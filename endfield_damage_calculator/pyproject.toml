@@ -22,6 +22,20 @@ dev = [
 [project.scripts]
 endfield-calculator = "main:main"
 
+[tool.setuptools]
+py-modules = ["main", "please_read_me", "build"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "calculation*",
+    "data*",
+    "gui_design*",
+    "character_weapon_equipment*",
+    "utils*",
+]
+exclude = ["tests*", "scripts*"]
+
 [tool.pyinstaller]
 script = "main.py"
 onefile = true
