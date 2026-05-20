@@ -16,7 +16,7 @@
 
 # ==================== 版本信息（只在此处修改） ====================
 # 项目版本号（用于文档、内部标识）
-_VERSION = "1.8.0"
+_VERSION = "1.8.1"
 
 # EXE 版本号（用于打包发布）
 _EXE_VERSION = "0.1.0-beta"
@@ -144,13 +144,14 @@ if __name__ == "__main__":
 
 # ## 1. 高层摘要（TL;DR）
 
-# *   **影响范围：** 🔴 **高** - 核心计算逻辑重构，新增配置和数据生成模块，影响所有数值计算和数据处理流程
+# *   **影响范围：** 🟢 **低** - 主要是文档完善和类型注解改进，核心逻辑无重大变更
 # *   **关键变更：**
-#     *   ✨ **新增配置模块**：集中管理属性常量、分类判断和参数验证
-#     *   🆕 **新增数据生成器**：统一角色/武器属性生成接口
-#     *   🔧 **重构反向计算**：提取内部辅助函数，消除重复代码，改进小数精度处理
-#     *   📦 **扩展数据加载器**：支持数据类型检测和元数据管理
-#     *   🧪 **增强测试覆盖**：新增配置模块和数据生成器的单元测试
+#     *   📝 **新增项目文档**：添加 `PROJECT_DOCUMENTATION.md` 和 `README.md` 完整项目文档
+#     *   🔧 **类型注解优化**：更新 `data_generator.py` 的返回类型注解，支持嵌套列表
+#     *   📄 **文档字符串修正**：修正 `formula.py` 中 special 参数的说明
+#     *   ⚠️ **错误处理改进**：`loader.py` 中解析失败时抛出异常而非静默返回
+#     *   🧹 **代码清理**：移除 `please_read_me.py` 中大量注释掉的文档内容
+#     *   📋 **.gitignore 重组**：重新组织并添加更多忽略规则分类
 
 # ---
 
@@ -158,333 +159,208 @@ if __name__ == "__main__":
 
 # ```mermaid
 # graph TD
-#     subgraph "业务目标：统一配置管理与数据生成"
-#         A["配置管理"] --> B["属性分类判断"]
-#         A --> C["参数验证"]
-#         D["数据生成"] --> E["角色属性生成"]
-#         D --> F["武器属性生成"]
+#     subgraph "业务目标：文档完善与代码质量提升"
+#         A["文档完善"] --> B["新增项目文档"]
+#         A --> C["新增README"]
+#         D["代码质量"] --> E["类型注解优化"]
+#         D --> F["错误处理改进"]
+#         D --> G["代码清理"]
 #     end
     
-#     subgraph "config.py - 新增配置模块"
-#         C1["CHARACTER_NORMAL_ATTRS"] --> C2["CHARACTER_SKILL_ATTRS"]
-#         C1 --> C3["WEAPON_BASE_ATTRS"]
-#         C2 --> C4["get_attribute_category()"]
-#         C4 --> C5["is_character_attribute()"]
-#         C4 --> C6["is_weapon_attribute()"]
-#         C4 --> C7["validate_growth_params()"]
+#     subgraph "data_generator.py - 类型注解优化"
+#         E1["generate_weapon_attributes()"] --> E2["返回类型更新"]
+#         E2 --> E3["Dict[str, Union[List[float], List[List[float]]]]"]
 #     end
     
-#     subgraph "data_generator.py - 新增数据生成器"
-#         D1["generate_attributes()"] --> D2["mode='character'"]
-#         D1 --> D3["mode='weapon'"]
-#         D2 --> D4["generate_character_attributes()"]
-#         D3 --> D5["generate_weapon_attributes()"]
+#     subgraph "formula.py - 文档修正"
+#         F1["calculate_bonus_attribute()"] --> F2["special参数说明"]
+#         F2 --> F3["修正为'第9级的特殊值'"]
 #     end
     
-#     subgraph "inverse.py - 重构反向计算"
-#         I1["fit_attribute_formula()"] --> I2["_scale_data()"]
-#         I1 --> I3["_find_best_params()"]
-#         I4["fit_skill_formula()"] --> I2
-#         I4 --> I3
-#         I5["validate_attribute_formula()"] --> I6["calculate_growth_curve()"]
+#     subgraph "loader.py - 错误处理改进"
+#         G1["process_input_data()"] --> G2["解析失败处理"]
+#         G2 --> G3["抛出ValueError异常"]
 #     end
     
-#     subgraph "loader.py - 扩展数据加载器"
-#         L1["detect_data_type()"] --> L2["parse_percentage()"]
-#         L1 --> L3["process_input_data()"]
-#         L3 --> L4["restore_data()"]
-#         L4 --> L5["add_metadata_to_value()"]
-#         L5 --> L6["extract_value_from_metadata()"]
-#     end
-    
-#     A -.-> C1
-#     D -.-> D1
-#     I1 -.-> I2
-#     L1 -.-> L2
+#     A -.-> B
+#     A -.-> C
+#     D -.-> E1
+#     D -.-> F1
+#     D -.-> G1
 # ```
 
 # ```mermaid
 # sequenceDiagram
 #     participant User as 用户代码
-#     participant Config as config.py
+#     participant Loader as loader.py
 #     participant Gen as data_generator.py
 #     participant Formula as formula.py
-#     participant Inverse as inverse.py
-#     participant Loader as loader.py
-    
-#     User->>Config: 获取属性分类
-#     Config-->>User: 返回分类结果
-    
-#     User->>Gen: 生成属性数据
-#     Gen->>Formula: 调用计算函数
-#     Formula-->>Gen: 返回成长曲线
-#     Gen-->>User: 返回属性数据
-    
-#     User->>Inverse: 反推公式参数
-#     Inverse->>Inverse: _scale_data() 缩放数据
-#     Inverse->>Inverse: _find_best_params() 查找参数
-#     Inverse-->>User: 返回拟合参数
     
 #     User->>Loader: 处理输入数据
-#     Loader->>Loader: detect_data_type() 检测类型
-#     Loader->>Loader: process_input_data() 转换数据
-#     Loader-->>User: 返回处理后的数据
+#     alt 数据解析失败
+#         Loader-->>User: 抛出 ValueError 异常
+#     else 数据解析成功
+#         Loader-->>User: 返回处理后的数据
+#     end
+    
+#     User->>Gen: 生成武器属性
+#     Gen->>Gen: 返回嵌套列表类型
+#     Gen-->>User: Dict[str, Union[List[float], List[List[float]]]]
+    
+#     User->>Formula: 计算附加属性
+#     Formula-->>User: 返回计算结果（文档已更新）
 # ```
 
 # ---
 
 # ## 3. 详细变更分析
 
-# ### 📦 组件一：新增配置模块（`calculation/config.py`）
+# ### 📝 组件一：新增项目文档
 
-# **变更说明：** 新建集中配置管理模块，消除各模块中的硬编码属性名称
+# #### 新增文件：`PROJECT_DOCUMENTATION.md`
 
-# **核心功能：**
+# **变更说明：** 新建完整的项目文档，包含项目结构、核心功能、使用指南等内容
 
-# | 功能类别 | 函数/常量 | 说明 |
-# |---------|----------|------|
-# | **属性常量** | `CHARACTER_NORMAL_ATTRS` | 角色普通属性列表（力量、敏捷、智识、意志、基础攻击力） |
-# | | `CHARACTER_SKILL_ATTRS` | 角色技能属性列表（战技倍率、连携技倍率、终结技倍率） |
-# | | `WEAPON_BASE_ATTRS` | 武器基础属性列表（基础攻击力） |
-# | | `WEAPON_BONUS_ATTR_SUFFIX` | 武器附加属性后缀（'+'） |
-# | **分类判断** | `get_attribute_category()` | 获取属性分类（character_normal/character_skill/weapon_base/weapon_bonus/unknown） |
-# | | `is_character_attribute()` | 判断是否为角色属性 |
-# | | `is_weapon_attribute()` | 判断是否为武器属性 |
-# | | `is_weapon_base_attribute()` | 判断是否为武器基础属性 |
-# | | `is_weapon_bonus_attribute()` | 判断是否为武器附加属性 |
-# | | `is_skill_attribute()` | 判断是否为技能属性 |
-# | **参数管理** | `get_default_growth_params()` | 获取默认成长参数配置 |
-# | | `validate_growth_params()` | 验证成长参数有效性 |
+# **主要章节：**
+# | 章节 | 内容 |
+# |------|------|
+# | **项目概述** | 项目简介和目标 |
+# | **项目结构** | 目录结构说明 |
+# | **核心功能模块** | 计算引擎、角色武器数据、数据加载器等 |
+# | **使用指南** | CLI、编程方式、GUI 三种使用方法 |
+# | **数据格式规范** | 属性数据和技能倍率格式 |
+# | **测试运行** | 测试命令和覆盖范围 |
+# | **环境要求** | Python 版本和依赖说明 |
+# | **常见问题** | FAQ 和解决方案 |
+# | **开发指南** | 添加新角色/武器的步骤 |
 
-# **代码示例：**
-# ```python
-# # 属性分类判断
-# category = get_attribute_category('敏捷+')  # 返回 'weapon_bonus'
-# is_char = is_character_attribute('力量')    # 返回 True
+# #### 新增文件：`endfield_damage_calculator/README.md`
 
-# # 参数验证
-# params = {'base': 100, 'growth': 50, 'divisor': 10}
-# result = validate_growth_params(params)
-# # 返回 {'valid': True, 'errors': [], 'warnings': []}
-# ```
+# **变更说明：** 为项目添加用户友好的 README 文档
 
-# ---
-
-# ### 🆕 组件二：新增数据生成器（`calculation/data_generator.py`）
-
-# **变更说明：** 新建统一数据生成器，整合角色和武器属性生成逻辑
-
-# **核心函数：**
-
-# | 函数名 | 参数 | 返回值 | 说明 |
-# |--------|------|--------|------|
-# | `generate_attributes()` | `growth_params`, `mode` | `Dict[str, List]` | 统一生成接口，通过 mode 区分角色/武器 |
-# | `generate_character_attributes()` | `growth_params` | `Dict[str, List]` | 生成角色属性（普通属性90级，技能倍率12级） |
-# | `generate_weapon_attributes()` | `growth_params` | `Dict[str, List]` | 生成武器属性（基础90级，附加9级） |
-
-# **数据格式示例：**
-# ```python
-# # 角色属性生成
-# params = {
-#     '力量': {'base': 100, 'growth': 50, 'divisor': 10, 'offset': 0},
-#     '战技倍率': [
-#         {'base': 100, 'growth': 20, 'divisor': 10, 'special': [150, 160, 170]}
-#     ]
-# }
-# attrs = generate_character_attributes(params)
-# # 返回: {'力量': [100, 105, ..., ...], '战技倍率': [[100, 102, ..., 150, 160, 170]]}
-
-# # 武器属性生成
-# params = {
-#     '基础攻击力': {'base': 34, 'growth': 31, 'divisor': 9, 'offset': 8},
-#     '攻击力+': {'base': 3.0, 'growth': 12, 'divisor': 5, 'offset': 0, 'special': [23.4]}
-# }
-# attrs = generate_weapon_attributes(params)
-# ```
+# **主要内容包括：**
+# - 🌟 项目简介和功能特性表
+# - 📁 详细的项目结构树
+# - 🚀 快速开始指南（环境要求、安装、运行、打包）
+# - 📖 使用指南（基本操作流程、公式反推工具）
+# - 🧮 核心算法说明（成长公式、小数数据处理、伤害计算公式）
+# - 🔧 API 文档（计算模块函数表）
+# - 🧪 测试说明和运行命令
+# - 📦 数据格式示例（角色和武器 JSON 格式）
+# - 📝 开发指南和代码规范
 
 # ---
 
-# ### 🔧 组件三：重构反向计算模块（`calculation/inverse.py`）
+# ### 🔧 组件二：类型注解优化
 
-# **变更说明：** 提取内部辅助函数，消除重复代码，改进小数精度处理
+# #### 文件：`endfield_damage_calculator/calculation/data_generator.py`
 
-# **新增内部辅助函数：**
+# **变更说明：** 更新 `generate_weapon_attributes()` 函数的返回类型注解
 
-# | 函数名 | 功能 |
-# |--------|------|
-# | `_is_decimal_data(data)` | 判断数据是否包含小数 |
-# | `_scale_data(data, scale_factor)` | 缩放数据（小数乘10转换为整数） |
-# | `_find_best_params()` | 查找最佳拟合参数（核心算法） |
-
-# **核心优化：**
-
-# 1. **小数精度处理改进：**
-# ```python
-# # 旧代码（直接乘除）
-# scaled_base = base * scale_factor
-
-# # 新代码（使用 round 确保精度）
-# scaled_base = int(round(base * scale_factor))
-# ```
-
-# 2. **验证逻辑简化：**
-# ```python
-# # 旧代码：手动实现计算和验证
-# for lv in range(1, 91):
-#     calculated = scaled_base + math.floor((growth * (lv - 1) + offset) / divisor)
-#     if abs(calculated - scaled_data[lv-1]) > 0.001:
-#         return False
-
-# # 新代码：复用正向计算函数
-# calculated = calculate_growth_curve(base, growth, divisor, offset)
-# for i, val in enumerate(data):
-#     if abs(calculated[i] - val) > 0.001:
-#         return False
-# ```
-
-# 3. **消除重复代码：** 将 `fit_attribute_formula()`, `fit_skill_formula()`, `fit_skill_formula_no_special()` 中的重复拟合逻辑提取到 `_find_best_params()` 中
-
-# ---
-
-# ### 📊 组件四：扩展数据加载器（`data/loader.py`）
-
-# **变更说明：** 新增数据类型处理和元数据管理功能
-
-# **新增数据类型常量：**
-
-# | 常量名 | 值 | 说明 |
-# |--------|-----|------|
-# | `DATA_TYPE_INTEGER` | `'integer'` | 整数类型 |
-# | `DATA_TYPE_DECIMAL` | `'decimal'` | 小数类型 |
-# | `DATA_TYPE_PERCENTAGE` | `'percentage'` | 百分比类型 |
-
-# **新增处理函数：**
-
-# | 函数名 | 功能 |
-# |--------|------|
-# | `detect_data_type(value)` | 检测单个数据类型（整数/小数/百分比） |
-# | `parse_percentage(value)` | 解析百分比字符串（如 "156%" → 156） |
-# | `process_input_data(data)` | 处理输入数据，根据类型转换 |
-# | `restore_data(processed_value, data_type, scale_factor)` | 还原处理后的数据 |
-# | `add_metadata_to_value(value)` | 为单个值添加元数据 |
-# | `extract_value_from_metadata(metadata_dict)` | 从元数据字典中提取原始值 |
-# | `process_list_with_metadata(data_list)` | 处理列表数据，为每个元素添加元数据 |
-# | `restore_list_from_metadata(metadata_list)` | 从元数据列表中还原原始数据 |
-
-# **数据处理规则：**
-
-# | 数据类型 | 处理方式 | 示例 |
-# |---------|---------|------|
-# | 整数 | 直接返回 | `100` → `100` |
-# | 小数 | 乘10转换为整数 | `3.4` → `34` |
-# | 百分比（整数） | 移除%符号 | `"89%"` → `89` |
-# | 百分比（小数） | 移除%符号并乘10 | `"8.9%"` → `89` |
-
-# ---
-
-# ### 🧮 组件五：优化正向计算模块（`calculation/formula.py`）
-
-# **变更说明：** 改进小数数据处理精度
-
-# **关键变更：**
+# **代码变更：**
 # ```python
 # # 旧代码
-# scaled_base = base * scale_factor
-# scaled_growth = growth * scale_factor
-# scaled_offset = offset * scale_factor
+# def generate_weapon_attributes(
+#     growth_params: Dict[str, Any]
+# ) -> Dict[str, List[float]]:
+#     attributes: Dict[str, List[float]] = {}
 
-# # 新代码（使用 round 确保浮点数精度）
-# scaled_base = round(base * scale_factor)
-# scaled_growth = round(growth * scale_factor)
-# scaled_offset = round(offset * scale_factor)
+# # 新代码
+# def generate_weapon_attributes(
+#     growth_params: Dict[str, Any]
+# ) -> Dict[str, Union[List[float], List[List[float]]]]:
+#     attributes: Dict[str, Union[List[float], List[List[float]]]] = {}
 # ```
 
-# **影响：** 确保小数数据在缩放过程中的精度，避免浮点运算误差
+# **原因：** 武器属性可能包含嵌套列表（如技能倍率），需要支持 `List[List[float]]` 类型
 
 # ---
 
-# ### 📝 组件六：模块导出更新（`calculation/__init__.py`）
+# ### 📄 组件三：文档字符串修正
 
-# **变更说明：** 导出新增模块的公共接口
+# #### 文件：`endfield_damage_calculator/calculation/formula.py`
 
-# **新增导出项：**
+# **变更说明：** 修正 `calculate_bonus_attribute()` 函数的文档字符串
 
-# ```python
-# # 配置模块常量
-# "CHARACTER_NORMAL_ATTRS",
-# "CHARACTER_SKILL_ATTRS",
-# "WEAPON_BASE_ATTRS",
-# "WEAPON_BONUS_ATTR_SUFFIX",
-# "DEFAULT_GROWTH_PARAMS",
-
-# # 配置模块函数
-# "get_default_growth_params",
-# "get_attribute_category",
-# "is_character_attribute",
-# "is_weapon_attribute",
-# "is_weapon_base_attribute",
-# "is_weapon_bonus_attribute",
-# "is_skill_attribute",
-# "validate_growth_params",
-
-# # 数据生成器函数
-# "generate_attributes",
-# "generate_character_attributes",
-# "generate_weapon_attributes",
-# ```
-
-# ---
-
-# ### 🧪 组件七：测试模块增强
-
-# #### 新增测试文件：`tests/test_config.py`
-
-# **测试覆盖：**
-# - ✅ 配置常量定义
-# - ✅ 属性分类判断
-# - ✅ 默认参数获取
-# - ✅ 参数验证（有效/无效/除数为零）
-
-# #### 新增测试文件：`tests/test_unified_data_generator.py`
-
-# **测试覆盖：**
-# - ✅ 角色属性生成（基本/带技能倍率/空参数）
-# - ✅ 武器属性生成（基本/空参数）
-# - ✅ 通用生成函数（角色模式/武器模式/无效模式）
-
-# #### 新增测试文件：`tests/test_inverse_refactored.py`
-
-# **测试覆盖：**
-# - ✅ 内部辅助函数（`_is_decimal_data`, `_scale_data`, `_find_best_params`）
-# - ✅ 属性公式拟合（整数数据）
-# - ✅ 技能公式拟合（整数/小数数据）
-# - ✅ 统一拟合接口自动检测
-
-# #### 修改测试文件：`tests/test_calculation.py`
-
-# **变更：** 调整断言逻辑，适应小数参数返回
+# **代码变更：**
 # ```python
 # # 旧代码
-# self.assertEqual(growth, 2)
-# self.assertEqual(divisor, 1)
+# special: 特殊值列表（第9级及以后的特殊值），如 [79] 表示第9级使用79（支持整数和小数）
 
-# # 新代码（支持小数参数）
-# self.assertAlmostEqual(growth / divisor, 2.0, places=5)
+# # 新代码
+# special: 特殊值列表（第9级的特殊值），如 [23.4] 表示第9级使用23.4（支持整数和小数）
 # ```
 
-# #### 修改测试文件：`tests/test_decimal_scaling.py`
-
-# **变更：** 添加注释说明测试预期行为
-# ```python
-# # 该数据无法用单一公式拟合，第9级作为special值
-# assert special == [23.4], f"special错误: {special} != [23.4]"
-# ```
+# **影响：** 文档更准确地描述了 special 参数的含义和用途
 
 # ---
 
-# ### 🗑️ 组件八：清理文档（`please_read_me.py`）
+# ### ⚠️ 组件四：错误处理改进
 
-# **变更说明：** 移除旧的文档注释内容（已注释掉的代码）
+# #### 文件：`endfield_damage_calculator/data/loader.py`
+
+# **变更说明：** 改进 `process_input_data()` 函数的错误处理逻辑
+
+# **代码变更：**
+# ```python
+# # 旧代码
+# try:
+#     # 解析逻辑...
+# except ValueError:
+#     return (data, DATA_TYPE_INTEGER, 1)  # 静默返回原始数据
+
+# # 新代码
+# try:
+#     # 解析逻辑...
+# except ValueError:
+#     raise ValueError(f"无法解析数据: {data}")  # 抛出异常
+# ```
+
+# **影响：** 
+# - ✅ 更好的错误提示，帮助开发者快速定位问题
+# - ✅ 避免静默失败导致的数据不一致
+# - ⚠️ 破坏性变更：调用方需要处理异常
+
+# ---
+
+# ### 🧹 组件五：代码清理
+
+# #### 文件：`endfield_damage_calculator/please_read_me.py`
+
+# **变更说明：** 删除了大量注释掉的文档内容（约 460 行）
+
+# **删除内容：**
+# - 完整的代码审查报告（已注释）
+# - Mermaid 流程图代码
+# - 详细的变更分析表格
+# - 影响与风险评估
+# - 代码片段示例
+
+# **原因：** 这些内容已移至独立的项目文档文件中，避免代码文件过于冗长
+
+# ---
+
+# ### 📋 组件六：.gitignore 重组
+
+# #### 文件：`.gitignore`
+
+# **变更说明：** 重新组织 gitignore 文件，添加分类注释和更多忽略规则
+
+# **新增分类：**
+# | 分类 | 新增内容 |
+# |------|----------|
+# | **IDE 配置** | `.idea/`, `.trae/` |
+# | **Skills 锁文件** | `skills-lock.json` |
+# | **Python 缓存** | `*.egg-info/` |
+# | **虚拟环境** | `.venv/` |
+# | **测试缓存** | `.pytest_cache/` |
+# | **构建输出** | `build/`, `dist/`, `*.spec` |
+# | **日志** | `debug.log` |
+# | **IDE 上传模块** | `github_upload_module.py`, `github_download_module.py`, `git_key.txt` |
+# | **压缩文件** | `*.zip` |
+
+# **移除内容：**
+# - ❌ `*.md`（不再忽略所有 markdown 文件）
 
 # ---
 
@@ -494,117 +370,76 @@ if __name__ == "__main__":
 
 # | 变更项 | 影响 | 兼容性 |
 # |--------|------|--------|
-# | 新增配置模块 | 无破坏性变更，纯新增功能 | ✅ 向后兼容 |
-# | 新增数据生成器 | 无破坏性变更，纯新增功能 | ✅ 向后兼容 |
-# | 反向计算重构 | 内部实现变更，公共接口不变 | ✅ 向后兼容 |
-# | 数据加载器扩展 | 无破坏性变更，纯新增功能 | ✅ 向后兼容 |
+# | `loader.py` 错误处理 | 调用方需要捕获 `ValueError` 异常 | ⚠️ 需要更新调用代码 |
 
 # ### ✅ 向后兼容性
 
-# - ✅ 所有现有公共接口保持不变
-# - ✅ 新增功能通过独立模块提供
-# - ✅ 内部重构不影响外部调用
-# - ✅ 测试用例已更新以适应新实现
+# - ✅ 类型注解变更不影响运行时行为
+# - ✅ 文档字符串修正不影响功能
+# - ✅ 新增文档文件不影响现有代码
+# - ✅ .gitignore 变更不影响代码逻辑
 
 # ### 🧪 测试建议
 
 # **优先级 P0（必须测试）：**
-# 1. **配置模块功能**：验证属性分类判断和参数验证正确性
-# 2. **数据生成器**：测试角色和武器属性生成的准确性
-# 3. **反向计算重构**：验证重构后的拟合算法与原实现结果一致
+# 1. **错误处理测试**：验证 `process_input_data()` 在解析失败时正确抛出异常
+# 2. **类型注解测试**：验证 `generate_weapon_attributes()` 返回类型符合预期
 
 # **优先级 P1（建议测试）：**
-# 1. **小数精度处理**：验证 `round()` 函数对计算结果的影响
-# 2. **数据类型检测**：测试整数、小数、百分比数据的正确识别
-# 3. **元数据管理**：验证数据添加/提取元数据的双向一致性
-
-# **优先级 P2（可选测试）：**
-# 1. 边界情况：极小/极大数值、0 值、负值
-# 2. 混合数据：整数参数 + 小数特殊值
-# 3. 性能测试：重构后的算法性能对比
+# 1. **文档完整性**：检查新增文档的链接和示例是否正确
+# 2. **gitignore 有效性**：验证新增的忽略规则是否生效
 
 # ---
 
 # ## 5. 代码片段示例
 
-# ### 配置模块使用示例
+# ### 类型注解使用示例
 
 # ```python
-# from calculation.config import (
-#     get_attribute_category,
-#     is_character_attribute,
-#     validate_growth_params
-# )
+# from typing import Dict, List, Union
+# from calculation.data_generator import generate_weapon_attributes
 
-# # 属性分类判断
-# category = get_attribute_category('敏捷+')  # 'weapon_bonus'
-# is_char = is_character_attribute('力量')    # True
-
-# # 参数验证
-# params = {'base': 100, 'growth': 50, 'divisor': 10, 'offset': 0}
-# result = validate_growth_params(params)
-# # {'valid': True, 'errors': [], 'warnings': []}
-# ```
-
-# ### 数据生成器使用示例
-
-# ```python
-# from calculation.data_generator import generate_attributes
-
-# # 生成角色属性
-# params = {
-#     '力量': {'base': 100, 'growth': 50, 'divisor': 10},
-#     '战技倍率': [{'base': 100, 'growth': 20, 'divisor': 10, 'special': [150, 160, 170]}]
-# }
-# attrs = generate_attributes(params, mode='character')
-
-# # 生成武器属性
+# # 武器属性生成（支持嵌套列表）
 # params = {
 #     '基础攻击力': {'base': 34, 'growth': 31, 'divisor': 9, 'offset': 8},
 #     '攻击力+': {'base': 3.0, 'growth': 12, 'divisor': 5, 'special': [23.4]}
 # }
-# attrs = generate_attributes(params, mode='weapon')
+
+# attrs = generate_weapon_attributes(params)
+# # 返回类型: Dict[str, Union[List[float], List[List[float]]]]
+# # '基础攻击力' -> List[float] (90个值)
+# # '攻击力+' -> List[float] (9个值)
 # ```
 
-# ### 数据加载器使用示例
+# ### 错误处理示例
 
 # ```python
-# from data.loader import (
-#     detect_data_type,
-#     process_input_data,
-#     restore_data
-# )
+# from data.loader import process_input_data
 
-# # 检测数据类型
-# data_type = detect_data_type("8.9%")  # 'percentage'
-
-# # 处理输入数据
-# value, data_type, scale_factor = process_input_data("8.9%")
-# # (89, 'percentage', 10)
-
-# # 还原数据
-# original = restore_data(89, 'percentage', 10)  # '8.9%'
+# try:
+#     value, data_type, scale_factor = process_input_data("invalid_data")
+# except ValueError as e:
+#     print(f"数据解析失败: {e}")
+#     # 输出: 数据解析失败: 无法解析数据: invalid_data
 # ```
 
 # ---
 
 # ## 6. 总结
 
-# 本次变更是一次**模块化重构**，核心目标是提高代码的可维护性和可扩展性：
+# 本次变更是一次**文档完善和代码质量提升**，核心目标是：
 
 # **关键改进：**
-# - 🎯 **配置集中化**：消除硬编码，统一管理属性常量和配置
-# - 🆕 **功能模块化**：新增独立的数据生成器模块
-# - 🔧 **代码重构**：提取公共逻辑，消除重复代码
-# - 📊 **数据类型支持**：完善数据类型检测和转换机制
-# - 🧪 **测试增强**：新增全面的单元测试覆盖
+# - 📝 **文档完善**：新增完整的项目文档和用户 README
+# - 🔧 **类型注解优化**：更准确地描述函数返回类型
+# - ⚠️ **错误处理改进**：提供更清晰的错误提示
+# - 🧹 **代码清理**：移除冗余的注释内容
 
 # **架构优化：**
-# - 清晰的模块职责划分
-# - 统一的接口设计
-# - 完善的错误处理和验证机制
+# - 文档与代码分离，提高可维护性
+# - 类型注解更准确，便于 IDE 智能提示
+# - 错误处理更严格，避免静默失败
 
 # **注意事项：**
-# - 所有变更均为向后兼容，无需修改现有调用代码
-# - 建议运行完整测试套件验证重构正确性
-# - 新增功能可通过导入相应模块直接使用
+# - ⚠️ `loader.py` 的错误处理变更需要调用方更新异常处理逻辑
+# - ✅ 其他变更均为向后兼容，无需修改现有调用代码

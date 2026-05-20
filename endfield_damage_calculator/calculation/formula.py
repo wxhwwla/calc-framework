@@ -165,7 +165,7 @@ def calculate_bonus_attribute(
         growth: 成长系数（支持整数和小数）
         divisor: 除数（支持整数和小数）
         offset: 偏移量（支持整数和小数）
-        special: 特殊值列表（第9级及以后的特殊值），如 [79] 表示第9级使用79（支持整数和小数）
+        special: 特殊值列表（第9级的特殊值），如 [23.4] 表示第9级使用23.4（支持整数和小数）
         max_level: 最大等级，默认9
         is_decimal: 是否为小数数据（None表示自动检测）
 

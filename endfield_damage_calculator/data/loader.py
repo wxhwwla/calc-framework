@@ -259,7 +259,7 @@ def process_input_data(data: Union[int, float, str]) -> Tuple[Union[int, float],
                 else:
                     return (num_val * 10, DATA_TYPE_DECIMAL, 10)
             except ValueError:
-                return (data, DATA_TYPE_INTEGER, 1)
+                raise ValueError(f"无法解析数据: {data}")
     
     elif isinstance(data, float):
         if data == int(data):

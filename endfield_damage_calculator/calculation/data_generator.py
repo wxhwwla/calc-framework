@@ -111,7 +111,7 @@ def generate_character_attributes(
 
 def generate_weapon_attributes(
     growth_params: Dict[str, Any]
-) -> Dict[str, List[float]]:
+) -> Dict[str, Union[List[float], List[List[float]]]]:
     """
     根据成长参数配置生成武器所有属性
 
@@ -127,7 +127,7 @@ def generate_weapon_attributes(
     返回：
         包含所有属性成长曲线的字典
     """
-    attributes: Dict[str, List[float]] = {}
+    attributes: Dict[str, Union[List[float], List[List[float]]]] = {}
 
     for attr_name, params in growth_params.items():
         if attr_name == "基础攻击力":
