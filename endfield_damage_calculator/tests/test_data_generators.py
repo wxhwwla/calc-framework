@@ -4,6 +4,10 @@
 数据生成器单元测试
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import unittest
 from typing import List
 from character_weapon_equipment.character_data.formula import generate_character_attributes

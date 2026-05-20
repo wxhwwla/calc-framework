@@ -4,6 +4,10 @@
 计算模块单元测试
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import unittest
 import math
 from calculation.formula import (

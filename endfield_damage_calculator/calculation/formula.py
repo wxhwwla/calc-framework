@@ -77,17 +77,25 @@ def calculate_skill_curve(
     growth: float | int,
     divisor: float | int,
     offset: float | int = 0,
-    special_values: List[float | int] | None = None
+    special_values: List[float | int] | None = None,
+    use_floor: bool = True,
+    is_decimal: bool | None = None
 ) -> List[float]:
     """
-    计算技能倍率成长曲线（支持10-12级特殊值）
+    计算技能倍率成长曲线（支持特殊值）
+
+    数据处理规则：
+    - 整数数据：直接按公式计算
+    - 小数数据：乘10→整数计算→除10
 
     参数：
         base: 1级时的基础值（支持整数和小数）
         growth: 成长系数（支持整数和小数）
         divisor: 除数（支持整数和小数）
         offset: 偏移量（支持整数和小数）
-        special_values: 10-12级的特殊值列表（长度为3，支持整数和小数）
+        special_values: 特殊值列表（9级或10-12级，支持整数和小数）
+        use_floor: 是否使用floor函数（True:整数数据，False:小数数据）
+        is_decimal: 是否为小数数据（None表示自动检测）
 
     返回：
         各等级技能倍率列表（共12个值，索引0对应等级1，保留一位小数）
@@ -98,20 +106,40 @@ def calculate_skill_curve(
     if divisor <= 0:
         raise ValueError("除数必须大于0")
 
+    # 判断是否为小数数据
+    if is_decimal is None:
+        is_decimal = isinstance(base, float) or \
+                     isinstance(growth, float) or \
+                     isinstance(offset, float) or \
+                     (special_values is not None and any(isinstance(x, float) for x in special_values))
+    
+    # 小数数据：乘10处理
+    scale_factor = 10 if is_decimal else 1
+    scaled_base = base * scale_factor
+    scaled_growth = growth * scale_factor
+    scaled_offset = offset * scale_factor
+
+    curve = []
+    
     # 1-9级使用公式计算
-    curve = [
-        round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1)
-        for lv in range(1, 10)
-    ]
+    for lv in range(1, 10):
+        # 统一使用整数计算逻辑（floor）
+        calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
+        
+        # 如果有特殊值且当前等级是9级，使用特殊值
+        if special_values and len(special_values) == 1 and lv == 9:
+            curve.append(round(special_values[0], 1))
+        else:
+            # 小数数据：除10还原
+            curve.append(round(calculated / scale_factor, 1))
 
     # 10-12级使用特殊值或继续计算
     if special_values and len(special_values) >= 3:
         curve.extend([round(v, 1) for v in special_values[:3]])
     else:
-        curve.extend([
-            round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1)
-            for lv in range(10, 13)
-        ])
+        for lv in range(10, 13):
+            calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
+            curve.append(round(calculated / scale_factor, 1))
 
     return curve
 
@@ -122,10 +150,15 @@ def calculate_bonus_attribute(
     divisor: float | int,
     offset: float | int = 0,
     special: List[float | int] | None = None,
-    max_level: int = 9
+    max_level: int = 9,
+    is_decimal: bool | None = None
 ) -> List[float]:
     """
     计算附加属性成长曲线（潜能1-9级）
+
+    数据处理规则：
+    - 整数数据：直接按公式计算
+    - 小数数据：乘10→整数计算→除10
 
     参数：
         base: 潜能1级时的基础值（支持整数和小数）
@@ -134,6 +167,7 @@ def calculate_bonus_attribute(
         offset: 偏移量（支持整数和小数）
         special: 特殊值列表（第9级及以后的特殊值），如 [79] 表示第9级使用79（支持整数和小数）
         max_level: 最大等级，默认9
+        is_decimal: 是否为小数数据（None表示自动检测）
 
     返回：
         各潜能等级属性值列表（索引0对应潜能1，保留一位小数）
@@ -143,17 +177,33 @@ def calculate_bonus_attribute(
     if max_level < 1:
         raise ValueError("最大等级必须大于等于1")
 
+    # 判断是否为小数数据（仅在用户未指定时自动检测）
+    if is_decimal is None:
+        is_decimal = isinstance(base, float) or \
+                     isinstance(growth, float) or \
+                     isinstance(offset, float) or \
+                     (special is not None and any(isinstance(x, float) for x in special))
+
+    # 小数数据：乘10处理
+    scale_factor = 10 if is_decimal else 1
+    scaled_base = base * scale_factor
+    scaled_growth = growth * scale_factor
+    scaled_offset = offset * scale_factor
+
     # 前8级用公式计算
-    curve = [
-        round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1)
-        for lv in range(1, min(9, max_level + 1))
-    ]
+    curve = []
+    for lv in range(1, min(9, max_level + 1)):
+        # 统一使用整数计算逻辑（floor）
+        calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
+        # 小数数据：除10还原
+        curve.append(round(calculated / scale_factor, 1))
 
     # 如果有特殊值，第9级使用特殊值
     if max_level >= 9:
         if special and len(special) > 0:
             curve.append(round(special[0], 1))
         else:
-            curve.append(round(base + math.floor((growth * 8 + offset) / divisor), 1))
+            calculated = scaled_base + math.floor((scaled_growth * 8 + scaled_offset) / divisor)
+            curve.append(round(calculated / scale_factor, 1))
 
     return curve

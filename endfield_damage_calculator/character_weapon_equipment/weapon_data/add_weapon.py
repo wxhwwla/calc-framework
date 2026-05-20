@@ -104,26 +104,26 @@ if __name__ == "__main__":
     # =============== 在这里配置你的新武器参数 ===============
     # 示例：添加一把新武器
     add_weapon(
-        name="佩科5",
-        weapon_type="手铳",
-        star=3,
+        name="荧光雷羽",
+        weapon_type="施术单元",
+        star=4,
         
         # 基础攻击力成长参数（公式：base + floor((growth * (lv-1) + offset) / divisor)）
-        base_atk={"base": 29, "growth": 163, "divisor": 57, "offset": 3},
+        base_atk={"base": 34, "growth": 31, "divisor": 9, "offset": 8},
         
         # 附加属性（潜能1-9级）
         # 格式：{"base": int, "growth": int, "divisor": int, "offset": int, "special": list}
         # special字段可选：前8级用公式计算，第9级使用special[0]（如果提供）
         bonus_attrs={
-            "主能力+": {"base": 10, "growth": 41, "divisor": 5, "offset": 0, "special": [79]},
-            "附加攻击力+": {"base": 12, "growth": 12, "divisor": 5, "offset": 2, "special": [34]},
+            "意志+": {"base": 12, "growth": 48, "divisor": 5, "offset": 0, "special": [79]},
+            "攻击力+": {"base": 3, "growth": 12, "divisor": 5, "offset": 0, "special": [23.4]},
         },
         
         # 特殊能力（可选）- 无特殊能力时可以不写或设为 None
-        # special_ability={
-        #     "enabled": True,
-        #     "name": "攻击力+",
-        #     "curve": [12, 14.4, 16.8, 19.2, 21.6, 24.0, 26.4, 28.8, 33.6]
-        # },
+        special_ability={
+            "enabled": True,
+            "name": "攻击力+",
+            "curve": [12, 14.4, 16.8, 19.2, 21.6, 24.0, 26.4, 28.8, 33.6]
+        },
     )
     # ======================================================

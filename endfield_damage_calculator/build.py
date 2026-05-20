@@ -37,6 +37,21 @@ def build_exe():
     chars_json = str(project_root / 'character_weapon_equipment' / 'character_data' / 'characters.json')
     weapons_json = str(project_root / 'character_weapon_equipment' / 'weapon_data' / 'weapons.json')
 
+    # 定义要排除的模块/文件
+    excludes = [
+        'tests',           # 测试文件
+        'scripts',         # 脚本文件（如 inverse_cli.py）
+        'build',           # 打包脚本模块
+        'add_character',   # 数据添加脚本
+        'add_weapon',      # 数据添加脚本
+        'test_',           # 测试相关
+    ]
+    
+    # 构建排除参数
+    exclude_args = []
+    for item in excludes:
+        exclude_args.extend(['--exclude-module', item])
+    
     args = [
         sys.executable, "-m", "PyInstaller",
         "--onedir",
@@ -46,6 +61,7 @@ def build_exe():
         "--add-data", f"{chars_json}{os.pathsep}character_weapon_equipment/character_data/",
         "--add-data", f"{weapons_json}{os.pathsep}character_weapon_equipment/weapon_data/",
         "--clean",
+        *exclude_args,
         str(project_root / "main.py")
     ]
     

@@ -35,6 +35,10 @@ def parse_percent(value: str) -> Tuple[float, bool]:
     """
     解析百分比字符串（支持整数和小数）
 
+    数据处理规则：
+    - 整数百分比：直接返回整数值
+    - 小数百分比：乘10转换为整数
+
     参数：
         value: 百分比字符串，如 "8.9%" 或 "89"
 
@@ -43,11 +47,20 @@ def parse_percent(value: str) -> Tuple[float, bool]:
     """
     value = value.strip()
     is_decimal = False
+    is_percent = False
+    
+    # 移除%符号
     if value.endswith('%'):
+        is_percent = True
         value = value[:-1]
+    
     if '.' in value:
         is_decimal = True
-        return float(value), is_decimal
+        val = float(value)
+        # 小数百分比：乘10转换为整数
+        if is_percent:
+            val = val * 10
+        return val, is_decimal
     else:
         return int(value), is_decimal
 
