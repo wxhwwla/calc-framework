@@ -16,9 +16,46 @@
 
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
-# _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本
+# _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
 _VERSION = "1.8.1"
 _EXE_VERSION = "0.2.0-beta"
+# ==============================================================
+
+# ==================== GitHub 上传流程（必读） ====================
+UPLOAD_WORKFLOW = """
+GitHub 上传与版本号（仓库根目录执行: python github_upload_module.py）
+
+1. 版本分工
+   - _VERSION：上传脚本在有「业务改动」并 push 成功时自动递增（第三位 +1 为默认）。
+   - _EXE_VERSION：仅在你重新打包 exe 前手动修改，上传脚本不会改它。
+   - 第一位 MAJOR：永远只在下方 _VERSION 行手动改，脚本不会动。
+
+2. 何时自动 bump _VERSION
+   - 会：本次有新的业务文件改动，将产生新 commit 并推送到远程。
+   - 不会：仅补推已有 commit、与远程已同步无改动、或使用了 --no-bump。
+
+3. 升级幅度
+   - 默认 Patch：1.8.1 → 1.8.2（第三位 +1）
+   - Minor（大改动）：1.8.1 → 1.9.0（第二位 +1，第三位归零）
+     · 交互：运行脚本时输入 M 或 minor
+     · 非交互：python github_upload_module.py --minor
+   - 不涨版本：python github_upload_module.py --no-bump
+
+4. 提交说明（临时写在「本文件最下面」）
+   - 上传前：脚本根据 git 改动自动生成 # --- UPLOAD_SUMMARY --- 块（勿手删标记行）。
+   - commit 消息格式：
+       v1.8.2: 一句话标题
+
+       - 修改 xxx
+       - 更新 weapons.json ...
+   - push 成功后：脚本删除该总结块（_VERSION 保留）。
+   - push 失败：总结块保留，版本不回滚；修好网络后可只 push 或 --no-bump 再传。
+
+5. 常用命令
+   python github_upload_module.py
+   python github_upload_module.py --minor
+   python github_upload_module.py --no-bump
+"""
 # ==============================================================
 
 # ==================== 项目结构文档（自动生成） ====================
@@ -123,6 +160,7 @@ def get_full_intro() -> str:
 {USAGE_INFO}
 {FORMULA_INFO}
 {VERSION_INFO}
+{UPLOAD_WORKFLOW}
     """
 
 
@@ -138,6 +176,7 @@ def show_help() -> None:
 {USAGE_INFO}
 {FORMULA_INFO}
 {VERSION_INFO}
+{UPLOAD_WORKFLOW}
     """)
 
 if __name__ == "__main__":

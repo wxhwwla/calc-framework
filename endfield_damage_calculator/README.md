@@ -83,7 +83,19 @@ endfield_damage_calculator/
 
 ### 版本号
 
-仅在 `please_read_me.py` 修改 `_VERSION`（pip/包元数据）与 `_EXE_VERSION`（窗口标题与 exe）；`pyproject.toml` 通过 dynamic 自动读取 `_VERSION`。
+- `_VERSION`：日常由上传脚本在有业务改动并 push 成功时自动递增（见下方「GitHub 上传」）；`pyproject.toml` 通过 dynamic 读取。
+- `_EXE_VERSION`：仅重新打包 exe 前在 `please_read_me.py` **手动**修改。
+- 完整流程说明：同文件中的 `UPLOAD_WORKFLOW` 常量，或 `python please_read_me.py` 打印帮助。
+
+### GitHub 上传（仓库根目录）
+
+```bash
+python github_upload_module.py              # 默认 patch：1.8.1 → 1.8.2
+python github_upload_module.py --minor        # 大改动：1.8.1 → 1.9.0
+python github_upload_module.py --no-bump    # 提交推送但不改 _VERSION
+```
+
+上传前脚本会根据改动在 `please_read_me.py` **底部**生成临时总结块，commit 消息读取该块（`v版本: 标题` + 列表）；**push 成功后**自动删除总结块。失败则保留总结便于重试。
 
 ### 安装依赖
 

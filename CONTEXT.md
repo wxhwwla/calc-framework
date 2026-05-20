@@ -37,3 +37,4 @@
 | **Python 包目录** | `endfield_damage_calculator/`（`main.py`、`tests/`、`pip install -e` 的工作目录） |
 | **打包路径** | PyInstaller 下通过 `utils.path_utils.get_resource_path` 解析 bundled 数据 |
 | **右侧乘区** | GUI 第三列，展示防御减伤、能力乘区与最终攻击力；**总伤结算**仍为后续产品功能 |
+| **上传流程** | 根目录 `github_upload_module.py`；`_VERSION` 自动 bump；说明见 `please_read_me.UPLOAD_WORKFLOW` |

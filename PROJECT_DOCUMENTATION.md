@@ -319,12 +319,17 @@ pip install -e .
 
 ### Git 推送（仓库根目录）
 
-使用 `github_upload_module.py` / `github_download_module.py`，**默认 SSH**（`git@github.com:wxhwwla/endfield_damage_calculator_2.0.git`）。需在本机配置 SSH 公钥；勿将 Token 写入 `git remote` 或 `git_key.txt`。
+使用 `github_upload_module.py` / `github_download_module.py`，**默认 SSH**。勿将 Token 写入 `git remote`。
 
-```bash
-# 仓库根目录
-python github_upload_module.py
-```
+**版本与提交说明（必读）**：见 `endfield_damage_calculator/please_read_me.py` 内 `UPLOAD_WORKFLOW`（`python endfield_damage_calculator/please_read_me.py` 可打印）。
+
+| 命令 | 作用 |
+|------|------|
+| `python github_upload_module.py` | 有业务改动时默认 patch +1，交互可选 minor |
+| `python github_upload_module.py --minor` | 第二位 +1（新武器 JSON、新乘区等） |
+| `python github_upload_module.py --no-bump` | 推送但不改 `_VERSION` |
+
+流程摘要：自动生成底部 `UPLOAD_SUMMARY` → bump `_VERSION`（可选）→ 单 commit → push 成功则删除总结块；`_EXE_VERSION` 仅打包前手改。
 
 ### 文件配置
 

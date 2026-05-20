@@ -3,27 +3,29 @@
 """
 将本仓库推送到 GitHub（仓库根目录运行，与脚本同目录）。
 
-认证方式（推荐）：
-    SSH — remote 为 git@github.com:...，需已配置 ~/.ssh 并添加公钥到 GitHub。
-    勿再把 Personal Access Token 写入 remote URL 或 git_key.txt。
+认证：SSH（git@github.com:...），勿将 Token 写入 remote URL。
 
 用法:
-    python github_upload_module.py
+    python github_upload_module.py              # 默认 patch +1，交互可选 minor
+    python github_upload_module.py --minor      # 第二位 +1（新武器/新乘区等）
+    python github_upload_module.py --no-bump    # 提交并推送，但不改 _VERSION
+
+版本与提交说明流程详见 endfield_damage_calculator/please_read_me.py 中的 UPLOAD_WORKFLOW。
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import subprocess
 import sys
 from datetime import datetime
-from typing import Any, Tuple
+from pathlib import Path
+from typing import Any, List, Optional, Tuple
 
 # ===== 配置区 =====
-# 默认 SSH 地址；若已在仓库内配置 origin，优先使用 origin
 DEFAULT_REMOTE_SSH = "git@github.com:wxhwwla/endfield_damage_calculator_2.0.git"
-# 仅当无法使用 SSH、且必须用 HTTPS+Token 时改为 "https_token"（不推荐）
 AUTH_MODE = "ssh"
 REMOTE_HTTPS = "https://github.com/wxhwwla/endfield_damage_calculator_2.0.git"
 KEY_FILE = "git_key.txt"
@@ -40,6 +42,19 @@ _TOKEN_IN_REMOTE = re.compile(
     r"https://[^@\s]+@github\.com/",
     re.IGNORECASE,
 )
+
+
+def _package_path() -> Path:
+    return Path(_repo_root()) / TARGET_DIR
+
+
+def _import_upload_meta():
+    pkg = str(_package_path())
+    if pkg not in sys.path:
+        sys.path.insert(0, pkg)
+    import upload_meta  # noqa: E402
+
+    return upload_meta
 
 
 def _decode_output(output: Any) -> str:
@@ -96,7 +111,6 @@ def _repo_root() -> str:
 
 
 def _origin_remote_url() -> str | None:
-    """读取当前仓库 origin；不存在或非 git 仓库时返回 None。"""
     if not os.path.isdir(os.path.join(_repo_root(), ".git")):
         return None
     code, url, _ = run_git(
@@ -133,11 +147,10 @@ def _remote_url() -> str:
 
 def _warn_if_remote_has_embedded_token(stdout: str) -> None:
     if _TOKEN_IN_REMOTE.search(stdout):
-        print("[警告] 检测到 origin 含嵌入 Token 的 HTTPS 地址，将改为 SSH/新地址（请已在 GitHub 撤销旧 Token）")
+        print("[警告] 检测到 origin 含嵌入 Token 的 HTTPS 地址，将改为 SSH/新地址")
 
 
 def _ensure_gitignore(repo_dir: str) -> None:
-    """补全根目录 .gitignore 条目（不覆盖已有文件）。"""
     path = os.path.join(repo_dir, ".gitignore")
     wanted = [
         KEY_FILE,
@@ -184,7 +197,6 @@ def setup_git_repo() -> str:
         )
         if code != 1 or "successfully authenticated" not in (out + err).lower():
             print("[警告] SSH 连通性未确认，若推送失败请检查 ~/.ssh 与 GitHub SSH keys")
-            print("        22 端口被拦时可配置 Host github.com → ssh.github.com:443")
 
     _ensure_gitignore(script_dir)
 
@@ -270,7 +282,80 @@ def sync_with_remote() -> bool:
     return pull_ok
 
 
-def commit_and_push() -> None:
+def _porcelain_paths(porcelain: str) -> List[str]:
+    paths: List[str] = []
+    for line in porcelain.splitlines():
+        if len(line) < 4:
+            continue
+        rest = line[3:].strip()
+        if " -> " in rest:
+            rest = rest.split(" -> ")[-1].strip()
+        if rest:
+            paths.append(rest)
+    return paths
+
+
+def _collect_change_paths() -> List[str]:
+    _, porcelain, _ = run_git(["status", "--porcelain"], capture_output=True)
+    paths = _porcelain_paths(porcelain)
+    _, diff_unstaged, _ = run_git(["diff", "--name-only"], check=False, capture_output=True)
+    _, diff_staged, _ = run_git(["diff", "--cached", "--name-only"], check=False, capture_output=True)
+    for chunk in (diff_unstaged, diff_staged):
+        for line in chunk.splitlines():
+            p = line.strip()
+            if p:
+                paths.append(p)
+    return paths
+
+
+def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> Optional[str]:
+    if no_bump:
+        return None
+    if minor_flag:
+        return "minor"
+    if sys.stdin.isatty():
+        print("版本升级: [P]atch 第三位+1 (回车默认) / [M]inor 第二位+1")
+        choice = input("> ").strip().lower()
+        if choice in ("m", "minor"):
+            return "minor"
+        return "patch"
+    return "patch"
+
+
+def _commit_with_message(message: str) -> None:
+    msg_path = os.path.join(_repo_root(), ".git-upload-msg.txt")
+    with open(msg_path, "w", encoding="utf-8") as f:
+        f.write(message)
+        f.write("\n")
+    try:
+        run_git(["commit", "-F", msg_path])
+    finally:
+        if os.path.isfile(msg_path):
+            os.remove(msg_path)
+
+
+def _push_to_remote() -> bool:
+    push_args = ["push", "origin", DEFAULT_BRANCH]
+    if FORCE_PUSH:
+        push_args.append("--force-with-lease")
+        print("[警告] 使用 --force-with-lease 推送")
+    print("[信息] git push ...")
+    try:
+        run_git(push_args, timeout=300)
+        print("[成功] 推送完成")
+        return True
+    except subprocess.CalledProcessError:
+        if SKIP_PULL:
+            print("[错误] 推送失败；可稍后重试，或使用 --no-bump 仅补推")
+            raise
+        print("[信息] 推送失败，尝试 pull --rebase 后重试")
+        run_git(["pull", "--rebase", "origin", DEFAULT_BRANCH], timeout=300)
+        run_git(push_args, timeout=300)
+        print("[成功] 推送完成")
+        return True
+
+
+def commit_and_push(*, minor: bool = False, no_bump: bool = False) -> None:
     os.chdir(_repo_root())
     target_path = os.path.join(".", TARGET_DIR)
     if not os.path.isdir(target_path):
@@ -279,6 +364,9 @@ def commit_and_push() -> None:
     if not any(os.scandir(target_path)):
         print(f"[错误] 目录为空: {TARGET_DIR}")
         sys.exit(1)
+
+    meta = _import_upload_meta()
+    readme_path = meta.please_read_me_path(_package_path())
 
     _, remote_heads, _ = run_git(
         ["ls-remote", "--heads", "origin", DEFAULT_BRANCH],
@@ -297,41 +385,89 @@ def commit_and_push() -> None:
         if code == 0 and ahead.strip().isdigit():
             has_unpushed = int(ahead.strip()) > 0
             if has_unpushed:
-                print(f"[信息] 已有 {ahead.strip()} 个提交未推送")
+                print(f"[信息] 已有 {ahead.strip()} 个提交未推送（不 bump 版本）")
+
+    created_commit = False
+    push_succeeded = False
 
     if not has_unpushed:
-        print("[信息] git add .")
-        run_git(["add", "."])
+        change_paths = _collect_change_paths()
+        business = meta.classify_changed_paths(change_paths, TARGET_DIR)
+
         _, porcelain, _ = run_git(["status", "--porcelain"], capture_output=True)
         if not porcelain.strip():
             print("[信息] 无新更改，无需提交")
             if remote_exists:
                 print("[完成] 与远程一致")
             return
-        msg = f"Update {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        print(f"[信息] git commit: {msg}")
-        run_git(["commit", "-m", msg])
 
-    push_args = ["push", "origin", DEFAULT_BRANCH]
-    if FORCE_PUSH:
-        push_args.append("--force-with-lease")
-        print("[警告] 使用 --force-with-lease 推送")
+        if not business:
+            print("[信息] 仅 please_read_me.py 有改动，视为非业务提交，不 bump 版本")
+            no_bump = True
 
-    print("[信息] git push ...")
+        version_for_msg = meta.read_version(readme_path)
+        if business and not no_bump:
+            kind = _ask_bump_kind(minor_flag=minor, no_bump=False)
+            current = meta.read_version(readme_path)
+            if kind == "minor":
+                version_for_msg = meta.bump_minor(current)
+                print(f"[信息] 版本 minor: {current} → {version_for_msg}")
+            else:
+                version_for_msg = meta.bump_patch(current)
+                print(f"[信息] 版本 patch: {current} → {version_for_msg}")
+            meta.write_version(readme_path, version_for_msg)
+
+        title, bullets = meta.summarize_changes(change_paths)
+        meta.write_summary_block(readme_path, title, bullets)
+        print(f"[信息] 已写入上传总结至 {readme_path.name} 底部")
+
+        print("[信息] git add .")
+        run_git(["add", "."])
+
+        title_read, bullets_read = meta.read_summary_for_commit(readme_path)
+        commit_msg = meta.build_commit_message(version_for_msg, title_read, bullets_read)
+        print(f"[信息] git commit:\n{commit_msg.splitlines()[0]} ...")
+        _commit_with_message(commit_msg)
+        created_commit = True
+    else:
+        print("[信息] 跳过新版本 commit，仅推送已有提交")
+
     try:
-        run_git(push_args, timeout=300)
-        print("[成功] 推送完成")
+        push_succeeded = _push_to_remote()
     except subprocess.CalledProcessError:
-        if SKIP_PULL:
-            print("[错误] 推送失败；可尝试 SKIP_PULL=False 先拉取，或检查 SSH/权限")
-            raise
-        print("[信息] 推送失败，尝试 pull --rebase 后重试")
-        run_git(["pull", "--rebase", "origin", DEFAULT_BRANCH], timeout=300)
-        run_git(push_args, timeout=300)
-        print("[成功] 推送完成")
+        push_succeeded = False
+        print("[警告] 推送未成功；please_read_me 底部总结块已保留，版本未回滚")
+        raise
+
+    if push_succeeded and created_commit:
+        meta.remove_summary_block(readme_path)
+        print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
+        print(f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}（_EXE_VERSION 请打包前自行修改）")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="推送本仓库到 GitHub（SSH），并按规则更新 _VERSION。",
+    )
+    parser.add_argument(
+        "--minor",
+        action="store_true",
+        help="第二位版本 +1、第三位归零（新武器/新乘区等）",
+    )
+    parser.add_argument(
+        "--no-bump",
+        action="store_true",
+        help="本次有业务改动也不递增 _VERSION",
+    )
+    return parser.parse_args()
 
 
 def main() -> None:
+    args = parse_args()
+    if args.minor and args.no_bump:
+        print("[错误] --minor 与 --no-bump 不能同时使用")
+        sys.exit(1)
+
     print("=" * 60)
     print("GitHub 上传脚本（SSH）")
     print("=" * 60)
@@ -340,7 +476,7 @@ def main() -> None:
         if not sync_with_remote():
             print("[中止] 同步远程失败，未推送")
             sys.exit(1)
-        commit_and_push()
+        commit_and_push(minor=args.minor, no_bump=args.no_bump)
         print("=" * 60)
         print("[完成]")
         print("=" * 60)
