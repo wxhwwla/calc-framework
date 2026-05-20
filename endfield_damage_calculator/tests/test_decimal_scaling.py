@@ -79,12 +79,11 @@ def test_inverse_formula_decimal_fitting():
     """测试小数数据反推公式"""
     data = [3.0, 5.4, 7.8, 10.2, 12.6, 15.0, 17.4, 19.8, 23.4]
     base, growth, divisor, offset, special = fit_skill_formula_no_special(data)
-    
+
     assert base == 3.0, f"base错误: {base} != 3.0"
+    # 该数据无法用单一公式拟合，第9级作为special值
     assert special == [23.4], f"special错误: {special} != [23.4]"
-    
-    # 验证反推参数计算结果是否正确
-    # 反推算法返回的参数已经是还原后的值，可以直接用于计算
+
     result = calculate_bonus_attribute(base, growth, divisor, offset, special, max_level=9)
     assert result == data, f"反推参数计算结果不匹配: {result} != {data}"
     print(f"✓ 小数数据反推公式测试通过 (参数: base={base}, growth={growth}, divisor={divisor}, offset={offset})")

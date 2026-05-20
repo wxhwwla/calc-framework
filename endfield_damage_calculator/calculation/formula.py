@@ -184,11 +184,11 @@ def calculate_bonus_attribute(
                      isinstance(offset, float) or \
                      (special is not None and any(isinstance(x, float) for x in special))
 
-    # 小数数据：乘10处理
+    # 小数数据：乘10处理（使用round确保浮点数精度）
     scale_factor = 10 if is_decimal else 1
-    scaled_base = base * scale_factor
-    scaled_growth = growth * scale_factor
-    scaled_offset = offset * scale_factor
+    scaled_base = round(base * scale_factor)
+    scaled_growth = round(growth * scale_factor)
+    scaled_offset = round(offset * scale_factor)
 
     # 前8级用公式计算
     curve = []
@@ -198,11 +198,12 @@ def calculate_bonus_attribute(
         # 小数数据：除10还原
         curve.append(round(calculated / scale_factor, 1))
 
-    # 如果有特殊值，第9级使用特殊值
+    # 如果max_level>=9，需要计算第9级
     if max_level >= 9:
         if special and len(special) > 0:
             curve.append(round(special[0], 1))
         else:
+            # 计算第9级（lv=9对应索引8）
             calculated = scaled_base + math.floor((scaled_growth * 8 + scaled_offset) / divisor)
             curve.append(round(calculated / scale_factor, 1))
 

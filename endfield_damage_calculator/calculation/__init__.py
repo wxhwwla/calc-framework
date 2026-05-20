@@ -8,8 +8,26 @@
 包含：
 - 正向计算公式（通用成长曲线计算）
 - 反向推导公式（通过数据反推公式参数）
+- 数据生成器（角色/武器属性生成）
 - 伤害乘区计算（乘法区伤害计算）
 """
+
+# 配置模块
+from calculation.config import (
+    CHARACTER_NORMAL_ATTRS,
+    CHARACTER_SKILL_ATTRS,
+    WEAPON_BASE_ATTRS,
+    WEAPON_BONUS_ATTR_SUFFIX,
+    DEFAULT_GROWTH_PARAMS,
+    get_default_growth_params,
+    get_attribute_category,
+    is_character_attribute,
+    is_weapon_attribute,
+    is_weapon_base_attribute,
+    is_weapon_bonus_attribute,
+    is_skill_attribute,
+    validate_growth_params,
+)
 
 # 正向计算公式
 from calculation.formula import (
@@ -20,6 +38,13 @@ from calculation.formula import (
     calculate_growth_curve,
     calculate_skill_curve,
     calculate_bonus_attribute,
+)
+
+# 数据生成器
+from calculation.data_generator import (
+    generate_attributes,
+    generate_character_attributes,
+    generate_weapon_attributes,
 )
 
 # 反向推导公式
@@ -53,6 +78,21 @@ from calculation.multiplicative_zones import (
 )
 
 __all__ = [
+    # 配置常量
+    "CHARACTER_NORMAL_ATTRS",
+    "CHARACTER_SKILL_ATTRS",
+    "WEAPON_BASE_ATTRS",
+    "WEAPON_BONUS_ATTR_SUFFIX",
+    "DEFAULT_GROWTH_PARAMS",
+    # 配置函数
+    "get_default_growth_params",
+    "get_attribute_category",
+    "is_character_attribute",
+    "is_weapon_attribute",
+    "is_weapon_base_attribute",
+    "is_weapon_bonus_attribute",
+    "is_skill_attribute",
+    "validate_growth_params",
     # 常量
     "levels",
     "talent",
@@ -62,6 +102,10 @@ __all__ = [
     "calculate_growth_curve",
     "calculate_skill_curve",
     "calculate_bonus_attribute",
+    # 数据生成器
+    "generate_attributes",
+    "generate_character_attributes",
+    "generate_weapon_attributes",
     # 反向推导
     "remove_duplicates",
     "fit_attribute_formula",

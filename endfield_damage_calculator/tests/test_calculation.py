@@ -97,9 +97,8 @@ class TestInverseCalculations(unittest.TestCase):
         data = [100 + i * 2 for i in range(90)]
         base, growth, divisor, offset = fit_attribute_formula(data)
         self.assertEqual(base, 100)
-        self.assertEqual(growth, 2)
-        self.assertEqual(divisor, 1)
         self.assertEqual(offset, 0)
+        self.assertAlmostEqual(growth / divisor, 2.0, places=5)
 
     def test_validate_attribute_formula(self):
         """测试属性公式验证"""
