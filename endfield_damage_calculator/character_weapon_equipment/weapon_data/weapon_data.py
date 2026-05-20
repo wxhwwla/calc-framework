@@ -9,6 +9,11 @@
     通过配置驱动的方式，武器数据（包括成长参数）存储在 JSON 文件中，
     添加新武器时只需修改 JSON 配置文件，无需修改代码。
 
+运行时数据入口：
+    GUI / 计算 / 测试应使用 ``data.loader.get_weapons()``。
+    本模块的 ``process_weapon_data`` / ``load_and_process_weapons`` 仅供
+    ``add_weapon`` / ``scripts/seed_weapons`` 在写入 JSON 前规范化结构，不是运行时加载路径。
+
 武器数据结构（JSON格式）：
 {
     "名称": str,           # 武器名称

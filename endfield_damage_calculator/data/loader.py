@@ -6,6 +6,11 @@
 此模块提供角色和武器数据的统一加载接口，支持数据缓存机制，
 避免重复读取文件。同时支持数据类型元数据管理，确保数据的双向一致性。
 
+运行时约定（GUI、计算、测试）：
+- 仅通过 ``get_characters()`` / ``get_weapons()`` 读取数据；
+- JSON 中应包含完整的等级曲线与属性列表（预烘焙数据）；
+- ``character_data.process_*`` / ``weapon_data.process_*`` 仅供录入脚本补全缺省字段，非运行时入口。
+
 主要功能：
 1. 加载 JSON 数据文件
 2. 提供角色和武器数据的获取接口（带缓存）
@@ -123,6 +128,20 @@ def get_weapons() -> List[Dict[str, Any]]:
     if _weapons is None:
         _weapons = load_json_file(WEAPONS_JSON_PATH, strict=True)
     return _weapons
+
+
+def preload_game_data() -> None:
+    """预加载角色与武器数据到缓存；失败时抛出 DataLoadError。"""
+    get_characters()
+    get_weapons()
+
+
+def fetch_game_data_for_gui() -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], Optional[DataLoadError]]:
+    """供 GUI 加载角色/武器列表；失败时返回空列表与错误对象（不抛异常）。"""
+    try:
+        return get_characters(), get_weapons(), None
+    except DataLoadError as exc:
+        return [], [], exc
 
 
 def reload_characters() -> None:

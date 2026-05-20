@@ -28,9 +28,7 @@ endfield_damage_calculator/终末地伤害计算器.exe
 # 日志
 debug.log
 
-# IDE 上传模块
-github_upload_module.py
-github_download_module.py
+# 勿提交 Token 明文
 git_key.txt
 
 # 压缩文件

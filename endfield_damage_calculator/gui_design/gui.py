@@ -21,16 +21,14 @@ GUI 主应用模块
 
 # 导入必要的模块
 import customtkinter as ctk  # CustomTkinter GUI 库
+from tkinter import messagebox
 from typing import Optional, List, Dict, Any   # 类型提示支持
 from gui_design.gui_tools import (  # GUI 工具组件导入
     gui_settings,              # GUI 设置初始化函数
     confirm_selection,         # 确认选择并展示属性的函数
     ChooseTypesStarsNamesLevels  # 选择面板类
 )
-from data.loader import (      # 数据加载模块导入
-    get_characters,            # 获取角色数据函数
-    get_weapons                # 获取武器数据函数
-)
+from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
 from please_read_me import get_exe_version  # EXE版本号
 
 
@@ -278,15 +276,19 @@ class DamageCalculatorApp:
         4. 创建武器选择面板实例（放在武器框架的第一行）
         5. 设置角色选择变化时的回调
         """
-        # 获取角色数据（如果为空则使用空列表）
-        characters = get_characters()
-        if not characters:
-            characters = []
-
-        # 获取武器数据（如果为空则使用空列表）
-        weapons = get_weapons()
-        if not weapons:
-            weapons = []
+        characters, weapons, load_error = fetch_game_data_for_gui()
+        if load_error is not None:
+            messagebox.showerror(
+                "游戏数据加载失败",
+                f"{load_error}\n\n请确认程序目录下角色/武器 JSON 文件完整且格式正确。",
+                parent=self.app,
+            )
+        if not characters and not weapons:
+            messagebox.showwarning(
+                "游戏数据为空",
+                "未加载到任何角色或武器条目，界面将无法选择配装。",
+                parent=self.app,
+            )
         
         # 保存所有武器数据
         self.all_weapons = weapons

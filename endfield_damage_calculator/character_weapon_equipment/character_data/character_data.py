@@ -9,6 +9,11 @@
     通过配置驱动的方式，角色数据（包括成长参数）存储在 JSON 文件中，
     添加新角色时只需修改 JSON 配置文件，无需修改代码。
 
+运行时数据入口：
+    GUI / 计算 / 测试应使用 ``data.loader.get_characters()``。
+    本模块的 ``process_character_data`` / ``load_and_process_characters`` 仅供
+    ``add_character`` 等录入脚本在写入 JSON 前补全缺省字段，不是运行时加载路径。
+
 角色数据结构（JSON格式）：
 {
     "名称": str,           # 角色名称

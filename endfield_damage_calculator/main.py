@@ -39,12 +39,11 @@ import time
 def preload_data():
     """预加载角色/武器 JSON 到 data.loader 缓存（后台线程）。"""
     try:
-        from data.loader import get_characters, get_weapons
+        from data.loader import preload_game_data
 
-        get_characters()
-        get_weapons()
+        preload_game_data()
     except Exception as exc:
-        # 启动阶段仅预加载；失败时记录日志，主界面仍可打开
+        # 启动阶段仅预加载；GUI 打开面板时会再次加载并弹窗提示
         import logging
 
         logging.getLogger(__name__).warning("预加载游戏数据失败: %s", exc)
