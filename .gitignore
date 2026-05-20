@@ -21,6 +21,9 @@ __pycache__/
 build/
 dist/
 *.spec
+*.exe
+终末地伤害计算器.exe
+endfield_damage_calculator/终末地伤害计算器.exe
 
 # 日志
 debug.log

@@ -35,7 +35,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from calculation.formula import (
     levels, talent
 )
-from data.loader import check_and_save_weapons as check_json_to_save
 
 
 def load_weapons_from_json(file_path: str) -> list:
@@ -112,9 +111,3 @@ def load_and_process_weapons(json_path: str | None = None) -> list:
     raw_weapons = load_weapons_from_json(json_path)
     return [process_weapon_data(weapon) for weapon in raw_weapons]
 
-
-# 加载武器数据（模块加载时自动执行）
-weapons = load_and_process_weapons()
-
-# 保存到 JSON（如果需要）
-check_json_to_save(weapons)

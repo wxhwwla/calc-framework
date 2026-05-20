@@ -30,7 +30,7 @@ def check_pyinstaller() -> bool:
 
 
 def build_exe():
-    """使用PyInstaller构建可执行文件"""
+    """使用PyInstaller构建可执行文件（单文件模式）"""
     project_root = Path(__file__).parent
     
     # 定义PyInstaller参数
@@ -52,9 +52,10 @@ def build_exe():
     for item in excludes:
         exclude_args.extend(['--exclude-module', item])
     
+    # 使用 --onefile 模式，将所有依赖打包进单个 exe 文件
     args = [
         sys.executable, "-m", "PyInstaller",
-        "--onedir",
+        "--onefile",
         "--windowed",
         "--noconfirm",
         "--name=终末地伤害计算器",

@@ -48,7 +48,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from calculation.formula import levels, talent, trust, trust_add
 from .formula import generate_character_attributes, DEFAULT_GROWTH_PARAMS
-from data.loader import check_and_save_characters as check_json_to_save
 
 
 def load_characters_from_json(file_path: str) -> list:
@@ -143,38 +142,32 @@ def load_and_process_characters(json_path: str | None = None) -> list:
     return [process_character_data(char) for char in raw_characters]
 
 
-# ==================== 旧版兼容性代码 ====================
-# 保持向后兼容，旧代码可以继续使用 char_g_l_y 变量
-# 新代码应使用 load_and_process_characters()
-
-# 加载角色数据
-characters = load_and_process_characters()
-
-# 为了向后兼容，创建 char_g_l_y 变量（第一个角色）
-char_g_l_y = characters[0] if characters else {
-    "名称": "管理员",
-    "类型": "近卫",
-    "星级": 6,
-    "等级": levels,
-    "潜能": talent,
-    "力量": [],
-    "敏捷": [],
-    "智识": [],
-    "意志": [],
-    "主能力": "敏捷",
-    "副能力": "力量",
-    "信赖": trust,
-    "信赖加成": trust_add,
-    "基础攻击力": [],
-    "战技倍率": [],
-    "连携技倍率": [],
-    "终结技倍率": [],
-    "战技倍率1": [],
-    "连携技倍率1": [],
-    "连携技倍率2": [],
-    "终结技倍率1": [],
-    "终结技倍率2": [],
-}
-
-# 保存到 JSON（如果需要）
-check_json_to_save(characters)
+def get_legacy_sample_character() -> dict:
+    """返回占位角色数据（仅供旧脚本显式调用，导入本模块时不再自动加载）。"""
+    loaded = load_and_process_characters()
+    if loaded:
+        return loaded[0]
+    return {
+        "名称": "管理员",
+        "类型": "近卫",
+        "星级": 6,
+        "等级": levels,
+        "潜能": talent,
+        "力量": [],
+        "敏捷": [],
+        "智识": [],
+        "意志": [],
+        "主能力": "敏捷",
+        "副能力": "力量",
+        "信赖": trust,
+        "信赖加成": trust_add,
+        "基础攻击力": [],
+        "战技倍率": [],
+        "连携技倍率": [],
+        "终结技倍率": [],
+        "战技倍率1": [],
+        "连携技倍率1": [],
+        "连携技倍率2": [],
+        "终结技倍率1": [],
+        "终结技倍率2": [],
+    }

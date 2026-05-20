@@ -356,7 +356,7 @@ if __name__ == "__main__":
 # | **测试缓存** | `.pytest_cache/` |
 # | **构建输出** | `build/`, `dist/`, `*.spec` |
 # | **日志** | `debug.log` |
-# | **IDE 上传模块** | `github_upload_module.py`, `github_download_module.py`, `git_key.txt` |
+# | **IDE 上传模块** | `github_upload_module.py`, `github_download_module.py`（SSH，勿提交 Token） |
 # | **压缩文件** | `*.zip` |
 
 # **移除内容：**

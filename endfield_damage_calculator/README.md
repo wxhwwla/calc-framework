@@ -86,7 +86,17 @@ endfield_damage_calculator/
 ### 安装依赖
 
 ```bash
-pip install customtkinter>=5.2.2
+cd endfield_damage_calculator
+pip install -e ".[dev]"
+```
+
+（`[dev]` 含 pytest，用于运行测试；仅使用 GUI 时可 `pip install -e .`。）
+
+### 运行测试
+
+```bash
+cd endfield_damage_calculator
+python -m pytest tests/ -q
 ```
 
 ### 运行项目
@@ -101,6 +111,8 @@ python main.py
 pip install setuptools wheel pyinstaller
 python build.py
 ```
+
+打包产物为 `dist/终末地伤害计算器.exe`（已加入 `.gitignore`，请勿提交到 Git）。
 
 ---
 

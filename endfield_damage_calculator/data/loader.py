@@ -23,9 +23,21 @@
 - 武器数据：character_weapon_equipment/weapon_data/weapons.json
 """
 import json
+import logging
 import re
 from typing import List, Dict, Any, Optional, Tuple, Union
 from utils.path_utils import get_resource_path
+
+logger = logging.getLogger(__name__)
+
+
+class DataLoadError(Exception):
+    """游戏数据 JSON 加载失败"""
+
+    def __init__(self, filepath: str, reason: str):
+        self.filepath = filepath
+        self.reason = reason
+        super().__init__(f"无法加载 {filepath}: {reason}")
 
 # 数据类型标识
 DATA_TYPE_INTEGER = 'integer'
@@ -45,26 +57,47 @@ CHARACTERS_JSON_PATH: str = "character_weapon_equipment/character_data/character
 WEAPONS_JSON_PATH: str = "character_weapon_equipment/weapon_data/weapons.json"
 
 
-def load_json_file(filepath: str) -> List[Dict[str, Any]]:
+def load_json_file(filepath: str, *, strict: bool = False) -> List[Dict[str, Any]]:
     """加载 JSON 文件并返回数据列表
 
     Args:
         filepath: 相对于项目根目录的路径
+        strict: 为 True 时，文件缺失或解析失败会抛出 DataLoadError
 
     Returns:
-        JSON 数据列表，如果文件不存在或解析失败返回空列表
+        JSON 数据列表；非 strict 模式下失败时返回空列表并记录警告
     """
+    full_path = get_resource_path(filepath)
     try:
-        full_path = get_resource_path(filepath)
         if not full_path.exists():
+            msg = f"文件不存在: {full_path}"
+            logger.warning(msg)
+            if strict:
+                raise DataLoadError(filepath, msg)
             return []
 
-        with open(full_path, 'r', encoding='utf-8') as f:
+        with open(full_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return data if isinstance(data, list) else []
-    except json.JSONDecodeError:
+        if not isinstance(data, list):
+            msg = "根节点必须是 JSON 数组"
+            logger.error("%s — %s", filepath, msg)
+            if strict:
+                raise DataLoadError(filepath, msg)
+            return []
+        return data
+    except json.JSONDecodeError as exc:
+        msg = f"JSON 解析失败: {exc}"
+        logger.error("%s — %s", filepath, msg)
+        if strict:
+            raise DataLoadError(filepath, msg) from exc
         return []
-    except Exception:
+    except DataLoadError:
+        raise
+    except Exception as exc:
+        msg = str(exc)
+        logger.error("%s — %s", filepath, msg)
+        if strict:
+            raise DataLoadError(filepath, msg) from exc
         return []
 
 
@@ -76,7 +109,7 @@ def get_characters() -> List[Dict[str, Any]]:
     """
     global _characters
     if _characters is None:
-        _characters = load_json_file(CHARACTERS_JSON_PATH)
+        _characters = load_json_file(CHARACTERS_JSON_PATH, strict=True)
     return _characters
 
 
@@ -88,7 +121,7 @@ def get_weapons() -> List[Dict[str, Any]]:
     """
     global _weapons
     if _weapons is None:
-        _weapons = load_json_file(WEAPONS_JSON_PATH)
+        _weapons = load_json_file(WEAPONS_JSON_PATH, strict=True)
     return _weapons
 
 

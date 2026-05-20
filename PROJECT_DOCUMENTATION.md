@@ -315,17 +315,19 @@ pip install -e .
 
 ## 配置说明
 
-### 环境变量
+### Git 推送（仓库根目录）
 
-| 变量名 | 作用 | 默认值 |
-|--------|------|--------|
-| `GIT_USERNAME` | GitHub 用户名（用于上传脚本） | wxhwwla |
+使用 `github_upload_module.py` / `github_download_module.py`，**默认 SSH**（`git@github.com:wxhwwla/endfield_damage_calculator_2.0.git`）。需在本机配置 SSH 公钥；勿将 Token 写入 `git remote` 或 `git_key.txt`。
+
+```bash
+# 仓库根目录
+python github_upload_module.py
+```
 
 ### 文件配置
 
 | 文件 | 说明 |
 |------|------|
-| `git_key.txt` | GitHub Token（用于上传脚本） | 需手动创建 |
 | `characters.json` | 角色数据存储 | 自动维护 |
 | `weapons.json` | 武器数据存储 | 自动维护 |
 

@@ -7,11 +7,16 @@ name = "endfield_damage_calculator"
 version = "1.0.0"
 description = "终末地伤害计算小工具"
 authors = [
-    { name = "Your Name", email = "your@email.com" }
+    { name = "wxhwwla", email = "wxhwwla@gmail.com" }
 ]
 requires-python = ">=3.10"
 dependencies = [
     "customtkinter>=5.2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
 ]
 
 [project.scripts]
