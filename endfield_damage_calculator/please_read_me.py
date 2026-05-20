@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.9.0"
+_VERSION = "1.9.1"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -55,6 +55,9 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    python github_upload_module.py
    python github_upload_module.py --minor
    python github_upload_module.py --no-bump
+
+完整操作指令（GUI、数据、测试、打包、GitHub、Cursor）见仓库根目录：
+   docs/操作指令集.md
 """
 # ==============================================================
 
