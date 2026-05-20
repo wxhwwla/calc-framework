@@ -4,10 +4,7 @@
 重构后的反向计算公式单元测试
 """
 
-import sys
-import os
 from typing import cast, Tuple
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
 from calculation.inverse import (

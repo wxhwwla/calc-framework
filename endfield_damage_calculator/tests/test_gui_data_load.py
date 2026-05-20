@@ -2,12 +2,8 @@
 # -*- coding: utf-8 -*-
 """GUI 数据加载失败时的用户提示测试"""
 
-import sys
 import unittest
-from pathlib import Path
 from unittest.mock import patch
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from data.loader import DataLoadError, fetch_game_data_for_gui
 

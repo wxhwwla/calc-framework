@@ -44,12 +44,8 @@
     }
 }
 """
-import sys
 import json
 from pathlib import Path
-
-# 添加路径以便导入公式模块
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from calculation.formula import levels, talent, trust, trust_add
 from .formula import generate_character_attributes, DEFAULT_GROWTH_PARAMS
@@ -145,34 +141,3 @@ def load_and_process_characters(json_path: str | None = None) -> list:
     
     raw_characters = load_characters_from_json(json_path)
     return [process_character_data(char) for char in raw_characters]
-
-
-def get_legacy_sample_character() -> dict:
-    """返回占位角色数据（仅供旧脚本显式调用，导入本模块时不再自动加载）。"""
-    loaded = load_and_process_characters()
-    if loaded:
-        return loaded[0]
-    return {
-        "名称": "管理员",
-        "类型": "近卫",
-        "星级": 6,
-        "等级": levels,
-        "潜能": talent,
-        "力量": [],
-        "敏捷": [],
-        "智识": [],
-        "意志": [],
-        "主能力": "敏捷",
-        "副能力": "力量",
-        "信赖": trust,
-        "信赖加成": trust_add,
-        "基础攻击力": [],
-        "战技倍率": [],
-        "连携技倍率": [],
-        "终结技倍率": [],
-        "战技倍率1": [],
-        "连携技倍率1": [],
-        "连携技倍率2": [],
-        "终结技倍率1": [],
-        "终结技倍率2": [],
-    }

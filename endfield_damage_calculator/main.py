@@ -13,7 +13,7 @@
 │   ├── selection_panel.py     # 选择面板类
 │   └── property_display.py    # 属性展示函数
 ├── calculation/               # 计算逻辑模块
-│   └── multiplicative_zone.py # 乘法区伤害计算
+│   └── multiplicative_zones/  # 乘区链（能力、防御、最终攻击力等）
 ├── data/                      # 统一数据加载层
 │   └── loader.py              # 角色和武器数据的统一加载与缓存
 ├── utils/                     # 工具函数模块
@@ -24,8 +24,8 @@
 
 功能说明：
 1. 提供角色和武器选择界面
-2. 显示选中角色/武器的属性
-3. 预留伤害计算区域（开发中）
+2. 显示选中角色/武器的属性与乘区数据（右侧）
+3. 完整敌人/技能总伤结算仍为后续产品功能
 
 使用方式：
     python main.py

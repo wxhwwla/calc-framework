@@ -4,11 +4,7 @@
 通用角色添加脚本（自动生成）
 """
 import json
-import sys
 from pathlib import Path
-
-# 添加项目根目录到模块搜索路径
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from calculation.formula import (
     calculate_growth_curve,

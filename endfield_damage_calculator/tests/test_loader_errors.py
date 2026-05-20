@@ -2,12 +2,8 @@
 # -*- coding: utf-8 -*-
 """data.loader 严格加载与错误类型测试"""
 
-import sys
 import unittest
-from pathlib import Path
 from unittest.mock import patch
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import data.loader as loader
 from data.loader import DataLoadError, load_json_file

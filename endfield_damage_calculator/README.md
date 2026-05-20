@@ -60,16 +60,14 @@ endfield_damage_calculator/
 │   ├── selection_panel.py     # 选择面板
 │   ├── selection_components.py # 选择组件
 │   └── property_display.py    # 属性展示
-├── scripts/                   # 辅助脚本
-│   └── inverse_cli.py         # 反推公式CLI工具
-├── tests/                     # 测试模块
-│   ├── test_calculation.py    # 计算模块测试
-│   ├── test_config.py         # 配置模块测试
-│   ├── test_data_generators.py # 数据生成器测试
-│   ├── test_decimal_scaling.py # 小数处理测试
-│   ├── test_inverse_gui.py    # 反推GUI测试
-│   ├── test_inverse_refactored.py # 反推重构测试
-│   └── test_unified_data_generator.py # 统一生成器测试
+├── scripts/                   # 辅助脚本（非 pytest）
+│   ├── inverse_cli.py         # 反推公式 CLI
+│   ├── inverse_formula_gui.py # 反推公式 GUI（维护用）
+│   └── seed_weapons.py        # 武器录入示例
+├── tests/                     # pytest 单元测试
+│   ├── test_calculation.py
+│   ├── test_game_data_contract.py
+│   └── ...
 └── utils/                     # 工具函数
     └── path_utils.py          # 路径处理工具
 ```
@@ -82,6 +80,10 @@ endfield_damage_calculator/
 
 - Python 3.10+
 - CustomTkinter 5.2.2+
+
+### 版本号
+
+仅在 `please_read_me.py` 修改 `_VERSION`（pip/包元数据）与 `_EXE_VERSION`（窗口标题与 exe）；`pyproject.toml` 通过 dynamic 自动读取 `_VERSION`。
 
 ### 安装依赖
 
@@ -137,9 +139,9 @@ python build.py
 
 ### 公式反推工具
 
-1. 运行反推GUI工具：
+1. 运行反推 GUI（需先 `pip install -e .`）：
 ```bash
-python tests/test_inverse_gui.py
+python scripts/inverse_formula_gui.py
 ```
 
 2. 输入数据格式：

@@ -9,10 +9,6 @@
 3. 百分比数据：移除%→按整数/小数处理
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from calculation.formula import (
     calculate_growth_curve,
     calculate_skill_curve,

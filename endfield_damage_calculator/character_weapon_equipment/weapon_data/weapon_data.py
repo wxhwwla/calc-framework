@@ -30,12 +30,8 @@
 - 未启用: [False]
 - 已启用: [True, "属性名称+", [等级1值, 等级2值, ...]]
 """
-import sys
 import json
 from pathlib import Path
-
-# 添加路径以便导入公式模块
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from calculation.formula import (
     levels, talent

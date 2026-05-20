@@ -15,11 +15,6 @@
 """
 
 import sys
-from pathlib import Path
-
-# 添加路径以便导入 calculation 模块
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from typing import Tuple, List
 from calculation.inverse import (
     fit_formula,

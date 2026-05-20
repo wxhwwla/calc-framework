@@ -2,11 +2,6 @@
 # -*- coding: utf-8 -*-
 """批量录入示例武器（与 add_weapon 库分离，避免 import 时执行）。"""
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 from character_weapon_equipment.weapon_data.add_weapon import add_weapon
 
 # 4 星武器示例配置（可按需增删）

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "endfield_damage_calculator"
-version = "1.0.0"
+dynamic = ["version"]
 description = "终末地伤害计算小工具"
 authors = [
     { name = "wxhwwla", email = "wxhwwla@gmail.com" }
@@ -21,6 +21,9 @@ dev = [
 
 [project.scripts]
 endfield-calculator = "main:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "please_read_me._VERSION" }
 
 [tool.setuptools]
 py-modules = ["main", "please_read_me", "build"]

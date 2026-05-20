@@ -3,11 +3,8 @@
 """characters.json / weapons.json 全库结构契约测试"""
 
 import json
-import sys
 import unittest
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from data.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH
 from utils.path_utils import get_resource_path

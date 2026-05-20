@@ -11,12 +11,8 @@ from __future__ import annotations
 
 import copy
 import json
-import sys
 from pathlib import Path
 from typing import Any
-
-# 添加项目根目录到路径，确保模块导入正确
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from calculation.formula import (
     calculate_growth_curve as calculate_weapon_attack,

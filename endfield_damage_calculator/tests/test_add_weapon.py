@@ -3,12 +3,9 @@
 """add_weapon 无副作用测试"""
 
 import copy
-import sys
 import tempfile
 import unittest
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from character_weapon_equipment.weapon_data.add_weapon import add_weapon
 
