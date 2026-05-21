@@ -20,12 +20,6 @@ _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
     re.MULTILINE,
 )
-_SUMMARY_BLOCK_PATTERN = re.compile(
-    rf"\n?{re.escape(SUMMARY_BEGIN)}.*?{re.escape(SUMMARY_END)}\n?",
-    re.DOTALL,
-)
-
-
 def please_read_me_path(package_root: Path | None = None) -> Path:
     """返回 please_read_me.py 路径。"""
     root = package_root or Path(__file__).resolve().parent
@@ -74,7 +68,15 @@ def bump_minor(version: str) -> str:
 
 
 def strip_summary_block(text: str) -> str:
-    return _SUMMARY_BLOCK_PATTERN.sub("\n", text).rstrip() + "\n"
+    """只删除文件末尾的上传总结块（避免误删 UPLOAD_WORKFLOW 文档里的同名说明文字）。"""
+    begin = text.rfind(SUMMARY_BEGIN)
+    if begin == -1:
+        return text.rstrip() + "\n"
+    end = text.find(SUMMARY_END, begin)
+    if end == -1:
+        return text.rstrip() + "\n"
+    end += len(SUMMARY_END)
+    return (text[:begin] + text[end:]).rstrip() + "\n"
 
 
 def write_summary_block(path: Path, title: str, bullets: List[str]) -> None:
@@ -101,8 +103,8 @@ def remove_summary_block(path: Path) -> None:
 def read_summary_for_commit(path: Path) -> Tuple[str, List[str]]:
     """解析底部总结块，返回 (title, bullet_lines)。"""
     text = path.read_text(encoding="utf-8")
-    begin = text.find(SUMMARY_BEGIN)
-    end = text.find(SUMMARY_END)
+    begin = text.rfind(SUMMARY_BEGIN)
+    end = text.find(SUMMARY_END, begin)
     if begin == -1 or end == -1:
         raise ValueError("please_read_me.py 中缺少 UPLOAD_SUMMARY 标记块")
     block = text[begin:end]

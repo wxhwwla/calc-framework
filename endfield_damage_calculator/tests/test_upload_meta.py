@@ -56,6 +56,27 @@ class TestUploadMeta(unittest.TestCase):
             self.assertNotIn(SUMMARY_BEGIN, text)
             self.assertNotIn(SUMMARY_END, text)
 
+    def test_strip_summary_keeps_workflow_doc_mention(self):
+        """删除末尾总结块时，不得截断 UPLOAD_WORKFLOW 字符串内的说明文字。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "please_read_me.py"
+            path.write_text(
+                f'UPLOAD_WORKFLOW = """\n'
+                f"说明 {SUMMARY_BEGIN} 标记\n"
+                f'"""\n'
+                f"def get_version():\n"
+                f'    return "1.0.0"\n'
+                f"\n{SUMMARY_BEGIN}\n"
+                f"# TITLE: t\n# BODY:\n# - a\n"
+                f"{SUMMARY_END}\n",
+                encoding="utf-8",
+            )
+            remove_summary_block(path)
+            text = path.read_text(encoding="utf-8")
+            self.assertIn('UPLOAD_WORKFLOW = """', text)
+            self.assertIn("def get_version():", text)
+            self.assertNotIn(SUMMARY_END, text)
+
     def test_write_version(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "please_read_me.py"
