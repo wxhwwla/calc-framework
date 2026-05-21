@@ -1,23 +1,38 @@
-# IDE 配置
+# IDE / 编辑器
 .idea/
 .trae/
+.vscode/
+*.swp
+*~
 
 # Skills 锁文件
 skills-lock.json
 
-# Python 缓存
+# Python 缓存与包元数据
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
 
 # 虚拟环境
 .venv/
+venv/
+env/
 
-# 测试缓存
+# 测试 / 覆盖率
 .pytest_cache/
+pytest-cache-files-*/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
 
-# 构建输出
+# 构建输出（PyInstaller）
 build/
 dist/
 *.spec
@@ -26,11 +41,25 @@ dist/
 endfield_damage_calculator/终末地伤害计算器.exe
 
 # 日志
+*.log
 debug.log
 
-# 勿提交 Token 明文
+# 环境与密钥（勿提交）
+.env
+.env.*
 git_key.txt
 
-# 压缩文件
+# 上传脚本临时文件
+.git-upload-msg.txt
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 压缩包
 *.zip
-.git/
+
+# 本地数据库（若将来使用）
+*.sqlite3
+*.db

@@ -155,17 +155,19 @@ def _ensure_gitignore(repo_dir: str) -> None:
     wanted = [
         KEY_FILE,
         "git_key.txt",
-        ".git/",
+        ".git-upload-msg.txt",
         "__pycache__/",
-        "*.pyc",
+        "*.py[cod]",
         ".venv/",
         "build/",
         "dist/",
         "*.spec",
         "*.exe",
         "终末地伤害计算器.exe",
+        "*.log",
         "debug.log",
         "skills-lock.json",
+        ".pytest_cache/",
     ]
     existing = ""
     if os.path.isfile(path):

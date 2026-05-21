@@ -41,7 +41,7 @@ _SEED_WEAPONS = [
             "growth": 6,
             "divisor": 2,
             "offset": 0,
-            "special": [45.0],
+            "special": [42.0],
         },
     },
     {
@@ -70,7 +70,7 @@ _SEED_WEAPONS = [
         "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
         "bonus_attrs": {
             "力量+": {"base": 12, "growth": 96, "divisor": 10, "offset": 0, "special": [93]},
-            "最大生命值+": {"base": 6, "growth": 9.6, "divisor": 2, "offset": 0, "special": [46.8]},
+            "最大生命值+": {"base": 3, "growth": 4.8, "divisor": 2, "offset": 0, "special": [23.4]},
         },
         "special_ability": {
             "enabled": True,
@@ -82,6 +82,89 @@ _SEED_WEAPONS = [
             "special": [33.6],
         },
     },
+    {
+        "name": "寻路者道标",
+        "weapon_type": "长柄武器",
+        "star": 4,
+        "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
+        "bonus_attrs": {
+            "敏捷+": {"base": 12, "growth": 96, "divisor": 10, "offset": 0, "special": [93]},
+            "攻击力+": {"base": 3, "growth": 4.8, "divisor": 2, "offset": 0, "special": [23.4]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "攻击力+",
+            "base": 15,
+            "growth": 6,
+            "divisor": 2,
+            "offset": 0,
+            "special": [42.0],
+        },
+    },
+    {
+        "name": "天使杀手",
+        "weapon_type": "长柄武器",
+        "star": 4,
+        "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
+        "bonus_attrs": {
+            "敏捷+": {"base": 12, "growth": 96, "divisor": 10, "offset": 0, "special": [93]},
+            "攻击力+": {"base": 3.3, "growth": 16, "divisor": 6, "offset": 0.4, "special": [26]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "攻击力+",
+            "base": 12,
+            "growth": 4.8,
+            "divisor": 2,
+            "offset": 0,
+            "special": [33.6],
+        },
+    },
+    {
+        "name": "长路",
+        "weapon_type": "手铳",
+        "star": 4,
+        "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
+        "bonus_attrs": {
+            "力量+": {"base": 12, "growth": 96, "divisor": 10, "offset": 0, "special": [93]},
+            "法术伤害+": {"base": 3.3, "growth": 16, "divisor": 6, "offset": 0.4, "special": [26]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "攻击力+",
+            "base": 12,
+            "growth": 4.8,
+            "divisor": 2,
+            "offset": 0,
+            "special": [33.6],
+        },
+    },
+    {
+        "name": "呼啸守卫",
+        "weapon_type": "手铳",
+        "star": 4,
+        "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
+        "bonus_attrs": {
+            "智识+": {"base": 12, "growth": 96, "divisor": 10, "offset": 0, "special": [93]},
+            "攻击力+": {"base": 3, "growth": 4.8, "divisor": 2, "offset": 0, "special": [23.4]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "攻击力+",
+            "base": 12,
+            "growth": 4.8,
+            "divisor": 2,
+            "offset": 0,
+            "special": [33.6],
+        },
+    },
+
+
+
+
+
+
+
 ]
 
 
