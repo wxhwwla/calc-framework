@@ -134,7 +134,7 @@ python build.py
 | 场景 | 入口 |
 |------|------|
 | GUI / 乘区计算 / pytest | `data.loader.get_characters()`、`get_weapons()` |
-| 录入新角色/武器 | `add_character.py`、`add_weapon.py` 或 `scripts/seed_weapons.py` |
+| 录入新角色/武器 | `scripts/seed_characters.py`、`scripts/seed_weapons.py` 或库函数 `add_character` / `add_weapon` |
 | JSON 内容 | 须含完整等级曲线；`process_*` 仅用于录入时补全缺省字段 |
 
 加载失败时 GUI 会弹窗提示；开发模式下 `strict=True` 会抛出 `DataLoadError`。
