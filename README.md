@@ -45,4 +45,5 @@ python github_upload_module.py
 
 ## 许可证
 
-MIT License
+**GPL-3.0 + 附加条款**（禁止商用；B 站充电等自愿创作者支持除外）。  
+全文见仓库根目录 [`LICENSE`](LICENSE)。

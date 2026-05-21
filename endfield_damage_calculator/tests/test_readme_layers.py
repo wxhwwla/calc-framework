@@ -15,6 +15,13 @@ class TestReadmeLayers(unittest.TestCase):
         text = _ROOT_README.read_text(encoding="utf-8")
         self.assertIn("endfield_damage_calculator/README.md", text)
         self.assertIn("docs/操作指令集.md", text)
+        self.assertIn("LICENSE", text)
+
+    def test_license_file_documents_gpl3_with_additional_terms(self):
+        text = (_REPO_ROOT / "LICENSE").read_text(encoding="utf-8")
+        self.assertIn("GPL-3.0", text)
+        self.assertIn("禁止商用", text)
+        self.assertIn("充电", text)
 
     def test_package_readme_links_back_to_root_docs(self):
         text = _PKG_README.read_text(encoding="utf-8")
