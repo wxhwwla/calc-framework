@@ -65,6 +65,8 @@ def calculate_ability_bonus(
     sa2_level: int = 1,
     sa3_name: str = "",
     sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
     trust_level: int = 0
 ) -> float:
     """
@@ -78,8 +80,10 @@ def calculate_ability_bonus(
         sa1_level: 第一个特殊能力等级（1-9）
         sa2_name: 第二个特殊能力名称（如物理伤害+）
         sa2_level: 第二个特殊能力等级（1-9）
-        sa3_name: 第三个特殊能力名称（如攻击力+）
-        sa3_level: 第三个特殊能力等级（0表示关闭，1-9表示等级）
+        sa3_name: 第三条附加属性名称
+        sa3_level: 第三条附加属性等级（无第三条时为 0）
+        ws_name: 武器「特殊能力」字段名称
+        ws_level: 武器「特殊能力」等级（0 表示关闭）
         trust_level: 信赖等级（0-4），信赖加成会加到主能力上
 
     返回：
@@ -140,6 +144,19 @@ def calculate_ability_bonus(
                 main_value += bonus_value
             elif attr_name == f"{sub_attr}+" or attr_name == "副能力+":
                 sub_value += bonus_value
+
+        special_ability_field = weapon.get('特殊能力', [])
+        if isinstance(special_ability_field, list) and len(special_ability_field) >= 3:
+            sa_name = special_ability_field[1]
+            sa_values = special_ability_field[2]
+            if isinstance(sa_values, list) and sa_name == ws_name and ws_level > 0:
+                idx = ws_level - 1
+                if 0 <= idx < len(sa_values):
+                    bonus_value = float(sa_values[idx])
+                    if sa_name == f"{main_attr}+" or sa_name == "主能力+":
+                        main_value += bonus_value
+                    elif sa_name == f"{sub_attr}+" or sa_name == "副能力+":
+                        sub_value += bonus_value
     
     # 添加信赖加成到主能力（使用公式模块中的 trust_add 常量）
     if 0 <= trust_level < len(trust_add):
@@ -158,6 +175,8 @@ def calculate_ability_bonus_with_details(
     sa2_level: int = 1,
     sa3_name: str = "",
     sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
     trust_level: int = 0
 ) -> Dict[str, Any]:
     """
@@ -171,8 +190,10 @@ def calculate_ability_bonus_with_details(
         sa1_level: 第一个特殊能力等级（1-9）
         sa2_name: 第二个特殊能力名称（如物理伤害+）
         sa2_level: 第二个特殊能力等级（1-9）
-        sa3_name: 第三个特殊能力名称（如攻击力+）
-        sa3_level: 第三个特殊能力等级（0表示关闭，1-9表示等级）
+        sa3_name: 第三条附加属性名称
+        sa3_level: 第三条附加属性等级（无第三条时为 0）
+        ws_name: 武器「特殊能力」字段名称
+        ws_level: 武器「特殊能力」等级（0 表示关闭）
         trust_level: 信赖等级（0-4），信赖加成会加到主能力上
 
     返回：
@@ -234,9 +255,10 @@ def calculate_ability_bonus_with_details(
                 bonus_level = sa3_level
             else:
                 bonus_level = 1
-            
-            # 直接属性的加成总是应用（不需要开关）
-            # 添加到对应能力值
+
+            if attr_name == sa3_name and sa3_name and sa3_level == 0:
+                continue
+
             bonus_value = _get_weapon_bonus(weapon[attr_name], bonus_level)
             if attr_name == f"{main_attr}+" or attr_name == "主能力+":
                 main_bonus += bonus_value
@@ -249,16 +271,14 @@ def calculate_ability_bonus_with_details(
             sa_name = special_ability_field[1]
             sa_values = special_ability_field[2]
             
-            if isinstance(sa_values, list):
-                # 这是第三个特殊能力（存储在特殊能力字段内），需要开关控制
-                if sa_name == sa3_name and sa3_level > 0:
-                    level_index = sa3_level - 1
-                    if 0 <= level_index < len(sa_values):
-                        bonus_value = float(sa_values[level_index])
-                        if sa_name == f"{main_attr}+" or sa_name == "主能力+":
-                            main_bonus += bonus_value
-                        elif sa_name == f"{sub_attr}+" or sa_name == "副能力+":
-                            sub_bonus += bonus_value
+            if isinstance(sa_values, list) and sa_name == ws_name and ws_level > 0:
+                level_index = ws_level - 1
+                if 0 <= level_index < len(sa_values):
+                    bonus_value = float(sa_values[level_index])
+                    if sa_name == f"{main_attr}+" or sa_name == "主能力+":
+                        main_bonus += bonus_value
+                    elif sa_name == f"{sub_attr}+" or sa_name == "副能力+":
+                        sub_bonus += bonus_value
 
     # 计算主能力值（包含武器加成和信赖加成，使用公式模块中的 trust_add 常量）
     trust_bonus = trust_add[trust_level] if 0 <= trust_level < len(trust_add) else 0.0

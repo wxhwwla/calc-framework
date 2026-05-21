@@ -206,16 +206,27 @@ def confirm_selection(
             )
             sa2_label.grid(row=9, column=0, sticky="w", pady=1)
         
-        # 显示特殊能力3等级（带开关状态指示）
+        weapon_special_name = weapon_panel.get_weapon_special_name()
+        weapon_special_level = weapon_panel.get_weapon_special_level()
+
         if special_ability_3_name:
-            sa3_status = "开启" if special_ability_3_level > 0 else "关闭"
             sa3_label = ctk.CTkLabel(
                 middle_scroll,
-                text=f"  {special_ability_3_name}等级：{special_ability_3_level} ({sa3_status})",
+                text=f"  {special_ability_3_name}等级：{special_ability_3_level}",
                 font=small_font,
                 text_color="#4ECDC4"
             )
-            sa3_label.grid(row=10, column=0, sticky="w", pady=(1, 5))
+            sa3_label.grid(row=10, column=0, sticky="w", pady=1)
+
+        if weapon_special_name:
+            ws_status = "开启" if weapon_special_level > 0 else "关闭"
+            ws_label = ctk.CTkLabel(
+                middle_scroll,
+                text=f"  {weapon_special_name}（特殊能力）等级：{weapon_special_level} ({ws_status})",
+                font=small_font,
+                text_color="#4ECDC4"
+            )
+            ws_label.grid(row=11, column=0, sticky="w", pady=(1, 5))
 
     # 添加分隔线（美化界面）
     separator = ctk.CTkFrame(
@@ -334,53 +345,40 @@ def confirm_selection(
             attr_label.grid(row=row_idx, column=0, sticky="w", pady=1)
             row_idx += 1
 
-        # 展示第三个特殊能力（存储在特殊能力字段内部的属性，如攻击力+）
-        if special_ability_3_name:
-            # 如果等级为0（开关关闭），直接显示0
-            if special_ability_3_level == 0:
-                display_value = "0"
-            else:
-                # 从特殊能力字段中获取第三个特殊能力的值
-                special_ability_field = weapon_data.get('特殊能力', [])
-                if isinstance(special_ability_field, list) and len(special_ability_field) >= 3:
-                    value = special_ability_field[2]
-                    if isinstance(value, list) and len(value) > 0:
-                        level_index = special_ability_3_level - 1
-                        if 0 <= level_index < len(value):
-                            display_value = str(value[level_index])
-                        else:
-                            display_value = str(value[0])
-                    else:
-                        display_value = str(value)
-                else:
-                    display_value = "0"
-            
-            # 如果名称已经在直接属性中存在（如浪潮有两个攻击力+），添加标记区分
-            display_name = f"{special_ability_3_name}(特殊能力)" if special_ability_3_name in bonus_attrs else special_ability_3_name
-            
+        weapon_special_name = weapon_panel.get_weapon_special_name()
+        weapon_special_level = weapon_panel.get_weapon_special_level()
+        if weapon_special_name and weapon_special_name not in bonus_attrs:
+            field = weapon_data.get('特殊能力', [])
+            display_value = "0"
+            if weapon_special_level > 0 and isinstance(field, list) and len(field) >= 3:
+                values = field[2]
+                if isinstance(values, list) and values:
+                    idx = weapon_special_level - 1
+                    display_value = str(values[idx]) if 0 <= idx < len(values) else str(values[0])
             attr_label = ctk.CTkLabel(
                 middle_scroll,
-                text=f"  {display_name}: {display_value}",
+                text=f"  {weapon_special_name}(特殊能力): {display_value}",
                 font=small_font,
-                text_color="#4ECDC4"  # 使用不同颜色区分加成属性
+                text_color="#4ECDC4"
             )
             attr_label.grid(row=row_idx, column=0, sticky="w", pady=1)
             row_idx += 1
 
-    # 获取武器特殊能力等级
     special_ability_1_name = weapon_panel.get_special_ability_1_name()
     special_ability_1_level = weapon_panel.get_special_ability_1_level()
     special_ability_2_name = weapon_panel.get_special_ability_2_name()
     special_ability_2_level = weapon_panel.get_special_ability_2_level()
     special_ability_3_name = weapon_panel.get_special_ability_3_name()
     special_ability_3_level = weapon_panel.get_special_ability_3_level()
+    weapon_special_name = weapon_panel.get_weapon_special_name()
+    weapon_special_level = weapon_panel.get_weapon_special_level()
 
-    # 在右侧区域展示乘区数据
     _display_zone_data(
         right_scroll, char_data, weapon_data, char_level, weapon_level,
         special_ability_1_name, special_ability_1_level,
         special_ability_2_name, special_ability_2_level,
         special_ability_3_name, special_ability_3_level,
+        weapon_special_name, weapon_special_level,
         trust_level,
         big_font, small_font
     )
@@ -398,6 +396,8 @@ def _display_zone_data(
     sa2_level: int = 1,
     sa3_name: str = "",
     sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
     trust_level: int = 0,
     big_font: Optional[ctk.CTkFont] = None,
     small_font: Optional[ctk.CTkFont] = None
@@ -415,8 +415,10 @@ def _display_zone_data(
         sa1_level: 第一个特殊能力等级（1-9）
         sa2_name: 第二个特殊能力名称（如"物理伤害+"）
         sa2_level: 第二个特殊能力等级（1-9）
-        sa3_name: 第三个特殊能力名称（如"攻击力+"）
-        sa3_level: 第三个特殊能力等级（0表示关闭，1-9表示等级）
+        sa3_name: 第三条附加属性名称（如"攻击力+"）
+        sa3_level: 第三条附加属性等级（无第三条时为 0）
+        ws_name: 武器「特殊能力」字段名称（如"源石技艺强度+"）
+        ws_level: 武器「特殊能力」等级（0 表示开关关闭）
         trust_level: 信赖等级（0-4），信赖加成会加到角色主能力上
         big_font: 大号字体（用于标题）
         small_font: 小号字体（用于内容）
@@ -464,6 +466,7 @@ def _display_zone_data(
             sa1_name=sa1_name, sa1_level=sa1_level,
             sa2_name=sa2_name, sa2_level=sa2_level,
             sa3_name=sa3_name, sa3_level=sa3_level,
+            ws_name=ws_name, ws_level=ws_level,
             trust_level=trust_level
         )
 
@@ -497,6 +500,7 @@ def _display_zone_data(
             sa1_name=sa1_name, sa1_level=sa1_level,
             sa2_name=sa2_name, sa2_level=sa2_level,
             sa3_name=sa3_name, sa3_level=sa3_level,
+            ws_name=ws_name, ws_level=ws_level,
             trust_level=trust_level
         )
         bonus_value = ability_details['bonus']
@@ -559,6 +563,7 @@ def _display_zone_data(
             sa1_name=sa1_name, sa1_level=sa1_level,
             sa2_name=sa2_name, sa2_level=sa2_level,
             sa3_name=sa3_name, sa3_level=sa3_level,
+            ws_name=ws_name, ws_level=ws_level,
             trust_level=trust_level
         )
         base_attack = final_attack_details['base_attack']

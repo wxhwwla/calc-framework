@@ -78,6 +78,8 @@ def calculate_final_attack_with_details(
     sa2_level: int = 1,
     sa3_name: str = "",
     sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
     trust_level: int = 0
 ) -> Dict[str, float]:
     """
@@ -92,8 +94,10 @@ def calculate_final_attack_with_details(
         sa1_level: 第一个特殊能力等级（1-9）
         sa2_name: 第二个特殊能力名称（如物理伤害+）
         sa2_level: 第二个特殊能力等级（1-9）
-        sa3_name: 第三个特殊能力名称（如攻击力+）
-        sa3_level: 第三个特殊能力等级（0表示关闭，1-9表示等级）
+        sa3_name: 第三条附加属性名称
+        sa3_level: 第三条附加属性等级
+        ws_name: 武器「特殊能力」字段名称
+        ws_level: 武器「特殊能力」等级（0 表示关闭）
         trust_level: 信赖等级（0-4），信赖加成会加到主能力上
 
     返回：
@@ -175,9 +179,8 @@ def calculate_final_attack_with_details(
             sa_values = special_ability_field[2]
             
             if sa_name == '攻击力+' and isinstance(sa_values, list):
-                # 这是第三个特殊能力（存储在特殊能力字段内），需要开关控制
-                if sa3_name == '攻击力+' and sa3_level > 0:
-                    level_index = sa3_level - 1
+                if ws_name == '攻击力+' and ws_level > 0:
+                    level_index = ws_level - 1
                     if 0 <= level_index < len(sa_values):
                         attack_bonus_percent += float(sa_values[level_index])
 
@@ -217,7 +220,7 @@ def calculate_final_attack_with_details(
     ability_bonus = calculate_ability_bonus(
         character, weapon, char_level,
         sa1_name, sa1_level, sa2_name, sa2_level, sa3_name, sa3_level,
-        trust_level
+        ws_name, ws_level, trust_level
     )
 
     # 计算最终攻击力：中间攻击力 × (能力值加成 + 1)

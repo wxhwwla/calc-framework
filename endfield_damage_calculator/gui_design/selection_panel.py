@@ -417,10 +417,10 @@ class ChooseTypesStarsNamesLevels:
     
     def get_special_ability_3_name(self) -> str:
         """
-        获取特殊能力3的名称（仅武器面板有效）
+        获取第三条附加属性（xxx+）名称（仅武器面板有效）
 
         返回：
-            特殊能力3的名称，如果不存在则返回空字符串
+            属性名；无第三条时返回空字符串
         """
         if self.special_ability_panel:
             return self.special_ability_panel.current_special_ability_3_name
@@ -428,13 +428,28 @@ class ChooseTypesStarsNamesLevels:
     
     def get_special_ability_3_level(self) -> int:
         """
-        获取特殊能力3的等级（仅武器面板有效）
+        获取第三条附加属性等级（仅武器面板有效）
 
         返回：
-            特殊能力3的等级（0表示关闭，1-9表示等级），如果不存在则返回0
+            1-9；无第三条时为 0
         """
         if self.special_ability_panel:
             level_str = self.special_ability_panel.special_ability_3_level.get()
+            return int(level_str) if level_str.isdigit() else 0
+        return 0
+
+    def get_weapon_special_name(self) -> str:
+        """获取武器「特殊能力」字段中的能力名称（仅武器面板有效）。"""
+        if self.special_ability_panel:
+            return self.special_ability_panel.current_weapon_special_name
+        return ""
+
+    def get_weapon_special_level(self) -> int:
+        """获取武器「特殊能力」字段等级；0 表示开关关闭。"""
+        if self.special_ability_panel:
+            if not self.special_ability_panel.weapon_special_enabled.get():
+                return 0
+            level_str = self.special_ability_panel.weapon_special_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
     

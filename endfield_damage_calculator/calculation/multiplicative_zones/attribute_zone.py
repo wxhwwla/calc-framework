@@ -205,6 +205,8 @@ def calculate_attribute_zones_with_details(
     sa2_level: int = 1,
     sa3_name: str = "",
     sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
     trust_level: int = 0
 ) -> Dict[str, Dict[str, float]]:
     """
@@ -218,8 +220,10 @@ def calculate_attribute_zones_with_details(
         sa1_level: 第一个特殊能力等级（1-9）
         sa2_name: 第二个特殊能力名称（如物理伤害+）
         sa2_level: 第二个特殊能力等级（1-9）
-        sa3_name: 第三个特殊能力名称（如攻击力+）
-        sa3_level: 第三个特殊能力等级（0表示关闭，1-9表示等级）
+        sa3_name: 第三条附加属性名称
+        sa3_level: 第三条附加属性等级（无第三条时为 0）
+        ws_name: 武器「特殊能力」字段名称
+        ws_level: 武器「特殊能力」等级（0 表示关闭）
         trust_level: 信赖等级（0-4），信赖加成会加到角色主能力上
 
     返回：
@@ -303,9 +307,8 @@ def calculate_attribute_zones_with_details(
                 sa_values = special_ability_field[2]
                 
                 if isinstance(sa_values, list) and sa_name == f"{attr}+":
-                    # 这是第三个特殊能力（存储在特殊能力字段内），需要开关控制
-                    if sa_name == sa3_name and sa3_level > 0:
-                        level_index = sa3_level - 1
+                    if sa_name == ws_name and ws_level > 0:
+                        level_index = ws_level - 1
                         if 0 <= level_index < len(sa_values):
                             bonus_value += float(sa_values[level_index])
             

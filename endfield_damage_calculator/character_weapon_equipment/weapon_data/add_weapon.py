@@ -98,6 +98,34 @@ def add_weapon(
     return weapon
 
 
+def remove_weapon(name: str, *, json_path: Path | None = None) -> bool:
+    """
+    从 weapons.json 按名称删除一把武器。
+
+    返回：
+        是否删除了条目（名称不存在时为 False）
+    """
+    if json_path is None:
+        json_path = Path(__file__).parent / "weapons.json"
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        weapons = json.load(f)
+
+    before = len(weapons)
+    weapons = [w for w in weapons if w.get("名称") != name]
+    if len(weapons) == before:
+        print(f"Warning: 武器「{name}」不存在，未修改 JSON。")
+        return False
+
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(weapons, f, ensure_ascii=False, indent=2)
+
+    reload_weapons()
+    print(f"OK: 已删除武器「{name}」，当前武器总数: {len(weapons)}")
+    return True
+
+
 if __name__ == "__main__":
-    print("武器录入库函数: add_weapon(...)")
+    print("武器录入: add_weapon(...)")
+    print("武器删除: remove_weapon('名称')")
     print("批量示例请运行: python scripts/seed_weapons.py")

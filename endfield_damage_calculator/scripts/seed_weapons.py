@@ -58,6 +58,46 @@ _SEED_WEAPONS = [
         },
     },
     {
+        "name": "逐鳞3.0",
+        "weapon_type": "单手剑",
+        "star": 5,
+        "base_atk": {"base": 42, "growth": 83, "divisor": 20, "offset": 0},
+        "bonus_attrs": {
+            "力量+": {"base": 12, "growth": 48, "divisor": 5, "offset": 0, "special": [93]},
+            "寒冷伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "寒冷伤害+",
+            "base": 7,
+            "growth": 1.4,
+            "divisor": 1,
+            "offset": 0,
+            "special": [19.6],
+        },
+    },
+    {
+        "name": "坚城铸造者",
+        "weapon_type": "单手剑",
+        "star": 5,
+        "base_atk": {"base": 42, "growth": 83, "divisor": 20, "offset": 0},
+        "bonus_attrs": {
+            "智识+": {"base": 12, "growth": 48, "divisor": 5, "offset": 0, "special": [93]},
+            "终结技充能效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0, "special": [37.1]},
+            "攻击力+": {"base": 5, "growth": 9, "divisor": 8, "offset": 0, "special": []},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "源石技艺强度+",
+            "base": 25,
+            "growth": 5,
+            "divisor": 1,
+            "offset": 0,
+            "special": [70],
+        },
+    },
+
+    {
         "name": "荧光雷羽",
         "weapon_type": "施术单元",
         "star": 4,
