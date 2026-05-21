@@ -34,6 +34,37 @@ trust = list(range(0, 5))
 trust_add = [0, 10, 15, 15, 20]
 
 
+def has_fractional_part(value: int | float) -> bool:
+    """真小数（如 5.4、23.4）；整数值的 float（如 10.0）不算。"""
+    return isinstance(value, float) and value != int(value)
+
+
+def infer_decimal_mode(
+    base: int | float,
+    growth: int | float,
+    divisor: int | float,
+    offset: int | float = 0,
+    *,
+    special: List[float | int] | None = None,
+    is_decimal: bool | None = None,
+) -> bool:
+    """
+    是否启用「×10 → floor → ÷10」小数取整。
+
+    - 曲线/参数含真小数（如 5.4、special 里 23.4）→ 小数模式
+    - 纯整数或 10.0 这类整型 float → 直接 floor
+    - 可显式传入 is_decimal 覆盖自动判断
+    """
+    if is_decimal is not None:
+        return is_decimal
+    for value in (base, growth, divisor, offset):
+        if has_fractional_part(value):
+            return True
+    if special:
+        return any(has_fractional_part(x) for x in special)
+    return False
+
+
 # ==================== 通用成长曲线计算器 ====================
 
 def calculate_growth_curve(
@@ -106,12 +137,10 @@ def calculate_skill_curve(
     if divisor <= 0:
         raise ValueError("除数必须大于0")
 
-    # 判断是否为小数数据
     if is_decimal is None:
-        is_decimal = isinstance(base, float) or \
-                     isinstance(growth, float) or \
-                     isinstance(offset, float) or \
-                     (special_values is not None and any(isinstance(x, float) for x in special_values))
+        is_decimal = infer_decimal_mode(
+            base, growth, divisor, offset, special=special_values
+        )
     
     # 小数数据：乘10处理
     scale_factor = 10 if is_decimal else 1
@@ -177,12 +206,8 @@ def calculate_bonus_attribute(
     if max_level < 1:
         raise ValueError("最大等级必须大于等于1")
 
-    # 判断是否为小数数据（仅在用户未指定时自动检测）
     if is_decimal is None:
-        is_decimal = isinstance(base, float) or \
-                     isinstance(growth, float) or \
-                     isinstance(offset, float) or \
-                     (special is not None and any(isinstance(x, float) for x in special))
+        is_decimal = infer_decimal_mode(base, growth, divisor, offset, special=special)
 
     # 小数数据：乘10处理（使用round确保浮点数精度）
     scale_factor = 10 if is_decimal else 1

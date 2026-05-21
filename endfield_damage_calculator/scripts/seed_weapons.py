@@ -7,6 +7,57 @@ from character_weapon_equipment.weapon_data.add_weapon import add_weapon
 # 4 星武器示例配置（可按需增删）
 _SEED_WEAPONS = [
     {
+        "name": "塔尔11",
+        "weapon_type": "单手剑",
+        "star": 3,
+        "base_atk": {"base": 29, "growth": 163, "divisor": 57, "offset": 3},
+        "bonus_attrs": {
+            "主能力+": {"base": 10, "growth": 41, "divisor": 5, "offset": 0, "special": [79]},
+            "附加攻击力+": {"base": 12, "growth": 12, "divisor": 5, "offset": 2, "special": [34]},
+        },
+        "special_ability": {
+            "enabled": False,
+        },
+    },
+    {
+        "name": "浪潮",
+        "weapon_type": "单手剑",
+        "star": 4,
+        "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
+        "bonus_attrs": {
+            "智识+": {"base": 12, "growth": 48, "divisor": 5, "offset": 0, "special": [93]},
+            "攻击力+": {"base": 3, "growth": 12, "divisor": 5, "offset": 0, "special": [23.4]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "攻击力+",
+            "base": 12,
+            "growth": 4.8,
+            "divisor": 2,
+            "offset": 0,
+            "special": [33.6],
+        },
+    },
+    {
+        "name": "显锋",
+        "weapon_type": "单手剑",
+        "star": 4,
+        "base_atk": {"base": 34, "growth": 62, "divisor": 18, "offset": 16},
+        "bonus_attrs": {
+            "敏捷+": {"base": 12, "growth": 48, "divisor": 5, "offset": 0, "special": [93]},
+            "攻击力+": {"base": 3.3, "growth": 16, "divisor": 6, "offset": 0.4, "special": [26]},
+        },
+        "special_ability": {
+            "enabled": True,
+            "name": "攻击力+",
+            "base": 12,
+            "growth": 4.8,
+            "divisor": 2,
+            "offset": 0,
+            "special": [33.6],
+        },
+    },
+    {
         "name": "荧光雷羽",
         "weapon_type": "施术单元",
         "star": 4,
@@ -158,11 +209,6 @@ _SEED_WEAPONS = [
             "special": [33.6],
         },
     },
-
-
-
-
-
 
 
 ]

@@ -37,7 +37,7 @@ def test_decimal_data_scale_by_10():
     """测试小数数据乘10处理"""
     # 小数数据：base=3.0, growth=12, divisor=5, offset=0
     # 期望：3.0, 5.4, 7.8, 10.2, 12.6
-    result = calculate_bonus_attribute(3.0, 12, 5, 0, max_level=5)
+    result = calculate_bonus_attribute(3.0, 12, 5, 0, max_level=5, is_decimal=True)
     expected = [3.0, 5.4, 7.8, 10.2, 12.6]
     assert result == expected, f"小数乘10计算失败: {result} != {expected}"
     print("✓ 小数数据乘10处理测试通过")
@@ -80,14 +80,16 @@ def test_inverse_formula_decimal_fitting():
     # 该数据无法用单一公式拟合，第9级作为special值
     assert special == [23.4], f"special错误: {special} != [23.4]"
 
-    result = calculate_bonus_attribute(base, growth, divisor, offset, special, max_level=9)
+    result = calculate_bonus_attribute(
+        base, growth, divisor, offset, special, max_level=9, is_decimal=True
+    )
     assert result == data, f"反推参数计算结果不匹配: {result} != {data}"
     print(f"✓ 小数数据反推公式测试通过 (参数: base={base}, growth={growth}, divisor={divisor}, offset={offset})")
 
 
 def test_skill_curve_with_decimal():
     """测试技能曲线计算（小数数据）"""
-    result = calculate_skill_curve(3.0, 12, 5, 0, use_floor=False)
+    result = calculate_skill_curve(3.0, 12, 5, 0, is_decimal=True)
     # 前9级应该是：3.0, 5.4, 7.8, 10.2, 12.6, 15.0, 17.4, 19.8, 22.2
     expected_first_9 = [3.0, 5.4, 7.8, 10.2, 12.6, 15.0, 17.4, 19.8, 22.2]
     assert result[:9] == expected_first_9, f"技能曲线计算失败: {result[:9]} != {expected_first_9}"

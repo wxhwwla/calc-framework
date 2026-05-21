@@ -54,6 +54,73 @@ def _scale_data(data: Sequence[int | float], scale_factor: int = 10) -> Tuple[Li
     return scaled, actual_scale
 
 
+def _restore_param(value: float | int, scale_factor: int) -> int | float:
+    """
+    将反推参数还原为录入格式。
+
+    整数曲线在 scale_factor==1 时必须返回 int，否则 calculate_bonus_attribute
+    会把 float 误判为小数模式（×10），与 weapons.json / seed 不一致。
+    """
+    if scale_factor != 1:
+        return value
+    rounded = round(float(value))
+    if abs(float(value) - rounded) < 1e-9:
+        return int(rounded)
+    return value
+
+
+def _params_sort_key(
+    growth: int,
+    divisor: int,
+    offset: int,
+) -> Tuple[int, int, int]:
+    """等价参数间按 growth → divisor → |offset| 取最小（便于录入）。"""
+    return (growth, divisor, abs(offset))
+
+
+def _gcd_normalize_params(
+    growth: int,
+    divisor: int,
+    offset: int,
+    scaled_data: List[int],
+    scaled_base: int,
+) -> Tuple[int, int, int]:
+    """若 growth/divisor 有公因子且仍精确拟合，则约分到更小的整数参数。"""
+    factor = math.gcd(growth, divisor)
+    while factor > 1:
+        ng, nd = growth // factor, divisor // factor
+        if all(
+            scaled_base + math.floor((ng * (lv - 1) + offset) / nd) == scaled_data[lv - 1]
+            for lv in range(1, len(scaled_data) + 1)
+        ):
+            growth, divisor = ng, nd
+            factor = math.gcd(growth, divisor)
+        else:
+            break
+    return growth, divisor, offset
+
+
+def _offset_bounds_for_pair(
+    scaled_data: List[int],
+    scaled_base: int,
+    growth: int,
+    divisor: int,
+    num_levels: int,
+) -> Tuple[bool, int, int]:
+    """计算使 floor 公式在各等级成立的 offset 整数区间。"""
+    offset_lower = -10**18
+    offset_upper = 10**18
+    for lv in range(1, num_levels + 1):
+        target = scaled_data[lv - 1] - scaled_base
+        lower = target * divisor - growth * (lv - 1)
+        upper = (target + 1) * divisor - growth * (lv - 1) - 1
+        offset_lower = max(offset_lower, math.ceil(lower))
+        offset_upper = min(offset_upper, math.floor(upper))
+        if offset_lower > offset_upper:
+            return False, 0, 0
+    return True, int(offset_lower), int(offset_upper)
+
+
 def _find_best_params(
     scaled_data: List[int],
     base: int | float,
@@ -79,63 +146,102 @@ def _find_best_params(
     
     返回：
         (growth, divisor, offset) 或 None
+
+    多条等价参数时，按 growth → divisor → |offset| 取字典序最小的一组。
     """
-    best_params = None
+    best_params: Tuple[int, int, int] | None = None
+    best_key: Tuple[int, int, int] | None = None
     best_error = float('inf')
-    
-    for divisor in range(*divisor_range):
-        for growth in range(*growth_range):
-            offset_lower = -10**18
-            offset_upper = 10**18
-            
-            valid = True
-            for lv in range(1, num_levels + 1):
-                target = scaled_data[lv - 1] - scaled_base
-                lower = target * divisor - growth * (lv - 1)
-                upper = (target + 1) * divisor - growth * (lv - 1) - 1
-                offset_lower = max(offset_lower, math.ceil(lower))
-                offset_upper = min(offset_upper, math.floor(upper))
-                if offset_lower >= offset_upper:
-                    valid = False
-                    break
-            
-            if valid and offset_lower < offset_upper:
-                offset_end = min(int(offset_upper) + 1, int(offset_lower) + offset_search_limit)
-                for offset in range(int(offset_lower), offset_end):
-                    error = 0
-                    for lv in range(1, num_levels + 1):
-                        calculated = scaled_base + math.floor((growth * (lv - 1) + offset) / divisor)
-                        error += abs(calculated - scaled_data[lv - 1])
-                    
-                    if error < 0.001:
-                        # 找到精确匹配，返回还原后的值
-                        return (growth / scale_factor, divisor, offset / scale_factor)
-                    elif error < best_error:
-                        best_error = error
-                        best_params = (growth / scale_factor, divisor, offset / scale_factor)
-    
-    # 如果没有精确匹配，使用最小二乘法
-    if best_params is None:
+
+    def _consider(growth: int, divisor: int, offset: int, error: float) -> None:
+        nonlocal best_params, best_key, best_error
+        key = _params_sort_key(growth, divisor, offset)
+        if error < 0.001:
+            if best_key is None or key < best_key:
+                best_key = key
+                best_params = (growth, divisor, offset)
+                best_error = 0.0
+            return
+        if best_error < 0.001:
+            return
+        if error < best_error or (error == best_error and (best_key is None or key < best_key)):
+            best_error = error
+            best_key = key
+            best_params = (growth, divisor, offset)
+
+    # 精确解：growth → divisor → offset 递增扫描，首个精确解即最小字典序
+    for growth in range(*growth_range):
         for divisor in range(*divisor_range):
-            for growth in range(*growth_range):
-                total_offset = sum(
-                    (scaled_data[lv - 1] - scaled_base) * divisor - growth * (lv - 1)
-                    for lv in range(1, num_levels + 1)
+            valid, offset_lower, offset_upper = _offset_bounds_for_pair(
+                scaled_data, scaled_base, growth, divisor, num_levels
+            )
+            if not valid:
+                continue
+            for offset in range(offset_lower, offset_upper + 1):
+                error = 0
+                for lv in range(1, num_levels + 1):
+                    calculated = scaled_base + math.floor(
+                        (growth * (lv - 1) + offset) / divisor
+                    )
+                    error += abs(calculated - scaled_data[lv - 1])
+                if error < 0.001:
+                    growth, divisor, offset = _gcd_normalize_params(
+                        growth, divisor, offset, scaled_data, scaled_base
+                    )
+                    return (
+                        _restore_param(growth / scale_factor, scale_factor),
+                        divisor,
+                        _restore_param(offset / scale_factor, scale_factor),
+                    )
+
+    # 无精确解：最小二乘，并在同误差下取最小字典序参数
+    for growth in range(*growth_range):
+        for divisor in range(*divisor_range):
+            total_offset = sum(
+                (scaled_data[lv - 1] - scaled_base) * divisor - growth * (lv - 1)
+                for lv in range(1, num_levels + 1)
+            )
+            offset = round(total_offset / num_levels)
+            error = sum(
+                abs(
+                    scaled_base
+                    + math.floor((growth * (lv - 1) + offset) / divisor)
+                    - scaled_data[lv - 1]
                 )
-                offset = round(total_offset / num_levels)
+                for lv in range(1, num_levels + 1)
+            )
+            _consider(growth, divisor, int(offset), float(error))
+
+            valid, offset_lower, offset_upper = _offset_bounds_for_pair(
+                scaled_data, scaled_base, growth, divisor, num_levels
+            )
+            if not valid:
+                continue
+            offset_end = min(offset_upper + 1, offset_lower + offset_search_limit)
+            for offset in range(offset_lower, offset_end):
                 error = sum(
-                    abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
+                    abs(
+                        scaled_base
+                        + math.floor((growth * (lv - 1) + offset) / divisor)
+                        - scaled_data[lv - 1]
+                    )
                     for lv in range(1, num_levels + 1)
                 )
-                if error < best_error:
-                    best_error = error
-                    best_params = (growth / scale_factor, divisor, offset / scale_factor)
+                _consider(growth, divisor, offset, float(error))
 
-        # 只有在误差足够小时才返回最小二乘法的结果
-        if best_error >= num_levels * 0.1:
-            return None
+    if best_params is None or best_error >= num_levels * 0.1:
+        return None
 
-    return best_params
+    growth, divisor, offset = best_params
+    if best_error < 0.001:
+        growth, divisor, offset = _gcd_normalize_params(
+            growth, divisor, offset, scaled_data, scaled_base
+        )
+    return (
+        _restore_param(growth / scale_factor, scale_factor),
+        divisor,
+        _restore_param(offset / scale_factor, scale_factor),
+    )
 
 
 # ==================== 属性成长反向计算 ====================
@@ -325,8 +431,11 @@ def validate_skill_formula(base: int | float, growth: int | float, divisor: int,
 def validate_skill_formula_no_special(base: int | float, growth: int | float, divisor: int, offset: int | float, special_values: List[int | float], data: Sequence[int | float]) -> bool:
     """验证技能倍率公式（9个元素版本）"""
     from calculation.formula import calculate_bonus_attribute
-    
-    calculated = calculate_bonus_attribute(base, growth, divisor, offset, special_values)
+
+    use_decimal = _is_decimal_data(data)
+    calculated = calculate_bonus_attribute(
+        base, growth, divisor, offset, special_values, is_decimal=use_decimal
+    )
     for i, val in enumerate(data):
         if abs(calculated[i] - val) > 0.001:
             return False
