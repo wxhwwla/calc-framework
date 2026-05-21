@@ -445,10 +445,8 @@ class ChooseTypesStarsNamesLevels:
         return ""
 
     def get_weapon_special_level(self) -> int:
-        """获取武器「特殊能力」字段等级；0 表示开关关闭。"""
+        """获取武器「特殊能力」字段等级；0 表示未启用。"""
         if self.special_ability_panel:
-            if not self.special_ability_panel.weapon_special_enabled.get():
-                return 0
             level_str = self.special_ability_panel.weapon_special_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
