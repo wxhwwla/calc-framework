@@ -172,11 +172,13 @@ endfield_damage_calculator/
 
 ### 4. 图形界面 (gui_design/)
 
-提供可视化界面功能：
-- `gui.py` - 主界面
-- `selection_panel.py` - 角色/武器选择面板
-- `property_display.py` - 属性展示组件
-- `gui_settings.py` - 界面设置
+主窗口 **8 列** grid：角色选择（0）| 武器选择+确认（1）| 角色属性（3）| 武器属性（5）| 右侧乘区（7）；选择列与属性列 `weight=0`，乘区列 `weight=1`。确认选择后分列刷新属性明细；角色与武器均有效时才更新乘区。启动时自动确认一次。
+
+模块职责：
+- `gui.py` - 主窗口布局与确认按钮
+- `selection_panel.py` / `selection_components.py` - 角色/武器选择面板（含武器技能滑块）
+- `property_display.py` - 确认后渲染角色属性列、武器属性列与乘区
+- `gui_settings.py` - 界面主题与字体
 
 ---
 

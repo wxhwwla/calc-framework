@@ -8,7 +8,7 @@ GUI 主应用模块
 
 主要功能：
 1. 创建主窗口并设置初始属性
-2. 使用 grid 布局管理三个主要区域（左侧选择区、中间属性展示区、右侧计算区）
+2. 使用 grid 布局管理五个内容区（角色/武器选择、角色/武器属性、右侧乘区）
 3. 加载角色和武器数据
 4. 处理用户交互事件（确认选择等）
 5. 支持窗口缩放自适应
@@ -31,6 +31,9 @@ from gui_design.gui_tools import (  # GUI 工具组件导入
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
 from please_read_me import get_exe_version  # EXE版本号
 
+# 列 0/1/3/5：选择区与属性区（最小宽度）；列 7：右侧乘区（占满剩余宽度）
+APP_COLUMN_WEIGHTS = (0, 0, 0, 0, 0, 0, 0, 1)
+
 
 class DamageCalculatorApp:
     """
@@ -38,29 +41,25 @@ class DamageCalculatorApp:
     
     包含完整的 GUI 界面，提供角色和武器选择功能，支持窗口缩放自适应。
     
-    界面布局（使用 grid 权重分配）：
-    ┌─────────────────────────────────────────────────────────────┐
-    │ 左侧选择区(23%) │ 间隙(3%) │ 中间属性区(25%) │ 间隙(2%) │ 右侧计算区(47%) │
-    │ ┌─────────────┐ │          │ ┌─────────────┐ │          │ ┌─────────────┐ │
-    │ │ 角色选择面板 │ │          │ │ 角色&武器属性│ │          │ │  乘区数据   │ │
-    │ ├─────────────┤ │          │ │   展示区域   │ │          │ │  （已实现） │ │
-    │ │ 武器选择面板 │ │          │ │             │ │          │ │             │ │
-    │ ├─────────────┤ │          │ └─────────────┘ │          │ └─────────────┘ │
-    │ │   确认按钮   │ │          │                 │          │                 │
-    │ └─────────────┘ │          │                 │          │                 │
-    └─────────────────────────────────────────────────────────────┘
+    界面布局（主窗口 8 列 grid，列 2/4/6 为间隙；选择列与属性列 weight=0，乘区列 weight=1）：
+    ┌──────────────────────────────────────────────────────────────────────────┐
+    │ 角色选择 │ 武器选择 │ 角色属性 │ 武器属性 │        右侧乘区（可伸缩）      │
+    │ +确认按钮│ +滑块    │ 明细数值 │ 明细数值 │        乘区数据               │
+    └──────────────────────────────────────────────────────────────────────────┘
     
     属性：
         app: CTk 主窗口对象
         big_font: 大号字体配置
         small_font: 小号字体配置
-        left_frame: 左侧选择区框架
-        char_frame: 角色选择子框架
-        weapon_frame: 武器选择子框架
+        char_frame: 角色选择区框架（第 0 列）
+        weapon_frame: 武器选择区框架（第 1 列，含确认按钮）
         confirm_btn: 确认选择按钮
-        middle_frame: 中间属性展示区框架
-        middle_scroll: 中间区域滚动容器
-        right_frame: 右侧计算区框架
+        char_attr_frame: 角色属性区外框（第 3 列）
+        char_attr_scroll: 角色属性滚动容器
+        weapon_attr_frame: 武器属性区外框（第 5 列）
+        weapon_attr_scroll: 武器属性滚动容器
+        right_frame: 右侧乘区框架（第 7 列）
+        right_scroll: 右侧乘区滚动容器
         char_panel: 角色选择面板实例
         weapon_panel: 武器选择面板实例
         all_weapons: 所有武器数据（用于动态过滤）
@@ -112,8 +111,10 @@ class DamageCalculatorApp:
         self.char_frame: Optional[ctk.CTkFrame] = None
         self.weapon_frame: Optional[ctk.CTkFrame] = None
         self.confirm_btn: Optional[ctk.CTkButton] = None
-        self.middle_frame: Optional[ctk.CTkFrame] = None
-        self.middle_scroll: Optional[ctk.CTkScrollableFrame] = None
+        self.char_attr_frame: Optional[ctk.CTkFrame] = None
+        self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
+        self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
+        self.weapon_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.right_frame: Optional[ctk.CTkFrame] = None
         self.right_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.char_panel: Optional[ChooseTypesStarsNamesLevels] = None
@@ -128,31 +129,29 @@ class DamageCalculatorApp:
         设置主界面布局（使用 grid 布局实现自适应缩放）
         
         布局结构：
-            - 主窗口分为 6 列，使用权重分配空间
+            - 主窗口分为 8 列，使用权重分配空间
             - 第0列：角色选择区
             - 第1列：武器选择区（含确认按钮）
-            - 第3列：中间属性展示区
-            - 第5列：右侧乘区数据计算区
+            - 第3列：角色属性展示区
+            - 第5列：武器属性展示区
+            - 第7列：右侧乘区数据计算区
         
         实现步骤：
-            1. 配置主窗口 grid 布局的行和列权重
-            2. 创建角色选择框架并放置在第0列
-            3. 创建武器选择框架并放置在第1列（包含确认按钮）
-            4. 创建中间属性展示框架并放置在第3列
-            5. 创建右侧乘区数据框架并放置在第5列
-            6. 调用 _load_data_and_create_panels 加载数据并创建选择面板
+            1. 配置主窗口 grid 布局的行和列权重（见 APP_COLUMN_WEIGHTS）
+            2. 创建角色选择框架并放置在第 0 列
+            3. 创建武器选择框架并放置在第 1 列（包含确认按钮）
+            4. 创建角色属性展示框架并放置在第 3 列
+            5. 创建武器属性展示框架并放置在第 5 列
+            6. 创建右侧乘区数据框架并放置在第 7 列
+            7. 调用 _load_data_and_create_panels 加载数据并创建选择面板
         """
         # 配置主窗口 grid 布局的行权重（只有 1 行，权重为 1 表示占满垂直空间）
         self.app.grid_rowconfigure(0, weight=1)
         
         # 配置主窗口 grid 布局的列权重（按比例分配宽度）
         # 注：CTkFrame 有内置最小宽度限制，设置 weight=0 让组件仅占用最小尺寸
-        self.app.grid_columnconfigure(0, weight=0)   # 角色选择区（仅最小宽度）
-        self.app.grid_columnconfigure(1, weight=0)   # 武器选择区（仅最小宽度）
-        self.app.grid_columnconfigure(2, weight=0)   # 无间隙列
-        self.app.grid_columnconfigure(3, weight=0)   # 中间属性区（仅最小宽度）
-        self.app.grid_columnconfigure(4, weight=0)   # 无间隙列
-        self.app.grid_columnconfigure(5, weight=1)   # 右侧计算区（占用剩余所有空间）
+        for idx, weight in enumerate(APP_COLUMN_WEIGHTS):
+            self.app.grid_columnconfigure(idx, weight=weight)
 
         # ==================== 角色选择区（左侧）====================
         self.char_frame = ctk.CTkFrame(
@@ -202,29 +201,55 @@ class DamageCalculatorApp:
             sticky="ew"  # 水平拉伸，垂直居中
         )
 
-        # ==================== 中间属性展示区 ====================
-        self.middle_frame = ctk.CTkFrame(
+        # ==================== 角色属性展示区 ====================
+        self.char_attr_frame = ctk.CTkFrame(
             self.app,
             corner_radius=20
         )
-        self.middle_frame.grid(
+        self.char_attr_frame.grid(
             row=0,
             column=3,
             padx=5,
             pady=10,
             sticky="nsew"
         )
-        # 配置中间框架内部布局
-        self.middle_frame.grid_rowconfigure(0, weight=1)
-        self.middle_frame.grid_columnconfigure(0, weight=1)
+        self.char_attr_frame.grid_rowconfigure(0, weight=1)
+        self.char_attr_frame.grid_columnconfigure(0, weight=1)
 
-        # 滚动框架（用于内容过多时滚动）
-        self.middle_scroll = ctk.CTkScrollableFrame(
-            self.middle_frame,      # 父容器
-            label_text="角色 & 武器属性",  # 滚动框架标题
-            label_font=self.big_font     # 标题字体
+        self.char_attr_scroll = ctk.CTkScrollableFrame(
+            self.char_attr_frame,
+            label_text="角色属性",
+            label_font=self.big_font
         )
-        self.middle_scroll.grid(
+        self.char_attr_scroll.grid(
+            row=0,
+            column=0,
+            padx=5,
+            pady=5,
+            sticky="nsew"
+        )
+
+        # ==================== 武器属性展示区 ====================
+        self.weapon_attr_frame = ctk.CTkFrame(
+            self.app,
+            corner_radius=20
+        )
+        self.weapon_attr_frame.grid(
+            row=0,
+            column=5,
+            padx=5,
+            pady=10,
+            sticky="nsew"
+        )
+        self.weapon_attr_frame.grid_rowconfigure(0, weight=1)
+        self.weapon_attr_frame.grid_columnconfigure(0, weight=1)
+
+        self.weapon_attr_scroll = ctk.CTkScrollableFrame(
+            self.weapon_attr_frame,
+            label_text="武器属性",
+            label_font=self.big_font
+        )
+        self.weapon_attr_scroll.grid(
             row=0,
             column=0,
             padx=5,
@@ -239,7 +264,7 @@ class DamageCalculatorApp:
         )
         self.right_frame.grid(
             row=0,
-            column=5,
+            column=7,
             padx=(5, 10),  # 左边距5，右边距10
             pady=10,
             sticky="nsew"
@@ -341,6 +366,9 @@ class DamageCalculatorApp:
             if not filtered_weapons:
                 self.weapon_panel.disable_panel()
 
+        # 启动后自动确认一次，填充默认角色/武器属性展示
+        self._on_confirm()
+
     def _on_char_name_change(self, *args: str) -> None:
         """
         角色名称变化时的回调函数
@@ -423,20 +451,23 @@ class DamageCalculatorApp:
         """
         确认按钮点击事件处理函数
         
-        功能：调用 confirm_selection() 函数，根据当前选中的角色和武器
-        在中间区域展示对应的属性信息。
+        功能：调用 confirm_selection()，根据当前选中的角色和武器
+        刷新角色属性列、武器属性列；两侧数据均有效时再刷新右侧乘区。
         
         前置条件：确保所有必要组件已初始化
         """
         # 断言检查组件是否已初始化
-        assert self.middle_scroll is not None, "middle_scroll 未初始化"
+        assert self.char_attr_scroll is not None, "char_attr_scroll 未初始化"
+        assert self.weapon_attr_scroll is not None, "weapon_attr_scroll 未初始化"
+        assert self.right_scroll is not None, "right_scroll 未初始化"
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
         
-        # 调用确认选择函数，更新中间区域和右侧区域显示
+        # 调用确认选择函数，更新属性列与乘区显示
         confirm_selection(
-            self.middle_scroll,  # 中间显示区域（角色/武器属性）
-            self.right_scroll,   # 右侧显示区域（乘区数据）
+            self.char_attr_scroll,   # 角色属性展示区域
+            self.weapon_attr_scroll, # 武器属性展示区域
+            self.right_scroll,       # 右侧显示区域（乘区数据）
             self.char_panel,     # 角色选择面板
             self.weapon_panel,   # 武器选择面板
             self.big_font,       # 大号字体

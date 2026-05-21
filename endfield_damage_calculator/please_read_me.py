@@ -10,14 +10,14 @@
 功能特性：
     1. 角色选择：支持按类型、星级筛选角色
     2. 武器选择：支持按类型、星级筛选武器，包含特殊能力等级选择
-    3. 属性展示：显示角色和武器的详细属性
+    3. 属性展示：角色属性列与武器属性列分列显示等级曲线明细
     4. 乘区计算：实时计算能力乘区、能力值加成、攻击力等数据
 """
 
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.10.2"
+_VERSION = "1.10.3"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -110,7 +110,7 @@ USAGE_INFO = f"""
         - 在左侧选择武器类型和星级
         - 调整等级和信赖等级（角色）
         - 调整特殊能力等级（武器）
-        - 点击"确认选择"按钮查看属性和乘区数据
+        - 点击「确认选择」刷新角色/武器属性列；两侧均有效时再更新右侧乘区
 
 技术栈：
     - Python 3.10+
@@ -186,14 +186,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 8 处文件
+# TITLE: 更新 11 处文件
 # BODY:
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 PROJECT_DOCUMENTATION.md
+# - 更新文档 endfield_damage_calculator/README.md
+# - 修改 endfield_damage_calculator/gui_design/gui.py
 # - 修改 endfield_damage_calculator/gui_design/property_display.py
-# - 修改 endfield_damage_calculator/gui_design/selection_components.py
-# - 修改 endfield_damage_calculator/gui_design/selection_panel.py
+# - 修改 endfield_damage_calculator/main.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/scripts/seed_weapons.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_panel_layout.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_property_display.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_special_level.py
+# - 修改 endfield_damage_calculator/tests/test_confirm_selection_state.py
+# - 修改 endfield_damage_calculator/tests/test_gui_layout_contract.py
+# - 修改 endfield_damage_calculator/tests/test_property_display_lines.py
 # --- END UPLOAD_SUMMARY ---

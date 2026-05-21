@@ -3,7 +3,8 @@
 """
 属性展示模块
 
-此模块包含确认选择并展示角色/武器属性的相关函数。
+确认选择后，在「角色属性」「武器属性」两列分别展示等级曲线明细，
+并在角色与武器数据均有效时刷新右侧乘区。
 """
 
 import customtkinter as ctk
@@ -24,7 +25,7 @@ LEVEL_ATTRIBUTES = ['力量', '敏捷', '智识', '意志', '基础攻击力']
 
 def format_weapon_bonus_display_value(raw: Any, *, is_first_skill: bool) -> str:
     """
-    武器「=== 武器属性 ===」区加成数值展示。
+    武器属性列中 xxx+ 与特殊能力字段的数值展示格式。
 
     - 第一技能（第一条 xxx+）：JSON 数值按整数展示，如 60.0 → 60
     - 其余附加属性与特殊能力字段：按百分数展示，JSON 数值即百分比，如 27.6 → 27.6%
@@ -68,8 +69,134 @@ def _get_attribute_value(data: Dict[str, Any], level: int, attr_name: str) -> st
     return str(value)
 
 
+def build_character_attribute_lines(
+    char_data: Optional[Dict[str, Any]],
+    level: int,
+) -> list[str]:
+    """构建角色属性列展示明细（不含摘要）。"""
+    if not char_data:
+        return []
+    lines: list[str] = []
+    for attr_name in LEVEL_ATTRIBUTES:
+        value = _get_attribute_value(char_data, level, attr_name)
+        if value:
+            lines.append(f"{attr_name}: {value}")
+    return lines
+
+
+def build_weapon_attribute_lines(
+    weapon_data: Optional[Dict[str, Any]],
+    weapon_level: int,
+    *,
+    sa1_name: str = "",
+    sa1_level: int = 1,
+    sa2_name: str = "",
+    sa2_level: int = 1,
+    sa3_name: str = "",
+    sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
+) -> list[str]:
+    """构建武器属性列展示明细（不含摘要）。"""
+    if not weapon_data:
+        return []
+
+    lines: list[str] = []
+    base_attack = _get_attribute_value(weapon_data, weapon_level, "基础攻击力")
+    if base_attack:
+        lines.append(f"基础攻击力: {base_attack}")
+
+    bonus_attrs = [key for key in weapon_data.keys() if key.endswith("+")]
+    for attr_name in bonus_attrs:
+        value = weapon_data[attr_name]
+        if isinstance(value, list) and value:
+            if attr_name == sa1_name:
+                level_index = sa1_level - 1
+            elif attr_name == sa2_name:
+                level_index = sa2_level - 1
+            elif attr_name == sa3_name:
+                level_index = sa3_level - 1
+            else:
+                level_index = 0
+            raw_value = value[level_index] if 0 <= level_index < len(value) else value[0]
+        else:
+            raw_value = value
+        display_value = format_weapon_bonus_display_value(
+            raw_value,
+            is_first_skill=(attr_name == sa1_name),
+        )
+        lines.append(f"{attr_name}: {display_value}")
+
+    if ws_name and ws_name not in bonus_attrs:
+        field = weapon_data.get("特殊能力", [])
+        display_value = "0%"
+        if ws_level > 0 and isinstance(field, list) and len(field) >= 3:
+            values = field[2]
+            if isinstance(values, list) and values:
+                idx = ws_level - 1
+                raw_value = values[idx] if 0 <= idx < len(values) else values[0]
+                display_value = format_weapon_bonus_display_value(
+                    raw_value,
+                    is_first_skill=False,
+                )
+        lines.append(f"{ws_name}(特殊能力): {display_value}")
+    return lines
+
+
+def _render_lines(
+    target_scroll: ctk.CTkScrollableFrame,
+    lines: list[str],
+    *,
+    font: ctk.CTkFont,
+    text_color: str,
+) -> None:
+    """按顺序渲染文本行。"""
+    for row, text in enumerate(lines):
+        label = ctk.CTkLabel(
+            target_scroll,
+            text=text,
+            font=font,
+            text_color=text_color,
+        )
+        label.grid(row=row, column=0, sticky="w", pady=2)
+
+
+def _render_placeholder(
+    target_scroll: ctk.CTkScrollableFrame,
+    message: str,
+    *,
+    font: ctk.CTkFont,
+) -> None:
+    """渲染空状态或错误提示。"""
+    label = ctk.CTkLabel(
+        target_scroll,
+        text=message,
+        font=font,
+        text_color="#888888",
+    )
+    label.grid(row=0, column=0, sticky="w", pady=(6, 2))
+
+
+def evaluate_display_state(
+    char_data: Optional[Dict[str, Any]],
+    weapon_data: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """评估本次确认后各列提示及右侧乘区是否可更新。"""
+    state = {
+        "char_message": "",
+        "weapon_message": "",
+        "can_update_zone": bool(char_data and weapon_data),
+    }
+    if not char_data:
+        state["char_message"] = "请选择有效角色"
+    if not weapon_data:
+        state["weapon_message"] = "请选择有效武器"
+    return state
+
+
 def confirm_selection(
-    middle_scroll: 'ctk.CTkScrollableFrame | None',
+    char_attr_scroll: 'ctk.CTkScrollableFrame | None',
+    weapon_attr_scroll: 'ctk.CTkScrollableFrame | None',
     right_scroll: 'ctk.CTkScrollableFrame | None',
     char_panel: 'ChooseTypesStarsNamesLevels',
     weapon_panel: 'ChooseTypesStarsNamesLevels',
@@ -77,10 +204,11 @@ def confirm_selection(
     small_font: ctk.CTkFont
 ) -> None:
     """
-    确认选择并在中间区域展示角色和武器属性，在右侧区域展示乘区数据
+    确认选择并刷新角色属性列、武器属性列，以及右侧乘区数据。
 
     参数：
-        middle_scroll: 中间展示区域（滚动框架）- 角色和武器属性
+        char_attr_scroll: 角色属性展示区域（滚动框架）
+        weapon_attr_scroll: 武器属性展示区域（滚动框架）
         right_scroll: 右侧展示区域（滚动框架）- 乘区数据
         char_panel: 角色选择面板实例
         weapon_panel: 武器选择面板实例
@@ -88,320 +216,37 @@ def confirm_selection(
         small_font: 小号字体（用于内容）
 
     执行流程：
-    1. 清空中间区域的现有组件
-    2. 获取用户选中的角色和武器数据
-    3. 创建标签展示选中信息
-    4. 根据等级展示对应的属性值（力量、敏捷、智识、意志、基础攻击力）
-    5. 在右侧区域展示乘区数据（敌方防御区、敏捷、力量、智识、意志）
+    1. 清空三个展示区域的组件
+    2. 分别渲染角色属性与武器属性明细（无摘要）
+    3. 角色和武器均有效时，刷新右侧乘区
     """
     # None 检查
-    if middle_scroll is None or right_scroll is None:
+    if char_attr_scroll is None or weapon_attr_scroll is None or right_scroll is None:
         return
 
-    # 清空中间区域的所有子组件（避免重复显示）
-    for widget in middle_scroll.winfo_children():
+    for widget in char_attr_scroll.winfo_children():
         widget.destroy()
-
-    # 清空右侧区域的所有子组件
+    for widget in weapon_attr_scroll.winfo_children():
+        widget.destroy()
     for widget in right_scroll.winfo_children():
         widget.destroy()
 
-    # 获取选中的角色数据
     char_data = char_panel.get_selected_data()
-    # 获取选中的武器数据
     weapon_data = weapon_panel.get_selected_data()
-
-    # 获取当前选中的等级
+    state = evaluate_display_state(char_data, weapon_data)
     char_level = char_panel.get_level()
     weapon_level = weapon_panel.get_level()
-    
-    # 获取信赖等级
     trust_level = char_panel.get_trust_level()
-
-    row_idx = 0
-
-    # 创建角色信息展示标签
-    char_label_text = f"角色：{char_data.get('名称', '未选择')}" if char_data else "角色：未选择"
-    char_label = ctk.CTkLabel(
-        middle_scroll,
-        text=char_label_text,
-        font=big_font,
-        text_color="#00D4AA"
-    )
-    char_label.grid(row=row_idx, column=0, sticky="w", pady=(5, 2))
-    row_idx += 1
-
-    # 创建角色等级标签
-    char_level_label = ctk.CTkLabel(
-        middle_scroll,
-        text=f"角色等级：{char_level}",
-        font=small_font,
-        text_color="white"
-    )
-    char_level_label.grid(row=row_idx, column=0, sticky="w", pady=(0, 2))
-    row_idx += 1
-
-    # 创建信赖等级标签
-    trust_label = ctk.CTkLabel(
-        middle_scroll,
-        text=f"信赖等级：{trust_level}",
-        font=small_font,
-        text_color="#FF6B6B"
-    )
-    trust_label.grid(row=row_idx, column=0, sticky="w", pady=(0, 2))
-    row_idx += 1
-
-    # 显示技能等级（仅角色面板）
-    skill_1_level = char_panel.get_skill_1_level()
-    skill_2_level = char_panel.get_skill_2_level()
-    skill_3_level = char_panel.get_skill_3_level()
-
-    if skill_1_level > 0:
-        skill_1_label = ctk.CTkLabel(
-            middle_scroll,
-            text=f"战技等级：{skill_1_level}",
+    if not state["char_message"] and char_data:
+        char_lines = build_character_attribute_lines(char_data, char_level)
+        _render_lines(
+            char_attr_scroll,
+            char_lines,
             font=small_font,
-            text_color="#4ECDC4"
+            text_color="#B8B8B8",
         )
-        skill_1_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-        row_idx += 1
-
-    if skill_2_level > 0:
-        skill_2_label = ctk.CTkLabel(
-            middle_scroll,
-            text=f"连携技等级：{skill_2_level}",
-            font=small_font,
-            text_color="#4ECDC4"
-        )
-        skill_2_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-        row_idx += 1
-
-    if skill_3_level > 0:
-        skill_3_label = ctk.CTkLabel(
-            middle_scroll,
-            text=f"终结技等级：{skill_3_level}",
-            font=small_font,
-            text_color="#4ECDC4"
-        )
-        skill_3_label.grid(row=row_idx, column=0, sticky="w", pady=(1, 5))
-        row_idx += 1
-
-    # 创建武器信息展示标签（始终显示）
-    weapon_label_text = f"武器：{weapon_data.get('名称', '未选择')}" if weapon_data else "武器：未选择"
-    weapon_label = ctk.CTkLabel(
-        middle_scroll,
-        text=weapon_label_text,
-        font=big_font,
-        text_color="#FFD700"
-    )
-    weapon_label.grid(row=row_idx, column=0, sticky="w", pady=(2, 5))
-    row_idx += 1
-
-    # 只有当有有效武器数据时才显示武器等级和特殊能力
-    if weapon_data:
-        # 创建武器等级标签
-        weapon_level_label = ctk.CTkLabel(
-            middle_scroll,
-            text=f"武器等级：{weapon_level}",
-            font=small_font,
-            text_color="white"
-        )
-        weapon_level_label.grid(row=row_idx, column=0, sticky="w", pady=(0, 2))
-        row_idx += 1
-
-        # 获取并显示武器特殊能力等级选择
-        special_ability_1_name = weapon_panel.get_special_ability_1_name()
-        special_ability_1_level = weapon_panel.get_special_ability_1_level()
-        special_ability_2_name = weapon_panel.get_special_ability_2_name()
-        special_ability_2_level = weapon_panel.get_special_ability_2_level()
-        special_ability_3_name = weapon_panel.get_special_ability_3_name()
-        special_ability_3_level = weapon_panel.get_special_ability_3_level()
-
-        from .selection_components import format_weapon_skill_title
-
-        if special_ability_1_name:
-            sa1_label = ctk.CTkLabel(
-                middle_scroll,
-                text=f"  {format_weapon_skill_title('第一技能', special_ability_1_name)}等级：{special_ability_1_level}",
-                font=small_font,
-                text_color="#4ECDC4"
-            )
-            sa1_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-            row_idx += 1
-
-        if special_ability_2_name:
-            sa2_label = ctk.CTkLabel(
-                middle_scroll,
-                text=f"  {format_weapon_skill_title('第二技能', special_ability_2_name)}等级：{special_ability_2_level}",
-                font=small_font,
-                text_color="#4ECDC4"
-            )
-            sa2_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-            row_idx += 1
-
-        weapon_special_name = weapon_panel.get_weapon_special_name()
-        weapon_special_level = weapon_panel.get_weapon_special_level()
-
-        if special_ability_3_name:
-            sa3_label = ctk.CTkLabel(
-                middle_scroll,
-                text=f"  {format_weapon_skill_title('第三技能', special_ability_3_name)}等级：{special_ability_3_level}",
-                font=small_font,
-                text_color="#4ECDC4"
-            )
-            sa3_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-            row_idx += 1
-
-        if weapon_special_name:
-            ws_label = ctk.CTkLabel(
-                middle_scroll,
-                text=f"  {format_weapon_skill_title('特殊技能', weapon_special_name)}等级：{weapon_special_level}",
-                font=small_font,
-                text_color="#4ECDC4"
-            )
-            ws_label.grid(row=row_idx, column=0, sticky="w", pady=(1, 5))
-            row_idx += 1
-
-    # 添加分隔线（美化界面）
-    separator = ctk.CTkFrame(
-        middle_scroll,
-        height=2,
-        fg_color="gray"
-    )
-    separator.grid(row=row_idx, column=0, sticky="ew", pady=5)
-    row_idx += 1
-
-    # 如果有角色数据，展示等级对应的属性
-    if char_data:
-        char_title = ctk.CTkLabel(
-            middle_scroll,
-            text="=== 角色属性 ===",
-            font=big_font,
-            text_color="#00D4AA"
-        )
-        char_title.grid(row=row_idx, column=0, sticky="w", pady=(5, 2))
-        row_idx += 1
-
-        # 展示与等级相关的属性（力量、敏捷、智识、意志、基础攻击力）
-        for attr_name in LEVEL_ATTRIBUTES:
-            value = _get_attribute_value(char_data, char_level, attr_name)
-            if value:
-                attr_label = ctk.CTkLabel(
-                    middle_scroll,
-                    text=f"  {attr_name}: {value}",
-                    font=small_font,
-                    text_color="#B8B8B8"
-                )
-                attr_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-                row_idx += 1
-
-        # 添加额外分隔线
-        separator2 = ctk.CTkFrame(
-            middle_scroll,
-            height=1,
-            fg_color="#333333"
-        )
-        separator2.grid(row=row_idx, column=0, sticky="ew", pady=5)
-        row_idx += 1
-
-    # 如果有武器数据，展示等级对应的属性
-    if weapon_data:
-        # 重新获取武器特殊能力等级（解决变量作用域问题）
-        special_ability_1_name = weapon_panel.get_special_ability_1_name()
-        special_ability_1_level = weapon_panel.get_special_ability_1_level()
-        special_ability_2_name = weapon_panel.get_special_ability_2_name()
-        special_ability_2_level = weapon_panel.get_special_ability_2_level()
-        special_ability_3_name = weapon_panel.get_special_ability_3_name()
-        special_ability_3_level = weapon_panel.get_special_ability_3_level()
-        
-        weapon_title = ctk.CTkLabel(
-            middle_scroll,
-            text="=== 武器属性 ===",
-            font=big_font,
-            text_color="#FFD700"
-        )
-        weapon_title.grid(row=row_idx, column=0, sticky="w", pady=(5, 2))
-        row_idx += 1
-
-        # 展示武器的基础属性（只显示武器实际拥有的属性）
-        # 首先展示基础攻击力
-        basic_attrs = ['基础攻击力']
-        for attr_name in basic_attrs:
-            value = _get_attribute_value(weapon_data, weapon_level, attr_name)
-            if value:
-                attr_label = ctk.CTkLabel(
-                    middle_scroll,
-                    text=f"  {attr_name}: {value}",
-                    font=small_font,
-                    text_color="#B8B8B8"
-                )
-                attr_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-                row_idx += 1
-
-        # 获取用户选择的武器特殊能力等级（已在前面获取过，这里不再重复获取）
-
-        # 展示武器的能力加成属性（所有以+结尾的属性）
-        # 获取所有加成属性（以+结尾的字段）
-        bonus_attrs = [key for key in weapon_data.keys() if key.endswith('+')]
-        for attr_name in bonus_attrs:
-            value = weapon_data[attr_name]
-            if isinstance(value, list) and len(value) > 0:
-                # 根据用户选择的特殊能力等级获取对应的值
-                # 确定使用哪个等级
-                if attr_name == special_ability_1_name:
-                    level_index = special_ability_1_level - 1
-                elif attr_name == special_ability_2_name:
-                    level_index = special_ability_2_level - 1
-                elif attr_name == special_ability_3_name:
-                    level_index = special_ability_3_level - 1
-                else:
-                    # 默认取第一个潜能等级的值
-                    level_index = 0
-                
-                # 确保索引有效
-                if 0 <= level_index < len(value):
-                    raw_value = value[level_index]
-                else:
-                    raw_value = value[0]
-                display_value = format_weapon_bonus_display_value(
-                    raw_value,
-                    is_first_skill=(attr_name == special_ability_1_name),
-                )
-            else:
-                display_value = format_weapon_bonus_display_value(
-                    value,
-                    is_first_skill=(attr_name == special_ability_1_name),
-                )
-            attr_label = ctk.CTkLabel(
-                middle_scroll,
-                text=f"  {attr_name}: {display_value}",
-                font=small_font,
-                text_color="#4ECDC4"  # 使用不同颜色区分加成属性
-            )
-            attr_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-            row_idx += 1
-
-        weapon_special_name = weapon_panel.get_weapon_special_name()
-        weapon_special_level = weapon_panel.get_weapon_special_level()
-        if weapon_special_name and weapon_special_name not in bonus_attrs:
-            field = weapon_data.get('特殊能力', [])
-            display_value = "0%"
-            if weapon_special_level > 0 and isinstance(field, list) and len(field) >= 3:
-                values = field[2]
-                if isinstance(values, list) and values:
-                    idx = weapon_special_level - 1
-                    raw_value = values[idx] if 0 <= idx < len(values) else values[0]
-                    display_value = format_weapon_bonus_display_value(
-                        raw_value, is_first_skill=False
-                    )
-            attr_label = ctk.CTkLabel(
-                middle_scroll,
-                text=f"  {weapon_special_name}(特殊能力): {display_value}",
-                font=small_font,
-                text_color="#4ECDC4"
-            )
-            attr_label.grid(row=row_idx, column=0, sticky="w", pady=1)
-            row_idx += 1
+    else:
+        _render_placeholder(char_attr_scroll, state["char_message"], font=small_font)
 
     special_ability_1_name = weapon_panel.get_special_ability_1_name()
     special_ability_1_level = weapon_panel.get_special_ability_1_level()
@@ -411,6 +256,31 @@ def confirm_selection(
     special_ability_3_level = weapon_panel.get_special_ability_3_level()
     weapon_special_name = weapon_panel.get_weapon_special_name()
     weapon_special_level = weapon_panel.get_weapon_special_level()
+
+    if not state["weapon_message"] and weapon_data:
+        weapon_lines = build_weapon_attribute_lines(
+            weapon_data,
+            weapon_level,
+            sa1_name=special_ability_1_name,
+            sa1_level=special_ability_1_level,
+            sa2_name=special_ability_2_name,
+            sa2_level=special_ability_2_level,
+            sa3_name=special_ability_3_name,
+            sa3_level=special_ability_3_level,
+            ws_name=weapon_special_name,
+            ws_level=weapon_special_level,
+        )
+        _render_lines(
+            weapon_attr_scroll,
+            weapon_lines,
+            font=small_font,
+            text_color="#4ECDC4",
+        )
+    else:
+        _render_placeholder(weapon_attr_scroll, state["weapon_message"], font=small_font)
+
+    if not state["can_update_zone"]:
+        return
 
     _display_zone_data(
         right_scroll, char_data, weapon_data, char_level, weapon_level,
