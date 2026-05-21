@@ -33,3 +33,4 @@ git_key.txt
 
 # 压缩文件
 *.zip
+.git/

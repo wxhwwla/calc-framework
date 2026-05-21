@@ -185,4 +185,11 @@ def show_help() -> None:
 if __name__ == "__main__":
     show_help()
 
-
+# --- UPLOAD_SUMMARY ---
+# TITLE: 更新 4 处文件
+# BODY:
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 .gitignore
+# - 更新文档 AGENTS.md
+# - 变更 skills-lock.json
+# --- END UPLOAD_SUMMARY ---
