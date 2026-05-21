@@ -22,12 +22,35 @@ from calculation.multiplicative_zones import (
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ['力量', '敏捷', '智识', '意志', '基础攻击力']
 
+# 角色技能类型与 JSON 字段、选择区滑块等级参数对应
+CHARACTER_SKILL_TYPES = (
+    ("战技", "战技倍率"),
+    ("连携技", "连携技倍率"),
+    ("终结技", "终结技倍率"),
+)
 
-def format_weapon_bonus_display_value(raw: Any, *, is_first_skill: bool) -> str:
+NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
+
+# 武器 xxx+ 中不按百分数展示的词条（JSON 为去掉 % 的数值，展示为整数）
+WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
+
+
+def _weapon_bonus_uses_integer_display(attr_name: str, *, is_first_skill: bool) -> bool:
+    """第一技能，或名称含源石技艺的附加属性，均展示为整数、不加 %。"""
+    return is_first_skill or WEAPON_INTEGER_BONUS_ATTR_KEY in attr_name
+
+
+def format_weapon_bonus_display_value(
+    raw: Any,
+    *,
+    attr_name: str = "",
+    is_first_skill: bool = False,
+) -> str:
     """
     武器属性列中 xxx+ 与特殊能力字段的数值展示格式。
 
     - 第一技能（第一条 xxx+）：JSON 数值按整数展示，如 60.0 → 60
+    - 名称含「源石技艺」的 xxx+：不论第几条，均按整数展示
     - 其余附加属性与特殊能力字段：按百分数展示，JSON 数值即百分比，如 27.6 → 27.6%
     """
     try:
@@ -35,7 +58,7 @@ def format_weapon_bonus_display_value(raw: Any, *, is_first_skill: bool) -> str:
     except (TypeError, ValueError):
         return str(raw)
 
-    if is_first_skill:
+    if _weapon_bonus_uses_integer_display(attr_name, is_first_skill=is_first_skill):
         return str(int(num))
 
     if num == int(num):
@@ -69,9 +92,65 @@ def _get_attribute_value(data: Dict[str, Any], level: int, attr_name: str) -> st
     return str(value)
 
 
+def format_skill_multiplier_display_value(raw: Any) -> str:
+    """技能倍率展示：JSON 去掉百分号，展示时原样补 %。"""
+    try:
+        num = float(raw)
+    except (TypeError, ValueError):
+        return str(raw)
+    if num == int(num):
+        return f"{int(num)}%"
+    return f"{format(num, 'g')}%"
+
+
+def _skill_segment_display_value(segment: Any, skill_level: int) -> Optional[str]:
+    """取单段倍率展示值；无伤害倍率时返回 None。"""
+    if not isinstance(segment, list) or not segment:
+        return None
+    index = skill_level - 1
+    if not (0 <= index < len(segment)):
+        return None
+    raw = segment[index]
+    if raw is None:
+        return None
+    return format_skill_multiplier_display_value(raw)
+
+
+def build_character_skill_lines(
+    char_data: Dict[str, Any],
+    *,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+) -> list[str]:
+    """构建角色技能倍率明细行（战技 → 连携技 → 终结技）。"""
+    skill_levels = (skill_1_level, skill_2_level, skill_3_level)
+    lines: list[str] = []
+    for (skill_type, field_name), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
+        if skill_level <= 0:
+            continue
+        segments = char_data.get(field_name)
+        if not isinstance(segments, list) or not segments:
+            continue
+        for segment_index, segment in enumerate(segments, start=1):
+            display_value = _skill_segment_display_value(segment, skill_level)
+            if display_value is None:
+                value_text = NO_DAMAGE_MULTIPLIER_TEXT
+            else:
+                value_text = display_value
+            lines.append(
+                f"{skill_type} 等级{skill_level} 第{segment_index}段: {value_text}"
+            )
+    return lines
+
+
 def build_character_attribute_lines(
     char_data: Optional[Dict[str, Any]],
     level: int,
+    *,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
 ) -> list[str]:
     """构建角色属性列展示明细（不含摘要）。"""
     if not char_data:
@@ -81,6 +160,15 @@ def build_character_attribute_lines(
         value = _get_attribute_value(char_data, level, attr_name)
         if value:
             lines.append(f"{attr_name}: {value}")
+    if skill_1_level or skill_2_level or skill_3_level:
+        lines.extend(
+            build_character_skill_lines(
+                char_data,
+                skill_1_level=skill_1_level,
+                skill_2_level=skill_2_level,
+                skill_3_level=skill_3_level,
+            )
+        )
     return lines
 
 
@@ -123,6 +211,7 @@ def build_weapon_attribute_lines(
             raw_value = value
         display_value = format_weapon_bonus_display_value(
             raw_value,
+            attr_name=attr_name,
             is_first_skill=(attr_name == sa1_name),
         )
         lines.append(f"{attr_name}: {display_value}")
@@ -137,6 +226,7 @@ def build_weapon_attribute_lines(
                 raw_value = values[idx] if 0 <= idx < len(values) else values[0]
                 display_value = format_weapon_bonus_display_value(
                     raw_value,
+                    attr_name=ws_name,
                     is_first_skill=False,
                 )
         lines.append(f"{ws_name}(特殊能力): {display_value}")
@@ -238,7 +328,13 @@ def confirm_selection(
     weapon_level = weapon_panel.get_level()
     trust_level = char_panel.get_trust_level()
     if not state["char_message"] and char_data:
-        char_lines = build_character_attribute_lines(char_data, char_level)
+        char_lines = build_character_attribute_lines(
+            char_data,
+            char_level,
+            skill_1_level=char_panel.get_skill_1_level(),
+            skill_2_level=char_panel.get_skill_2_level(),
+            skill_3_level=char_panel.get_skill_3_level(),
+        )
         _render_lines(
             char_attr_scroll,
             char_lines,

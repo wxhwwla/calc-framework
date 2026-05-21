@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -49,10 +50,11 @@ def _package_path() -> Path:
 
 
 def _import_upload_meta():
+    """从 Python 包目录加载 upload_meta（运行时改 sys.path；见仓库根 pyrightconfig.json）。"""
     pkg = str(_package_path())
     if pkg not in sys.path:
         sys.path.insert(0, pkg)
-    import upload_meta  # noqa: E402
+    import upload_meta  # noqa: E402  # pyright: 依赖 extraPaths，运行时由上方 sys.path 保证
 
     return upload_meta
 

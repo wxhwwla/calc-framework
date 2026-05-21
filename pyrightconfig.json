@@ -1,0 +1,15 @@
+{
+  "include": [
+    "endfield_damage_calculator",
+    "github_upload_module.py",
+    "github_download_module.py"
+  ],
+  "exclude": [
+    "_add_character_legacy.py"
+  ],
+  "extraPaths": [
+    "endfield_damage_calculator"
+  ],
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "standard"
+}

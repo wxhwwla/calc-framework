@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.10.3"
+_VERSION = "1.10.4"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -188,15 +188,15 @@ if __name__ == "__main__":
 # --- UPLOAD_SUMMARY ---
 # TITLE: 更新 11 处文件
 # BODY:
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 更新文档 CONTEXT.md
-# - 更新文档 PROJECT_DOCUMENTATION.md
 # - 更新文档 endfield_damage_calculator/README.md
-# - 修改 endfield_damage_calculator/gui_design/gui.py
 # - 修改 endfield_damage_calculator/gui_design/property_display.py
-# - 修改 endfield_damage_calculator/main.py
+# - 修改 endfield_damage_calculator/gui_design/selection_components.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/test_confirm_selection_state.py
-# - 修改 endfield_damage_calculator/tests/test_gui_layout_contract.py
+# - 修改 endfield_damage_calculator/tests/test_confirm_selection_skill_levels.py
 # - 修改 endfield_damage_calculator/tests/test_property_display_lines.py
+# - 修改 endfield_damage_calculator/tests/test_weapon_panel_layout.py
+# - 修改 endfield_damage_calculator/tests/test_weapon_property_display.py
+# - 修改 github_upload_module.py
+# - 变更 pyrightconfig.json
 # --- END UPLOAD_SUMMARY ---

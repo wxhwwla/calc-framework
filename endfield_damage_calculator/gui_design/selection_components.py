@@ -23,6 +23,13 @@ def format_weapon_skill_title(prefix: str, attr_name: str = "") -> str:
     return f"{prefix}：无"
 
 
+def format_weapon_skill_slider_value(*, active: bool, level: int = 0) -> str:
+    """武器技能滑块右侧数值；无该条技能时与特殊技能一致显示 0。"""
+    if not active:
+        return "0"
+    return str(level)
+
+
 class TrustPanel:
     """
     信赖等级选择面板
@@ -189,7 +196,10 @@ class SpecialAbilityPanel:
         )
         self._ability_3_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
         self._ability_3_label = ctk.CTkLabel(
-            self._ability_3_frame, text="—", font=self.my_font, width=30
+            self._ability_3_frame,
+            text=format_weapon_skill_slider_value(active=False),
+            font=self.my_font,
+            width=30,
         )
         self._ability_3_label.pack(side="right")
         self._ability_3_slider = ctk.CTkSlider(
@@ -379,7 +389,9 @@ class SpecialAbilityPanel:
                 text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2])
             )
         if self._ability_3_label:
-            self._ability_3_label.configure(text="—")
+            self._ability_3_label.configure(
+                text=format_weapon_skill_slider_value(active=False)
+            )
         if self._ability_3_slider:
             self._ability_3_slider.configure(state="disabled")
             self._ability_3_slider.set(1)

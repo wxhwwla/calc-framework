@@ -8,6 +8,7 @@ from pathlib import Path
 
 from gui_design.selection_components import (
     SpecialAbilityPanel,
+    format_weapon_skill_slider_value,
     format_weapon_skill_title,
 )
 
@@ -26,6 +27,14 @@ def _load_weapon_by_name(name: str) -> dict:
         if weapon.get("名称") == name:
             return weapon
     raise KeyError(name)
+
+
+class TestFormatWeaponSkillSliderValue(unittest.TestCase):
+    def test_inactive_skill_shows_zero_like_weapon_special(self):
+        self.assertEqual(format_weapon_skill_slider_value(active=False), "0")
+
+    def test_active_skill_shows_level(self):
+        self.assertEqual(format_weapon_skill_slider_value(active=True, level=3), "3")
 
 
 class TestFormatWeaponSkillTitle(unittest.TestCase):
