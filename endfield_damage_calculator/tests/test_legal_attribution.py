@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 
 from legal.attribution import (
+    ATTRIBUTION_DIALOG_MINSIZE,
+    ATTRIBUTION_DIALOG_SIZE,
     ATTRIBUTION_DOC_URL,
     BWIKI_ZMD_URL,
     COMMERCIAL_OUTLINE_URL,
@@ -22,6 +24,13 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class TestLegalAttribution(unittest.TestCase):
+    def test_dialog_default_size_fits_all_buttons(self):
+        w, h = ATTRIBUTION_DIALOG_SIZE
+        min_w, min_h = ATTRIBUTION_DIALOG_MINSIZE
+        self.assertGreaterEqual(h, 700)
+        self.assertLessEqual(min_w, w)
+        self.assertLessEqual(min_h, h)
+
     def test_summary_covers_acceptance_and_non_official(self):
         self.assertIn("非官方", SUMMARY_TEXT)
         self.assertIn("AGPL", SUMMARY_TEXT)

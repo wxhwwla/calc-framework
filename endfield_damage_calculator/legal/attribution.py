@@ -25,6 +25,11 @@ CC_BY_SA_40_URL = "https://creativecommons.org/licenses/by-sa/4.0/deed.zh"
 AGPL_30_URL = "https://www.gnu.org/licenses/agpl-3.0.html"
 COMMERCIAL_CONTACT = "wxhwwla@gmail.com"
 
+# 默认尺寸须容纳简略正文 + 全部链接按钮；过小会导致底部按钮被裁切
+ATTRIBUTION_DIALOG_SIZE = (620, 760)
+ATTRIBUTION_DIALOG_MINSIZE = (560, 700)
+ATTRIBUTION_TEXTBOX_HEIGHT = 200
+
 SUMMARY_TEXT = """【非官方工具】
 本程序为爱好者计算器，不代表游戏官方或 BWIKI 运营方。
 使用本程序或数据即表示您已阅读相关许可。
@@ -76,24 +81,22 @@ def open_attribution_dialog(
     """打开「数据来源与许可」模态窗口。"""
     dialog = ctk.CTkToplevel(parent)
     dialog.title("数据来源与许可")
-    dialog.geometry("600x580")
+    w, h = ATTRIBUTION_DIALOG_SIZE
+    dialog.geometry(f"{w}x{h}")
+    dialog.minsize(*ATTRIBUTION_DIALOG_MINSIZE)
     dialog.transient(parent)
     dialog.grab_set()
 
     body_font = small_font or ctk.CTkFont(family="微软雅黑", size=12)
     title_font = font or ctk.CTkFont(family="微软雅黑", size=14, weight="bold")
 
-    ctk.CTkLabel(dialog, text="数据来源与许可（简略）", font=title_font).pack(
-        padx=16, pady=(16, 8), anchor="w"
+    # 自下而上 pack，避免 expand 文本框挤占底部按钮区域
+    ctk.CTkButton(dialog, text="关闭", font=body_font, command=dialog.destroy).pack(
+        side="bottom", pady=(0, 16)
     )
 
-    textbox = ctk.CTkTextbox(dialog, font=body_font, wrap="word")
-    textbox.pack(fill="both", expand=True, padx=16, pady=8)
-    textbox.insert("1.0", SUMMARY_TEXT)
-    textbox.configure(state="disabled")
-
     btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
-    btn_frame.pack(fill="x", padx=16, pady=(4, 8))
+    btn_frame.pack(side="bottom", fill="x", padx=16, pady=(4, 8))
 
     def _row(label: str, url: str) -> None:
         ctk.CTkButton(
@@ -112,6 +115,16 @@ def open_attribution_dialog(
     _row("终末地 BWIKI", BWIKI_ZMD_URL)
     _row("CC BY-SA 4.0", CC_BY_SA_40_URL)
 
-    ctk.CTkButton(dialog, text="关闭", font=body_font, command=dialog.destroy).pack(pady=(0, 16))
+    ctk.CTkLabel(dialog, text="数据来源与许可（简略）", font=title_font).pack(
+        side="top", padx=16, pady=(16, 8), anchor="w"
+    )
+
+    textbox = ctk.CTkTextbox(
+        dialog, font=body_font, wrap="word", height=ATTRIBUTION_TEXTBOX_HEIGHT
+    )
+    textbox.pack(side="top", fill="both", expand=True, padx=16, pady=8)
+    textbox.insert("1.0", SUMMARY_TEXT)
+    textbox.configure(state="disabled")
+
     dialog.update_idletasks()
     return dialog
