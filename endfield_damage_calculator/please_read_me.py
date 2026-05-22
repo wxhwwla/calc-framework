@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.13.0"
+_VERSION = "1.13.1"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -211,41 +211,12 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 35 处文件
+# TITLE: 更新 6 处文件
 # BODY:
-# - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 .cursor/
+# - 更新文档 AGENTS.md
 # - 更新文档 CONTEXT.md
-# - 更新文档 docs/README.md
-# - 更新文档 endfield_damage_calculator/README.md
-# - 修改 endfield_damage_calculator/build.py
-# - 修改 endfield_damage_calculator/calculation/__init__.py
-# - 修改 endfield_damage_calculator/calculation/curve_baker.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/add_character.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/character_data.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/formula.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/add_weapon.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/formula.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/weapon_data.py
-# - 修改 endfield_damage_calculator/data/loader.py
-# - 修改 endfield_damage_calculator/gui_design/display_model.py
-# - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/gui_design/gui_tools.py
-# - 修改 endfield_damage_calculator/gui_design/property_display.py
-# - 修改 endfield_damage_calculator/main.py
-# - 修改 endfield_damage_calculator/packaging/__init__.py
-# - 修改 endfield_damage_calculator/packaging/release_layout.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 变更 endfield_damage_calculator/pyproject.toml
-# - 变更 endfield_damage_calculator/release_bundle/
-# - 修改 endfield_damage_calculator/tests/test_curve_baker.py
-# - 修改 endfield_damage_calculator/tests/test_data_generators.py
-# - 修改 endfield_damage_calculator/tests/test_release_layout.py
-# - 修改 endfield_damage_calculator/tests/test_wiki_sync.py
-# - 修改 endfield_damage_calculator/tests/test_zone_snapshot.py
-# - 修改 tools/bwiki_scout/pkg_bootstrap.py
-# - 修改 tools/bwiki_scout/seed_persist.py
-# - 修改 tools/bwiki_scout/wiki_sync.py
 # --- END UPLOAD_SUMMARY ---

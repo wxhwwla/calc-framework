@@ -27,7 +27,7 @@
 |------|------|
 | **统一加载层** | `data.loader`：`get_characters()` / `get_weapons()`，带缓存，`strict` 失败抛 `DataLoadError` |
 | **预烘焙 JSON** | 已写入完整曲线的 JSON；GUI 不再在运行时调用 `process_*` |
-| **录入脚本** | `add_weapon.py`、`add_character.py`、`scripts/seed_weapons.py`，可用 `process_*` 规范化后写回 JSON |
+| **录入脚本** | `add_weapon.py`、`add_character.py`、`scripts/seed_*.py`；经 `curve_baker` 烘焙曲线后写回 JSON |
 
 ## 工程
 
