@@ -12,6 +12,8 @@
     python github_upload_module.py --no-bump    # 提交并推送，但不改 _VERSION
 
 版本与提交说明流程详见 endfield_damage_calculator/please_read_me.py 中的 UPLOAD_WORKFLOW。
+
+若本机已配置 Git 提交签名（GPG/SSH），脚本会在 commit 时自动签名，便于 GitHub 显示 Verified。
 """
 
 from __future__ import annotations
@@ -21,9 +23,10 @@ import os
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 # ===== 配置区 =====
 DEFAULT_REMOTE_SSH = "git@github.com:wxhwwla/endfield_damage_calculator_2.0.git"
@@ -312,6 +315,76 @@ def _collect_change_paths() -> List[str]:
     return paths
 
 
+@dataclass(frozen=True)
+class SigningConfig:
+    """本机 Git 提交签名配置快照（用于上传脚本 commit）。"""
+
+    gpgsign: str | None
+    signingkey: str | None
+    gpg_format: str | None
+
+
+def _is_truthy_git_config(value: str | None) -> bool:
+    if not value:
+        return False
+    return value.strip().lower() in {"true", "1", "yes", "on"}
+
+
+def _git_config_get(key: str) -> str | None:
+    """读取 git config（先本地，再 global）。"""
+    for scope in ([], ["--global"]):
+        args = ["config", *scope, "--get", key] if scope else ["config", "--get", key]
+        code, stdout, _ = run_git(args, check=False, capture_output=True)
+        if code == 0 and stdout.strip():
+            return stdout.strip()
+    return None
+
+
+def resolve_signing_config(
+    getter: Callable[[str], str | None] | None = None,
+) -> SigningConfig:
+    read = getter or _git_config_get
+    return SigningConfig(
+        gpgsign=read("commit.gpgsign"),
+        signingkey=read("user.signingkey"),
+        gpg_format=read("gpg.format"),
+    )
+
+
+def commit_extra_args(cfg: SigningConfig) -> list[str]:
+    """
+    返回追加到 `git commit` 的参数。
+
+    - 已开 commit.gpgsign：由 Git 自动签名，无需 -S
+    - 仅有 signingkey：对本提交显式 -S
+    """
+    if _is_truthy_git_config(cfg.gpgsign):
+        return []
+    if cfg.signingkey and cfg.signingkey.strip():
+        return ["-S"]
+    return []
+
+
+def is_signing_configured(cfg: SigningConfig) -> bool:
+    return bool(commit_extra_args(cfg)) or _is_truthy_git_config(cfg.gpgsign)
+
+
+def signing_status_message(cfg: SigningConfig) -> str:
+    if is_signing_configured(cfg):
+        fmt = (cfg.gpg_format or "openpgp").strip().lower()
+        return (
+            f"[信息] 已配置提交签名（{fmt}），本次 commit 可在 GitHub 显示 Verified"
+            "（密钥须已添加到 GitHub → Settings → SSH and GPG keys）"
+        )
+    return (
+        "[提示] 未检测到提交签名；推送后 commit 可能无 Verified 标记。\n"
+        "  配置示例（SSH 签名）：\n"
+        "    git config --global gpg.format ssh\n"
+        "    git config --global user.signingkey <你的 SSH 公钥路径>\n"
+        "    git config --global commit.gpgsign true"
+    )
+
+
 def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> Optional[str]:
     if no_bump:
         return None
@@ -327,12 +400,14 @@ def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> Optional[str]:
 
 
 def _commit_with_message(message: str) -> None:
+    cfg = resolve_signing_config()
+    extra = commit_extra_args(cfg)
     msg_path = os.path.join(_repo_root(), ".git-upload-msg.txt")
     with open(msg_path, "w", encoding="utf-8") as f:
         f.write(message)
         f.write("\n")
     try:
-        run_git(["commit", "-F", msg_path])
+        run_git(["commit", *extra, "-F", msg_path])
     finally:
         if os.path.isfile(msg_path):
             os.remove(msg_path)
@@ -430,6 +505,7 @@ def commit_and_push(*, minor: bool = False, no_bump: bool = False) -> None:
 
         title_read, bullets_read = meta.read_summary_for_commit(readme_path)
         commit_msg = meta.build_commit_message(version_for_msg, title_read, bullets_read)
+        print(signing_status_message(resolve_signing_config()))
         print(f"[信息] git commit:\n{commit_msg.splitlines()[0]} ...")
         _commit_with_message(commit_msg)
         created_commit = True
