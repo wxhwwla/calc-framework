@@ -343,10 +343,12 @@ python character_weapon_equipment/weapon_data/add_weapon.py
 
 ---
 
-## 📄 许可证
+## 📄 许可证与数据来源
 
-**GPL-3.0 + 附加条款**（禁止商用；B 站充电等自愿创作者支持除外）。  
-全文见仓库根目录 [`LICENSE`](../LICENSE)。
+- **软件**：[`LICENSE`](../LICENSE)（AGPL-3.0 或商业许可）
+- **数据**：[`DATA_LICENSE`](../DATA_LICENSE)（商用不可用本仓库 JSON）
+- **说明**：[`docs/数据来源与许可.md`](../docs/数据来源与许可.md) · [`合规自查清单`](../docs/合规自查清单.md)
+- **GUI**：「数据来源与许可」按钮
 
 ---
 

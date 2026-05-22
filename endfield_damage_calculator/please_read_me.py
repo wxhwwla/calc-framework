@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.10.6"
+_VERSION = "1.11.0"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -186,11 +186,24 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 18 处文件
 # BODY:
+# - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
+# - 变更 "docs//345/225/206/344/270/232/350/256/270/345/217/257/350/246/201/347/202/271.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
+# - 变更 .gitignore
+# - 变更 DATA_LICENSE
 # - 变更 LICENSE
+# - 更新文档 NOTICES.md
 # - 更新文档 README.md
 # - 更新文档 endfield_damage_calculator/README.md
-# - 修改 endfield_damage_calculator/please_read_me.py
+# - 更新文档 endfield_damage_calculator/character_weapon_equipment/DATA_README.md
+# - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 变更 endfield_damage_calculator/legal/
+# - 修改 endfield_damage_calculator/tests/test_bwiki_scout.py
+# - 修改 endfield_damage_calculator/tests/test_legal_attribution.py
 # - 修改 endfield_damage_calculator/tests/test_readme_layers.py
+# - 修改 github_download_module.py
+# - 变更 scripts/bwiki_scout/
 # --- END UPLOAD_SUMMARY ---

@@ -63,3 +63,6 @@ Desktop.ini
 # 本地数据库（若将来使用）
 *.sqlite3
 *.db
+
+# BWIKI 侦察缓存（体积大、可本地重跑）
+scripts/bwiki_scout/output/

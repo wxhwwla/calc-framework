@@ -30,6 +30,7 @@ from gui_design.gui_tools import (  # GUI 工具组件导入
 )
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
 from please_read_me import get_exe_version  # EXE版本号
+from legal.attribution import open_attribution_dialog
 
 # 列 0/1/3/5：选择区与属性区（最小宽度）；列 7：右侧乘区（占满剩余宽度）
 APP_COLUMN_WEIGHTS = (0, 0, 0, 0, 0, 0, 0, 1)
@@ -111,6 +112,7 @@ class DamageCalculatorApp:
         self.char_frame: Optional[ctk.CTkFrame] = None
         self.weapon_frame: Optional[ctk.CTkFrame] = None
         self.confirm_btn: Optional[ctk.CTkButton] = None
+        self.attribution_btn: Optional[ctk.CTkButton] = None
         self.char_attr_frame: Optional[ctk.CTkFrame] = None
         self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
@@ -188,17 +190,33 @@ class DamageCalculatorApp:
             font=self.big_font,       # 使用大号字体
             command=self._on_confirm  # 点击事件处理函数
         )
-        # 配置武器框架内部布局（确认按钮放在底部）
-        self.weapon_frame.grid_rowconfigure(0, weight=1)  # 武器选择区
-        self.weapon_frame.grid_rowconfigure(1, weight=0)  # 按钮区不拉伸
+        self.weapon_frame.grid_rowconfigure(0, weight=1)
+        self.weapon_frame.grid_rowconfigure(1, weight=0)
+        self.weapon_frame.grid_rowconfigure(2, weight=0)
         self.weapon_frame.grid_columnconfigure(0, weight=1)
-        
+
         self.confirm_btn.grid(
             row=1,
             column=0,
             padx=10,
-            pady=10,
-            sticky="ew"  # 水平拉伸，垂直居中
+            pady=(10, 4),
+            sticky="ew",
+        )
+
+        self.attribution_btn = ctk.CTkButton(
+            self.weapon_frame,
+            text="数据来源与许可",
+            font=self.small_font,
+            fg_color="transparent",
+            border_width=1,
+            command=self._on_attribution,
+        )
+        self.attribution_btn.grid(
+            row=2,
+            column=0,
+            padx=10,
+            pady=(4, 10),
+            sticky="ew",
         )
 
         # ==================== 角色属性展示区 ====================
@@ -446,6 +464,14 @@ class DamageCalculatorApp:
                 weapon_names = [w["名称"] for w in filtered_weapons]
                 if current_weapon_name in weapon_names:
                     self.weapon_panel.selected_name.set(current_weapon_name)
+
+    def _on_attribution(self) -> None:
+        """打开数据来源与许可说明窗口。"""
+        open_attribution_dialog(
+            self.app,
+            font=self.big_font,
+            small_font=self.small_font,
+        )
 
     def _on_confirm(self) -> None:
         """

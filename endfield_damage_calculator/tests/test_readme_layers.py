@@ -16,12 +16,19 @@ class TestReadmeLayers(unittest.TestCase):
         self.assertIn("endfield_damage_calculator/README.md", text)
         self.assertIn("docs/操作指令集.md", text)
         self.assertIn("LICENSE", text)
+        self.assertIn("DATA_LICENSE", text)
 
-    def test_license_file_documents_gpl3_with_additional_terms(self):
+    def test_license_file_documents_agpl_and_commercial_dual_license(self):
         text = (_REPO_ROOT / "LICENSE").read_text(encoding="utf-8")
-        self.assertIn("GPL-3.0", text)
-        self.assertIn("禁止商用", text)
+        self.assertIn("AGPL-3.0", text)
+        self.assertIn("商业许可", text)
         self.assertIn("充电", text)
+        self.assertIn("DATA_LICENSE", text)
+
+    def test_data_license_file_exists(self):
+        path = _REPO_ROOT / "DATA_LICENSE"
+        self.assertTrue(path.is_file())
+        self.assertIn("商业", path.read_text(encoding="utf-8"))
 
     def test_package_readme_links_back_to_root_docs(self):
         text = _PKG_README.read_text(encoding="utf-8")

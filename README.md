@@ -43,7 +43,15 @@ python github_upload_module.py
 
 细节与布局说明见 [**详细 README**](endfield_damage_calculator/README.md)。
 
-## 许可证
+## 许可证与数据来源
 
-**GPL-3.0 + 附加条款**（禁止商用；B 站充电等自愿创作者支持除外）。  
-全文见仓库根目录 [`LICENSE`](LICENSE)。
+| 内容 | 说明 |
+|------|------|
+| **本软件** | **AGPL-3.0**（默认）或书面 **商业许可** → [`LICENSE`](LICENSE) |
+| **游戏数据** | 单独许可 → [`DATA_LICENSE`](DATA_LICENSE)（**商用不可用本仓库数据**） |
+| **完整说明** | [`docs/数据来源与许可.md`](docs/数据来源与许可.md)（含典型情形对照） |
+| **商业洽谈** | [`docs/商业许可要点.md`](docs/商业许可要点.md)（提纲，非合同） |
+| **发布自检** | [`docs/合规自查清单.md`](docs/合规自查清单.md) |
+| **第三方声明** | [`NOTICES.md`](NOTICES.md) |
+
+使用或分发即视为接受相应许可。GUI「数据来源与许可」可查看简略版并打开链接。

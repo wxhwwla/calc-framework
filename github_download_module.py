@@ -5,19 +5,25 @@
 
 认证：SSH（git@github.com:...），不再依赖 git_key.txt。
 
-警告：会丢弃本地未提交更改，使用前请确认。
+警告：会丢弃本地未提交更改与未跟踪文件，使用前须人工确认。
 
 用法:
     python github_download_module.py
+    python github_download_module.py --yes   # 跳过确认（仅自动化，慎用）
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import subprocess
 import sys
 from typing import Any, Tuple
+
+# 须完整输入该词才会执行 reset --hard / clean -fd
+CONFIRM_PHRASE = "覆盖本地"
+_MAX_LISTED_CHANGES = 30
 
 DEFAULT_REMOTE_SSH = "git@github.com:wxhwwla/endfield_damage_calculator_2.0.git"
 AUTH_MODE = "ssh"
@@ -130,11 +136,64 @@ def setup_git_repo() -> None:
             run_git(["checkout", "-b", DEFAULT_BRANCH])
 
 
+def _porcelain_status() -> str:
+    _, status, _ = run_git(["status", "--porcelain"], capture_output=True)
+    return status
+
+
+def _print_pending_changes(porcelain: str) -> None:
+    lines = [ln for ln in porcelain.splitlines() if ln.strip()]
+    if not lines:
+        print("[信息] 工作区无已跟踪文件的修改（仍将执行 clean -fd 删除未跟踪文件）")
+        return
+    print(f"[警告] 检测到 {len(lines)} 项本地变更（未提交或将丢失）：")
+    for line in lines[:_MAX_LISTED_CHANGES]:
+        print(f"  {line}")
+    if len(lines) > _MAX_LISTED_CHANGES:
+        print(f"  ... 另有 {len(lines) - _MAX_LISTED_CHANGES} 项未列出")
+
+
+def require_user_confirm(*, skip: bool = False) -> bool:
+    """
+    要求用户输入 CONFIRM_PHRASE 后才允许继续。
+
+    返回 True 表示可继续；False 表示用户取消。
+    """
+    if skip:
+        print("[警告] 已使用 --yes，跳过人工确认")
+        return True
+
+    os.chdir(_repo_root())
+    porcelain = _porcelain_status()
+
+    print("=" * 60)
+    print("[危险] 本操作将：")
+    print("  1. git fetch origin")
+    print(f"  2. git reset --hard origin/{DEFAULT_BRANCH}")
+    print("  3. git clean -fd（删除未跟踪的文件与目录）")
+    print("本地未推送的提交、未提交修改、未跟踪文件均可能丢失。")
+    print("=" * 60)
+    _print_pending_changes(porcelain)
+    print()
+    print(f"若确定继续，请完整输入: {CONFIRM_PHRASE}")
+    print("直接回车或输入其他内容将取消。")
+    try:
+        typed = input("> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print("\n[已取消]")
+        return False
+    if typed != CONFIRM_PHRASE:
+        print(f"[已取消] 未输入「{CONFIRM_PHRASE}」，本地未改动。")
+        return False
+    print("[信息] 确认通过，开始与远程对齐…")
+    return True
+
+
 def force_pull() -> bool:
     os.chdir(_repo_root())
     print("[信息] 强制与 origin/main 对齐（本地未提交更改将丢失）")
 
-    code, status, _ = run_git(["status", "--porcelain"], capture_output=True)
+    status = _porcelain_status()
     if status.strip():
         print("[警告] 存在本地更改，将 reset --hard")
 
@@ -154,11 +213,23 @@ def force_pull() -> bool:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="从 GitHub 拉取并覆盖本地（危险操作，须确认）",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help=f"跳过确认（慎用）；默认须输入「{CONFIRM_PHRASE}」",
+    )
+    args = parser.parse_args()
+
     print("=" * 60)
     print("GitHub 拉取脚本（SSH，覆盖本地）")
     print("=" * 60)
     try:
         setup_git_repo()
+        if not require_user_confirm(skip=args.yes):
+            sys.exit(0)
         if not force_pull():
             sys.exit(1)
         print("=" * 60)
