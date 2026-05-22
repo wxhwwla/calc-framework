@@ -87,7 +87,7 @@ None - can start immediately
 - [ ] 启动应用与运行测试不再因 import `weapon_data` 而隐式改写 JSON
 - [ ] `get_characters()` / `get_weapons()` 为唯一推荐数据入口
 - [ ] 现有 59 个测试仍通过
-- [ ] 文档（README 或 PROJECT_DOCUMENTATION）说明数据加载约定
+- [ ] 文档（README 或 `docs/算法与架构.md`）说明数据加载约定
 
 ### Blocked by
 

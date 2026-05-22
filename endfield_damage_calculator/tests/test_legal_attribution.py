@@ -35,7 +35,7 @@ class TestLegalAttribution(unittest.TestCase):
             notices_local_path(),
             _REPO_ROOT / "docs" / "商业许可要点.md",
             _REPO_ROOT / "docs" / "合规自查清单.md",
-            _REPO_ROOT / "scripts" / "bwiki_scout" / "scout.py",
+            _REPO_ROOT / "tools" / "bwiki_scout" / "scout.py",
         ]
         for path in paths:
             self.assertTrue(path.is_file(), path)

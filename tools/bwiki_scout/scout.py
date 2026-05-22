@@ -4,8 +4,8 @@
 BWIKI 侦察入口（阶段 C）。
 
 用法（仓库根目录）：
-    python scripts/bwiki_scout/scout.py
-    python scripts/bwiki_scout/scout.py --limit 5   # 每类仅拉 5 条，调试
+    python tools/bwiki_scout/scout.py
+    python tools/bwiki_scout/scout.py --limit 5   # 每类仅拉 5 条，调试
 """
 
 from __future__ import annotations
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output",
         type=Path,
         default=OUTPUT_ROOT,
-        help="输出目录，默认 scripts/bwiki_scout/output",
+        help="输出目录，默认 tools/bwiki_scout/output",
     )
     args = parser.parse_args(argv)
     result = run_scout(output_root=args.output, per_kind_limit=args.limit)

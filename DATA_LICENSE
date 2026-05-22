@@ -29,12 +29,12 @@ Copyright (C) 2024-2026 wxhwwla（数据整理与编排）
   - endfield_damage_calculator/character_weapon_equipment/**/characters.json
   - endfield_damage_calculator/character_weapon_equipment/**/weapons.json
   - 以及今后在同路径下维护的同类结构化游戏数据文件
-  - scripts/bwiki_scout/output/ 下的侦察缓存与解析草案（若存在）
+  - tools/bwiki_scout/output/ 下的侦察缓存与解析草案（若存在）
   - 基于上述文件或本项目数据采集流程（人工录入模板、BWIKI 侦察脚本、
     字段映射、对比合并规则等）所产生的衍生数据集
 
   「数据」包括文件内容、字段命名约定、录入模板及可直接复现相同数据集
-  的流程说明（含 scripts/bwiki_scout/ 的设计思路与输出格式）。
+  的流程说明（含 tools/bwiki_scout/ 的设计思路与输出格式）。
 
 ================================================================================
 二、非商业使用（默认）
@@ -63,7 +63,7 @@ Copyright (C) 2024-2026 wxhwwla（数据整理与编排）
   中直接使用、再分发、缓存或向终端用户提供：
 
   - 本仓库 characters.json、weapons.json 等现成文件（含摘录、转换格式）；
-  - scripts/bwiki_scout/ 的产出或与之实质相同的采集结果；
+  - tools/bwiki_scout/ 的产出或与之实质相同的采集结果；
   - 通过复制本项目录入模板、侦察脚本逻辑、字段映射表而得到的衍生集。
 
   商业场景包括但不限于：收费软件/服务、企业内商业决策工具（若对外
@@ -78,7 +78,7 @@ Copyright (C) 2024-2026 wxhwwla（数据整理与编排）
 四、BWIKI 与采集脚本
 ================================================================================
 
-  - scripts/bwiki_scout/ 仅用于维护者非商业校对，须合理访问频率，遵守
+  - tools/bwiki_scout/ 仅用于维护者非商业校对，须合理访问频率，遵守
     Wiki 服务条款与 robots 惯例。
   - 侦察产出默认不随发行包分发；即使获得，亦受本文件约束。
   - 从 BWIKI 摘录的内容须遵守 CC BY-SA 4.0：署名、相同方式共享等。

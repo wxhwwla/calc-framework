@@ -5,7 +5,7 @@
     "github_download_module.py"
   ],
   "exclude": [
-    "_add_character_legacy.py"
+    "legacy/_add_character_legacy.py"
   ],
   "extraPaths": [
     "endfield_damage_calculator"

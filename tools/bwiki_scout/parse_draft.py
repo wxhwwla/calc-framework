@@ -4,8 +4,8 @@
 阶段 B：将侦察缓存解析为 JSON 草案（不写入正式 characters.json / weapons.json）。
 
 用法：
-    python scripts/bwiki_scout/parse_draft.py
-    python scripts/bwiki_scout/parse_draft.py --input scripts/bwiki_scout/output
+    python tools/bwiki_scout/parse_draft.py
+    python tools/bwiki_scout/parse_draft.py --input tools/bwiki_scout/output
 """
 
 from __future__ import annotations

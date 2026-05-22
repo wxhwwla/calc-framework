@@ -2,7 +2,7 @@
 
 ## Project operations
 
-Before changing code or pushing to GitHub, read the human operation guide: [`docs/操作指令集.md`](docs/操作指令集.md) (working directories, upload script, versioning). Domain terms: [`CONTEXT.md`](CONTEXT.md). License: [`LICENSE`](LICENSE), [`DATA_LICENSE`](DATA_LICENSE), [`docs/数据来源与许可.md`](docs/数据来源与许可.md).
+Before changing code or pushing to GitHub, read the human operation guide: [`docs/操作指令集.md`](docs/操作指令集.md) (`[根]` / `[工具]` / `[包]` directories, upload script, versioning). Domain terms: [`CONTEXT.md`](CONTEXT.md). Repo maintenance scripts live under [`tools/`](tools/README.md) (not package `scripts/`). License: [`LICENSE`](LICENSE), [`DATA_LICENSE`](DATA_LICENSE), [`docs/数据来源与许可.md`](docs/数据来源与许可.md).
 
 ### Pushing to GitHub (agents)
 

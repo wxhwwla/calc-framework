@@ -33,8 +33,9 @@
 
 | 术语 | 含义 |
 |------|------|
-| **仓库根目录** | Git 克隆顶层（含 `CONTEXT.md`、`.github/`、`github_upload_module.py`） |
+| **仓库根目录** | Git 克隆顶层（含 `CONTEXT.md`、`.github/`、`github_upload_module.py`、`docs/`、`tools/`） |
 | **Python 包目录** | `endfield_damage_calculator/`（`main.py`、`tests/`、`pip install -e` 的工作目录） |
+| **遗留目录** | `legacy/`：旧脚本归档，新功能勿依赖 |
 | **打包路径** | PyInstaller 下通过 `utils.path_utils.get_resource_path` 解析 bundled 数据 |
 | **右侧乘区** | GUI 最右列（第 7 列），展示防御减伤、能力乘区与最终攻击力；**总伤结算**仍为后续产品功能 |
 | **角色属性列** | GUI 第 3 列，展示角色等级曲线属性（力量、敏捷等）及战技/连携技/终结技倍率明细（等级取自选择区滑块）；不含选择摘要 |
@@ -42,4 +43,5 @@
 | **上传流程** | 根目录 `github_upload_module.py`；`_VERSION` 自动 bump；可选提交签名；说明见 `please_read_me.UPLOAD_WORKFLOW` |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
-| **BWIKI 侦察** | `scripts/bwiki_scout/` 阶段 C 拉取 Wiki、阶段 B 解析草案；产出在 `output/`（gitignore），不写入正式 JSON |
+| **仓库维护工具** | `tools/`：仓库级脚本（BWIKI 侦察、审计等），与包内 `endfield_damage_calculator/scripts/` 区分 |
+| **BWIKI 侦察** | `tools/bwiki_scout/` 阶段 C 拉取 Wiki、阶段 B 解析草案；产出在 `output/`（gitignore），不写入正式 JSON |

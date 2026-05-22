@@ -11,6 +11,7 @@ GITIGNORE = REPO_ROOT / ".gitignore"
 # 必须忽略的片段（行为：这些路径不应被误提交）
 REQUIRED_PATTERNS = [
     "__pycache__/",
+    "tools/bwiki_scout/output/",
     ".pytest_cache/",
     "*.exe",
     "git_key.txt",

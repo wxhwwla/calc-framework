@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.11.2"
+_VERSION = "1.11.3"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -109,11 +109,15 @@ PROJECT_STRUCTURE = f"""
         └── weapon_data/           # 武器数据（JSON格式）
 
 仓库根目录（与 [包] 并列）：
-    ├── LICENSE / DATA_LICENSE     # 软件与数据许可
-    ├── docs/数据来源与许可.md      # 合规说明
-    ├── github_upload_module.py    # 上传（版本 bump + 可选签名）
-    ├── github_download_module.py  # 拉取覆盖（须输入「覆盖本地」）
-    └── scripts/bwiki_scout/       # BWIKI 侦察（output/ 已 gitignore）
+    ├── README.md / CONTEXT.md     # 门面与术语
+    ├── docs/                      # 操作指令集、许可、算法与架构
+    ├── tools/                     # 仓库级维护（见 tools/README.md）
+    │   ├── bwiki_scout/         # BWIKI 侦察（output/ 已 gitignore）
+    │   └── audit/               # 如 create_audit_issues.ps1
+    ├── legacy/                  # 遗留脚本，不参与日常
+    ├── LICENSE / DATA_LICENSE   # 软件与数据许可
+    ├── github_upload_module.py  # 上传（版本 bump + 可选签名）
+    └── github_download_module.py # 拉取覆盖（须输入「覆盖本地」）
 """
 
 USAGE_INFO = f"""
@@ -206,14 +210,44 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 8 处文件
+# TITLE: 更新 38 处文件
 # BODY:
+# - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
+# - 变更 "docs//345/225/206/344/270/232/350/256/270/345/217/257/350/246/201/347/202/271.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 变更 .gitignore
 # - 更新文档 AGENTS.md
 # - 更新文档 CONTEXT.md
+# - 变更 DATA_LICENSE
+# - 更新文档 NOTICES.md
 # - 更新文档 PROJECT_DOCUMENTATION.md
 # - 更新文档 README.md
+# - 修改 _add_character_legacy.py
+# - 更新文档 docs/README.md
+# - 更新文档 docs/agents/audit-issues-2026-05-20.md
 # - 更新文档 endfield_damage_calculator/README.md
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/tests/test_bwiki_scout.py
+# - 修改 endfield_damage_calculator/tests/test_gitignore_contract.py
+# - 修改 endfield_damage_calculator/tests/test_legal_attribution.py
+# - 修改 endfield_damage_calculator/tests/test_readme_layers.py
+# - 修改 endfield_damage_calculator/tests/test_repo_layout.py
+# - 变更 legacy/
+# - 变更 pyrightconfig.json
 # - 更新文档 scripts/bwiki_scout/README.md
+# - 修改 scripts/bwiki_scout/__init__.py
+# - 修改 scripts/bwiki_scout/api.py
+# - 修改 scripts/bwiki_scout/config.py
+# - 修改 scripts/bwiki_scout/gallery.py
+# - 修改 scripts/bwiki_scout/json_scan.py
+# - 修改 scripts/bwiki_scout/local_schema.py
+# - 修改 scripts/bwiki_scout/names.py
+# - 修改 scripts/bwiki_scout/parse_draft.py
+# - 修改 scripts/bwiki_scout/report.py
+# - 修改 scripts/bwiki_scout/scout.py
+# - 修改 scripts/bwiki_scout/storage.py
+# - 变更 scripts/create_audit_issues.ps1
+# - 变更 tools/
 # --- END UPLOAD_SUMMARY ---

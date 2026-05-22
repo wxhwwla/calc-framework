@@ -8,13 +8,13 @@
 
 ```powershell
 # 仓库根目录
-python scripts/bwiki_scout/scout.py
+python tools/bwiki_scout/scout.py
 
 # 调试：每类只拉 5 条
-python scripts/bwiki_scout/scout.py --limit 5
+python tools/bwiki_scout/scout.py --limit 5
 ```
 
-输出目录（已 gitignore）：`scripts/bwiki_scout/output/`
+输出目录（已 gitignore）：`tools/bwiki_scout/output/`
 
 | 路径 | 说明 |
 |------|------|
@@ -30,7 +30,7 @@ python scripts/bwiki_scout/scout.py --limit 5
 在阶段 C 完成后：
 
 ```powershell
-python scripts/bwiki_scout/parse_draft.py
+python tools/bwiki_scout/parse_draft.py
 ```
 
 生成 `output/parsed/operators.json`、`weapons.json`、`equipment.json`（**不覆盖**正式数据文件）。

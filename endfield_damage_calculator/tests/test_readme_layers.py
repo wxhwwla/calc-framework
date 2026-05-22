@@ -15,6 +15,7 @@ class TestReadmeLayers(unittest.TestCase):
         text = _ROOT_README.read_text(encoding="utf-8")
         self.assertIn("endfield_damage_calculator/README.md", text)
         self.assertIn("docs/操作指令集.md", text)
+        self.assertIn("tools/", text)
         self.assertIn("LICENSE", text)
         self.assertIn("DATA_LICENSE", text)
 

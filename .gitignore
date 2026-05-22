@@ -65,4 +65,4 @@ Desktop.ini
 *.db
 
 # BWIKI 侦察缓存（体积大、可本地重跑）
-scripts/bwiki_scout/output/
+tools/bwiki_scout/output/

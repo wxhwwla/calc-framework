@@ -1,7 +1,7 @@
 # 终末地伤害计算小工具（详细文档）
 
 > 本文件为 **Python 包目录** `[包]` 下的详细说明。  
-> GitHub 首页与速览见仓库根目录 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)。
+> GitHub 首页与速览见仓库根 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../docs/算法与架构.md)。
 
 > 基于 CustomTkinter 开发的《明日方舟：终末地》伤害计算辅助工具
 
@@ -66,10 +66,11 @@ endfield_damage_calculator/
 │   └── property_display.py    # 确认后分列展示角色/武器属性与乘区
 ├── legal/                     # 许可与数据来源（GUI 对话框）
 │   └── attribution.py
-├── scripts/                   # 辅助脚本（非 pytest）
+├── scripts/                   # 包内维护脚本（非 pytest；≠ 仓库 tools/）
 │   ├── inverse_cli.py         # 反推公式 CLI
 │   ├── inverse_formula_gui.py # 反推公式 GUI（维护用）
-│   └── seed_weapons.py        # 武器录入示例
+│   ├── seed_weapons.py        # 武器录入示例
+│   └── seed_characters.py     # 角色录入示例
 ├── tests/                     # pytest 单元测试
 │   ├── test_calculation.py
 │   ├── test_game_data_contract.py
@@ -77,6 +78,15 @@ endfield_damage_calculator/
 └── utils/                     # 工具函数
     └── path_utils.py          # 路径处理工具
 ```
+
+### 仓库根目录（与本包并列）
+
+| 路径 | 说明 |
+|------|------|
+| [`tools/`](../tools/README.md) | BWIKI 侦察、审计等；在 `[根]` 执行 `python tools/bwiki_scout/scout.py` |
+| [`docs/`](../docs/README.md) | 操作指令集、许可、算法文档 |
+| [`legacy/`](../legacy/README.md) | 遗留脚本，新录入请用本包 `add_character` / `add_weapon` |
+| `github_upload_module.py` / `github_download_module.py` | 在 `[根]` 运行 |
 
 ---
 
@@ -181,17 +191,17 @@ python build.py
 
 武器列下方 **「数据来源与许可」** 打开简略说明，可跳转 `LICENSE`、`DATA_LICENSE`、BWIKI、CC 与完整文档 [`docs/数据来源与许可.md`](../docs/数据来源与许可.md)。
 
-### BWIKI 数据侦察（`[根]` / `scripts/bwiki_scout/`）
+### BWIKI 数据侦察（`[根]` / `tools/bwiki_scout/`）
 
 对比终末地 BWIKI 与本地 JSON，**不覆盖** `characters.json` / `weapons.json`：
 
 ```powershell
 cd e:\endfield_damage_calculator   # [根]
-python scripts/bwiki_scout/scout.py --limit 5   # 调试可先限量
-python scripts/bwiki_scout/parse_draft.py
+python tools/bwiki_scout/scout.py --limit 5   # 调试可先限量
+python tools/bwiki_scout/parse_draft.py
 ```
 
-产出在 `scripts/bwiki_scout/output/`（已 gitignore）。说明见 [`scripts/bwiki_scout/README.md`](../scripts/bwiki_scout/README.md)。
+产出在 `tools/bwiki_scout/output/`（已 gitignore）。说明见 [`tools/bwiki_scout/README.md`](../tools/bwiki_scout/README.md)。
 
 ### 公式反推工具
 

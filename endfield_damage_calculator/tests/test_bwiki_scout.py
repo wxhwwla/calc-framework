@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_SCRIPTS = _REPO_ROOT / "scripts"
-if str(_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_SCRIPTS))
+_TOOLS = _REPO_ROOT / "tools"
+if str(_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_TOOLS))
 
 from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists  # noqa: E402
 from bwiki_scout.json_scan import find_json_hints  # noqa: E402
