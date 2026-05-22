@@ -14,6 +14,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -120,6 +121,8 @@ def run_scout(
             "titles": merged,
         }
 
+    cache_hits = 0
+    fetched_count = 0
     for kind, titles in titles_by_kind.items():
         if not titles:
             continue
@@ -127,12 +130,14 @@ def run_scout(
         for title in titles:
             cached = load_page_bundle(raw_dir, title)
             if cached:
+                cache_hits += 1
                 cached["kind"] = kind
                 all_pages[title] = cached
             else:
                 pending.append(title)
         if pending:
             bundles = wiki.fetch_pages_content(pending)
+            fetched_count += len(bundles)
             for title, bundle in bundles.items():
                 bundle["kind"] = kind
                 save_page_bundle(raw_dir, title, bundle)
@@ -142,6 +147,8 @@ def run_scout(
         "api_url": API_URL,
         "kinds": manifest_kinds,
         "fetched_pages": len(all_pages),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "cache_stats": {"from_cache": cache_hits, "fetched": fetched_count},
     }
     write_manifest(output_root, manifest)
 
@@ -207,6 +214,7 @@ def run_scout(
         "reports_dir": str(reports_dir),
         "raw_dir": str(raw_dir),
         "page_count": len(all_pages),
+        "cache_stats": manifest["cache_stats"],
     }
 
 
@@ -226,7 +234,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     result = run_scout(output_root=args.output, per_kind_limit=args.limit)
-    print(f"完成：缓存 {result['page_count']} 页")
+    stats = result.get("cache_stats") or {}
+    print(f"完成：共 {result['page_count']} 页（本地复用 {stats.get('from_cache', 0)}，新拉取 {stats.get('fetched', 0)}）")
+    print(f"原始缓存目录: {args.output / 'raw'}（已写入磁盘，下次默认跳过已有页）")
     print(f"manifest: {result['manifest_path']}")
     print(f"报告目录: {result['reports_dir']}")
     return 0

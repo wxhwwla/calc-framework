@@ -14,7 +14,9 @@ python tools/bwiki_scout/scout.py
 python tools/bwiki_scout/scout.py --limit 5
 ```
 
-输出目录（已 gitignore）：`tools/bwiki_scout/output/`
+输出目录（**保存在本机**，已 gitignore，不进 GitHub）：`tools/bwiki_scout/output/`
+
+详见 **[CACHE.md](CACHE.md)**：续跑规则、备份建议、何时会丢缓存。
 
 | 路径 | 说明 |
 |------|------|
