@@ -28,14 +28,16 @@ from bwiki_scout.weapon_wiki import (  # noqa: E402
     fit_weapon_base_atk_from_endpoints,
     has_weapon_growth_block,
 )
-from bwiki_scout.wiki_sync import (  # noqa: E402
+from bwiki_scout.seed_persist import (  # noqa: E402
     _flatten_seed_list,
+    load_seed_character_specs,
+    replace_seed_specs,
+    write_seed_character_specs,
+)
+from bwiki_scout.wiki_sync import (  # noqa: E402
     build_seed_spec_from_wiki,
     fit_growth_params_from_curve,
-    load_seed_character_specs,
     needs_sync_with_wiki,
-    replace_seed_character_specs,
-    write_seed_character_specs,
 )
 from calculation.formula import calculate_growth_curve  # noqa: E402
 
@@ -208,7 +210,7 @@ class TestWikiSync(unittest.TestCase):
         }
         new = dict(old)
         new["star"] = 4
-        merged = replace_seed_character_specs([old], {"秋栗": new})
+        merged = replace_seed_specs([old], {"秋栗": new}, admin_first=True)
         self.assertEqual(merged[0]["star"], 4)
 
 

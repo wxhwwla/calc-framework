@@ -14,21 +14,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from calculation.formula import (
-    calculate_growth_curve,
-    calculate_skill_curve,
-)
+from calculation.curve_baker import bake_character_curves
 from data.loader import reload_characters
-
-_GROWTH_KEYS = frozenset({"base", "growth", "divisor", "offset", "special"})
-
-
-def _calc_skill_curve(params: dict[str, Any]) -> list:
-    p = copy.deepcopy(params)
-    if p.get("divisor", 1) == 0:
-        return []
-    special = p.pop("special", None)
-    return calculate_skill_curve(**p, special_values=special)
 
 
 def add_character(
@@ -61,14 +48,16 @@ def add_character(
         "信赖加成": [0, 10, 15, 15, 20],
         "主能力": primary,
         "副能力": secondary,
-        "力量": calculate_growth_curve(**copy.deepcopy(strength)),
-        "敏捷": calculate_growth_curve(**copy.deepcopy(agility)),
-        "智识": calculate_growth_curve(**copy.deepcopy(intellect)),
-        "意志": calculate_growth_curve(**copy.deepcopy(will)),
-        "基础攻击力": calculate_growth_curve(**copy.deepcopy(base_atk)),
-        "战技倍率": [_calc_skill_curve(s) for s in copy.deepcopy(sk1)],
-        "连携技倍率": [_calc_skill_curve(s) for s in copy.deepcopy(sk2)],
-        "终结技倍率": [_calc_skill_curve(s) for s in copy.deepcopy(sk3)],
+        **bake_character_curves(
+            strength=copy.deepcopy(strength),
+            agility=copy.deepcopy(agility),
+            intellect=copy.deepcopy(intellect),
+            will=copy.deepcopy(will),
+            base_atk=copy.deepcopy(base_atk),
+            sk1=copy.deepcopy(sk1),
+            sk2=copy.deepcopy(sk2),
+            sk3=copy.deepcopy(sk3),
+        ),
     }
 
     if json_path is None:

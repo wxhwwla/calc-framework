@@ -22,7 +22,7 @@ from pathlib import Path
 # 添加项目根目录到路径，确保能导入 please_read_me
 sys.path.insert(0, str(Path(__file__).parent))
 
-from packaging.release_layout import (  # noqa: E402
+from release_bundle.release_layout import (  # noqa: E402
     RELEASE_APP_NAME,
     release_dir_from_dist,
     stage_release_folder,
@@ -30,17 +30,20 @@ from packaging.release_layout import (  # noqa: E402
 from please_read_me import get_exe_version, get_version  # noqa: E402
 
 
-def check_pyinstaller() -> bool:
-    """检查 PyInstaller 是否已安装。"""
+def check_build_dependencies() -> bool:
+    """检查打包依赖：PyInstaller 及其所需的 PyPI ``packaging``（勿与 release_bundle 混淆）。"""
     try:
-        import PyInstaller
+        import PyInstaller  # noqa: F401
+        import packaging.requirements  # noqa: F401
+    except ImportError as exc:
+        print("缺少打包依赖。请在 [包] 目录执行：")
+        print('  pip install -e ".[build]"')
+        print(f"详情: {exc}")
+        return False
+    import PyInstaller
 
-        print(f"PyInstaller 已安装: {PyInstaller.__version__}")
-        return True
-    except ImportError:
-        print("PyInstaller 未安装，正在安装...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-        return True
+    print(f"PyInstaller 已安装: {PyInstaller.__version__}")
+    return True
 
 
 def build_release() -> Path:
@@ -51,7 +54,7 @@ def build_release() -> Path:
     excludes = [
         "tests",
         "scripts",
-        "packaging",
+        "release_bundle",
         "add_character",
         "add_weapon",
         "test_",
@@ -98,7 +101,7 @@ def main() -> None:
     print(f"终末地伤害计算器 v{get_version()} - 打包工具")
     print("=" * 60)
 
-    if not check_pyinstaller():
+    if not check_build_dependencies():
         sys.exit(1)
 
     try:

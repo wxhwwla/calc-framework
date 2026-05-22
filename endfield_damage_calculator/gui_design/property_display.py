@@ -10,12 +10,11 @@
 import customtkinter as ctk
 from typing import Dict, Any, Optional
 from .selection_panel import ChooseTypesStarsNamesLevels
-from calculation.multiplicative_zones import (
-    calculate_attribute_zones,
-    calculate_attribute_zones_with_details,
-    DefenseReductionZone,
-    calculate_ability_bonus_with_details,
-    calculate_final_attack_with_details
+from calculation.multiplicative_zones import calculate_attribute_zones
+from calculation.multiplicative_zones.zone_snapshot import (
+    MultiplicativeZoneSelection,
+    WeaponBonusSelection,
+    compute_multiplicative_zone_snapshot,
 )
 
 
@@ -440,177 +439,42 @@ def _display_zone_data(
         6. 中间攻击力
         7. 最终攻击力
     """
-    # 创建乘区标题
     zone_title = ctk.CTkLabel(
         right_scroll,
         text="=== 乘区数据 ===",
         font=big_font,
-        text_color="#FF6B6B"
+        text_color="#FF6B6B",
     )
     zone_title.grid(row=0, column=0, sticky="w", pady=(5, 5))
 
     row_idx = 1
-
-    # 1. 敌方防御区
-    defense_zone = DefenseReductionZone()
-    defense_value = defense_zone.calculate()
-    defense_label = ctk.CTkLabel(
-        right_scroll,
-        text=f"敌方防御减伤: {defense_value:.4f}",
-        font=small_font,
-        text_color="#4ECDC4"
-    )
-    defense_label.grid(row=row_idx, column=0, sticky="w", pady=2)
-    row_idx += 1
-
-    # 2. 能力乘区（按顺序：敏捷、力量、智识、意志）
     if char_data:
-        # 使用带详细信息的计算函数（传递特殊能力等级和信赖等级）
-        attr_details = calculate_attribute_zones_with_details(
-            char_data, weapon_data, level=char_level,
-            sa1_name=sa1_name, sa1_level=sa1_level,
-            sa2_name=sa2_name, sa2_level=sa2_level,
-            sa3_name=sa3_name, sa3_level=sa3_level,
-            ws_name=ws_name, ws_level=ws_level,
-            trust_level=trust_level
+        selection = MultiplicativeZoneSelection(
+            character=char_data,
+            weapon=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            bonuses=WeaponBonusSelection(
+                sa1_name=sa1_name,
+                sa1_level=sa1_level,
+                sa2_name=sa2_name,
+                sa2_level=sa2_level,
+                sa3_name=sa3_name,
+                sa3_level=sa3_level,
+                ws_name=ws_name,
+                ws_level=ws_level,
+            ),
         )
-
-        # 按指定顺序展示
-        display_order = ['力量', '敏捷', '智识', '意志']
-        for attr_name in display_order:
-            details = attr_details.get(attr_name, {'base': 0.0, 'bonus': 0.0, 'total': 0.0})
-            base_value = details['base']
-            bonus_value = details['bonus']
-            total_value = details['total']
-
-            # 构建显示文本：如果有武器加成，显示括号说明
-            if bonus_value > 0:
-                display_text = f"{attr_name}: {total_value:.1f} ({base_value:.1f}+{bonus_value:.1f})"
-            else:
-                display_text = f"{attr_name}: {total_value:.1f}"
-
-            attr_label = ctk.CTkLabel(
+        for line in compute_multiplicative_zone_snapshot(selection):
+            label = ctk.CTkLabel(
                 right_scroll,
-                text=display_text,
+                text=line.text,
                 font=small_font,
-                text_color="#B8B8B8"
+                text_color=line.color,
             )
-            attr_label.grid(row=row_idx, column=0, sticky="w", pady=2)
+            label.grid(row=row_idx, column=0, sticky="w", pady=2)
             row_idx += 1
-
-    # 3. 能力值加成乘区
-    if char_data:
-        ability_details = calculate_ability_bonus_with_details(
-            char_data, weapon_data, level=char_level,
-            sa1_name=sa1_name, sa1_level=sa1_level,
-            sa2_name=sa2_name, sa2_level=sa2_level,
-            sa3_name=sa3_name, sa3_level=sa3_level,
-            ws_name=ws_name, ws_level=ws_level,
-            trust_level=trust_level
-        )
-        bonus_value = ability_details['bonus']
-        main_attr = ability_details['main_attr']
-        main_value = ability_details['main_value']
-        sub_attr = ability_details['sub_attr']
-        sub_value = ability_details['sub_value']
-        
-        # 构建显示文本：能力值加成: 值 (主能力*0.005+副能力*0.002)
-        if main_attr and sub_attr:
-            display_text = f"能力值加成: {bonus_value:.4f} ({main_attr}:{main_value:.1f}*0.005+{sub_attr}:{sub_value:.1f}*0.002)"
-        else:
-            display_text = f"能力值加成: {bonus_value:.4f}"
-        
-        ability_bonus_label = ctk.CTkLabel(
-            right_scroll,
-            text=display_text,
-            font=small_font,
-            text_color="#FFD700"
-        )
-        ability_bonus_label.grid(row=row_idx, column=0, sticky="w", pady=2)
-        row_idx += 1
-
-    # 4. 基础攻击力（角色+武器）
-    if char_data:
-        # 获取角色基础攻击力（使用角色等级）
-        char_base_attack = 0.0
-        char_level_index = char_level - 1
-        if '基础攻击力' in char_data and isinstance(char_data['基础攻击力'], list):
-            if 0 <= char_level_index < len(char_data['基础攻击力']):
-                char_base_attack = float(char_data['基础攻击力'][char_level_index])
-        
-        # 获取武器基础攻击力（使用武器等级）
-        weapon_base_attack = 0.0
-        if weapon_data and '基础攻击力' in weapon_data and isinstance(weapon_data['基础攻击力'], list):
-            weapon_level_index = weapon_level - 1
-            if 0 <= weapon_level_index < len(weapon_data['基础攻击力']):
-                weapon_base_attack = float(weapon_data['基础攻击力'][weapon_level_index])
-        
-        # 计算总基础攻击力
-        total_base_attack = char_base_attack + weapon_base_attack
-        
-        # 构建显示文本：基础攻击力: 值 (角色值+武器值)
-        display_text = f"基础攻击力: {total_base_attack:.1f} ({char_base_attack:.1f}+{weapon_base_attack:.1f})"
-        
-        base_attack_label = ctk.CTkLabel(
-            right_scroll,
-            text=display_text,
-            font=small_font,
-            text_color="#00D4AA"
-        )
-        base_attack_label.grid(row=row_idx, column=0, sticky="w", pady=2)
-        row_idx += 1
-
-    # 5. 攻击加成攻击力和中间攻击力
-    if char_data:
-        final_attack_details = calculate_final_attack_with_details(
-            char_data, weapon_data,
-            char_level=char_level, weapon_level=weapon_level,
-            sa1_name=sa1_name, sa1_level=sa1_level,
-            sa2_name=sa2_name, sa2_level=sa2_level,
-            sa3_name=sa3_name, sa3_level=sa3_level,
-            ws_name=ws_name, ws_level=ws_level,
-            trust_level=trust_level
-        )
-        base_attack = final_attack_details['base_attack']
-        attack_bonus_multiplier = final_attack_details['attack_bonus_multiplier']
-        attack_bonus_attack = final_attack_details['attack_bonus_attack']
-        additional_attack = final_attack_details['additional_attack']
-        intermediate_attack = final_attack_details['intermediate_attack']
-        final_attack = final_attack_details['final_attack']
-        ability_bonus = final_attack_details['ability_bonus']
-        
-        # 显示攻击加成攻击力
-        display_text = f"攻击加成攻击力: {attack_bonus_attack:.1f} ({base_attack:.1f}×{attack_bonus_multiplier:.3f})"
-        attack_bonus_attack_label = ctk.CTkLabel(
-            right_scroll,
-            text=display_text,
-            font=small_font,
-            text_color="#9B59B6"
-        )
-        attack_bonus_attack_label.grid(row=row_idx, column=0, sticky="w", pady=2)
-        row_idx += 1
-        
-        # 显示中间攻击力
-        display_text = f"中间攻击力: {intermediate_attack:.1f} ({attack_bonus_attack:.1f}+{additional_attack:.1f})"
-        intermediate_attack_label = ctk.CTkLabel(
-            right_scroll,
-            text=display_text,
-            font=small_font,
-            text_color="#3498DB"
-        )
-        intermediate_attack_label.grid(row=row_idx, column=0, sticky="w", pady=2)
-        row_idx += 1
-        
-        # 显示最终攻击力
-        display_text = f"最终攻击力: {final_attack:.1f} ({intermediate_attack:.1f}*({ability_bonus:.4f}+1))"
-        final_attack_label = ctk.CTkLabel(
-            right_scroll,
-            text=display_text,
-            font=small_font,
-            text_color="#FF6B6B"
-        )
-        final_attack_label.grid(row=row_idx, column=0, sticky="w", pady=2)
-        row_idx += 1
 
     # 添加说明标签
     hint_label = ctk.CTkLabel(

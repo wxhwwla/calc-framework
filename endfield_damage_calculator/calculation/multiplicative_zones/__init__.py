@@ -40,6 +40,12 @@ from .final_attack_zone import (
     calculate_final_attack,
     calculate_final_attack_with_details
 )
+from .zone_snapshot import (
+    MultiplicativeZoneSelection,
+    WeaponBonusSelection,
+    ZoneDisplayLine,
+    compute_multiplicative_zone_snapshot,
+)
 
 __all__ = [
     'BaseZone',
@@ -54,5 +60,9 @@ __all__ = [
     'calculate_ability_bonus_with_details',
     'FinalAttackZone',
     'calculate_final_attack',
-    'calculate_final_attack_with_details'
+    'calculate_final_attack_with_details',
+    'MultiplicativeZoneSelection',
+    'WeaponBonusSelection',
+    'ZoneDisplayLine',
+    'compute_multiplicative_zone_snapshot',
 ]

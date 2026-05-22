@@ -14,10 +14,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from calculation.formula import (
-    calculate_growth_curve as calculate_weapon_attack,
-    calculate_bonus_attribute,
-)
+from calculation.curve_baker import bake_weapon_curves
+from calculation.formula import calculate_bonus_attribute
 from data.loader import reload_weapons
 
 _GROWTH_KEYS = frozenset({"base", "growth", "divisor", "offset", "special"})
@@ -43,22 +41,18 @@ def add_weapon(
     """
     添加新武器到 weapons.json（不修改调用方传入的字典对象）。
     """
+    baked = bake_weapon_curves(
+        base_atk=copy.deepcopy(base_atk),
+        bonus_attrs=copy.deepcopy(bonus_attrs) if bonus_attrs else None,
+    )
     weapon: dict[str, Any] = {
         "名称": name,
         "类型": weapon_type,
         "星级": star,
         "等级": list(range(1, 91)),
         "潜能": list(range(0, 6)),
-        "基础攻击力": calculate_weapon_attack(**dict(base_atk)),
+        **baked,
     }
-
-    if bonus_attrs:
-        for attr_name, params in bonus_attrs.items():
-            if not attr_name.endswith("+"):
-                attr_name = attr_name + "+"
-            p = copy.deepcopy(params)
-            special = p.pop("special", None)
-            weapon[attr_name] = calculate_bonus_attribute(special=special, **p)
 
     sa = copy.deepcopy(special_ability) if special_ability else None
     if sa and sa.get("enabled"):

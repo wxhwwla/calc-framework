@@ -8,7 +8,7 @@
 ├── pyproject.toml             # 打包配置文件
 ├── gui_design/                # GUI 界面模块
 │   ├── gui.py                 # 主应用类，管理窗口和布局
-│   ├── gui_tools.py           # GUI 工具组件导出层
+│   ├── display_model.py       # GUI 展示层入口
 │   ├── gui_settings.py        # GUI 设置初始化
 │   ├── selection_panel.py     # 选择面板类
 │   └── property_display.py    # 属性展示函数

@@ -14,7 +14,7 @@ _PKG = Path(__file__).resolve().parent.parent
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
-from packaging.release_layout import (  # noqa: E402
+from release_bundle.release_layout import (  # noqa: E402
     LICENSE_FILES,
     RELEASE_APP_NAME,
     RELEASE_DATA_FILES,
@@ -25,6 +25,18 @@ from utils.path_utils import get_resource_path
 
 
 class TestReleaseLayout(unittest.TestCase):
+    def test_pypi_packaging_not_shadowed_when_project_on_path(self):
+        """PyInstaller 需要 ``packaging.requirements``；本地包不得占用顶层名 packaging。"""
+        import importlib.util
+
+        _PKG = Path(__file__).resolve().parent.parent
+        if str(_PKG) not in sys.path:
+            sys.path.insert(0, str(_PKG))
+        import release_bundle.release_layout  # noqa: F401
+
+        spec = importlib.util.find_spec("packaging.requirements")
+        self.assertIsNotNone(spec, "packaging.requirements 应解析到 PyPI packaging，而非本地目录")
+
     def test_release_data_files_match_loader_paths(self):
         rel_paths = {rel for rel, _ in RELEASE_DATA_FILES}
         self.assertIn(CHARACTERS_JSON_PATH, rel_paths)

@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""将 endfield_damage_calculator 包加入 sys.path（BWIKI 工具调用反推/录入用）。"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_PKG = _REPO_ROOT / "endfield_damage_calculator"
+
+
+def ensure_package_path() -> Path:
+    if str(_PKG) not in sys.path:
+        sys.path.insert(0, str(_PKG))
+    return _PKG

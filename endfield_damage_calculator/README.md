@@ -59,7 +59,8 @@ endfield_damage_calculator/
 │   └── loader.py              # 数据统一加载与缓存
 ├── gui_design/                # GUI界面模块
 │   ├── gui.py                 # 主应用类
-│   ├── gui_tools.py           # GUI工具组件
+│   ├── display_model.py       # GUI 展示层入口
+│   ├── gui_tools.py           # 兼容导出（请用 display_model）
 │   ├── gui_settings.py        # GUI设置初始化
 │   ├── selection_panel.py     # 选择面板
 │   ├── selection_components.py # 选择组件
@@ -124,7 +125,7 @@ cd endfield_damage_calculator
 pip install -e ".[dev]"
 ```
 
-（`[dev]` 含 pytest，用于运行测试；仅使用 GUI 时可 `pip install -e .`。）
+（`[dev]` 含 pytest；`[build]` 含 PyInstaller。仅 GUI：`pip install -e .`；要打包：`pip install -e ".[build]"`。）
 
 ### 运行测试
 
@@ -142,7 +143,7 @@ python main.py
 ### 打包发布
 
 ```bash
-pip install setuptools wheel pyinstaller
+pip install -e ".[build]"
 python build.py
 ```
 

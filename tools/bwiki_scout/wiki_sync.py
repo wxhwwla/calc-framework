@@ -9,19 +9,22 @@
 
 from __future__ import annotations
 
-import ast
 import io
 import json
-import re
-import sys
 from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PKG = _REPO_ROOT / "endfield_damage_calculator"
-if str(_PKG) not in sys.path:
-    sys.path.insert(0, str(_PKG))
+from bwiki_scout.pkg_bootstrap import ensure_package_path
+from bwiki_scout.seed_persist import (
+    load_seed_character_specs,
+    load_seed_weapon_specs,
+    replace_seed_specs,
+    write_seed_character_specs,
+    write_seed_weapon_specs,
+)
+
+ensure_package_path()
 
 from bwiki_scout.detail_levels import (  # noqa: E402
     operator_detail_title,
@@ -196,101 +199,6 @@ def needs_sync_with_wiki(
     return False
 
 
-def _flatten_seed_list(raw: list[Any]) -> list[dict[str, Any]]:
-    """兼容旧版 `[[{...}, ...]]` 误嵌套为单层列表。"""
-    if len(raw) == 1 and isinstance(raw[0], list):
-        inner = raw[0]
-        if inner and isinstance(inner[0], dict):
-            return inner
-    return [item for item in raw if isinstance(item, dict)]
-
-
-def load_seed_character_specs(seed_path: Path) -> list[dict[str, Any]]:
-    """解析 scripts/seed_characters.py 中的 _SEED_CHARACTERS。"""
-    text = seed_path.read_text(encoding="utf-8")
-    match = re.search(
-        r"_SEED_CHARACTERS\s*=\s*(\[.*?\])\s*\ndef\s+main\s*\(",
-        text,
-        re.DOTALL,
-    )
-    if not match:
-        raise ValueError(f"无法解析 _SEED_CHARACTERS: {seed_path}")
-    return _flatten_seed_list(ast.literal_eval(match.group(1)))
-
-
-def write_seed_character_specs(
-    seed_path: Path,
-    specs: list[dict[str, Any]],
-) -> None:
-    """重写 seed 文件中的 _SEED_CHARACTERS 列表（其余内容保持不变）。"""
-    import pprint
-
-    text = seed_path.read_text(encoding="utf-8")
-    formatted = pprint.pformat(specs, width=100, sort_dicts=False)
-    new_text, n = re.subn(
-        r"_SEED_CHARACTERS\s*=\s*\[.*?\]\s*\n\n\ndef\s+main\s*\(",
-        f"_SEED_CHARACTERS = {formatted}\n\n\ndef main(",
-        text,
-        count=1,
-        flags=re.DOTALL,
-    )
-    if n != 1:
-        raise ValueError(f"未能替换 _SEED_CHARACTERS: {seed_path}")
-    seed_path.write_text(new_text, encoding="utf-8")
-
-
-def replace_seed_character_specs(
-    specs: list[dict[str, Any]],
-    updates: dict[str, dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """按 name 覆盖或追加 seed 条目。"""
-    by_name = {s["name"]: s for s in specs}
-    for name, spec in updates.items():
-        by_name[name] = spec
-    return [by_name[n] for n in sorted(by_name.keys(), key=lambda x: (x != "管理员", x))]
-
-
-def load_seed_weapon_specs(seed_path: Path) -> list[dict[str, Any]]:
-    """解析 scripts/seed_weapons.py 中的 _SEED_WEAPONS。"""
-    text = seed_path.read_text(encoding="utf-8")
-    match = re.search(
-        r"_SEED_WEAPONS\s*=\s*(\[.*?\])\s*\ndef\s+main\s*\(",
-        text,
-        re.DOTALL,
-    )
-    if not match:
-        raise ValueError(f"无法解析 _SEED_WEAPONS: {seed_path}")
-    return _flatten_seed_list(ast.literal_eval(match.group(1)))
-
-
-def write_seed_weapon_specs(seed_path: Path, specs: list[dict[str, Any]]) -> None:
-    """重写 seed_weapons.py 中的 _SEED_WEAPONS 列表。"""
-    import pprint
-
-    text = seed_path.read_text(encoding="utf-8")
-    formatted = pprint.pformat(specs, width=100, sort_dicts=False)
-    new_text, n = re.subn(
-        r"_SEED_WEAPONS\s*=\s*\[.*?\]\s*\n\n\ndef\s+main\s*\(",
-        f"_SEED_WEAPONS = {formatted}\n\n\ndef main(",
-        text,
-        count=1,
-        flags=re.DOTALL,
-    )
-    if n != 1:
-        raise ValueError(f"未能替换 _SEED_WEAPONS: {seed_path}")
-    seed_path.write_text(new_text, encoding="utf-8")
-
-
-def replace_seed_weapon_specs(
-    specs: list[dict[str, Any]],
-    updates: dict[str, dict[str, Any]],
-) -> list[dict[str, Any]]:
-    by_name = {s["name"]: s for s in specs}
-    for name, spec in updates.items():
-        by_name[name] = spec
-    return [by_name[n] for n in sorted(by_name.keys())]
-
-
 def load_preserve_skills_for_name(
     seed_path: Path,
     name: str,
@@ -366,7 +274,7 @@ def sync_operators_from_cache(
 
     if not dry_run and updates:
         specs = load_seed_character_specs(seed_path)
-        merged = replace_seed_character_specs(specs, updates)
+        merged = replace_seed_specs(specs, updates, admin_first=True)
         write_seed_character_specs(seed_path, merged)
 
     return {
@@ -429,7 +337,7 @@ def sync_weapons_from_cache(
 
     if not dry_run and updates:
         specs = load_seed_weapon_specs(seed_path)
-        merged = replace_seed_weapon_specs(specs, updates)
+        merged = replace_seed_specs(specs, updates)
         write_seed_weapon_specs(seed_path, merged)
 
     return {

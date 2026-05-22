@@ -17,8 +17,8 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.12.0"
-_EXE_VERSION = "0.2.0-beta"
+_VERSION = "1.13.0"
+_EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
 # ==================== GitHub 上传流程（必读） ====================
@@ -83,7 +83,8 @@ PROJECT_STRUCTURE = f"""
     ├── tests/                     # pytest 单元测试（不含可交互 GUI）
     ├── gui_design/                # GUI 界面模块
     │   ├── gui.py                 # 主应用类，管理窗口和布局
-    │   ├── gui_tools.py           # GUI 工具组件导出层
+    │   ├── display_model.py       # GUI 展示层入口
+    │   ├── gui_tools.py           # 兼容导出（请用 display_model）
     │   ├── gui_settings.py        # GUI 设置初始化
     │   ├── selection_panel.py     # 选择面板类
     │   ├── selection_components.py # 选择面板组件
@@ -125,8 +126,8 @@ USAGE_INFO = f"""
     1. 运行方式：
         python main.py
 
-    2. 打包方式：
-        pip install setuptools wheel pyinstaller
+    2. 打包方式（产出 dist/终末地伤害计算器/ 文件夹，exe 与 JSON 分开放置）：
+        pip install -e ".[build]"
         python build.py
 
     3. 操作流程：
@@ -210,36 +211,41 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 30 处文件
+# TITLE: 更新 35 处文件
 # BODY:
-# - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
+# - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
 # - 更新文档 CONTEXT.md
-# - 更新文档 README.md
 # - 更新文档 docs/README.md
 # - 更新文档 endfield_damage_calculator/README.md
 # - 修改 endfield_damage_calculator/build.py
-# - 更新 characters.json 角色数据
-# - 变更 endfield_damage_calculator/packaging/
+# - 修改 endfield_damage_calculator/calculation/__init__.py
+# - 修改 endfield_damage_calculator/calculation/curve_baker.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/add_character.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/character_data.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/formula.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/add_weapon.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/formula.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/weapon_data.py
+# - 修改 endfield_damage_calculator/data/loader.py
+# - 修改 endfield_damage_calculator/gui_design/display_model.py
+# - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 修改 endfield_damage_calculator/gui_design/gui_tools.py
+# - 修改 endfield_damage_calculator/gui_design/property_display.py
+# - 修改 endfield_damage_calculator/main.py
+# - 修改 endfield_damage_calculator/packaging/__init__.py
+# - 修改 endfield_damage_calculator/packaging/release_layout.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/scripts/seed_characters.py
-# - 修改 endfield_damage_calculator/tests/test_bwiki_scout.py
+# - 变更 endfield_damage_calculator/pyproject.toml
+# - 变更 endfield_damage_calculator/release_bundle/
+# - 修改 endfield_damage_calculator/tests/test_curve_baker.py
+# - 修改 endfield_damage_calculator/tests/test_data_generators.py
 # - 修改 endfield_damage_calculator/tests/test_release_layout.py
 # - 修改 endfield_damage_calculator/tests/test_wiki_sync.py
-# - 修改 endfield_damage_calculator/utils/path_utils.py
-# - 更新文档 tools/README.md
-# - 更新文档 tools/bwiki_scout/CACHE.md
-# - 更新文档 tools/bwiki_scout/README.md
-# - 修改 tools/bwiki_scout/__init__.py
-# - 修改 tools/bwiki_scout/compare_stats.py
-# - 修改 tools/bwiki_scout/detail_levels.py
-# - 修改 tools/bwiki_scout/report.py
-# - 修改 tools/bwiki_scout/scout.py
-# - 修改 tools/bwiki_scout/skill_tables.py
-# - 修改 tools/bwiki_scout/sync_operators.py
-# - 修改 tools/bwiki_scout/sync_weapons.py
-# - 修改 tools/bwiki_scout/weapon_wiki.py
+# - 修改 endfield_damage_calculator/tests/test_zone_snapshot.py
+# - 修改 tools/bwiki_scout/pkg_bootstrap.py
+# - 修改 tools/bwiki_scout/seed_persist.py
 # - 修改 tools/bwiki_scout/wiki_sync.py
 # --- END UPLOAD_SUMMARY ---

@@ -47,6 +47,9 @@ from calculation.data_generator import (
     generate_weapon_attributes,
 )
 
+# 曲线烘焙（录入 / BWIKI 同步共用）
+from calculation.curve_baker import bake_character_curves, bake_weapon_curves
+
 # 反向推导公式
 from calculation.inverse import (
     remove_duplicates,
@@ -106,6 +109,8 @@ __all__ = [
     "generate_attributes",
     "generate_character_attributes",
     "generate_weapon_attributes",
+    "bake_character_curves",
+    "bake_weapon_curves",
     # 反向推导
     "remove_duplicates",
     "fit_attribute_formula",

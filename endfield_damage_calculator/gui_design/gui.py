@@ -15,7 +15,7 @@ GUI 主应用模块
 
 依赖模块：
 - customtkinter: GUI 库
-- gui_design.gui_tools: GUI 工具组件
+- gui_design.display_model: GUI 展示层入口
 - data.loader: 数据加载模块
 """
 
@@ -23,10 +23,10 @@ GUI 主应用模块
 import customtkinter as ctk  # CustomTkinter GUI 库
 from tkinter import messagebox
 from typing import Optional, List, Dict, Any   # 类型提示支持
-from gui_design.gui_tools import (  # GUI 工具组件导入
-    gui_settings,              # GUI 设置初始化函数
-    confirm_selection,         # 确认选择并展示属性的函数
-    ChooseTypesStarsNamesLevels  # 选择面板类
+from gui_design.display_model import (
+    gui_settings,
+    confirm_selection,
+    ChooseTypesStarsNamesLevels,
 )
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
 from please_read_me import get_exe_version  # EXE版本号

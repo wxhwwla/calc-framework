@@ -4,6 +4,8 @@
 发布目录布局：软件（exe）与游戏数据（JSON + DATA_LICENSE）分文件存放。
 
 非商业分发须附带 DATA_LICENSE；数据路径与 ``data.loader`` 常量一致，便于 exe 旁加载。
+
+注意：目录名 deliberately 不用 ``packaging``，以免遮蔽 PyInstaller 依赖的 PyPI ``packaging`` 包。
 """
 
 from __future__ import annotations

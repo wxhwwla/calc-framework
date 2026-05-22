@@ -15,8 +15,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# 开发 / CI：pytest
 dev = [
     "pytest>=8.0",
+]
+# 打包：PyInstaller（会拉取 PyPI 的 packaging 等传递依赖；勿建名为 packaging 的本地包）
+build = [
+    "pyinstaller>=6.0",
 ]
 
 [project.scripts]
@@ -26,7 +31,7 @@ endfield-calculator = "main:main"
 version = { attr = "please_read_me._VERSION" }
 
 [tool.setuptools]
-py-modules = ["main", "please_read_me", "build"]
+py-modules = ["main", "please_read_me"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -36,20 +41,13 @@ include = [
     "gui_design*",
     "character_weapon_equipment*",
     "utils*",
+    "legal*",
+    "release_bundle*",
 ]
 exclude = ["tests*", "scripts*"]
 
-[tool.pyinstaller]
-script = "main.py"
-onefile = true
-windowed = true
-name = "endfield_damage_calculator"
-icon = ""  # 如果有图标文件，设置路径
-
-[tool.pyinstaller.datas]
-# 包含角色和武器数据
-"character_weapon_equipment/character_data/characters.json" = "character_weapon_equipment/character_data/"
-"character_weapon_equipment/weapon_data/weapons.json" = "character_weapon_equipment/weapon_data/"
+# 打包由 build.py 驱动（PyInstaller --onedir，JSON 外挂于 exe 旁）。
+# 勿使用旧版 onefile + --add-data 内嵌数据；见 release_bundle/ 与 docs/操作指令集.md §7。
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
