@@ -43,10 +43,15 @@ from bwiki_scout.local_schema import (
     summarize_local_schema,
 )
 from bwiki_scout.names import normalize_name_for_match
+from bwiki_scout.detail_levels import (
+    build_operator_stats_diff,
+    operator_detail_titles,
+)
 from bwiki_scout.report import (
     write_names_diff_report,
     write_sample_bundle,
     write_schema_diff_report,
+    write_stats_diff_report,
     write_summary_report,
 )
 from bwiki_scout.storage import load_page_bundle, save_page_bundle, write_manifest
@@ -143,6 +148,26 @@ def run_scout(
                 save_page_bundle(raw_dir, title, bundle)
                 all_pages[title] = bundle
 
+    detail_titles = operator_detail_titles(titles_by_kind.get("operator", []))
+    if detail_titles:
+        manifest_kinds.setdefault("operator", {})["detail_titles"] = detail_titles
+        pending_detail: list[str] = []
+        for title in detail_titles:
+            cached = load_page_bundle(raw_dir, title)
+            if cached:
+                cache_hits += 1
+                cached["kind"] = "operator_detail"
+                all_pages[title] = cached
+            else:
+                pending_detail.append(title)
+        if pending_detail:
+            bundles = wiki.fetch_pages_content(pending_detail)
+            fetched_count += len(bundles)
+            for title, bundle in bundles.items():
+                bundle["kind"] = "operator_detail"
+                save_page_bundle(raw_dir, title, bundle)
+                all_pages[title] = bundle
+
     manifest = {
         "api_url": API_URL,
         "kinds": manifest_kinds,
@@ -187,6 +212,12 @@ def run_scout(
     )
     write_schema_diff_report(reports_dir, local_schema, wiki_field_notes=wiki_field_notes)
     write_names_diff_report(reports_dir, name_diff)
+
+    stats_diff = build_operator_stats_diff(
+        output_root=output_root,
+        characters_json=LOCAL_CHARACTERS_JSON,
+    )
+    write_stats_diff_report(reports_dir, stats_diff)
 
     # 样例：每类取第一个有本地对照的条目
     with LOCAL_CHARACTERS_JSON.open(encoding="utf-8") as f:

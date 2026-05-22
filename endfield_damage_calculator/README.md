@@ -146,7 +146,7 @@ pip install setuptools wheel pyinstaller
 python build.py
 ```
 
-打包产物为 `dist/终末地伤害计算器.exe`（已加入 `.gitignore`，请勿提交到 Git）。
+产物为 **`dist/终末地伤害计算器/` 文件夹**（onedir）：exe 与 `characters.json` / `weapons.json`、`DATA_LICENSE` 等同目录分发，符合软件与数据许可分离。请整夹分发，勿只发 exe。详见 [`docs/操作指令集.md`](../docs/操作指令集.md) §7。
 
 ### 数据加载约定
 
@@ -191,17 +191,20 @@ python build.py
 
 武器列下方 **「数据来源与许可」** 打开简略说明，可跳转 `LICENSE`、`DATA_LICENSE`、BWIKI、CC 与完整文档 [`docs/数据来源与许可.md`](../docs/数据来源与许可.md)。
 
-### BWIKI 数据侦察（`[根]` / `tools/bwiki_scout/`）
+### BWIKI 数据侦察与同步（`[根]` / `tools/bwiki_scout/`）
 
-对比终末地 BWIKI 与本地 JSON，**不覆盖** `characters.json` / `weapons.json`：
+对比 [终末地 BWIKI](https://wiki.biligame.com/zmd/) 与本地 JSON；侦察默认只写 `tools/bwiki_scout/output/`（已 gitignore）。经 `sync_*.py --apply` 才更新本目录下的 `characters.json` / `weapons.json` 与 `scripts/seed_*.py`。
 
 ```powershell
 cd e:\endfield_damage_calculator   # [根]
-python tools/bwiki_scout/scout.py --limit 5   # 调试可先限量
-python tools/bwiki_scout/parse_draft.py
+python tools/bwiki_scout/scout.py              # 拉取/续跑缓存（含干员 */详细数据）
+python tools/bwiki_scout/compare_stats.py      # 干员数值对比报告（离线）
+python tools/bwiki_scout/sync_operators.py     # 预览：属性 + 技能倍率
+python tools/bwiki_scout/sync_weapons.py       # 预览：武器攻击与词条（需 Wiki 含 rank 表）
+python tools/bwiki_scout/sync_operators.py --apply
 ```
 
-产出在 `tools/bwiki_scout/output/`（已 gitignore）。说明见 [`tools/bwiki_scout/README.md`](../tools/bwiki_scout/README.md)。
+完整字段映射与模块说明见 [`tools/bwiki_scout/README.md`](../tools/bwiki_scout/README.md)、[`docs/操作指令集.md`](../docs/操作指令集.md) §9。
 
 ### 公式反推工具
 

@@ -17,6 +17,11 @@ from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists 
 from bwiki_scout.json_scan import find_json_hints  # noqa: E402
 from bwiki_scout.local_schema import compare_name_sets, summarize_local_schema  # noqa: E402
 from bwiki_scout.names import normalize_name_for_match  # noqa: E402
+from bwiki_scout.detail_levels import (  # noqa: E402
+    compare_operator_to_local,
+    operator_detail_title,
+    parse_operator_detail_wikitext,
+)
 from bwiki_scout.parse_draft import build_draft_record, extract_template_params  # noqa: E402
 from bwiki_scout.scout import run_scout  # noqa: E402
 from bwiki_scout.storage import save_page_bundle  # noqa: E402
@@ -24,6 +29,47 @@ from bwiki_scout.storage import save_page_bundle  # noqa: E402
 _PKG = _REPO_ROOT / "endfield_damage_calculator"
 _CHARS = _PKG / "character_weapon_equipment" / "character_data" / "characters.json"
 _WEAPONS = _PKG / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+
+
+_DETAIL_FIXTURE = """{{干员/逐级等级|
+| 力量1 = 21 | 敏捷1 = 9 | 智识1 = 8 | 意志1 = 11
+| 攻击1 = 30 | 生命1 = 500 | 防御1 = 0
+| 力量90 = 176 | 敏捷90 = 96 | 智识90 = 86 | 意志90 = 106
+| 攻击90 = 300 | 生命90 = 5495 | 防御90 = 0
+}}"""
+
+
+class TestDetailLevels(unittest.TestCase):
+    def test_operator_detail_title(self):
+        self.assertEqual(operator_detail_title("秋栗"), "秋栗/详细数据")
+
+    def test_parse_operator_detail_wikitext_extracts_attack_curve(self):
+        curves = parse_operator_detail_wikitext(_DETAIL_FIXTURE, max_level=90)
+        self.assertEqual(curves["levels"][0], 1)
+        self.assertEqual(curves["levels"][-1], 90)
+        self.assertEqual(curves["基础攻击力"][0], 30)
+        self.assertEqual(curves["基础攻击力"][89], 300)
+        self.assertIsNone(curves["基础攻击力"][1])
+
+    def test_compare_operator_to_local_flags_mismatch(self):
+        wiki = parse_operator_detail_wikitext(_DETAIL_FIXTURE, max_level=90)
+        local = {
+            "名称": "测试",
+            "等级": list(range(1, 91)),
+            "基础攻击力": [31] + [0.0] * 88 + [300.0],
+            "力量": [0.0] * 90,
+            "敏捷": [0.0] * 90,
+            "智识": [0.0] * 90,
+            "意志": [0.0] * 90,
+        }
+        summary = compare_operator_to_local(
+            operator_name="测试",
+            wiki_curves=wiki,
+            local_record=local,
+            fields=("基础攻击力",),
+        )
+        self.assertGreater(summary["mismatch_count"], 0)
+        self.assertEqual(summary["mismatches"][0]["level"], 1)
 
 
 class TestParseDraft(unittest.TestCase):

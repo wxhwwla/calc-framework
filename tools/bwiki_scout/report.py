@@ -147,3 +147,56 @@ def write_sample_bundle(
             json.dumps(local_sample, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+
+
+def write_stats_diff_report(reports_dir: Path, stats: dict[str, Any]) -> Path:
+    """干员逐级数值对比（详细数据子页 wikitext vs 本地 JSON）。"""
+    lines = [
+        "# 干员逐级数值对比",
+        "",
+        "数据源：Wiki 子页 `干员名/详细数据` 的 **wikitext**（`干员/逐级等级` 模板）；"
+        "本地：`characters.json` 预烘焙曲线。",
+        "",
+        f"- 缺详细数据页（需重跑 scout）：{len(stats.get('missing_detail_pages', []))} 人",
+        f"- 数值完全一致（抽样字段）：{len(stats.get('perfect_match', []))} 人",
+        "",
+    ]
+    missing = stats.get("missing_detail_pages") or []
+    if missing:
+        lines.append("## 缺 `*/详细数据` 缓存")
+        lines.append("")
+        for name in missing[:30]:
+            lines.append(f"- {name}")
+        if len(missing) > 30:
+            lines.append(f"- …共 {len(missing)} 人")
+        lines.append("")
+
+    lines.append("## 有差异（节选）")
+    lines.append("")
+    any_diff = False
+    for row in stats.get("operators") or []:
+        if row.get("mismatch_count", 0) == 0:
+            continue
+        any_diff = True
+        lines.append(
+            f"### {row['name']}（{row['mismatch_count']} 处 / 对比 {row.get('compared_points', 0)} 点）"
+        )
+        lines.append("")
+        for item in row.get("mismatches") or []:
+            lines.append(
+                f"- L{item['level']} `{item['field']}`：本地 {item['local']} vs Wiki {item['wiki']}（Δ {item['delta']}）"
+            )
+        lines.append("")
+    if not any_diff:
+        lines.append("（无超出容差的差异，或尚无详细数据缓存）")
+        lines.append("")
+
+    lines.append("## 完全一致")
+    lines.append("")
+    for name in stats.get("perfect_match") or []:
+        lines.append(f"- {name}")
+    lines.append("")
+
+    path = reports_dir / "stats_diff.md"
+    _write(path, "\n".join(lines))
+    return path

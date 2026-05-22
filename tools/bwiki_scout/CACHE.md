@@ -25,6 +25,9 @@ tools/bwiki_scout/output/
 |------|-------------------|
 | `python tools/bwiki_scout/scout.py` | 仅拉取 `raw/` 里**没有**的页面；已有 wikitext 的页直接读盘 |
 | `python tools/bwiki_scout/parse_draft.py` | **不访问网络**，只读 `output/raw` + `manifest.json` |
+| `python tools/bwiki_scout/compare_stats.py` | **不访问网络**，重算 `reports/stats_diff.md` |
+| `python tools/bwiki_scout/sync_operators.py` | **不访问网络**（预览）；`--apply` 写本地 JSON/seed |
+| `python tools/bwiki_scout/sync_weapons.py` | **不访问网络**（预览）；`--apply` 写本地 JSON/seed |
 
 再次执行 `scout.py` 时，终端会打印「本地复用 N，新拉取 M」。若条目无变化，M 应为 0，几秒内完成。
 

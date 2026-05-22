@@ -63,7 +63,7 @@ python github_upload_module.py
 - 确认选择后刷新右侧乘区（能力、攻击力等）
 - 角色与武器 JSON 数据、公式反推与录入脚本
 - GUI「数据来源与许可」：软件 AGPL / 数据许可说明与链接
-- BWIKI 数据侦察（`tools/bwiki_scout/`，对比本地 JSON，不覆盖正式数据）
+- BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
 
 细节与布局说明见 [**详细 README**](endfield_damage_calculator/README.md)。
 

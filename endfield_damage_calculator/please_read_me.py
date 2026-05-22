@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.11.4"
+_VERSION = "1.12.0"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -210,11 +210,36 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 30 处文件
 # BODY:
+# - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 README.md
+# - 更新文档 docs/README.md
+# - 更新文档 endfield_damage_calculator/README.md
+# - 修改 endfield_damage_calculator/build.py
+# - 更新 characters.json 角色数据
+# - 变更 endfield_damage_calculator/packaging/
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/scripts/seed_characters.py
+# - 修改 endfield_damage_calculator/tests/test_bwiki_scout.py
+# - 修改 endfield_damage_calculator/tests/test_release_layout.py
+# - 修改 endfield_damage_calculator/tests/test_wiki_sync.py
+# - 修改 endfield_damage_calculator/utils/path_utils.py
+# - 更新文档 tools/README.md
 # - 更新文档 tools/bwiki_scout/CACHE.md
 # - 更新文档 tools/bwiki_scout/README.md
+# - 修改 tools/bwiki_scout/__init__.py
+# - 修改 tools/bwiki_scout/compare_stats.py
+# - 修改 tools/bwiki_scout/detail_levels.py
+# - 修改 tools/bwiki_scout/report.py
 # - 修改 tools/bwiki_scout/scout.py
+# - 修改 tools/bwiki_scout/skill_tables.py
+# - 修改 tools/bwiki_scout/sync_operators.py
+# - 修改 tools/bwiki_scout/sync_weapons.py
+# - 修改 tools/bwiki_scout/weapon_wiki.py
+# - 修改 tools/bwiki_scout/wiki_sync.py
 # --- END UPLOAD_SUMMARY ---
