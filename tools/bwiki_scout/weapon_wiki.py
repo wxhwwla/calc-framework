@@ -51,6 +51,65 @@ def _attr_key_from_content(content: str) -> str:
     return m.group(1) + "+"
 
 
+def _first_line_of_slot3_content(p: dict[str, str]) -> str:
+    """词条3内容首行：Wiki 表格第三列的无条件部分。"""
+    raw = (p.get("词条3内容") or "").strip()
+    if not raw:
+        return ""
+    return raw.split("\n")[0].strip()
+
+
+def _slot3_unconditional_attr_key(p: dict[str, str]) -> str:
+    """第三附加技能键名（仅 ``词条3内容`` 首行无条件段，不用副1 文案）。"""
+    return _attr_key_from_content(_first_line_of_slot3_content(p))
+
+
+def _slot3_conditional_attr_key(p: dict[str, str], sub: str) -> str:
+    """词条3 副 N 有条件描述 → JSON「特殊能力」名称。"""
+    raw = (p.get(f"词条3副{sub}内容") or "").strip()
+    if not raw:
+        return ""
+    return raw if raw.endswith("+") else raw + "+"
+
+
+def _fit_conditional_special(rank_curves: dict[str, list[float]], p: dict[str, str], sub: str) -> dict[str, Any] | None:
+    gkey = f"3_{sub}"
+    if gkey not in rank_curves:
+        return None
+    name = _slot3_conditional_attr_key(p, sub)
+    if not name:
+        return None
+    fitted = fit_bonus_params_from_rank_curve(rank_curves[gkey])
+    if "curve" in fitted:
+        return {"enabled": True, "name": name, "curve": fitted["curve"]}
+    return {"enabled": True, "name": name, **fitted}
+
+
+def split_slot3_weapon_effects(
+    p: dict[str, str],
+    rank_curves: dict[str, list[float]],
+) -> tuple[tuple[str, dict[str, Any]] | None, list[dict[str, Any]]]:
+    """
+    拆分词条3：第三技能（无条件 / 副1）与最多两条有条件特殊能力（副1–4）。
+
+    若 ``词条3内容`` 首行可解析为 ``属性+数值``，则副1 曲线归入第三技能，有条件从副2 起；
+    否则副1 起归入特殊能力1/2（如 O.B.J.尖峰）。
+    """
+    third: tuple[str, dict[str, Any]] | None = None
+    third_key = _slot3_unconditional_attr_key(p)
+    if third_key and "3_1" in rank_curves:
+        third = (third_key, fit_bonus_params_from_rank_curve(rank_curves["3_1"]))
+
+    conditionals: list[dict[str, Any]] = []
+    for sub in ("1", "2", "3", "4"):
+        if sub == "1" and third is not None:
+            continue
+        spec = _fit_conditional_special(rank_curves, p, sub)
+        if spec:
+            conditionals.append(spec)
+    return third, conditionals
+
+
 def _parse_rank_value(raw: str) -> float:
     text = (raw or "").strip().replace("％", "%")
     if text.endswith("%"):
@@ -105,15 +164,19 @@ def fit_bonus_params_from_rank_curve(curve9: list[float]) -> dict[str, Any]:
     """9 档潜能曲线 → add_weapon / seed 用参数字典。"""
     if len(curve9) != 9:
         raise ValueError(f"武器词条曲线长度应为 9，实际 {len(curve9)}")
-    with redirect_stdout(io.StringIO()):
-        base, growth, divisor, offset, special = fit_skill_formula_no_special(curve9)
-    return {
-        "base": base,
-        "growth": growth,
-        "divisor": divisor,
-        "offset": offset,
-        "special": list(special),
-    }
+    try:
+        with redirect_stdout(io.StringIO()):
+            base, growth, divisor, offset, special = fit_skill_formula_no_special(curve9)
+        return {
+            "base": base,
+            "growth": growth,
+            "divisor": divisor,
+            "offset": offset,
+            "special": list(special),
+        }
+    except (ValueError, AssertionError):
+        # 部分有条件词条（如 O.B.J.尖峰 攻击力 副2）无法反推公式，直接烘焙 Wiki 九档
+        return {"curve": [float(v) for v in curve9]}
 
 
 def fit_weapon_base_atk_from_endpoints(
@@ -175,7 +238,8 @@ def build_weapon_seed_spec_from_wiki(
             l1, l90, reference_curve=ref_atk
         ),
         "bonus_attrs": {},
-        "special_ability": {"enabled": False},
+        "special_1": {"enabled": False},
+        "special_2": {"enabled": False},
     }
 
     rank_curves = parse_weapon_rank_curves(wikitext)
@@ -186,11 +250,13 @@ def build_weapon_seed_spec_from_wiki(
     if key2 and "2" in rank_curves:
         spec["bonus_attrs"][key2] = fit_bonus_params_from_rank_curve(rank_curves["2"])
 
-    sub1_key = (p.get("词条3副1内容") or "").strip()
-    if sub1_key and "3_1" in rank_curves:
-        sa_name = sub1_key if sub1_key.endswith("+") else sub1_key + "+"
-        sa_params = fit_bonus_params_from_rank_curve(rank_curves["3_1"])
-        spec["special_ability"] = {"enabled": True, "name": sa_name, **sa_params}
+    third, conditionals = split_slot3_weapon_effects(p, rank_curves)
+    if third:
+        spec["bonus_attrs"][third[0]] = third[1]
+    if conditionals:
+        spec["special_1"] = conditionals[0]
+    if len(conditionals) > 1:
+        spec["special_2"] = conditionals[1]
     return spec
 
 
@@ -201,13 +267,20 @@ def _bonus_curves_from_seed_spec(spec: dict[str, Any]) -> dict[str, list[float]]
         p = dict(params)
         special = p.pop("special", None)
         out[key] = calculate_bonus_attribute(special=special, **p)
-    sa = spec.get("special_ability") or {}
-    if sa.get("enabled"):
+    for sa_key in ("special_1", "special_2"):
+        sa = spec.get(sa_key) or {}
+        if not sa.get("enabled"):
+            continue
         name = sa.get("name", "")
+        if not name:
+            continue
         key = name if name.endswith("+") else name + "+"
-        p = {k: sa[k] for k in ("base", "growth", "divisor", "offset") if k in sa}
-        special = sa.get("special")
-        out[key] = calculate_bonus_attribute(special=special, **p)
+        if isinstance(sa.get("curve"), list):
+            out[key] = [float(v) for v in sa["curve"]]
+        else:
+            p = {k: sa[k] for k in ("base", "growth", "divisor", "offset") if k in sa}
+            special = sa.get("special")
+            out[key] = calculate_bonus_attribute(special=special, **p)
     return out
 
 
@@ -241,9 +314,25 @@ def needs_weapon_sync_with_wiki(
             if abs(float(la) - float(wa)) > tolerance:
                 return True
 
-    local_sa = local_record.get("特殊能力") or [False]
-    wiki_sa = spec.get("special_ability") or {}
-    wiki_enabled = bool(wiki_sa.get("enabled"))
-    if wiki_enabled != bool(local_sa[0] if local_sa else False):
-        return True
+    from character_weapon_equipment.weapon_data.special_fields import (
+        read_weapon_special_slots,
+    )
+
+    local_slots = read_weapon_special_slots(local_record)
+    for idx, sa_key in enumerate(("special_1", "special_2")):
+        wiki_sa = spec.get(sa_key) or {}
+        local_enabled, local_name, local_curve = local_slots[idx]
+        wiki_enabled = bool(wiki_sa.get("enabled"))
+        if wiki_enabled != local_enabled:
+            return True
+        if wiki_enabled:
+            if wiki_sa.get("name") != local_name:
+                return True
+            wiki_cond = _bonus_curves_from_seed_spec({sa_key: wiki_sa})
+            for _key, wiki_arr in wiki_cond.items():
+                if not isinstance(local_curve, list):
+                    return True
+                for la, wa in zip(local_curve, wiki_arr):
+                    if abs(float(la) - float(wa)) > tolerance:
+                        return True
     return False

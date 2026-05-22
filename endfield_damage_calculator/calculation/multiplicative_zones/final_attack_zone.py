@@ -80,6 +80,8 @@ def calculate_final_attack_with_details(
     sa3_level: int = 0,
     ws_name: str = "",
     ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
     trust_level: int = 0
 ) -> Dict[str, float]:
     """
@@ -172,17 +174,18 @@ def calculate_final_attack_with_details(
                 elif isinstance(bonus_data, (int, float)):
                     attack_bonus_percent += float(bonus_data)
         
-        # 2. 检查特殊能力字段内部是否有攻击力+（如显锋、浪潮）
-        special_ability_field = weapon.get('特殊能力', [])
-        if isinstance(special_ability_field, list) and len(special_ability_field) >= 3:
-            sa_name = special_ability_field[1]
-            sa_values = special_ability_field[2]
-            
-            if sa_name == '攻击力+' and isinstance(sa_values, list):
-                if ws_name == '攻击力+' and ws_level > 0:
-                    level_index = ws_level - 1
-                    if 0 <= level_index < len(sa_values):
-                        attack_bonus_percent += float(sa_values[level_index])
+        from character_weapon_equipment.weapon_data.special_fields import (
+            add_special_picks_attack_percent,
+        )
+
+        attack_bonus_percent += add_special_picks_attack_percent(
+            weapon,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+            target_name="攻击力+",
+        )
 
     # 攻击力+乘区 = 1 + 攻击力+/100
     attack_bonus_multiplier = 1.0 + attack_bonus_percent / 100.0
@@ -220,7 +223,7 @@ def calculate_final_attack_with_details(
     ability_bonus = calculate_ability_bonus(
         character, weapon, char_level,
         sa1_name, sa1_level, sa2_name, sa2_level, sa3_name, sa3_level,
-        ws_name, ws_level, trust_level
+        ws_name, ws_level, ws2_name, ws2_level, trust_level
     )
 
     # 计算最终攻击力：中间攻击力 × (能力值加成 + 1)

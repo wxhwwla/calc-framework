@@ -46,7 +46,7 @@ class TestFormatWeaponSkillTitle(unittest.TestCase):
 
     def test_without_attribute_name(self):
         self.assertEqual(format_weapon_skill_title("第三技能"), "第三技能：无")
-        self.assertEqual(format_weapon_skill_title("特殊技能", ""), "特殊技能：无")
+        self.assertEqual(format_weapon_skill_title("特殊能力1", ""), "特殊能力1：无")
 
 
 class TestBonusAttributeOrder(unittest.TestCase):

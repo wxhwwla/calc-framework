@@ -138,13 +138,16 @@ def generate_weapon_attributes(
                 offset=params.get("offset", 0)
             )
         elif attr_name.endswith('+'):
-            special: List[float | int] | None = params.get("special")
-            attributes[attr_name] = calculate_bonus_attribute(
-                base=params.get("base", 0),
-                growth=params.get("growth", 0),
-                divisor=params.get("divisor", 1),
-                offset=params.get("offset", 0),
-                special=special
-            )
+            if isinstance(params.get("curve"), list):
+                attributes[attr_name] = [float(v) for v in params["curve"]]
+            else:
+                special: List[float | int] | None = params.get("special")
+                attributes[attr_name] = calculate_bonus_attribute(
+                    base=params.get("base", 0),
+                    growth=params.get("growth", 0),
+                    divisor=params.get("divisor", 1),
+                    offset=params.get("offset", 0),
+                    special=special,
+                )
 
     return attributes

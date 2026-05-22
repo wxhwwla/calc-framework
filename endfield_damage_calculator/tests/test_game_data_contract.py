@@ -92,8 +92,18 @@ class TestGameDataContract(unittest.TestCase):
                         f"武器「{name}」附加属性「{key}」长度应为 {BONUS_ATTR_LEN}",
                     )
 
-            if "特殊能力" in weapon:
-                _assert_special_ability(name, weapon["特殊能力"])
+            from character_weapon_equipment.weapon_data.special_fields import (
+                SPECIAL_FIELD_KEYS,
+                read_weapon_special_slots,
+                write_weapon_special_slots,
+            )
+
+            slots = read_weapon_special_slots(weapon)
+            if weapon.get(SPECIAL_FIELD_KEYS[0]) or weapon.get(SPECIAL_FIELD_KEYS[1]):
+                write_weapon_special_slots(weapon, slots)
+            for key in SPECIAL_FIELD_KEYS:
+                if key in weapon:
+                    _assert_special_ability(name, weapon[key])
 
 
 if __name__ == "__main__":

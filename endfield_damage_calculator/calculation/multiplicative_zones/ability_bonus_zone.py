@@ -67,6 +67,8 @@ def calculate_ability_bonus(
     sa3_level: int = 0,
     ws_name: str = "",
     ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
     trust_level: int = 0
 ) -> float:
     """
@@ -145,19 +147,22 @@ def calculate_ability_bonus(
             elif attr_name == f"{sub_attr}+" or attr_name == "副能力+":
                 sub_value += bonus_value
 
-        special_ability_field = weapon.get('特殊能力', [])
-        if isinstance(special_ability_field, list) and len(special_ability_field) >= 3:
-            sa_name = special_ability_field[1]
-            sa_values = special_ability_field[2]
-            if isinstance(sa_values, list) and sa_name == ws_name and ws_level > 0:
-                idx = ws_level - 1
-                if 0 <= idx < len(sa_values):
-                    bonus_value = float(sa_values[idx])
-                    if sa_name == f"{main_attr}+" or sa_name == "主能力+":
-                        main_value += bonus_value
-                    elif sa_name == f"{sub_attr}+" or sa_name == "副能力+":
-                        sub_value += bonus_value
-    
+        from character_weapon_equipment.weapon_data.special_fields import (
+            add_special_picks_to_main_sub_bonus,
+        )
+
+        md, sd = add_special_picks_to_main_sub_bonus(
+            weapon,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+            main_attr=main_attr,
+            sub_attr=sub_attr,
+        )
+        main_value += md
+        sub_value += sd
+
     # 添加信赖加成到主能力（使用公式模块中的 trust_add 常量）
     if 0 <= trust_level < len(trust_add):
         main_value += trust_add[trust_level]
@@ -177,6 +182,8 @@ def calculate_ability_bonus_with_details(
     sa3_level: int = 0,
     ws_name: str = "",
     ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
     trust_level: int = 0
 ) -> Dict[str, Any]:
     """
@@ -265,20 +272,21 @@ def calculate_ability_bonus_with_details(
             elif attr_name == f"{sub_attr}+" or attr_name == "副能力+":
                 sub_bonus += bonus_value
         
-        # 2. 检查特殊能力字段内部是否有加成属性（如显锋、浪潮的攻击力+）
-        special_ability_field = weapon.get('特殊能力', [])
-        if isinstance(special_ability_field, list) and len(special_ability_field) >= 3:
-            sa_name = special_ability_field[1]
-            sa_values = special_ability_field[2]
-            
-            if isinstance(sa_values, list) and sa_name == ws_name and ws_level > 0:
-                level_index = ws_level - 1
-                if 0 <= level_index < len(sa_values):
-                    bonus_value = float(sa_values[level_index])
-                    if sa_name == f"{main_attr}+" or sa_name == "主能力+":
-                        main_bonus += bonus_value
-                    elif sa_name == f"{sub_attr}+" or sa_name == "副能力+":
-                        sub_bonus += bonus_value
+        from character_weapon_equipment.weapon_data.special_fields import (
+            add_special_picks_to_main_sub_bonus,
+        )
+
+        md, sd = add_special_picks_to_main_sub_bonus(
+            weapon,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+            main_attr=main_attr,
+            sub_attr=sub_attr,
+        )
+        main_bonus += md
+        sub_bonus += sd
 
     # 计算主能力值（包含武器加成和信赖加成，使用公式模块中的 trust_add 常量）
     trust_bonus = trust_add[trust_level] if 0 <= trust_level < len(trust_add) else 0.0

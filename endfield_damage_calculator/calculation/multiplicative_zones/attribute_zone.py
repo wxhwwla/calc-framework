@@ -207,6 +207,8 @@ def calculate_attribute_zones_with_details(
     sa3_level: int = 0,
     ws_name: str = "",
     ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
     trust_level: int = 0
 ) -> Dict[str, Dict[str, float]]:
     """
@@ -300,17 +302,23 @@ def calculate_attribute_zones_with_details(
                     continue
                 bonus_value += manager._get_weapon_bonus(weapon["副能力+"], bonus_level)
             
-            # 处理特殊能力字段内的加成属性（如显锋、浪潮的攻击力+）
-            special_ability_field = weapon.get('特殊能力', [])
-            if isinstance(special_ability_field, list) and len(special_ability_field) >= 3:
-                sa_name = special_ability_field[1]
-                sa_values = special_ability_field[2]
-                
-                if isinstance(sa_values, list) and sa_name == f"{attr}+":
-                    if sa_name == ws_name and ws_level > 0:
-                        level_index = ws_level - 1
-                        if 0 <= level_index < len(sa_values):
-                            bonus_value += float(sa_values[level_index])
+            from character_weapon_equipment.weapon_data.special_fields import (
+                add_special_picks_to_main_sub_bonus,
+            )
+
+            md, sd = add_special_picks_to_main_sub_bonus(
+                weapon,
+                ws_name=ws_name,
+                ws_level=ws_level,
+                ws2_name=ws2_name,
+                ws2_level=ws2_level,
+                main_attr=main_attr,
+                sub_attr=sub_attr,
+            )
+            if attr == main_attr:
+                bonus_value += md
+            elif attr == sub_attr:
+                bonus_value += sd
             
             # 如果是主能力，加上信赖加成
             if attr == main_attr and trust_level > 0:

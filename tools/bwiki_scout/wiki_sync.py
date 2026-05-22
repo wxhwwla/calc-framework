@@ -37,6 +37,11 @@ from bwiki_scout.skill_tables import (  # noqa: E402
     skill_tabs_to_seed_skills,
     verify_skill_params,
 )
+from bwiki_scout.import_targets import (  # noqa: E402
+    load_manifest_titles,
+    resolve_operator_sync_names,
+    resolve_weapon_sync_names,
+)
 from bwiki_scout.weapon_wiki import (  # noqa: E402
     build_weapon_seed_spec_from_wiki,
     has_weapon_growth_block,
@@ -223,12 +228,14 @@ def sync_operators_from_cache(
     characters_json: Path,
     seed_path: Path,
     names: list[str] | None = None,
+    include_new: bool = False,
     dry_run: bool = True,
 ) -> dict[str, Any]:
     """
     从 output/raw 同步干员；返回摘要。
 
     dry_run=True 时不写文件，只报告将更新谁。
+    include_new=True 时，将 manifest 中缓存齐全、本地尚无的干员一并写入。
     """
     from character_weapon_equipment.character_data.add_character import add_character
 
@@ -237,15 +244,25 @@ def sync_operators_from_cache(
         local_rows = json.load(f)
     local_by_name = {r["名称"]: r for r in local_rows if r.get("名称")}
 
-    target_names = names or sorted(local_by_name.keys())
+    manifest_ops = load_manifest_titles(output_root, "operator")
+    target_names = resolve_operator_sync_names(
+        local_names=set(local_by_name.keys()),
+        manifest_titles=manifest_ops,
+        raw_dir=raw_dir,
+        only=names,
+        include_new=include_new,
+    )
     updates: dict[str, dict[str, Any]] = {}
     skipped: list[str] = []
     planned: list[str] = []
+    added: list[str] = []
+    updated: list[str] = []
 
     for name in target_names:
         local = local_by_name.get(name)
-        if not local:
-            skipped.append(name)
+        is_new = local is None
+        if is_new and not include_new:
+            skipped.append(f"{name}(本地无，需 --new)")
             continue
         main_bundle = load_page_bundle(raw_dir, name)
         detail_bundle = load_page_bundle(raw_dir, operator_detail_title(name))
@@ -265,9 +282,13 @@ def sync_operators_from_cache(
         except (ValueError, AssertionError) as exc:
             skipped.append(f"{name}({exc})")
             continue
-        if not needs_sync_with_wiki(spec, local):
+        if not is_new and not needs_sync_with_wiki(spec, local):
             continue
         planned.append(name)
+        if is_new:
+            added.append(name)
+        else:
+            updated.append(name)
         updates[name] = spec
         if not dry_run:
             add_character(**spec, json_path=characters_json)
@@ -279,9 +300,12 @@ def sync_operators_from_cache(
 
     return {
         "planned": planned,
+        "added": added,
+        "updated": updated,
         "skipped": skipped,
         "updated_count": len(updates) if not dry_run else 0,
         "dry_run": dry_run,
+        "include_new": include_new,
     }
 
 
@@ -291,9 +315,14 @@ def sync_weapons_from_cache(
     weapons_json: Path,
     seed_path: Path,
     names: list[str] | None = None,
+    include_new: bool = False,
     dry_run: bool = True,
 ) -> dict[str, Any]:
-    """从 output/raw 同步武器；仅处理 Wiki 含完整成长块的条目。"""
+    """
+    从 output/raw 同步武器；仅处理 Wiki 含完整成长块的条目。
+
+    include_new=True 时，将 manifest 中可反推、本地尚无的武器写入 JSON/seed。
+    """
     from character_weapon_equipment.weapon_data.add_weapon import add_weapon
 
     raw_dir = output_root / "raw"
@@ -301,15 +330,25 @@ def sync_weapons_from_cache(
         local_rows = json.load(f)
     local_by_name = {r["名称"]: r for r in local_rows if r.get("名称")}
 
-    target_names = names or sorted(local_by_name.keys())
+    manifest_weps = load_manifest_titles(output_root, "weapon")
+    target_names = resolve_weapon_sync_names(
+        local_names=set(local_by_name.keys()),
+        manifest_titles=manifest_weps,
+        raw_dir=raw_dir,
+        only=names,
+        include_new=include_new,
+    )
     updates: dict[str, dict[str, Any]] = {}
     skipped: list[str] = []
     planned: list[str] = []
+    added: list[str] = []
+    updated: list[str] = []
 
     for name in target_names:
         local = local_by_name.get(name)
-        if not local:
-            skipped.append(name)
+        is_new = local is None
+        if is_new and not include_new:
+            skipped.append(f"{name}(本地无，需 --new)")
             continue
         bundle = load_page_bundle(raw_dir, name)
         if not bundle:
@@ -328,9 +367,13 @@ def sync_weapons_from_cache(
         except (ValueError, AssertionError) as exc:
             skipped.append(f"{name}({exc})")
             continue
-        if not needs_weapon_sync_with_wiki(spec, local):
+        if not is_new and not needs_weapon_sync_with_wiki(spec, local):
             continue
         planned.append(name)
+        if is_new:
+            added.append(name)
+        else:
+            updated.append(name)
         updates[name] = spec
         if not dry_run:
             add_weapon(**spec, json_path=weapons_json)
@@ -342,7 +385,10 @@ def sync_weapons_from_cache(
 
     return {
         "planned": planned,
+        "added": added,
+        "updated": updated,
         "skipped": skipped,
         "updated_count": len(updates) if not dry_run else 0,
         "dry_run": dry_run,
+        "include_new": include_new,
     }

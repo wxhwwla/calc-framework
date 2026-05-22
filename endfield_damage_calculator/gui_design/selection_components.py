@@ -14,6 +14,11 @@
 import customtkinter as ctk
 from typing import List, Dict, Any, Optional
 
+from character_weapon_equipment.weapon_data.special_fields import (
+    bonus_attribute_keys,
+    read_weapon_special_slots,
+)
+
 
 def format_weapon_skill_title(prefix: str, attr_name: str = "") -> str:
     """武器技能行标题，例如「第一技能：智识+」；无属性时为「第三技能：无」。"""
@@ -108,9 +113,11 @@ class SpecialAbilityPanel:
     第一技能 → 第二技能 → 第三技能 → 特殊技能
     """
 
-    _BONUS_EXCLUDED = frozenset({'名称', '类型', '星级', '等级', '潜能', '基础攻击力', '特殊能力'})
+    _BONUS_EXCLUDED = frozenset(
+        {"名称", "类型", "星级", "等级", "潜能", "基础攻击力", "特殊能力", "特殊能力1", "特殊能力2"}
+    )
     _BONUS_SKILL_PREFIX = ("第一技能", "第二技能", "第三技能")
-    _WEAPON_SPECIAL_PREFIX = "特殊技能"
+    _WEAPON_SPECIAL_PREFIX = ("特殊能力1", "特殊能力2")
 
     def __init__(self, parent_frame: ctk.CTkFrame, my_font: ctk.CTkFont):
         self.parent_frame = parent_frame
@@ -125,8 +132,11 @@ class SpecialAbilityPanel:
         self.current_special_ability_3_name: str = ""
 
         self.weapon_special_level: ctk.StringVar = ctk.StringVar(value="0")
+        self.weapon_special_2_level: ctk.StringVar = ctk.StringVar(value="0")
         self.current_weapon_special_name: str = ""
+        self.current_weapon_special_2_name: str = ""
         self._weapon_special_available: bool = False
+        self._weapon_special_2_available: bool = False
         self._bonus_rows_suppressed: bool = False
 
         self._ability_1_name_label: ctk.CTkLabel | None = None
@@ -148,6 +158,11 @@ class SpecialAbilityPanel:
         self._weapon_special_frame: ctk.CTkFrame | None = None
         self._weapon_special_value_label: ctk.CTkLabel | None = None
         self._weapon_special_slider: ctk.CTkSlider | None = None
+
+        self._weapon_special_2_name_label: ctk.CTkLabel | None = None
+        self._weapon_special_2_frame: ctk.CTkFrame | None = None
+        self._weapon_special_2_value_label: ctk.CTkLabel | None = None
+        self._weapon_special_2_slider: ctk.CTkSlider | None = None
 
         self._build_gui()
 
@@ -215,7 +230,7 @@ class SpecialAbilityPanel:
 
         self._weapon_special_name_label = ctk.CTkLabel(
             self.parent_frame,
-            text=format_weapon_skill_title(self._WEAPON_SPECIAL_PREFIX),
+            text=format_weapon_skill_title(self._WEAPON_SPECIAL_PREFIX[0]),
             font=self.my_font,
         )
         self._weapon_special_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
@@ -234,6 +249,27 @@ class SpecialAbilityPanel:
         self._weapon_special_slider.pack(side="left", fill="x", expand=True)
         self._weapon_special_slider.set(0)
 
+        self._weapon_special_2_name_label = ctk.CTkLabel(
+            self.parent_frame,
+            text=format_weapon_skill_title(self._WEAPON_SPECIAL_PREFIX[1]),
+            font=self.my_font,
+        )
+        self._weapon_special_2_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
+        self._weapon_special_2_value_label = ctk.CTkLabel(
+            self._weapon_special_2_frame, text="0", font=self.my_font, width=30
+        )
+        self._weapon_special_2_value_label.pack(side="right")
+        self._weapon_special_2_slider = ctk.CTkSlider(
+            self._weapon_special_2_frame,
+            from_=0,
+            to=9,
+            number_of_steps=9,
+            command=self._on_weapon_special_2_change,
+            state="disabled",
+        )
+        self._weapon_special_2_slider.pack(side="left", fill="x", expand=True)
+        self._weapon_special_2_slider.set(0)
+
         self._apply_layout()
 
     def _apply_layout(self) -> None:
@@ -251,7 +287,16 @@ class SpecialAbilityPanel:
                 show_bonus and bool(self.current_special_ability_2_name),
             ),
             (self._ability_3_name_label, self._ability_3_frame, True),
-            (self._weapon_special_name_label, self._weapon_special_frame, True),
+            (
+                self._weapon_special_name_label,
+                self._weapon_special_frame,
+                True,
+            ),
+            (
+                self._weapon_special_2_name_label,
+                self._weapon_special_2_frame,
+                True,
+            ),
         ]
         for name_lbl, frame, _ in rows:
             if name_lbl:
@@ -294,10 +339,20 @@ class SpecialAbilityPanel:
             self._weapon_special_value_label.configure(text=str(level))
         self.weapon_special_level.set(str(level))
 
+    def _on_weapon_special_2_change(self, value: float) -> None:
+        if not self._weapon_special_2_available:
+            return
+        level = int(value)
+        if self._weapon_special_2_value_label:
+            self._weapon_special_2_value_label.configure(text=str(level))
+        self.weapon_special_2_level.set(str(level))
+
     def refresh(self, weapon_data: Dict[str, Any]) -> None:
         """根据武器数据刷新面板。"""
         bonus_attrs = self._extract_bonus_attributes(weapon_data)
-        sa_available, sa_name = self._parse_weapon_special_field(weapon_data)
+        slots = read_weapon_special_slots(weapon_data)
+        sa_available, sa_name = slots[0][0], slots[0][1]
+        sa2_available, sa2_name = slots[1][0], slots[1][1]
 
         if len(bonus_attrs) >= 1:
             self.current_special_ability_1_name = bonus_attrs[0]
@@ -320,30 +375,37 @@ class SpecialAbilityPanel:
 
         self._weapon_special_available = sa_available
         self.current_weapon_special_name = sa_name if sa_available else ""
-        self._configure_weapon_special_row(sa_available, sa_name)
+        self._configure_weapon_special_row(
+            1,
+            sa_available,
+            sa_name,
+            self._weapon_special_name_label,
+            self._weapon_special_value_label,
+            self._weapon_special_slider,
+            self.weapon_special_level,
+        )
+
+        self._weapon_special_2_available = sa2_available
+        self.current_weapon_special_2_name = sa2_name if sa2_available else ""
+        self._configure_weapon_special_row(
+            2,
+            sa2_available,
+            sa2_name,
+            self._weapon_special_2_name_label,
+            self._weapon_special_2_value_label,
+            self._weapon_special_2_slider,
+            self.weapon_special_2_level,
+        )
         self._apply_layout()
 
     @classmethod
     def _extract_bonus_attributes(cls, weapon_data: Dict[str, Any]) -> List[str]:
-        keys = list(weapon_data.keys())
-        try:
-            start = keys.index('基础攻击力') + 1
-            end = keys.index('特殊能力')
-        except ValueError:
-            return []
-        result: List[str] = []
-        for key in keys[start:end]:
-            if key not in cls._BONUS_EXCLUDED and isinstance(weapon_data.get(key), list):
-                result.append(key)
-        return result[:3]
+        return bonus_attribute_keys(weapon_data)[:3]
 
     @staticmethod
     def _parse_weapon_special_field(weapon_data: Dict[str, Any]) -> tuple[bool, str]:
-        field = weapon_data.get('特殊能力', [])
-        if not isinstance(field, list) or not field:
-            return False, ""
-        enabled = bool(field[0])
-        name = field[1] if len(field) > 1 and isinstance(field[1], str) else ""
+        """兼容旧测试：仅返回特殊能力1（或旧 ``特殊能力``）。"""
+        enabled, name, _ = read_weapon_special_slots(weapon_data)[0]
         return enabled, name
 
     def _reset_bonus_row(self, index: int, title: str) -> None:
@@ -397,29 +459,35 @@ class SpecialAbilityPanel:
             self._ability_3_slider.set(1)
         self.special_ability_3_level.set("0")
 
-    def _configure_weapon_special_row(self, available: bool, name: str) -> None:
+    def _configure_weapon_special_row(
+        self,
+        index: int,
+        available: bool,
+        name: str,
+        name_label: ctk.CTkLabel | None,
+        value_label: ctk.CTkLabel | None,
+        slider: ctk.CTkSlider | None,
+        level_var: ctk.StringVar,
+    ) -> None:
+        prefix = self._WEAPON_SPECIAL_PREFIX[index - 1]
         if available and name:
-            if self._weapon_special_name_label:
-                self._weapon_special_name_label.configure(
-                    text=format_weapon_skill_title(self._WEAPON_SPECIAL_PREFIX, name)
-                )
-            if self._weapon_special_value_label:
-                self._weapon_special_value_label.configure(text="0")
-            if self._weapon_special_slider:
-                self._weapon_special_slider.configure(state="normal")
-                self._weapon_special_slider.set(0)
-            self.weapon_special_level.set("0")
+            if name_label:
+                name_label.configure(text=format_weapon_skill_title(prefix, name))
+            if value_label:
+                value_label.configure(text="0")
+            if slider:
+                slider.configure(state="normal")
+                slider.set(0)
+            level_var.set("0")
         else:
-            if self._weapon_special_name_label:
-                self._weapon_special_name_label.configure(
-                    text=format_weapon_skill_title(self._WEAPON_SPECIAL_PREFIX)
-                )
-            if self._weapon_special_value_label:
-                self._weapon_special_value_label.configure(text="0")
-            if self._weapon_special_slider:
-                self._weapon_special_slider.configure(state="disabled")
-                self._weapon_special_slider.set(0)
-            self.weapon_special_level.set("0")
+            if name_label:
+                name_label.configure(text=format_weapon_skill_title(prefix))
+            if value_label:
+                value_label.configure(text="0")
+            if slider:
+                slider.configure(state="disabled")
+                slider.set(0)
+            level_var.set("0")
 
     def hide(self) -> None:
         """隐藏前两条附加属性（第三与特殊能力区仍占位）。"""

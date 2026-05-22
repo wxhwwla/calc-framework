@@ -106,7 +106,7 @@ class TestPropertyDisplayLines(unittest.TestCase):
         self.assertIn("智识+: 12", lines)
         self.assertIn("终结技充能效率+: 4.8%", lines)
         self.assertIn("攻击力+: 5%", lines)
-        self.assertIn("源石技艺强度+(特殊能力): 60", lines)
+        self.assertIn("源石技艺强度+(特殊能力1): 60", lines)
         self.assertFalse(any(line.startswith("武器：") for line in lines))
         self.assertFalse(any(line.startswith("===") for line in lines))
 

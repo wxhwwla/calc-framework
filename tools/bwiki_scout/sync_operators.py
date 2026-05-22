@@ -9,6 +9,7 @@
     python tools/bwiki_scout/sync_operators.py
     python tools/bwiki_scout/sync_operators.py --apply
     python tools/bwiki_scout/sync_operators.py --apply --only 佩丽卡 埃特拉
+    python tools/bwiki_scout/sync_operators.py --new          # 含 manifest 中本地尚无的干员
 
 说明见 tools/bwiki_scout/README.md、docs/操作指令集.md §9。
 """
@@ -23,7 +24,10 @@ _SCRIPTS_ROOT = Path(__file__).resolve().parent.parent
 if str(_SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_ROOT))
 
+import json
+
 from bwiki_scout.config import LOCAL_CHARACTERS_JSON, OUTPUT_ROOT
+from bwiki_scout.import_targets import summarize_importable_from_manifest
 from bwiki_scout.wiki_sync import sync_operators_from_cache
 
 _SEED_PATH = (
@@ -52,19 +56,45 @@ def main(argv: list[str] | None = None) -> int:
         nargs="*",
         help="仅处理指定干员名称",
     )
+    parser.add_argument(
+        "--new",
+        action="store_true",
+        help="同时导入 manifest 中本地尚无、且 raw 缓存齐全的新干员",
+    )
+    parser.add_argument(
+        "--list-new",
+        action="store_true",
+        help="仅列出可 --new 导入的干员名称（不反推、不写文件）",
+    )
     args = parser.parse_args(argv)
+
+    if args.list_new:
+        with LOCAL_CHARACTERS_JSON.open(encoding="utf-8") as f:
+            local = {r["名称"] for r in json.load(f) if r.get("名称")}
+        summary = summarize_importable_from_manifest(
+            args.input,
+            local_operator_names=local,
+            local_weapon_names=set(),
+        )
+        names = summary["operators"]
+        print(f"可导入新干员 {len(names)} 人（须 --new 写入）：")
+        for name in names:
+            print(f"  - {name}")
+        return 0
 
     result = sync_operators_from_cache(
         output_root=args.input,
         characters_json=LOCAL_CHARACTERS_JSON,
         seed_path=_SEED_PATH,
         names=args.only,
+        include_new=args.new,
         dry_run=not args.apply,
     )
     mode = "预览" if result["dry_run"] else "已写入"
-    print(f"[{mode}] 计划更新 {len(result['planned'])} 人：")
+    print(f"[{mode}] 计划处理 {len(result['planned'])} 人（更新 {len(result['updated'])}，新增 {len(result['added'])}）：")
     for name in result["planned"]:
-        print(f"  - {name}")
+        tag = "新增" if name in result["added"] else "更新"
+        print(f"  - [{tag}] {name}")
     if result["skipped"]:
         print(f"跳过 {len(result['skipped'])} 项：")
         for item in result["skipped"][:15]:

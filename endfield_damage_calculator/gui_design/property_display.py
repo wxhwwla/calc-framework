@@ -183,6 +183,8 @@ def build_weapon_attribute_lines(
     sa3_level: int = 0,
     ws_name: str = "",
     ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
 ) -> list[str]:
     """构建武器属性列展示明细（不含摘要）。"""
     if not weapon_data:
@@ -215,20 +217,27 @@ def build_weapon_attribute_lines(
         )
         lines.append(f"{attr_name}: {display_value}")
 
-    if ws_name and ws_name not in bonus_attrs:
-        field = weapon_data.get("特殊能力", [])
+    from character_weapon_equipment.weapon_data.special_fields import (
+        get_special_value_at_level,
+    )
+
+    for slot_idx, pick_level, pick_name, label in (
+        (0, ws_level, ws_name, "特殊能力1"),
+        (1, ws2_level, ws2_name, "特殊能力2"),
+    ):
+        if not pick_name or pick_name in bonus_attrs:
+            continue
+        raw_value = get_special_value_at_level(
+            weapon_data, slot_idx, name=pick_name, level=pick_level
+        )
         display_value = "0%"
-        if ws_level > 0 and isinstance(field, list) and len(field) >= 3:
-            values = field[2]
-            if isinstance(values, list) and values:
-                idx = ws_level - 1
-                raw_value = values[idx] if 0 <= idx < len(values) else values[0]
-                display_value = format_weapon_bonus_display_value(
-                    raw_value,
-                    attr_name=ws_name,
-                    is_first_skill=False,
-                )
-        lines.append(f"{ws_name}(特殊能力): {display_value}")
+        if raw_value is not None:
+            display_value = format_weapon_bonus_display_value(
+                raw_value,
+                attr_name=pick_name,
+                is_first_skill=False,
+            )
+        lines.append(f"{pick_name}({label}): {display_value}")
     return lines
 
 
@@ -351,6 +360,8 @@ def confirm_selection(
     special_ability_3_level = weapon_panel.get_special_ability_3_level()
     weapon_special_name = weapon_panel.get_weapon_special_name()
     weapon_special_level = weapon_panel.get_weapon_special_level()
+    weapon_special_2_name = weapon_panel.get_weapon_special_2_name()
+    weapon_special_2_level = weapon_panel.get_weapon_special_2_level()
 
     if not state["weapon_message"] and weapon_data:
         weapon_lines = build_weapon_attribute_lines(
@@ -364,6 +375,8 @@ def confirm_selection(
             sa3_level=special_ability_3_level,
             ws_name=weapon_special_name,
             ws_level=weapon_special_level,
+            ws2_name=weapon_special_2_name,
+            ws2_level=weapon_special_2_level,
         )
         _render_lines(
             weapon_attr_scroll,
@@ -383,6 +396,7 @@ def confirm_selection(
         special_ability_2_name, special_ability_2_level,
         special_ability_3_name, special_ability_3_level,
         weapon_special_name, weapon_special_level,
+        weapon_special_2_name, weapon_special_2_level,
         trust_level,
         big_font, small_font
     )
@@ -402,6 +416,8 @@ def _display_zone_data(
     sa3_level: int = 0,
     ws_name: str = "",
     ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
     trust_level: int = 0,
     big_font: Optional[ctk.CTkFont] = None,
     small_font: Optional[ctk.CTkFont] = None
@@ -464,6 +480,8 @@ def _display_zone_data(
                 sa3_level=sa3_level,
                 ws_name=ws_name,
                 ws_level=ws_level,
+                ws2_name=ws2_name,
+                ws2_level=ws2_level,
             ),
         )
         for line in compute_multiplicative_zone_snapshot(selection):

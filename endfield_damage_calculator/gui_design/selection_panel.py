@@ -445,12 +445,25 @@ class ChooseTypesStarsNamesLevels:
         return ""
 
     def get_weapon_special_level(self) -> int:
-        """获取武器「特殊能力」字段等级；0 表示未启用。"""
+        """获取武器「特殊能力1」字段等级；0 表示未启用。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.weapon_special_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
-    
+
+    def get_weapon_special_2_name(self) -> str:
+        """获取武器「特殊能力2」名称（仅武器面板有效）。"""
+        if self.special_ability_panel:
+            return self.special_ability_panel.current_weapon_special_2_name
+        return ""
+
+    def get_weapon_special_2_level(self) -> int:
+        """获取武器「特殊能力2」等级；0 表示未启用。"""
+        if self.special_ability_panel:
+            level_str = self.special_ability_panel.weapon_special_2_level.get()
+            return int(level_str) if level_str.isdigit() else 0
+        return 0
+
     def get_skill_1_level(self) -> int:
         """
         获取战技等级（仅角色面板有效）

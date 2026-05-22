@@ -10,6 +10,7 @@
 scout.py（拉取/续跑 raw 缓存）
     → compare_stats.py（可选：干员 1–90 级对比报告）
     → sync_operators.py / sync_weapons.py（预览待更新项）
+    → sync_*.py --new（可选：导入 manifest 中本地尚无、缓存齐全的条目）
     → sync_*.py --apply（写入 JSON + seed_*.py）
 ```
 
@@ -70,7 +71,9 @@ python tools/bwiki_scout/compare_stats.py   # 仅离线重算报告
 | 干员 `力量/敏捷/智识/意志/基础攻击力` | `raw/<干员>/详细数据/wikitext.txt` | `wiki_sync.fit_growth_params_from_curve` |
 | 干员 `战技倍率` / `连携技倍率` / `终结技倍率` | `raw/<干员>/html.html` 技能 tab 中「伤害倍率」行 | `skill_tables` + `fit_skill_formula` |
 | 武器 `基础攻击力` | `raw/<武器>/wikitext.txt` 的 1 级与满级端点 | `weapon_wiki.fit_weapon_base_atk_from_endpoints` |
-| 武器 `xxx+`、特殊能力 | 同页 `词条Nrank1–9`、`词条3副1rank…` | `fit_skill_formula_no_special`（9 档潜能） |
+| 武器第 3 技能（无条件） | `词条3内容` 首行 + `词条3副1rank1–9` | 写入 `bonus_attrs` 第三项（如 `法术伤害+`） |
+| 武器特殊能力1/2（有条件） | `词条3副1–4rank…`（视武器有无无条件第三技能） | 写入 `特殊能力1` / `特殊能力2`（如尖峰两条判定、J.E.T. 战技+连携） |
+| 武器 `xxx+`（词条 1/2） | 同页 `词条1/2rank1–9` | `fit_skill_formula_no_special`（9 档潜能） |
 
 **武器限制**：须存在 `基础攻击力`、`满级基础攻击力` 与 `词条1rank1` 等字段；仅模板简介、无 rank 表的武器（如部分 Wiki 简页）会跳过。
 
@@ -82,6 +85,7 @@ python tools/bwiki_scout/compare_stats.py   # 仅离线重算报告
 python tools/bwiki_scout/sync_operators.py
 python tools/bwiki_scout/sync_operators.py --apply
 python tools/bwiki_scout/sync_operators.py --apply --only 佩丽卡
+python tools/bwiki_scout/sync_operators.py --new          # 本地尚无、且 raw 齐全的新干员
 ```
 
 **武器** → `weapons.json` + `endfield_damage_calculator/scripts/seed_weapons.py`：
@@ -90,7 +94,11 @@ python tools/bwiki_scout/sync_operators.py --apply --only 佩丽卡
 python tools/bwiki_scout/sync_weapons.py
 python tools/bwiki_scout/sync_weapons.py --apply
 python tools/bwiki_scout/sync_weapons.py --apply --only 逐鳞3.0
+python tools/bwiki_scout/sync_weapons.py --new              # 预览：可导入的新武器
+python tools/bwiki_scout/sync_weapons.py --new --apply      # 写入 JSON + seed_weapons.py
 ```
+
+默认只处理 **已在** `characters.json` / `weapons.json` 中的名称（与 Wiki 对比后更新）。加 `--new` 会从 `manifest.json` 并入本地缺失、且 `output/raw` 缓存可反推的条目（武器须含 `词条1rank1` 等成长块）。
 
 ## 模块文件
 
@@ -103,6 +111,7 @@ python tools/bwiki_scout/sync_weapons.py --apply --only 逐鳞3.0
 | `skill_tables.py` | 解析干员主页 HTML 技能倍率表 |
 | `weapon_wiki.py` | 解析武器 wikitext 与反推 seed 结构 |
 | `wiki_sync.py` | 干员/武器同步核心、`seed_*` 读写 |
+| `import_targets.py` | manifest → 同步目标（含 `--new`） |
 | `sync_operators.py` / `sync_weapons.py` | CLI 入口 |
 | `storage.py` | `raw/` 读写与续跑 |
 | `config.py` | 路径、API、本地 JSON 位置 |

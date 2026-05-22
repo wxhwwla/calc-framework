@@ -16,6 +16,10 @@ from typing import Any
 
 from calculation.curve_baker import bake_weapon_curves
 from calculation.formula import calculate_bonus_attribute
+from character_weapon_equipment.weapon_data.special_fields import (
+    read_weapon_special_slots,
+    write_weapon_special_slots,
+)
 from data.loader import reload_weapons
 
 _GROWTH_KEYS = frozenset({"base", "growth", "divisor", "offset", "special"})
@@ -35,7 +39,10 @@ def add_weapon(
     base_atk: dict,
     bonus_attrs: dict | None = None,
     special_ability: dict | None = None,
+    special_ability_2: dict | None = None,
     *,
+    special_1: dict | None = None,
+    special_2: dict | None = None,
     json_path: Path | None = None,
 ) -> dict:
     """
@@ -54,15 +61,21 @@ def add_weapon(
         **baked,
     }
 
-    sa = copy.deepcopy(special_ability) if special_ability else None
-    if sa and sa.get("enabled"):
-        weapon["特殊能力"] = [
-            True,
-            sa.get("name", ""),
-            _build_special_ability_curve(sa),
-        ]
-    else:
-        weapon["特殊能力"] = [False]
+    sa1 = copy.deepcopy(special_1 or special_ability)
+    sa2 = copy.deepcopy(special_2 or special_ability_2)
+    slots: list[tuple[bool, str, list]] = []
+    for sa in (sa1, sa2):
+        if sa and (sa.get("enabled") or sa.get("curve")):
+            slots.append(
+                (
+                    True,
+                    sa.get("name", ""),
+                    _build_special_ability_curve(sa),
+                )
+            )
+        else:
+            slots.append((False, "", []))
+    write_weapon_special_slots(weapon, slots)
 
     if json_path is None:
         json_path = Path(__file__).parent / "weapons.json"
@@ -86,8 +99,11 @@ def add_weapon(
     print(f"   基础攻击力: {weapon['基础攻击力'][0]} - {weapon['基础攻击力'][-1]}")
     if bonus_attrs:
         print(f"   附加属性: {', '.join(bonus_attrs.keys())}")
-    if sa and sa.get("enabled"):
-        print(f"   特殊能力: {sa.get('name')}")
+    for label, (enabled, sa_name, _) in zip(
+        ("特殊能力1", "特殊能力2"), read_weapon_special_slots(weapon)
+    ):
+        if enabled:
+            print(f"   {label}: {sa_name}")
     print(f"   当前武器总数: {len(weapons)}")
     return weapon
 

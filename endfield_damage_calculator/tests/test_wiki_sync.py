@@ -42,6 +42,7 @@ from bwiki_scout.wiki_sync import (  # noqa: E402
 from calculation.formula import calculate_growth_curve  # noqa: E402
 
 _RAW_ZHULIN = _REPO_ROOT / "tools/bwiki_scout/output/raw/逐鳞3.0"
+_RAW_JET = _REPO_ROOT / "tools/bwiki_scout/output/raw/J.E.T"
 
 
 class TestWikiSync(unittest.TestCase):
@@ -181,7 +182,25 @@ class TestWikiSync(unittest.TestCase):
         self.assertEqual(rebuilt[0], 42)
         self.assertEqual(rebuilt[-1], 411)
         self.assertIn("力量+", spec["bonus_attrs"])
-        self.assertTrue(spec["special_ability"]["enabled"])
+        self.assertIn("寒冷伤害+", spec["bonus_attrs"])
+        self.assertIn("攻击力+", spec["bonus_attrs"])
+        self.assertIn("攻击力+", spec["bonus_attrs"])
+        self.assertEqual(spec["special_1"]["name"], "目标受到的寒冷伤害+")
+        self.assertTrue(spec["special_1"]["enabled"])
+
+    @unittest.skipUnless(
+        _RAW_JET.is_dir(),
+        "需要 BWIKI 缓存 raw/J.E.T",
+    )
+    def test_jet_slot3_unconditional_is_third_bonus_conditional_is_special(self):
+        """词条3：副1 为第三技能；副2+ 为特殊能力（非副1）。"""
+        wikitext = (_RAW_JET / "wikitext.txt").read_text(encoding="utf-8")
+        with redirect_stdout(io.StringIO()):
+            spec = build_weapon_seed_spec_from_wiki(name="J.E.T.", wikitext=wikitext)
+        self.assertIn("法术伤害+", spec["bonus_attrs"])
+        self.assertEqual(spec["special_2"]["name"], "施放连携技后，法术伤害+")
+        self.assertTrue(spec["special_2"]["enabled"])
+        self.assertEqual(spec["special_1"]["name"], "施放战技后，法术伤害+")
 
     def test_fit_weapon_base_atk_preserves_shape_with_reference(self):
         ref = list(range(100, 190))
