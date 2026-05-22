@@ -11,12 +11,13 @@
 | **操作速查** | [`docs/操作指令集.md`](docs/操作指令集.md) | 日常命令与 `[根]` / `[包]` 目录约定 |
 | **领域术语** | [`CONTEXT.md`](CONTEXT.md) | Issue、测试、文档统一用语 |
 | **算法说明** | [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md) | 公式与架构细节 |
+| **许可与合规** | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | 软件/数据双许可、典型情形 |
 
 ## 目录约定
 
 | 名称 | 路径 | 典型操作 |
 |------|------|----------|
-| **仓库根** `[根]` | 本目录 | `github_upload_module.py`、`github_download_module.py` |
+| **仓库根** `[根]` | 本目录 | `github_upload_module.py`、`github_download_module.py`、`scripts/bwiki_scout/` |
 | **Python 包** `[包]` | `endfield_damage_calculator/` | `main.py`、`pytest`、`build.py` |
 
 ## 快速开始
@@ -40,6 +41,8 @@ python github_upload_module.py
 - 角色 / 武器选择，分列展示属性与技能倍率
 - 确认选择后刷新右侧乘区（能力、攻击力等）
 - 角色与武器 JSON 数据、公式反推与录入脚本
+- GUI「数据来源与许可」：软件 AGPL / 数据许可说明与链接
+- BWIKI 数据侦察（`scripts/bwiki_scout/`，对比本地 JSON，不覆盖正式数据）
 
 细节与布局说明见 [**详细 README**](endfield_damage_calculator/README.md)。
 

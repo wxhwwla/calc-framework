@@ -44,6 +44,7 @@ endfield_damage_calculator/
 │       ├── final_attack_zone.py   # 最终攻击力区
 │       └── zone_manager.py    # 乘区管理器
 ├── character_weapon_equipment/# 数据文件目录
+│   ├── DATA_README.md         # 数据许可说明（见仓库根 DATA_LICENSE）
 │   ├── character_data/        # 角色数据
 │   │   ├── characters.json    # 角色JSON数据
 │   │   ├── character_data.py  # 角色数据管理
@@ -63,6 +64,8 @@ endfield_damage_calculator/
 │   ├── selection_panel.py     # 选择面板
 │   ├── selection_components.py # 选择组件
 │   └── property_display.py    # 确认后分列展示角色/武器属性与乘区
+├── legal/                     # 许可与数据来源（GUI 对话框）
+│   └── attribution.py
 ├── scripts/                   # 辅助脚本（非 pytest）
 │   ├── inverse_cli.py         # 反推公式 CLI
 │   ├── inverse_formula_gui.py # 反推公式 GUI（维护用）
@@ -99,6 +102,10 @@ python github_upload_module.py --no-bump    # 提交推送但不改 _VERSION
 ```
 
 上传前脚本会根据改动在 `please_read_me.py` **底部**生成临时总结块，commit 消息读取该块（`v版本: 标题` + 列表）；**push 成功后**自动删除总结块。失败则保留总结便于重试。
+
+若本机已配置 Git 提交签名（`commit.gpgsign` 或 `user.signingkey`），脚本会在 commit 时自动签名，便于 GitHub 显示 **Verified**；未配置会打印设置提示（见 [`docs/操作指令集.md`](../docs/操作指令集.md) §1.5）。
+
+**从远程覆盖本地（危险）**：在 `[根]` 运行 `python github_download_module.py`，须输入确认词 **`覆盖本地`**；会丢弃未提交与未跟踪文件。详见操作指令集 §5.2。
 
 ### 安装依赖
 
@@ -159,7 +166,7 @@ python build.py
 | 列 | 内容 | 宽度策略 |
 |----|------|----------|
 | 0 | 角色选择 | 最小宽度（`weight=0`） |
-| 1 | 武器选择 + 确认按钮 | 最小宽度 |
+| 1 | 武器选择 +「确认选择」+「数据来源与许可」 | 最小宽度 |
 | 3 | **角色属性**（力量、敏捷、智识、意志、基础攻击力等） | 最小宽度 |
 | 5 | **武器属性**（基础攻击、各条 `xxx+`、特殊能力数值） | 最小宽度 |
 | 7 | **右侧乘区** | 占满剩余宽度（`weight=1`） |
@@ -169,6 +176,22 @@ python build.py
 - 武器属性列数值规则：**第一技能**对应条目为 JSON 整数；**其余** `xxx+` 与特殊能力字段按百分数显示（如 `27.6%`）。
 
 术语与列号说明见仓库根目录 [`CONTEXT.md`](../CONTEXT.md)。
+
+### 数据来源与许可
+
+武器列下方 **「数据来源与许可」** 打开简略说明，可跳转 `LICENSE`、`DATA_LICENSE`、BWIKI、CC 与完整文档 [`docs/数据来源与许可.md`](../docs/数据来源与许可.md)。
+
+### BWIKI 数据侦察（`[根]` / `scripts/bwiki_scout/`）
+
+对比终末地 BWIKI 与本地 JSON，**不覆盖** `characters.json` / `weapons.json`：
+
+```powershell
+cd e:\endfield_damage_calculator   # [根]
+python scripts/bwiki_scout/scout.py --limit 5   # 调试可先限量
+python scripts/bwiki_scout/parse_draft.py
+```
+
+产出在 `scripts/bwiki_scout/output/`（已 gitignore）。说明见 [`scripts/bwiki_scout/README.md`](../scripts/bwiki_scout/README.md)。
 
 ### 公式反推工具
 

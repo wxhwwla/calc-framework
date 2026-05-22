@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.11.1"
+_VERSION = "1.11.2"
 _EXE_VERSION = "0.2.0-beta"
 # ==============================================================
 
@@ -56,7 +56,17 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    python github_upload_module.py --minor
    python github_upload_module.py --no-bump
 
-完整操作指令（GUI、数据、测试、打包、GitHub、Cursor）见仓库根目录：
+6. 提交签名（可选，便于 GitHub 显示 Verified）
+   - 若本机已配置 commit.gpgsign 或 user.signingkey，上传脚本会自动签名。
+   - 未配置时脚本会打印设置提示；见 docs/操作指令集.md §1.5。
+
+7. 从远程覆盖本地（危险，勿误点）
+   - 仓库根：python github_download_module.py
+   - 须完整输入确认词「覆盖本地」才会执行；会 reset --hard 并 clean 未跟踪文件。
+
+许可与数据：LICENSE（软件）、DATA_LICENSE（游戏 JSON）、docs/数据来源与许可.md
+
+完整操作指令（GUI、数据、测试、打包、GitHub、BWIKI、Cursor）见仓库根目录：
    docs/操作指令集.md
 """
 # ==============================================================
@@ -78,6 +88,8 @@ PROJECT_STRUCTURE = f"""
     │   ├── selection_panel.py     # 选择面板类
     │   ├── selection_components.py # 选择面板组件
     │   └── property_display.py    # 属性展示函数
+    ├── legal/                     # 许可与数据来源（GUI 对话框）
+    │   └── attribution.py
     ├── calculation/               # 计算逻辑模块
     │   ├── formula.py / inverse.py
     │   └── multiplicative_zones/  # 乘区链（能力、防御、攻击力等）
@@ -91,9 +103,17 @@ PROJECT_STRUCTURE = f"""
     │   └── loader.py              # 角色和武器数据的统一加载与缓存
     ├── utils/                     # 工具函数模块
     │   └── path_utils.py          # 路径处理工具
-    └── character_weapon_equipment/# 数据文件目录
+    └── character_weapon_equipment/# 数据文件目录（许可见仓库根 DATA_LICENSE）
+        ├── DATA_README.md         # 数据许可入口说明
         ├── character_data/        # 角色数据（JSON格式）
         └── weapon_data/           # 武器数据（JSON格式）
+
+仓库根目录（与 [包] 并列）：
+    ├── LICENSE / DATA_LICENSE     # 软件与数据许可
+    ├── docs/数据来源与许可.md      # 合规说明
+    ├── github_upload_module.py    # 上传（版本 bump + 可选签名）
+    ├── github_download_module.py  # 拉取覆盖（须输入「覆盖本地」）
+    └── scripts/bwiki_scout/       # BWIKI 侦察（output/ 已 gitignore）
 """
 
 USAGE_INFO = f"""
@@ -186,10 +206,14 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 4 处文件
+# TITLE: 更新 8 处文件
 # BODY:
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 更新文档 AGENTS.md
+# - 更新文档 CONTEXT.md
+# - 更新文档 PROJECT_DOCUMENTATION.md
+# - 更新文档 README.md
+# - 更新文档 endfield_damage_calculator/README.md
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/test_github_upload_signing.py
-# - 修改 github_upload_module.py
+# - 更新文档 scripts/bwiki_scout/README.md
 # --- END UPLOAD_SUMMARY ---

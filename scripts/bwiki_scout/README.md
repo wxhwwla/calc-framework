@@ -2,6 +2,8 @@
 
 从 [终末地 BWIKI](https://wiki.biligame.com/zmd/) 拉取干员 / 武器 / 装备数据，对比本地 `characters.json`、`weapons.json`，并生成阶段 B 解析草案。
 
+操作速查见 [`docs/操作指令集.md`](../../docs/操作指令集.md) §9；许可见 [`DATA_LICENSE`](../../DATA_LICENSE)。
+
 ## 阶段 C（侦察）
 
 ```powershell

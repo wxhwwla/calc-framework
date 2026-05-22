@@ -39,4 +39,7 @@
 | **右侧乘区** | GUI 最右列（第 7 列），展示防御减伤、能力乘区与最终攻击力；**总伤结算**仍为后续产品功能 |
 | **角色属性列** | GUI 第 3 列，展示角色等级曲线属性（力量、敏捷等）及战技/连携技/终结技倍率明细（等级取自选择区滑块）；不含选择摘要 |
 | **武器属性列** | GUI 第 5 列，仅展示武器基础攻击与附加属性明细，不含选择摘要 |
-| **上传流程** | 根目录 `github_upload_module.py`；`_VERSION` 自动 bump；说明见 `please_read_me.UPLOAD_WORKFLOW` |
+| **上传流程** | 根目录 `github_upload_module.py`；`_VERSION` 自动 bump；可选提交签名；说明见 `please_read_me.UPLOAD_WORKFLOW` |
+| **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
+| **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
+| **BWIKI 侦察** | `scripts/bwiki_scout/` 阶段 C 拉取 Wiki、阶段 B 解析草案；产出在 `output/`（gitignore），不写入正式 JSON |

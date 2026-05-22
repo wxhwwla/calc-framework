@@ -327,11 +327,14 @@ pip install -e .
 
 | 命令 | 作用 |
 |------|------|
-| `python github_upload_module.py` | 有业务改动时默认 patch +1，交互可选 minor |
+| `python github_upload_module.py` | 有业务改动时默认 patch +1，交互可选 minor；已配置签名时 commit 可显示 Verified |
 | `python github_upload_module.py --minor` | 第二位 +1（新武器 JSON、新乘区等） |
 | `python github_upload_module.py --no-bump` | 推送但不改 `_VERSION` |
+| `python github_download_module.py` | **危险**：对齐 `origin/main`；须输入 **`覆盖本地`** 确认 |
 
-流程摘要：自动生成底部 `UPLOAD_SUMMARY` → bump `_VERSION`（可选）→ 单 commit → push 成功则删除总结块；`_EXE_VERSION` 仅打包前手改。
+流程摘要：自动生成底部 `UPLOAD_SUMMARY` → bump `_VERSION`（可选）→ 单 commit（可选 GPG/SSH 签名）→ push 成功则删除总结块；`_EXE_VERSION` 仅打包前手改。
+
+下载脚本会 `reset --hard` 且 `git clean -fd`，未提交与未跟踪文件均可能丢失。详见 [`docs/操作指令集.md`](docs/操作指令集.md)。
 
 ### 文件配置
 
@@ -403,9 +406,11 @@ python -c "import sys; sys.path.insert(0, '.'); from calculation.formula import 
 
 ---
 
-## 许可证
+## 许可证与数据来源
 
-本项目仅供学习和研究使用。
+- **软件**：AGPL-3.0 或商业许可 → [`LICENSE`](LICENSE)
+- **游戏数据**：[`DATA_LICENSE`](DATA_LICENSE)（商用不可用本仓库 JSON / BWIKI 侦察流程）
+- **说明**：[`docs/数据来源与许可.md`](docs/数据来源与许可.md)、[`NOTICES.md`](NOTICES.md)
 
 ---
 
