@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""多技能加权总伤遍历。"""
+"""
+多技能快速预览用的加权总伤（非全量产品化路径）。
+
+总伤 = Σ(单技能单次伤害 × GUI 填写的释放次数)；与全量搜索共用配装枚举，但不做 SQLite 续跑。
+"""
 
 from __future__ import annotations
 

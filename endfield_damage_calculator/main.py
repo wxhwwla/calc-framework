@@ -3,29 +3,17 @@
 """
 终末地伤害计算小工具 - 项目入口文件
 
-项目结构说明：
-├── main.py                    # 项目入口，启动应用
-├── pyproject.toml             # 打包配置文件
-├── gui_design/                # GUI 界面模块
-│   ├── gui.py                 # 主应用类，管理窗口和布局
-│   ├── display_model.py       # GUI 展示层入口
-│   ├── gui_settings.py        # GUI 设置初始化
-│   ├── selection_panel.py     # 选择面板类
-│   └── property_display.py    # 属性展示函数
-├── calculation/               # 计算逻辑模块
-│   └── multiplicative_zones/  # 乘区链（能力、防御、最终攻击力等）
-├── data/                      # 统一数据加载层
-│   └── loader.py              # 角色和武器数据的统一加载与缓存
-├── utils/                     # 工具函数模块
-│   └── path_utils.py          # 路径处理工具（支持打包后运行）
-└── character_weapon_equipment/# 数据文件目录
-    ├── character_data/        # 角色数据（JSON格式）
-    └── weapon_data/           # 武器数据（JSON格式）
+项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
+├── main.py                    # 本文件：启动 GUI
+├── gui_design/gui.py          # 主窗口（6 列：选择 / 计算与搜索 / 属性 / 乘区）
+├── data/loader.py             # 角色、武器、装备 JSON 统一加载
+├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线
+└── character_weapon_equipment/  # characters.json / weapons.json / equipments.json
 
 功能说明：
-1. 提供角色和武器选择界面
-2. 分列显示角色属性、武器属性，并在确认后刷新右侧乘区数据
-3. 完整敌人/技能总伤结算仍为后续产品功能
+1. 角色 / 武器 / 装备选择与属性、乘区展示
+2. 单段伤害、乘区快照、多技能快速预览、单技能全量遍历（实验）
+3. 完整敌方参数面板与多技能全量遍历产品化仍为后续功能
 
 使用方式：
     python main.py

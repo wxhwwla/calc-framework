@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""单技能全量搜索导出编排（无 GUI）。"""
+"""
+单技能全量搜索编排（无 GUI 依赖）。
+
+- ``estimate_single_skill_search``：与全量共用 ``optimizer_config_for_character``，保证预估组合数与实跑一致；
+- ``run_exported_single_skill_search``：在 ``export_root`` 下写 ``search_runs.db`` 并调用 ``mvp_pipeline``。
+"""
 
 from __future__ import annotations
 

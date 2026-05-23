@@ -159,6 +159,7 @@ def aggregate_loadout_modifiers(
     for item in items:
         _absorb_item(item)
 
+    # 同套装满 3 件时，合并该套装第一件上的「三件套效果」
     set_counts: dict[str, int] = {}
     for item in items:
         set_id = str(item.get("套装") or "").strip()

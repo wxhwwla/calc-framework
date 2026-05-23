@@ -29,12 +29,13 @@ def run_bounded_parallel(
     top_key: Callable[[R], float] = lambda score: float(score),  # type: ignore[arg-type]
 ) -> tuple[tuple[R, ...], int, bool]:
     """
-    流式提交任务，限制在途 future 数量。
+    流式提交任务，限制在途 future 数量（避免千万级组合时一次性 submit 占满内存）。
 
     若提供 top_n，则只保留得分最高的 top_n 条结果（适用于 LoadoutScore 等）。
-  """
+    """
     token = cancel_token or SearchCancelToken()
     workers = max(1, int(max_workers))
+    # 在途任务约为线程数的数倍，平衡吞吐与内存
     max_inflight = max(workers * 4, 8)
     tracker: TopNTracker[R] | None = None
     all_results: list[R] | None = None

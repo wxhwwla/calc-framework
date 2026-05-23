@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.15.4"
+_VERSION = "1.15.5"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -81,19 +81,16 @@ PROJECT_STRUCTURE = f"""
     ├── README.md                  # 开发与测试说明（首选文档）
     ├── scripts/                   # 命令行与维护脚本（反推 GUI、录入种子等）
     ├── tests/                     # pytest 单元测试（不含可交互 GUI）
-    ├── gui_design/                # GUI 界面模块
-    │   ├── gui.py                 # 主应用类，管理窗口和布局
-    │   ├── display_model.py       # GUI 展示层入口
-    │   ├── gui_tools.py           # 兼容导出（请用 display_model）
-    │   ├── gui_settings.py        # GUI 设置初始化
-    │   ├── selection_panel.py     # 选择面板类
-    │   ├── selection_components.py # 选择面板组件
-    │   └── property_display.py    # 属性展示函数
+    ├── gui_design/                # GUI（6 列：选择 / 计算与搜索 / 属性 / 乘区）
+    │   ├── gui.py                 # 主应用类
+    │   ├── preview_lines.py       # 快速预览文案
+    │   ├── selection_panel.py / selection_components.py
+    │   └── property_display.py    # 属性列与乘区
     ├── legal/                     # 许可与数据来源（GUI 对话框）
     │   └── attribution.py
-    ├── calculation/               # 计算逻辑模块
-    │   ├── formula.py / inverse.py
-    │   └── multiplicative_zones/  # 乘区链（能力、防御、攻击力等）
+    ├── calculation/               # 公式、乘区、伤害引擎、装备搜索
+    │   ├── damage_engine.py / loadout_optimizer.py / mvp_pipeline.py
+    │   └── multiplicative_zones/  # 能力、防御、最终攻击力等
     │       ├── base_zone.py       # 乘区基类
     │       ├── attribute_zone.py  # 能力乘区
     │       ├── defense_zone.py     # 防御减伤区
@@ -212,31 +209,24 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 25 处文件
+# TITLE: 更新 18 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/calculation/equipment_prune.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 README.md
+# - 更新文档 docs/README.md
+# - 更新文档 endfield_damage_calculator/README.md
+# - 修改 endfield_damage_calculator/calculation/damage_engine.py
+# - 修改 endfield_damage_calculator/calculation/equipment_affix.py
 # - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/loadout_slot_search.py
 # - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
 # - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
-# - 修改 endfield_damage_calculator/calculation/search_estimate.py
+# - 修改 endfield_damage_calculator/calculation/parallel_search.py
 # - 修改 endfield_damage_calculator/calculation/single_skill_search_job.py
 # - 修改 endfield_damage_calculator/calculation/single_skill_search_runner.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/gui_design/label_layout.py
-# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
-# - 修改 endfield_damage_calculator/gui_design/property_display.py
-# - 修改 endfield_damage_calculator/gui_design/selection_components.py
+# - 修改 endfield_damage_calculator/main.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/test_equipment_prune.py
-# - 修改 endfield_damage_calculator/tests/test_gui_layout_contract.py
-# - 修改 endfield_damage_calculator/tests/test_gui_window.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_optimizer.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_varying_slots.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_counts.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_search_preview.py
-# - 修改 endfield_damage_calculator/tests/test_single_skill_search_runner.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_panel_layout.py
-# - 修改 endfield_damage_calculator/utils/gui_window.py
 # --- END UPLOAD_SUMMARY ---

@@ -61,16 +61,14 @@ endfield_damage_calculator/
 ├── data/                      # 统一数据加载层
 │   └── loader.py              # get_characters / get_weapons / get_equipments
 ├── calculation/               # 伤害引擎、装备、搜索、MVP 流水线（见 docs/MVP搜索验收说明.md）
-├── gui_design/                # GUI界面模块
-│   ├── gui.py                 # 主应用类（三列 + 乘区）
+├── gui_design/                # GUI 界面模块
+│   ├── gui.py                 # 主应用（6 列 grid，含计算与搜索列）
+│   ├── preview_lines.py       # 单/多技能快速预览文案
 │   ├── search_export_paths.py # search_output/ 导出路径
-│   ├── search_settings.py     # 并行线程与进度文案
-│   ├── display_model.py       # GUI 展示层入口
-│   ├── gui_tools.py           # 兼容导出（请用 display_model）
-│   ├── gui_settings.py        # GUI设置初始化
+│   ├── gui_settings.py        # 主题与字体
 │   ├── selection_panel.py     # 选择面板
-│   ├── selection_components.py # 选择组件
-│   └── property_display.py    # 确认后分列展示角色/武器属性与乘区
+│   ├── selection_components.py
+│   └── property_display.py    # 确认后属性列与乘区
 ├── legal/                     # 许可与数据来源（GUI 对话框）
 │   └── attribution.py
 ├── scripts/                   # 包内维护脚本（非 pytest；≠ 仓库 tools/）
@@ -181,15 +179,16 @@ python build.py
 
 ### GUI 布局
 
-主窗口为 **8 列** grid（偶数列为间隙），内容区从左到右：
+主窗口为 **6 列** grid，`APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 1, 5)`：
 
 | 列 | 内容 | 宽度策略 |
 |----|------|----------|
-| 0 | 角色选择 | 最小宽度（`weight=0`） |
-| 1 | 武器选择 +「确认选择」+「数据来源与许可」 | 最小宽度 |
-| 3 | **角色属性**（力量、敏捷、智识、意志、基础攻击力等） | 最小宽度 |
-| 5 | **武器属性**（基础攻击、各条 `xxx+`、特殊能力数值） | 最小宽度 |
-| 7 | **右侧乘区** | 占满剩余宽度（`weight=1`） |
+| 0 | 角色选择 | `weight=0`，min ~260px |
+| 1 | 武器选择 +「确认选择」+「数据来源与许可」 | `weight=0` |
+| 2 | **计算与搜索**（模式、全量遍历、线程、预估） | `weight=1`，min 360px |
+| 3 | **角色属性** | `weight=1` |
+| 4 | **武器属性** | `weight=1` |
+| 5 | **右侧乘区** | `weight=5`，主伸缩列 |
 
 - 启动完成后会自动确认一次，用默认角色/武器填充属性列与乘区。
 - 角色或武器无效时，仅对应属性列显示提示，且不刷新乘区。
@@ -302,7 +301,7 @@ result = calculated / scale_factor
 | `test_decimal_scaling.py` | 小数数据处理测试 |
 | `test_inverse_refactored.py` | 反推算法重构测试 |
 | `test_unified_data_generator.py` | 统一数据生成器测试 |
-| `test_gui_layout_contract.py` | 主界面 8 列布局权重契约 |
+| `test_gui_layout_contract.py` | 主界面 6 列布局权重契约 |
 | `test_property_display_lines.py` | 角色/武器属性列明细文本 |
 | `test_confirm_selection_state.py` | 确认选择后的分列提示与乘区联动 |
 | `test_weapon_property_display.py` | 武器属性数值格式（整数 / 百分数） |

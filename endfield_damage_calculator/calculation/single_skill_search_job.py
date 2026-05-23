@@ -86,7 +86,12 @@ def build_run_signature(
     equipment_scope_label: str,
     varying_equipment_slot_count: int,
 ) -> str:
-    """生成续跑用 run_signature。"""
+    """
+    生成续跑用 run_signature（写入 search_runs.db）。
+
+    任一搜索参数（等级、技能、武器/装备范围、遍历件数 slotsN 等）变化都会得到新签名，
+    避免与旧库的 total_combinations / 已处理 key 混用。
+    """
     seed = (
         f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
         f"{skill_name}-w{weapon_count}-e{chest_count}-"

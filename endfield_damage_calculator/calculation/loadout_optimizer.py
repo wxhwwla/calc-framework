@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""单技能最优配装搜索（V1）。"""
+"""
+单技能最优配装搜索。
+
+组合空间 = 候选武器数 × 四格配装笛卡尔积（由 ``varying_slot_count`` 与 ``loadout_slot_search`` 控制）。
+``build_optimizer_search_plan`` 负责剪枝无益装备、按主/副能力排序、统计 ``total_combinations``；
+``evaluate_task`` 对每条 (武器, 四格) 重算攻击力并走 ``damage_engine`` 得到伤害用于 TopN。
+"""
 
 from __future__ import annotations
 
@@ -289,8 +295,9 @@ def evaluate_task(
     task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]],
     search_eval: Optional[SearchEvalContext] = None,
 ) -> LoadoutScore:
-    """评估单条搜索任务。"""
+    """评估单条搜索任务：四格配装 → 词条加成 → 最终攻击 → 单段伤害。"""
     weapon, (chest, glove, acc_a, acc_b) = task
+    # 将 JSON 行转为带解析后效果的运行时四格结构
     loadout = build_four_slot_loadout(
         chest=chest,
         gloves=glove,
@@ -298,9 +305,11 @@ def evaluate_task(
         accessory_b=acc_b,
         allow_duplicate_accessory=True,
     )
+    # 属性词条、套装三件套等 → DamageEffect + 平铺四维 + 攻击力%
     equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
     effects = list(weapon.effects) + equip_effects
     final_attack = weapon.final_attack
+    # 全量搜索时按当前等级曲线重算 final_attack（含装备平铺与攻击%）
     if search_eval is not None:
         weapon_data = search_eval.weapon_data_by_name.get(weapon.name)
         if weapon_data is not None:

@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""单段伤害引擎（15 乘区）。"""
+"""
+单段伤害引擎（15 乘区链）。
+
+流程概要：
+1. ``DamageContext`` 提供最终攻击力、技能倍率、敌防/抗性、各类加成基数等；
+2. ``DamageEffect`` 列表（武器特殊能力、装备词条、套装效果）经 ``_collect_effects`` 过滤到当前伤害/技能类型；
+3. 各效果累加到对应乘区（见 ``ZONE_ORDER``），最后连乘得到 ``final_damage``。
+
+搜索场景下 ``evaluate_task`` 会把装备平铺四维与攻击力% 并入 ``final_attack`` 后再调用本模块。
+"""
 
 from __future__ import annotations
 
@@ -9,6 +18,7 @@ from typing import Literal, Optional
 
 CritMode = Literal["non_crit", "expected", "always_crit"]
 
+# 乘区连乘顺序（与游戏文档一致；展示与结算均按此顺序）
 ZONE_ORDER = (
     "基础伤害区",
     "暴击区",

@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""MVP 端到端搜索流水线。"""
+"""
+MVP 端到端搜索流水线。
+
+串联：``run_search_session``（并行 + 可选 SQLite 续跑）→ TopN → ``export_search_outputs`` 写文件。
+GUI「全量遍历」「MVP 导出/续跑」最终都进入 ``run_mvp_search_from_job``。
+"""
 
 from __future__ import annotations
 

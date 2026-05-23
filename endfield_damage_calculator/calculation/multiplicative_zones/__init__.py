@@ -14,11 +14,14 @@
 - 最终攻击力区
 - 等等
 
-使用方式：
+接缝说明：
+- **右侧乘区 GUI**：``zone_snapshot.compute_multiplicative_zone_snapshot`` + 各 ``calculate_*_with_details``；
+- **单段伤害 / 全量搜索评分**：``calculation.damage_engine``（15 乘区连乘），与 ``ZoneManager`` 演示路径分离。
+
+使用方式（维护/扩展乘区类时）：
     from calculation.multiplicative_zones import ZoneManager
     manager = ZoneManager()
-    manager.add_zone(AttackMultiplierZone())
-    total_multiplier = manager.calculate_total()
+    manager.add_zone(DefenseReductionZone())
 """
 
 from .base_zone import BaseZone

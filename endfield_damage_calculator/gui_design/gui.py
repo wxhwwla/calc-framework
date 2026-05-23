@@ -8,7 +8,7 @@ GUI 主应用模块
 
 主要功能：
 1. 创建主窗口并设置初始属性
-2. 使用 grid 布局管理五个内容区（角色/武器选择、角色/武器属性、右侧乘区）
+2. 使用 6 列 grid：角色/武器选择、计算与搜索、角色/武器属性、右侧乘区
 3. 加载角色和武器数据
 4. 处理用户交互事件（确认选择等）
 5. 支持窗口缩放自适应
@@ -70,6 +70,7 @@ from gui_design.search_results_view import (
 )
 
 # 列 0/1：配装（固定宽）；列 2：计算与搜索；列 3/4：属性（均分）；列 5：乘区（主伸缩）
+# 六列伸缩权重：0–1 选择区固定，2–4 中间列均分，5 乘区占主要剩余宽度
 APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 1, 5)
 
 
@@ -95,7 +96,7 @@ class DamageCalculatorApp:
         char_attr_scroll: 角色属性滚动容器
         weapon_attr_frame: 武器属性区外框（第 5 列）
         weapon_attr_scroll: 武器属性滚动容器
-        right_frame: 右侧乘区框架（第 7 列）
+        right_frame: 右侧乘区框架（第 5 列）
         right_scroll: 右侧乘区滚动容器
         char_panel: 角色选择面板实例
         weapon_panel: 武器选择面板实例
@@ -154,6 +155,7 @@ class DamageCalculatorApp:
         self.search_workers_hint_label: Optional[ctk.CTkLabel] = None
         self.search_top_n_menu: Optional[ctk.CTkOptionMenu] = None
         self.search_cancel_btn: Optional[ctk.CTkButton] = None
+        # --- 全量/MVP 搜索状态（后台线程写 outcome，UI 更新须经 app.after）---
         self._search_cancel_token: Optional[SearchCancelToken] = None
         self._search_estimated_total_seconds: float = 0.0
         self.search_estimate_label: Optional[ctk.CTkLabel] = None
@@ -554,7 +556,12 @@ class DamageCalculatorApp:
         return "战技", "战技", 1.0
 
     def _build_control_panel(self) -> None:
-        """构建「计算与搜索」列：确认、模式、遍历、多技能权重。"""
+        """
+        构建「计算与搜索」列（第 2 列）。
+
+        自上而下：确认选择 → 计算模式 → 全量遍历参数（范围/件数/预估）→
+        并行线程与 TopN → 多技能次数。改范围或件数会触发 ``_refresh_search_estimate``。
+        """
         assert self.control_scroll is not None
         panel = self.control_scroll
         panel.grid_columnconfigure(0, weight=1, minsize=120)
@@ -616,6 +623,7 @@ class DamageCalculatorApp:
         )
         place(self.calc_mode_menu, pady=(0, 8))
 
+        # 以下控件与 single_skill_search_job / loadout_optimizer 共用同一套 scope 与 slots 语义
         section("单技能全量遍历")
         place(
             ctk.CTkLabel(panel, text="武器候选范围", font=self.small_font, text_color="#CCCCCC"),
@@ -801,7 +809,12 @@ class DamageCalculatorApp:
     def _prepare_single_skill_search_job(
         self,
     ) -> Optional[SingleSkillSearchJob]:
-        """收集全量单技能搜索所需上下文；失败时弹窗并返回 None。"""
+        """
+        从当前 GUI 选择组装 ``SingleSkillSearchJob``。
+
+        含：角色/武器等级、左侧技能倍率、武器/装备范围、遍历件数 1–4、
+        ``run_signature``（续跑库键）。失败时弹窗并返回 None。
+        """
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
         char_data = self.char_panel.get_selected_data()
@@ -963,7 +976,12 @@ class DamageCalculatorApp:
         status_running: str,
         status_done_prefix: str,
     ) -> None:
-        """后台执行 MVP 搜索流水线，完成后弹窗展示结果。"""
+        """
+        在守护线程中调用 ``run_exported_single_skill_search``，避免阻塞 Tk 主循环。
+
+        进度与完成回调均通过 ``app.after(0, ...)`` 回到 UI 线程；取消由 ``SearchCancelToken`` 传递。
+        全量弹窗与 MVP 导出按钮共用本入口，仅 ``export_root`` 与文案不同。
+        """
         top_n = resolve_top_n(self.search_top_n_var.get())
         max_workers = resolve_parallel_workers(self.search_workers_var.get())
         skill_type = str(job.base_context.skill_type or job.skill_label)
