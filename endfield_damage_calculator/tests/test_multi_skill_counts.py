@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""多技能加权总伤遍历测试。"""
+"""多技能次数加权测试。"""
 
 import unittest
 
@@ -14,7 +14,7 @@ from calculation.multi_skill_optimizer import (
 )
 
 
-class TestMultiSkillOptimizer(unittest.TestCase):
+class TestMultiSkillCounts(unittest.TestCase):
     def _catalog(self):
         return {
             "chest": [
@@ -34,20 +34,43 @@ class TestMultiSkillOptimizer(unittest.TestCase):
             ],
         }
 
-    def test_default_weight_policy_uses_selected_skill(self):
+    def test_default_counts_only_selected_skill_once(self):
         result = optimize_multi_skill_loadouts(
             base_context=DamageContext(final_attack=0.0, skill_multiplier=1.0, enemy_defense=0.0),
             weapons=[WeaponCandidate(name="武器A", final_attack=1000.0)],
             equipment_catalog=self._catalog(),
             scenarios=[
-                SkillScenario(skill_name="战技", skill_multiplier=1.0),
-                SkillScenario(skill_name="终结技", skill_multiplier=2.0),
+                SkillScenario(skill_name="战技", skill_multiplier=1.0, skill_type="战技"),
+                SkillScenario(skill_name="连携技", skill_multiplier=1.0, skill_type="连携技"),
             ],
-            config=MultiSkillConfig(selected_skill="终结技", top_n=1),
+            config=MultiSkillConfig(selected_skill="连携技", top_n=1),
         )
         self.assertEqual(result.skill_count_map["战技"], 0)
-        self.assertEqual(result.skill_count_map["终结技"], 1)
-        self.assertAlmostEqual(result.top_results[0].skill_breakdown["终结技"], 2000.0)
+        self.assertEqual(result.skill_count_map["连携技"], 1)
+        self.assertAlmostEqual(result.top_results[0].weighted_total_damage, 1000.0)
+
+    def test_manual_counts_sum_damage_by_cast_times(self):
+        result = optimize_multi_skill_loadouts(
+            base_context=DamageContext(final_attack=0.0, skill_multiplier=1.0, enemy_defense=0.0),
+            weapons=[WeaponCandidate(name="武器A", final_attack=1000.0)],
+            equipment_catalog=self._catalog(),
+            scenarios=[
+                SkillScenario(skill_name="战技", skill_multiplier=1.0, skill_type="战技"),
+                SkillScenario(
+                    skill_name="终结技",
+                    skill_multiplier=1.0,
+                    skill_type="终结技",
+                    external_effects=(DamageEffect(effect_type="易伤", value=0.5),),
+                ),
+            ],
+            config=MultiSkillConfig(
+                skill_counts={"战技": 1, "终结技": 2},
+                top_n=1,
+            ),
+        )
+        war = result.top_results[0].skill_breakdown["战技"]
+        fin = result.top_results[0].skill_breakdown["终结技"]
+        self.assertAlmostEqual(result.top_results[0].weighted_total_damage, war * 1 + fin * 2)
 
     def test_all_zero_counts_raise_error(self):
         with self.assertRaises(ValueError):
@@ -58,25 +81,6 @@ class TestMultiSkillOptimizer(unittest.TestCase):
                 scenarios=[SkillScenario(skill_name="战技", skill_multiplier=1.0)],
                 config=MultiSkillConfig(skill_counts={"战技": 0}),
             )
-
-    def test_each_skill_can_have_independent_external_effects(self):
-        result = optimize_multi_skill_loadouts(
-            base_context=DamageContext(final_attack=0.0, skill_multiplier=1.0, enemy_defense=0.0),
-            weapons=[WeaponCandidate(name="武器A", final_attack=1000.0)],
-            equipment_catalog=self._catalog(),
-            scenarios=[
-                SkillScenario(skill_name="战技", skill_multiplier=1.0),
-                SkillScenario(
-                    skill_name="终结技",
-                    skill_multiplier=1.0,
-                    external_effects=(DamageEffect(effect_type="易伤", value=0.5),),
-                ),
-            ],
-            config=MultiSkillConfig(skill_counts={"战技": 1, "终结技": 1}, top_n=1),
-        )
-        self.assertAlmostEqual(result.top_results[0].skill_breakdown["战技"], 1000.0)
-        self.assertAlmostEqual(result.top_results[0].skill_breakdown["终结技"], 1500.0)
-        self.assertAlmostEqual(result.top_results[0].weighted_total_damage, 2500.0)
 
 
 if __name__ == "__main__":

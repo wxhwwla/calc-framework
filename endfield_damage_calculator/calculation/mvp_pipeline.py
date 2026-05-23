@@ -100,6 +100,7 @@ def run_mvp_search_pipeline(
             skill_label="",
             weapon_scope="",
             equipment_scope="",
+            varying_equipment_slot_count=4,
             base_context=base_context,
             weapon_candidates=tuple(weapons),
             equipment_catalog=equipment_catalog,

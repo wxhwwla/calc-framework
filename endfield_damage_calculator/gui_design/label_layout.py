@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
-# 「计算与搜索」列建议最小宽度（像素）
-CONTROL_COLUMN_MINSIZE = 300
+# 主界面各列建议最小宽度（像素）
+SELECTION_COLUMN_MINSIZE = 260
+CONTROL_COLUMN_MINSIZE = 360
+ATTR_COLUMN_MINSIZE = 168
 
 
 def bind_wrapped_label(

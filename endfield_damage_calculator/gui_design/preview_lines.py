@@ -143,8 +143,8 @@ def build_multi_skill_search_preview_lines(
     skill_1_level: int = 0,
     skill_2_level: int = 0,
     skill_3_level: int = 0,
-    manual_weights: Optional[Dict[str, float]] = None,
-    use_manual_weights: bool = False,
+    manual_counts: Optional[Dict[str, int]] = None,
+    use_manual_counts: bool = False,
     preview_equipment_scope_label: str = "",
 ) -> list[str]:
     """构建多技能遍历模式的快速预览文案。"""
@@ -185,26 +185,26 @@ def build_multi_skill_search_preview_lines(
         selected_skill=selected_skill,
         top_n=3,
     )
-    weight_desc = f"默认权重: 当前选中技能 {selected_skill}=1，其它=0"
-    if use_manual_weights:
-        weights = {
-            "战技": float((manual_weights or {}).get("战技", 0.0)),
-            "连携技": float((manual_weights or {}).get("连携技", 0.0)),
-            "终结技": float((manual_weights or {}).get("终结技", 0.0)),
+    count_desc = f"默认次数: 当前选中技能 {selected_skill}×1，其它×0"
+    if use_manual_counts:
+        counts = {
+            "战技": int((manual_counts or {}).get("战技", 0)),
+            "连携技": int((manual_counts or {}).get("连携技", 0)),
+            "终结技": int((manual_counts or {}).get("终结技", 0)),
         }
-        if all(v == 0.0 for v in weights.values()):
+        if all(v == 0 for v in counts.values()):
             return [
                 "计算模式: 多技能遍历(快速预览)",
-                "手动权重不能全为0，请至少设置一项 > 0。",
+                "手动次数不能全为0，请至少设置一项 > 0。",
             ]
         config = MultiSkillConfig(
             selected_skill=selected_skill,
             top_n=3,
-            weights=weights,
+            skill_counts=counts,
         )
-        weight_desc = (
-            "手动权重: "
-            f"战技={weights['战技']:.2f}, 连携技={weights['连携技']:.2f}, 终结技={weights['终结技']:.2f}"
+        count_desc = (
+            "手动次数: "
+            f"战技×{counts['战技']}, 连携技×{counts['连携技']}, 终结技×{counts['终结技']}"
         )
 
     result = optimize_multi_skill_loadouts(
@@ -222,12 +222,13 @@ def build_multi_skill_search_preview_lines(
         equipment_catalog=sampled_catalog,
         scenarios=scenarios,
         config=config,
+        character=char_data,
     )
     lines = [
         "计算模式: 多技能遍历(快速预览)",
         f"装备范围: {preview_equipment_scope_label or '全部装备'}",
         f"预览组合数: {result.total_combinations}",
-        weight_desc,
+        count_desc,
         "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
     ]
     if warning:

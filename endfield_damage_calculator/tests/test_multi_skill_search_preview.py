@@ -34,7 +34,7 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 class TestMultiSkillSearchPreview(unittest.TestCase):
     @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_include_weight_and_top_result(
+    def test_preview_lines_include_counts_and_top_result(
         self,
         mock_get_catalog,
     ):
@@ -55,11 +55,11 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
             skill_3_level=0,
         )
         self.assertTrue(any(line.startswith("计算模式: 多技能遍历(快速预览)") for line in lines))
-        self.assertTrue(any(line.startswith("默认权重:") for line in lines))
+        self.assertTrue(any(line.startswith("默认次数:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
     @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_use_manual_weights_when_provided(
+    def test_preview_lines_use_manual_counts_when_provided(
         self,
         mock_get_catalog,
     ):
@@ -78,13 +78,13 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
             skill_1_level=5,
             skill_2_level=0,
             skill_3_level=0,
-            manual_weights={"战技": 2.0, "连携技": 1.0, "终结技": 0.0},
-            use_manual_weights=True,
+            manual_counts={"战技": 2, "连携技": 1, "终结技": 0},
+            use_manual_counts=True,
         )
-        self.assertTrue(any(line.startswith("手动权重:") for line in lines))
+        self.assertTrue(any(line.startswith("手动次数:") for line in lines))
 
     @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_warn_when_manual_weights_all_zero(
+    def test_preview_lines_warn_when_manual_counts_all_zero(
         self,
         mock_get_catalog,
     ):
@@ -103,8 +103,8 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
             skill_1_level=5,
             skill_2_level=0,
             skill_3_level=0,
-            manual_weights={"战技": 0.0, "连携技": 0.0, "终结技": 0.0},
-            use_manual_weights=True,
+            manual_counts={"战技": 0, "连携技": 0, "终结技": 0},
+            use_manual_counts=True,
         )
         self.assertTrue(any("不能全为0" in line for line in lines))
 

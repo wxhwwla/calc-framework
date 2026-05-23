@@ -34,7 +34,7 @@ from data.equipment_catalog import catalog_full_search_error, get_equipment_cata
 from please_read_me import get_exe_version  # EXE版本号
 from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
-from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
+from calculation.loadout_optimizer import WeaponCandidate, optimizer_config_for_character
 from calculation.mvp_pipeline import MvpSearchOutcome
 from calculation.search_cancel import SearchCancelToken
 from calculation.single_skill_search_job import (
@@ -46,7 +46,13 @@ from calculation.single_skill_search_runner import (
     estimate_single_skill_search,
     run_exported_single_skill_search,
 )
-from gui_design.label_layout import CONTROL_COLUMN_MINSIZE, bind_wrapped_label
+from gui_design.label_layout import (
+    ATTR_COLUMN_MINSIZE,
+    CONTROL_COLUMN_MINSIZE,
+    SELECTION_COLUMN_MINSIZE,
+    bind_wrapped_label,
+)
+from utils.gui_window import apply_startup_maximized
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 from utils.gui_fonts import default_ui_font
 from gui_design.search_settings import (
@@ -63,8 +69,8 @@ from gui_design.search_results_view import (
     show_search_results_dialog,
 )
 
-# 列 0/1：配装；列 2：计算与搜索（需一定宽度）；列 7：乘区（可伸缩）
-APP_COLUMN_WEIGHTS = (0, 0, 2, 0, 0, 0, 0, 5)
+# 列 0/1：配装（固定宽）；列 2：计算与搜索；列 3/4：属性（均分）；列 5：乘区（主伸缩）
+APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 1, 5)
 
 
 class DamageCalculatorApp:
@@ -73,11 +79,10 @@ class DamageCalculatorApp:
     
     包含完整的 GUI 界面，提供角色和武器选择功能，支持窗口缩放自适应。
     
-    界面布局（8 列 grid；列 2/4/6 为窄间隙）：
-    ┌────────────────────────────────────────────────────────────────────────────┐
-    │ 角色选择 │ 武器选择 │ 计算与搜索 │ 角色属性 │ 武器属性 │   右侧乘区      │
-    │ (滚动)   │ (滚动)   │ (滚动)     │          │          │   (可伸缩)      │
-    └────────────────────────────────────────────────────────────────────────────┘
+    界面布局（6 列 grid，启动后默认最大化）：
+    ┌──────────────────────────────────────────────────────────────────┐
+    │ 角色选择 │ 武器选择 │ 计算与搜索 │ 角色属性 │ 武器属性 │ 乘区数据 │
+    └──────────────────────────────────────────────────────────────────┘
     
     属性：
         app: CTk 主窗口对象
@@ -116,14 +121,14 @@ class DamageCalculatorApp:
         # 创建主窗口对象
         self.app: ctk.CTk = ctk.CTk()
 
-        # 设置窗口初始大小（宽度x高度）
-        self.app.geometry("1360x760")
-        
+        # 初始尺寸（启动后 apply_startup_maximized 会最大化）
+        self.app.geometry("1280x720")
+
         # 设置窗口标题（包含 EXE 版本号）
         self.app.title(f"终末地伤害计算小工具 v{get_exe_version()}")
-        
-        # 设置窗口最小尺寸（防止用户拖得太小）
-        self.app.minsize(1100, 640)
+
+        # 最小尺寸：保证六列布局可读
+        self.app.minsize(1024, 600)
         
         # 绑定窗口大小变化事件，用于自适应缩放
         self.app.bind("<Configure>", self._on_window_resize)
@@ -155,17 +160,16 @@ class DamageCalculatorApp:
         self.mvp_status_label: Optional[ctk.CTkLabel] = None
         self.calc_mode_var: ctk.StringVar = ctk.StringVar(value="single_hit")
         self.calc_mode_menu: Optional[ctk.CTkOptionMenu] = None
-        self.use_manual_weights_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        self.use_manual_skill_counts_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
         self.single_skill_scope_var: ctk.StringVar = ctk.StringVar(value="当前武器")
         self.single_skill_scope_menu: Optional[ctk.CTkOptionMenu] = None
         self.single_skill_equipment_scope_var: ctk.StringVar = ctk.StringVar(value="全部装备")
         self.single_skill_equipment_scope_menu: Optional[ctk.CTkOptionMenu] = None
-        self.skill_weight_1_var: ctk.StringVar = ctk.StringVar(value="1.0")
-        self.skill_weight_2_var: ctk.StringVar = ctk.StringVar(value="0.0")
-        self.skill_weight_3_var: ctk.StringVar = ctk.StringVar(value="0.0")
-        self.skill_weight_1_slider: Optional[ctk.CTkSlider] = None
-        self.skill_weight_2_slider: Optional[ctk.CTkSlider] = None
-        self.skill_weight_3_slider: Optional[ctk.CTkSlider] = None
+        self.search_varying_slots_var: ctk.StringVar = ctk.StringVar(value="4")
+        self.search_varying_slots_menu: Optional[ctk.CTkOptionMenu] = None
+        self.skill_count_1_var: ctk.StringVar = ctk.StringVar(value="1")
+        self.skill_count_2_var: ctk.StringVar = ctk.StringVar(value="0")
+        self.skill_count_3_var: ctk.StringVar = ctk.StringVar(value="0")
         self.char_attr_frame: Optional[ctk.CTkFrame] = None
         self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
@@ -184,20 +188,21 @@ class DamageCalculatorApp:
         设置主界面布局（使用 grid 布局实现自适应缩放）
         
         布局结构：
-            - 主窗口分为 8 列，使用权重分配空间
+            - 主窗口分为 6 列，使用权重分配空间
             - 第0列：角色选择区
-            - 第1列：武器选择区（含确认按钮）
+            - 第1列：武器选择区
+            - 第2列：计算与搜索
             - 第3列：角色属性展示区
-            - 第5列：武器属性展示区
-            - 第7列：右侧乘区数据计算区
+            - 第4列：武器属性展示区
+            - 第5列：右侧乘区数据计算区
         
         实现步骤：
             1. 配置主窗口 grid 布局的行和列权重（见 APP_COLUMN_WEIGHTS）
             2. 创建角色选择框架并放置在第 0 列
             3. 创建武器选择框架并放置在第 1 列（包含确认按钮）
             4. 创建角色属性展示框架并放置在第 3 列
-            5. 创建武器属性展示框架并放置在第 5 列
-            6. 创建右侧乘区数据框架并放置在第 7 列
+            5. 创建武器属性展示框架并放置在第 4 列
+            6. 创建右侧乘区数据框架并放置在第 5 列
             7. 调用 _load_data_and_create_panels 加载数据并创建选择面板
         """
         # 配置主窗口 grid 布局的行权重（只有 1 行，权重为 1 表示占满垂直空间）
@@ -207,7 +212,11 @@ class DamageCalculatorApp:
         # 注：CTkFrame 有内置最小宽度限制，设置 weight=0 让组件仅占用最小尺寸
         for idx, weight in enumerate(APP_COLUMN_WEIGHTS):
             self.app.grid_columnconfigure(idx, weight=weight)
+        self.app.grid_columnconfigure(0, minsize=SELECTION_COLUMN_MINSIZE)
+        self.app.grid_columnconfigure(1, minsize=SELECTION_COLUMN_MINSIZE)
         self.app.grid_columnconfigure(2, minsize=CONTROL_COLUMN_MINSIZE)
+        self.app.grid_columnconfigure(3, minsize=ATTR_COLUMN_MINSIZE)
+        self.app.grid_columnconfigure(4, minsize=ATTR_COLUMN_MINSIZE)
 
         # ==================== 角色选择区（左侧）====================
         self.char_frame = ctk.CTkFrame(
@@ -218,8 +227,8 @@ class DamageCalculatorApp:
         self.char_frame.grid(
             row=0,
             column=0,
-            padx=(10, 5),
-            pady=10,
+            padx=(8, 4),
+            pady=8,
             sticky="nsew",
         )
         self.char_frame.grid_rowconfigure(0, weight=1)
@@ -230,8 +239,8 @@ class DamageCalculatorApp:
         self.weapon_frame.grid(
             row=0,
             column=1,
-            padx=5,
-            pady=10,
+            padx=4,
+            pady=8,
             sticky="nsew",
         )
         self.weapon_frame.grid_rowconfigure(0, weight=1)
@@ -242,8 +251,8 @@ class DamageCalculatorApp:
         self.control_frame.grid(
             row=0,
             column=2,
-            padx=5,
-            pady=10,
+            padx=4,
+            pady=8,
             sticky="nsew",
         )
         self.control_frame.grid_rowconfigure(0, weight=1)
@@ -265,8 +274,8 @@ class DamageCalculatorApp:
         self.char_attr_frame.grid(
             row=0,
             column=3,
-            padx=5,
-            pady=10,
+            padx=4,
+            pady=8,
             sticky="nsew"
         )
         self.char_attr_frame.grid_rowconfigure(0, weight=1)
@@ -292,10 +301,10 @@ class DamageCalculatorApp:
         )
         self.weapon_attr_frame.grid(
             row=0,
-            column=5,
-            padx=5,
-            pady=10,
-            sticky="nsew"
+            column=4,
+            padx=4,
+            pady=8,
+            sticky="nsew",
         )
         self.weapon_attr_frame.grid_rowconfigure(0, weight=1)
         self.weapon_attr_frame.grid_columnconfigure(0, weight=1)
@@ -320,10 +329,10 @@ class DamageCalculatorApp:
         )
         self.right_frame.grid(
             row=0,
-            column=7,
-            padx=(5, 10),  # 左边距5，右边距10
-            pady=10,
-            sticky="nsew"
+            column=5,
+            padx=(4, 8),
+            pady=8,
+            sticky="nsew",
         )
         # 配置右侧框架内部布局
         self.right_frame.grid_rowconfigure(0, weight=1)
@@ -548,11 +557,13 @@ class DamageCalculatorApp:
         """构建「计算与搜索」列：确认、模式、遍历、多技能权重。"""
         assert self.control_scroll is not None
         panel = self.control_scroll
+        panel.grid_columnconfigure(0, weight=1, minsize=120)
+        panel.grid_columnconfigure(1, weight=0, minsize=80)
         row = 0
 
         def place(widget, *, pady: tuple[int, int] = (0, 4), sticky: str = "ew") -> None:
             nonlocal row
-            widget.grid(row=row, column=0, padx=10, pady=pady, sticky=sticky)
+            widget.grid(row=row, column=0, columnspan=2, padx=8, pady=pady, sticky=sticky)
             row += 1
 
         def section(title: str) -> None:
@@ -632,6 +643,33 @@ class DamageCalculatorApp:
             command=lambda _v: self._on_confirm(),
         )
         place(self.single_skill_equipment_scope_menu)
+        place(
+            ctk.CTkLabel(
+                panel,
+                text="遍历装备件数",
+                font=self.small_font,
+                text_color="#CCCCCC",
+            ),
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.search_varying_slots_menu = ctk.CTkOptionMenu(
+            panel,
+            values=["1", "2", "3", "4"],
+            variable=self.search_varying_slots_var,
+            font=self.small_font,
+        )
+        place(self.search_varying_slots_menu)
+        varying_slots_hint = ctk.CTkLabel(
+            panel,
+            text="1=仅护甲，2=+护手，3=+配件A，4=四格全套；未遍历格固定为各部首件",
+            font=self.small_font,
+            text_color="#888888",
+            justify="left",
+            anchor="w",
+        )
+        place(varying_slots_hint, pady=(0, 8), sticky="ew")
+        bind_wrapped_label(varying_slots_hint, panel)
 
         def _on_search_scope_change(_value: str = "") -> None:
             self._refresh_search_estimate()
@@ -639,6 +677,8 @@ class DamageCalculatorApp:
 
         self.single_skill_scope_menu.configure(command=_on_search_scope_change)
         self.single_skill_equipment_scope_menu.configure(command=_on_search_scope_change)
+        if self.search_varying_slots_menu is not None:
+            self.search_varying_slots_menu.configure(command=_on_search_scope_change)
 
         self.search_estimate_label = ctk.CTkLabel(
             panel,
@@ -667,7 +707,7 @@ class DamageCalculatorApp:
         place(self.mvp_search_btn)
 
         search_param_row = ctk.CTkFrame(panel, fg_color="transparent")
-        search_param_row.grid(row=row, column=0, padx=10, pady=(0, 4), sticky="ew")
+        search_param_row.grid(row=row, column=0, columnspan=2, padx=8, pady=(0, 4), sticky="ew")
         search_param_row.grid_columnconfigure(0, weight=1)
         search_param_row.grid_columnconfigure(1, weight=1)
         row += 1
@@ -727,47 +767,31 @@ class DamageCalculatorApp:
         place(self.mvp_status_label, pady=(0, 10), sticky="ew")
         bind_wrapped_label(self.mvp_status_label, panel)
 
-        section("多技能权重")
-        weight_switch = ctk.CTkSwitch(
+        section("多技能次数")
+        count_switch = ctk.CTkSwitch(
             panel,
-            text="使用手动权重",
-            variable=self.use_manual_weights_var,
+            text="使用手动次数",
+            variable=self.use_manual_skill_counts_var,
             font=self.small_font,
             command=self._on_confirm,
         )
-        place(weight_switch, sticky="w")
-        self.skill_weight_1_slider = self._create_weight_row(
-            row=row,
-            label_text="战技权重",
-            value_var=self.skill_weight_1_var,
-            default_value=1.0,
-        )
+        place(count_switch, sticky="w")
+        self._create_skill_count_row(row=row, label_text="战技次数", value_var=self.skill_count_1_var)
         row += 1
-        self.skill_weight_2_slider = self._create_weight_row(
-            row=row,
-            label_text="连携技权重",
-            value_var=self.skill_weight_2_var,
-            default_value=0.0,
-        )
+        self._create_skill_count_row(row=row, label_text="连携技次数", value_var=self.skill_count_2_var)
         row += 1
-        self.skill_weight_3_slider = self._create_weight_row(
-            row=row,
-            label_text="终结技权重",
-            value_var=self.skill_weight_3_var,
-            default_value=0.0,
-        )
+        self._create_skill_count_row(row=row, label_text="终结技次数", value_var=self.skill_count_3_var)
         row += 1
-        place(
-            ctk.CTkLabel(
-                panel,
-                text="提示：权重仅在「多技能遍历(快速预览)」生效",
-                font=self.small_font,
-                text_color="#888888",
-                wraplength=260,
-            ),
-            pady=(0, 12),
-            sticky="w",
+        multi_skill_hint = ctk.CTkLabel(
+            panel,
+            text="提示：次数仅在「多技能遍历(快速预览)」生效；技能倍率取左侧等级",
+            font=self.small_font,
+            text_color="#888888",
+            justify="left",
+            anchor="w",
         )
+        place(multi_skill_hint, pady=(0, 12), sticky="ew")
+        bind_wrapped_label(multi_skill_hint, panel)
 
     def _set_mvp_status(self, text: str) -> None:
         """更新 MVP 搜索状态文案。"""
@@ -808,11 +832,19 @@ class DamageCalculatorApp:
             all_weapons=self.all_weapons,
             current_weapon=current_weapon,
             equipment_catalog=equipment_catalog,
+            varying_equipment_slot_count=self._search_varying_slot_count(),
         )
         if err:
             messagebox.showwarning("全量遍历", err, parent=self.app)
             return None
         return job
+
+    def _search_varying_slot_count(self) -> int:
+        """读取 GUI「遍历装备件数」（1–4）。"""
+        try:
+            return max(1, min(4, int(self.search_varying_slots_var.get())))
+        except (TypeError, ValueError):
+            return 4
 
     def _set_search_buttons_enabled(self, enabled: bool) -> None:
         state = "normal" if enabled else "disabled"
@@ -882,6 +914,7 @@ class DamageCalculatorApp:
             all_weapons=self.all_weapons,
             current_weapon=self.weapon_panel.get_selected_data(),
             equipment_catalog=catalog,
+            varying_equipment_slot_count=self._search_varying_slot_count(),
         )
         if err or preview_job is None:
             self.search_estimate_label.configure(text=f"预计组合数：{err or '无法预估'}")
@@ -933,10 +966,16 @@ class DamageCalculatorApp:
         """后台执行 MVP 搜索流水线，完成后弹窗展示结果。"""
         top_n = resolve_top_n(self.search_top_n_var.get())
         max_workers = resolve_parallel_workers(self.search_workers_var.get())
-        config = OptimizerConfig(
+        skill_type = str(job.base_context.skill_type or job.skill_label)
+        config = optimizer_config_for_character(
+            job.char_data,
+            priority_skill_types=(skill_type,),
+            varying_slot_count=job.varying_equipment_slot_count,
             top_n=top_n,
             crit_mode="non_crit",
             allow_duplicate_accessory=True,
+            prune_non_beneficial=True,
+            warn_on_unfiltered=False,
         )
         self._search_cancel_token = SearchCancelToken()
         progress_prefix = status_done_prefix
@@ -1081,8 +1120,8 @@ class DamageCalculatorApp:
             self.big_font,       # 大号字体
             self.small_font,     # 小号字体
             calculation_mode=self._current_calculation_mode(),
-            multi_skill_manual_weights=self._manual_multi_skill_weights(),
-            use_manual_multi_skill_weights=bool(self.use_manual_weights_var.get()),
+            multi_skill_manual_counts=self._manual_multi_skill_counts(),
+            use_manual_multi_skill_counts=bool(self.use_manual_skill_counts_var.get()),
             preview_weapon_candidates=self._single_skill_preview_candidates(),
             preview_scope_label=self.single_skill_scope_var.get(),
             preview_equipment_catalog=self._single_skill_preview_equipment_catalog(),
@@ -1090,55 +1129,56 @@ class DamageCalculatorApp:
         )
         self._refresh_search_estimate()
 
-    def _create_weight_row(
+    def _create_skill_count_row(
         self,
         *,
         row: int,
         label_text: str,
         value_var: ctk.StringVar,
-        default_value: float,
-    ) -> ctk.CTkSlider:
-        """创建单行权重滑块。"""
+    ) -> None:
+        """创建单行技能次数输入（标签 + 数字框两列）。"""
         parent = self.control_scroll
         assert parent is not None
-        title = ctk.CTkLabel(
+        ctk.CTkLabel(
             parent,
-            text=f"{label_text}: {value_var.get()}",
+            text=label_text,
             font=self.small_font,
             text_color="#CCCCCC",
-        )
-        title.grid(row=row, column=0, padx=10, pady=(0, 2), sticky="w")
+        ).grid(row=row, column=0, padx=8, pady=(0, 2), sticky="w")
 
-        def _on_change(raw: float) -> None:
-            value = round(float(raw), 1)
-            value_var.set(f"{value:.1f}")
-            title.configure(text=f"{label_text}: {value_var.get()}")
+        def _on_change(*_args: object) -> None:
+            text = (value_var.get() or "").strip()
+            try:
+                value = max(0, int(float(text)))
+            except (TypeError, ValueError):
+                value = 0
+            value_var.set(str(value))
             if self._current_calculation_mode() == "multi_skill_search":
                 self._on_confirm()
 
-        slider = ctk.CTkSlider(
+        entry = ctk.CTkEntry(
             parent,
-            from_=0.0,
-            to=5.0,
-            number_of_steps=50,
-            command=_on_change,
+            textvariable=value_var,
+            width=72,
+            font=self.small_font,
         )
-        slider.grid(row=row, column=0, padx=(120, 10), pady=(0, 2), sticky="ew")
-        slider.set(default_value)
-        return slider
+        entry.grid(row=row, column=1, padx=(4, 8), pady=(0, 2), sticky="e")
+        entry.bind("<FocusOut>", _on_change)
+        entry.bind("<Return>", _on_change)
 
-    def _manual_multi_skill_weights(self) -> Dict[str, float]:
-        """读取 GUI 手动权重。"""
-        def _to_float(text: str) -> float:
+    def _manual_multi_skill_counts(self) -> Dict[str, int]:
+        """读取 GUI 手动技能次数。"""
+
+        def _to_int(text: str) -> int:
             try:
-                return max(0.0, float(text))
+                return max(0, int(float(text)))
             except (TypeError, ValueError):
-                return 0.0
+                return 0
 
         return {
-            "战技": _to_float(self.skill_weight_1_var.get()),
-            "连携技": _to_float(self.skill_weight_2_var.get()),
-            "终结技": _to_float(self.skill_weight_3_var.get()),
+            "战技": _to_int(self.skill_count_1_var.get()),
+            "连携技": _to_int(self.skill_count_2_var.get()),
+            "终结技": _to_int(self.skill_count_3_var.get()),
         }
 
     def _single_skill_preview_candidates(self) -> List[WeaponCandidate]:
@@ -1197,6 +1237,7 @@ class DamageCalculatorApp:
         调用 CTk 窗口的 mainloop() 方法，开始事件循环，显示窗口。
         此方法会阻塞直到窗口关闭。
         """
+        apply_startup_maximized(self.app)
         self.app.mainloop()
 
 

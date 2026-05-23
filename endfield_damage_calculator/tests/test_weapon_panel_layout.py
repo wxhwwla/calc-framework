@@ -60,6 +60,12 @@ class TestExtractEffectDisplayName(unittest.TestCase):
     def test_keeps_plain_attr_name(self):
         self.assertEqual(extract_effect_display_name("源石技艺强度+"), "源石技艺强度+")
 
+    def test_strips_target_received_prefix(self):
+        self.assertEqual(
+            extract_effect_display_name("目标受到的寒冷伤害+"),
+            "寒冷伤害+",
+        )
+
 
 class TestBonusAttributeOrder(unittest.TestCase):
     def test_jiancheng_casting_bonus_order(self):

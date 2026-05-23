@@ -25,6 +25,7 @@ class TestSingleSkillSearchRunner(unittest.TestCase):
             skill_label="战技",
             weapon_scope="当前武器",
             equipment_scope="全部装备",
+            varying_equipment_slot_count=4,
             base_context=DamageContext(
                 final_attack=0.0,
                 skill_multiplier=1.0,

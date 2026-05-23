@@ -25,6 +25,7 @@ class SingleSkillSearchJob:
     skill_label: str
     weapon_scope: str
     equipment_scope: str
+    varying_equipment_slot_count: int
     base_context: DamageContext
     weapon_candidates: tuple[WeaponCandidate, ...]
     equipment_catalog: dict[str, list[dict[str, Any]]]
@@ -83,12 +84,13 @@ def build_run_signature(
     chest_count: int,
     weapon_scope_label: str,
     equipment_scope_label: str,
+    varying_equipment_slot_count: int,
 ) -> str:
     """生成续跑用 run_signature。"""
     seed = (
         f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
         f"{skill_name}-w{weapon_count}-e{chest_count}-"
-        f"{weapon_scope_label}-{equipment_scope_label}"
+        f"{weapon_scope_label}-{equipment_scope_label}-slots{varying_equipment_slot_count}"
     )
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:16]
 
@@ -104,6 +106,7 @@ def prepare_single_skill_search_job(
     skill_multiplier: float,
     weapon_scope_label: str,
     equipment_scope_label: str,
+    varying_equipment_slot_count: int = 4,
     all_weapons: list[dict[str, Any]],
     current_weapon: dict[str, Any],
     equipment_catalog: dict[str, list[dict[str, Any]]],
@@ -139,6 +142,7 @@ def prepare_single_skill_search_job(
         chest_count=len(equipment_catalog["chest"]),
         weapon_scope_label=weapon_scope_label,
         equipment_scope_label=equipment_scope_label,
+        varying_equipment_slot_count=varying_equipment_slot_count,
     )
     weapon_data_by_name = {
         str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
@@ -151,6 +155,7 @@ def prepare_single_skill_search_job(
         skill_label=skill_name,
         weapon_scope=weapon_scope_label,
         equipment_scope=equipment_scope_label,
+        varying_equipment_slot_count=max(1, min(4, int(varying_equipment_slot_count))),
         base_context=DamageContext(
             final_attack=0.0,
             skill_multiplier=float(skill_multiplier),

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig
+from calculation.loadout_optimizer import LoadoutScore, optimizer_config_for_character
 from calculation.mvp_pipeline import MvpSearchOutcome, run_mvp_search_from_job
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_estimate import (
@@ -38,13 +38,17 @@ def estimate_single_skill_search(
     top_n: int,
 ) -> SingleSkillSearchEstimate:
     """根据作业计算预计组合数/耗时文案。"""
+    skill_type = str(job.base_context.skill_type or job.skill_label)
     workload = preview_search_workload(
         weapons=list(job.weapon_candidates),
         equipment_catalog=job.equipment_catalog,
-        config=OptimizerConfig(
+        config=optimizer_config_for_character(
+            job.char_data,
+            priority_skill_types=(skill_type,),
+            varying_slot_count=job.varying_equipment_slot_count,
             top_n=top_n,
             warn_on_unfiltered=False,
-            prune_non_beneficial=False,
+            prune_non_beneficial=True,
         ),
     )
     duration = estimate_search_duration(

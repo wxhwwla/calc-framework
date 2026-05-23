@@ -9,8 +9,12 @@ from calculation.equipment_system import build_runtime_equipment_from_wiki_draft
 from calculation.loadout_optimizer import (
     OptimizerConfig,
     WeaponCandidate,
+    build_optimizer_search_plan,
     search_best_single_skill_loadouts,
 )
+from calculation.search_estimate import preview_search_workload
+from calculation.single_skill_search_job import SingleSkillSearchJob
+from calculation.single_skill_search_runner import estimate_single_skill_search
 
 
 class TestLoadoutOptimizer(unittest.TestCase):
@@ -94,6 +98,55 @@ class TestLoadoutOptimizer(unittest.TestCase):
         )
         self.assertEqual(filtered.total_combinations, 1)
         self.assertEqual(filtered.top_results[0].loadout_names["chest"], "胸甲A")
+
+    def test_affix_only_equipment_counts_as_beneficial_when_pruning(self):
+        catalog = {
+            "chest": [
+                {"名称": "战技甲", "属性词条": ["战技伤害加成10.00%"], "效果": [], "三件套效果": []},
+                {"名称": "白板甲", "属性词条": [], "效果": [], "三件套效果": []},
+            ],
+            "gloves": [{"名称": "手", "属性词条": ["攻击力10"], "效果": [], "三件套效果": []}],
+            "accessories": [{"名称": "件", "属性词条": [], "效果": [], "三件套效果": []}],
+        }
+        pruned = build_optimizer_search_plan(
+            weapons=[WeaponCandidate(name="武", final_attack=100.0)],
+            equipment_catalog=catalog,
+            config=OptimizerConfig(prune_non_beneficial=True, warn_on_unfiltered=False),
+        )
+        self.assertEqual([x["名称"] for x in pruned.equipment_catalog["chest"]], ["战技甲"])
+        self.assertEqual(pruned.total_combinations, 1)
+
+    def test_estimate_matches_full_search_total_with_default_prune(self):
+        catalog = {
+            "chest": [{"名称": "c1", "属性词条": ["敏捷1"], "效果": [], "三件套效果": []}],
+            "gloves": [{"名称": "g1", "属性词条": ["力量1"], "效果": [], "三件套效果": []}],
+            "accessories": [
+                {"名称": "a1", "属性词条": ["战技伤害加成5.00%"], "效果": [], "三件套效果": []},
+                {"名称": "a2", "属性词条": ["连携技伤害加成5.00%"], "效果": [], "三件套效果": []},
+            ],
+        }
+        job = SingleSkillSearchJob(
+            char_data={"名称": "测试"},
+            char_level=1,
+            weapon_level=1,
+            trust_level=0,
+            skill_label="战技",
+            weapon_scope="当前武器",
+            equipment_scope="全部装备",
+            varying_equipment_slot_count=4,
+            base_context=DamageContext(final_attack=0.0, skill_multiplier=1.0, skill_type="战技", enemy_defense=100.0),
+            weapon_candidates=(WeaponCandidate(name="武", final_attack=100.0),),
+            equipment_catalog=catalog,
+            weapon_data_by_name={},
+            run_signature="sig",
+        )
+        estimate = estimate_single_skill_search(job, max_workers=4, top_n=10)
+        search_plan = build_optimizer_search_plan(
+            weapons=list(job.weapon_candidates),
+            equipment_catalog=job.equipment_catalog,
+            config=OptimizerConfig(top_n=10, warn_on_unfiltered=False),
+        )
+        self.assertEqual(estimate.workload.total_combinations, search_plan.total_combinations)
 
     def test_search_prunes_obviously_non_beneficial_weapons(self):
         result = search_best_single_skill_loadouts(

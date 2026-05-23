@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import product
 from typing import Callable, Iterator, Optional
 
 from calculation.top_n_tracker import TopNTracker
@@ -14,6 +13,14 @@ from calculation.damage_engine import CritMode, DamageContext, DamageEffect, cal
 from calculation.equipment_affix import aggregate_loadout_modifiers
 from calculation.equipment_system import build_four_slot_loadout, collect_loadout_effects
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.equipment_prune import character_ability_attrs, sort_equipment_catalog_by_priority
+from calculation.loadout_slot_search import (
+    VaryingSlotMask,
+    baseline_loadout_from_catalog,
+    count_loadout_combinations_for_mask,
+    iter_loadout_combinations_for_mask,
+    varying_slot_mask_from_count,
+)
 from calculation.search_eval_context import SearchEvalContext
 
 
@@ -34,9 +41,14 @@ class OptimizerConfig:
     crit_mode: CritMode = "non_crit"
     allow_duplicate_accessory: bool = True
     prune_non_beneficial: bool = True
+    sort_equipment_by_priority: bool = False
+    main_attr: str = ""
+    sub_attr: str = ""
+    priority_skill_types: tuple[str, ...] = ()
     candidate_weapon_names: Optional[set[str]] = None
     candidate_equipment_names: Optional[set[str]] = None
     warn_on_unfiltered: bool = True
+    varying_slot_count: int = 4
 
 
 @dataclass(frozen=True)
@@ -60,7 +72,11 @@ class OptimizerResult:
 
 
 def _is_equipment_beneficial(item: dict) -> bool:
-    return bool(item.get("效果") or item.get("三件套效果"))
+    """有套装/效果文案，或有属性词条（战技加成、四维等）即参与遍历。"""
+    if item.get("效果") or item.get("三件套效果"):
+        return True
+    affixes = item.get("属性词条") or []
+    return bool(affixes)
 
 
 def _apply_equipment_filter(items: list[dict], candidate_names: Optional[set[str]]) -> list[dict]:
@@ -81,43 +97,47 @@ class OptimizerSearchPlan:
     total_combinations: int
     pruned_weapon_count: int
     warnings: tuple[str, ...]
+    varying_slots: VaryingSlotMask
+    baseline_loadout: tuple[dict, dict, dict, dict]
 
 
 def count_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
     allow_duplicate_accessory: bool = True,
+    varying_slot_count: int = 4,
 ) -> int:
-    """统计四格配装组合数（与 _iter_loadout_combinations 一致）。"""
-    chests = equipment_catalog.get("chest", [])
-    gloves = equipment_catalog.get("gloves", [])
-    accessories = equipment_catalog.get("accessories", [])
-    if not chests or not gloves or not accessories:
+    """统计配装组合数（与 iter 一致；varying_slot_count 为 1–4）。"""
+    if not equipment_catalog.get("chest") or not equipment_catalog.get("gloves"):
         return 0
-    if allow_duplicate_accessory:
-        accessory_pairs = len(accessories) * len(accessories)
-    else:
-        accessory_pairs = sum(
-            1
-            for acc_a in accessories
-            for acc_b in accessories
-            if acc_a.get("名称") != acc_b.get("名称")
-        )
-    return len(chests) * len(gloves) * accessory_pairs
+    if not equipment_catalog.get("accessories"):
+        return 0
+    try:
+        baseline = baseline_loadout_from_catalog(equipment_catalog)
+    except ValueError:
+        return 0
+    mask = varying_slot_mask_from_count(varying_slot_count)
+    return count_loadout_combinations_for_mask(
+        equipment_catalog,
+        allow_duplicate_accessory=allow_duplicate_accessory,
+        mask=mask,
+        baseline=baseline,
+    )
 
 
 def _iter_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
     allow_duplicate_accessory: bool,
+    varying_slots: VaryingSlotMask,
+    baseline: tuple[dict, dict, dict, dict],
 ) -> Iterator[tuple[dict, dict, dict, dict]]:
-    chests = equipment_catalog.get("chest", [])
-    gloves = equipment_catalog.get("gloves", [])
-    accessories = equipment_catalog.get("accessories", [])
-    for chest, glove, acc_a, acc_b in product(chests, gloves, accessories, accessories):
-        if not allow_duplicate_accessory and acc_a.get("名称") == acc_b.get("名称"):
-            continue
-        yield (chest, glove, acc_a, acc_b)
+    yield from iter_loadout_combinations_for_mask(
+        equipment_catalog,
+        allow_duplicate_accessory=allow_duplicate_accessory,
+        mask=varying_slots,
+        baseline=baseline,
+    )
 
 
 def build_optimizer_search_plan(
@@ -161,10 +181,29 @@ def build_optimizer_search_plan(
             if beneficial:
                 filtered_catalog[key] = beneficial
 
-    loadout_count = count_loadout_combinations(
-        filtered_catalog,
-        allow_duplicate_accessory=config.allow_duplicate_accessory,
-    )
+    if config.sort_equipment_by_priority and (
+        config.main_attr or config.sub_attr or config.priority_skill_types
+    ):
+        filtered_catalog = sort_equipment_catalog_by_priority(
+            filtered_catalog,
+            main_attr=config.main_attr,
+            sub_attr=config.sub_attr,
+            skill_types=config.priority_skill_types,
+        )
+
+    try:
+        baseline = baseline_loadout_from_catalog(filtered_catalog)
+    except ValueError:
+        baseline = ({}, {}, {}, {})
+    varying_slots = varying_slot_mask_from_count(config.varying_slot_count)
+    loadout_count = 0
+    if baseline[0] and baseline[1] and baseline[2]:
+        loadout_count = count_loadout_combinations_for_mask(
+            filtered_catalog,
+            allow_duplicate_accessory=config.allow_duplicate_accessory,
+            mask=varying_slots,
+            baseline=baseline,
+        )
     weapon_count = len(filtered_weapons)
     return OptimizerSearchPlan(
         weapons=tuple(filtered_weapons),
@@ -172,6 +211,8 @@ def build_optimizer_search_plan(
         total_combinations=weapon_count * loadout_count,
         pruned_weapon_count=pruned_weapon_count,
         warnings=tuple(warnings),
+        varying_slots=varying_slots,
+        baseline_loadout=baseline,
     )
 
 
@@ -185,6 +226,8 @@ def iter_optimizer_tasks(
         for loadout in _iter_loadout_combinations(
             plan.equipment_catalog,
             allow_duplicate_accessory=allow_duplicate_accessory,
+            varying_slots=plan.varying_slots,
+            baseline=plan.baseline_loadout,
         ):
             yield (weapon, loadout)
 
@@ -209,6 +252,34 @@ def enumerate_optimizer_tasks(
         plan.pruned_weapon_count,
         plan.warnings,
     )
+
+
+def optimizer_config_for_character(
+    char_data: dict,
+    *,
+    priority_skill_types: tuple[str, ...],
+    varying_slot_count: int = 4,
+    top_n: int = 10,
+    crit_mode: CritMode = "non_crit",
+    allow_duplicate_accessory: bool = True,
+    prune_non_beneficial: bool = True,
+    warn_on_unfiltered: bool = False,
+) -> OptimizerConfig:
+    """从角色数据填充主/副属性并启用装备优先级排序。"""
+    main_attr, sub_attr = character_ability_attrs(char_data)
+    return OptimizerConfig(
+        top_n=top_n,
+        crit_mode=crit_mode,
+        allow_duplicate_accessory=allow_duplicate_accessory,
+        prune_non_beneficial=prune_non_beneficial,
+        warn_on_unfiltered=warn_on_unfiltered,
+        main_attr=main_attr,
+        sub_attr=sub_attr,
+        priority_skill_types=priority_skill_types,
+        sort_equipment_by_priority=True,
+        varying_slot_count=varying_slot_count,
+    )
+
 
 
 def evaluate_task(

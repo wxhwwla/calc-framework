@@ -19,6 +19,7 @@ from character_weapon_equipment.weapon_data.special_fields import (
     bonus_attribute_keys,
     read_weapon_special_slots,
 )
+from gui_design.label_layout import bind_wrapped_label
 
 
 def format_weapon_skill_title(prefix: str, attr_name: str = "") -> str:
@@ -41,12 +42,31 @@ _SIMPLE_EFFECT_NAME_RE = re.compile(r'^[^\s，。；:：,\.()（）"“”\[\]�
 
 
 def extract_effect_display_name(raw_name: str) -> str:
-    """从条件描述中提取词条展示名，仅用于 UI 文案。"""
+    """从条件描述中提取词条展示名（仅效果，不含触发条件），供 UI 展示。"""
     name = (raw_name or "").strip()
     if not name:
         return ""
-    if _SIMPLE_EFFECT_NAME_RE.fullmatch(name):
+
+    received = re.search(r"受到的\s*([^，。；]+?\+)\s*$", name)
+    if received:
+        return received.group(1).strip()
+
+    for prefix in (
+        "目标受到的",
+        "目标获得",
+        "使目标受到的",
+        "使目标获得",
+        "装备者获得的",
+        "装备者",
+    ):
+        if name.startswith(prefix) and name.endswith("+"):
+            trimmed = name[len(prefix) :].strip()
+            if trimmed.endswith("+") and len(trimmed) <= 24:
+                return trimmed
+
+    if _SIMPLE_EFFECT_NAME_RE.fullmatch(name) and len(name) <= 16:
         return name
+
     matches = _EFFECT_NAME_RE.findall(name)
     if matches:
         candidate = matches[-1]
@@ -420,6 +440,16 @@ class SpecialAbilityPanel:
             self._weapon_special_2_slider,
             self.weapon_special_2_level,
         )
+        for lbl in (
+            self._ability_1_name_label,
+            self._ability_2_name_label,
+            self._ability_3_name_label,
+            self._weapon_special_name_label,
+            self._weapon_special_2_name_label,
+        ):
+            if lbl is not None:
+                bind_wrapped_label(lbl, self.parent_frame, padding=16, min_wrap=120)
+
         self._apply_layout()
 
     @classmethod
@@ -449,7 +479,8 @@ class SpecialAbilityPanel:
             level_var = self.special_ability_2_level
         if name_lbl:
             prefix = self._BONUS_SKILL_PREFIX[index - 1]
-            name_lbl.configure(text=format_weapon_skill_title(prefix, title))
+            display = extract_effect_display_name(title) if title else ""
+            name_lbl.configure(text=format_weapon_skill_title(prefix, display))
         if val_lbl:
             val_lbl.configure(text="1")
         level_var.set("1")
@@ -459,8 +490,9 @@ class SpecialAbilityPanel:
 
     def _configure_third_bonus_active(self, title: str) -> None:
         if self._ability_3_name_label:
+            display = extract_effect_display_name(title) if title else ""
             self._ability_3_name_label.configure(
-                text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2], title)
+                text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2], display)
             )
         if self._ability_3_label:
             self._ability_3_label.configure(text="1")

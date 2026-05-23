@@ -13,6 +13,7 @@ from calculation.loadout_optimizer import (
     WeaponCandidate,
     enumerate_optimizer_tasks,
 )
+from calculation.equipment_prune import character_ability_attrs
 from calculation.equipment_system import build_four_slot_loadout, collect_loadout_effects
 
 
@@ -28,11 +29,11 @@ class SkillScenario:
 
 @dataclass(frozen=True)
 class MultiSkillConfig:
-    """多技能加权配置。"""
+    """多技能次数加权配置（总伤 = Σ 单次伤害 × 释放次数）。"""
 
     top_n: int = 10
     selected_skill: str = "战技"
-    weights: Optional[dict[str, float]] = None
+    skill_counts: Optional[dict[str, int]] = None
     crit_mode: str = "non_crit"
 
 
@@ -51,20 +52,27 @@ class MultiSkillResult:
     """多技能搜索结果。"""
 
     top_results: tuple[MultiSkillScore, ...]
-    weight_map: dict[str, float]
+    skill_count_map: dict[str, int]
     total_combinations: int
 
+    @property
+    def weight_map(self) -> dict[str, float]:
+        """兼容旧测试/调用方（次数以 float 暴露）。"""
+        return {name: float(count) for name, count in self.skill_count_map.items()}
 
-def _resolve_weights(scenarios: list[SkillScenario], config: MultiSkillConfig) -> dict[str, float]:
-    if config.weights is not None:
-        weights = {s.skill_name: float(config.weights.get(s.skill_name, 0.0)) for s in scenarios}
-    else:
-        weights = {
-            s.skill_name: (1.0 if s.skill_name == config.selected_skill else 0.0) for s in scenarios
+
+def _resolve_skill_counts(scenarios: list[SkillScenario], config: MultiSkillConfig) -> dict[str, int]:
+    if config.skill_counts is not None:
+        counts = {
+            s.skill_name: max(0, int(config.skill_counts.get(s.skill_name, 0))) for s in scenarios
         }
-    if all(v == 0.0 for v in weights.values()):
-        raise ValueError("技能权重不能全为 0。")
-    return weights
+    else:
+        counts = {
+            s.skill_name: (1 if s.skill_name == config.selected_skill else 0) for s in scenarios
+        }
+    if all(v == 0 for v in counts.values()):
+        raise ValueError("技能次数不能全为 0。")
+    return counts
 
 
 def optimize_multi_skill_loadouts(
@@ -74,11 +82,18 @@ def optimize_multi_skill_loadouts(
     equipment_catalog: dict[str, list[dict]],
     scenarios: list[SkillScenario],
     config: MultiSkillConfig = MultiSkillConfig(),
+    character: Optional[dict] = None,
 ) -> MultiSkillResult:
     """按多技能加权总伤进行搜索。"""
     if not scenarios:
-        return MultiSkillResult(top_results=(), weight_map={}, total_combinations=0)
-    weight_map = _resolve_weights(scenarios, config)
+        return MultiSkillResult(top_results=(), skill_count_map={}, total_combinations=0)
+    count_map = _resolve_skill_counts(scenarios, config)
+    skill_types = tuple(
+        dict.fromkeys(
+            (s.skill_type or s.skill_name for s in scenarios if count_map.get(s.skill_name, 0) > 0)
+        )
+    )
+    main_attr, sub_attr = character_ability_attrs(character or {})
     tasks, total_combinations, _pruned, _warnings = enumerate_optimizer_tasks(
         base_context=base_context,
         weapons=weapons,
@@ -87,8 +102,12 @@ def optimize_multi_skill_loadouts(
             top_n=config.top_n,
             crit_mode=config.crit_mode,  # type: ignore[arg-type]
             allow_duplicate_accessory=True,
-            prune_non_beneficial=False,
+            prune_non_beneficial=True,
             warn_on_unfiltered=False,
+            main_attr=main_attr,
+            sub_attr=sub_attr,
+            priority_skill_types=skill_types,
+            sort_equipment_by_priority=bool(main_attr or sub_attr or skill_types),
         ),
     )
     scores: list[MultiSkillScore] = []
@@ -128,7 +147,7 @@ def optimize_multi_skill_loadouts(
                 crit_mode=config.crit_mode,  # type: ignore[arg-type]
             ).final_damage
             breakdown[scenario.skill_name] = dmg
-            weighted_total += dmg * weight_map.get(scenario.skill_name, 0.0)
+            weighted_total += dmg * count_map.get(scenario.skill_name, 0)
         scores.append(
             MultiSkillScore(
                 weapon_name=weapon.name,
@@ -145,4 +164,8 @@ def optimize_multi_skill_loadouts(
     top = tuple(
         sorted(scores, key=lambda s: s.weighted_total_damage, reverse=True)[: max(1, config.top_n)]
     )
-    return MultiSkillResult(top_results=top, weight_map=weight_map, total_combinations=total_combinations)
+    return MultiSkillResult(
+        top_results=top,
+        skill_count_map=count_map,
+        total_combinations=total_combinations,
+    )
