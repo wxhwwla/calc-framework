@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.13.3"
+_VERSION = "1.13.4"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -211,7 +211,8 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 修改 endfield_damage_calculator/please_read_me.py
+# TITLE: 更新 2 处文件
 # BODY:
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/tests/test_property_display_lines.py
 # --- END UPLOAD_SUMMARY ---

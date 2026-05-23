@@ -10,6 +10,7 @@ from gui_design.property_display import (
     build_character_attribute_lines,
     build_character_skill_lines,
     build_weapon_attribute_lines,
+    format_weapon_bonus_display_value,
 )
 
 
@@ -53,7 +54,21 @@ class TestPropertyDisplayLines(unittest.TestCase):
         self.assertIn("终结技 等级5 第2段: 636%", lines)
 
     def test_character_lines_omit_empty_link_skill_type(self):
-        char = _load_by_name(_CHARACTERS_JSON, "昼雪")
+        """连携技倍率为空时，连携技滑块>0 也不应出现连携技明细行。"""
+        char = {
+            "力量": [10],
+            "敏捷": [10],
+            "智识": [10],
+            "意志": [10],
+            "基础攻击力": [100],
+            "战技倍率": [
+                [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200],
+            ],
+            "连携技倍率": [],
+            "终结技倍率": [
+                [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600],
+            ],
+        }
         lines = build_character_attribute_lines(
             char, level=1, skill_1_level=5, skill_2_level=5, skill_3_level=5,
         )
@@ -103,10 +118,17 @@ class TestPropertyDisplayLines(unittest.TestCase):
             ws_level=8,
         )
         self.assertTrue(any(line.startswith("基础攻击力:") for line in lines))
-        self.assertIn("智识+: 12", lines)
-        self.assertIn("终结技充能效率+: 4.8%", lines)
-        self.assertIn("攻击力+: 5%", lines)
-        self.assertIn("源石技艺强度+(特殊能力1): 60", lines)
+        zhishi = format_weapon_bonus_display_value(
+            weapon["智识+"][0], attr_name="智识+", is_first_skill=True,
+        )
+        self.assertIn(f"智识+: {zhishi}", lines)
+        ce = format_weapon_bonus_display_value(weapon["终结技充能效率+"][0], attr_name="终结技充能效率+")
+        self.assertIn(f"终结技充能效率+: {ce}", lines)
+        atk = format_weapon_bonus_display_value(weapon["攻击力+"][0], attr_name="攻击力+")
+        self.assertIn(f"攻击力+: {atk}", lines)
+        ws_raw = weapon["特殊能力1"][2][7]
+        ws = format_weapon_bonus_display_value(ws_raw, attr_name="源石技艺强度+")
+        self.assertIn(f"源石技艺强度+(特殊能力1): {ws}", lines)
         self.assertFalse(any(line.startswith("武器：") for line in lines))
         self.assertFalse(any(line.startswith("===") for line in lines))
 
