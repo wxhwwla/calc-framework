@@ -11,7 +11,7 @@ from typing import Any, Optional
 from calculation.damage_engine import DamageContext
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.loadout_optimizer import WeaponCandidate
-from data.equipment_catalog import is_equipment_catalog_complete
+from data.equipment_catalog import catalog_full_search_error
 
 
 @dataclass(frozen=True)
@@ -109,8 +109,9 @@ def prepare_single_skill_search_job(
 
     返回 (job, None) 或 (None, 用户可读错误文案)。
     """
-    if not is_equipment_catalog_complete(equipment_catalog):
-        return None, "装备数据不完整（缺护甲/护手/配件）。请先执行 sync_equipments.py --apply 同步 Wiki 装备。"
+    catalog_err = catalog_full_search_error(equipment_catalog)
+    if catalog_err:
+        return None, catalog_err
 
     weapon_candidates = build_weapon_candidates(
         all_weapons=all_weapons,
@@ -153,15 +154,3 @@ def prepare_single_skill_search_job(
     return job, None
 
 
-def job_to_legacy_dict(job: SingleSkillSearchJob) -> dict[str, Any]:
-    """转换为 GUI / mvp 沿用的 dict 结构。"""
-    return {
-        "char_data": job.char_data,
-        "skill_label": job.skill_label,
-        "weapon_scope": job.weapon_scope,
-        "equipment_scope": job.equipment_scope,
-        "base_context": job.base_context,
-        "weapon_candidates": list(job.weapon_candidates),
-        "equipment_catalog": job.equipment_catalog,
-        "run_signature": job.run_signature,
-    }

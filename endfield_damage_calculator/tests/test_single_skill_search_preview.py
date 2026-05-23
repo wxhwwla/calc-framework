@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from calculation.loadout_optimizer import WeaponCandidate
-from gui_design.property_display import build_single_skill_search_preview_lines
+from gui_design.preview_lines import build_single_skill_search_preview_lines
 
 _CHARACTERS_JSON = (
     Path(__file__).resolve().parent.parent
@@ -34,7 +34,7 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestSingleSkillSearchPreview(unittest.TestCase):
-    @patch("gui_design.property_display.get_equipment_catalog")
+    @patch("gui_design.preview_lines.get_equipment_catalog")
     def test_preview_lines_include_top_result(
         self,
         mock_get_catalog,
@@ -59,7 +59,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("预览组合数:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
-    @patch("gui_design.property_display.get_equipment_catalog")
+    @patch("gui_design.preview_lines.get_equipment_catalog")
     def test_preview_lines_respect_candidate_scope_and_weapon_list(
         self,
         mock_get_catalog,
@@ -88,7 +88,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("候选范围: 同类型全部") for line in lines))
         self.assertTrue(any("Top1:" in line and "候选B" in line for line in lines))
 
-    @patch("gui_design.property_display.get_equipment_catalog")
+    @patch("gui_design.preview_lines.get_equipment_catalog")
     def test_preview_uses_provided_equipment_catalog_without_loading_local_data(
         self,
         mock_get_catalog,

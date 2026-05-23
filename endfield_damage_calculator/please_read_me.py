@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.15.1"
+_VERSION = "1.15.2"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -212,25 +212,30 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 19 处文件
+# TITLE: 更新 24 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 修改 endfield_damage_calculator/calculation/in_memory_optimizer.py
 # - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
 # - 修改 endfield_damage_calculator/calculation/search_estimate.py
-# - 修改 endfield_damage_calculator/calculation/search_runner.py
 # - 修改 endfield_damage_calculator/calculation/search_session.py
 # - 修改 endfield_damage_calculator/calculation/single_skill_search_job.py
+# - 修改 endfield_damage_calculator/calculation/single_skill_search_runner.py
 # - 修改 endfield_damage_calculator/data/equipment_catalog.py
 # - 修改 endfield_damage_calculator/gui_design/display_model.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 修改 endfield_damage_calculator/gui_design/gui_tools.py
+# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
 # - 修改 endfield_damage_calculator/gui_design/property_display.py
-# - 修改 endfield_damage_calculator/gui_design/search_export_paths.py
 # - 修改 endfield_damage_calculator/gui_design/search_settings.py
 # - 修改 endfield_damage_calculator/please_read_me.py
 # - 修改 endfield_damage_calculator/tests/test_equipment_catalog.py
-# - 修改 endfield_damage_calculator/tests/test_frozen_search_export_paths.py
 # - 修改 endfield_damage_calculator/tests/test_multi_skill_search_preview.py
-# - 修改 endfield_damage_calculator/tests/test_single_skill_search_job.py
+# - 修改 endfield_damage_calculator/tests/test_search_export_paths.py
+# - 修改 endfield_damage_calculator/tests/test_search_format.py
+# - 修改 endfield_damage_calculator/tests/test_search_session.py
 # - 修改 endfield_damage_calculator/tests/test_single_skill_search_preview.py
+# - 修改 endfield_damage_calculator/tests/test_single_skill_search_runner.py
 # - 修改 endfield_damage_calculator/utils/app_paths.py
+# - 修改 endfield_damage_calculator/utils/search_format.py
 # --- END UPLOAD_SUMMARY ---

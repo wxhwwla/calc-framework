@@ -81,14 +81,14 @@ def estimate_search_duration(
 
 
 def format_duration_human(seconds: float) -> str:
-    """兼容导出：请改用 gui_design.search_settings.format_duration_human。"""
-    from gui_design.search_settings import format_duration_human as _fmt
+    """兼容导出：实现位于 utils.search_format。"""
+    from utils.search_format import format_duration_human as _fmt
 
     return _fmt(seconds)
 
 
 def format_workload_estimate_line(*, workload: SearchWorkloadPreview, duration: SearchDurationEstimate) -> str:
-    """兼容导出：请改用 gui_design.search_settings.format_workload_estimate_line。"""
-    from gui_design.search_settings import format_workload_estimate_line as _fmt
+    """兼容导出：实现位于 utils.search_format。"""
+    from utils.search_format import format_workload_estimate_line as _fmt
 
     return _fmt(workload=workload, duration=duration)

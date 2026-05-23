@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""单技能全量搜索导出编排（无 GUI）。"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Optional
+
+from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig
+from calculation.mvp_pipeline import MvpSearchOutcome, run_mvp_search_from_job
+from calculation.search_cancel import SearchCancelToken
+from calculation.search_estimate import (
+    SearchDurationEstimate,
+    SearchWorkloadPreview,
+    estimate_search_duration,
+    preview_search_workload,
+)
+from calculation.single_skill_search_job import SingleSkillSearchJob
+from utils.search_format import format_workload_estimate_line
+
+
+@dataclass(frozen=True)
+class SingleSkillSearchEstimate:
+    """全量遍历预估摘要。"""
+
+    text: str
+    estimated_seconds: float
+    workload: SearchWorkloadPreview
+    duration: SearchDurationEstimate
+
+
+def estimate_single_skill_search(
+    job: SingleSkillSearchJob,
+    *,
+    max_workers: int,
+    top_n: int,
+) -> SingleSkillSearchEstimate:
+    """根据作业计算预计组合数/耗时文案。"""
+    workload = preview_search_workload(
+        weapons=list(job.weapon_candidates),
+        equipment_catalog=job.equipment_catalog,
+        config=OptimizerConfig(
+            top_n=top_n,
+            warn_on_unfiltered=False,
+            prune_non_beneficial=False,
+        ),
+    )
+    duration = estimate_search_duration(
+        total_combinations=workload.total_combinations,
+        max_workers=max_workers,
+    )
+    return SingleSkillSearchEstimate(
+        text=format_workload_estimate_line(workload=workload, duration=duration),
+        estimated_seconds=duration.estimated_seconds,
+        workload=workload,
+        duration=duration,
+    )
+
+
+def run_exported_single_skill_search(
+    job: SingleSkillSearchJob,
+    *,
+    export_root: Path,
+    config: OptimizerConfig,
+    max_workers: int = 1,
+    cancel_token: Optional[SearchCancelToken] = None,
+    progress_callback: Optional[Callable[[dict], None]] = None,
+) -> MvpSearchOutcome:
+    """在 export_root 下执行续跑搜索并导出 MVP 结果。"""
+    db_path = Path(export_root) / "search_runs.db"
+    export_dir = Path(export_root) / "mvp_exports"
+    return run_mvp_search_from_job(
+        job,
+        db_path=db_path,
+        export_dir=export_dir,
+        config=config,
+        max_workers=max_workers,
+        cancel_token=cancel_token,
+        progress_callback=progress_callback,
+    )

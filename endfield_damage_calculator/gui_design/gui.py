@@ -30,26 +30,28 @@ from gui_design.gui_settings import gui_settings
 from gui_design.property_display import confirm_selection
 from gui_design.selection_panel import ChooseTypesStarsNamesLevels
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
-from data.equipment_catalog import get_equipment_catalog
+from data.equipment_catalog import catalog_full_search_error, get_equipment_catalog
 from please_read_me import get_exe_version  # EXE版本号
 from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
-from calculation.mvp_pipeline import run_mvp_search_pipeline
+from calculation.mvp_pipeline import MvpSearchOutcome
 from calculation.search_cancel import SearchCancelToken
 from calculation.single_skill_search_job import (
+    SingleSkillSearchJob,
     build_weapon_candidates,
-    job_to_legacy_dict,
     prepare_single_skill_search_job,
 )
-from calculation.search_estimate import estimate_search_duration, preview_search_workload
+from calculation.single_skill_search_runner import (
+    estimate_single_skill_search,
+    run_exported_single_skill_search,
+)
 from gui_design.label_layout import CONTROL_COLUMN_MINSIZE, bind_wrapped_label
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 from gui_design.search_settings import (
     build_worker_option_labels,
     format_parallel_workers_help,
     format_search_progress_text,
-    format_workload_estimate_line,
     get_cpu_parallel_info,
     resolve_parallel_workers,
     resolve_top_n,
@@ -57,7 +59,6 @@ from gui_design.search_settings import (
 from gui_design.search_results_view import (
     build_search_results_report_lines,
     export_paths_to_strings,
-    loadout_scores_from_payload,
     show_search_results_dialog,
 )
 
@@ -781,7 +782,7 @@ class DamageCalculatorApp:
 
     def _prepare_single_skill_search_job(
         self,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[SingleSkillSearchJob]:
         """收集全量单技能搜索所需上下文；失败时弹窗并返回 None。"""
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
@@ -817,7 +818,7 @@ class DamageCalculatorApp:
         if err:
             messagebox.showwarning("全量遍历", err, parent=self.app)
             return None
-        return job_to_legacy_dict(job)
+        return job
 
     def _set_search_buttons_enabled(self, enabled: bool) -> None:
         state = "normal" if enabled else "disabled"
@@ -832,24 +833,15 @@ class DamageCalculatorApp:
         if self.search_cancel_btn is not None:
             self.search_cancel_btn.configure(state="normal" if not enabled else "disabled")
 
-    def _compute_search_estimate_text(self, job: Dict[str, Any]) -> str:
+    def _compute_search_estimate_text(self, job: SingleSkillSearchJob) -> str:
         """根据当前 job 计算预估文案（不弹窗）。"""
-        max_workers = resolve_parallel_workers(self.search_workers_var.get())
-        workload = preview_search_workload(
-            weapons=job["weapon_candidates"],
-            equipment_catalog=job["equipment_catalog"],
-            config=OptimizerConfig(
-                top_n=resolve_top_n(self.search_top_n_var.get()),
-                warn_on_unfiltered=False,
-                prune_non_beneficial=False,
-            ),
+        estimate = estimate_single_skill_search(
+            job,
+            max_workers=resolve_parallel_workers(self.search_workers_var.get()),
+            top_n=resolve_top_n(self.search_top_n_var.get()),
         )
-        duration = estimate_search_duration(
-            total_combinations=workload.total_combinations,
-            max_workers=max_workers,
-        )
-        self._search_estimated_total_seconds = duration.estimated_seconds
-        return format_workload_estimate_line(workload=workload, duration=duration)
+        self._search_estimated_total_seconds = estimate.estimated_seconds
+        return estimate.text
 
     def _refresh_parallel_workers_hint(self) -> None:
         """刷新并行线程与本机 CPU 的对应说明。"""
@@ -871,28 +863,42 @@ class DamageCalculatorApp:
             self.search_estimate_label.configure(text="预计组合数：请先选择角色和武器")
             return
         catalog = self._single_skill_preview_equipment_catalog()
-        if not catalog["chest"] or not catalog["gloves"] or not catalog["accessories"]:
+        catalog_err = catalog_full_search_error(catalog)
+        if catalog_err:
             self.search_estimate_label.configure(
-                text="预计组合数：装备数据不完整\n请先 sync_equipments.py --apply"
+                text=f"预计组合数：{catalog_err.split('。')[0]}"
             )
             return
         weapons = self._single_skill_preview_candidates()
         if not weapons:
             self.search_estimate_label.configure(text="预计组合数：当前武器候选为空")
             return
-        workload = preview_search_workload(
-            weapons=weapons,
+        char_data = self.char_panel.get_selected_data()
+        skill_name, skill_type, skill_multiplier = self._resolve_selected_skill(char_data)
+        preview_job, err = prepare_single_skill_search_job(
+            char_data=char_data,
+            char_level=self.char_panel.get_level(),
+            weapon_level=self.weapon_panel.get_level(),
+            trust_level=self.char_panel.get_trust_level(),
+            skill_name=skill_name,
+            skill_type=skill_type,
+            skill_multiplier=skill_multiplier,
+            weapon_scope_label=self.single_skill_scope_var.get(),
+            equipment_scope_label=self.single_skill_equipment_scope_var.get(),
+            all_weapons=self.all_weapons,
+            current_weapon=self.weapon_panel.get_selected_data(),
             equipment_catalog=catalog,
-            config=OptimizerConfig(warn_on_unfiltered=False, prune_non_beneficial=False),
         )
-        duration = estimate_search_duration(
-            total_combinations=workload.total_combinations,
+        if err or preview_job is None:
+            self.search_estimate_label.configure(text=f"预计组合数：{err or '无法预估'}")
+            return
+        estimate = estimate_single_skill_search(
+            preview_job,
             max_workers=resolve_parallel_workers(self.search_workers_var.get()),
+            top_n=resolve_top_n(self.search_top_n_var.get()),
         )
-        self._search_estimated_total_seconds = duration.estimated_seconds
-        self.search_estimate_label.configure(
-            text=format_workload_estimate_line(workload=workload, duration=duration)
-        )
+        self._search_estimated_total_seconds = estimate.estimated_seconds
+        self.search_estimate_label.configure(text=estimate.text)
 
     def _on_cancel_search(self) -> None:
         """请求取消正在运行的全量/MVP 搜索。"""
@@ -904,20 +910,20 @@ class DamageCalculatorApp:
         self,
         *,
         mode_label: str,
-        job: Dict[str, Any],
-        result: Dict[str, Any],
+        job: SingleSkillSearchJob,
+        outcome: MvpSearchOutcome,
         export_paths: Optional[Dict[str, str]] = None,
     ) -> None:
         """在独立大窗口展示 Top 配装与导出路径。"""
         lines = build_search_results_report_lines(
             mode_label=mode_label,
-            skill_label=str(job["skill_label"]),
-            scope_labels=(str(job["weapon_scope"]), str(job["equipment_scope"])),
-            processed_combinations=int(result["processed_combinations"]),
-            total_combinations=int(result["total_combinations"]),
-            top_results=loadout_scores_from_payload(result.get("top_results", [])),
+            skill_label=str(job.skill_label),
+            scope_labels=(str(job.weapon_scope), str(job.equipment_scope)),
+            processed_combinations=int(outcome.processed_combinations),
+            total_combinations=int(outcome.total_combinations),
+            top_results=outcome.top_results,
             export_paths=export_paths,
-            cancelled=bool(result.get("cancelled")),
+            cancelled=bool(outcome.cancelled),
         )
         show_search_results_dialog(self.app, title=mode_label, lines=lines)
 
@@ -926,13 +932,11 @@ class DamageCalculatorApp:
         *,
         mode_label: str,
         export_root: Path,
-        job: Dict[str, Any],
+        job: SingleSkillSearchJob,
         status_running: str,
         status_done_prefix: str,
     ) -> None:
         """后台执行 MVP 搜索流水线，完成后弹窗展示结果。"""
-        db_path = export_root / "search_runs.db"
-        export_dir = export_root / "mvp_exports"
         top_n = resolve_top_n(self.search_top_n_var.get())
         max_workers = resolve_parallel_workers(self.search_workers_var.get())
         config = OptimizerConfig(
@@ -968,13 +972,9 @@ class DamageCalculatorApp:
 
         def _worker() -> None:
             try:
-                result = run_mvp_search_pipeline(
-                    db_path=db_path,
-                    export_dir=export_dir,
-                    run_signature=str(job["run_signature"]),
-                    base_context=job["base_context"],
-                    weapons=job["weapon_candidates"],
-                    equipment_catalog=job["equipment_catalog"],
+                outcome = run_exported_single_skill_search(
+                    job,
+                    export_root=export_root,
                     config=config,
                     max_workers=max_workers,
                     cancel_token=self._search_cancel_token,
@@ -992,22 +992,22 @@ class DamageCalculatorApp:
                 )
                 return
 
-            export_paths = export_paths_to_strings(result.get("exports") or {})
-            export_paths["数据库"] = str(db_path)
-            export_paths["导出目录"] = str(export_dir)
+            export_paths = export_paths_to_strings(outcome.exports or {})
+            export_paths["数据库"] = str(outcome.db_path)
+            export_paths["导出目录"] = str(outcome.export_dir)
 
             def _finish() -> None:
                 self._search_cancel_token = None
-                suffix = "（已取消）" if result.get("cancelled") else "：完成"
+                suffix = "（已取消）" if outcome.cancelled else "：完成"
                 self._set_mvp_status(
-                    f"{status_done_prefix}{suffix}（{result['processed_combinations']}/"
-                    f"{result['total_combinations']}）"
+                    f"{status_done_prefix}{suffix}（{outcome.processed_combinations}/"
+                    f"{outcome.total_combinations}）"
                 )
                 self._set_search_buttons_enabled(True)
                 self._show_search_result_popup(
                     mode_label=mode_label,
                     job=job,
-                    result=result,
+                    outcome=outcome,
                     export_paths=export_paths,
                 )
 

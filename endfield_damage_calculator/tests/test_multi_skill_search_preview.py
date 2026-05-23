@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from gui_design.property_display import build_multi_skill_search_preview_lines
+from gui_design.preview_lines import build_multi_skill_search_preview_lines
 
 _CHARACTERS_JSON = (
     Path(__file__).resolve().parent.parent
@@ -33,7 +33,7 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestMultiSkillSearchPreview(unittest.TestCase):
-    @patch("gui_design.property_display.get_equipment_catalog")
+    @patch("gui_design.preview_lines.get_equipment_catalog")
     def test_preview_lines_include_weight_and_top_result(
         self,
         mock_get_catalog,
@@ -58,7 +58,7 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("默认权重:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
-    @patch("gui_design.property_display.get_equipment_catalog")
+    @patch("gui_design.preview_lines.get_equipment_catalog")
     def test_preview_lines_use_manual_weights_when_provided(
         self,
         mock_get_catalog,
@@ -83,7 +83,7 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("手动权重:") for line in lines))
 
-    @patch("gui_design.property_display.get_equipment_catalog")
+    @patch("gui_design.preview_lines.get_equipment_catalog")
     def test_preview_lines_warn_when_manual_weights_all_zero(
         self,
         mock_get_catalog,

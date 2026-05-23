@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import secrets
 import time
 from datetime import datetime
 from pathlib import Path
@@ -29,6 +30,7 @@ def allocate_search_run_directory(
     output_root.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_purpose = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in purpose)
-    run_dir = output_root / f"{safe_purpose}_{stamp}_{time.time_ns()}"
+    # time_ns 在部分 Windows 上连续调用可能相同，追加随机后缀保证唯一
+    run_dir = output_root / f"{safe_purpose}_{stamp}_{time.time_ns()}_{secrets.token_hex(4)}"
     run_dir.mkdir(parents=True, exist_ok=True)
     return run_dir

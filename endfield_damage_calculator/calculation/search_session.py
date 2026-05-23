@@ -9,14 +9,8 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from calculation.damage_engine import DamageContext
-from calculation.loadout_optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    WeaponCandidate,
-    enumerate_optimizer_tasks,
-    evaluate_task,
-)
-from calculation.parallel_search import run_bounded_parallel
+from calculation.in_memory_optimizer import run_enumerated_optimizer_parallel
+from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig, WeaponCandidate
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_persistence import execute_search_with_resume
 
@@ -71,35 +65,16 @@ def run_search_session(
             skipped_preprocessed=resume.skipped_preprocessed,
         )
 
-    tasks, total_combinations, _pruned, warnings = enumerate_optimizer_tasks(
-        base_context=base_context,
-        weapons=weapons,
-        equipment_catalog=equipment_catalog,
-        config=config,
-    )
-    if total_combinations == 0:
-        return SearchSessionResult(
-            top_results=(),
-            total_combinations=0,
-            processed_combinations=0,
-            cancelled=False,
-            warnings=warnings,
+    top_results, total_combinations, processed, cancelled, warnings = (
+        run_enumerated_optimizer_parallel(
+            base_context=base_context,
+            weapons=weapons,
+            equipment_catalog=equipment_catalog,
+            config=config,
+            max_workers=max_workers,
+            cancel_token=cancel_token,
+            progress_callback=progress_callback,
         )
-
-    evaluator = lambda task: evaluate_task(
-        base_context=base_context,
-        crit_mode=config.crit_mode,
-        task=task,
-    )
-    top_results, processed, cancelled = run_bounded_parallel(
-        work_items=tasks,
-        total=total_combinations,
-        evaluate=evaluator,
-        max_workers=max_workers,
-        cancel_token=cancel_token,
-        progress_callback=progress_callback,
-        top_n=config.top_n,
-        top_key=lambda score: score.final_damage,
     )
     return SearchSessionResult(
         top_results=top_results,

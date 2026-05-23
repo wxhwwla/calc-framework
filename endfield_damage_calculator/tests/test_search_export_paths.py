@@ -5,8 +5,9 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from gui_design.search_export_paths import (
+from utils.app_paths import (
     allocate_search_run_directory,
     default_search_output_root,
 )
@@ -30,6 +31,15 @@ class TestSearchExportPaths(unittest.TestCase):
             self.assertTrue(second.is_dir())
             self.assertNotEqual(first, second)
             self.assertTrue(str(first).startswith(str(base)))
+
+    @patch("utils.app_paths.time.time_ns", return_value=1779529790739543600)
+    def test_allocate_unique_when_time_ns_collides(self, _mock_ns):
+        """Windows CI 上连续调用可能得到相同 time_ns，仍须分配不同目录。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            first = allocate_search_run_directory(purpose="full_search", base_dir=base)
+            second = allocate_search_run_directory(purpose="full_search", base_dir=base)
+            self.assertNotEqual(first, second)
 
 
 if __name__ == "__main__":
