@@ -6,6 +6,7 @@ import unittest
 
 from calculation.damage_engine import DamageContext, DamageEffect
 from calculation.equipment_system import build_runtime_equipment_from_wiki_draft
+from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.loadout_optimizer import (
     OptimizerConfig,
     WeaponCandidate,
@@ -133,7 +134,7 @@ class TestLoadoutOptimizer(unittest.TestCase):
             skill_label="战技",
             weapon_scope="当前武器",
             equipment_scope="全部装备",
-            varying_equipment_slot_count=4,
+            fixed_loadout=FixedLoadoutSelection(),
             base_context=DamageContext(final_attack=0.0, skill_multiplier=1.0, skill_type="战技", enemy_defense=100.0),
             weapon_candidates=(WeaponCandidate(name="武", final_attack=100.0),),
             equipment_catalog=catalog,

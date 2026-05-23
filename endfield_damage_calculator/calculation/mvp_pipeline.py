@@ -19,6 +19,7 @@ from calculation.result_export import export_search_outputs
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_eval_context import SearchEvalContext
 from calculation.search_session import run_search_session
+from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.single_skill_search_job import SingleSkillSearchJob
 
 
@@ -105,7 +106,7 @@ def run_mvp_search_pipeline(
             skill_label="",
             weapon_scope="",
             equipment_scope="",
-            varying_equipment_slot_count=4,
+            fixed_loadout=FixedLoadoutSelection(),
             base_context=base_context,
             weapon_candidates=tuple(weapons),
             equipment_catalog=equipment_catalog,

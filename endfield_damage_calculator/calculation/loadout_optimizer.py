@@ -3,7 +3,7 @@
 """
 单技能最优配装搜索。
 
-组合空间 = 候选武器数 × 四格配装笛卡尔积（由 ``varying_slot_count`` 与 ``loadout_slot_search`` 控制）。
+组合空间 = 候选武器数 × 四格配装笛卡尔积（由 ``FixedLoadoutSelection`` 控制固定/遍历）。
 ``build_optimizer_search_plan`` 负责剪枝无益装备、按主/副能力排序、统计 ``total_combinations``；
 ``evaluate_task`` 对每条 (武器, 四格) 重算攻击力并走 ``damage_engine`` 得到伤害用于 TopN。
 """
@@ -21,11 +21,13 @@ from calculation.equipment_system import build_four_slot_loadout, collect_loadou
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.equipment_prune import character_ability_attrs, sort_equipment_catalog_by_priority
 from calculation.loadout_slot_search import (
+    FixedLoadoutSelection,
     VaryingSlotMask,
     baseline_loadout_from_catalog,
-    count_loadout_combinations_for_mask,
+    count_loadout_combinations_for_selection,
     iter_loadout_combinations_for_mask,
-    varying_slot_mask_from_count,
+    iter_loadout_combinations_for_selection,
+    selection_from_legacy_slot_count,
 )
 from calculation.search_eval_context import SearchEvalContext
 
@@ -54,7 +56,8 @@ class OptimizerConfig:
     candidate_weapon_names: Optional[set[str]] = None
     candidate_equipment_names: Optional[set[str]] = None
     warn_on_unfiltered: bool = True
-    varying_slot_count: int = 4
+    fixed_loadout: FixedLoadoutSelection = FixedLoadoutSelection()
+    varying_slot_count: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -103,31 +106,38 @@ class OptimizerSearchPlan:
     total_combinations: int
     pruned_weapon_count: int
     warnings: tuple[str, ...]
-    varying_slots: VaryingSlotMask
-    baseline_loadout: tuple[dict, dict, dict, dict]
+    fixed_loadout: FixedLoadoutSelection
+
+
+def _resolve_config_fixed_loadout(
+    config: OptimizerConfig,
+    equipment_catalog: dict[str, list[dict]],
+) -> FixedLoadoutSelection:
+    if config.varying_slot_count is not None:
+        return selection_from_legacy_slot_count(equipment_catalog, config.varying_slot_count)
+    return config.fixed_loadout
 
 
 def count_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
     allow_duplicate_accessory: bool = True,
-    varying_slot_count: int = 4,
+    selection: Optional[FixedLoadoutSelection] = None,
+    varying_slot_count: Optional[int] = None,
 ) -> int:
-    """统计配装组合数（与 iter 一致；varying_slot_count 为 1–4）。"""
+    """统计配装组合数（与 iter 一致）。"""
     if not equipment_catalog.get("chest") or not equipment_catalog.get("gloves"):
         return 0
     if not equipment_catalog.get("accessories"):
         return 0
-    try:
-        baseline = baseline_loadout_from_catalog(equipment_catalog)
-    except ValueError:
-        return 0
-    mask = varying_slot_mask_from_count(varying_slot_count)
-    return count_loadout_combinations_for_mask(
+    if selection is None:
+        if varying_slot_count is None:
+            varying_slot_count = 4
+        selection = selection_from_legacy_slot_count(equipment_catalog, varying_slot_count)
+    return count_loadout_combinations_for_selection(
         equipment_catalog,
+        selection=selection,
         allow_duplicate_accessory=allow_duplicate_accessory,
-        mask=mask,
-        baseline=baseline,
     )
 
 
@@ -135,14 +145,12 @@ def _iter_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
     allow_duplicate_accessory: bool,
-    varying_slots: VaryingSlotMask,
-    baseline: tuple[dict, dict, dict, dict],
+    fixed_loadout: FixedLoadoutSelection,
 ) -> Iterator[tuple[dict, dict, dict, dict]]:
-    yield from iter_loadout_combinations_for_mask(
+    yield from iter_loadout_combinations_for_selection(
         equipment_catalog,
+        selection=fixed_loadout,
         allow_duplicate_accessory=allow_duplicate_accessory,
-        mask=varying_slots,
-        baseline=baseline,
     )
 
 
@@ -197,18 +205,13 @@ def build_optimizer_search_plan(
             skill_types=config.priority_skill_types,
         )
 
-    try:
-        baseline = baseline_loadout_from_catalog(filtered_catalog)
-    except ValueError:
-        baseline = ({}, {}, {}, {})
-    varying_slots = varying_slot_mask_from_count(config.varying_slot_count)
+    fixed_loadout = _resolve_config_fixed_loadout(config, filtered_catalog)
     loadout_count = 0
-    if baseline[0] and baseline[1] and baseline[2]:
-        loadout_count = count_loadout_combinations_for_mask(
+    if filtered_catalog.get("chest") and filtered_catalog.get("gloves") and filtered_catalog.get("accessories"):
+        loadout_count = count_loadout_combinations_for_selection(
             filtered_catalog,
+            selection=fixed_loadout,
             allow_duplicate_accessory=config.allow_duplicate_accessory,
-            mask=varying_slots,
-            baseline=baseline,
         )
     weapon_count = len(filtered_weapons)
     return OptimizerSearchPlan(
@@ -217,8 +220,7 @@ def build_optimizer_search_plan(
         total_combinations=weapon_count * loadout_count,
         pruned_weapon_count=pruned_weapon_count,
         warnings=tuple(warnings),
-        varying_slots=varying_slots,
-        baseline_loadout=baseline,
+        fixed_loadout=fixed_loadout,
     )
 
 
@@ -232,8 +234,7 @@ def iter_optimizer_tasks(
         for loadout in _iter_loadout_combinations(
             plan.equipment_catalog,
             allow_duplicate_accessory=allow_duplicate_accessory,
-            varying_slots=plan.varying_slots,
-            baseline=plan.baseline_loadout,
+            fixed_loadout=plan.fixed_loadout,
         ):
             yield (weapon, loadout)
 
@@ -264,7 +265,8 @@ def optimizer_config_for_character(
     char_data: dict,
     *,
     priority_skill_types: tuple[str, ...],
-    varying_slot_count: int = 4,
+    fixed_loadout: Optional[FixedLoadoutSelection] = None,
+    varying_slot_count: Optional[int] = None,
     top_n: int = 10,
     crit_mode: CritMode = "non_crit",
     allow_duplicate_accessory: bool = True,
@@ -283,6 +285,7 @@ def optimizer_config_for_character(
         sub_attr=sub_attr,
         priority_skill_types=priority_skill_types,
         sort_equipment_by_priority=True,
+        fixed_loadout=fixed_loadout if fixed_loadout is not None else FixedLoadoutSelection(),
         varying_slot_count=varying_slot_count,
     )
 

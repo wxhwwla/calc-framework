@@ -6,6 +6,7 @@ import unittest
 
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
+from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.single_skill_search_job import SingleSkillSearchJob
 from calculation.single_skill_search_runner import estimate_single_skill_search
 
@@ -25,7 +26,7 @@ class TestSingleSkillSearchRunner(unittest.TestCase):
             skill_label="战技",
             weapon_scope="当前武器",
             equipment_scope="全部装备",
-            varying_equipment_slot_count=4,
+            fixed_loadout=FixedLoadoutSelection(),
             base_context=DamageContext(
                 final_attack=0.0,
                 skill_multiplier=1.0,

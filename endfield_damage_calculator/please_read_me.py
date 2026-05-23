@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.15.5"
+_VERSION = "1.15.6"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -207,3 +207,30 @@ def show_help() -> None:
 
 if __name__ == "__main__":
     show_help()
+
+# --- UPLOAD_SUMMARY ---
+# TITLE: 更新 22 处文件
+# BODY:
+# - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
+# - 修改 endfield_damage_calculator/calculation/loadout_slot_search.py
+# - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
+# - 修改 endfield_damage_calculator/calculation/search_estimate.py
+# - 修改 endfield_damage_calculator/calculation/single_skill_search_job.py
+# - 修改 endfield_damage_calculator/calculation/single_skill_search_runner.py
+# - 修改 endfield_damage_calculator/data/equipment_filters.py
+# - 修改 endfield_damage_calculator/gui_design/calc_mode_labels.py
+# - 修改 endfield_damage_calculator/gui_design/fixed_loadout_controls.py
+# - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 修改 endfield_damage_calculator/gui_design/gui_layout.py
+# - 修改 endfield_damage_calculator/gui_design/label_layout.py
+# - 修改 endfield_damage_calculator/gui_design/panel_hints.py
+# - 修改 endfield_damage_calculator/tests/test_calc_mode_labels.py
+# - 修改 endfield_damage_calculator/tests/test_fixed_loadout_selection.py
+# - 修改 endfield_damage_calculator/tests/test_gui_layout_contract.py
+# - 修改 endfield_damage_calculator/tests/test_label_layout.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_optimizer.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_varying_slots.py
+# - 修改 endfield_damage_calculator/tests/test_panel_hints.py
+# - 修改 endfield_damage_calculator/tests/test_single_skill_search_runner.py
+# - 修改 endfield_damage_calculator/utils/search_format.py
+# --- END UPLOAD_SUMMARY ---

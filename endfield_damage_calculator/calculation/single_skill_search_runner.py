@@ -50,7 +50,7 @@ def estimate_single_skill_search(
         config=optimizer_config_for_character(
             job.char_data,
             priority_skill_types=(skill_type,),
-            varying_slot_count=job.varying_equipment_slot_count,
+            fixed_loadout=job.fixed_loadout,
             top_n=top_n,
             warn_on_unfiltered=False,
             prune_non_beneficial=True,

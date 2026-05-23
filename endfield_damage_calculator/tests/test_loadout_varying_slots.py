@@ -11,7 +11,11 @@ from calculation.loadout_optimizer import (
     count_loadout_combinations,
     iter_optimizer_tasks,
 )
-from calculation.loadout_slot_search import varying_slot_mask_from_count
+from calculation.loadout_slot_search import (
+    FixedLoadoutSelection,
+    selection_from_legacy_slot_count,
+    varying_slot_mask_from_count,
+)
 
 
 class TestLoadoutVaryingSlots(unittest.TestCase):
@@ -39,7 +43,7 @@ class TestLoadoutVaryingSlots(unittest.TestCase):
         total = count_loadout_combinations(
             catalog,
             allow_duplicate_accessory=True,
-            varying_slot_count=1,
+            selection=selection_from_legacy_slot_count(catalog, 1),
         )
         self.assertEqual(total, 2)
 
@@ -48,7 +52,7 @@ class TestLoadoutVaryingSlots(unittest.TestCase):
         total = count_loadout_combinations(
             catalog,
             allow_duplicate_accessory=True,
-            varying_slot_count=4,
+            selection=FixedLoadoutSelection(),
         )
         self.assertEqual(total, 2 * 2 * 2 * 2)
 
@@ -58,7 +62,7 @@ class TestLoadoutVaryingSlots(unittest.TestCase):
             weapons=[WeaponCandidate(name="武", final_attack=100.0)],
             equipment_catalog=catalog,
             config=OptimizerConfig(
-                varying_slot_count=1,
+                fixed_loadout=selection_from_legacy_slot_count(catalog, 1),
                 prune_non_beneficial=False,
                 warn_on_unfiltered=False,
             ),

@@ -11,6 +11,7 @@ from typing import Any, Optional
 from calculation.damage_engine import DamageContext
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.loadout_optimizer import WeaponCandidate
+from calculation.loadout_slot_search import FixedLoadoutSelection
 from data.equipment_catalog import catalog_full_search_error
 
 
@@ -25,7 +26,7 @@ class SingleSkillSearchJob:
     skill_label: str
     weapon_scope: str
     equipment_scope: str
-    varying_equipment_slot_count: int
+    fixed_loadout: FixedLoadoutSelection
     base_context: DamageContext
     weapon_candidates: tuple[WeaponCandidate, ...]
     equipment_catalog: dict[str, list[dict[str, Any]]]
@@ -84,18 +85,19 @@ def build_run_signature(
     chest_count: int,
     weapon_scope_label: str,
     equipment_scope_label: str,
-    varying_equipment_slot_count: int,
+    fixed_loadout: FixedLoadoutSelection,
 ) -> str:
     """
     生成续跑用 run_signature（写入 search_runs.db）。
 
-    任一搜索参数（等级、技能、武器/装备范围、遍历件数 slotsN 等）变化都会得到新签名，
+    任一搜索参数（等级、技能、武器/装备范围、固定配装等）变化都会得到新签名，
     避免与旧库的 total_combinations / 已处理 key 混用。
     """
     seed = (
         f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
         f"{skill_name}-w{weapon_count}-e{chest_count}-"
-        f"{weapon_scope_label}-{equipment_scope_label}-slots{varying_equipment_slot_count}"
+        f"{weapon_scope_label}-{equipment_scope_label}-"
+        f"{fixed_loadout.signature_token()}"
     )
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:16]
 
@@ -111,7 +113,7 @@ def prepare_single_skill_search_job(
     skill_multiplier: float,
     weapon_scope_label: str,
     equipment_scope_label: str,
-    varying_equipment_slot_count: int = 4,
+    fixed_loadout: Optional[FixedLoadoutSelection] = None,
     all_weapons: list[dict[str, Any]],
     current_weapon: dict[str, Any],
     equipment_catalog: dict[str, list[dict[str, Any]]],
@@ -147,7 +149,7 @@ def prepare_single_skill_search_job(
         chest_count=len(equipment_catalog["chest"]),
         weapon_scope_label=weapon_scope_label,
         equipment_scope_label=equipment_scope_label,
-        varying_equipment_slot_count=varying_equipment_slot_count,
+        fixed_loadout=fixed_loadout or FixedLoadoutSelection(),
     )
     weapon_data_by_name = {
         str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
@@ -160,7 +162,7 @@ def prepare_single_skill_search_job(
         skill_label=skill_name,
         weapon_scope=weapon_scope_label,
         equipment_scope=equipment_scope_label,
-        varying_equipment_slot_count=max(1, min(4, int(varying_equipment_slot_count))),
+        fixed_loadout=fixed_loadout or FixedLoadoutSelection(),
         base_context=DamageContext(
             final_attack=0.0,
             skill_multiplier=float(skill_multiplier),

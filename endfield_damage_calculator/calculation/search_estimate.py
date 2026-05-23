@@ -52,7 +52,7 @@ def preview_search_workload(
     loadout_count = count_loadout_combinations(
         plan.equipment_catalog,
         allow_duplicate_accessory=config.allow_duplicate_accessory,
-        varying_slot_count=config.varying_slot_count,
+        selection=plan.fixed_loadout,
     )
     return SearchWorkloadPreview(
         total_combinations=plan.total_combinations,

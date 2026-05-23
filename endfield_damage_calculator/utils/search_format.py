@@ -30,7 +30,8 @@ def format_workload_estimate_line(*, workload, duration) -> str:
         return "预计组合数：0（请检查候选范围与装备数据）"
     human = format_duration_human(duration.estimated_seconds)
     return (
-        f"预计组合数：{total:,}（{workload.weapon_count} 武器 × "
-        f"{workload.loadout_combinations:,} 配装）\n"
-        f"预计耗时：{human}（{duration.max_workers} 线程，仅供参考）"
+        f"预计组合数：{total:,}\n"
+        f"（{workload.weapon_count} 武器 × {workload.loadout_combinations:,} 配装）\n"
+        f"预计耗时：{human}\n"
+        f"（{duration.max_workers} 线程，仅供参考）"
     )
