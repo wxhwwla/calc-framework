@@ -28,7 +28,7 @@ Before changing code or pushing to GitHub, read the human operation guide: [`doc
 
 ### Issue tracker
 
-Issues are tracked in GitHub Issues for this repo. See `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues for this repo. Web forms: `.github/ISSUE_TEMPLATE/`（Bug 报告、功能建议；默认 `needs-triage`）. See `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`.
 
 ### Triage labels
 

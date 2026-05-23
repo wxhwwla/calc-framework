@@ -31,7 +31,7 @@
 ├── docs/                         # 操作指令集、许可、算法说明
 ├── tools/                        # [工具] 仓库级维护（非包内 scripts）
 ├── legacy/                       # 遗留脚本，不参与日常流程
-├── .github/                      # CI（勿随意改路径）
+├── .github/                      # CI、Issue 表单模板（Bug / 功能建议）
 ├── .agents/                      # Cursor Agent 技能
 ├── github_upload_module.py
 ├── github_download_module.py
@@ -67,6 +67,15 @@ python github_upload_module.py
 - BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
 
 细节与布局说明见 [**详细 README**](endfield_damage_calculator/README.md)。
+
+## 反馈与 Issue
+
+| 方式 | 说明 |
+|------|------|
+| **GitHub Issues** | 仓库 **Issues → New issue** → 选 **Bug 报告** 或 **功能建议**（`.github/ISSUE_TEMPLATE/`） |
+| **模板字段** | 描述、复现步骤、期望行为、OS / Python / 项目版本；Bug 默认标签 `needs-triage` |
+| **命令行** | `gh issue create`（需 `gh auth login`）；见 [`docs/操作指令集.md`](docs/操作指令集.md) §1.3 |
+| **协作约定** | Agent / 维护者见 [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)、[`triage-labels.md`](docs/agents/triage-labels.md) |
 
 ## 许可证与数据来源
 

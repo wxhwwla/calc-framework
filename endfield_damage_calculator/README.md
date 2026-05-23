@@ -401,6 +401,13 @@ python character_weapon_equipment/weapon_data/add_weapon.py
 
 ---
 
-## 🤝 贡献
+## 🤝 贡献与反馈
 
-欢迎提交 Issue 和 Pull Request！
+| 方式 | 说明 |
+|------|------|
+| **报告 Bug** | GitHub **Issues → New issue → Bug 报告**（请填复现步骤与窗口标题中的版本号） |
+| **功能建议** | 同上，选 **功能建议** |
+| **文档** | 人类操作见 [`docs/操作指令集.md`](../docs/操作指令集.md)；Agent 见 [`docs/会话接续手册.md`](../docs/会话接续手册.md) |
+| **代码贡献** | Fork 后 PR；大改动请先开 Issue 讨论 |
+
+Issue 模板与 `gh` 用法：[`docs/agents/issue-tracker.md`](../docs/agents/issue-tracker.md)。

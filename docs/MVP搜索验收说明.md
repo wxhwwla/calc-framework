@@ -162,9 +162,10 @@ python build.py
 | 敌方防御/抗性等 | 否 | 后端 `DamageContext` |
 | 全量 Top 分项伤害 | 否 | 弹窗仅显示加权总伤/单段伤害数值 |
 
-## 9. 已知限制
+## 9. 已知限制与反馈
 
 - 实验入口；敌方面板、全量结果分项展示等未做完
+- **Bug / 建议**：GitHub **Issues → New issue**（模板见 [`.github/ISSUE_TEMPLATE/`](../.github/ISSUE_TEMPLATE/) 与 [`agents/issue-tracker.md`](agents/issue-tracker.md)）
 - 耗时预估为粗估（含批量写库经验值），跑起来后「剩余时间」更准
 - 续跑时 `get_processed_keys` 仍会一次加载已处理 key 集合（超大续跑可再优化）
 - 装备数据质量依赖 BWIKI 同步与 `infer_equipment_slot` 规则

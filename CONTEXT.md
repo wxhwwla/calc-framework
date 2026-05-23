@@ -34,7 +34,7 @@
 
 | 术语 | 含义 |
 |------|------|
-| **仓库根目录** | Git 克隆顶层（含 `CONTEXT.md`、`.github/`、`github_upload_module.py`、`docs/`、`tools/`） |
+| **仓库根目录** | Git 克隆顶层（含 `CONTEXT.md`、`.github/`（CI + Issue 模板）、`github_upload_module.py`、`docs/`、`tools/`） |
 | **Python 包目录** | `endfield_damage_calculator/`（`main.py`、`tests/`、`pip install -e` 的工作目录） |
 | **遗留目录** | `legacy/`：旧脚本归档，新功能勿依赖 |
 | **应用根目录** | `utils.path_utils.get_application_dir()`：开发=包目录，打包=exe 所在发布文件夹 |
