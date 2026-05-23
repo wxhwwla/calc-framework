@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+当前配装快照：从选择面板读取一次，供确认签名、预设、全量搜索共用。
+
+减少 gui / enhancement_controls 多处刮取 panel 的重复与漂移。
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Optional
+
+from calculation.loadout_slot_search import FixedLoadoutSelection
+from calculation.search_controller import SearchJobInputs
+from gui_design.confirm_refresh import build_confirm_refresh_signature
+from gui_design.loadout_preset import LoadoutPreset
+
+
+def _resolve_selected_skill_for_search(
+    char_data: dict[str, Any],
+    *,
+    skill_1_level: int,
+    skill_2_level: int,
+    skill_3_level: int,
+) -> tuple[str, str, float]:
+    """与 ``DamageCalculatorApp._resolve_selected_skill`` 一致，供全量搜索使用。"""
+    options = (
+        ("战技", "战技倍率", skill_1_level),
+        ("连携技", "连携技倍率", skill_2_level),
+        ("终结技", "终结技倍率", skill_3_level),
+    )
+    for skill_name, field, level in options:
+        if level <= 0:
+            continue
+        segments = char_data.get(field) or []
+        if not isinstance(segments, list) or not segments:
+            continue
+        first_segment = segments[0] if isinstance(segments[0], list) else []
+        index = max(0, min(level - 1, len(first_segment) - 1))
+        if isinstance(first_segment, list) and first_segment:
+            value = float(first_segment[index] or 0.0)
+            return skill_name, skill_name, value / 100.0
+    return "战技", "战技", 1.0
+
+
+@dataclass(frozen=True)
+class LoadoutState:
+    """角色+武器+范围+固定配装+次数+敌人防御的统一快照。"""
+
+    char_data: dict[str, Any]
+    weapon_data: dict[str, Any]
+    char_level: int
+    weapon_level: int
+    trust_level: int
+    skill_levels: tuple[int, int, int]
+    skill_name: str
+    skill_type: str
+    skill_multiplier: float
+    calculation_mode: str
+    weapon_scope_label: str
+    equipment_scope_label: str
+    fixed_loadout: FixedLoadoutSelection
+    fixed_equipment_names: dict[str, Optional[str]]
+    use_manual_multi_skill_counts: bool
+    manual_counts: dict[str, int]
+    enemy_defense: float
+    weapon_specials: tuple[Any, ...]
+
+    def confirm_refresh_signature(self) -> tuple:
+        """供 confirm_refresh 去重使用的可哈希签名。"""
+        return build_confirm_refresh_signature(
+            calculation_mode=self.calculation_mode,
+            char_name=str(self.char_data.get("名称", "")),
+            char_level=self.char_level,
+            weapon_name=str(self.weapon_data.get("名称", "")),
+            weapon_level=self.weapon_level,
+            trust_level=self.trust_level,
+            skill_levels=self.skill_levels,
+            weapon_specials=self.weapon_specials,
+            use_manual_multi_skill_counts=self.use_manual_multi_skill_counts,
+            multi_skill_manual_counts=self.manual_counts,
+            preview_scope_label=self.weapon_scope_label,
+            preview_equipment_scope_label=self.equipment_scope_label,
+            fixed_loadout_token=self.fixed_loadout.signature_token(),
+        )
+
+    def to_loadout_preset(self) -> LoadoutPreset:
+        return LoadoutPreset(
+            char_name=str(self.char_data.get("名称", "")),
+            weapon_name=str(self.weapon_data.get("名称", "")),
+            char_level=self.char_level,
+            weapon_level=self.weapon_level,
+            trust_level=self.trust_level,
+            skill_levels=self.skill_levels,
+            calculation_mode=self.calculation_mode,
+            weapon_scope=self.weapon_scope_label,
+            equipment_scope=self.equipment_scope_label,
+            fixed_equipment_names=dict(self.fixed_equipment_names),
+            multi_skill_counts=dict(self.manual_counts),
+            use_manual_multi_skill_counts=self.use_manual_multi_skill_counts,
+        )
+
+    def to_search_job_inputs(
+        self,
+        *,
+        all_weapons: list[dict[str, Any]],
+        equipment_catalog: dict[str, list[dict[str, Any]]],
+    ) -> SearchJobInputs:
+        return SearchJobInputs(
+            char_data=self.char_data,
+            char_level=self.char_level,
+            weapon_level=self.weapon_level,
+            trust_level=self.trust_level,
+            skill_name=self.skill_name,
+            skill_type=self.skill_type,
+            skill_multiplier=self.skill_multiplier,
+            weapon_scope_label=self.weapon_scope_label,
+            equipment_scope_label=self.equipment_scope_label,
+            all_weapons=all_weapons,
+            current_weapon=self.weapon_data,
+            equipment_catalog=equipment_catalog,
+            fixed_loadout=self.fixed_loadout,
+            enemy_defense=self.enemy_defense,
+            use_manual_multi_skill_counts=self.use_manual_multi_skill_counts,
+            skill_1_level=self.skill_levels[0],
+            skill_2_level=self.skill_levels[1],
+            skill_3_level=self.skill_levels[2],
+            manual_counts=dict(self.manual_counts),
+        )
+
+
+def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, Optional[str]]:
+    def _name(item: Optional[dict]) -> Optional[str]:
+        if not item:
+            return None
+        return str(item.get("名称") or "") or None
+
+    return {
+        "chest": _name(fixed.chest),
+        "gloves": _name(fixed.gloves),
+        "accessory_a": _name(fixed.accessory_a),
+        "accessory_b": _name(fixed.accessory_b),
+    }
+
+
+def _weapon_specials_tuple(weapon_panel: Any) -> tuple[Any, ...]:
+    return (
+        weapon_panel.get_special_ability_1_name(),
+        weapon_panel.get_special_ability_1_level(),
+        weapon_panel.get_special_ability_2_name(),
+        weapon_panel.get_special_ability_2_level(),
+        weapon_panel.get_special_ability_3_name(),
+        weapon_panel.get_special_ability_3_level(),
+        weapon_panel.get_weapon_special_name(),
+        weapon_panel.get_weapon_special_level(),
+        weapon_panel.get_weapon_special_2_name(),
+        weapon_panel.get_weapon_special_2_level(),
+    )
+
+
+def read_loadout_from_panels(
+    char_panel: Any,
+    weapon_panel: Any,
+    *,
+    calculation_mode: str,
+    weapon_scope_label: str,
+    equipment_scope_label: str,
+    fixed_loadout: FixedLoadoutSelection,
+    use_manual_multi_skill_counts: bool,
+    manual_counts: dict[str, int],
+    enemy_defense: float,
+) -> Optional[LoadoutState]:
+    """从角色/武器面板读取配装快照；无效选择时返回 None。"""
+    char_data = char_panel.get_selected_data()
+    weapon_data = weapon_panel.get_selected_data()
+    if not char_data or not weapon_data:
+        return None
+
+    skill_name, skill_type, skill_multiplier = _resolve_selected_skill_for_search(
+        char_data,
+        skill_1_level=int(char_panel.get_skill_1_level()),
+        skill_2_level=int(char_panel.get_skill_2_level()),
+        skill_3_level=int(char_panel.get_skill_3_level()),
+    )
+
+    return LoadoutState(
+        char_data=char_data,
+        weapon_data=weapon_data,
+        char_level=int(char_panel.get_level()),
+        weapon_level=int(weapon_panel.get_level()),
+        trust_level=int(char_panel.get_trust_level()),
+        skill_levels=(
+            int(char_panel.get_skill_1_level()),
+            int(char_panel.get_skill_2_level()),
+            int(char_panel.get_skill_3_level()),
+        ),
+        skill_name=skill_name,
+        skill_type=skill_type,
+        skill_multiplier=float(skill_multiplier),
+        calculation_mode=calculation_mode,
+        weapon_scope_label=weapon_scope_label,
+        equipment_scope_label=equipment_scope_label,
+        fixed_loadout=fixed_loadout,
+        fixed_equipment_names=_fixed_equipment_names(fixed_loadout),
+        use_manual_multi_skill_counts=use_manual_multi_skill_counts,
+        manual_counts=dict(manual_counts),
+        enemy_defense=float(enemy_defense),
+        weapon_specials=_weapon_specials_tuple(weapon_panel),
+    )
+
+
+def read_loadout_from_app(app: Any) -> Optional[LoadoutState]:
+    """从 DamageCalculatorApp 实例读取配装快照。"""
+    char_panel = getattr(app, "char_panel", None)
+    weapon_panel = getattr(app, "weapon_panel", None)
+    if char_panel is None or weapon_panel is None:
+        return None
+    fixed = app._build_fixed_loadout_selection()
+    return read_loadout_from_panels(
+        char_panel,
+        weapon_panel,
+        calculation_mode=app._current_calculation_mode(),
+        weapon_scope_label=str(app.single_skill_scope_var.get()),
+        equipment_scope_label=str(app.single_skill_equipment_scope_var.get()),
+        fixed_loadout=fixed,
+        use_manual_multi_skill_counts=bool(app.use_manual_skill_counts_var.get()),
+        manual_counts=app._manual_multi_skill_counts(),
+        enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
+    )

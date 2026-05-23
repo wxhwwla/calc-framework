@@ -121,6 +121,7 @@ def prepare_single_skill_search_job(
     current_weapon: dict[str, Any],
     equipment_catalog: dict[str, list[dict[str, Any]]],
     multi_skill_eval: Optional[MultiSkillSearchEval] = None,
+    enemy_defense: float = 100.0,
 ) -> tuple[Optional[SingleSkillSearchJob], Optional[str]]:
     """
     组装搜索作业。
@@ -174,7 +175,7 @@ def prepare_single_skill_search_job(
             final_attack=0.0,
             skill_multiplier=float(skill_multiplier),
             skill_type=skill_type,
-            enemy_defense=100.0,
+            enemy_defense=float(enemy_defense),
         ),
         weapon_candidates=tuple(weapon_candidates),
         equipment_catalog=equipment_catalog,

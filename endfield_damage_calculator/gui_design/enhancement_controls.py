@@ -49,6 +49,11 @@ def _label_for_mode(mode_id: str) -> str:
 
 def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
     """从当前 GUI 状态组装可导出预设。"""
+    from gui_design.loadout_state import read_loadout_from_app
+
+    state = read_loadout_from_app(app)
+    if state is not None:
+        return state.to_loadout_preset()
     assert app.char_panel and app.weapon_panel
     fixed = app._build_fixed_loadout_selection()
     names = {

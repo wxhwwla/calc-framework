@@ -89,6 +89,31 @@ class TestSingleSkillSearchJob(unittest.TestCase):
         self.assertEqual(len(job.run_signature), 16)
         self.assertEqual(len(job.weapon_candidates), 1)
 
+    def test_prepare_job_honors_enemy_defense_parameter(self) -> None:
+        catalog = {
+            "chest": [{"名称": "甲", "效果": [1], "三件套效果": []}],
+            "gloves": [{"名称": "手", "效果": [1], "三件套效果": []}],
+            "accessories": [{"名称": "件", "效果": [1], "三件套效果": []}],
+        }
+        job, err = prepare_single_skill_search_job(
+            char_data=self._char(),
+            char_level=1,
+            weapon_level=1,
+            trust_level=0,
+            skill_name="战技",
+            skill_type="战技",
+            skill_multiplier=1.0,
+            weapon_scope_label="当前武器",
+            equipment_scope_label="全部装备",
+            all_weapons=[self._weapon("A")],
+            current_weapon=self._weapon("A"),
+            equipment_catalog=catalog,
+            enemy_defense=180.0,
+        )
+        self.assertIsNone(err)
+        assert job is not None
+        self.assertEqual(job.base_context.enemy_defense, 180.0)
+
 
 if __name__ == "__main__":
     unittest.main()

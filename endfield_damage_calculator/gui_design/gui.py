@@ -34,22 +34,21 @@ from data.equipment_catalog import catalog_full_search_error, get_equipment_cata
 from please_read_me import get_exe_version  # EXE版本号
 from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
-from calculation.loadout_optimizer import WeaponCandidate, optimizer_config_for_character
+from calculation.loadout_optimizer import WeaponCandidate
 from calculation.mvp_pipeline import MvpSearchOutcome
 from calculation.search_cancel import SearchCancelToken
-from calculation.multi_skill_search_eval import build_multi_skill_search_eval
-from calculation.single_skill_search_job import (
-    SingleSkillSearchJob,
-    build_weapon_candidates,
-    prepare_single_skill_search_job,
+from calculation.search_controller import (
+    SearchJobInputs,
+    optimizer_config_for_search_job,
+    prepare_search_job,
 )
+from calculation.single_skill_search_job import SingleSkillSearchJob
 from calculation.single_skill_search_runner import (
     estimate_single_skill_search,
     run_exported_single_skill_search,
 )
 from gui_design.panel_hints import FIXED_LOADOUT_HINT, MULTI_SKILL_COUNTS_HINT
 from gui_design.confirm_refresh import (
-    build_confirm_refresh_signature,
     normalize_skill_count_text,
     skill_count_commit_changed,
 )
@@ -865,6 +864,18 @@ class DamageCalculatorApp:
         if self.mvp_status_label is not None:
             self.mvp_status_label.configure(text=text)
 
+    def _build_search_job_inputs(self) -> Optional[SearchJobInputs]:
+        """从当前 GUI 刮取全量搜索输入（预估与实跑共用）。"""
+        from gui_design.loadout_state import read_loadout_from_app
+
+        state = read_loadout_from_app(self)
+        if state is None:
+            return None
+        return state.to_search_job_inputs(
+            all_weapons=self.all_weapons,
+            equipment_catalog=self._single_skill_preview_equipment_catalog(),
+        )
+
     def _prepare_single_skill_search_job(
         self,
     ) -> Optional[SingleSkillSearchJob]:
@@ -874,51 +885,14 @@ class DamageCalculatorApp:
         含：角色/武器等级、左侧技能倍率、武器/装备范围、固定配装、
         可选多技能加权（手动次数）、``run_signature``（续跑库键）。失败时弹窗并返回 None。
         """
-        assert self.char_panel is not None, "char_panel 未初始化"
-        assert self.weapon_panel is not None, "weapon_panel 未初始化"
-        char_data = self.char_panel.get_selected_data()
-        if not char_data:
-            messagebox.showwarning("全量遍历", "请先选择有效角色。", parent=self.app)
+        inputs = self._build_search_job_inputs()
+        if inputs is None:
+            if not self.char_panel or not self.char_panel.get_selected_data():
+                messagebox.showwarning("全量遍历", "请先选择有效角色。", parent=self.app)
+            else:
+                messagebox.showwarning("全量遍历", "请先选择有效武器。", parent=self.app)
             return None
-
-        char_level = self.char_panel.get_level()
-        weapon_level = self.weapon_panel.get_level()
-        trust_level = self.char_panel.get_trust_level()
-        skill_name, skill_type, skill_multiplier = self._resolve_selected_skill(char_data)
-        current_weapon = self.weapon_panel.get_selected_data()
-        if not current_weapon:
-            messagebox.showwarning("全量遍历", "请先选择有效武器。", parent=self.app)
-            return None
-
-        equipment_catalog = self._single_skill_preview_equipment_catalog()
-        multi_skill_eval = None
-        if bool(self.use_manual_skill_counts_var.get()):
-            multi_skill_eval, ms_err = build_multi_skill_search_eval(
-                char_data,
-                skill_1_level=self.char_panel.get_skill_1_level(),
-                skill_2_level=self.char_panel.get_skill_2_level(),
-                skill_3_level=self.char_panel.get_skill_3_level(),
-                manual_counts=self._manual_multi_skill_counts(),
-            )
-            if ms_err:
-                messagebox.showwarning("全量遍历", ms_err, parent=self.app)
-                return None
-        job, err = prepare_single_skill_search_job(
-            char_data=char_data,
-            char_level=char_level,
-            weapon_level=weapon_level,
-            trust_level=trust_level,
-            skill_name=skill_name,
-            skill_type=skill_type,
-            skill_multiplier=skill_multiplier,
-            weapon_scope_label=self.single_skill_scope_var.get(),
-            equipment_scope_label=self.single_skill_equipment_scope_var.get(),
-            all_weapons=self.all_weapons,
-            current_weapon=current_weapon,
-            equipment_catalog=equipment_catalog,
-            fixed_loadout=self._build_fixed_loadout_selection(),
-            multi_skill_eval=multi_skill_eval,
-        )
+        job, err = prepare_search_job(inputs)
         if err:
             messagebox.showwarning("全量遍历", err, parent=self.app)
             return None
@@ -999,23 +973,11 @@ class DamageCalculatorApp:
         if not weapons:
             self.search_estimate_label.configure(text="预计组合数：当前武器候选为空")
             return
-        char_data = self.char_panel.get_selected_data()
-        skill_name, skill_type, skill_multiplier = self._resolve_selected_skill(char_data)
-        preview_job, err = prepare_single_skill_search_job(
-            char_data=char_data,
-            char_level=self.char_panel.get_level(),
-            weapon_level=self.weapon_panel.get_level(),
-            trust_level=self.char_panel.get_trust_level(),
-            skill_name=skill_name,
-            skill_type=skill_type,
-            skill_multiplier=skill_multiplier,
-            weapon_scope_label=self.single_skill_scope_var.get(),
-            equipment_scope_label=self.single_skill_equipment_scope_var.get(),
-            all_weapons=self.all_weapons,
-            current_weapon=self.weapon_panel.get_selected_data(),
-            equipment_catalog=catalog,
-            fixed_loadout=self._build_fixed_loadout_selection(),
-        )
+        inputs = self._build_search_job_inputs()
+        if inputs is None:
+            self.search_estimate_label.configure(text="预计组合数：请先选择角色和武器")
+            return
+        preview_job, err = prepare_search_job(inputs)
         if err or preview_job is None:
             self.search_estimate_label.configure(text=f"预计组合数：{err or '无法预估'}")
             return
@@ -1073,20 +1035,7 @@ class DamageCalculatorApp:
         """
         top_n = resolve_top_n(self.search_top_n_var.get())
         max_workers = resolve_parallel_workers(self.search_workers_var.get())
-        if job.multi_skill_eval is not None:
-            priority_types = job.multi_skill_eval.priority_skill_types
-        else:
-            priority_types = (str(job.base_context.skill_type or job.skill_label),)
-        config = optimizer_config_for_character(
-            job.char_data,
-            priority_skill_types=priority_types,
-            fixed_loadout=job.fixed_loadout,
-            top_n=top_n,
-            crit_mode="non_crit",
-            allow_duplicate_accessory=True,
-            prune_non_beneficial=True,
-            warn_on_unfiltered=False,
-        )
+        config = optimizer_config_for_search_job(job, top_n=top_n)
         self._search_cancel_token = SearchCancelToken()
         progress_prefix = status_done_prefix
 
@@ -1218,40 +1167,12 @@ class DamageCalculatorApp:
 
     def _confirm_refresh_signature_now(self) -> tuple:
         """当前界面输入对应的确认刷新签名。"""
-        assert self.char_panel is not None and self.weapon_panel is not None
-        char_data = self.char_panel.get_selected_data() or {}
-        weapon_data = self.weapon_panel.get_selected_data() or {}
-        wp = self.weapon_panel
-        return build_confirm_refresh_signature(
-            calculation_mode=self._current_calculation_mode(),
-            char_name=str(char_data.get("名称", "")),
-            char_level=self.char_panel.get_level(),
-            weapon_name=str(weapon_data.get("名称", "")),
-            weapon_level=self.weapon_panel.get_level(),
-            trust_level=self.char_panel.get_trust_level(),
-            skill_levels=(
-                self.char_panel.get_skill_1_level(),
-                self.char_panel.get_skill_2_level(),
-                self.char_panel.get_skill_3_level(),
-            ),
-            weapon_specials=(
-                wp.get_special_ability_1_name(),
-                wp.get_special_ability_1_level(),
-                wp.get_special_ability_2_name(),
-                wp.get_special_ability_2_level(),
-                wp.get_special_ability_3_name(),
-                wp.get_special_ability_3_level(),
-                wp.get_weapon_special_name(),
-                wp.get_weapon_special_level(),
-                wp.get_weapon_special_2_name(),
-                wp.get_weapon_special_2_level(),
-            ),
-            use_manual_multi_skill_counts=bool(self.use_manual_skill_counts_var.get()),
-            multi_skill_manual_counts=self._manual_multi_skill_counts(),
-            preview_scope_label=self.single_skill_scope_var.get(),
-            preview_equipment_scope_label=self.single_skill_equipment_scope_var.get(),
-            fixed_loadout_token=self._build_fixed_loadout_selection().signature_token(),
-        )
+        from gui_design.loadout_state import read_loadout_from_app
+
+        state = read_loadout_from_app(self)
+        if state is None:
+            return ()
+        return state.confirm_refresh_signature()
 
     def _on_confirm(self, *, force: bool = False) -> None:
         """

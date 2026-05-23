@@ -13,7 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from calculation.loadout_optimizer import LoadoutScore, optimizer_config_for_character
+from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig, optimizer_config_for_character
+from calculation.search_controller import optimizer_config_for_search_job
 from calculation.mvp_pipeline import MvpSearchOutcome, run_mvp_search_from_job
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_estimate import (
@@ -75,12 +76,15 @@ def run_exported_single_skill_search(
     job: SingleSkillSearchJob,
     *,
     export_root: Path,
-    config: OptimizerConfig,
+    config: Optional[OptimizerConfig] = None,
+    top_n: int = 10,
     max_workers: int = 1,
     cancel_token: Optional[SearchCancelToken] = None,
     progress_callback: Optional[Callable[[dict], None]] = None,
 ) -> MvpSearchOutcome:
     """在 export_root 下执行续跑搜索并导出 MVP 结果。"""
+    if config is None:
+        config = optimizer_config_for_search_job(job, top_n=top_n)
     db_path = Path(export_root) / "search_runs.db"
     export_dir = Path(export_root) / "mvp_exports"
     return run_mvp_search_from_job(
