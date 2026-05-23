@@ -282,7 +282,7 @@ def resolve_selected_skill_for_damage(
     return ("默认普攻段", 1.0, "未选择技能等级或无可用倍率，按 100% 计算。")
 
 
-# 兼容旧私有名（preview_lines 等仍可能 lazy import property_display）
+# 兼容旧私有名（历史模块名，勿再新增引用）
 _resolve_selected_skill_for_damage = resolve_selected_skill_for_damage
 
 

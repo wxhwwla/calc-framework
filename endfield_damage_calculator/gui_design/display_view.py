@@ -23,10 +23,7 @@ from gui_design.display_lines import (
     build_weapon_attribute_lines,
     evaluate_display_state,
 )
-from gui_design.preview_lines import (
-    build_multi_skill_search_preview_lines,
-    build_single_skill_search_preview_lines,
-)
+from gui_design.loadout_evaluation import build_search_preview_lines
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from gui_design.display_request import DisplayRequest
 from gui_design.loadout_state import LoadoutState, read_loadout_from_panels
@@ -163,17 +160,14 @@ def confirm_from_display_request(
         loadout.trust_level,
         big_font,
         small_font,
+        loadout=loadout,
         calculation_mode=loadout.calculation_mode,
         skill_1_level=s1,
         skill_2_level=s2,
         skill_3_level=s3,
-        multi_skill_manual_counts=loadout.manual_counts,
         enemy_defense=loadout.enemy_defense,
-        use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
         preview_weapon_candidates=list(request.preview_weapon_candidates),
-        preview_scope_label=loadout.weapon_scope_label,
         preview_equipment_catalog=request.equipment_catalog,
-        preview_equipment_scope_label=loadout.equipment_scope_label,
     )
 
 
@@ -255,6 +249,7 @@ def _display_zone_data(
     trust_level: int = 0,
     big_font: Optional[ctk.CTkFont] = None,
     small_font: Optional[ctk.CTkFont] = None,
+    loadout: Optional[LoadoutState] = None,
     calculation_mode: str = "zone_snapshot",
     skill_1_level: int = 0,
     skill_2_level: int = 0,
@@ -310,47 +305,14 @@ def _display_zone_data(
             row_idx += 1
         return
 
-    if calculation_mode == "single_skill_search":
-        for text in build_single_skill_search_preview_lines(
-            char_data=char_data,
-            weapon_data=weapon_data,
-            char_level=char_level,
-            weapon_level=weapon_level,
-            trust_level=trust_level,
-            skill_1_level=skill_1_level,
-            skill_2_level=skill_2_level,
-            skill_3_level=skill_3_level,
+    if (
+        loadout is not None
+        and calculation_mode in ("single_skill_search", "multi_skill_search")
+    ):
+        for text in build_search_preview_lines(
+            loadout,
+            equipment_catalog=preview_equipment_catalog or {},
             preview_weapon_candidates=preview_weapon_candidates,
-            preview_scope_label=preview_scope_label,
-            preview_equipment_catalog=preview_equipment_catalog,
-            preview_equipment_scope_label=preview_equipment_scope_label,
-            enemy_defense=enemy_defense,
-        ):
-            label = ctk.CTkLabel(
-                right_scroll,
-                text=text,
-                font=small_font,
-                text_color="#B8B8B8",
-            )
-            label.grid(row=row_idx, column=0, sticky="w", pady=2)
-            row_idx += 1
-        return
-
-    if calculation_mode == "multi_skill_search":
-        for text in build_multi_skill_search_preview_lines(
-            char_data=char_data,
-            weapon_data=weapon_data,
-            char_level=char_level,
-            weapon_level=weapon_level,
-            trust_level=trust_level,
-            skill_1_level=skill_1_level,
-            skill_2_level=skill_2_level,
-            skill_3_level=skill_3_level,
-            manual_counts=multi_skill_manual_counts,
-            use_manual_counts=use_manual_multi_skill_counts,
-            preview_equipment_catalog=preview_equipment_catalog,
-            preview_equipment_scope_label=preview_equipment_scope_label,
-            enemy_defense=enemy_defense,
         ):
             label = ctk.CTkLabel(
                 right_scroll,

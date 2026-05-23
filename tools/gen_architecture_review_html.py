@@ -9,7 +9,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-# 2026-05 第二轮：#1–#6（search_controller / LoadoutState / display_* / search_controls / GameDataFacade）已落地
+# 2026-05 第一轮+第二轮均已落地；若再生成报告请改 CANDIDATES 为第三轮新接缝
 CANDIDATES = [
     {
         "num": "1",

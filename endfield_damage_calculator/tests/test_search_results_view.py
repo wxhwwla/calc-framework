@@ -5,7 +5,7 @@
 import unittest
 
 from calculation.loadout_optimizer import LoadoutScore
-from gui_design.search_results_view import build_search_results_report_lines
+from gui_design.search_results_lines import build_search_results_report_lines
 
 
 class TestSearchResultsReportLines(unittest.TestCase):

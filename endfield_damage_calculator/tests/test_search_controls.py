@@ -4,7 +4,7 @@
 
 import unittest
 
-from gui_design.search_controls import compose_search_estimate_message
+from gui_design.search_estimate_message import compose_search_estimate_message
 
 
 class TestSearchControls(unittest.TestCase):

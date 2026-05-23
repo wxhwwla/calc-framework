@@ -11,12 +11,7 @@ import pytest
 from calculation.equipment_system import build_runtime_equipment_from_wiki_draft
 
 pytestmark = pytest.mark.integration
-from gui_design.fixed_loadout_controls import (
-    create_fixed_loadout_controls,
-    refresh_all_fixed_slot_menus,
-    refresh_slot_equipment_menu,
-    resolve_fixed_loadout_selection,
-)
+
 from tests.gui_fixtures import ctk_available
 
 
@@ -47,10 +42,24 @@ def _sample_catalog() -> dict:
     }
 
 
-@unittest.skipUnless(ctk_available(), "需要可用的 CustomTkinter / Tcl")
 class TestFixedLoadoutIntegration(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not ctk_available():
+            raise unittest.SkipTest("需要可用的 CustomTkinter / Tcl")
+
     def setUp(self) -> None:
         import customtkinter as ctk
+        from gui_design.fixed_loadout_controls import (
+            create_fixed_loadout_controls,
+            refresh_all_fixed_slot_menus,
+            refresh_slot_equipment_menu,
+            resolve_fixed_loadout_selection,
+        )
+
+        self._refresh_all_fixed_slot_menus = refresh_all_fixed_slot_menus
+        self._refresh_slot_equipment_menu = refresh_slot_equipment_menu
+        self._resolve_fixed_loadout_selection = resolve_fixed_loadout_selection
 
         self.root = ctk.CTk()
         self.root.withdraw()
@@ -74,11 +83,11 @@ class TestFixedLoadoutIntegration(unittest.TestCase):
         self.assertEqual(set(self.slots.keys()), {"chest", "gloves", "accessory_a", "accessory_b"})
 
     def test_resolve_fixed_chest_when_enabled(self) -> None:
-        refresh_all_fixed_slot_menus(self.catalog, self.slots)
+        self._refresh_all_fixed_slot_menus(self.catalog, self.slots)
         binding = self.slots["chest"]
         binding.enabled_var.set(True)
         binding.equipment_var.set("测试胸甲")
-        selection = resolve_fixed_loadout_selection(self.catalog, self.slots)
+        selection = self._resolve_fixed_loadout_selection(self.catalog, self.slots)
         self.assertIsNotNone(selection.chest)
         assert selection.chest is not None
         self.assertEqual(selection.chest.get("名称"), "测试胸甲")
@@ -87,11 +96,11 @@ class TestFixedLoadoutIntegration(unittest.TestCase):
     def test_refresh_slot_picks_first_when_current_invalid(self) -> None:
         binding = self.slots["gloves"]
         binding.enabled_var.set(True)
-        refresh_slot_equipment_menu(binding, self.catalog)
+        self._refresh_slot_equipment_menu(binding, self.catalog)
         self.assertIn(binding.equipment_var.get(), ["散件护手"])
 
     def test_refresh_all_disables_menus_when_slot_off(self) -> None:
-        refresh_all_fixed_slot_menus(self.catalog, self.slots)
+        self._refresh_all_fixed_slot_menus(self.catalog, self.slots)
         binding = self.slots["accessory_a"]
         self.assertEqual(str(binding.set_menu.cget("state")), "disabled")
 

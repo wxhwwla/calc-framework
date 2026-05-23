@@ -4,7 +4,7 @@
 
 import unittest
 
-from gui_design.label_layout import compute_wraplength
+from gui_design.label_wrap import compute_wraplength
 
 
 class TestComputeWraplength(unittest.TestCase):

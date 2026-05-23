@@ -6,8 +6,11 @@ import json
 import unittest
 from pathlib import Path
 
-from gui_design.selection_components import (
-    SpecialAbilityPanel,
+from character_weapon_equipment.weapon_data.special_fields import (
+    bonus_attribute_keys,
+    read_weapon_special_slots,
+)
+from gui_design.weapon_display_text import (
     extract_effect_display_name,
     format_weapon_skill_slider_value,
     format_weapon_skill_title,
@@ -70,7 +73,7 @@ class TestExtractEffectDisplayName(unittest.TestCase):
 class TestBonusAttributeOrder(unittest.TestCase):
     def test_jiancheng_casting_bonus_order(self):
         weapon = _load_weapon_by_name("坚城铸造者")
-        attrs = SpecialAbilityPanel._extract_bonus_attributes(weapon)
+        attrs = bonus_attribute_keys(weapon)[:3]
         self.assertEqual(
             attrs,
             ["智识+", "终结技充能效率+", "攻击力+"],
@@ -78,7 +81,7 @@ class TestBonusAttributeOrder(unittest.TestCase):
 
     def test_jiancheng_weapon_special_field(self):
         weapon = _load_weapon_by_name("坚城铸造者")
-        available, name = SpecialAbilityPanel._parse_weapon_special_field(weapon)
+        available, name = read_weapon_special_slots(weapon)[0][:2]
         self.assertTrue(available)
         self.assertEqual(name, "源石技艺强度+")
 

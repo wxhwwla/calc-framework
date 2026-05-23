@@ -6,7 +6,6 @@ import json
 import os
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -37,17 +36,24 @@ def _load_by_name(path: Path, name: str) -> dict:
     raise KeyError(name)
 
 
+def _sample_catalog() -> dict:
+    row = lambda n, slot: {
+        "名称": n,
+        "装备种类": slot,
+        "部位": slot,
+        "套装": "",
+        "效果": [],
+        "三件套效果": [],
+    }
+    return {
+        "chest": [row("胸甲A", "护甲")],
+        "gloves": [row("护手A", "护手")],
+        "accessories": [row("配件A", "配件")],
+    }
+
+
 class TestSingleSkillSearchPreview(unittest.TestCase):
-    @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_include_top_result(
-        self,
-        mock_get_catalog,
-    ):
-        mock_get_catalog.return_value = {
-            "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
-            "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
-            "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
-        }
+    def test_preview_lines_include_top_result(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_single_skill_search_preview_lines(
@@ -58,21 +64,13 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             skill_1_level=1,
             skill_2_level=0,
             skill_3_level=0,
+            preview_equipment_catalog=_sample_catalog(),
         )
         self.assertTrue(any(line.startswith("计算模式: 单技能遍历(快速预览)") for line in lines))
         self.assertTrue(any(line.startswith("预览组合数:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
-    @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_respect_candidate_scope_and_weapon_list(
-        self,
-        mock_get_catalog,
-    ):
-        mock_get_catalog.return_value = {
-            "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
-            "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
-            "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
-        }
+    def test_preview_lines_respect_candidate_scope_and_weapon_list(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_single_skill_search_preview_lines(
@@ -88,15 +86,24 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
                 WeaponCandidate(name="候选B", final_attack=1200.0),
             ],
             preview_scope_label="同类型全部",
+            preview_equipment_catalog=_sample_catalog(),
         )
         self.assertTrue(any(line.startswith("候选范围: 同类型全部") for line in lines))
         self.assertTrue(any("Top1:" in line and "候选B" in line for line in lines))
 
-    @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_uses_provided_equipment_catalog_without_loading_local_data(
-        self,
-        mock_get_catalog,
-    ):
+    def test_preview_requires_explicit_catalog(self) -> None:
+        char = _load_by_name(_CHARACTERS_JSON, "秋栗")
+        weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
+        lines = build_single_skill_search_preview_lines(
+            char_data=char,
+            weapon_data=weapon,
+            char_level=1,
+            weapon_level=1,
+            skill_1_level=1,
+        )
+        self.assertTrue(any("未提供装备 catalog" in line for line in lines))
+
+    def test_preview_uses_provided_equipment_catalog(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_single_skill_search_preview_lines(
@@ -117,14 +124,13 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             preview_equipment_scope_label="仅散件装备",
         )
         self.assertTrue(any(line.startswith("装备范围: 仅散件装备") for line in lines))
-        self.assertFalse(mock_get_catalog.called)
 
     @pytest.mark.real_data
     @unittest.skipUnless(
         os.environ.get("ENDFIELD_RUN_REAL_DATA_TESTS") == "1",
         "需设置 ENDFIELD_RUN_REAL_DATA_TESTS=1 才跑真数据预览（防误占内存）",
     )
-    def test_preview_with_real_local_equipments_when_available(self):
+    def test_preview_with_real_local_equipments_when_available(self) -> None:
         """真数据契约：显式传入有限 catalog，禁止 preview 内隐式 get_equipments。"""
         equip_path = (
             Path(__file__).resolve().parent.parent
@@ -135,7 +141,6 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         if not equip_path.is_file():
             self.skipTest("无本地 equipments.json")
         rows = json.loads(equip_path.read_text(encoding="utf-8"))
-        # 只取前若干行做三部位切分验证，预览仍走 per_slot=2 采样
         catalog = get_equipment_catalog(
             scope_label="全部装备",
             equipment_rows=rows[:80],

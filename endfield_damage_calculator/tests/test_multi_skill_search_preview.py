@@ -5,7 +5,6 @@
 import json
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 from gui_design.preview_lines import build_multi_skill_search_preview_lines
 
@@ -32,17 +31,16 @@ def _load_by_name(path: Path, name: str) -> dict:
     raise KeyError(name)
 
 
+def _sample_catalog() -> dict:
+    return {
+        "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
+        "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
+        "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
+    }
+
+
 class TestMultiSkillSearchPreview(unittest.TestCase):
-    @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_include_counts_and_top_result(
-        self,
-        mock_get_catalog,
-    ):
-        mock_get_catalog.return_value = {
-            "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
-            "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
-            "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
-        }
+    def test_preview_lines_include_counts_and_top_result(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_multi_skill_search_preview_lines(
@@ -53,21 +51,13 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
             skill_1_level=5,
             skill_2_level=0,
             skill_3_level=0,
+            preview_equipment_catalog=_sample_catalog(),
         )
         self.assertTrue(any(line.startswith("计算模式: 多技能遍历(快速预览)") for line in lines))
         self.assertTrue(any(line.startswith("默认次数:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
-    @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_use_manual_counts_when_provided(
-        self,
-        mock_get_catalog,
-    ):
-        mock_get_catalog.return_value = {
-            "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
-            "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
-            "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
-        }
+    def test_preview_lines_use_manual_counts_when_provided(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_multi_skill_search_preview_lines(
@@ -80,19 +70,11 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
             skill_3_level=0,
             manual_counts={"战技": 2, "连携技": 1, "终结技": 0},
             use_manual_counts=True,
+            preview_equipment_catalog=_sample_catalog(),
         )
         self.assertTrue(any(line.startswith("手动次数:") for line in lines))
 
-    @patch("gui_design.preview_lines.get_equipment_catalog")
-    def test_preview_lines_warn_when_manual_counts_all_zero(
-        self,
-        mock_get_catalog,
-    ):
-        mock_get_catalog.return_value = {
-            "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
-            "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
-            "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
-        }
+    def test_preview_lines_warn_when_manual_counts_all_zero(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_multi_skill_search_preview_lines(
@@ -105,8 +87,21 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
             skill_3_level=0,
             manual_counts={"战技": 0, "连携技": 0, "终结技": 0},
             use_manual_counts=True,
+            preview_equipment_catalog=_sample_catalog(),
         )
         self.assertTrue(any("不能全为0" in line for line in lines))
+
+    def test_preview_requires_explicit_catalog(self) -> None:
+        char = _load_by_name(_CHARACTERS_JSON, "秋栗")
+        weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
+        lines = build_multi_skill_search_preview_lines(
+            char_data=char,
+            weapon_data=weapon,
+            char_level=1,
+            weapon_level=1,
+            skill_1_level=1,
+        )
+        self.assertTrue(any("未提供装备 catalog" in line for line in lines))
 
 
 if __name__ == "__main__":

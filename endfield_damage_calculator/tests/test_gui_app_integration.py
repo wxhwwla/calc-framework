@@ -14,10 +14,11 @@ from tests.gui_fixtures import ctk_available
 pytestmark = pytest.mark.integration
 
 
-@unittest.skipUnless(ctk_available(), "需要可用的 CustomTkinter / Tcl")
 class TestDamageCalculatorAppIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        if not ctk_available():
+            raise unittest.SkipTest("需要可用的 CustomTkinter / Tcl")
         from data.loader import preload_game_data
 
         preload_game_data()

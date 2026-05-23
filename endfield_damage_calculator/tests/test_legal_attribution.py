@@ -5,7 +5,7 @@
 import unittest
 from pathlib import Path
 
-from legal.attribution import (
+from legal.attribution_content import (
     ATTRIBUTION_DIALOG_MINSIZE,
     ATTRIBUTION_DIALOG_SIZE,
     ATTRIBUTION_DOC_URL,

@@ -15,7 +15,7 @@ GUI 主应用模块
 
 依赖模块：
 - customtkinter: GUI 库
-- gui_design.display_view (property_display): 属性与乘区展示
+- gui_design.display_view / display_lines: 属性列与乘区展示
 - data.loader: 数据加载模块
 """
 

@@ -8,16 +8,15 @@ import unittest
 
 import pytest
 
-from gui_design.display_view import confirm_selection
-
 pytestmark = pytest.mark.integration
 from tests.gui_fixtures import build_mock_app, ctk_available, destroy_mock_app_root
 
 
-@unittest.skipUnless(ctk_available(), "需要可用的 CustomTkinter / Tcl")
 class TestPropertyDisplayIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        if not ctk_available():
+            raise unittest.SkipTest("需要可用的 CustomTkinter / Tcl")
         import customtkinter as ctk
 
         cls._root = ctk.CTk()
@@ -42,6 +41,8 @@ class TestPropertyDisplayIntegration(unittest.TestCase):
         destroy_mock_app_root(self.app)
 
     def test_confirm_selection_populates_zone_snapshot(self) -> None:
+        from gui_design.display_view import confirm_selection
+
         confirm_selection(
             self.char_scroll,
             self.weapon_scroll,
@@ -60,6 +61,8 @@ class TestPropertyDisplayIntegration(unittest.TestCase):
         self.assertIn("乘区", joined)
 
     def test_confirm_single_hit_mode(self) -> None:
+        from gui_design.display_view import confirm_selection
+
         confirm_selection(
             self.char_scroll,
             self.weapon_scroll,

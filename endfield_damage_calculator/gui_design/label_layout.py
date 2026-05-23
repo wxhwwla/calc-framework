@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
+from gui_design.label_wrap import compute_wraplength
+
 # 主界面各列建议最小宽度（像素）；布局常量以 gui_layout 为准
 from gui_design.gui_layout import (  # noqa: E402
     ATTR_COLUMN_MINSIZE,
@@ -14,30 +16,6 @@ from gui_design.gui_layout import (  # noqa: E402
 
 # 旧版窄列宽（仅兼容引用，新布局使用底栏）
 CONTROL_COLUMN_MINSIZE = 360
-
-
-def compute_wraplength(
-    container_width: int,
-    *,
-    viewport_width: int | None = None,
-    padding: int = 24,
-    min_wrap: int = 160,
-) -> int:
-    """
-    计算标签 wraplength（像素）。
-
-    CTkScrollableFrame 内层宽度常大于可见列宽；传入 viewport_width 时取二者较小值，
-    使长文案在「计算与搜索」等窄列中仍能换行而非被横向裁切。
-    """
-    effective = container_width
-    if viewport_width is not None and viewport_width > 0:
-        if effective <= 0:
-            effective = viewport_width
-        else:
-            effective = min(effective, viewport_width)
-    if effective <= padding:
-        return min_wrap
-    return max(min_wrap, effective - padding)
 
 
 def _wrap_viewport(container: ctk.CTkBaseClass) -> ctk.CTkBaseClass | None:

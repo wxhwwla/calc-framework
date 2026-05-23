@@ -14,7 +14,18 @@
 """
 
 import math
+import os
 from typing import List, Tuple, Sequence, Optional
+
+
+def _inverse_verbose() -> bool:
+    """调试输出开关：环境变量 INVERSE_FIT_VERBOSE=1。"""
+    return os.environ.get("INVERSE_FIT_VERBOSE", "").strip().lower() in ("1", "true", "yes")
+
+
+def _inv_print(*args: object, **kwargs: object) -> None:
+    if _inverse_verbose():
+        _inv_print(*args, **kwargs)
 
 
 # ==================== 内部辅助函数 ====================
@@ -271,17 +282,17 @@ def fit_attribute_formula(data: Sequence[int | float]) -> Tuple[int | float, int
         raise ValueError(f"数据长度应为90，实际为{len(data)}")
 
     base = data[0]
-    print(f"\n数据长度: 90")
-    print(f"base = {base}")
+    _inv_print(f"\n数据长度: 90")
+    _inv_print(f"base = {base}")
 
     # 缩放数据
     scaled_data, scale_factor = _scale_data(data)
     scaled_base = int(base * scale_factor)
-    print(f"数据类型: {'小数' if scale_factor == 10 else '整数'}")
+    _inv_print(f"数据类型: {'小数' if scale_factor == 10 else '整数'}")
 
     # 计算差分
     diffs = [scaled_data[i] - scaled_data[i-1] for i in range(1, 90)]
-    print(f"差分: 平均={sum(diffs)/len(diffs):.3f}, 最大={max(diffs)}, 最小={min(diffs)}")
+    _inv_print(f"差分: 平均={sum(diffs)/len(diffs):.3f}, 最大={max(diffs)}, 最小={min(diffs)}")
 
     # 查找最佳参数
     params = _find_best_params(
@@ -326,18 +337,18 @@ def fit_skill_formula(data: Sequence[int | float]) -> Tuple[int | float, int | f
     base_data = data[:9]
     base = base_data[0]
 
-    print(f"\nbase = {base}")
+    _inv_print(f"\nbase = {base}")
 
     # 缩放数据
     scaled_base_data, scale_factor = _scale_data(base_data)
     scaled_base = int(base * scale_factor)
-    print(f"数据类型: {'小数' if scale_factor == 10 else '整数'}")
+    _inv_print(f"数据类型: {'小数' if scale_factor == 10 else '整数'}")
 
     # 计算差分
     diffs = [scaled_base_data[i] - scaled_base_data[i-1] for i in range(1, 9)]
     if diffs:
-        print(f"差分(1-9级): 平均={sum(diffs)/len(diffs):.3f}, 最大={max(diffs)}, 最小={min(diffs)}")
-    print(f"特殊值(10-12级): {special_values}")
+        _inv_print(f"差分(1-9级): 平均={sum(diffs)/len(diffs):.3f}, 最大={max(diffs)}, 最小={min(diffs)}")
+    _inv_print(f"特殊值(10-12级): {special_values}")
 
     # 查找最佳参数
     params = _find_best_params(
@@ -368,17 +379,17 @@ def fit_skill_formula_no_special(data: Sequence[int | float]) -> Tuple[int | flo
         raise ValueError(f"技能倍率数据长度应为9，实际为{len(data)}")
 
     base = data[0]
-    print(f"\nbase = {base}")
+    _inv_print(f"\nbase = {base}")
 
     # 计算差分
     diffs = [data[i] - data[i-1] for i in range(1, 9)]
     if diffs:
-        print(f"差分(1-9级): 平均={sum(diffs)/len(diffs):.3f}, 最大={max(diffs)}, 最小={min(diffs)}")
+        _inv_print(f"差分(1-9级): 平均={sum(diffs)/len(diffs):.3f}, 最大={max(diffs)}, 最小={min(diffs)}")
 
     # 缩放数据
     scaled_data, scale_factor = _scale_data(data)
     scaled_base = int(base * scale_factor)
-    print(f"数据类型: {'小数' if scale_factor == 10 else '整数'}")
+    _inv_print(f"数据类型: {'小数' if scale_factor == 10 else '整数'}")
 
     # 首先尝试拟合全部9个数据
     params = _find_best_params(
@@ -390,16 +401,16 @@ def fit_skill_formula_no_special(data: Sequence[int | float]) -> Tuple[int | flo
     )
     
     if params:
-        print(f"\n[OK] 找到完全匹配的参数!")
-        print(f"公式: base + floor((growth * (lv - 1) + offset) / divisor)")
-        print(f"参数: base={base}, growth={params[0]}, divisor={params[1]}, offset={params[2]}")
+        _inv_print(f"\n[OK] 找到完全匹配的参数!")
+        _inv_print(f"公式: base + floor((growth * (lv - 1) + offset) / divisor)")
+        _inv_print(f"参数: base={base}, growth={params[0]}, divisor={params[1]}, offset={params[2]}")
         return (base, params[0], params[1], params[2], [])
 
     # 如果全部9个数据无法拟合，则尝试将第9个作为特殊值
-    print("\n[INFO] 无法拟合全部9个数据，尝试将第9个作为特殊值...")
+    _inv_print("\n[INFO] 无法拟合全部9个数据，尝试将第9个作为特殊值...")
     special_values = [data[8]]
     scaled_base_data = scaled_data[:8]
-    print(f"特殊值(9级): {special_values}")
+    _inv_print(f"特殊值(9级): {special_values}")
 
     # 使用前8级数据拟合
     params = _find_best_params(
@@ -411,9 +422,9 @@ def fit_skill_formula_no_special(data: Sequence[int | float]) -> Tuple[int | flo
     )
     
     assert params is not None, "无法找到合适的公式参数"
-    print(f"\n[OK] 找到完全匹配的参数!")
-    print(f"公式: base + floor((growth * (lv - 1) + offset) / divisor)")
-    print(f"参数: base={base}, growth={params[0]}, divisor={params[1]}, offset={params[2]}")
+    _inv_print(f"\n[OK] 找到完全匹配的参数!")
+    _inv_print(f"公式: base + floor((growth * (lv - 1) + offset) / divisor)")
+    _inv_print(f"参数: base={base}, growth={params[0]}, divisor={params[1]}, offset={params[2]}")
     return (base, params[0], params[1], params[2], special_values)
 
 

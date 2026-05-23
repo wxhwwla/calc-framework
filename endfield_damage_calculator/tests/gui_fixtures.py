@@ -203,13 +203,21 @@ def destroy_mock_app_root(app: SimpleNamespace) -> None:
         app.app.destroy()
 
 
+_CTK_AVAILABLE: bool | None = None
+
+
 def ctk_available() -> bool:
+    """探测 Tcl/CTk 是否可用（结果缓存，避免每个集成文件重复初始化）。"""
+    global _CTK_AVAILABLE
+    if _CTK_AVAILABLE is not None:
+        return _CTK_AVAILABLE
     try:
         import customtkinter as ctk
 
         root = ctk.CTk()
         root.withdraw()
         root.destroy()
-        return True
+        _CTK_AVAILABLE = True
     except Exception:
-        return False
+        _CTK_AVAILABLE = False
+    return _CTK_AVAILABLE

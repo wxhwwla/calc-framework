@@ -19,11 +19,7 @@ from calculation.multi_skill_optimizer import (
 )
 from calculation.multi_skill_search_eval import build_skill_scenarios_from_levels
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from data.equipment_catalog import (
-    catalog_preview_status_lines,
-    get_equipment_catalog,
-    sample_equipment_catalog,
-)
+from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 from calculation.preview_cache import cached_preview, sync_preview_dependencies
 
 
@@ -103,10 +99,12 @@ def _build_single_skill_search_preview_lines_impl(
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
 ) -> list[str]:
-    if preview_equipment_catalog is None:
-        catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
-    else:
-        catalog = preview_equipment_catalog
+    if not preview_equipment_catalog:
+        return [
+            "计算模式: 单技能遍历(快速预览)",
+            "错误: 未提供装备 catalog，请通过 GameDataFacade 传入后再预览。",
+        ]
+    catalog = preview_equipment_catalog
     blocked = catalog_preview_status_lines(
         catalog, mode_label="单技能遍历(快速预览)"
     )
@@ -244,10 +242,12 @@ def _build_multi_skill_search_preview_lines_impl(
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
 ) -> list[str]:
-    if preview_equipment_catalog is None:
-        catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
-    else:
-        catalog = preview_equipment_catalog
+    if not preview_equipment_catalog:
+        return [
+            "计算模式: 多技能遍历(快速预览)",
+            "错误: 未提供装备 catalog，请通过 GameDataFacade 传入后再预览。",
+        ]
+    catalog = preview_equipment_catalog
     blocked = catalog_preview_status_lines(
         catalog, mode_label="多技能遍历(快速预览)"
     )

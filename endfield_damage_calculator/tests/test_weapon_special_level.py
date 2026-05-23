@@ -7,7 +7,7 @@ import unittest
 from calculation.multiplicative_zones.ability_bonus_zone import (
     calculate_ability_bonus_with_details,
 )
-from gui_design.selection_components import SpecialAbilityPanel
+from character_weapon_equipment.weapon_data.special_fields import read_weapon_special_slots
 
 
 class TestWeaponSpecialLevel(unittest.TestCase):
@@ -17,14 +17,10 @@ class TestWeaponSpecialLevel(unittest.TestCase):
         }
         without = {"特殊能力1": [False]}
 
-        self.assertEqual(
-            SpecialAbilityPanel._parse_weapon_special_field(with_special),
-            (True, "源石技艺强度+"),
-        )
-        self.assertEqual(
-            SpecialAbilityPanel._parse_weapon_special_field(without),
-            (False, ""),
-        )
+        enabled, name = read_weapon_special_slots(with_special)[0][:2]
+        self.assertEqual((enabled, name), (True, "源石技艺强度+"))
+        enabled2, name2 = read_weapon_special_slots(without)[0][:2]
+        self.assertEqual((enabled2, name2), (False, ""))
 
     def test_ws_level_zero_skips_field_bonus(self):
         char = {

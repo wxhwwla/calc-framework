@@ -12,17 +12,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gui_design.enhancement_controls import (
-    apply_preset_to_app,
-    build_preset_from_app,
-    get_app_calculation_history,
-    place_enhancement_section,
-    record_calculation_history,
-    refresh_damage_snapshot,
-    show_calculation_history_dialog,
-    show_damage_dashboard_dialog,
-    show_preset_compare_dialog,
-)
 from gui_design.loadout_preset import export_preset_json
 from tests.gui_fixtures import (
     build_mock_app,
@@ -34,10 +23,11 @@ from tests.gui_fixtures import (
 pytestmark = pytest.mark.integration
 
 
-@unittest.skipUnless(ctk_available(), "需要可用的 CustomTkinter / Tcl")
 class TestEnhancementIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        if not ctk_available():
+            raise unittest.SkipTest("需要可用的 CustomTkinter / Tcl")
         import customtkinter as ctk
 
         cls._root = ctk.CTk()
@@ -48,20 +38,23 @@ class TestEnhancementIntegration(unittest.TestCase):
         cls._root.destroy()
 
     def setUp(self) -> None:
+        from gui_design import enhancement_controls as ec
+
+        self._ec = ec
         self.app = build_mock_app(root=self._root)
 
     def tearDown(self) -> None:
         destroy_mock_app_root(self.app)
 
     def test_build_preset_from_app_roundtrip_fields(self) -> None:
-        preset = build_preset_from_app(self.app)
+        preset = self._ec.build_preset_from_app(self.app)
         self.assertEqual(preset.char_name, "秋栗")
         self.assertEqual(preset.weapon_name, "坚城铸造者")
         self.assertEqual(preset.skill_levels[0], 1)
 
     def test_record_and_restore_history(self) -> None:
-        record_calculation_history(self.app, summary="集成测试")
-        history = get_app_calculation_history(self.app)
+        self._ec.record_calculation_history(self.app, summary="集成测试")
+        history = self._ec.get_app_calculation_history(self.app)
         self.assertEqual(len(history.list_entries()), 1)
         snap = history.get_snapshot(0)
         self.assertIsNotNone(snap)
@@ -69,7 +62,7 @@ class TestEnhancementIntegration(unittest.TestCase):
         self.assertEqual(snap["char_name"], "秋栗")
 
     def test_refresh_damage_snapshot_stores_on_app(self) -> None:
-        refresh_damage_snapshot(self.app)
+        self._ec.refresh_damage_snapshot(self.app)
         self.assertIsNotNone(getattr(self.app, "_last_damage_snapshot", None))
         self.assertGreater(self.app._last_damage_snapshot.weighted_total_damage, 0)
 
@@ -85,9 +78,9 @@ class TestEnhancementIntegration(unittest.TestCase):
             skills=(1, 0, 0),
         )
         self.app.char_panel.list_c_w = [self.app.char_panel._data, chen]
-        preset_dict = json.loads(export_preset_json(build_preset_from_app(self.app)))
+        preset_dict = json.loads(export_preset_json(self._ec.build_preset_from_app(self.app)))
         preset_dict["char_name"] = "陈千语"
-        apply_preset_to_app(self.app, LoadoutPreset.from_dict(preset_dict))
+        self._ec.apply_preset_to_app(self.app, LoadoutPreset.from_dict(preset_dict))
         self.assertEqual(self.app.char_panel.get_selected_data()["名称"], "陈千语")
         self.assertGreater(self.app._schedule_confirm_calls, 0)
 
@@ -103,7 +96,7 @@ class TestEnhancementIntegration(unittest.TestCase):
             widget.grid(row=row, column=0)
             return row + 1
 
-        place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
+        self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
         self.assertIn("多方案对比", buttons)
         self.assertIn("伤害仪表盘", buttons)
 
@@ -123,16 +116,16 @@ class TestEnhancementIntegration(unittest.TestCase):
                             "matplotlib.backends.backend_tkagg.FigureCanvasTkAgg",
                             MagicMock(),
                         ):
-                            show_damage_dashboard_dialog(self.app)
+                            self._ec.show_damage_dashboard_dialog(self.app)
         mock_mb.showinfo.assert_not_called()
 
     @patch("gui_design.enhancement_controls.filedialog.askopenfilenames", return_value=())
     def test_preset_compare_cancelled_on_empty_paths(self, _mock_fd: MagicMock) -> None:
-        show_preset_compare_dialog(self.app)
+        self._ec.show_preset_compare_dialog(self.app)
 
     def test_preset_compare_with_two_json_files(self) -> None:
-        preset_a = build_preset_from_app(self.app)
-        preset_b = build_preset_from_app(self.app)
+        preset_a = self._ec.build_preset_from_app(self.app)
+        preset_b = self._ec.build_preset_from_app(self.app)
         preset_b_dict = json.loads(export_preset_json(preset_b))
         preset_b_dict["note"] = "方案B"
         from gui_design.loadout_preset import LoadoutPreset
@@ -151,7 +144,7 @@ class TestEnhancementIntegration(unittest.TestCase):
                     mock_top.return_value = MagicMock()
                     with patch("gui_design.enhancement_controls.ctk.CTkScrollableFrame"):
                         with patch("gui_design.enhancement_controls.ctk.CTkLabel"):
-                            show_preset_compare_dialog(self.app)
+                            self._ec.show_preset_compare_dialog(self.app)
 
     def test_history_dialog_empty(self) -> None:
         with patch("gui_design.enhancement_controls.ctk.CTkToplevel") as mock_top:
@@ -159,7 +152,7 @@ class TestEnhancementIntegration(unittest.TestCase):
             mock_top.return_value = dialog
             with patch("gui_design.enhancement_controls.ctk.CTkScrollableFrame"):
                 with patch("gui_design.enhancement_controls.ctk.CTkLabel") as mock_label:
-                    show_calculation_history_dialog(self.app)
+                    self._ec.show_calculation_history_dialog(self.app)
                     mock_label.assert_called()
 
 
