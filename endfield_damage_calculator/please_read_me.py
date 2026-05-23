@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.15.8"
+_VERSION = "1.15.9"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -209,17 +209,9 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 3 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
-# - 变更 "docs/MVP/346/220/234/347/264/242/351/252/214/346/224/266/350/257/264/346/230/216.md"
-# - 更新文档 CONTEXT.md
-# - 更新文档 README.md
-# - 更新文档 endfield_damage_calculator/README.md
-# - 修改 endfield_damage_calculator/gui_design/confirm_refresh.py
-# - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/main.py
-# - 修改 endfield_damage_calculator/tests/test_confirm_refresh.py
+# - 变更 .github/ISSUE_TEMPLATE/
+# - 更新文档 docs/agents/issue-tracker.md
+# - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---

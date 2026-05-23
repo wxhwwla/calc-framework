@@ -1,0 +1,106 @@
+name: Bug 报告
+description: 报告计算器、全量搜索或 GUI 中的异常行为
+title: "[Bug]: "
+labels:
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请尽量填写完整，便于复现与定位。若涉及全量搜索，请说明是否开启「使用手动次数」、固定配装勾选情况。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 描述 Bug
+      description: 清晰简洁地描述问题是什么。
+      placeholder: 例如：最小化窗口恢复后，右侧乘区会先空白再刷新。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 按顺序列出操作，他人可按此复现。
+      placeholder: |
+        1. 启动 `python main.py`
+        2. 选择角色「…」、武器「…」
+        3. 点击「…」
+        4. 看到 …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 正常情况下应该发生什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 实际发生了什么？与期望的差异？
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 截图 / 日志
+      description: 粘贴终端报错、弹窗文案，或拖拽上传截图。
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 相关区域
+      options:
+        - GUI 布局 / 显示
+        - 乘区 / 单段伤害计算
+        - 全量遍历 / MVP 搜索
+        - 多技能预览 / 加权总伤
+        - 数据加载（角色/武器/装备 JSON）
+        - 打包 / 发布 exe
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      placeholder: "Windows 11 23H2"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python 版本
+      placeholder: "3.12.3"
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: 项目版本
+      description: 窗口标题中的版本号，或 `please_read_me._VERSION` / commit hash
+      placeholder: "v1.15.8"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: extras
+    attributes:
+      label: 补充信息（可选）
+      options:
+        - label: 仅开发环境（`python main.py`）可复现
+        - label: 打包 exe 也可复现
+        - label: 我已阅读 [`docs/操作指令集.md`](docs/操作指令集.md) 中相关说明
