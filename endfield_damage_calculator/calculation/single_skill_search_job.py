@@ -12,6 +12,7 @@ from calculation.damage_engine import DamageContext
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.loadout_optimizer import WeaponCandidate
 from calculation.loadout_slot_search import FixedLoadoutSelection
+from calculation.multi_skill_search_eval import MultiSkillSearchEval
 from data.equipment_catalog import catalog_full_search_error
 
 
@@ -32,6 +33,7 @@ class SingleSkillSearchJob:
     equipment_catalog: dict[str, list[dict[str, Any]]]
     weapon_data_by_name: dict[str, dict[str, Any]]
     run_signature: str
+    multi_skill_eval: Optional[MultiSkillSearchEval] = None
 
 
 def build_weapon_candidates(
@@ -86,6 +88,7 @@ def build_run_signature(
     weapon_scope_label: str,
     equipment_scope_label: str,
     fixed_loadout: FixedLoadoutSelection,
+    multi_skill_token: str = "",
 ) -> str:
     """
     生成续跑用 run_signature（写入 search_runs.db）。
@@ -97,7 +100,7 @@ def build_run_signature(
         f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
         f"{skill_name}-w{weapon_count}-e{chest_count}-"
         f"{weapon_scope_label}-{equipment_scope_label}-"
-        f"{fixed_loadout.signature_token()}"
+        f"{fixed_loadout.signature_token()}-{multi_skill_token}"
     )
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:16]
 
@@ -117,6 +120,7 @@ def prepare_single_skill_search_job(
     all_weapons: list[dict[str, Any]],
     current_weapon: dict[str, Any],
     equipment_catalog: dict[str, list[dict[str, Any]]],
+    multi_skill_eval: Optional[MultiSkillSearchEval] = None,
 ) -> tuple[Optional[SingleSkillSearchJob], Optional[str]]:
     """
     组装搜索作业。
@@ -139,6 +143,7 @@ def prepare_single_skill_search_job(
     if not weapon_candidates:
         return None, "当前武器/装备候选范围下无可用武器。"
 
+    multi_token = multi_skill_eval.signature_token() if multi_skill_eval else ""
     run_signature = build_run_signature(
         char_data=char_data,
         char_level=char_level,
@@ -150,16 +155,18 @@ def prepare_single_skill_search_job(
         weapon_scope_label=weapon_scope_label,
         equipment_scope_label=equipment_scope_label,
         fixed_loadout=fixed_loadout or FixedLoadoutSelection(),
+        multi_skill_token=multi_token,
     )
     weapon_data_by_name = {
         str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
     }
+    display_skill = multi_skill_eval.display_label if multi_skill_eval else skill_name
     job = SingleSkillSearchJob(
         char_data=char_data,
         char_level=char_level,
         weapon_level=weapon_level,
         trust_level=trust_level,
-        skill_label=skill_name,
+        skill_label=display_skill,
         weapon_scope=weapon_scope_label,
         equipment_scope=equipment_scope_label,
         fixed_loadout=fixed_loadout or FixedLoadoutSelection(),
@@ -173,6 +180,7 @@ def prepare_single_skill_search_job(
         equipment_catalog=equipment_catalog,
         weapon_data_by_name=weapon_data_by_name,
         run_signature=run_signature,
+        multi_skill_eval=multi_skill_eval,
     )
     return job, None
 

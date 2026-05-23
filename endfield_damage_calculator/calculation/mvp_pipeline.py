@@ -19,6 +19,7 @@ from calculation.result_export import export_search_outputs
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_eval_context import SearchEvalContext
 from calculation.search_session import run_search_session
+from calculation.search_task_evaluator import make_loadout_task_evaluator
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.single_skill_search_job import SingleSkillSearchJob
 
@@ -54,6 +55,9 @@ def run_mvp_search_from_job(
         trust_level=job.trust_level,
         weapon_data_by_name=job.weapon_data_by_name,
     )
+    task_evaluator = make_loadout_task_evaluator(
+        job, crit_mode=config.crit_mode, search_eval=search_eval
+    )
     session = run_search_session(
         db_path=db_path,
         run_signature=job.run_signature,
@@ -65,6 +69,7 @@ def run_mvp_search_from_job(
         cancel_token=cancel_token,
         progress_callback=progress_callback,
         search_eval=search_eval,
+        task_evaluator=task_evaluator,
     )
     exports = export_search_outputs(
         scores=session.top_results,

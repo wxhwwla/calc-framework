@@ -37,6 +37,7 @@ from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import WeaponCandidate, optimizer_config_for_character
 from calculation.mvp_pipeline import MvpSearchOutcome
 from calculation.search_cancel import SearchCancelToken
+from calculation.multi_skill_search_eval import build_multi_skill_search_eval
 from calculation.single_skill_search_job import (
     SingleSkillSearchJob,
     build_weapon_candidates,
@@ -636,7 +637,7 @@ class DamageCalculatorApp:
         _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
 
         sr = 0
-        sr = _section(search, "单技能全量遍历", sr)
+        sr = _section(search, "全量遍历", sr)
         sr = _place(
             search,
             sr,
@@ -856,6 +857,18 @@ class DamageCalculatorApp:
             return None
 
         equipment_catalog = self._single_skill_preview_equipment_catalog()
+        multi_skill_eval = None
+        if bool(self.use_manual_skill_counts_var.get()):
+            multi_skill_eval, ms_err = build_multi_skill_search_eval(
+                char_data,
+                skill_1_level=self.char_panel.get_skill_1_level(),
+                skill_2_level=self.char_panel.get_skill_2_level(),
+                skill_3_level=self.char_panel.get_skill_3_level(),
+                manual_counts=self._manual_multi_skill_counts(),
+            )
+            if ms_err:
+                messagebox.showwarning("全量遍历", ms_err, parent=self.app)
+                return None
         job, err = prepare_single_skill_search_job(
             char_data=char_data,
             char_level=char_level,
@@ -870,6 +883,7 @@ class DamageCalculatorApp:
             current_weapon=current_weapon,
             equipment_catalog=equipment_catalog,
             fixed_loadout=self._build_fixed_loadout_selection(),
+            multi_skill_eval=multi_skill_eval,
         )
         if err:
             messagebox.showwarning("全量遍历", err, parent=self.app)
@@ -994,6 +1008,7 @@ class DamageCalculatorApp:
         export_paths: Optional[Dict[str, str]] = None,
     ) -> None:
         """在独立大窗口展示 Top 配装与导出路径。"""
+        damage_metric = "加权总伤" if job.multi_skill_eval is not None else "伤害"
         lines = build_search_results_report_lines(
             mode_label=mode_label,
             skill_label=str(job.skill_label),
@@ -1003,6 +1018,7 @@ class DamageCalculatorApp:
             top_results=outcome.top_results,
             export_paths=export_paths,
             cancelled=bool(outcome.cancelled),
+            damage_metric=damage_metric,
         )
         show_search_results_dialog(self.app, title=mode_label, lines=lines)
 
@@ -1023,10 +1039,13 @@ class DamageCalculatorApp:
         """
         top_n = resolve_top_n(self.search_top_n_var.get())
         max_workers = resolve_parallel_workers(self.search_workers_var.get())
-        skill_type = str(job.base_context.skill_type or job.skill_label)
+        if job.multi_skill_eval is not None:
+            priority_types = job.multi_skill_eval.priority_skill_types
+        else:
+            priority_types = (str(job.base_context.skill_type or job.skill_label),)
         config = optimizer_config_for_character(
             job.char_data,
-            priority_skill_types=(skill_type,),
+            priority_skill_types=priority_types,
             fixed_loadout=job.fixed_loadout,
             top_n=top_n,
             crit_mode="non_crit",
@@ -1119,8 +1138,13 @@ class DamageCalculatorApp:
             ):
                 return
         export_root = allocate_search_run_directory(purpose="full_search")
+        mode_label = (
+            "多技能加权全量遍历"
+            if job.multi_skill_eval is not None
+            else "单技能全量遍历"
+        )
         self._start_search_worker(
-            mode_label="单技能全量遍历",
+            mode_label=mode_label,
             export_root=export_root,
             job=job,
             status_running="全量遍历：计算中，请稍候…",

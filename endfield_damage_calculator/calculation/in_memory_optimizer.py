@@ -29,6 +29,9 @@ def run_enumerated_optimizer_parallel(
     cancel_token: Optional[SearchCancelToken] = None,
     progress_callback: Optional[Callable[[dict], None]] = None,
     search_eval: Optional[SearchEvalContext] = None,
+    task_evaluator: Optional[
+        Callable[[tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]], LoadoutScore]
+    ] = None,
 ) -> tuple[tuple[LoadoutScore, ...], int, int, bool, tuple[str, ...]]:
     """
     枚举全部配装任务并在内存中保留 TopN。
@@ -45,6 +48,8 @@ def run_enumerated_optimizer_parallel(
         return (), 0, 0, False, warnings
 
     def evaluator(task):
+        if task_evaluator is not None:
+            return task_evaluator(task)
         return evaluate_task(
             base_context=base_context,
             crit_mode=config.crit_mode,

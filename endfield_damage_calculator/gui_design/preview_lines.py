@@ -17,6 +17,7 @@ from calculation.multi_skill_optimizer import (
     SkillScenario,
     optimize_multi_skill_loadouts,
 )
+from calculation.multi_skill_search_eval import build_skill_scenarios_from_levels
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from data.equipment_catalog import (
     catalog_preview_status_lines,
@@ -24,29 +25,6 @@ from data.equipment_catalog import (
     sample_equipment_catalog,
 )
 from gui_design.property_display import _resolve_selected_skill_for_damage
-
-
-def _skill_multiplier_from_curve(
-    char_data: Dict[str, Any],
-    field_name: str,
-    level: int,
-) -> float:
-    """从技能曲线读取第一段倍率（小数）。"""
-    if level <= 0:
-        return 0.0
-    segments = char_data.get(field_name)
-    if not isinstance(segments, list) or not segments:
-        return 0.0
-    first_segment = segments[0]
-    if not isinstance(first_segment, list) or not first_segment:
-        return 0.0
-    idx = level - 1
-    if not (0 <= idx < len(first_segment)):
-        return 0.0
-    value = first_segment[idx]
-    if value is None:
-        return 0.0
-    return float(value) / 100.0
 
 
 def build_single_skill_search_preview_lines(
@@ -157,16 +135,12 @@ def build_multi_skill_search_preview_lines(
     if blocked:
         return blocked
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
-    multipliers = {
-        "战技": _skill_multiplier_from_curve(char_data, "战技倍率", skill_1_level),
-        "连携技": _skill_multiplier_from_curve(char_data, "连携技倍率", skill_2_level),
-        "终结技": _skill_multiplier_from_curve(char_data, "终结技倍率", skill_3_level),
-    }
-    scenarios = [
-        SkillScenario(skill_name=name, skill_multiplier=val, skill_type=name)
-        for name, val in multipliers.items()
-        if val > 0
-    ]
+    scenarios = build_skill_scenarios_from_levels(
+        char_data,
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
+    )
     if not scenarios:
         scenarios = [SkillScenario(skill_name="战技", skill_multiplier=1.0, skill_type="战技")]
         selected_skill = "战技"

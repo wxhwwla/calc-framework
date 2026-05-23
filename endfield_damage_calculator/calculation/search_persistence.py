@@ -272,6 +272,7 @@ def execute_search_with_resume(
     cancel_token: Optional[SearchCancelToken] = None,
     progress_callback: Optional[Callable[[dict], None]] = None,
     search_eval: Optional[SearchEvalContext] = None,
+    task_evaluator: Optional[Callable[[OptimizerTask], LoadoutScore]] = None,
 ) -> ResumeExecutionResult:
     """执行可续跑搜索：自动跳过已处理组合。"""
     store = SearchRunStore(db_path)
@@ -296,6 +297,8 @@ def execute_search_with_resume(
     started_at = time.perf_counter()
 
     def _evaluate(task: OptimizerTask) -> LoadoutScore:
+        if task_evaluator is not None:
+            return task_evaluator(task)
         return evaluate_task(
             base_context=base_context,
             crit_mode=config.crit_mode,

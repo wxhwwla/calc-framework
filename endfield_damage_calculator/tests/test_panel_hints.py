@@ -8,13 +8,11 @@ from gui_design.panel_hints import MULTI_SKILL_COUNTS_HINT
 
 
 class TestPanelHints(unittest.TestCase):
-    def test_multi_skill_hint_explains_mode_confirm_and_manual_switch(self):
+    def test_multi_skill_hint_explains_manual_switch_and_full_search(self):
         hint = MULTI_SKILL_COUNTS_HINT
-        self.assertIn("多技能遍历(快速预览)", hint)
-        self.assertIn("确认选择", hint)
         self.assertIn("使用手动次数", hint)
+        self.assertIn("全量遍历", hint)
         self.assertIn("技能等级", hint)
-        self.assertNotIn("左侧等级", hint)
 
 
 if __name__ == "__main__":

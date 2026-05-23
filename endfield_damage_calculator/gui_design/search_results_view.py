@@ -17,10 +17,12 @@ DEFAULT_DIALOG_WIDTH = 920
 DEFAULT_DIALOG_HEIGHT = 720
 
 
-def _format_top_result_line(rank: int, score: LoadoutScore) -> str:
+def _format_top_result_line(
+    rank: int, score: LoadoutScore, *, damage_metric: str = "伤害"
+) -> str:
     loadout = score.loadout_names
     return (
-        f"Top{rank}: 武器 {score.weapon_name}  伤害 {score.final_damage:.1f}\n"
+        f"Top{rank}: 武器 {score.weapon_name}  {damage_metric} {score.final_damage:.1f}\n"
         f"       护甲 {loadout.get('chest', '')}  |  "
         f"护手 {loadout.get('gloves', '')}  |  "
         f"配件A {loadout.get('accessory_a', '')}  |  "
@@ -38,6 +40,7 @@ def build_search_results_report_lines(
     top_results: Sequence[LoadoutScore],
     export_paths: Optional[dict[str, str]] = None,
     cancelled: bool = False,
+    damage_metric: str = "伤害",
 ) -> list[str]:
     """生成全量遍历结果报告（供弹窗与测试使用）。"""
     weapon_scope, equip_scope = scope_labels
@@ -59,7 +62,7 @@ def build_search_results_report_lines(
     else:
         lines.append("—— Top 配装 ——")
         for idx, score in enumerate(top_results, start=1):
-            lines.append(_format_top_result_line(idx, score))
+            lines.append(_format_top_result_line(idx, score, damage_metric=damage_metric))
     if export_paths:
         lines.append("")
         lines.append("—— 导出文件 ——")

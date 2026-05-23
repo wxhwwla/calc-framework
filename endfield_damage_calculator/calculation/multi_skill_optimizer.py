@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-多技能快速预览用的加权总伤（非全量产品化路径）。
+多技能加权总伤：快速预览与全量遍历（手动次数）共用评分语义。
 
-总伤 = Σ(单技能单次伤害 × GUI 填写的释放次数)；与全量搜索共用配装枚举，但不做 SQLite 续跑。
+总伤 = Σ(单技能单次伤害 × GUI 填写的释放次数)。
 """
 
 from __future__ import annotations
@@ -11,12 +11,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from calculation.damage_engine import DamageContext, DamageEffect, calculate_single_hit_damage
+from calculation.damage_engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from calculation.equipment_affix import aggregate_loadout_modifiers
 from calculation.loadout_optimizer import (
+    LoadoutScore,
     OptimizerConfig,
+    OptimizerTask,
     WeaponCandidate,
     enumerate_optimizer_tasks,
 )
+from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.search_eval_context import SearchEvalContext
 from calculation.equipment_prune import character_ability_attrs
 from calculation.equipment_system import build_four_slot_loadout, collect_loadout_effects
 
@@ -172,4 +177,85 @@ def optimize_multi_skill_loadouts(
         top_results=top,
         skill_count_map=count_map,
         total_combinations=total_combinations,
+    )
+
+
+def evaluate_multi_skill_task(
+    *,
+    shared_context: DamageContext,
+    crit_mode: CritMode,
+    task: OptimizerTask,
+    scenarios: tuple[SkillScenario, ...],
+    skill_counts: dict[str, int],
+    search_eval: Optional[SearchEvalContext] = None,
+) -> LoadoutScore:
+    """
+    评估单条配装的多技能加权总伤（供全量并行/续跑搜索）。
+
+    ``LoadoutScore.final_damage`` 为 Σ(单段伤害 × 次数)。
+    """
+    weapon, (chest, glove, acc_a, acc_b) = task
+    loadout = build_four_slot_loadout(
+        chest=chest,
+        gloves=glove,
+        accessory_a=acc_a,
+        accessory_b=acc_b,
+        allow_duplicate_accessory=True,
+    )
+    equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+    effects = list(weapon.effects) + equip_effects
+    final_attack = weapon.final_attack
+    if search_eval is not None:
+        weapon_data = search_eval.weapon_data_by_name.get(weapon.name)
+        if weapon_data is not None:
+            details = calculate_final_attack_with_details(
+                character=search_eval.char_data,
+                weapon=weapon_data,
+                char_level=search_eval.char_level,
+                weapon_level=search_eval.weapon_level,
+                trust_level=search_eval.trust_level,
+                equipment_stat_bonus=flat_stats,
+                equipment_attack_percent=atk_percent,
+            )
+            final_attack = float(details["final_attack"])
+
+    weighted_total = 0.0
+    for scenario in scenarios:
+        count = max(0, int(skill_counts.get(scenario.skill_name, 0)))
+        if count <= 0:
+            continue
+        ctx = DamageContext(
+            final_attack=final_attack,
+            skill_multiplier=scenario.skill_multiplier,
+            damage_type=shared_context.damage_type,
+            skill_type=scenario.skill_type or shared_context.skill_type,
+            is_unbalanced=shared_context.is_unbalanced,
+            is_true_damage=shared_context.is_true_damage,
+            enemy_defense=shared_context.enemy_defense,
+            enemy_resistance=shared_context.enemy_resistance,
+            ignore_resistance=shared_context.ignore_resistance,
+            imbalance_vulnerability_coeff=shared_context.imbalance_vulnerability_coeff,
+            crit_rate=shared_context.crit_rate,
+            crit_damage=shared_context.crit_damage,
+            damage_type_bonus=shared_context.damage_type_bonus,
+            skill_type_bonus=shared_context.skill_type_bonus,
+            imbalance_damage_bonus=shared_context.imbalance_damage_bonus,
+            other_damage_bonus=shared_context.other_damage_bonus,
+        )
+        dmg = calculate_single_hit_damage(
+            ctx,
+            effects=effects + list(scenario.external_effects),
+            crit_mode=crit_mode,
+        ).final_damage
+        weighted_total += dmg * count
+
+    return LoadoutScore(
+        weapon_name=weapon.name,
+        final_damage=weighted_total,
+        loadout_names={
+            "chest": chest.get("名称", ""),
+            "gloves": glove.get("名称", ""),
+            "accessory_a": acc_a.get("名称", ""),
+            "accessory_b": acc_b.get("名称", ""),
+        },
     )

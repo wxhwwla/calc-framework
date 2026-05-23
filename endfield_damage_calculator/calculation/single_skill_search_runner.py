@@ -43,13 +43,16 @@ def estimate_single_skill_search(
     top_n: int,
 ) -> SingleSkillSearchEstimate:
     """根据作业计算预计组合数/耗时文案。"""
-    skill_type = str(job.base_context.skill_type or job.skill_label)
+    if job.multi_skill_eval is not None:
+        priority_types = job.multi_skill_eval.priority_skill_types
+    else:
+        priority_types = (str(job.base_context.skill_type or job.skill_label),)
     workload = preview_search_workload(
         weapons=list(job.weapon_candidates),
         equipment_catalog=job.equipment_catalog,
         config=optimizer_config_for_character(
             job.char_data,
-            priority_skill_types=(skill_type,),
+            priority_skill_types=priority_types,
             fixed_loadout=job.fixed_loadout,
             top_n=top_n,
             warn_on_unfiltered=False,
