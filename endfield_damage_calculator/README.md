@@ -168,7 +168,7 @@ pip install -e ".[build]"
 python build.py
 ```
 
-打包前会检查 PyInstaller 与 matplotlib；Windows 上通过 `pyinstaller_entry` 规避 WMI 卡死。产物内仪表盘无需用户另装 matplotlib。
+打包前会检查 PyInstaller 与 matplotlib；Windows 上通过 `pyinstaller_entry` 规避 WMI 卡死；各 GUI 子模块 import CTk 前亦打补丁。默认 20 分钟超时 + 15 秒心跳（见 `docs/操作指令集.md` §7）。产物内仪表盘无需用户另装 matplotlib。
 
 产物为 **`dist/终末地伤害计算器/` 文件夹**（onedir）：exe 与 `characters.json` / `weapons.json`、`DATA_LICENSE` 等同目录分发，符合软件与数据许可分离。请整夹分发，勿只发 exe。详见 [`docs/操作指令集.md`](../docs/操作指令集.md) §7。
 

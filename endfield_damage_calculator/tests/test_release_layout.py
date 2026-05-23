@@ -46,9 +46,11 @@ class TestReleaseLayout(unittest.TestCase):
     def test_release_readme_mentions_search_output_and_parallel_workers(self):
         from release_bundle.release_layout import _release_readme_text
 
-        text = _release_readme_text()
+        text = _release_readme_text(exe_version="0.4.0-beta", package_version="1.17.0")
         self.assertIn("search_output", text)
         self.assertIn("并行线程", text)
+        self.assertIn("EXE v0.4.0-beta", text)
+        self.assertIn("build.py", text)
 
     def test_stage_release_folder_copies_json_and_licenses(self):
         repo_root = _PKG.parent

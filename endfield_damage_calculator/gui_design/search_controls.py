@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
+# Windows：PyInstaller 会单独 import 本模块，须在 CTk 之前打 WMI 补丁
 apply_platform_win32_patch()
 import customtkinter as ctk
 

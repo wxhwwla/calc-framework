@@ -35,15 +35,17 @@ LICENSE_FILES: tuple[tuple[str, str], ...] = (
 RELEASE_README_NAME = "发布说明.txt"
 
 
-def _release_readme_text() -> str:
-    return """终末地伤害计算小工具 — 发布包说明
+def _release_readme_text(*, exe_version: str, package_version: str) -> str:
+    return f"""终末地伤害计算小工具 — 发布包说明
 
+【版本】EXE v{exe_version}（源码包 v{package_version}，见 please_read_me._EXE_VERSION / _VERSION）
 【软件】终末地伤害计算器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
 【数据】character_weapon_equipment/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
 
 完整说明：docs/数据来源与许可.md（源码仓库）或 GUI「数据来源与许可」按钮。
 
 分发时请保持 exe 与本目录内 JSON、许可文件相对位置不变；可单独更新 JSON 而无需重打 exe。
+修改 _EXE_VERSION 后须重新执行 build.py，否则 exe 内版本不会变。
 
 【全量/MVP 搜索导出】首次运行后在本文件夹下自动创建 search_output/（与 exe 同级，不在 C 盘临时目录）。
   - 内含 search_runs.db、mvp_exports/ 等；可直接备份或删除该文件夹。
@@ -79,9 +81,21 @@ def stage_release_folder(
             raise FileNotFoundError(f"缺少许可文件: {src}")
         shutil.copy2(src, release_root / dest_rel)
 
+    exe_version, package_version = _read_release_versions()
     (release_root / RELEASE_README_NAME).write_text(
-        _release_readme_text(), encoding="utf-8"
+        _release_readme_text(
+            exe_version=exe_version,
+            package_version=package_version,
+        ),
+        encoding="utf-8",
     )
+
+
+def _read_release_versions() -> tuple[str, str]:
+    """读取当前打包使用的 EXE / 包版本（与 GUI 标题一致）。"""
+    from please_read_me import get_exe_version, get_version
+
+    return get_exe_version(), get_version()
 
 
 def release_dir_from_dist(dist_dir: Path) -> Path:

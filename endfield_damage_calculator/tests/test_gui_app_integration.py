@@ -38,7 +38,9 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 self.assertEqual(fixed.fixed_count(), 0)
                 self.assertIsNotNone(app.char_panel)
                 self.assertIsNotNone(app.weapon_panel)
-                sig = app._confirm_refresh_signature_now()
+                from gui_design.confirm_orchestrator import confirm_signature_now
+
+                sig = confirm_signature_now(app)
                 self.assertIsInstance(sig, tuple)
             finally:
                 app.app.destroy()

@@ -16,9 +16,9 @@
 
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
-# _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.17.0"
-_EXE_VERSION = "0.3.0-beta"
+# _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
+_VERSION = "1.16.5"
+_EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
 # ==================== GitHub 上传流程（必读） ====================
@@ -209,30 +209,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 24 处文件
+# TITLE: 更新 13 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
 # - 更新文档 endfield_damage_calculator/README.md
 # - 修改 endfield_damage_calculator/build.py
-# - 修改 endfield_damage_calculator/gui_design/damage_visualization.py
-# - 修改 endfield_damage_calculator/gui_design/display_view.py
-# - 修改 endfield_damage_calculator/gui_design/enhancement_controls.py
-# - 修改 endfield_damage_calculator/gui_design/fixed_loadout_controls.py
-# - 修改 endfield_damage_calculator/gui_design/gui_settings.py
-# - 修改 endfield_damage_calculator/gui_design/label_layout.py
-# - 修改 endfield_damage_calculator/gui_design/multi_skill_controls.py
 # - 修改 endfield_damage_calculator/gui_design/search_controls.py
-# - 修改 endfield_damage_calculator/gui_design/search_results_view.py
-# - 修改 endfield_damage_calculator/gui_design/selection_components.py
-# - 修改 endfield_damage_calculator/gui_design/selection_panel.py
-# - 修改 endfield_damage_calculator/legal/attribution.py
 # - 修改 endfield_damage_calculator/please_read_me.py
 # - 修改 endfield_damage_calculator/release_bundle/release_layout.py
-# - 修改 endfield_damage_calculator/tests/test_gui_chart_theme.py
-# - 修改 endfield_damage_calculator/tests/test_gui_fonts_matplotlib.py
-# - 修改 endfield_damage_calculator/utils/gui_chart_theme.py
-# - 修改 endfield_damage_calculator/utils/gui_fonts.py
+# - 修改 endfield_damage_calculator/tests/test_build_watchdog.py
+# - 修改 endfield_damage_calculator/tests/test_gui_app_integration.py
+# - 修改 endfield_damage_calculator/tests/test_gui_import_regression.py
+# - 修改 endfield_damage_calculator/tests/test_release_layout.py
+# - 修改 endfield_damage_calculator/utils/platform_win32_patch.py
 # --- END UPLOAD_SUMMARY ---

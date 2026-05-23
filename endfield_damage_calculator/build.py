@@ -12,6 +12,10 @@
   ├── DATA_LICENSE、LICENSE、NOTICES.md
   ├── 发布说明.txt
   └── search_output/（首次全量/MVP 搜索后自动创建，与 exe 同级）
+
+看门狗（可选环境变量）：
+  ENDFIELD_BUILD_TIMEOUT_SECONDS  默认 1200（20 分钟），超时自动终止 PyInstaller
+  ENDFIELD_BUILD_HEARTBEAT_SECONDS  默认 15，打印进度心跳
 """
 
 from __future__ import annotations
@@ -219,7 +223,10 @@ def main() -> None:
     apply_platform_win32_patch()
 
     print("=" * 60)
-    print(f"终末地伤害计算器 v{get_version()} - 打包工具")
+    print(
+        f"终末地伤害计算器 — 打包工具"
+        f"（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）"
+    )
     print("=" * 60)
 
     if not check_build_dependencies():
@@ -232,7 +239,9 @@ def main() -> None:
         sys.exit(1)
 
     print("\n" + "=" * 60)
-    print(f"打包完成！EXE v{get_exe_version()}")
+    print(f"打包完成！")
+    print(f"  EXE 版本（窗口标题）: v{get_exe_version()}")
+    print(f"  源码包版本:         v{get_version()}")
     print(f"发布文件夹: {release_root}")
     print("请将整个文件夹分发给用户（勿只发 exe，否则无法加载角色/武器数据）。")
     print("=" * 60)

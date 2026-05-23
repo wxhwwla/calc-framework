@@ -21,3 +21,8 @@ class TestGuiImportRegression(unittest.TestCase):
 
         apply_platform_win32_patch()
         self.assertTrue(getattr(platform.win32_ver, "_edc_no_wmi_patch", False))
+
+    def test_ctk_gui_module_imports_do_not_require_manual_patch(self) -> None:
+        """PyInstaller 会单独 import 各 GUI 子模块，模块内须自带补丁。"""
+        import gui_design.search_controls  # noqa: F401
+        import gui_design.selection_panel  # noqa: F401

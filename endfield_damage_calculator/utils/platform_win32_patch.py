@@ -8,6 +8,9 @@ CustomTkinter → darkdetect、PyInstaller.compat 等在导入时会调用
 表现为 ``main.py`` / ``build.py`` 启动后长时间无响应。
 
 在导入 customtkinter 或 PyInstaller 之前调用 ``apply_platform_win32_patch()``。
+
+凡**顶层** ``import customtkinter`` 的模块（含 ``gui_design/*``、``legal/attribution.py``）
+都须在 import 前调用本补丁；否则 PyInstaller 分析依赖时会单独 import 这些模块并卡死。
 """
 
 from __future__ import annotations
