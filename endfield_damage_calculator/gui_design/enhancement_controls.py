@@ -19,6 +19,7 @@ from gui_design.damage_visualization import (
     damage_breakdown_from_skill_map,
     is_matplotlib_available,
 )
+from utils.optional_deps import matplotlib_install_hint
 from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
 from gui_design.loadout_preset import (
     LoadoutPreset,
@@ -370,7 +371,7 @@ def show_damage_dashboard_dialog(app: "DamageCalculatorApp") -> None:
     if not is_matplotlib_available():
         messagebox.showwarning(
             "需要 matplotlib",
-            "请安装: pip install matplotlib\n或 pip install -e \".[dev,viz]\"",
+            f"请安装:\n{matplotlib_install_hint()}",
             parent=app.app,
         )
         return

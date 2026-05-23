@@ -24,6 +24,11 @@ import sys
 import threading
 import time
 
+# Windows：须在 customtkinter（darkdetect）之前规避 WMI 卡死
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
+
 
 def preload_data():
     """预加载角色/武器 JSON 到 data.loader 缓存（后台线程）。"""
@@ -51,18 +56,34 @@ def main() -> None:
     # 启动后台线程预加载数据（不阻塞主界面）
     preload_thread = threading.Thread(target=preload_data, daemon=True)
     preload_thread.start()
-    
-    # 导入 GUI 模块
+
+    if not getattr(sys, "frozen", False):
+        from utils.optional_deps import ensure_runtime_dependencies
+
+        ensure_runtime_dependencies()
+        print("正在加载界面…", flush=True)
+
+    # 导入 GUI 模块（含 customtkinter，首次较慢）
     from data.plugin_registry import load_default_plugins
     from gui_design.gui import DamageCalculatorApp
     from utils.path_utils import get_application_dir
+
+    if not getattr(sys, "frozen", False):
+        print("正在创建主窗口…", flush=True)
 
     # 热加载 plugins/ 下的扩展 JSON/YAML（敌方等）
     load_default_plugins(get_application_dir())
 
     # 创建应用实例
     app = DamageCalculatorApp()
-    
+
+    if not getattr(sys, "frozen", False):
+        from utils.optional_deps import format_missing_gui_extras
+
+        extras_hint = format_missing_gui_extras()
+        if extras_hint:
+            print(extras_hint, flush=True)
+
     # 启动主事件循环，显示窗口
     app.run()
 

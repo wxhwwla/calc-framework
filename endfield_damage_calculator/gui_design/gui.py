@@ -19,7 +19,11 @@ GUI 主应用模块
 - data.loader: 数据加载模块
 """
 
-# 导入必要的模块
+# 导入必要的模块（Windows 上须先打 platform 补丁，否则 darkdetect→WMI 卡死）
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
+
 import customtkinter as ctk  # CustomTkinter GUI 库
 from tkinter import messagebox
 from typing import Optional, List, Dict, Any   # 类型提示支持
@@ -40,6 +44,7 @@ from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import WeaponCandidate
 from calculation.search_cancel import SearchCancelToken
+from calculation.single_skill_search_job import build_weapon_candidates
 from gui_design.fixed_loadout_controls import (
     refresh_all_fixed_slot_menus,
     resolve_fixed_loadout_selection,
@@ -445,8 +450,7 @@ class DamageCalculatorApp:
         # 角色面板初始化时已经自动选择了第一个角色，现在需要同步更新武器面板
         self._on_char_name_change()
         self._refresh_fixed_loadout_menus()
-        self._refresh_search_estimate()
-        
+
         # 如果没有选中角色或没有可用武器，禁用武器面板
         char_data = self.char_panel.get_selected_data()
         if not char_data:
@@ -457,9 +461,15 @@ class DamageCalculatorApp:
             if not filtered_weapons:
                 self.weapon_panel.disable_panel()
 
-        # 启动后自动确认一次，填充默认角色/武器属性展示
+        # 先刷新布局再进入事件循环，避免长时间黑屏
+        self.app.update_idletasks()
         get_session_operation_log().record(LogLevel.INFO, "app_ready", {})
-        handle_confirm(self)
+        self.app.after_idle(self._startup_refresh)
+
+    def _startup_refresh(self) -> None:
+        """首帧绘制后再做确认刷新与搜索预估（勿在 __init__ 中同步调用）。"""
+        handle_confirm(self, force=True)
+        self._refresh_search_estimate()
 
     def _on_char_name_change(self, *args: str) -> None:
         """

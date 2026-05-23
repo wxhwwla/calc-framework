@@ -17,12 +17,9 @@ class DamageSlice:
 
 
 def is_matplotlib_available() -> bool:
-    try:
-        import matplotlib  # noqa: F401
+    from utils.optional_deps import is_matplotlib_available as _probe
 
-        return True
-    except ImportError:
-        return False
+    return _probe()
 
 
 def damage_breakdown_from_skill_map(skill_damage: dict[str, float]) -> tuple[DamageSlice, ...]:

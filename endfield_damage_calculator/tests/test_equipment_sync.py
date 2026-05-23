@@ -47,7 +47,7 @@ class TestEquipmentSync(unittest.TestCase):
         self.assertTrue(row["三件套效果"])
 
     def test_sync_equipments_from_parsed_writes_local_style_json(self):
-        from tools.bwiki_scout.equipment_sync import sync_equipments_from_parsed
+        from bwiki_scout.equipment_sync import sync_equipments_from_parsed
 
         parsed_rows = [
             {

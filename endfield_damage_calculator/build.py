@@ -29,21 +29,39 @@ from release_bundle.release_layout import (  # noqa: E402
     stage_release_folder,
 )
 from please_read_me import get_exe_version, get_version  # noqa: E402
+from utils.platform_win32_patch import apply_platform_win32_patch  # noqa: E402
 
 
 def check_build_dependencies() -> bool:
     """检查打包依赖：PyInstaller 及其所需的 PyPI ``packaging``（勿与 release_bundle 混淆）。"""
+    import importlib.util
+    from importlib.metadata import PackageNotFoundError, version
+
+    print("正在检查打包依赖…", flush=True)
+    if importlib.util.find_spec("PyInstaller") is None:
+        print("缺少打包依赖。请在 [包] 目录执行：")
+        print('  pip install -e ".[build]"')
+        return False
     try:
-        import PyInstaller  # noqa: F401
         import packaging.requirements  # noqa: F401
     except ImportError as exc:
         print("缺少打包依赖。请在 [包] 目录执行：")
         print('  pip install -e ".[build]"')
         print(f"详情: {exc}")
         return False
-    import PyInstaller
+    try:
+        pyi_ver = version("pyinstaller")
+    except PackageNotFoundError:
+        pyi_ver = "未知"
+    print(f"PyInstaller 已安装: {pyi_ver}", flush=True)
 
-    print(f"PyInstaller 已安装: {PyInstaller.__version__}")
+    from utils.optional_deps import is_matplotlib_available
+
+    if not is_matplotlib_available():
+        print("缺少运行时依赖 matplotlib。请在 [包] 目录执行：")
+        print('  pip install -e .')
+        return False
+    print("matplotlib 已安装（将打入发布包）", flush=True)
     return True
 
 
@@ -64,21 +82,31 @@ def build_release() -> Path:
     for item in excludes:
         exclude_args.extend(["--exclude-module", item])
 
+    # matplotlib 需随包收集字体/后端，否则 exe 内仪表盘空白或报错
+    pyinstaller_collect_args = [
+        "--collect-all",
+        "matplotlib",
+        "--hidden-import",
+        "matplotlib.backends.backend_tkagg",
+    ]
+
     args = [
         sys.executable,
         "-m",
-        "PyInstaller",
+        "release_bundle.pyinstaller_entry",
         "--onedir",
         "--windowed",
         "--noconfirm",
         f"--name={RELEASE_APP_NAME}",
         "--clean",
+        *pyinstaller_collect_args,
         *exclude_args,
         str(project_root / "main.py"),
     ]
 
     print("=" * 60)
     print("开始打包（onedir，游戏数据不写入 exe）...")
+    print("（PyInstaller 分析依赖可能需数分钟，请耐心等待下方日志）")
     print("=" * 60)
 
     subprocess.check_call(args, cwd=project_root)
@@ -98,6 +126,8 @@ def build_release() -> Path:
 
 
 def main() -> None:
+    apply_platform_win32_patch()
+
     print("=" * 60)
     print(f"终末地伤害计算器 v{get_version()} - 打包工具")
     print("=" * 60)
