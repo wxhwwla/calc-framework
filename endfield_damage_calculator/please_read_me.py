@@ -209,24 +209,7 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 18 处文件
+# TITLE: 修改 endfield_damage_calculator/please_read_me.py
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
-# - 更新文档 CONTEXT.md
-# - 更新文档 README.md
-# - 更新文档 docs/README.md
-# - 更新文档 endfield_damage_calculator/README.md
-# - 修改 endfield_damage_calculator/calculation/damage_engine.py
-# - 修改 endfield_damage_calculator/calculation/equipment_affix.py
-# - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
-# - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
-# - 修改 endfield_damage_calculator/calculation/parallel_search.py
-# - 修改 endfield_damage_calculator/calculation/single_skill_search_job.py
-# - 修改 endfield_damage_calculator/calculation/single_skill_search_runner.py
-# - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/main.py
 # - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
