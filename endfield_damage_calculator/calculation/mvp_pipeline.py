@@ -7,12 +7,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from calculation.search_runner import SearchCancelToken
-
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
 from calculation.result_export import export_search_outputs
-from calculation.search_persistence import execute_search_with_resume
+from calculation.search_cancel import SearchCancelToken
+from calculation.search_session import run_search_session
 
 
 def run_mvp_search_pipeline(
@@ -29,7 +28,7 @@ def run_mvp_search_pipeline(
     progress_callback: Optional[Callable[[dict], None]] = None,
 ) -> dict[str, Any]:
     """运行 MVP 主链路：续跑搜索 + 导出。"""
-    resume_result = execute_search_with_resume(
+    session = run_search_session(
         db_path=db_path,
         run_signature=run_signature,
         base_context=base_context,
@@ -41,22 +40,22 @@ def run_mvp_search_pipeline(
         progress_callback=progress_callback,
     )
     exports = export_search_outputs(
-        scores=resume_result.top_results,
+        scores=session.top_results,
         output_dir=export_dir,
         top_n=config.top_n,
         export_all=True,
     )
     return {
-        "processed_combinations": resume_result.processed_combinations,
-        "total_combinations": resume_result.total_combinations,
-        "cancelled": resume_result.cancelled,
+        "processed_combinations": session.processed_combinations,
+        "total_combinations": session.total_combinations,
+        "cancelled": session.cancelled,
         "top_results": [
             {
                 "weapon_name": score.weapon_name,
                 "final_damage": score.final_damage,
                 "loadout_names": dict(score.loadout_names),
             }
-            for score in resume_result.top_results
+            for score in session.top_results
         ],
         "exports": exports,
     }

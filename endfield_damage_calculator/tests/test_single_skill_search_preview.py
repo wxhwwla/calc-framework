@@ -34,15 +34,12 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestSingleSkillSearchPreview(unittest.TestCase):
-    @patch("gui_design.property_display.get_equipments")
-    @patch("gui_design.property_display.build_equipment_catalog_from_local_rows")
+    @patch("gui_design.property_display.get_equipment_catalog")
     def test_preview_lines_include_top_result(
         self,
-        mock_build_catalog,
-        mock_get_equipments,
+        mock_get_catalog,
     ):
-        mock_get_equipments.return_value = [{"名称": "占位"}]
-        mock_build_catalog.return_value = {
+        mock_get_catalog.return_value = {
             "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
             "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
             "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
@@ -62,15 +59,12 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("预览组合数:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
-    @patch("gui_design.property_display.get_equipments")
-    @patch("gui_design.property_display.build_equipment_catalog_from_local_rows")
+    @patch("gui_design.property_display.get_equipment_catalog")
     def test_preview_lines_respect_candidate_scope_and_weapon_list(
         self,
-        mock_build_catalog,
-        mock_get_equipments,
+        mock_get_catalog,
     ):
-        mock_get_equipments.return_value = [{"名称": "占位"}]
-        mock_build_catalog.return_value = {
+        mock_get_catalog.return_value = {
             "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
             "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
             "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
@@ -94,12 +88,11 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("候选范围: 同类型全部") for line in lines))
         self.assertTrue(any("Top1:" in line and "候选B" in line for line in lines))
 
-    @patch("gui_design.property_display.get_equipments")
+    @patch("gui_design.property_display.get_equipment_catalog")
     def test_preview_uses_provided_equipment_catalog_without_loading_local_data(
         self,
-        mock_get_equipments,
+        mock_get_catalog,
     ):
-        mock_get_equipments.return_value = []
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_single_skill_search_preview_lines(
@@ -120,7 +113,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             preview_equipment_scope_label="仅散件装备",
         )
         self.assertTrue(any(line.startswith("装备范围: 仅散件装备") for line in lines))
-        self.assertFalse(mock_get_equipments.called)
+        self.assertFalse(mock_get_catalog.called)
 
     def test_preview_with_real_local_equipments_when_available(self):
         """不 mock 时，本地装备应能跑出 Top 结果而非「数据不完整」。"""

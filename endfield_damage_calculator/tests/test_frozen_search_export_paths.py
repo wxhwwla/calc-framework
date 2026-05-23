@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from gui_design.search_export_paths import allocate_search_run_directory, default_search_output_root
+from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
 
 class TestFrozenSearchExportPaths(unittest.TestCase):

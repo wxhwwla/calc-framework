@@ -15,7 +15,7 @@ GUI 主应用模块
 
 依赖模块：
 - customtkinter: GUI 库
-- gui_design.display_model: GUI 展示层入口
+- gui_design.property_display: 属性与乘区展示
 - data.loader: 数据加载模块
 """
 
@@ -25,37 +25,31 @@ from tkinter import filedialog, messagebox
 from typing import Optional, List, Dict, Any   # 类型提示支持
 from pathlib import Path
 import threading
-import hashlib
 import os
-from gui_design.display_model import (
-    gui_settings,
-    confirm_selection,
-    ChooseTypesStarsNamesLevels,
-)
+from gui_design.gui_settings import gui_settings
+from gui_design.property_display import confirm_selection
+from gui_design.selection_panel import ChooseTypesStarsNamesLevels
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
-from data.loader import get_equipments, DataLoadError
+from data.equipment_catalog import get_equipment_catalog
 from please_read_me import get_exe_version  # EXE版本号
 from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
 from calculation.mvp_pipeline import run_mvp_search_pipeline
-from calculation.search_runner import SearchCancelToken
-from calculation.equipment_system import build_equipment_catalog_from_local_rows
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.search_estimate import (
-    estimate_search_duration,
-    format_workload_estimate_line,
-    preview_search_workload,
+from calculation.search_cancel import SearchCancelToken
+from calculation.single_skill_search_job import (
+    build_weapon_candidates,
+    job_to_legacy_dict,
+    prepare_single_skill_search_job,
 )
+from calculation.search_estimate import estimate_search_duration, preview_search_workload
 from gui_design.label_layout import CONTROL_COLUMN_MINSIZE, bind_wrapped_label
-from gui_design.search_export_paths import (
-    allocate_search_run_directory,
-    default_search_output_root,
-)
+from utils.app_paths import allocate_search_run_directory, default_search_output_root
 from gui_design.search_settings import (
     build_worker_option_labels,
     format_parallel_workers_help,
     format_search_progress_text,
+    format_workload_estimate_line,
     get_cpu_parallel_info,
     resolve_parallel_workers,
     resolve_top_n,
@@ -555,35 +549,6 @@ class DamageCalculatorApp:
                 return skill_name, skill_name, value / 100.0
         return "战技", "战技", 1.0
 
-    def _build_weapon_candidates(
-        self,
-        *,
-        char_data: Dict[str, Any],
-        char_level: int,
-        weapon_level: int,
-        trust_level: int,
-    ) -> list[WeaponCandidate]:
-        """按当前角色与等级生成候选武器最终攻击力。"""
-        weapon_type = char_data.get("武器", "")
-        candidates: list[WeaponCandidate] = []
-        for weapon in self.all_weapons:
-            if weapon.get("类型") != weapon_type:
-                continue
-            details = calculate_final_attack_with_details(
-                character=char_data,
-                weapon=weapon,
-                char_level=char_level,
-                weapon_level=weapon_level,
-                trust_level=trust_level,
-            )
-            candidates.append(
-                WeaponCandidate(
-                    name=str(weapon.get("名称", "")),
-                    final_attack=float(details.get("final_attack", 0.0)),
-                )
-            )
-        return candidates
-
     def _build_control_panel(self) -> None:
         """构建「计算与搜索」列：确认、模式、遍历、多技能权重。"""
         assert self.control_scroll is not None
@@ -825,46 +790,34 @@ class DamageCalculatorApp:
             messagebox.showwarning("全量遍历", "请先选择有效角色。", parent=self.app)
             return None
 
-        equipment_catalog = self._single_skill_preview_equipment_catalog()
-        if not equipment_catalog["chest"] or not equipment_catalog["gloves"] or not equipment_catalog["accessories"]:
-            messagebox.showwarning(
-                "全量遍历",
-                "装备数据不完整（缺护甲/护手/配件）。\n"
-                "请先执行 sync_equipments.py --apply 同步 Wiki 装备。",
-                parent=self.app,
-            )
-            return None
-
         char_level = self.char_panel.get_level()
         weapon_level = self.weapon_panel.get_level()
         trust_level = self.char_panel.get_trust_level()
         skill_name, skill_type, skill_multiplier = self._resolve_selected_skill(char_data)
-        weapon_candidates = self._single_skill_preview_candidates()
-        if not weapon_candidates:
-            messagebox.showwarning("全量遍历", "当前武器/装备候选范围下无可用武器。", parent=self.app)
+        current_weapon = self.weapon_panel.get_selected_data()
+        if not current_weapon:
+            messagebox.showwarning("全量遍历", "请先选择有效武器。", parent=self.app)
             return None
 
-        signature_seed = (
-            f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
-            f"{skill_name}-w{len(weapon_candidates)}-e{len(equipment_catalog['chest'])}"
-            f"-{self.single_skill_equipment_scope_var.get()}"
+        equipment_catalog = self._single_skill_preview_equipment_catalog()
+        job, err = prepare_single_skill_search_job(
+            char_data=char_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_name=skill_name,
+            skill_type=skill_type,
+            skill_multiplier=skill_multiplier,
+            weapon_scope_label=self.single_skill_scope_var.get(),
+            equipment_scope_label=self.single_skill_equipment_scope_var.get(),
+            all_weapons=self.all_weapons,
+            current_weapon=current_weapon,
+            equipment_catalog=equipment_catalog,
         )
-        run_signature = hashlib.sha1(signature_seed.encode("utf-8")).hexdigest()[:16]
-        return {
-            "char_data": char_data,
-            "skill_label": skill_name,
-            "weapon_scope": self.single_skill_scope_var.get(),
-            "equipment_scope": self.single_skill_equipment_scope_var.get(),
-            "base_context": DamageContext(
-                final_attack=0.0,
-                skill_multiplier=skill_multiplier,
-                skill_type=skill_type,
-                enemy_defense=100.0,
-            ),
-            "weapon_candidates": weapon_candidates,
-            "equipment_catalog": equipment_catalog,
-            "run_signature": run_signature,
-        }
+        if err:
+            messagebox.showwarning("全量遍历", err, parent=self.app)
+            return None
+        return job_to_legacy_dict(job)
 
     def _set_search_buttons_enabled(self, enabled: bool) -> None:
         state = "normal" if enabled else "disabled"
@@ -1202,53 +1155,19 @@ class DamageCalculatorApp:
         current_weapon = self.weapon_panel.get_selected_data()
         if not char_data or not current_weapon:
             return []
-
-        scope = self.single_skill_scope_var.get()
-        char_level = self.char_panel.get_level()
-        weapon_level = self.weapon_panel.get_level()
-        trust_level = self.char_panel.get_trust_level()
-        weapon_type = str(char_data.get("武器", ""))
-        current_star = current_weapon.get("星级")
-
-        candidates: List[WeaponCandidate] = []
-        for weapon in self.all_weapons:
-            if weapon.get("类型") != weapon_type:
-                continue
-            if scope == "同类型同星级" and weapon.get("星级") != current_star:
-                continue
-            if scope == "当前武器" and weapon.get("名称") != current_weapon.get("名称"):
-                continue
-            details = calculate_final_attack_with_details(
-                character=char_data,
-                weapon=weapon,
-                char_level=char_level,
-                weapon_level=weapon_level,
-                trust_level=trust_level,
-            )
-            candidates.append(
-                WeaponCandidate(
-                    name=str(weapon.get("名称", "")),
-                    final_attack=float(details.get("final_attack", 0.0)),
-                )
-            )
-        return candidates
+        return build_weapon_candidates(
+            all_weapons=self.all_weapons,
+            char_data=char_data,
+            current_weapon=current_weapon,
+            weapon_scope_label=self.single_skill_scope_var.get(),
+            char_level=self.char_panel.get_level(),
+            weapon_level=self.weapon_panel.get_level(),
+            trust_level=self.char_panel.get_trust_level(),
+        )
 
     def _single_skill_preview_equipment_catalog(self) -> Dict[str, List[Dict[str, Any]]]:
         """按装备范围构建单技能预览装备目录。"""
-        try:
-            rows = get_equipments()
-        except DataLoadError:
-            return {"chest": [], "gloves": [], "accessories": []}
-        scope = self.single_skill_equipment_scope_var.get()
-        filtered: List[Dict[str, Any]] = []
-        for row in rows:
-            set_name = str(row.get("套装") or "").strip()
-            if scope == "仅套装装备" and not set_name:
-                continue
-            if scope == "仅散件装备" and set_name:
-                continue
-            filtered.append(row)
-        return build_equipment_catalog_from_local_rows(filtered)
+        return get_equipment_catalog(scope_label=self.single_skill_equipment_scope_var.get())
 
     def _current_calculation_mode(self) -> str:
         """读取当前模式下拉框并转换为内部标识。"""

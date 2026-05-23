@@ -33,8 +33,7 @@ from calculation.multi_skill_optimizer import (
     SkillScenario,
     optimize_multi_skill_loadouts,
 )
-from calculation.equipment_system import build_equipment_catalog_from_local_rows
-from data.loader import DataLoadError, get_equipments
+from data.equipment_catalog import get_equipment_catalog
 
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
@@ -413,14 +412,12 @@ def build_single_skill_search_preview_lines(
     if not char_data or not weapon_data:
         return ["请选择有效角色和武器"]
     if preview_equipment_catalog is None:
-        try:
-            equipment_rows = get_equipments()
-        except DataLoadError:
+        catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
+        if not catalog["chest"] and not catalog["gloves"] and not catalog["accessories"]:
             return [
                 "计算模式: 单技能遍历(快速预览)",
                 "未加载到本地装备数据，请先执行 sync_equipments.py --apply。",
             ]
-        catalog = build_equipment_catalog_from_local_rows(equipment_rows)
     else:
         catalog = preview_equipment_catalog
     if not catalog["chest"] or not catalog["gloves"] or not catalog["accessories"]:
@@ -524,18 +521,17 @@ def build_multi_skill_search_preview_lines(
     skill_3_level: int = 0,
     manual_weights: Optional[Dict[str, float]] = None,
     use_manual_weights: bool = False,
+    preview_equipment_scope_label: str = "",
 ) -> list[str]:
     """构建多技能遍历模式的快速预览文案。"""
     if not char_data or not weapon_data:
         return ["请选择有效角色和武器"]
-    try:
-        equipment_rows = get_equipments()
-    except DataLoadError:
+    catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
+    if not catalog["chest"] and not catalog["gloves"] and not catalog["accessories"]:
         return [
             "计算模式: 多技能遍历(快速预览)",
             "未加载到本地装备数据，请先执行 sync_equipments.py --apply。",
         ]
-    catalog = build_equipment_catalog_from_local_rows(equipment_rows)
     if not catalog["chest"] or not catalog["gloves"] or not catalog["accessories"]:
         return [
             "计算模式: 多技能遍历(快速预览)",
@@ -614,6 +610,7 @@ def build_multi_skill_search_preview_lines(
     )
     lines = [
         "计算模式: 多技能遍历(快速预览)",
+        f"装备范围: {preview_equipment_scope_label or '全部装备'}",
         f"预览组合数: {result.total_combinations}",
         weight_desc,
         "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
@@ -951,6 +948,7 @@ def _display_zone_data(
             skill_3_level=skill_3_level,
             manual_weights=multi_skill_manual_weights,
             use_manual_weights=use_manual_multi_skill_weights,
+            preview_equipment_scope_label=preview_equipment_scope_label,
         ):
             label = ctk.CTkLabel(
                 right_scroll,

@@ -33,15 +33,12 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestMultiSkillSearchPreview(unittest.TestCase):
-    @patch("gui_design.property_display.get_equipments")
-    @patch("gui_design.property_display.build_equipment_catalog_from_local_rows")
+    @patch("gui_design.property_display.get_equipment_catalog")
     def test_preview_lines_include_weight_and_top_result(
         self,
-        mock_build_catalog,
-        mock_get_equipments,
+        mock_get_catalog,
     ):
-        mock_get_equipments.return_value = [{"名称": "占位"}]
-        mock_build_catalog.return_value = {
+        mock_get_catalog.return_value = {
             "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
             "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
             "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
@@ -61,15 +58,12 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("默认权重:") for line in lines))
         self.assertTrue(any(line.startswith("Top1:") for line in lines))
 
-    @patch("gui_design.property_display.get_equipments")
-    @patch("gui_design.property_display.build_equipment_catalog_from_local_rows")
+    @patch("gui_design.property_display.get_equipment_catalog")
     def test_preview_lines_use_manual_weights_when_provided(
         self,
-        mock_build_catalog,
-        mock_get_equipments,
+        mock_get_catalog,
     ):
-        mock_get_equipments.return_value = [{"名称": "占位"}]
-        mock_build_catalog.return_value = {
+        mock_get_catalog.return_value = {
             "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
             "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
             "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
@@ -89,15 +83,12 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("手动权重:") for line in lines))
 
-    @patch("gui_design.property_display.get_equipments")
-    @patch("gui_design.property_display.build_equipment_catalog_from_local_rows")
+    @patch("gui_design.property_display.get_equipment_catalog")
     def test_preview_lines_warn_when_manual_weights_all_zero(
         self,
-        mock_build_catalog,
-        mock_get_equipments,
+        mock_get_catalog,
     ):
-        mock_get_equipments.return_value = [{"名称": "占位"}]
-        mock_build_catalog.return_value = {
+        mock_get_catalog.return_value = {
             "chest": [{"名称": "胸甲A", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
             "gloves": [{"名称": "护手A", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
             "accessories": [{"名称": "配件A", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],

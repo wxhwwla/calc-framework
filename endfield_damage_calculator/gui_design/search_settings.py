@@ -80,6 +80,41 @@ def resolve_top_n(choice: str, *, default: int = 10) -> int:
         return default
 
 
+def format_duration_human(seconds: float) -> str:
+    """将秒数格式化为中文可读时长（GUI 文案）。"""
+    total = max(0, int(seconds))
+    if total < 1:
+        return "少于 1 秒"
+    if total < 60:
+        return f"约 {total} 秒"
+    minutes, sec = divmod(total, 60)
+    if minutes < 60:
+        if sec > 0:
+            return f"约 {minutes} 分 {sec} 秒"
+        return f"约 {minutes} 分钟"
+    hours, minutes = divmod(minutes, 60)
+    if minutes > 0:
+        return f"约 {hours} 小时 {minutes} 分"
+    return f"约 {hours} 小时"
+
+
+def format_workload_estimate_line(
+    *,
+    workload,
+    duration,
+) -> str:
+    """生成 GUI 预估文案。"""
+    total = workload.total_combinations
+    if total <= 0:
+        return "预计组合数：0（请检查候选范围与装备数据）"
+    human = format_duration_human(duration.estimated_seconds)
+    return (
+        f"预计组合数：{total:,}（{workload.weapon_count} 武器 × "
+        f"{workload.loadout_combinations:,} 配装）\n"
+        f"预计耗时：{human}（{duration.max_workers} 线程，仅供参考）"
+    )
+
+
 def format_search_progress_text(
     *,
     prefix: str,
@@ -92,8 +127,6 @@ def format_search_progress_text(
     if total <= 0:
         return f"{prefix}：准备中…"
     if eta_seconds > 0:
-        from calculation.search_estimate import format_duration_human
-
         remain_text = format_duration_human(eta_seconds)
         if estimated_total_seconds and estimated_total_seconds > 0:
             total_text = format_duration_human(estimated_total_seconds)
