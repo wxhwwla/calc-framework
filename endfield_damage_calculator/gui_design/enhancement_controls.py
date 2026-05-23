@@ -8,6 +8,9 @@ from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 
 from gui_design.calc_history import CalculationHistory, HistoryEntry

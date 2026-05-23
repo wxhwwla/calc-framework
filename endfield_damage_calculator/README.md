@@ -70,13 +70,13 @@ endfield_damage_calculator/
 │   ├── preview_lines.py       # 单/多技能快速预览文案（带缓存）
 │   ├── enhancement_controls.py # 底栏工具与分享、仪表盘
 │   ├── damage_snapshot.py     # 确认后伤害快照
-│   ├── damage_visualization.py # matplotlib 图表
+│   ├── damage_visualization.py # matplotlib 图表（CTk 主题同步）
 │   ├── loadout_preset.py / calc_history.py
 │   ├── search_export_paths.py # search_output/ 导出路径
 │   ├── gui_settings.py        # 主题与字体
 │   ├── selection_panel.py     # 选择面板
 │   ├── selection_components.py
-│   └── property_display.py    # 确认后属性列与乘区
+│   ├── display_lines.py / display_view.py  # 确认后属性列与乘区
 ├── legal/                     # 许可与数据来源（GUI 对话框）
 │   └── attribution.py
 ├── scripts/                   # 包内维护脚本（非 pytest；≠ 仓库 tools/）
@@ -92,7 +92,10 @@ endfield_damage_calculator/
 │   └── release_layout.py
 ├── search_output/             # 全量/MVP 搜索导出（gitignore，运行后生成）
 └── utils/
-    └── path_utils.py          # get_application_dir / get_resource_path
+    ├── path_utils.py          # get_application_dir / get_resource_path
+    ├── gui_fonts.py           # 系统 UI 字体 + matplotlib 中文
+    ├── gui_chart_theme.py     # 仪表盘图表与 CTk 深色主题同步
+    └── platform_win32_patch.py # Windows WMI 规避（启动/打包）
 ```
 
 ### 仓库根目录（与本包并列）
@@ -112,6 +115,9 @@ endfield_damage_calculator/
 
 - Python 3.10+
 - CustomTkinter 5.2.2+
+- matplotlib 3.8+（运行时依赖，含伤害仪表盘）
+
+首次安装：`pip install -e .`（或 `pip install -e ".[dev]"`）。缺依赖时 `main.py` 会警告但不会自动 pip。
 
 ### 版本号
 
@@ -161,6 +167,8 @@ python main.py
 pip install -e ".[build]"
 python build.py
 ```
+
+打包前会检查 PyInstaller 与 matplotlib；Windows 上通过 `pyinstaller_entry` 规避 WMI 卡死。产物内仪表盘无需用户另装 matplotlib。
 
 产物为 **`dist/终末地伤害计算器/` 文件夹**（onedir）：exe 与 `characters.json` / `weapons.json`、`DATA_LICENSE` 等同目录分发，符合软件与数据许可分离。请整夹分发，勿只发 exe。详见 [`docs/操作指令集.md`](../docs/操作指令集.md) §7。
 

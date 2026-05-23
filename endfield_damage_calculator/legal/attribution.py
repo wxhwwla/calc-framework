@@ -7,6 +7,9 @@ from __future__ import annotations
 import webbrowser
 from pathlib import Path
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 
 from legal.attribution_content import (

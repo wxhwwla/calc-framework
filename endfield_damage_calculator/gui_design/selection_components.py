@@ -11,6 +11,9 @@
 这些组件被设计为独立的、可组合的 UI 模块，便于维护和测试。
 """
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 from typing import List, Dict, Any, Optional
 

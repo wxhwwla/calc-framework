@@ -48,6 +48,8 @@ def _release_readme_text() -> str:
 【全量/MVP 搜索导出】首次运行后在本文件夹下自动创建 search_output/（与 exe 同级，不在 C 盘临时目录）。
   - 内含 search_runs.db、mvp_exports/ 等；可直接备份或删除该文件夹。
 【并行线程】GUI「计算与搜索」中「自动」= 逻辑核数减 1；手动选项不会超过本机逻辑核数。
+【伤害仪表盘】已内置 matplotlib（无需用户另装）；图表字体与界面一致，深色主题。
+【插件 YAML 敌人】可选：plugins/enemies/*.yaml 需自行放置；JSON 敌人插件无需额外依赖。
 """
 
 

@@ -6,6 +6,9 @@ GUI 设置模块
 此模块包含 GUI 全局设置初始化函数和常量定义。
 """
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 
 

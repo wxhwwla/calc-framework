@@ -9,6 +9,9 @@
 - ChooseTypesStarsNamesLevels: 通用选择面板类
 """
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 from typing import List, Dict, Any, Optional
 from .selection_components import TrustPanel, SpecialAbilityPanel, SkillLevelPanel

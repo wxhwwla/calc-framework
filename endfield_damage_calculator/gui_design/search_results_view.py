@@ -6,6 +6,9 @@ from __future__ import annotations
 
 from typing import Any, Optional, Sequence
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 
 from calculation.loadout_optimizer import LoadoutScore

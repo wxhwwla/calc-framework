@@ -16,8 +16,10 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 # 添加项目根目录到路径，确保能导入 please_read_me
@@ -30,6 +32,79 @@ from release_bundle.release_layout import (  # noqa: E402
 )
 from please_read_me import get_exe_version, get_version  # noqa: E402
 from utils.platform_win32_patch import apply_platform_win32_patch  # noqa: E402
+
+DEFAULT_BUILD_TIMEOUT_SECONDS = 20 * 60
+DEFAULT_HEARTBEAT_SECONDS = 15
+
+
+def _read_int_env(name: str, default: int) -> int:
+    """读取正整数环境变量；非法值回退到默认值。"""
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def _terminate_process_tree(proc: subprocess.Popen[bytes]) -> None:
+    """尽量终止进程树，避免 PyInstaller 子进程残留。"""
+    if proc.poll() is not None:
+        return
+    try:
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        else:
+            proc.kill()
+    except Exception:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+
+
+def _run_with_watchdog(
+    args: list[str],
+    *,
+    cwd: Path,
+    timeout_seconds: int,
+    heartbeat_seconds: int,
+) -> None:
+    """
+    带心跳与超时的子进程执行器。
+
+    - 每 heartbeat_seconds 打印一次“仍在进行中”，避免用户误判卡死。
+    - 超时后自动终止子进程树并抛出 TimeoutError。
+    """
+    proc = subprocess.Popen(args, cwd=cwd)
+    start = time.monotonic()
+    last_heartbeat = start
+
+    while True:
+        rc = proc.poll()
+        now = time.monotonic()
+        elapsed = int(now - start)
+        if rc is not None:
+            if rc != 0:
+                raise subprocess.CalledProcessError(rc, args)
+            return
+        if now - last_heartbeat >= heartbeat_seconds:
+            print(f"[build] 仍在执行中... 已用时 {elapsed}s", flush=True)
+            last_heartbeat = now
+        if elapsed >= timeout_seconds:
+            _terminate_process_tree(proc)
+            raise TimeoutError(
+                f"PyInstaller 超时（>{timeout_seconds}s）并已终止。"
+                "可设置环境变量 ENDFIELD_BUILD_TIMEOUT_SECONDS 延长超时。"
+            )
+        time.sleep(1)
 
 
 def check_build_dependencies() -> bool:
@@ -69,6 +144,12 @@ def build_release() -> Path:
     """构建 onedir 发布包（exe 不内嵌 JSON）。"""
     project_root = Path(__file__).parent
     repo_root = project_root.parent
+    timeout_seconds = _read_int_env(
+        "ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS
+    )
+    heartbeat_seconds = _read_int_env(
+        "ENDFIELD_BUILD_HEARTBEAT_SECONDS", DEFAULT_HEARTBEAT_SECONDS
+    )
 
     excludes = [
         "tests",
@@ -107,9 +188,18 @@ def build_release() -> Path:
     print("=" * 60)
     print("开始打包（onedir，游戏数据不写入 exe）...")
     print("（PyInstaller 分析依赖可能需数分钟，请耐心等待下方日志）")
+    print(
+        f"（已启用看门狗：超时 {timeout_seconds}s，心跳 {heartbeat_seconds}s）",
+        flush=True,
+    )
     print("=" * 60)
 
-    subprocess.check_call(args, cwd=project_root)
+    _run_with_watchdog(
+        args,
+        cwd=project_root,
+        timeout_seconds=timeout_seconds,
+        heartbeat_seconds=heartbeat_seconds,
+    )
 
     dist_dir = project_root / "dist"
     release_root = release_dir_from_dist(dist_dir)
@@ -137,7 +227,7 @@ def main() -> None:
 
     try:
         release_root = build_release()
-    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+    except (subprocess.CalledProcessError, FileNotFoundError, TimeoutError) as exc:
         print(f"\n打包失败: {exc}")
         sys.exit(1)
 

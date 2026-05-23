@@ -4,6 +4,9 @@
 
 from __future__ import annotations
 
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 import customtkinter as ctk
 
 from gui_design.label_wrap import compute_wraplength

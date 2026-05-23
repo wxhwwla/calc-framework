@@ -38,16 +38,44 @@ def build_damage_pie_figure(
     title: str = "伤害构成",
 ) -> Any:
     """构建饼图 Figure（调用方负责 plt.close）。"""
+    from utils.gui_chart_theme import (
+        chart_theme_from_ctk,
+        configure_matplotlib_gui_style,
+        series_color,
+        style_axes,
+        style_figure,
+    )
+
+    configure_matplotlib_gui_style()
     import matplotlib.pyplot as plt
 
+    theme = chart_theme_from_ctk()
     labels = [s.label for s in slices]
     values = [s.value for s in slices]
     fig, ax = plt.subplots(figsize=(5, 4), dpi=100)
+    style_figure(fig, theme)
+    style_axes(ax, theme)
     if not values:
-        ax.text(0.5, 0.5, "无数据", ha="center", va="center")
+        ax.text(
+            0.5,
+            0.5,
+            "无数据",
+            ha="center",
+            va="center",
+            color=theme.text_muted,
+        )
     else:
-        ax.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
-    ax.set_title(title)
+        colors = [series_color(theme, i) for i in range(len(values))]
+        ax.pie(
+            values,
+            labels=labels,
+            autopct="%1.1f%%",
+            startangle=90,
+            colors=colors,
+            textprops={"color": theme.text, "fontsize": 10},
+            wedgeprops={"edgecolor": theme.border, "linewidth": 0.8},
+        )
+    ax.set_title(title, color=theme.text)
     fig.tight_layout()
     return fig
 
@@ -59,14 +87,34 @@ def build_improvement_bar_figure(
     ylabel: str = "提升 %",
 ) -> Any:
     """构建柱状图（默认用于提升率；亦可传入乘区占比等百分比序列）。"""
+    from utils.gui_chart_theme import (
+        bar_colors,
+        chart_theme_from_ctk,
+        configure_matplotlib_gui_style,
+        style_axes,
+        style_figure,
+    )
+
+    configure_matplotlib_gui_style()
     import matplotlib.pyplot as plt
 
+    theme = chart_theme_from_ctk()
     labels = [name for name, _ in items]
     values = [val for _, val in items]
     fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
-    ax.bar(labels, values, color="#4ECDC4")
-    ax.set_title(title)
-    ax.set_ylabel(ylabel)
-    ax.axhline(0, color="#888888", linewidth=0.8)
+    style_figure(fig, theme)
+    style_axes(ax, theme)
+    colors = bar_colors(theme, len(values))
+    if values:
+        max_idx = max(range(len(values)), key=lambda i: values[i])
+        colors[max_idx] = theme.accent
+    ax.bar(labels, values, color=colors, edgecolor=theme.border, linewidth=0.6)
+    ax.set_title(title, color=theme.text)
+    ax.set_ylabel(ylabel, color=theme.text)
+    ax.tick_params(axis="x", rotation=25, labelsize=9)
+    for tick in ax.get_xticklabels():
+        tick.set_color(theme.text_secondary)
+    ax.axhline(0, color=theme.border, linewidth=0.8)
+    ax.grid(axis="y", linestyle="--", alpha=0.35)
     fig.tight_layout()
     return fig
