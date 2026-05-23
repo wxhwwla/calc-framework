@@ -24,7 +24,7 @@ from data.equipment_catalog import (
     get_equipment_catalog,
     sample_equipment_catalog,
 )
-from gui_design.property_display import _resolve_selected_skill_for_damage
+from calculation.preview_cache import cached_preview, sync_preview_dependencies
 
 
 def build_single_skill_search_preview_lines(
@@ -41,10 +41,68 @@ def build_single_skill_search_preview_lines(
     preview_scope_label: str = "",
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
+    enemy_defense: float = 100.0,
 ) -> list[str]:
-    """构建单技能遍历模式的快速预览文案。"""
+    """构建单技能遍历模式的快速预览文案（带缓存）。"""
     if not char_data or not weapon_data:
         return ["请选择有效角色和武器"]
+
+    sync_preview_dependencies(
+        char_name=char_data.get("名称", ""),
+        weapon_name=weapon_data.get("名称", ""),
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+        skill_1=skill_1_level,
+        skill_2=skill_2_level,
+        skill_3=skill_3_level,
+        calculation_mode="single_skill_search_preview",
+        weapon_scope=preview_scope_label,
+        equipment_scope=preview_equipment_scope_label,
+        enemy_defense=enemy_defense,
+        preview_weapon_names=tuple(
+            c.name for c in (preview_weapon_candidates or [])
+        ),
+        custom_equipment_catalog=preview_equipment_catalog is not None,
+    )
+
+    def _compute() -> list[str]:
+        return _build_single_skill_search_preview_lines_impl(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+            preview_weapon_candidates=preview_weapon_candidates,
+            preview_scope_label=preview_scope_label,
+            preview_equipment_catalog=preview_equipment_catalog,
+            preview_equipment_scope_label=preview_equipment_scope_label,
+            enemy_defense=enemy_defense,
+        )
+
+    lines, _ = cached_preview("single_skill_search_preview", _compute)
+    return lines
+
+
+def _build_single_skill_search_preview_lines_impl(
+    *,
+    char_data: Dict[str, Any],
+    weapon_data: Dict[str, Any],
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_scope_label: str = "",
+    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_scope_label: str = "",
+    enemy_defense: float = 100.0,
+) -> list[str]:
     if preview_equipment_catalog is None:
         catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
     else:
@@ -55,6 +113,8 @@ def build_single_skill_search_preview_lines(
     if blocked:
         return blocked
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
+    from gui_design.property_display import _resolve_selected_skill_for_damage
+
     skill_label, skill_multiplier, skill_warning = _resolve_selected_skill_for_damage(
         char_data,
         skill_1_level=skill_1_level,
@@ -79,7 +139,7 @@ def build_single_skill_search_preview_lines(
             final_attack=0.0,
             skill_multiplier=skill_multiplier,
             skill_type=skill_label.split()[0],
-            enemy_defense=100.0,
+            enemy_defense=enemy_defense,
         ),
         weapons=candidates,
         equipment_catalog=sampled_catalog,
@@ -124,10 +184,63 @@ def build_multi_skill_search_preview_lines(
     manual_counts: Optional[Dict[str, int]] = None,
     use_manual_counts: bool = False,
     preview_equipment_scope_label: str = "",
+    enemy_defense: float = 100.0,
 ) -> list[str]:
-    """构建多技能遍历模式的快速预览文案。"""
+    """构建多技能遍历模式的快速预览文案（带缓存）。"""
     if not char_data or not weapon_data:
         return ["请选择有效角色和武器"]
+
+    sync_preview_dependencies(
+        char_name=char_data.get("名称", ""),
+        weapon_name=weapon_data.get("名称", ""),
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+        skill_1=skill_1_level,
+        skill_2=skill_2_level,
+        skill_3=skill_3_level,
+        calculation_mode="multi_skill_search_preview",
+        equipment_scope=preview_equipment_scope_label,
+        enemy_defense=enemy_defense,
+        multi_skill_counts=tuple(sorted((manual_counts or {}).items())),
+        use_manual_multi_skill_counts=use_manual_counts,
+    )
+
+    def _compute() -> list[str]:
+        return _build_multi_skill_search_preview_lines_impl(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+            manual_counts=manual_counts,
+            use_manual_counts=use_manual_counts,
+            preview_equipment_scope_label=preview_equipment_scope_label,
+            enemy_defense=enemy_defense,
+        )
+
+    lines, _ = cached_preview("multi_skill_search_preview", _compute)
+    return lines
+
+
+def _build_multi_skill_search_preview_lines_impl(
+    *,
+    char_data: Dict[str, Any],
+    weapon_data: Dict[str, Any],
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    manual_counts: Optional[Dict[str, int]] = None,
+    use_manual_counts: bool = False,
+    preview_equipment_scope_label: str = "",
+    enemy_defense: float = 100.0,
+) -> list[str]:
     catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
     blocked = catalog_preview_status_lines(
         catalog, mode_label="多技能遍历(快速预览)"
@@ -185,7 +298,7 @@ def build_multi_skill_search_preview_lines(
         base_context=DamageContext(
             final_attack=0.0,
             skill_multiplier=1.0,
-            enemy_defense=100.0,
+            enemy_defense=enemy_defense,
         ),
         weapons=[
             WeaponCandidate(

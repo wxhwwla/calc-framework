@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""插件敌人参数解析（敌方防御/抗性等）。"""
+
+from __future__ import annotations
+
+from typing import Any, Optional
+
+from data.plugin_registry import get_plugin_registry
+
+DEFAULT_ENEMY_DEFENSE = 100.0
+
+
+def list_plugin_enemy_choices() -> tuple[tuple[str, str], ...]:
+    """
+    返回 (显示名, enemy_id) 列表；首项为内置默认。
+
+    enemy_id 为空字符串表示使用默认防御。
+    """
+    choices: list[tuple[str, str]] = [("默认敌人", "")]
+    reg = get_plugin_registry()
+    for enemy_id in reg.list_enemy_ids():
+        row = reg.get_enemy(enemy_id) or {}
+        label = str(row.get("名称") or enemy_id)
+        defense = row.get("enemy_defense", DEFAULT_ENEMY_DEFENSE)
+        choices.append((f"{label} (防{defense})", enemy_id))
+    return tuple(choices)
+
+
+def resolve_enemy_defense(enemy_id: str, *, default: float = DEFAULT_ENEMY_DEFENSE) -> float:
+    """按插件 id 读取敌方防御；id 为空时用 default。"""
+    if not (enemy_id or "").strip():
+        return float(default)
+    row = get_plugin_registry().get_enemy(enemy_id.strip())
+    if not row:
+        return float(default)
+    return float(row.get("enemy_defense", default))
+
+
+def enemy_damage_context_overrides(enemy_id: str) -> dict[str, Any]:
+    """返回可并入 DamageContext 的敌方参数字段。"""
+    if not (enemy_id or "").strip():
+        return {"enemy_defense": DEFAULT_ENEMY_DEFENSE}
+    row = get_plugin_registry().get_enemy(enemy_id.strip()) or {}
+    return {
+        "enemy_defense": float(row.get("enemy_defense", DEFAULT_ENEMY_DEFENSE)),
+        "enemy_resistance": float(row.get("enemy_resistance", 0.0)),
+    }

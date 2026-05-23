@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
-      - name: Run tests
-        run: python -m pytest tests/ -q
+          python -m pip install -e ".[dev,viz,plugins]"
+      - name: Run tests with coverage
+        run: |
+          python -m pytest tests/ -q --cov=calculation --cov=data --cov=utils --cov=gui_design --cov-report=term-missing --cov-report=xml
+      - name: Coverage summary
+        run: python -m coverage report --fail-under=57

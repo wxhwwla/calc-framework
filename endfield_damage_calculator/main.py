@@ -52,8 +52,13 @@ def main() -> None:
     preload_thread.start()
     
     # 导入 GUI 模块
+    from data.plugin_registry import load_default_plugins
     from gui_design.gui import DamageCalculatorApp
-    
+    from utils.path_utils import get_application_dir
+
+    # 热加载 plugins/ 下的扩展 JSON/YAML（敌方等）
+    load_default_plugins(get_application_dir())
+
     # 创建应用实例
     app = DamageCalculatorApp()
     

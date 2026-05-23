@@ -64,6 +64,7 @@ python github_upload_module.py
 - 角色 / 武器 / **装备** JSON；全量搜索导出至 **`search_output/`**（开发或 exe 同级，非 C 盘临时目录）
 - 公式反推与录入脚本；BWIKI 装备同步
 - GUI「数据来源与许可」：软件 AGPL / 数据许可说明与链接
+- 底栏「工具与分享」：配装预设、操作日志、计算历史、伤害仪表盘（见 [操作指令集 §6.1](docs/操作指令集.md)）
 - BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
 
 细节与布局说明见 [**详细 README**](endfield_damage_calculator/README.md)。
@@ -76,6 +77,7 @@ python github_upload_module.py
 | **模板字段** | 描述、复现步骤、期望行为、OS / Python / 项目版本；Bug 默认标签 `needs-triage` |
 | **命令行** | `gh issue create`（需 `gh auth login`）；见 [`docs/操作指令集.md`](docs/操作指令集.md) §1.3 |
 | **协作约定** | Agent / 维护者见 [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)、[`triage-labels.md`](docs/agents/triage-labels.md) |
+| **测试覆盖率** | [![CI](https://github.com/wxhwwla/endfield_damage_calculator_2.0/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/endfield_damage_calculator_2.0/actions/workflows/ci.yml) + `pytest-cov`（门槛 **57%**→80%，含 GUI 集成测） |
 
 ## 许可证与数据来源
 

@@ -92,6 +92,12 @@ from gui_design.search_settings import (
     resolve_parallel_workers,
     resolve_top_n,
 )
+from gui_design.enhancement_controls import (
+    place_enhancement_section,
+    record_calculation_history,
+    refresh_damage_snapshot,
+)
+from utils.operation_log import LogLevel, get_session_operation_log
 from gui_design.search_results_view import (
     build_search_results_report_lines,
     export_paths_to_strings,
@@ -475,6 +481,7 @@ class DamageCalculatorApp:
                 self.weapon_panel.disable_panel()
 
         # 启动后自动确认一次，填充默认角色/武器属性展示
+        get_session_operation_log().record(LogLevel.INFO, "app_ready", {})
         self._on_confirm()
 
     def _on_char_name_change(self, *args: str) -> None:
@@ -646,7 +653,10 @@ class DamageCalculatorApp:
             font=self.small_font,
             command=lambda _v: self._schedule_confirm(),
         )
-        _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
+        ar = _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
+        ar = place_enhancement_section(
+            self, actions, start_row=ar, place_fn=_place
+        )
 
         sr = 0
         sr = _section(search, "全量遍历", sr)
@@ -1250,12 +1260,23 @@ class DamageCalculatorApp:
         默认合并同帧调用并在输入未变时跳过，避免最小化失焦触发整页清空重建。
         ``force=True`` 时供「确认选择」按钮强制刷新。
         """
+        if force:
+            get_session_operation_log().record(
+                LogLevel.USER,
+                "confirm_selection",
+                {"mode": self._current_calculation_mode()},
+            )
         if not force and self._is_window_iconified():
             return
         signature = self._confirm_refresh_signature_now()
         if not force and signature == self._confirm_refresh_signature:
             return
         self._confirm_refresh_signature = signature
+        get_session_operation_log().record(
+            LogLevel.USER,
+            "confirm_selection",
+            {"mode": self._current_calculation_mode()},
+        )
         self._run_confirm()
 
     def _schedule_confirm(self, *, force: bool = False) -> None:
@@ -1286,6 +1307,7 @@ class DamageCalculatorApp:
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
 
+        enemy_defense = float(getattr(self, "_enemy_defense", 100.0))
         confirm_selection(
             self.char_attr_scroll,
             self.weapon_attr_scroll,
@@ -1301,8 +1323,17 @@ class DamageCalculatorApp:
             preview_scope_label=self.single_skill_scope_var.get(),
             preview_equipment_catalog=self._single_skill_preview_equipment_catalog(),
             preview_equipment_scope_label=self.single_skill_equipment_scope_var.get(),
+            enemy_defense=enemy_defense,
         )
+        refresh_damage_snapshot(self)
         self._refresh_search_estimate()
+        record_calculation_history(
+            self,
+            summary=f"模式 {self._current_calculation_mode_label()}",
+        )
+
+    def _current_calculation_mode_label(self) -> str:
+        return str(self.calc_mode_var.get())
 
     def _create_skill_count_row(
         self,

@@ -24,6 +24,7 @@ from calculation.damage_engine import (
 )
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
+from calculation.preview_cache import cached_preview, sync_confirm_dependencies
 
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
@@ -330,11 +331,72 @@ def build_single_hit_damage_lines(
     ws_level: int = 0,
     ws2_name: str = "",
     ws2_level: int = 0,
+    enemy_defense: float = 100.0,
 ) -> list[str]:
-    """构建单段伤害计算模式的展示行。"""
+    """构建单段伤害计算模式的展示行（带结果缓存）。"""
     if not char_data or not weapon_data:
         return ["请选择有效角色和武器"]
 
+    sync_confirm_dependencies(
+        char_data=char_data,
+        weapon_data=weapon_data,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+        skill_levels=(skill_1_level, skill_2_level, skill_3_level),
+        calculation_mode="single_hit",
+        enemy_defense=enemy_defense,
+    )
+
+    def _compute() -> list[str]:
+        return _build_single_hit_damage_lines_impl(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+            sa1_name=sa1_name,
+            sa1_level=sa1_level,
+            sa2_name=sa2_name,
+            sa2_level=sa2_level,
+            sa3_name=sa3_name,
+            sa3_level=sa3_level,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+            enemy_defense=enemy_defense,
+        )
+
+    lines, _hit = cached_preview("single_hit_lines", _compute)
+    return lines
+
+
+def _build_single_hit_damage_lines_impl(
+    *,
+    char_data: Dict[str, Any],
+    weapon_data: Dict[str, Any],
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    sa1_name: str = "",
+    sa1_level: int = 1,
+    sa2_name: str = "",
+    sa2_level: int = 1,
+    sa3_name: str = "",
+    sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
+    enemy_defense: float = 100.0,
+) -> list[str]:
     skill_label, skill_multiplier, skill_warning = _resolve_selected_skill_for_damage(
         char_data,
         skill_1_level=skill_1_level,
@@ -363,7 +425,7 @@ def build_single_hit_damage_lines(
             final_attack=float(final["final_attack"]),
             skill_multiplier=skill_multiplier,
             skill_type=skill_label.split()[0],
-            enemy_defense=100.0,
+            enemy_defense=enemy_defense,
         ),
         crit_mode="non_crit",
     )
@@ -449,6 +511,7 @@ def confirm_selection(
     preview_scope_label: str = "",
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
+    enemy_defense: float = 100.0,
 ) -> None:
     """
     确认选择并刷新角色属性列、武器属性列，以及右侧乘区数据。
@@ -481,6 +544,24 @@ def confirm_selection(
     char_data = char_panel.get_selected_data()
     weapon_data = weapon_panel.get_selected_data()
     state = evaluate_display_state(char_data, weapon_data)
+    skill_1_level = char_panel.get_skill_1_level()
+    skill_2_level = char_panel.get_skill_2_level()
+    skill_3_level = char_panel.get_skill_3_level()
+    if char_data and weapon_data:
+        sync_confirm_dependencies(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_panel.get_level(),
+            weapon_level=weapon_panel.get_level(),
+            trust_level=char_panel.get_trust_level(),
+            skill_levels=(skill_1_level, skill_2_level, skill_3_level),
+            calculation_mode=calculation_mode,
+            weapon_scope=preview_scope_label,
+            equipment_scope=preview_equipment_scope_label,
+            multi_skill_counts=multi_skill_manual_counts,
+            use_manual_multi_skill_counts=use_manual_multi_skill_counts,
+            enemy_defense=enemy_defense,
+        )
     char_level = char_panel.get_level()
     weapon_level = weapon_panel.get_level()
     trust_level = char_panel.get_trust_level()
@@ -488,9 +569,9 @@ def confirm_selection(
         char_lines = build_character_attribute_lines(
             char_data,
             char_level,
-            skill_1_level=char_panel.get_skill_1_level(),
-            skill_2_level=char_panel.get_skill_2_level(),
-            skill_3_level=char_panel.get_skill_3_level(),
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
         )
         _render_lines(
             char_attr_scroll,
@@ -549,10 +630,11 @@ def confirm_selection(
         trust_level,
         big_font, small_font,
         calculation_mode=calculation_mode,
-        skill_1_level=char_panel.get_skill_1_level(),
-        skill_2_level=char_panel.get_skill_2_level(),
-        skill_3_level=char_panel.get_skill_3_level(),
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
         multi_skill_manual_counts=multi_skill_manual_counts,
+        enemy_defense=enemy_defense,
         use_manual_multi_skill_counts=use_manual_multi_skill_counts,
         preview_weapon_candidates=preview_weapon_candidates,
         preview_scope_label=preview_scope_label,
@@ -590,6 +672,7 @@ def _display_zone_data(
     preview_scope_label: str = "",
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
+    enemy_defense: float = 100.0,
 ) -> None:
     """
     在右侧区域展示乘区数据
@@ -654,6 +737,7 @@ def _display_zone_data(
             ws_level=ws_level,
             ws2_name=ws2_name,
             ws2_level=ws2_level,
+            enemy_defense=enemy_defense,
         ):
             label = ctk.CTkLabel(
                 right_scroll,
@@ -679,6 +763,7 @@ def _display_zone_data(
             preview_scope_label=preview_scope_label,
             preview_equipment_catalog=preview_equipment_catalog,
             preview_equipment_scope_label=preview_equipment_scope_label,
+            enemy_defense=enemy_defense,
         ):
             label = ctk.CTkLabel(
                 right_scroll,
@@ -703,6 +788,7 @@ def _display_zone_data(
             manual_counts=multi_skill_manual_counts,
             use_manual_counts=use_manual_multi_skill_counts,
             preview_equipment_scope_label=preview_equipment_scope_label,
+            enemy_defense=enemy_defense,
         ):
             label = ctk.CTkLabel(
                 right_scroll,

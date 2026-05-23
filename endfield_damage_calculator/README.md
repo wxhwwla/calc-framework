@@ -19,6 +19,7 @@
 | 乘区计算 | 点击「确认选择」后，在角色与武器均有效时刷新右侧乘区（能力、攻击力等） |
 | 单段伤害 / 快照 | 计算模式：15 乘区单段伤害、乘区快照 |
 | 全量搜索（实验） | 固定配装 0–4 + TopN 弹窗；可选多技能加权总伤；导出至 `search_output/` |
+| 工具与分享 | 配装预设 JSON、多方案对比、操作日志、计算历史、伤害仪表盘；可选 `plugins/enemies/` 敌人防御 |
 | 公式反推 | 支持从数值数据反推成长公式参数 |
 | 数据管理 | 支持添加新角色和武器数据；装备经 BWIKI `sync_equipments.py` |
 
@@ -66,7 +67,11 @@ endfield_damage_calculator/
 │   ├── gui_layout.py          # grid 常量
 │   ├── fixed_loadout_controls.py  # 固定配装 UI
 │   ├── confirm_refresh.py     # 确认刷新去重
-│   ├── preview_lines.py       # 单/多技能快速预览文案
+│   ├── preview_lines.py       # 单/多技能快速预览文案（带缓存）
+│   ├── enhancement_controls.py # 底栏工具与分享、仪表盘
+│   ├── damage_snapshot.py     # 确认后伤害快照
+│   ├── damage_visualization.py # matplotlib 图表
+│   ├── loadout_preset.py / calc_history.py
 │   ├── search_export_paths.py # search_output/ 导出路径
 │   ├── gui_settings.py        # 主题与字体
 │   ├── selection_panel.py     # 选择面板

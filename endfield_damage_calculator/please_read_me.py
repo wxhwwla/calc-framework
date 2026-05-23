@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.15.10"
+_VERSION = "1.16.0"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -209,18 +209,49 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 43 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
-# - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "docs/MVP/346/220/234/347/264/242/351/252/214/346/224/266/350/257/264/346/230/216.md"
-# - 更新文档 AGENTS.md
-# - 更新文档 CONTEXT.md
+# - 变更 .github/workflows/ci.yml
 # - 更新文档 README.md
-# - 更新文档 docs/README.md
-# - 更新文档 docs/agents/issue-tracker.md
 # - 更新文档 endfield_damage_calculator/README.md
+# - 修改 endfield_damage_calculator/calculation/parallel_evaluate.py
+# - 修改 endfield_damage_calculator/calculation/preview_cache.py
+# - 修改 endfield_damage_calculator/calculation/result_cache.py
+# - 修改 endfield_damage_calculator/data/enemy_params.py
+# - 修改 endfield_damage_calculator/data/plugin_registry.py
+# - 修改 endfield_damage_calculator/gui_design/calc_history.py
+# - 修改 endfield_damage_calculator/gui_design/damage_snapshot.py
+# - 修改 endfield_damage_calculator/gui_design/damage_visualization.py
+# - 修改 endfield_damage_calculator/gui_design/enhancement_controls.py
+# - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 修改 endfield_damage_calculator/gui_design/loadout_preset.py
+# - 修改 endfield_damage_calculator/gui_design/preset_batch_compare.py
+# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
+# - 修改 endfield_damage_calculator/gui_design/property_display.py
+# - 修改 endfield_damage_calculator/main.py
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 变更 endfield_damage_calculator/plugins/
+# - 变更 endfield_damage_calculator/pyproject.toml
+# - 修改 endfield_damage_calculator/tests/gui_fixtures.py
+# - 修改 endfield_damage_calculator/tests/test_calc_history.py
+# - 修改 endfield_damage_calculator/tests/test_coverage_boost_misc.py
+# - 修改 endfield_damage_calculator/tests/test_damage_snapshot.py
+# - 修改 endfield_damage_calculator/tests/test_damage_visualization.py
+# - 修改 endfield_damage_calculator/tests/test_enemy_params.py
+# - 修改 endfield_damage_calculator/tests/test_enhancement_integration.py
+# - 修改 endfield_damage_calculator/tests/test_equipment_filters.py
+# - 修改 endfield_damage_calculator/tests/test_fixed_loadout_integration.py
+# - 修改 endfield_damage_calculator/tests/test_gui_app_integration.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_preset.py
+# - 修改 endfield_damage_calculator/tests/test_operation_log.py
+# - 修改 endfield_damage_calculator/tests/test_parallel_evaluate.py
+# - 修改 endfield_damage_calculator/tests/test_plugin_registry.py
+# - 修改 endfield_damage_calculator/tests/test_preset_batch_compare.py
+# - 修改 endfield_damage_calculator/tests/test_preview_cache.py
+# - 修改 endfield_damage_calculator/tests/test_property_display_cache.py
+# - 修改 endfield_damage_calculator/tests/test_property_display_integration.py
+# - 修改 endfield_damage_calculator/tests/test_result_cache.py
+# - 修改 endfield_damage_calculator/utils/operation_log.py
 # --- END UPLOAD_SUMMARY ---
