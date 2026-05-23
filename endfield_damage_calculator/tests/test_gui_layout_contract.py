@@ -10,7 +10,7 @@ from gui_design.gui import APP_COLUMN_WEIGHTS
 class TestGuiLayoutContract(unittest.TestCase):
     def test_main_grid_column_weights(self):
         """主界面应为 8 列，其中乘区列占剩余空间。"""
-        self.assertEqual(APP_COLUMN_WEIGHTS, (0, 0, 0, 0, 0, 0, 0, 1))
+        self.assertEqual(APP_COLUMN_WEIGHTS, (0, 0, 2, 0, 0, 0, 0, 5))
 
 
 if __name__ == "__main__":

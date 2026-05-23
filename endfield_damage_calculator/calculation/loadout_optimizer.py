@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import product
-from typing import Callable, Optional
+from typing import Callable, Iterator, Optional
+
+from calculation.top_n_tracker import TopNTracker
 
 from calculation.damage_engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
 from calculation.equipment_system import (
@@ -67,30 +69,64 @@ def _apply_equipment_filter(items: list[dict], candidate_names: Optional[set[str
     return [item for item in items if item.get("名称") in candidate_names]
 
 
-def _iter_loadouts(
+OptimizerTask = tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]
+
+
+@dataclass(frozen=True)
+class OptimizerSearchPlan:
+    """过滤后的搜索计划（不含物化任务列表）。"""
+
+    weapons: tuple[WeaponCandidate, ...]
+    equipment_catalog: dict[str, list[dict]]
+    total_combinations: int
+    pruned_weapon_count: int
+    warnings: tuple[str, ...]
+
+
+def count_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
-    allow_duplicate_accessory: bool,
-) -> list[tuple[dict, dict, dict, dict]]:
+    allow_duplicate_accessory: bool = True,
+) -> int:
+    """统计四格配装组合数（与 _iter_loadout_combinations 一致）。"""
     chests = equipment_catalog.get("chest", [])
     gloves = equipment_catalog.get("gloves", [])
     accessories = equipment_catalog.get("accessories", [])
-    combos: list[tuple[dict, dict, dict, dict]] = []
+    if not chests or not gloves or not accessories:
+        return 0
+    if allow_duplicate_accessory:
+        accessory_pairs = len(accessories) * len(accessories)
+    else:
+        accessory_pairs = sum(
+            1
+            for acc_a in accessories
+            for acc_b in accessories
+            if acc_a.get("名称") != acc_b.get("名称")
+        )
+    return len(chests) * len(gloves) * accessory_pairs
+
+
+def _iter_loadout_combinations(
+    equipment_catalog: dict[str, list[dict]],
+    *,
+    allow_duplicate_accessory: bool,
+) -> Iterator[tuple[dict, dict, dict, dict]]:
+    chests = equipment_catalog.get("chest", [])
+    gloves = equipment_catalog.get("gloves", [])
+    accessories = equipment_catalog.get("accessories", [])
     for chest, glove, acc_a, acc_b in product(chests, gloves, accessories, accessories):
         if not allow_duplicate_accessory and acc_a.get("名称") == acc_b.get("名称"):
             continue
-        combos.append((chest, glove, acc_a, acc_b))
-    return combos
+        yield (chest, glove, acc_a, acc_b)
 
 
-def enumerate_optimizer_tasks(
+def build_optimizer_search_plan(
     *,
-    base_context: DamageContext,
     weapons: list[WeaponCandidate],
     equipment_catalog: dict[str, list[dict]],
     config: OptimizerConfig,
-) -> tuple[list[tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]], int, int, tuple[str, ...]]:
-    """生成搜索任务，供串行/并行复用。"""
+) -> OptimizerSearchPlan:
+    """构建搜索计划并计算组合总数（不物化任务）。"""
     warnings: list[str] = []
     if (
         config.warn_on_unfiltered
@@ -125,13 +161,54 @@ def enumerate_optimizer_tasks(
             if beneficial:
                 filtered_catalog[key] = beneficial
 
-    loadout_combos = _iter_loadouts(
-        filtered_catalog, allow_duplicate_accessory=config.allow_duplicate_accessory
+    loadout_count = count_loadout_combinations(
+        filtered_catalog,
+        allow_duplicate_accessory=config.allow_duplicate_accessory,
     )
-    tasks: list[tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]] = [
-        (weapon, loadout) for weapon in filtered_weapons for loadout in loadout_combos
-    ]
-    return tasks, len(tasks), pruned_weapon_count, tuple(warnings)
+    weapon_count = len(filtered_weapons)
+    return OptimizerSearchPlan(
+        weapons=tuple(filtered_weapons),
+        equipment_catalog=filtered_catalog,
+        total_combinations=weapon_count * loadout_count,
+        pruned_weapon_count=pruned_weapon_count,
+        warnings=tuple(warnings),
+    )
+
+
+def iter_optimizer_tasks(
+    plan: OptimizerSearchPlan,
+    *,
+    allow_duplicate_accessory: bool,
+) -> Iterator[OptimizerTask]:
+    """按武器 × 配装流式生成任务。"""
+    for weapon in plan.weapons:
+        for loadout in _iter_loadout_combinations(
+            plan.equipment_catalog,
+            allow_duplicate_accessory=allow_duplicate_accessory,
+        ):
+            yield (weapon, loadout)
+
+
+def enumerate_optimizer_tasks(
+    *,
+    base_context: DamageContext,
+    weapons: list[WeaponCandidate],
+    equipment_catalog: dict[str, list[dict]],
+    config: OptimizerConfig,
+) -> tuple[Iterator[OptimizerTask], int, int, tuple[str, ...]]:
+    """生成搜索任务迭代器与总数（不物化全部任务）。"""
+    _ = base_context
+    plan = build_optimizer_search_plan(
+        weapons=weapons,
+        equipment_catalog=equipment_catalog,
+        config=config,
+    )
+    return (
+        iter_optimizer_tasks(plan, allow_duplicate_accessory=config.allow_duplicate_accessory),
+        plan.total_combinations,
+        plan.pruned_weapon_count,
+        plan.warnings,
+    )
 
 
 def evaluate_task(
@@ -207,11 +284,15 @@ def search_best_single_skill_loadouts(
         lambda task: evaluate_task(base_context=base_context, crit_mode=config.crit_mode, task=task)
     )
 
-    scores = [evaluator(task) for task in tasks]
+    tracker = TopNTracker(config.top_n, key_fn=lambda score: score.final_damage)
+    searched = 0
+    for task in tasks:
+        tracker.offer(evaluator(task))
+        searched += 1
     return OptimizerResult(
-        top_results=_select_top_n(scores, config.top_n),
+        top_results=tracker.results(),
         total_combinations=total_combinations,
-        searched_combinations=len(scores),
+        searched_combinations=searched,
         pruned_weapon_count=pruned_weapon_count,
         warnings=warnings,
     )

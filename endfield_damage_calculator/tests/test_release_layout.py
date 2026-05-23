@@ -20,7 +20,7 @@ from release_bundle.release_layout import (  # noqa: E402
     RELEASE_DATA_FILES,
     stage_release_folder,
 )
-from data.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH
+from data.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 from utils.path_utils import get_resource_path
 
 
@@ -41,6 +41,14 @@ class TestReleaseLayout(unittest.TestCase):
         rel_paths = {rel for rel, _ in RELEASE_DATA_FILES}
         self.assertIn(CHARACTERS_JSON_PATH, rel_paths)
         self.assertIn(WEAPONS_JSON_PATH, rel_paths)
+        self.assertIn(EQUIPMENTS_JSON_PATH, rel_paths)
+
+    def test_release_readme_mentions_search_output_and_parallel_workers(self):
+        from release_bundle.release_layout import _release_readme_text
+
+        text = _release_readme_text()
+        self.assertIn("search_output", text)
+        self.assertIn("并行线程", text)
 
     def test_stage_release_folder_copies_json_and_licenses(self):
         repo_root = _PKG.parent

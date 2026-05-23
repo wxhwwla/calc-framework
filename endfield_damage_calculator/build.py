@@ -8,9 +8,10 @@
 
 输出：dist/终末地伤害计算器/
   ├── 终末地伤害计算器.exe
-  ├── character_weapon_equipment/.../*.json
+  ├── character_weapon_equipment/.../*.json（含 equipments.json）
   ├── DATA_LICENSE、LICENSE、NOTICES.md
-  └── 发布说明.txt
+  ├── 发布说明.txt
+  └── search_output/（首次全量/MVP 搜索后自动创建，与 exe 同级）
 """
 
 from __future__ import annotations

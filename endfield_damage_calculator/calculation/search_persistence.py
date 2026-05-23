@@ -5,20 +5,27 @@
 from __future__ import annotations
 
 import sqlite3
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Iterator, Optional
 
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import (
     LoadoutScore,
     OptimizerConfig,
+    OptimizerTask,
     WeaponCandidate,
-    enumerate_optimizer_tasks,
+    build_optimizer_search_plan,
     evaluate_task,
+    iter_optimizer_tasks,
 )
-from calculation.search_runner import SearchCancelToken
+from calculation.parallel_search import run_bounded_parallel
+from calculation.search_cancel import SearchCancelToken
+from calculation.top_n_tracker import TopNTracker
+
+# 续跑进度批量写入条数
+PROCESSED_BATCH_SIZE = 500
 
 
 @dataclass(frozen=True)
@@ -114,37 +121,62 @@ class SearchRunStore:
             conn.close()
         return {row["combo_key"] for row in rows}
 
-    def save_processed_score(self, signature: str, combo_key: str, score: LoadoutScore) -> None:
+    def mark_processed_batch(self, signature: str, combo_keys: list[str]) -> None:
+        """批量标记已处理组合（单次提交）。"""
+        if not combo_keys:
+            return
         conn = self._connect()
         try:
-            conn.execute(
+            conn.executemany(
                 """
                 INSERT OR IGNORE INTO processed(signature, combo_key)
                 VALUES (?, ?)
                 """,
-                (signature, combo_key),
-            )
-            conn.execute(
-                """
-                INSERT OR REPLACE INTO scores(
-                    signature, combo_key, weapon_name, final_damage,
-                    chest, gloves, accessory_a, accessory_b
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    signature,
-                    combo_key,
-                    score.weapon_name,
-                    float(score.final_damage),
-                    score.loadout_names.get("chest", ""),
-                    score.loadout_names.get("gloves", ""),
-                    score.loadout_names.get("accessory_a", ""),
-                    score.loadout_names.get("accessory_b", ""),
-                ),
+                [(signature, key) for key in combo_keys],
             )
             conn.commit()
         finally:
             conn.close()
+
+    def replace_top_scores(self, signature: str, scores: tuple[LoadoutScore, ...]) -> None:
+        """仅持久化 TopN 得分（结束时写入）。"""
+        conn = self._connect()
+        try:
+            conn.execute("DELETE FROM scores WHERE signature=?", (signature,))
+            for index, score in enumerate(scores):
+                combo_key = f"top-{index}"
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO scores(
+                        signature, combo_key, weapon_name, final_damage,
+                        chest, gloves, accessory_a, accessory_b
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        signature,
+                        combo_key,
+                        score.weapon_name,
+                        float(score.final_damage),
+                        score.loadout_names.get("chest", ""),
+                        score.loadout_names.get("gloves", ""),
+                        score.loadout_names.get("accessory_a", ""),
+                        score.loadout_names.get("accessory_b", ""),
+                    ),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def count_score_rows(self, signature: str) -> int:
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) AS c FROM scores WHERE signature=?",
+                (signature,),
+            ).fetchone()
+        finally:
+            conn.close()
+        return int(row["c"] if row else 0)
 
     def count_processed(self, signature: str) -> int:
         conn = self._connect()
@@ -187,6 +219,33 @@ class SearchRunStore:
         )
 
 
+@dataclass
+class PendingTaskStream:
+    """待处理任务流（附带跳过计数）。"""
+
+    skipped_preprocessed: int = 0
+
+
+def _iter_pending_tasks(
+    *,
+    plan,
+    allow_duplicate_accessory: bool,
+    existing_keys: set[str],
+) -> tuple[Iterator[tuple[str, OptimizerTask]], PendingTaskStream]:
+    """流式产出待处理 (combo_key, task)，并统计已跳过数量。"""
+    stream = PendingTaskStream()
+
+    def _generator() -> Iterator[tuple[str, OptimizerTask]]:
+        for task in iter_optimizer_tasks(plan, allow_duplicate_accessory=allow_duplicate_accessory):
+            key = _task_key(task)
+            if key in existing_keys:
+                stream.skipped_preprocessed += 1
+                continue
+            yield key, task
+
+    return _generator(), stream
+
+
 def _task_key(task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]) -> str:
     weapon, (chest, gloves, acc_a, acc_b) = task
     return "|".join(
@@ -210,53 +269,82 @@ def execute_search_with_resume(
     config: OptimizerConfig,
     max_workers: int = 1,
     cancel_token: Optional[SearchCancelToken] = None,
+    progress_callback: Optional[Callable[[dict], None]] = None,
 ) -> ResumeExecutionResult:
     """执行可续跑搜索：自动跳过已处理组合。"""
     store = SearchRunStore(db_path)
-    tasks, total_combinations, _pruned, _warnings = enumerate_optimizer_tasks(
-        base_context=base_context,
+    plan = build_optimizer_search_plan(
         weapons=weapons,
         equipment_catalog=equipment_catalog,
         config=config,
     )
+    total_combinations = plan.total_combinations
     store.ensure_run(run_signature, total_combinations)
 
     existing_keys = store.get_processed_keys(run_signature)
-    task_items = [(_task_key(task), task) for task in tasks]
-    skipped_preprocessed = sum(1 for key, _ in task_items if key in existing_keys)
-    remaining = [(key, task) for key, task in task_items if key not in existing_keys]
-
+    pending_iter, pending_stream = _iter_pending_tasks(
+        plan=plan,
+        allow_duplicate_accessory=config.allow_duplicate_accessory,
+        existing_keys=existing_keys,
+    )
     token = cancel_token or SearchCancelToken()
     processed_this_run = 0
-    cancelled = False
+    processed_keys_buffer: list[str] = []
+    top_tracker = TopNTracker(config.top_n, key_fn=lambda score: score.final_damage)
+    started_at = time.perf_counter()
 
-    with ThreadPoolExecutor(max_workers=max(1, int(max_workers))) as executor:
-        futures = {
-            executor.submit(
-                evaluate_task,
-                base_context=base_context,
-                crit_mode=config.crit_mode,
-                task=task,
-            ): key
-            for key, task in remaining
-        }
-        for future in as_completed(futures):
-            if token.should_cancel(processed_this_run):
-                cancelled = True
-                for pending in futures:
-                    pending.cancel()
-                break
-            key = futures[future]
-            try:
-                score = future.result()
-            except Exception:
-                continue
-            store.save_processed_score(run_signature, key, score)
-            processed_this_run += 1
+    def _evaluate(task: OptimizerTask) -> LoadoutScore:
+        return evaluate_task(
+            base_context=base_context,
+            crit_mode=config.crit_mode,
+            task=task,
+        )
 
+    def _on_result(item: tuple[str, OptimizerTask], score: LoadoutScore) -> None:
+        nonlocal processed_this_run
+        key, _task = item
+        top_tracker.offer(score)
+        processed_keys_buffer.append(key)
+        processed_this_run += 1
+        if len(processed_keys_buffer) >= PROCESSED_BATCH_SIZE:
+            store.mark_processed_batch(run_signature, processed_keys_buffer)
+            processed_keys_buffer.clear()
+
+    def _progress(info: dict) -> None:
+        if not progress_callback:
+            return
+        processed_total = skipped_preprocessed + int(info.get("processed", 0))
+        elapsed = max(1e-6, time.perf_counter() - started_at)
+        speed = processed_this_run / elapsed if processed_this_run else 0.0
+        remain = max(0, total_combinations - processed_total)
+        eta = remain / speed if speed > 0 else 0.0
+        progress_callback(
+            {
+                "processed": processed_total,
+                "total": total_combinations,
+                "speed_per_sec": speed,
+                "eta_seconds": eta,
+            }
+        )
+
+    _, _processed_count, cancelled = run_bounded_parallel(
+        work_items=pending_iter,
+        total=total_combinations,
+        evaluate=lambda item: _evaluate(item[1]),
+        max_workers=max_workers,
+        cancel_token=token,
+        progress_callback=_progress,
+        on_result=_on_result,
+    )
+
+    if processed_keys_buffer:
+        store.mark_processed_batch(run_signature, processed_keys_buffer)
+
+    skipped_preprocessed = pending_stream.skipped_preprocessed
+    top_scores = top_tracker.results()
+    store.replace_top_scores(run_signature, top_scores)
     store.mark_run_status(run_signature, "cancelled" if cancelled else "completed")
     processed_total = store.count_processed(run_signature)
-    top_scores = store.load_top_scores(run_signature, config.top_n)
     return ResumeExecutionResult(
         top_results=top_scores,
         total_combinations=total_combinations,

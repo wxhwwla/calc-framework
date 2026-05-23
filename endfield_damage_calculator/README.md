@@ -17,8 +17,10 @@
 | 武器选择 | 支持按类型、星级筛选武器，包含特殊能力等级选择 |
 | 属性展示 | **角色属性列**（四维、基础攻击与技能倍率）与**武器属性列**分列显示等级曲线明细（选择区仅负责操作，不重复摘要） |
 | 乘区计算 | 点击「确认选择」后，在角色与武器均有效时刷新右侧乘区（能力、攻击力等） |
+| 单段伤害 / 快照 | 计算模式：15 乘区单段伤害、乘区快照 |
+| 全量搜索（实验） | 单技能全量遍历 + TopN 弹窗；并行线程说明；导出至 `search_output/` |
 | 公式反推 | 支持从数值数据反推成长公式参数 |
-| 数据管理 | 支持添加新角色和武器数据 |
+| 数据管理 | 支持添加新角色和武器数据；装备经 BWIKI `sync_equipments.py` |
 
 ---
 
@@ -50,15 +52,19 @@ endfield_damage_calculator/
 │   │   ├── character_data.py  # 角色数据管理
 │   │   ├── add_character.py   # 添加角色脚本
 │   │   └── formula.py         # 角色公式（保留兼容）
-│   └── weapon_data/           # 武器数据
-│       ├── weapons.json       # 武器JSON数据
-│       ├── weapon_data.py     # 武器数据管理
-│       ├── add_weapon.py      # 添加武器脚本
-│       └── formula.py         # 武器公式（保留兼容）
+│   ├── weapon_data/           # 武器数据
+│   │   ├── weapons.json
+│   │   ├── add_weapon.py
+│   │   └── formula.py         # 保留兼容
+│   └── equipment_data/
+│       └── equipments.json    # 装备（全量搜索）
 ├── data/                      # 统一数据加载层
-│   └── loader.py              # 数据统一加载与缓存
+│   └── loader.py              # get_characters / get_weapons / get_equipments
+├── calculation/               # 伤害引擎、装备、搜索、MVP 流水线（见 docs/MVP搜索验收说明.md）
 ├── gui_design/                # GUI界面模块
-│   ├── gui.py                 # 主应用类
+│   ├── gui.py                 # 主应用类（三列 + 乘区）
+│   ├── search_export_paths.py # search_output/ 导出路径
+│   ├── search_settings.py     # 并行线程与进度文案
 │   ├── display_model.py       # GUI 展示层入口
 │   ├── gui_tools.py           # 兼容导出（请用 display_model）
 │   ├── gui_settings.py        # GUI设置初始化
@@ -76,8 +82,11 @@ endfield_damage_calculator/
 │   ├── test_calculation.py
 │   ├── test_game_data_contract.py
 │   └── ...
-└── utils/                     # 工具函数
-    └── path_utils.py          # 路径处理工具
+├── release_bundle/            # 发布布局（勿命名 packaging）
+│   └── release_layout.py
+├── search_output/             # 全量/MVP 搜索导出（gitignore，运行后生成）
+└── utils/
+    └── path_utils.py          # get_application_dir / get_resource_path
 ```
 
 ### 仓库根目录（与本包并列）

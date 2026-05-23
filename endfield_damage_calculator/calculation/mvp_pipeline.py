@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
+
+from calculation.search_runner import SearchCancelToken
 
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
@@ -23,6 +25,8 @@ def run_mvp_search_pipeline(
     equipment_catalog: dict[str, list[dict[str, Any]]],
     config: OptimizerConfig,
     max_workers: int = 1,
+    cancel_token: Optional[SearchCancelToken] = None,
+    progress_callback: Optional[Callable[[dict], None]] = None,
 ) -> dict[str, Any]:
     """运行 MVP 主链路：续跑搜索 + 导出。"""
     resume_result = execute_search_with_resume(
@@ -33,6 +37,8 @@ def run_mvp_search_pipeline(
         equipment_catalog=equipment_catalog,
         config=config,
         max_workers=max_workers,
+        cancel_token=cancel_token,
+        progress_callback=progress_callback,
     )
     exports = export_search_outputs(
         scores=resume_result.top_results,
@@ -44,5 +50,13 @@ def run_mvp_search_pipeline(
         "processed_combinations": resume_result.processed_combinations,
         "total_combinations": resume_result.total_combinations,
         "cancelled": resume_result.cancelled,
+        "top_results": [
+            {
+                "weapon_name": score.weapon_name,
+                "final_damage": score.final_damage,
+                "loadout_names": dict(score.loadout_names),
+            }
+            for score in resume_result.top_results
+        ],
         "exports": exports,
     }

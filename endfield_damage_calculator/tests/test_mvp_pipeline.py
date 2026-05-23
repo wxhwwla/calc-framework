@@ -49,6 +49,8 @@ class TestMvpPipeline(unittest.TestCase):
                 max_workers=2,
             )
             self.assertGreaterEqual(out["processed_combinations"], 1)
+            self.assertTrue(out["top_results"])
+            self.assertIn("weapon_name", out["top_results"][0])
             self.assertTrue((root / "exports" / "top_results.json").is_file())
             self.assertTrue((root / "exports" / "top_results.csv").is_file())
             self.assertTrue((root / "exports" / "all_results.ndjson").is_file())

@@ -10,6 +10,8 @@
 | [商业许可要点.md](商业许可要点.md) | 商业洽谈提纲（非合同） |
 | [合规自查清单.md](合规自查清单.md) | 发布前自检 |
 | [算法与架构.md](算法与架构.md) | 公式、乘区、模块结构（原根目录 `PROJECT_DOCUMENTATION.md`） |
+| [MVP搜索验收说明.md](MVP搜索验收说明.md) | 全量遍历、并行线程、`search_output/` 导出、GUI/打包验收 |
+| [会话接续手册.md](会话接续手册.md) | 新对话必读：接缝、已完成项、勿重复工作 |
 | [agents/](agents/) | Issue 流程、标签、Agent 协作约定 |
 
 仓库门面与目录树见根目录 [README.md](../README.md)；领域术语见 [CONTEXT.md](../CONTEXT.md)。

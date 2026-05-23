@@ -64,5 +64,8 @@ Desktop.ini
 *.sqlite3
 *.db
 
+# GUI 全量/MVP 搜索导出（包目录 search_output/）
+endfield_damage_calculator/search_output/
+
 # BWIKI 侦察缓存（体积大、可本地重跑）
 tools/bwiki_scout/output/

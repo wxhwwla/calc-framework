@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.14.1"
+_VERSION = "1.15.0"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -129,6 +129,7 @@ USAGE_INFO = f"""
     2. 打包方式（产出 dist/终末地伤害计算器/ 文件夹，exe 与 JSON 分开放置）：
         pip install -e ".[build]"
         python build.py
+        全量/MVP 搜索导出在 exe 同级 search_output/（见 发布说明.txt）
 
     3. 操作流程：
         - 在左侧选择角色类型和星级
@@ -211,33 +212,46 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 27 处文件
+# TITLE: 更新 40 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
 # - 变更 "docs/MVP/346/220/234/347/264/242/351/252/214/346/224/266/350/257/264/346/230/216.md"
-# - 修改 endfield_damage_calculator/calculation/equipment_system.py
-# - 变更 endfield_damage_calculator/character_weapon_equipment/equipment_data/
-# - 修改 endfield_damage_calculator/data/loader.py
+# - 变更 .gitignore
+# - 更新文档 CONTEXT.md
+# - 更新文档 README.md
+# - 更新文档 docs/README.md
+# - 更新文档 endfield_damage_calculator/README.md
+# - 修改 endfield_damage_calculator/build.py
+# - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
+# - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
+# - 修改 endfield_damage_calculator/calculation/parallel_search.py
+# - 修改 endfield_damage_calculator/calculation/search_cancel.py
+# - 修改 endfield_damage_calculator/calculation/search_estimate.py
+# - 修改 endfield_damage_calculator/calculation/search_persistence.py
+# - 修改 endfield_damage_calculator/calculation/search_runner.py
+# - 修改 endfield_damage_calculator/calculation/top_n_tracker.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 修改 endfield_damage_calculator/gui_design/label_layout.py
 # - 修改 endfield_damage_calculator/gui_design/property_display.py
+# - 修改 endfield_damage_calculator/gui_design/search_export_paths.py
+# - 修改 endfield_damage_calculator/gui_design/search_results_view.py
+# - 修改 endfield_damage_calculator/gui_design/search_settings.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/test_equipment_sync.py
-# - 修改 endfield_damage_calculator/tests/test_equipment_system.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_optimizer.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_search_preview.py
+# - 修改 endfield_damage_calculator/release_bundle/release_layout.py
+# - 修改 endfield_damage_calculator/tests/test_frozen_search_export_paths.py
+# - 修改 endfield_damage_calculator/tests/test_gui_layout_contract.py
 # - 修改 endfield_damage_calculator/tests/test_mvp_pipeline.py
+# - 修改 endfield_damage_calculator/tests/test_release_layout.py
+# - 修改 endfield_damage_calculator/tests/test_search_estimate.py
+# - 修改 endfield_damage_calculator/tests/test_search_export_paths.py
 # - 修改 endfield_damage_calculator/tests/test_search_persistence.py
-# - 修改 endfield_damage_calculator/tests/test_search_runner.py
-# - 修改 endfield_damage_calculator/tests/test_single_hit_preview.py
-# - 修改 endfield_damage_calculator/tests/test_single_skill_search_preview.py
-# - 更新文档 tools/bwiki_scout/README.md
-# - 修改 tools/bwiki_scout/config.py
-# - 修改 tools/bwiki_scout/equipment_sync.py
-# - 修改 tools/bwiki_scout/equipment_wiki.py
-# - 修改 tools/bwiki_scout/scout.py
-# - 修改 tools/bwiki_scout/sync_all.py
-# - 修改 tools/bwiki_scout/sync_equipments.py
+# - 修改 endfield_damage_calculator/tests/test_search_results_view.py
+# - 修改 endfield_damage_calculator/tests/test_search_settings.py
+# - 修改 endfield_damage_calculator/tests/test_streaming_optimizer.py
+# - 修改 endfield_damage_calculator/tests/test_top_n_tracker.py
+# - 修改 endfield_damage_calculator/utils/__init__.py
+# - 修改 endfield_damage_calculator/utils/path_utils.py
 # --- END UPLOAD_SUMMARY ---

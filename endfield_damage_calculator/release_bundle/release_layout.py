@@ -13,7 +13,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from data.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH
+from data.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
 # PyInstaller onedir 输出目录名 / 压缩包根目录名
 RELEASE_APP_NAME = "终末地伤害计算器"
@@ -22,6 +22,7 @@ RELEASE_APP_NAME = "终末地伤害计算器"
 RELEASE_DATA_FILES: tuple[tuple[str, str], ...] = (
     (CHARACTERS_JSON_PATH, CHARACTERS_JSON_PATH),
     (WEAPONS_JSON_PATH, WEAPONS_JSON_PATH),
+    (EQUIPMENTS_JSON_PATH, EQUIPMENTS_JSON_PATH),
 )
 
 # 随数据分发的许可与声明（相对 repo 根目录）
@@ -43,6 +44,10 @@ def _release_readme_text() -> str:
 完整说明：docs/数据来源与许可.md（源码仓库）或 GUI「数据来源与许可」按钮。
 
 分发时请保持 exe 与本目录内 JSON、许可文件相对位置不变；可单独更新 JSON 而无需重打 exe。
+
+【全量/MVP 搜索导出】首次运行后在本文件夹下自动创建 search_output/（与 exe 同级，不在 C 盘临时目录）。
+  - 内含 search_runs.db、mvp_exports/ 等；可直接备份或删除该文件夹。
+【并行线程】GUI「计算与搜索」中「自动」= 逻辑核数减 1；手动选项不会超过本机逻辑核数。
 """
 
 

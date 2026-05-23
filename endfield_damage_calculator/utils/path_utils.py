@@ -32,6 +32,15 @@ def _find_project_root() -> Path:
     return current_file.parent.parent
 
 
+def get_application_dir() -> Path:
+    """
+    获取应用程序根目录（开发=源码包目录；打包=exe 所在目录）。
+
+    全量搜索导出、续跑数据库等用户数据应写在此目录下，勿使用系统临时盘。
+    """
+    return _get_app_dir()
+
+
 def _get_app_dir() -> Path:
     """
     获取应用程序根目录

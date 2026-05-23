@@ -473,7 +473,7 @@ def build_single_skill_search_preview_lines(
         f"候选范围: {preview_scope_label or '当前武器'}",
         f"装备范围: {preview_equipment_scope_label or '全部装备'}",
         f"预览组合数: {result.total_combinations}",
-        "说明: 当前仅采样每个部位前2件装备；完整遍历请点击“实验：MVP搜索并导出”。",
+        "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
     ]
     if skill_warning:
         lines.append(f"提示: {skill_warning}")
@@ -616,7 +616,7 @@ def build_multi_skill_search_preview_lines(
         "计算模式: 多技能遍历(快速预览)",
         f"预览组合数: {result.total_combinations}",
         weight_desc,
-        "说明: 当前仅采样每个部位前2件装备；完整遍历请点击“实验：MVP搜索并导出”。",
+        "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
     ]
     if warning:
         lines.append(f"提示: {warning}")

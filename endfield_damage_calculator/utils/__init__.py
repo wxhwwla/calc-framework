@@ -6,6 +6,6 @@
 - get_resource_path: 获取资源文件的完整路径
 """
 
-from .path_utils import get_resource_path
+from .path_utils import get_application_dir, get_resource_path
 
 __all__ = ["get_resource_path"]

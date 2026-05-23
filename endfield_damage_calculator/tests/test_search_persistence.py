@@ -10,6 +10,7 @@ from calculation.damage_engine import DamageContext
 from calculation.equipment_system import build_runtime_equipment_from_wiki_draft
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
 from calculation.search_persistence import (
+    SearchRunStore,
     execute_search_with_resume,
     get_sqlite_viewer_links,
 )
@@ -66,6 +67,36 @@ class TestSearchPersistence(unittest.TestCase):
             self.assertFalse(second.cancelled)
             self.assertGreater(second.skipped_preprocessed, 0)
             self.assertEqual(second.processed_combinations, second.total_combinations)
+
+    def test_mark_processed_batch_writes_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = SearchRunStore(Path(tmp) / "search_runs.db")
+            store.ensure_run("sig", 10)
+            store.mark_processed_batch("sig", ["k1", "k2", "k3"])
+            self.assertEqual(store.count_processed("sig"), 3)
+
+    def test_full_search_persists_only_top_n_scores(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "search_runs.db"
+            signature = "topn-signature"
+            base_context = DamageContext(final_attack=0.0, skill_multiplier=1.0, enemy_defense=0.0)
+            weapons = [WeaponCandidate(name="武器A", final_attack=1000.0)]
+            catalog = self._catalog()
+            config = OptimizerConfig(top_n=2)
+
+            result = execute_search_with_resume(
+                db_path=db_path,
+                run_signature=signature,
+                base_context=base_context,
+                weapons=weapons,
+                equipment_catalog=catalog,
+                config=config,
+                max_workers=2,
+            )
+            self.assertFalse(result.cancelled)
+            store = SearchRunStore(db_path)
+            self.assertLessEqual(store.count_score_rows(signature), 2)
+            self.assertEqual(len(result.top_results), 2)
 
     def test_viewer_links_are_exposed_for_packaging_notice(self):
         links = get_sqlite_viewer_links()

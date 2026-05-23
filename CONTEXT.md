@@ -8,6 +8,7 @@
 |------|------|
 | **角色** | `characters.json` 中的一条记录，含类型、星级、等级曲线、四维属性、战技/连携/终结技倍率等 |
 | **武器** | `weapons.json` 中的一条记录，含基础攻击力曲线、以 `+` 结尾的附加属性、可选**特殊能力** |
+| **装备** | `equipments.json` 中的一条记录；部位为 **护甲 / 护手 / 配件**（与 Wiki「装备种类」一致，旧称「胸甲」作别名） |
 | **等级曲线** | 与角色/武器等级列表等长的数值数组（通常 90 级），由 JSON 预存，运行时直接读取 |
 | **潜能** | 武器精炼等级序列（`talent`，0–5），不是角色天赋 |
 
@@ -25,7 +26,7 @@
 
 | 术语 | 含义 |
 |------|------|
-| **统一加载层** | `data.loader`：`get_characters()` / `get_weapons()`，带缓存，`strict` 失败抛 `DataLoadError` |
+| **统一加载层** | `data.loader`：`get_characters()` / `get_weapons()` / `get_equipments()`，带缓存，`strict` 失败抛 `DataLoadError` |
 | **预烘焙 JSON** | 已写入完整曲线的 JSON；GUI 不再在运行时调用 `process_*` |
 | **录入脚本** | `add_weapon.py`、`add_character.py`、`scripts/seed_*.py`；经 `curve_baker` 烘焙曲线后写回 JSON |
 
@@ -36,10 +37,14 @@
 | **仓库根目录** | Git 克隆顶层（含 `CONTEXT.md`、`.github/`、`github_upload_module.py`、`docs/`、`tools/`） |
 | **Python 包目录** | `endfield_damage_calculator/`（`main.py`、`tests/`、`pip install -e` 的工作目录） |
 | **遗留目录** | `legacy/`：旧脚本归档，新功能勿依赖 |
-| **打包路径** | PyInstaller 下通过 `utils.path_utils.get_resource_path` 解析 bundled 数据 |
-| **右侧乘区** | GUI 最右列（第 7 列），展示防御减伤、能力乘区与最终攻击力；**总伤结算**仍为后续产品功能 |
-| **角色属性列** | GUI 第 3 列，展示角色等级曲线属性（力量、敏捷等）及战技/连携技/终结技倍率明细（等级取自选择区滑块）；不含选择摘要 |
-| **武器属性列** | GUI 第 5 列，仅展示武器基础攻击与附加属性明细，不含选择摘要 |
+| **应用根目录** | `utils.path_utils.get_application_dir()`：开发=包目录，打包=exe 所在发布文件夹 |
+| **打包路径** | `get_resource_path` 读 exe **同级** JSON（非 onefile 内嵌） |
+| **搜索导出** | 默认 `<应用根>/search_output/`；全量/MVP 续跑库与导出文件 |
+| **全量遍历** | 单技能下枚举武器×四格配装组合；GUI「全量遍历(弹窗结果)」；流式+有界并行+SQLite 续跑 |
+| **计算与搜索列** | GUI 第 2 列：模式、全量遍历、并行线程、预估与状态 |
+| **右侧乘区** | GUI 第 7 列，展示防御减伤、能力乘区与最终攻击力等 |
+| **角色属性列** | GUI 第 3 列，角色曲线与技能倍率 |
+| **武器属性列** | GUI 第 5 列，武器攻击与附加属性 |
 | **上传流程** | 根目录 `github_upload_module.py`；`_VERSION` 自动 bump；可选提交签名；说明见 `please_read_me.UPLOAD_WORKFLOW` |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |

@@ -39,12 +39,36 @@ from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
 from calculation.mvp_pipeline import run_mvp_search_pipeline
-from calculation.equipment_system import load_equipment_catalog_from_wiki_draft
+from calculation.search_runner import SearchCancelToken
 from calculation.equipment_system import build_equipment_catalog_from_local_rows
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.search_estimate import (
+    estimate_search_duration,
+    format_workload_estimate_line,
+    preview_search_workload,
+)
+from gui_design.label_layout import CONTROL_COLUMN_MINSIZE, bind_wrapped_label
+from gui_design.search_export_paths import (
+    allocate_search_run_directory,
+    default_search_output_root,
+)
+from gui_design.search_settings import (
+    build_worker_option_labels,
+    format_parallel_workers_help,
+    format_search_progress_text,
+    get_cpu_parallel_info,
+    resolve_parallel_workers,
+    resolve_top_n,
+)
+from gui_design.search_results_view import (
+    build_search_results_report_lines,
+    export_paths_to_strings,
+    loadout_scores_from_payload,
+    show_search_results_dialog,
+)
 
-# 列 0/1/3/5：选择区与属性区（最小宽度）；列 7：右侧乘区（占满剩余宽度）
-APP_COLUMN_WEIGHTS = (0, 0, 0, 0, 0, 0, 0, 1)
+# 列 0/1：配装；列 2：计算与搜索（需一定宽度）；列 7：乘区（可伸缩）
+APP_COLUMN_WEIGHTS = (0, 0, 2, 0, 0, 0, 0, 5)
 
 
 class DamageCalculatorApp:
@@ -53,11 +77,11 @@ class DamageCalculatorApp:
     
     包含完整的 GUI 界面，提供角色和武器选择功能，支持窗口缩放自适应。
     
-    界面布局（主窗口 8 列 grid，列 2/4/6 为间隙；选择列与属性列 weight=0，乘区列 weight=1）：
-    ┌──────────────────────────────────────────────────────────────────────────┐
-    │ 角色选择 │ 武器选择 │ 角色属性 │ 武器属性 │        右侧乘区（可伸缩）      │
-    │ +确认按钮│ +滑块    │ 明细数值 │ 明细数值 │        乘区数据               │
-    └──────────────────────────────────────────────────────────────────────────┘
+    界面布局（8 列 grid；列 2/4/6 为窄间隙）：
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │ 角色选择 │ 武器选择 │ 计算与搜索 │ 角色属性 │ 武器属性 │   右侧乘区      │
+    │ (滚动)   │ (滚动)   │ (滚动)     │          │          │   (可伸缩)      │
+    └────────────────────────────────────────────────────────────────────────────┘
     
     属性：
         app: CTk 主窗口对象
@@ -97,13 +121,13 @@ class DamageCalculatorApp:
         self.app: ctk.CTk = ctk.CTk()
 
         # 设置窗口初始大小（宽度x高度）
-        self.app.geometry("1200x720")
+        self.app.geometry("1360x760")
         
         # 设置窗口标题（包含 EXE 版本号）
         self.app.title(f"终末地伤害计算小工具 v{get_exe_version()}")
         
         # 设置窗口最小尺寸（防止用户拖得太小）
-        self.app.minsize(900, 600)
+        self.app.minsize(1100, 640)
         
         # 绑定窗口大小变化事件，用于自适应缩放
         self.app.bind("<Configure>", self._on_window_resize)
@@ -122,9 +146,23 @@ class DamageCalculatorApp:
         # 初始化 UI 组件引用为 None（后续在 _setup_ui 中创建）
         self.char_frame: Optional[ctk.CTkFrame] = None
         self.weapon_frame: Optional[ctk.CTkFrame] = None
+        self.control_frame: Optional[ctk.CTkFrame] = None
+        self.control_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.confirm_btn: Optional[ctk.CTkButton] = None
         self.attribution_btn: Optional[ctk.CTkButton] = None
         self.mvp_search_btn: Optional[ctk.CTkButton] = None
+        self.full_search_btn: Optional[ctk.CTkButton] = None
+        self.search_workers_var: ctk.StringVar = ctk.StringVar(
+            value=build_worker_option_labels()[0]
+        )
+        self.search_top_n_var: ctk.StringVar = ctk.StringVar(value="10")
+        self.search_workers_menu: Optional[ctk.CTkOptionMenu] = None
+        self.search_workers_hint_label: Optional[ctk.CTkLabel] = None
+        self.search_top_n_menu: Optional[ctk.CTkOptionMenu] = None
+        self.search_cancel_btn: Optional[ctk.CTkButton] = None
+        self._search_cancel_token: Optional[SearchCancelToken] = None
+        self._search_estimated_total_seconds: float = 0.0
+        self.search_estimate_label: Optional[ctk.CTkLabel] = None
         self.mvp_status_label: Optional[ctk.CTkLabel] = None
         self.calc_mode_var: ctk.StringVar = ctk.StringVar(value="single_hit")
         self.calc_mode_menu: Optional[ctk.CTkOptionMenu] = None
@@ -180,6 +218,7 @@ class DamageCalculatorApp:
         # 注：CTkFrame 有内置最小宽度限制，设置 weight=0 让组件仅占用最小尺寸
         for idx, weight in enumerate(APP_COLUMN_WEIGHTS):
             self.app.grid_columnconfigure(idx, weight=weight)
+        self.app.grid_columnconfigure(2, minsize=CONTROL_COLUMN_MINSIZE)
 
         # ==================== 角色选择区（左侧）====================
         self.char_frame = ctk.CTkFrame(
@@ -188,243 +227,46 @@ class DamageCalculatorApp:
         )
         # 将角色框架放置在第 0 行第 0 列
         self.char_frame.grid(
-            row=0,              # 行号
-            column=0,           # 列号
-            padx=(10, 5),      # 水平内边距（左边10，右边5）
-            pady=10,            # 垂直内边距
-            sticky="nsew"       # 四边拉伸（north, south, east, west）
+            row=0,
+            column=0,
+            padx=(10, 5),
+            pady=10,
+            sticky="nsew",
         )
+        self.char_frame.grid_rowconfigure(0, weight=1)
+        self.char_frame.grid_columnconfigure(0, weight=1)
 
-        # ==================== 武器选择区（角色选择右侧）====================
-        self.weapon_frame = ctk.CTkFrame(
-            self.app,           # 父容器
-            corner_radius=20    # 圆角半径（美化）
-        )
-        # 将武器框架放置在第 0 行第 1 列
+        # ==================== 武器选择区（仅武器词条与等级）====================
+        self.weapon_frame = ctk.CTkFrame(self.app, corner_radius=20)
         self.weapon_frame.grid(
-            row=0,              # 行号
-            column=1,           # 列号
-            padx=5,             # 水平内边距
-            pady=10,            # 垂直内边距
-            sticky="nsew"       # 四边拉伸（north, south, east, west）
+            row=0,
+            column=1,
+            padx=5,
+            pady=10,
+            sticky="nsew",
         )
-        
-        # 确认按钮（放在武器选择区下方）
-        self.confirm_btn = ctk.CTkButton(
-            self.weapon_frame,        # 父容器（放在武器框架内）
-            text="确认选择",          # 按钮文本
-            font=self.big_font,       # 使用大号字体
-            command=self._on_confirm  # 点击事件处理函数
-        )
-        # 第 0 行仅放武器选择滚动区，避免与下方按钮/模式下拉重叠
-        self.weapon_frame.grid_rowconfigure(0, weight=1, minsize=280)
-        self.weapon_frame.grid_rowconfigure(1, weight=0)
-        self.weapon_frame.grid_rowconfigure(2, weight=0)
-        self.weapon_frame.grid_rowconfigure(3, weight=0)
-        self.weapon_frame.grid_rowconfigure(4, weight=0)
-        self.weapon_frame.grid_rowconfigure(5, weight=0)
-        self.weapon_frame.grid_rowconfigure(6, weight=0)
-        self.weapon_frame.grid_rowconfigure(7, weight=0)
-        self.weapon_frame.grid_rowconfigure(8, weight=0)
-        self.weapon_frame.grid_rowconfigure(9, weight=0)
-        self.weapon_frame.grid_rowconfigure(10, weight=0)
-        self.weapon_frame.grid_rowconfigure(11, weight=0)
-        self.weapon_frame.grid_rowconfigure(12, weight=0)
-        self.weapon_frame.grid_rowconfigure(13, weight=0)
-        self.weapon_frame.grid_rowconfigure(14, weight=0)
-        self.weapon_frame.grid_rowconfigure(15, weight=0)
+        self.weapon_frame.grid_rowconfigure(0, weight=1)
         self.weapon_frame.grid_columnconfigure(0, weight=1)
 
-        self.confirm_btn.grid(
-            row=1,
-            column=0,
-            padx=10,
-            pady=(10, 4),
-            sticky="ew",
+        # ==================== 计算与搜索（独立列，可滚动）====================
+        self.control_frame = ctk.CTkFrame(self.app, corner_radius=20)
+        self.control_frame.grid(
+            row=0,
+            column=2,
+            padx=5,
+            pady=10,
+            sticky="nsew",
         )
-
-        self.attribution_btn = ctk.CTkButton(
-            self.weapon_frame,
-            text="数据来源与许可",
-            font=self.small_font,
-            fg_color="transparent",
-            border_width=1,
-            command=self._on_attribution,
+        self.control_frame.grid_rowconfigure(0, weight=1)
+        self.control_frame.grid_columnconfigure(0, weight=1)
+        self.control_scroll = ctk.CTkScrollableFrame(
+            self.control_frame,
+            label_text="计算与搜索",
+            label_font=self.big_font,
         )
-        self.attribution_btn.grid(
-            row=2,
-            column=0,
-            padx=10,
-            pady=(4, 10),
-            sticky="ew",
-        )
-
-        self.mvp_search_btn = ctk.CTkButton(
-            self.weapon_frame,
-            text="实验：MVP搜索并导出",
-            font=self.small_font,
-            command=self._on_run_mvp_search,
-        )
-        self.mvp_search_btn.grid(
-            row=3,
-            column=0,
-            padx=10,
-            pady=(0, 4),
-            sticky="ew",
-        )
-        self.mvp_status_label = ctk.CTkLabel(
-            self.weapon_frame,
-            text="MVP搜索状态：未开始",
-            font=self.small_font,
-            text_color="#888888",
-            justify="left",
-        )
-        self.mvp_status_label.grid(
-            row=4,
-            column=0,
-            padx=10,
-            pady=(0, 4),
-            sticky="w",
-        )
-        mode_title = ctk.CTkLabel(
-            self.weapon_frame,
-            text="计算模式",
-            font=self.small_font,
-            text_color="#CCCCCC",
-        )
-        mode_title.grid(
-            row=5,
-            column=0,
-            padx=10,
-            pady=(0, 2),
-            sticky="w",
-        )
-        self.calc_mode_menu = ctk.CTkOptionMenu(
-            self.weapon_frame,
-            values=[
-                "单段伤害计算",
-                "乘区快照",
-                "单技能遍历(快速预览)",
-                "多技能遍历(快速预览)",
-            ],
-            variable=self.calc_mode_var,
-            font=self.small_font,
-            command=lambda _v: self._on_confirm(),
-        )
-        self.calc_mode_menu.grid(
-            row=6,
-            column=0,
-            padx=10,
-            pady=(0, 4),
-            sticky="ew",
-        )
-        scope_title = ctk.CTkLabel(
-            self.weapon_frame,
-            text="单技能候选范围",
-            font=self.small_font,
-            text_color="#CCCCCC",
-        )
-        scope_title.grid(
-            row=7,
-            column=0,
-            padx=10,
-            pady=(0, 2),
-            sticky="w",
-        )
-        self.single_skill_scope_menu = ctk.CTkOptionMenu(
-            self.weapon_frame,
-            values=[
-                "当前武器",
-                "同类型同星级",
-                "同类型全部",
-            ],
-            variable=self.single_skill_scope_var,
-            font=self.small_font,
-            command=lambda _v: self._on_confirm(),
-        )
-        self.single_skill_scope_menu.grid(
-            row=8,
-            column=0,
-            padx=10,
-            pady=(0, 4),
-            sticky="ew",
-        )
-        equip_scope_title = ctk.CTkLabel(
-            self.weapon_frame,
-            text="单技能装备范围",
-            font=self.small_font,
-            text_color="#CCCCCC",
-        )
-        equip_scope_title.grid(
-            row=9,
-            column=0,
-            padx=10,
-            pady=(0, 2),
-            sticky="w",
-        )
-        self.single_skill_equipment_scope_menu = ctk.CTkOptionMenu(
-            self.weapon_frame,
-            values=[
-                "全部装备",
-                "仅套装装备",
-                "仅散件装备",
-            ],
-            variable=self.single_skill_equipment_scope_var,
-            font=self.small_font,
-            command=lambda _v: self._on_confirm(),
-        )
-        self.single_skill_equipment_scope_menu.grid(
-            row=10,
-            column=0,
-            padx=10,
-            pady=(0, 4),
-            sticky="ew",
-        )
-        weight_switch = ctk.CTkSwitch(
-            self.weapon_frame,
-            text="多技能使用手动权重",
-            variable=self.use_manual_weights_var,
-            font=self.small_font,
-            command=self._on_confirm,
-        )
-        weight_switch.grid(
-            row=11,
-            column=0,
-            padx=10,
-            pady=(0, 4),
-            sticky="w",
-        )
-        self.skill_weight_1_slider = self._create_weight_row(
-            row=12,
-            label_text="战技权重",
-            value_var=self.skill_weight_1_var,
-            default_value=1.0,
-        )
-        self.skill_weight_2_slider = self._create_weight_row(
-            row=13,
-            label_text="连携技权重",
-            value_var=self.skill_weight_2_var,
-            default_value=0.0,
-        )
-        self.skill_weight_3_slider = self._create_weight_row(
-            row=14,
-            label_text="终结技权重",
-            value_var=self.skill_weight_3_var,
-            default_value=0.0,
-        )
-        weight_tip = ctk.CTkLabel(
-            self.weapon_frame,
-            text="提示：仅在“多技能遍历(快速预览)”模式生效",
-            font=self.small_font,
-            text_color="#888888",
-        )
-        weight_tip.grid(
-            row=15,
-            column=0,
-            padx=10,
-            pady=(0, 10),
-            sticky="w",
-        )
+        self.control_scroll.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.control_scroll.grid_columnconfigure(0, weight=1)
+        self._build_control_panel()
 
         # ==================== 角色属性展示区 ====================
         self.char_attr_frame = ctk.CTkFrame(
@@ -543,12 +385,20 @@ class DamageCalculatorApp:
         # 保存所有武器数据
         self.all_weapons = weapons
 
-        # 创建角色选择面板
+        # 创建角色选择面板（可滚动，避免与操作区争用高度）
         assert self.char_frame is not None, "char_frame 未初始化"
+        char_select_scroll = ctk.CTkScrollableFrame(
+            self.char_frame,
+            fg_color="transparent",
+            label_text="角色选择",
+            label_font=self.small_font,
+        )
+        char_select_scroll.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        char_select_scroll.grid_columnconfigure(0, weight=1)
         self.char_panel = ChooseTypesStarsNamesLevels.use(
-            self.char_frame,  # 父框架
-            characters,       # 角色数据列表
-            self.big_font     # 使用的字体
+            char_select_scroll,
+            characters,
+            self.big_font,
         )
 
         # 创建武器选择面板（放在武器框架的第一行）
@@ -583,6 +433,7 @@ class DamageCalculatorApp:
         # 根据默认选中的角色初始化武器面板
         # 角色面板初始化时已经自动选择了第一个角色，现在需要同步更新武器面板
         self._on_char_name_change()
+        self._refresh_search_estimate()
         
         # 如果没有选中角色或没有可用武器，禁用武器面板
         char_data = self.char_panel.get_selected_data()
@@ -733,125 +584,529 @@ class DamageCalculatorApp:
             )
         return candidates
 
+    def _build_control_panel(self) -> None:
+        """构建「计算与搜索」列：确认、模式、遍历、多技能权重。"""
+        assert self.control_scroll is not None
+        panel = self.control_scroll
+        row = 0
+
+        def place(widget, *, pady: tuple[int, int] = (0, 4), sticky: str = "ew") -> None:
+            nonlocal row
+            widget.grid(row=row, column=0, padx=10, pady=pady, sticky=sticky)
+            row += 1
+
+        def section(title: str) -> None:
+            place(
+                ctk.CTkLabel(
+                    panel,
+                    text=title,
+                    font=self.big_font,
+                    text_color="#FF6B6B",
+                ),
+                pady=(10, 2),
+                sticky="w",
+            )
+
+        section("操作")
+        self.confirm_btn = ctk.CTkButton(
+            panel,
+            text="确认选择",
+            font=self.big_font,
+            command=self._on_confirm,
+        )
+        place(self.confirm_btn, pady=(0, 6))
+        self.attribution_btn = ctk.CTkButton(
+            panel,
+            text="数据来源与许可",
+            font=self.small_font,
+            fg_color="transparent",
+            border_width=1,
+            command=self._on_attribution,
+        )
+        place(self.attribution_btn, pady=(0, 10))
+
+        section("乘区展示")
+        place(
+            ctk.CTkLabel(panel, text="计算模式", font=self.small_font, text_color="#CCCCCC"),
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.calc_mode_menu = ctk.CTkOptionMenu(
+            panel,
+            values=[
+                "单段伤害计算",
+                "乘区快照",
+                "单技能遍历(快速预览)",
+                "多技能遍历(快速预览)",
+            ],
+            variable=self.calc_mode_var,
+            font=self.small_font,
+            command=lambda _v: self._on_confirm(),
+        )
+        place(self.calc_mode_menu, pady=(0, 8))
+
+        section("单技能全量遍历")
+        place(
+            ctk.CTkLabel(panel, text="武器候选范围", font=self.small_font, text_color="#CCCCCC"),
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.single_skill_scope_menu = ctk.CTkOptionMenu(
+            panel,
+            values=["当前武器", "同类型同星级", "同类型全部"],
+            variable=self.single_skill_scope_var,
+            font=self.small_font,
+            command=lambda _v: self._on_confirm(),
+        )
+        place(self.single_skill_scope_menu)
+        place(
+            ctk.CTkLabel(panel, text="装备范围", font=self.small_font, text_color="#CCCCCC"),
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.single_skill_equipment_scope_menu = ctk.CTkOptionMenu(
+            panel,
+            values=["全部装备", "仅套装装备", "仅散件装备"],
+            variable=self.single_skill_equipment_scope_var,
+            font=self.small_font,
+            command=lambda _v: self._on_confirm(),
+        )
+        place(self.single_skill_equipment_scope_menu)
+
+        def _on_search_scope_change(_value: str = "") -> None:
+            self._refresh_search_estimate()
+            self._on_confirm()
+
+        self.single_skill_scope_menu.configure(command=_on_search_scope_change)
+        self.single_skill_equipment_scope_menu.configure(command=_on_search_scope_change)
+
+        self.search_estimate_label = ctk.CTkLabel(
+            panel,
+            text="预计组合数：—",
+            font=self.small_font,
+            text_color="#AAAAAA",
+            justify="left",
+            anchor="w",
+        )
+        place(self.search_estimate_label, pady=(0, 8), sticky="ew")
+        bind_wrapped_label(self.search_estimate_label, panel)
+
+        self.full_search_btn = ctk.CTkButton(
+            panel,
+            text="全量遍历(弹窗结果)",
+            font=self.small_font,
+            command=self._on_run_full_search,
+        )
+        place(self.full_search_btn, pady=(4, 4))
+        self.mvp_search_btn = ctk.CTkButton(
+            panel,
+            text="实验：MVP搜索并导出",
+            font=self.small_font,
+            command=self._on_run_mvp_search,
+        )
+        place(self.mvp_search_btn)
+
+        search_param_row = ctk.CTkFrame(panel, fg_color="transparent")
+        search_param_row.grid(row=row, column=0, padx=10, pady=(0, 4), sticky="ew")
+        search_param_row.grid_columnconfigure(0, weight=1)
+        search_param_row.grid_columnconfigure(1, weight=1)
+        row += 1
+        ctk.CTkLabel(
+            search_param_row, text="并行线程", font=self.small_font, text_color="#CCCCCC"
+        ).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(
+            search_param_row, text="Top 条数", font=self.small_font, text_color="#CCCCCC"
+        ).grid(row=0, column=1, sticky="w")
+        self.search_workers_menu = ctk.CTkOptionMenu(
+            search_param_row,
+            values=build_worker_option_labels(),
+            variable=self.search_workers_var,
+            font=self.small_font,
+        )
+        self.search_workers_menu.grid(row=1, column=0, padx=(0, 4), pady=(0, 2), sticky="ew")
+        self.search_workers_menu.configure(
+            command=lambda _v: (self._refresh_parallel_workers_hint(), self._refresh_search_estimate())
+        )
+        self.search_workers_hint_label = ctk.CTkLabel(
+            panel,
+            text="",
+            font=self.small_font,
+            text_color="#777777",
+            justify="left",
+            anchor="w",
+        )
+        place(self.search_workers_hint_label, pady=(0, 6), sticky="ew")
+        bind_wrapped_label(self.search_workers_hint_label, panel)
+        self._refresh_parallel_workers_hint()
+        self.search_top_n_menu = ctk.CTkOptionMenu(
+            search_param_row,
+            values=["3", "5", "10", "20", "50"],
+            variable=self.search_top_n_var,
+            font=self.small_font,
+        )
+        self.search_top_n_menu.grid(row=1, column=1, padx=(4, 0), pady=(0, 2), sticky="ew")
+
+        self.search_cancel_btn = ctk.CTkButton(
+            panel,
+            text="取消搜索",
+            font=self.small_font,
+            state="disabled",
+            fg_color="#8B3A3A",
+            hover_color="#A04848",
+            command=self._on_cancel_search,
+        )
+        place(self.search_cancel_btn)
+        self.mvp_status_label = ctk.CTkLabel(
+            panel,
+            text="搜索状态：未开始",
+            font=self.small_font,
+            text_color="#888888",
+            justify="left",
+            anchor="w",
+        )
+        place(self.mvp_status_label, pady=(0, 10), sticky="ew")
+        bind_wrapped_label(self.mvp_status_label, panel)
+
+        section("多技能权重")
+        weight_switch = ctk.CTkSwitch(
+            panel,
+            text="使用手动权重",
+            variable=self.use_manual_weights_var,
+            font=self.small_font,
+            command=self._on_confirm,
+        )
+        place(weight_switch, sticky="w")
+        self.skill_weight_1_slider = self._create_weight_row(
+            row=row,
+            label_text="战技权重",
+            value_var=self.skill_weight_1_var,
+            default_value=1.0,
+        )
+        row += 1
+        self.skill_weight_2_slider = self._create_weight_row(
+            row=row,
+            label_text="连携技权重",
+            value_var=self.skill_weight_2_var,
+            default_value=0.0,
+        )
+        row += 1
+        self.skill_weight_3_slider = self._create_weight_row(
+            row=row,
+            label_text="终结技权重",
+            value_var=self.skill_weight_3_var,
+            default_value=0.0,
+        )
+        row += 1
+        place(
+            ctk.CTkLabel(
+                panel,
+                text="提示：权重仅在「多技能遍历(快速预览)」生效",
+                font=self.small_font,
+                text_color="#888888",
+                wraplength=260,
+            ),
+            pady=(0, 12),
+            sticky="w",
+        )
+
     def _set_mvp_status(self, text: str) -> None:
         """更新 MVP 搜索状态文案。"""
         if self.mvp_status_label is not None:
             self.mvp_status_label.configure(text=text)
 
-    def _on_run_mvp_search(self) -> None:
-        """执行实验性 MVP 搜索并导出结果。"""
+    def _prepare_single_skill_search_job(
+        self,
+    ) -> Optional[Dict[str, Any]]:
+        """收集全量单技能搜索所需上下文；失败时弹窗并返回 None。"""
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
         char_data = self.char_panel.get_selected_data()
         if not char_data:
-            messagebox.showwarning("MVP搜索", "请先选择有效角色。", parent=self.app)
-            return
+            messagebox.showwarning("全量遍历", "请先选择有效角色。", parent=self.app)
+            return None
 
-        output_dir = filedialog.askdirectory(parent=self.app, title="选择MVP搜索导出目录")
-        if not output_dir:
-            return
-
-        pkg_root = Path(__file__).resolve().parent.parent
-        draft_path = pkg_root.parent / "tools" / "bwiki_scout" / "output" / "parsed" / "equipment.json"
-        try:
-            local_equipments = get_equipments()
-        except DataLoadError:
-            local_equipments = []
-        equipment_catalog = build_equipment_catalog_from_local_rows(local_equipments)
-        if not equipment_catalog["chest"] or not equipment_catalog["gloves"] or not equipment_catalog["accessories"]:
-            if not draft_path.is_file():
-                messagebox.showwarning(
-                    "MVP搜索",
-                    "未找到本地装备数据（equipments.json）或装备草案（output/parsed/equipment.json）。\n"
-                    "请先执行：python tools/bwiki_scout/parse_draft.py\n"
-                    "再执行：python tools/bwiki_scout/sync_equipments.py --apply",
-                    parent=self.app,
-                )
-                return
-            equipment_catalog = load_equipment_catalog_from_wiki_draft(draft_path)
+        equipment_catalog = self._single_skill_preview_equipment_catalog()
         if not equipment_catalog["chest"] or not equipment_catalog["gloves"] or not equipment_catalog["accessories"]:
             messagebox.showwarning(
-                "MVP搜索",
-                "装备草案未包含完整的护甲/护手/配件数据，无法搜索。",
+                "全量遍历",
+                "装备数据不完整（缺护甲/护手/配件）。\n"
+                "请先执行 sync_equipments.py --apply 同步 Wiki 装备。",
                 parent=self.app,
             )
-            return
+            return None
 
         char_level = self.char_panel.get_level()
         weapon_level = self.weapon_panel.get_level()
         trust_level = self.char_panel.get_trust_level()
         skill_name, skill_type, skill_multiplier = self._resolve_selected_skill(char_data)
-        weapon_candidates = self._build_weapon_candidates(
-            char_data=char_data,
-            char_level=char_level,
-            weapon_level=weapon_level,
-            trust_level=trust_level,
-        )
+        weapon_candidates = self._single_skill_preview_candidates()
         if not weapon_candidates:
-            messagebox.showwarning("MVP搜索", "当前角色对应武器候选为空。", parent=self.app)
-            return
+            messagebox.showwarning("全量遍历", "当前武器/装备候选范围下无可用武器。", parent=self.app)
+            return None
 
         signature_seed = (
-            f"{char_data.get('名称','')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
-            f"{skill_name}-w{len(weapon_candidates)}"
+            f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
+            f"{skill_name}-w{len(weapon_candidates)}-e{len(equipment_catalog['chest'])}"
+            f"-{self.single_skill_equipment_scope_var.get()}"
         )
         run_signature = hashlib.sha1(signature_seed.encode("utf-8")).hexdigest()[:16]
-        export_root = Path(output_dir)
+        return {
+            "char_data": char_data,
+            "skill_label": skill_name,
+            "weapon_scope": self.single_skill_scope_var.get(),
+            "equipment_scope": self.single_skill_equipment_scope_var.get(),
+            "base_context": DamageContext(
+                final_attack=0.0,
+                skill_multiplier=skill_multiplier,
+                skill_type=skill_type,
+                enemy_defense=100.0,
+            ),
+            "weapon_candidates": weapon_candidates,
+            "equipment_catalog": equipment_catalog,
+            "run_signature": run_signature,
+        }
+
+    def _set_search_buttons_enabled(self, enabled: bool) -> None:
+        state = "normal" if enabled else "disabled"
+        if self.mvp_search_btn is not None:
+            self.mvp_search_btn.configure(state=state)
+        if self.full_search_btn is not None:
+            self.full_search_btn.configure(state=state)
+        if self.search_workers_menu is not None:
+            self.search_workers_menu.configure(state=state)
+        if self.search_top_n_menu is not None:
+            self.search_top_n_menu.configure(state=state)
+        if self.search_cancel_btn is not None:
+            self.search_cancel_btn.configure(state="normal" if not enabled else "disabled")
+
+    def _compute_search_estimate_text(self, job: Dict[str, Any]) -> str:
+        """根据当前 job 计算预估文案（不弹窗）。"""
+        max_workers = resolve_parallel_workers(self.search_workers_var.get())
+        workload = preview_search_workload(
+            weapons=job["weapon_candidates"],
+            equipment_catalog=job["equipment_catalog"],
+            config=OptimizerConfig(
+                top_n=resolve_top_n(self.search_top_n_var.get()),
+                warn_on_unfiltered=False,
+                prune_non_beneficial=False,
+            ),
+        )
+        duration = estimate_search_duration(
+            total_combinations=workload.total_combinations,
+            max_workers=max_workers,
+        )
+        self._search_estimated_total_seconds = duration.estimated_seconds
+        return format_workload_estimate_line(workload=workload, duration=duration)
+
+    def _refresh_parallel_workers_hint(self) -> None:
+        """刷新并行线程与本机 CPU 的对应说明。"""
+        if self.search_workers_hint_label is None:
+            return
+        info = get_cpu_parallel_info()
+        workers = resolve_parallel_workers(self.search_workers_var.get())
+        self.search_workers_hint_label.configure(
+            text=format_parallel_workers_help(info, selected_workers=workers)
+        )
+
+    def _refresh_search_estimate(self) -> None:
+        """刷新「预计组合数/耗时」标签。"""
+        if self.search_estimate_label is None:
+            return
+        assert self.char_panel is not None
+        assert self.weapon_panel is not None
+        if not self.char_panel.get_selected_data() or not self.weapon_panel.get_selected_data():
+            self.search_estimate_label.configure(text="预计组合数：请先选择角色和武器")
+            return
+        catalog = self._single_skill_preview_equipment_catalog()
+        if not catalog["chest"] or not catalog["gloves"] or not catalog["accessories"]:
+            self.search_estimate_label.configure(
+                text="预计组合数：装备数据不完整\n请先 sync_equipments.py --apply"
+            )
+            return
+        weapons = self._single_skill_preview_candidates()
+        if not weapons:
+            self.search_estimate_label.configure(text="预计组合数：当前武器候选为空")
+            return
+        workload = preview_search_workload(
+            weapons=weapons,
+            equipment_catalog=catalog,
+            config=OptimizerConfig(warn_on_unfiltered=False, prune_non_beneficial=False),
+        )
+        duration = estimate_search_duration(
+            total_combinations=workload.total_combinations,
+            max_workers=resolve_parallel_workers(self.search_workers_var.get()),
+        )
+        self._search_estimated_total_seconds = duration.estimated_seconds
+        self.search_estimate_label.configure(
+            text=format_workload_estimate_line(workload=workload, duration=duration)
+        )
+
+    def _on_cancel_search(self) -> None:
+        """请求取消正在运行的全量/MVP 搜索。"""
+        if self._search_cancel_token is not None:
+            self._search_cancel_token.cancel()
+            self._set_mvp_status("搜索状态：正在取消…")
+
+    def _show_search_result_popup(
+        self,
+        *,
+        mode_label: str,
+        job: Dict[str, Any],
+        result: Dict[str, Any],
+        export_paths: Optional[Dict[str, str]] = None,
+    ) -> None:
+        """在独立大窗口展示 Top 配装与导出路径。"""
+        lines = build_search_results_report_lines(
+            mode_label=mode_label,
+            skill_label=str(job["skill_label"]),
+            scope_labels=(str(job["weapon_scope"]), str(job["equipment_scope"])),
+            processed_combinations=int(result["processed_combinations"]),
+            total_combinations=int(result["total_combinations"]),
+            top_results=loadout_scores_from_payload(result.get("top_results", [])),
+            export_paths=export_paths,
+            cancelled=bool(result.get("cancelled")),
+        )
+        show_search_results_dialog(self.app, title=mode_label, lines=lines)
+
+    def _start_search_worker(
+        self,
+        *,
+        mode_label: str,
+        export_root: Path,
+        job: Dict[str, Any],
+        status_running: str,
+        status_done_prefix: str,
+    ) -> None:
+        """后台执行 MVP 搜索流水线，完成后弹窗展示结果。"""
         db_path = export_root / "search_runs.db"
         export_dir = export_root / "mvp_exports"
-        base_context = DamageContext(
-            final_attack=0.0,
-            skill_multiplier=skill_multiplier,
-            skill_type=skill_type,
-            enemy_defense=100.0,
+        top_n = resolve_top_n(self.search_top_n_var.get())
+        max_workers = resolve_parallel_workers(self.search_workers_var.get())
+        config = OptimizerConfig(
+            top_n=top_n,
+            crit_mode="non_crit",
+            allow_duplicate_accessory=True,
         )
-        config = OptimizerConfig(top_n=10, crit_mode="non_crit", allow_duplicate_accessory=True)
+        self._search_cancel_token = SearchCancelToken()
+        progress_prefix = status_done_prefix
 
-        if self.mvp_search_btn is not None:
-            self.mvp_search_btn.configure(state="disabled")
-        self._set_mvp_status("MVP搜索状态：计算中，请稍候...")
+        estimate_text = self._compute_search_estimate_text(job)
+
+        def _progress_callback(info: dict) -> None:
+            text = format_search_progress_text(
+                prefix=progress_prefix,
+                processed=int(info.get("processed", 0)),
+                total=int(info.get("total", 0)),
+                eta_seconds=float(info.get("eta_seconds", 0.0)),
+                estimated_total_seconds=self._search_estimated_total_seconds,
+            )
+
+            def _update_status() -> None:
+                self._set_mvp_status(text)
+
+            self.app.after(0, _update_status)
+
+        self._set_search_buttons_enabled(False)
+        if self.search_estimate_label is not None:
+            self.search_estimate_label.configure(text=estimate_text)
+        self._set_mvp_status(
+            f"{status_running}\n导出目录：{export_root}\n\n{estimate_text}"
+        )
 
         def _worker() -> None:
             try:
                 result = run_mvp_search_pipeline(
                     db_path=db_path,
                     export_dir=export_dir,
-                    run_signature=run_signature,
-                    base_context=base_context,
-                    weapons=weapon_candidates,
-                    equipment_catalog=equipment_catalog,
+                    run_signature=str(job["run_signature"]),
+                    base_context=job["base_context"],
+                    weapons=job["weapon_candidates"],
+                    equipment_catalog=job["equipment_catalog"],
                     config=config,
-                    max_workers=max(1, (os.cpu_count() or 1) - 1),
+                    max_workers=max_workers,
+                    cancel_token=self._search_cancel_token,
+                    progress_callback=_progress_callback,
                 )
             except Exception as exc:
                 self.app.after(
                     0,
                     lambda: (
-                        self._set_mvp_status("MVP搜索状态：失败"),
-                        messagebox.showerror("MVP搜索失败", str(exc), parent=self.app),
-                        self.mvp_search_btn.configure(state="normal") if self.mvp_search_btn else None,
+                        setattr(self, "_search_cancel_token", None),
+                        self._set_mvp_status(f"{status_done_prefix}：失败"),
+                        messagebox.showerror(mode_label, str(exc), parent=self.app),
+                        self._set_search_buttons_enabled(True),
                     ),
                 )
                 return
 
+            export_paths = export_paths_to_strings(result.get("exports") or {})
+            export_paths["数据库"] = str(db_path)
+            export_paths["导出目录"] = str(export_dir)
+
             def _finish() -> None:
+                self._search_cancel_token = None
+                suffix = "（已取消）" if result.get("cancelled") else "：完成"
                 self._set_mvp_status(
-                    f"MVP搜索状态：完成（{result['processed_combinations']}/{result['total_combinations']}）"
+                    f"{status_done_prefix}{suffix}（{result['processed_combinations']}/"
+                    f"{result['total_combinations']}）"
                 )
-                if self.mvp_search_btn is not None:
-                    self.mvp_search_btn.configure(state="normal")
-                messagebox.showinfo(
-                    "MVP搜索完成",
-                    "已完成搜索并导出结果：\n"
-                    f"- 数据库：{db_path}\n"
-                    f"- 导出目录：{export_dir}\n"
-                    f"- 已处理组合：{result['processed_combinations']}/{result['total_combinations']}",
-                    parent=self.app,
+                self._set_search_buttons_enabled(True)
+                self._show_search_result_popup(
+                    mode_label=mode_label,
+                    job=job,
+                    result=result,
+                    export_paths=export_paths,
                 )
 
             self.app.after(0, _finish)
 
         threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_run_full_search(self) -> None:
+        """全量遍历：使用当前候选/装备范围，结果在弹窗中展示（不要求先选导出目录）。"""
+        job = self._prepare_single_skill_search_job()
+        if not job:
+            return
+        estimate_text = self._compute_search_estimate_text(job)
+        if self._search_estimated_total_seconds >= 120:
+            if not messagebox.askyesno(
+                "确认全量遍历",
+                f"{estimate_text}\n\n组合较多，是否仍要开始？",
+                parent=self.app,
+            ):
+                return
+        export_root = allocate_search_run_directory(purpose="full_search")
+        self._start_search_worker(
+            mode_label="单技能全量遍历",
+            export_root=export_root,
+            job=job,
+            status_running="全量遍历：计算中，请稍候…",
+            status_done_prefix="全量遍历",
+        )
+
+    def _on_run_mvp_search(self) -> None:
+        """执行 MVP 搜索、导出，并在弹窗中展示 Top 结果。"""
+        job = self._prepare_single_skill_search_job()
+        if not job:
+            return
+
+        output_dir = filedialog.askdirectory(
+            parent=self.app,
+            title="选择MVP搜索导出目录",
+            initialdir=str(default_search_output_root()),
+        )
+        if not output_dir:
+            export_root = allocate_search_run_directory(purpose="mvp_search")
+        else:
+            export_root = Path(output_dir)
+
+        self._start_search_worker(
+            mode_label="MVP搜索并导出",
+            export_root=export_root,
+            job=job,
+            status_running="MVP搜索状态：计算中，请稍候...",
+            status_done_prefix="MVP搜索状态",
+        )
 
     def _on_confirm(self) -> None:
         """
@@ -886,6 +1141,7 @@ class DamageCalculatorApp:
             preview_equipment_catalog=self._single_skill_preview_equipment_catalog(),
             preview_equipment_scope_label=self.single_skill_equipment_scope_var.get(),
         )
+        self._refresh_search_estimate()
 
     def _create_weight_row(
         self,
@@ -896,8 +1152,10 @@ class DamageCalculatorApp:
         default_value: float,
     ) -> ctk.CTkSlider:
         """创建单行权重滑块。"""
+        parent = self.control_scroll
+        assert parent is not None
         title = ctk.CTkLabel(
-            self.weapon_frame,
+            parent,
             text=f"{label_text}: {value_var.get()}",
             font=self.small_font,
             text_color="#CCCCCC",
@@ -912,7 +1170,7 @@ class DamageCalculatorApp:
                 self._on_confirm()
 
         slider = ctk.CTkSlider(
-            self.weapon_frame,
+            parent,
             from_=0.0,
             to=5.0,
             number_of_steps=50,
