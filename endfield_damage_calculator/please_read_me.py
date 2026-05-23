@@ -207,9 +207,3 @@ def show_help() -> None:
 
 if __name__ == "__main__":
     show_help()
-
-# --- UPLOAD_SUMMARY ---
-# TITLE: 修改 endfield_damage_calculator/please_read_me.py
-# BODY:
-# - 修改 endfield_damage_calculator/please_read_me.py
-# --- END UPLOAD_SUMMARY ---
