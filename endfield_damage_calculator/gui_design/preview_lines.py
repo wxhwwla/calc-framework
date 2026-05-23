@@ -113,9 +113,9 @@ def _build_single_skill_search_preview_lines_impl(
     if blocked:
         return blocked
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
-    from gui_design.property_display import _resolve_selected_skill_for_damage
+    from gui_design.display_lines import resolve_selected_skill_for_damage
 
-    skill_label, skill_multiplier, skill_warning = _resolve_selected_skill_for_damage(
+    skill_label, skill_multiplier, skill_warning = resolve_selected_skill_for_damage(
         char_data,
         skill_1_level=skill_1_level,
         skill_2_level=skill_2_level,

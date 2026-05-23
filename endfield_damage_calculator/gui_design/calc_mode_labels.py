@@ -21,7 +21,7 @@ _INTERNAL_MODE_IDS: frozenset[str] = frozenset(mode_id for _, mode_id in CALC_MO
 
 
 def calculation_mode_from_label(label: str) -> str:
-    """将下拉框当前文案转为 property_display 使用的内部模式。"""
+    """将下拉框当前文案转为 display_view / 确认刷新使用的内部模式。"""
     text = (label or "").strip()
     if text in _INTERNAL_MODE_IDS:
         return text

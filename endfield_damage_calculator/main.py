@@ -7,6 +7,7 @@
 ├── main.py                    # 本文件：启动 GUI
 ├── gui_design/gui.py          # 主窗口（5 列 + 底栏：选择 / 属性 / 乘区 / 搜索）
 ├── data/loader.py             # 角色、武器、装备 JSON 统一加载
+├── data/game_data_facade.py   # 应用级数据门面（GUI / 对比 / 搜索）
 ├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线
 └── character_weapon_equipment/  # characters.json / weapons.json / equipments.json
 

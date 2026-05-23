@@ -31,6 +31,7 @@ from gui_design.loadout_preset import (
     import_presets_from_json_text,
 )
 from gui_design.preset_batch_compare import compare_presets_parallel
+from data.game_data_facade import GameDataFacade
 from data.loader import get_characters, get_equipments, get_weapons
 from gui_design.search_settings import resolve_parallel_workers
 from utils.gui_fonts import default_ui_font
@@ -45,6 +46,18 @@ def _label_for_mode(mode_id: str) -> str:
         if mid == mode_id:
             return label
     return mode_id
+
+
+def _lists_for_preset_compare(app: "DamageCalculatorApp") -> tuple[list, list, list]:
+    """多方案对比用的角色/武器/装备列表（优先 app.game_data）。"""
+    game_data = getattr(app, "game_data", None)
+    if isinstance(game_data, GameDataFacade):
+        return (
+            game_data.characters,
+            game_data.weapons,
+            game_data.equipment_rows,
+        )
+    return get_characters(), get_weapons(), get_equipments()
 
 
 def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
@@ -364,11 +377,12 @@ def show_preset_compare_dialog(app: "DamageCalculatorApp") -> None:
     worker_label = workers_var.get() if workers_var is not None else "1"
     max_workers = resolve_parallel_workers(worker_label)
 
+    characters, weapons, equipments = _lists_for_preset_compare(app)
     rows = compare_presets_parallel(
         presets,
-        characters=get_characters(),
-        weapons=get_weapons(),
-        equipments=get_equipments(),
+        characters=characters,
+        weapons=weapons,
+        equipments=equipments,
         enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
         max_workers=max_workers,
     )

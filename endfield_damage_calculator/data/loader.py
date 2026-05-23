@@ -90,18 +90,22 @@ def get_weapons() -> List[dict[str, Any]]:
 
 
 def preload_game_data() -> None:
-    """预加载角色与武器数据到缓存；失败时抛出 DataLoadError。"""
-    get_characters()
-    get_weapons()
-    get_equipments()
+    """预加载角色、武器与装备到缓存；失败时抛出 DataLoadError。"""
+    from data.game_data_facade import GameDataFacade
+
+    facade = GameDataFacade.create()
+    if facade.load_error is not None:
+        raise facade.load_error
+    if facade.equipment_load_error is not None:
+        raise facade.equipment_load_error
 
 
 def fetch_game_data_for_gui() -> Tuple[List[dict[str, Any]], List[dict[str, Any]], Optional[DataLoadError]]:
     """供 GUI 加载角色/武器列表；失败时返回空列表与错误对象（不抛异常）。"""
-    try:
-        return get_characters(), get_weapons(), None
-    except DataLoadError as exc:
-        return [], [], exc
+    from data.game_data_facade import GameDataFacade
+
+    facade = GameDataFacade.create()
+    return facade.characters, facade.weapons, facade.load_error
 
 
 def get_equipments() -> List[dict[str, Any]]:

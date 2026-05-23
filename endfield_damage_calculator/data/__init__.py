@@ -1,4 +1,5 @@
 """数据加载模块"""
+from .game_data_facade import GameDataFacade
 from .loader import (
     DataLoadError,
     get_characters,
@@ -12,6 +13,7 @@ from .loader import (
 
 __all__ = [
     "DataLoadError",
+    "GameDataFacade",
     "get_characters",
     "get_weapons",
     "preload_game_data",

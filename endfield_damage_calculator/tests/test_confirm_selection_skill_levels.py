@@ -28,9 +28,9 @@ def _load_by_name(name: str) -> dict:
 
 
 class TestConfirmSelectionSkillLevels(unittest.TestCase):
-    @patch("gui_design.property_display.build_character_attribute_lines")
-    @patch("gui_design.property_display._render_placeholder")
-    @patch("gui_design.property_display._render_lines")
+    @patch("gui_design.display_view.build_character_attribute_lines")
+    @patch("gui_design.display_view._render_placeholder")
+    @patch("gui_design.display_view._render_lines")
     def test_confirm_passes_skill_levels_from_character_panel(
         self,
         _render_lines,
