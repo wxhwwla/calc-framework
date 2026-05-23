@@ -19,6 +19,9 @@ class TestSingleSkillSearchRunner(unittest.TestCase):
         }
         return SingleSkillSearchJob(
             char_data={"名称": "测试"},
+            char_level=1,
+            weapon_level=1,
+            trust_level=0,
             skill_label="战技",
             weapon_scope="当前武器",
             equipment_scope="全部装备",
@@ -30,6 +33,7 @@ class TestSingleSkillSearchRunner(unittest.TestCase):
             ),
             weapon_candidates=(WeaponCandidate(name="A", final_attack=100.0),),
             equipment_catalog=catalog,
+            weapon_data_by_name={"A": {"名称": "A", "基础攻击力": [100.0] * 90}},
             run_signature="sig1234567890abcd",
         )
 

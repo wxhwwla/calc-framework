@@ -55,6 +55,11 @@ class TestSearchPersistence(unittest.TestCase):
             self.assertTrue(first.cancelled)
             self.assertEqual(first.processed_this_run, 4)
 
+            progress_events: list[int] = []
+
+            def _on_progress(info: dict) -> None:
+                progress_events.append(int(info.get("processed", 0)))
+
             second = execute_search_with_resume(
                 db_path=db_path,
                 run_signature=signature,
@@ -63,9 +68,12 @@ class TestSearchPersistence(unittest.TestCase):
                 equipment_catalog=catalog,
                 config=config,
                 max_workers=2,
+                progress_callback=_on_progress,
             )
             self.assertFalse(second.cancelled)
             self.assertGreater(second.skipped_preprocessed, 0)
+            self.assertGreater(len(progress_events), 0)
+            self.assertGreaterEqual(progress_events[0], second.skipped_preprocessed)
             self.assertEqual(second.processed_combinations, second.total_combinations)
 
     def test_mark_processed_batch_writes_keys(self):

@@ -16,6 +16,7 @@ from calculation.loadout_optimizer import (
 )
 from calculation.parallel_search import run_bounded_parallel
 from calculation.search_cancel import SearchCancelToken
+from calculation.search_eval_context import SearchEvalContext
 
 
 def run_enumerated_optimizer_parallel(
@@ -27,6 +28,7 @@ def run_enumerated_optimizer_parallel(
     max_workers: int = 1,
     cancel_token: Optional[SearchCancelToken] = None,
     progress_callback: Optional[Callable[[dict], None]] = None,
+    search_eval: Optional[SearchEvalContext] = None,
 ) -> tuple[tuple[LoadoutScore, ...], int, int, bool, tuple[str, ...]]:
     """
     枚举全部配装任务并在内存中保留 TopN。
@@ -42,11 +44,13 @@ def run_enumerated_optimizer_parallel(
     if total_combinations == 0:
         return (), 0, 0, False, warnings
 
-    evaluator = lambda task: evaluate_task(
-        base_context=base_context,
-        crit_mode=config.crit_mode,
-        task=task,
-    )
+    def evaluator(task):
+        return evaluate_task(
+            base_context=base_context,
+            crit_mode=config.crit_mode,
+            task=task,
+            search_eval=search_eval,
+        )
     top_results, processed, cancelled = run_bounded_parallel(
         work_items=tasks,
         total=total_combinations,

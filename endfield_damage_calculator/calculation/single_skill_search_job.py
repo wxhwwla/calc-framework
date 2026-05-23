@@ -19,12 +19,16 @@ class SingleSkillSearchJob:
     """全量单技能搜索所需上下文。"""
 
     char_data: dict[str, Any]
+    char_level: int
+    weapon_level: int
+    trust_level: int
     skill_label: str
     weapon_scope: str
     equipment_scope: str
     base_context: DamageContext
     weapon_candidates: tuple[WeaponCandidate, ...]
     equipment_catalog: dict[str, list[dict[str, Any]]]
+    weapon_data_by_name: dict[str, dict[str, Any]]
     run_signature: str
 
 
@@ -136,8 +140,14 @@ def prepare_single_skill_search_job(
         weapon_scope_label=weapon_scope_label,
         equipment_scope_label=equipment_scope_label,
     )
+    weapon_data_by_name = {
+        str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
+    }
     job = SingleSkillSearchJob(
         char_data=char_data,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
         skill_label=skill_name,
         weapon_scope=weapon_scope_label,
         equipment_scope=equipment_scope_label,
@@ -149,6 +159,7 @@ def prepare_single_skill_search_job(
         ),
         weapon_candidates=tuple(weapon_candidates),
         equipment_catalog=equipment_catalog,
+        weapon_data_by_name=weapon_data_by_name,
         run_signature=run_signature,
     )
     return job, None

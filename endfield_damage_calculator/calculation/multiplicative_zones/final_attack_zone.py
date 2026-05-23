@@ -82,7 +82,9 @@ def calculate_final_attack_with_details(
     ws_level: int = 0,
     ws2_name: str = "",
     ws2_level: int = 0,
-    trust_level: int = 0
+    trust_level: int = 0,
+    equipment_stat_bonus: Optional[Dict[str, float]] = None,
+    equipment_attack_percent: float = 0.0,
 ) -> Dict[str, float]:
     """
     快捷函数：计算最终攻击力，返回详细信息
@@ -187,6 +189,8 @@ def calculate_final_attack_with_details(
             target_name="攻击力+",
         )
 
+    attack_bonus_percent += float(equipment_attack_percent) * 100.0
+
     # 攻击力+乘区 = 1 + 攻击力+/100
     attack_bonus_multiplier = 1.0 + attack_bonus_percent / 100.0
 
@@ -216,14 +220,22 @@ def calculate_final_attack_with_details(
             elif isinstance(bonus_data, (int, float)):
                 additional_attack = float(bonus_data)
 
-    # 中间攻击力 = 攻击加成攻击力 + 附加攻击力+
-    intermediate_attack = attack_bonus_attack + additional_attack
+    # 中间攻击力 = 攻击加成攻击力 + 附加攻击力+ + 装备平铺攻击力
+    equipment_flat_attack = 0.0
+    if equipment_stat_bonus and "攻击力" in equipment_stat_bonus:
+        equipment_flat_attack = float(equipment_stat_bonus["攻击力"])
+    intermediate_attack = attack_bonus_attack + additional_attack + equipment_flat_attack
 
     # 计算能力值加成（包含武器加成和信赖加成，使用特殊能力等级）
+    stat_bonus = dict(equipment_stat_bonus) if equipment_stat_bonus else None
+    if stat_bonus and "攻击力" in stat_bonus:
+        stat_bonus = {k: v for k, v in stat_bonus.items() if k != "攻击力"}
+
     ability_bonus = calculate_ability_bonus(
         character, weapon, char_level,
         sa1_name, sa1_level, sa2_name, sa2_level, sa3_name, sa3_level,
-        ws_name, ws_level, ws2_name, ws2_level, trust_level
+        ws_name, ws_level, ws2_name, ws2_level, trust_level,
+        equipment_stat_bonus=stat_bonus,
     )
 
     # 计算最终攻击力：中间攻击力 × (能力值加成 + 1)

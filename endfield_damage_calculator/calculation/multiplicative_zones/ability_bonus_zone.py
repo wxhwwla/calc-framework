@@ -69,7 +69,8 @@ def calculate_ability_bonus(
     ws_level: int = 0,
     ws2_name: str = "",
     ws2_level: int = 0,
-    trust_level: int = 0
+    trust_level: int = 0,
+    equipment_stat_bonus: Optional[Dict[str, float]] = None,
 ) -> float:
     """
     快捷函数：计算能力值加成
@@ -166,6 +167,12 @@ def calculate_ability_bonus(
     # 添加信赖加成到主能力（使用公式模块中的 trust_add 常量）
     if 0 <= trust_level < len(trust_add):
         main_value += trust_add[trust_level]
+
+    if equipment_stat_bonus:
+        if main_attr and main_attr in equipment_stat_bonus:
+            main_value += float(equipment_stat_bonus[main_attr])
+        if sub_attr and sub_attr in equipment_stat_bonus:
+            sub_value += float(equipment_stat_bonus[sub_attr])
 
     return main_value * 0.005 + sub_value * 0.002
 

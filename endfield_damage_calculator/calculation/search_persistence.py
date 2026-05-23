@@ -22,6 +22,7 @@ from calculation.loadout_optimizer import (
 )
 from calculation.parallel_search import run_bounded_parallel
 from calculation.search_cancel import SearchCancelToken
+from calculation.search_eval_context import SearchEvalContext
 from calculation.top_n_tracker import TopNTracker
 
 # 续跑进度批量写入条数
@@ -270,6 +271,7 @@ def execute_search_with_resume(
     max_workers: int = 1,
     cancel_token: Optional[SearchCancelToken] = None,
     progress_callback: Optional[Callable[[dict], None]] = None,
+    search_eval: Optional[SearchEvalContext] = None,
 ) -> ResumeExecutionResult:
     """执行可续跑搜索：自动跳过已处理组合。"""
     store = SearchRunStore(db_path)
@@ -298,6 +300,7 @@ def execute_search_with_resume(
             base_context=base_context,
             crit_mode=config.crit_mode,
             task=task,
+            search_eval=search_eval,
         )
 
     def _on_result(item: tuple[str, OptimizerTask], score: LoadoutScore) -> None:
@@ -313,7 +316,8 @@ def execute_search_with_resume(
     def _progress(info: dict) -> None:
         if not progress_callback:
             return
-        processed_total = skipped_preprocessed + int(info.get("processed", 0))
+        # 须读 pending_stream：skipped 在遍历中递增，不能先用后赋的局部变量
+        processed_total = pending_stream.skipped_preprocessed + int(info.get("processed", 0))
         elapsed = max(1e-6, time.perf_counter() - started_at)
         speed = processed_this_run / elapsed if processed_this_run else 0.0
         remain = max(0, total_combinations - processed_total)

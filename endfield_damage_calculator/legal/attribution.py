@@ -87,8 +87,10 @@ def open_attribution_dialog(
     dialog.transient(parent)
     dialog.grab_set()
 
-    body_font = small_font or ctk.CTkFont(family="微软雅黑", size=12)
-    title_font = font or ctk.CTkFont(family="微软雅黑", size=14, weight="bold")
+    from utils.gui_fonts import default_ui_font
+
+    body_font = small_font or default_ui_font(size=12)
+    title_font = font or default_ui_font(size=14, weight="bold")
 
     # 自下而上 pack，避免 expand 文本框挤占底部按钮区域
     ctk.CTkButton(dialog, text="关闭", font=body_font, command=dialog.destroy).pack(

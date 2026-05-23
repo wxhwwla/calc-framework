@@ -48,6 +48,7 @@ from calculation.single_skill_search_runner import (
 )
 from gui_design.label_layout import CONTROL_COLUMN_MINSIZE, bind_wrapped_label
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
+from utils.gui_fonts import default_ui_font
 from gui_design.search_settings import (
     build_worker_option_labels,
     format_parallel_workers_help,
@@ -127,16 +128,9 @@ class DamageCalculatorApp:
         # 绑定窗口大小变化事件，用于自适应缩放
         self.app.bind("<Configure>", self._on_window_resize)
 
-        # 初始化字体配置
-        self.big_font: ctk.CTkFont = ctk.CTkFont(
-            family="微软雅黑",  # 字体名称
-            size=14,           # 字体大小
-            weight="bold"      # 字体粗细（粗体）
-        )
-        self.small_font: ctk.CTkFont = ctk.CTkFont(
-            family="微软雅黑",  # 字体名称
-            size=12            # 字体大小（常规）
-        )
+        # 与系统默认 UI 字体一致
+        self.big_font: ctk.CTkFont = default_ui_font(size=14, weight="bold")
+        self.small_font: ctk.CTkFont = default_ui_font(size=12)
 
         # 初始化 UI 组件引用为 None（后续在 _setup_ui 中创建）
         self.char_frame: Optional[ctk.CTkFrame] = None
@@ -981,15 +975,15 @@ class DamageCalculatorApp:
                     progress_callback=_progress_callback,
                 )
             except Exception as exc:
-                self.app.after(
-                    0,
-                    lambda: (
-                        setattr(self, "_search_cancel_token", None),
-                        self._set_mvp_status(f"{status_done_prefix}：失败"),
-                        messagebox.showerror(mode_label, str(exc), parent=self.app),
-                        self._set_search_buttons_enabled(True),
-                    ),
-                )
+                # except 块结束后 exc 会被清除，须在嵌套函数默认参数里绑定
+                def _report_failure(error: BaseException = exc) -> None:
+                    self._search_cancel_token = None
+                    detail = str(error)
+                    self._set_mvp_status(f"{status_done_prefix}：失败\n{detail}")
+                    messagebox.showerror(mode_label, detail, parent=self.app)
+                    self._set_search_buttons_enabled(True)
+
+                self.app.after(0, _report_failure)
                 return
 
             export_paths = export_paths_to_strings(outcome.exports or {})

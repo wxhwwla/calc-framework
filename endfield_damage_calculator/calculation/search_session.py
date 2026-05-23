@@ -11,6 +11,7 @@ from typing import Any, Callable, Optional
 from calculation.damage_engine import DamageContext
 from calculation.in_memory_optimizer import run_enumerated_optimizer_parallel
 from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig, WeaponCandidate
+from calculation.search_eval_context import SearchEvalContext
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_persistence import execute_search_with_resume
 
@@ -38,6 +39,7 @@ def run_search_session(
     progress_callback: Optional[Callable[[dict], None]] = None,
     db_path: Optional[Path] = None,
     run_signature: Optional[str] = None,
+    search_eval: Optional[SearchEvalContext] = None,
 ) -> SearchSessionResult:
     """
     执行单技能搜索。
@@ -55,6 +57,7 @@ def run_search_session(
             max_workers=max_workers,
             cancel_token=cancel_token,
             progress_callback=progress_callback,
+            search_eval=search_eval,
         )
         return SearchSessionResult(
             top_results=resume.top_results,
@@ -74,6 +77,7 @@ def run_search_session(
             max_workers=max_workers,
             cancel_token=cancel_token,
             progress_callback=progress_callback,
+            search_eval=search_eval,
         )
     )
     return SearchSessionResult(

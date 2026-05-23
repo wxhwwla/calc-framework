@@ -12,6 +12,7 @@ from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig, WeaponCandidate
 from calculation.result_export import export_search_outputs
 from calculation.search_cancel import SearchCancelToken
+from calculation.search_eval_context import SearchEvalContext
 from calculation.search_session import run_search_session
 from calculation.single_skill_search_job import SingleSkillSearchJob
 
@@ -40,6 +41,13 @@ def run_mvp_search_from_job(
     progress_callback: Optional[Callable[[dict], None]] = None,
 ) -> MvpSearchOutcome:
     """运行 MVP 主链路：续跑搜索 + 导出。"""
+    search_eval = SearchEvalContext(
+        char_data=job.char_data,
+        char_level=job.char_level,
+        weapon_level=job.weapon_level,
+        trust_level=job.trust_level,
+        weapon_data_by_name=job.weapon_data_by_name,
+    )
     session = run_search_session(
         db_path=db_path,
         run_signature=job.run_signature,
@@ -50,6 +58,7 @@ def run_mvp_search_from_job(
         max_workers=max_workers,
         cancel_token=cancel_token,
         progress_callback=progress_callback,
+        search_eval=search_eval,
     )
     exports = export_search_outputs(
         scores=session.top_results,
@@ -85,12 +94,16 @@ def run_mvp_search_pipeline(
     outcome = run_mvp_search_from_job(
         SingleSkillSearchJob(
             char_data={},
+            char_level=1,
+            weapon_level=1,
+            trust_level=0,
             skill_label="",
             weapon_scope="",
             equipment_scope="",
             base_context=base_context,
             weapon_candidates=tuple(weapons),
             equipment_catalog=equipment_catalog,
+            weapon_data_by_name={w.name: {} for w in weapons},
             run_signature=run_signature,
         ),
         db_path=db_path,

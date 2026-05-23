@@ -10,6 +10,7 @@ from typing import Any, Optional, Sequence
 import customtkinter as ctk
 
 from calculation.loadout_optimizer import LoadoutScore
+from utils.gui_fonts import default_ui_font
 
 # 弹窗默认尺寸（主窗口右侧区域较窄，结果用独立窗口展示）
 DEFAULT_DIALOG_WIDTH = 920
@@ -100,13 +101,13 @@ def show_search_results_dialog(
     header = ctk.CTkLabel(
         dialog,
         text=title,
-        font=ctk.CTkFont(size=18, weight="bold"),
+        font=default_ui_font(size=18, weight="bold"),
     )
     header.pack(anchor="w", padx=12, pady=(12, 4))
 
     textbox = ctk.CTkTextbox(
         dialog,
-        font=ctk.CTkFont(family="Consolas", size=13),
+        font=default_ui_font(size=13),
         wrap="word",
     )
     textbox.pack(fill="both", expand=True, padx=12, pady=(0, 12))
