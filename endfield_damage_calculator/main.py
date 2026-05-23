@@ -5,15 +5,15 @@
 
 项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
 ├── main.py                    # 本文件：启动 GUI
-├── gui_design/gui.py          # 主窗口（6 列：选择 / 计算与搜索 / 属性 / 乘区）
+├── gui_design/gui.py          # 主窗口（5 列 + 底栏：选择 / 属性 / 乘区 / 搜索）
 ├── data/loader.py             # 角色、武器、装备 JSON 统一加载
 ├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线
 └── character_weapon_equipment/  # characters.json / weapons.json / equipments.json
 
 功能说明：
 1. 角色 / 武器 / 装备选择与属性、乘区展示
-2. 单段伤害、乘区快照、多技能快速预览、单技能全量遍历（实验）
-3. 完整敌方参数面板与多技能全量遍历产品化仍为后续功能
+2. 单段伤害、乘区快照、多技能预览、全量遍历（单技能或手动次数加权，实验）
+3. 完整敌方参数面板、总伤结算 UI 等仍为后续功能
 
 使用方式：
     python main.py

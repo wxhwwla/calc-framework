@@ -14,7 +14,7 @@
 - **流式任务生成** + **有界并行**（不一次性物化/提交全部 future）
 - SQLite 续跑：**批量**标记 `processed`、结束时仅写入 **TopN** 到 `scores`
 - 结果导出：Top JSON/CSV（`result_export.py`）
-- 多技能加权总伤搜索（后端；GUI 仅快速预览 + 手动权重）
+- 多技能加权总伤（快速预览 + **开启手动次数时的全量/MVP TopN**）
 - GUI：**预计组合数/耗时**、并行线程与本机 CPU 说明、进度 ETA、取消、结果大窗
 
 ## 2. 代码入口
@@ -33,18 +33,24 @@
 | 多技能 | `calculation/multi_skill_optimizer.py` |
 | 导出目录 | `gui_design/search_export_paths.py`（`get_application_dir()` → `search_output/`） |
 | 并行/进度文案 | `gui_design/search_settings.py` |
-| GUI | `gui_design/gui.py`（第 2 列「计算与搜索」） |
+| 固定配装 UI | `gui_design/fixed_loadout_controls.py` |
+| 多技能全量评分 | `calculation/multi_skill_search_eval.py`、`search_task_evaluator.py` |
+| GUI | `gui_design/gui.py`、`gui_layout.py`（五列 + 底栏） |
 | 结果大窗 | `gui_design/search_results_view.py` |
 
 ## 3. GUI 布局（2026-05-23）
+
+**上排五列** `APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 5)`：
 
 | 列 | 内容 |
 |----|------|
 | 0 | 角色选择（滚动） |
 | 1 | 武器选择（滚动） |
-| 2 | **计算与搜索**（滚动）：确认、计算模式、全量遍历、并行/TopN、状态与预估 |
-| 3 / 5 | 角色 / 武器属性 |
-| 7 | 右侧乘区（可伸缩） |
+| 2 | 角色属性 |
+| 3 | 武器属性 |
+| 4 | 右侧乘区（主伸缩） |
+
+**底栏**（横跨列 0–3）：操作（确认、模式）| 全量搜索（范围、**固定配装 0–4**、预估、遍历/MVP）| 多技能次数
 
 ## 4. GUI 使用步骤
 
@@ -52,10 +58,11 @@
 
 1. 启动：`python main.py`（或发布文件夹内 exe）
 2. 选择角色、武器、技能；点击「确认选择」
-3. 在 **计算与搜索** 列设置：
+3. 在底栏 **全量搜索** 区设置：
    - **武器候选范围** / **装备范围**
-   - 查看 **预计组合数 / 预计耗时**（改范围或并行线程会刷新）
-   - 阅读 **并行线程** 下方说明（本机核数、硬上限、是否可能变卡）
+   - **固定配装**：勾选 0–4 件具体装备；未勾选部位全部遍历
+   - （可选）底栏 **多技能** 开「使用手动次数」并填次数 → TopN 按加权总伤
+   - 查看 **预计组合数 / 预计耗时**；阅读 **并行线程** 说明
 4. 点击 **`全量遍历(弹窗结果)`**（无需选手动导出目录）
 5. 若预计 ≥ 2 分钟，会弹出确认框
 6. 进行中：状态栏显示 `已处理/总数`、剩余与总预计时间；可点 **取消搜索**
@@ -103,7 +110,7 @@ python tools/bwiki_scout/sync_equipments.py --apply
 python -m pytest tests/ -q
 ```
 
-当前基线：**229 passed**, 9 subtests passed。
+当前基线：**294 passed**, 9 subtests passed。
 
 重点模块：
 
@@ -149,14 +156,15 @@ python build.py
 | Top 条数 / 取消 / ETA | 是 | 同列 |
 | MVP 导出 + 续跑 | 是 | 「实验：MVP搜索并导出」 |
 | 导出到 search_output | 是 | 开发/打包均非 C 盘 Temp |
-| 多技能加权全量 | 否 | 仅快速预览 + 权重滑块 |
+| 多技能加权全量 | 是 | 开「使用手动次数」后全量/MVP 按 Σ(单段×次数) |
+| 固定配装 0–4 | 是 | 底栏勾选部位 + 选装备 |
 | 暴击模式 | 否 | 搜索固定不暴击 |
 | 敌方防御/抗性等 | 否 | 后端 `DamageContext` |
-| 多技能全量弹窗 | 否 | 待接 |
+| 全量 Top 分项伤害 | 否 | 弹窗仅显示加权总伤/单段伤害数值 |
 
 ## 9. 已知限制
 
-- 实验入口，产品化（多技能全量、敌方面板等）未做完
+- 实验入口；敌方面板、全量结果分项展示等未做完
 - 耗时预估为粗估（含批量写库经验值），跑起来后「剩余时间」更准
 - 续跑时 `get_processed_keys` 仍会一次加载已处理 key 集合（超大续跑可再优化）
 - 装备数据质量依赖 BWIKI 同步与 `infer_equipment_slot` 规则

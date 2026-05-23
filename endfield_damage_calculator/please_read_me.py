@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.15.7"
+_VERSION = "1.15.8"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -209,22 +209,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 16 处文件
+# TITLE: 更新 11 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/calculation/in_memory_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_search_eval.py
-# - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
-# - 修改 endfield_damage_calculator/calculation/search_persistence.py
-# - 修改 endfield_damage_calculator/calculation/search_session.py
-# - 修改 endfield_damage_calculator/calculation/search_task_evaluator.py
-# - 修改 endfield_damage_calculator/calculation/single_skill_search_job.py
-# - 修改 endfield_damage_calculator/calculation/single_skill_search_runner.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 变更 "docs/MVP/346/220/234/347/264/242/351/252/214/346/224/266/350/257/264/346/230/216.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 README.md
+# - 更新文档 endfield_damage_calculator/README.md
+# - 修改 endfield_damage_calculator/gui_design/confirm_refresh.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/gui_design/panel_hints.py
-# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
-# - 修改 endfield_damage_calculator/gui_design/search_results_view.py
-# - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_full_search.py
-# - 修改 endfield_damage_calculator/tests/test_panel_hints.py
+# - 修改 endfield_damage_calculator/main.py
+# - 修改 endfield_damage_calculator/tests/test_confirm_refresh.py
 # --- END UPLOAD_SUMMARY ---

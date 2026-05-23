@@ -8,7 +8,7 @@ GUI 主应用模块
 
 主要功能：
 1. 创建主窗口并设置初始属性
-2. 使用 6 列 grid：角色/武器选择、计算与搜索、角色/武器属性、右侧乘区
+2. 使用 5 列 + 底栏 grid：角色/武器选择、属性列、乘区；底栏为操作/全量搜索/多技能
 3. 加载角色和武器数据
 4. 处理用户交互事件（确认选择等）
 5. 支持窗口缩放自适应
@@ -48,6 +48,11 @@ from calculation.single_skill_search_runner import (
     run_exported_single_skill_search,
 )
 from gui_design.panel_hints import FIXED_LOADOUT_HINT, MULTI_SKILL_COUNTS_HINT
+from gui_design.confirm_refresh import (
+    build_confirm_refresh_signature,
+    normalize_skill_count_text,
+    skill_count_commit_changed,
+)
 from gui_design.fixed_loadout_controls import (
     create_fixed_loadout_controls,
     refresh_all_fixed_slot_menus,
@@ -149,7 +154,7 @@ class DamageCalculatorApp:
         # 设置窗口标题（包含 EXE 版本号）
         self.app.title(f"终末地伤害计算小工具 v{get_exe_version()}")
 
-        # 最小尺寸：保证六列布局可读
+        # 最小尺寸：保证五列+底栏布局可读
         self.app.minsize(1024, 600)
         
         # 绑定窗口大小变化事件，用于自适应缩放
@@ -204,6 +209,10 @@ class DamageCalculatorApp:
         self.char_panel: Optional[ChooseTypesStarsNamesLevels] = None
         self.weapon_panel: Optional[ChooseTypesStarsNamesLevels] = None
         self.all_weapons: List[Dict[str, Any]] = []  # 存储所有武器数据
+        # 确认刷新：合并同帧多次调用；签名未变时跳过整页重绘
+        self._confirm_refresh_signature: Optional[tuple] = None
+        self._confirm_after_id: Optional[str] = None
+        self._skill_count_last_committed: Dict[str, str] = {}
 
         # 创建并布局所有 UI 组件
         self._setup_ui()
@@ -608,7 +617,10 @@ class DamageCalculatorApp:
         ar = 0
         ar = _section(actions, "操作", ar)
         self.confirm_btn = ctk.CTkButton(
-            actions, text="确认选择", font=self.big_font, command=self._on_confirm
+            actions,
+            text="确认选择",
+            font=self.big_font,
+            command=lambda: self._on_confirm(force=True),
         )
         ar = _place(actions, ar, self.confirm_btn, pady=(0, 6))
         self.attribution_btn = ctk.CTkButton(
@@ -632,7 +644,7 @@ class DamageCalculatorApp:
             values=list(CALC_MODE_LABELS),
             variable=self.calc_mode_var,
             font=self.small_font,
-            command=lambda _v: self._on_confirm(),
+            command=lambda _v: self._schedule_confirm(),
         )
         _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
 
@@ -693,7 +705,7 @@ class DamageCalculatorApp:
         def _on_search_scope_change(_value: str = "") -> None:
             self._refresh_fixed_loadout_menus()
             self._refresh_search_estimate()
-            self._on_confirm()
+            self._schedule_confirm()
 
         self.single_skill_scope_menu.configure(command=_on_search_scope_change)
         self.single_skill_equipment_scope_menu.configure(command=_on_search_scope_change)
@@ -799,20 +811,32 @@ class DamageCalculatorApp:
             text="使用手动次数",
             variable=self.use_manual_skill_counts_var,
             font=self.small_font,
-            command=self._on_confirm,
+            command=self._schedule_confirm,
         )
         mr = _place(multi, mr, count_switch, pady=(0, 6))
         multi.grid_columnconfigure(1, weight=0, minsize=72)
         self._create_skill_count_row(
-            parent=multi, row=mr, label_text="战技次数", value_var=self.skill_count_1_var
+            parent=multi,
+            row=mr,
+            label_text="战技次数",
+            value_var=self.skill_count_1_var,
+            storage_key="战技",
         )
         mr += 1
         self._create_skill_count_row(
-            parent=multi, row=mr, label_text="连携技次数", value_var=self.skill_count_2_var
+            parent=multi,
+            row=mr,
+            label_text="连携技次数",
+            value_var=self.skill_count_2_var,
+            storage_key="连携技",
         )
         mr += 1
         self._create_skill_count_row(
-            parent=multi, row=mr, label_text="终结技次数", value_var=self.skill_count_3_var
+            parent=multi,
+            row=mr,
+            label_text="终结技次数",
+            value_var=self.skill_count_3_var,
+            storage_key="终结技",
         )
         mr += 1
         multi_skill_hint = ctk.CTkLabel(
@@ -837,8 +861,8 @@ class DamageCalculatorApp:
         """
         从当前 GUI 选择组装 ``SingleSkillSearchJob``。
 
-        含：角色/武器等级、左侧技能倍率、武器/装备范围、遍历件数 1–4、
-        ``run_signature``（续跑库键）。失败时弹窗并返回 None。
+        含：角色/武器等级、左侧技能倍率、武器/装备范围、固定配装、
+        可选多技能加权（手动次数）、``run_signature``（续跑库键）。失败时弹窗并返回 None。
         """
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
@@ -910,7 +934,7 @@ class DamageCalculatorApp:
         catalog = self._single_skill_preview_equipment_catalog()
         refresh_all_fixed_slot_menus(catalog, self._fixed_loadout_slots)
         self._refresh_search_estimate()
-        self._on_confirm()
+        self._schedule_confirm()
 
     def _set_search_buttons_enabled(self, enabled: bool) -> None:
         state = "normal" if enabled else "disabled"
@@ -1175,31 +1199,101 @@ class DamageCalculatorApp:
             status_done_prefix="MVP搜索状态",
         )
 
-    def _on_confirm(self) -> None:
+    def _is_window_iconified(self) -> bool:
+        """窗口是否处于最小化状态（最小化时跳过重绘，避免恢复后闪屏）。"""
+        try:
+            return str(self.app.state()) == "iconic"
+        except Exception:
+            return False
+
+    def _confirm_refresh_signature_now(self) -> tuple:
+        """当前界面输入对应的确认刷新签名。"""
+        assert self.char_panel is not None and self.weapon_panel is not None
+        char_data = self.char_panel.get_selected_data() or {}
+        weapon_data = self.weapon_panel.get_selected_data() or {}
+        wp = self.weapon_panel
+        return build_confirm_refresh_signature(
+            calculation_mode=self._current_calculation_mode(),
+            char_name=str(char_data.get("名称", "")),
+            char_level=self.char_panel.get_level(),
+            weapon_name=str(weapon_data.get("名称", "")),
+            weapon_level=self.weapon_panel.get_level(),
+            trust_level=self.char_panel.get_trust_level(),
+            skill_levels=(
+                self.char_panel.get_skill_1_level(),
+                self.char_panel.get_skill_2_level(),
+                self.char_panel.get_skill_3_level(),
+            ),
+            weapon_specials=(
+                wp.get_special_ability_1_name(),
+                wp.get_special_ability_1_level(),
+                wp.get_special_ability_2_name(),
+                wp.get_special_ability_2_level(),
+                wp.get_special_ability_3_name(),
+                wp.get_special_ability_3_level(),
+                wp.get_weapon_special_name(),
+                wp.get_weapon_special_level(),
+                wp.get_weapon_special_2_name(),
+                wp.get_weapon_special_2_level(),
+            ),
+            use_manual_multi_skill_counts=bool(self.use_manual_skill_counts_var.get()),
+            multi_skill_manual_counts=self._manual_multi_skill_counts(),
+            preview_scope_label=self.single_skill_scope_var.get(),
+            preview_equipment_scope_label=self.single_skill_equipment_scope_var.get(),
+            fixed_loadout_token=self._build_fixed_loadout_selection().signature_token(),
+        )
+
+    def _on_confirm(self, *, force: bool = False) -> None:
         """
-        确认按钮点击事件处理函数
-        
-        功能：调用 confirm_selection()，根据当前选中的角色和武器
-        刷新角色属性列、武器属性列；两侧数据均有效时再刷新右侧乘区。
-        
-        前置条件：确保所有必要组件已初始化
+        刷新属性列与右侧乘区/预览。
+
+        默认合并同帧调用并在输入未变时跳过，避免最小化失焦触发整页清空重建。
+        ``force=True`` 时供「确认选择」按钮强制刷新。
         """
-        # 断言检查组件是否已初始化
+        if not force and self._is_window_iconified():
+            return
+        signature = self._confirm_refresh_signature_now()
+        if not force and signature == self._confirm_refresh_signature:
+            return
+        self._confirm_refresh_signature = signature
+        self._run_confirm()
+
+    def _schedule_confirm(self, *, force: bool = False) -> None:
+        """将确认刷新合并到下一 idle，避免连续事件多次重绘。"""
+        if force:
+            if self._confirm_after_id is not None:
+                try:
+                    self.app.after_cancel(self._confirm_after_id)
+                except Exception:
+                    pass
+                self._confirm_after_id = None
+            self._on_confirm(force=True)
+            return
+        if self._confirm_after_id is not None:
+            return
+
+        def _dispatch() -> None:
+            self._confirm_after_id = None
+            self._on_confirm(force=False)
+
+        self._confirm_after_id = self.app.after_idle(_dispatch)
+
+    def _run_confirm(self) -> None:
+        """执行一次属性/乘区展示刷新（假定签名已更新）。"""
         assert self.char_attr_scroll is not None, "char_attr_scroll 未初始化"
         assert self.weapon_attr_scroll is not None, "weapon_attr_scroll 未初始化"
         assert self.right_scroll is not None, "right_scroll 未初始化"
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
-        
-        # 调用确认选择函数，更新属性列与乘区显示
+
         confirm_selection(
-            self.char_attr_scroll,   # 角色属性展示区域
-            self.weapon_attr_scroll, # 武器属性展示区域
-            self.right_scroll,       # 右侧显示区域（乘区数据）
-            self.char_panel,     # 角色选择面板
-            self.weapon_panel,   # 武器选择面板
-            self.big_font,       # 大号字体
-            self.small_font,     # 小号字体
+            self.char_attr_scroll,
+            self.weapon_attr_scroll,
+            self.right_scroll,
+            self.char_panel,
+            self.weapon_panel,
+            self.big_font,
+            self.small_font,
             calculation_mode=self._current_calculation_mode(),
             multi_skill_manual_counts=self._manual_multi_skill_counts(),
             use_manual_multi_skill_counts=bool(self.use_manual_skill_counts_var.get()),
@@ -1217,6 +1311,7 @@ class DamageCalculatorApp:
         row: int,
         label_text: str,
         value_var: ctk.StringVar,
+        storage_key: str,
     ) -> None:
         """创建单行技能次数输入（标签 + 数字框两列）。"""
         ctk.CTkLabel(
@@ -1226,15 +1321,22 @@ class DamageCalculatorApp:
             text_color="#CCCCCC",
         ).grid(row=row, column=0, padx=8, pady=(0, 2), sticky="w")
 
+        self._skill_count_last_committed[storage_key] = normalize_skill_count_text(
+            value_var.get()
+        )
+
         def _on_change(*_args: object) -> None:
-            text = (value_var.get() or "").strip()
-            try:
-                value = max(0, int(float(text)))
-            except (TypeError, ValueError):
-                value = 0
-            value_var.set(str(value))
+            normalized, changed = skill_count_commit_changed(
+                value_var.get(),
+                self._skill_count_last_committed.get(storage_key),
+            )
+            if not changed:
+                return
+            self._skill_count_last_committed[storage_key] = normalized
+            if (value_var.get() or "").strip() != normalized:
+                value_var.set(normalized)
             if self._current_calculation_mode() == "multi_skill_search":
-                self._on_confirm()
+                self._schedule_confirm()
 
         entry = ctk.CTkEntry(
             parent,
