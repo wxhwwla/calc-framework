@@ -33,12 +33,14 @@ from gui_design.display_model import (
     ChooseTypesStarsNamesLevels,
 )
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
+from data.loader import get_equipments, DataLoadError
 from please_read_me import get_exe_version  # EXE版本号
 from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
 from calculation.mvp_pipeline import run_mvp_search_pipeline
 from calculation.equipment_system import load_equipment_catalog_from_wiki_draft
+from calculation.equipment_system import build_equipment_catalog_from_local_rows
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 # 列 0/1/3/5：选择区与属性区（最小宽度）；列 7：右侧乘区（占满剩余宽度）
@@ -124,6 +126,19 @@ class DamageCalculatorApp:
         self.attribution_btn: Optional[ctk.CTkButton] = None
         self.mvp_search_btn: Optional[ctk.CTkButton] = None
         self.mvp_status_label: Optional[ctk.CTkLabel] = None
+        self.calc_mode_var: ctk.StringVar = ctk.StringVar(value="single_hit")
+        self.calc_mode_menu: Optional[ctk.CTkOptionMenu] = None
+        self.use_manual_weights_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        self.single_skill_scope_var: ctk.StringVar = ctk.StringVar(value="当前武器")
+        self.single_skill_scope_menu: Optional[ctk.CTkOptionMenu] = None
+        self.single_skill_equipment_scope_var: ctk.StringVar = ctk.StringVar(value="全部装备")
+        self.single_skill_equipment_scope_menu: Optional[ctk.CTkOptionMenu] = None
+        self.skill_weight_1_var: ctk.StringVar = ctk.StringVar(value="1.0")
+        self.skill_weight_2_var: ctk.StringVar = ctk.StringVar(value="0.0")
+        self.skill_weight_3_var: ctk.StringVar = ctk.StringVar(value="0.0")
+        self.skill_weight_1_slider: Optional[ctk.CTkSlider] = None
+        self.skill_weight_2_slider: Optional[ctk.CTkSlider] = None
+        self.skill_weight_3_slider: Optional[ctk.CTkSlider] = None
         self.char_attr_frame: Optional[ctk.CTkFrame] = None
         self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
@@ -201,11 +216,23 @@ class DamageCalculatorApp:
             font=self.big_font,       # 使用大号字体
             command=self._on_confirm  # 点击事件处理函数
         )
-        self.weapon_frame.grid_rowconfigure(0, weight=1)
+        # 第 0 行仅放武器选择滚动区，避免与下方按钮/模式下拉重叠
+        self.weapon_frame.grid_rowconfigure(0, weight=1, minsize=280)
         self.weapon_frame.grid_rowconfigure(1, weight=0)
         self.weapon_frame.grid_rowconfigure(2, weight=0)
         self.weapon_frame.grid_rowconfigure(3, weight=0)
         self.weapon_frame.grid_rowconfigure(4, weight=0)
+        self.weapon_frame.grid_rowconfigure(5, weight=0)
+        self.weapon_frame.grid_rowconfigure(6, weight=0)
+        self.weapon_frame.grid_rowconfigure(7, weight=0)
+        self.weapon_frame.grid_rowconfigure(8, weight=0)
+        self.weapon_frame.grid_rowconfigure(9, weight=0)
+        self.weapon_frame.grid_rowconfigure(10, weight=0)
+        self.weapon_frame.grid_rowconfigure(11, weight=0)
+        self.weapon_frame.grid_rowconfigure(12, weight=0)
+        self.weapon_frame.grid_rowconfigure(13, weight=0)
+        self.weapon_frame.grid_rowconfigure(14, weight=0)
+        self.weapon_frame.grid_rowconfigure(15, weight=0)
         self.weapon_frame.grid_columnconfigure(0, weight=1)
 
         self.confirm_btn.grid(
@@ -254,6 +281,145 @@ class DamageCalculatorApp:
         )
         self.mvp_status_label.grid(
             row=4,
+            column=0,
+            padx=10,
+            pady=(0, 4),
+            sticky="w",
+        )
+        mode_title = ctk.CTkLabel(
+            self.weapon_frame,
+            text="计算模式",
+            font=self.small_font,
+            text_color="#CCCCCC",
+        )
+        mode_title.grid(
+            row=5,
+            column=0,
+            padx=10,
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.calc_mode_menu = ctk.CTkOptionMenu(
+            self.weapon_frame,
+            values=[
+                "单段伤害计算",
+                "乘区快照",
+                "单技能遍历(快速预览)",
+                "多技能遍历(快速预览)",
+            ],
+            variable=self.calc_mode_var,
+            font=self.small_font,
+            command=lambda _v: self._on_confirm(),
+        )
+        self.calc_mode_menu.grid(
+            row=6,
+            column=0,
+            padx=10,
+            pady=(0, 4),
+            sticky="ew",
+        )
+        scope_title = ctk.CTkLabel(
+            self.weapon_frame,
+            text="单技能候选范围",
+            font=self.small_font,
+            text_color="#CCCCCC",
+        )
+        scope_title.grid(
+            row=7,
+            column=0,
+            padx=10,
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.single_skill_scope_menu = ctk.CTkOptionMenu(
+            self.weapon_frame,
+            values=[
+                "当前武器",
+                "同类型同星级",
+                "同类型全部",
+            ],
+            variable=self.single_skill_scope_var,
+            font=self.small_font,
+            command=lambda _v: self._on_confirm(),
+        )
+        self.single_skill_scope_menu.grid(
+            row=8,
+            column=0,
+            padx=10,
+            pady=(0, 4),
+            sticky="ew",
+        )
+        equip_scope_title = ctk.CTkLabel(
+            self.weapon_frame,
+            text="单技能装备范围",
+            font=self.small_font,
+            text_color="#CCCCCC",
+        )
+        equip_scope_title.grid(
+            row=9,
+            column=0,
+            padx=10,
+            pady=(0, 2),
+            sticky="w",
+        )
+        self.single_skill_equipment_scope_menu = ctk.CTkOptionMenu(
+            self.weapon_frame,
+            values=[
+                "全部装备",
+                "仅套装装备",
+                "仅散件装备",
+            ],
+            variable=self.single_skill_equipment_scope_var,
+            font=self.small_font,
+            command=lambda _v: self._on_confirm(),
+        )
+        self.single_skill_equipment_scope_menu.grid(
+            row=10,
+            column=0,
+            padx=10,
+            pady=(0, 4),
+            sticky="ew",
+        )
+        weight_switch = ctk.CTkSwitch(
+            self.weapon_frame,
+            text="多技能使用手动权重",
+            variable=self.use_manual_weights_var,
+            font=self.small_font,
+            command=self._on_confirm,
+        )
+        weight_switch.grid(
+            row=11,
+            column=0,
+            padx=10,
+            pady=(0, 4),
+            sticky="w",
+        )
+        self.skill_weight_1_slider = self._create_weight_row(
+            row=12,
+            label_text="战技权重",
+            value_var=self.skill_weight_1_var,
+            default_value=1.0,
+        )
+        self.skill_weight_2_slider = self._create_weight_row(
+            row=13,
+            label_text="连携技权重",
+            value_var=self.skill_weight_2_var,
+            default_value=0.0,
+        )
+        self.skill_weight_3_slider = self._create_weight_row(
+            row=14,
+            label_text="终结技权重",
+            value_var=self.skill_weight_3_var,
+            default_value=0.0,
+        )
+        weight_tip = ctk.CTkLabel(
+            self.weapon_frame,
+            text="提示：仅在“多技能遍历(快速预览)”模式生效",
+            font=self.small_font,
+            text_color="#888888",
+        )
+        weight_tip.grid(
+            row=15,
             column=0,
             padx=10,
             pady=(0, 10),
@@ -388,21 +554,24 @@ class DamageCalculatorApp:
         # 创建武器选择面板（放在武器框架的第一行）
         assert self.weapon_frame is not None, "weapon_frame 未初始化"
         
-        # 创建武器子框架（放在武器框架的第一行）
-        weapon_inner_frame = ctk.CTkFrame(
+        # 武器选择放入可滚动区域，防止词条滑块被下方「确认/模式」控件遮挡
+        weapon_select_scroll = ctk.CTkScrollableFrame(
             self.weapon_frame,
-            fg_color="transparent"
+            fg_color="transparent",
+            label_text="武器选择",
+            label_font=self.small_font,
         )
-        weapon_inner_frame.grid(
+        weapon_select_scroll.grid(
             row=0,
             column=0,
             padx=5,
-            pady=5,
-            sticky="nsew"
+            pady=(5, 0),
+            sticky="nsew",
         )
-        
+        weapon_select_scroll.grid_columnconfigure(0, weight=1)
+
         self.weapon_panel = ChooseTypesStarsNamesLevels.use(
-            weapon_inner_frame,     # 父框架（武器框架内的子框架）
+            weapon_select_scroll,
             weapons,               # 武器数据列表
             self.big_font,          # 使用的字体
             is_weapon_panel=True   # 是否为武器面板（启用特殊能力滑块）
@@ -584,19 +753,26 @@ class DamageCalculatorApp:
 
         pkg_root = Path(__file__).resolve().parent.parent
         draft_path = pkg_root.parent / "tools" / "bwiki_scout" / "output" / "parsed" / "equipment.json"
-        if not draft_path.is_file():
-            messagebox.showwarning(
-                "MVP搜索",
-                "未找到装备草案数据：tools/bwiki_scout/output/parsed/equipment.json\n"
-                "请先执行 BWIKI 流程生成装备草案。",
-                parent=self.app,
-            )
-            return
-        equipment_catalog = load_equipment_catalog_from_wiki_draft(draft_path)
+        try:
+            local_equipments = get_equipments()
+        except DataLoadError:
+            local_equipments = []
+        equipment_catalog = build_equipment_catalog_from_local_rows(local_equipments)
+        if not equipment_catalog["chest"] or not equipment_catalog["gloves"] or not equipment_catalog["accessories"]:
+            if not draft_path.is_file():
+                messagebox.showwarning(
+                    "MVP搜索",
+                    "未找到本地装备数据（equipments.json）或装备草案（output/parsed/equipment.json）。\n"
+                    "请先执行：python tools/bwiki_scout/parse_draft.py\n"
+                    "再执行：python tools/bwiki_scout/sync_equipments.py --apply",
+                    parent=self.app,
+                )
+                return
+            equipment_catalog = load_equipment_catalog_from_wiki_draft(draft_path)
         if not equipment_catalog["chest"] or not equipment_catalog["gloves"] or not equipment_catalog["accessories"]:
             messagebox.showwarning(
                 "MVP搜索",
-                "装备草案未包含完整的胸甲/护手/配件数据，无法搜索。",
+                "装备草案未包含完整的护甲/护手/配件数据，无法搜索。",
                 parent=self.app,
             )
             return
@@ -701,8 +877,133 @@ class DamageCalculatorApp:
             self.char_panel,     # 角色选择面板
             self.weapon_panel,   # 武器选择面板
             self.big_font,       # 大号字体
-            self.small_font      # 小号字体
+            self.small_font,     # 小号字体
+            calculation_mode=self._current_calculation_mode(),
+            multi_skill_manual_weights=self._manual_multi_skill_weights(),
+            use_manual_multi_skill_weights=bool(self.use_manual_weights_var.get()),
+            preview_weapon_candidates=self._single_skill_preview_candidates(),
+            preview_scope_label=self.single_skill_scope_var.get(),
+            preview_equipment_catalog=self._single_skill_preview_equipment_catalog(),
+            preview_equipment_scope_label=self.single_skill_equipment_scope_var.get(),
         )
+
+    def _create_weight_row(
+        self,
+        *,
+        row: int,
+        label_text: str,
+        value_var: ctk.StringVar,
+        default_value: float,
+    ) -> ctk.CTkSlider:
+        """创建单行权重滑块。"""
+        title = ctk.CTkLabel(
+            self.weapon_frame,
+            text=f"{label_text}: {value_var.get()}",
+            font=self.small_font,
+            text_color="#CCCCCC",
+        )
+        title.grid(row=row, column=0, padx=10, pady=(0, 2), sticky="w")
+
+        def _on_change(raw: float) -> None:
+            value = round(float(raw), 1)
+            value_var.set(f"{value:.1f}")
+            title.configure(text=f"{label_text}: {value_var.get()}")
+            if self._current_calculation_mode() == "multi_skill_search":
+                self._on_confirm()
+
+        slider = ctk.CTkSlider(
+            self.weapon_frame,
+            from_=0.0,
+            to=5.0,
+            number_of_steps=50,
+            command=_on_change,
+        )
+        slider.grid(row=row, column=0, padx=(120, 10), pady=(0, 2), sticky="ew")
+        slider.set(default_value)
+        return slider
+
+    def _manual_multi_skill_weights(self) -> Dict[str, float]:
+        """读取 GUI 手动权重。"""
+        def _to_float(text: str) -> float:
+            try:
+                return max(0.0, float(text))
+            except (TypeError, ValueError):
+                return 0.0
+
+        return {
+            "战技": _to_float(self.skill_weight_1_var.get()),
+            "连携技": _to_float(self.skill_weight_2_var.get()),
+            "终结技": _to_float(self.skill_weight_3_var.get()),
+        }
+
+    def _single_skill_preview_candidates(self) -> List[WeaponCandidate]:
+        """按候选范围生成单技能预览武器集合。"""
+        assert self.char_panel is not None, "char_panel 未初始化"
+        assert self.weapon_panel is not None, "weapon_panel 未初始化"
+        char_data = self.char_panel.get_selected_data()
+        current_weapon = self.weapon_panel.get_selected_data()
+        if not char_data or not current_weapon:
+            return []
+
+        scope = self.single_skill_scope_var.get()
+        char_level = self.char_panel.get_level()
+        weapon_level = self.weapon_panel.get_level()
+        trust_level = self.char_panel.get_trust_level()
+        weapon_type = str(char_data.get("武器", ""))
+        current_star = current_weapon.get("星级")
+
+        candidates: List[WeaponCandidate] = []
+        for weapon in self.all_weapons:
+            if weapon.get("类型") != weapon_type:
+                continue
+            if scope == "同类型同星级" and weapon.get("星级") != current_star:
+                continue
+            if scope == "当前武器" and weapon.get("名称") != current_weapon.get("名称"):
+                continue
+            details = calculate_final_attack_with_details(
+                character=char_data,
+                weapon=weapon,
+                char_level=char_level,
+                weapon_level=weapon_level,
+                trust_level=trust_level,
+            )
+            candidates.append(
+                WeaponCandidate(
+                    name=str(weapon.get("名称", "")),
+                    final_attack=float(details.get("final_attack", 0.0)),
+                )
+            )
+        return candidates
+
+    def _single_skill_preview_equipment_catalog(self) -> Dict[str, List[Dict[str, Any]]]:
+        """按装备范围构建单技能预览装备目录。"""
+        try:
+            rows = get_equipments()
+        except DataLoadError:
+            return {"chest": [], "gloves": [], "accessories": []}
+        scope = self.single_skill_equipment_scope_var.get()
+        filtered: List[Dict[str, Any]] = []
+        for row in rows:
+            set_name = str(row.get("套装") or "").strip()
+            if scope == "仅套装装备" and not set_name:
+                continue
+            if scope == "仅散件装备" and set_name:
+                continue
+            filtered.append(row)
+        return build_equipment_catalog_from_local_rows(filtered)
+
+    def _current_calculation_mode(self) -> str:
+        """读取当前模式下拉框并转换为内部标识。"""
+        mode_text = self.calc_mode_var.get()
+        if mode_text == "单段伤害计算":
+            return "single_hit"
+        if mode_text == "乘区快照":
+            return "zone_snapshot"
+        if mode_text.startswith("单技能遍历"):
+            return "single_skill_search"
+        if mode_text.startswith("多技能遍历"):
+            return "multi_skill_search"
+        return "single_hit"
 
     def _on_window_resize(self, event) -> None:
         """

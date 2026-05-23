@@ -20,13 +20,13 @@ class TestLoadoutOptimizer(unittest.TestCase):
                 build_runtime_equipment_from_wiki_draft(
                     {
                         "名称": "胸甲A",
-                        "_wiki_params": {"部位": "胸甲", "套装": "寒霜协议", "效果1": "寒冷伤害+10%"},
+                        "_wiki_params": {"装备种类": "护甲", "所属套组": "寒霜协议", "效果1": "寒冷伤害+10%"},
                     }
                 ),
                 build_runtime_equipment_from_wiki_draft(
                     {
                         "名称": "胸甲B",
-                        "_wiki_params": {"部位": "胸甲", "套装": "散件"},
+                        "_wiki_params": {"装备种类": "护甲", "所属套组": "散件"},
                     }
                 ),
             ],

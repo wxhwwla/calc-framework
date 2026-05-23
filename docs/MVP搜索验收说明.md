@@ -34,14 +34,20 @@
 2. 选择角色与武器（角色武器类型会自动过滤候选）
 3. 点击 `实验：MVP搜索并导出`
 4. 选择导出目录
-5. 程序将读取 `tools/bwiki_scout/output/parsed/equipment.json` 作为装备草案数据
+5. 程序优先读取本地标准装备数据 `endfield_damage_calculator/character_weapon_equipment/equipment_data/equipments.json`
+6. 若本地标准装备为空，会回退读取 `tools/bwiki_scout/output/parsed/equipment.json` 草案
 6. 完成后会弹窗提示：
    - `search_runs.db`（续跑数据库）
    - `mvp_exports/top_results.json`
    - `mvp_exports/top_results.csv`
    - `mvp_exports/all_results.ndjson`
 
-> 注意：若未生成 `equipment.json`，按钮会提示先完成 BWIKI 草案解析。
+> 建议先执行一次标准化同步，再使用 GUI 搜索：
+>
+> ```powershell
+> python tools/bwiki_scout/parse_draft.py
+> python tools/bwiki_scout/sync_equipments.py --apply
+> ```
 
 ## 4. 命令行验收
 

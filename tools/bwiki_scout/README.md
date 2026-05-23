@@ -9,9 +9,8 @@
 ```
 scout.py（拉取/续跑 raw 缓存）
     → compare_stats.py（可选：干员 1–90 级对比报告）
-    → sync_operators.py / sync_weapons.py（预览待更新项）
-    → sync_*.py --new（可选：导入 manifest 中本地尚无、缓存齐全的条目）
-    → sync_*.py --apply（写入 JSON + seed_*.py）
+    → parse_draft.py（生成 parsed/equipment.json 草案）
+    → sync_all.py（干员+武器+装备一键预览/写入）
 ```
 
 默认**不**改正式 JSON；只有加 `--apply` 才会覆盖 `characters.json` / `weapons.json` 并更新 `seed_characters.py` / `seed_weapons.py`。
@@ -100,6 +99,26 @@ python tools/bwiki_scout/sync_weapons.py --new --apply      # 写入 JSON + seed
 
 默认只处理 **已在** `characters.json` / `weapons.json` 中的名称（与 Wiki 对比后更新）。加 `--new` 会从 `manifest.json` 并入本地缺失、且 `output/raw` 缓存可反推的条目（武器须含 `词条1rank1` 等成长块）。
 
+**装备** → `endfield_damage_calculator/character_weapon_equipment/equipment_data/equipments.json`：
+
+Wiki 模板字段：`装备种类`（**护甲 / 护手 / 配件**）、`所属套组`、`装备套组效果`、`主词条` / `属性词条N`。
+
+```powershell
+python tools/bwiki_scout/scout.py --only-kind equipment
+python tools/bwiki_scout/parse_draft.py
+python tools/bwiki_scout/sync_equipments.py
+python tools/bwiki_scout/sync_equipments.py --apply
+```
+
+**一键同步（干员+武器+装备）**：
+
+```powershell
+python tools/bwiki_scout/sync_all.py
+python tools/bwiki_scout/sync_all.py --apply
+python tools/bwiki_scout/sync_all.py --apply --new
+python tools/bwiki_scout/sync_all.py --apply --only-operators 秋栗 --only-weapons 逐鳞3.0
+```
+
 ## 模块文件
 
 | 文件 | 职责 |
@@ -112,7 +131,9 @@ python tools/bwiki_scout/sync_weapons.py --new --apply      # 写入 JSON + seed
 | `weapon_wiki.py` | 解析武器 wikitext 与反推 seed 结构 |
 | `wiki_sync.py` | 干员/武器同步核心、`seed_*` 读写 |
 | `import_targets.py` | manifest → 同步目标（含 `--new`） |
-| `sync_operators.py` / `sync_weapons.py` | CLI 入口 |
+| `equipment_wiki.py` | 装备 wikitext → 本地 JSON（`装备种类` 等与 Wiki 对齐） |
+| `sync_operators.py` / `sync_weapons.py` / `sync_equipments.py` | 分项 CLI 入口 |
+| `sync_all.py` | 一键串联干员/武器/装备同步 |
 | `storage.py` | `raw/` 读写与续跑 |
 | `config.py` | 路径、API、本地 JSON 位置 |
 

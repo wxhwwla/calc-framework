@@ -6,6 +6,7 @@ BWIKI 侦察入口（阶段 C）。
 用法（仓库根目录）：
     python tools/bwiki_scout/scout.py
     python tools/bwiki_scout/scout.py --limit 5   # 每类仅拉 5 条，调试
+    python tools/bwiki_scout/scout.py --only-kind equipment   # 仅拉装备
 """
 
 from __future__ import annotations
@@ -91,6 +92,7 @@ def run_scout(
     output_root: Path = OUTPUT_ROOT,
     client: MediaWikiClient | None = None,
     per_kind_limit: int | None = None,
+    only_kind: str | None = None,
 ) -> dict[str, Any]:
     """执行侦察：拉取列表、缓存原始页、生成报告。"""
     output_root.mkdir(parents=True, exist_ok=True)
@@ -109,7 +111,13 @@ def run_scout(
     all_pages: dict[str, dict[str, Any]] = {}
     titles_by_kind: dict[str, list[str]] = {}
 
-    for kind, gallery_page in GALLERY_PAGES.items():
+    gallery_items = GALLERY_PAGES.items()
+    if only_kind:
+        if only_kind not in GALLERY_PAGES:
+            raise ValueError(f"未知种类：{only_kind}")
+        gallery_items = [(only_kind, GALLERY_PAGES[only_kind])]
+
+    for kind, gallery_page in gallery_items:
         category = CATEGORY_TITLES.get(kind, "")
         gallery, category_list, merged = collect_titles_for_kind(
             wiki, gallery_page, category
@@ -263,8 +271,18 @@ def main(argv: list[str] | None = None) -> int:
         default=OUTPUT_ROOT,
         help="输出目录，默认 tools/bwiki_scout/output",
     )
+    parser.add_argument(
+        "--only-kind",
+        choices=tuple(GALLERY_PAGES.keys()),
+        default=None,
+        help="仅拉取指定种类（operator / weapon / equipment）",
+    )
     args = parser.parse_args(argv)
-    result = run_scout(output_root=args.output, per_kind_limit=args.limit)
+    result = run_scout(
+        output_root=args.output,
+        per_kind_limit=args.limit,
+        only_kind=args.only_kind,
+    )
     stats = result.get("cache_stats") or {}
     print(f"完成：共 {result['page_count']} 页（本地复用 {stats.get('from_cache', 0)}，新拉取 {stats.get('fetched', 0)}）")
     print(f"原始缓存目录: {args.output / 'raw'}（已写入磁盘，下次默认跳过已有页）")

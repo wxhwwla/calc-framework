@@ -19,7 +19,7 @@ from calculation.search_runner import SearchCancelToken
 class TestSearchPersistence(unittest.TestCase):
     def _catalog(self):
         chest = build_runtime_equipment_from_wiki_draft(
-            {"名称": "胸甲A", "_wiki_params": {"部位": "胸甲", "套装": "套装A"}}
+            {"名称": "胸甲A", "_wiki_params": {"装备种类": "护甲", "所属套组": "套装A"}}
         )
         gloves = build_runtime_equipment_from_wiki_draft(
             {"名称": "护手A", "_wiki_params": {"部位": "护手", "套装": "套装A"}}

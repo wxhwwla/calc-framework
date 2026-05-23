@@ -16,6 +16,25 @@ from calculation.multiplicative_zones.zone_snapshot import (
     WeaponBonusSelection,
     compute_multiplicative_zone_snapshot,
 )
+from calculation.damage_engine import (
+    ZONE_ORDER,
+    DamageContext,
+    DamageResult,
+    calculate_single_hit_damage,
+)
+from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.loadout_optimizer import (
+    OptimizerConfig,
+    WeaponCandidate,
+    search_best_single_skill_loadouts,
+)
+from calculation.multi_skill_optimizer import (
+    MultiSkillConfig,
+    SkillScenario,
+    optimize_multi_skill_loadouts,
+)
+from calculation.equipment_system import build_equipment_catalog_from_local_rows
+from data.loader import DataLoadError, get_equipments
 
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
@@ -241,6 +260,378 @@ def build_weapon_attribute_lines(
     return lines
 
 
+def _resolve_selected_skill_for_damage(
+    char_data: Dict[str, Any],
+    *,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+) -> tuple[str, float, str]:
+    """根据技能滑块解析单段伤害预览所用的技能倍率。"""
+    picks = (
+        ("战技", "战技倍率", skill_1_level),
+        ("连携技", "连携技倍率", skill_2_level),
+        ("终结技", "终结技倍率", skill_3_level),
+    )
+    for skill_name, field_name, level in picks:
+        if level <= 0:
+            continue
+        segments = char_data.get(field_name)
+        if not isinstance(segments, list) or not segments:
+            continue
+        first_segment = segments[0]
+        if not isinstance(first_segment, list) or not first_segment:
+            continue
+        idx = level - 1
+        if not (0 <= idx < len(first_segment)):
+            continue
+        value = first_segment[idx]
+        if value is None:
+            continue
+        return (
+            f"{skill_name} 等级{level} 第1段",
+            float(value) / 100.0,
+            "",
+        )
+    return ("默认普攻段", 1.0, "未选择技能等级或无可用倍率，按 100% 计算。")
+
+
+def format_fifteen_zone_damage_lines(
+    result: DamageResult,
+    *,
+    header_lines: Optional[list[str]] = None,
+    show_running_product: bool = True,
+) -> list[str]:
+    """将伤害引擎结果格式化为 15 乘区分步展示文案。"""
+    lines: list[str] = list(header_lines or [])
+    running = 1.0
+    for zone_name in ZONE_ORDER:
+        zone_value = float(result.zone_values[zone_name])
+        if show_running_product:
+            running *= zone_value
+            lines.append(f"{zone_name}: {zone_value:.4f}  (累计: {running:.4f})")
+        else:
+            lines.append(f"{zone_name}: {zone_value:.4f}")
+    lines.append(f"最终伤害: {result.final_damage:.1f}")
+    if result.warnings:
+        for warning in result.warnings:
+            lines.append(f"提示: {warning}")
+    if result.unknown_effects:
+        lines.append(f"未识别效果数: {len(result.unknown_effects)}")
+    return lines
+
+
+def build_single_hit_damage_lines(
+    *,
+    char_data: Optional[Dict[str, Any]],
+    weapon_data: Optional[Dict[str, Any]],
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    sa1_name: str = "",
+    sa1_level: int = 1,
+    sa2_name: str = "",
+    sa2_level: int = 1,
+    sa3_name: str = "",
+    sa3_level: int = 0,
+    ws_name: str = "",
+    ws_level: int = 0,
+    ws2_name: str = "",
+    ws2_level: int = 0,
+) -> list[str]:
+    """构建单段伤害计算模式的展示行。"""
+    if not char_data or not weapon_data:
+        return ["请选择有效角色和武器"]
+
+    skill_label, skill_multiplier, skill_warning = _resolve_selected_skill_for_damage(
+        char_data,
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
+    )
+    final = calculate_final_attack_with_details(
+        character=char_data,
+        weapon=weapon_data,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        sa1_name=sa1_name,
+        sa1_level=sa1_level,
+        sa2_name=sa2_name,
+        sa2_level=sa2_level,
+        sa3_name=sa3_name,
+        sa3_level=sa3_level,
+        ws_name=ws_name,
+        ws_level=ws_level,
+        ws2_name=ws2_name,
+        ws2_level=ws2_level,
+        trust_level=trust_level,
+    )
+    result = calculate_single_hit_damage(
+        DamageContext(
+            final_attack=float(final["final_attack"]),
+            skill_multiplier=skill_multiplier,
+            skill_type=skill_label.split()[0],
+            enemy_defense=100.0,
+        ),
+        crit_mode="non_crit",
+    )
+    header = [
+        "计算模式: 单段伤害计算",
+        f"技能: {skill_label}",
+        f"技能倍率: {format_skill_multiplier_display_value(skill_multiplier * 100)}",
+        f"最终攻击力(基础伤害区): {final['final_attack']:.1f}",
+        "暴击模式: 不暴击",
+    ]
+    if skill_warning:
+        header.append(f"提示: {skill_warning}")
+    return format_fifteen_zone_damage_lines(
+        result,
+        header_lines=header,
+        show_running_product=True,
+    )
+
+
+def build_single_skill_search_preview_lines(
+    *,
+    char_data: Optional[Dict[str, Any]],
+    weapon_data: Optional[Dict[str, Any]],
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_scope_label: str = "",
+    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_scope_label: str = "",
+) -> list[str]:
+    """构建单技能遍历模式的快速预览文案。"""
+    if not char_data or not weapon_data:
+        return ["请选择有效角色和武器"]
+    if preview_equipment_catalog is None:
+        try:
+            equipment_rows = get_equipments()
+        except DataLoadError:
+            return [
+                "计算模式: 单技能遍历(快速预览)",
+                "未加载到本地装备数据，请先执行 sync_equipments.py --apply。",
+            ]
+        catalog = build_equipment_catalog_from_local_rows(equipment_rows)
+    else:
+        catalog = preview_equipment_catalog
+    if not catalog["chest"] or not catalog["gloves"] or not catalog["accessories"]:
+        return [
+            "计算模式: 单技能遍历(快速预览)",
+            "装备数据不完整（缺护甲/护手/配件），无法进行预览。",
+        ]
+    sampled_catalog = {
+        "chest": catalog["chest"][:2],
+        "gloves": catalog["gloves"][:2],
+        "accessories": catalog["accessories"][:2],
+    }
+    skill_label, skill_multiplier, skill_warning = _resolve_selected_skill_for_damage(
+        char_data,
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
+    )
+    final = calculate_final_attack_with_details(
+        character=char_data,
+        weapon=weapon_data,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+    )
+    candidates = preview_weapon_candidates or [
+        WeaponCandidate(
+            name=str(weapon_data.get("名称", "当前武器")),
+            final_attack=float(final["final_attack"]),
+        )
+    ]
+    result = search_best_single_skill_loadouts(
+        base_context=DamageContext(
+            final_attack=0.0,
+            skill_multiplier=skill_multiplier,
+            skill_type=skill_label.split()[0],
+            enemy_defense=100.0,
+        ),
+        weapons=candidates,
+        equipment_catalog=sampled_catalog,
+        config=OptimizerConfig(
+            top_n=3,
+            warn_on_unfiltered=False,
+            prune_non_beneficial=False,
+        ),
+    )
+    lines = [
+        "计算模式: 单技能遍历(快速预览)",
+        f"技能: {skill_label}",
+        f"候选范围: {preview_scope_label or '当前武器'}",
+        f"装备范围: {preview_equipment_scope_label or '全部装备'}",
+        f"预览组合数: {result.total_combinations}",
+        "说明: 当前仅采样每个部位前2件装备；完整遍历请点击“实验：MVP搜索并导出”。",
+    ]
+    if skill_warning:
+        lines.append(f"提示: {skill_warning}")
+    for idx, score in enumerate(result.top_results, start=1):
+        loadout = score.loadout_names
+        lines.append(
+            f"Top{idx}: 武器:{score.weapon_name} 伤害 {score.final_damage:.1f} | "
+            f"护甲:{loadout['chest']} 护手:{loadout['gloves']} "
+            f"配件A:{loadout['accessory_a']} 配件B:{loadout['accessory_b']}"
+        )
+    if not result.top_results:
+        lines.append("无可用结果，请检查装备数据。")
+    return lines
+
+
+def _skill_multiplier_from_curve(
+    char_data: Dict[str, Any],
+    field_name: str,
+    level: int,
+) -> float:
+    """从技能曲线读取第一段倍率（小数）。"""
+    if level <= 0:
+        return 0.0
+    segments = char_data.get(field_name)
+    if not isinstance(segments, list) or not segments:
+        return 0.0
+    first_segment = segments[0]
+    if not isinstance(first_segment, list) or not first_segment:
+        return 0.0
+    idx = level - 1
+    if not (0 <= idx < len(first_segment)):
+        return 0.0
+    value = first_segment[idx]
+    if value is None:
+        return 0.0
+    return float(value) / 100.0
+
+
+def build_multi_skill_search_preview_lines(
+    *,
+    char_data: Optional[Dict[str, Any]],
+    weapon_data: Optional[Dict[str, Any]],
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    manual_weights: Optional[Dict[str, float]] = None,
+    use_manual_weights: bool = False,
+) -> list[str]:
+    """构建多技能遍历模式的快速预览文案。"""
+    if not char_data or not weapon_data:
+        return ["请选择有效角色和武器"]
+    try:
+        equipment_rows = get_equipments()
+    except DataLoadError:
+        return [
+            "计算模式: 多技能遍历(快速预览)",
+            "未加载到本地装备数据，请先执行 sync_equipments.py --apply。",
+        ]
+    catalog = build_equipment_catalog_from_local_rows(equipment_rows)
+    if not catalog["chest"] or not catalog["gloves"] or not catalog["accessories"]:
+        return [
+            "计算模式: 多技能遍历(快速预览)",
+            "装备数据不完整（缺护甲/护手/配件），无法进行预览。",
+        ]
+    sampled_catalog = {
+        "chest": catalog["chest"][:2],
+        "gloves": catalog["gloves"][:2],
+        "accessories": catalog["accessories"][:2],
+    }
+    multipliers = {
+        "战技": _skill_multiplier_from_curve(char_data, "战技倍率", skill_1_level),
+        "连携技": _skill_multiplier_from_curve(char_data, "连携技倍率", skill_2_level),
+        "终结技": _skill_multiplier_from_curve(char_data, "终结技倍率", skill_3_level),
+    }
+    scenarios = [
+        SkillScenario(skill_name=name, skill_multiplier=val, skill_type=name)
+        for name, val in multipliers.items()
+        if val > 0
+    ]
+    if not scenarios:
+        scenarios = [SkillScenario(skill_name="战技", skill_multiplier=1.0, skill_type="战技")]
+        selected_skill = "战技"
+        warning = "未选择技能等级或无可用倍率，按战技 100% 预览。"
+    else:
+        selected_skill = scenarios[0].skill_name
+        warning = ""
+    final = calculate_final_attack_with_details(
+        character=char_data,
+        weapon=weapon_data,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+    )
+    config = MultiSkillConfig(
+        selected_skill=selected_skill,
+        top_n=3,
+    )
+    weight_desc = f"默认权重: 当前选中技能 {selected_skill}=1，其它=0"
+    if use_manual_weights:
+        weights = {
+            "战技": float((manual_weights or {}).get("战技", 0.0)),
+            "连携技": float((manual_weights or {}).get("连携技", 0.0)),
+            "终结技": float((manual_weights or {}).get("终结技", 0.0)),
+        }
+        if all(v == 0.0 for v in weights.values()):
+            return [
+                "计算模式: 多技能遍历(快速预览)",
+                "手动权重不能全为0，请至少设置一项 > 0。",
+            ]
+        config = MultiSkillConfig(
+            selected_skill=selected_skill,
+            top_n=3,
+            weights=weights,
+        )
+        weight_desc = (
+            "手动权重: "
+            f"战技={weights['战技']:.2f}, 连携技={weights['连携技']:.2f}, 终结技={weights['终结技']:.2f}"
+        )
+
+    result = optimize_multi_skill_loadouts(
+        base_context=DamageContext(
+            final_attack=0.0,
+            skill_multiplier=1.0,
+            enemy_defense=100.0,
+        ),
+        weapons=[
+            WeaponCandidate(
+                name=str(weapon_data.get("名称", "当前武器")),
+                final_attack=float(final["final_attack"]),
+            )
+        ],
+        equipment_catalog=sampled_catalog,
+        scenarios=scenarios,
+        config=config,
+    )
+    lines = [
+        "计算模式: 多技能遍历(快速预览)",
+        f"预览组合数: {result.total_combinations}",
+        weight_desc,
+        "说明: 当前仅采样每个部位前2件装备；完整遍历请点击“实验：MVP搜索并导出”。",
+    ]
+    if warning:
+        lines.append(f"提示: {warning}")
+    for idx, score in enumerate(result.top_results, start=1):
+        breakdown_text = " / ".join(
+            [f"{name}:{value:.1f}" for name, value in score.skill_breakdown.items()]
+        )
+        lines.append(
+            f"Top{idx}: 总伤 {score.weighted_total_damage:.1f} | {breakdown_text}"
+        )
+    if not result.top_results:
+        lines.append("无可用结果，请检查装备数据。")
+    return lines
+
+
 def _render_lines(
     target_scroll: ctk.CTkScrollableFrame,
     lines: list[str],
@@ -299,7 +690,14 @@ def confirm_selection(
     char_panel: 'ChooseTypesStarsNamesLevels',
     weapon_panel: 'ChooseTypesStarsNamesLevels',
     big_font: ctk.CTkFont,
-    small_font: ctk.CTkFont
+    small_font: ctk.CTkFont,
+    calculation_mode: str = "zone_snapshot",
+    multi_skill_manual_weights: Optional[Dict[str, float]] = None,
+    use_manual_multi_skill_weights: bool = False,
+    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_scope_label: str = "",
+    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_scope_label: str = "",
 ) -> None:
     """
     确认选择并刷新角色属性列、武器属性列，以及右侧乘区数据。
@@ -398,7 +796,17 @@ def confirm_selection(
         weapon_special_name, weapon_special_level,
         weapon_special_2_name, weapon_special_2_level,
         trust_level,
-        big_font, small_font
+        big_font, small_font,
+        calculation_mode=calculation_mode,
+        skill_1_level=char_panel.get_skill_1_level(),
+        skill_2_level=char_panel.get_skill_2_level(),
+        skill_3_level=char_panel.get_skill_3_level(),
+        multi_skill_manual_weights=multi_skill_manual_weights,
+        use_manual_multi_skill_weights=use_manual_multi_skill_weights,
+        preview_weapon_candidates=preview_weapon_candidates,
+        preview_scope_label=preview_scope_label,
+        preview_equipment_catalog=preview_equipment_catalog,
+        preview_equipment_scope_label=preview_equipment_scope_label,
     )
 
 
@@ -420,7 +828,17 @@ def _display_zone_data(
     ws2_level: int = 0,
     trust_level: int = 0,
     big_font: Optional[ctk.CTkFont] = None,
-    small_font: Optional[ctk.CTkFont] = None
+    small_font: Optional[ctk.CTkFont] = None,
+    calculation_mode: str = "zone_snapshot",
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+    multi_skill_manual_weights: Optional[Dict[str, float]] = None,
+    use_manual_multi_skill_weights: bool = False,
+    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_scope_label: str = "",
+    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_scope_label: str = "",
 ) -> None:
     """
     在右侧区域展示乘区数据
@@ -455,15 +873,105 @@ def _display_zone_data(
         6. 中间攻击力
         7. 最终攻击力
     """
+    mode_title = "乘区数据" if calculation_mode == "zone_snapshot" else "单段伤害预览"
     zone_title = ctk.CTkLabel(
         right_scroll,
-        text="=== 乘区数据 ===",
+        text=f"=== {mode_title} ===",
         font=big_font,
         text_color="#FF6B6B",
     )
     zone_title.grid(row=0, column=0, sticky="w", pady=(5, 5))
 
     row_idx = 1
+    if calculation_mode == "single_hit":
+        for text in build_single_hit_damage_lines(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+            sa1_name=sa1_name,
+            sa1_level=sa1_level,
+            sa2_name=sa2_name,
+            sa2_level=sa2_level,
+            sa3_name=sa3_name,
+            sa3_level=sa3_level,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+        ):
+            label = ctk.CTkLabel(
+                right_scroll,
+                text=text,
+                font=small_font,
+                text_color="#B8B8B8",
+            )
+            label.grid(row=row_idx, column=0, sticky="w", pady=2)
+            row_idx += 1
+        return
+
+    if calculation_mode == "single_skill_search":
+        for text in build_single_skill_search_preview_lines(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+            preview_weapon_candidates=preview_weapon_candidates,
+            preview_scope_label=preview_scope_label,
+            preview_equipment_catalog=preview_equipment_catalog,
+            preview_equipment_scope_label=preview_equipment_scope_label,
+        ):
+            label = ctk.CTkLabel(
+                right_scroll,
+                text=text,
+                font=small_font,
+                text_color="#B8B8B8",
+            )
+            label.grid(row=row_idx, column=0, sticky="w", pady=2)
+            row_idx += 1
+        return
+
+    if calculation_mode == "multi_skill_search":
+        for text in build_multi_skill_search_preview_lines(
+            char_data=char_data,
+            weapon_data=weapon_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+            manual_weights=multi_skill_manual_weights,
+            use_manual_weights=use_manual_multi_skill_weights,
+        ):
+            label = ctk.CTkLabel(
+                right_scroll,
+                text=text,
+                font=small_font,
+                text_color="#B8B8B8",
+            )
+            label.grid(row=row_idx, column=0, sticky="w", pady=2)
+            row_idx += 1
+        return
+
+    if calculation_mode != "zone_snapshot":
+        tip = ctk.CTkLabel(
+            right_scroll,
+            text="该模式开发中，当前先支持“单段伤害计算”。",
+            font=small_font,
+            text_color="#888888",
+        )
+        tip.grid(row=row_idx, column=0, sticky="w", pady=(6, 2))
+        return
+
     if char_data:
         selection = MultiplicativeZoneSelection(
             character=char_data,

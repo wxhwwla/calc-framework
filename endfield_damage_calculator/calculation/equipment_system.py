@@ -14,11 +14,60 @@ from calculation.damage_engine import DamageEffect
 
 _PERCENT_RE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*%")
 
+# 与 BWIKI「装备种类」一致：护甲 / 护手 / 配件
+EQUIPMENT_KIND_ARMOR = "护甲"
+EQUIPMENT_KIND_GLOVES = "护手"
+EQUIPMENT_KIND_ACCESSORY = "配件"
+
 _SLOT_ALIASES = {
-    "胸甲": "胸甲",
-    "护手": "护手",
-    "配件": "配件",
+    EQUIPMENT_KIND_ARMOR: EQUIPMENT_KIND_ARMOR,
+    EQUIPMENT_KIND_GLOVES: EQUIPMENT_KIND_GLOVES,
+    EQUIPMENT_KIND_ACCESSORY: EQUIPMENT_KIND_ACCESSORY,
+    "胸甲": EQUIPMENT_KIND_ARMOR,
 }
+
+# BWIKI 同步失败或旧数据：按名称关键词回退推断装备种类
+_NAME_SLOT_KEYWORDS: tuple[tuple[str, str], ...] = (
+    ("轻甲", EQUIPMENT_KIND_ARMOR),
+    ("重甲", EQUIPMENT_KIND_ARMOR),
+    ("护甲", EQUIPMENT_KIND_ARMOR),
+    ("罩衣", EQUIPMENT_KIND_ARMOR),
+    ("夹克", EQUIPMENT_KIND_ARMOR),
+    ("背心", EQUIPMENT_KIND_ARMOR),
+    ("甲片", EQUIPMENT_KIND_ARMOR),
+    ("外骨骼", EQUIPMENT_KIND_ARMOR),
+    ("胸甲", EQUIPMENT_KIND_ARMOR),
+    ("护手", EQUIPMENT_KIND_GLOVES),
+    ("手套", EQUIPMENT_KIND_GLOVES),
+    ("护腕", EQUIPMENT_KIND_GLOVES),
+    ("手甲", EQUIPMENT_KIND_GLOVES),
+    ("雷达", EQUIPMENT_KIND_ACCESSORY),
+    ("短刃", EQUIPMENT_KIND_ACCESSORY),
+    ("刺刃", EQUIPMENT_KIND_ACCESSORY),
+    ("芯片", EQUIPMENT_KIND_ACCESSORY),
+    ("戒指", EQUIPMENT_KIND_ACCESSORY),
+    ("项链", EQUIPMENT_KIND_ACCESSORY),
+    ("胸针", EQUIPMENT_KIND_ACCESSORY),
+    ("徽章", EQUIPMENT_KIND_ACCESSORY),
+    ("手环", EQUIPMENT_KIND_ACCESSORY),
+    ("臂环", EQUIPMENT_KIND_ACCESSORY),
+    ("瞄具", EQUIPMENT_KIND_ACCESSORY),
+    ("工具组", EQUIPMENT_KIND_ACCESSORY),
+    ("储能", EQUIPMENT_KIND_ACCESSORY),
+    ("测温镜", EQUIPMENT_KIND_ACCESSORY),
+    ("电力匣", EQUIPMENT_KIND_ACCESSORY),
+    ("净芯", EQUIPMENT_KIND_ACCESSORY),
+    ("滤芯", EQUIPMENT_KIND_ACCESSORY),
+    ("图鉴", EQUIPMENT_KIND_ACCESSORY),
+)
+
+
+def equipment_kind(record: dict[str, Any]) -> str:
+    """读取装备种类（优先 Wiki 字段「装备种类」，兼容旧字段「部位」）。"""
+    raw = str(record.get("装备种类") or record.get("部位") or "").strip()
+    if raw in _SLOT_ALIASES:
+        return _SLOT_ALIASES[raw]
+    return raw
 
 _DAMAGE_TYPE_TAGS = {
     "物理": ("物理",),
@@ -91,6 +140,21 @@ def _normalize_slot(slot_raw: str) -> str:
     raise ValueError(f"不支持的装备部位：{slot_raw}")
 
 
+def infer_equipment_slot(record: dict[str, Any]) -> str:
+    """从记录推断装备种类；优先显式字段，否则按名称关键词。"""
+    slot_raw = equipment_kind(record)
+    if slot_raw in _SLOT_ALIASES:
+        return _SLOT_ALIASES[slot_raw]
+    type_raw = str(record.get("类型") or "").strip()
+    if type_raw in _SLOT_ALIASES:
+        return _SLOT_ALIASES[type_raw]
+    name = str(record.get("名称") or "").strip()
+    for keyword, slot in _NAME_SLOT_KEYWORDS:
+        if keyword in name:
+            return slot
+    return ""
+
+
 def _parse_effect_keys(params: dict[str, Any], prefix: str, source: str) -> list[DamageEffect]:
     effects: list[DamageEffect] = []
     for idx in range(1, 10):
@@ -106,13 +170,53 @@ def build_runtime_equipment_from_wiki_draft(record: dict[str, Any]) -> dict[str,
     """将 BWIKI 草案记录转为可计算装备。"""
     params = record.get("_wiki_params") or {}
     name = str(record.get("名称") or params.get("名称") or "").strip()
-    slot = _normalize_slot(str(params.get("部位") or params.get("类型") or ""))
-    set_id = str(params.get("套装") or "").strip()
+    slot_raw = str(
+        params.get("装备种类") or params.get("部位") or params.get("类型") or ""
+    ).strip()
+    slot = infer_equipment_slot({"装备种类": slot_raw, "部位": slot_raw, "名称": name})
+    if not slot:
+        raise ValueError(f"无法推断装备种类：{name or '未命名装备'}")
+    slot = _normalize_slot(slot)
+    set_id = str(params.get("所属套组") or params.get("套装") or "").strip()
     source = f"{name or '未命名装备'}"
     direct_effects = _parse_effect_keys(params, "效果", source)
     set_effects = _parse_effect_keys(params, "三件套效果", source)
+    if not set_effects:
+        set_text = str(params.get("装备套组效果") or "").strip()
+        if set_text:
+            set_effects = [_parse_effect_text(set_text, source=source)]
     return {
         "名称": name,
+        "装备种类": slot,
+        "部位": slot,
+        "套装": set_id,
+        "效果": direct_effects,
+        "三件套效果": set_effects,
+    }
+
+
+def build_runtime_equipment_from_local_record(record: dict[str, Any]) -> dict[str, Any]:
+    """将本地 equipments.json 记录转为可计算装备。"""
+    name = str(record.get("名称") or "").strip()
+    slot = infer_equipment_slot(record)
+    if not slot:
+        raise ValueError(f"无法推断装备种类：{name or '未命名装备'}")
+    slot = _normalize_slot(slot)
+    set_id = str(record.get("套装") or "").strip()
+    source = f"{name or '未命名装备'}"
+    direct_effects = [
+        _parse_effect_text(str(text), source=source)
+        for text in (record.get("效果") or [])
+        if str(text).strip()
+    ]
+    set_effects = [
+        _parse_effect_text(str(text), source=source)
+        for text in (record.get("三件套效果") or [])
+        if str(text).strip()
+    ]
+    return {
+        "名称": name,
+        "装备种类": slot,
         "部位": slot,
         "套装": set_id,
         "效果": direct_effects,
@@ -129,14 +233,14 @@ def build_four_slot_loadout(
     allow_duplicate_accessory: bool = True,
 ) -> FourSlotLoadout:
     """构建四格装备并校验部位规则。"""
-    if chest.get("部位") != "胸甲":
-        raise ValueError("胸甲槽位必须放置胸甲")
-    if gloves.get("部位") != "护手":
-        raise ValueError("护手槽位必须放置护手")
-    if accessory_a.get("部位") != "配件":
-        raise ValueError("配件A槽位必须放置配件")
-    if accessory_b.get("部位") != "配件":
-        raise ValueError("配件B槽位必须放置配件")
+    if equipment_kind(chest) != EQUIPMENT_KIND_ARMOR:
+        raise ValueError("护甲槽位必须放置护甲类装备")
+    if equipment_kind(gloves) != EQUIPMENT_KIND_GLOVES:
+        raise ValueError("护手槽位必须放置护手类装备")
+    if equipment_kind(accessory_a) != EQUIPMENT_KIND_ACCESSORY:
+        raise ValueError("配件A槽位必须放置配件类装备")
+    if equipment_kind(accessory_b) != EQUIPMENT_KIND_ACCESSORY:
+        raise ValueError("配件B槽位必须放置配件类装备")
     if not allow_duplicate_accessory and accessory_a.get("名称") == accessory_b.get("名称"):
         raise ValueError("当前配置不允许重复配件")
     return FourSlotLoadout(
@@ -179,14 +283,25 @@ def build_equipment_catalog_from_runtime(records: list[dict[str, Any]]) -> dict[
     """将运行时装备记录归并为搜索目录。"""
     catalog = {"chest": [], "gloves": [], "accessories": []}
     for item in records:
-        slot = str(item.get("部位") or "").strip()
-        if slot == "胸甲":
+        slot = equipment_kind(item)
+        if slot == EQUIPMENT_KIND_ARMOR:
             catalog["chest"].append(item)
-        elif slot == "护手":
+        elif slot == EQUIPMENT_KIND_GLOVES:
             catalog["gloves"].append(item)
-        elif slot == "配件":
+        elif slot == EQUIPMENT_KIND_ACCESSORY:
             catalog["accessories"].append(item)
     return catalog
+
+
+def build_equipment_catalog_from_local_rows(records: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """从本地装备 JSON 行构建可搜索目录。"""
+    runtime_records = []
+    for record in records:
+        try:
+            runtime_records.append(build_runtime_equipment_from_local_record(record))
+        except ValueError:
+            continue
+    return build_equipment_catalog_from_runtime(runtime_records)
 
 
 def load_equipment_catalog_from_wiki_draft(path: Path) -> dict[str, list[dict[str, Any]]]:

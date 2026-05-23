@@ -30,9 +30,11 @@ class DataLoadError(Exception):
 
 _characters: Optional[List[dict[str, Any]]] = None
 _weapons: Optional[List[dict[str, Any]]] = None
+_equipments: Optional[List[dict[str, Any]]] = None
 
 CHARACTERS_JSON_PATH: str = "character_weapon_equipment/character_data/characters.json"
 WEAPONS_JSON_PATH: str = "character_weapon_equipment/weapon_data/weapons.json"
+EQUIPMENTS_JSON_PATH: str = "character_weapon_equipment/equipment_data/equipments.json"
 
 
 def load_json_file(filepath: str, *, strict: bool = False) -> List[dict[str, Any]]:
@@ -91,6 +93,7 @@ def preload_game_data() -> None:
     """预加载角色与武器数据到缓存；失败时抛出 DataLoadError。"""
     get_characters()
     get_weapons()
+    get_equipments()
 
 
 def fetch_game_data_for_gui() -> Tuple[List[dict[str, Any]], List[dict[str, Any]], Optional[DataLoadError]]:
@@ -99,6 +102,14 @@ def fetch_game_data_for_gui() -> Tuple[List[dict[str, Any]], List[dict[str, Any]
         return get_characters(), get_weapons(), None
     except DataLoadError as exc:
         return [], [], exc
+
+
+def get_equipments() -> List[dict[str, Any]]:
+    """获取所有装备数据（带缓存）。"""
+    global _equipments
+    if _equipments is None:
+        _equipments = load_json_file(EQUIPMENTS_JSON_PATH, strict=True)
+    return _equipments
 
 
 def reload_characters() -> None:
@@ -111,6 +122,12 @@ def reload_weapons() -> None:
     """重新加载武器数据（清除缓存）。"""
     global _weapons
     _weapons = None
+
+
+def reload_equipments() -> None:
+    """重新加载装备数据（清除缓存）。"""
+    global _equipments
+    _equipments = None
 
 
 def save_characters(data: List[dict[str, Any]]) -> bool:
@@ -132,6 +149,18 @@ def save_weapons(data: List[dict[str, Any]]) -> bool:
         with open(full_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         reload_weapons()
+        return True
+    except Exception:
+        return False
+
+
+def save_equipments(data: List[dict[str, Any]]) -> bool:
+    """保存装备数据到 JSON 文件。"""
+    try:
+        full_path = get_resource_path(EQUIPMENTS_JSON_PATH)
+        with open(full_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        reload_equipments()
         return True
     except Exception:
         return False

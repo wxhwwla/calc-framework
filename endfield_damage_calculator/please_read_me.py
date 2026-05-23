@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改）
-_VERSION = "1.14.0"
+_VERSION = "1.14.1"
 _EXE_VERSION = "0.3.0-beta"
 # ==============================================================
 
@@ -211,28 +211,33 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 22 处文件
+# TITLE: 更新 27 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
 # - 变更 "docs/MVP/346/220/234/347/264/242/351/252/214/346/224/266/350/257/264/346/230/216.md"
-# - 修改 endfield_damage_calculator/calculation/damage_engine.py
 # - 修改 endfield_damage_calculator/calculation/equipment_system.py
-# - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/mvp_pipeline.py
-# - 修改 endfield_damage_calculator/calculation/result_export.py
-# - 修改 endfield_damage_calculator/calculation/search_persistence.py
-# - 修改 endfield_damage_calculator/calculation/search_runner.py
+# - 变更 endfield_damage_calculator/character_weapon_equipment/equipment_data/
+# - 修改 endfield_damage_calculator/data/loader.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/gui_design/selection_components.py
+# - 修改 endfield_damage_calculator/gui_design/property_display.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/test_damage_engine.py
+# - 修改 endfield_damage_calculator/tests/test_equipment_sync.py
 # - 修改 endfield_damage_calculator/tests/test_equipment_system.py
 # - 修改 endfield_damage_calculator/tests/test_loadout_optimizer.py
 # - 修改 endfield_damage_calculator/tests/test_multi_skill_optimizer.py
+# - 修改 endfield_damage_calculator/tests/test_multi_skill_search_preview.py
 # - 修改 endfield_damage_calculator/tests/test_mvp_pipeline.py
-# - 修改 endfield_damage_calculator/tests/test_result_export.py
 # - 修改 endfield_damage_calculator/tests/test_search_persistence.py
 # - 修改 endfield_damage_calculator/tests/test_search_runner.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_panel_layout.py
+# - 修改 endfield_damage_calculator/tests/test_single_hit_preview.py
+# - 修改 endfield_damage_calculator/tests/test_single_skill_search_preview.py
+# - 更新文档 tools/bwiki_scout/README.md
+# - 修改 tools/bwiki_scout/config.py
+# - 修改 tools/bwiki_scout/equipment_sync.py
+# - 修改 tools/bwiki_scout/equipment_wiki.py
+# - 修改 tools/bwiki_scout/scout.py
+# - 修改 tools/bwiki_scout/sync_all.py
+# - 修改 tools/bwiki_scout/sync_equipments.py
 # --- END UPLOAD_SUMMARY ---

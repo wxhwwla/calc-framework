@@ -49,3 +49,10 @@ LOCAL_WEAPONS_JSON = (
     / "weapon_data"
     / "weapons.json"
 )
+LOCAL_EQUIPMENTS_JSON = (
+    REPO_ROOT
+    / "endfield_damage_calculator"
+    / "character_weapon_equipment"
+    / "equipment_data"
+    / "equipments.json"
+)

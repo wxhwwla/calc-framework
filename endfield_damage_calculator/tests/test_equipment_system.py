@@ -17,14 +17,14 @@ class TestEquipmentSystem(unittest.TestCase):
         draft = {
             "名称": "测试胸甲",
             "_wiki_params": {
-                "部位": "胸甲",
+                "装备种类": "护甲",
                 "套装": "寒霜协议",
                 "效果1": "寒冷伤害+12%",
                 "三件套效果1": "易伤+10%",
             },
         }
         runtime = build_runtime_equipment_from_wiki_draft(draft)
-        self.assertEqual(runtime["部位"], "胸甲")
+        self.assertEqual(runtime["装备种类"], "护甲")
         self.assertEqual(runtime["套装"], "寒霜协议")
         self.assertEqual(len(runtime["效果"]), 1)
         self.assertEqual(runtime["效果"][0].effect_type, "伤害类型伤害加成")
@@ -36,7 +36,7 @@ class TestEquipmentSystem(unittest.TestCase):
         chest = build_runtime_equipment_from_wiki_draft(
             {
                 "名称": "测试胸甲",
-                "_wiki_params": {"部位": "胸甲", "套装": "寒霜协议"},
+                "_wiki_params": {"装备种类": "护甲", "所属套组": "寒霜协议"},
             }
         )
         gloves = build_runtime_equipment_from_wiki_draft(
@@ -66,7 +66,7 @@ class TestEquipmentSystem(unittest.TestCase):
             {
                 "名称": "测试胸甲",
                 "_wiki_params": {
-                    "部位": "胸甲",
+                    "装备种类": "护甲",
                     "套装": "寒霜协议",
                     "三件套效果1": "易伤+10%",
                 },
