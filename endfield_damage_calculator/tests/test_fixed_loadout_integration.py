@@ -6,7 +6,11 @@ from __future__ import annotations
 
 import unittest
 
+import pytest
+
 from calculation.equipment_system import build_runtime_equipment_from_wiki_draft
+
+pytestmark = pytest.mark.integration
 from gui_design.fixed_loadout_controls import (
     create_fixed_loadout_controls,
     refresh_all_fixed_slot_menus,

@@ -25,7 +25,14 @@ from tkinter import messagebox
 from typing import Optional, List, Dict, Any   # 类型提示支持
 import os
 from gui_design.gui_settings import gui_settings
-from gui_design.property_display import confirm_selection
+from gui_design.confirm_orchestrator import (
+    handle_confirm,
+    schedule_confirm,
+)
+from gui_design.multi_skill_controls import (
+    place_multi_skill_section,
+    read_manual_multi_skill_counts,
+)
 from gui_design.selection_panel import ChooseTypesStarsNamesLevels
 from data.game_data_facade import GameDataFacade
 from please_read_me import get_exe_version  # EXE版本号
@@ -33,11 +40,6 @@ from legal.attribution import open_attribution_dialog
 from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import WeaponCandidate
 from calculation.search_cancel import SearchCancelToken
-from gui_design.panel_hints import MULTI_SKILL_COUNTS_HINT
-from gui_design.confirm_refresh import (
-    normalize_skill_count_text,
-    skill_count_commit_changed,
-)
 from gui_design.fixed_loadout_controls import (
     refresh_all_fixed_slot_menus,
     resolve_fixed_loadout_selection,
@@ -68,11 +70,7 @@ from gui_design.label_layout import bind_wrapped_label
 from utils.gui_window import apply_startup_maximized
 from utils.gui_fonts import default_ui_font
 from gui_design.search_settings import build_worker_option_labels
-from gui_design.enhancement_controls import (
-    place_enhancement_section,
-    record_calculation_history,
-    refresh_damage_snapshot,
-)
+from gui_design.enhancement_controls import place_enhancement_section
 from utils.operation_log import LogLevel, get_session_operation_log
 from gui_design.search_controls import place_search_section, refresh_search_estimate
 
@@ -461,7 +459,7 @@ class DamageCalculatorApp:
 
         # 启动后自动确认一次，填充默认角色/武器属性展示
         get_session_operation_log().record(LogLevel.INFO, "app_ready", {})
-        self._on_confirm()
+        handle_confirm(self)
 
     def _on_char_name_change(self, *args: str) -> None:
         """
@@ -549,27 +547,6 @@ class DamageCalculatorApp:
             small_font=self.small_font,
         )
 
-    def _resolve_selected_skill(self, char_data: Dict[str, Any]) -> tuple[str, str, float]:
-        """根据当前滑块选择解析技能类型与倍率。"""
-        assert self.char_panel is not None, "char_panel 未初始化"
-        options = (
-            ("战技", "战技倍率", self.char_panel.get_skill_1_level()),
-            ("连携技", "连携技倍率", self.char_panel.get_skill_2_level()),
-            ("终结技", "终结技倍率", self.char_panel.get_skill_3_level()),
-        )
-        for skill_name, field, level in options:
-            if level <= 0:
-                continue
-            segments = char_data.get(field) or []
-            if not isinstance(segments, list) or not segments:
-                continue
-            first_segment = segments[0] if isinstance(segments[0], list) else []
-            index = max(0, min(level - 1, len(first_segment) - 1))
-            if isinstance(first_segment, list) and first_segment:
-                value = float(first_segment[index] or 0.0)
-                return skill_name, skill_name, value / 100.0
-        return "战技", "战技", 1.0
-
     def _wrap_control_label(self, label: ctk.CTkLabel, container: ctk.CTkBaseClass) -> None:
         """底栏内长文案：以整个 control_frame 宽度为换行参考。"""
         bind_wrapped_label(label, container, viewport=self.control_frame, padding=12)
@@ -606,7 +583,7 @@ class DamageCalculatorApp:
             actions,
             text="确认选择",
             font=self.big_font,
-            command=lambda: self._on_confirm(force=True),
+            command=lambda: handle_confirm(self, force=True),
         )
         ar = _place(actions, ar, self.confirm_btn, pady=(0, 6))
         self.attribution_btn = ctk.CTkButton(
@@ -630,7 +607,7 @@ class DamageCalculatorApp:
             values=list(CALC_MODE_LABELS),
             variable=self.calc_mode_var,
             font=self.small_font,
-            command=lambda _v: self._schedule_confirm(),
+            command=lambda _v: schedule_confirm(self),
         )
         ar = _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
         ar = place_enhancement_section(
@@ -643,51 +620,12 @@ class DamageCalculatorApp:
             wrap_label=self._wrap_control_label,
         )
 
-        mr = 0
-        mr = _section(multi, "多技能次数", mr)
-        count_switch = ctk.CTkSwitch(
+        place_multi_skill_section(
+            self,
             multi,
-            text="使用手动次数",
-            variable=self.use_manual_skill_counts_var,
-            font=self.small_font,
-            command=self._schedule_confirm,
+            wrap_label=self._wrap_control_label,
+            schedule_confirm=lambda **kw: schedule_confirm(self, **kw),
         )
-        mr = _place(multi, mr, count_switch, pady=(0, 6))
-        multi.grid_columnconfigure(1, weight=0, minsize=72)
-        self._create_skill_count_row(
-            parent=multi,
-            row=mr,
-            label_text="战技次数",
-            value_var=self.skill_count_1_var,
-            storage_key="战技",
-        )
-        mr += 1
-        self._create_skill_count_row(
-            parent=multi,
-            row=mr,
-            label_text="连携技次数",
-            value_var=self.skill_count_2_var,
-            storage_key="连携技",
-        )
-        mr += 1
-        self._create_skill_count_row(
-            parent=multi,
-            row=mr,
-            label_text="终结技次数",
-            value_var=self.skill_count_3_var,
-            storage_key="终结技",
-        )
-        mr += 1
-        multi_skill_hint = ctk.CTkLabel(
-            multi,
-            text=MULTI_SKILL_COUNTS_HINT,
-            font=self.small_font,
-            text_color="#888888",
-            justify="left",
-            anchor="w",
-        )
-        mr = _place(multi, mr, multi_skill_hint)
-        self._wrap_control_label(multi_skill_hint, multi)
 
     def _build_fixed_loadout_selection(self):
         """从底栏勾选状态解析固定/遍历配装。"""
@@ -716,155 +654,14 @@ class DamageCalculatorApp:
         except Exception:
             return False
 
-    def _confirm_refresh_signature_now(self) -> tuple:
-        """当前界面输入对应的确认刷新签名。"""
-        from gui_design.loadout_state import read_loadout_from_app
-
-        state = read_loadout_from_app(self)
-        if state is None:
-            return ()
-        return state.confirm_refresh_signature()
-
-    def _on_confirm(self, *, force: bool = False) -> None:
-        """
-        刷新属性列与右侧乘区/预览。
-
-        默认合并同帧调用并在输入未变时跳过，避免最小化失焦触发整页清空重建。
-        ``force=True`` 时供「确认选择」按钮强制刷新。
-        """
-        if force:
-            get_session_operation_log().record(
-                LogLevel.USER,
-                "confirm_selection",
-                {"mode": self._current_calculation_mode()},
-            )
-        if not force and self._is_window_iconified():
-            return
-        signature = self._confirm_refresh_signature_now()
-        if not force and signature == self._confirm_refresh_signature:
-            return
-        self._confirm_refresh_signature = signature
-        get_session_operation_log().record(
-            LogLevel.USER,
-            "confirm_selection",
-            {"mode": self._current_calculation_mode()},
-        )
-        self._run_confirm()
+    def _manual_multi_skill_counts(self) -> Dict[str, int]:
+        return read_manual_multi_skill_counts(self)
 
     def _schedule_confirm(self, *, force: bool = False) -> None:
-        """将确认刷新合并到下一 idle，避免连续事件多次重绘。"""
-        if force:
-            if self._confirm_after_id is not None:
-                try:
-                    self.app.after_cancel(self._confirm_after_id)
-                except Exception:
-                    pass
-                self._confirm_after_id = None
-            self._on_confirm(force=True)
-            return
-        if self._confirm_after_id is not None:
-            return
-
-        def _dispatch() -> None:
-            self._confirm_after_id = None
-            self._on_confirm(force=False)
-
-        self._confirm_after_id = self.app.after_idle(_dispatch)
-
-    def _run_confirm(self) -> None:
-        """执行一次属性/乘区展示刷新（假定签名已更新）。"""
-        assert self.char_attr_scroll is not None, "char_attr_scroll 未初始化"
-        assert self.weapon_attr_scroll is not None, "weapon_attr_scroll 未初始化"
-        assert self.right_scroll is not None, "right_scroll 未初始化"
-        assert self.char_panel is not None, "char_panel 未初始化"
-        assert self.weapon_panel is not None, "weapon_panel 未初始化"
-
-        enemy_defense = float(getattr(self, "_enemy_defense", 100.0))
-        confirm_selection(
-            self.char_attr_scroll,
-            self.weapon_attr_scroll,
-            self.right_scroll,
-            self.char_panel,
-            self.weapon_panel,
-            self.big_font,
-            self.small_font,
-            calculation_mode=self._current_calculation_mode(),
-            multi_skill_manual_counts=self._manual_multi_skill_counts(),
-            use_manual_multi_skill_counts=bool(self.use_manual_skill_counts_var.get()),
-            preview_weapon_candidates=self._single_skill_preview_candidates(),
-            preview_scope_label=self.single_skill_scope_var.get(),
-            preview_equipment_catalog=self._single_skill_preview_equipment_catalog(),
-            preview_equipment_scope_label=self.single_skill_equipment_scope_var.get(),
-            enemy_defense=enemy_defense,
-        )
-        refresh_damage_snapshot(self)
-        self._refresh_search_estimate()
-        record_calculation_history(
-            self,
-            summary=f"模式 {self._current_calculation_mode_label()}",
-        )
+        schedule_confirm(self, force=force)
 
     def _current_calculation_mode_label(self) -> str:
         return str(self.calc_mode_var.get())
-
-    def _create_skill_count_row(
-        self,
-        *,
-        parent: ctk.CTkFrame,
-        row: int,
-        label_text: str,
-        value_var: ctk.StringVar,
-        storage_key: str,
-    ) -> None:
-        """创建单行技能次数输入（标签 + 数字框两列）。"""
-        ctk.CTkLabel(
-            parent,
-            text=label_text,
-            font=self.small_font,
-            text_color="#CCCCCC",
-        ).grid(row=row, column=0, padx=8, pady=(0, 2), sticky="w")
-
-        self._skill_count_last_committed[storage_key] = normalize_skill_count_text(
-            value_var.get()
-        )
-
-        def _on_change(*_args: object) -> None:
-            normalized, changed = skill_count_commit_changed(
-                value_var.get(),
-                self._skill_count_last_committed.get(storage_key),
-            )
-            if not changed:
-                return
-            self._skill_count_last_committed[storage_key] = normalized
-            if (value_var.get() or "").strip() != normalized:
-                value_var.set(normalized)
-            if self._current_calculation_mode() == "multi_skill_search":
-                self._schedule_confirm()
-
-        entry = ctk.CTkEntry(
-            parent,
-            textvariable=value_var,
-            width=72,
-            font=self.small_font,
-        )
-        entry.grid(row=row, column=1, padx=(4, 8), pady=(0, 2), sticky="e")
-        entry.bind("<FocusOut>", _on_change)
-        entry.bind("<Return>", _on_change)
-
-    def _manual_multi_skill_counts(self) -> Dict[str, int]:
-        """读取 GUI 手动技能次数。"""
-
-        def _to_int(text: str) -> int:
-            try:
-                return max(0, int(float(text)))
-            except (TypeError, ValueError):
-                return 0
-
-        return {
-            "战技": _to_int(self.skill_count_1_var.get()),
-            "连携技": _to_int(self.skill_count_2_var.get()),
-            "终结技": _to_int(self.skill_count_3_var.get()),
-        }
 
     def _single_skill_preview_candidates(self) -> List[WeaponCandidate]:
         """按候选范围生成单技能预览武器集合。"""

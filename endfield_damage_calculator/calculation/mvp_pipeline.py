@@ -3,7 +3,7 @@
 """
 MVP 端到端搜索流水线。
 
-串联：``run_search_session``（并行 + 可选 SQLite 续跑）→ TopN → ``export_search_outputs`` 写文件。
+串联：``SearchRunner.run``（并行 + 可选 SQLite 续跑）→ TopN → ``export_search_outputs`` 写文件。
 GUI「全量遍历」「MVP 导出/续跑」最终都进入 ``run_mvp_search_from_job``。
 """
 
@@ -18,7 +18,7 @@ from calculation.loadout_optimizer import LoadoutScore, OptimizerConfig, WeaponC
 from calculation.result_export import export_search_outputs
 from calculation.search_cancel import SearchCancelToken
 from calculation.search_eval_context import SearchEvalContext
-from calculation.search_session import run_search_session
+from calculation.search_runner import SearchRunner
 from calculation.search_task_evaluator import make_loadout_task_evaluator
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.single_skill_search_job import SingleSkillSearchJob
@@ -58,7 +58,7 @@ def run_mvp_search_from_job(
     task_evaluator = make_loadout_task_evaluator(
         job, crit_mode=config.crit_mode, search_eval=search_eval
     )
-    session = run_search_session(
+    session = SearchRunner.run(
         db_path=db_path,
         run_signature=job.run_signature,
         base_context=job.base_context,

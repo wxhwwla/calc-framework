@@ -9,104 +9,116 @@ import time
 import webbrowser
 from pathlib import Path
 
+# 2026-05 第二轮：#1–#6（search_controller / LoadoutState / display_* / search_controls / GameDataFacade）已落地
 CANDIDATES = [
     {
         "num": "1",
         "strength": "Strong",
-        "title": "将全量遍历编排移出 gui.py",
-        "files": "gui.py · single_skill_search_runner · mvp_pipeline · search_results_view",
+        "title": "瘦化 gui.py：确认编排 + 多技能次数区",
+        "files": "gui.py · confirm_refresh · loadout_state · (new) multi_skill_controls.py",
         "problem": (
-            "计算与搜索区的线程、取消、预估、MVP 与弹窗仍挤在 DamageCalculatorApp；"
-            "runner 几乎只是转发。删除 runner 不减少复杂度；预估路径未传 multi_skill_eval。"
+            "search_controls / enhancement_controls 已抽出，但 gui 仍含 ~200 行确认去重、"
+            "多技能次数区与五列 grid 接线；_resolve_selected_skill 与 loadout_state 重复且 gui 内未用。"
         ),
         "solution": (
-            "新增 calculation 侧 search_controller：统一 job 组装、estimate、run+cancel；"
-            "GUI 只做适配器。"
+            "place_multi_skill_section() 对称 search_controls；ConfirmOrchestrator 管签名/合并/失焦；"
+            "gui 仅窗口与面板生命周期。"
         ),
-        "wins": ["预估与实跑同一接口", "可无头测取消/进度", "gui.py 变薄易导航"],
-        "mermaid": """flowchart TB
+        "wins": ["确认语义一处", "底栏两列对称", "删重复技能解析"],
+        "mermaid": """flowchart LR
   subgraph before["Before"]
-    G["gui.py"] --> J["job 组装 x2"]
-    G --> T["threading + app.after"]
-    E["estimate"] -.泄漏.-> M["缺 multi_skill_eval"]
+    G["gui.py ~860L"] --> C["确认编排"]
+    G --> M["多技能次数区"]
   end
   subgraph after["After"]
-    G2["gui 薄适配"] --> C["search_controller 深模块"]
-    C --> R["estimate / run / cancel"]
+    G2["gui 薄壳"] --> CO["ConfirmOrchestrator"]
+    G2 --> MSC["multi_skill_controls"]
+    CO --> LS["LoadoutState"]
   end""",
     },
     {
         "num": "2",
         "strength": "Strong",
-        "title": "统一搜索 job 的敌方防御与 OptimizerConfig",
-        "files": "single_skill_search_job · gui · enemy_params · loadout_optimizer",
+        "title": "LoadoutState → DisplayRequest（确认与右侧乘区）",
+        "files": "loadout_state · display_view · game_data_facade · gui._run_confirm",
         "problem": (
-            "确认选择/预览用插件 enemy_defense；全量遍历 job 写死 100 防。"
-            "OptimizerConfig 在 GUI 与 runner 各建一份，易漂移。"
+            "_run_confirm 仍手工传 12+ 参数进 confirm_selection，display 路径再次刮 panel；"
+            "LoadoutState 已含模式/范围/固定配装/次数，但未作为 display 唯一输入。"
         ),
         "solution": (
-            "job 或 optimizer_config_for_job() 集中 DamageContext 与 config；"
-            "estimate、MVP、GUI 共用。"
+            "to_display_request(game_data) 含 catalog 与武器候选；"
+            "confirm_selection(DisplayRequest, scrolls) 内部分派计算模式。"
         ),
-        "wins": ["预览与 TopN 同敌人", "单测可断言防御", "接缝即测试面"],
-        "mermaid": """flowchart LR
-  P["右侧乘区预览"] --> D1["enemy_defense 来自插件"]
-  S["全量遍历 TopN"] --> D2["enemy_defense=100"]
-  classDef leak stroke:#dc2626,stroke-width:2px
-  class D2 leak""",
+        "wins": ["确认与乘区同一次刮取", "测 DisplayRequest 非 CTk", "catalog 走 GameDataFacade"],
+        "mermaid": """flowchart TB
+  LS[LoadoutState] --> DR[DisplayRequest]
+  GDF[GameDataFacade] --> DR
+  DR --> DV[display_view]
+  DR --> PL[preview_lines 格式化]""",
     },
     {
         "num": "3",
         "strength": "Strong",
-        "title": "拆分 property_display：文案 vs CTk 渲染",
-        "files": "property_display · preview_lines · test_property_display_*",
+        "title": "统一 LoadoutEvaluation（预览 / 单段 / 仪表盘）",
+        "files": "preview_lines · display_lines · damage_snapshot · preview_cache",
         "problem": (
-            "confirm_selection 接口 15+ 参数，与实现同宽（浅模块）；"
-            "纯文案与 destroy/grid 混在一起。"
+            "单段伤害、单/多技能快速预览、伤害仪表盘三条路径各自算 final_attack 与技能场景；"
+            "preview_lines 仍直调 get_equipment_catalog，绕过 GameDataFacade。"
         ),
-        "solution": "display_lines.py（纯）+ display_view.py（CTk）；模式分派只保留一处。",
-        "wins": ["行构建已有测", "CTk 可 mock 渲染", "新计算模式一处加"],
+        "solution": (
+            "calculation 层 LoadoutEvaluation：一次求值 → 行文案 / DamageSnapshot 格式化；"
+            "preview 与确认共用 preview_cache 失效面。"
+        ),
+        "wins": ["预览与仪表盘数字一致", "一处缓存失效", "门面无旁路"],
         "mermaid": None,
     },
     {
         "num": "4",
-        "strength": "Strong",
-        "title": "LoadoutState 值对象（GUI↔calculation 接缝）",
-        "files": "gui · confirm_refresh · enhancement_controls · damage_snapshot · gui_fixtures",
+        "strength": "Worth exploring",
+        "title": "退役 property_display 再导出门面",
+        "files": "property_display.py · tests · gui.py imports",
         "problem": (
-            "角色/武器/固定配装/多技能次数/敌人防御在 N 处从 panel 刮取；"
-            "MockSelectionPanel 手工同步 API。"
+            "property_display 仅 re-export display_* / preview_lines；删除测试不通过但复杂度不收敛（浅模块）。"
+            "测试与 gui 仍经此间接 import，真实 seam 被遮住。"
         ),
-        "solution": (
-            "loadout_state.read_from_panels() → 预设、确认签名、搜索 job、伤害快照共用。"
-        ),
-        "wins": ["新字段只改一处", "预设与搜索对齐", "Mock 只实现一个读法"],
+        "solution": "调用方改 import display_view / display_lines；保留短期 shim 后删除。",
+        "wins": ["删 pass-through", "import 图清晰", "测试对准真实模块"],
         "mermaid": None,
     },
     {
         "num": "5",
         "strength": "Worth exploring",
-        "title": "提取计算与搜索区控件",
-        "files": "gui._build_control_panel · fixed_loadout_controls · search_settings",
+        "title": "合并全量遍历执行栈 SearchRunner",
+        "files": "search_session · in_memory_optimizer · search_persistence · single_skill_search_runner",
         "problem": (
-            "固定配装、工具与分享已抽出；全量按钮/并行/预估仍内联 gui，"
-            "与 enhancement_controls 不对称。"
+            "search_session / in_memory_optimizer / search_persistence 薄转发重复 bounded parallel；"
+            "续跑与内存路径 evaluator 易漂移。"
         ),
-        "solution": "search_controls.place_search_section() + 句柄；绑定 search_controller。",
-        "wins": ["与 enhancement 同模式", "控件可集成测", "搜索文案集中"],
-        "mermaid": None,
+        "solution": (
+            "SearchRunner.run(job, persistence?) 统一 plan、evaluator、TopN、cancel；"
+            "estimate 只经 optimizer_config_for_search_job。"
+        ),
+        "wins": ["取消/进度一处修", "可无头测全量遍历", "MVP 与内存同栈"],
+        "mermaid": """flowchart LR
+  SC[search_controller] --> Job[SingleSkillSearchJob]
+  Job --> SR[SearchRunner]
+  SR --> LO[evaluate_task]
+  SR --> PS[run_bounded_parallel]""",
     },
     {
         "num": "6",
         "strength": "Worth exploring",
-        "title": "GameDataFacade 统一加载",
-        "files": "loader · equipment_catalog · gui 启动 · enhancement_controls",
+        "title": "enhancement 与 DamageSnapshot 接 LoadoutState",
+        "files": "enhancement_controls · damage_snapshot · preset_batch_compare",
         "problem": (
-            "启动只缓存武器；装备按装备范围懒加载；多方案对比直接 get_equipments()。"
-            "三种入口，失败时机不一。"
+            "refresh_damage_snapshot 确认后再次刮 panel；build_preset_from_app 仍有 panel fallback；"
+            "enhancement_controls 混 UI 与预设/对比逻辑。"
         ),
-        "solution": "应用持 facade：角色/武器/范围 catalog，统一 DataLoadError。",
-        "wins": ["一处 mock 适配器", "全量前即知数据坏", "符合统一加载层"],
+        "solution": (
+            "refresh_from_state(state)；拆分 preset_dialogs；"
+            "多方案对比只读 game_data 三列表。"
+        ),
+        "wins": ["仪表盘与右侧乘区同源", "预设测 LoadoutState", "CTk 与逻辑分离"],
         "mermaid": None,
     },
 ]
@@ -172,14 +184,14 @@ def build_html() -> str:
 <body class="bg-stone-50 text-slate-900 font-sans">
 <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
 <header class="border-b border-stone-200 pb-8">
-  <p class="text-xs uppercase tracking-wider text-slate-500">2026-05-23 · endfield_damage_calculator</p>
-  <h1 class="text-3xl font-serif mt-2">架构加深机会</h1>
-  <p class="text-sm text-slate-600 mt-3">术语：module · interface · implementation · depth · seam · adapter · leverage · locality（见技能 LANGUAGE.md）</p>
+  <p class="text-xs uppercase tracking-wider text-slate-500">2026-05-23 · 第二轮审查 · endfield_damage_calculator</p>
+  <h1 class="text-3xl font-serif mt-2">架构加深机会（post #1–#6）</h1>
+  <p class="text-sm text-slate-600 mt-3">已完成：search_controller · LoadoutState · display_lines/view · search_controls · GameDataFacade。术语见 LANGUAGE.md。</p>
 </header>
 <section id="candidates" class="space-y-10">{cards}</section>
 <section id="top-recommendation" class="rounded-xl border-2 border-emerald-600 bg-emerald-50 p-6">
   <h2 class="text-lg font-serif text-emerald-900">Top recommendation</h2>
-  <p class="mt-2 text-emerald-900"><strong>#1 + #2</strong>：全量遍历/MVP 迁入 calculation 深模块，并统一 job 的敌方防御与 OptimizerConfig（修复预估与实跑、预览与 TopN 的接缝泄漏）。随后 <strong>#4 LoadoutState</strong> 统一确认/预设/搜索的刮取。</p>
+  <p class="mt-2 text-emerald-900"><strong>#1 + #2</strong>：在已有 LoadoutState / GameDataFacade 上，抽出 ConfirmOrchestrator + multi_skill_controls，并让 <code>DisplayRequest</code> 成为确认刷新与右侧乘区的唯一接口——locality 最高、与上轮接缝直接衔接。</p>
 </section>
 </main>
 </body>

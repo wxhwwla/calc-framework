@@ -10,6 +10,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from gui_design.enhancement_controls import (
     apply_preset_to_app,
     build_preset_from_app,
@@ -28,6 +30,8 @@ from tests.gui_fixtures import (
     destroy_mock_app_root,
     load_character_by_name,
 )
+
+pytestmark = pytest.mark.integration
 
 
 @unittest.skipUnless(ctk_available(), "需要可用的 CustomTkinter / Tcl")

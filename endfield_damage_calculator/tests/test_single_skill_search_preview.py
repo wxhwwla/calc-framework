@@ -3,11 +3,15 @@
 """单技能遍历快速预览文案测试。"""
 
 import json
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from calculation.loadout_optimizer import WeaponCandidate
+from data.equipment_catalog import get_equipment_catalog
 from gui_design.preview_lines import build_single_skill_search_preview_lines
 
 _CHARACTERS_JSON = (
@@ -115,8 +119,13 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         self.assertTrue(any(line.startswith("装备范围: 仅散件装备") for line in lines))
         self.assertFalse(mock_get_catalog.called)
 
+    @pytest.mark.real_data
+    @unittest.skipUnless(
+        os.environ.get("ENDFIELD_RUN_REAL_DATA_TESTS") == "1",
+        "需设置 ENDFIELD_RUN_REAL_DATA_TESTS=1 才跑真数据预览（防误占内存）",
+    )
     def test_preview_with_real_local_equipments_when_available(self):
-        """不 mock 时，本地装备应能跑出 Top 结果而非「数据不完整」。"""
+        """真数据契约：显式传入有限 catalog，禁止 preview 内隐式 get_equipments。"""
         equip_path = (
             Path(__file__).resolve().parent.parent
             / "character_weapon_equipment"
@@ -125,6 +134,12 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         )
         if not equip_path.is_file():
             self.skipTest("无本地 equipments.json")
+        rows = json.loads(equip_path.read_text(encoding="utf-8"))
+        # 只取前若干行做三部位切分验证，预览仍走 per_slot=2 采样
+        catalog = get_equipment_catalog(
+            scope_label="全部装备",
+            equipment_rows=rows[:80],
+        )
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
         lines = build_single_skill_search_preview_lines(
@@ -135,6 +150,8 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             skill_1_level=1,
             skill_2_level=0,
             skill_3_level=0,
+            preview_equipment_catalog=catalog,
+            preview_equipment_scope_label="全部装备",
         )
         joined = "\n".join(lines)
         self.assertNotIn("装备数据不完整", joined, msg=joined)

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from calculation.damage_engine import ZONE_ORDER
-from gui_design.property_display import build_single_hit_damage_lines
+from gui_design.display_lines import build_single_hit_damage_lines
 
 _CHARACTERS_JSON = (
     Path(__file__).resolve().parent.parent

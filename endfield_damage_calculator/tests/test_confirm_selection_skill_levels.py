@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""确认选择时角色属性列应传入技能等级。"""
+"""确认选择时角色属性列应传入技能等级（无 CTk）。"""
 
 import json
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from gui_design.property_display import confirm_selection
+from gui_design.display_lines import build_character_attribute_lines
+from gui_design.loadout_state import read_loadout_from_panels
+from calculation.loadout_slot_search import FixedLoadoutSelection
 
 
 _CHARACTERS_JSON = (
@@ -28,15 +30,7 @@ def _load_by_name(name: str) -> dict:
 
 
 class TestConfirmSelectionSkillLevels(unittest.TestCase):
-    @patch("gui_design.display_view.build_character_attribute_lines")
-    @patch("gui_design.display_view._render_placeholder")
-    @patch("gui_design.display_view._render_lines")
-    def test_confirm_passes_skill_levels_from_character_panel(
-        self,
-        _render_lines,
-        _render_placeholder,
-        build_lines,
-    ):
+    def test_loadout_and_char_lines_use_panel_skill_levels(self) -> None:
         char = _load_by_name("秋栗")
         char_panel = MagicMock()
         char_panel.get_selected_data.return_value = char
@@ -47,32 +41,42 @@ class TestConfirmSelectionSkillLevels(unittest.TestCase):
         char_panel.get_skill_3_level.return_value = 2
 
         weapon_panel = MagicMock()
-        weapon_panel.get_selected_data.return_value = None
+        weapon_panel.get_selected_data.return_value = {"名称": "测试武器", "基础攻击力": [100]}
+        weapon_panel.get_level.return_value = 1
+        weapon_panel.get_special_ability_1_name.return_value = ""
+        weapon_panel.get_special_ability_1_level.return_value = 0
+        weapon_panel.get_special_ability_2_name.return_value = ""
+        weapon_panel.get_special_ability_2_level.return_value = 0
+        weapon_panel.get_special_ability_3_name.return_value = ""
+        weapon_panel.get_special_ability_3_level.return_value = 0
+        weapon_panel.get_weapon_special_name.return_value = ""
+        weapon_panel.get_weapon_special_level.return_value = 0
+        weapon_panel.get_weapon_special_2_name.return_value = ""
+        weapon_panel.get_weapon_special_2_level.return_value = 0
 
-        char_scroll = MagicMock()
-        char_scroll.winfo_children.return_value = []
-        weapon_scroll = MagicMock()
-        weapon_scroll.winfo_children.return_value = []
-        right_scroll = MagicMock()
-        right_scroll.winfo_children.return_value = []
-
-        confirm_selection(
-            char_scroll,
-            weapon_scroll,
-            right_scroll,
+        loadout = read_loadout_from_panels(
             char_panel,
             weapon_panel,
-            MagicMock(),
-            MagicMock(),
+            calculation_mode="zone_snapshot",
+            weapon_scope_label="当前武器",
+            equipment_scope_label="全部装备",
+            fixed_loadout=FixedLoadoutSelection(),
+            use_manual_multi_skill_counts=False,
+            manual_counts={"战技": 0, "连携技": 0, "终结技": 0},
+            enemy_defense=100.0,
         )
+        self.assertIsNotNone(loadout)
+        assert loadout is not None
+        self.assertEqual(loadout.skill_levels, (5, 3, 2))
 
-        build_lines.assert_called_once_with(
+        lines = build_character_attribute_lines(
             char,
-            1,
-            skill_1_level=5,
-            skill_2_level=3,
-            skill_3_level=2,
+            loadout.char_level,
+            skill_1_level=loadout.skill_levels[0],
+            skill_2_level=loadout.skill_levels[1],
+            skill_3_level=loadout.skill_levels[2],
         )
+        self.assertTrue(lines)
 
 
 if __name__ == "__main__":

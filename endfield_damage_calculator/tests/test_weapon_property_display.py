@@ -4,7 +4,7 @@
 
 import unittest
 
-from gui_design.property_display import format_weapon_bonus_display_value
+from gui_design.display_lines import format_weapon_bonus_display_value
 
 
 class TestFormatWeaponBonusDisplayValue(unittest.TestCase):

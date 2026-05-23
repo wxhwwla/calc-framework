@@ -4,7 +4,7 @@
 
 import unittest
 
-from gui_design.property_display import evaluate_display_state
+from gui_design.display_lines import evaluate_display_state
 
 
 class TestConfirmSelectionState(unittest.TestCase):

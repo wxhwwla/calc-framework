@@ -7,7 +7,11 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
+import pytest
+
 from tests.gui_fixtures import ctk_available
+
+pytestmark = pytest.mark.integration
 
 
 @unittest.skipUnless(ctk_available(), "需要可用的 CustomTkinter / Tcl")

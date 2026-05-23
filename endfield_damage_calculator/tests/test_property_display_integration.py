@@ -6,7 +6,11 @@ from __future__ import annotations
 
 import unittest
 
-from gui_design.property_display import confirm_selection
+import pytest
+
+from gui_design.display_view import confirm_selection
+
+pytestmark = pytest.mark.integration
 from tests.gui_fixtures import build_mock_app, ctk_available, destroy_mock_app_root
 
 

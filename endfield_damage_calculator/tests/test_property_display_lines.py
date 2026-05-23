@@ -6,7 +6,7 @@ import json
 import unittest
 from pathlib import Path
 
-from gui_design.property_display import (
+from gui_design.display_lines import (
     build_character_attribute_lines,
     build_character_skill_lines,
     build_weapon_attribute_lines,

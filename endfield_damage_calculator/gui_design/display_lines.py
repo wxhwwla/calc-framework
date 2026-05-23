@@ -33,6 +33,23 @@ NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
 WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
 
 
+def evaluate_display_state(
+    char_data: Optional[Dict[str, Any]],
+    weapon_data: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """评估本次确认后各列提示及右侧乘区是否可更新（无 CTk）。"""
+    state = {
+        "char_message": "",
+        "weapon_message": "",
+        "can_update_zone": bool(char_data and weapon_data),
+    }
+    if not char_data:
+        state["char_message"] = "请选择有效角色"
+    if not weapon_data:
+        state["weapon_message"] = "请选择有效武器"
+    return state
+
+
 def _weapon_bonus_uses_integer_display(attr_name: str, *, is_first_skill: bool) -> bool:
     """第一技能，或名称含源石技艺的附加属性，均展示为整数、不加 %。"""
     return is_first_skill or WEAPON_INTEGER_BONUS_ATTR_KEY in attr_name

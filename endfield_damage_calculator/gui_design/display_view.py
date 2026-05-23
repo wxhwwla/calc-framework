@@ -21,11 +21,15 @@ from gui_design.display_lines import (
     build_character_attribute_lines,
     build_single_hit_damage_lines,
     build_weapon_attribute_lines,
+    evaluate_display_state,
 )
 from gui_design.preview_lines import (
     build_multi_skill_search_preview_lines,
     build_single_skill_search_preview_lines,
 )
+from calculation.loadout_slot_search import FixedLoadoutSelection
+from gui_design.display_request import DisplayRequest
+from gui_design.loadout_state import LoadoutState, read_loadout_from_panels
 from gui_design.selection_panel import ChooseTypesStarsNamesLevels
 
 
@@ -63,21 +67,114 @@ def _render_placeholder(
     label.grid(row=0, column=0, sticky="w", pady=(6, 2))
 
 
-def evaluate_display_state(
-    char_data: Optional[Dict[str, Any]],
-    weapon_data: Optional[Dict[str, Any]],
-) -> Dict[str, Any]:
-    """评估本次确认后各列提示及右侧乘区是否可更新。"""
-    state = {
-        "char_message": "",
-        "weapon_message": "",
-        "can_update_zone": bool(char_data and weapon_data),
-    }
-    if not char_data:
-        state["char_message"] = "请选择有效角色"
-    if not weapon_data:
-        state["weapon_message"] = "请选择有效武器"
-    return state
+def confirm_from_display_request(
+    char_attr_scroll: ctk.CTkScrollableFrame | None,
+    weapon_attr_scroll: ctk.CTkScrollableFrame | None,
+    right_scroll: ctk.CTkScrollableFrame | None,
+    request: DisplayRequest,
+    *,
+    big_font: ctk.CTkFont,
+    small_font: ctk.CTkFont,
+) -> None:
+    """根据 DisplayRequest 刷新三列展示（不再从 panel 二次刮取）。"""
+    if char_attr_scroll is None or weapon_attr_scroll is None or right_scroll is None:
+        return
+
+    for widget in char_attr_scroll.winfo_children():
+        widget.destroy()
+    for widget in weapon_attr_scroll.winfo_children():
+        widget.destroy()
+    for widget in right_scroll.winfo_children():
+        widget.destroy()
+
+    loadout = request.loadout
+    char_data = loadout.char_data
+    weapon_data = loadout.weapon_data
+    ui_state = evaluate_display_state(char_data, weapon_data)
+    s1, s2, s3 = loadout.skill_levels
+
+    sync_confirm_dependencies(
+        char_data=char_data,
+        weapon_data=weapon_data,
+        char_level=loadout.char_level,
+        weapon_level=loadout.weapon_level,
+        trust_level=loadout.trust_level,
+        skill_levels=loadout.skill_levels,
+        calculation_mode=loadout.calculation_mode,
+        weapon_scope=loadout.weapon_scope_label,
+        equipment_scope=loadout.equipment_scope_label,
+        multi_skill_counts=loadout.manual_counts,
+        use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
+        enemy_defense=loadout.enemy_defense,
+    )
+
+    if not ui_state["char_message"]:
+        char_lines = build_character_attribute_lines(
+            char_data,
+            loadout.char_level,
+            skill_1_level=s1,
+            skill_2_level=s2,
+            skill_3_level=s3,
+        )
+        _render_lines(
+            char_attr_scroll,
+            char_lines,
+            font=small_font,
+            text_color="#B8B8B8",
+        )
+    else:
+        _render_placeholder(char_attr_scroll, ui_state["char_message"], font=small_font)
+
+    specials = loadout.weapon_special_kwargs()
+    if not ui_state["weapon_message"]:
+        weapon_lines = build_weapon_attribute_lines(
+            weapon_data,
+            loadout.weapon_level,
+            **specials,
+        )
+        _render_lines(
+            weapon_attr_scroll,
+            weapon_lines,
+            font=small_font,
+            text_color="#4ECDC4",
+        )
+    else:
+        _render_placeholder(weapon_attr_scroll, ui_state["weapon_message"], font=small_font)
+
+    if not ui_state["can_update_zone"]:
+        return
+
+    _display_zone_data(
+        right_scroll,
+        char_data,
+        weapon_data,
+        loadout.char_level,
+        loadout.weapon_level,
+        specials["sa1_name"],
+        specials["sa1_level"],
+        specials["sa2_name"],
+        specials["sa2_level"],
+        specials["sa3_name"],
+        specials["sa3_level"],
+        specials["ws_name"],
+        specials["ws_level"],
+        specials["ws2_name"],
+        specials["ws2_level"],
+        loadout.trust_level,
+        big_font,
+        small_font,
+        calculation_mode=loadout.calculation_mode,
+        skill_1_level=s1,
+        skill_2_level=s2,
+        skill_3_level=s3,
+        multi_skill_manual_counts=loadout.manual_counts,
+        enemy_defense=loadout.enemy_defense,
+        use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
+        preview_weapon_candidates=list(request.preview_weapon_candidates),
+        preview_scope_label=loadout.weapon_scope_label,
+        preview_equipment_catalog=request.equipment_catalog,
+        preview_equipment_scope_label=loadout.equipment_scope_label,
+    )
 
 
 def confirm_selection(
@@ -97,128 +194,45 @@ def confirm_selection(
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
 ) -> None:
-    """
-    确认选择并刷新角色属性列、武器属性列，以及右侧乘区数据。
-    """
-    if char_attr_scroll is None or weapon_attr_scroll is None or right_scroll is None:
-        return
-
-    for widget in char_attr_scroll.winfo_children():
-        widget.destroy()
-    for widget in weapon_attr_scroll.winfo_children():
-        widget.destroy()
-    for widget in right_scroll.winfo_children():
-        widget.destroy()
-
-    char_data = char_panel.get_selected_data()
-    weapon_data = weapon_panel.get_selected_data()
-    state = evaluate_display_state(char_data, weapon_data)
-    skill_1_level = char_panel.get_skill_1_level()
-    skill_2_level = char_panel.get_skill_2_level()
-    skill_3_level = char_panel.get_skill_3_level()
-    if char_data and weapon_data:
-        sync_confirm_dependencies(
-            char_data=char_data,
-            weapon_data=weapon_data,
-            char_level=char_panel.get_level(),
-            weapon_level=weapon_panel.get_level(),
-            trust_level=char_panel.get_trust_level(),
-            skill_levels=(skill_1_level, skill_2_level, skill_3_level),
-            calculation_mode=calculation_mode,
-            weapon_scope=preview_scope_label,
-            equipment_scope=preview_equipment_scope_label,
-            multi_skill_counts=multi_skill_manual_counts,
-            use_manual_multi_skill_counts=use_manual_multi_skill_counts,
-            enemy_defense=enemy_defense,
-        )
-    char_level = char_panel.get_level()
-    weapon_level = weapon_panel.get_level()
-    trust_level = char_panel.get_trust_level()
-    if not state["char_message"] and char_data:
-        char_lines = build_character_attribute_lines(
-            char_data,
-            char_level,
-            skill_1_level=skill_1_level,
-            skill_2_level=skill_2_level,
-            skill_3_level=skill_3_level,
-        )
-        _render_lines(
-            char_attr_scroll,
-            char_lines,
-            font=small_font,
-            text_color="#B8B8B8",
-        )
-    else:
-        _render_placeholder(char_attr_scroll, state["char_message"], font=small_font)
-
-    special_ability_1_name = weapon_panel.get_special_ability_1_name()
-    special_ability_1_level = weapon_panel.get_special_ability_1_level()
-    special_ability_2_name = weapon_panel.get_special_ability_2_name()
-    special_ability_2_level = weapon_panel.get_special_ability_2_level()
-    special_ability_3_name = weapon_panel.get_special_ability_3_name()
-    special_ability_3_level = weapon_panel.get_special_ability_3_level()
-    weapon_special_name = weapon_panel.get_weapon_special_name()
-    weapon_special_level = weapon_panel.get_weapon_special_level()
-    weapon_special_2_name = weapon_panel.get_weapon_special_2_name()
-    weapon_special_2_level = weapon_panel.get_weapon_special_2_level()
-
-    if not state["weapon_message"] and weapon_data:
-        weapon_lines = build_weapon_attribute_lines(
-            weapon_data,
-            weapon_level,
-            sa1_name=special_ability_1_name,
-            sa1_level=special_ability_1_level,
-            sa2_name=special_ability_2_name,
-            sa2_level=special_ability_2_level,
-            sa3_name=special_ability_3_name,
-            sa3_level=special_ability_3_level,
-            ws_name=weapon_special_name,
-            ws_level=weapon_special_level,
-            ws2_name=weapon_special_2_name,
-            ws2_level=weapon_special_2_level,
-        )
-        _render_lines(
-            weapon_attr_scroll,
-            weapon_lines,
-            font=small_font,
-            text_color="#4ECDC4",
-        )
-    else:
-        _render_placeholder(weapon_attr_scroll, state["weapon_message"], font=small_font)
-
-    if not state["can_update_zone"]:
-        return
-
-    _display_zone_data(
-        right_scroll,
-        char_data,
-        weapon_data,
-        char_level,
-        weapon_level,
-        special_ability_1_name,
-        special_ability_1_level,
-        special_ability_2_name,
-        special_ability_2_level,
-        special_ability_3_name,
-        special_ability_3_level,
-        weapon_special_name,
-        weapon_special_level,
-        weapon_special_2_name,
-        weapon_special_2_level,
-        trust_level,
-        big_font,
-        small_font,
+    """确认选择（测试/兼容入口：从 panel 组装 DisplayRequest）。"""
+    counts = multi_skill_manual_counts or {}
+    loadout = read_loadout_from_panels(
+        char_panel,
+        weapon_panel,
         calculation_mode=calculation_mode,
-        skill_1_level=skill_1_level,
-        skill_2_level=skill_2_level,
-        skill_3_level=skill_3_level,
-        multi_skill_manual_counts=multi_skill_manual_counts,
-        enemy_defense=enemy_defense,
+        weapon_scope_label=preview_scope_label or "当前武器",
+        equipment_scope_label=preview_equipment_scope_label or "全部装备",
+        fixed_loadout=FixedLoadoutSelection(),
         use_manual_multi_skill_counts=use_manual_multi_skill_counts,
-        preview_weapon_candidates=preview_weapon_candidates,
-        preview_scope_label=preview_scope_label,
-        preview_equipment_catalog=preview_equipment_catalog,
-        preview_equipment_scope_label=preview_equipment_scope_label,
+        manual_counts=counts,
+        enemy_defense=enemy_defense,
+    )
+    if loadout is None:
+        for scroll, msg in (
+            (char_attr_scroll, "请选择有效角色"),
+            (weapon_attr_scroll, "请选择有效武器"),
+        ):
+            if scroll is not None:
+                for widget in scroll.winfo_children():
+                    widget.destroy()
+                _render_placeholder(scroll, msg, font=small_font)
+        if right_scroll is not None:
+            for widget in right_scroll.winfo_children():
+                widget.destroy()
+        return
+
+    request = DisplayRequest(
+        loadout=loadout,
+        equipment_catalog=preview_equipment_catalog or {},
+        preview_weapon_candidates=tuple(preview_weapon_candidates or []),
+    )
+    confirm_from_display_request(
+        char_attr_scroll,
+        weapon_attr_scroll,
+        right_scroll,
+        request,
+        big_font=big_font,
+        small_font=small_font,
     )
 
 
@@ -334,6 +348,7 @@ def _display_zone_data(
             skill_3_level=skill_3_level,
             manual_counts=multi_skill_manual_counts,
             use_manual_counts=use_manual_multi_skill_counts,
+            preview_equipment_catalog=preview_equipment_catalog,
             preview_equipment_scope_label=preview_equipment_scope_label,
             enemy_defense=enemy_defense,
         ):

@@ -12,11 +12,7 @@ import customtkinter as ctk
 
 from gui_design.calc_history import CalculationHistory, HistoryEntry
 from gui_design.calc_mode_labels import CALC_MODE_OPTIONS
-from gui_design.damage_snapshot import (
-    build_damage_snapshot,
-    get_snapshot_from_app,
-    store_snapshot_on_app,
-)
+from gui_design.damage_snapshot import get_snapshot_from_app, store_snapshot_on_app
 from gui_design.damage_visualization import (
     build_damage_pie_figure,
     build_improvement_bar_figure,
@@ -39,6 +35,7 @@ from utils.operation_log import LogLevel, get_session_operation_log
 
 if TYPE_CHECKING:
     from gui_design.gui import DamageCalculatorApp
+    from gui_design.loadout_state import LoadoutState
 
 
 def _label_for_mode(mode_id: str) -> str:
@@ -65,36 +62,9 @@ def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
     from gui_design.loadout_state import read_loadout_from_app
 
     state = read_loadout_from_app(app)
-    if state is not None:
-        return state.to_loadout_preset()
-    assert app.char_panel and app.weapon_panel
-    fixed = app._build_fixed_loadout_selection()
-    names = {
-        "chest": (fixed.chest or {}).get("名称") if fixed.chest else None,
-        "gloves": (fixed.gloves or {}).get("名称") if fixed.gloves else None,
-        "accessory_a": (fixed.accessory_a or {}).get("名称") if fixed.accessory_a else None,
-        "accessory_b": (fixed.accessory_b or {}).get("名称") if fixed.accessory_b else None,
-    }
-    char = app.char_panel.get_selected_data() or {}
-    weapon = app.weapon_panel.get_selected_data() or {}
-    return LoadoutPreset(
-        char_name=str(char.get("名称", "")),
-        weapon_name=str(weapon.get("名称", "")),
-        char_level=app.char_panel.get_level(),
-        weapon_level=app.weapon_panel.get_level(),
-        trust_level=app.char_panel.get_trust_level(),
-        skill_levels=(
-            app.char_panel.get_skill_1_level(),
-            app.char_panel.get_skill_2_level(),
-            app.char_panel.get_skill_3_level(),
-        ),
-        calculation_mode=app._current_calculation_mode(),
-        weapon_scope=app.single_skill_scope_var.get(),
-        equipment_scope=app.single_skill_equipment_scope_var.get(),
-        fixed_equipment_names=names,
-        multi_skill_counts=app._manual_multi_skill_counts(),
-        use_manual_multi_skill_counts=bool(app.use_manual_skill_counts_var.get()),
-    )
+    if state is None:
+        raise ValueError("请先选择有效角色和武器")
+    return state.to_loadout_preset()
 
 
 def _select_panel_by_name(panel, name: str) -> bool:
@@ -308,42 +278,20 @@ def show_calculation_history_dialog(app: "DamageCalculatorApp") -> None:
         ).pack(anchor="e", padx=8, pady=6)
 
 
-def refresh_damage_snapshot(app: "DamageCalculatorApp") -> None:
-    """根据当前 GUI 状态重建伤害快照（确认后调用）。"""
-    assert app.char_panel and app.weapon_panel
-    char = app.char_panel.get_selected_data()
-    weapon = app.weapon_panel.get_selected_data()
-    if not char or not weapon:
+def refresh_damage_snapshot(
+    app: "DamageCalculatorApp",
+    *,
+    loadout: Optional["LoadoutState"] = None,
+) -> None:
+    """根据 LoadoutState 重建伤害快照（确认后调用）。"""
+    from gui_design.loadout_evaluation import build_snapshot_from_loadout
+    from gui_design.loadout_state import LoadoutState, read_loadout_from_app
+
+    if loadout is None:
+        loadout = read_loadout_from_app(app)
+    if loadout is None:
         return
-    wp = app.weapon_panel
-    counts = app._manual_multi_skill_counts()
-    if not bool(app.use_manual_skill_counts_var.get()):
-        counts = {"战技": 1, "连携技": 0, "终结技": 0}
-    snap = build_damage_snapshot(
-        char_data=char,
-        weapon_data=weapon,
-        char_level=app.char_panel.get_level(),
-        weapon_level=app.weapon_panel.get_level(),
-        trust_level=app.char_panel.get_trust_level(),
-        skill_levels=(
-            app.char_panel.get_skill_1_level(),
-            app.char_panel.get_skill_2_level(),
-            app.char_panel.get_skill_3_level(),
-        ),
-        skill_counts=counts,
-        sa1_name=wp.get_special_ability_1_name(),
-        sa1_level=wp.get_special_ability_1_level(),
-        sa2_name=wp.get_special_ability_2_name(),
-        sa2_level=wp.get_special_ability_2_level(),
-        sa3_name=wp.get_special_ability_3_name(),
-        sa3_level=wp.get_special_ability_3_level(),
-        ws_name=wp.get_weapon_special_name(),
-        ws_level=wp.get_weapon_special_level(),
-        ws2_name=wp.get_weapon_special_2_name(),
-        ws2_level=wp.get_weapon_special_2_level(),
-        enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
-    )
-    store_snapshot_on_app(app, snap)
+    store_snapshot_on_app(app, build_snapshot_from_loadout(loadout))
 
 
 def show_preset_compare_dialog(app: "DamageCalculatorApp") -> None:

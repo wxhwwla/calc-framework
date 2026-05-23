@@ -183,6 +183,7 @@ def build_multi_skill_search_preview_lines(
     skill_3_level: int = 0,
     manual_counts: Optional[Dict[str, int]] = None,
     use_manual_counts: bool = False,
+    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
 ) -> list[str]:
@@ -218,6 +219,7 @@ def build_multi_skill_search_preview_lines(
             skill_3_level=skill_3_level,
             manual_counts=manual_counts,
             use_manual_counts=use_manual_counts,
+            preview_equipment_catalog=preview_equipment_catalog,
             preview_equipment_scope_label=preview_equipment_scope_label,
             enemy_defense=enemy_defense,
         )
@@ -238,10 +240,14 @@ def _build_multi_skill_search_preview_lines_impl(
     skill_3_level: int = 0,
     manual_counts: Optional[Dict[str, int]] = None,
     use_manual_counts: bool = False,
+    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
 ) -> list[str]:
-    catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
+    if preview_equipment_catalog is None:
+        catalog = get_equipment_catalog(scope_label=preview_equipment_scope_label or "全部装备")
+    else:
+        catalog = preview_equipment_catalog
     blocked = catalog_preview_status_lines(
         catalog, mode_label="多技能遍历(快速预览)"
     )

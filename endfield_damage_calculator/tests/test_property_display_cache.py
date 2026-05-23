@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""property_display 预览缓存行为测试。"""
+"""display_lines 预览缓存行为测试。"""
 
 import unittest
 
 from calculation.result_cache import reset_global_result_cache
-from gui_design.property_display import build_single_hit_damage_lines
+from gui_design.display_lines import build_single_hit_damage_lines
 
 
 class TestPropertyDisplayCache(unittest.TestCase):

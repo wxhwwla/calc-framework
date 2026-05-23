@@ -63,3 +63,10 @@ exclude = ["tests*", "scripts*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "integration: 需要 CustomTkinter/Tcl（本地可 -m 'not integration' 跳过）",
+    "real_data: 读取本地 characters/weapons/equipments JSON（默认跳过，见 ENDFIELD_RUN_REAL_DATA_TESTS）",
+]
+# 本地日常：pytest -m "not integration and not real_data"
+# CI 仍跑全量：pytest tests/ -q
+filterwarnings = ["ignore::DeprecationWarning"]

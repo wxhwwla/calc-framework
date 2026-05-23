@@ -67,6 +67,28 @@ class LoadoutState:
     enemy_defense: float
     weapon_specials: tuple[Any, ...]
 
+    def weapon_special_kwargs(self) -> dict[str, Any]:
+        """武器特殊能力字段，供武器属性列与伤害快照使用。"""
+        t = self.weapon_specials
+        return {
+            "sa1_name": t[0],
+            "sa1_level": int(t[1]),
+            "sa2_name": t[2],
+            "sa2_level": int(t[3]),
+            "sa3_name": t[4],
+            "sa3_level": int(t[5]),
+            "ws_name": t[6],
+            "ws_level": int(t[7]),
+            "ws2_name": t[8],
+            "ws2_level": int(t[9]),
+        }
+
+    def effective_skill_counts(self) -> dict[str, int]:
+        """未开手动次数时仅战技计 1 次（与仪表盘一致）。"""
+        if self.use_manual_multi_skill_counts:
+            return dict(self.manual_counts)
+        return {"战技": 1, "连携技": 0, "终结技": 0}
+
     def confirm_refresh_signature(self) -> tuple:
         """供 confirm_refresh 去重使用的可哈希签名。"""
         return build_confirm_refresh_signature(
