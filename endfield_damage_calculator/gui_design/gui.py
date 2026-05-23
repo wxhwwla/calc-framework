@@ -21,8 +21,12 @@ GUI 主应用模块
 
 # 导入必要的模块
 import customtkinter as ctk  # CustomTkinter GUI 库
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 from typing import Optional, List, Dict, Any   # 类型提示支持
+from pathlib import Path
+import threading
+import hashlib
+import os
 from gui_design.display_model import (
     gui_settings,
     confirm_selection,
@@ -31,6 +35,11 @@ from gui_design.display_model import (
 from data.loader import fetch_game_data_for_gui  # 数据加载（含失败信息）
 from please_read_me import get_exe_version  # EXE版本号
 from legal.attribution import open_attribution_dialog
+from calculation.damage_engine import DamageContext
+from calculation.loadout_optimizer import OptimizerConfig, WeaponCandidate
+from calculation.mvp_pipeline import run_mvp_search_pipeline
+from calculation.equipment_system import load_equipment_catalog_from_wiki_draft
+from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 # 列 0/1/3/5：选择区与属性区（最小宽度）；列 7：右侧乘区（占满剩余宽度）
 APP_COLUMN_WEIGHTS = (0, 0, 0, 0, 0, 0, 0, 1)
@@ -113,6 +122,8 @@ class DamageCalculatorApp:
         self.weapon_frame: Optional[ctk.CTkFrame] = None
         self.confirm_btn: Optional[ctk.CTkButton] = None
         self.attribution_btn: Optional[ctk.CTkButton] = None
+        self.mvp_search_btn: Optional[ctk.CTkButton] = None
+        self.mvp_status_label: Optional[ctk.CTkLabel] = None
         self.char_attr_frame: Optional[ctk.CTkFrame] = None
         self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
@@ -193,6 +204,8 @@ class DamageCalculatorApp:
         self.weapon_frame.grid_rowconfigure(0, weight=1)
         self.weapon_frame.grid_rowconfigure(1, weight=0)
         self.weapon_frame.grid_rowconfigure(2, weight=0)
+        self.weapon_frame.grid_rowconfigure(3, weight=0)
+        self.weapon_frame.grid_rowconfigure(4, weight=0)
         self.weapon_frame.grid_columnconfigure(0, weight=1)
 
         self.confirm_btn.grid(
@@ -217,6 +230,34 @@ class DamageCalculatorApp:
             padx=10,
             pady=(4, 10),
             sticky="ew",
+        )
+
+        self.mvp_search_btn = ctk.CTkButton(
+            self.weapon_frame,
+            text="实验：MVP搜索并导出",
+            font=self.small_font,
+            command=self._on_run_mvp_search,
+        )
+        self.mvp_search_btn.grid(
+            row=3,
+            column=0,
+            padx=10,
+            pady=(0, 4),
+            sticky="ew",
+        )
+        self.mvp_status_label = ctk.CTkLabel(
+            self.weapon_frame,
+            text="MVP搜索状态：未开始",
+            font=self.small_font,
+            text_color="#888888",
+            justify="left",
+        )
+        self.mvp_status_label.grid(
+            row=4,
+            column=0,
+            padx=10,
+            pady=(0, 10),
+            sticky="w",
         )
 
         # ==================== 角色属性展示区 ====================
@@ -472,6 +513,169 @@ class DamageCalculatorApp:
             font=self.big_font,
             small_font=self.small_font,
         )
+
+    def _resolve_selected_skill(self, char_data: Dict[str, Any]) -> tuple[str, str, float]:
+        """根据当前滑块选择解析技能类型与倍率。"""
+        assert self.char_panel is not None, "char_panel 未初始化"
+        options = (
+            ("战技", "战技倍率", self.char_panel.get_skill_1_level()),
+            ("连携技", "连携技倍率", self.char_panel.get_skill_2_level()),
+            ("终结技", "终结技倍率", self.char_panel.get_skill_3_level()),
+        )
+        for skill_name, field, level in options:
+            if level <= 0:
+                continue
+            segments = char_data.get(field) or []
+            if not isinstance(segments, list) or not segments:
+                continue
+            first_segment = segments[0] if isinstance(segments[0], list) else []
+            index = max(0, min(level - 1, len(first_segment) - 1))
+            if isinstance(first_segment, list) and first_segment:
+                value = float(first_segment[index] or 0.0)
+                return skill_name, skill_name, value / 100.0
+        return "战技", "战技", 1.0
+
+    def _build_weapon_candidates(
+        self,
+        *,
+        char_data: Dict[str, Any],
+        char_level: int,
+        weapon_level: int,
+        trust_level: int,
+    ) -> list[WeaponCandidate]:
+        """按当前角色与等级生成候选武器最终攻击力。"""
+        weapon_type = char_data.get("武器", "")
+        candidates: list[WeaponCandidate] = []
+        for weapon in self.all_weapons:
+            if weapon.get("类型") != weapon_type:
+                continue
+            details = calculate_final_attack_with_details(
+                character=char_data,
+                weapon=weapon,
+                char_level=char_level,
+                weapon_level=weapon_level,
+                trust_level=trust_level,
+            )
+            candidates.append(
+                WeaponCandidate(
+                    name=str(weapon.get("名称", "")),
+                    final_attack=float(details.get("final_attack", 0.0)),
+                )
+            )
+        return candidates
+
+    def _set_mvp_status(self, text: str) -> None:
+        """更新 MVP 搜索状态文案。"""
+        if self.mvp_status_label is not None:
+            self.mvp_status_label.configure(text=text)
+
+    def _on_run_mvp_search(self) -> None:
+        """执行实验性 MVP 搜索并导出结果。"""
+        assert self.char_panel is not None, "char_panel 未初始化"
+        assert self.weapon_panel is not None, "weapon_panel 未初始化"
+        char_data = self.char_panel.get_selected_data()
+        if not char_data:
+            messagebox.showwarning("MVP搜索", "请先选择有效角色。", parent=self.app)
+            return
+
+        output_dir = filedialog.askdirectory(parent=self.app, title="选择MVP搜索导出目录")
+        if not output_dir:
+            return
+
+        pkg_root = Path(__file__).resolve().parent.parent
+        draft_path = pkg_root.parent / "tools" / "bwiki_scout" / "output" / "parsed" / "equipment.json"
+        if not draft_path.is_file():
+            messagebox.showwarning(
+                "MVP搜索",
+                "未找到装备草案数据：tools/bwiki_scout/output/parsed/equipment.json\n"
+                "请先执行 BWIKI 流程生成装备草案。",
+                parent=self.app,
+            )
+            return
+        equipment_catalog = load_equipment_catalog_from_wiki_draft(draft_path)
+        if not equipment_catalog["chest"] or not equipment_catalog["gloves"] or not equipment_catalog["accessories"]:
+            messagebox.showwarning(
+                "MVP搜索",
+                "装备草案未包含完整的胸甲/护手/配件数据，无法搜索。",
+                parent=self.app,
+            )
+            return
+
+        char_level = self.char_panel.get_level()
+        weapon_level = self.weapon_panel.get_level()
+        trust_level = self.char_panel.get_trust_level()
+        skill_name, skill_type, skill_multiplier = self._resolve_selected_skill(char_data)
+        weapon_candidates = self._build_weapon_candidates(
+            char_data=char_data,
+            char_level=char_level,
+            weapon_level=weapon_level,
+            trust_level=trust_level,
+        )
+        if not weapon_candidates:
+            messagebox.showwarning("MVP搜索", "当前角色对应武器候选为空。", parent=self.app)
+            return
+
+        signature_seed = (
+            f"{char_data.get('名称','')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
+            f"{skill_name}-w{len(weapon_candidates)}"
+        )
+        run_signature = hashlib.sha1(signature_seed.encode("utf-8")).hexdigest()[:16]
+        export_root = Path(output_dir)
+        db_path = export_root / "search_runs.db"
+        export_dir = export_root / "mvp_exports"
+        base_context = DamageContext(
+            final_attack=0.0,
+            skill_multiplier=skill_multiplier,
+            skill_type=skill_type,
+            enemy_defense=100.0,
+        )
+        config = OptimizerConfig(top_n=10, crit_mode="non_crit", allow_duplicate_accessory=True)
+
+        if self.mvp_search_btn is not None:
+            self.mvp_search_btn.configure(state="disabled")
+        self._set_mvp_status("MVP搜索状态：计算中，请稍候...")
+
+        def _worker() -> None:
+            try:
+                result = run_mvp_search_pipeline(
+                    db_path=db_path,
+                    export_dir=export_dir,
+                    run_signature=run_signature,
+                    base_context=base_context,
+                    weapons=weapon_candidates,
+                    equipment_catalog=equipment_catalog,
+                    config=config,
+                    max_workers=max(1, (os.cpu_count() or 1) - 1),
+                )
+            except Exception as exc:
+                self.app.after(
+                    0,
+                    lambda: (
+                        self._set_mvp_status("MVP搜索状态：失败"),
+                        messagebox.showerror("MVP搜索失败", str(exc), parent=self.app),
+                        self.mvp_search_btn.configure(state="normal") if self.mvp_search_btn else None,
+                    ),
+                )
+                return
+
+            def _finish() -> None:
+                self._set_mvp_status(
+                    f"MVP搜索状态：完成（{result['processed_combinations']}/{result['total_combinations']}）"
+                )
+                if self.mvp_search_btn is not None:
+                    self.mvp_search_btn.configure(state="normal")
+                messagebox.showinfo(
+                    "MVP搜索完成",
+                    "已完成搜索并导出结果：\n"
+                    f"- 数据库：{db_path}\n"
+                    f"- 导出目录：{export_dir}\n"
+                    f"- 已处理组合：{result['processed_combinations']}/{result['total_combinations']}",
+                    parent=self.app,
+                )
+
+            self.app.after(0, _finish)
+
+        threading.Thread(target=_worker, daemon=True).start()
 
     def _on_confirm(self) -> None:
         """

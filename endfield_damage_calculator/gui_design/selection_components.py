@@ -13,6 +13,7 @@
 
 import customtkinter as ctk
 from typing import List, Dict, Any, Optional
+import re
 
 from character_weapon_equipment.weapon_data.special_fields import (
     bonus_attribute_keys,
@@ -33,6 +34,29 @@ def format_weapon_skill_slider_value(*, active: bool, level: int = 0) -> str:
     if not active:
         return "0"
     return str(level)
+
+
+_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]+?\+)')
+_SIMPLE_EFFECT_NAME_RE = re.compile(r'^[^\s，。；:：,\.()（）"“”\[\]【】]+?\+$')
+
+
+def extract_effect_display_name(raw_name: str) -> str:
+    """从条件描述中提取词条展示名，仅用于 UI 文案。"""
+    name = (raw_name or "").strip()
+    if not name:
+        return ""
+    if _SIMPLE_EFFECT_NAME_RE.fullmatch(name):
+        return name
+    matches = _EFFECT_NAME_RE.findall(name)
+    if matches:
+        candidate = matches[-1]
+        for marker in ("时获得", "获得", "时", "使", "造成", "提高", "提升", "降低", "增加"):
+            if marker in candidate:
+                tail = candidate.split(marker)[-1].strip()
+                if tail.endswith("+"):
+                    candidate = tail
+        return candidate
+    return name
 
 
 class TrustPanel:
@@ -471,8 +495,9 @@ class SpecialAbilityPanel:
     ) -> None:
         prefix = self._WEAPON_SPECIAL_PREFIX[index - 1]
         if available and name:
+            display_name = extract_effect_display_name(name)
             if name_label:
-                name_label.configure(text=format_weapon_skill_title(prefix, name))
+                name_label.configure(text=format_weapon_skill_title(prefix, display_name))
             if value_label:
                 value_label.configure(text="0")
             if slider:

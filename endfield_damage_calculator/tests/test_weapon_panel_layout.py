@@ -8,6 +8,7 @@ from pathlib import Path
 
 from gui_design.selection_components import (
     SpecialAbilityPanel,
+    extract_effect_display_name,
     format_weapon_skill_slider_value,
     format_weapon_skill_title,
 )
@@ -47,6 +48,17 @@ class TestFormatWeaponSkillTitle(unittest.TestCase):
     def test_without_attribute_name(self):
         self.assertEqual(format_weapon_skill_title("第三技能"), "第三技能：无")
         self.assertEqual(format_weapon_skill_title("特殊能力1", ""), "特殊能力1：无")
+
+
+class TestExtractEffectDisplayName(unittest.TestCase):
+    def test_extracts_attr_name_from_conditional_text(self):
+        self.assertEqual(
+            extract_effect_display_name('造成"物理异常"时获得攻击力+'),
+            "攻击力+",
+        )
+
+    def test_keeps_plain_attr_name(self):
+        self.assertEqual(extract_effect_display_name("源石技艺强度+"), "源石技艺强度+")
 
 
 class TestBonusAttributeOrder(unittest.TestCase):
