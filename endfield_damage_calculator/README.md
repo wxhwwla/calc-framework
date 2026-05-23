@@ -122,7 +122,7 @@ endfield_damage_calculator/
 ### 版本号
 
 - `_VERSION`：日常由上传脚本在有业务改动并 push 成功时自动递增（见下方「GitHub 上传」）；`pyproject.toml` 通过 dynamic 读取。
-- `_EXE_VERSION`：仅重新打包 exe 前在 `please_read_me.py` **手动**修改。
+- `_EXE_VERSION`：仅重新打包 exe 前在 `please_read_me.py` **手动**修改；**改后必须重新 `python build.py`**，旧 `dist/` 内 exe 不会自动更新。
 - 完整流程说明：同文件中的 `UPLOAD_WORKFLOW` 常量，或 `python please_read_me.py` 打印帮助。
 
 ### GitHub 上传（仓库根目录）

@@ -110,7 +110,7 @@ python tools/bwiki_scout/sync_equipments.py --apply
 python -m pytest tests/ -q
 ```
 
-当前基线：**294 passed**, 9 subtests passed。
+当前基线见 [`docs/会话接续手册.md`](会话接续手册.md) §5（全量 **393 passed**, 9 subtests）。
 
 重点模块：
 

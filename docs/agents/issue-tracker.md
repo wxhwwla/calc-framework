@@ -17,7 +17,7 @@ Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all op
 
 ### 人类填写建议
 
-- **版本**：窗口标题 `v…` 或 `please_read_me._VERSION`
+- **版本**：窗口标题 `v…`（`please_read_me._EXE_VERSION`）或 pip/上传用 `please_read_me._VERSION`；exe 分发以窗口标题为准
 - **全量搜索类 Bug**：是否开启「使用手动次数」、固定配装勾选、武器/装备范围
 - **日志**：终端完整 traceback；勿粘贴含个人路径时可打码
 
