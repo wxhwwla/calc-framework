@@ -12,7 +12,7 @@ class TestPanelHints(unittest.TestCase):
         hint = MULTI_SKILL_COUNTS_HINT
         self.assertIn("使用手动次数", hint)
         self.assertIn("全量遍历", hint)
-        self.assertIn("技能等级", hint)
+        self.assertIn("各段", hint)
 
 
 if __name__ == "__main__":

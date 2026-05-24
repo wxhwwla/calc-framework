@@ -45,9 +45,9 @@ class TestMultiSkillOptimizer(unittest.TestCase):
             ],
             config=MultiSkillConfig(selected_skill="终结技", top_n=1),
         )
-        self.assertEqual(result.skill_count_map["战技"], 0)
-        self.assertEqual(result.skill_count_map["终结技"], 1)
-        self.assertAlmostEqual(result.top_results[0].skill_breakdown["终结技"], 2000.0)
+        self.assertEqual(result.skill_count_map["战技:1"], 0)
+        self.assertEqual(result.skill_count_map["终结技:1"], 1)
+        self.assertAlmostEqual(result.top_results[0].skill_breakdown["终结技:1"], 2000.0)
 
     def test_all_zero_counts_raise_error(self):
         with self.assertRaises(ValueError):
@@ -74,8 +74,8 @@ class TestMultiSkillOptimizer(unittest.TestCase):
             ],
             config=MultiSkillConfig(skill_counts={"战技": 1, "终结技": 1}, top_n=1),
         )
-        self.assertAlmostEqual(result.top_results[0].skill_breakdown["战技"], 1000.0)
-        self.assertAlmostEqual(result.top_results[0].skill_breakdown["终结技"], 1500.0)
+        self.assertAlmostEqual(result.top_results[0].skill_breakdown["战技:1"], 1000.0)
+        self.assertAlmostEqual(result.top_results[0].skill_breakdown["终结技:1"], 1500.0)
         self.assertAlmostEqual(result.top_results[0].weighted_total_damage, 2500.0)
 
 

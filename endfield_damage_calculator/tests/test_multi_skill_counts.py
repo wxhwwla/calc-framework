@@ -45,8 +45,8 @@ class TestMultiSkillCounts(unittest.TestCase):
             ],
             config=MultiSkillConfig(selected_skill="连携技", top_n=1),
         )
-        self.assertEqual(result.skill_count_map["战技"], 0)
-        self.assertEqual(result.skill_count_map["连携技"], 1)
+        self.assertEqual(result.skill_count_map["战技:1"], 0)
+        self.assertEqual(result.skill_count_map["连携技:1"], 1)
         self.assertAlmostEqual(result.top_results[0].weighted_total_damage, 1000.0)
 
     def test_manual_counts_sum_damage_by_cast_times(self):
@@ -68,8 +68,8 @@ class TestMultiSkillCounts(unittest.TestCase):
                 top_n=1,
             ),
         )
-        war = result.top_results[0].skill_breakdown["战技"]
-        fin = result.top_results[0].skill_breakdown["终结技"]
+        war = result.top_results[0].skill_breakdown["战技:1"]
+        fin = result.top_results[0].skill_breakdown["终结技:1"]
         self.assertAlmostEqual(result.top_results[0].weighted_total_damage, war * 1 + fin * 2)
 
     def test_all_zero_counts_raise_error(self):

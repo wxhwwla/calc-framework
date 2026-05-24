@@ -27,11 +27,12 @@ class TestDamageSnapshot(unittest.TestCase):
             char_level=1,
             weapon_level=1,
             skill_levels=(1, 1, 0),
-            skill_counts={"战技": 2, "连携技": 1, "终结技": 0},
+            skill_counts={"战技:1": 2, "连携技:1": 1, "终结技:1": 0},
+            use_manual_counts=True,
         )
-        self.assertGreater(snap.skill_damage["战技"], 0)
-        self.assertGreater(snap.weighted_total_damage, snap.skill_damage["连携技"])
-        self.assertIn("战技", snap.rotation_share_percent)
+        self.assertGreater(snap.segment_damage["战技:1"], 0)
+        self.assertGreater(snap.weighted_total_damage, snap.segment_damage["连携技:1"])
+        self.assertIn("战技:1", snap.rotation_share_percent)
 
     def test_zone_shares_sum_to_about_100(self) -> None:
         snap = build_damage_snapshot(
@@ -40,7 +41,8 @@ class TestDamageSnapshot(unittest.TestCase):
             char_level=1,
             weapon_level=1,
             skill_levels=(1, 0, 0),
-            skill_counts={"战技": 1, "连携技": 0, "终结技": 0},
+            skill_counts={"战技:1": 1, "连携技:1": 0, "终结技:1": 0},
+            use_manual_counts=False,
         )
         total = sum(snap.zone_share_percent.values())
         self.assertAlmostEqual(total, 100.0, delta=0.5)

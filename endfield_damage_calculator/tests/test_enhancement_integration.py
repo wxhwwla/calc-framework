@@ -47,10 +47,18 @@ class TestEnhancementIntegration(unittest.TestCase):
         destroy_mock_app_root(self.app)
 
     def test_build_preset_from_app_roundtrip_fields(self) -> None:
+        self.app.char_panel._show_advanced_params_var.set(True)
+        self.app.weapon_panel._show_advanced_params_var.set(False)
+        self.app._show_more_settings_var.set(True)
+        self.app.page_tabs.set("高级页")
         preset = self._ec.build_preset_from_app(self.app)
         self.assertEqual(preset.char_name, "秋栗")
         self.assertEqual(preset.weapon_name, "坚城铸造者")
         self.assertEqual(preset.skill_levels[0], 1)
+        self.assertTrue(bool((preset.ui_state or {}).get("char_advanced_expanded")))
+        self.assertFalse(bool((preset.ui_state or {}).get("weapon_advanced_expanded")))
+        self.assertTrue(bool((preset.ui_state or {}).get("more_settings_expanded")))
+        self.assertEqual((preset.ui_state or {}).get("current_page"), "高级页")
 
     def test_record_and_restore_history(self) -> None:
         self._ec.record_calculation_history(self.app, summary="集成测试")
@@ -80,25 +88,115 @@ class TestEnhancementIntegration(unittest.TestCase):
         self.app.char_panel.list_c_w = [self.app.char_panel._data, chen]
         preset_dict = json.loads(export_preset_json(self._ec.build_preset_from_app(self.app)))
         preset_dict["char_name"] = "陈千语"
+        preset_dict["ui_state"] = {
+            "char_advanced_expanded": True,
+            "weapon_advanced_expanded": True,
+            "more_settings_expanded": True,
+            "current_page": "高级页",
+        }
         self._ec.apply_preset_to_app(self.app, LoadoutPreset.from_dict(preset_dict))
         self.assertEqual(self.app.char_panel.get_selected_data()["名称"], "陈千语")
+        self.assertTrue(bool(self.app.char_panel._show_advanced_params_var.get()))
+        self.assertTrue(bool(self.app.weapon_panel._show_advanced_params_var.get()))
+        self.assertTrue(bool(self.app._show_more_settings_var.get()))
+        self.assertEqual(self.app.page_tabs.get(), "高级页")
         self.assertGreater(self.app._schedule_confirm_calls, 0)
 
-    def test_place_enhancement_section_adds_buttons(self) -> None:
+    def test_place_enhancement_section_collapsible_more_settings(self) -> None:
         import customtkinter as ctk
 
         parent = ctk.CTkFrame(self.app.app)
-        buttons: list[str] = []
 
         def place_fn(frame, row, widget, **kwargs):
-            if isinstance(widget, ctk.CTkButton):
-                buttons.append(widget.cget("text"))
             widget.grid(row=row, column=0)
             return row + 1
 
         self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
-        self.assertIn("多方案对比", buttons)
-        self.assertIn("伤害仪表盘", buttons)
+        self.assertIsNotNone(getattr(self.app, "_more_settings_toggle_btn", None))
+        self.assertIsNotNone(getattr(self.app, "_more_settings_body", None))
+
+        toggle_btn = self.app._more_settings_toggle_btn
+        body = self.app._more_settings_body
+        self.assertFalse(bool(self.app._show_more_settings_var.get()))
+        self.assertIn("展开", toggle_btn.cget("text"))
+
+        toggle_btn.invoke()
+        self.assertTrue(bool(self.app._show_more_settings_var.get()))
+        self.assertIn("收起", toggle_btn.cget("text"))
+
+        labels = [
+            child.cget("text")
+            for child in body.winfo_children()
+            if isinstance(child, ctk.CTkButton)
+        ]
+        self.assertIn("多方案对比", labels)
+        self.assertIn("伤害仪表盘", labels)
+
+    def test_more_settings_state_persists_after_rebuild(self) -> None:
+        import customtkinter as ctk
+
+        parent_1 = ctk.CTkFrame(self.app.app)
+        parent_2 = ctk.CTkFrame(self.app.app)
+
+        def place_fn(frame, row, widget, **kwargs):
+            widget.grid(row=row, column=0)
+            return row + 1
+
+        self._ec.place_enhancement_section(self.app, parent_1, start_row=0, place_fn=place_fn)
+        self.app._more_settings_toggle_btn.invoke()
+        self.assertTrue(bool(self.app._show_more_settings_var.get()))
+        self.assertIn("收起", self.app._more_settings_toggle_btn.cget("text"))
+
+        self._ec.place_enhancement_section(self.app, parent_2, start_row=0, place_fn=place_fn)
+        self.assertTrue(bool(self.app._show_more_settings_var.get()))
+        self.assertIn("收起", self.app._more_settings_toggle_btn.cget("text"))
+
+    def test_more_settings_contains_group_titles(self) -> None:
+        import customtkinter as ctk
+
+        parent = ctk.CTkFrame(self.app.app)
+
+        def place_fn(frame, row, widget, **kwargs):
+            widget.grid(row=row, column=0)
+            return row + 1
+
+        self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
+        self.app._more_settings_toggle_btn.invoke()
+        body = self.app._more_settings_body
+        titles = [
+            child.cget("text")
+            for child in body.winfo_children()
+            if isinstance(child, ctk.CTkLabel)
+        ]
+        self.assertIn("导入导出", titles)
+        self.assertIn("分析工具", titles)
+
+    def test_startup_page_mode_selector_updates_preferences(self) -> None:
+        import customtkinter as ctk
+
+        parent = ctk.CTkFrame(self.app.app)
+
+        def place_fn(frame, row, widget, **kwargs):
+            widget.grid(row=row, column=0)
+            return row + 1
+
+        with patch("gui_design.enhancement_controls.save_ui_preferences") as mock_save:
+            self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
+            self.app._more_settings_toggle_btn.invoke()
+            self.assertIsNotNone(getattr(self.app, "_startup_page_mode_menu", None))
+            self.assertIsNotNone(getattr(self.app, "_on_startup_page_mode_change", None))
+            self.assertIsNotNone(getattr(self.app, "_startup_page_mode_hint_label", None))
+            self.assertIn(
+                "下次启动",
+                self.app._startup_page_mode_hint_label.cget("text"),
+            )
+
+            self.app._on_startup_page_mode_change("启动记住上次页面")
+            self.assertEqual(
+                self.app._ui_preferences.get("startup_page_mode"),
+                "remember_last",
+            )
+            mock_save.assert_called()
 
     @patch("gui_design.enhancement_controls.messagebox")
     def test_dashboard_without_snapshot_refreshes(self, mock_mb: MagicMock) -> None:

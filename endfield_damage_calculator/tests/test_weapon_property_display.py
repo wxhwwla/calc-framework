@@ -26,6 +26,14 @@ class TestFormatWeaponBonusDisplayValue(unittest.TestCase):
             "60",
         )
 
+    def test_additional_attack_shows_flat_value_not_percent(self):
+        self.assertEqual(
+            format_weapon_bonus_display_value(
+                12.0, attr_name="附加攻击力+", is_first_skill=False
+            ),
+            "12",
+        )
+
     def test_second_and_third_skills_show_percent(self):
         self.assertEqual(
             format_weapon_bonus_display_value(27.6, attr_name="攻击力+", is_first_skill=False),
@@ -33,7 +41,7 @@ class TestFormatWeaponBonusDisplayValue(unittest.TestCase):
         )
         self.assertEqual(
             format_weapon_bonus_display_value(11.0, attr_name="智识+", is_first_skill=False),
-            "11%",
+            "11",
         )
 
     def test_non_originium_special_ability_field_shows_percent(self):

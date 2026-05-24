@@ -8,7 +8,7 @@ GUI 主应用模块
 
 主要功能：
 1. 创建主窗口并设置初始属性
-2. 使用 5 列 + 底栏 grid：角色/武器选择、属性列、乘区；底栏为操作/全量搜索/多技能
+2. 使用「计算页 / 高级页」双页签：计算页承载 5 列主视图，高级页承载操作/全量搜索/多技能
 3. 加载角色和武器数据
 4. 处理用户交互事件（确认选择等）
 5. 支持窗口缩放自适应
@@ -36,6 +36,7 @@ from gui_design.confirm_orchestrator import (
 from gui_design.multi_skill_controls import (
     place_multi_skill_section,
     read_manual_multi_skill_counts,
+    rebuild_multi_skill_segment_rows,
 )
 from gui_design.selection_panel import ChooseTypesStarsNamesLevels
 from data.game_data_facade import GameDataFacade
@@ -59,23 +60,33 @@ from gui_design.gui_layout import (
     ATTR_COLUMN_MINSIZE,
     CHAR_ATTR_COLUMN,
     CHAR_COLUMN,
-    CONTROL_DOCK_COLUMNSPAN,
     CONTROL_DOCK_MINSIZE,
     CONTROL_DOCK_ROW,
     CONTROL_INNER_COL_ACTIONS_MINSIZE,
     CONTROL_INNER_COL_MULTI_WEIGHT,
     CONTROL_INNER_COL_SEARCH_WEIGHT,
     MAIN_CONTENT_ROW,
+    PRIMARY_ACTION_BUTTON_HEIGHT,
     SELECTION_COLUMN_MINSIZE,
+    SECONDARY_ACTION_BUTTON_HEIGHT,
+    search_action_button_texts,
     WEAPON_ATTR_COLUMN,
     WEAPON_COLUMN,
     ZONE_COLUMN,
+    ZONE_COLUMN_MINSIZE,
+    should_use_compact_control_dock,
 )
 from gui_design.label_layout import bind_wrapped_label
 from utils.gui_window import apply_startup_maximized
 from utils.gui_fonts import default_ui_font
 from gui_design.search_settings import build_worker_option_labels
 from gui_design.enhancement_controls import place_enhancement_section
+from gui_design.ui_preferences import (
+    record_last_page,
+    resolve_startup_page,
+    save_ui_preferences,
+    load_ui_preferences,
+)
 from utils.operation_log import LogLevel, get_session_operation_log
 from gui_design.search_controls import place_search_section, refresh_search_estimate
 
@@ -85,12 +96,9 @@ class DamageCalculatorApp:
     
     包含完整的 GUI 界面，提供角色和武器选择功能，支持窗口缩放自适应。
     
-    界面布局（上排 5 列 + 底栏，启动后默认最大化）：
-    ┌────────┬────────┬──────────┬──────────┬────────────┐
-    │ 角色   │ 武器   │ 角色属性 │ 武器属性 │ 乘区数据   │
-    ├────────┴────────┴──────────┴──────────┤            │
-    │           计算与搜索（底栏）            │  （通高）  │
-    └───────────────────────────────────────┴────────────┘
+    界面布局（双页签，启动后默认最大化）：
+    - 计算页：角色 | 武器 | 角色属性 | 武器属性 | 乘区数据
+    - 高级页：操作与分享 | 全量搜索 | 多技能次数
     
     属性：
         app: CTk 主窗口对象
@@ -148,10 +156,17 @@ class DamageCalculatorApp:
         # 初始化 UI 组件引用为 None（后续在 _setup_ui 中创建）
         self.char_frame: Optional[ctk.CTkFrame] = None
         self.weapon_frame: Optional[ctk.CTkFrame] = None
+        self.page_tabs: Optional[ctk.CTkTabview] = None
+        self.main_page_frame: Optional[ctk.CTkFrame] = None
+        self.advanced_page_frame: Optional[ctk.CTkFrame] = None
         self.control_frame: Optional[ctk.CTkFrame] = None
+        self._control_dock_body: Optional[ctk.CTkFrame] = None
         self._control_col_actions: Optional[ctk.CTkFrame] = None
         self._control_col_search: Optional[ctk.CTkFrame] = None
         self._control_col_multi: Optional[ctk.CTkFrame] = None
+        self.goto_advanced_btn: Optional[ctk.CTkButton] = None
+        self.main_confirm_btn: Optional[ctk.CTkButton] = None
+        self.back_to_main_btn: Optional[ctk.CTkButton] = None
         self.confirm_btn: Optional[ctk.CTkButton] = None
         self.attribution_btn: Optional[ctk.CTkButton] = None
         self.mvp_search_btn: Optional[ctk.CTkButton] = None
@@ -178,9 +193,11 @@ class DamageCalculatorApp:
         self.single_skill_equipment_scope_menu: Optional[ctk.CTkOptionMenu] = None
         self._fixed_loadout_slots: Dict[str, Any] = {}
         self._fixed_loadout_frame: Optional[ctk.CTkFrame] = None
-        self.skill_count_1_var: ctk.StringVar = ctk.StringVar(value="1")
+        self.skill_count_1_var: ctk.StringVar = ctk.StringVar(value="0")
         self.skill_count_2_var: ctk.StringVar = ctk.StringVar(value="0")
         self.skill_count_3_var: ctk.StringVar = ctk.StringVar(value="0")
+        self._segment_count_vars: Dict[str, ctk.StringVar] = {}
+        self._multi_skill_counts_body: Optional[ctk.CTkFrame] = None
         self.char_attr_frame: Optional[ctk.CTkFrame] = None
         self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
         self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
@@ -195,29 +212,47 @@ class DamageCalculatorApp:
         self._confirm_refresh_signature: Optional[tuple] = None
         self._confirm_after_id: Optional[str] = None
         self._skill_count_last_committed: Dict[str, str] = {}
+        self._suppress_full_confirm_refresh: bool = False
+        self._ui_preferences: Dict[str, Any] = load_ui_preferences()
 
         # 创建并布局所有 UI 组件
         self._setup_ui()
+        self.app.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _setup_ui(self) -> None:
         """
         设置主界面布局（使用 grid 布局实现自适应缩放）
         
-        布局结构见 ``gui_layout``：上排 5 列 + 底栏「计算与搜索」横跨左侧四列。
+        布局结构见 ``gui_layout``：双页签；计算页使用 5 列，操作控件集中在高级页。
         """
-        self.app.grid_rowconfigure(MAIN_CONTENT_ROW, weight=1)
-        self.app.grid_rowconfigure(CONTROL_DOCK_ROW, weight=0, minsize=CONTROL_DOCK_MINSIZE)
+        self.app.grid_rowconfigure(0, weight=1)
+        self.app.grid_columnconfigure(0, weight=1)
+
+        self.page_tabs = ctk.CTkTabview(self.app, corner_radius=20)
+        self.page_tabs.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
+        self.page_tabs.add("计算页")
+        self.page_tabs.add("高级页")
+        self.main_page_frame = self.page_tabs.tab("计算页")
+        self.advanced_page_frame = self.page_tabs.tab("高级页")
+        self.page_tabs.set(resolve_startup_page(self._ui_preferences))
+
+        assert self.main_page_frame is not None, "main_page_frame 未初始化"
+        assert self.advanced_page_frame is not None, "advanced_page_frame 未初始化"
+        self.main_page_frame.grid_rowconfigure(MAIN_CONTENT_ROW, weight=1, minsize=480)
+        self.advanced_page_frame.grid_rowconfigure(CONTROL_DOCK_ROW, weight=1, minsize=CONTROL_DOCK_MINSIZE)
 
         for idx, weight in enumerate(APP_COLUMN_WEIGHTS):
-            self.app.grid_columnconfigure(idx, weight=weight)
-        self.app.grid_columnconfigure(CHAR_COLUMN, minsize=SELECTION_COLUMN_MINSIZE)
-        self.app.grid_columnconfigure(WEAPON_COLUMN, minsize=SELECTION_COLUMN_MINSIZE)
-        self.app.grid_columnconfigure(CHAR_ATTR_COLUMN, minsize=ATTR_COLUMN_MINSIZE)
-        self.app.grid_columnconfigure(WEAPON_ATTR_COLUMN, minsize=ATTR_COLUMN_MINSIZE)
+            self.main_page_frame.grid_columnconfigure(idx, weight=weight)
+        self.main_page_frame.grid_columnconfigure(CHAR_COLUMN, minsize=SELECTION_COLUMN_MINSIZE)
+        self.main_page_frame.grid_columnconfigure(WEAPON_COLUMN, minsize=SELECTION_COLUMN_MINSIZE)
+        self.main_page_frame.grid_columnconfigure(CHAR_ATTR_COLUMN, minsize=ATTR_COLUMN_MINSIZE)
+        self.main_page_frame.grid_columnconfigure(WEAPON_ATTR_COLUMN, minsize=ATTR_COLUMN_MINSIZE)
+        self.main_page_frame.grid_columnconfigure(ZONE_COLUMN, weight=0, minsize=ZONE_COLUMN_MINSIZE)
+        self.advanced_page_frame.grid_columnconfigure(0, weight=1)
 
         # ==================== 角色选择区（左侧）====================
         self.char_frame = ctk.CTkFrame(
-            self.app,           # 父容器
+            self.main_page_frame,           # 父容器
             corner_radius=20    # 圆角半径（美化）
         )
         # 将角色框架放置在第 0 行第 0 列
@@ -232,7 +267,7 @@ class DamageCalculatorApp:
         self.char_frame.grid_columnconfigure(0, weight=1)
 
         # ==================== 武器选择区（仅武器词条与等级）====================
-        self.weapon_frame = ctk.CTkFrame(self.app, corner_radius=20)
+        self.weapon_frame = ctk.CTkFrame(self.main_page_frame, corner_radius=20)
         self.weapon_frame.grid(
             row=MAIN_CONTENT_ROW,
             column=WEAPON_COLUMN,
@@ -245,7 +280,7 @@ class DamageCalculatorApp:
 
         # ==================== 角色属性展示区 ====================
         self.char_attr_frame = ctk.CTkFrame(
-            self.app,
+            self.main_page_frame,
             corner_radius=20
         )
         self.char_attr_frame.grid(
@@ -273,7 +308,7 @@ class DamageCalculatorApp:
 
         # ==================== 武器属性展示区 ====================
         self.weapon_attr_frame = ctk.CTkFrame(
-            self.app,
+            self.main_page_frame,
             corner_radius=20
         )
         self.weapon_attr_frame.grid(
@@ -301,13 +336,12 @@ class DamageCalculatorApp:
 
         # ==================== 右侧乘区展示区 ====================
         self.right_frame = ctk.CTkFrame(
-            self.app,
+            self.main_page_frame,
             corner_radius=20
         )
         self.right_frame.grid(
             row=MAIN_CONTENT_ROW,
             column=ZONE_COLUMN,
-            rowspan=2,
             padx=(4, 8),
             pady=8,
             sticky="nsew",
@@ -330,17 +364,39 @@ class DamageCalculatorApp:
             sticky="nsew"
         )
 
-        # ==================== 计算与搜索（底栏，横跨左侧四列）====================
-        self.control_frame = ctk.CTkFrame(self.app, corner_radius=20)
+        quick_actions = ctk.CTkFrame(self.right_frame, fg_color="transparent")
+        quick_actions.grid(row=1, column=0, padx=8, pady=(0, 6), sticky="ew")
+        quick_actions.grid_columnconfigure(0, weight=1)
+        quick_actions.grid_columnconfigure(1, weight=1)
+        self.main_confirm_btn = ctk.CTkButton(
+            quick_actions,
+            text="确认选择",
+            font=self.small_font,
+            height=PRIMARY_ACTION_BUTTON_HEIGHT,
+            command=lambda: handle_confirm(self, force=True),
+        )
+        self.main_confirm_btn.grid(row=0, column=0, padx=(0, 4), sticky="ew")
+        self.goto_advanced_btn = ctk.CTkButton(
+            quick_actions,
+            text="前往高级页",
+            font=self.small_font,
+            height=SECONDARY_ACTION_BUTTON_HEIGHT,
+            fg_color="transparent",
+            border_width=1,
+            command=self._show_advanced_page,
+        )
+        self.goto_advanced_btn.grid(row=0, column=1, padx=(4, 0), sticky="ew")
+
+        # ==================== 高级页（全量搜索 / 多技能次数 / 工具）====================
+        self.control_frame = ctk.CTkFrame(self.advanced_page_frame, corner_radius=20)
         self.control_frame.grid(
             row=CONTROL_DOCK_ROW,
-            column=CHAR_COLUMN,
-            columnspan=CONTROL_DOCK_COLUMNSPAN,
-            padx=(8, 4),
-            pady=(0, 8),
+            column=0,
+            padx=8,
+            pady=8,
             sticky="nsew",
         )
-        self.control_frame.grid_rowconfigure(1, weight=1)
+        self.control_frame.grid_rowconfigure(1, weight=0)
         self.control_frame.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
             self.control_frame,
@@ -350,19 +406,22 @@ class DamageCalculatorApp:
         ).grid(row=0, column=0, padx=10, pady=(8, 4), sticky="w")
 
         dock_body = ctk.CTkFrame(self.control_frame, fg_color="transparent")
-        dock_body.grid(row=1, column=0, padx=6, pady=(0, 8), sticky="nsew")
-        dock_body.grid_rowconfigure(0, weight=1)
+        dock_body.grid(row=1, column=0, padx=6, pady=(0, 8), sticky="new")
+        dock_body.grid_rowconfigure(0, weight=0)
         dock_body.grid_columnconfigure(0, weight=0, minsize=CONTROL_INNER_COL_ACTIONS_MINSIZE)
         dock_body.grid_columnconfigure(1, weight=CONTROL_INNER_COL_SEARCH_WEIGHT)
         dock_body.grid_columnconfigure(2, weight=CONTROL_INNER_COL_MULTI_WEIGHT)
+        self._control_dock_body = dock_body
 
         self._control_col_actions = ctk.CTkFrame(dock_body, fg_color="transparent")
-        self._control_col_actions.grid(row=0, column=0, padx=(4, 8), pady=4, sticky="nsew")
+        self._control_col_actions.grid(row=0, column=0, padx=(4, 8), pady=4, sticky="new")
         self._control_col_search = ctk.CTkFrame(dock_body, fg_color="transparent")
-        self._control_col_search.grid(row=0, column=1, padx=8, pady=4, sticky="nsew")
+        self._control_col_search.grid(row=0, column=1, padx=8, pady=4, sticky="new")
         self._control_col_multi = ctk.CTkFrame(dock_body, fg_color="transparent")
-        self._control_col_multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="nsew")
+        self._control_col_multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="new")
         self._build_control_panel()
+        self._apply_control_dock_layout(self.app.winfo_width())
+        self._apply_adaptive_button_texts(self.app.winfo_width())
 
         # 加载数据并创建选择面板
         self._load_data_and_create_panels()
@@ -401,18 +460,16 @@ class DamageCalculatorApp:
 
         self.all_weapons = list(weapons)
 
-        # 创建角色选择面板（可滚动，避免与操作区争用高度）
+        # 创建角色选择面板（主计算页优先直观操作，默认不使用滚动容器）
         assert self.char_frame is not None, "char_frame 未初始化"
-        char_select_scroll = ctk.CTkScrollableFrame(
+        char_select_body = ctk.CTkFrame(
             self.char_frame,
             fg_color="transparent",
-            label_text="角色选择",
-            label_font=self.small_font,
         )
-        char_select_scroll.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        char_select_scroll.grid_columnconfigure(0, weight=1)
+        char_select_body.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        char_select_body.grid_columnconfigure(0, weight=1)
         self.char_panel = ChooseTypesStarsNamesLevels.use(
-            char_select_scroll,
+            char_select_body,
             characters,
             self.big_font,
         )
@@ -420,24 +477,22 @@ class DamageCalculatorApp:
         # 创建武器选择面板（放在武器框架的第一行）
         assert self.weapon_frame is not None, "weapon_frame 未初始化"
         
-        # 武器选择放入可滚动区域，防止词条滑块被下方「确认/模式」控件遮挡
-        weapon_select_scroll = ctk.CTkScrollableFrame(
+        # 武器选择与角色一致使用普通容器；高级操作已迁移到「高级页」
+        weapon_select_body = ctk.CTkFrame(
             self.weapon_frame,
             fg_color="transparent",
-            label_text="武器选择",
-            label_font=self.small_font,
         )
-        weapon_select_scroll.grid(
+        weapon_select_body.grid(
             row=0,
             column=0,
             padx=5,
             pady=(5, 0),
             sticky="nsew",
         )
-        weapon_select_scroll.grid_columnconfigure(0, weight=1)
+        weapon_select_body.grid_columnconfigure(0, weight=1)
 
         self.weapon_panel = ChooseTypesStarsNamesLevels.use(
-            weapon_select_scroll,
+            weapon_select_body,
             weapons,               # 武器数据列表
             self.big_font,          # 使用的字体
             is_weapon_panel=True   # 是否为武器面板（启用特殊能力滑块）
@@ -470,6 +525,70 @@ class DamageCalculatorApp:
         """首帧绘制后再做确认刷新与搜索预估（勿在 __init__ 中同步调用）。"""
         handle_confirm(self, force=True)
         self._refresh_search_estimate()
+
+    def _show_main_page(self) -> None:
+        """切回计算页（保留当前输入状态）。"""
+        self._set_current_page("计算页")
+
+    def _show_advanced_page(self) -> None:
+        """切到高级页（保留当前输入状态）。"""
+        self._set_current_page("高级页")
+
+    def _set_current_page(self, page: str) -> None:
+        """设置当前页签，并同步更新内存中的 last_page。"""
+        if self.page_tabs is None:
+            return
+        if page not in ("计算页", "高级页"):
+            page = "计算页"
+        self.page_tabs.set(page)
+        self._ui_preferences = record_last_page(self._ui_preferences, page=page)
+
+    def _on_close(self) -> None:
+        """关闭窗口前持久化 UI 偏好。"""
+        try:
+            if self.page_tabs is not None:
+                self._ui_preferences = record_last_page(
+                    self._ui_preferences,
+                    page=str(self.page_tabs.get()),
+                )
+            save_ui_preferences(self._ui_preferences)
+        finally:
+            self.app.destroy()
+
+    def _apply_control_dock_layout(self, window_width: int) -> None:
+        """根据窗口宽度重排高级页三列，避免窄窗口下横向挤压。"""
+        body = self._control_dock_body
+        actions = self._control_col_actions
+        search = self._control_col_search
+        multi = self._control_col_multi
+        if body is None or actions is None or search is None or multi is None:
+            return
+
+        compact = should_use_compact_control_dock(window_width)
+        if compact:
+            body.grid_columnconfigure(0, weight=1, minsize=260)
+            body.grid_columnconfigure(1, weight=1, minsize=260)
+            body.grid_columnconfigure(2, weight=0, minsize=0)
+            actions.grid(row=0, column=0, columnspan=2, padx=(4, 4), pady=(4, 2), sticky="new")
+            search.grid(row=1, column=0, padx=(4, 6), pady=(2, 4), sticky="new")
+            multi.grid(row=1, column=1, padx=(6, 4), pady=(2, 4), sticky="new")
+            return
+
+        body.grid_columnconfigure(0, weight=0, minsize=CONTROL_INNER_COL_ACTIONS_MINSIZE)
+        body.grid_columnconfigure(1, weight=CONTROL_INNER_COL_SEARCH_WEIGHT, minsize=0)
+        body.grid_columnconfigure(2, weight=CONTROL_INNER_COL_MULTI_WEIGHT, minsize=0)
+        actions.grid(row=0, column=0, columnspan=1, padx=(4, 8), pady=4, sticky="new")
+        search.grid(row=0, column=1, padx=8, pady=4, sticky="new")
+        multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="new")
+
+    def _apply_adaptive_button_texts(self, window_width: int) -> None:
+        """按窗口宽度调整按钮文案长度，降低窄屏文本挤压。"""
+        compact = should_use_compact_control_dock(window_width)
+        full_text, mvp_text = search_action_button_texts(compact=compact)
+        if self.full_search_btn is not None:
+            self.full_search_btn.configure(text=full_text)
+        if self.mvp_search_btn is not None:
+            self.mvp_search_btn.configure(text=mvp_text)
 
     def _on_char_name_change(self, *args: str) -> None:
         """
@@ -549,6 +668,8 @@ class DamageCalculatorApp:
                 if current_weapon_name in weapon_names:
                     self.weapon_panel.selected_name.set(current_weapon_name)
 
+        rebuild_multi_skill_segment_rows(self)
+
     def _on_attribution(self) -> None:
         """打开数据来源与许可说明窗口。"""
         open_attribution_dialog(
@@ -589,10 +710,21 @@ class DamageCalculatorApp:
 
         ar = 0
         ar = _section(actions, "操作", ar)
+        self.back_to_main_btn = ctk.CTkButton(
+            actions,
+            text="返回计算页",
+            font=self.small_font,
+            height=SECONDARY_ACTION_BUTTON_HEIGHT,
+            fg_color="transparent",
+            border_width=1,
+            command=self._show_main_page,
+        )
+        ar = _place(actions, ar, self.back_to_main_btn, pady=(0, 6))
         self.confirm_btn = ctk.CTkButton(
             actions,
             text="确认选择",
             font=self.big_font,
+            height=PRIMARY_ACTION_BUTTON_HEIGHT,
             command=lambda: handle_confirm(self, force=True),
         )
         ar = _place(actions, ar, self.confirm_btn, pady=(0, 6))
@@ -600,6 +732,7 @@ class DamageCalculatorApp:
             actions,
             text="数据来源与许可",
             font=self.small_font,
+            height=SECONDARY_ACTION_BUTTON_HEIGHT,
             fg_color="transparent",
             border_width=1,
             command=self._on_attribution,
@@ -710,10 +843,12 @@ class DamageCalculatorApp:
         
         当前功能：预留接口，可用于动态调整字体大小等高级功能
         """
-        # 可以在这里添加额外的缩放逻辑
-        # 例如根据窗口大小动态调整字体大小
-        # 当前预留，暂不实现具体功能
-        pass
+        width = getattr(event, "width", None)
+        if width is None:
+            width = self.app.winfo_width()
+        width = int(width)
+        self._apply_control_dock_layout(width)
+        self._apply_adaptive_button_texts(width)
 
     def run(self) -> None:
         """

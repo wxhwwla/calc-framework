@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""增强功能 UI：预设导入导出、日志、历史、可视化仪表盘。"""
+"""增强功能 UI：预设导入导出、日志、历史、可视化仪表盘、启动页策略。"""
 
 from __future__ import annotations
 
@@ -34,6 +34,12 @@ from gui_design.preset_batch_compare import compare_presets_parallel
 from data.game_data_facade import GameDataFacade
 from data.loader import get_characters, get_equipments, get_weapons
 from gui_design.search_settings import resolve_parallel_workers
+from gui_design.gui_layout import SECONDARY_ACTION_BUTTON_HEIGHT
+from gui_design.ui_preferences import (
+    STARTUP_MODE_ALWAYS_MAIN,
+    STARTUP_MODE_REMEMBER_LAST,
+    save_ui_preferences,
+)
 from utils.gui_fonts import default_ui_font
 from utils.operation_log import LogLevel, get_session_operation_log
 
@@ -68,7 +74,47 @@ def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
     state = read_loadout_from_app(app)
     if state is None:
         raise ValueError("请先选择有效角色和武器")
-    return state.to_loadout_preset()
+    preset = state.to_loadout_preset()
+    char_var = getattr(getattr(app, "char_panel", None), "_show_advanced_params_var", None)
+    weapon_var = getattr(getattr(app, "weapon_panel", None), "_show_advanced_params_var", None)
+    more_var = getattr(app, "_show_more_settings_var", None)
+    ui_state = {
+        "char_advanced_expanded": bool(char_var.get()) if char_var is not None else False,
+        "weapon_advanced_expanded": bool(weapon_var.get()) if weapon_var is not None else False,
+        "more_settings_expanded": bool(more_var.get()) if more_var is not None else False,
+        "current_page": str(app.page_tabs.get()) if getattr(app, "page_tabs", None) is not None else "计算页",
+    }
+    return LoadoutPreset(
+        char_name=preset.char_name,
+        weapon_name=preset.weapon_name,
+        char_level=preset.char_level,
+        weapon_level=preset.weapon_level,
+        trust_level=preset.trust_level,
+        skill_levels=preset.skill_levels,
+        calculation_mode=preset.calculation_mode,
+        weapon_scope=preset.weapon_scope,
+        equipment_scope=preset.equipment_scope,
+        fixed_equipment_names=preset.fixed_equipment_names,
+        multi_skill_counts=preset.multi_skill_counts,
+        use_manual_multi_skill_counts=preset.use_manual_multi_skill_counts,
+        ui_state=ui_state,
+        note=preset.note,
+    )
+
+
+def _refresh_more_settings_visibility(app: "DamageCalculatorApp") -> None:
+    """按 app._show_more_settings_var 刷新「更多设置」折叠区显隐。"""
+    toggle_btn = getattr(app, "_more_settings_toggle_btn", None)
+    body = getattr(app, "_more_settings_body", None)
+    var = getattr(app, "_show_more_settings_var", None)
+    expanded = bool(var.get()) if var is not None else False
+    if toggle_btn is not None:
+        toggle_btn.configure(text="更多设置（收起）" if expanded else "更多设置（展开）")
+    if body is not None:
+        if expanded:
+            body.grid()
+        else:
+            body.grid_remove()
 
 
 def _select_panel_by_name(panel, name: str) -> bool:
@@ -103,9 +149,30 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
     app.single_skill_scope_var.set(preset.weapon_scope)
     app.single_skill_equipment_scope_var.set(preset.equipment_scope)
     app.use_manual_skill_counts_var.set(preset.use_manual_multi_skill_counts)
-    app.skill_count_1_var.set(str(preset.multi_skill_counts.get("战技", 0)))
-    app.skill_count_2_var.set(str(preset.multi_skill_counts.get("连携技", 0)))
-    app.skill_count_3_var.set(str(preset.multi_skill_counts.get("终结技", 0)))
+    from gui_design.multi_skill_controls import apply_segment_counts_to_app
+
+    apply_segment_counts_to_app(app, preset.multi_skill_counts)
+    ui_state = preset.ui_state or {}
+    char_panel = getattr(app, "char_panel", None)
+    if char_panel is not None and hasattr(char_panel, "_show_advanced_params_var"):
+        char_panel._show_advanced_params_var.set(bool(ui_state.get("char_advanced_expanded", False)))
+        if hasattr(char_panel, "_refresh_advanced_params_visibility"):
+            char_panel._refresh_advanced_params_visibility()
+    weapon_panel = getattr(app, "weapon_panel", None)
+    if weapon_panel is not None and hasattr(weapon_panel, "_show_advanced_params_var"):
+        weapon_panel._show_advanced_params_var.set(bool(ui_state.get("weapon_advanced_expanded", False)))
+        if hasattr(weapon_panel, "_refresh_advanced_params_visibility"):
+            weapon_panel._refresh_advanced_params_visibility()
+    if hasattr(app, "_show_more_settings_var"):
+        app._show_more_settings_var.set(bool(ui_state.get("more_settings_expanded", False)))
+        _refresh_more_settings_visibility(app)
+    if getattr(app, "page_tabs", None) is not None:
+        target_page = str(ui_state.get("current_page", "计算页"))
+        if target_page in ("计算页", "高级页"):
+            if hasattr(app, "_set_current_page"):
+                app._set_current_page(target_page)
+            else:
+                app.page_tabs.set(target_page)
     app._refresh_fixed_loadout_menus()
     app._schedule_confirm(force=True)
 
@@ -125,6 +192,32 @@ def place_enhancement_section(
         ctk.CTkLabel(parent, text="工具与分享", font=app.small_font, text_color="#FF6B6B"),
         pady=(8, 2),
     )
+
+    if not hasattr(app, "_show_more_settings_var"):
+        app._show_more_settings_var = ctk.BooleanVar(value=False)
+
+    app._more_settings_toggle_btn = ctk.CTkButton(
+        parent,
+        text="更多设置（展开）",
+        font=app.small_font,
+        command=lambda: (
+            app._show_more_settings_var.set(not bool(app._show_more_settings_var.get())),
+            _refresh_more_settings_visibility(app),
+        ),
+    )
+    row = place_fn(parent, row, app._more_settings_toggle_btn, pady=(0, 4))
+
+    app._more_settings_body = ctk.CTkFrame(parent, fg_color="transparent")
+    app._more_settings_body.grid(row=row, column=0, padx=4, pady=(0, 2), sticky="ew")
+    app._more_settings_body.grid_columnconfigure(0, weight=1)
+    row += 1
+
+    body_row = 0
+
+    def _place_body(widget, *, pady: tuple[int, int] = (0, 4)) -> None:
+        nonlocal body_row
+        widget.grid(row=body_row, column=0, padx=0, pady=pady, sticky="ew")
+        body_row += 1
 
     def _export_preset() -> None:
         path = filedialog.asksaveasfilename(
@@ -191,36 +284,102 @@ def place_enhancement_section(
             app._enemy_defense = resolve_enemy_defense(enemy_id)
             app._schedule_confirm(force=True)
 
-        row = place_fn(
-            parent,
-            row,
-            ctk.CTkLabel(parent, text="插件敌人", font=app.small_font, text_color="#CCCCCC"),
+        _place_body(
+            ctk.CTkLabel(
+                app._more_settings_body,
+                text="插件敌人",
+                font=app.small_font,
+                text_color="#CCCCCC",
+            ),
             pady=(0, 2),
         )
         menu = ctk.CTkOptionMenu(
-            parent,
+            app._more_settings_body,
             values=labels,
             variable=app._plugin_enemy_var,
             font=app.small_font,
             command=_on_enemy_change,
         )
-        row = place_fn(parent, row, menu, pady=(0, 4))
+        _place_body(menu, pady=(0, 4))
         app._plugin_enemy_id = id_by_label.get(app._plugin_enemy_var.get(), "")
         app._enemy_defense = resolve_enemy_defense(app._plugin_enemy_id)
     else:
         app._plugin_enemy_id = ""
         app._enemy_defense = resolve_enemy_defense("")
 
-    for text, cmd in (
-        ("导出配装(.json)", _export_preset),
-        ("导入配装(.json)", _import_preset),
-        ("多方案对比", _compare_presets),
-        ("导出操作日志", _export_log),
-        ("计算历史", _show_history),
-        ("伤害仪表盘", _show_charts),
-    ):
-        btn = ctk.CTkButton(parent, text=text, font=app.small_font, command=cmd)
-        row = place_fn(parent, row, btn, pady=(0, 4))
+    grouped_actions = (
+        ("导入导出", (("导出配装(.json)", _export_preset), ("导入配装(.json)", _import_preset))),
+        ("分析工具", (("多方案对比", _compare_presets), ("伤害仪表盘", _show_charts))),
+        ("维护工具", (("导出操作日志", _export_log), ("计算历史", _show_history))),
+    )
+    for title, actions in grouped_actions:
+        _place_body(
+            ctk.CTkLabel(
+                app._more_settings_body,
+                text=title,
+                font=app.small_font,
+                text_color="#CCCCCC",
+            ),
+            pady=(4, 2),
+        )
+        for text, cmd in actions:
+            btn = ctk.CTkButton(
+                app._more_settings_body,
+                text=text,
+                font=app.small_font,
+                height=SECONDARY_ACTION_BUTTON_HEIGHT,
+                command=cmd,
+            )
+            _place_body(btn, pady=(0, 4))
+
+    mode_label_to_value = {
+        "启动总是计算页": STARTUP_MODE_ALWAYS_MAIN,
+        "启动记住上次页面": STARTUP_MODE_REMEMBER_LAST,
+    }
+    mode_value_to_label = {value: label for label, value in mode_label_to_value.items()}
+    preferences = getattr(app, "_ui_preferences", {}) or {}
+    current_mode = str(preferences.get("startup_page_mode", STARTUP_MODE_ALWAYS_MAIN))
+    current_label = mode_value_to_label.get(current_mode, "启动总是计算页")
+    if not hasattr(app, "_startup_page_mode_var"):
+        app._startup_page_mode_var = ctk.StringVar(value=current_label)
+    else:
+        app._startup_page_mode_var.set(current_label)
+
+    def _on_startup_page_mode_change(label: str) -> None:
+        mode = mode_label_to_value.get(str(label), STARTUP_MODE_ALWAYS_MAIN)
+        app._ui_preferences = dict(getattr(app, "_ui_preferences", {}) or {})
+        app._ui_preferences["startup_page_mode"] = mode
+        save_ui_preferences(app._ui_preferences)
+
+    app._on_startup_page_mode_change = _on_startup_page_mode_change
+    _place_body(
+        ctk.CTkLabel(
+            app._more_settings_body,
+            text="启动页面策略",
+            font=app.small_font,
+            text_color="#CCCCCC",
+        ),
+        pady=(4, 2),
+    )
+    app._startup_page_mode_menu = ctk.CTkOptionMenu(
+        app._more_settings_body,
+        values=list(mode_label_to_value.keys()),
+        variable=app._startup_page_mode_var,
+        font=app.small_font,
+        command=_on_startup_page_mode_change,
+    )
+    _place_body(app._startup_page_mode_menu, pady=(0, 4))
+    app._startup_page_mode_hint_label = ctk.CTkLabel(
+        app._more_settings_body,
+        text="仅影响下次启动，当前页面不会立刻切换",
+        font=app.small_font,
+        text_color="#888888",
+        justify="left",
+        anchor="w",
+    )
+    _place_body(app._startup_page_mode_hint_label, pady=(0, 4))
+
+    _refresh_more_settings_visibility(app)
     return row
 
 
@@ -389,12 +548,16 @@ def show_damage_dashboard_dialog(app: "DamageCalculatorApp") -> None:
             parent=app.app,
         )
         return
-    rotation_damage = {
-        name: snap.skill_damage.get(name, 0.0) * snap.skill_counts.get(name, 0)
-        for name in snap.skill_damage
-        if snap.skill_counts.get(name, 0) > 0
-    }
-    pie_slices = damage_breakdown_from_skill_map(rotation_damage)
+    from calculation.skill_segments import segment_display_label
+
+    rotation_damage = dict(snap.segment_totals)
+    pie_slices = damage_breakdown_from_skill_map(
+        {
+            segment_display_label(key): value
+            for key, value in rotation_damage.items()
+            if value > 0
+        }
+    )
     fig = build_damage_pie_figure(pie_slices, title="轮转伤害构成")
     zone_items = tuple(
         sorted(snap.zone_share_percent.items(), key=lambda item: -item[1])

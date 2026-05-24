@@ -67,6 +67,7 @@ class LoadoutScore:
     weapon_name: str
     final_damage: float
     loadout_names: dict[str, str]
+    segment_breakdown: Optional[dict[str, float]] = None
 
 
 @dataclass(frozen=True)

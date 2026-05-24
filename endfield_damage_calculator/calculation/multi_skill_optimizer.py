@@ -28,12 +28,37 @@ from calculation.equipment_system import build_four_slot_loadout, collect_loadou
 
 @dataclass(frozen=True)
 class SkillScenario:
-    """单个技能场景定义。"""
+    """单个技能段场景定义。"""
 
     skill_name: str
     skill_multiplier: float
     skill_type: str = ""
+    segment_index: int = 1
     external_effects: tuple[DamageEffect, ...] = ()
+
+    @property
+    def scenario_key(self) -> str:
+        """段级键（与次数 dict、breakdown 一致）。"""
+        if ":" in self.skill_name:
+            return self.skill_name
+        skill = self.skill_type or self.skill_name
+        return f"{skill}:{self.segment_index}"
+
+    @property
+    def resolved_skill_type(self) -> str:
+        """装备加成与伤害上下文用的技能类型。"""
+        if ":" in self.skill_name:
+            return self.skill_name.split(":", 1)[0]
+        return self.skill_type or self.skill_name
+
+    @property
+    def resolved_segment_index(self) -> int:
+        if ":" in self.skill_name:
+            try:
+                return max(1, int(self.skill_name.split(":", 1)[1]))
+            except ValueError:
+                return 1
+        return max(1, self.segment_index)
 
 
 @dataclass(frozen=True)
@@ -70,15 +95,27 @@ class MultiSkillResult:
         return {name: float(count) for name, count in self.skill_count_map.items()}
 
 
-def _resolve_skill_counts(scenarios: list[SkillScenario], config: MultiSkillConfig) -> dict[str, int]:
+def _resolve_skill_counts(
+    scenarios: list[SkillScenario],
+    config: MultiSkillConfig,
+) -> dict[str, int]:
     if config.skill_counts is not None:
-        counts = {
-            s.skill_name: max(0, int(config.skill_counts.get(s.skill_name, 0))) for s in scenarios
-        }
+        from calculation.skill_segments import normalize_manual_segment_counts
+
+        normalized = normalize_manual_segment_counts(config.skill_counts, scenarios)
+        counts = {s.scenario_key: normalized.get(s.scenario_key, 0) for s in scenarios}
     else:
-        counts = {
-            s.skill_name: (1 if s.skill_name == config.selected_skill else 0) for s in scenarios
-        }
+        counts = {s.scenario_key: 0 for s in scenarios}
+        for s in scenarios:
+            if (
+                s.resolved_skill_type == config.selected_skill
+                and s.resolved_segment_index == 1
+            ):
+                counts[s.scenario_key] = 1
+                break
+        else:
+            if scenarios:
+                counts[scenarios[0].scenario_key] = 1
     if all(v == 0 for v in counts.values()):
         raise ValueError("技能次数不能全为 0。")
     return counts
@@ -99,7 +136,11 @@ def optimize_multi_skill_loadouts(
     count_map = _resolve_skill_counts(scenarios, config)
     skill_types = tuple(
         dict.fromkeys(
-            (s.skill_type or s.skill_name for s in scenarios if count_map.get(s.skill_name, 0) > 0)
+            (
+                s.resolved_skill_type
+                for s in scenarios
+                if count_map.get(s.scenario_key, 0) > 0
+            )
         )
     )
     main_attr, sub_attr = character_ability_attrs(character or {})
@@ -136,7 +177,7 @@ def optimize_multi_skill_loadouts(
                 final_attack=weapon.final_attack,
                 skill_multiplier=scenario.skill_multiplier,
                 damage_type=base_context.damage_type,
-                skill_type=scenario.skill_type or base_context.skill_type,
+                skill_type=scenario.resolved_skill_type or base_context.skill_type,
                 is_unbalanced=base_context.is_unbalanced,
                 is_true_damage=base_context.is_true_damage,
                 enemy_defense=base_context.enemy_defense,
@@ -155,8 +196,8 @@ def optimize_multi_skill_loadouts(
                 effects=base_effects + list(scenario.external_effects),
                 crit_mode=config.crit_mode,  # type: ignore[arg-type]
             ).final_damage
-            breakdown[scenario.skill_name] = dmg
-            weighted_total += dmg * count_map.get(scenario.skill_name, 0)
+            breakdown[scenario.scenario_key] = dmg
+            weighted_total += dmg * count_map.get(scenario.scenario_key, 0)
         scores.append(
             MultiSkillScore(
                 weapon_name=weapon.name,
@@ -219,16 +260,21 @@ def evaluate_multi_skill_task(
             )
             final_attack = float(details["final_attack"])
 
+    from calculation.skill_segments import normalize_manual_segment_counts
+
+    normalized_counts = normalize_manual_segment_counts(skill_counts, list(scenarios))
     weighted_total = 0.0
+    segment_breakdown: dict[str, float] = {}
     for scenario in scenarios:
-        count = max(0, int(skill_counts.get(scenario.skill_name, 0)))
+        key = scenario.scenario_key
+        count = normalized_counts.get(key, 0)
         if count <= 0:
             continue
         ctx = DamageContext(
             final_attack=final_attack,
             skill_multiplier=scenario.skill_multiplier,
             damage_type=shared_context.damage_type,
-            skill_type=scenario.skill_type or shared_context.skill_type,
+            skill_type=scenario.resolved_skill_type or shared_context.skill_type,
             is_unbalanced=shared_context.is_unbalanced,
             is_true_damage=shared_context.is_true_damage,
             enemy_defense=shared_context.enemy_defense,
@@ -247,6 +293,7 @@ def evaluate_multi_skill_task(
             effects=effects + list(scenario.external_effects),
             crit_mode=crit_mode,
         ).final_damage
+        segment_breakdown[key] = dmg
         weighted_total += dmg * count
 
     return LoadoutScore(
@@ -258,4 +305,5 @@ def evaluate_multi_skill_task(
             "accessory_a": acc_a.get("名称", ""),
             "accessory_b": acc_b.get("名称", ""),
         },
+        segment_breakdown=segment_breakdown or None,
     )

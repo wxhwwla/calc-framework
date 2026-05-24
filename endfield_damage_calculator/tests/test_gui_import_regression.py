@@ -26,3 +26,13 @@ class TestGuiImportRegression(unittest.TestCase):
         """PyInstaller 会单独 import 各 GUI 子模块，模块内须自带补丁。"""
         import gui_design.search_controls  # noqa: F401
         import gui_design.selection_panel  # noqa: F401
+
+    def test_search_controls_resolves_fixed_loadout_hint(self) -> None:
+        """place_search_section 依赖 FIXED_LOADOUT_HINT，须在模块作用域可解析。"""
+        from gui_design.panel_hints import FIXED_LOADOUT_HINT
+        from gui_design.search_controls import place_search_section
+
+        self.assertIs(
+            place_search_section.__globals__["FIXED_LOADOUT_HINT"],
+            FIXED_LOADOUT_HINT,
+        )

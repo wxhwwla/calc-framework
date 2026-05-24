@@ -14,7 +14,11 @@ BATCH_PRESET_SCHEMA = "endfield_loadout_preset_batch_v1"
 
 @dataclass(frozen=True)
 class LoadoutPreset:
-    """可分享的配装与计算参数快照（仅存名称，便于跨机器）。"""
+    """可分享的配装与计算参数快照（仅存名称，便于跨机器）。
+
+    ``ui_state`` 可选，用于恢复 GUI 折叠与页签（见 ``enhancement_controls.apply_preset_to_app``）：
+    ``char_advanced_expanded``、``weapon_advanced_expanded``、``more_settings_expanded``、``current_page``。
+    """
 
     char_name: str
     weapon_name: str
@@ -28,6 +32,7 @@ class LoadoutPreset:
     fixed_equipment_names: dict[str, Optional[str]]
     multi_skill_counts: dict[str, int]
     use_manual_multi_skill_counts: bool
+    ui_state: dict[str, Any] | None = None
     note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -45,6 +50,7 @@ class LoadoutPreset:
             "fixed_equipment_names": dict(self.fixed_equipment_names),
             "multi_skill_counts": dict(self.multi_skill_counts),
             "use_manual_multi_skill_counts": self.use_manual_multi_skill_counts,
+            "ui_state": dict(self.ui_state or {}),
             "note": self.note,
         }
 
@@ -54,6 +60,13 @@ class LoadoutPreset:
             raise ValueError(f"不支持的预设格式: {data.get('schema')}")
         fixed = data.get("fixed_equipment_names") or {}
         counts = data.get("multi_skill_counts") or {}
+        parsed_counts: dict[str, int] = {}
+        for key, value in counts.items():
+            parsed_counts[str(key)] = max(0, int(value))
+        if not any(":" in k for k in parsed_counts):
+            parsed_counts.setdefault("战技", int(counts.get("战技", 0)))
+            parsed_counts.setdefault("连携技", int(counts.get("连携技", 0)))
+            parsed_counts.setdefault("终结技", int(counts.get("终结技", 0)))
         levels = data.get("skill_levels") or [0, 0, 0]
         return cls(
             char_name=str(data.get("char_name", "")),
@@ -75,14 +88,22 @@ class LoadoutPreset:
                 "accessory_a": fixed.get("accessory_a"),
                 "accessory_b": fixed.get("accessory_b"),
             },
-            multi_skill_counts={
-                "战技": int(counts.get("战技", 0)),
-                "连携技": int(counts.get("连携技", 0)),
-                "终结技": int(counts.get("终结技", 0)),
-            },
+            multi_skill_counts=parsed_counts,
             use_manual_multi_skill_counts=bool(
                 data.get("use_manual_multi_skill_counts", False)
             ),
+            ui_state={
+                "char_advanced_expanded": bool(
+                    (data.get("ui_state") or {}).get("char_advanced_expanded", False)
+                ),
+                "weapon_advanced_expanded": bool(
+                    (data.get("ui_state") or {}).get("weapon_advanced_expanded", False)
+                ),
+                "more_settings_expanded": bool(
+                    (data.get("ui_state") or {}).get("more_settings_expanded", False)
+                ),
+                "current_page": str((data.get("ui_state") or {}).get("current_page", "计算页")),
+            },
             note=str(data.get("note", "")),
         )
 

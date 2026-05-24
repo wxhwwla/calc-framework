@@ -91,7 +91,8 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         weapon_level=loadout.weapon_level,
         trust_level=loadout.trust_level,
         skill_levels=loadout.skill_levels,
-        skill_counts=loadout.effective_skill_counts(),
+        skill_counts=loadout.manual_counts,
+        use_manual_counts=loadout.use_manual_multi_skill_counts,
         enemy_defense=loadout.enemy_defense,
         **specials,
     )

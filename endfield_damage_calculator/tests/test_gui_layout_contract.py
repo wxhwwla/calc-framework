@@ -14,13 +14,15 @@ from gui_design.gui_layout import (
     WEAPON_ATTR_COLUMN,
     WEAPON_COLUMN,
     ZONE_COLUMN,
+    ZONE_COLUMN_MINSIZE,
 )
 
 
 class TestGuiLayoutContract(unittest.TestCase):
-    def test_main_grid_five_columns_with_bottom_control_dock(self):
-        """上排五列 + 底栏横跨左侧四列，乘区通高。"""
-        self.assertEqual(APP_COLUMN_WEIGHTS, (0, 0, 1, 1, 5))
+    def test_main_grid_five_columns_with_advanced_page_dock(self):
+        """计算页五列 + 高级页三列 dock 常量；乘区固定宽。"""
+        self.assertEqual(APP_COLUMN_WEIGHTS, (0, 0, 1, 1, 0))
+        self.assertEqual(ZONE_COLUMN_MINSIZE, 340)
         self.assertEqual(CHAR_COLUMN, 0)
         self.assertEqual(WEAPON_COLUMN, 1)
         self.assertEqual(CHAR_ATTR_COLUMN, 2)

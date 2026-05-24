@@ -8,19 +8,33 @@ from pathlib import Path
 from typing import Any, Optional, Sequence
 
 from calculation.loadout_optimizer import LoadoutScore
+from calculation.skill_segments import format_segment_breakdown_lines
 
 
 def _format_top_result_line(
-    rank: int, score: LoadoutScore, *, damage_metric: str = "伤害"
-) -> str:
+    rank: int,
+    score: LoadoutScore,
+    *,
+    damage_metric: str = "伤害",
+    segment_counts: Optional[dict[str, int]] = None,
+) -> list[str]:
     loadout = score.loadout_names
-    return (
-        f"Top{rank}: 武器 {score.weapon_name}  {damage_metric} {score.final_damage:.1f}\n"
+    lines = [
+        f"Top{rank}: 武器 {score.weapon_name}  {damage_metric} {score.final_damage:.1f}",
         f"       护甲 {loadout.get('chest', '')}  |  "
         f"护手 {loadout.get('gloves', '')}  |  "
         f"配件A {loadout.get('accessory_a', '')}  |  "
-        f"配件B {loadout.get('accessory_b', '')}"
-    )
+        f"配件B {loadout.get('accessory_b', '')}",
+    ]
+    if score.segment_breakdown and segment_counts:
+        lines.extend(
+            format_segment_breakdown_lines(
+                score.segment_breakdown,
+                segment_counts,
+                indent="       ",
+            )
+        )
+    return lines
 
 
 def build_search_results_report_lines(
@@ -34,6 +48,7 @@ def build_search_results_report_lines(
     export_paths: Optional[dict[str, str]] = None,
     cancelled: bool = False,
     damage_metric: str = "伤害",
+    segment_counts: Optional[dict[str, int]] = None,
 ) -> list[str]:
     """生成全量遍历结果报告（供弹窗与测试使用）。"""
     weapon_scope, equip_scope = scope_labels
@@ -55,7 +70,14 @@ def build_search_results_report_lines(
     else:
         lines.append("—— Top 配装 ——")
         for idx, score in enumerate(top_results, start=1):
-            lines.append(_format_top_result_line(idx, score, damage_metric=damage_metric))
+            lines.extend(
+                _format_top_result_line(
+                    idx,
+                    score,
+                    damage_metric=damage_metric,
+                    segment_counts=segment_counts,
+                )
+            )
     if export_paths:
         lines.append("")
         lines.append("—— 导出文件 ——")
@@ -74,6 +96,7 @@ def loadout_scores_from_payload(rows: Sequence[dict[str, Any]]) -> tuple[Loadout
                 weapon_name=str(row.get("weapon_name", "")),
                 final_damage=float(row.get("final_damage", 0.0)),
                 loadout_names=dict(row.get("loadout_names") or {}),
+                segment_breakdown=dict(row.get("segment_breakdown") or {}) or None,
             )
         )
     return tuple(scores)

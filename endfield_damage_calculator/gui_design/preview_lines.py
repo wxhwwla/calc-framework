@@ -18,6 +18,7 @@ from calculation.multi_skill_optimizer import (
     optimize_multi_skill_loadouts,
 )
 from calculation.multi_skill_search_eval import build_skill_scenarios_from_levels
+from calculation.skill_segments import format_segment_breakdown_lines, normalize_manual_segment_counts
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 from calculation.preview_cache import cached_preview, sync_preview_dependencies
@@ -265,7 +266,7 @@ def _build_multi_skill_search_preview_lines_impl(
         selected_skill = "战技"
         warning = "未选择技能等级或无可用倍率，按战技 100% 预览。"
     else:
-        selected_skill = scenarios[0].skill_name
+        selected_skill = scenarios[0].resolved_skill_type
         warning = ""
     final = calculate_final_attack_with_details(
         character=char_data,
@@ -280,25 +281,21 @@ def _build_multi_skill_search_preview_lines_impl(
     )
     count_desc = f"默认次数: 当前选中技能 {selected_skill}×1，其它×0"
     if use_manual_counts:
-        counts = {
-            "战技": int((manual_counts or {}).get("战技", 0)),
-            "连携技": int((manual_counts or {}).get("连携技", 0)),
-            "终结技": int((manual_counts or {}).get("终结技", 0)),
-        }
+        counts = normalize_manual_segment_counts(manual_counts or {}, scenarios)
         if all(v == 0 for v in counts.values()):
             return [
                 "计算模式: 多技能遍历(快速预览)",
                 "手动次数不能全为0，请至少设置一项 > 0。",
             ]
+        active_counts = {k: v for k, v in counts.items() if v > 0}
         config = MultiSkillConfig(
             selected_skill=selected_skill,
             top_n=3,
-            skill_counts=counts,
+            skill_counts=active_counts,
         )
-        count_desc = (
-            "手动次数: "
-            f"战技×{counts['战技']}, 连携技×{counts['连携技']}, 终结技×{counts['终结技']}"
-        )
+        from calculation.skill_segments import format_segment_count_label
+
+        count_desc = f"手动次数: {format_segment_count_label(active_counts)}"
 
     result = optimize_multi_skill_loadouts(
         base_context=DamageContext(
@@ -327,12 +324,13 @@ def _build_multi_skill_search_preview_lines_impl(
     if warning:
         lines.append(f"提示: {warning}")
     for idx, score in enumerate(result.top_results, start=1):
-        breakdown_text = " / ".join(
-            [f"{name}:{value:.1f}" for name, value in score.skill_breakdown.items()]
+        breakdown_lines = format_segment_breakdown_lines(
+            score.skill_breakdown,
+            result.skill_count_map,
+            indent="  ",
         )
-        lines.append(
-            f"Top{idx}: 总伤 {score.weighted_total_damage:.1f} | {breakdown_text}"
-        )
+        lines.append(f"Top{idx}: 总伤 {score.weighted_total_damage:.1f}")
+        lines.extend(breakdown_lines)
     if not result.top_results:
         lines.append("无可用结果，请检查装备数据。")
     return lines

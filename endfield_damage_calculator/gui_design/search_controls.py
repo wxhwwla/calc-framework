@@ -36,6 +36,15 @@ from gui_design.fixed_loadout_controls import (
     create_fixed_loadout_controls,
     refresh_all_fixed_slot_menus,
 )
+from gui_design.gui_layout import (
+    FIXED_LOADOUT_HINT_BOX_HEIGHT,
+    PRIMARY_ACTION_BUTTON_HEIGHT,
+    SEARCH_ESTIMATE_BOX_HEIGHT,
+    search_action_button_texts,
+    SEARCH_STATUS_BOX_HEIGHT,
+    SEARCH_WORKERS_HINT_BOX_HEIGHT,
+    SECONDARY_ACTION_BUTTON_HEIGHT,
+)
 from gui_design.panel_hints import FIXED_LOADOUT_HINT
 from gui_design.search_estimate_message import compose_search_estimate_message
 from gui_design.search_results_lines import (
@@ -133,16 +142,24 @@ def place_search_section(
         small_font=app.small_font,
         on_change=lambda: on_fixed_loadout_changed(app),
     )
+    fixed_hint_box = ctk.CTkFrame(
+        parent, height=FIXED_LOADOUT_HINT_BOX_HEIGHT, fg_color="transparent"
+    )
+    fixed_hint_box.grid(row=sr, column=0, padx=4, pady=(0, 6), sticky="ew")
+    fixed_hint_box.grid_propagate(False)
+    fixed_hint_box.grid_columnconfigure(0, weight=1)
+    fixed_hint_box.grid_rowconfigure(0, weight=1)
+    sr += 1
     fixed_hint = ctk.CTkLabel(
-        parent,
+        fixed_hint_box,
         text=FIXED_LOADOUT_HINT,
         font=app.small_font,
         text_color="#888888",
         justify="left",
-        anchor="w",
+        anchor="nw",
     )
-    sr = _place(sr, fixed_hint, pady=(0, 6))
-    wrap_label(fixed_hint, parent)
+    fixed_hint.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+    wrap_label(fixed_hint, fixed_hint_box)
 
     def _on_search_scope_change(_value: str = "") -> None:
         app._refresh_fixed_loadout_menus()
@@ -152,33 +169,42 @@ def place_search_section(
     app.single_skill_scope_menu.configure(command=_on_search_scope_change)
     app.single_skill_equipment_scope_menu.configure(command=_on_search_scope_change)
 
+    estimate_box = ctk.CTkFrame(parent, height=SEARCH_ESTIMATE_BOX_HEIGHT, fg_color="transparent")
+    estimate_box.grid(row=sr, column=0, padx=4, pady=(0, 6), sticky="ew")
+    estimate_box.grid_propagate(False)
+    estimate_box.grid_columnconfigure(0, weight=1)
+    estimate_box.grid_rowconfigure(0, weight=1)
     app.search_estimate_label = ctk.CTkLabel(
-        parent,
+        estimate_box,
         text="预计组合数：—",
         font=app.small_font,
         text_color="#AAAAAA",
         justify="left",
-        anchor="w",
+        anchor="nw",
     )
-    sr = _place(sr, app.search_estimate_label, pady=(0, 6))
-    wrap_label(app.search_estimate_label, parent)
+    app.search_estimate_label.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+    wrap_label(app.search_estimate_label, estimate_box)
+    sr += 1
 
     btn_row = ctk.CTkFrame(parent, fg_color="transparent")
     btn_row.grid(row=sr, column=0, padx=4, pady=(0, 4), sticky="ew")
     btn_row.grid_columnconfigure(0, weight=1)
     btn_row.grid_columnconfigure(1, weight=1)
     sr += 1
+    full_text, mvp_text = search_action_button_texts(compact=False)
     app.full_search_btn = ctk.CTkButton(
         btn_row,
-        text="全量遍历(弹窗结果)",
+        text=full_text,
         font=app.small_font,
+        height=PRIMARY_ACTION_BUTTON_HEIGHT,
         command=lambda: on_run_full_search(app),
     )
     app.full_search_btn.grid(row=0, column=0, padx=(0, 4), sticky="ew")
     app.mvp_search_btn = ctk.CTkButton(
         btn_row,
-        text="实验：MVP搜索并导出",
+        text=mvp_text,
         font=app.small_font,
+        height=PRIMARY_ACTION_BUTTON_HEIGHT,
         command=lambda: on_run_mvp_search(app),
     )
     app.mvp_search_btn.grid(row=0, column=1, padx=(4, 0), sticky="ew")
@@ -213,38 +239,56 @@ def place_search_section(
     )
     app.search_top_n_menu.grid(row=1, column=1, padx=(4, 0), pady=(0, 2), sticky="ew")
 
+    workers_hint_box = ctk.CTkFrame(
+        parent, height=SEARCH_WORKERS_HINT_BOX_HEIGHT, fg_color="transparent"
+    )
+    workers_hint_box.grid(row=sr, column=0, padx=4, pady=(0, 4), sticky="ew")
+    workers_hint_box.grid_propagate(False)
+    workers_hint_box.grid_columnconfigure(0, weight=1)
+    workers_hint_box.grid_rowconfigure(0, weight=1)
+    sr += 1
     app.search_workers_hint_label = ctk.CTkLabel(
-        parent,
+        workers_hint_box,
         text="",
         font=app.small_font,
         text_color="#777777",
         justify="left",
-        anchor="w",
+        anchor="nw",
     )
-    sr = _place(sr, app.search_workers_hint_label, pady=(0, 4))
-    wrap_label(app.search_workers_hint_label, parent)
+    app.search_workers_hint_label.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+    wrap_label(app.search_workers_hint_label, workers_hint_box)
     refresh_parallel_workers_hint(app)
+
+    status_box = ctk.CTkFrame(
+        parent, height=SEARCH_STATUS_BOX_HEIGHT, fg_color="transparent"
+    )
+    status_box.grid(row=sr, column=0, padx=4, pady=(0, 4), sticky="ew")
+    status_box.grid_propagate(False)
+    status_box.grid_columnconfigure(0, weight=1)
+    status_box.grid_rowconfigure(0, weight=1)
+    sr += 1
+    app.mvp_status_label = ctk.CTkLabel(
+        status_box,
+        text="搜索状态：未开始",
+        font=app.small_font,
+        text_color="#888888",
+        justify="left",
+        anchor="nw",
+    )
+    app.mvp_status_label.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+    wrap_label(app.mvp_status_label, status_box)
 
     app.search_cancel_btn = ctk.CTkButton(
         parent,
         text="取消搜索",
         font=app.small_font,
+        height=SECONDARY_ACTION_BUTTON_HEIGHT,
         state="disabled",
         fg_color="#8B3A3A",
         hover_color="#A04848",
         command=lambda: on_cancel_search(app),
     )
-    sr = _place(sr, app.search_cancel_btn, pady=(0, 4))
-    app.mvp_status_label = ctk.CTkLabel(
-        parent,
-        text="搜索状态：未开始",
-        font=app.small_font,
-        text_color="#888888",
-        justify="left",
-        anchor="w",
-    )
-    sr = _place(sr, app.mvp_status_label)
-    wrap_label(app.mvp_status_label, parent)
+    _place(sr, app.search_cancel_btn, pady=(0, 4))
 
 
 def set_mvp_status(app: "DamageCalculatorApp", text: str) -> None:
@@ -378,6 +422,9 @@ def show_search_result_popup(
         export_paths=export_paths,
         cancelled=bool(outcome.cancelled),
         damage_metric=damage_metric,
+        segment_counts=(
+            dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None
+        ),
     )
     show_search_results_dialog(app.app, title=mode_label, lines=lines)
 

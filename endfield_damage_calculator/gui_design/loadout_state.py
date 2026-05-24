@@ -232,12 +232,16 @@ def read_loadout_from_panels(
     )
 
 
-def read_loadout_from_app(app: Any) -> Optional[LoadoutState]:
+def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Optional[LoadoutState]:
     """从 DamageCalculatorApp 实例读取配装快照。"""
     char_panel = getattr(app, "char_panel", None)
     weapon_panel = getattr(app, "weapon_panel", None)
     if char_panel is None or weapon_panel is None:
         return None
+    if ensure_segment_rows:
+        from gui_design.multi_skill_controls import ensure_multi_skill_segment_rows
+
+        ensure_multi_skill_segment_rows(app)
     fixed = app._build_fixed_loadout_selection()
     return read_loadout_from_panels(
         char_panel,

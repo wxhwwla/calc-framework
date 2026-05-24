@@ -3,7 +3,7 @@
 """
 当前配装下的伤害快照：供仪表盘与历史记录使用。
 
-- 技能分项：各技能单段伤害 × 次数 → 轮转总伤
+- 技能分项：各段单次伤害 × 次数 → 轮转总伤（饼图按段分块）
 - 乘区构成：按 15 乘区对数权重估算占比（可视化用）
 """
 
@@ -16,18 +16,37 @@ from typing import Any, Optional
 from calculation.damage_engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
 from calculation.multi_skill_search_eval import build_skill_scenarios_from_levels
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.skill_segments import (
+    aggregate_weighted_damage,
+    normalize_manual_segment_counts,
+    parse_segment_key,
+    scenario_counts_for_eval,
+    segment_key,
+)
 
 
 @dataclass(frozen=True)
 class DamageSnapshot:
     """一次确认后可复用的伤害摘要。"""
 
-    skill_damage: dict[str, float]
-    skill_counts: dict[str, int]
+    segment_damage: dict[str, float]
+    segment_counts: dict[str, int]
+    segment_totals: dict[str, float]
+    skill_type_totals: dict[str, float]
     weighted_total_damage: float
     rotation_share_percent: dict[str, float]
     zone_share_percent: dict[str, float]
     selected_skill_label: str
+
+    @property
+    def skill_damage(self) -> dict[str, float]:
+        """兼容旧接口：段键 → 单次伤害。"""
+        return dict(self.segment_damage)
+
+    @property
+    def skill_counts(self) -> dict[str, int]:
+        """兼容旧接口：段键 → 次数。"""
+        return dict(self.segment_counts)
 
 
 def _zone_share_percent(zone_values: dict[str, float]) -> dict[str, float]:
@@ -49,6 +68,7 @@ def build_damage_snapshot(
     trust_level: int = 0,
     skill_levels: tuple[int, int, int],
     skill_counts: dict[str, int],
+    use_manual_counts: bool = True,
     sa1_name: str = "",
     sa1_level: int = 1,
     sa2_name: str = "",
@@ -61,7 +81,7 @@ def build_damage_snapshot(
     ws2_level: int = 0,
     enemy_defense: float = 100.0,
 ) -> DamageSnapshot:
-    """按当前角色/武器与技能次数计算分项伤害（不含装备词条）。"""
+    """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。"""
     scenarios = build_skill_scenarios_from_levels(
         char_data,
         skill_1_level=skill_levels[0],
@@ -69,11 +89,11 @@ def build_damage_snapshot(
         skill_3_level=skill_levels[2],
     )
     if not scenarios:
-        scenarios_list = []
         selected_label = "战技"
+        scenarios_list = []
     else:
         scenarios_list = list(scenarios)
-        selected_label = scenarios_list[0].skill_name
+        selected_label = scenarios_list[0].resolved_skill_type
 
     final = calculate_final_attack_with_details(
         character=char_data,
@@ -94,62 +114,74 @@ def build_damage_snapshot(
     )
     final_attack = float(final["final_attack"])
 
-    skill_damage: dict[str, float] = {}
+    segment_damage: dict[str, float] = {}
     for scenario in scenarios_list:
         result = calculate_single_hit_damage(
             DamageContext(
                 final_attack=final_attack,
                 skill_multiplier=scenario.skill_multiplier,
-                skill_type=scenario.skill_type,
+                skill_type=scenario.resolved_skill_type,
                 enemy_defense=enemy_defense,
             ),
             crit_mode="non_crit",
         )
-        skill_damage[scenario.skill_name] = float(result.final_damage)
+        segment_damage[scenario.scenario_key] = float(result.final_damage)
 
-    counts = {
-        "战技": max(0, int(skill_counts.get("战技", 0))),
-        "连携技": max(0, int(skill_counts.get("连携技", 0))),
-        "终结技": max(0, int(skill_counts.get("终结技", 0))),
-    }
-    if not any(counts.values()):
-        counts["战技"] = 1
+    if use_manual_counts:
+        counts = normalize_manual_segment_counts(skill_counts, scenarios_list)
+    else:
+        counts = scenario_counts_for_eval(
+            skill_counts,
+            scenarios_list,
+            selected_skill_type=selected_label,
+            use_manual=False,
+        )
+    active_counts = {k: v for k, v in counts.items() if v > 0}
+    if not active_counts:
+        counts = {segment_key(selected_label, 1): 1}
+        active_counts = counts
 
-    weighted = sum(
-        skill_damage.get(name, 0.0) * counts.get(name, 0)
-        for name in counts
-        if counts.get(name, 0) > 0
+    weighted, segment_totals, skill_type_totals = aggregate_weighted_damage(
+        segment_damage, counts
     )
 
     rotation_share: dict[str, float] = {}
     if weighted > 0:
-        for name, dmg in skill_damage.items():
-            c = counts.get(name, 0)
-            if c > 0:
-                rotation_share[name] = dmg * c / weighted * 100.0
+        for key, total in segment_totals.items():
+            rotation_share[key] = total / weighted * 100.0
 
-    # 乘区占比取「当前选中技能」对应的一次计算
     zone_percent: dict[str, float] = {}
-    primary = scenarios_list[0] if scenarios_list else None
+    primary_key = next(iter(active_counts), None)
+    primary = next(
+        (s for s in scenarios_list if s.scenario_key == primary_key),
+        scenarios_list[0] if scenarios_list else None,
+    )
     if primary is not None:
         zone_result = calculate_single_hit_damage(
             DamageContext(
                 final_attack=final_attack,
                 skill_multiplier=primary.skill_multiplier,
-                skill_type=primary.skill_type,
+                skill_type=primary.resolved_skill_type,
                 enemy_defense=enemy_defense,
             ),
             crit_mode="non_crit",
         )
         zone_percent = _zone_share_percent(zone_result.zone_values)
 
+    label = selected_label
+    if primary_key:
+        skill_type, seg = parse_segment_key(primary_key)
+        label = f"{skill_type} 第{seg}段"
+
     return DamageSnapshot(
-        skill_damage=skill_damage,
-        skill_counts=counts,
+        segment_damage=segment_damage,
+        segment_counts=active_counts,
+        segment_totals=segment_totals,
+        skill_type_totals=skill_type_totals,
         weighted_total_damage=weighted,
         rotation_share_percent=rotation_share,
         zone_share_percent=zone_percent,
-        selected_skill_label=selected_label,
+        selected_skill_label=label,
     )
 
 

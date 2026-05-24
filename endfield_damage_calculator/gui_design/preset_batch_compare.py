@@ -122,11 +122,21 @@ def _build_eval_item(
     if not scenarios:
         raise ValueError("技能等级均为 0 或无有效倍率")
 
-    counts = {
-        "战技": max(0, int(preset.multi_skill_counts.get("战技", 0))),
-        "连携技": max(0, int(preset.multi_skill_counts.get("连携技", 0))),
-        "终结技": max(0, int(preset.multi_skill_counts.get("终结技", 0))),
-    }
+    from calculation.skill_segments import normalize_manual_segment_counts
+
+    counts = normalize_manual_segment_counts(
+        {
+            "战技": max(0, int(preset.multi_skill_counts.get("战技", 0))),
+            "连携技": max(0, int(preset.multi_skill_counts.get("连携技", 0))),
+            "终结技": max(0, int(preset.multi_skill_counts.get("终结技", 0))),
+            **{
+                k: int(v)
+                for k, v in preset.multi_skill_counts.items()
+                if ":" in k
+            },
+        },
+        list(scenarios),
+    )
     use_multi = bool(preset.use_manual_multi_skill_counts) and any(counts.values())
 
     primary = scenarios[0]
@@ -134,19 +144,20 @@ def _build_eval_item(
         base_context = DamageContext(
             final_attack=0.0,
             skill_multiplier=1.0,
-            skill_type=primary.skill_type,
+            skill_type=primary.resolved_skill_type,
             enemy_defense=float(enemy_defense),
         )
+        active_counts = {k: v for k, v in counts.items() if v > 0}
     else:
         base_context = DamageContext(
             final_attack=0.0,
             skill_multiplier=primary.skill_multiplier,
-            skill_type=primary.skill_type,
+            skill_type=primary.resolved_skill_type,
             enemy_defense=float(enemy_defense),
         )
-        counts = {primary.skill_name: 1}
+        active_counts = {primary.scenario_key: 1}
 
-    return _preset_label(preset), task, search_eval, base_context, use_multi, scenarios, counts
+    return _preset_label(preset), task, search_eval, base_context, use_multi, scenarios, active_counts
 
 
 def _evaluate_item(

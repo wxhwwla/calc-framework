@@ -31,6 +31,8 @@ def confirm_signature_now(app: "DamageCalculatorApp") -> tuple:
 
 def handle_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
     """合并去重后执行一次确认刷新。"""
+    if not force and getattr(app, "_suppress_full_confirm_refresh", False):
+        return
     if force:
         get_session_operation_log().record(
             LogLevel.USER,
@@ -54,6 +56,8 @@ def handle_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
 
 def schedule_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
     """将确认刷新合并到下一 idle。"""
+    if not force and getattr(app, "_suppress_full_confirm_refresh", False):
+        return
     if force:
         if app._confirm_after_id is not None:
             try:

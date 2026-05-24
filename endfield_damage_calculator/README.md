@@ -63,12 +63,13 @@ endfield_damage_calculator/
 │   └── loader.py              # get_characters / get_weapons / get_equipments
 ├── calculation/               # 伤害引擎、装备、搜索、MVP 流水线（见 docs/MVP搜索验收说明.md）
 ├── gui_design/                # GUI 界面模块
-│   ├── gui.py                 # 主应用（5 列 + 底栏）
-│   ├── gui_layout.py          # grid 常量
+│   ├── gui.py                 # 主应用（双页签：计算页 + 高级页）
+│   ├── gui_layout.py          # grid 常量、窄屏重排、按钮尺寸
+│   ├── ui_preferences.py      # 启动页策略、ui_preferences.json
 │   ├── fixed_loadout_controls.py  # 固定配装 UI
 │   ├── confirm_refresh.py     # 确认刷新去重
 │   ├── preview_lines.py       # 单/多技能快速预览文案（带缓存）
-│   ├── enhancement_controls.py # 底栏工具与分享、仪表盘
+│   ├── enhancement_controls.py # 高级页工具与分享、「更多设置」
 │   ├── damage_snapshot.py     # 确认后伤害快照
 │   ├── damage_visualization.py # matplotlib 图表（CTk 主题同步）
 │   ├── loadout_preset.py / calc_history.py
@@ -188,26 +189,22 @@ python build.py
 
 ### 基本操作流程
 
-1. **选择角色**：第 0 列选择类型、星级、名称与等级（含信赖、技能等级）
-2. **选择武器**：第 1 列选择武器并调整技能与特殊能力滑块
-3. **确认**：底栏「确认选择」——刷新属性列与右侧乘区/预览（输入未变时不会重复整页重绘）
-4. **全量搜索**（可选）：底栏设置武器/装备范围、固定配装、多技能次数后点「全量遍历」
+1. **选择角色**：计算页第 0 列选择类型、星级、名称与等级（信赖等在「高级参数」折叠内）
+2. **选择武器**：计算页第 1 列选择武器（词条滑块在「高级参数」折叠内）
+3. **确认**：计算页乘区下方或高级页「确认选择」——刷新属性列与乘区/预览
+4. **全量搜索**（可选）：切换到 **高级页**，设置范围、固定配装、多技能次数后点「全量遍历」
 
 ### GUI 布局
 
-主窗口为 **5 列 + 底栏**（`gui_layout.py`，`APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 5)`）：
+主窗口为 **双页签**（`gui.py` + `gui_layout.py`）：
 
-| 区域 | 内容 | 宽度策略 |
-|------|------|----------|
-| 列 0 | 角色选择 | `weight=0`，min ~260px |
-| 列 1 | 武器选择 | `weight=0` |
-| 列 2 | **角色属性** | `weight=1` |
-| 列 3 | **武器属性** | `weight=1` |
-| 列 4 | **右侧乘区** | `weight=5`，主伸缩列 |
-| 底栏 | 确认/模式、**全量搜索**（固定配装、遍历、MVP）、**多技能次数** | 横跨列 0–3 |
+| 页签 | 布局 | 说明 |
+|------|------|------|
+| **计算页** | 五列 `APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 0)` | 选择、属性、乘区（固定宽 340px）；快速确认 |
+| **高级页** | 三列（原底栏） | 操作/工具、全量搜索、多技能次数 |
 
-- 启动后自动确认一次；输入未变时不会重复清空三列（最小化恢复不闪屏）。
-- 全量：开「使用手动次数」后按加权总伤排名，否则按当前技能单段伤害。
+- 启动后自动确认一次；切页不丢输入；关闭时保存 `ui_preferences.json`（启动页策略）。
+- 全量：开「使用手动次数」后按段级加权总伤排名，否则按当前技能单段伤害。
 - 角色或武器无效时，仅对应属性列显示提示，且不刷新乘区。
 - 武器属性列数值规则：**第一技能**对应条目为 JSON 整数；**其余** `xxx+` 与特殊能力字段按百分数显示（如 `27.6%`）。
 
@@ -318,7 +315,7 @@ result = calculated / scale_factor
 | `test_decimal_scaling.py` | 小数数据处理测试 |
 | `test_inverse_refactored.py` | 反推算法重构测试 |
 | `test_unified_data_generator.py` | 统一数据生成器测试 |
-| `test_gui_layout_contract.py` | 主界面 5 列 + 底栏布局权重契约 |
+| `test_gui_layout_contract.py` | 计算页五列 + 高级页 dock 布局契约 |
 | `test_property_display_lines.py` | 角色/武器属性列明细文本 |
 | `test_confirm_selection_state.py` | 确认选择后的分列提示与乘区联动 |
 | `test_weapon_property_display.py` | 武器属性数值格式（整数 / 百分数） |

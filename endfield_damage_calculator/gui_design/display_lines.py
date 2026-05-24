@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from calculation.config import CHARACTER_NORMAL_ATTRS
 from calculation.damage_engine import (
     ZONE_ORDER,
     DamageContext,
@@ -31,6 +32,40 @@ NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
 
 # 武器 xxx+ 中不按百分数展示的词条（JSON 为去掉 % 的数值，展示为整数）
 WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
+WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset(
+    {"附加攻击力+", "主能力+", "副能力+"}
+)
+
+
+def weapon_bonus_display_uses_percent(attr_name: str) -> bool:
+    """
+    武器 xxx+ 在属性列是否带 % 展示。
+
+    与 ``final_attack_zone`` / ``ability_bonus_zone`` 一致：
+    - ``攻击力+``、*伤害+、*率+、充能效率 → 百分数
+    - ``附加攻击力+``、四维+、主/副能力+、源石技艺 → 固定数值
+    """
+    if attr_name in WEAPON_FLAT_BONUS_ATTRS:
+        return False
+    if any(attr_name == f"{stat}+" for stat in CHARACTER_NORMAL_ATTRS):
+        return False
+    if WEAPON_INTEGER_BONUS_ATTR_KEY in attr_name:
+        return False
+    if attr_name == "攻击力+":
+        return True
+    if attr_name.endswith("伤害+"):
+        return True
+    if "充能效率" in attr_name:
+        return True
+    if attr_name.endswith("率+"):
+        return True
+    return True
+
+
+def _weapon_bonus_uses_integer_display(attr_name: str, *, is_first_skill: bool = False) -> bool:
+    """是否按固定整数展示（``is_first_skill`` 保留兼容，实际以词条名为准）。"""
+    _ = is_first_skill
+    return not weapon_bonus_display_uses_percent(attr_name)
 
 
 def evaluate_display_state(
@@ -50,11 +85,6 @@ def evaluate_display_state(
     return state
 
 
-def _weapon_bonus_uses_integer_display(attr_name: str, *, is_first_skill: bool) -> bool:
-    """第一技能，或名称含源石技艺的附加属性，均展示为整数、不加 %。"""
-    return is_first_skill or WEAPON_INTEGER_BONUS_ATTR_KEY in attr_name
-
-
 def format_weapon_bonus_display_value(
     raw: Any,
     *,
@@ -64,9 +94,8 @@ def format_weapon_bonus_display_value(
     """
     武器属性列中 xxx+ 与特殊能力字段的数值展示格式。
 
-    - 第一技能（第一条 xxx+）：JSON 数值按整数展示，如 60.0 → 60
-    - 名称含「源石技艺」的 xxx+：不论第几条，均按整数展示
-    - 其余附加属性与特殊能力字段：按百分数展示，JSON 数值即百分比，如 27.6 → 27.6%
+    按 ``weapon_bonus_display_uses_percent`` 区分百分数与固定数值；
+    JSON 中百分类词条存的是去掉 % 的数值（如 27.6 表示 27.6%）。
     """
     try:
         num = float(raw)

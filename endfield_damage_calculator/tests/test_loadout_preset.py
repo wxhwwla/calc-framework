@@ -32,12 +32,21 @@ class TestLoadoutPreset(unittest.TestCase):
             },
             multi_skill_counts={"战技": 2, "连携技": 1, "终结技": 0},
             use_manual_multi_skill_counts=True,
+            ui_state={
+                "char_advanced_expanded": True,
+                "weapon_advanced_expanded": False,
+                "more_settings_expanded": True,
+                "current_page": "高级页",
+            },
         )
         text = export_preset_json(preset)
         restored = import_preset_json(text)
         self.assertEqual(restored.char_name, preset.char_name)
         self.assertEqual(restored.fixed_equipment_names["chest"], "胸甲A")
         self.assertTrue(restored.use_manual_multi_skill_counts)
+        self.assertTrue(bool((restored.ui_state or {}).get("char_advanced_expanded")))
+        self.assertFalse(bool((restored.ui_state or {}).get("weapon_advanced_expanded")))
+        self.assertEqual((restored.ui_state or {}).get("current_page"), "高级页")
 
     def test_rejects_unknown_schema(self) -> None:
         with self.assertRaises(ValueError):

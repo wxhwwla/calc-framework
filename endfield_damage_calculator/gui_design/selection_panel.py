@@ -67,6 +67,9 @@ class ChooseTypesStarsNamesLevels:
         self.trust_panel: Optional[TrustPanel] = None              # 信赖面板（角色专用）
         self.skill_level_panel: Optional[SkillLevelPanel] = None   # 技能等级面板（角色专用）
         self.special_ability_panel: Optional[SpecialAbilityPanel] = None  # 特殊能力面板（武器专用）
+        self._show_advanced_params_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        self._advanced_toggle_btn: ctk.CTkButton | None = None
+        self._advanced_body: ctk.CTkFrame | None = None
 
         # UI控件
         self.type_menu: ctk.CTkOptionMenu = ctk.CTkOptionMenu(
@@ -146,12 +149,48 @@ class ChooseTypesStarsNamesLevels:
 
         # 如果是角色面板，添加信赖滑块和技能等级滑块
         if not self.is_weapon_panel:
-            self.trust_panel = TrustPanel(self.frame, self.my_font)
             self.skill_level_panel = SkillLevelPanel(self.frame, self.my_font)
+            self._build_advanced_params_container()
+            assert self._advanced_body is not None
+            self.trust_panel = TrustPanel(self._advanced_body, self.my_font)
         
         # 如果是武器面板，添加特殊能力滑块
         if self.is_weapon_panel:
-            self.special_ability_panel = SpecialAbilityPanel(self.frame, self.my_font)
+            self._build_advanced_params_container()
+            assert self._advanced_body is not None
+            self.special_ability_panel = SpecialAbilityPanel(self._advanced_body, self.my_font)
+    
+    def _build_advanced_params_container(self) -> None:
+        """构建低频参数折叠区，默认收起以降低主流程密度。"""
+        self._advanced_toggle_btn = ctk.CTkButton(
+            self.frame,
+            text="高级参数（展开）",
+            font=self.my_font,
+            fg_color="transparent",
+            border_width=1,
+            command=self._toggle_advanced_params,
+            height=30,
+        )
+        self._advanced_toggle_btn.pack(fill="x", padx=10, pady=(4, 4))
+        self._advanced_body = ctk.CTkFrame(self.frame, fg_color="transparent")
+        self._advanced_body.pack(fill="x", padx=0, pady=(0, 4))
+        self._refresh_advanced_params_visibility()
+
+    def _toggle_advanced_params(self) -> None:
+        self._show_advanced_params_var.set(not bool(self._show_advanced_params_var.get()))
+        self._refresh_advanced_params_visibility()
+
+    def _refresh_advanced_params_visibility(self) -> None:
+        expanded = bool(self._show_advanced_params_var.get())
+        if self._advanced_toggle_btn is not None:
+            self._advanced_toggle_btn.configure(
+                text="高级参数（收起）" if expanded else "高级参数（展开）"
+            )
+        if self._advanced_body is not None:
+            if expanded:
+                self._advanced_body.pack(fill="x", padx=0, pady=(0, 4))
+            else:
+                self._advanced_body.pack_forget()
 
     def _connect_trace(self) -> None:
         """

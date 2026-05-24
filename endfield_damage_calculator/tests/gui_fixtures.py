@@ -47,6 +47,7 @@ class MockSelectionPanel:
         self.selected_star = _StrVar(str(data.get("星级", "")))
         self.selected_name = _StrVar(str(data.get("名称", "")))
         self.trust_panel = SimpleNamespace(trust_level=_StrVar(str(trust)))
+        self._show_advanced_params_var = _BoolVar(False)
         self.skill_level_panel = SimpleNamespace(
             skill_1_level=_StrVar(str(skills[0])),
             skill_2_level=_StrVar(str(skills[1])),
@@ -106,6 +107,10 @@ class MockSelectionPanel:
     def get_weapon_special_2_level(self) -> int:
         return 0
 
+    def _refresh_advanced_params_visibility(self) -> None:
+        """测试替身：真实面板会刷新折叠显隐，这里无需动作。"""
+        return None
+
 
 class _StrVar:
     def __init__(self, value: str) -> None:
@@ -116,6 +121,28 @@ class _StrVar:
 
     def set(self, value: str) -> None:
         self._value = value
+
+
+class _BoolVar:
+    def __init__(self, value: bool) -> None:
+        self._value = bool(value)
+
+    def get(self) -> bool:
+        return self._value
+
+    def set(self, value: bool) -> None:
+        self._value = bool(value)
+
+
+class _TabsVar:
+    def __init__(self, value: str = "计算页") -> None:
+        self._value = value
+
+    def get(self) -> str:
+        return self._value
+
+    def set(self, value: str) -> None:
+        self._value = str(value)
 
 
 def build_mock_app(
@@ -142,13 +169,20 @@ def build_mock_app(
         weapon_panel=MockSelectionPanel(weapon),
         small_font=ctk.CTkFont(size=12),
         big_font=ctk.CTkFont(size=14, weight="bold"),
+        _show_more_settings_var=ctk.BooleanVar(value=False),
+        _ui_preferences={"startup_page_mode": "always_main", "last_page": "计算页"},
+        page_tabs=_TabsVar("计算页"),
         calc_mode_var=ctk.StringVar(value="乘区快照"),
         single_skill_scope_var=ctk.StringVar(value="当前武器"),
         single_skill_equipment_scope_var=ctk.StringVar(value="全部装备"),
         use_manual_skill_counts_var=ctk.BooleanVar(value=False),
-        skill_count_1_var=ctk.StringVar(value="1"),
+        skill_count_1_var=ctk.StringVar(value="0"),
         skill_count_2_var=ctk.StringVar(value="0"),
         skill_count_3_var=ctk.StringVar(value="0"),
+        _segment_count_vars={"战技:1": ctk.StringVar(value="0")},
+        _skill_count_last_committed={},
+        _multi_skill_counts_body=None,
+        _segment_row_keys=("战技:1",),
         search_workers_var=ctk.StringVar(value="1"),
         _fixed_loadout_slots={},
         _enemy_defense=100.0,
@@ -157,11 +191,9 @@ def build_mock_app(
     )
 
     def _manual_multi_skill_counts() -> dict[str, int]:
-        return {
-            "战技": int(app.skill_count_1_var.get()),
-            "连携技": int(app.skill_count_2_var.get()),
-            "终结技": int(app.skill_count_3_var.get()),
-        }
+        from gui_design.multi_skill_controls import read_manual_multi_skill_counts
+
+        return read_manual_multi_skill_counts(app)  # type: ignore[arg-type]
 
     def _build_fixed_loadout_selection():
         from calculation.loadout_slot_search import FixedLoadoutSelection

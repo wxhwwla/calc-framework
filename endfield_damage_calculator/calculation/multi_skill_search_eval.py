@@ -8,6 +8,13 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from calculation.multi_skill_optimizer import SkillScenario
+from calculation.skill_segments import (
+    build_segment_scenarios_from_levels,
+    format_segment_count_label,
+    normalize_manual_segment_counts,
+    scenario_counts_for_eval,
+    segment_key,
+)
 
 
 def skill_multiplier_from_curve(
@@ -16,21 +23,15 @@ def skill_multiplier_from_curve(
     level: int,
 ) -> float:
     """从技能曲线读取第一段倍率（小数）。"""
-    if level <= 0:
-        return 0.0
-    segments = char_data.get(field_name)
-    if not isinstance(segments, list) or not segments:
-        return 0.0
-    first_segment = segments[0]
-    if not isinstance(first_segment, list) or not first_segment:
-        return 0.0
-    idx = level - 1
-    if not (0 <= idx < len(first_segment)):
-        return 0.0
-    value = first_segment[idx]
-    if value is None:
-        return 0.0
-    return float(value) / 100.0
+    from calculation.skill_segments import segment_multiplier_at_level
+
+    value = segment_multiplier_at_level(
+        char_data,
+        field_name,
+        skill_level=level,
+        segment_index=1,
+    )
+    return value if value is not None else 0.0
 
 
 def build_skill_scenarios_from_levels(
@@ -40,27 +41,18 @@ def build_skill_scenarios_from_levels(
     skill_2_level: int,
     skill_3_level: int,
 ) -> list[SkillScenario]:
-    """按左侧技能等级构建战技/连携/终结场景。"""
-    multipliers = {
-        "战技": skill_multiplier_from_curve(char_data, "战技倍率", skill_1_level),
-        "连携技": skill_multiplier_from_curve(char_data, "连携技倍率", skill_2_level),
-        "终结技": skill_multiplier_from_curve(char_data, "终结技倍率", skill_3_level),
-    }
-    return [
-        SkillScenario(skill_name=name, skill_multiplier=val, skill_type=name)
-        for name, val in multipliers.items()
-        if val > 0
-    ]
+    """按左侧技能等级构建全部有效段场景。"""
+    return build_segment_scenarios_from_levels(
+        char_data,
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
+    )
 
 
 def format_multi_skill_count_label(skill_counts: dict[str, int]) -> str:
     """生成弹窗/作业用的次数说明。"""
-    parts = [
-        f"{name}×{max(0, int(skill_counts.get(name, 0)))}"
-        for name in ("战技", "连携技", "终结技")
-        if int(skill_counts.get(name, 0)) > 0
-    ]
-    return " + ".join(parts) if parts else "（无有效次数）"
+    return format_segment_count_label(skill_counts)
 
 
 @dataclass(frozen=True)
@@ -72,21 +64,23 @@ class MultiSkillSearchEval:
 
     @property
     def priority_skill_types(self) -> tuple[str, ...]:
-        active = {s.skill_name for s in self.scenarios if self.skill_counts.get(s.skill_name, 0) > 0}
+        active_keys = {key for key, c in self.skill_counts.items() if c > 0}
         return tuple(
             dict.fromkeys(
-                (s.skill_type or s.skill_name for s in self.scenarios if s.skill_name in active)
+                s.resolved_skill_type
+                for s in self.scenarios
+                if s.scenario_key in active_keys
             )
         )
 
     def signature_token(self) -> str:
         """写入 run_signature，避免与单技能或不同次数混库。"""
         count_part = "|".join(
-            f"{name}:{max(0, int(self.skill_counts.get(name, 0)))}"
-            for name in ("战技", "连携技", "终结技")
+            f"{key}:{max(0, int(self.skill_counts.get(key, 0)))}"
+            for key in sorted(self.skill_counts.keys())
         )
         mult_part = "|".join(
-            f"{s.skill_name}:{s.skill_multiplier:.6f}" for s in self.scenarios
+            f"{s.scenario_key}:{s.skill_multiplier:.6f}" for s in self.scenarios
         )
         return f"multi({count_part};{mult_part})"
 
@@ -108,14 +102,6 @@ def build_multi_skill_search_eval(
 
     返回 (eval, None) 或 (None, 错误文案)。
     """
-    counts = {
-        "战技": max(0, int(manual_counts.get("战技", 0))),
-        "连携技": max(0, int(manual_counts.get("连携技", 0))),
-        "终结技": max(0, int(manual_counts.get("终结技", 0))),
-    }
-    if all(v == 0 for v in counts.values()):
-        return None, "手动次数不能全为 0，请至少设置一项 > 0。"
-
     scenarios = build_skill_scenarios_from_levels(
         char_data,
         skill_1_level=skill_1_level,
@@ -123,8 +109,26 @@ def build_multi_skill_search_eval(
         skill_3_level=skill_3_level,
     )
     if not scenarios:
-        scenarios = [SkillScenario(skill_name="战技", skill_multiplier=1.0, skill_type="战技")]
+        scenarios = [
+            SkillScenario(
+                skill_name=segment_key("战技", 1),
+                skill_multiplier=1.0,
+                skill_type="战技",
+                segment_index=1,
+            )
+        ]
+    try:
+        counts = scenario_counts_for_eval(
+            manual_counts,
+            scenarios,
+            use_manual=True,
+        )
+    except ValueError as exc:
+        return None, str(exc)
+    active = {k: v for k, v in counts.items() if v > 0}
+    if not active:
+        return None, "手动次数不能全为 0，请至少设置一项 > 0。"
     return (
-        MultiSkillSearchEval(scenarios=tuple(scenarios), skill_counts=counts),
+        MultiSkillSearchEval(scenarios=tuple(scenarios), skill_counts=active),
         None,
     )

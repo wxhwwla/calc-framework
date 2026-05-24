@@ -67,6 +67,75 @@ def _render_placeholder(
     label.grid(row=0, column=0, sticky="w", pady=(6, 2))
 
 
+def refresh_right_column_from_request(
+    right_scroll: ctk.CTkScrollableFrame | None,
+    request: DisplayRequest,
+    *,
+    big_font: ctk.CTkFont,
+    small_font: ctk.CTkFont,
+) -> None:
+    """仅重绘右侧乘区/预览列（避免切换手动次数时整页刷新）。"""
+    if right_scroll is None:
+        return
+
+    for widget in right_scroll.winfo_children():
+        widget.destroy()
+
+    loadout = request.loadout
+    char_data = loadout.char_data
+    weapon_data = loadout.weapon_data
+    ui_state = evaluate_display_state(char_data, weapon_data)
+    s1, s2, s3 = loadout.skill_levels
+
+    sync_confirm_dependencies(
+        char_data=char_data,
+        weapon_data=weapon_data,
+        char_level=loadout.char_level,
+        weapon_level=loadout.weapon_level,
+        trust_level=loadout.trust_level,
+        skill_levels=loadout.skill_levels,
+        calculation_mode=loadout.calculation_mode,
+        weapon_scope=loadout.weapon_scope_label,
+        equipment_scope=loadout.equipment_scope_label,
+        multi_skill_counts=loadout.manual_counts,
+        use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
+        enemy_defense=loadout.enemy_defense,
+    )
+
+    if not ui_state["can_update_zone"]:
+        return
+
+    specials = loadout.weapon_special_kwargs()
+    _display_zone_data(
+        right_scroll,
+        char_data,
+        weapon_data,
+        loadout.char_level,
+        loadout.weapon_level,
+        specials["sa1_name"],
+        specials["sa1_level"],
+        specials["sa2_name"],
+        specials["sa2_level"],
+        specials["sa3_name"],
+        specials["sa3_level"],
+        specials["ws_name"],
+        specials["ws_level"],
+        specials["ws2_name"],
+        specials["ws2_level"],
+        loadout.trust_level,
+        big_font,
+        small_font,
+        loadout=loadout,
+        calculation_mode=loadout.calculation_mode,
+        skill_1_level=s1,
+        skill_2_level=s2,
+        skill_3_level=s3,
+        enemy_defense=loadout.enemy_defense,
+        preview_weapon_candidates=list(request.preview_weapon_candidates),
+        preview_equipment_catalog=request.equipment_catalog,
+    )
+
+
 def confirm_from_display_request(
     char_attr_scroll: ctk.CTkScrollableFrame | None,
     weapon_attr_scroll: ctk.CTkScrollableFrame | None,
