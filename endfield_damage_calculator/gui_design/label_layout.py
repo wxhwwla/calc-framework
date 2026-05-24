@@ -40,11 +40,20 @@ def bind_wrapped_label(
 ) -> None:
     """随容器/可见列宽度更新 wraplength，避免长文案在窄列中被裁切。"""
     viewport_widget = viewport if viewport is not None else _wrap_viewport(container)
+    last_wrap: int | None = None
 
     def _update(_event: object | None = None) -> None:
+        nonlocal last_wrap
+        # 隐藏页签里的控件会先经历 0/1 像素过渡态，跳过可减少切页跳动感
+        if not bool(container.winfo_ismapped()):
+            return
+        if viewport_widget is not None and not bool(viewport_widget.winfo_ismapped()):
+            return
         try:
             container_width = int(container.winfo_width())
         except Exception:
+            return
+        if container_width <= 1:
             return
         viewport_width: int | None = None
         if viewport_widget is not None:
@@ -58,6 +67,9 @@ def bind_wrapped_label(
             padding=padding,
             min_wrap=min_wrap,
         )
+        if last_wrap == wrap:
+            return
+        last_wrap = wrap
         label.configure(wraplength=wrap)
 
     for widget in (container, label):

@@ -34,7 +34,10 @@ from gui_design.preset_batch_compare import compare_presets_parallel
 from data.game_data_facade import GameDataFacade
 from data.loader import get_characters, get_equipments, get_weapons
 from gui_design.search_settings import resolve_parallel_workers
-from gui_design.gui_layout import SECONDARY_ACTION_BUTTON_HEIGHT
+from gui_design.gui_layout import (
+    MORE_SETTINGS_VIEWPORT_HEIGHT,
+    SECONDARY_ACTION_BUTTON_HEIGHT,
+)
 from gui_design.ui_preferences import (
     STARTUP_MODE_ALWAYS_MAIN,
     STARTUP_MODE_REMEMBER_LAST,
@@ -207,8 +210,17 @@ def place_enhancement_section(
     )
     row = place_fn(parent, row, app._more_settings_toggle_btn, pady=(0, 4))
 
-    app._more_settings_body = ctk.CTkFrame(parent, fg_color="transparent")
-    app._more_settings_body.grid(row=row, column=0, padx=4, pady=(0, 2), sticky="ew")
+    app._more_settings_viewport = ctk.CTkFrame(
+        parent,
+        height=MORE_SETTINGS_VIEWPORT_HEIGHT,
+        fg_color="transparent",
+    )
+    app._more_settings_viewport.grid(row=row, column=0, padx=4, pady=(0, 2), sticky="ew")
+    app._more_settings_viewport.grid_propagate(False)
+    app._more_settings_viewport.grid_columnconfigure(0, weight=1)
+    app._more_settings_viewport.grid_rowconfigure(0, weight=1)
+    app._more_settings_body = ctk.CTkFrame(app._more_settings_viewport, fg_color="transparent")
+    app._more_settings_body.grid(row=0, column=0, sticky="ew")
     app._more_settings_body.grid_columnconfigure(0, weight=1)
     row += 1
 

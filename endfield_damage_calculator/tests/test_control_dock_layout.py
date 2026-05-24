@@ -7,7 +7,6 @@ import unittest
 from gui_design.gui_layout import (
     CONTROL_DOCK_COMPACT_BREAKPOINT,
     CONTROL_DOCK_INNER_COLUMN_COUNT,
-    MULTI_SKILL_SEGMENT_BOX_MAX_HEIGHT,
     MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT,
     PRIMARY_ACTION_BUTTON_HEIGHT,
     SEARCH_ESTIMATE_BOX_HEIGHT,
@@ -32,9 +31,11 @@ class TestControlDockLayout(unittest.TestCase):
         self.assertLess(one, five)
         self.assertGreaterEqual(one, MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT)
 
-    def test_segment_box_height_caps_at_max(self) -> None:
+    def test_segment_box_height_grows_without_cap(self) -> None:
+        five = multi_skill_segment_box_height(5)
         many = multi_skill_segment_box_height(20)
-        self.assertEqual(many, MULTI_SKILL_SEGMENT_BOX_MAX_HEIGHT)
+        self.assertLess(five, many)
+        self.assertGreater(many, MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT)
 
     def test_estimate_box_height_is_two_lines(self) -> None:
         self.assertEqual(SEARCH_ESTIMATE_BOX_HEIGHT, hint_text_box_height(2))
@@ -63,8 +64,8 @@ class TestControlDockLayout(unittest.TestCase):
             ("全量遍历（弹窗）", "MVP搜索导出"),
         )
 
-    def test_place_multi_skill_section_builds_without_grid_propagate_error(self) -> None:
-        """CTkScrollableFrame 不支持 grid_propagate(False)，放置段列表区不得崩溃。"""
+    def test_place_multi_skill_section_uses_plain_frame_for_segments(self) -> None:
+        """段级次数列表用普通 CTkFrame 自然增高，不使用 ScrollableFrame。"""
         import customtkinter as ctk
 
         from gui_design.multi_skill_controls import place_multi_skill_section
@@ -82,8 +83,10 @@ class TestControlDockLayout(unittest.TestCase):
                 wrap_label=lambda _label, _container: None,
                 schedule_confirm=lambda **_kw: None,
             )
-            self.assertIsNotNone(app._multi_skill_counts_body)
-            self.assertIsNotNone(getattr(app, "_multi_skill_segment_box", None))
+            body = app._multi_skill_counts_body
+            self.assertIsNotNone(body)
+            self.assertIsInstance(body, ctk.CTkFrame)
+            self.assertNotIsInstance(body, ctk.CTkScrollableFrame)
         finally:
             root.destroy()
 

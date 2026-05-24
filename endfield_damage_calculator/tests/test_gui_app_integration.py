@@ -64,6 +64,85 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
             finally:
                 app.app.destroy()
 
+    def test_selection_and_level_changes_trigger_live_confirm_schedule(self) -> None:
+        with patch("utils.gui_window.apply_startup_maximized"):
+            from gui_design.gui import DamageCalculatorApp
+
+            app = DamageCalculatorApp()
+            try:
+                app.app.withdraw()
+                self.assertIsNotNone(app.char_panel)
+                self.assertIsNotNone(app.weapon_panel)
+                self.assertIsNotNone(app.char_panel.skill_level_panel)
+                self.assertIsNotNone(app.char_panel.trust_panel)
+                self.assertIsNotNone(app.weapon_panel.special_ability_panel)
+
+                with patch("gui_design.gui.schedule_confirm") as mock_schedule:
+                    app.char_panel.selected_level.set("2")
+                    app.weapon_panel.selected_level.set("2")
+                    app.char_panel.trust_panel.trust_level.set("1")  # type: ignore[union-attr]
+                    app.char_panel.skill_level_panel.skill_1_level.set("2")  # type: ignore[union-attr]
+                    app.weapon_panel.special_ability_panel.special_ability_1_level.set("2")  # type: ignore[union-attr]
+                    app.weapon_panel.selected_name.set(app.weapon_panel.selected_name.get())
+
+                self.assertGreaterEqual(mock_schedule.call_count, 5)
+            finally:
+                app.app.destroy()
+
+    def test_on_window_resize_skips_iconic_and_duplicate_width(self) -> None:
+        with patch("utils.gui_window.apply_startup_maximized"):
+            from gui_design.gui import DamageCalculatorApp
+
+            app = DamageCalculatorApp()
+            try:
+                app.app.withdraw()
+                app._control_dock_last_width = 1600
+                app._control_dock_last_compact = False
+                event = type("E", (), {"widget": app.app, "width": 1600, "height": 900})()
+
+                with patch.object(app, "_apply_control_dock_layout") as mock_layout:
+                    with patch.object(app, "_apply_adaptive_button_texts") as mock_texts:
+                        app._on_window_resize(event)
+                        mock_layout.assert_not_called()
+                        mock_texts.assert_not_called()
+
+                with patch.object(app, "_is_window_iconified", return_value=True):
+                    with patch.object(app, "_apply_control_dock_layout") as mock_layout:
+                        app._control_dock_last_width = None
+                        app._on_window_resize(
+                            type("E", (), {"widget": app.app, "width": 1200, "height": 900})()
+                        )
+                        mock_layout.assert_not_called()
+            finally:
+                app.app.destroy()
+
+    def test_window_map_restore_uses_settle_debounce(self) -> None:
+        with patch("utils.gui_window.apply_startup_maximized"):
+            from gui_design.confirm_orchestrator import WINDOW_RESTORE_SETTLE_MS
+            from gui_design.gui import DamageCalculatorApp
+
+            app = DamageCalculatorApp()
+            try:
+                app.app.withdraw()
+                app._window_has_been_mapped = True
+                after_calls: list[tuple[int, object]] = []
+
+                def fake_after(ms: int, fn: object) -> str:
+                    after_calls.append((ms, fn))
+                    return "after-id"
+
+                with patch.object(app.app, "after", side_effect=fake_after):
+                    app._on_window_map()
+                self.assertTrue(app._restore_settling)
+                self.assertEqual(after_calls[-1][0], WINDOW_RESTORE_SETTLE_MS)
+
+                with patch.object(app, "_apply_responsive_layout") as mock_layout:
+                    after_calls[-1][1]()  # type: ignore[operator]
+                    mock_layout.assert_called_once()
+                self.assertFalse(app._restore_settling)
+            finally:
+                app.app.destroy()
+
     def test_switch_between_pages_preserves_user_inputs(self) -> None:
         """在计算页/高级页切换时，不应重置已填写的输入状态。"""
         with patch("utils.gui_window.apply_startup_maximized"):
@@ -198,13 +277,64 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 self.assertFalse(bool(weapon_panel._show_advanced_params_var.get()))
                 self.assertIsNotNone(char_panel._advanced_toggle_btn)
                 self.assertIsNotNone(weapon_panel._advanced_toggle_btn)
+                self.assertIsNotNone(char_panel._advanced_body)
                 self.assertIn("展开", char_panel._advanced_toggle_btn.cget("text"))  # type: ignore[union-attr]
                 self.assertIn("展开", weapon_panel._advanced_toggle_btn.cget("text"))  # type: ignore[union-attr]
+                # 角色面板中，除等级外的参数应全部位于高级参数容器内
+                self.assertIsNotNone(char_panel.skill_level_panel)
+                self.assertIsNotNone(char_panel.trust_panel)
+                self.assertIs(char_panel.skill_level_panel.parent_frame, char_panel._advanced_body)  # type: ignore[union-attr]
+                self.assertIs(char_panel.trust_panel.parent_frame, char_panel._advanced_body)  # type: ignore[union-attr]
 
                 char_panel._advanced_toggle_btn.invoke()  # type: ignore[union-attr]
                 weapon_panel._advanced_toggle_btn.invoke()  # type: ignore[union-attr]
                 self.assertTrue(bool(char_panel._show_advanced_params_var.get()))
                 self.assertTrue(bool(weapon_panel._show_advanced_params_var.get()))
+            finally:
+                app.app.destroy()
+
+    def test_selection_panels_have_one_click_presets(self) -> None:
+        """角色/武器面板应提供等级与技能一键预设按钮。"""
+        with patch("utils.gui_window.apply_startup_maximized"):
+            from gui_design.gui import DamageCalculatorApp
+
+            try:
+                app = DamageCalculatorApp()
+            except tkinter.TclError as exc:
+                raise unittest.SkipTest(f"Tcl 不可用，跳过预设按钮测试：{exc}") from exc
+            try:
+                app.app.withdraw()
+                self.assertIsNotNone(app.char_panel)
+                self.assertIsNotNone(app.weapon_panel)
+                char_panel = app.char_panel
+                weapon_panel = app.weapon_panel
+                self.assertIsNotNone(char_panel._level_preset_80_btn)
+                self.assertIsNotNone(char_panel._level_preset_90_btn)
+                self.assertIsNotNone(weapon_panel._level_preset_80_btn)
+                self.assertIsNotNone(weapon_panel._level_preset_90_btn)
+                self.assertIsNotNone(char_panel._skill_preset_9_btn)
+                self.assertIsNotNone(char_panel._skill_preset_12_btn)
+                self.assertIsNotNone(weapon_panel._weapon_skill_preset_9_btn)
+
+                char_panel._level_preset_90_btn.invoke()  # type: ignore[union-attr]
+                weapon_panel._level_preset_80_btn.invoke()  # type: ignore[union-attr]
+                self.assertEqual(char_panel.selected_level.get(), "90")
+                self.assertEqual(weapon_panel.selected_level.get(), "80")
+
+                char_panel._skill_preset_9_btn.invoke()  # type: ignore[union-attr]
+                self.assertEqual(char_panel.get_skill_1_level(), 9)
+                self.assertEqual(char_panel.get_skill_2_level(), 9)
+                if (
+                    char_panel.skill_level_panel is not None
+                    and char_panel.skill_level_panel.current_skill_3_name
+                ):
+                    self.assertEqual(char_panel.get_skill_3_level(), 9)
+
+                weapon_panel._weapon_skill_preset_9_btn.invoke()  # type: ignore[union-attr]
+                if weapon_panel.get_special_ability_1_name():
+                    self.assertGreaterEqual(weapon_panel.get_special_ability_1_level(), 1)
+                if weapon_panel.get_special_ability_2_name():
+                    self.assertGreaterEqual(weapon_panel.get_special_ability_2_level(), 1)
             finally:
                 app.app.destroy()
 

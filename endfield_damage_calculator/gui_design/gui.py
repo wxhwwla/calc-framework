@@ -32,6 +32,7 @@ from gui_design.gui_settings import gui_settings
 from gui_design.confirm_orchestrator import (
     handle_confirm,
     schedule_confirm,
+    WINDOW_RESTORE_SETTLE_MS,
 )
 from gui_design.multi_skill_controls import (
     place_multi_skill_section,
@@ -75,6 +76,7 @@ from gui_design.gui_layout import (
     ZONE_COLUMN,
     ZONE_COLUMN_MINSIZE,
     should_use_compact_control_dock,
+    control_dock_layout_needs_update,
 )
 from gui_design.label_layout import bind_wrapped_label
 from utils.gui_window import apply_startup_maximized
@@ -148,6 +150,9 @@ class DamageCalculatorApp:
         
         # 绑定窗口大小变化事件，用于自适应缩放
         self.app.bind("<Configure>", self._on_window_resize)
+        # 最小化/恢复时 Map/Unmap 用于防抖，避免恢复瞬间重复重排
+        self.app.bind("<Map>", self._on_window_map, add="+")
+        self.app.bind("<Unmap>", self._on_window_unmap, add="+")
 
         # 与系统默认 UI 字体一致
         self.big_font: ctk.CTkFont = default_ui_font(size=14, weight="bold")
@@ -214,7 +219,13 @@ class DamageCalculatorApp:
         self._skill_count_last_committed: Dict[str, str] = {}
         self._suppress_full_confirm_refresh: bool = False
         self._ui_preferences: Dict[str, Any] = load_ui_preferences()
-
+        # 高级页布局缓存：宽度/紧凑模式未变时不重复 grid
+        self._control_dock_last_width: Optional[int] = None
+        self._control_dock_last_compact: Optional[bool] = None
+        # 窗口恢复后短暂防抖，避免 Configure/confirm 在布局未稳时触发
+        self._restore_settling: bool = False
+        self._restore_after_id: Optional[str] = None
+        self._window_has_been_mapped: bool = False
         # 创建并布局所有 UI 组件
         self._setup_ui()
         self.app.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -500,6 +511,7 @@ class DamageCalculatorApp:
         
         # 设置角色选择变化时的回调
         self.char_panel.selected_name.trace_add("write", self._on_char_name_change)
+        self._bind_live_refresh_traces()
         
         # 根据默认选中的角色初始化武器面板
         # 角色面板初始化时已经自动选择了第一个角色，现在需要同步更新武器面板
@@ -520,6 +532,38 @@ class DamageCalculatorApp:
         self.app.update_idletasks()
         get_session_operation_log().record(LogLevel.INFO, "app_ready", {})
         self.app.after_idle(self._startup_refresh)
+
+    def _bind_live_refresh_traces(self) -> None:
+        """将关键输入项绑定到确认刷新，保证改值后计算页自动更新。"""
+        assert self.char_panel is not None, "char_panel 未初始化"
+        assert self.weapon_panel is not None, "weapon_panel 未初始化"
+
+        def _schedule(*_args: object) -> None:
+            schedule_confirm(self)
+
+        # 角色/武器主选择与等级
+        self.char_panel.selected_name.trace_add("write", _schedule)
+        self.weapon_panel.selected_name.trace_add("write", _schedule)
+        self.char_panel.selected_level.trace_add("write", _schedule)
+        self.weapon_panel.selected_level.trace_add("write", _schedule)
+
+        # 角色高级参数：信赖 + 技能等级
+        if self.char_panel.trust_panel is not None:
+            self.char_panel.trust_panel.trust_level.trace_add("write", _schedule)
+        if self.char_panel.skill_level_panel is not None:
+            skill_panel = self.char_panel.skill_level_panel
+            skill_panel.skill_1_level.trace_add("write", _schedule)
+            skill_panel.skill_2_level.trace_add("write", _schedule)
+            skill_panel.skill_3_level.trace_add("write", _schedule)
+
+        # 武器高级参数：三条附加属性 + 两条特殊能力
+        if self.weapon_panel.special_ability_panel is not None:
+            special_panel = self.weapon_panel.special_ability_panel
+            special_panel.special_ability_1_level.trace_add("write", _schedule)
+            special_panel.special_ability_2_level.trace_add("write", _schedule)
+            special_panel.special_ability_3_level.trace_add("write", _schedule)
+            special_panel.weapon_special_level.trace_add("write", _schedule)
+            special_panel.weapon_special_2_level.trace_add("write", _schedule)
 
     def _startup_refresh(self) -> None:
         """首帧绘制后再做确认刷新与搜索预估（勿在 __init__ 中同步调用）。"""
@@ -790,12 +834,85 @@ class DamageCalculatorApp:
         """刷新「预计组合数/耗时」标签（委托 search_controls）。"""
         refresh_search_estimate(self)
 
-    def _is_window_iconified(self) -> None:
+    def _is_window_iconified(self) -> bool:
         """窗口是否处于最小化状态（最小化时跳过重绘，避免恢复后闪屏）。"""
         try:
             return str(self.app.state()) == "iconic"
         except Exception:
             return False
+
+    def _apply_responsive_layout(self, window_width: int) -> None:
+        """按窗口宽度更新高级页布局与按钮文案；未变化时跳过。"""
+        width = int(window_width)
+        if width <= 1:
+            return
+        if not control_dock_layout_needs_update(
+            width,
+            last_width=self._control_dock_last_width,
+            last_compact=self._control_dock_last_compact,
+        ):
+            return
+        compact = should_use_compact_control_dock(width)
+        self._control_dock_last_width = width
+        self._control_dock_last_compact = compact
+        self._apply_control_dock_layout(width)
+        self._apply_adaptive_button_texts(width)
+
+    def _on_window_unmap(self, _event: object = None) -> None:
+        """窗口被隐藏/最小化时取消待执行的恢复防抖。"""
+        if self._restore_after_id is not None:
+            try:
+                self.app.after_cancel(self._restore_after_id)
+            except Exception:
+                pass
+            self._restore_after_id = None
+
+    def _on_window_map(self, _event: object = None) -> None:
+        """窗口重新显示：首次映射立即布局，后续恢复走防抖。"""
+        if self._is_window_iconified():
+            return
+        if not self._window_has_been_mapped:
+            self._window_has_been_mapped = True
+            self._apply_responsive_layout(int(self.app.winfo_width()))
+            return
+        self._begin_restore_settle()
+
+    def _begin_restore_settle(self) -> None:
+        """恢复显示后延迟一帧再重排，避免与 CTk remap 争抢导致黑屏。"""
+        self._restore_settling = True
+        if self._restore_after_id is not None:
+            try:
+                self.app.after_cancel(self._restore_after_id)
+            except Exception:
+                pass
+        self._restore_after_id = self.app.after(
+            WINDOW_RESTORE_SETTLE_MS,
+            self._finish_restore_settle,
+        )
+
+    def _finish_restore_settle(self) -> None:
+        """恢复防抖结束：若仍可见则补一次必要布局。"""
+        self._restore_after_id = None
+        self._restore_settling = False
+        if self._is_window_iconified():
+            return
+        self._apply_responsive_layout(int(self.app.winfo_width()))
+
+    def _on_window_resize(self, event) -> None:
+        """
+        窗口大小变化事件处理：仅根窗口、非最小化、非恢复防抖中且尺寸变化时重排。
+
+        参数：
+            event: Tkinter 事件对象（包含窗口大小等信息）
+        """
+        if getattr(event, "widget", None) is not self.app:
+            return
+        if self._is_window_iconified() or self._restore_settling:
+            return
+        width = getattr(event, "width", None)
+        if width is None:
+            width = self.app.winfo_width()
+        self._apply_responsive_layout(int(width))
 
     def _manual_multi_skill_counts(self) -> Dict[str, int]:
         return read_manual_multi_skill_counts(self)
@@ -833,22 +950,6 @@ class DamageCalculatorApp:
     def _current_calculation_mode(self) -> str:
         """读取当前模式下拉框并转换为内部标识。"""
         return calculation_mode_from_label(self.calc_mode_var.get())
-
-    def _on_window_resize(self, event) -> None:
-        """
-        窗口大小变化事件处理函数
-        
-        参数：
-            event: Tkinter 事件对象（包含窗口大小等信息）
-        
-        当前功能：预留接口，可用于动态调整字体大小等高级功能
-        """
-        width = getattr(event, "width", None)
-        if width is None:
-            width = self.app.winfo_width()
-        width = int(width)
-        self._apply_control_dock_layout(width)
-        self._apply_adaptive_button_texts(width)
 
     def run(self) -> None:
         """

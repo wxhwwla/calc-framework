@@ -54,6 +54,18 @@ def should_use_compact_control_dock(window_width: int) -> bool:
     return int(window_width) < CONTROL_DOCK_COMPACT_BREAKPOINT
 
 
+def control_dock_layout_needs_update(
+    window_width: int,
+    *,
+    last_width: int | None,
+    last_compact: bool | None,
+) -> bool:
+    """窗口宽度与紧凑模式均未变时跳过重排，避免最小化/恢复时重复 grid。"""
+    width = int(window_width)
+    compact = should_use_compact_control_dock(width)
+    return not (last_width == width and last_compact == compact)
+
+
 def search_action_button_texts(*, compact: bool) -> tuple[str, str]:
     """按布局密度返回搜索主按钮文案（全量、MVP）。"""
     if compact:
@@ -66,6 +78,8 @@ SEARCH_ESTIMATE_BOX_HEIGHT = hint_text_box_height(2)
 FIXED_LOADOUT_HINT_BOX_HEIGHT = hint_text_box_height(2)
 SEARCH_WORKERS_HINT_BOX_HEIGHT = hint_text_box_height(3)
 SEARCH_STATUS_BOX_HEIGHT = hint_text_box_height(2)
+# 高级页「更多设置」预留固定视口，展开/收起时不推动整列重排
+MORE_SETTINGS_VIEWPORT_HEIGHT = 430
 
 # 统一按钮尺寸：主动作更醒目，次级动作保证密集布局下仍可点击
 PRIMARY_ACTION_BUTTON_HEIGHT = 40
@@ -73,16 +87,12 @@ SECONDARY_ACTION_BUTTON_HEIGHT = 32
 
 MULTI_SKILL_SEGMENT_ROW_HEIGHT = 28
 MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT = 36
-MULTI_SKILL_SEGMENT_BOX_MAX_HEIGHT = 168
 MULTI_SKILL_HINT_BOX_HEIGHT = hint_text_box_height(4)
 
 
 def multi_skill_segment_box_height(segment_count: int) -> int:
-    """段数输入区高度：随行数伸缩，上限内可滚动，避免与下方说明重叠。"""
+    """段数输入区预估高度：随行数线性增长（高级页空间足够，不再设上限滚动）。"""
     if segment_count <= 0:
         return MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT
     needed = segment_count * MULTI_SKILL_SEGMENT_ROW_HEIGHT + 8
-    return min(
-        MULTI_SKILL_SEGMENT_BOX_MAX_HEIGHT,
-        max(MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT, needed),
-    )
+    return max(MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT, needed)

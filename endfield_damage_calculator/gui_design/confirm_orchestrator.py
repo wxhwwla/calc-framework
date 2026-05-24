@@ -14,6 +14,9 @@ from utils.operation_log import LogLevel, get_session_operation_log
 if TYPE_CHECKING:
     from gui_design.gui import DamageCalculatorApp
 
+# 窗口从最小化/隐藏恢复后，等待布局稳定再重排或确认刷新（毫秒）
+WINDOW_RESTORE_SETTLE_MS = 80
+
 
 def is_window_iconified(app: "DamageCalculatorApp") -> bool:
     try:
@@ -29,6 +32,11 @@ def confirm_signature_now(app: "DamageCalculatorApp") -> tuple:
     return state.confirm_refresh_signature()
 
 
+def is_restore_settling(app: "DamageCalculatorApp") -> bool:
+    """窗口刚恢复显示，布局尚未稳定。"""
+    return bool(getattr(app, "_restore_settling", False))
+
+
 def handle_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
     """合并去重后执行一次确认刷新。"""
     if not force and getattr(app, "_suppress_full_confirm_refresh", False):
@@ -40,6 +48,9 @@ def handle_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
             {"mode": app._current_calculation_mode()},
         )
     if not force and is_window_iconified(app):
+        return
+    if not force and is_restore_settling(app):
+        schedule_confirm(app)
         return
     signature = confirm_signature_now(app)
     if not force and signature == app._confirm_refresh_signature:
@@ -72,6 +83,12 @@ def schedule_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None
 
     def _dispatch() -> None:
         app._confirm_after_id = None
+        if is_window_iconified(app):
+            app._confirm_after_id = app.app.after(WINDOW_RESTORE_SETTLE_MS, _dispatch)
+            return
+        if is_restore_settling(app):
+            app._confirm_after_id = app.app.after(WINDOW_RESTORE_SETTLE_MS, _dispatch)
+            return
         handle_confirm(app, force=False)
 
     app._confirm_after_id = app.app.after_idle(_dispatch)

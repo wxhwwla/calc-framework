@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from gui_design.loadout_preset import export_preset_json
+from gui_design.gui_layout import MORE_SETTINGS_VIEWPORT_HEIGHT
 from tests.gui_fixtures import (
     build_mock_app,
     ctk_available,
@@ -114,9 +115,13 @@ class TestEnhancementIntegration(unittest.TestCase):
         self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
         self.assertIsNotNone(getattr(self.app, "_more_settings_toggle_btn", None))
         self.assertIsNotNone(getattr(self.app, "_more_settings_body", None))
+        self.assertIsNotNone(getattr(self.app, "_more_settings_viewport", None))
 
         toggle_btn = self.app._more_settings_toggle_btn
         body = self.app._more_settings_body
+        viewport = self.app._more_settings_viewport
+        self.assertEqual(int(viewport.cget("height")), MORE_SETTINGS_VIEWPORT_HEIGHT)
+        self.assertEqual(body.master, viewport)
         self.assertFalse(bool(self.app._show_more_settings_var.get()))
         self.assertIn("展开", toggle_btn.cget("text"))
 

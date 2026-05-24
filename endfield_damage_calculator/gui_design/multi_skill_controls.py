@@ -13,11 +13,6 @@ import customtkinter as ctk
 
 from calculation.skill_segments import list_segment_count_specs
 from gui_design.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
-from gui_design.gui_layout import (
-    MULTI_SKILL_HINT_BOX_HEIGHT,
-    MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT,
-    multi_skill_segment_box_height,
-)
 from gui_design.panel_hints import MULTI_SKILL_COUNTS_HINT
 
 if TYPE_CHECKING:
@@ -148,11 +143,6 @@ def rebuild_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
         entry.bind("<FocusOut>", on_change)
         entry.bind("<Return>", on_change)
 
-    box_height = multi_skill_segment_box_height(len(specs))
-    segment_box = getattr(app, "_multi_skill_segment_box", None)
-    if segment_box is not None:
-        segment_box.configure(height=box_height)
-
 
 def apply_segment_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
     """将段级次数写回动态输入框（预设导入用）。"""
@@ -217,44 +207,23 @@ def place_multi_skill_section(
     )
     mr = _place(mr, count_switch, pady=(0, 6))
 
-    segment_box = ctk.CTkFrame(
-        parent,
-        height=MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT,
-        fg_color="transparent",
-    )
-    segment_box.grid(row=mr, column=0, columnspan=2, padx=4, pady=(4, 4), sticky="ew")
-    segment_box.grid_propagate(False)
-    segment_box.grid_columnconfigure(0, weight=1)
-    segment_box.grid_rowconfigure(0, weight=1)
-    app._multi_skill_segment_box = segment_box
-
-    body = ctk.CTkScrollableFrame(
-        segment_box,
-        fg_color="transparent",
-        scrollbar_button_color="#444444",
-        scrollbar_button_hover_color="#666666",
-    )
-    body.grid(row=0, column=0, sticky="nsew", padx=2, pady=(4, 2))
+    body = ctk.CTkFrame(parent, fg_color="transparent")
+    body.grid(row=mr, column=0, columnspan=2, padx=4, pady=(4, 4), sticky="ew")
     body.grid_columnconfigure(0, weight=1)
     body.grid_columnconfigure(1, weight=0, minsize=72)
     app._multi_skill_counts_body = body
     mr += 1
 
-    hint_box = ctk.CTkFrame(parent, height=MULTI_SKILL_HINT_BOX_HEIGHT, fg_color="transparent")
-    hint_box.grid(row=mr, column=0, columnspan=2, padx=4, pady=(0, 4), sticky="ew")
-    hint_box.grid_propagate(False)
-    hint_box.grid_columnconfigure(0, weight=1)
-    hint_box.grid_rowconfigure(0, weight=1)
     multi_skill_hint = ctk.CTkLabel(
-        hint_box,
+        parent,
         text=MULTI_SKILL_COUNTS_HINT,
         font=app.small_font,
         text_color="#888888",
         justify="left",
         anchor="nw",
     )
-    multi_skill_hint.grid(row=0, column=0, sticky="nsew", padx=4, pady=2)
-    wrap_label(multi_skill_hint, hint_box)
+    multi_skill_hint.grid(row=mr, column=0, columnspan=2, padx=8, pady=(0, 6), sticky="ew")
+    wrap_label(multi_skill_hint, parent)
     mr += 1
 
     rebuild_multi_skill_segment_rows(app)

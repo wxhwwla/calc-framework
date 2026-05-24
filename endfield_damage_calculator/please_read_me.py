@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "1.16.7"
+_VERSION = "1.17.0"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,50 +209,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 44 处文件
+# TITLE: 更新 13 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
-# - 变更 "docs/MVP/346/220/234/347/264/242/351/252/214/346/224/266/350/257/264/346/230/216.md"
-# - 更新文档 CONTEXT.md
-# - 更新文档 endfield_damage_calculator/README.md
-# - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_search_eval.py
-# - 修改 endfield_damage_calculator/calculation/skill_segments.py
 # - 修改 endfield_damage_calculator/gui_design/confirm_orchestrator.py
-# - 修改 endfield_damage_calculator/gui_design/damage_snapshot.py
-# - 修改 endfield_damage_calculator/gui_design/display_lines.py
-# - 修改 endfield_damage_calculator/gui_design/display_view.py
 # - 修改 endfield_damage_calculator/gui_design/enhancement_controls.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
 # - 修改 endfield_damage_calculator/gui_design/gui_layout.py
-# - 修改 endfield_damage_calculator/gui_design/loadout_evaluation.py
-# - 修改 endfield_damage_calculator/gui_design/loadout_preset.py
-# - 修改 endfield_damage_calculator/gui_design/loadout_state.py
+# - 修改 endfield_damage_calculator/gui_design/label_layout.py
 # - 修改 endfield_damage_calculator/gui_design/multi_skill_controls.py
-# - 修改 endfield_damage_calculator/gui_design/panel_hints.py
-# - 修改 endfield_damage_calculator/gui_design/preset_batch_compare.py
-# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
-# - 修改 endfield_damage_calculator/gui_design/search_controls.py
-# - 修改 endfield_damage_calculator/gui_design/search_results_lines.py
 # - 修改 endfield_damage_calculator/gui_design/selection_panel.py
-# - 修改 endfield_damage_calculator/gui_design/ui_preferences.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/tests/gui_fixtures.py
-# - 修改 endfield_damage_calculator/tests/test_confirm_suppress.py
 # - 修改 endfield_damage_calculator/tests/test_control_dock_layout.py
-# - 修改 endfield_damage_calculator/tests/test_damage_snapshot.py
 # - 修改 endfield_damage_calculator/tests/test_enhancement_integration.py
 # - 修改 endfield_damage_calculator/tests/test_gui_app_integration.py
-# - 修改 endfield_damage_calculator/tests/test_gui_import_regression.py
-# - 修改 endfield_damage_calculator/tests/test_gui_layout_contract.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_preset.py
-# - 修改 endfield_damage_calculator/tests/test_manual_skill_counts_switch.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_counts.py
-# - 修改 endfield_damage_calculator/tests/test_multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/tests/test_panel_hints.py
-# - 修改 endfield_damage_calculator/tests/test_skill_segments.py
-# - 修改 endfield_damage_calculator/tests/test_ui_preferences.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_property_display.py
+# - 修改 endfield_damage_calculator/tests/test_window_restore.py
+# - 变更 endfield_damage_calculator/ui_preferences.json
 # --- END UPLOAD_SUMMARY ---
