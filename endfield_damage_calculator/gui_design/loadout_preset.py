@@ -181,7 +181,7 @@ class LoadoutPreset:
             extra_crit_damage=float(data.get("extra_crit_damage", 0.0) or 0.0),
             ui_state={
                 "char_advanced_expanded": bool(
-                    (data.get("ui_state") or {}).get("char_advanced_expanded", False)
+                    (data.get("ui_state") or {}).get("char_advanced_expanded", True)
                 ),
                 "weapon_advanced_expanded": bool(
                     (data.get("ui_state") or {}).get("weapon_advanced_expanded", False)

@@ -14,6 +14,7 @@ from gui_design.ui_preferences import (
     STARTUP_MODE_ALWAYS_MAIN,
     STARTUP_MODE_REMEMBER_LAST,
     load_ui_preferences,
+    record_char_advanced_expanded,
     record_last_page,
     resolve_startup_page,
     save_ui_preferences,
@@ -26,6 +27,7 @@ class TestUiPreferences(unittest.TestCase):
             prefs = load_ui_preferences(base_dir=Path(tmp))
         self.assertEqual(prefs["startup_page_mode"], STARTUP_MODE_ALWAYS_MAIN)
         self.assertEqual(prefs["last_page"], PAGE_MAIN)
+        self.assertTrue(prefs["char_advanced_expanded"])
 
     def test_resolve_startup_page_by_mode(self) -> None:
         remember = {
@@ -52,6 +54,28 @@ class TestUiPreferences(unittest.TestCase):
             loaded = load_ui_preferences(base_dir=base)
         self.assertEqual(loaded["startup_page_mode"], STARTUP_MODE_REMEMBER_LAST)
         self.assertEqual(loaded["last_page"], PAGE_ADVANCED)
+        self.assertTrue(loaded["char_advanced_expanded"])
+
+    def test_save_and_reload_char_skill_levels_expanded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            save_ui_preferences(
+                {
+                    "startup_page_mode": STARTUP_MODE_ALWAYS_MAIN,
+                    "last_page": PAGE_MAIN,
+                    "char_advanced_expanded": False,
+                },
+                base_dir=base,
+            )
+            loaded = load_ui_preferences(base_dir=base)
+        self.assertFalse(loaded["char_advanced_expanded"])
+
+    def test_record_char_advanced_expanded(self) -> None:
+        updated = record_char_advanced_expanded(
+            {"startup_page_mode": STARTUP_MODE_ALWAYS_MAIN, "last_page": PAGE_MAIN},
+            expanded=False,
+        )
+        self.assertFalse(updated["char_advanced_expanded"])
 
     def test_record_last_page_normalizes_invalid_value(self) -> None:
         updated = record_last_page(

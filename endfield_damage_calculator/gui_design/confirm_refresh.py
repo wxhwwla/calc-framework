@@ -74,3 +74,49 @@ def build_confirm_refresh_signature(
         tuple(sorted((physical_abnormal_counts or {}).items())),
         tuple(sorted((spell_abnormal_counts or {}).items())),
     )
+
+
+def build_display_pending_signature(
+    *,
+    calculation_mode: str,
+    char_name: str,
+    char_level: int,
+    weapon_name: str,
+    weapon_level: int,
+    trust_level: int,
+    skill_levels: tuple[int, int, int],
+    weapon_specials: tuple[Any, ...],
+    use_manual_multi_skill_counts: bool,
+    multi_skill_manual_counts: Dict[str, int],
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    include_conditional_equipment_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
+    physical_abnormal_counts: Optional[Dict[str, int]] = None,
+    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    enemy_defense: float = 100.0,
+) -> tuple:
+    """
+    三列展示 + 快照/历史所用配装签名（不含搜索范围、固定配装等仅影响预估/搜索的字段）。
+    """
+    return (
+        calculation_mode,
+        char_name,
+        char_level,
+        weapon_name,
+        weapon_level,
+        trust_level,
+        skill_levels,
+        weapon_specials,
+        use_manual_multi_skill_counts,
+        tuple(sorted(multi_skill_manual_counts.items())),
+        damage_component_mode,
+        bool(use_expected_crit),
+        bool(include_conditional_equipment_crit),
+        float(extra_crit_rate),
+        float(extra_crit_damage),
+        tuple(sorted((physical_abnormal_counts or {}).items())),
+        tuple(sorted((spell_abnormal_counts or {}).items())),
+        float(enemy_defense),
+    )

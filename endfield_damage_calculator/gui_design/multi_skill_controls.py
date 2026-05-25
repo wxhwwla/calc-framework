@@ -138,7 +138,7 @@ def rebuild_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=0, minsize=72)
 
-    schedule_confirm = app._schedule_confirm
+    schedule_confirm = getattr(app, "_mark_loadout_pending", app._schedule_confirm)
 
     for row_idx, spec in enumerate(specs):
         key = str(spec["key"])
@@ -170,8 +170,7 @@ def rebuild_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
                 app._skill_count_last_committed[storage_key] = normalized
                 if (var.get() or "").strip() != normalized:
                     var.set(normalized)
-                if app._current_calculation_mode() == "multi_skill_search":
-                    schedule_confirm()
+                schedule_confirm()
 
             return _on_change
 
@@ -259,7 +258,7 @@ def clear_all_abnormal_counts(app: "DamageCalculatorApp") -> None:
         var.set("0")
     for var in (getattr(app, "_spell_abnormal_count_vars", None) or {}).values():
         var.set("0")
-    schedule = getattr(app, "_schedule_confirm", None)
+    schedule = getattr(app, "_mark_loadout_pending", None)
     if callable(schedule):
         schedule()
 
@@ -268,7 +267,7 @@ def clear_physical_abnormal_counts(app: "DamageCalculatorApp") -> None:
     """一键清空异常次数。"""
     for var in (getattr(app, "_physical_abnormal_count_vars", None) or {}).values():
         var.set("0")
-    schedule = getattr(app, "_schedule_confirm", None)
+    schedule = getattr(app, "_mark_loadout_pending", None)
     if callable(schedule):
         schedule()
 
@@ -277,7 +276,7 @@ def clear_spell_abnormal_counts(app: "DamageCalculatorApp") -> None:
     """一键清空法术异常次数。"""
     for var in (getattr(app, "_spell_abnormal_count_vars", None) or {}).values():
         var.set("0")
-    schedule = getattr(app, "_schedule_confirm", None)
+    schedule = getattr(app, "_mark_loadout_pending", None)
     if callable(schedule):
         schedule()
 
@@ -528,46 +527,7 @@ def place_multi_skill_section(
 
 
 def on_manual_skill_counts_switch_changed(app: "DamageCalculatorApp") -> None:
-    """
-    切换「使用手动次数」时的轻量刷新。
-
-    不 destroy 角色/武器属性列，避免整窗闪屏与底栏比例跳动；
-    多技能预览模式下才重绘右侧列。
-    """
-    from gui_design.display_request import build_display_request
-    from gui_design.display_view import refresh_right_column_from_request
-    from gui_design.enhancement_controls import refresh_damage_snapshot
-    from gui_design.loadout_state import read_loadout_from_app
-    from gui_design.search_controls import refresh_search_estimate
-
-    app._suppress_full_confirm_refresh = True
-    try:
-        loadout = read_loadout_from_app(app, ensure_segment_rows=False)
-        if loadout is None:
-            return
-
-        app._confirm_refresh_signature = loadout.confirm_refresh_signature()
-        refresh_damage_snapshot(app, loadout=loadout)
-        refresh_search_estimate(app)
-
-        if loadout.calculation_mode != "multi_skill_search":
-            return
-        if app.right_scroll is None:
-            return
-
-        request = build_display_request(
-            loadout,
-            app.game_data,
-            preview_weapon_candidates=app._single_skill_preview_candidates(),
-        )
-        refresh_right_column_from_request(
-            app.right_scroll,
-            request,
-            big_font=app.big_font,
-            small_font=app.small_font,
-        )
-    finally:
-        def _clear_suppress() -> None:
-            app._suppress_full_confirm_refresh = False
-
-        app.app.after(400, _clear_suppress)
+    """切换「使用手动次数」：不即时重绘三列，仅标记待确认。"""
+    mark = getattr(app, "_mark_loadout_pending", None)
+    if callable(mark):
+        mark()

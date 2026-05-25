@@ -30,7 +30,8 @@ class ChooseTypesStarsNamesLevels:
     │ 星级标签 + 下拉菜单      │
     │ 角色/武器标签 + 下拉菜单 │
     │ 等级标签 + 滑块          │
-    │ 信赖滑块（角色）         │
+    │ 信赖滑块（角色，主区）   │
+    │ 技能等级折叠（角色）     │
     │ 特殊能力滑块（武器）      │
     └──────────────────────────┘
 
@@ -67,7 +68,13 @@ class ChooseTypesStarsNamesLevels:
         self.trust_panel: Optional[TrustPanel] = None              # 信赖面板（角色专用）
         self.skill_level_panel: Optional[SkillLevelPanel] = None   # 技能等级面板（角色专用）
         self.special_ability_panel: Optional[SpecialAbilityPanel] = None  # 特殊能力面板（武器专用）
-        self._show_advanced_params_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        # 角色侧默认展开「技能等级」；武器侧默认收起「高级参数」
+        self._show_advanced_params_var: ctk.BooleanVar = ctk.BooleanVar(
+            value=False if is_weapon_panel else True
+        )
+        self._advanced_section_title: str = (
+            "高级参数" if is_weapon_panel else "技能等级"
+        )
         self._advanced_toggle_btn: ctk.CTkButton | None = None
         self._advanced_body: ctk.CTkFrame | None = None
         self._level_preset_80_btn: ctk.CTkButton | None = None
@@ -153,15 +160,12 @@ class ChooseTypesStarsNamesLevels:
             pass
         self._build_level_preset_buttons()
 
-        # 如果是角色面板，等级之外的参数统一放入「高级参数」折叠区
         if not self.is_weapon_panel:
+            self.trust_panel = TrustPanel(self.frame, self.my_font)
             self._build_advanced_params_container()
             assert self._advanced_body is not None
             self.skill_level_panel = SkillLevelPanel(self._advanced_body, self.my_font)
-            self.trust_panel = TrustPanel(self._advanced_body, self.my_font)
-        
-        # 如果是武器面板，添加特殊能力滑块
-        if self.is_weapon_panel:
+        elif self.is_weapon_panel:
             self._build_advanced_params_container()
             assert self._advanced_body is not None
             self.special_ability_panel = SpecialAbilityPanel(self._advanced_body, self.my_font)
@@ -267,10 +271,11 @@ class ChooseTypesStarsNamesLevels:
                 panel._on_weapon_special_2_change(float(clamped))
     
     def _build_advanced_params_container(self) -> None:
-        """构建低频参数折叠区，默认收起以降低主流程密度。"""
+        """构建低频参数折叠区（角色=技能等级，武器=高级参数）。"""
+        collapsed_label = f"{self._advanced_section_title}（展开）"
         self._advanced_toggle_btn = ctk.CTkButton(
             self.frame,
-            text="高级参数（展开）",
+            text=collapsed_label,
             font=self.my_font,
             fg_color="transparent",
             border_width=1,
@@ -315,8 +320,9 @@ class ChooseTypesStarsNamesLevels:
     def _refresh_advanced_params_visibility(self) -> None:
         expanded = bool(self._show_advanced_params_var.get())
         if self._advanced_toggle_btn is not None:
+            title = self._advanced_section_title
             self._advanced_toggle_btn.configure(
-                text="高级参数（收起）" if expanded else "高级参数（展开）"
+                text=f"{title}（收起）" if expanded else f"{title}（展开）"
             )
         if self._advanced_body is not None:
             if expanded:

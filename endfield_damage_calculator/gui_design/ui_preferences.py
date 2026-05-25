@@ -21,6 +21,8 @@ def _default_preferences() -> dict[str, Any]:
     return {
         "startup_page_mode": STARTUP_MODE_ALWAYS_MAIN,
         "last_page": PAGE_MAIN,
+        # 角色侧「技能等级」折叠：无记录时默认展开
+        "char_advanced_expanded": True,
     }
 
 
@@ -45,9 +47,15 @@ def load_ui_preferences(*, base_dir: Path | None = None) -> dict[str, Any]:
     page = str(data.get("last_page", PAGE_MAIN))
     if page not in (PAGE_MAIN, PAGE_ADVANCED):
         page = PAGE_MAIN
+    char_raw = data.get("char_advanced_expanded")
+    if char_raw is None:
+        char_expanded = bool(defaults["char_advanced_expanded"])
+    else:
+        char_expanded = bool(char_raw)
     return {
         "startup_page_mode": mode,
         "last_page": page,
+        "char_advanced_expanded": char_expanded,
     }
 
 
@@ -55,11 +63,15 @@ def save_ui_preferences(
     preferences: dict[str, Any], *, base_dir: Path | None = None
 ) -> None:
     """持久化 GUI 偏好；失败时静默忽略（不阻塞主流程）。"""
+    defaults = _default_preferences()
     path = _preferences_path(base_dir=base_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "startup_page_mode": str(preferences.get("startup_page_mode", STARTUP_MODE_ALWAYS_MAIN)),
         "last_page": str(preferences.get("last_page", PAGE_MAIN)),
+        "char_advanced_expanded": bool(
+            preferences.get("char_advanced_expanded", defaults["char_advanced_expanded"])
+        ),
     }
     try:
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -82,5 +94,14 @@ def record_last_page(preferences: dict[str, Any], *, page: str) -> dict[str, Any
     normalized_page = page if page in (PAGE_MAIN, PAGE_ADVANCED) else PAGE_MAIN
     updated = dict(preferences)
     updated["last_page"] = normalized_page
+    return updated
+
+
+def record_char_advanced_expanded(
+    preferences: dict[str, Any], *, expanded: bool
+) -> dict[str, Any]:
+    """更新内存中的角色「技能等级」折叠展开态。"""
+    updated = dict(preferences)
+    updated["char_advanced_expanded"] = bool(expanded)
     return updated
 

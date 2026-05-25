@@ -86,12 +86,14 @@ from utils.gui_fonts import default_ui_font
 from gui_design.search_settings import build_worker_option_labels
 from gui_design.enhancement_controls import place_enhancement_section
 from gui_design.ui_preferences import (
+    record_char_advanced_expanded,
     record_last_page,
     resolve_startup_page,
     save_ui_preferences,
     load_ui_preferences,
 )
 from utils.operation_log import LogLevel, get_session_operation_log
+from gui_design.loadout_pending import mark_loadout_pending
 from gui_design.search_controls import place_search_section, refresh_search_estimate
 
 class DamageCalculatorApp:
@@ -224,7 +226,10 @@ class DamageCalculatorApp:
         self.all_weapons: List[Dict[str, Any]] = list(self.game_data.weapons)
         # 确认刷新：合并同帧多次调用；签名未变时跳过整页重绘
         self._confirm_refresh_signature: Optional[tuple] = None
+        self._confirmed_display_signature: Optional[tuple] = None
         self._confirm_after_id: Optional[str] = None
+        self._pending_ui_after_id: Optional[str] = None
+        self._confirm_button_default_styles: dict[int, tuple] = {}
         self._skill_count_last_committed: Dict[str, str] = {}
         self._suppress_full_confirm_refresh: bool = False
         self._ui_preferences: Dict[str, Any] = load_ui_preferences()
@@ -519,7 +524,8 @@ class DamageCalculatorApp:
             self.big_font,          # 使用的字体
             is_weapon_panel=True   # 是否为武器面板（启用特殊能力滑块）
         )
-        
+        self._apply_char_skill_levels_expanded_preference()
+
         # 设置角色选择变化时的回调
         self.char_panel.selected_name.trace_add("write", self._on_char_name_change)
         self._bind_live_refresh_traces()
@@ -545,50 +551,52 @@ class DamageCalculatorApp:
         self.app.after_idle(self._startup_refresh)
 
     def _bind_live_refresh_traces(self) -> None:
-        """将关键输入项绑定到确认刷新，保证改值后计算页自动更新。"""
+        """绑定输入 trace：换名即时确认刷新；数值/选项仅标记待确认。"""
         assert self.char_panel is not None, "char_panel 未初始化"
         assert self.weapon_panel is not None, "weapon_panel 未初始化"
 
-        def _schedule(*_args: object) -> None:
+        def _schedule_name_confirm(*_args: object) -> None:
             schedule_confirm(self)
 
-        # 角色/武器主选择与等级
-        self.char_panel.selected_name.trace_add("write", _schedule)
-        self.weapon_panel.selected_name.trace_add("write", _schedule)
-        self.char_panel.selected_level.trace_add("write", _schedule)
-        self.weapon_panel.selected_level.trace_add("write", _schedule)
+        def _mark_pending(*_args: object) -> None:
+            mark_loadout_pending(self)
 
-        # 角色高级参数：信赖 + 技能等级
+        # 换角色/武器名：立刻刷新三列
+        self.char_panel.selected_name.trace_add("write", _schedule_name_confirm)
+        self.weapon_panel.selected_name.trace_add("write", _schedule_name_confirm)
+
+        # 等级、信赖、技能、武器词条：仅待确认，不自动重算三列
+        self.char_panel.selected_level.trace_add("write", _mark_pending)
+        self.weapon_panel.selected_level.trace_add("write", _mark_pending)
+
         if self.char_panel.trust_panel is not None:
-            self.char_panel.trust_panel.trust_level.trace_add("write", _schedule)
+            self.char_panel.trust_panel.trust_level.trace_add("write", _mark_pending)
         if self.char_panel.skill_level_panel is not None:
             skill_panel = self.char_panel.skill_level_panel
-            skill_panel.skill_1_level.trace_add("write", _schedule)
-            skill_panel.skill_2_level.trace_add("write", _schedule)
-            skill_panel.skill_3_level.trace_add("write", _schedule)
+            skill_panel.skill_1_level.trace_add("write", _mark_pending)
+            skill_panel.skill_2_level.trace_add("write", _mark_pending)
+            skill_panel.skill_3_level.trace_add("write", _mark_pending)
 
-        # 武器高级参数：三条附加属性 + 两条特殊能力
         if self.weapon_panel.special_ability_panel is not None:
             special_panel = self.weapon_panel.special_ability_panel
-            special_panel.special_ability_1_level.trace_add("write", _schedule)
-            special_panel.special_ability_2_level.trace_add("write", _schedule)
-            special_panel.special_ability_3_level.trace_add("write", _schedule)
-            special_panel.weapon_special_level.trace_add("write", _schedule)
-            special_panel.weapon_special_2_level.trace_add("write", _schedule)
-        self.damage_component_mode_var.trace_add("write", _schedule)
-        self.use_expected_crit_var.trace_add("write", _schedule)
-        self.include_conditional_equipment_crit_var.trace_add("write", _schedule)
-        self.extra_crit_rate_percent_var.trace_add("write", _schedule)
-        self.extra_crit_damage_percent_var.trace_add("write", _schedule)
-        for var in self._physical_abnormal_count_vars.values():
-            var.trace_add("write", _schedule)
-        for var in self._spell_abnormal_count_vars.values():
-            var.trace_add("write", _schedule)
+            special_panel.special_ability_1_level.trace_add("write", _mark_pending)
+            special_panel.special_ability_2_level.trace_add("write", _mark_pending)
+            special_panel.special_ability_3_level.trace_add("write", _mark_pending)
+            special_panel.weapon_special_level.trace_add("write", _mark_pending)
+            special_panel.weapon_special_2_level.trace_add("write", _mark_pending)
 
     def _startup_refresh(self) -> None:
         """首帧绘制后再做确认刷新与搜索预估（勿在 __init__ 中同步调用）。"""
         handle_confirm(self, force=True)
         self._refresh_search_estimate()
+
+    def _apply_char_skill_levels_expanded_preference(self) -> None:
+        """从 ui_preferences 恢复角色「技能等级」折叠展开态。"""
+        if self.char_panel is None:
+            return
+        expanded = bool(self._ui_preferences.get("char_advanced_expanded", True))
+        self.char_panel._show_advanced_params_var.set(expanded)
+        self.char_panel._refresh_advanced_params_visibility()
 
     def _show_main_page(self) -> None:
         """切回计算页（保留当前输入状态）。"""
@@ -614,6 +622,11 @@ class DamageCalculatorApp:
                 self._ui_preferences = record_last_page(
                     self._ui_preferences,
                     page=str(self.page_tabs.get()),
+                )
+            if self.char_panel is not None:
+                self._ui_preferences = record_char_advanced_expanded(
+                    self._ui_preferences,
+                    expanded=bool(self.char_panel._show_advanced_params_var.get()),
                 )
             save_ui_preferences(self._ui_preferences)
         finally:
@@ -814,7 +827,7 @@ class DamageCalculatorApp:
             values=list(CALC_MODE_LABELS),
             variable=self.calc_mode_var,
             font=self.small_font,
-            command=lambda _v: schedule_confirm(self),
+            command=lambda _v: mark_loadout_pending(self),
         )
         ar = _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
         ar = place_enhancement_section(
@@ -831,7 +844,7 @@ class DamageCalculatorApp:
             self,
             multi,
             wrap_label=self._wrap_control_label,
-            schedule_confirm=lambda **kw: schedule_confirm(self, **kw),
+            schedule_confirm=lambda **_kw: mark_loadout_pending(self),
         )
 
     def _build_fixed_loadout_selection(self):
@@ -988,6 +1001,10 @@ class DamageCalculatorApp:
             return float(self.extra_crit_damage_percent_var.get()) / 100.0
         except (TypeError, ValueError):
             return 0.0
+
+    def _mark_loadout_pending(self) -> None:
+        """配装数值/选项变更：不刷新三列，仅更新待确认按钮。"""
+        mark_loadout_pending(self)
 
     def _schedule_confirm(self, *, force: bool = False) -> None:
         """调度确认刷新。

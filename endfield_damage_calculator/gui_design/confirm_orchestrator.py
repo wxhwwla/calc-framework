@@ -129,3 +129,6 @@ def run_confirm_refresh(app: "DamageCalculatorApp") -> None:
         app,
         summary=f"模式 {app._current_calculation_mode_label()}",
     )
+    from gui_design.loadout_pending import capture_confirmed_display_signature
+
+    capture_confirmed_display_signature(app)

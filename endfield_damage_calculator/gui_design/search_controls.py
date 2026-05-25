@@ -164,7 +164,6 @@ def place_search_section(
     def _on_search_scope_change(_value: str = "") -> None:
         app._refresh_fixed_loadout_menus()
         refresh_search_estimate(app)
-        app._schedule_confirm()
 
     app.single_skill_scope_menu.configure(command=_on_search_scope_change)
     app.single_skill_equipment_scope_menu.configure(command=_on_search_scope_change)
@@ -394,7 +393,6 @@ def on_fixed_loadout_changed(app: "DamageCalculatorApp") -> None:
     catalog = app._single_skill_preview_equipment_catalog()
     refresh_all_fixed_slot_menus(catalog, app._fixed_loadout_slots)
     refresh_search_estimate(app)
-    app._schedule_confirm()
 
 
 def on_cancel_search(app: "DamageCalculatorApp") -> None:

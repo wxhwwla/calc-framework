@@ -13,7 +13,10 @@ from typing import Any, Optional
 
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.search_controller import SearchJobInputs
-from gui_design.confirm_refresh import build_confirm_refresh_signature
+from gui_design.confirm_refresh import (
+    build_confirm_refresh_signature,
+    build_display_pending_signature,
+)
 from gui_design.loadout_preset import LoadoutPreset
 from calculation.weapon_skill_selection import WeaponSkillSelection
 from gui_design.weapon_skill_selection import read_weapon_skill_selection_from_panel
@@ -141,6 +144,29 @@ class LoadoutState:
             extra_crit_damage=self.extra_crit_damage,
             physical_abnormal_counts=self.physical_abnormal_counts,
             spell_abnormal_counts=self.spell_abnormal_counts,
+        )
+
+    def display_pending_signature(self) -> tuple:
+        """供「待确认」检测：仅含影响三列/快照的配装字段。"""
+        return build_display_pending_signature(
+            calculation_mode=self.calculation_mode,
+            char_name=str(self.char_data.get("名称", "")),
+            char_level=self.char_level,
+            weapon_name=str(self.weapon_data.get("名称", "")),
+            weapon_level=self.weapon_level,
+            trust_level=self.trust_level,
+            skill_levels=self.skill_levels,
+            weapon_specials=self.weapon_specials,
+            use_manual_multi_skill_counts=self.use_manual_multi_skill_counts,
+            multi_skill_manual_counts=self.manual_counts,
+            damage_component_mode=self.damage_component_mode,
+            use_expected_crit=self.use_expected_crit,
+            include_conditional_equipment_crit=self.include_conditional_equipment_crit,
+            extra_crit_rate=self.extra_crit_rate,
+            extra_crit_damage=self.extra_crit_damage,
+            physical_abnormal_counts=self.physical_abnormal_counts,
+            spell_abnormal_counts=self.spell_abnormal_counts,
+            enemy_defense=self.enemy_defense,
         )
 
     def to_loadout_preset(self) -> LoadoutPreset:

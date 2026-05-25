@@ -201,7 +201,7 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
     ui_state = preset.ui_state or {}
     char_panel = getattr(app, "char_panel", None)
     if char_panel is not None and hasattr(char_panel, "_show_advanced_params_var"):
-        char_panel._show_advanced_params_var.set(bool(ui_state.get("char_advanced_expanded", False)))
+        char_panel._show_advanced_params_var.set(bool(ui_state.get("char_advanced_expanded", True)))
         if hasattr(char_panel, "_refresh_advanced_params_visibility"):
             char_panel._refresh_advanced_params_visibility()
     weapon_panel = getattr(app, "weapon_panel", None)
@@ -337,7 +337,7 @@ def place_enhancement_section(
             enemy_id = id_by_label.get(choice, "")
             app._plugin_enemy_id = enemy_id
             app._enemy_defense = resolve_enemy_defense(enemy_id)
-            app._schedule_confirm(force=True)
+            app._mark_loadout_pending()
 
         _place_body(
             ctk.CTkLabel(
