@@ -22,9 +22,12 @@ def bake_character_curves(
     sk1: list[dict[str, Any]],
     sk2: list[dict[str, Any]],
     sk3: list[dict[str, Any]],
+    sk1_dt: list[str] | None = None,
+    sk2_dt: list[str] | None = None,
+    sk3_dt: list[str] | None = None,
 ) -> dict[str, Any]:
     """由 seed / 反推参数生成角色四维、攻击与技能曲线字段。"""
-    return generate_character_attributes(
+    attrs = generate_character_attributes(
         {
             "力量": strength,
             "敏捷": agility,
@@ -36,6 +39,13 @@ def bake_character_curves(
             "终结技倍率": sk3,
         }
     )
+    if sk1_dt:
+        attrs["战技段伤害类型"] = list(sk1_dt)
+    if sk2_dt:
+        attrs["连携技段伤害类型"] = list(sk2_dt)
+    if sk3_dt:
+        attrs["终结技段伤害类型"] = list(sk3_dt)
+    return attrs
 
 
 def bake_weapon_curves(

@@ -28,6 +28,7 @@ class SearchJobInputs:
     skill_name: str
     skill_type: str
     skill_multiplier: float
+    damage_type: str
     weapon_scope_label: str
     equipment_scope_label: str
     all_weapons: list[dict[str, Any]]
@@ -80,6 +81,7 @@ def prepare_search_job(
         skill_name=inputs.skill_name,
         skill_type=inputs.skill_type,
         skill_multiplier=inputs.skill_multiplier,
+        damage_type=inputs.damage_type,
         weapon_scope_label=inputs.weapon_scope_label,
         equipment_scope_label=inputs.equipment_scope_label,
         all_weapons=inputs.all_weapons,

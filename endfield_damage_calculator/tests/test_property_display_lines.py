@@ -44,15 +44,15 @@ class TestPropertyDisplayLines(unittest.TestCase):
         lines = build_character_attribute_lines(
             char, level=1, skill_1_level=5, skill_2_level=1, skill_3_level=1,
         )
-        self.assertIn("战技 等级5 第1段: 199%", lines)
+        self.assertIn("战技 等级5 第1段: 199% · 物理(默认物理)", lines)
 
     def test_character_lines_show_multiple_finale_segments(self):
         char = _load_by_name(_CHARACTERS_JSON, "陈千语")
         lines = build_character_attribute_lines(
             char, level=1, skill_1_level=1, skill_2_level=1, skill_3_level=5,
         )
-        self.assertIn("终结技 等级5 第1段: 50%", lines)
-        self.assertIn("终结技 等级5 第2段: 636%", lines)
+        self.assertIn("终结技 等级5 第1段: 50% · 物理(默认物理)", lines)
+        self.assertIn("终结技 等级5 第2段: 636% · 物理(默认物理)", lines)
 
     def test_character_lines_omit_empty_link_skill_type(self):
         """连携技倍率为空时，连携技滑块>0 也不应出现连携技明细行。"""
@@ -87,15 +87,15 @@ class TestPropertyDisplayLines(unittest.TestCase):
         self.assertEqual(
             lines,
             [
-                "战技 等级2 第1段: 200%",
-                "战技 等级2 第2段: 无伤害倍率",
+                "战技 等级2 第1段: 200% · 物理(默认物理)",
+                "战技 等级2 第2段: 无伤害倍率 · 物理(默认物理)",
             ],
         )
 
     def test_character_skill_line_formats_decimal_percent(self):
         char = {"战技倍率": [[218.5]], "连携技倍率": [], "终结技倍率": []}
         lines = build_character_skill_lines(char, skill_1_level=1)
-        self.assertEqual(lines, ["战技 等级1 第1段: 218.5%"])
+        self.assertEqual(lines, ["战技 等级1 第1段: 218.5% · 物理(默认物理)"])
 
     def test_character_lines_are_attribute_only_without_skill_levels(self):
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")

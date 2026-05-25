@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""从干员主页 HTML 解析技能等级倍率表（1–9 + 专1–3）。"""
+"""从干员主页 HTML 解析技能等级倍率表（1–9 + 专1–3）及段伤害类型。"""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import io
 import re
 import sys
 from contextlib import redirect_stdout
+from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ _PKG = _REPO_ROOT / "endfield_damage_calculator"
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
+from calculation.damage_types import infer_segment_damage_type  # noqa: E402
 from calculation.formula import calculate_skill_curve  # noqa: E402
 from calculation.inverse import fit_skill_formula  # noqa: E402
 
@@ -24,15 +26,24 @@ _PERCENT_RE = re.compile(r"([\d.]+)\s*%?")
 _SKIP_ROW_KEYWORDS = ("失衡", "技力", "消耗", "冷却", "范围")
 
 
+@dataclass(frozen=True)
+class ParsedSkillDamageRow:
+    """单行伤害倍率 + 推断的段伤害类型。"""
+
+    curve: list[float]
+    damage_type: str
+    raw_header: str
+
+
 class _SkillTableParser(HTMLParser):
-    """收集技能区各 tab 内「伤害倍率」等行的 12 格数值。"""
+    """收集技能区各 tab 内「伤害倍率」等行的 12 格数值与行标题。"""
 
     def __init__(self) -> None:
         super().__init__()
         self._div_classes: list[str] = []
-        self._tab_tables: list[list[list[float]]] = []
-        self._tab_rows: list[list[float]] = []
-        self._current_table: list[list[float]] | None = None
+        self._tab_tables: list[list[ParsedSkillDamageRow]] = []
+        self._tab_rows: list[ParsedSkillDamageRow] = []
+        self._current_table: list[ParsedSkillDamageRow] | None = None
         self._in_tr = False
         self._in_th = False
         self._row_header = ""
@@ -70,9 +81,9 @@ class _SkillTableParser(HTMLParser):
         if tag == "tr" and self._in_tr:
             self._in_tr = False
             if self._capture_row and self._row_cells and self._current_table is not None:
-                values = [_parse_percent_cell(c) for c in self._row_cells]
-                if len(values) == 12:
-                    self._current_table.append(values)
+                parsed = _finalize_damage_row(self._row_header, self._row_cells)
+                if parsed is not None:
+                    self._current_table.append(parsed)
             self._capture_row = False
         if tag == "table" and self._current_table is not None and self._in_tab_content():
             if self._current_table:
@@ -103,17 +114,35 @@ def _parse_percent_cell(text: str) -> float:
     return float(m.group(1))
 
 
+def _cell_looks_numeric(text: str) -> bool:
+    return bool(_PERCENT_RE.search(text.replace(",", "")))
+
+
+def _finalize_damage_row(header: str, cells: list[str]) -> ParsedSkillDamageRow | None:
+    numeric: list[float] = []
+    extra_text: list[str] = []
+    for cell in cells:
+        if _cell_looks_numeric(cell):
+            numeric.append(_parse_percent_cell(cell))
+        elif cell.strip():
+            extra_text.append(cell.strip())
+    if len(numeric) != 12:
+        return None
+    damage_type = infer_segment_damage_type(header, *extra_text)
+    return ParsedSkillDamageRow(curve=numeric, damage_type=damage_type, raw_header=header.strip())
+
+
 def _is_damage_multiplier_row(header: str) -> bool:
     if "倍率" not in header or "伤害" not in header:
         return False
     return not any(k in header for k in _SKIP_ROW_KEYWORDS)
 
 
-def parse_skill_damage_rows_from_html(html: str) -> list[list[list[float]]]:
+def parse_skill_damage_rows_from_html(html: str) -> list[list[ParsedSkillDamageRow]]:
     """
     解析技能区每个 tab 的伤害倍率行。
 
-    返回 ``[tab_index][row_index][12]``；仅含出现「伤害倍率」行的 tab，按顺序对应 sk1/sk2/sk3。
+    返回 ``[tab_index][row_index]``；仅含出现「伤害倍率」行的 tab，按顺序对应 sk1/sk2/sk3。
     """
     parser = _SkillTableParser()
     parser.feed(html)
@@ -121,26 +150,28 @@ def parse_skill_damage_rows_from_html(html: str) -> list[list[list[float]]]:
 
 
 def skill_tabs_to_seed_skills(
-    tab_tables: list[list[list[float]]],
-) -> dict[str, list[dict[str, Any]]]:
-    """
-    将 HTML tab 转为 seed 的 sk1/sk2/sk3。
-
-    每个 tab 取所有「伤害倍率」行（无该行的普攻 tab 不会出现在 ``tab_tables``）。
-    """
-    tabs = tab_tables
-    out: dict[str, list[dict[str, Any]]] = {}
+    tab_tables: list[list[ParsedSkillDamageRow]],
+) -> dict[str, list[Any]]:
+    """将 HTML tab 转为 seed 的 sk1/sk2/sk3 与平行 sk*_dt 段伤害类型列表。"""
+    out: dict[str, list[Any]] = {}
     keys = ("sk1", "sk2", "sk3")
-    for idx, table in enumerate(tabs[:3]):
-        key = keys[idx]
+    dt_keys = ("sk1_dt", "sk2_dt", "sk3_dt")
+    for idx, table in enumerate(tab_tables[:3]):
+        sk_key = keys[idx]
+        dt_key = dt_keys[idx]
         curves: list[dict[str, Any]] = []
+        damage_types: list[str] = []
         for row in table:
-            if len(row) != 12:
+            if len(row.curve) != 12:
                 continue
-            curves.append(fit_skill_params_from_curve(row))
-        out[key] = curves
+            curves.append(fit_skill_params_from_curve(row.curve))
+            damage_types.append(row.damage_type)
+        out[sk_key] = curves
+        out[dt_key] = damage_types
     for key in keys:
         out.setdefault(key, [])
+    for dt_key in dt_keys:
+        out.setdefault(dt_key, [])
     return out
 
 

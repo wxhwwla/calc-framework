@@ -60,6 +60,8 @@ class SkillScenario:
     skill_multiplier: float
     skill_type: str = ""
     segment_index: int = 1
+    damage_type: str = ""
+    damage_type_explicit: bool = False
     external_effects: tuple[DamageEffect, ...] = ()
 
     @property
@@ -98,6 +100,12 @@ class SkillScenario:
             except ValueError:
                 return 1
         return max(1, self.segment_index)
+
+
+def resolve_scenario_damage_type(scenario: SkillScenario, base_context: DamageContext) -> str:
+    if scenario.damage_type:
+        return scenario.damage_type
+    return base_context.damage_type
 
 
 @dataclass(frozen=True)
@@ -276,7 +284,7 @@ def optimize_multi_skill_loadouts(
             ctx = DamageContext(
                 final_attack=weapon.final_attack,
                 skill_multiplier=scenario.skill_multiplier,
-                damage_type=base_context.damage_type,
+                damage_type=resolve_scenario_damage_type(scenario, base_context),
                 skill_type=scenario.resolved_skill_type or base_context.skill_type,
                 is_unbalanced=base_context.is_unbalanced,
                 is_true_damage=base_context.is_true_damage,
@@ -385,7 +393,7 @@ def evaluate_multi_skill_task(
         ctx = DamageContext(
             final_attack=final_attack,
             skill_multiplier=scenario.skill_multiplier,
-            damage_type=shared_context.damage_type,
+            damage_type=resolve_scenario_damage_type(scenario, shared_context),
             skill_type=scenario.resolved_skill_type or shared_context.skill_type,
             is_unbalanced=shared_context.is_unbalanced,
             is_true_damage=shared_context.is_true_damage,

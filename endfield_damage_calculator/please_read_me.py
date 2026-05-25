@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "1.18.12"
+_VERSION = "1.18.13"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,8 +209,31 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 25 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/gui_design/selection_panel.py
+# - 修改 endfield_damage_calculator/calculation/curve_baker.py
+# - 修改 endfield_damage_calculator/calculation/damage_engine.py
+# - 修改 endfield_damage_calculator/calculation/damage_types.py
+# - 修改 endfield_damage_calculator/calculation/equipment_system.py
+# - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
+# - 修改 endfield_damage_calculator/calculation/search_controller.py
+# - 修改 endfield_damage_calculator/calculation/single_skill_search_job.py
+# - 修改 endfield_damage_calculator/calculation/skill_segments.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/character_data/add_character.py
+# - 修改 endfield_damage_calculator/gui_design/damage_snapshot.py
+# - 修改 endfield_damage_calculator/gui_design/display_lines.py
+# - 修改 endfield_damage_calculator/gui_design/loadout_state.py
+# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/tests/test_confirm_orchestrator.py
+# - 修改 endfield_damage_calculator/tests/test_damage_types.py
+# - 修改 endfield_damage_calculator/tests/test_display_lines_module.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_evaluation.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_state.py
+# - 修改 endfield_damage_calculator/tests/test_property_display_lines.py
+# - 修改 endfield_damage_calculator/tests/test_search_controller.py
+# - 修改 endfield_damage_calculator/tests/test_skill_segments.py
+# - 修改 endfield_damage_calculator/tests/test_skill_tables_damage_type.py
+# - 变更 endfield_damage_calculator/ui_preferences.json
+# - 修改 tools/bwiki_scout/skill_tables.py
 # --- END UPLOAD_SUMMARY ---

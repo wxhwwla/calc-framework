@@ -40,6 +40,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Optional
 
+from calculation.damage_types import damage_type_matches_context
+
 CritMode = Literal["non_crit", "expected", "always_crit"]
 """暴击模式类型：
 - non_crit: 非暴击模式，暴击区固定为 1.0
@@ -232,7 +234,7 @@ def _match_scope(ctx: DamageContext, effect: DamageEffect) -> bool:
     Returns:
         True 如果效果适用于当前上下文，否则 False
     """
-    if effect.damage_types and ctx.damage_type not in effect.damage_types:
+    if effect.damage_types and not damage_type_matches_context(ctx.damage_type, effect.damage_types):
         return False
     if effect.skill_types and ctx.skill_type not in effect.skill_types:
         return False

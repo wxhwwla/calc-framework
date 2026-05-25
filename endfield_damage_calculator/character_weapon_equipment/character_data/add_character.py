@@ -33,6 +33,9 @@ def add_character(
     sk1: list,
     sk2: list,
     sk3: list,
+    sk1_dt: list | None = None,
+    sk2_dt: list | None = None,
+    sk3_dt: list | None = None,
     *,
     json_path: Path | None = None,
 ) -> dict:
@@ -57,6 +60,9 @@ def add_character(
             sk1=copy.deepcopy(sk1),
             sk2=copy.deepcopy(sk2),
             sk3=copy.deepcopy(sk3),
+            sk1_dt=copy.deepcopy(sk1_dt) if sk1_dt else None,
+            sk2_dt=copy.deepcopy(sk2_dt) if sk2_dt else None,
+            sk3_dt=copy.deepcopy(sk3_dt) if sk3_dt else None,
         ),
     }
 

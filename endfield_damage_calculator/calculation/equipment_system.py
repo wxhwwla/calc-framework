@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from calculation.damage_engine import DamageEffect
+from calculation.damage_types import infer_equipment_damage_types
 
 _PERCENT_RE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*%")
 
@@ -69,17 +70,6 @@ def equipment_kind(record: dict[str, Any]) -> str:
         return _SLOT_ALIASES[raw]
     return raw
 
-_DAMAGE_TYPE_TAGS = {
-    "物理": ("物理",),
-    "灼热": ("法术-灼热",),
-    "电磁": ("法术-电磁",),
-    "寒冷": ("法术-寒冷",),
-    "自然": ("法术-自然",),
-    "法术": ("法术-灼热", "法术-电磁", "法术-寒冷", "法术-自然"),
-    "超域": ("超域",),
-}
-
-
 @dataclass(frozen=True)
 class FourSlotLoadout:
     """四格装备。"""
@@ -98,10 +88,7 @@ def _parse_percent_value(text: str) -> float:
 
 
 def _infer_damage_types(text: str) -> tuple[str, ...]:
-    for tag, mapped in _DAMAGE_TYPE_TAGS.items():
-        if tag in text:
-            return mapped
-    return ()
+    return infer_equipment_damage_types(text)
 
 
 def _parse_effect_text(text: str, *, source: str) -> DamageEffect:

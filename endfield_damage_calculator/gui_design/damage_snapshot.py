@@ -154,6 +154,7 @@ def build_damage_snapshot(
             DamageContext(
                 final_attack=final_attack,
                 skill_multiplier=scenario.skill_multiplier,
+                damage_type=scenario.damage_type or "物理",
                 skill_type=scenario.resolved_skill_type,
                 enemy_defense=enemy_defense,
             ),
@@ -195,6 +196,7 @@ def build_damage_snapshot(
             DamageContext(
                 final_attack=final_attack,
                 skill_multiplier=primary.skill_multiplier,
+                damage_type=primary.damage_type or "物理",
                 skill_type=primary.resolved_skill_type,
                 enemy_defense=enemy_defense,
             ),

@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, NamedTuple, Optional
 
 from calculation.config import CHARACTER_NORMAL_ATTRS
 from calculation.damage_engine import (
@@ -15,8 +15,10 @@ from calculation.damage_engine import (
     DamageResult,
     calculate_single_hit_damage,
 )
+from calculation.damage_types import format_damage_type_display, resolve_segment_damage_type
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.preview_cache import cached_preview, sync_confirm_dependencies
+from calculation.skill_segments import CHARACTER_SKILL_TYPES
 from character_weapon_equipment.weapon_data.special_fields import (
     read_weapon_skills_schema,
     special_pick_bonus,
@@ -25,12 +27,7 @@ from character_weapon_equipment.weapon_data.special_fields import (
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
 
-# 角色技能类型与 JSON 字段、选择区滑块等级参数对应
-CHARACTER_SKILL_TYPES = (
-    ("战技", "战技倍率"),
-    ("连携技", "连携技倍率"),
-    ("终结技", "终结技倍率"),
-)
+# 角色技能类型与 JSON 字段、选择区滑块等级参数对应（见 skill_segments.CHARACTER_SKILL_TYPES）
 
 NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
 
@@ -153,6 +150,42 @@ def _skill_segment_display_value(segment: Any, skill_level: int) -> Optional[str
     return format_skill_multiplier_display_value(raw)
 
 
+class SelectedSkillForDamage(NamedTuple):
+    """单段预览/单技能搜索使用的技能与伤害类型。"""
+
+    label: str
+    multiplier: float
+    warning: str
+    damage_type: str
+    damage_type_display: str
+    skill_type: str
+
+
+def build_character_skill_damage_type_lines(
+    char_data: Dict[str, Any],
+    *,
+    skill_1_level: int = 0,
+    skill_2_level: int = 0,
+    skill_3_level: int = 0,
+) -> list[str]:
+    """构建角色各段伤害类型只读列表（与倍率段序对齐）。"""
+    skill_levels = (skill_1_level, skill_2_level, skill_3_level)
+    lines: list[str] = []
+    for (skill_type, field_name, _), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
+        if skill_level <= 0:
+            continue
+        segments = char_data.get(field_name)
+        if not isinstance(segments, list) or not segments:
+            continue
+        for segment_index in range(1, len(segments) + 1):
+            damage_type, explicit = resolve_segment_damage_type(
+                char_data, field_name, segment_index
+            )
+            type_display = format_damage_type_display(damage_type, is_default=not explicit)
+            lines.append(f"{skill_type} 第{segment_index}段: {type_display}")
+    return lines
+
+
 def build_character_skill_lines(
     char_data: Dict[str, Any],
     *,
@@ -163,7 +196,7 @@ def build_character_skill_lines(
     """构建角色技能倍率明细行（战技 → 连携技 → 终结技）。"""
     skill_levels = (skill_1_level, skill_2_level, skill_3_level)
     lines: list[str] = []
-    for (skill_type, field_name), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
+    for (skill_type, field_name, _), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
         if skill_level <= 0:
             continue
         segments = char_data.get(field_name)
@@ -175,8 +208,12 @@ def build_character_skill_lines(
                 value_text = NO_DAMAGE_MULTIPLIER_TEXT
             else:
                 value_text = display_value
+            damage_type, explicit = resolve_segment_damage_type(
+                char_data, field_name, segment_index
+            )
+            type_display = format_damage_type_display(damage_type, is_default=not explicit)
             lines.append(
-                f"{skill_type} 等级{skill_level} 第{segment_index}段: {value_text}"
+                f"{skill_type} 等级{skill_level} 第{segment_index}段: {value_text} · {type_display}"
             )
     return lines
 
@@ -198,6 +235,15 @@ def build_character_attribute_lines(
         if value:
             lines.append(f"{attr_name}: {value}")
     if skill_1_level or skill_2_level or skill_3_level:
+        type_lines = build_character_skill_damage_type_lines(
+            char_data,
+            skill_1_level=skill_1_level,
+            skill_2_level=skill_2_level,
+            skill_3_level=skill_3_level,
+        )
+        if type_lines:
+            lines.append("--- 技能段伤害类型 ---")
+            lines.extend(type_lines)
         lines.extend(
             build_character_skill_lines(
                 char_data,
@@ -324,8 +370,8 @@ def resolve_selected_skill_for_damage(
     skill_1_level: int = 0,
     skill_2_level: int = 0,
     skill_3_level: int = 0,
-) -> tuple[str, float, str]:
-    """根据技能滑块解析单段伤害预览所用的技能倍率。"""
+) -> SelectedSkillForDamage:
+    """根据技能滑块解析单段伤害预览所用的技能倍率与段伤害类型。"""
     picks = (
         ("战技", "战技倍率", skill_1_level),
         ("连携技", "连携技倍率", skill_2_level),
@@ -346,12 +392,27 @@ def resolve_selected_skill_for_damage(
         value = first_segment[idx]
         if value is None:
             continue
-        return (
-            f"{skill_name} 等级{level} 第1段",
-            float(value) / 100.0,
-            "",
+        damage_type, explicit = resolve_segment_damage_type(char_data, field_name, 1)
+        type_display = format_damage_type_display(damage_type, is_default=not explicit)
+        warning = ""
+        if not explicit:
+            warning = "该段伤害类型未收录，按物理伤害计算。"
+        return SelectedSkillForDamage(
+            label=f"{skill_name} 等级{level} 第1段",
+            multiplier=float(value) / 100.0,
+            warning=warning,
+            damage_type=damage_type,
+            damage_type_display=type_display,
+            skill_type=skill_name,
         )
-    return ("默认普攻段", 1.0, "未选择技能等级或无可用倍率，按 100% 计算。")
+    return SelectedSkillForDamage(
+        label="默认普攻段",
+        multiplier=1.0,
+        warning="未选择技能等级或无可用倍率，按 100% 计算。",
+        damage_type="物理",
+        damage_type_display=format_damage_type_display("物理", is_default=True),
+        skill_type="战技",
+    )
 
 
 # 兼容旧私有名（历史模块名，勿再新增引用）
@@ -529,7 +590,7 @@ def _build_single_hit_damage_lines_impl(
     special_skill_2_level = special_skill_2_level if has_special_2 else ws2_level
     special_skill_2_stack = special_skill_2_stack if has_special_2 else ws2_stack
 
-    skill_label, skill_multiplier, skill_warning = resolve_selected_skill_for_damage(
+    skill = resolve_selected_skill_for_damage(
         char_data,
         skill_1_level=skill_1_level,
         skill_2_level=skill_2_level,
@@ -557,21 +618,23 @@ def _build_single_hit_damage_lines_impl(
     result = calculate_single_hit_damage(
         DamageContext(
             final_attack=float(final["final_attack"]),
-            skill_multiplier=skill_multiplier,
-            skill_type=skill_label.split()[0],
+            skill_multiplier=skill.multiplier,
+            damage_type=skill.damage_type,
+            skill_type=skill.skill_type,
             enemy_defense=enemy_defense,
         ),
         crit_mode="non_crit",
     )
     header = [
         "计算模式: 单段伤害计算",
-        f"技能: {skill_label}",
-        f"技能倍率: {format_skill_multiplier_display_value(skill_multiplier * 100)}",
+        f"技能: {skill.label}",
+        f"伤害类型: {skill.damage_type_display}",
+        f"技能倍率: {format_skill_multiplier_display_value(skill.multiplier * 100)}",
         f"最终攻击力(基础伤害区): {final['final_attack']:.1f}",
         "暴击模式: 不暴击",
     ]
-    if skill_warning:
-        header.append(f"提示: {skill_warning}")
+    if skill.warning:
+        header.append(f"提示: {skill.warning}")
     return format_fifteen_zone_damage_lines(
         result,
         header_lines=header,

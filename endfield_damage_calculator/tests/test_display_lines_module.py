@@ -20,12 +20,13 @@ class TestDisplayLinesModule(unittest.TestCase):
             "连携技倍率": [],
             "终结技倍率": [],
         }
-        label, mult, warn = display_lines.resolve_selected_skill_for_damage(
+        skill = display_lines.resolve_selected_skill_for_damage(
             char, skill_1_level=1, skill_2_level=0, skill_3_level=0,
         )
-        self.assertIn("战技", label)
-        self.assertAlmostEqual(mult, 2.0)
-        self.assertEqual(warn, "")
+        self.assertIn("战技", skill.label)
+        self.assertAlmostEqual(skill.multiplier, 2.0)
+        self.assertEqual(skill.warning, "该段伤害类型未收录，按物理伤害计算。")
+        self.assertEqual(skill.damage_type, "物理")
 
 
 if __name__ == "__main__":

@@ -195,7 +195,7 @@ def _build_single_skill_search_preview_lines_impl(
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
     from gui_design.display_lines import resolve_selected_skill_for_damage
 
-    skill_label, skill_multiplier, skill_warning = resolve_selected_skill_for_damage(
+    skill = resolve_selected_skill_for_damage(
         char_data,
         skill_1_level=skill_1_level,
         skill_2_level=skill_2_level,
@@ -229,8 +229,9 @@ def _build_single_skill_search_preview_lines_impl(
     result = search_best_single_skill_loadouts(
         base_context=DamageContext(
             final_attack=0.0,
-            skill_multiplier=skill_multiplier,
-            skill_type=skill_label.split()[0],
+            skill_multiplier=skill.multiplier,
+            damage_type=skill.damage_type,
+            skill_type=skill.skill_type,
             enemy_defense=enemy_defense,
             crit_rate=0.05 + float(extra_crit_rate),
             crit_damage=0.5 + float(extra_crit_damage),
@@ -246,7 +247,8 @@ def _build_single_skill_search_preview_lines_impl(
     )
     lines = [
         "计算模式: 单技能遍历(快速预览)",
-        f"技能: {skill_label}",
+        f"技能: {skill.label}",
+        f"伤害类型: {skill.damage_type_display}",
         f"候选范围: {preview_scope_label or '当前武器'}",
         f"装备范围: {preview_equipment_scope_label or '全部装备'}",
         f"预览组合数: {result.total_combinations}",
@@ -293,8 +295,8 @@ def _build_single_skill_search_preview_lines_impl(
         lines.append(f"当前武器异常估算总伤: {abnormal_total:.1f}")
         lines.extend(format_abnormal_breakdown_lines(physical_breakdown, physical_abnormal_counts, indent="  "))
         lines.extend(format_spell_abnormal_breakdown_lines(spell_breakdown, spell_abnormal_counts, indent="  "))
-    if skill_warning:
-        lines.append(f"提示: {skill_warning}")
+    if skill.warning:
+        lines.append(f"提示: {skill.warning}")
     for idx, score in enumerate(result.top_results, start=1):
         loadout = score.loadout_names
         lines.append(
@@ -527,6 +529,16 @@ def _build_multi_skill_search_preview_lines_impl(
 
         count_desc = f"手动次数: {format_segment_count_label(active_counts)}"
 
+    from calculation.damage_types import format_damage_type_display
+
+    segment_type_lines = []
+    for scenario in scenarios:
+        type_display = format_damage_type_display(
+            scenario.damage_type or "物理",
+            is_default=not scenario.damage_type_explicit,
+        )
+        segment_type_lines.append(f"  {scenario.scenario_key}: {type_display}")
+
     result = optimize_multi_skill_loadouts(
         base_context=DamageContext(
             final_attack=0.0,
@@ -551,6 +563,8 @@ def _build_multi_skill_search_preview_lines_impl(
         f"装备范围: {preview_equipment_scope_label or '全部装备'}",
         f"预览组合数: {result.total_combinations}",
         count_desc,
+        "段伤害类型:",
+        *segment_type_lines,
         "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
     ]
     mode_text = {

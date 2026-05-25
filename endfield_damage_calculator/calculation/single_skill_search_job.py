@@ -142,6 +142,7 @@ def prepare_single_skill_search_job(
     skill_name: str,
     skill_type: str,
     skill_multiplier: float,
+    damage_type: str = "物理",
     weapon_scope_label: str,
     equipment_scope_label: str,
     fixed_loadout: Optional[FixedLoadoutSelection] = None,
@@ -222,6 +223,7 @@ def prepare_single_skill_search_job(
         base_context=DamageContext(
             final_attack=0.0,
             skill_multiplier=float(skill_multiplier),
+            damage_type=str(damage_type or "物理"),
             skill_type=skill_type,
             enemy_defense=float(enemy_defense),
         ),

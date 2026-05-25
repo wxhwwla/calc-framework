@@ -18,6 +18,7 @@ from gui_design.confirm_refresh import (
     build_display_pending_signature,
 )
 from gui_design.loadout_preset import LoadoutPreset
+from gui_design.display_lines import resolve_selected_skill_for_damage
 from calculation.weapon_skill_selection import WeaponSkillSelection
 from gui_design.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
@@ -28,25 +29,15 @@ def _resolve_selected_skill_for_search(
     skill_1_level: int,
     skill_2_level: int,
     skill_3_level: int,
-) -> tuple[str, str, float]:
-    """与 ``DamageCalculatorApp._resolve_selected_skill`` 一致，供全量搜索使用。"""
-    options = (
-        ("战技", "战技倍率", skill_1_level),
-        ("连携技", "连携技倍率", skill_2_level),
-        ("终结技", "终结技倍率", skill_3_level),
+) -> tuple[str, str, float, str]:
+    """与 ``resolve_selected_skill_for_damage`` 一致，供全量搜索使用。"""
+    skill = resolve_selected_skill_for_damage(
+        char_data,
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
     )
-    for skill_name, field, level in options:
-        if level <= 0:
-            continue
-        segments = char_data.get(field) or []
-        if not isinstance(segments, list) or not segments:
-            continue
-        first_segment = segments[0] if isinstance(segments[0], list) else []
-        index = max(0, min(level - 1, len(first_segment) - 1))
-        if isinstance(first_segment, list) and first_segment:
-            value = float(first_segment[index] or 0.0)
-            return skill_name, skill_name, value / 100.0
-    return "战技", "战技", 1.0
+    return skill.label, skill.skill_type, skill.multiplier, skill.damage_type
 
 
 @dataclass(frozen=True)
@@ -62,6 +53,7 @@ class LoadoutState:
     skill_name: str
     skill_type: str
     skill_multiplier: float
+    damage_type: str
     calculation_mode: str
     weapon_scope_label: str
     equipment_scope_label: str
@@ -209,6 +201,7 @@ class LoadoutState:
             skill_name=self.skill_name,
             skill_type=self.skill_type,
             skill_multiplier=self.skill_multiplier,
+            damage_type=self.damage_type,
             weapon_scope_label=self.weapon_scope_label,
             equipment_scope_label=self.equipment_scope_label,
             all_weapons=all_weapons,
@@ -272,7 +265,7 @@ def read_loadout_from_panels(
     if not char_data or not weapon_data:
         return None
 
-    skill_name, skill_type, skill_multiplier = _resolve_selected_skill_for_search(
+    skill_name, skill_type, skill_multiplier, damage_type = _resolve_selected_skill_for_search(
         char_data,
         skill_1_level=int(char_panel.get_skill_1_level()),
         skill_2_level=int(char_panel.get_skill_2_level()),
@@ -293,6 +286,7 @@ def read_loadout_from_panels(
         skill_name=skill_name,
         skill_type=skill_type,
         skill_multiplier=float(skill_multiplier),
+        damage_type=damage_type,
         calculation_mode=calculation_mode,
         weapon_scope_label=weapon_scope_label,
         equipment_scope_label=equipment_scope_label,

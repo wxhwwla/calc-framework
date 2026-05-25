@@ -11,12 +11,16 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from calculation.multi_skill_optimizer import SkillScenario
+from calculation.damage_types import (
+    format_damage_type_display,
+    resolve_segment_damage_type,
+)
 
-# 与 display_lines.CHARACTER_SKILL_TYPES 一致
-CHARACTER_SKILL_TYPES: tuple[tuple[str, str], ...] = (
-    ("战技", "战技倍率"),
-    ("连携技", "连携技倍率"),
-    ("终结技", "终结技倍率"),
+# 与 display_lines.CHARACTER_SKILL_TYPES 一致：(技能槽名, 倍率字段, 段伤害类型字段)
+CHARACTER_SKILL_TYPES: tuple[tuple[str, str, str], ...] = (
+    ("战技", "战技倍率", "战技段伤害类型"),
+    ("连携技", "连携技倍率", "连携技段伤害类型"),
+    ("终结技", "终结技倍率", "终结技段伤害类型"),
 )
 
 SKILL_TYPE_ORDER: tuple[str, ...] = ("战技", "连携技", "终结技")
@@ -75,7 +79,7 @@ def build_segment_scenarios_from_levels(
     """按左侧技能等级构建全部有效段场景（每段独立倍率）。"""
     skill_levels = (skill_1_level, skill_2_level, skill_3_level)
     scenarios: list[SkillScenario] = []
-    for (skill_type, field_name), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
+    for (skill_type, field_name, _), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
         if skill_level <= 0:
             continue
         segments = char_data.get(field_name)
@@ -90,12 +94,17 @@ def build_segment_scenarios_from_levels(
             )
             if multiplier is None:
                 continue
+            damage_type, explicit = resolve_segment_damage_type(
+                char_data, field_name, segment_index
+            )
             scenarios.append(
                 SkillScenario(
                     skill_name=segment_key(skill_type, segment_index),
                     skill_multiplier=multiplier,
                     skill_type=skill_type,
                     segment_index=segment_index,
+                    damage_type=damage_type,
+                    damage_type_explicit=explicit,
                 )
             )
     return scenarios
@@ -181,17 +190,26 @@ def format_segment_count_label(counts: dict[str, int]) -> str:
     return " + ".join(parts) if parts else "（无有效次数）"
 
 
-def segment_display_label(scenario_key: str, *, multiplier_percent: Optional[float] = None) -> str:
-    """GUI 行标签，如 ``连携技 第2段 (400%)``。"""
+def segment_display_label(
+    scenario_key: str,
+    *,
+    multiplier_percent: Optional[float] = None,
+    damage_type_display: Optional[str] = None,
+) -> str:
+    """GUI 行标签，如 ``连携技 第2段 (400%) · 灼热``。"""
     skill_type, seg = parse_segment_key(scenario_key)
     if multiplier_percent is None:
-        return f"{skill_type} 第{seg}段"
-    pct = multiplier_percent
-    if pct == int(pct):
-        pct_text = f"{int(pct)}%"
+        base = f"{skill_type} 第{seg}段"
     else:
-        pct_text = f"{format(pct, 'g')}%"
-    return f"{skill_type} 第{seg}段 ({pct_text})"
+        pct = multiplier_percent
+        if pct == int(pct):
+            pct_text = f"{int(pct)}%"
+        else:
+            pct_text = f"{format(pct, 'g')}%"
+        base = f"{skill_type} 第{seg}段 ({pct_text})"
+    if damage_type_display:
+        return f"{base} · {damage_type_display}"
+    return base
 
 
 def list_segment_count_specs(
@@ -204,7 +222,7 @@ def list_segment_count_specs(
     """供 GUI 动态行的段规格（键、标签、倍率%）。"""
     specs: list[dict[str, Any]] = []
     skill_levels = (skill_1_level, skill_2_level, skill_3_level)
-    for (skill_type, field_name), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
+    for (skill_type, field_name, _), skill_level in zip(CHARACTER_SKILL_TYPES, skill_levels):
         if skill_level <= 0:
             continue
         segments = char_data.get(field_name)
@@ -220,12 +238,22 @@ def list_segment_count_specs(
             if multiplier is None:
                 continue
             key = segment_key(skill_type, segment_index)
+            damage_type, explicit = resolve_segment_damage_type(
+                char_data, field_name, segment_index
+            )
+            type_display = format_damage_type_display(damage_type, is_default=not explicit)
             specs.append(
                 {
                     "key": key,
-                    "label": segment_display_label(key, multiplier_percent=multiplier * 100.0),
+                    "label": segment_display_label(
+                        key,
+                        multiplier_percent=multiplier * 100.0,
+                        damage_type_display=type_display,
+                    ),
                     "skill_type": skill_type,
                     "segment_index": segment_index,
+                    "damage_type": damage_type,
+                    "damage_type_display": type_display,
                 }
             )
     return specs

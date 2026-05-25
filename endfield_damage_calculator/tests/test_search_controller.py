@@ -55,6 +55,7 @@ class TestSearchController(unittest.TestCase):
             skill_name="战技",
             skill_type="战技",
             skill_multiplier=2.0,
+            damage_type="物理",
             weapon_scope_label="当前武器",
             equipment_scope_label="全部装备",
             all_weapons=[self._weapon()],
