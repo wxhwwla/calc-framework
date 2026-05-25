@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
 PRESET_SCHEMA = "endfield_loadout_preset_v1"
@@ -32,6 +32,13 @@ class LoadoutPreset:
     fixed_equipment_names: dict[str, Optional[str]]
     multi_skill_counts: dict[str, int]
     use_manual_multi_skill_counts: bool
+    physical_abnormal_counts: dict[str, int] = field(default_factory=dict)
+    spell_abnormal_counts: dict[str, int] = field(default_factory=dict)
+    damage_component_mode: str = "skill_and_abnormal"
+    use_expected_crit: bool = False
+    include_conditional_equipment_crit: bool = False
+    extra_crit_rate: float = 0.0
+    extra_crit_damage: float = 0.0
     ui_state: dict[str, Any] | None = None
     note: str = ""
 
@@ -50,6 +57,13 @@ class LoadoutPreset:
             "fixed_equipment_names": dict(self.fixed_equipment_names),
             "multi_skill_counts": dict(self.multi_skill_counts),
             "use_manual_multi_skill_counts": self.use_manual_multi_skill_counts,
+            "physical_abnormal_counts": dict(self.physical_abnormal_counts),
+            "spell_abnormal_counts": dict(self.spell_abnormal_counts),
+            "damage_component_mode": self.damage_component_mode,
+            "use_expected_crit": self.use_expected_crit,
+            "include_conditional_equipment_crit": self.include_conditional_equipment_crit,
+            "extra_crit_rate": float(self.extra_crit_rate),
+            "extra_crit_damage": float(self.extra_crit_damage),
             "ui_state": dict(self.ui_state or {}),
             "note": self.note,
         }
@@ -60,9 +74,17 @@ class LoadoutPreset:
             raise ValueError(f"不支持的预设格式: {data.get('schema')}")
         fixed = data.get("fixed_equipment_names") or {}
         counts = data.get("multi_skill_counts") or {}
+        abnormal_counts = data.get("physical_abnormal_counts") or {}
+        spell_abnormal_counts = data.get("spell_abnormal_counts") or {}
         parsed_counts: dict[str, int] = {}
         for key, value in counts.items():
             parsed_counts[str(key)] = max(0, int(value))
+        parsed_abnormal_counts: dict[str, int] = {}
+        for key, value in abnormal_counts.items():
+            parsed_abnormal_counts[str(key)] = max(0, int(value))
+        parsed_spell_abnormal_counts: dict[str, int] = {}
+        for key, value in spell_abnormal_counts.items():
+            parsed_spell_abnormal_counts[str(key)] = max(0, int(value))
         if not any(":" in k for k in parsed_counts):
             parsed_counts.setdefault("战技", int(counts.get("战技", 0)))
             parsed_counts.setdefault("连携技", int(counts.get("连携技", 0)))
@@ -92,6 +114,15 @@ class LoadoutPreset:
             use_manual_multi_skill_counts=bool(
                 data.get("use_manual_multi_skill_counts", False)
             ),
+            physical_abnormal_counts=parsed_abnormal_counts,
+            spell_abnormal_counts=parsed_spell_abnormal_counts,
+            damage_component_mode=str(data.get("damage_component_mode", "skill_and_abnormal")),
+            use_expected_crit=bool(data.get("use_expected_crit", False)),
+            include_conditional_equipment_crit=bool(
+                data.get("include_conditional_equipment_crit", False)
+            ),
+            extra_crit_rate=float(data.get("extra_crit_rate", 0.0) or 0.0),
+            extra_crit_damage=float(data.get("extra_crit_damage", 0.0) or 0.0),
             ui_state={
                 "char_advanced_expanded": bool(
                     (data.get("ui_state") or {}).get("char_advanced_expanded", False)

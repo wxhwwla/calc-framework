@@ -100,6 +100,13 @@ def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
         fixed_equipment_names=preset.fixed_equipment_names,
         multi_skill_counts=preset.multi_skill_counts,
         use_manual_multi_skill_counts=preset.use_manual_multi_skill_counts,
+        physical_abnormal_counts=preset.physical_abnormal_counts,
+        spell_abnormal_counts=preset.spell_abnormal_counts,
+        damage_component_mode=preset.damage_component_mode,
+        use_expected_crit=preset.use_expected_crit,
+        include_conditional_equipment_crit=preset.include_conditional_equipment_crit,
+        extra_crit_rate=preset.extra_crit_rate,
+        extra_crit_damage=preset.extra_crit_damage,
         ui_state=ui_state,
         note=preset.note,
     )
@@ -152,9 +159,32 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
     app.single_skill_scope_var.set(preset.weapon_scope)
     app.single_skill_equipment_scope_var.set(preset.equipment_scope)
     app.use_manual_skill_counts_var.set(preset.use_manual_multi_skill_counts)
-    from gui_design.multi_skill_controls import apply_segment_counts_to_app
+    from gui_design.multi_skill_controls import (
+        apply_physical_abnormal_counts_to_app,
+        apply_spell_abnormal_counts_to_app,
+        apply_segment_counts_to_app,
+    )
 
     apply_segment_counts_to_app(app, preset.multi_skill_counts)
+    apply_physical_abnormal_counts_to_app(app, preset.physical_abnormal_counts)
+    apply_spell_abnormal_counts_to_app(app, getattr(preset, "spell_abnormal_counts", {}))
+    if hasattr(app, "damage_component_mode_var"):
+        if preset.damage_component_mode == "skill_only":
+            app.damage_component_mode_var.set("仅技能")
+        elif preset.damage_component_mode == "abnormal_only":
+            app.damage_component_mode_var.set("仅异常")
+        else:
+            app.damage_component_mode_var.set("技能+异常")
+    if hasattr(app, "use_expected_crit_var"):
+        app.use_expected_crit_var.set(bool(preset.use_expected_crit))
+    if hasattr(app, "include_conditional_equipment_crit_var"):
+        app.include_conditional_equipment_crit_var.set(
+            bool(preset.include_conditional_equipment_crit)
+        )
+    if hasattr(app, "extra_crit_rate_percent_var"):
+        app.extra_crit_rate_percent_var.set(str(float(preset.extra_crit_rate) * 100.0))
+    if hasattr(app, "extra_crit_damage_percent_var"):
+        app.extra_crit_damage_percent_var.set(str(float(preset.extra_crit_damage) * 100.0))
     ui_state = preset.ui_state or {}
     char_panel = getattr(app, "char_panel", None)
     if char_panel is not None and hasattr(char_panel, "_show_advanced_params_var"):

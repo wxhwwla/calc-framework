@@ -12,6 +12,8 @@ apply_platform_win32_patch()
 import customtkinter as ctk
 
 from calculation.skill_segments import list_segment_count_specs
+from calculation.physical_abnormal import PHYSICAL_ABNORMAL_LEVELS, PHYSICAL_ABNORMAL_TYPES
+from calculation.spell_abnormal import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYPES
 from gui_design.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
 from gui_design.panel_hints import MULTI_SKILL_COUNTS_HINT
 
@@ -56,6 +58,38 @@ def read_manual_multi_skill_counts(app: "DamageCalculatorApp") -> dict[str, int]
     counts: dict[str, int] = {}
     segment_vars = getattr(app, "_segment_count_vars", None) or {}
     for key, var in segment_vars.items():
+        counts[key] = _to_int(var.get())
+    return counts
+
+
+def read_manual_physical_abnormal_counts(app: "DamageCalculatorApp") -> dict[str, int]:
+    """读取 GUI 物理异常矩阵次数（键如 ``猛击:3``）。"""
+
+    def _to_int(text: str) -> int:
+        try:
+            return max(0, int(float(text)))
+        except (TypeError, ValueError):
+            return 0
+
+    counts: dict[str, int] = {}
+    vars_map = getattr(app, "_physical_abnormal_count_vars", None) or {}
+    for key, var in vars_map.items():
+        counts[key] = _to_int(var.get())
+    return counts
+
+
+def read_manual_spell_abnormal_counts(app: "DamageCalculatorApp") -> dict[str, int]:
+    """读取 GUI 法术异常矩阵次数（键如 ``灼热异常:2``）。"""
+
+    def _to_int(text: str) -> int:
+        try:
+            return max(0, int(float(text)))
+        except (TypeError, ValueError):
+            return 0
+
+    counts: dict[str, int] = {}
+    vars_map = getattr(app, "_spell_abnormal_count_vars", None) or {}
+    for key, var in vars_map.items():
         counts[key] = _to_int(var.get())
     return counts
 
@@ -173,6 +207,50 @@ def apply_segment_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, in
         app._skill_count_last_committed[key] = normalize_skill_count_text(var.get())
 
 
+def apply_physical_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
+    """将物理异常次数写回矩阵输入框（预设导入用）。"""
+    vars_map = getattr(app, "_physical_abnormal_count_vars", None) or {}
+    for abnormal in PHYSICAL_ABNORMAL_TYPES:
+        for level in PHYSICAL_ABNORMAL_LEVELS:
+            key = f"{abnormal}:{level}"
+            var = vars_map.get(key)
+            if var is None:
+                continue
+            value = max(0, int(float(counts.get(key, 0))))
+            var.set(str(value))
+
+
+def apply_spell_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
+    """将法术异常次数写回矩阵输入框（预设导入用）。"""
+    vars_map = getattr(app, "_spell_abnormal_count_vars", None) or {}
+    for abnormal in SPELL_ABNORMAL_TYPES:
+        for level in SPELL_ABNORMAL_LEVELS:
+            key = f"{abnormal}:{level}"
+            var = vars_map.get(key)
+            if var is None:
+                continue
+            value = max(0, int(float(counts.get(key, 0))))
+            var.set(str(value))
+
+
+def clear_physical_abnormal_counts(app: "DamageCalculatorApp") -> None:
+    """一键清空异常次数。"""
+    for var in (getattr(app, "_physical_abnormal_count_vars", None) or {}).values():
+        var.set("0")
+    schedule = getattr(app, "_schedule_confirm", None)
+    if callable(schedule):
+        schedule()
+
+
+def clear_spell_abnormal_counts(app: "DamageCalculatorApp") -> None:
+    """一键清空法术异常次数。"""
+    for var in (getattr(app, "_spell_abnormal_count_vars", None) or {}).values():
+        var.set("0")
+    schedule = getattr(app, "_schedule_confirm", None)
+    if callable(schedule):
+        schedule()
+
+
 def place_multi_skill_section(
     app: "DamageCalculatorApp",
     parent: ctk.CTkFrame,
@@ -227,6 +305,190 @@ def place_multi_skill_section(
     mr += 1
 
     rebuild_multi_skill_segment_rows(app)
+
+    mr = _section("物理异常", mr)
+
+    mode_row = ctk.CTkFrame(parent, fg_color="transparent")
+    mode_row.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
+    mode_row.grid_columnconfigure(1, weight=1)
+    ctk.CTkLabel(
+        mode_row,
+        text="伤害口径",
+        font=app.small_font,
+        text_color="#CCCCCC",
+    ).grid(row=0, column=0, padx=(0, 6), pady=0, sticky="w")
+    ctk.CTkOptionMenu(
+        mode_row,
+        variable=app.damage_component_mode_var,
+        values=["仅技能", "仅异常", "技能+异常"],
+        font=app.small_font,
+        command=lambda _v: schedule_confirm(),
+    ).grid(row=0, column=1, padx=0, pady=0, sticky="ew")
+    mr += 1
+
+    expected_switch = ctk.CTkSwitch(
+        parent,
+        text="期望伤害模式（计入暴击期望）",
+        variable=app.use_expected_crit_var,
+        font=app.small_font,
+        command=lambda: schedule_confirm(),
+    )
+    mr = _place(mr, expected_switch, pady=(0, 4))
+
+    conditional_switch = ctk.CTkSwitch(
+        parent,
+        text="装备条件暴击效果生效",
+        variable=app.include_conditional_equipment_crit_var,
+        font=app.small_font,
+        command=lambda: schedule_confirm(),
+    )
+    mr = _place(mr, conditional_switch, pady=(0, 6))
+
+    bonus_row = ctk.CTkFrame(parent, fg_color="transparent")
+    bonus_row.grid(row=mr, column=0, padx=4, pady=(0, 6), sticky="ew")
+    bonus_row.grid_columnconfigure(1, weight=1)
+    bonus_row.grid_columnconfigure(3, weight=1)
+    ctk.CTkLabel(
+        bonus_row,
+        text="额外暴击率%",
+        font=app.small_font,
+        text_color="#CCCCCC",
+    ).grid(row=0, column=0, padx=(0, 4), pady=0, sticky="w")
+    crit_rate_entry = ctk.CTkEntry(
+        bonus_row,
+        textvariable=app.extra_crit_rate_percent_var,
+        width=72,
+        font=app.small_font,
+    )
+    crit_rate_entry.grid(row=0, column=1, padx=(0, 8), pady=0, sticky="ew")
+    ctk.CTkLabel(
+        bonus_row,
+        text="额外暴伤%",
+        font=app.small_font,
+        text_color="#CCCCCC",
+    ).grid(row=0, column=2, padx=(0, 4), pady=0, sticky="w")
+    crit_damage_entry = ctk.CTkEntry(
+        bonus_row,
+        textvariable=app.extra_crit_damage_percent_var,
+        width=72,
+        font=app.small_font,
+    )
+    crit_damage_entry.grid(row=0, column=3, padx=0, pady=0, sticky="ew")
+    crit_rate_entry.bind("<FocusOut>", lambda _e: schedule_confirm())
+    crit_rate_entry.bind("<Return>", lambda _e: schedule_confirm())
+    crit_damage_entry.bind("<FocusOut>", lambda _e: schedule_confirm())
+    crit_damage_entry.bind("<Return>", lambda _e: schedule_confirm())
+    mr += 1
+
+    matrix = ctk.CTkFrame(parent, fg_color="transparent")
+    matrix.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
+    matrix.grid_columnconfigure(0, weight=1, minsize=78)
+    for idx, level in enumerate(PHYSICAL_ABNORMAL_LEVELS, start=1):
+        matrix.grid_columnconfigure(idx, weight=0, minsize=44)
+        ctk.CTkLabel(
+            matrix,
+            text=f"L{level}",
+            font=app.small_font,
+            text_color="#BBBBBB",
+        ).grid(row=0, column=idx, padx=(2, 2), pady=(0, 2), sticky="n")
+    ctk.CTkLabel(
+        matrix,
+        text="异常",
+        font=app.small_font,
+        text_color="#BBBBBB",
+    ).grid(row=0, column=0, padx=(0, 4), pady=(0, 2), sticky="w")
+
+    app._physical_abnormal_count_vars = {}
+
+    def _on_abnormal_commit(var: ctk.StringVar) -> None:
+        normalized = normalize_skill_count_text(var.get())
+        if var.get() != normalized:
+            var.set(normalized)
+        schedule_confirm()
+
+    for row_idx, abnormal in enumerate(PHYSICAL_ABNORMAL_TYPES, start=1):
+        ctk.CTkLabel(
+            matrix,
+            text=abnormal,
+            font=app.small_font,
+            text_color="#CCCCCC",
+        ).grid(row=row_idx, column=0, padx=(0, 4), pady=(0, 2), sticky="w")
+        for col_idx, level in enumerate(PHYSICAL_ABNORMAL_LEVELS, start=1):
+            key = f"{abnormal}:{level}"
+            var = ctk.StringVar(value="0")
+            app._physical_abnormal_count_vars[key] = var
+            entry = ctk.CTkEntry(
+                matrix,
+                textvariable=var,
+                width=44,
+                font=app.small_font,
+                justify="center",
+            )
+            entry.grid(row=row_idx, column=col_idx, padx=2, pady=(0, 2), sticky="ew")
+            entry.bind("<FocusOut>", lambda _e, _v=var: _on_abnormal_commit(_v))
+            entry.bind("<Return>", lambda _e, _v=var: _on_abnormal_commit(_v))
+    mr += 1
+
+    clear_btn = ctk.CTkButton(
+        parent,
+        text="清空全部异常次数",
+        font=app.small_font,
+        height=28,
+        command=lambda: clear_physical_abnormal_counts(app),
+    )
+    mr = _place(mr, clear_btn, pady=(0, 6))
+
+    mr = _section("法术异常（骨架）", mr)
+    spell_matrix = ctk.CTkFrame(parent, fg_color="transparent")
+    spell_matrix.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
+    spell_matrix.grid_columnconfigure(0, weight=1, minsize=78)
+    for idx, level in enumerate(SPELL_ABNORMAL_LEVELS, start=1):
+        spell_matrix.grid_columnconfigure(idx, weight=0, minsize=44)
+        ctk.CTkLabel(
+            spell_matrix,
+            text=f"L{level}",
+            font=app.small_font,
+            text_color="#BBBBBB",
+        ).grid(row=0, column=idx, padx=(2, 2), pady=(0, 2), sticky="n")
+    ctk.CTkLabel(
+        spell_matrix,
+        text="异常",
+        font=app.small_font,
+        text_color="#BBBBBB",
+    ).grid(row=0, column=0, padx=(0, 4), pady=(0, 2), sticky="w")
+
+    app._spell_abnormal_count_vars = {}
+    for row_idx, abnormal in enumerate(SPELL_ABNORMAL_TYPES, start=1):
+        ctk.CTkLabel(
+            spell_matrix,
+            text=abnormal,
+            font=app.small_font,
+            text_color="#CCCCCC",
+        ).grid(row=row_idx, column=0, padx=(0, 4), pady=(0, 2), sticky="w")
+        for col_idx, level in enumerate(SPELL_ABNORMAL_LEVELS, start=1):
+            key = f"{abnormal}:{level}"
+            var = ctk.StringVar(value="0")
+            app._spell_abnormal_count_vars[key] = var
+            entry = ctk.CTkEntry(
+                spell_matrix,
+                textvariable=var,
+                width=44,
+                font=app.small_font,
+                justify="center",
+            )
+            entry.grid(row=row_idx, column=col_idx, padx=2, pady=(0, 2), sticky="ew")
+            entry.bind("<FocusOut>", lambda _e, _v=var: _on_abnormal_commit(_v))
+            entry.bind("<Return>", lambda _e, _v=var: _on_abnormal_commit(_v))
+    mr += 1
+
+    clear_spell_btn = ctk.CTkButton(
+        parent,
+        text="清空全部法术异常次数",
+        font=app.small_font,
+        height=28,
+        command=lambda: clear_spell_abnormal_counts(app),
+    )
+    mr = _place(mr, clear_spell_btn, pady=(0, 6))
 
 
 def on_manual_skill_counts_switch_changed(app: "DamageCalculatorApp") -> None:

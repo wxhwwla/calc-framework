@@ -7,6 +7,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
+from calculation.physical_abnormal import (
+    abnormal_weighted_total,
+    format_abnormal_breakdown_lines,
+    split_damage_breakdown,
+)
+from calculation.spell_abnormal import (
+    format_spell_abnormal_breakdown_lines,
+    is_spell_abnormal_key,
+    spell_abnormal_weighted_total,
+)
 from calculation.loadout_optimizer import LoadoutScore
 from calculation.skill_segments import format_segment_breakdown_lines
 
@@ -17,6 +27,8 @@ def _format_top_result_line(
     *,
     damage_metric: str = "伤害",
     segment_counts: Optional[dict[str, int]] = None,
+    abnormal_counts: Optional[dict[str, int]] = None,
+    spell_abnormal_counts: Optional[dict[str, int]] = None,
 ) -> list[str]:
     loadout = score.loadout_names
     lines = [
@@ -26,14 +38,49 @@ def _format_top_result_line(
         f"配件A {loadout.get('accessory_a', '')}  |  "
         f"配件B {loadout.get('accessory_b', '')}",
     ]
-    if score.segment_breakdown and segment_counts:
+    if score.segment_breakdown:
+        base_skill_breakdown, physical_abnormal_breakdown = split_damage_breakdown(score.segment_breakdown)
+        spell_abnormal_breakdown: dict[str, float] = {}
+        skill_breakdown: dict[str, float] = {}
+        for key, value in base_skill_breakdown.items():
+            if is_spell_abnormal_key(key):
+                spell_abnormal_breakdown[key] = value
+            else:
+                skill_breakdown[key] = value
+    else:
+        skill_breakdown, physical_abnormal_breakdown, spell_abnormal_breakdown = {}, {}, {}
+    if skill_breakdown and segment_counts:
         lines.extend(
             format_segment_breakdown_lines(
-                score.segment_breakdown,
+                skill_breakdown,
                 segment_counts,
                 indent="       ",
             )
         )
+    if physical_abnormal_breakdown and abnormal_counts:
+        lines.extend(
+            format_abnormal_breakdown_lines(
+                physical_abnormal_breakdown,
+                abnormal_counts,
+                indent="       ",
+            )
+        )
+        abnormal_total = abnormal_weighted_total(physical_abnormal_breakdown, abnormal_counts)
+        if abnormal_total > 0:
+            lines.append(f"       物理异常合计: {abnormal_total:.1f}")
+    if spell_abnormal_breakdown and spell_abnormal_counts:
+        lines.extend(
+            format_spell_abnormal_breakdown_lines(
+                spell_abnormal_breakdown,
+                spell_abnormal_counts,
+                indent="       ",
+            )
+        )
+        spell_total = spell_abnormal_weighted_total(
+            spell_abnormal_breakdown, spell_abnormal_counts
+        )
+        if spell_total > 0:
+            lines.append(f"       法术异常合计: {spell_total:.1f}")
     return lines
 
 
@@ -49,6 +96,8 @@ def build_search_results_report_lines(
     cancelled: bool = False,
     damage_metric: str = "伤害",
     segment_counts: Optional[dict[str, int]] = None,
+    abnormal_counts: Optional[dict[str, int]] = None,
+    spell_abnormal_counts: Optional[dict[str, int]] = None,
 ) -> list[str]:
     """生成全量遍历结果报告（供弹窗与测试使用）。"""
     weapon_scope, equip_scope = scope_labels
@@ -76,6 +125,8 @@ def build_search_results_report_lines(
                     score,
                     damage_metric=damage_metric,
                     segment_counts=segment_counts,
+                    abnormal_counts=abnormal_counts,
+                    spell_abnormal_counts=spell_abnormal_counts,
                 )
             )
     if export_paths:

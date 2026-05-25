@@ -71,6 +71,16 @@ class LoadoutScore:
 
 
 @dataclass(frozen=True)
+class RuntimeEvalSnapshot:
+    """单条任务运行时快照：最终攻击/效果/名称。"""
+
+    weapon_name: str
+    final_attack: float
+    effects: tuple[DamageEffect, ...]
+    loadout_names: dict[str, str]
+
+
+@dataclass(frozen=True)
 class OptimizerResult:
     """搜索结果。"""
 
@@ -300,6 +310,42 @@ def evaluate_task(
     search_eval: Optional[SearchEvalContext] = None,
 ) -> LoadoutScore:
     """评估单条搜索任务：四格配装 → 词条加成 → 最终攻击 → 单段伤害。"""
+    snapshot = build_runtime_eval_snapshot(
+        task=task,
+        search_eval=search_eval,
+    )
+    ctx = DamageContext(
+        final_attack=snapshot.final_attack,
+        skill_multiplier=base_context.skill_multiplier,
+        damage_type=base_context.damage_type,
+        skill_type=base_context.skill_type,
+        is_unbalanced=base_context.is_unbalanced,
+        is_true_damage=base_context.is_true_damage,
+        enemy_defense=base_context.enemy_defense,
+        enemy_resistance=base_context.enemy_resistance,
+        ignore_resistance=base_context.ignore_resistance,
+        imbalance_vulnerability_coeff=base_context.imbalance_vulnerability_coeff,
+        crit_rate=base_context.crit_rate,
+        crit_damage=base_context.crit_damage,
+        damage_type_bonus=base_context.damage_type_bonus,
+        skill_type_bonus=base_context.skill_type_bonus,
+        imbalance_damage_bonus=base_context.imbalance_damage_bonus,
+        other_damage_bonus=base_context.other_damage_bonus,
+    )
+    result = calculate_single_hit_damage(ctx, effects=list(snapshot.effects), crit_mode=crit_mode)
+    return LoadoutScore(
+        weapon_name=snapshot.weapon_name,
+        final_damage=result.final_damage,
+        loadout_names=dict(snapshot.loadout_names),
+    )
+
+
+def build_runtime_eval_snapshot(
+    *,
+    task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]],
+    search_eval: Optional[SearchEvalContext] = None,
+) -> RuntimeEvalSnapshot:
+    """将一条任务解析为可复用的运行时快照。"""
     weapon, (chest, glove, acc_a, acc_b) = task
     # 将 JSON 行转为带解析后效果的运行时四格结构
     loadout = build_four_slot_loadout(
@@ -327,28 +373,10 @@ def evaluate_task(
                 equipment_attack_percent=atk_percent,
             )
             final_attack = float(details["final_attack"])
-    ctx = DamageContext(
-        final_attack=final_attack,
-        skill_multiplier=base_context.skill_multiplier,
-        damage_type=base_context.damage_type,
-        skill_type=base_context.skill_type,
-        is_unbalanced=base_context.is_unbalanced,
-        is_true_damage=base_context.is_true_damage,
-        enemy_defense=base_context.enemy_defense,
-        enemy_resistance=base_context.enemy_resistance,
-        ignore_resistance=base_context.ignore_resistance,
-        imbalance_vulnerability_coeff=base_context.imbalance_vulnerability_coeff,
-        crit_rate=base_context.crit_rate,
-        crit_damage=base_context.crit_damage,
-        damage_type_bonus=base_context.damage_type_bonus,
-        skill_type_bonus=base_context.skill_type_bonus,
-        imbalance_damage_bonus=base_context.imbalance_damage_bonus,
-        other_damage_bonus=base_context.other_damage_bonus,
-    )
-    result = calculate_single_hit_damage(ctx, effects=effects, crit_mode=crit_mode)
-    return LoadoutScore(
+    return RuntimeEvalSnapshot(
         weapon_name=weapon.name,
-        final_damage=result.final_damage,
+        final_attack=final_attack,
+        effects=tuple(effects),
         loadout_names={
             "chest": chest.get("名称", ""),
             "gloves": glove.get("名称", ""),

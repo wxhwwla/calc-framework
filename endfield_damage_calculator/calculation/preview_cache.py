@@ -36,6 +36,13 @@ def sync_confirm_dependencies(
     equipment_scope: str = "",
     multi_skill_counts: Optional[dict[str, int]] = None,
     use_manual_multi_skill_counts: bool = False,
+    physical_abnormal_counts: Optional[dict[str, int]] = None,
+    spell_abnormal_counts: Optional[dict[str, int]] = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    include_conditional_equipment_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
     enemy_defense: float = 100.0,
 ) -> None:
     """确认/预览前同步依赖，供各模式缓存共享。"""
@@ -53,5 +60,12 @@ def sync_confirm_dependencies(
         equipment_scope=equipment_scope,
         multi_skill_counts=tuple(sorted((multi_skill_counts or {}).items())),
         use_manual_multi_skill_counts=use_manual_multi_skill_counts,
+        physical_abnormal_counts=tuple(sorted((physical_abnormal_counts or {}).items())),
+        spell_abnormal_counts=tuple(sorted((spell_abnormal_counts or {}).items())),
+        damage_component_mode=damage_component_mode,
+        use_expected_crit=use_expected_crit,
+        include_conditional_equipment_crit=bool(include_conditional_equipment_crit),
+        extra_crit_rate=float(extra_crit_rate),
+        extra_crit_damage=float(extra_crit_damage),
         enemy_defense=enemy_defense,
     )

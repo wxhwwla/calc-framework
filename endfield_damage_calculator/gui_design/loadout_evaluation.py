@@ -30,6 +30,13 @@ def sync_evaluation_cache(loadout: LoadoutState) -> None:
         equipment_scope=loadout.equipment_scope_label,
         multi_skill_counts=loadout.manual_counts,
         use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
+        physical_abnormal_counts=loadout.physical_abnormal_counts,
+        spell_abnormal_counts=loadout.spell_abnormal_counts,
+        damage_component_mode=loadout.damage_component_mode,
+        use_expected_crit=loadout.use_expected_crit,
+        include_conditional_equipment_crit=loadout.include_conditional_equipment_crit,
+        extra_crit_rate=loadout.extra_crit_rate,
+        extra_crit_damage=loadout.extra_crit_damage,
         enemy_defense=loadout.enemy_defense,
     )
 
@@ -60,6 +67,12 @@ def build_search_preview_lines(
             preview_equipment_catalog=equipment_catalog,
             preview_equipment_scope_label=loadout.equipment_scope_label,
             enemy_defense=loadout.enemy_defense,
+            physical_abnormal_counts=loadout.physical_abnormal_counts,
+            spell_abnormal_counts=loadout.spell_abnormal_counts,
+            damage_component_mode=loadout.damage_component_mode,
+            use_expected_crit=loadout.use_expected_crit,
+            extra_crit_rate=loadout.extra_crit_rate,
+            extra_crit_damage=loadout.extra_crit_damage,
         )
     if loadout.calculation_mode == "single_skill_search":
         return build_single_skill_search_preview_lines(
@@ -76,6 +89,12 @@ def build_search_preview_lines(
             preview_equipment_catalog=equipment_catalog,
             preview_equipment_scope_label=loadout.equipment_scope_label,
             enemy_defense=loadout.enemy_defense,
+            physical_abnormal_counts=loadout.physical_abnormal_counts,
+            spell_abnormal_counts=loadout.spell_abnormal_counts,
+            damage_component_mode=loadout.damage_component_mode,
+            use_expected_crit=loadout.use_expected_crit,
+            extra_crit_rate=loadout.extra_crit_rate,
+            extra_crit_damage=loadout.extra_crit_damage,
         )
     return []
 

@@ -36,6 +36,8 @@ from gui_design.confirm_orchestrator import (
 )
 from gui_design.multi_skill_controls import (
     place_multi_skill_section,
+    read_manual_physical_abnormal_counts,
+    read_manual_spell_abnormal_counts,
     read_manual_multi_skill_counts,
     rebuild_multi_skill_segment_rows,
 )
@@ -192,6 +194,11 @@ class DamageCalculatorApp:
         self.calc_mode_var: ctk.StringVar = ctk.StringVar(value=DEFAULT_CALC_MODE_LABEL)
         self.calc_mode_menu: Optional[ctk.CTkOptionMenu] = None
         self.use_manual_skill_counts_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        self.damage_component_mode_var: ctk.StringVar = ctk.StringVar(value="技能+异常")
+        self.use_expected_crit_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        self.include_conditional_equipment_crit_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
+        self.extra_crit_rate_percent_var: ctk.StringVar = ctk.StringVar(value="0")
+        self.extra_crit_damage_percent_var: ctk.StringVar = ctk.StringVar(value="0")
         self.single_skill_scope_var: ctk.StringVar = ctk.StringVar(value="当前武器")
         self.single_skill_scope_menu: Optional[ctk.CTkOptionMenu] = None
         self.single_skill_equipment_scope_var: ctk.StringVar = ctk.StringVar(value="全部装备")
@@ -202,6 +209,8 @@ class DamageCalculatorApp:
         self.skill_count_2_var: ctk.StringVar = ctk.StringVar(value="0")
         self.skill_count_3_var: ctk.StringVar = ctk.StringVar(value="0")
         self._segment_count_vars: Dict[str, ctk.StringVar] = {}
+        self._physical_abnormal_count_vars: Dict[str, ctk.StringVar] = {}
+        self._spell_abnormal_count_vars: Dict[str, ctk.StringVar] = {}
         self._multi_skill_counts_body: Optional[ctk.CTkFrame] = None
         self.char_attr_frame: Optional[ctk.CTkFrame] = None
         self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
@@ -564,6 +573,15 @@ class DamageCalculatorApp:
             special_panel.special_ability_3_level.trace_add("write", _schedule)
             special_panel.weapon_special_level.trace_add("write", _schedule)
             special_panel.weapon_special_2_level.trace_add("write", _schedule)
+        self.damage_component_mode_var.trace_add("write", _schedule)
+        self.use_expected_crit_var.trace_add("write", _schedule)
+        self.include_conditional_equipment_crit_var.trace_add("write", _schedule)
+        self.extra_crit_rate_percent_var.trace_add("write", _schedule)
+        self.extra_crit_damage_percent_var.trace_add("write", _schedule)
+        for var in self._physical_abnormal_count_vars.values():
+            var.trace_add("write", _schedule)
+        for var in self._spell_abnormal_count_vars.values():
+            var.trace_add("write", _schedule)
 
     def _startup_refresh(self) -> None:
         """首帧绘制后再做确认刷新与搜索预估（勿在 __init__ 中同步调用）。"""
@@ -916,6 +934,32 @@ class DamageCalculatorApp:
 
     def _manual_multi_skill_counts(self) -> Dict[str, int]:
         return read_manual_multi_skill_counts(self)
+
+    def _manual_physical_abnormal_counts(self) -> Dict[str, int]:
+        return read_manual_physical_abnormal_counts(self)
+
+    def _manual_spell_abnormal_counts(self) -> Dict[str, int]:
+        return read_manual_spell_abnormal_counts(self)
+
+    def _current_damage_component_mode(self) -> str:
+        label = str(self.damage_component_mode_var.get()).strip()
+        if label == "仅技能":
+            return "skill_only"
+        if label == "仅异常":
+            return "abnormal_only"
+        return "skill_and_abnormal"
+
+    def _extra_crit_rate(self) -> float:
+        try:
+            return float(self.extra_crit_rate_percent_var.get()) / 100.0
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _extra_crit_damage(self) -> float:
+        try:
+            return float(self.extra_crit_damage_percent_var.get()) / 100.0
+        except (TypeError, ValueError):
+            return 0.0
 
     def _schedule_confirm(self, *, force: bool = False) -> None:
         schedule_confirm(self, force=force)

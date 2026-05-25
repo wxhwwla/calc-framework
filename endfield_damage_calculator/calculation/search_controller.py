@@ -40,6 +40,13 @@ class SearchJobInputs:
     skill_2_level: int = 0
     skill_3_level: int = 0
     manual_counts: Optional[dict[str, int]] = None
+    physical_abnormal_counts: Optional[dict[str, int]] = None
+    spell_abnormal_counts: Optional[dict[str, int]] = None
+    damage_component_mode: str = "skill_and_abnormal"
+    use_expected_crit: bool = False
+    include_conditional_equipment_crit: bool = False
+    extra_crit_rate: float = 0.0
+    extra_crit_damage: float = 0.0
 
 
 def prepare_search_job(
@@ -79,6 +86,13 @@ def prepare_search_job(
         fixed_loadout=inputs.fixed_loadout,
         multi_skill_eval=multi_skill_eval,
         enemy_defense=float(inputs.enemy_defense),
+        physical_abnormal_counts=dict(inputs.physical_abnormal_counts or {}),
+        spell_abnormal_counts=dict(inputs.spell_abnormal_counts or {}),
+        damage_component_mode=inputs.damage_component_mode,
+        use_expected_crit=bool(inputs.use_expected_crit),
+        include_conditional_equipment_crit=bool(inputs.include_conditional_equipment_crit),
+        extra_crit_rate=float(inputs.extra_crit_rate),
+        extra_crit_damage=float(inputs.extra_crit_damage),
     )
 
 
@@ -92,12 +106,13 @@ def optimizer_config_for_search_job(
         priority_types = job.multi_skill_eval.priority_skill_types
     else:
         priority_types = (str(job.base_context.skill_type or job.skill_label),)
+    crit_mode = "expected" if bool(job.use_expected_crit) else "non_crit"
     return optimizer_config_for_character(
         job.char_data,
         priority_skill_types=priority_types,
         fixed_loadout=job.fixed_loadout,
         top_n=int(top_n),
-        crit_mode="non_crit",
+        crit_mode=crit_mode,  # type: ignore[arg-type]
         allow_duplicate_accessory=True,
         prune_non_beneficial=True,
         warn_on_unfiltered=False,

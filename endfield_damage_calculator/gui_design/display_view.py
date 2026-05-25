@@ -99,6 +99,13 @@ def refresh_right_column_from_request(
         equipment_scope=loadout.equipment_scope_label,
         multi_skill_counts=loadout.manual_counts,
         use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
+        physical_abnormal_counts=loadout.physical_abnormal_counts,
+        spell_abnormal_counts=loadout.spell_abnormal_counts,
+        damage_component_mode=loadout.damage_component_mode,
+        use_expected_crit=loadout.use_expected_crit,
+        include_conditional_equipment_crit=loadout.include_conditional_equipment_crit,
+        extra_crit_rate=loadout.extra_crit_rate,
+        extra_crit_damage=loadout.extra_crit_damage,
         enemy_defense=loadout.enemy_defense,
     )
 
@@ -174,6 +181,13 @@ def confirm_from_display_request(
         equipment_scope=loadout.equipment_scope_label,
         multi_skill_counts=loadout.manual_counts,
         use_manual_multi_skill_counts=loadout.use_manual_multi_skill_counts,
+        physical_abnormal_counts=loadout.physical_abnormal_counts,
+        spell_abnormal_counts=loadout.spell_abnormal_counts,
+        damage_component_mode=loadout.damage_component_mode,
+        use_expected_crit=loadout.use_expected_crit,
+        include_conditional_equipment_crit=loadout.include_conditional_equipment_crit,
+        extra_crit_rate=loadout.extra_crit_rate,
+        extra_crit_damage=loadout.extra_crit_damage,
         enemy_defense=loadout.enemy_defense,
     )
 

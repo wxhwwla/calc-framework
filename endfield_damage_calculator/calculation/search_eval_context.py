@@ -17,3 +17,10 @@ class SearchEvalContext:
     weapon_level: int
     trust_level: int
     weapon_data_by_name: dict[str, dict[str, Any]]
+    damage_component_mode: str = "skill_and_abnormal"
+    use_expected_crit: bool = False
+    include_conditional_equipment_crit: bool = False
+    extra_crit_rate: float = 0.0
+    extra_crit_damage: float = 0.0
+    physical_abnormal_counts: dict[str, int] | None = None
+    spell_abnormal_counts: dict[str, int] | None = None

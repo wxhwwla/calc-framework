@@ -43,6 +43,13 @@ def build_confirm_refresh_signature(
     preview_scope_label: str,
     preview_equipment_scope_label: str,
     fixed_loadout_token: str,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    include_conditional_equipment_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
+    physical_abnormal_counts: Optional[Dict[str, int]] = None,
+    spell_abnormal_counts: Optional[Dict[str, int]] = None,
 ) -> tuple:
     """生成可哈希签名；相同输入时跳过 destroy+重建三列展示。"""
     return (
@@ -59,4 +66,11 @@ def build_confirm_refresh_signature(
         preview_scope_label,
         preview_equipment_scope_label,
         fixed_loadout_token,
+        damage_component_mode,
+        bool(use_expected_crit),
+        bool(include_conditional_equipment_crit),
+        float(extra_crit_rate),
+        float(extra_crit_damage),
+        tuple(sorted((physical_abnormal_counts or {}).items())),
+        tuple(sorted((spell_abnormal_counts or {}).items())),
     )

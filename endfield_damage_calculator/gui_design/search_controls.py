@@ -425,6 +425,8 @@ def show_search_result_popup(
         segment_counts=(
             dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None
         ),
+        abnormal_counts=dict(job.physical_abnormal_counts or {}),
+        spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
     )
     show_search_results_dialog(app.app, title=mode_label, lines=lines)
 

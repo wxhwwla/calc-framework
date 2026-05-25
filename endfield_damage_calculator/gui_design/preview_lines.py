@@ -22,6 +22,15 @@ from calculation.skill_segments import format_segment_breakdown_lines, normalize
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 from calculation.preview_cache import cached_preview, sync_preview_dependencies
+from calculation.physical_abnormal import (
+    compose_damage_total,
+    evaluate_physical_abnormal_total,
+    format_abnormal_breakdown_lines,
+)
+from calculation.spell_abnormal import (
+    evaluate_spell_abnormal_total,
+    format_spell_abnormal_breakdown_lines,
+)
 
 
 def build_single_skill_search_preview_lines(
@@ -39,6 +48,12 @@ def build_single_skill_search_preview_lines(
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
+    physical_abnormal_counts: Optional[Dict[str, int]] = None,
+    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
 ) -> list[str]:
     """构建单技能遍历模式的快速预览文案（带缓存）。"""
     if not char_data or not weapon_data:
@@ -61,6 +76,12 @@ def build_single_skill_search_preview_lines(
             c.name for c in (preview_weapon_candidates or [])
         ),
         custom_equipment_catalog=preview_equipment_catalog is not None,
+        physical_abnormal_counts=tuple(sorted((physical_abnormal_counts or {}).items())),
+        spell_abnormal_counts=tuple(sorted((spell_abnormal_counts or {}).items())),
+        damage_component_mode=damage_component_mode,
+        use_expected_crit=bool(use_expected_crit),
+        extra_crit_rate=float(extra_crit_rate),
+        extra_crit_damage=float(extra_crit_damage),
     )
 
     def _compute() -> list[str]:
@@ -78,6 +99,12 @@ def build_single_skill_search_preview_lines(
             preview_equipment_catalog=preview_equipment_catalog,
             preview_equipment_scope_label=preview_equipment_scope_label,
             enemy_defense=enemy_defense,
+            physical_abnormal_counts=physical_abnormal_counts,
+            spell_abnormal_counts=spell_abnormal_counts,
+            damage_component_mode=damage_component_mode,
+            use_expected_crit=use_expected_crit,
+            extra_crit_rate=extra_crit_rate,
+            extra_crit_damage=extra_crit_damage,
         )
 
     lines, _ = cached_preview("single_skill_search_preview", _compute)
@@ -99,6 +126,12 @@ def _build_single_skill_search_preview_lines_impl(
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
+    physical_abnormal_counts: Optional[Dict[str, int]] = None,
+    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
 ) -> list[str]:
     if not preview_equipment_catalog:
         return [
@@ -139,11 +172,14 @@ def _build_single_skill_search_preview_lines_impl(
             skill_multiplier=skill_multiplier,
             skill_type=skill_label.split()[0],
             enemy_defense=enemy_defense,
+            crit_rate=0.05 + float(extra_crit_rate),
+            crit_damage=0.5 + float(extra_crit_damage),
         ),
         weapons=candidates,
         equipment_catalog=sampled_catalog,
         config=OptimizerConfig(
             top_n=3,
+            crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
             warn_on_unfiltered=False,
             prune_non_beneficial=False,
         ),
@@ -156,6 +192,46 @@ def _build_single_skill_search_preview_lines_impl(
         f"预览组合数: {result.total_combinations}",
         "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
     ]
+    mode_text = {
+        "skill_only": "仅技能",
+        "abnormal_only": "仅异常",
+        "skill_and_abnormal": "技能+异常",
+    }.get(damage_component_mode, "技能+异常")
+    lines.append(f"口径: {mode_text} | 期望伤害: {'开' if use_expected_crit else '关'}")
+    physical_total, physical_breakdown = evaluate_physical_abnormal_total(
+        context=DamageContext(
+            final_attack=float(final["final_attack"]),
+            skill_multiplier=1.0,
+            damage_type="物理",
+            skill_type="异常",
+            enemy_defense=enemy_defense,
+            crit_rate=0.05 + float(extra_crit_rate),
+            crit_damage=0.5 + float(extra_crit_damage),
+        ),
+        crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
+        effects=[],
+        counts=physical_abnormal_counts or {},
+        char_level=char_level,
+    )
+    spell_total, spell_breakdown = evaluate_spell_abnormal_total(
+        context=DamageContext(
+            final_attack=float(final["final_attack"]),
+            skill_multiplier=1.0,
+            damage_type="法术-灼热",
+            skill_type="异常",
+            enemy_defense=enemy_defense,
+            crit_rate=0.05 + float(extra_crit_rate),
+            crit_damage=0.5 + float(extra_crit_damage),
+        ),
+        crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
+        effects=[],
+        counts=spell_abnormal_counts or {},
+    )
+    abnormal_total = physical_total + spell_total
+    if abnormal_total > 0:
+        lines.append(f"当前武器异常估算总伤: {abnormal_total:.1f}")
+        lines.extend(format_abnormal_breakdown_lines(physical_breakdown, physical_abnormal_counts, indent="  "))
+        lines.extend(format_spell_abnormal_breakdown_lines(spell_breakdown, spell_abnormal_counts, indent="  "))
     if skill_warning:
         lines.append(f"提示: {skill_warning}")
     for idx, score in enumerate(result.top_results, start=1):
@@ -165,6 +241,13 @@ def _build_single_skill_search_preview_lines_impl(
             f"护甲:{loadout['chest']} 护手:{loadout['gloves']} "
             f"配件A:{loadout['accessory_a']} 配件B:{loadout['accessory_b']}"
         )
+        if abnormal_total > 0:
+            merged = compose_damage_total(
+                skill_damage=score.final_damage,
+                abnormal_damage=abnormal_total,
+                mode=damage_component_mode,
+            )
+            lines.append(f"      技能 {score.final_damage:.1f} | 异常 {abnormal_total:.1f} | 合计 {merged:.1f}")
     if not result.top_results:
         lines.append("无可用结果，请检查装备数据。")
     return lines
@@ -185,6 +268,12 @@ def build_multi_skill_search_preview_lines(
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
+    physical_abnormal_counts: Optional[Dict[str, int]] = None,
+    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
 ) -> list[str]:
     """构建多技能遍历模式的快速预览文案（带缓存）。"""
     if not char_data or not weapon_data:
@@ -204,6 +293,12 @@ def build_multi_skill_search_preview_lines(
         enemy_defense=enemy_defense,
         multi_skill_counts=tuple(sorted((manual_counts or {}).items())),
         use_manual_multi_skill_counts=use_manual_counts,
+        physical_abnormal_counts=tuple(sorted((physical_abnormal_counts or {}).items())),
+        spell_abnormal_counts=tuple(sorted((spell_abnormal_counts or {}).items())),
+        damage_component_mode=damage_component_mode,
+        use_expected_crit=bool(use_expected_crit),
+        extra_crit_rate=float(extra_crit_rate),
+        extra_crit_damage=float(extra_crit_damage),
     )
 
     def _compute() -> list[str]:
@@ -221,6 +316,12 @@ def build_multi_skill_search_preview_lines(
             preview_equipment_catalog=preview_equipment_catalog,
             preview_equipment_scope_label=preview_equipment_scope_label,
             enemy_defense=enemy_defense,
+            physical_abnormal_counts=physical_abnormal_counts,
+            spell_abnormal_counts=spell_abnormal_counts,
+            damage_component_mode=damage_component_mode,
+            use_expected_crit=use_expected_crit,
+            extra_crit_rate=extra_crit_rate,
+            extra_crit_damage=extra_crit_damage,
         )
 
     lines, _ = cached_preview("multi_skill_search_preview", _compute)
@@ -242,6 +343,12 @@ def _build_multi_skill_search_preview_lines_impl(
     preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
+    physical_abnormal_counts: Optional[Dict[str, int]] = None,
+    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
 ) -> list[str]:
     if not preview_equipment_catalog:
         return [
@@ -278,6 +385,7 @@ def _build_multi_skill_search_preview_lines_impl(
     config = MultiSkillConfig(
         selected_skill=selected_skill,
         top_n=3,
+        crit_mode="expected" if use_expected_crit else "non_crit",
     )
     count_desc = f"默认次数: 当前选中技能 {selected_skill}×1，其它×0"
     if use_manual_counts:
@@ -292,6 +400,7 @@ def _build_multi_skill_search_preview_lines_impl(
             selected_skill=selected_skill,
             top_n=3,
             skill_counts=active_counts,
+            crit_mode="expected" if use_expected_crit else "non_crit",
         )
         from calculation.skill_segments import format_segment_count_label
 
@@ -302,6 +411,8 @@ def _build_multi_skill_search_preview_lines_impl(
             final_attack=0.0,
             skill_multiplier=1.0,
             enemy_defense=enemy_defense,
+            crit_rate=0.05 + float(extra_crit_rate),
+            crit_damage=0.5 + float(extra_crit_damage),
         ),
         weapons=[
             WeaponCandidate(
@@ -321,6 +432,46 @@ def _build_multi_skill_search_preview_lines_impl(
         count_desc,
         "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
     ]
+    mode_text = {
+        "skill_only": "仅技能",
+        "abnormal_only": "仅异常",
+        "skill_and_abnormal": "技能+异常",
+    }.get(damage_component_mode, "技能+异常")
+    lines.append(f"口径: {mode_text} | 期望伤害: {'开' if use_expected_crit else '关'}")
+    physical_total, physical_breakdown = evaluate_physical_abnormal_total(
+        context=DamageContext(
+            final_attack=float(final["final_attack"]),
+            skill_multiplier=1.0,
+            damage_type="物理",
+            skill_type="异常",
+            enemy_defense=enemy_defense,
+            crit_rate=0.05 + float(extra_crit_rate),
+            crit_damage=0.5 + float(extra_crit_damage),
+        ),
+        crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
+        effects=[],
+        counts=physical_abnormal_counts or {},
+        char_level=char_level,
+    )
+    spell_total, spell_breakdown = evaluate_spell_abnormal_total(
+        context=DamageContext(
+            final_attack=float(final["final_attack"]),
+            skill_multiplier=1.0,
+            damage_type="法术-灼热",
+            skill_type="异常",
+            enemy_defense=enemy_defense,
+            crit_rate=0.05 + float(extra_crit_rate),
+            crit_damage=0.5 + float(extra_crit_damage),
+        ),
+        crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
+        effects=[],
+        counts=spell_abnormal_counts or {},
+    )
+    abnormal_total = physical_total + spell_total
+    if abnormal_total > 0:
+        lines.append(f"当前武器异常估算总伤: {abnormal_total:.1f}")
+        lines.extend(format_abnormal_breakdown_lines(physical_breakdown, physical_abnormal_counts, indent="  "))
+        lines.extend(format_spell_abnormal_breakdown_lines(spell_breakdown, spell_abnormal_counts, indent="  "))
     if warning:
         lines.append(f"提示: {warning}")
     for idx, score in enumerate(result.top_results, start=1):
@@ -330,6 +481,13 @@ def _build_multi_skill_search_preview_lines_impl(
             indent="  ",
         )
         lines.append(f"Top{idx}: 总伤 {score.weighted_total_damage:.1f}")
+        if abnormal_total > 0:
+            merged = compose_damage_total(
+                skill_damage=score.weighted_total_damage,
+                abnormal_damage=abnormal_total,
+                mode=damage_component_mode,
+            )
+            lines.append(f"  技能 {score.weighted_total_damage:.1f} | 异常 {abnormal_total:.1f} | 合计 {merged:.1f}")
         lines.extend(breakdown_lines)
     if not result.top_results:
         lines.append("无可用结果，请检查装备数据。")

@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from calculation.loadout_slot_search import FixedLoadoutSelection
@@ -64,8 +64,15 @@ class LoadoutState:
     fixed_equipment_names: dict[str, Optional[str]]
     use_manual_multi_skill_counts: bool
     manual_counts: dict[str, int]
-    enemy_defense: float
-    weapon_specials: tuple[Any, ...]
+    physical_abnormal_counts: dict[str, int] = field(default_factory=dict)
+    spell_abnormal_counts: dict[str, int] = field(default_factory=dict)
+    damage_component_mode: str = "skill_and_abnormal"
+    use_expected_crit: bool = False
+    include_conditional_equipment_crit: bool = False
+    extra_crit_rate: float = 0.0
+    extra_crit_damage: float = 0.0
+    enemy_defense: float = 100.0
+    weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 1, "", 1, "", 1)
 
     def weapon_special_kwargs(self) -> dict[str, Any]:
         """武器特殊能力字段，供武器属性列与伤害快照使用。"""
@@ -105,6 +112,13 @@ class LoadoutState:
             preview_scope_label=self.weapon_scope_label,
             preview_equipment_scope_label=self.equipment_scope_label,
             fixed_loadout_token=self.fixed_loadout.signature_token(),
+            damage_component_mode=self.damage_component_mode,
+            use_expected_crit=self.use_expected_crit,
+            include_conditional_equipment_crit=self.include_conditional_equipment_crit,
+            extra_crit_rate=self.extra_crit_rate,
+            extra_crit_damage=self.extra_crit_damage,
+            physical_abnormal_counts=self.physical_abnormal_counts,
+            spell_abnormal_counts=self.spell_abnormal_counts,
         )
 
     def to_loadout_preset(self) -> LoadoutPreset:
@@ -121,6 +135,13 @@ class LoadoutState:
             fixed_equipment_names=dict(self.fixed_equipment_names),
             multi_skill_counts=dict(self.manual_counts),
             use_manual_multi_skill_counts=self.use_manual_multi_skill_counts,
+            physical_abnormal_counts=dict(self.physical_abnormal_counts),
+            spell_abnormal_counts=dict(self.spell_abnormal_counts),
+            damage_component_mode=self.damage_component_mode,
+            use_expected_crit=self.use_expected_crit,
+            include_conditional_equipment_crit=self.include_conditional_equipment_crit,
+            extra_crit_rate=self.extra_crit_rate,
+            extra_crit_damage=self.extra_crit_damage,
         )
 
     def to_search_job_inputs(
@@ -149,6 +170,13 @@ class LoadoutState:
             skill_2_level=self.skill_levels[1],
             skill_3_level=self.skill_levels[2],
             manual_counts=dict(self.manual_counts),
+            physical_abnormal_counts=dict(self.physical_abnormal_counts),
+            spell_abnormal_counts=dict(self.spell_abnormal_counts),
+            damage_component_mode=self.damage_component_mode,
+            use_expected_crit=self.use_expected_crit,
+            include_conditional_equipment_crit=self.include_conditional_equipment_crit,
+            extra_crit_rate=self.extra_crit_rate,
+            extra_crit_damage=self.extra_crit_damage,
         )
 
 
@@ -191,6 +219,13 @@ def read_loadout_from_panels(
     fixed_loadout: FixedLoadoutSelection,
     use_manual_multi_skill_counts: bool,
     manual_counts: dict[str, int],
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    include_conditional_equipment_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
     enemy_defense: float,
 ) -> Optional[LoadoutState]:
     """从角色/武器面板读取配装快照；无效选择时返回 None。"""
@@ -227,6 +262,13 @@ def read_loadout_from_panels(
         fixed_equipment_names=_fixed_equipment_names(fixed_loadout),
         use_manual_multi_skill_counts=use_manual_multi_skill_counts,
         manual_counts=dict(manual_counts),
+        physical_abnormal_counts=dict(physical_abnormal_counts or {}),
+        spell_abnormal_counts=dict(spell_abnormal_counts or {}),
+        damage_component_mode=str(damage_component_mode),
+        use_expected_crit=bool(use_expected_crit),
+        include_conditional_equipment_crit=bool(include_conditional_equipment_crit),
+        extra_crit_rate=float(extra_crit_rate),
+        extra_crit_damage=float(extra_crit_damage),
         enemy_defense=float(enemy_defense),
         weapon_specials=_weapon_specials_tuple(weapon_panel),
     )
@@ -252,5 +294,34 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Opti
         fixed_loadout=fixed,
         use_manual_multi_skill_counts=bool(app.use_manual_skill_counts_var.get()),
         manual_counts=app._manual_multi_skill_counts(),
+        physical_abnormal_counts=(
+            app._manual_physical_abnormal_counts()
+            if hasattr(app, "_manual_physical_abnormal_counts")
+            else {}
+        ),
+        spell_abnormal_counts=(
+            app._manual_spell_abnormal_counts()
+            if hasattr(app, "_manual_spell_abnormal_counts")
+            else {}
+        ),
+        damage_component_mode=(
+            app._current_damage_component_mode()
+            if hasattr(app, "_current_damage_component_mode")
+            else "skill_and_abnormal"
+        ),
+        use_expected_crit=bool(
+            getattr(getattr(app, "use_expected_crit_var", None), "get", lambda: False)()
+        ),
+        include_conditional_equipment_crit=bool(
+            getattr(
+                getattr(app, "include_conditional_equipment_crit_var", None),
+                "get",
+                lambda: False,
+            )()
+        ),
+        extra_crit_rate=float(app._extra_crit_rate() if hasattr(app, "_extra_crit_rate") else 0.0),
+        extra_crit_damage=float(
+            app._extra_crit_damage() if hasattr(app, "_extra_crit_damage") else 0.0
+        ),
         enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
     )

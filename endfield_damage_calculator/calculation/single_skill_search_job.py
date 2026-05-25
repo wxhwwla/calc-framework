@@ -34,6 +34,13 @@ class SingleSkillSearchJob:
     weapon_data_by_name: dict[str, dict[str, Any]]
     run_signature: str
     multi_skill_eval: Optional[MultiSkillSearchEval] = None
+    physical_abnormal_counts: dict[str, int] | None = None
+    spell_abnormal_counts: dict[str, int] | None = None
+    damage_component_mode: str = "skill_and_abnormal"
+    use_expected_crit: bool = False
+    include_conditional_equipment_crit: bool = False
+    extra_crit_rate: float = 0.0
+    extra_crit_damage: float = 0.0
 
 
 def build_weapon_candidates(
@@ -89,6 +96,13 @@ def build_run_signature(
     equipment_scope_label: str,
     fixed_loadout: FixedLoadoutSelection,
     multi_skill_token: str = "",
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    include_conditional_equipment_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
+    physical_abnormal_counts: Optional[dict[str, int]] = None,
+    spell_abnormal_counts: Optional[dict[str, int]] = None,
 ) -> str:
     """
     生成续跑用 run_signature（写入 search_runs.db）。
@@ -100,7 +114,11 @@ def build_run_signature(
         f"{char_data.get('名称', '')}-lv{char_level}-wlv{weapon_level}-trust{trust_level}-"
         f"{skill_name}-w{weapon_count}-e{chest_count}-"
         f"{weapon_scope_label}-{equipment_scope_label}-"
-        f"{fixed_loadout.signature_token()}-{multi_skill_token}"
+        f"{fixed_loadout.signature_token()}-{multi_skill_token}-"
+        f"{damage_component_mode}-{int(use_expected_crit)}-{int(include_conditional_equipment_crit)}-"
+        f"{float(extra_crit_rate):.6f}-{float(extra_crit_damage):.6f}-"
+        f"{tuple(sorted((physical_abnormal_counts or {}).items()))}-"
+        f"{tuple(sorted((spell_abnormal_counts or {}).items()))}"
     )
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:16]
 
@@ -122,6 +140,13 @@ def prepare_single_skill_search_job(
     equipment_catalog: dict[str, list[dict[str, Any]]],
     multi_skill_eval: Optional[MultiSkillSearchEval] = None,
     enemy_defense: float = 100.0,
+    physical_abnormal_counts: Optional[dict[str, int]] = None,
+    spell_abnormal_counts: Optional[dict[str, int]] = None,
+    damage_component_mode: str = "skill_and_abnormal",
+    use_expected_crit: bool = False,
+    include_conditional_equipment_crit: bool = False,
+    extra_crit_rate: float = 0.0,
+    extra_crit_damage: float = 0.0,
 ) -> tuple[Optional[SingleSkillSearchJob], Optional[str]]:
     """
     组装搜索作业。
@@ -157,6 +182,13 @@ def prepare_single_skill_search_job(
         equipment_scope_label=equipment_scope_label,
         fixed_loadout=fixed_loadout or FixedLoadoutSelection(),
         multi_skill_token=multi_token,
+        damage_component_mode=damage_component_mode,
+        use_expected_crit=use_expected_crit,
+        include_conditional_equipment_crit=include_conditional_equipment_crit,
+        extra_crit_rate=extra_crit_rate,
+        extra_crit_damage=extra_crit_damage,
+        physical_abnormal_counts=physical_abnormal_counts,
+        spell_abnormal_counts=spell_abnormal_counts,
     )
     weapon_data_by_name = {
         str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
@@ -182,6 +214,13 @@ def prepare_single_skill_search_job(
         weapon_data_by_name=weapon_data_by_name,
         run_signature=run_signature,
         multi_skill_eval=multi_skill_eval,
+        physical_abnormal_counts=dict(physical_abnormal_counts or {}),
+        spell_abnormal_counts=dict(spell_abnormal_counts or {}),
+        damage_component_mode=str(damage_component_mode),
+        use_expected_crit=bool(use_expected_crit),
+        include_conditional_equipment_crit=bool(include_conditional_equipment_crit),
+        extra_crit_rate=float(extra_crit_rate),
+        extra_crit_damage=float(extra_crit_damage),
     )
     return job, None
 

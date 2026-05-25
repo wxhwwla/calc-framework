@@ -32,6 +32,10 @@ class TestLoadoutPreset(unittest.TestCase):
             },
             multi_skill_counts={"战技": 2, "连携技": 1, "终结技": 0},
             use_manual_multi_skill_counts=True,
+            physical_abnormal_counts={"猛击:2": 3},
+            spell_abnormal_counts={"灼热爆发:1": 2},
+            damage_component_mode="skill_and_abnormal",
+            use_expected_crit=True,
             ui_state={
                 "char_advanced_expanded": True,
                 "weapon_advanced_expanded": False,
@@ -47,6 +51,9 @@ class TestLoadoutPreset(unittest.TestCase):
         self.assertTrue(bool((restored.ui_state or {}).get("char_advanced_expanded")))
         self.assertFalse(bool((restored.ui_state or {}).get("weapon_advanced_expanded")))
         self.assertEqual((restored.ui_state or {}).get("current_page"), "高级页")
+        self.assertEqual(restored.physical_abnormal_counts.get("猛击:2"), 3)
+        self.assertEqual(restored.spell_abnormal_counts.get("灼热爆发:1"), 2)
+        self.assertTrue(restored.use_expected_crit)
 
     def test_rejects_unknown_schema(self) -> None:
         with self.assertRaises(ValueError):
