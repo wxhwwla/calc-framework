@@ -9,7 +9,9 @@ from gui_design import display_lines
 
 class TestDisplayLinesModule(unittest.TestCase):
     def test_module_has_no_customtkinter_import(self) -> None:
-        source_path = display_lines.__file__
+        from gui_design.presentation import display_lines as display_lines_impl
+
+        source_path = display_lines_impl.__file__
         assert source_path
         text = open(source_path, encoding="utf-8").read()
         self.assertNotIn("customtkinter", text)
