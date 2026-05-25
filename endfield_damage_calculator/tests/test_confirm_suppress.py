@@ -16,7 +16,7 @@ class TestConfirmSuppress(unittest.TestCase):
             _confirm_after_id=None,
             app=SimpleNamespace(after_idle=lambda fn: "id"),
         )
-        with patch("gui_design.confirm_orchestrator.handle_confirm") as mock_handle:
+        with patch("gui_design.app.confirm_orchestrator.handle_confirm") as mock_handle:
             schedule_confirm(app)  # type: ignore[arg-type]
         mock_handle.assert_not_called()
 

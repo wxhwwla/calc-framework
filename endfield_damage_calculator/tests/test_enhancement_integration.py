@@ -185,7 +185,7 @@ class TestEnhancementIntegration(unittest.TestCase):
             widget.grid(row=row, column=0)
             return row + 1
 
-        with patch("gui_design.enhancement_controls.save_ui_preferences") as mock_save:
+        with patch("gui_design.controls.enhancement_section.save_ui_preferences") as mock_save:
             self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
             self.app._more_settings_toggle_btn.invoke()
             self.assertIsNotNone(getattr(self.app, "_startup_page_mode_menu", None))
@@ -203,16 +203,16 @@ class TestEnhancementIntegration(unittest.TestCase):
             )
             mock_save.assert_called()
 
-    @patch("gui_design.enhancement_controls.messagebox")
+    @patch("gui_design.controls.enhancement_dialogs.messagebox")
     def test_dashboard_without_snapshot_refreshes(self, mock_mb: MagicMock) -> None:
-        with patch("gui_design.enhancement_controls.is_matplotlib_available", return_value=True):
+        with patch("gui_design.controls.enhancement_dialogs.is_matplotlib_available", return_value=True):
             with patch("matplotlib.use"):
                 with patch(
-                    "gui_design.enhancement_controls.build_damage_pie_figure",
+                    "gui_design.controls.enhancement_dialogs.build_damage_pie_figure",
                     return_value=MagicMock(),
                 ):
                     with patch(
-                        "gui_design.enhancement_controls.build_improvement_bar_figure",
+                        "gui_design.controls.enhancement_dialogs.build_improvement_bar_figure",
                         return_value=MagicMock(),
                     ):
                         with patch(
@@ -222,7 +222,7 @@ class TestEnhancementIntegration(unittest.TestCase):
                             self._ec.show_damage_dashboard_dialog(self.app)
         mock_mb.showinfo.assert_not_called()
 
-    @patch("gui_design.enhancement_controls.filedialog.askopenfilenames", return_value=())
+    @patch("gui_design.controls.enhancement_dialogs.filedialog.askopenfilenames", return_value=())
     def test_preset_compare_cancelled_on_empty_paths(self, _mock_fd: MagicMock) -> None:
         self._ec.show_preset_compare_dialog(self.app)
 
@@ -240,21 +240,21 @@ class TestEnhancementIntegration(unittest.TestCase):
             p1.write_text(export_preset_json(preset_a), encoding="utf-8")
             p2.write_text(export_preset_json(preset_b), encoding="utf-8")
             with patch(
-                "gui_design.enhancement_controls.filedialog.askopenfilenames",
+                "gui_design.controls.enhancement_dialogs.filedialog.askopenfilenames",
                 return_value=(str(p1), str(p2)),
             ):
-                with patch("gui_design.enhancement_controls.ctk.CTkToplevel") as mock_top:
+                with patch("gui_design.controls.enhancement_dialogs.ctk.CTkToplevel") as mock_top:
                     mock_top.return_value = MagicMock()
-                    with patch("gui_design.enhancement_controls.ctk.CTkScrollableFrame"):
-                        with patch("gui_design.enhancement_controls.ctk.CTkLabel"):
+                    with patch("gui_design.controls.enhancement_dialogs.ctk.CTkScrollableFrame"):
+                        with patch("gui_design.controls.enhancement_dialogs.ctk.CTkLabel"):
                             self._ec.show_preset_compare_dialog(self.app)
 
     def test_history_dialog_empty(self) -> None:
-        with patch("gui_design.enhancement_controls.ctk.CTkToplevel") as mock_top:
+        with patch("gui_design.controls.enhancement_dialogs.ctk.CTkToplevel") as mock_top:
             dialog = MagicMock()
             mock_top.return_value = dialog
-            with patch("gui_design.enhancement_controls.ctk.CTkScrollableFrame"):
-                with patch("gui_design.enhancement_controls.ctk.CTkLabel") as mock_label:
+            with patch("gui_design.controls.enhancement_dialogs.ctk.CTkScrollableFrame"):
+                with patch("gui_design.controls.enhancement_dialogs.ctk.CTkLabel") as mock_label:
                     self._ec.show_calculation_history_dialog(self.app)
                     mock_label.assert_called()
 

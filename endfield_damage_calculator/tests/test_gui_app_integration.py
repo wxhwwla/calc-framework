@@ -76,8 +76,8 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 self.assertIsNotNone(app.char_panel.skill_level_panel)
                 self.assertIsNotNone(app.weapon_panel.special_ability_panel)
 
-                with patch("gui_design.gui.schedule_confirm") as mock_schedule:
-                    with patch("gui_design.gui.mark_loadout_pending") as mock_pending:
+                with patch("gui_design.shell.app_selection.schedule_confirm") as mock_schedule:
+                    with patch("gui_design.shell.app_selection.mark_loadout_pending") as mock_pending:
                         app.char_panel.selected_level.set("2")
                         app.weapon_panel.selected_level.set("2")
                         app.char_panel.skill_level_panel.skill_1_level.set("2")  # type: ignore[union-attr]

@@ -95,7 +95,7 @@ class TestLoadoutPendingUi(unittest.TestCase):
     def test_pending_when_signatures_differ(self) -> None:
         app = self._make_app(confirmed=("a",), current=("b",))
         with patch(
-            "gui_design.loadout_pending.read_loadout_from_app",
+            "gui_design.app.loadout_pending.read_loadout_from_app",
             return_value=MagicMock(display_pending_signature=lambda: ("b",)),
         ):
             self.assertTrue(is_loadout_pending_confirm(app))
@@ -103,7 +103,7 @@ class TestLoadoutPendingUi(unittest.TestCase):
     def test_not_pending_when_signatures_match(self) -> None:
         app = self._make_app(confirmed=("same",), current=("same",))
         with patch(
-            "gui_design.loadout_pending.read_loadout_from_app",
+            "gui_design.app.loadout_pending.read_loadout_from_app",
             return_value=MagicMock(display_pending_signature=lambda: ("same",)),
         ):
             self.assertFalse(is_loadout_pending_confirm(app))
@@ -111,7 +111,7 @@ class TestLoadoutPendingUi(unittest.TestCase):
     def test_sync_buttons_show_pending_text(self) -> None:
         app = self._make_app(confirmed=("a",), current=("b",))
         with patch(
-            "gui_design.loadout_pending.read_loadout_from_app",
+            "gui_design.app.loadout_pending.read_loadout_from_app",
             return_value=MagicMock(display_pending_signature=lambda: ("b",)),
         ):
             sync_confirm_button_pending_state(app)
@@ -123,7 +123,7 @@ class TestLoadoutPendingUi(unittest.TestCase):
     def test_capture_confirmed_clears_pending_style(self) -> None:
         app = self._make_app(confirmed=("old",), current=("old",))
         with patch(
-            "gui_design.loadout_pending.read_loadout_from_app",
+            "gui_design.app.loadout_pending.read_loadout_from_app",
             return_value=MagicMock(display_pending_signature=lambda: ("old",)),
         ):
             capture_confirmed_display_signature(app)

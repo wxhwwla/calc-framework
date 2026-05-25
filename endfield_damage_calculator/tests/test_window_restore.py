@@ -66,12 +66,12 @@ class TestConfirmRestoreDefer(unittest.TestCase):
             ),
         )
 
-        with patch("gui_design.confirm_orchestrator.run_confirm_refresh") as mock_run:
+        with patch("gui_design.app.confirm_orchestrator.run_confirm_refresh") as mock_run:
             with patch(
-                "gui_design.confirm_orchestrator.confirm_signature_now",
+                "gui_design.app.confirm_orchestrator.confirm_signature_now",
                 return_value=("sig",),
             ):
-                with patch("gui_design.confirm_orchestrator.get_session_operation_log"):
+                with patch("gui_design.app.confirm_orchestrator.get_session_operation_log"):
                     schedule_confirm(app)  # type: ignore[arg-type]
 
                 self.assertEqual(len(after_calls), 1)
@@ -100,7 +100,7 @@ class TestConfirmRestoreDefer(unittest.TestCase):
             ),
         )
 
-        with patch("gui_design.confirm_orchestrator.schedule_confirm") as mock_schedule:
+        with patch("gui_design.app.confirm_orchestrator.schedule_confirm") as mock_schedule:
             handle_confirm(app, force=False)  # type: ignore[arg-type]
 
         mock_schedule.assert_called_once_with(app)

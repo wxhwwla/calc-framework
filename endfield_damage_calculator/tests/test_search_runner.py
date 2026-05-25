@@ -9,7 +9,7 @@ from calculation.search_runner import SearchRunner
 
 
 class TestSearchRunner(unittest.TestCase):
-    @patch("calculation.search_runner.run_search_session")
+    @patch("calculation.search.run_runner.run_search_session")
     def test_run_delegates_to_session(self, mock_run) -> None:
         mock_run.return_value = object()
         result = SearchRunner.run(

@@ -39,8 +39,8 @@ class TestLoadoutEvaluation(unittest.TestCase):
         self.assertEqual(state.effective_skill_counts()["战技"], 1)
         self.assertEqual(state.effective_skill_counts()["连携技"], 0)
 
-    @patch("gui_design.loadout_evaluation.build_damage_snapshot")
-    @patch("gui_design.loadout_evaluation.sync_evaluation_cache")
+    @patch("gui_design.app.loadout_evaluation.build_damage_snapshot")
+    @patch("gui_design.app.loadout_evaluation.sync_evaluation_cache")
     def test_build_snapshot_from_loadout(self, mock_sync, mock_build) -> None:
         state = LoadoutState(
             char_data={"名称": "A"},
@@ -69,8 +69,8 @@ class TestLoadoutEvaluation(unittest.TestCase):
         mock_build.assert_called_once()
         self.assertEqual(mock_build.call_args.kwargs["enemy_defense"], 50.0)
 
-    @patch("gui_design.loadout_evaluation.build_single_skill_search_preview_lines")
-    @patch("gui_design.loadout_evaluation.sync_evaluation_cache")
+    @patch("gui_design.app.loadout_evaluation.build_single_skill_search_preview_lines")
+    @patch("gui_design.app.loadout_evaluation.sync_evaluation_cache")
     def test_build_search_preview_lines_single_skill(
         self, mock_sync, mock_preview
     ) -> None:

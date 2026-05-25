@@ -1,5 +1,5 @@
 {
-  "startup_page_mode": "always_main",
+  "startup_page_mode": "remember_last",
   "last_page": "计算页",
   "char_advanced_expanded": true,
   "weapon_advanced_expanded": true
