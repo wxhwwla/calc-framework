@@ -754,8 +754,6 @@ class ChooseTypesStarsNamesLevels:
             self._skill_preset_9_btn.configure(state="disabled")
         if self._skill_preset_12_btn:
             self._skill_preset_12_btn.configure(state="disabled")
-        if self._weapon_skill_preset_9_btn:
-            self._weapon_skill_preset_9_btn.configure(state="disabled")
         
         # 禁用子组件
         if self.trust_panel:
@@ -787,8 +785,6 @@ class ChooseTypesStarsNamesLevels:
             self._skill_preset_9_btn.configure(state="normal")
         if self._skill_preset_12_btn:
             self._skill_preset_12_btn.configure(state="normal")
-        if self._weapon_skill_preset_9_btn:
-            self._weapon_skill_preset_9_btn.configure(state="normal")
         
         # 启用以子组件
         if self.trust_panel:
