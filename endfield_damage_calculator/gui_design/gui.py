@@ -89,6 +89,7 @@ from gui_design.search_settings import build_worker_option_labels
 from gui_design.enhancement_controls import place_enhancement_section
 from gui_design.ui_preferences import (
     record_char_advanced_expanded,
+    record_weapon_advanced_expanded,
     record_last_page,
     resolve_startup_page,
     save_ui_preferences,
@@ -526,7 +527,7 @@ class DamageCalculatorApp:
             self.big_font,          # 使用的字体
             is_weapon_panel=True   # 是否为武器面板（启用特殊能力滑块）
         )
-        self._apply_char_skill_levels_expanded_preference()
+        self._apply_selection_panel_expand_preferences()
 
         # 设置角色选择变化时的回调
         self.char_panel.selected_name.trace_add("write", self._on_char_name_change)
@@ -592,13 +593,16 @@ class DamageCalculatorApp:
         handle_confirm(self, force=True)
         self._refresh_search_estimate()
 
-    def _apply_char_skill_levels_expanded_preference(self) -> None:
-        """从 ui_preferences 恢复角色「技能等级」折叠展开态。"""
-        if self.char_panel is None:
-            return
-        expanded = bool(self._ui_preferences.get("char_advanced_expanded", True))
-        self.char_panel._show_advanced_params_var.set(expanded)
-        self.char_panel._refresh_advanced_params_visibility()
+    def _apply_selection_panel_expand_preferences(self) -> None:
+        """从 ui_preferences 恢复角色/武器技能折叠展开态。"""
+        if self.char_panel is not None:
+            expanded = bool(self._ui_preferences.get("char_advanced_expanded", True))
+            self.char_panel._show_advanced_params_var.set(expanded)
+            self.char_panel._refresh_advanced_params_visibility()
+        if self.weapon_panel is not None:
+            expanded = bool(self._ui_preferences.get("weapon_advanced_expanded", True))
+            self.weapon_panel._show_advanced_params_var.set(expanded)
+            self.weapon_panel._refresh_advanced_params_visibility()
 
     def _show_main_page(self) -> None:
         """切回计算页（保留当前输入状态）。"""
@@ -629,6 +633,11 @@ class DamageCalculatorApp:
                 self._ui_preferences = record_char_advanced_expanded(
                     self._ui_preferences,
                     expanded=bool(self.char_panel._show_advanced_params_var.get()),
+                )
+            if self.weapon_panel is not None:
+                self._ui_preferences = record_weapon_advanced_expanded(
+                    self._ui_preferences,
+                    expanded=bool(self.weapon_panel._show_advanced_params_var.get()),
                 )
             save_ui_preferences(self._ui_preferences)
         finally:

@@ -184,7 +184,7 @@ class LoadoutPreset:
                     (data.get("ui_state") or {}).get("char_advanced_expanded", True)
                 ),
                 "weapon_advanced_expanded": bool(
-                    (data.get("ui_state") or {}).get("weapon_advanced_expanded", False)
+                    (data.get("ui_state") or {}).get("weapon_advanced_expanded", True)
                 ),
                 "more_settings_expanded": bool(
                     (data.get("ui_state") or {}).get("more_settings_expanded", False)

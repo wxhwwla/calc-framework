@@ -324,12 +324,25 @@ class SpecialAbilityPanel:
         self._weapon_special_2_stack_slider.pack(side="left", fill="x", expand=True)
         self._weapon_special_2_stack_slider.set(0)
 
+        self._normal_section_label = ctk.CTkLabel(
+            self.parent_frame,
+            text="普通技能",
+            font=self.my_font,
+            text_color="#AAAAAA",
+        )
+        self._special_section_label = ctk.CTkLabel(
+            self.parent_frame,
+            text="特殊技能",
+            font=self.my_font,
+            text_color="#AAAAAA",
+        )
+
         self._apply_layout()
 
     def _apply_layout(self) -> None:
-        """按 第一→第二→第三→特殊 顺序 pack，避免后 pack 的行跑到上面。"""
+        """按 普通技能 → 特殊技能 分段 pack。"""
         show_bonus = not self._bonus_rows_suppressed
-        rows: List[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
+        normal_rows: List[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
             (
                 self._ability_1_name_label,
                 self._ability_1_frame,
@@ -341,6 +354,8 @@ class SpecialAbilityPanel:
                 show_bonus and bool(self.current_special_ability_2_name),
             ),
             (self._ability_3_name_label, self._ability_3_frame, True),
+        ]
+        special_rows: List[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
             (
                 self._weapon_special_name_label,
                 self._weapon_special_frame,
@@ -362,18 +377,29 @@ class SpecialAbilityPanel:
                 self._weapon_special_2_available and self._weapon_special_2_max_stack > 1,
             ),
         ]
-        for name_lbl, frame, _ in rows:
+        for lbl in (self._normal_section_label, self._special_section_label):
+            lbl.pack_forget()
+        for name_lbl, frame, _ in normal_rows + special_rows:
             if name_lbl:
                 name_lbl.pack_forget()
             if frame:
                 frame.pack_forget()
-        for name_lbl, frame, visible in rows:
-            if not visible:
-                continue
-            if name_lbl:
-                name_lbl.pack(anchor="w")
-            if frame:
-                frame.pack(fill="x", padx=10, pady=(0, 5))
+
+        def _pack_rows(rows: list, *, section: ctk.CTkLabel | None = None) -> None:
+            if not any(visible for _, _, visible in rows):
+                return
+            if section is not None:
+                section.pack(anchor="w", padx=8, pady=(6, 2))
+            for name_lbl, frame, visible in rows:
+                if not visible:
+                    continue
+                if name_lbl:
+                    name_lbl.pack(anchor="w")
+                if frame:
+                    frame.pack(fill="x", padx=10, pady=(0, 5))
+
+        _pack_rows(normal_rows, section=self._normal_section_label)
+        _pack_rows(special_rows, section=self._special_section_label)
 
     def _on_ability_1_change(self, value: float) -> None:
         level = int(value)

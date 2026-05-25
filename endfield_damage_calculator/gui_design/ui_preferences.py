@@ -21,8 +21,9 @@ def _default_preferences() -> dict[str, Any]:
     return {
         "startup_page_mode": STARTUP_MODE_ALWAYS_MAIN,
         "last_page": PAGE_MAIN,
-        # 角色侧「技能等级」折叠：无记录时默认展开
+        # 角色/武器侧「技能/武器技能」折叠：无记录时默认展开
         "char_advanced_expanded": True,
+        "weapon_advanced_expanded": True,
     }
 
 
@@ -52,10 +53,16 @@ def load_ui_preferences(*, base_dir: Path | None = None) -> dict[str, Any]:
         char_expanded = bool(defaults["char_advanced_expanded"])
     else:
         char_expanded = bool(char_raw)
+    weapon_raw = data.get("weapon_advanced_expanded")
+    if weapon_raw is None:
+        weapon_expanded = bool(defaults["weapon_advanced_expanded"])
+    else:
+        weapon_expanded = bool(weapon_raw)
     return {
         "startup_page_mode": mode,
         "last_page": page,
         "char_advanced_expanded": char_expanded,
+        "weapon_advanced_expanded": weapon_expanded,
     }
 
 
@@ -71,6 +78,9 @@ def save_ui_preferences(
         "last_page": str(preferences.get("last_page", PAGE_MAIN)),
         "char_advanced_expanded": bool(
             preferences.get("char_advanced_expanded", defaults["char_advanced_expanded"])
+        ),
+        "weapon_advanced_expanded": bool(
+            preferences.get("weapon_advanced_expanded", defaults["weapon_advanced_expanded"])
         ),
     }
     try:
@@ -103,5 +113,14 @@ def record_char_advanced_expanded(
     """更新内存中的角色「技能等级」折叠展开态。"""
     updated = dict(preferences)
     updated["char_advanced_expanded"] = bool(expanded)
+    return updated
+
+
+def record_weapon_advanced_expanded(
+    preferences: dict[str, Any], *, expanded: bool
+) -> dict[str, Any]:
+    """更新内存中的武器「武器技能」折叠展开态。"""
+    updated = dict(preferences)
+    updated["weapon_advanced_expanded"] = bool(expanded)
     return updated
 

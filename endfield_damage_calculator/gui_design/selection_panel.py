@@ -68,12 +68,10 @@ class ChooseTypesStarsNamesLevels:
         self.trust_panel: Optional[TrustPanel] = None              # 信赖面板（角色专用）
         self.skill_level_panel: Optional[SkillLevelPanel] = None   # 技能等级面板（角色专用）
         self.special_ability_panel: Optional[SpecialAbilityPanel] = None  # 特殊能力面板（武器专用）
-        # 角色侧默认展开「技能等级」；武器侧默认收起「高级参数」
-        self._show_advanced_params_var: ctk.BooleanVar = ctk.BooleanVar(
-            value=False if is_weapon_panel else True
-        )
+        # 角色/武器侧默认展开「技能等级 / 武器技能」
+        self._show_advanced_params_var: ctk.BooleanVar = ctk.BooleanVar(value=True)
         self._advanced_section_title: str = (
-            "高级参数" if is_weapon_panel else "技能等级"
+            "武器技能" if is_weapon_panel else "技能等级"
         )
         self._advanced_toggle_btn: ctk.CTkButton | None = None
         self._advanced_body: ctk.CTkFrame | None = None
@@ -81,7 +79,6 @@ class ChooseTypesStarsNamesLevels:
         self._level_preset_90_btn: ctk.CTkButton | None = None
         self._skill_preset_9_btn: ctk.CTkButton | None = None
         self._skill_preset_12_btn: ctk.CTkButton | None = None
-        self._weapon_skill_preset_9_btn: ctk.CTkButton | None = None
 
         # UI控件
         self.type_menu: ctk.CTkOptionMenu = ctk.CTkOptionMenu(
@@ -303,14 +300,14 @@ class ChooseTypesStarsNamesLevels:
             )
             self._skill_preset_12_btn.pack(fill="x", padx=10, pady=(0, 4))
         else:
-            self._weapon_skill_preset_9_btn = ctk.CTkButton(
+            self._skill_preset_9_btn = ctk.CTkButton(
                 self._advanced_body,
-                text="武器技能9级",
+                text="技能9级",
                 font=self.my_font,
                 height=28,
                 command=lambda: self._apply_weapon_skill_preset(9),
             )
-            self._weapon_skill_preset_9_btn.pack(fill="x", padx=10, pady=(0, 4))
+            self._skill_preset_9_btn.pack(fill="x", padx=10, pady=(0, 4))
         self._refresh_advanced_params_visibility()
 
     def _toggle_advanced_params(self) -> None:

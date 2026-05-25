@@ -258,7 +258,7 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 app.app.destroy()
 
     def test_selection_panels_have_collapsible_advanced_params(self) -> None:
-        """角色侧：信赖在主区、技能等级默认展开；武器侧：高级参数默认收起。"""
+        """角色/武器侧：技能/武器技能折叠默认展开；武器侧分区展示普通/特殊技能。"""
         with patch("utils.gui_window.apply_startup_maximized"):
             from gui_design.gui import DamageCalculatorApp
 
@@ -274,21 +274,26 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 char_panel = app.char_panel
                 weapon_panel = app.weapon_panel
                 self.assertTrue(bool(char_panel._show_advanced_params_var.get()))
-                self.assertFalse(bool(weapon_panel._show_advanced_params_var.get()))
+                self.assertTrue(bool(weapon_panel._show_advanced_params_var.get()))
                 self.assertIsNotNone(char_panel._advanced_toggle_btn)
                 self.assertIsNotNone(weapon_panel._advanced_toggle_btn)
                 self.assertIsNotNone(char_panel._advanced_body)
                 self.assertIn("技能等级", char_panel._advanced_toggle_btn.cget("text"))  # type: ignore[union-attr]
-                self.assertIn("高级参数", weapon_panel._advanced_toggle_btn.cget("text"))  # type: ignore[union-attr]
+                self.assertIn("武器技能", weapon_panel._advanced_toggle_btn.cget("text"))  # type: ignore[union-attr]
                 self.assertIsNotNone(char_panel.skill_level_panel)
                 self.assertIsNotNone(char_panel.trust_panel)
+                self.assertIsNotNone(weapon_panel.special_ability_panel)
                 self.assertIs(char_panel.skill_level_panel.parent_frame, char_panel._advanced_body)  # type: ignore[union-attr]
                 self.assertIs(char_panel.trust_panel.parent_frame, char_panel.frame)  # type: ignore[union-attr]
+                self.assertIs(
+                    weapon_panel.special_ability_panel.parent_frame,  # type: ignore[union-attr]
+                    weapon_panel._advanced_body,
+                )
 
                 char_panel._advanced_toggle_btn.invoke()  # type: ignore[union-attr]
                 weapon_panel._advanced_toggle_btn.invoke()  # type: ignore[union-attr]
                 self.assertFalse(bool(char_panel._show_advanced_params_var.get()))
-                self.assertTrue(bool(weapon_panel._show_advanced_params_var.get()))
+                self.assertFalse(bool(weapon_panel._show_advanced_params_var.get()))
             finally:
                 app.app.destroy()
 
@@ -313,7 +318,7 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 self.assertIsNotNone(weapon_panel._level_preset_90_btn)
                 self.assertIsNotNone(char_panel._skill_preset_9_btn)
                 self.assertIsNotNone(char_panel._skill_preset_12_btn)
-                self.assertIsNotNone(weapon_panel._weapon_skill_preset_9_btn)
+                self.assertIsNotNone(weapon_panel._skill_preset_9_btn)
 
                 char_panel._level_preset_90_btn.invoke()  # type: ignore[union-attr]
                 weapon_panel._level_preset_80_btn.invoke()  # type: ignore[union-attr]
@@ -329,7 +334,7 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 ):
                     self.assertEqual(char_panel.get_skill_3_level(), 9)
 
-                weapon_panel._weapon_skill_preset_9_btn.invoke()  # type: ignore[union-attr]
+                weapon_panel._skill_preset_9_btn.invoke()  # type: ignore[union-attr]
                 if weapon_panel.get_special_ability_1_name():
                     self.assertGreaterEqual(weapon_panel.get_special_ability_1_level(), 1)
                 if weapon_panel.get_special_ability_2_name():

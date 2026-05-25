@@ -206,7 +206,7 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
             char_panel._refresh_advanced_params_visibility()
     weapon_panel = getattr(app, "weapon_panel", None)
     if weapon_panel is not None and hasattr(weapon_panel, "_show_advanced_params_var"):
-        weapon_panel._show_advanced_params_var.set(bool(ui_state.get("weapon_advanced_expanded", False)))
+        weapon_panel._show_advanced_params_var.set(bool(ui_state.get("weapon_advanced_expanded", True)))
         if hasattr(weapon_panel, "_refresh_advanced_params_visibility"):
             weapon_panel._refresh_advanced_params_visibility()
     if hasattr(app, "_show_more_settings_var"):
