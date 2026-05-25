@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "1.18.4"
+_VERSION = "1.18.5"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,15 +209,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 9 处文件
+# TITLE: 更新 11 处文件
 # BODY:
 # - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/special_fields.py
-# - 更新 weapons.json 武器数据
+# - 修改 endfield_damage_calculator/gui_design/display_lines.py
+# - 修改 endfield_damage_calculator/gui_design/loadout_state.py
+# - 修改 endfield_damage_calculator/gui_design/selection_components.py
+# - 修改 endfield_damage_calculator/gui_design/selection_panel.py
+# - 修改 endfield_damage_calculator/gui_design/weapon_display_text.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 endfield_damage_calculator/scripts/seed_weapons.py
-# - 修改 endfield_damage_calculator/tests/test_bwiki_scout.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_state.py
+# - 修改 endfield_damage_calculator/tests/test_property_display_lines.py
+# - 修改 endfield_damage_calculator/tests/test_weapon_panel_layout.py
 # - 修改 endfield_damage_calculator/tests/test_weapon_special_fields.py
-# - 修改 tools/bwiki_scout/backfill_weapon_max_stack.py
-# - 修改 tools/bwiki_scout/parse_draft.py
-# - 修改 tools/bwiki_scout/weapon_wiki.py
 # --- END UPLOAD_SUMMARY ---

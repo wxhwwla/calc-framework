@@ -128,7 +128,7 @@ class TestPropertyDisplayLines(unittest.TestCase):
         self.assertIn(f"攻击力+: {atk}", lines)
         ws_raw = weapon["特殊能力1"][2][7]
         ws = format_weapon_bonus_display_value(ws_raw, attr_name="源石技艺强度+")
-        self.assertIn(f"源石技艺强度+(特殊能力1): {ws}", lines)
+        self.assertIn(f"源石技艺强度+(特殊一): {ws}", lines)
         self.assertFalse(any(line.startswith("武器：") for line in lines))
         self.assertFalse(any(line.startswith("===") for line in lines))
 

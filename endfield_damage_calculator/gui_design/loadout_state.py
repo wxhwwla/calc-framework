@@ -75,22 +75,64 @@ class LoadoutState:
     enemy_defense: float = 100.0
     weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
 
-    def weapon_special_kwargs(self) -> dict[str, Any]:
-        """武器特殊能力字段，供武器属性列与伤害快照使用。"""
+    def weapon_skill_kwargs(self) -> dict[str, Any]:
+        """武器技能参数（新命名：普通技能 / 特殊技能）。"""
         t = normalize_weapon_specials_tuple(self.weapon_specials)
         return {
-            "sa1_name": t[0],
-            "sa1_level": int(t[1]),
-            "sa2_name": t[2],
-            "sa2_level": int(t[3]),
-            "sa3_name": t[4],
-            "sa3_level": int(t[5]),
-            "ws_name": t[6],
-            "ws_level": int(t[7]),
-            "ws_stack": int(t[8]),
-            "ws2_name": t[9],
-            "ws2_level": int(t[10]),
-            "ws2_stack": int(t[11]),
+            "normal_skill_1_name": t[0],
+            "normal_skill_1_level": int(t[1]),
+            "normal_skill_2_name": t[2],
+            "normal_skill_2_level": int(t[3]),
+            "normal_skill_3_name": t[4],
+            "normal_skill_3_level": int(t[5]),
+            "special_skill_1_name": t[6],
+            "special_skill_1_level": int(t[7]),
+            "special_skill_1_stack": int(t[8]),
+            "special_skill_2_name": t[9],
+            "special_skill_2_level": int(t[10]),
+            "special_skill_2_stack": int(t[11]),
+        }
+
+    def weapon_special_kwargs(self) -> dict[str, Any]:
+        """兼容旧命名字段，供既有调用方继续使用。"""
+        new = self.weapon_skill_kwargs()
+        return {
+            "sa1_name": new["normal_skill_1_name"],
+            "sa1_level": new["normal_skill_1_level"],
+            "sa2_name": new["normal_skill_2_name"],
+            "sa2_level": new["normal_skill_2_level"],
+            "sa3_name": new["normal_skill_3_name"],
+            "sa3_level": new["normal_skill_3_level"],
+            "ws_name": new["special_skill_1_name"],
+            "ws_level": new["special_skill_1_level"],
+            "ws_stack": new["special_skill_1_stack"],
+            "ws2_name": new["special_skill_2_name"],
+            "ws2_level": new["special_skill_2_level"],
+            "ws2_stack": new["special_skill_2_stack"],
+        }
+
+    def weapon_skill_selection(self) -> dict[str, Any]:
+        """
+        武器技能选择（新 schema 视图）。
+
+        返回：
+        - ``weapon_normal_levels``: 按顺序启用的普通技能等级列表
+        - ``weapon_special_states``: 启用的特殊技能状态列表（level/stack）
+        """
+        t = normalize_weapon_specials_tuple(self.weapon_specials)
+        normal_levels: list[int] = []
+        for name, level in ((t[0], t[1]), (t[2], t[3]), (t[4], t[5])):
+            if str(name).strip() and int(level) > 0:
+                normal_levels.append(int(level))
+        special_states: list[dict[str, int]] = []
+        for name, level, stack in ((t[6], t[7], t[8]), (t[9], t[10], t[11])):
+            if str(name).strip() and int(level) > 0:
+                special_states.append(
+                    {"level": int(level), "stack": max(0, int(stack))}
+                )
+        return {
+            "weapon_normal_levels": normal_levels,
+            "weapon_special_states": special_states,
         }
 
     def effective_skill_counts(self) -> dict[str, int]:
@@ -222,19 +264,25 @@ def normalize_weapon_specials_tuple(raw: tuple[Any, ...]) -> tuple[Any, ...]:
 
 
 def _weapon_specials_tuple(weapon_panel: Any) -> tuple[Any, ...]:
+    def _call(name: str, fallback: str) -> Any:
+        getter = getattr(weapon_panel, name, None)
+        if callable(getter):
+            return getter()
+        return getattr(weapon_panel, fallback)()
+
     return (
-        weapon_panel.get_special_ability_1_name(),
-        weapon_panel.get_special_ability_1_level(),
-        weapon_panel.get_special_ability_2_name(),
-        weapon_panel.get_special_ability_2_level(),
-        weapon_panel.get_special_ability_3_name(),
-        weapon_panel.get_special_ability_3_level(),
-        weapon_panel.get_weapon_special_name(),
-        weapon_panel.get_weapon_special_level(),
-        weapon_panel.get_weapon_special_stack(),
-        weapon_panel.get_weapon_special_2_name(),
-        weapon_panel.get_weapon_special_2_level(),
-        weapon_panel.get_weapon_special_2_stack(),
+        _call("get_normal_skill_1_name", "get_special_ability_1_name"),
+        _call("get_normal_skill_1_level", "get_special_ability_1_level"),
+        _call("get_normal_skill_2_name", "get_special_ability_2_name"),
+        _call("get_normal_skill_2_level", "get_special_ability_2_level"),
+        _call("get_normal_skill_3_name", "get_special_ability_3_name"),
+        _call("get_normal_skill_3_level", "get_special_ability_3_level"),
+        _call("get_special_skill_1_name", "get_weapon_special_name"),
+        _call("get_special_skill_1_level", "get_weapon_special_level"),
+        _call("get_special_skill_1_stack", "get_weapon_special_stack"),
+        _call("get_special_skill_2_name", "get_weapon_special_2_name"),
+        _call("get_special_skill_2_level", "get_weapon_special_2_level"),
+        _call("get_special_skill_2_stack", "get_weapon_special_2_stack"),
     )
 
 

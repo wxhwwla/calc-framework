@@ -133,6 +133,151 @@ def bonus_curve_for_key(weapon: dict[str, Any], attr_key: str) -> list[float]:
     return [float(v) for v in raw]
 
 
+_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]+?\+)')
+
+
+def _extract_effect_name_from_special_name(raw_name: str) -> str:
+    """从特殊技能完整名称中提取 ``xxx+`` 词条名。"""
+    name = (raw_name or "").strip()
+    if not name:
+        return ""
+    if name.endswith("+") and all(ch not in name for ch in ("，", "。")):
+        return name
+    matches = _EFFECT_NAME_RE.findall(name)
+    if matches:
+        return matches[-1]
+    return name
+
+
+def _split_special_name(raw_name: str) -> tuple[str, str]:
+    """拆分特殊技能名称为 (condition, effect)。"""
+    name = (raw_name or "").strip()
+    effect = _extract_effect_name_from_special_name(name)
+    if not name or not effect:
+        return "", effect
+    if name == effect or effect not in name:
+        return "", effect
+    condition = name[: name.rfind(effect)].strip("，。；:：, ")
+    for marker in ("时获得", "获得", "提高", "提升", "增加", "降低", "使得", "使"):
+        if condition.endswith(marker):
+            condition = condition[: -len(marker)].strip("，。；:：, ")
+            break
+    return condition, effect
+
+
+def read_weapon_skills_schema(weapon: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """
+    读取武器技能 schema（normal_skills / special_skills）。
+
+    - 若已是新结构，按新结构归一化返回
+    - 若是旧结构（xxx+ + 特殊能力1/2），动态映射为新结构视图
+    """
+    normal_raw = weapon.get("normal_skills")
+    special_raw = weapon.get("special_skills")
+    if isinstance(normal_raw, list) and isinstance(special_raw, list):
+        normal_skills: list[dict[str, Any]] = []
+        for idx, item in enumerate(normal_raw):
+            if not isinstance(item, dict):
+                continue
+            curve = item.get("curve")
+            normal_skills.append(
+                {
+                    "zone": int(item.get("zone", idx + 1)),
+                    "effect": str(item.get("effect", "")),
+                    "curve": [float(v) for v in curve] if isinstance(curve, list) else [],
+                }
+            )
+        special_skills: list[dict[str, Any]] = []
+        for item in special_raw:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name", ""))
+            effect = str(item.get("effect", "")) or _extract_effect_name_from_special_name(name)
+            condition = str(item.get("condition", ""))
+            curve = item.get("curve")
+            special_skills.append(
+                {
+                    "zone": int(item.get("zone", 3)),
+                    "name": name,
+                    "condition": condition,
+                    "effect": effect,
+                    "curve": [float(v) for v in curve] if isinstance(curve, list) else [],
+                    "max_stack": max(1, int(item.get("max_stack", 1))),
+                }
+            )
+        return {"normal_skills": normal_skills, "special_skills": special_skills}
+
+    normal_skills = []
+    for idx, attr_key in enumerate(bonus_attribute_keys(weapon), start=1):
+        normal_skills.append(
+            {
+                "zone": idx,
+                "effect": attr_key,
+                "curve": bonus_curve_for_key(weapon, attr_key),
+            }
+        )
+
+    special_skills = []
+    for enabled, name, curve, max_stack in read_weapon_special_slots(weapon):
+        if not enabled or not name:
+            continue
+        condition, effect = _split_special_name(name)
+        special_skills.append(
+            {
+                "zone": 3,
+                "name": name,
+                "condition": condition,
+                "effect": effect,
+                "curve": [float(v) for v in curve],
+                "max_stack": max(1, int(max_stack)),
+            }
+        )
+    return {"normal_skills": normal_skills, "special_skills": special_skills}
+
+
+def write_weapon_skills_schema(
+    weapon: dict[str, Any],
+    *,
+    normal_skills: list[dict[str, Any]],
+    special_skills: list[dict[str, Any]],
+) -> None:
+    """
+    写入新武器技能 schema，并清理旧 ``xxx+`` / ``特殊能力1/2`` 字段。
+    """
+    for key in bonus_attribute_keys(weapon):
+        weapon.pop(key, None)
+    for key in weapon_special_field_keys(weapon):
+        weapon.pop(key, None)
+    weapon.pop("normal_skills", None)
+    weapon.pop("special_skills", None)
+
+    weapon["normal_skills"] = [
+        {
+            "zone": int(item.get("zone", idx + 1)),
+            "effect": str(item.get("effect", "")),
+            "curve": [
+                float(v) for v in (item.get("curve") if isinstance(item.get("curve"), list) else [])
+            ],
+        }
+        for idx, item in enumerate(normal_skills)
+        if isinstance(item, dict) and str(item.get("effect", "")).strip()
+    ]
+    weapon["special_skills"] = [
+        {
+            "zone": int(item.get("zone", 3)),
+            "name": str(item.get("name", "")),
+            "condition": str(item.get("condition", "")),
+            "effect": str(item.get("effect", "")),
+            "curve": [
+                float(v) for v in (item.get("curve") if isinstance(item.get("curve"), list) else [])
+            ],
+            "max_stack": max(1, int(item.get("max_stack", 1))),
+        }
+        for item in special_skills
+        if isinstance(item, dict) and str(item.get("name", "")).strip()
+    ]
+
+
 def special_pick_bonus(
     curve: list[float],
     max_stack: int,

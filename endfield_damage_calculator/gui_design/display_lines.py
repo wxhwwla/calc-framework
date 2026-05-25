@@ -258,8 +258,8 @@ def build_weapon_attribute_lines(
     )
 
     for slot_idx, pick_level, pick_stack, pick_name, label in (
-        (0, ws_level, ws_stack, ws_name, "特殊能力1"),
-        (1, ws2_level, ws2_stack, ws2_name, "特殊能力2"),
+        (0, ws_level, ws_stack, ws_name, "特殊一"),
+        (1, ws2_level, ws2_stack, ws2_name, "特殊二"),
     ):
         if not pick_name or pick_name in bonus_attrs:
             continue

@@ -26,6 +26,7 @@ from gui_design.weapon_display_text import (
     extract_effect_display_name,
     format_weapon_skill_slider_value,
     format_weapon_skill_title,
+    split_special_skill_display,
 )
 
 class TrustPanel:
@@ -110,7 +111,7 @@ class SpecialAbilityPanel:
         {"名称", "类型", "星级", "等级", "潜能", "基础攻击力", "特殊能力", "特殊能力1", "特殊能力2"}
     )
     _BONUS_SKILL_PREFIX = ("第一技能", "第二技能", "第三技能")
-    _WEAPON_SPECIAL_PREFIX = ("特殊能力1", "特殊能力2")
+    _WEAPON_SPECIAL_PREFIX = ("特殊一", "特殊二")
 
     def __init__(self, parent_frame: ctk.CTkFrame, my_font: ctk.CTkFont):
         self.parent_frame = parent_frame
@@ -176,7 +177,9 @@ class SpecialAbilityPanel:
     def _build_gui(self) -> None:
         """构建附加属性与特殊能力滑块"""
         self._ability_1_name_label = ctk.CTkLabel(
-            self.parent_frame, text="附加属性1", font=self.my_font
+            self.parent_frame,
+            text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[0]),
+            font=self.my_font,
         )
         self._ability_1_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
         self._ability_1_label = ctk.CTkLabel(
@@ -194,7 +197,9 @@ class SpecialAbilityPanel:
         self._ability_1_slider.set(1)
 
         self._ability_2_name_label = ctk.CTkLabel(
-            self.parent_frame, text="附加属性2", font=self.my_font
+            self.parent_frame,
+            text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[1]),
+            font=self.my_font,
         )
         self._ability_2_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
         self._ability_2_label = ctk.CTkLabel(
@@ -575,9 +580,12 @@ class SpecialAbilityPanel:
     ) -> None:
         prefix = self._WEAPON_SPECIAL_PREFIX[index - 1]
         if available and name:
-            display_name = extract_effect_display_name(name)
+            condition, effect = split_special_skill_display(name)
             if name_label:
-                name_label.configure(text=format_weapon_skill_title(prefix, display_name))
+                if condition:
+                    name_label.configure(text=f"{prefix}：{condition}\n{effect}")
+                else:
+                    name_label.configure(text=format_weapon_skill_title(prefix, effect))
             if stack_name_label:
                 stack_name_label.configure(text=f"{prefix} 叠加")
             if value_label:

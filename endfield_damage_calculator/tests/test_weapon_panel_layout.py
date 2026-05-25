@@ -14,6 +14,7 @@ from gui_design.weapon_display_text import (
     extract_effect_display_name,
     format_weapon_skill_slider_value,
     format_weapon_skill_title,
+    split_special_skill_display,
 )
 
 _WEAPONS_JSON = (
@@ -50,7 +51,7 @@ class TestFormatWeaponSkillTitle(unittest.TestCase):
 
     def test_without_attribute_name(self):
         self.assertEqual(format_weapon_skill_title("第三技能"), "第三技能：无")
-        self.assertEqual(format_weapon_skill_title("特殊能力1", ""), "特殊能力1：无")
+        self.assertEqual(format_weapon_skill_title("特殊一", ""), "特殊一：无")
 
 
 class TestExtractEffectDisplayName(unittest.TestCase):
@@ -67,6 +68,20 @@ class TestExtractEffectDisplayName(unittest.TestCase):
         self.assertEqual(
             extract_effect_display_name("目标受到的寒冷伤害+"),
             "寒冷伤害+",
+        )
+
+
+class TestSplitSpecialSkillDisplay(unittest.TestCase):
+    def test_split_condition_and_effect(self):
+        self.assertEqual(
+            split_special_skill_display("施放战技后，攻击力+"),
+            ("施放战技后", "攻击力+"),
+        )
+
+    def test_plain_effect_has_empty_condition(self):
+        self.assertEqual(
+            split_special_skill_display("法术伤害+"),
+            ("", "法术伤害+"),
         )
 
 

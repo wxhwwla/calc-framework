@@ -107,6 +107,39 @@ class TestLoadoutState(unittest.TestCase):
         )
         self.assertEqual(migrated[7:12], (1, 0, "", 3, 1))
 
+    def test_weapon_skill_selection_uses_new_schema_shape(self) -> None:
+        state = LoadoutState(
+            char_data=self._char(),
+            weapon_data=self._weapon(),
+            char_level=10,
+            weapon_level=20,
+            trust_level=1,
+            skill_levels=(3, 2, 0),
+            skill_name="战技",
+            skill_type="战技",
+            skill_multiplier=2.0,
+            calculation_mode="zone_snapshot",
+            weapon_scope_label="当前武器",
+            equipment_scope_label="全部装备",
+            fixed_loadout=FixedLoadoutSelection(),
+            fixed_equipment_names={
+                "chest": None,
+                "gloves": None,
+                "accessory_a": None,
+                "accessory_b": None,
+            },
+            use_manual_multi_skill_counts=False,
+            manual_counts={"战技": 1, "连携技": 0, "终结技": 0},
+            enemy_defense=100.0,
+            weapon_specials=("敏捷+", 9, "攻击力+", 8, "", 0, "施放战技后，攻击力+", 7, 2, "", 1, 0),
+        )
+        selection = state.weapon_skill_selection()
+        self.assertEqual(selection["weapon_normal_levels"], [9, 8])
+        self.assertEqual(
+            selection["weapon_special_states"],
+            [{"level": 7, "stack": 2}],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

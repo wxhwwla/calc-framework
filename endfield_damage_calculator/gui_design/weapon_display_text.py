@@ -61,3 +61,37 @@ def extract_effect_display_name(raw_name: str) -> str:
                     candidate = tail
         return candidate
     return name
+
+
+def split_special_skill_display(raw_name: str) -> tuple[str, str]:
+    """
+    拆分特殊技能展示文案：返回 (条件行, 效果行)。
+
+    - 条件行用于第一行展示（可为空）
+    - 效果行始终尽量返回 ``xxx+``（由 ``extract_effect_display_name`` 提取）
+    """
+    name = (raw_name or "").strip()
+    if not name:
+        return "", ""
+    effect = extract_effect_display_name(name)
+    if not effect:
+        return "", name
+    if name == effect:
+        return "", effect
+    if effect not in name:
+        return "", effect
+    condition = name[: name.rfind(effect)].strip("，。；:：, ")
+    for marker in ("时获得", "获得", "提高", "提升", "增加", "降低", "使得", "使"):
+        if condition.endswith(marker):
+            condition = condition[: -len(marker)].strip("，。；:：, ")
+            break
+    if condition in {
+        "目标受到的",
+        "目标获得",
+        "使目标受到的",
+        "使目标获得",
+        "装备者",
+        "装备者获得的",
+    }:
+        condition = ""
+    return condition, effect

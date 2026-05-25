@@ -10,12 +10,82 @@ from character_weapon_equipment.weapon_data.special_fields import (
     bonus_attribute_keys,
     build_special_field,
     parse_special_field,
+    read_weapon_skills_schema,
     read_weapon_special_slots,
+    write_weapon_skills_schema,
     write_weapon_special_slots,
 )
 
 
 class TestWeaponSpecialFields(unittest.TestCase):
+    def test_read_weapon_skills_schema_from_legacy_fields(self):
+        weapon = {
+            "基础攻击力": [1] * 90,
+            "敏捷+": [10.0] * 9,
+            "攻击力+": [20.0] * 9,
+            "特殊能力1": [True, "施放战技后，攻击力+", [5.0] * 9, 2],
+            "特殊能力2": [False],
+        }
+        schema = read_weapon_skills_schema(weapon)
+        self.assertEqual(
+            schema["normal_skills"],
+            [
+                {"zone": 1, "effect": "敏捷+", "curve": [10.0] * 9},
+                {"zone": 2, "effect": "攻击力+", "curve": [20.0] * 9},
+            ],
+        )
+        self.assertEqual(schema["special_skills"][0]["name"], "施放战技后，攻击力+")
+        self.assertEqual(schema["special_skills"][0]["effect"], "攻击力+")
+        self.assertEqual(schema["special_skills"][0]["max_stack"], 2)
+
+    def test_read_weapon_skills_schema_keeps_new_structure(self):
+        weapon = {
+            "normal_skills": [
+                {"zone": 1, "effect": "敏捷+", "curve": [1.0] * 9},
+            ],
+            "special_skills": [
+                {
+                    "zone": 3,
+                    "name": "施放战技后，攻击力+",
+                    "condition": "施放战技后",
+                    "curve": [2.0] * 9,
+                    "max_stack": 3,
+                }
+            ],
+        }
+        schema = read_weapon_skills_schema(weapon)
+        self.assertEqual(schema["normal_skills"][0]["effect"], "敏捷+")
+        self.assertEqual(schema["special_skills"][0]["effect"], "攻击力+")
+        self.assertEqual(schema["special_skills"][0]["condition"], "施放战技后")
+
+    def test_write_weapon_skills_schema_replaces_legacy_fields(self):
+        weapon = {
+            "基础攻击力": [1] * 90,
+            "敏捷+": [10.0] * 9,
+            "特殊能力1": [True, "施放战技后，攻击力+", [5.0] * 9, 2],
+            "特殊能力2": [False],
+        }
+        write_weapon_skills_schema(
+            weapon,
+            normal_skills=[{"zone": 1, "effect": "攻击力+", "curve": [11.0] * 9}],
+            special_skills=[
+                {
+                    "zone": 3,
+                    "name": "施放连携技后，法术伤害+",
+                    "condition": "施放连携技后",
+                    "effect": "法术伤害+",
+                    "curve": [3.0] * 9,
+                    "max_stack": 3,
+                }
+            ],
+        )
+        self.assertNotIn("敏捷+", weapon)
+        self.assertNotIn("特殊能力1", weapon)
+        self.assertIn("normal_skills", weapon)
+        self.assertIn("special_skills", weapon)
+        self.assertEqual(weapon["normal_skills"][0]["effect"], "攻击力+")
+        self.assertEqual(weapon["special_skills"][0]["max_stack"], 3)
+
     def test_parse_disabled_special(self):
         self.assertEqual(parse_special_field([False]), (False, "", [], 1))
 

@@ -543,114 +543,132 @@ class ChooseTypesStarsNamesLevels:
             return int(trust_str) if trust_str.isdigit() else 0
         return 0
     
-    def get_special_ability_1_name(self) -> str:
-        """
-        获取特殊能力1的名称（仅武器面板有效）
-
-        返回：
-            特殊能力1的名称，如果不存在则返回空字符串
-        """
+    def get_normal_skill_1_name(self) -> str:
+        """获取第一技能名称（仅武器面板有效）。"""
         if self.special_ability_panel:
             return self.special_ability_panel.current_special_ability_1_name
         return ""
-    
-    def get_special_ability_1_level(self) -> int:
-        """
-        获取特殊能力1的等级（仅武器面板有效）
 
-        返回：
-            特殊能力1的等级（1-9），如果不存在则返回0
-        """
+    def get_special_ability_1_name(self) -> str:
+        """兼容旧命名：第一技能名称。"""
+        return self.get_normal_skill_1_name()
+
+    def get_normal_skill_1_level(self) -> int:
+        """获取第一技能等级（仅武器面板有效）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.special_ability_1_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
-    
-    def get_special_ability_2_name(self) -> str:
-        """
-        获取特殊能力2的名称（仅武器面板有效）
 
-        返回：
-            特殊能力2的名称，如果不存在则返回空字符串
-        """
+    def get_special_ability_1_level(self) -> int:
+        """兼容旧命名：第一技能等级。"""
+        return self.get_normal_skill_1_level()
+
+    def get_normal_skill_2_name(self) -> str:
+        """获取第二技能名称（仅武器面板有效）。"""
         if self.special_ability_panel:
             return self.special_ability_panel.current_special_ability_2_name
         return ""
-    
-    def get_special_ability_2_level(self) -> int:
-        """
-        获取特殊能力2的等级（仅武器面板有效）
 
-        返回：
-            特殊能力2的等级（1-9），如果不存在则返回0
-        """
+    def get_special_ability_2_name(self) -> str:
+        """兼容旧命名：第二技能名称。"""
+        return self.get_normal_skill_2_name()
+
+    def get_normal_skill_2_level(self) -> int:
+        """获取第二技能等级（仅武器面板有效）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.special_ability_2_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
-    
-    def get_special_ability_3_name(self) -> str:
-        """
-        获取第三条附加属性（xxx+）名称（仅武器面板有效）
 
-        返回：
-            属性名；无第三条时返回空字符串
-        """
+    def get_special_ability_2_level(self) -> int:
+        """兼容旧命名：第二技能等级。"""
+        return self.get_normal_skill_2_level()
+
+    def get_normal_skill_3_name(self) -> str:
+        """获取第三技能名称（仅武器面板有效）。"""
         if self.special_ability_panel:
             return self.special_ability_panel.current_special_ability_3_name
         return ""
-    
-    def get_special_ability_3_level(self) -> int:
-        """
-        获取第三条附加属性等级（仅武器面板有效）
 
-        返回：
-            1-9；无第三条时为 0
-        """
+    def get_special_ability_3_name(self) -> str:
+        """兼容旧命名：第三技能名称。"""
+        return self.get_normal_skill_3_name()
+
+    def get_normal_skill_3_level(self) -> int:
+        """获取第三技能等级（仅武器面板有效）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.special_ability_3_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
 
-    def get_weapon_special_name(self) -> str:
-        """获取武器「特殊能力」字段中的能力名称（仅武器面板有效）。"""
+    def get_special_ability_3_level(self) -> int:
+        """兼容旧命名：第三技能等级。"""
+        return self.get_normal_skill_3_level()
+
+    def get_special_skill_1_name(self) -> str:
+        """获取特殊一名称（仅武器面板有效）。"""
         if self.special_ability_panel:
             return self.special_ability_panel.current_weapon_special_name
         return ""
 
-    def get_weapon_special_level(self) -> int:
-        """获取武器「特殊能力1」技能等级（1-9）。"""
+    def get_weapon_special_name(self) -> str:
+        """兼容旧命名：特殊一名称。"""
+        return self.get_special_skill_1_name()
+
+    def get_special_skill_1_level(self) -> int:
+        """获取特殊一等级（1-9）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.weapon_special_level.get()
             return int(level_str) if level_str.isdigit() else 1
         return 1
 
-    def get_weapon_special_stack(self) -> int:
-        """获取武器「特殊能力1」叠加层数。"""
+    def get_weapon_special_level(self) -> int:
+        """兼容旧命名：特殊一等级。"""
+        return self.get_special_skill_1_level()
+
+    def get_special_skill_1_stack(self) -> int:
+        """获取特殊一叠加层数。"""
         if self.special_ability_panel:
             stack_str = self.special_ability_panel.weapon_special_stack.get()
             return int(stack_str) if stack_str.isdigit() else 0
         return 0
 
-    def get_weapon_special_2_name(self) -> str:
-        """获取武器「特殊能力2」名称（仅武器面板有效）。"""
+    def get_weapon_special_stack(self) -> int:
+        """兼容旧命名：特殊一叠加层数。"""
+        return self.get_special_skill_1_stack()
+
+    def get_special_skill_2_name(self) -> str:
+        """获取特殊二名称（仅武器面板有效）。"""
         if self.special_ability_panel:
             return self.special_ability_panel.current_weapon_special_2_name
         return ""
 
-    def get_weapon_special_2_level(self) -> int:
-        """获取武器「特殊能力2」技能等级（1-9）。"""
+    def get_weapon_special_2_name(self) -> str:
+        """兼容旧命名：特殊二名称。"""
+        return self.get_special_skill_2_name()
+
+    def get_special_skill_2_level(self) -> int:
+        """获取特殊二等级（1-9）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.weapon_special_2_level.get()
             return int(level_str) if level_str.isdigit() else 1
         return 1
 
-    def get_weapon_special_2_stack(self) -> int:
-        """获取武器「特殊能力2」叠加层数。"""
+    def get_weapon_special_2_level(self) -> int:
+        """兼容旧命名：特殊二等级。"""
+        return self.get_special_skill_2_level()
+
+    def get_special_skill_2_stack(self) -> int:
+        """获取特殊二叠加层数。"""
         if self.special_ability_panel:
             stack_str = self.special_ability_panel.weapon_special_2_stack.get()
             return int(stack_str) if stack_str.isdigit() else 0
         return 0
+
+    def get_weapon_special_2_stack(self) -> int:
+        """兼容旧命名：特殊二叠加层数。"""
+        return self.get_special_skill_2_stack()
 
     def get_skill_1_level(self) -> int:
         """
