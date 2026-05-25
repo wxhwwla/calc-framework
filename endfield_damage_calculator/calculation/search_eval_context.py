@@ -24,3 +24,5 @@ class SearchEvalContext:
     extra_crit_damage: float = 0.0
     physical_abnormal_counts: dict[str, int] | None = None
     spell_abnormal_counts: dict[str, int] | None = None
+    weapon_normal_levels: tuple[int, ...] = ()
+    weapon_special_states: tuple[dict[str, int], ...] = ()

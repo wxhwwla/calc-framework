@@ -115,6 +115,24 @@ class WeaponBonusSelection:
             ),
         }
 
+    @classmethod
+    def from_calculation_kwargs(cls, kwargs: dict[str, Any]) -> WeaponBonusSelection:
+        """由 ``WeaponSkillSelection.calculation_kwargs()`` 等构建。"""
+        return cls(
+            normal_skill_1_name=str(kwargs.get("normal_skill_1_name", "")),
+            normal_skill_1_level=int(kwargs.get("normal_skill_1_level", 1)),
+            normal_skill_2_name=str(kwargs.get("normal_skill_2_name", "")),
+            normal_skill_2_level=int(kwargs.get("normal_skill_2_level", 1)),
+            normal_skill_3_name=str(kwargs.get("normal_skill_3_name", "")),
+            normal_skill_3_level=int(kwargs.get("normal_skill_3_level", 0)),
+            special_skill_1_name=str(kwargs.get("special_skill_1_name", "")),
+            special_skill_1_level=int(kwargs.get("special_skill_1_level", 1)),
+            special_skill_1_stack=int(kwargs.get("special_skill_1_stack", 0)),
+            special_skill_2_name=str(kwargs.get("special_skill_2_name", "")),
+            special_skill_2_level=int(kwargs.get("special_skill_2_level", 1)),
+            special_skill_2_stack=int(kwargs.get("special_skill_2_stack", 0)),
+        )
+
 
 @dataclass(frozen=True)
 class MultiplicativeZoneSelection:
@@ -191,8 +209,8 @@ def compute_multiplicative_zone_snapshot(
         weapon,
         char_level=selection.char_level,
         weapon_level=selection.weapon_level,
-        **kwargs,
         trust_level=selection.trust_level,
+        **kwargs,
     )
     lines.append(
         ZoneDisplayLine(

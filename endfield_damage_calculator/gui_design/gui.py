@@ -1023,6 +1023,9 @@ class DamageCalculatorApp:
         current_weapon = self.weapon_panel.get_selected_data()
         if not char_data or not current_weapon:
             return []
+        from gui_design.weapon_skill_selection import read_weapon_skill_selection_from_panel
+
+        skill_view = read_weapon_skill_selection_from_panel(self.weapon_panel).to_preset_view()
         return build_weapon_candidates(
             all_weapons=self.all_weapons,
             char_data=char_data,
@@ -1031,6 +1034,8 @@ class DamageCalculatorApp:
             char_level=self.char_panel.get_level(),
             weapon_level=self.weapon_panel.get_level(),
             trust_level=self.char_panel.get_trust_level(),
+            weapon_normal_levels=skill_view["weapon_normal_levels"],
+            weapon_special_states=skill_view["weapon_special_states"],
         )
 
     def _single_skill_preview_equipment_catalog(self) -> Dict[str, List[Dict[str, Any]]]:

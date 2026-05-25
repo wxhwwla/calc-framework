@@ -146,6 +146,19 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
     app._on_char_name_change()
     if not _select_panel_by_name(app.weapon_panel, preset.weapon_name):
         raise ValueError(f"未找到武器: {preset.weapon_name}")
+    weapon_data = app.weapon_panel.get_selected_data()
+    if weapon_data:
+        from gui_design.weapon_skill_selection import (
+            WeaponSkillSelection,
+            apply_weapon_skill_selection_to_panel,
+        )
+
+        skill_selection = WeaponSkillSelection.from_preset_view(
+            weapon_data,
+            weapon_normal_levels=preset.weapon_normal_levels,
+            weapon_special_states=preset.weapon_special_states,
+        )
+        apply_weapon_skill_selection_to_panel(app.weapon_panel, skill_selection)
     app.char_panel.selected_level.set(str(preset.char_level))
     app.weapon_panel.selected_level.set(str(preset.weapon_level))
     if app.char_panel.trust_panel:

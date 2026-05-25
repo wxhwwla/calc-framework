@@ -11,7 +11,7 @@ from calculation.damage_engine import DamageContext
 from calculation.loadout_optimizer import LoadoutScore, OptimizerTask, WeaponCandidate, evaluate_task
 from calculation.multi_skill_optimizer import evaluate_multi_skill_task
 from calculation.multi_skill_search_eval import build_skill_scenarios_from_levels
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.loadout_attack_eval import final_attack_details_for_loadout
 from calculation.parallel_evaluate import evaluate_parallel
 from calculation.search_eval_context import SearchEvalContext
 from gui_design.loadout_preset import LoadoutPreset
@@ -91,12 +91,14 @@ def _build_eval_item(
     acc_a = _resolve_equipment(fixed.get("accessory_a"), equipments, slot_kind="配件")
     acc_b = _resolve_equipment(fixed.get("accessory_b"), equipments, slot_kind="配件")
 
-    final = calculate_final_attack_with_details(
+    final = final_attack_details_for_loadout(
         character=char,
         weapon=weapon,
         char_level=preset.char_level,
         weapon_level=preset.weapon_level,
         trust_level=preset.trust_level,
+        weapon_normal_levels=preset.weapon_normal_levels,
+        weapon_special_states=preset.weapon_special_states,
     )
     weapon_candidate = WeaponCandidate(
         name=str(weapon.get("名称", preset.weapon_name)),
@@ -109,6 +111,8 @@ def _build_eval_item(
         weapon_level=preset.weapon_level,
         trust_level=preset.trust_level,
         weapon_data_by_name={str(weapon.get("名称", "")): weapon},
+        weapon_normal_levels=tuple(int(v) for v in preset.weapon_normal_levels),
+        weapon_special_states=tuple(dict(s) for s in preset.weapon_special_states),
     )
 
     scenarios = tuple(

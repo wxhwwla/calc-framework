@@ -11,11 +11,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from character_weapon_equipment.weapon_data.special_fields import migrate_legacy_weapon_special_level
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.search_controller import SearchJobInputs
 from gui_design.confirm_refresh import build_confirm_refresh_signature
 from gui_design.loadout_preset import LoadoutPreset
+from calculation.weapon_skill_selection import WeaponSkillSelection
+from gui_design.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
 
 def _resolve_selected_skill_for_search(
@@ -75,23 +76,13 @@ class LoadoutState:
     enemy_defense: float = 100.0
     weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
 
+    def weapon_skills(self) -> WeaponSkillSelection:
+        """当前武器技能选用状态（深 module 视图）。"""
+        return WeaponSkillSelection.from_legacy_tuple(self.weapon_specials)
+
     def weapon_skill_kwargs(self) -> dict[str, Any]:
         """武器技能参数（新命名：普通技能 / 特殊技能）。"""
-        t = normalize_weapon_specials_tuple(self.weapon_specials)
-        return {
-            "normal_skill_1_name": t[0],
-            "normal_skill_1_level": int(t[1]),
-            "normal_skill_2_name": t[2],
-            "normal_skill_2_level": int(t[3]),
-            "normal_skill_3_name": t[4],
-            "normal_skill_3_level": int(t[5]),
-            "special_skill_1_name": t[6],
-            "special_skill_1_level": int(t[7]),
-            "special_skill_1_stack": int(t[8]),
-            "special_skill_2_name": t[9],
-            "special_skill_2_level": int(t[10]),
-            "special_skill_2_stack": int(t[11]),
-        }
+        return self.weapon_skills().calculation_kwargs()
 
     def weapon_special_kwargs(self) -> dict[str, Any]:
         """兼容旧命名字段，供既有调用方继续使用。"""
@@ -119,21 +110,7 @@ class LoadoutState:
         - ``weapon_normal_levels``: 按顺序启用的普通技能等级列表
         - ``weapon_special_states``: 启用的特殊技能状态列表（level/stack）
         """
-        t = normalize_weapon_specials_tuple(self.weapon_specials)
-        normal_levels: list[int] = []
-        for name, level in ((t[0], t[1]), (t[2], t[3]), (t[4], t[5])):
-            if str(name).strip() and int(level) > 0:
-                normal_levels.append(int(level))
-        special_states: list[dict[str, int]] = []
-        for name, level, stack in ((t[6], t[7], t[8]), (t[9], t[10], t[11])):
-            if str(name).strip() and int(level) > 0:
-                special_states.append(
-                    {"level": int(level), "stack": max(0, int(stack))}
-                )
-        return {
-            "weapon_normal_levels": normal_levels,
-            "weapon_special_states": special_states,
-        }
+        return self.weapon_skills().to_preset_view()
 
     def effective_skill_counts(self) -> dict[str, int]:
         """未开手动次数时仅战技计 1 次（与仪表盘一致）。"""
@@ -197,6 +174,7 @@ class LoadoutState:
         all_weapons: list[dict[str, Any]],
         equipment_catalog: dict[str, list[dict[str, Any]]],
     ) -> SearchJobInputs:
+        preset_skills = self.weapon_skills().to_preset_view()
         return SearchJobInputs(
             char_data=self.char_data,
             char_level=self.char_level,
@@ -224,6 +202,8 @@ class LoadoutState:
             include_conditional_equipment_crit=self.include_conditional_equipment_crit,
             extra_crit_rate=self.extra_crit_rate,
             extra_crit_damage=self.extra_crit_damage,
+            weapon_normal_levels=preset_skills["weapon_normal_levels"],
+            weapon_special_states=preset_skills["weapon_special_states"],
         )
 
 
@@ -239,53 +219,6 @@ def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, Optional[s
         "accessory_a": _name(fixed.accessory_a),
         "accessory_b": _name(fixed.accessory_b),
     }
-
-
-def normalize_weapon_specials_tuple(raw: tuple[Any, ...]) -> tuple[Any, ...]:
-    """将旧版 10 元组迁移为 (技能/叠加)×2 + 三附加技能。"""
-    if len(raw) >= 12:
-        return tuple(raw[:12])
-    if len(raw) == 10:
-        ws_level, ws_stack = migrate_legacy_weapon_special_level(int(raw[7]))
-        ws2_level, ws2_stack = migrate_legacy_weapon_special_level(int(raw[9]))
-        return (
-            raw[0],
-            raw[1],
-            raw[2],
-            raw[3],
-            raw[4],
-            raw[5],
-            raw[6],
-            ws_level,
-            ws_stack,
-            raw[8],
-            ws2_level,
-            ws2_stack,
-        )
-    raise ValueError(f"weapon_specials 长度无效: {len(raw)}")
-
-
-def _weapon_specials_tuple(weapon_panel: Any) -> tuple[Any, ...]:
-    def _call(name: str, fallback: str) -> Any:
-        getter = getattr(weapon_panel, name, None)
-        if callable(getter):
-            return getter()
-        return getattr(weapon_panel, fallback)()
-
-    return (
-        _call("get_normal_skill_1_name", "get_special_ability_1_name"),
-        _call("get_normal_skill_1_level", "get_special_ability_1_level"),
-        _call("get_normal_skill_2_name", "get_special_ability_2_name"),
-        _call("get_normal_skill_2_level", "get_special_ability_2_level"),
-        _call("get_normal_skill_3_name", "get_special_ability_3_name"),
-        _call("get_normal_skill_3_level", "get_special_ability_3_level"),
-        _call("get_special_skill_1_name", "get_weapon_special_name"),
-        _call("get_special_skill_1_level", "get_weapon_special_level"),
-        _call("get_special_skill_1_stack", "get_weapon_special_stack"),
-        _call("get_special_skill_2_name", "get_weapon_special_2_name"),
-        _call("get_special_skill_2_level", "get_weapon_special_2_level"),
-        _call("get_special_skill_2_stack", "get_weapon_special_2_stack"),
-    )
 
 
 def read_loadout_from_panels(
@@ -349,7 +282,7 @@ def read_loadout_from_panels(
         extra_crit_rate=float(extra_crit_rate),
         extra_crit_damage=float(extra_crit_damage),
         enemy_defense=float(enemy_defense),
-        weapon_specials=_weapon_specials_tuple(weapon_panel),
+        weapon_specials=read_weapon_skill_selection_from_panel(weapon_panel).to_legacy_tuple(),
     )
 
 

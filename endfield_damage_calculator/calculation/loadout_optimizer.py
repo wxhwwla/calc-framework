@@ -47,7 +47,7 @@ from calculation.top_n_tracker import TopNTracker
 from calculation.damage_engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
 from calculation.equipment_affix import aggregate_loadout_modifiers
 from calculation.equipment_system import build_four_slot_loadout, collect_loadout_effects
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.loadout_attack_eval import final_attack_details_for_loadout
 from calculation.equipment_prune import character_ability_attrs, sort_equipment_catalog_by_priority
 from calculation.loadout_slot_search import (
     FixedLoadoutSelection,
@@ -596,12 +596,14 @@ def build_runtime_eval_snapshot(
     if search_eval is not None:
         weapon_data = search_eval.weapon_data_by_name.get(weapon.name)
         if weapon_data is not None:
-            details = calculate_final_attack_with_details(
+            details = final_attack_details_for_loadout(
                 character=search_eval.char_data,
                 weapon=weapon_data,
                 char_level=search_eval.char_level,
                 weapon_level=search_eval.weapon_level,
                 trust_level=search_eval.trust_level,
+                weapon_normal_levels=list(search_eval.weapon_normal_levels),
+                weapon_special_states=list(search_eval.weapon_special_states),
                 equipment_stat_bonus=flat_stats,
                 equipment_attack_percent=atk_percent,
             )

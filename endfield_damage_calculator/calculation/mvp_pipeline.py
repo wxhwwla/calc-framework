@@ -61,6 +61,8 @@ def run_mvp_search_from_job(
         extra_crit_damage=job.extra_crit_damage,
         physical_abnormal_counts=dict(job.physical_abnormal_counts or {}),
         spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
+        weapon_normal_levels=tuple(job.weapon_normal_levels),
+        weapon_special_states=tuple(dict(s) for s in job.weapon_special_states),
     )
     task_evaluator = make_loadout_task_evaluator(
         job, crit_mode=config.crit_mode, search_eval=search_eval

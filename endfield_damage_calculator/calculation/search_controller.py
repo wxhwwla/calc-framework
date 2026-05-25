@@ -47,6 +47,8 @@ class SearchJobInputs:
     include_conditional_equipment_crit: bool = False
     extra_crit_rate: float = 0.0
     extra_crit_damage: float = 0.0
+    weapon_normal_levels: list[int] | None = None
+    weapon_special_states: list[dict[str, int]] | None = None
 
 
 def prepare_search_job(
@@ -93,6 +95,8 @@ def prepare_search_job(
         include_conditional_equipment_crit=bool(inputs.include_conditional_equipment_crit),
         extra_crit_rate=float(inputs.extra_crit_rate),
         extra_crit_damage=float(inputs.extra_crit_damage),
+        weapon_normal_levels=list(inputs.weapon_normal_levels or []),
+        weapon_special_states=list(inputs.weapon_special_states or []),
     )
 
 

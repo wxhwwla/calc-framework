@@ -5,11 +5,16 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from tools.migrate_weapon_skills_schema import migrate_file
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tools.migrate_weapon_skills_schema import migrate_file  # noqa: E402
 
 
 class TestMigrateWeaponSkillsSchemaTool(unittest.TestCase):

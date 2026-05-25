@@ -24,6 +24,8 @@
 | **普通技能** | 武器 `normal_skills[]`：无条件词条，字段 `zone`（1–3）、`effect`（如 `攻击力+`）、`curve[9]`（潜能 1–9 档） |
 | **特殊技能** | 武器 `special_skills[]`：有条件或独立词条，字段 `zone`、`name`（完整展示名）、`condition`、`effect`、`curve[9]`、`max_stack` |
 | **武器技能参数（代码）** | 计算/GUI 优先使用 `normal_skill_*` / `special_skill_*`；旧名 `sa1/sa2/sa3/ws/ws2` 仅兼容，触发 `DeprecationWarning` |
+| **武器技能选用状态** | `calculation/weapon_skill_selection.WeaponSkillSelection`：普通/特殊技能槽位 → 预设 v2 视图与乘区 kwargs；GUI 面板读写见 `gui_design/weapon_skill_selection.py` |
+| **配装攻击力求值** | `calculation/loadout_attack_eval.final_attack_details_for_loadout`：右侧乘区与全量搜索共用的最终攻击力 seam |
 | **DamageContext** | 伤害上下文对象，包含攻击力、技能倍率、敌方属性等所有基础参数 |
 | **DamageEffect** | 伤害效果对象，包含武器技能词条、装备词条、套装效果等 |
 | **SkillScenario** | 技能场景对象，描述技能的伤害类型、倍率、属性等信息 |

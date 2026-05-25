@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
+from calculation.loadout_attack_eval import final_attack_details_for_loadout
 from calculation.damage_engine import DamageContext
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.loadout_optimizer import WeaponCandidate
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.multi_skill_search_eval import MultiSkillSearchEval
@@ -36,6 +36,8 @@ class SingleSkillSearchJob:
     multi_skill_eval: Optional[MultiSkillSearchEval] = None
     physical_abnormal_counts: dict[str, int] | None = None
     spell_abnormal_counts: dict[str, int] | None = None
+    weapon_normal_levels: tuple[int, ...] = ()
+    weapon_special_states: tuple[dict[str, int], ...] = ()
     damage_component_mode: str = "skill_and_abnormal"
     use_expected_crit: bool = False
     include_conditional_equipment_crit: bool = False
@@ -52,6 +54,8 @@ def build_weapon_candidates(
     char_level: int,
     weapon_level: int,
     trust_level: int,
+    weapon_normal_levels: Sequence[int] | None = None,
+    weapon_special_states: Sequence[dict[str, int]] | None = None,
 ) -> list[WeaponCandidate]:
     """按武器候选范围生成 WeaponCandidate 列表。"""
     scope = (weapon_scope_label or "").strip()
@@ -67,12 +71,14 @@ def build_weapon_candidates(
             continue
         if scope == "当前武器" and weapon.get("名称") != current_name:
             continue
-        details = calculate_final_attack_with_details(
+        details = final_attack_details_for_loadout(
             character=char_data,
             weapon=weapon,
             char_level=char_level,
             weapon_level=weapon_level,
             trust_level=trust_level,
+            weapon_normal_levels=list(weapon_normal_levels or ()),
+            weapon_special_states=list(weapon_special_states or ()),
         )
         candidates.append(
             WeaponCandidate(
@@ -103,6 +109,8 @@ def build_run_signature(
     extra_crit_damage: float = 0.0,
     physical_abnormal_counts: Optional[dict[str, int]] = None,
     spell_abnormal_counts: Optional[dict[str, int]] = None,
+    weapon_normal_levels: Optional[Sequence[int]] = None,
+    weapon_special_states: Optional[Sequence[dict[str, int]]] = None,
 ) -> str:
     """
     生成续跑用 run_signature（写入 search_runs.db）。
@@ -118,7 +126,9 @@ def build_run_signature(
         f"{damage_component_mode}-{int(use_expected_crit)}-{int(include_conditional_equipment_crit)}-"
         f"{float(extra_crit_rate):.6f}-{float(extra_crit_damage):.6f}-"
         f"{tuple(sorted((physical_abnormal_counts or {}).items()))}-"
-        f"{tuple(sorted((spell_abnormal_counts or {}).items()))}"
+        f"{tuple(sorted((spell_abnormal_counts or {}).items()))}-"
+        f"{tuple(int(v) for v in (weapon_normal_levels or ()))}-"
+        f"{tuple((int(s.get('level', 0)), int(s.get('stack', 0))) for s in (weapon_special_states or ()))}"
     )
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:16]
 
@@ -147,6 +157,8 @@ def prepare_single_skill_search_job(
     include_conditional_equipment_crit: bool = False,
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
+    weapon_normal_levels: Optional[Sequence[int]] = None,
+    weapon_special_states: Optional[Sequence[dict[str, int]]] = None,
 ) -> tuple[Optional[SingleSkillSearchJob], Optional[str]]:
     """
     组装搜索作业。
@@ -165,6 +177,8 @@ def prepare_single_skill_search_job(
         char_level=char_level,
         weapon_level=weapon_level,
         trust_level=trust_level,
+        weapon_normal_levels=list(weapon_normal_levels or ()),
+        weapon_special_states=list(weapon_special_states or ()),
     )
     if not weapon_candidates:
         return None, "当前武器/装备候选范围下无可用武器。"
@@ -189,6 +203,8 @@ def prepare_single_skill_search_job(
         extra_crit_damage=extra_crit_damage,
         physical_abnormal_counts=physical_abnormal_counts,
         spell_abnormal_counts=spell_abnormal_counts,
+        weapon_normal_levels=tuple(int(v) for v in (weapon_normal_levels or ())),
+        weapon_special_states=tuple(dict(s) for s in (weapon_special_states or ())),
     )
     weapon_data_by_name = {
         str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
@@ -216,6 +232,8 @@ def prepare_single_skill_search_job(
         multi_skill_eval=multi_skill_eval,
         physical_abnormal_counts=dict(physical_abnormal_counts or {}),
         spell_abnormal_counts=dict(spell_abnormal_counts or {}),
+        weapon_normal_levels=tuple(int(v) for v in (weapon_normal_levels or ())),
+        weapon_special_states=tuple(dict(s) for s in (weapon_special_states or ())),
         damage_component_mode=str(damage_component_mode),
         use_expected_crit=bool(use_expected_crit),
         include_conditional_equipment_crit=bool(include_conditional_equipment_crit),
