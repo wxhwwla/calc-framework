@@ -416,7 +416,7 @@ class DamageCalculatorApp:
             pady=8,
             sticky="nsew",
         )
-        self.control_frame.grid_rowconfigure(1, weight=0)
+        self.control_frame.grid_rowconfigure(1, weight=1)
         self.control_frame.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(
             self.control_frame,
@@ -426,8 +426,8 @@ class DamageCalculatorApp:
         ).grid(row=0, column=0, padx=10, pady=(8, 4), sticky="w")
 
         dock_body = ctk.CTkFrame(self.control_frame, fg_color="transparent")
-        dock_body.grid(row=1, column=0, padx=6, pady=(0, 8), sticky="new")
-        dock_body.grid_rowconfigure(0, weight=0)
+        dock_body.grid(row=1, column=0, padx=6, pady=(0, 8), sticky="nsew")
+        dock_body.grid_rowconfigure(0, weight=1)
         dock_body.grid_columnconfigure(0, weight=0, minsize=CONTROL_INNER_COL_ACTIONS_MINSIZE)
         dock_body.grid_columnconfigure(1, weight=CONTROL_INNER_COL_SEARCH_WEIGHT)
         dock_body.grid_columnconfigure(2, weight=CONTROL_INNER_COL_MULTI_WEIGHT)
@@ -438,7 +438,9 @@ class DamageCalculatorApp:
         self._control_col_search = ctk.CTkFrame(dock_body, fg_color="transparent")
         self._control_col_search.grid(row=0, column=1, padx=8, pady=4, sticky="new")
         self._control_col_multi = ctk.CTkFrame(dock_body, fg_color="transparent")
-        self._control_col_multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="new")
+        self._control_col_multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="nsew")
+        self._control_col_multi.grid_rowconfigure(0, weight=1)
+        self._control_col_multi.grid_columnconfigure(0, weight=1)
         self._build_control_panel()
         self._apply_control_dock_layout(self.app.winfo_width())
         self._apply_adaptive_button_texts(self.app.winfo_width())
@@ -633,7 +635,7 @@ class DamageCalculatorApp:
             body.grid_columnconfigure(2, weight=0, minsize=0)
             actions.grid(row=0, column=0, columnspan=2, padx=(4, 4), pady=(4, 2), sticky="new")
             search.grid(row=1, column=0, padx=(4, 6), pady=(2, 4), sticky="new")
-            multi.grid(row=1, column=1, padx=(6, 4), pady=(2, 4), sticky="new")
+            multi.grid(row=1, column=1, padx=(6, 4), pady=(2, 4), sticky="nsew")
             return
 
         body.grid_columnconfigure(0, weight=0, minsize=CONTROL_INNER_COL_ACTIONS_MINSIZE)
@@ -641,7 +643,7 @@ class DamageCalculatorApp:
         body.grid_columnconfigure(2, weight=CONTROL_INNER_COL_MULTI_WEIGHT, minsize=0)
         actions.grid(row=0, column=0, columnspan=1, padx=(4, 8), pady=4, sticky="new")
         search.grid(row=0, column=1, padx=8, pady=4, sticky="new")
-        multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="new")
+        multi.grid(row=0, column=2, padx=(8, 4), pady=4, sticky="nsew")
 
     def _apply_adaptive_button_texts(self, window_width: int) -> None:
         """按窗口宽度调整按钮文案长度，降低窄屏文本挤压。"""

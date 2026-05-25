@@ -226,6 +226,7 @@ def _build_single_skill_search_preview_lines_impl(
         crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
         effects=[],
         counts=spell_abnormal_counts or {},
+        char_level=char_level,
     )
     abnormal_total = physical_total + spell_total
     if abnormal_total > 0:
@@ -466,6 +467,7 @@ def _build_multi_skill_search_preview_lines_impl(
         crit_mode="expected" if use_expected_crit else "non_crit",  # type: ignore[arg-type]
         effects=[],
         counts=spell_abnormal_counts or {},
+        char_level=char_level,
     )
     abnormal_total = physical_total + spell_total
     if abnormal_total > 0:

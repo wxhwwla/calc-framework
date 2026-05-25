@@ -15,7 +15,16 @@ from calculation.skill_segments import list_segment_count_specs
 from calculation.physical_abnormal import PHYSICAL_ABNORMAL_LEVELS, PHYSICAL_ABNORMAL_TYPES
 from calculation.spell_abnormal import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYPES
 from gui_design.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
-from gui_design.panel_hints import MULTI_SKILL_COUNTS_HINT
+from gui_design.gui_layout import (
+    ANOMALY_MATRIX_LABEL_MINSIZE,
+    multi_skill_segment_box_height,
+)
+from gui_design.label_layout import bind_wrapped_label
+from gui_design.panel_hints import (
+    MULTI_SKILL_COUNTS_HINT,
+    PHYSICAL_ABNORMAL_HINT,
+    SPELL_ABNORMAL_HINT,
+)
 
 if TYPE_CHECKING:
     from gui_design.gui import DamageCalculatorApp
@@ -233,6 +242,28 @@ def apply_spell_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: dict[
             var.set(str(value))
 
 
+def _spell_abnormal_row_label(abnormal_key: str) -> str:
+    """法术异常矩阵行标签：窄列下用缩写避免裁切。"""
+    if abnormal_key == "碎冰":
+        return "碎冰"
+    if abnormal_key.endswith("异常"):
+        return f"{abnormal_key[:-2]}·异"
+    if abnormal_key.endswith("爆发"):
+        return f"{abnormal_key[:-2]}·爆"
+    return abnormal_key
+
+
+def clear_all_abnormal_counts(app: "DamageCalculatorApp") -> None:
+    """一键清空物理与法术异常次数。"""
+    for var in (getattr(app, "_physical_abnormal_count_vars", None) or {}).values():
+        var.set("0")
+    for var in (getattr(app, "_spell_abnormal_count_vars", None) or {}).values():
+        var.set("0")
+    schedule = getattr(app, "_schedule_confirm", None)
+    if callable(schedule):
+        schedule()
+
+
 def clear_physical_abnormal_counts(app: "DamageCalculatorApp") -> None:
     """一键清空异常次数。"""
     for var in (getattr(app, "_physical_abnormal_count_vars", None) or {}).values():
@@ -259,11 +290,18 @@ def place_multi_skill_section(
     schedule_confirm: Callable[..., None],
 ) -> None:
     """在底栏右侧放置多技能次数开关与段级输入行。"""
+    parent.grid_rowconfigure(0, weight=1)
     parent.grid_columnconfigure(0, weight=1)
+
+    viewport = ctk.CTkScrollableFrame(parent, fg_color="transparent")
+    viewport.grid(row=0, column=0, sticky="nsew")
+    viewport.grid_columnconfigure(0, weight=1)
+    app._multi_skill_controls_viewport = viewport
+    content = viewport
 
     def _section(title: str, row: int) -> int:
         ctk.CTkLabel(
-            parent,
+            content,
             text=title,
             font=app.big_font,
             text_color="#FF6B6B",
@@ -274,10 +312,24 @@ def place_multi_skill_section(
         widget.grid(row=row, column=0, padx=4, pady=pady, sticky="ew")
         return row + 1
 
+    def _hint(row: int, text: str) -> int:
+        """说明文案：以右侧列宽换行，避免 ScrollableFrame 内横向裁切。"""
+        hint_label = ctk.CTkLabel(
+            content,
+            text=text,
+            font=app.small_font,
+            text_color="#888888",
+            justify="left",
+            anchor="nw",
+        )
+        hint_label.grid(row=row, column=0, padx=8, pady=(0, 6), sticky="ew")
+        bind_wrapped_label(hint_label, content, viewport=parent, padding=28)
+        return row + 1
+
     mr = 0
     mr = _section("多技能次数", mr)
     count_switch = ctk.CTkSwitch(
-        parent,
+        content,
         text="使用手动次数",
         variable=app.use_manual_skill_counts_var,
         font=app.small_font,
@@ -285,30 +337,21 @@ def place_multi_skill_section(
     )
     mr = _place(mr, count_switch, pady=(0, 6))
 
-    body = ctk.CTkFrame(parent, fg_color="transparent")
+    body = ctk.CTkFrame(content, fg_color="transparent")
     body.grid(row=mr, column=0, columnspan=2, padx=4, pady=(4, 4), sticky="ew")
     body.grid_columnconfigure(0, weight=1)
     body.grid_columnconfigure(1, weight=0, minsize=72)
     app._multi_skill_counts_body = body
     mr += 1
 
-    multi_skill_hint = ctk.CTkLabel(
-        parent,
-        text=MULTI_SKILL_COUNTS_HINT,
-        font=app.small_font,
-        text_color="#888888",
-        justify="left",
-        anchor="nw",
-    )
-    multi_skill_hint.grid(row=mr, column=0, columnspan=2, padx=8, pady=(0, 6), sticky="ew")
-    wrap_label(multi_skill_hint, parent)
-    mr += 1
+    mr = _hint(mr, MULTI_SKILL_COUNTS_HINT)
 
     rebuild_multi_skill_segment_rows(app)
 
     mr = _section("物理异常", mr)
+    mr = _hint(mr, PHYSICAL_ABNORMAL_HINT)
 
-    mode_row = ctk.CTkFrame(parent, fg_color="transparent")
+    mode_row = ctk.CTkFrame(content, fg_color="transparent")
     mode_row.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
     mode_row.grid_columnconfigure(1, weight=1)
     ctk.CTkLabel(
@@ -327,8 +370,8 @@ def place_multi_skill_section(
     mr += 1
 
     expected_switch = ctk.CTkSwitch(
-        parent,
-        text="期望伤害模式（计入暴击期望）",
+        content,
+        text="期望伤害模式",
         variable=app.use_expected_crit_var,
         font=app.small_font,
         command=lambda: schedule_confirm(),
@@ -336,15 +379,15 @@ def place_multi_skill_section(
     mr = _place(mr, expected_switch, pady=(0, 4))
 
     conditional_switch = ctk.CTkSwitch(
-        parent,
-        text="装备条件暴击效果生效",
+        content,
+        text="装备条件暴击",
         variable=app.include_conditional_equipment_crit_var,
         font=app.small_font,
         command=lambda: schedule_confirm(),
     )
     mr = _place(mr, conditional_switch, pady=(0, 6))
 
-    bonus_row = ctk.CTkFrame(parent, fg_color="transparent")
+    bonus_row = ctk.CTkFrame(content, fg_color="transparent")
     bonus_row.grid(row=mr, column=0, padx=4, pady=(0, 6), sticky="ew")
     bonus_row.grid_columnconfigure(1, weight=1)
     bonus_row.grid_columnconfigure(3, weight=1)
@@ -380,9 +423,9 @@ def place_multi_skill_section(
     crit_damage_entry.bind("<Return>", lambda _e: schedule_confirm())
     mr += 1
 
-    matrix = ctk.CTkFrame(parent, fg_color="transparent")
+    matrix = ctk.CTkFrame(content, fg_color="transparent")
     matrix.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
-    matrix.grid_columnconfigure(0, weight=1, minsize=78)
+    matrix.grid_columnconfigure(0, weight=0, minsize=ANOMALY_MATRIX_LABEL_MINSIZE)
     for idx, level in enumerate(PHYSICAL_ABNORMAL_LEVELS, start=1):
         matrix.grid_columnconfigure(idx, weight=0, minsize=44)
         ctk.CTkLabel(
@@ -429,19 +472,12 @@ def place_multi_skill_section(
             entry.bind("<Return>", lambda _e, _v=var: _on_abnormal_commit(_v))
     mr += 1
 
-    clear_btn = ctk.CTkButton(
-        parent,
-        text="清空全部异常次数",
-        font=app.small_font,
-        height=28,
-        command=lambda: clear_physical_abnormal_counts(app),
-    )
-    mr = _place(mr, clear_btn, pady=(0, 6))
+    mr = _section("法术异常", mr)
+    mr = _hint(mr, SPELL_ABNORMAL_HINT)
 
-    mr = _section("法术异常（骨架）", mr)
-    spell_matrix = ctk.CTkFrame(parent, fg_color="transparent")
+    spell_matrix = ctk.CTkFrame(content, fg_color="transparent")
     spell_matrix.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
-    spell_matrix.grid_columnconfigure(0, weight=1, minsize=78)
+    spell_matrix.grid_columnconfigure(0, weight=0, minsize=ANOMALY_MATRIX_LABEL_MINSIZE)
     for idx, level in enumerate(SPELL_ABNORMAL_LEVELS, start=1):
         spell_matrix.grid_columnconfigure(idx, weight=0, minsize=44)
         ctk.CTkLabel(
@@ -461,7 +497,7 @@ def place_multi_skill_section(
     for row_idx, abnormal in enumerate(SPELL_ABNORMAL_TYPES, start=1):
         ctk.CTkLabel(
             spell_matrix,
-            text=abnormal,
+            text=_spell_abnormal_row_label(abnormal),
             font=app.small_font,
             text_color="#CCCCCC",
         ).grid(row=row_idx, column=0, padx=(0, 4), pady=(0, 2), sticky="w")
@@ -481,14 +517,14 @@ def place_multi_skill_section(
             entry.bind("<Return>", lambda _e, _v=var: _on_abnormal_commit(_v))
     mr += 1
 
-    clear_spell_btn = ctk.CTkButton(
-        parent,
-        text="清空全部法术异常次数",
+    clear_all_btn = ctk.CTkButton(
+        content,
+        text="清空全部异常次数",
         font=app.small_font,
         height=28,
-        command=lambda: clear_spell_abnormal_counts(app),
+        command=lambda: clear_all_abnormal_counts(app),
     )
-    mr = _place(mr, clear_spell_btn, pady=(0, 6))
+    _place(mr, clear_all_btn, pady=(0, 8))
 
 
 def on_manual_skill_counts_switch_changed(app: "DamageCalculatorApp") -> None:

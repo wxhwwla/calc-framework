@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""法术异常骨架（异常/爆发双轨；公式先占位，后续可替换）。"""
+"""法术异常/爆发伤害计算（导电/腐蚀/燃烧/冻结 + 同属性爆发）。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from calculation.damage_engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-from calculation.spell_abnormal_params import SPELL_ABNORMAL_PARAM_ROWS
+from calculation.spell_abnormal_params import (
+    SPELL_ABNORMAL_PARAM_ROWS,
+    SPELL_LEVEL_COEFF_DIVISOR,
+    SpellFormulaKind,
+    base_multiplier_for_formula,
+    calc_level_from_ui,
+    preview_level_multipliers,
+)
 
 
 @dataclass(frozen=True)
@@ -17,7 +24,8 @@ class SpellAbnormalDef:
     key: str
     damage_type: str
     event_kind: str  # 异常 / 爆发
-    level_coeffs: tuple[float, float, float, float, float]  # 对应 UI Lv0~Lv4 的占位系数
+    formula: SpellFormulaKind
+    game_name: str
 
 
 _SPELL_DEFS: tuple[SpellAbnormalDef, ...] = (
@@ -26,7 +34,8 @@ _SPELL_DEFS: tuple[SpellAbnormalDef, ...] = (
             key=str(row["key"]),
             damage_type=str(row["damage_type"]),
             event_kind=str(row["event_kind"]),
-            level_coeffs=tuple(row["level_coeffs"]),
+            formula=row["formula"],
+            game_name=str(row["game_name"]),
         )
         for row in SPELL_ABNORMAL_PARAM_ROWS
     ),
@@ -60,22 +69,29 @@ def is_spell_abnormal_key(key: str) -> bool:
     return lv in SPELL_ABNORMAL_LEVELS
 
 
+def _spell_level_coeff(char_level: int) -> float:
+    """法术异常/爆发等级系数区：1 + (触发者等级 - 1) / 196。"""
+    return 1.0 + (max(1, int(char_level)) - 1.0) / SPELL_LEVEL_COEFF_DIVISOR
+
+
+def _skill_multiplier(defn: SpellAbnormalDef, ui_level: int, *, char_level: int) -> float:
+    calc_level = calc_level_from_ui(ui_level)
+    base = base_multiplier_for_formula(defn.formula, calc_level=calc_level)
+    return base * _spell_level_coeff(char_level)
+
+
 def get_spell_abnormal_param_snapshot() -> dict[str, dict[str, object]]:
     """返回当前法术异常参数快照（供测试/校验）。"""
     return {
         item.key: {
             "damage_type": item.damage_type,
             "event_kind": item.event_kind,
-            "level_coeffs": tuple(item.level_coeffs),
+            "formula": item.formula,
+            "game_name": item.game_name,
+            "level_multipliers": preview_level_multipliers(item.formula),
         }
         for item in _SPELL_DEFS
     }
-
-
-def _def_multiplier(defn: SpellAbnormalDef, ui_level: int) -> float:
-    # 占位倍率：后续可按「异常/爆发」分别替换为正式公式
-    idx = max(0, min(int(ui_level), len(defn.level_coeffs) - 1))
-    return float(defn.level_coeffs[idx])
 
 
 def evaluate_spell_abnormal_total(
@@ -84,8 +100,9 @@ def evaluate_spell_abnormal_total(
     crit_mode: CritMode,
     effects: list[DamageEffect],
     counts: dict[str, int] | None,
+    char_level: int = 1,
 ) -> tuple[float, dict[str, float]]:
-    """计算法术异常总伤与单次分项（首版占位）。"""
+    """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。"""
     normalized = normalize_spell_abnormal_counts(counts)
     total = 0.0
     breakdown: dict[str, float] = {}
@@ -97,7 +114,7 @@ def evaluate_spell_abnormal_total(
             count = normalized.get(f"{abnormal}:{ui_level}", 0)
             if count <= 0:
                 continue
-            multiplier = _def_multiplier(defn, ui_level)
+            multiplier = _skill_multiplier(defn, ui_level, char_level=char_level)
             if multiplier <= 0:
                 continue
             result = calculate_single_hit_damage(
@@ -149,8 +166,11 @@ def format_spell_abnormal_breakdown_lines(
                 continue
             single = float((single_hit_breakdown or {}).get(key, 0.0))
             total = single * float(count)
+            label = defn.game_name
+            if defn.event_kind == "爆发":
+                label = "爆发"
             lines.append(
-                f"{indent}{abnormal}({defn.event_kind}) Lv{level}: 单次 {single:.1f} ×{count} = {total:.1f}"
+                f"{indent}{abnormal}({label}) Lv{level}: 单次 {single:.1f} ×{count} = {total:.1f}"
             )
     return lines
 

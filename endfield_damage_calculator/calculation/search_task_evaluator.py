@@ -174,6 +174,7 @@ def _evaluate_abnormal_damage(
         crit_mode=crit_mode,
         effects=list(snapshot.effects),
         counts=spell_counts,
+        char_level=char_level,
     )
     merged = dict(physical_breakdown)
     merged.update(spell_breakdown)

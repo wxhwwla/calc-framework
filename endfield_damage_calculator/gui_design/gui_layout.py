@@ -88,6 +88,10 @@ SECONDARY_ACTION_BUTTON_HEIGHT = 32
 MULTI_SKILL_SEGMENT_ROW_HEIGHT = 28
 MULTI_SKILL_SEGMENT_BOX_MIN_HEIGHT = 36
 MULTI_SKILL_HINT_BOX_HEIGHT = hint_text_box_height(4)
+PHYSICAL_ABNORMAL_HINT_BOX_HEIGHT = hint_text_box_height(5)
+SPELL_ABNORMAL_HINT_BOX_HEIGHT = hint_text_box_height(4)
+# 异常矩阵行标签列最小宽，避免窄列下四字标签被裁切
+ANOMALY_MATRIX_LABEL_MINSIZE = 56
 
 
 def multi_skill_segment_box_height(segment_count: int) -> int:

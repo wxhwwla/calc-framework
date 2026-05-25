@@ -64,8 +64,8 @@ class TestControlDockLayout(unittest.TestCase):
             ("全量遍历（弹窗）", "MVP搜索导出"),
         )
 
-    def test_place_multi_skill_section_uses_plain_frame_for_segments(self) -> None:
-        """段级次数列表用普通 CTkFrame 自然增高，不使用 ScrollableFrame。"""
+    def test_place_multi_skill_section_uses_scrollable_viewport(self) -> None:
+        """右侧多技能/异常区使用 ScrollableFrame，避免内容被窗口底部裁切。"""
         import customtkinter as ctk
 
         from gui_design.multi_skill_controls import place_multi_skill_section
@@ -75,6 +75,8 @@ class TestControlDockLayout(unittest.TestCase):
         root.withdraw()
         try:
             parent = ctk.CTkFrame(root)
+            parent.grid_rowconfigure(0, weight=1)
+            parent.grid_columnconfigure(0, weight=1)
             app = build_mock_app(root=root)
             app._multi_skill_counts_body = None
             place_multi_skill_section(
@@ -86,7 +88,9 @@ class TestControlDockLayout(unittest.TestCase):
             body = app._multi_skill_counts_body
             self.assertIsNotNone(body)
             self.assertIsInstance(body, ctk.CTkFrame)
-            self.assertNotIsInstance(body, ctk.CTkScrollableFrame)
+            viewport = getattr(app, "_multi_skill_controls_viewport", None)
+            self.assertIsNotNone(viewport)
+            self.assertIsInstance(viewport, ctk.CTkScrollableFrame)
         finally:
             root.destroy()
 
