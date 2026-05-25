@@ -122,9 +122,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="按顶层符号拆分 Python 模块")
     parser.add_argument(
         "--only",
-        choices=("all", "presentation", "core"),
+        choices=("all", "presentation", "core", "soft"),
         default="core",
-        help="all=含 presentation；core=仅 optimizer/special_fields/inverse",
+        help="all=全部；core=optimizer/special/inverse；soft=剩余 >400 行模块",
     )
     args = parser.parse_args()
     pkg = Path(__file__).resolve().parents[1] / "endfield_damage_calculator"
@@ -134,6 +134,9 @@ def main() -> None:
 
     if args.only in ("all", "core"):
         _split_core(pkg)
+
+    if args.only in ("all", "soft"):
+        _split_soft(pkg)
 
 
 def _split_presentation(pkg: Path) -> None:
@@ -464,6 +467,151 @@ from .skill import (
 )
 ''',
         )
+
+
+def _split_soft(pkg: Path) -> None:
+    # damage engine → 包
+    eng_src = pkg / "calculation/damage/engine.py"
+    if eng_src.is_file():
+        eng_pkg = pkg / "calculation/damage/engine"
+        split_into_package(
+            eng_src,
+            dest_pkg=eng_pkg,
+            groups={
+                "types.py": [
+                    "CritMode",
+                    "ZONE_ORDER",
+                    "KNOWN_EFFECT_TYPES",
+                    "DamageContext",
+                    "DamageEffect",
+                    "DamageResult",
+                ],
+                "helpers.py": [
+                    "_clamp",
+                    "_resolve_crit_zone",
+                    "_match_scope",
+                    "_collect_effects",
+                ],
+                "calculate.py": ["calculate_single_hit_damage"],
+            },
+            patches={
+                "helpers.py": "from .types import KNOWN_EFFECT_TYPES, CritMode, DamageContext, DamageEffect\n\n",
+                "calculate.py": "from .helpers import _collect_effects, _resolve_crit_zone\nfrom .types import CritMode, DamageContext, DamageEffect, DamageResult, ZONE_ORDER\n\n",
+            },
+            init_body='''#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""单段伤害引擎（15 乘区链）。"""
+
+from .calculate import calculate_single_hit_damage
+from .helpers import _clamp, _collect_effects, _match_scope, _resolve_crit_zone
+from .types import (
+    KNOWN_EFFECT_TYPES,
+    ZONE_ORDER,
+    CritMode,
+    DamageContext,
+    DamageEffect,
+    DamageResult,
+)
+''',
+        )
+
+    # multi_skill optimizer → 包
+    ms_src = pkg / "calculation/multi_skill/optimizer.py"
+    if ms_src.is_file():
+        ms_pkg = pkg / "calculation/multi_skill/optimizer"
+        split_into_package(
+            ms_src,
+            dest_pkg=ms_pkg,
+            groups={
+                "types.py": [
+                    "SkillScenario",
+                    "resolve_scenario_damage_type",
+                    "MultiSkillConfig",
+                    "MultiSkillScore",
+                    "MultiSkillResult",
+                ],
+                "search.py": [
+                    "_resolve_skill_counts",
+                    "optimize_multi_skill_loadouts",
+                    "evaluate_multi_skill_task",
+                ],
+            },
+            patches={
+                "search.py": "from .types import MultiSkillConfig, MultiSkillResult, MultiSkillScore, SkillScenario, resolve_scenario_damage_type\n\n",
+            },
+            init_body='''#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""多技能加权总伤优化。"""
+
+from .search import evaluate_multi_skill_task, optimize_multi_skill_loadouts
+from .types import (
+    MultiSkillConfig,
+    MultiSkillResult,
+    MultiSkillScore,
+    SkillScenario,
+    resolve_scenario_damage_type,
+)
+''',
+        )
+
+    # display_view → 包
+    dv_src = pkg / "gui_design/shared/display_view.py"
+    if dv_src.is_file():
+        dv_pkg = pkg / "gui_design/shared/display_view"
+        split_into_package(
+            dv_src,
+            dest_pkg=dv_pkg,
+            groups={
+                "render.py": ["_render_lines", "_render_placeholder"],
+                "refresh.py": ["refresh_right_column_from_request"],
+                "confirm.py": ["confirm_from_display_request", "confirm_selection"],
+                "zone_panel.py": ["_display_zone_data"],
+            },
+            patches={
+                "refresh.py": "from .zone_panel import _display_zone_data\n\n",
+                "confirm.py": "from .render import _render_lines, _render_placeholder\nfrom .zone_panel import _display_zone_data\n\n",
+            },
+            init_body='''#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""属性三列 CTk 渲染与确认刷新编排。"""
+
+from .confirm import confirm_from_display_request, confirm_selection
+from .refresh import refresh_right_column_from_request
+from .render import _render_lines, _render_placeholder
+from .zone_panel import _display_zone_data
+''',
+        )
+
+    # ability_bonus：类留 zone 文件，计算函数拆到 ability_bonus_calc.py
+    ab_src = pkg / "calculation/multiplicative_zones/ability_bonus_zone.py"
+    ab_calc = pkg / "calculation/multiplicative_zones/ability_bonus_calc.py"
+    if ab_src.is_file() and not ab_calc.is_file():
+        import shutil
+
+        tmp = pkg / "calculation/multiplicative_zones/_ab_tmp"
+        split_by_symbols(
+            ab_src,
+            dest_dir=tmp,
+            groups={
+                "zone.py": ["AbilityBonusZone"],
+                "calc.py": [
+                    "_get_weapon_bonus",
+                    "_warn_if_legacy_skill_kwargs_used",
+                    "calculate_ability_bonus",
+                    "calculate_ability_bonus_with_details",
+                ],
+            },
+        )
+        ab_calc.write_text((tmp / "calc.py").read_text(encoding="utf-8"), encoding="utf-8")
+        ab_src.write_text(
+            (tmp / "zone.py").read_text(encoding="utf-8")
+            + "\nfrom .ability_bonus_calc import calculate_ability_bonus, calculate_ability_bonus_with_details\n",
+            encoding="utf-8",
+        )
+        shutil.rmtree(tmp)
+        print("  ability_bonus calc split done")
+
+    print("soft splits done")
 
 
 def _patch(path: Path, insert: str) -> None:
