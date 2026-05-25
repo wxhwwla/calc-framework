@@ -166,6 +166,20 @@ def _resolve_skill_counts(
     scenarios: list[SkillScenario],
     config: MultiSkillConfig,
 ) -> dict[str, int]:
+    """解析技能次数映射。
+
+    优先使用配置中的 skill_counts，若未设置则根据 selected_skill 自动分配。
+
+    Args:
+        scenarios: 技能场景列表
+        config: 多技能配置
+
+    Returns:
+        场景键到次数的映射
+
+    Raises:
+        ValueError: 如果所有技能次数都为 0
+    """
     if config.skill_counts is not None:
         from calculation.skill_segments import normalize_manual_segment_counts
 
@@ -197,7 +211,26 @@ def optimize_multi_skill_loadouts(
     config: MultiSkillConfig = MultiSkillConfig(),
     character: Optional[dict] = None,
 ) -> MultiSkillResult:
-    """按多技能加权总伤进行搜索。"""
+    """按多技能加权总伤进行搜索（快速预览版）。
+
+    执行流程：
+    1. 解析技能次数映射
+    2. 生成任务迭代器
+    3. 遍历所有配装组合，计算每个组合在各技能场景下的伤害
+    4. 计算加权总伤害（Σ 单次伤害 × 次数）
+    5. 返回 Top-N 最优结果
+
+    Args:
+        base_context: 基础伤害上下文
+        weapons: 候选武器列表
+        equipment_catalog: 装备目录
+        scenarios: 技能场景列表
+        config: 多技能配置
+        character: 角色数据（用于自动配置装备排序优先级）
+
+    Returns:
+        MultiSkillResult 对象，包含 Top-N 最优配装和技能次数映射
+    """
     if not scenarios:
         return MultiSkillResult(top_results=(), skill_count_map={}, total_combinations=0)
     count_map = _resolve_skill_counts(scenarios, config)
@@ -297,10 +330,22 @@ def evaluate_multi_skill_task(
     skill_counts: dict[str, int],
     search_eval: Optional[SearchEvalContext] = None,
 ) -> LoadoutScore:
-    """
-    评估单条配装的多技能加权总伤（供全量并行/续跑搜索）。
+    """评估单条配装的多技能加权总伤（供全量并行/续跑搜索）。
 
-    ``LoadoutScore.final_damage`` 为 Σ(单段伤害 × 次数)。
+    与 optimize_multi_skill_loadouts 的区别：
+    - 支持 search_eval 上下文，可按等级曲线重算攻击力
+    - 返回 LoadoutScore 格式，便于与单技能搜索共用 TopNTracker
+
+    Args:
+        shared_context: 共享的伤害上下文
+        crit_mode: 暴击模式
+        task: 搜索任务（武器候选 + 四格配装）
+        scenarios: 技能场景元组
+        skill_counts: 技能次数映射
+        search_eval: 搜索评估上下文（用于全量搜索时重算攻击力）
+
+    Returns:
+        LoadoutScore 对象，其中 final_damage 为加权总伤害（Σ 单次伤害 × 次数）
     """
     weapon, (chest, glove, acc_a, acc_b) = task
     loadout = build_four_slot_loadout(

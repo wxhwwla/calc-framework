@@ -24,35 +24,39 @@ def _inverse_verbose() -> bool:
 
 
 def _inv_print(*args: object, **kwargs: object) -> None:
+    """调试输出函数：仅在环境变量 INVERSE_FIT_VERBOSE=1 时输出。"""
     if _inverse_verbose():
-        _inv_print(*args, **kwargs)
+        print(*args, **kwargs)
 
 
 # ==================== 内部辅助函数 ====================
 
 def _is_decimal_data(data: Sequence[int | float]) -> bool:
     """
-    判断数据是否包含小数（非整数的浮点数）
-    
-    参数：
+    判断数据是否包含小数（非整数的浮点数）。
+
+    Args:
         data: 数据序列
-    
-    返回：
-        是否为小数数据
+
+    Returns:
+        True 如果数据中包含非整数的浮点数（如 5.4、23.4），False 否则
     """
     return any(isinstance(x, float) and x != int(x) for x in data)
 
 
 def _scale_data(data: Sequence[int | float], scale_factor: int = 10) -> Tuple[List[int], int]:
     """
-    缩放数据（小数乘10转换为整数）
-    
-    参数：
+    缩放数据（小数乘10转换为整数）。
+
+    小数数据需要进行缩放处理，将其转换为整数后再进行公式拟合，
+    避免浮点数精度问题带来的误差。
+
+    Args:
         data: 原始数据序列
-        scale_factor: 缩放因子（默认10）
-    
-    返回：
-        (缩放后的数据, 实际使用的缩放因子)
+        scale_factor: 缩放因子（默认10，用于处理小数数据）
+
+    Returns:
+        元组：(缩放后的数据列表, 实际使用的缩放因子)
     """
     is_decimal = _is_decimal_data(data)
     actual_scale = scale_factor if is_decimal else 1
@@ -71,6 +75,13 @@ def _restore_param(value: float | int, scale_factor: int) -> int | float:
 
     整数曲线在 scale_factor==1 时必须返回 int，否则 calculate_bonus_attribute
     会把 float 误判为小数模式（×10），与 weapons.json / seed 不一致。
+
+    Args:
+        value: 缩放后的参数值
+        scale_factor: 缩放因子（1 表示整数数据，10 表示小数数据）
+
+    Returns:
+        还原后的参数值（整数数据返回 int，小数数据保持 float）
     """
     if scale_factor != 1:
         return value
@@ -85,7 +96,20 @@ def _params_sort_key(
     divisor: int,
     offset: int,
 ) -> Tuple[int, int, int]:
-    """等价参数间按 growth → divisor → |offset| 取最小（便于录入）。"""
+    """
+    参数排序键生成函数。
+
+    用于在多条等价参数中选择最优解：按 growth → divisor → |offset| 取最小，
+    这样选择的参数更简洁，便于人工录入和维护。
+
+    Args:
+        growth: 成长系数
+        divisor: 除数
+        offset: 偏移量
+
+    Returns:
+        排序键元组
+    """
     return (growth, divisor, abs(offset))
 
 
@@ -96,7 +120,22 @@ def _gcd_normalize_params(
     scaled_data: List[int],
     scaled_base: int,
 ) -> Tuple[int, int, int]:
-    """若 growth/divisor 有公因子且仍精确拟合，则约分到更小的整数参数。"""
+    """
+    对参数进行最大公约数规范化。
+
+    如果 growth 和 divisor 有公因子，且约分后仍能精确拟合数据，则进行约分，
+    得到更小、更简洁的整数参数。
+
+    Args:
+        growth: 成长系数
+        divisor: 除数
+        offset: 偏移量
+        scaled_data: 缩放后的数据列表
+        scaled_base: 缩放后的基础值
+
+    Returns:
+        规范化后的 (growth, divisor, offset) 元组
+    """
     factor = math.gcd(growth, divisor)
     while factor > 1:
         ng, nd = growth // factor, divisor // factor
@@ -118,7 +157,23 @@ def _offset_bounds_for_pair(
     divisor: int,
     num_levels: int,
 ) -> Tuple[bool, int, int]:
-    """计算使 floor 公式在各等级成立的 offset 整数区间。"""
+    """
+    计算使 floor 公式在各等级成立的 offset 整数区间。
+
+    对于给定的 growth 和 divisor，计算 offset 的取值范围，使得公式：
+        scaled_base + floor((growth * (lv - 1) + offset) / divisor)
+    在所有等级上都能精确匹配 scaled_data。
+
+    Args:
+        scaled_data: 缩放后的数据列表
+        scaled_base: 缩放后的基础值
+        growth: 成长系数
+        divisor: 除数
+        num_levels: 等级数量
+
+    Returns:
+        元组：(是否存在有效区间, offset下界, offset上界)
+    """
     offset_lower = -10**18
     offset_upper = 10**18
     for lv in range(1, num_levels + 1):

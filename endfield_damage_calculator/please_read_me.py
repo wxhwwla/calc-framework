@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "1.18.1"
+_VERSION = "1.18.2"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,22 +209,13 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 16 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/calculation/damage_engine.py
-# - 修改 endfield_damage_calculator/calculation/loadout_optimizer.py
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 更新文档 CONTEXT.md
+# - 修改 endfield_damage_calculator/calculation/inverse.py
 # - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/calculation/search_task_evaluator.py
-# - 修改 endfield_damage_calculator/calculation/spell_abnormal.py
-# - 修改 endfield_damage_calculator/calculation/spell_abnormal_params.py
+# - 修改 endfield_damage_calculator/data/loader.py
 # - 修改 endfield_damage_calculator/gui_design/gui.py
-# - 修改 endfield_damage_calculator/gui_design/gui_layout.py
-# - 修改 endfield_damage_calculator/gui_design/multi_skill_controls.py
-# - 修改 endfield_damage_calculator/gui_design/panel_hints.py
-# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
-# - 修改 endfield_damage_calculator/tests/gui_fixtures.py
-# - 修改 endfield_damage_calculator/tests/test_control_dock_layout.py
-# - 修改 endfield_damage_calculator/tests/test_panel_hints.py
-# - 修改 endfield_damage_calculator/tests/test_spell_abnormal.py
-# - 修改 endfield_damage_calculator/tests/test_spell_abnormal_params.py
+# - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
