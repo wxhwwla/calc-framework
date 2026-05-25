@@ -209,35 +209,7 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 29 处文件
+# TITLE: 修改 endfield_damage_calculator/please_read_me.py
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_zone.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/attribute_zone.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/final_attack_zone.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/special_fields.py
-# - 更新 weapons.json 武器数据
-# - 修改 endfield_damage_calculator/gui_design/damage_snapshot.py
-# - 修改 endfield_damage_calculator/gui_design/display_lines.py
-# - 修改 endfield_damage_calculator/gui_design/display_view.py
-# - 修改 endfield_damage_calculator/gui_design/loadout_evaluation.py
-# - 修改 endfield_damage_calculator/gui_design/loadout_preset.py
-# - 修改 endfield_damage_calculator/gui_design/loadout_state.py
-# - 修改 endfield_damage_calculator/gui_design/preview_lines.py
-# - 修改 endfield_damage_calculator/tests/test_calc_chain_naming_compat.py
-# - 修改 endfield_damage_calculator/tests/test_damage_snapshot.py
-# - 修改 endfield_damage_calculator/tests/test_game_data_contract.py
-# - 修改 endfield_damage_calculator/tests/test_import_targets.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_evaluation.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_preset.py
-# - 修改 endfield_damage_calculator/tests/test_loadout_state.py
-# - 修改 endfield_damage_calculator/tests/test_migrate_weapon_skills_schema_tool.py
-# - 修改 endfield_damage_calculator/tests/test_property_display_lines.py
-# - 修改 endfield_damage_calculator/tests/test_single_hit_preview.py
-# - 修改 endfield_damage_calculator/tests/test_single_skill_search_preview.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_special_fields.py
-# - 修改 endfield_damage_calculator/tests/test_weapon_special_level.py
-# - 修改 endfield_damage_calculator/tests/test_zone_snapshot.py
-# - 修改 tools/migrate_weapon_skills_schema.py
+# - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
