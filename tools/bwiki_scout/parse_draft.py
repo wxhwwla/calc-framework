@@ -24,16 +24,26 @@ if str(_SCRIPTS_ROOT) not in sys.path:
 from bwiki_scout.config import OUTPUT_ROOT
 from bwiki_scout.storage import safe_dirname
 
-_PARAM_RE = re.compile(r"\|([^=\|\n}]+?)=([^|\n}]+)")
+_PARAM_INLINE_RE = re.compile(r"\|([^=\|\n}]+?)=([^|\n}]+)")
+_PARAM_MULTILINE_RE = re.compile(
+    r"\|([^=\|\n}]+?)=(.*?)(?=\n\|[^\n=]+?=)",
+    re.DOTALL,
+)
 
 
 def extract_template_params(wikitext: str) -> dict[str, str]:
     """从 wikitext 模板参数提取键值（阶段 B 最小实现）。"""
     params: dict[str, str] = {}
-    for key, value in _PARAM_RE.findall(wikitext or ""):
+    text = wikitext or ""
+    for key, value in _PARAM_INLINE_RE.findall(text):
         k = key.strip()
         v = value.strip()
         if k and k not in params:
+            params[k] = v
+    for key, value in _PARAM_MULTILINE_RE.findall(text):
+        k = key.strip()
+        v = value.strip()
+        if k:
             params[k] = v
     return params
 

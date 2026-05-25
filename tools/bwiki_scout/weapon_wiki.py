@@ -33,7 +33,6 @@ _RARITY_STAR: dict[str, int] = {
 _ATTR_KEY_RE = re.compile(r"^(.+?)\+")
 _RANK_RE = re.compile(r"^词条(\d)(?:副(\d))?rank(\d)$")
 _FLOAT_RE = re.compile(r"[\d.]+")
-_MAX_STACK_RE = re.compile(r"最多(?:可)?叠加(\d+)层")
 
 
 def _parse_float(text: str | None) -> float | None:
@@ -62,7 +61,15 @@ def _first_line_of_slot3_content(p: dict[str, str]) -> str:
 
 def _slot3_unconditional_attr_key(p: dict[str, str]) -> str:
     """第三附加技能键名（仅 ``词条3内容`` 首行无条件段，不用副1 文案）。"""
-    return _attr_key_from_content(_first_line_of_slot3_content(p))
+    first = _first_line_of_slot3_content(p).replace("％", "%").strip()
+    # 首行须为「简短属性+数值」前缀；长句/模板标记归入特殊能力副词条。
+    match = re.match(r"^([^+。]+?\+[\d.]+%?)(?:[。]|$)", first)
+    if not match:
+        return ""
+    attr_part = match.group(1).split("+", 1)[0]
+    if len(attr_part) > 12 or any(ch in attr_part for ch in "，'''{{"):
+        return ""
+    return _attr_key_from_content(match.group(1))
 
 
 def _slot3_conditional_attr_key(p: dict[str, str], sub: str) -> str:
@@ -73,12 +80,13 @@ def _slot3_conditional_attr_key(p: dict[str, str], sub: str) -> str:
     return raw if raw.endswith("+") else raw + "+"
 
 
-def _parse_max_stack_from_text(text: str) -> int:
+def _parse_max_stack_from_text(text: str, *, name: str = "") -> int:
     """从 Wiki 条件描述解析最大叠加层数。"""
-    match = _MAX_STACK_RE.search(text or "")
-    if match:
-        return max(1, int(match.group(1)))
-    return 1
+    from character_weapon_equipment.weapon_data.special_fields import (
+        infer_max_stack_from_special,
+    )
+
+    return infer_max_stack_from_special(name, text)
 
 
 def _fit_conditional_special(rank_curves: dict[str, list[float]], p: dict[str, str], sub: str) -> dict[str, Any] | None:
@@ -90,7 +98,14 @@ def _fit_conditional_special(rank_curves: dict[str, list[float]], p: dict[str, s
         return None
     fitted = fit_bonus_params_from_rank_curve(rank_curves[gkey])
     raw_text = (p.get(f"词条3副{sub}内容") or "").strip()
-    max_stack = _parse_max_stack_from_text(raw_text)
+    slot3_context = "\n".join(
+        (p.get(key) or "").strip()
+        for key in ("词条3内容", "满级词条3内容")
+        if (p.get(key) or "").strip()
+    )
+    max_stack = _parse_max_stack_from_text(
+        f"{raw_text}\n{slot3_context}", name=name
+    )
     if "curve" in fitted:
         return {"enabled": True, "name": name, "curve": fitted["curve"], "max_stack": max_stack}
     return {"enabled": True, "name": name, "max_stack": max_stack, **fitted}
@@ -295,6 +310,152 @@ def _bonus_curves_from_seed_spec(spec: dict[str, Any]) -> dict[str, list[float]]
     return out
 
 
+def parse_special_max_stacks_from_wikitext(wikitext: str) -> list[tuple[str, int]]:
+    """仅解析特殊能力名称与 max_stack（不要求 rank 曲线或成长块）。"""
+    p = extract_template_params(wikitext)
+    slot3_context = "\n".join(
+        (p.get(key) or "").strip()
+        for key in ("词条3内容", "满级词条3内容")
+        if (p.get(key) or "").strip()
+    )
+    third_key = _slot3_unconditional_attr_key(p)
+    results: list[tuple[str, int]] = []
+    for sub in ("1", "2", "3", "4"):
+        if sub == "1" and third_key:
+            continue
+        name = _slot3_conditional_attr_key(p, sub)
+        if not name:
+            continue
+        raw_text = (p.get(f"词条3副{sub}内容") or "").strip()
+        max_stack = _parse_max_stack_from_text(
+            f"{raw_text}\n{slot3_context}", name=name
+        )
+        results.append((name, max_stack))
+        if len(results) >= 2:
+            break
+    return results
+
+
+def backfill_weapon_max_stack_from_cache(
+    *,
+    output_root: Path,
+    weapons_json: Path,
+    seed_path: Path,
+    names: list[str] | None = None,
+    dry_run: bool = True,
+) -> dict[str, Any]:
+    """
+    从 Wiki 缓存（或离线名称推断）回填 weapons.json / seed 的 max_stack，不改曲线。
+    """
+    import json
+
+    from bwiki_scout.seed_persist import load_seed_weapon_specs, write_seed_weapon_specs
+    from bwiki_scout.storage import load_page_bundle
+    from character_weapon_equipment.weapon_data.special_fields import (
+        infer_max_stack_from_special,
+        read_weapon_special_slots,
+        write_weapon_special_slots,
+    )
+
+    raw_dir = output_root / "raw"
+    with weapons_json.open(encoding="utf-8") as f:
+        weapons = json.load(f)
+
+    seed_specs = load_seed_weapon_specs(seed_path)
+    seed_by_name = {s["name"]: s for s in seed_specs if s.get("name")}
+
+    planned: list[str] = []
+    skipped: list[str] = []
+    changes: list[dict[str, Any]] = []
+
+    for record in weapons:
+        name = record.get("名称") or ""
+        if not name:
+            continue
+        if names and name not in names:
+            continue
+
+        slots = list(read_weapon_special_slots(record))
+        if not any(s[0] for s in slots):
+            continue
+
+        bundle = load_page_bundle(raw_dir, name)
+        wiki_stacks: list[tuple[str, int]] = []
+        if bundle and (bundle.get("wikitext") or "").strip():
+            wiki_stacks = parse_special_max_stacks_from_wikitext(bundle["wikitext"])
+
+        new_slots = list(slots)
+        weapon_changed = False
+        slot_changes: list[dict[str, Any]] = []
+
+        for idx in range(2):
+            enabled, sa_name, curve, old_stack = slots[idx]
+            if not enabled:
+                continue
+            new_stack = old_stack
+            source = "local"
+            if idx < len(wiki_stacks) and wiki_stacks[idx][0] == sa_name:
+                new_stack = wiki_stacks[idx][1]
+                source = "wiki"
+            elif wiki_stacks:
+                for wname, wstack in wiki_stacks:
+                    if wname == sa_name:
+                        new_stack = wstack
+                        source = "wiki"
+                        break
+            else:
+                inferred = infer_max_stack_from_special(sa_name)
+                if inferred != old_stack:
+                    new_stack = inferred
+                    source = "offline"
+
+            if new_stack != old_stack:
+                new_slots[idx] = (enabled, sa_name, curve, new_stack)
+                weapon_changed = True
+                slot_changes.append(
+                    {
+                        "slot": idx + 1,
+                        "name": sa_name,
+                        "old": old_stack,
+                        "new": new_stack,
+                        "source": source,
+                    }
+                )
+
+        if not weapon_changed:
+            continue
+
+        planned.append(name)
+        changes.append({"name": name, "slots": slot_changes})
+
+        if dry_run:
+            continue
+
+        write_weapon_special_slots(record, new_slots)
+
+        seed = seed_by_name.get(name)
+        if seed:
+            for ch in slot_changes:
+                for sa_key in ("special_1", "special_2", "special_ability"):
+                    sa = seed.get(sa_key) or {}
+                    if sa.get("enabled") and sa.get("name") == ch["name"]:
+                        sa["max_stack"] = ch["new"]
+                        break
+
+    if not dry_run and planned:
+        with weapons_json.open("w", encoding="utf-8") as f:
+            json.dump(weapons, f, ensure_ascii=False, indent=2)
+        write_seed_weapon_specs(seed_path, seed_specs)
+
+    return {
+        "planned": planned,
+        "changes": changes,
+        "skipped": skipped,
+        "updated_count": len(planned) if not dry_run else 0,
+        "dry_run": dry_run,
+    }
+
+
 def needs_weapon_sync_with_wiki(
     spec: dict[str, Any],
     local_record: dict[str, Any],
@@ -332,12 +493,15 @@ def needs_weapon_sync_with_wiki(
     local_slots = read_weapon_special_slots(local_record)
     for idx, sa_key in enumerate(("special_1", "special_2")):
         wiki_sa = spec.get(sa_key) or {}
-        local_enabled, local_name, local_curve = local_slots[idx]
+        local_enabled, local_name, local_curve, local_max_stack = local_slots[idx]
         wiki_enabled = bool(wiki_sa.get("enabled"))
         if wiki_enabled != local_enabled:
             return True
         if wiki_enabled:
             if wiki_sa.get("name") != local_name:
+                return True
+            wiki_max_stack = max(1, int(wiki_sa.get("max_stack", 1)))
+            if wiki_max_stack != local_max_stack:
                 return True
             wiki_cond = _bonus_curves_from_seed_spec({sa_key: wiki_sa})
             for _key, wiki_arr in wiki_cond.items():

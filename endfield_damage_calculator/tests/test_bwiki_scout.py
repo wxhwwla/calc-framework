@@ -78,7 +78,15 @@ class TestParseDraft(unittest.TestCase):
         self.assertEqual(params["名称"], "秋栗")
         self.assertEqual(params["稀有度"], "4星")
 
-    def test_build_draft_operator_lists_missing_local_fields(self):
+    def test_extract_template_params_multiline_value(self):
+        wikitext = (
+            "{{武器|词条3内容=攻击力+5.0%。\n"
+            "同名效果最多叠加2层，每层单独计算持续时间。\n"
+            "|词条3副2内容=造成物理异常时获得攻击力}}"
+        )
+        params = extract_template_params(wikitext)
+        self.assertIn("同名效果最多叠加2层", params["词条3内容"])
+        self.assertEqual(params["词条3副2内容"], "造成物理异常时获得攻击力")
         record = build_draft_record(
             kind="operator",
             title="秋栗",

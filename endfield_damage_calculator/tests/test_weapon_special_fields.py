@@ -29,6 +29,30 @@ class TestWeaponSpecialFields(unittest.TestCase):
             (True, "源石技艺强度+", [10.0] * 9, 1),
         )
 
+    def test_infer_max_stack_from_special_text(self):
+        from character_weapon_equipment.weapon_data.special_fields import (
+            infer_max_stack_from_special,
+        )
+
+        self.assertEqual(
+            infer_max_stack_from_special(
+                "造成'''物理异常'''时获得攻击力+",
+                "最多可叠加2层",
+            ),
+            2,
+        )
+        self.assertEqual(
+            infer_max_stack_from_special("每层'''狼血'''", "可叠加9层"),
+            9,
+        )
+        self.assertEqual(
+            infer_max_stack_from_special(
+                "造成'''物理异常'''时获得攻击力+",
+                "同名效果最多叠加2层，每层单独计算持续时间",
+            ),
+            2,
+        )
+
     def test_build_and_read_two_slots(self):
         weapon: dict = {}
         write_weapon_special_slots(
