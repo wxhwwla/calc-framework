@@ -17,9 +17,11 @@ from calculation.spell_abnormal import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYP
 from gui_design.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
 from gui_design.gui_layout import (
     ANOMALY_MATRIX_LABEL_MINSIZE,
+    MULTI_SKILL_HINT_BOX_HEIGHT,
+    PHYSICAL_ABNORMAL_HINT_BOX_HEIGHT,
+    SPELL_ABNORMAL_HINT_BOX_HEIGHT,
     multi_skill_segment_box_height,
 )
-from gui_design.label_layout import bind_wrapped_label
 from gui_design.panel_hints import (
     MULTI_SKILL_COUNTS_HINT,
     PHYSICAL_ABNORMAL_HINT,
@@ -48,11 +50,16 @@ def ensure_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
         skill_2_level=s2,
         skill_3_level=s3,
     )
-    keys = tuple(spec["key"] for spec in specs)
-    if getattr(app, "_segment_row_keys", None) == keys:
+    signature = segment_rows_signature(specs)
+    if getattr(app, "_segment_row_signature", None) == signature:
         return
-    app._segment_row_keys = keys
+    app._segment_row_signature = signature
     rebuild_multi_skill_segment_rows(app)
+
+
+def segment_rows_signature(specs: list[dict[str, object]]) -> tuple[tuple[str, str], ...]:
+    """段列表签名：键 + 展示标签（含倍率%），技能等级变化时也会触发重建。"""
+    return tuple((str(spec["key"]), str(spec["label"])) for spec in specs)
 
 
 def read_manual_multi_skill_counts(app: "DamageCalculatorApp") -> dict[str, int]:
@@ -185,6 +192,8 @@ def rebuild_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
         entry.bind("<FocusOut>", on_change)
         entry.bind("<Return>", on_change)
 
+    app._segment_row_signature = segment_rows_signature(specs)
+
 
 def apply_segment_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
     """将段级次数写回动态输入框（预设导入用）。"""
@@ -311,18 +320,23 @@ def place_multi_skill_section(
         widget.grid(row=row, column=0, padx=4, pady=pady, sticky="ew")
         return row + 1
 
-    def _hint(row: int, text: str) -> int:
-        """说明文案：以右侧列宽换行，避免 ScrollableFrame 内横向裁切。"""
+    def _hint(row: int, text: str, *, box_height: int) -> int:
+        """说明文案：固定高度容器 + 以高级页整宽换行，避免 ScrollableFrame 裁切。"""
+        hint_box = ctk.CTkFrame(content, height=box_height, fg_color="transparent")
+        hint_box.grid(row=row, column=0, padx=4, pady=(0, 6), sticky="ew")
+        hint_box.grid_propagate(False)
+        hint_box.grid_columnconfigure(0, weight=1)
+        hint_box.grid_rowconfigure(0, weight=1)
         hint_label = ctk.CTkLabel(
-            content,
+            hint_box,
             text=text,
             font=app.small_font,
             text_color="#888888",
             justify="left",
             anchor="nw",
         )
-        hint_label.grid(row=row, column=0, padx=8, pady=(0, 6), sticky="ew")
-        bind_wrapped_label(hint_label, content, viewport=parent, padding=28)
+        hint_label.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+        wrap_label(hint_label, hint_box)
         return row + 1
 
     mr = 0
@@ -343,12 +357,12 @@ def place_multi_skill_section(
     app._multi_skill_counts_body = body
     mr += 1
 
-    mr = _hint(mr, MULTI_SKILL_COUNTS_HINT)
+    mr = _hint(mr, MULTI_SKILL_COUNTS_HINT, box_height=MULTI_SKILL_HINT_BOX_HEIGHT)
 
     rebuild_multi_skill_segment_rows(app)
 
     mr = _section("物理异常", mr)
-    mr = _hint(mr, PHYSICAL_ABNORMAL_HINT)
+    mr = _hint(mr, PHYSICAL_ABNORMAL_HINT, box_height=PHYSICAL_ABNORMAL_HINT_BOX_HEIGHT)
 
     mode_row = ctk.CTkFrame(content, fg_color="transparent")
     mode_row.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")
@@ -472,7 +486,7 @@ def place_multi_skill_section(
     mr += 1
 
     mr = _section("法术异常", mr)
-    mr = _hint(mr, SPELL_ABNORMAL_HINT)
+    mr = _hint(mr, SPELL_ABNORMAL_HINT, box_height=SPELL_ABNORMAL_HINT_BOX_HEIGHT)
 
     spell_matrix = ctk.CTkFrame(content, fg_color="transparent")
     spell_matrix.grid(row=mr, column=0, padx=4, pady=(0, 4), sticky="ew")

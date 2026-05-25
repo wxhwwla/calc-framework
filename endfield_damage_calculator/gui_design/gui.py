@@ -66,6 +66,8 @@ from gui_design.gui_layout import (
     CONTROL_DOCK_MINSIZE,
     CONTROL_DOCK_ROW,
     CONTROL_INNER_COL_ACTIONS_MINSIZE,
+    CONTROL_INNER_COL_COMPACT_MULTI_WEIGHT,
+    CONTROL_INNER_COL_COMPACT_SEARCH_WEIGHT,
     CONTROL_INNER_COL_MULTI_WEIGHT,
     CONTROL_INNER_COL_SEARCH_WEIGHT,
     MAIN_CONTENT_ROW,
@@ -643,8 +645,16 @@ class DamageCalculatorApp:
 
         compact = should_use_compact_control_dock(window_width)
         if compact:
-            body.grid_columnconfigure(0, weight=1, minsize=260)
-            body.grid_columnconfigure(1, weight=1, minsize=260)
+            body.grid_columnconfigure(
+                0,
+                weight=CONTROL_INNER_COL_COMPACT_SEARCH_WEIGHT,
+                minsize=220,
+            )
+            body.grid_columnconfigure(
+                1,
+                weight=CONTROL_INNER_COL_COMPACT_MULTI_WEIGHT,
+                minsize=260,
+            )
             body.grid_columnconfigure(2, weight=0, minsize=0)
             actions.grid(row=0, column=0, columnspan=2, padx=(4, 4), pady=(4, 2), sticky="new")
             search.grid(row=1, column=0, padx=(4, 6), pady=(2, 4), sticky="new")
