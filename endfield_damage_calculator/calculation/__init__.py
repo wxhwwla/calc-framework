@@ -13,7 +13,7 @@
 """
 
 # 配置模块
-from calculation.config import (
+from calculation.core.config import (
     CHARACTER_NORMAL_ATTRS,
     CHARACTER_SKILL_ATTRS,
     WEAPON_BASE_ATTRS,
@@ -30,7 +30,7 @@ from calculation.config import (
 )
 
 # 正向计算公式
-from calculation.formula import (
+from calculation.damage.formula import (
     levels,
     talent,
     trust,
@@ -41,17 +41,17 @@ from calculation.formula import (
 )
 
 # 数据生成器
-from calculation.data_generator import (
+from calculation.core.data_generator import (
     generate_attributes,
     generate_character_attributes,
     generate_weapon_attributes,
 )
 
 # 曲线烘焙（录入 / BWIKI 同步共用）
-from calculation.curve_baker import bake_character_curves, bake_weapon_curves
+from calculation.core.curve_baker import bake_character_curves, bake_weapon_curves
 
 # 反向推导公式
-from calculation.inverse import (
+from calculation.damage.inverse import (
     remove_duplicates,
     fit_attribute_formula,
     fit_skill_formula,

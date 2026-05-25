@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from calculation.weapon_skill_selection import (
+from calculation.skills.weapon_selection import (
     WeaponSkillSelection,
     normalize_weapon_specials_tuple,
 )

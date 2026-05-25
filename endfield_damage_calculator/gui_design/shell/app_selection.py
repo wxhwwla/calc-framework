@@ -4,9 +4,9 @@
 
 from __future__ import annotations
 
-from gui_design.confirm_orchestrator import handle_confirm, schedule_confirm
-from gui_design.loadout_pending import mark_loadout_pending
-from gui_design.ui_preferences import (
+from gui_design.app.confirm_orchestrator import handle_confirm, schedule_confirm
+from gui_design.app.loadout_pending import mark_loadout_pending
+from gui_design.shared.ui_preferences import (
     record_char_advanced_expanded,
     record_last_page,
     record_weapon_advanced_expanded,

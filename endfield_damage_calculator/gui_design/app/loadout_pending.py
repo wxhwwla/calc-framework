@@ -11,7 +11,7 @@ import customtkinter as ctk
 from .loadout_state import read_loadout_from_app
 
 if TYPE_CHECKING:
-    from gui_design.gui import DamageCalculatorApp
+    from gui_design.shell.app import DamageCalculatorApp
 
 CONFIRM_BTN_TEXT_DEFAULT = "确认选择"
 CONFIRM_BTN_TEXT_PENDING = "确认选择（待更新）"

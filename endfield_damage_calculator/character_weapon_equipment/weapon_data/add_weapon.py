@@ -14,8 +14,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from calculation.curve_baker import bake_weapon_curves
-from calculation.formula import calculate_bonus_attribute
+from calculation.core.curve_baker import bake_weapon_curves
+from calculation.damage.formula import calculate_bonus_attribute
 from character_weapon_equipment.weapon_data.special_fields import (
     read_weapon_special_slots,
     write_weapon_special_slots,

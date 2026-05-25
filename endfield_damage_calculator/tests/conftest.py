@@ -4,28 +4,37 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
 
-from calculation.result_cache import reset_global_result_cache
+_PKG_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = _PKG_ROOT.parent
+_TOOLS_ROOT = _REPO_ROOT / "tools"
+if str(_TOOLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_ROOT))
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from calculation.core.result_cache import reset_global_result_cache
 
 _INTEGRATION_FILES = frozenset(
     {
-        "test_property_display_integration.py",
-        "test_enhancement_integration.py",
-        "test_gui_app_integration.py",
-        "test_fixed_loadout_integration.py",
+        "gui_design/presentation/test_property_display_integration.py",
+        "gui_design/controls/test_enhancement_integration.py",
+        "gui_design/shell/test_gui_app_integration.py",
+        "gui_design/controls/test_fixed_loadout_integration.py",
     }
 )
 
 _SLOW_FILES = frozenset(
     {
-        "test_calculation.py",
-        "test_inverse_refactored.py",
-        "test_scaling_mode.py",
-        "test_decimal_scaling.py",
-        "test_wiki_sync.py",
+        "calculation/damage/test_calculation.py",
+        "calculation/damage/test_inverse_refactored.py",
+        "calculation/damage/test_scaling_mode.py",
+        "calculation/damage/test_decimal_scaling.py",
+        "tools/test_wiki_sync.py",
     }
 )
 
@@ -44,7 +53,7 @@ def pytest_configure(config: pytest.Config) -> None:
     if "notintegration" in expr:
         ignore.extend(str(tests_dir / name) for name in _INTEGRATION_FILES)
     if "notrealdata" in expr:
-        pass  # real_data 用例在文件内 skip/env，不整文件忽略
+        pass
     if "notslow" in expr:
         ignore.extend(str(tests_dir / name) for name in _SLOW_FILES)
     if ignore:
@@ -54,7 +63,8 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """为慢测模块自动打 slow 标记（全量收集时生效）。"""
     for item in items:
-        if item.path.name in _SLOW_FILES:
+        rel = item.path.relative_to(Path(__file__).resolve().parent).as_posix()
+        if rel in _SLOW_FILES:
             item.add_marker(pytest.mark.slow)
 
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from calculation.loadout_optimizer import WeaponCandidate
+from calculation.loadout.optimizer import WeaponCandidate
 from data.game_data_facade import GameDataFacade
 from .loadout_state import LoadoutState
 

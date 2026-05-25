@@ -8,17 +8,17 @@ from __future__ import annotations
 
 from typing import Any, Dict, NamedTuple, Optional
 
-from calculation.config import CHARACTER_NORMAL_ATTRS
-from calculation.damage_engine import (
+from calculation.core.config import CHARACTER_NORMAL_ATTRS
+from calculation.damage.engine import (
     ZONE_ORDER,
     DamageContext,
     DamageResult,
     calculate_single_hit_damage,
 )
-from calculation.damage_types import format_damage_type_display, resolve_segment_damage_type
+from calculation.damage.types import format_damage_type_display, resolve_segment_damage_type
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.preview_cache import cached_preview, sync_confirm_dependencies
-from calculation.skill_segments import CHARACTER_SKILL_TYPES
+from calculation.core.preview_cache import cached_preview, sync_confirm_dependencies
+from calculation.skills.segments import CHARACTER_SKILL_TYPES
 from character_weapon_equipment.weapon_data.special_fields import (
     read_weapon_skills_schema,
     special_pick_bonus,

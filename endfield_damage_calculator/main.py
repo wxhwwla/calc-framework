@@ -5,7 +5,7 @@
 
 项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
 ├── main.py                    # 本文件：启动 GUI
-├── gui_design/gui.py          # 主窗口（5 列 + 底栏：选择 / 属性 / 乘区 / 搜索）
+├── gui_design/shell/app.py   # 主窗口（5 列 + 底栏：选择 / 属性 / 乘区 / 搜索）
 ├── data/loader.py             # 角色、武器、装备 JSON 统一加载
 ├── data/game_data_facade.py   # 应用级数据门面（GUI / 对比 / 搜索）
 ├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线
@@ -65,7 +65,7 @@ def main() -> None:
 
     # 导入 GUI 模块（含 customtkinter，首次较慢）
     from data.plugin_registry import load_default_plugins
-    from gui_design.gui import DamageCalculatorApp
+    from gui_design.shell.app import DamageCalculatorApp
     from utils.path_utils import get_application_dir
 
     if not getattr(sys, "frozen", False):

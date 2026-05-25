@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from gui_design.gui_layout import (
+from gui_design.layout.gui_layout import (
     CONTROL_INNER_COL_ACTIONS_MINSIZE,
     CONTROL_INNER_COL_COMPACT_MULTI_WEIGHT,
     CONTROL_INNER_COL_COMPACT_SEARCH_WEIGHT,

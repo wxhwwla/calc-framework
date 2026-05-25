@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from gui_design.controls.multi_skill_controls import rebuild_multi_skill_segment_rows
+from gui_design.controls.multi_skill import rebuild_multi_skill_segment_rows
 
 class AppCharWeaponLinkMixin:
     def _on_char_name_change(self, *args: str) -> None:

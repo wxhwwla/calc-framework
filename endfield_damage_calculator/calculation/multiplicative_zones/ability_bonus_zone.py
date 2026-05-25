@@ -17,7 +17,7 @@
 import warnings
 from typing import Dict, Any, Optional, Union
 from .base_zone import BaseZone
-from calculation.formula import trust_add
+from calculation.damage.formula import trust_add
 
 
 class AbilityBonusZone(BaseZone):

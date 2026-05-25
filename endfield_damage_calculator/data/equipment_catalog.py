@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from calculation.equipment_system import build_equipment_catalog_from_local_rows
+from calculation.equipment.system import build_equipment_catalog_from_local_rows
 from data.loader import DataLoadError, get_equipments
 
 # 与 GUI 下拉文案一致

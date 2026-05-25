@@ -4,16 +4,16 @@
 
 from __future__ import annotations
 
-from gui_design.controls.fixed_loadout_controls import (
+from gui_design.controls.fixed_loadout import (
     refresh_all_fixed_slot_menus,
     resolve_fixed_loadout_selection,
 )
-from gui_design.controls.search_controls import refresh_search_estimate
+from gui_design.controls.search import refresh_search_estimate
 
 class AppLoadoutBridgeMixin:
     def _build_fixed_loadout_selection(self):
         """从底栏勾选状态解析固定/遍历配装。"""
-        from calculation.loadout_slot_search import FixedLoadoutSelection
+        from calculation.loadout.slot_search import FixedLoadoutSelection
 
         if not self._fixed_loadout_slots:
             return FixedLoadoutSelection()

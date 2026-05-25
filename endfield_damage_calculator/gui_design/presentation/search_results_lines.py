@@ -7,18 +7,18 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
-from calculation.physical_abnormal import (
+from calculation.abnormal.physical import (
     abnormal_weighted_total,
     format_abnormal_breakdown_lines,
     split_damage_breakdown,
 )
-from calculation.spell_abnormal import (
+from calculation.abnormal.spell import (
     format_spell_abnormal_breakdown_lines,
     is_spell_abnormal_key,
     spell_abnormal_weighted_total,
 )
-from calculation.loadout_optimizer import LoadoutScore
-from calculation.skill_segments import format_segment_breakdown_lines
+from calculation.loadout.optimizer import LoadoutScore
+from calculation.skills.segments import format_segment_breakdown_lines
 
 
 def _format_top_result_line(

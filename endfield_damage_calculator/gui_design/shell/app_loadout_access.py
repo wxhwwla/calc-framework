@@ -6,16 +6,16 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from calculation.loadout_optimizer import WeaponCandidate
-from calculation.single_skill_search_job import build_weapon_candidates
-from gui_design.calc_mode_labels import calculation_mode_from_label
-from gui_design.confirm_orchestrator import schedule_confirm
-from gui_design.controls.multi_skill_controls import (
+from calculation.loadout.optimizer import WeaponCandidate
+from calculation.search.plan.job import build_weapon_candidates
+from gui_design.shared.calc_mode_labels import calculation_mode_from_label
+from gui_design.app.confirm_orchestrator import schedule_confirm
+from gui_design.controls.multi_skill import (
     read_manual_multi_skill_counts,
     read_manual_physical_abnormal_counts,
     read_manual_spell_abnormal_counts,
 )
-from gui_design.loadout_pending import mark_loadout_pending
+from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
 class AppLoadoutAccessMixin:
@@ -112,7 +112,7 @@ class AppLoadoutAccessMixin:
         current_weapon = self.weapon_panel.get_selected_data()
         if not char_data or not current_weapon:
             return []
-        from gui_design.weapon_skill_selection import read_weapon_skill_selection_from_panel
+        from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
         skill_view = read_weapon_skill_selection_from_panel(self.weapon_panel).to_preset_view()
         return build_weapon_candidates(

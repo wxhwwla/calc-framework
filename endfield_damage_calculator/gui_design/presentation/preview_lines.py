@@ -6,28 +6,28 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from calculation.damage_engine import DamageContext
-from calculation.loadout_optimizer import (
+from calculation.damage.engine import DamageContext
+from calculation.loadout.optimizer import (
     OptimizerConfig,
     WeaponCandidate,
     search_best_single_skill_loadouts,
 )
-from calculation.multi_skill_optimizer import (
+from calculation.multi_skill.optimizer import (
     MultiSkillConfig,
     SkillScenario,
     optimize_multi_skill_loadouts,
 )
-from calculation.multi_skill_search_eval import build_skill_scenarios_from_levels
-from calculation.skill_segments import format_segment_breakdown_lines, normalize_manual_segment_counts
+from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
+from calculation.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
-from calculation.preview_cache import cached_preview, sync_preview_dependencies
-from calculation.physical_abnormal import (
+from calculation.core.preview_cache import cached_preview, sync_preview_dependencies
+from calculation.abnormal.physical import (
     compose_damage_total,
     evaluate_physical_abnormal_total,
     format_abnormal_breakdown_lines,
 )
-from calculation.spell_abnormal import (
+from calculation.abnormal.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
 )
@@ -525,11 +525,11 @@ def _build_multi_skill_search_preview_lines_impl(
             skill_counts=active_counts,
             crit_mode="expected" if use_expected_crit else "non_crit",
         )
-        from calculation.skill_segments import format_segment_count_label
+        from calculation.skills.segments import format_segment_count_label
 
         count_desc = f"手动次数: {format_segment_count_label(active_counts)}"
 
-    from calculation.damage_types import format_damage_type_display
+    from calculation.damage.types import format_damage_type_display
 
     segment_type_lines = []
     for scenario in scenarios:

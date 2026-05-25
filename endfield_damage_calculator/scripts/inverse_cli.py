@@ -16,7 +16,7 @@
 
 import sys
 from typing import Tuple, List
-from calculation.inverse import (
+from calculation.damage.inverse import (
     fit_formula,
     validate_formula,
     remove_duplicates,

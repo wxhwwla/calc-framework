@@ -11,15 +11,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from calculation.loadout_slot_search import FixedLoadoutSelection
-from calculation.search_controller import SearchJobInputs
+from calculation.loadout.slot_search import FixedLoadoutSelection
+from calculation.search.plan.controller import SearchJobInputs
 from .confirm_refresh import (
     build_confirm_refresh_signature,
     build_display_pending_signature,
 )
 from .loadout_preset import LoadoutPreset
 from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
-from calculation.weapon_skill_selection import WeaponSkillSelection
+from calculation.skills.weapon_selection import WeaponSkillSelection
 from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
 
@@ -313,7 +313,7 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Opti
     if char_panel is None or weapon_panel is None:
         return None
     if ensure_segment_rows:
-        from gui_design.multi_skill_controls import ensure_multi_skill_segment_rows
+        from gui_design.controls.multi_skill import ensure_multi_skill_segment_rows
 
         ensure_multi_skill_segment_rows(app)
     fixed = app._build_fixed_loadout_selection()

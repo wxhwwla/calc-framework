@@ -6,6 +6,8 @@
 
 If the user @-mentions that file, treat it as mandatory context before any code change.
 
+**Layout constraints:** Before structural refactors or adding modules, read [`docs/代码结构规范.md`](docs/代码结构规范.md) and [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md) (≤10 items per directory, ~400 lines per file).
+
 ## Project operations
 
 Before changing code or pushing to GitHub, read the human operation guide: [`docs/操作指令集.md`](docs/操作指令集.md) (`[根]` / `[工具]` / `[包]` directories, upload script, versioning). Domain terms: [`CONTEXT.md`](CONTEXT.md). Repo maintenance scripts live under [`tools/`](tools/README.md) (not package `scripts/`). License: [`LICENSE`](LICENSE), [`DATA_LICENSE`](DATA_LICENSE), [`docs/数据来源与许可.md`](docs/数据来源与许可.md).

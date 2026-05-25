@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 
 from .display_request import build_display_request
 from .loadout_state import read_loadout_from_app
-from gui_design.search_controls import refresh_search_estimate
+from gui_design.controls.search import refresh_search_estimate
 from utils.operation_log import LogLevel, get_session_operation_log
 
 if TYPE_CHECKING:
-    from gui_design.gui import DamageCalculatorApp
+    from gui_design.shell.app import DamageCalculatorApp
 
 # 窗口从最小化/隐藏恢复后，等待布局稳定再重排或确认刷新（毫秒）
 WINDOW_RESTORE_SETTLE_MS = 80
@@ -96,8 +96,8 @@ def schedule_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None
 
 def run_confirm_refresh(app: "DamageCalculatorApp") -> None:
     """执行属性列、右侧乘区、快照与搜索预估刷新。"""
-    from gui_design.display_view import confirm_from_display_request
-    from gui_design.enhancement_controls import (
+    from gui_design.shared.display_view import confirm_from_display_request
+    from gui_design.controls.enhancement import (
         record_calculation_history,
         refresh_damage_snapshot,
     )

@@ -8,8 +8,8 @@ from tkinter import messagebox
 
 import customtkinter as ctk
 
-from gui_design.confirm_orchestrator import handle_confirm
-from gui_design.gui_layout import (
+from gui_design.app.confirm_orchestrator import handle_confirm
+from gui_design.layout.gui_layout import (
     APP_COLUMN_WEIGHTS,
     ATTR_COLUMN_MINSIZE,
     CHAR_ATTR_COLUMN,
@@ -29,7 +29,7 @@ from gui_design.gui_layout import (
     ZONE_COLUMN_MINSIZE,
 )
 from gui_design.panels.selection_panel import ChooseTypesStarsNamesLevels
-from gui_design.ui_preferences import resolve_startup_page
+from gui_design.shared.ui_preferences import resolve_startup_page
 from utils.operation_log import LogLevel, get_session_operation_log
 
 class AppMainLayoutMixin:

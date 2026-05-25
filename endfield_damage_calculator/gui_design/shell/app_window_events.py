@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-from gui_design.confirm_orchestrator import WINDOW_RESTORE_SETTLE_MS
-from gui_design.gui_layout import (
+from gui_design.app.confirm_orchestrator import WINDOW_RESTORE_SETTLE_MS
+from gui_design.layout.gui_layout import (
     control_dock_layout_needs_update,
     should_use_compact_control_dock,
 )

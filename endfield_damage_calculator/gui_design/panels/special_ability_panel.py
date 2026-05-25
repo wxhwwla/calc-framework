@@ -13,8 +13,8 @@ from character_weapon_equipment.weapon_data.special_fields import (
     bonus_attribute_keys,
     read_weapon_special_slots,
 )
-from gui_design.label_layout import bind_wrapped_label
-from gui_design.weapon_display_text import (
+from gui_design.layout.label_layout import bind_wrapped_label
+from gui_design.shared.weapon_display_text import (
     extract_effect_display_name,
     format_weapon_skill_slider_value,
     format_weapon_skill_title,

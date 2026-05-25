@@ -40,19 +40,19 @@ OLD_TO_NEW: dict[str, str] = {
 
 # 修正：模块路径应含 .py 去掉后缀后的名字
 OLD_TO_NEW = {
-    "search_controller": "calculation.search.plan_controller",
-    "search_estimate": "calculation.search.plan_estimate",
-    "single_skill_search_job": "calculation.search.plan_job",
-    "search_runner": "calculation.search.run_runner",
-    "search_session": "calculation.search.run_session",
-    "single_skill_search_runner": "calculation.search.run_single_skill",
-    "mvp_pipeline": "calculation.search.run_mvp",
-    "parallel_search": "calculation.search.run_parallel",
-    "search_cancel": "calculation.search.run_cancel",
-    "search_task_evaluator": "calculation.search.evaluate_task",
-    "search_eval_context": "calculation.search.evaluate_context",
-    "multi_skill_search_eval": "calculation.search.evaluate_multi_skill",
-    "search_persistence": "calculation.search.persist_store",
+    "search_controller": "calculation.search.plan.controller",
+    "search_estimate": "calculation.search.plan.estimate",
+    "single_skill_search_job": "calculation.search.plan.job",
+    "search_runner": "calculation.search.run.runner",
+    "search_session": "calculation.search.run.session",
+    "single_skill_search_runner": "calculation.search.run.single_skill",
+    "mvp_pipeline": "calculation.search.run.mvp",
+    "parallel_search": "calculation.search.run.parallel",
+    "search_cancel": "calculation.search.run.cancel",
+    "search_task_evaluator": "calculation.search.evaluate.task",
+    "search_eval_context": "calculation.search.evaluate.context",
+    "multi_skill_search_eval": "calculation.search.evaluate.multi_skill",
+    "search_persistence": "calculation.search.persist.store",
 }
 
 STUB_TEMPLATE = '''#!/usr/bin/env python3

@@ -14,15 +14,15 @@ apply_platform_win32_patch()
 import customtkinter as ctk
 from typing import Any, Dict, List, Optional
 
-from calculation.search_cancel import SearchCancelToken
-from calculation.single_skill_search_job import build_weapon_candidates
+from calculation.search.run.cancel import SearchCancelToken
+from calculation.search.plan.job import build_weapon_candidates
 from data.game_data_facade import GameDataFacade
-from gui_design.calc_mode_labels import DEFAULT_CALC_MODE_LABEL
-from gui_design.confirm_orchestrator import schedule_confirm
-from gui_design.gui_settings import gui_settings
-from gui_design.loadout_pending import mark_loadout_pending
+from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL
+from gui_design.app.confirm_orchestrator import schedule_confirm
+from gui_design.shared.gui_settings import gui_settings
+from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.panels.selection_panel import ChooseTypesStarsNamesLevels
-from gui_design.search_settings import build_worker_option_labels
+from gui_design.search_ui.search_settings import build_worker_option_labels
 from gui_design.shell.app_char_weapon_link import AppCharWeaponLinkMixin
 from gui_design.shell.app_control_dock import AppControlDockMixin
 from gui_design.shell.app_loadout_access import AppLoadoutAccessMixin
@@ -31,7 +31,7 @@ from gui_design.shell.app_main_layout import AppMainLayoutMixin
 from gui_design.shell.app_selection import AppSelectionMixin
 from gui_design.shell.app_window import AppWindowMixin
 from gui_design.shell.app_window_events import AppWindowEventsMixin
-from gui_design.ui_preferences import load_ui_preferences
+from gui_design.shared.ui_preferences import load_ui_preferences
 from please_read_me import get_exe_version
 from utils.gui_fonts import default_ui_font
 from utils.gui_window import apply_startup_maximized

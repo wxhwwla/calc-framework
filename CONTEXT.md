@@ -71,6 +71,7 @@
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
 | **仓库维护工具** | `tools/`：仓库级脚本（BWIKI 侦察、审计等），与包内 `endfield_damage_calculator/scripts/` 区分 |
+| **代码结构约束** | 每目录直接子项 **≤ 10**；业务 `.py` **≤ 400 行**（硬顶 500）；见 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)、[`docs/代码结构规范.md`](docs/代码结构规范.md) |
 | **BWIKI 侦察** | `tools/bwiki_scout/`：阶段 C 拉取 Wiki 至 `output/raw/`（gitignore）；阶段 B `parse_draft.py` 仅生成对照草案 |
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
 | **项目依赖** | 运行时：`customtkinter`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |

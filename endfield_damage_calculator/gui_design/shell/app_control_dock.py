@@ -6,17 +6,17 @@ from __future__ import annotations
 
 import customtkinter as ctk
 
-from gui_design.calc_mode_labels import CALC_MODE_LABELS
-from gui_design.confirm_orchestrator import handle_confirm
-from gui_design.controls.enhancement_controls import place_enhancement_section
-from gui_design.controls.multi_skill_controls import place_multi_skill_section
-from gui_design.controls.search_controls import place_search_section
-from gui_design.gui_layout import (
+from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS
+from gui_design.app.confirm_orchestrator import handle_confirm
+from gui_design.controls.enhancement import place_enhancement_section
+from gui_design.controls.multi_skill import place_multi_skill_section
+from gui_design.controls.search import place_search_section
+from gui_design.layout.gui_layout import (
     PRIMARY_ACTION_BUTTON_HEIGHT,
     SECONDARY_ACTION_BUTTON_HEIGHT,
 )
-from gui_design.label_layout import bind_wrapped_label
-from gui_design.loadout_pending import mark_loadout_pending
+from gui_design.layout.label_layout import bind_wrapped_label
+from gui_design.app.loadout_pending import mark_loadout_pending
 from legal.attribution import open_attribution_dialog
 
 class AppControlDockMixin:

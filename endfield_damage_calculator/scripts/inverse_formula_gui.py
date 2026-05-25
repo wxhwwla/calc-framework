@@ -11,7 +11,7 @@ import re
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 
-from calculation.inverse import (
+from calculation.damage.inverse import (
     fit_attribute_formula,
     fit_skill_formula,
     fit_skill_formula_no_special,
@@ -19,7 +19,7 @@ from calculation.inverse import (
     validate_skill_formula,
     remove_duplicates,
 )
-from calculation.formula import calculate_growth_curve, calculate_skill_curve
+from calculation.damage.formula import calculate_growth_curve, calculate_skill_curve
 
 
 class InverseFormulaGUI:
