@@ -63,18 +63,20 @@ def add_weapon(
 
     sa1 = copy.deepcopy(special_1 or special_ability)
     sa2 = copy.deepcopy(special_2 or special_ability_2)
-    slots: list[tuple[bool, str, list]] = []
+    slots: list[tuple[bool, str, list, int]] = []
     for sa in (sa1, sa2):
         if sa and (sa.get("enabled") or sa.get("curve")):
+            max_stack = max(1, int(sa.get("max_stack", 1)))
             slots.append(
                 (
                     True,
                     sa.get("name", ""),
                     _build_special_ability_curve(sa),
+                    max_stack,
                 )
             )
         else:
-            slots.append((False, "", []))
+            slots.append((False, "", [], 1))
     write_weapon_special_slots(weapon, slots)
 
     if json_path is None:
@@ -99,9 +101,8 @@ def add_weapon(
     print(f"   基础攻击力: {weapon['基础攻击力'][0]} - {weapon['基础攻击力'][-1]}")
     if bonus_attrs:
         print(f"   附加属性: {', '.join(bonus_attrs.keys())}")
-    for label, (enabled, sa_name, _) in zip(
-        ("特殊能力1", "特殊能力2"), read_weapon_special_slots(weapon)
-    ):
+    for label, slot in zip(("特殊能力1", "特殊能力2"), read_weapon_special_slots(weapon)):
+        enabled, sa_name, _, _ = slot
         if enabled:
             print(f"   {label}: {sa_name}")
     print(f"   当前武器总数: {len(weapons)}")

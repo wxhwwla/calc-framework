@@ -5,7 +5,7 @@
 import unittest
 
 from calculation.loadout_slot_search import FixedLoadoutSelection
-from gui_design.loadout_state import LoadoutState, read_loadout_from_panels
+from gui_design.loadout_state import LoadoutState, normalize_weapon_specials_tuple, read_loadout_from_panels
 from tests.gui_fixtures import MockSelectionPanel
 
 
@@ -95,11 +95,17 @@ class TestLoadoutState(unittest.TestCase):
             use_manual_multi_skill_counts=False,
             manual_counts={"战技": 1, "连携技": 0, "终结技": 0},
             enemy_defense=100.0,
-            weapon_specials=(("", 0) * 9),
+            weapon_specials=("敏捷+", 9, "", 0, "", 0, "主能力+", 8, "", 0),
         )
         preset = state.to_loadout_preset()
         self.assertEqual(preset.char_name, "测试干员")
         self.assertEqual(preset.char_level, 10)
+
+    def test_normalize_weapon_specials_migrates_legacy_ws_level(self) -> None:
+        migrated = normalize_weapon_specials_tuple(
+            ("", 1, "", 1, "", 0, "攻击力+", 0, "", 3)
+        )
+        self.assertEqual(migrated[7:12], (1, 0, "", 3, 1))
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from character_weapon_equipment.weapon_data.special_fields import migrate_legacy_weapon_special_level
 from calculation.loadout_slot_search import FixedLoadoutSelection
 from calculation.search_controller import SearchJobInputs
 from gui_design.confirm_refresh import build_confirm_refresh_signature
@@ -72,11 +73,11 @@ class LoadoutState:
     extra_crit_rate: float = 0.0
     extra_crit_damage: float = 0.0
     enemy_defense: float = 100.0
-    weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 1, "", 1, "", 1)
+    weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
 
     def weapon_special_kwargs(self) -> dict[str, Any]:
         """武器特殊能力字段，供武器属性列与伤害快照使用。"""
-        t = self.weapon_specials
+        t = normalize_weapon_specials_tuple(self.weapon_specials)
         return {
             "sa1_name": t[0],
             "sa1_level": int(t[1]),
@@ -86,8 +87,10 @@ class LoadoutState:
             "sa3_level": int(t[5]),
             "ws_name": t[6],
             "ws_level": int(t[7]),
-            "ws2_name": t[8],
-            "ws2_level": int(t[9]),
+            "ws_stack": int(t[8]),
+            "ws2_name": t[9],
+            "ws2_level": int(t[10]),
+            "ws2_stack": int(t[11]),
         }
 
     def effective_skill_counts(self) -> dict[str, int]:
@@ -194,6 +197,30 @@ def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, Optional[s
     }
 
 
+def normalize_weapon_specials_tuple(raw: tuple[Any, ...]) -> tuple[Any, ...]:
+    """将旧版 10 元组迁移为 (技能/叠加)×2 + 三附加技能。"""
+    if len(raw) >= 12:
+        return tuple(raw[:12])
+    if len(raw) == 10:
+        ws_level, ws_stack = migrate_legacy_weapon_special_level(int(raw[7]))
+        ws2_level, ws2_stack = migrate_legacy_weapon_special_level(int(raw[9]))
+        return (
+            raw[0],
+            raw[1],
+            raw[2],
+            raw[3],
+            raw[4],
+            raw[5],
+            raw[6],
+            ws_level,
+            ws_stack,
+            raw[8],
+            ws2_level,
+            ws2_stack,
+        )
+    raise ValueError(f"weapon_specials 长度无效: {len(raw)}")
+
+
 def _weapon_specials_tuple(weapon_panel: Any) -> tuple[Any, ...]:
     return (
         weapon_panel.get_special_ability_1_name(),
@@ -204,8 +231,10 @@ def _weapon_specials_tuple(weapon_panel: Any) -> tuple[Any, ...]:
         weapon_panel.get_special_ability_3_level(),
         weapon_panel.get_weapon_special_name(),
         weapon_panel.get_weapon_special_level(),
+        weapon_panel.get_weapon_special_stack(),
         weapon_panel.get_weapon_special_2_name(),
         weapon_panel.get_weapon_special_2_level(),
+        weapon_panel.get_weapon_special_2_stack(),
     )
 
 

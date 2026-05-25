@@ -47,6 +47,14 @@ class TestFixedLoadoutIntegration(unittest.TestCase):
     def setUpClass(cls) -> None:
         if not ctk_available():
             raise unittest.SkipTest("需要可用的 CustomTkinter / Tcl")
+        import customtkinter as ctk
+
+        cls._root = ctk.CTk()
+        cls._root.withdraw()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._root.destroy()
 
     def setUp(self) -> None:
         import customtkinter as ctk
@@ -61,9 +69,7 @@ class TestFixedLoadoutIntegration(unittest.TestCase):
         self._refresh_slot_equipment_menu = refresh_slot_equipment_menu
         self._resolve_fixed_loadout_selection = resolve_fixed_loadout_selection
 
-        self.root = ctk.CTk()
-        self.root.withdraw()
-        self.frame = ctk.CTkFrame(self.root)
+        self.frame = ctk.CTkFrame(self._root)
         self.changes: list[str] = []
 
         def on_change() -> None:
@@ -77,7 +83,7 @@ class TestFixedLoadoutIntegration(unittest.TestCase):
         self.catalog = _sample_catalog()
 
     def tearDown(self) -> None:
-        self.root.destroy()
+        self.frame.destroy()
 
     def test_create_four_slots(self) -> None:
         self.assertEqual(set(self.slots.keys()), {"chest", "gloves", "accessory_a", "accessory_b"})

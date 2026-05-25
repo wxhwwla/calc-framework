@@ -165,14 +165,6 @@ class ChooseTypesStarsNamesLevels:
             self._build_advanced_params_container()
             assert self._advanced_body is not None
             self.special_ability_panel = SpecialAbilityPanel(self._advanced_body, self.my_font)
-            self._weapon_skill_preset_9_btn = ctk.CTkButton(
-                self._advanced_body,
-                text="武器技能9级",
-                font=self.my_font,
-                height=28,
-                command=lambda: self._apply_weapon_skill_preset(9),
-            )
-            self._weapon_skill_preset_9_btn.pack(fill="x", padx=10, pady=(0, 4))
 
     def _build_level_preset_buttons(self) -> None:
         """等级快捷预设：一键设置 80/90 级。"""
@@ -265,12 +257,12 @@ class ChooseTypesStarsNamesLevels:
                 panel._on_ability_3_change(float(clamped))
         if panel._weapon_special_available and panel._weapon_special_slider is not None:
             if str(panel._weapon_special_slider.cget("state")) != "disabled":
-                clamped = max(0, min(int(target_level), 9))
+                clamped = max(1, min(int(target_level), 9))
                 panel._weapon_special_slider.set(clamped)
                 panel._on_weapon_special_change(float(clamped))
         if panel._weapon_special_2_available and panel._weapon_special_2_slider is not None:
             if str(panel._weapon_special_2_slider.cget("state")) != "disabled":
-                clamped = max(0, min(int(target_level), 9))
+                clamped = max(1, min(int(target_level), 9))
                 panel._weapon_special_2_slider.set(clamped)
                 panel._on_weapon_special_2_change(float(clamped))
     
@@ -305,6 +297,15 @@ class ChooseTypesStarsNamesLevels:
                 command=lambda: self._apply_character_skill_preset(12),
             )
             self._skill_preset_12_btn.pack(fill="x", padx=10, pady=(0, 4))
+        else:
+            self._weapon_skill_preset_9_btn = ctk.CTkButton(
+                self._advanced_body,
+                text="武器技能9级",
+                font=self.my_font,
+                height=28,
+                command=lambda: self._apply_weapon_skill_preset(9),
+            )
+            self._weapon_skill_preset_9_btn.pack(fill="x", padx=10, pady=(0, 4))
         self._refresh_advanced_params_visibility()
 
     def _toggle_advanced_params(self) -> None:
@@ -618,10 +619,17 @@ class ChooseTypesStarsNamesLevels:
         return ""
 
     def get_weapon_special_level(self) -> int:
-        """获取武器「特殊能力1」字段等级；0 表示未启用。"""
+        """获取武器「特殊能力1」技能等级（1-9）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.weapon_special_level.get()
-            return int(level_str) if level_str.isdigit() else 0
+            return int(level_str) if level_str.isdigit() else 1
+        return 1
+
+    def get_weapon_special_stack(self) -> int:
+        """获取武器「特殊能力1」叠加层数。"""
+        if self.special_ability_panel:
+            stack_str = self.special_ability_panel.weapon_special_stack.get()
+            return int(stack_str) if stack_str.isdigit() else 0
         return 0
 
     def get_weapon_special_2_name(self) -> str:
@@ -631,10 +639,17 @@ class ChooseTypesStarsNamesLevels:
         return ""
 
     def get_weapon_special_2_level(self) -> int:
-        """获取武器「特殊能力2」等级；0 表示未启用。"""
+        """获取武器「特殊能力2」技能等级（1-9）。"""
         if self.special_ability_panel:
             level_str = self.special_ability_panel.weapon_special_2_level.get()
-            return int(level_str) if level_str.isdigit() else 0
+            return int(level_str) if level_str.isdigit() else 1
+        return 1
+
+    def get_weapon_special_2_stack(self) -> int:
+        """获取武器「特殊能力2」叠加层数。"""
+        if self.special_ability_panel:
+            stack_str = self.special_ability_panel.weapon_special_2_stack.get()
+            return int(stack_str) if stack_str.isdigit() else 0
         return 0
 
     def get_skill_1_level(self) -> int:

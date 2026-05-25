@@ -124,12 +124,16 @@ class SpecialAbilityPanel:
         self.current_special_ability_2_name: str = ""
         self.current_special_ability_3_name: str = ""
 
-        self.weapon_special_level: ctk.StringVar = ctk.StringVar(value="0")
-        self.weapon_special_2_level: ctk.StringVar = ctk.StringVar(value="0")
+        self.weapon_special_level: ctk.StringVar = ctk.StringVar(value="1")
+        self.weapon_special_stack: ctk.StringVar = ctk.StringVar(value="0")
+        self.weapon_special_2_level: ctk.StringVar = ctk.StringVar(value="1")
+        self.weapon_special_2_stack: ctk.StringVar = ctk.StringVar(value="0")
         self.current_weapon_special_name: str = ""
         self.current_weapon_special_2_name: str = ""
         self._weapon_special_available: bool = False
         self._weapon_special_2_available: bool = False
+        self._weapon_special_max_stack: int = 1
+        self._weapon_special_2_max_stack: int = 1
         self._bonus_rows_suppressed: bool = False
 
         self._ability_1_name_label: ctk.CTkLabel | None = None
@@ -152,10 +156,20 @@ class SpecialAbilityPanel:
         self._weapon_special_value_label: ctk.CTkLabel | None = None
         self._weapon_special_slider: ctk.CTkSlider | None = None
 
+        self._weapon_special_stack_name_label: ctk.CTkLabel | None = None
+        self._weapon_special_stack_frame: ctk.CTkFrame | None = None
+        self._weapon_special_stack_value_label: ctk.CTkLabel | None = None
+        self._weapon_special_stack_slider: ctk.CTkSlider | None = None
+
         self._weapon_special_2_name_label: ctk.CTkLabel | None = None
         self._weapon_special_2_frame: ctk.CTkFrame | None = None
         self._weapon_special_2_value_label: ctk.CTkLabel | None = None
         self._weapon_special_2_slider: ctk.CTkSlider | None = None
+
+        self._weapon_special_2_stack_name_label: ctk.CTkLabel | None = None
+        self._weapon_special_2_stack_frame: ctk.CTkFrame | None = None
+        self._weapon_special_2_stack_value_label: ctk.CTkLabel | None = None
+        self._weapon_special_2_stack_slider: ctk.CTkSlider | None = None
 
         self._build_gui()
 
@@ -228,19 +242,40 @@ class SpecialAbilityPanel:
         )
         self._weapon_special_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
         self._weapon_special_value_label = ctk.CTkLabel(
-            self._weapon_special_frame, text="0", font=self.my_font, width=30
+            self._weapon_special_frame, text="1", font=self.my_font, width=30
         )
         self._weapon_special_value_label.pack(side="right")
         self._weapon_special_slider = ctk.CTkSlider(
             self._weapon_special_frame,
-            from_=0,
+            from_=1,
             to=9,
-            number_of_steps=9,
+            number_of_steps=8,
             command=self._on_weapon_special_change,
             state="disabled",
         )
         self._weapon_special_slider.pack(side="left", fill="x", expand=True)
-        self._weapon_special_slider.set(0)
+        self._weapon_special_slider.set(1)
+
+        self._weapon_special_stack_name_label = ctk.CTkLabel(
+            self.parent_frame,
+            text=f"{self._WEAPON_SPECIAL_PREFIX[0]} 叠加",
+            font=self.my_font,
+        )
+        self._weapon_special_stack_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
+        self._weapon_special_stack_value_label = ctk.CTkLabel(
+            self._weapon_special_stack_frame, text="0", font=self.my_font, width=30
+        )
+        self._weapon_special_stack_value_label.pack(side="right")
+        self._weapon_special_stack_slider = ctk.CTkSlider(
+            self._weapon_special_stack_frame,
+            from_=0,
+            to=2,
+            number_of_steps=2,
+            command=self._on_weapon_special_stack_change,
+            state="disabled",
+        )
+        self._weapon_special_stack_slider.pack(side="left", fill="x", expand=True)
+        self._weapon_special_stack_slider.set(0)
 
         self._weapon_special_2_name_label = ctk.CTkLabel(
             self.parent_frame,
@@ -249,19 +284,40 @@ class SpecialAbilityPanel:
         )
         self._weapon_special_2_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
         self._weapon_special_2_value_label = ctk.CTkLabel(
-            self._weapon_special_2_frame, text="0", font=self.my_font, width=30
+            self._weapon_special_2_frame, text="1", font=self.my_font, width=30
         )
         self._weapon_special_2_value_label.pack(side="right")
         self._weapon_special_2_slider = ctk.CTkSlider(
             self._weapon_special_2_frame,
-            from_=0,
+            from_=1,
             to=9,
-            number_of_steps=9,
+            number_of_steps=8,
             command=self._on_weapon_special_2_change,
             state="disabled",
         )
         self._weapon_special_2_slider.pack(side="left", fill="x", expand=True)
-        self._weapon_special_2_slider.set(0)
+        self._weapon_special_2_slider.set(1)
+
+        self._weapon_special_2_stack_name_label = ctk.CTkLabel(
+            self.parent_frame,
+            text=f"{self._WEAPON_SPECIAL_PREFIX[1]} 叠加",
+            font=self.my_font,
+        )
+        self._weapon_special_2_stack_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
+        self._weapon_special_2_stack_value_label = ctk.CTkLabel(
+            self._weapon_special_2_stack_frame, text="0", font=self.my_font, width=30
+        )
+        self._weapon_special_2_stack_value_label.pack(side="right")
+        self._weapon_special_2_stack_slider = ctk.CTkSlider(
+            self._weapon_special_2_stack_frame,
+            from_=0,
+            to=2,
+            number_of_steps=2,
+            command=self._on_weapon_special_2_stack_change,
+            state="disabled",
+        )
+        self._weapon_special_2_stack_slider.pack(side="left", fill="x", expand=True)
+        self._weapon_special_2_stack_slider.set(0)
 
         self._apply_layout()
 
@@ -283,12 +339,22 @@ class SpecialAbilityPanel:
             (
                 self._weapon_special_name_label,
                 self._weapon_special_frame,
-                True,
+                self._weapon_special_available,
+            ),
+            (
+                self._weapon_special_stack_name_label,
+                self._weapon_special_stack_frame,
+                self._weapon_special_available and self._weapon_special_max_stack > 1,
             ),
             (
                 self._weapon_special_2_name_label,
                 self._weapon_special_2_frame,
-                True,
+                self._weapon_special_2_available,
+            ),
+            (
+                self._weapon_special_2_stack_name_label,
+                self._weapon_special_2_stack_frame,
+                self._weapon_special_2_available and self._weapon_special_2_max_stack > 1,
             ),
         ]
         for name_lbl, frame, _ in rows:
@@ -332,6 +398,14 @@ class SpecialAbilityPanel:
             self._weapon_special_value_label.configure(text=str(level))
         self.weapon_special_level.set(str(level))
 
+    def _on_weapon_special_stack_change(self, value: float) -> None:
+        if not self._weapon_special_available or self._weapon_special_max_stack <= 1:
+            return
+        stack = int(value)
+        if self._weapon_special_stack_value_label:
+            self._weapon_special_stack_value_label.configure(text=str(stack))
+        self.weapon_special_stack.set(str(stack))
+
     def _on_weapon_special_2_change(self, value: float) -> None:
         if not self._weapon_special_2_available:
             return
@@ -340,12 +414,20 @@ class SpecialAbilityPanel:
             self._weapon_special_2_value_label.configure(text=str(level))
         self.weapon_special_2_level.set(str(level))
 
+    def _on_weapon_special_2_stack_change(self, value: float) -> None:
+        if not self._weapon_special_2_available or self._weapon_special_2_max_stack <= 1:
+            return
+        stack = int(value)
+        if self._weapon_special_2_stack_value_label:
+            self._weapon_special_2_stack_value_label.configure(text=str(stack))
+        self.weapon_special_2_stack.set(str(stack))
+
     def refresh(self, weapon_data: Dict[str, Any]) -> None:
         """根据武器数据刷新面板。"""
         bonus_attrs = self._extract_bonus_attributes(weapon_data)
         slots = read_weapon_special_slots(weapon_data)
-        sa_available, sa_name = slots[0][0], slots[0][1]
-        sa2_available, sa2_name = slots[1][0], slots[1][1]
+        sa_available, sa_name, _, sa_max_stack = slots[0]
+        sa2_available, sa2_name, _, sa2_max_stack = slots[1]
 
         if len(bonus_attrs) >= 1:
             self.current_special_ability_1_name = bonus_attrs[0]
@@ -368,26 +450,38 @@ class SpecialAbilityPanel:
 
         self._weapon_special_available = sa_available
         self.current_weapon_special_name = sa_name if sa_available else ""
+        self._weapon_special_max_stack = sa_max_stack if sa_available else 1
         self._configure_weapon_special_row(
             1,
             sa_available,
             sa_name,
+            sa_max_stack,
             self._weapon_special_name_label,
             self._weapon_special_value_label,
             self._weapon_special_slider,
             self.weapon_special_level,
+            self._weapon_special_stack_name_label,
+            self._weapon_special_stack_value_label,
+            self._weapon_special_stack_slider,
+            self.weapon_special_stack,
         )
 
         self._weapon_special_2_available = sa2_available
         self.current_weapon_special_2_name = sa2_name if sa2_available else ""
+        self._weapon_special_2_max_stack = sa2_max_stack if sa2_available else 1
         self._configure_weapon_special_row(
             2,
             sa2_available,
             sa2_name,
+            sa2_max_stack,
             self._weapon_special_2_name_label,
             self._weapon_special_2_value_label,
             self._weapon_special_2_slider,
             self.weapon_special_2_level,
+            self._weapon_special_2_stack_name_label,
+            self._weapon_special_2_stack_value_label,
+            self._weapon_special_2_stack_slider,
+            self.weapon_special_2_stack,
         )
         for lbl in (
             self._ability_1_name_label,
@@ -469,31 +563,61 @@ class SpecialAbilityPanel:
         index: int,
         available: bool,
         name: str,
+        max_stack: int,
         name_label: ctk.CTkLabel | None,
         value_label: ctk.CTkLabel | None,
         slider: ctk.CTkSlider | None,
         level_var: ctk.StringVar,
+        stack_name_label: ctk.CTkLabel | None,
+        stack_value_label: ctk.CTkLabel | None,
+        stack_slider: ctk.CTkSlider | None,
+        stack_var: ctk.StringVar,
     ) -> None:
         prefix = self._WEAPON_SPECIAL_PREFIX[index - 1]
         if available and name:
             display_name = extract_effect_display_name(name)
             if name_label:
                 name_label.configure(text=format_weapon_skill_title(prefix, display_name))
+            if stack_name_label:
+                stack_name_label.configure(text=f"{prefix} 叠加")
             if value_label:
-                value_label.configure(text="0")
+                value_label.configure(text="1")
+            if stack_value_label:
+                stack_value_label.configure(text="0")
             if slider:
-                slider.configure(state="normal")
-                slider.set(0)
-            level_var.set("0")
+                slider.configure(state="normal", from_=1, to=9, number_of_steps=8)
+                slider.set(1)
+            if stack_slider:
+                if max_stack > 1:
+                    stack_slider.configure(
+                        state="normal",
+                        from_=0,
+                        to=max_stack,
+                        number_of_steps=max_stack,
+                    )
+                    stack_slider.set(0)
+                else:
+                    stack_slider.configure(state="disabled")
+                    stack_slider.set(0)
+            level_var.set("1")
+            stack_var.set("0")
         else:
             if name_label:
                 name_label.configure(text=format_weapon_skill_title(prefix))
+            if stack_name_label:
+                stack_name_label.configure(text=f"{prefix} 叠加")
             if value_label:
                 value_label.configure(text="0")
+            if stack_value_label:
+                stack_value_label.configure(text="0")
             if slider:
                 slider.configure(state="disabled")
-                slider.set(0)
-            level_var.set("0")
+                slider.set(1)
+            if stack_slider:
+                stack_slider.configure(state="disabled")
+                stack_slider.set(0)
+            level_var.set("1")
+            stack_var.set("0")
 
     def hide(self) -> None:
         """隐藏前两条附加属性（第三与特殊能力区仍占位）。"""

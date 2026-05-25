@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "1.18.2"
+_VERSION = "1.18.3"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,13 +209,30 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 24 处文件
 # BODY:
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
-# - 更新文档 CONTEXT.md
-# - 修改 endfield_damage_calculator/calculation/inverse.py
-# - 修改 endfield_damage_calculator/calculation/multi_skill_optimizer.py
-# - 修改 endfield_damage_calculator/data/loader.py
-# - 修改 endfield_damage_calculator/gui_design/gui.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_zone.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/attribute_zone.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/final_attack_zone.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/add_weapon.py
+# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/special_fields.py
+# - 更新 weapons.json 武器数据
+# - 修改 endfield_damage_calculator/gui_design/damage_snapshot.py
+# - 修改 endfield_damage_calculator/gui_design/display_lines.py
+# - 修改 endfield_damage_calculator/gui_design/display_view.py
+# - 修改 endfield_damage_calculator/gui_design/loadout_state.py
+# - 修改 endfield_damage_calculator/gui_design/selection_components.py
+# - 修改 endfield_damage_calculator/gui_design/selection_panel.py
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/scripts/seed_weapons.py
+# - 修改 endfield_damage_calculator/tests/gui_fixtures.py
+# - 修改 endfield_damage_calculator/tests/test_fixed_loadout_integration.py
+# - 修改 endfield_damage_calculator/tests/test_game_data_contract.py
+# - 修改 endfield_damage_calculator/tests/test_loadout_state.py
+# - 修改 endfield_damage_calculator/tests/test_weapon_panel_layout.py
+# - 修改 endfield_damage_calculator/tests/test_weapon_special_fields.py
+# - 修改 endfield_damage_calculator/tests/test_weapon_special_stack_layers.py
+# - 变更 endfield_damage_calculator/ui_preferences.json
+# - 修改 tools/bwiki_scout/weapon_wiki.py
 # --- END UPLOAD_SUMMARY ---

@@ -37,7 +37,7 @@ class TestFormatWeaponSkillSliderValue(unittest.TestCase):
     def test_inactive_skill_shows_zero_like_weapon_special(self):
         self.assertEqual(format_weapon_skill_slider_value(active=False), "0")
 
-    def test_active_skill_shows_level(self):
+    def test_active_skill_shows_plain_level(self):
         self.assertEqual(format_weapon_skill_slider_value(active=True, level=3), "3")
 
 

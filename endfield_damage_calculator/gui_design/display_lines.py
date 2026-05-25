@@ -216,9 +216,11 @@ def build_weapon_attribute_lines(
     sa3_name: str = "",
     sa3_level: int = 0,
     ws_name: str = "",
-    ws_level: int = 0,
+    ws_level: int = 1,
+    ws_stack: int = 1,
     ws2_name: str = "",
-    ws2_level: int = 0,
+    ws2_level: int = 1,
+    ws2_stack: int = 1,
 ) -> list[str]:
     """构建武器属性列展示明细（不含摘要）。"""
     if not weapon_data:
@@ -255,14 +257,18 @@ def build_weapon_attribute_lines(
         get_special_value_at_level,
     )
 
-    for slot_idx, pick_level, pick_name, label in (
-        (0, ws_level, ws_name, "特殊能力1"),
-        (1, ws2_level, ws2_name, "特殊能力2"),
+    for slot_idx, pick_level, pick_stack, pick_name, label in (
+        (0, ws_level, ws_stack, ws_name, "特殊能力1"),
+        (1, ws2_level, ws2_stack, ws2_name, "特殊能力2"),
     ):
         if not pick_name or pick_name in bonus_attrs:
             continue
         raw_value = get_special_value_at_level(
-            weapon_data, slot_idx, name=pick_name, level=pick_level
+            weapon_data,
+            slot_idx,
+            name=pick_name,
+            level=pick_level,
+            stack_count=pick_stack,
         )
         display_value = "0%"
         if raw_value is not None:
@@ -357,9 +363,11 @@ def build_single_hit_damage_lines(
     sa3_name: str = "",
     sa3_level: int = 0,
     ws_name: str = "",
-    ws_level: int = 0,
+    ws_level: int = 1,
+    ws_stack: int = 1,
     ws2_name: str = "",
-    ws2_level: int = 0,
+    ws2_level: int = 1,
+    ws2_stack: int = 1,
     enemy_defense: float = 100.0,
 ) -> list[str]:
     """构建单段伤害计算模式的展示行（带结果缓存）。"""
@@ -395,8 +403,10 @@ def build_single_hit_damage_lines(
             sa3_level=sa3_level,
             ws_name=ws_name,
             ws_level=ws_level,
+            ws_stack=ws_stack,
             ws2_name=ws2_name,
             ws2_level=ws2_level,
+            ws2_stack=ws2_stack,
             enemy_defense=enemy_defense,
         )
 
@@ -421,9 +431,11 @@ def _build_single_hit_damage_lines_impl(
     sa3_name: str = "",
     sa3_level: int = 0,
     ws_name: str = "",
-    ws_level: int = 0,
+    ws_level: int = 1,
+    ws_stack: int = 1,
     ws2_name: str = "",
-    ws2_level: int = 0,
+    ws2_level: int = 1,
+    ws2_stack: int = 1,
     enemy_defense: float = 100.0,
 ) -> list[str]:
     skill_label, skill_multiplier, skill_warning = resolve_selected_skill_for_damage(
@@ -445,8 +457,10 @@ def _build_single_hit_damage_lines_impl(
         sa3_level=sa3_level,
         ws_name=ws_name,
         ws_level=ws_level,
+        ws_stack=ws_stack,
         ws2_name=ws2_name,
         ws2_level=ws2_level,
+        ws2_stack=ws2_stack,
         trust_level=trust_level,
     )
     result = calculate_single_hit_damage(

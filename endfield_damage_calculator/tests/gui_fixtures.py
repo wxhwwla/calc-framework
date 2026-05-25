@@ -99,12 +99,18 @@ class MockSelectionPanel:
         return ""
 
     def get_weapon_special_level(self) -> int:
+        return 1
+
+    def get_weapon_special_stack(self) -> int:
         return 0
 
     def get_weapon_special_2_name(self) -> str:
         return ""
 
     def get_weapon_special_2_level(self) -> int:
+        return 1
+
+    def get_weapon_special_2_stack(self) -> int:
         return 0
 
     def _refresh_advanced_params_visibility(self) -> None:

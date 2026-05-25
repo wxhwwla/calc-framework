@@ -206,9 +206,11 @@ def calculate_attribute_zones_with_details(
     sa3_name: str = "",
     sa3_level: int = 0,
     ws_name: str = "",
-    ws_level: int = 0,
+    ws_level: int = 1,
+    ws_stack: int = 1,
     ws2_name: str = "",
-    ws2_level: int = 0,
+    ws2_level: int = 1,
+    ws2_stack: int = 1,
     trust_level: int = 0
 ) -> Dict[str, Dict[str, float]]:
     """
@@ -310,8 +312,10 @@ def calculate_attribute_zones_with_details(
                 weapon,
                 ws_name=ws_name,
                 ws_level=ws_level,
+                ws_stack=ws_stack,
                 ws2_name=ws2_name,
                 ws2_level=ws2_level,
+                ws2_stack=ws2_stack,
                 main_attr=main_attr,
                 sub_attr=sub_attr,
             )

@@ -76,9 +76,11 @@ def build_damage_snapshot(
     sa3_name: str = "",
     sa3_level: int = 0,
     ws_name: str = "",
-    ws_level: int = 0,
+    ws_level: int = 1,
+    ws_stack: int = 1,
     ws2_name: str = "",
-    ws2_level: int = 0,
+    ws2_level: int = 1,
+    ws2_stack: int = 1,
     enemy_defense: float = 100.0,
 ) -> DamageSnapshot:
     """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。"""
@@ -109,8 +111,10 @@ def build_damage_snapshot(
         sa3_level=sa3_level,
         ws_name=ws_name,
         ws_level=ws_level,
+        ws_stack=ws_stack,
         ws2_name=ws2_name,
         ws2_level=ws2_level,
+        ws2_stack=ws2_stack,
     )
     final_attack = float(final["final_attack"])
 

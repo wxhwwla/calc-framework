@@ -36,9 +36,11 @@ class WeaponBonusSelection:
     sa3_name: str = ""
     sa3_level: int = 0
     ws_name: str = ""
-    ws_level: int = 0
+    ws_level: int = 1
+    ws_stack: int = 0
     ws2_name: str = ""
-    ws2_level: int = 0
+    ws2_level: int = 1
+    ws2_stack: int = 0
 
 
 @dataclass(frozen=True)
@@ -85,8 +87,10 @@ def compute_multiplicative_zone_snapshot(
         sa3_level=b.sa3_level,
         ws_name=b.ws_name,
         ws_level=b.ws_level,
+        ws_stack=b.ws_stack,
         ws2_name=b.ws2_name,
         ws2_level=b.ws2_level,
+        ws2_stack=b.ws2_stack,
         trust_level=selection.trust_level,
     )
     for attr_name in ATTR_DISPLAY_ORDER:
@@ -112,8 +116,10 @@ def compute_multiplicative_zone_snapshot(
         sa3_level=b.sa3_level,
         ws_name=b.ws_name,
         ws_level=b.ws_level,
+        ws_stack=b.ws_stack,
         ws2_name=b.ws2_name,
         ws2_level=b.ws2_level,
+        ws2_stack=b.ws2_stack,
         trust_level=selection.trust_level,
     )
     main_attr = ability["main_attr"]
@@ -141,8 +147,10 @@ def compute_multiplicative_zone_snapshot(
         sa3_level=b.sa3_level,
         ws_name=b.ws_name,
         ws_level=b.ws_level,
+        ws_stack=b.ws_stack,
         ws2_name=b.ws2_name,
         ws2_level=b.ws2_level,
+        ws2_stack=b.ws2_stack,
         trust_level=selection.trust_level,
     )
     lines.append(

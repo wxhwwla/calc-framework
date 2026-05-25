@@ -31,8 +31,10 @@ def _assert_special_ability(entry_name: str, field: list) -> None:
         raise AssertionError(f"{entry_name}: 特殊能力 格式无效")
     if field[0] is not True:
         raise AssertionError(f"{entry_name}: 特殊能力 未启用时应为 [False]")
-    if len(field) != 3:
-        raise AssertionError(f"{entry_name}: 启用的特殊能力应为 [True, 名称, 曲线]")
+    if len(field) not in (3, 4):
+        raise AssertionError(f"{entry_name}: 启用的特殊能力应为 [True, 名称, 曲线] 或含 max_stack")
+    if len(field) == 4 and not isinstance(field[3], int):
+        raise AssertionError(f"{entry_name}: 特殊能力 max_stack 应为整数")
     if not isinstance(field[1], str) or not field[1]:
         raise AssertionError(f"{entry_name}: 特殊能力名称无效")
     curve = field[2]

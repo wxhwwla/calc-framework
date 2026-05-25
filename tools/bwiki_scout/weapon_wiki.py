@@ -33,6 +33,7 @@ _RARITY_STAR: dict[str, int] = {
 _ATTR_KEY_RE = re.compile(r"^(.+?)\+")
 _RANK_RE = re.compile(r"^词条(\d)(?:副(\d))?rank(\d)$")
 _FLOAT_RE = re.compile(r"[\d.]+")
+_MAX_STACK_RE = re.compile(r"最多(?:可)?叠加(\d+)层")
 
 
 def _parse_float(text: str | None) -> float | None:
@@ -72,6 +73,14 @@ def _slot3_conditional_attr_key(p: dict[str, str], sub: str) -> str:
     return raw if raw.endswith("+") else raw + "+"
 
 
+def _parse_max_stack_from_text(text: str) -> int:
+    """从 Wiki 条件描述解析最大叠加层数。"""
+    match = _MAX_STACK_RE.search(text or "")
+    if match:
+        return max(1, int(match.group(1)))
+    return 1
+
+
 def _fit_conditional_special(rank_curves: dict[str, list[float]], p: dict[str, str], sub: str) -> dict[str, Any] | None:
     gkey = f"3_{sub}"
     if gkey not in rank_curves:
@@ -80,9 +89,11 @@ def _fit_conditional_special(rank_curves: dict[str, list[float]], p: dict[str, s
     if not name:
         return None
     fitted = fit_bonus_params_from_rank_curve(rank_curves[gkey])
+    raw_text = (p.get(f"词条3副{sub}内容") or "").strip()
+    max_stack = _parse_max_stack_from_text(raw_text)
     if "curve" in fitted:
-        return {"enabled": True, "name": name, "curve": fitted["curve"]}
-    return {"enabled": True, "name": name, **fitted}
+        return {"enabled": True, "name": name, "curve": fitted["curve"], "max_stack": max_stack}
+    return {"enabled": True, "name": name, "max_stack": max_stack, **fitted}
 
 
 def split_slot3_weapon_effects(
