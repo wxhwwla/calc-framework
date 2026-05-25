@@ -90,7 +90,20 @@ class TestLoadoutEvaluation(unittest.TestCase):
             use_manual_multi_skill_counts=False,
             manual_counts={"战技": 1, "连携技": 0, "终结技": 0},
             enemy_defense=80.0,
-            weapon_specials=("", 0) * 5,
+            weapon_specials=(
+                "攻击力+",
+                1,
+                "",
+                1,
+                "",
+                0,
+                "施放战技后，法术伤害+",
+                1,
+                1,
+                "",
+                1,
+                0,
+            ),
         )
         catalog = {"chest": [], "gloves": [], "accessories": [{"名称": "x"}]}
         mock_preview.return_value = ["line"]
@@ -102,6 +115,11 @@ class TestLoadoutEvaluation(unittest.TestCase):
             mock_preview.call_args.kwargs["preview_equipment_catalog"], catalog
         )
         self.assertEqual(mock_preview.call_args.kwargs["enemy_defense"], 80.0)
+        self.assertEqual(mock_preview.call_args.kwargs["normal_skill_1_name"], "攻击力+")
+        self.assertEqual(
+            mock_preview.call_args.kwargs["special_skill_1_name"],
+            "施放战技后，法术伤害+",
+        )
 
 
 if __name__ == "__main__":

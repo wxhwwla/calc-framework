@@ -53,6 +53,29 @@ class TestZoneSnapshot(unittest.TestCase):
         self.assertTrue(any(t.startswith("最终攻击力:") for t in texts))
         self.assertTrue(any(t.startswith("力量:") for t in texts))
 
+    def test_snapshot_accepts_new_bonus_selection_names(self):
+        char = _load_by_name(_CHARACTERS_JSON, "秋栗")
+        weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
+        lines = compute_multiplicative_zone_snapshot(
+            MultiplicativeZoneSelection(
+                character=char,
+                weapon=weapon,
+                char_level=1,
+                weapon_level=1,
+                bonuses=WeaponBonusSelection(
+                    normal_skill_1_name="智识+",
+                    normal_skill_1_level=9,
+                    normal_skill_2_name="终结技充能效率+",
+                    normal_skill_2_level=9,
+                    special_skill_1_name="源石技艺强度+",
+                    special_skill_1_level=9,
+                    special_skill_1_stack=0,
+                ),
+            )
+        )
+        texts = [line.text for line in lines]
+        self.assertTrue(any(t.startswith("最终攻击力:") for t in texts))
+
 
 if __name__ == "__main__":
     unittest.main()

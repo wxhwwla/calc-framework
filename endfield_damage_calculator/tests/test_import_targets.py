@@ -121,13 +121,12 @@ class TestImportTargets(unittest.TestCase):
         self.assertEqual(jet["类型"], "长柄武器")
         self.assertEqual(len(jet["基础攻击力"]), 90)
         self.assertEqual(len(jet["等级"]), 90)
-        self.assertIn("法术伤害+", jet)
-        sa1 = jet.get("特殊能力1") or []
-        sa2 = jet.get("特殊能力2") or []
-        self.assertTrue(sa1[0])
-        self.assertEqual(sa1[1], "施放战技后，法术伤害+")
-        self.assertTrue(sa2[0])
-        self.assertEqual(sa2[1], "施放连携技后，法术伤害+")
+        normal = jet.get("normal_skills") or []
+        special = jet.get("special_skills") or []
+        self.assertTrue(any(item.get("effect") == "法术伤害+" for item in normal))
+        self.assertGreaterEqual(len(special), 2)
+        self.assertEqual(special[0].get("name"), "施放战技后，法术伤害+")
+        self.assertEqual(special[1].get("name"), "施放连携技后，法术伤害+")
 
 
 if __name__ == "__main__":

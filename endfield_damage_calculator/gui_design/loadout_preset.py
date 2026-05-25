@@ -8,7 +8,12 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
-PRESET_SCHEMA = "endfield_loadout_preset_v1"
+from character_weapon_equipment.weapon_data.special_fields import (
+    migrate_legacy_weapon_special_level,
+)
+
+PRESET_SCHEMA = "endfield_loadout_preset_v2"
+LEGACY_PRESET_SCHEMA = "endfield_loadout_preset_v1"
 BATCH_PRESET_SCHEMA = "endfield_loadout_preset_batch_v1"
 
 
@@ -32,6 +37,8 @@ class LoadoutPreset:
     fixed_equipment_names: dict[str, Optional[str]]
     multi_skill_counts: dict[str, int]
     use_manual_multi_skill_counts: bool
+    weapon_normal_levels: list[int] = field(default_factory=list)
+    weapon_special_states: list[dict[str, int]] = field(default_factory=list)
     physical_abnormal_counts: dict[str, int] = field(default_factory=dict)
     spell_abnormal_counts: dict[str, int] = field(default_factory=dict)
     damage_component_mode: str = "skill_and_abnormal"
@@ -57,6 +64,11 @@ class LoadoutPreset:
             "fixed_equipment_names": dict(self.fixed_equipment_names),
             "multi_skill_counts": dict(self.multi_skill_counts),
             "use_manual_multi_skill_counts": self.use_manual_multi_skill_counts,
+            "weapon_normal_levels": [int(v) for v in self.weapon_normal_levels],
+            "weapon_special_states": [
+                {"level": int(s.get("level", 1)), "stack": max(0, int(s.get("stack", 0)))}
+                for s in self.weapon_special_states
+            ],
             "physical_abnormal_counts": dict(self.physical_abnormal_counts),
             "spell_abnormal_counts": dict(self.spell_abnormal_counts),
             "damage_component_mode": self.damage_component_mode,
@@ -70,12 +82,15 @@ class LoadoutPreset:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "LoadoutPreset":
-        if data.get("schema") != PRESET_SCHEMA:
+        schema = str(data.get("schema", ""))
+        if schema not in {PRESET_SCHEMA, LEGACY_PRESET_SCHEMA}:
             raise ValueError(f"不支持的预设格式: {data.get('schema')}")
         fixed = data.get("fixed_equipment_names") or {}
         counts = data.get("multi_skill_counts") or {}
         abnormal_counts = data.get("physical_abnormal_counts") or {}
         spell_abnormal_counts = data.get("spell_abnormal_counts") or {}
+        weapon_normal_levels = data.get("weapon_normal_levels") or []
+        weapon_special_states = data.get("weapon_special_states") or []
         parsed_counts: dict[str, int] = {}
         for key, value in counts.items():
             parsed_counts[str(key)] = max(0, int(value))
@@ -89,6 +104,45 @@ class LoadoutPreset:
             parsed_counts.setdefault("战技", int(counts.get("战技", 0)))
             parsed_counts.setdefault("连携技", int(counts.get("连携技", 0)))
             parsed_counts.setdefault("终结技", int(counts.get("终结技", 0)))
+        parsed_normal_levels = [max(0, int(v)) for v in weapon_normal_levels]
+        if not parsed_normal_levels:
+            legacy_normal_levels = [
+                int(data.get("special_ability_1_level", 0) or 0),
+                int(data.get("special_ability_2_level", 0) or 0),
+                int(data.get("special_ability_3_level", 0) or 0),
+            ]
+            parsed_normal_levels = [v for v in legacy_normal_levels if v > 0]
+        parsed_special_states: list[dict[str, int]] = []
+        for item in weapon_special_states:
+            if not isinstance(item, dict):
+                continue
+            parsed_special_states.append(
+                {
+                    "level": max(1, int(item.get("level", 1))),
+                    "stack": max(0, int(item.get("stack", 0))),
+                }
+            )
+        if not parsed_special_states:
+            ws_level, ws_stack = migrate_legacy_weapon_special_level(
+                int(data.get("ws_level", 0) or 0),
+                ws_stack=(
+                    int(data["ws_stack"]) if "ws_stack" in data and data.get("ws_stack") is not None else None
+                ),
+            )
+            if int(data.get("ws_level", 0) or 0) > 0 or (
+                "ws_stack" in data and int(data.get("ws_stack", 0) or 0) > 0
+            ):
+                parsed_special_states.append({"level": ws_level, "stack": ws_stack})
+            ws2_level, ws2_stack = migrate_legacy_weapon_special_level(
+                int(data.get("ws2_level", 0) or 0),
+                ws_stack=(
+                    int(data["ws2_stack"]) if "ws2_stack" in data and data.get("ws2_stack") is not None else None
+                ),
+            )
+            if int(data.get("ws2_level", 0) or 0) > 0 or (
+                "ws2_stack" in data and int(data.get("ws2_stack", 0) or 0) > 0
+            ):
+                parsed_special_states.append({"level": ws2_level, "stack": ws2_stack})
         levels = data.get("skill_levels") or [0, 0, 0]
         return cls(
             char_name=str(data.get("char_name", "")),
@@ -114,6 +168,8 @@ class LoadoutPreset:
             use_manual_multi_skill_counts=bool(
                 data.get("use_manual_multi_skill_counts", False)
             ),
+            weapon_normal_levels=parsed_normal_levels,
+            weapon_special_states=parsed_special_states,
             physical_abnormal_counts=parsed_abnormal_counts,
             spell_abnormal_counts=parsed_spell_abnormal_counts,
             damage_component_mode=str(data.get("damage_component_mode", "skill_and_abnormal")),

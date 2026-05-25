@@ -72,6 +72,26 @@ def read_weapon_special_slots(
 
     若仅有旧字段 ``特殊能力``，视为 ``特殊能力1``。
     """
+    special_raw = weapon.get("special_skills")
+    if isinstance(special_raw, list):
+        slots: list[tuple[bool, str, list[float], int]] = []
+        for idx in range(2):
+            if idx >= len(special_raw) or not isinstance(special_raw[idx], dict):
+                slots.append((False, "", [], 1))
+                continue
+            item = special_raw[idx]
+            name = str(item.get("name", "")).strip()
+            effect = str(item.get("effect", "")).strip()
+            curve = item.get("curve")
+            max_stack = max(1, int(item.get("max_stack", 1)))
+            if not name and effect:
+                name = effect
+            if not isinstance(curve, list) or not curve:
+                slots.append((False, "", [], 1))
+                continue
+            slots.append((True, name, [float(v) for v in curve], max_stack))
+        return slots
+
     slots: list[tuple[bool, str, list[float], int]] = []
     for key in SPECIAL_FIELD_KEYS:
         if key in weapon:
@@ -88,6 +108,36 @@ def write_weapon_special_slots(
     slots: list[tuple[bool, str, list[float], int] | tuple[bool, str, list[float]]],
 ) -> None:
     """写入 ``特殊能力1`` / ``特殊能力2``，并移除旧 ``特殊能力`` 键。"""
+    if isinstance(weapon.get("special_skills"), list):
+        existing = weapon.get("special_skills") or []
+        out: list[dict[str, Any]] = []
+        for idx in range(2):
+            enabled, name, curve, max_stack = False, "", [], 1
+            if idx < len(slots):
+                slot = slots[idx]
+                enabled, name, curve = slot[0], slot[1], slot[2]
+                max_stack = int(slot[3]) if len(slot) > 3 else 1
+            if not enabled or not name or not curve:
+                continue
+            old = existing[idx] if idx < len(existing) and isinstance(existing[idx], dict) else {}
+            condition = str(old.get("condition", ""))
+            effect = str(old.get("effect", "")) or _extract_effect_name_from_special_name(name)
+            out.append(
+                {
+                    "zone": int(old.get("zone", 3)),
+                    "name": name,
+                    "condition": condition,
+                    "effect": effect,
+                    "curve": [float(v) for v in curve],
+                    "max_stack": max(1, max_stack),
+                }
+            )
+        weapon["special_skills"] = out
+        for key in SPECIAL_FIELD_KEYS:
+            weapon.pop(key, None)
+        weapon.pop(LEGACY_SPECIAL_KEY, None)
+        return
+
     for idx, key in enumerate(SPECIAL_FIELD_KEYS):
         enabled, name, curve, max_stack = False, "", [], 1
         if idx < len(slots):
@@ -110,6 +160,18 @@ def weapon_special_field_keys(weapon: dict[str, Any]) -> frozenset[str]:
 
 def bonus_attribute_keys(weapon: dict[str, Any]) -> list[str]:
     """``基础攻击力`` 与特殊能力字段之间的 ``xxx+`` 附加属性键（保持 JSON 顺序）。"""
+    normal_raw = weapon.get("normal_skills")
+    if isinstance(normal_raw, list):
+        out: list[str] = []
+        for item in normal_raw:
+            if not isinstance(item, dict):
+                continue
+            effect = str(item.get("effect", "")).strip()
+            curve = item.get("curve")
+            if effect and isinstance(curve, list):
+                out.append(effect)
+        return out
+
     keys = list(weapon.keys())
     try:
         start = keys.index("基础攻击力") + 1
@@ -127,6 +189,18 @@ def bonus_attribute_keys(weapon: dict[str, Any]) -> list[str]:
 
 def bonus_curve_for_key(weapon: dict[str, Any], attr_key: str) -> list[float]:
     """读取附加属性 ``xxx+`` 的层数曲线。"""
+    normal_raw = weapon.get("normal_skills")
+    if isinstance(normal_raw, list):
+        for item in normal_raw:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("effect", "")).strip() != attr_key:
+                continue
+            curve = item.get("curve")
+            if isinstance(curve, list):
+                return [float(v) for v in curve]
+        return []
+
     raw = weapon.get(attr_key)
     if not isinstance(raw, list):
         return []
@@ -163,6 +237,14 @@ def _split_special_name(raw_name: str) -> tuple[str, str]:
             condition = condition[: -len(marker)].strip("，。；:：, ")
             break
     return condition, effect
+
+
+def _special_name_matches(pick_name: str, special_name: str, special_effect: str = "") -> bool:
+    """特殊技能名称匹配：支持完整名称与词条名互认。"""
+    pick = (pick_name or "").strip()
+    name = (special_name or "").strip()
+    effect = (special_effect or "").strip() or _extract_effect_name_from_special_name(name)
+    return bool(pick and (pick == name or pick == effect))
 
 
 def read_weapon_skills_schema(weapon: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
@@ -278,6 +360,52 @@ def write_weapon_skills_schema(
     ]
 
 
+def migrate_weapon_record_to_skill_schema(weapon: dict[str, Any]) -> bool:
+    """
+    将单条武器记录迁移为 ``normal_skills`` / ``special_skills`` 结构。
+
+    返回值：
+    - ``True``: 记录被改写
+    - ``False``: 记录已是新结构且无需改动
+    """
+    keys = list(weapon.keys())
+    old_bonus_keys: list[str] = []
+    try:
+        start = keys.index("基础攻击力") + 1
+    except ValueError:
+        start = len(keys)
+    for key in keys[start:]:
+        if key in weapon_special_field_keys(weapon):
+            break
+        if key.endswith("+") and isinstance(weapon.get(key), list):
+            old_bonus_keys.append(key)
+    old_special_keys = [key for key in weapon_special_field_keys(weapon) if key in weapon]
+    has_new_schema = isinstance(weapon.get("normal_skills"), list) and isinstance(
+        weapon.get("special_skills"), list
+    )
+    needs_migration = bool(old_bonus_keys or old_special_keys or not has_new_schema)
+    if not needs_migration:
+        return False
+    schema = read_weapon_skills_schema(weapon)
+    write_weapon_skills_schema(
+        weapon,
+        normal_skills=schema["normal_skills"],
+        special_skills=schema["special_skills"],
+    )
+    return True
+
+
+def migrate_weapon_records_to_skill_schema(
+    weapons: list[dict[str, Any]],
+) -> list[str]:
+    """批量迁移武器记录，返回发生变更的武器名称列表。"""
+    changed_names: list[str] = []
+    for weapon in weapons:
+        if migrate_weapon_record_to_skill_schema(weapon):
+            changed_names.append(str(weapon.get("名称", "")))
+    return changed_names
+
+
 def special_pick_bonus(
     curve: list[float],
     max_stack: int,
@@ -322,7 +450,7 @@ def apply_conditional_special_to_stats(
         if pick_level <= 0 or not pick_name:
             continue
         enabled, sa_name, curve, max_stack = read_weapon_special_slots(weapon)[slot_idx]
-        if not enabled or sa_name != pick_name or not curve:
+        if not enabled or not _special_name_matches(pick_name, sa_name) or not curve:
             continue
         value = special_pick_bonus(
             curve, max_stack, skill_level=pick_level, stack_count=pick_stack
@@ -382,7 +510,7 @@ def add_special_picks_attack_percent(
         if pick_level <= 0 or not pick_name:
             continue
         enabled, sa_name, curve, max_stack = slots[slot_idx]
-        if not enabled or sa_name != pick_name or not curve:
+        if not enabled or not _special_name_matches(pick_name, sa_name) or not curve:
             continue
         if target_name in sa_name:
             total += special_pick_bonus(
@@ -402,12 +530,28 @@ def get_special_value_at_level(
     """读取某条特殊能力在指定技能等级与叠加层下的数值（用于展示）。"""
     if level <= 0:
         return None
+    special_raw = weapon.get("special_skills")
+    if isinstance(special_raw, list) and slot_index < len(special_raw):
+        item = special_raw[slot_index]
+        if isinstance(item, dict):
+            special_name = str(item.get("name", ""))
+            special_effect = str(item.get("effect", ""))
+            curve = item.get("curve")
+            if not _special_name_matches(name, special_name, special_effect):
+                return None
+            if not isinstance(curve, list) or not curve:
+                return None
+            return special_pick_bonus(
+                [float(v) for v in curve],
+                int(item.get("max_stack", 1)),
+                skill_level=level,
+                stack_count=stack_count,
+            )
+
     enabled, sa_name, curve, max_stack = read_weapon_special_slots(weapon)[slot_index]
-    if not enabled or sa_name != name or not curve:
+    if not enabled or not _special_name_matches(name, sa_name) or not curve:
         return None
-    return special_pick_bonus(
-        curve, max_stack, skill_level=level, stack_count=stack_count
-    )
+    return special_pick_bonus(curve, max_stack, skill_level=level, stack_count=stack_count)
 
 
 def migrate_legacy_weapon_special_level(

@@ -47,6 +47,23 @@ class TestDamageSnapshot(unittest.TestCase):
         total = sum(snap.zone_share_percent.values())
         self.assertAlmostEqual(total, 100.0, delta=0.5)
 
+    def test_snapshot_accepts_new_weapon_skill_kwargs(self) -> None:
+        snap = build_damage_snapshot(
+            char_data=self._char(),
+            weapon_data=self._weapon(),
+            char_level=1,
+            weapon_level=1,
+            skill_levels=(1, 0, 0),
+            skill_counts={"战技:1": 1},
+            use_manual_counts=False,
+            normal_skill_1_name="攻击力+",
+            normal_skill_1_level=1,
+            special_skill_1_name="施放战技后，法术伤害+",
+            special_skill_1_level=1,
+            special_skill_1_stack=1,
+        )
+        self.assertGreaterEqual(snap.weighted_total_damage, 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()

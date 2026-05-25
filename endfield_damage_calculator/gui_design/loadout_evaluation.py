@@ -52,6 +52,7 @@ def build_search_preview_lines(
     s1, s2, s3 = loadout.skill_levels
     char_data = loadout.char_data
     weapon_data = loadout.weapon_data
+    skill_kwargs = loadout.weapon_skill_kwargs()
     if loadout.calculation_mode == "multi_skill_search":
         return build_multi_skill_search_preview_lines(
             char_data=char_data,
@@ -73,6 +74,7 @@ def build_search_preview_lines(
             use_expected_crit=loadout.use_expected_crit,
             extra_crit_rate=loadout.extra_crit_rate,
             extra_crit_damage=loadout.extra_crit_damage,
+            **skill_kwargs,
         )
     if loadout.calculation_mode == "single_skill_search":
         return build_single_skill_search_preview_lines(
@@ -95,6 +97,7 @@ def build_search_preview_lines(
             use_expected_crit=loadout.use_expected_crit,
             extra_crit_rate=loadout.extra_crit_rate,
             extra_crit_damage=loadout.extra_crit_damage,
+            **skill_kwargs,
         )
     return []
 
@@ -102,7 +105,7 @@ def build_search_preview_lines(
 def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
     """从 LoadoutState 构建伤害仪表盘快照。"""
     sync_evaluation_cache(loadout)
-    specials = loadout.weapon_special_kwargs()
+    skill_kwargs = loadout.weapon_skill_kwargs()
     return build_damage_snapshot(
         char_data=loadout.char_data,
         weapon_data=loadout.weapon_data,
@@ -113,5 +116,5 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         skill_counts=loadout.manual_counts,
         use_manual_counts=loadout.use_manual_multi_skill_counts,
         enemy_defense=loadout.enemy_defense,
-        **specials,
+        **skill_kwargs,
     )

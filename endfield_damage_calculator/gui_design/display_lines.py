@@ -17,6 +17,10 @@ from calculation.damage_engine import (
 )
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.preview_cache import cached_preview, sync_confirm_dependencies
+from character_weapon_equipment.weapon_data.special_fields import (
+    read_weapon_skills_schema,
+    special_pick_bonus,
+)
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
@@ -209,6 +213,18 @@ def build_weapon_attribute_lines(
     weapon_data: Optional[Dict[str, Any]],
     weapon_level: int,
     *,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
     sa1_name: str = "",
     sa1_level: int = 1,
     sa2_name: str = "",
@@ -226,26 +242,44 @@ def build_weapon_attribute_lines(
     if not weapon_data:
         return []
 
+    # 新命名优先；旧命名保持兼容
+    sa1_name = normal_skill_1_name or sa1_name
+    sa1_level = normal_skill_1_level if normal_skill_1_name else sa1_level
+    sa2_name = normal_skill_2_name or sa2_name
+    sa2_level = normal_skill_2_level if normal_skill_2_name else sa2_level
+    sa3_name = normal_skill_3_name or sa3_name
+    sa3_level = normal_skill_3_level if normal_skill_3_name else sa3_level
+    ws_name = special_skill_1_name or ws_name
+    ws_level = special_skill_1_level if special_skill_1_name else ws_level
+    ws_stack = special_skill_1_stack if special_skill_1_name else ws_stack
+    ws2_name = special_skill_2_name or ws2_name
+    ws2_level = special_skill_2_level if special_skill_2_name else ws2_level
+    ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
+
     lines: list[str] = []
     base_attack = _get_attribute_value(weapon_data, weapon_level, "基础攻击力")
     if base_attack:
         lines.append(f"基础攻击力: {base_attack}")
 
-    bonus_attrs = [key for key in weapon_data.keys() if key.endswith("+")]
-    for attr_name in bonus_attrs:
-        value = weapon_data[attr_name]
-        if isinstance(value, list) and value:
-            if attr_name == sa1_name:
-                level_index = sa1_level - 1
-            elif attr_name == sa2_name:
-                level_index = sa2_level - 1
-            elif attr_name == sa3_name:
-                level_index = sa3_level - 1
-            else:
-                level_index = 0
-            raw_value = value[level_index] if 0 <= level_index < len(value) else value[0]
+    schema = read_weapon_skills_schema(weapon_data)
+    normal_skills = schema.get("normal_skills", [])
+    special_skills = schema.get("special_skills", [])
+    bonus_attrs = [str(item.get("effect", "")) for item in normal_skills]
+    for item in normal_skills:
+        attr_name = str(item.get("effect", ""))
+        curve = item.get("curve")
+        values = curve if isinstance(curve, list) else []
+        if not attr_name or not values:
+            continue
+        if attr_name == sa1_name:
+            level_index = sa1_level - 1
+        elif attr_name == sa2_name:
+            level_index = sa2_level - 1
+        elif attr_name == sa3_name:
+            level_index = sa3_level - 1
         else:
-            raw_value = value
+            level_index = 0
+        raw_value = values[level_index] if 0 <= level_index < len(values) else values[0]
         display_value = format_weapon_bonus_display_value(
             raw_value,
             attr_name=attr_name,
@@ -253,23 +287,26 @@ def build_weapon_attribute_lines(
         )
         lines.append(f"{attr_name}: {display_value}")
 
-    from character_weapon_equipment.weapon_data.special_fields import (
-        get_special_value_at_level,
-    )
-
     for slot_idx, pick_level, pick_stack, pick_name, label in (
         (0, ws_level, ws_stack, ws_name, "特殊一"),
         (1, ws2_level, ws2_stack, ws2_name, "特殊二"),
     ):
         if not pick_name or pick_name in bonus_attrs:
             continue
-        raw_value = get_special_value_at_level(
-            weapon_data,
-            slot_idx,
-            name=pick_name,
-            level=pick_level,
-            stack_count=pick_stack,
-        )
+        raw_value = None
+        if slot_idx < len(special_skills):
+            special = special_skills[slot_idx]
+            curve = special.get("curve")
+            if isinstance(curve, list) and curve:
+                special_name = str(special.get("name", ""))
+                special_effect = str(special.get("effect", ""))
+                if pick_name in (special_name, special_effect):
+                    raw_value = special_pick_bonus(
+                        [float(v) for v in curve],
+                        int(special.get("max_stack", 1)),
+                        skill_level=pick_level,
+                        stack_count=pick_stack,
+                    )
         display_value = "0%"
         if raw_value is not None:
             display_value = format_weapon_bonus_display_value(
@@ -356,6 +393,18 @@ def build_single_hit_damage_lines(
     skill_1_level: int = 0,
     skill_2_level: int = 0,
     skill_3_level: int = 0,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
     sa1_name: str = "",
     sa1_level: int = 1,
     sa2_name: str = "",
@@ -395,6 +444,18 @@ def build_single_hit_damage_lines(
             skill_1_level=skill_1_level,
             skill_2_level=skill_2_level,
             skill_3_level=skill_3_level,
+            normal_skill_1_name=normal_skill_1_name,
+            normal_skill_1_level=normal_skill_1_level,
+            normal_skill_2_name=normal_skill_2_name,
+            normal_skill_2_level=normal_skill_2_level,
+            normal_skill_3_name=normal_skill_3_name,
+            normal_skill_3_level=normal_skill_3_level,
+            special_skill_1_name=special_skill_1_name,
+            special_skill_1_level=special_skill_1_level,
+            special_skill_1_stack=special_skill_1_stack,
+            special_skill_2_name=special_skill_2_name,
+            special_skill_2_level=special_skill_2_level,
+            special_skill_2_stack=special_skill_2_stack,
             sa1_name=sa1_name,
             sa1_level=sa1_level,
             sa2_name=sa2_name,
@@ -424,6 +485,18 @@ def _build_single_hit_damage_lines_impl(
     skill_1_level: int = 0,
     skill_2_level: int = 0,
     skill_3_level: int = 0,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
     sa1_name: str = "",
     sa1_level: int = 1,
     sa2_name: str = "",
@@ -438,6 +511,24 @@ def _build_single_hit_damage_lines_impl(
     ws2_stack: int = 1,
     enemy_defense: float = 100.0,
 ) -> list[str]:
+    has_normal_1 = bool(normal_skill_1_name)
+    has_normal_2 = bool(normal_skill_2_name)
+    has_normal_3 = bool(normal_skill_3_name)
+    has_special_1 = bool(special_skill_1_name)
+    has_special_2 = bool(special_skill_2_name)
+    normal_skill_1_name = normal_skill_1_name or sa1_name
+    normal_skill_1_level = normal_skill_1_level if has_normal_1 else sa1_level
+    normal_skill_2_name = normal_skill_2_name or sa2_name
+    normal_skill_2_level = normal_skill_2_level if has_normal_2 else sa2_level
+    normal_skill_3_name = normal_skill_3_name or sa3_name
+    normal_skill_3_level = normal_skill_3_level if has_normal_3 else sa3_level
+    special_skill_1_name = special_skill_1_name or ws_name
+    special_skill_1_level = special_skill_1_level if has_special_1 else ws_level
+    special_skill_1_stack = special_skill_1_stack if has_special_1 else ws_stack
+    special_skill_2_name = special_skill_2_name or ws2_name
+    special_skill_2_level = special_skill_2_level if has_special_2 else ws2_level
+    special_skill_2_stack = special_skill_2_stack if has_special_2 else ws2_stack
+
     skill_label, skill_multiplier, skill_warning = resolve_selected_skill_for_damage(
         char_data,
         skill_1_level=skill_1_level,
@@ -449,18 +540,18 @@ def _build_single_hit_damage_lines_impl(
         weapon=weapon_data,
         char_level=char_level,
         weapon_level=weapon_level,
-        sa1_name=sa1_name,
-        sa1_level=sa1_level,
-        sa2_name=sa2_name,
-        sa2_level=sa2_level,
-        sa3_name=sa3_name,
-        sa3_level=sa3_level,
-        ws_name=ws_name,
-        ws_level=ws_level,
-        ws_stack=ws_stack,
-        ws2_name=ws2_name,
-        ws2_level=ws2_level,
-        ws2_stack=ws2_stack,
+        normal_skill_1_name=normal_skill_1_name,
+        normal_skill_1_level=normal_skill_1_level,
+        normal_skill_2_name=normal_skill_2_name,
+        normal_skill_2_level=normal_skill_2_level,
+        normal_skill_3_name=normal_skill_3_name,
+        normal_skill_3_level=normal_skill_3_level,
+        special_skill_1_name=special_skill_1_name,
+        special_skill_1_level=special_skill_1_level,
+        special_skill_1_stack=special_skill_1_stack,
+        special_skill_2_name=special_skill_2_name,
+        special_skill_2_level=special_skill_2_level,
+        special_skill_2_stack=special_skill_2_stack,
         trust_level=trust_level,
     )
     result = calculate_single_hit_damage(

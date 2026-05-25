@@ -44,6 +44,41 @@ def _assert_special_ability(entry_name: str, field: list) -> None:
         )
 
 
+def _assert_weapon_skills_schema(entry_name: str, weapon: dict) -> None:
+    normal = weapon.get("normal_skills")
+    special = weapon.get("special_skills")
+    if not isinstance(normal, list):
+        raise AssertionError(f"{entry_name}: 缺少 normal_skills 数组")
+    if not isinstance(special, list):
+        raise AssertionError(f"{entry_name}: 缺少 special_skills 数组")
+
+    for idx, item in enumerate(normal, start=1):
+        if not isinstance(item, dict):
+            raise AssertionError(f"{entry_name}: normal_skills[{idx}] 必须是对象")
+        if not str(item.get("effect", "")):
+            raise AssertionError(f"{entry_name}: normal_skills[{idx}] 缺少 effect")
+        curve = item.get("curve")
+        if not isinstance(curve, list) or len(curve) != BONUS_ATTR_LEN:
+            raise AssertionError(
+                f"{entry_name}: normal_skills[{idx}] curve 长度应为 {BONUS_ATTR_LEN}"
+            )
+
+    for idx, item in enumerate(special, start=1):
+        if not isinstance(item, dict):
+            raise AssertionError(f"{entry_name}: special_skills[{idx}] 必须是对象")
+        if not str(item.get("name", "")):
+            raise AssertionError(f"{entry_name}: special_skills[{idx}] 缺少 name")
+        if not str(item.get("effect", "")):
+            raise AssertionError(f"{entry_name}: special_skills[{idx}] 缺少 effect")
+        curve = item.get("curve")
+        if not isinstance(curve, list) or len(curve) != BONUS_ATTR_LEN:
+            raise AssertionError(
+                f"{entry_name}: special_skills[{idx}] curve 长度应为 {BONUS_ATTR_LEN}"
+            )
+        if int(item.get("max_stack", 1)) < 1:
+            raise AssertionError(f"{entry_name}: special_skills[{idx}] max_stack 至少为 1")
+
+
 class TestGameDataContract(unittest.TestCase):
     """游戏数据 JSON 契约"""
 
@@ -106,6 +141,7 @@ class TestGameDataContract(unittest.TestCase):
             for key in SPECIAL_FIELD_KEYS:
                 if key in weapon:
                     _assert_special_ability(name, weapon[key])
+            _assert_weapon_skills_schema(name, weapon)
 
 
 if __name__ == "__main__":

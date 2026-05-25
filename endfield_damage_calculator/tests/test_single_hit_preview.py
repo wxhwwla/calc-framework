@@ -70,6 +70,23 @@ class TestSingleHitPreview(unittest.TestCase):
         self.assertTrue(any("未选择技能等级" in line for line in lines))
         self.assertTrue(any("技能倍率: 100%" in line for line in lines))
 
+    def test_single_hit_preview_accepts_new_weapon_skill_kwargs(self):
+        char = _load_by_name(_CHARACTERS_JSON, "秋栗")
+        weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")
+        lines = build_single_hit_damage_lines(
+            char_data=char,
+            weapon_data=weapon,
+            char_level=1,
+            weapon_level=1,
+            skill_1_level=1,
+            normal_skill_1_name="攻击力+",
+            normal_skill_1_level=1,
+            special_skill_1_name="施放战技后，法术伤害+",
+            special_skill_1_level=1,
+            special_skill_1_stack=1,
+        )
+        self.assertTrue(any(line.startswith("最终伤害:") for line in lines))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -29,6 +29,19 @@ ATTR_DISPLAY_ORDER = ("力量", "敏捷", "智识", "意志")
 class WeaponBonusSelection:
     """武器潜能 / 特殊能力在乘区中的选用档位。"""
 
+    normal_skill_1_name: str = ""
+    normal_skill_1_level: int = 1
+    normal_skill_2_name: str = ""
+    normal_skill_2_level: int = 1
+    normal_skill_3_name: str = ""
+    normal_skill_3_level: int = 0
+    special_skill_1_name: str = ""
+    special_skill_1_level: int = 1
+    special_skill_1_stack: int = 0
+    special_skill_2_name: str = ""
+    special_skill_2_level: int = 1
+    special_skill_2_stack: int = 0
+
     sa1_name: str = ""
     sa1_level: int = 1
     sa2_name: str = ""
@@ -41,6 +54,66 @@ class WeaponBonusSelection:
     ws2_name: str = ""
     ws2_level: int = 1
     ws2_stack: int = 0
+
+    def legacy_kwargs(self) -> dict[str, int | str]:
+        """兼容旧计算函数参数名。"""
+        sa1_name = self.normal_skill_1_name or self.sa1_name
+        sa1_level = self.normal_skill_1_level if self.normal_skill_1_name else self.sa1_level
+        sa2_name = self.normal_skill_2_name or self.sa2_name
+        sa2_level = self.normal_skill_2_level if self.normal_skill_2_name else self.sa2_level
+        sa3_name = self.normal_skill_3_name or self.sa3_name
+        sa3_level = self.normal_skill_3_level if self.normal_skill_3_name else self.sa3_level
+        ws_name = self.special_skill_1_name or self.ws_name
+        ws_level = self.special_skill_1_level if self.special_skill_1_name else self.ws_level
+        ws_stack = self.special_skill_1_stack if self.special_skill_1_name else self.ws_stack
+        ws2_name = self.special_skill_2_name or self.ws2_name
+        ws2_level = self.special_skill_2_level if self.special_skill_2_name else self.ws2_level
+        ws2_stack = self.special_skill_2_stack if self.special_skill_2_name else self.ws2_stack
+        return {
+            "sa1_name": sa1_name,
+            "sa1_level": sa1_level,
+            "sa2_name": sa2_name,
+            "sa2_level": sa2_level,
+            "sa3_name": sa3_name,
+            "sa3_level": sa3_level,
+            "ws_name": ws_name,
+            "ws_level": ws_level,
+            "ws_stack": ws_stack,
+            "ws2_name": ws2_name,
+            "ws2_level": ws2_level,
+            "ws2_stack": ws2_stack,
+        }
+
+    def calculation_kwargs(self) -> dict[str, int | str]:
+        """统一输出给计算链的新参数名（兼容旧字段输入）。"""
+        return {
+            "normal_skill_1_name": self.normal_skill_1_name or self.sa1_name,
+            "normal_skill_1_level": (
+                self.normal_skill_1_level if self.normal_skill_1_name else self.sa1_level
+            ),
+            "normal_skill_2_name": self.normal_skill_2_name or self.sa2_name,
+            "normal_skill_2_level": (
+                self.normal_skill_2_level if self.normal_skill_2_name else self.sa2_level
+            ),
+            "normal_skill_3_name": self.normal_skill_3_name or self.sa3_name,
+            "normal_skill_3_level": (
+                self.normal_skill_3_level if self.normal_skill_3_name else self.sa3_level
+            ),
+            "special_skill_1_name": self.special_skill_1_name or self.ws_name,
+            "special_skill_1_level": (
+                self.special_skill_1_level if self.special_skill_1_name else self.ws_level
+            ),
+            "special_skill_1_stack": (
+                self.special_skill_1_stack if self.special_skill_1_name else self.ws_stack
+            ),
+            "special_skill_2_name": self.special_skill_2_name or self.ws2_name,
+            "special_skill_2_level": (
+                self.special_skill_2_level if self.special_skill_2_name else self.ws2_level
+            ),
+            "special_skill_2_stack": (
+                self.special_skill_2_stack if self.special_skill_2_name else self.ws2_stack
+            ),
+        }
 
 
 @dataclass(frozen=True)
@@ -70,6 +143,7 @@ def compute_multiplicative_zone_snapshot(
     char = selection.character
     weapon = selection.weapon
     b = selection.bonuses
+    kwargs = b.calculation_kwargs()
     lines: list[ZoneDisplayLine] = []
 
     defense = DefenseReductionZone().calculate()
@@ -79,18 +153,7 @@ def compute_multiplicative_zone_snapshot(
         char,
         weapon,
         level=selection.char_level,
-        sa1_name=b.sa1_name,
-        sa1_level=b.sa1_level,
-        sa2_name=b.sa2_name,
-        sa2_level=b.sa2_level,
-        sa3_name=b.sa3_name,
-        sa3_level=b.sa3_level,
-        ws_name=b.ws_name,
-        ws_level=b.ws_level,
-        ws_stack=b.ws_stack,
-        ws2_name=b.ws2_name,
-        ws2_level=b.ws2_level,
-        ws2_stack=b.ws2_stack,
+        **kwargs,
         trust_level=selection.trust_level,
     )
     for attr_name in ATTR_DISPLAY_ORDER:
@@ -108,18 +171,7 @@ def compute_multiplicative_zone_snapshot(
         char,
         weapon,
         level=selection.char_level,
-        sa1_name=b.sa1_name,
-        sa1_level=b.sa1_level,
-        sa2_name=b.sa2_name,
-        sa2_level=b.sa2_level,
-        sa3_name=b.sa3_name,
-        sa3_level=b.sa3_level,
-        ws_name=b.ws_name,
-        ws_level=b.ws_level,
-        ws_stack=b.ws_stack,
-        ws2_name=b.ws2_name,
-        ws2_level=b.ws2_level,
-        ws2_stack=b.ws2_stack,
+        **kwargs,
         trust_level=selection.trust_level,
     )
     main_attr = ability["main_attr"]
@@ -139,18 +191,7 @@ def compute_multiplicative_zone_snapshot(
         weapon,
         char_level=selection.char_level,
         weapon_level=selection.weapon_level,
-        sa1_name=b.sa1_name,
-        sa1_level=b.sa1_level,
-        sa2_name=b.sa2_name,
-        sa2_level=b.sa2_level,
-        sa3_name=b.sa3_name,
-        sa3_level=b.sa3_level,
-        ws_name=b.ws_name,
-        ws_level=b.ws_level,
-        ws_stack=b.ws_stack,
-        ws2_name=b.ws2_name,
-        ws2_level=b.ws2_level,
-        ws2_stack=b.ws2_stack,
+        **kwargs,
         trust_level=selection.trust_level,
     )
     lines.append(

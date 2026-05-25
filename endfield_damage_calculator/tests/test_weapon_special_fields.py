@@ -10,6 +10,8 @@ from character_weapon_equipment.weapon_data.special_fields import (
     bonus_attribute_keys,
     build_special_field,
     parse_special_field,
+    migrate_weapon_record_to_skill_schema,
+    migrate_weapon_records_to_skill_schema,
     read_weapon_skills_schema,
     read_weapon_special_slots,
     write_weapon_skills_schema,
@@ -18,6 +20,53 @@ from character_weapon_equipment.weapon_data.special_fields import (
 
 
 class TestWeaponSpecialFields(unittest.TestCase):
+    def test_migrate_weapon_record_to_skill_schema(self):
+        weapon = {
+            "名称": "测试武器",
+            "基础攻击力": [1] * 90,
+            "敏捷+": [10.0] * 9,
+            "攻击力+": [20.0] * 9,
+            "特殊能力1": [True, "施放战技后，攻击力+", [5.0] * 9, 2],
+            "特殊能力2": [False],
+        }
+        changed = migrate_weapon_record_to_skill_schema(weapon)
+        self.assertTrue(changed)
+        self.assertNotIn("敏捷+", weapon)
+        self.assertNotIn("特殊能力1", weapon)
+        self.assertIn("normal_skills", weapon)
+        self.assertIn("special_skills", weapon)
+        self.assertEqual(weapon["normal_skills"][0]["effect"], "敏捷+")
+        self.assertEqual(weapon["special_skills"][0]["effect"], "攻击力+")
+
+    def test_migrate_weapon_record_to_skill_schema_is_idempotent(self):
+        weapon = {
+            "名称": "测试武器",
+            "基础攻击力": [1] * 90,
+            "normal_skills": [{"zone": 1, "effect": "敏捷+", "curve": [10.0] * 9}],
+            "special_skills": [],
+        }
+        changed = migrate_weapon_record_to_skill_schema(weapon)
+        self.assertFalse(changed)
+
+    def test_migrate_weapon_records_to_skill_schema_returns_changed_names(self):
+        weapons = [
+            {
+                "名称": "武器A",
+                "基础攻击力": [1] * 90,
+                "敏捷+": [10.0] * 9,
+                "特殊能力1": [False],
+                "特殊能力2": [False],
+            },
+            {
+                "名称": "武器B",
+                "基础攻击力": [1] * 90,
+                "normal_skills": [],
+                "special_skills": [],
+            },
+        ]
+        changed_names = migrate_weapon_records_to_skill_schema(weapons)
+        self.assertEqual(changed_names, ["武器A"])
+
     def test_read_weapon_skills_schema_from_legacy_fields(self):
         weapon = {
             "基础攻击力": [1] * 90,
@@ -57,6 +106,30 @@ class TestWeaponSpecialFields(unittest.TestCase):
         self.assertEqual(schema["normal_skills"][0]["effect"], "敏捷+")
         self.assertEqual(schema["special_skills"][0]["effect"], "攻击力+")
         self.assertEqual(schema["special_skills"][0]["condition"], "施放战技后")
+
+    def test_bonus_and_special_slots_work_with_new_schema(self):
+        weapon = {
+            "基础攻击力": [1] * 90,
+            "normal_skills": [
+                {"zone": 1, "effect": "敏捷+", "curve": [10.0] * 9},
+                {"zone": 2, "effect": "攻击力+", "curve": [20.0] * 9},
+            ],
+            "special_skills": [
+                {
+                    "zone": 3,
+                    "name": "施放战技后，法术伤害+",
+                    "condition": "施放战技后",
+                    "effect": "法术伤害+",
+                    "curve": [12.0] * 9,
+                    "max_stack": 2,
+                }
+            ],
+        }
+        self.assertEqual(bonus_attribute_keys(weapon), ["敏捷+", "攻击力+"])
+        slots = read_weapon_special_slots(weapon)
+        self.assertTrue(slots[0][0])
+        self.assertEqual(slots[0][1], "施放战技后，法术伤害+")
+        self.assertEqual(slots[0][3], 2)
 
     def test_write_weapon_skills_schema_replaces_legacy_fields(self):
         weapon = {

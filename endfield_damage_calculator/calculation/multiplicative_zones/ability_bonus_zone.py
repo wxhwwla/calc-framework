@@ -14,6 +14,7 @@
     - 能力值：根据角色等级从对应的属性列表中获取，加上武器加成
 """
 
+import warnings
 from typing import Dict, Any, Optional, Union
 from .base_zone import BaseZone
 from calculation.formula import trust_add
@@ -55,6 +56,36 @@ def _get_weapon_bonus(bonus_data, level: int = 1) -> float:
     return 0.0
 
 
+def _warn_if_legacy_skill_kwargs_used(
+    *,
+    sa1_name: str,
+    sa2_name: str,
+    sa3_name: str,
+    ws_name: str,
+    ws2_name: str,
+    normal_skill_1_name: str,
+    normal_skill_2_name: str,
+    normal_skill_3_name: str,
+    special_skill_1_name: str,
+    special_skill_2_name: str,
+) -> None:
+    """当仅使用旧参数名时发出弃用告警。"""
+    legacy_used = bool(sa1_name or sa2_name or sa3_name or ws_name or ws2_name)
+    new_used = bool(
+        normal_skill_1_name
+        or normal_skill_2_name
+        or normal_skill_3_name
+        or special_skill_1_name
+        or special_skill_2_name
+    )
+    if legacy_used and not new_used:
+        warnings.warn(
+            "参数 sa*/ws* 已弃用，请改用 normal_skill_* / special_skill_*。",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+
+
 def calculate_ability_bonus(
     character: Optional[Dict[str, Any]],
     weapon: Optional[Dict[str, Any]] = None,
@@ -73,6 +104,18 @@ def calculate_ability_bonus(
     ws2_stack: int = 1,
     trust_level: int = 0,
     equipment_stat_bonus: Optional[Dict[str, float]] = None,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
 ) -> float:
     """
     快捷函数：计算能力值加成
@@ -104,8 +147,34 @@ def calculate_ability_bonus(
         - 如果角色没有定义主/副能力，或数据不完整，返回 0.0
         - 同名的加成效果会叠加（如两个敏捷+会相加）
     """
+    _warn_if_legacy_skill_kwargs_used(
+        sa1_name=sa1_name,
+        sa2_name=sa2_name,
+        sa3_name=sa3_name,
+        ws_name=ws_name,
+        ws2_name=ws2_name,
+        normal_skill_1_name=normal_skill_1_name,
+        normal_skill_2_name=normal_skill_2_name,
+        normal_skill_3_name=normal_skill_3_name,
+        special_skill_1_name=special_skill_1_name,
+        special_skill_2_name=special_skill_2_name,
+    )
+
     if character is None:
         return 0.0
+
+    sa1_name = normal_skill_1_name or sa1_name
+    sa1_level = normal_skill_1_level if normal_skill_1_name else sa1_level
+    sa2_name = normal_skill_2_name or sa2_name
+    sa2_level = normal_skill_2_level if normal_skill_2_name else sa2_level
+    sa3_name = normal_skill_3_name or sa3_name
+    sa3_level = normal_skill_3_level if normal_skill_3_name else sa3_level
+    ws_name = special_skill_1_name or ws_name
+    ws_level = special_skill_1_level if special_skill_1_name else ws_level
+    ws_stack = special_skill_1_stack if special_skill_1_name else ws_stack
+    ws2_name = special_skill_2_name or ws2_name
+    ws2_level = special_skill_2_level if special_skill_2_name else ws2_level
+    ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
 
     main_attr = character.get('主能力', '')
     sub_attr = character.get('副能力', '')
@@ -197,7 +266,19 @@ def calculate_ability_bonus_with_details(
     ws2_name: str = "",
     ws2_level: int = 1,
     ws2_stack: int = 1,
-    trust_level: int = 0
+    trust_level: int = 0,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
 ) -> Dict[str, Any]:
     """
     快捷函数：计算能力值加成，返回详细信息
@@ -230,6 +311,19 @@ def calculate_ability_bonus_with_details(
             'bonus': 能力值加成（最终结果）
         }
     """
+    _warn_if_legacy_skill_kwargs_used(
+        sa1_name=sa1_name,
+        sa2_name=sa2_name,
+        sa3_name=sa3_name,
+        ws_name=ws_name,
+        ws2_name=ws2_name,
+        normal_skill_1_name=normal_skill_1_name,
+        normal_skill_2_name=normal_skill_2_name,
+        normal_skill_3_name=normal_skill_3_name,
+        special_skill_1_name=special_skill_1_name,
+        special_skill_2_name=special_skill_2_name,
+    )
+
     if character is None:
         return {
             'main_attr': '',
@@ -242,6 +336,19 @@ def calculate_ability_bonus_with_details(
             'sub_bonus': 0.0,
             'bonus': 0.0
         }
+
+    sa1_name = normal_skill_1_name or sa1_name
+    sa1_level = normal_skill_1_level if normal_skill_1_name else sa1_level
+    sa2_name = normal_skill_2_name or sa2_name
+    sa2_level = normal_skill_2_level if normal_skill_2_name else sa2_level
+    sa3_name = normal_skill_3_name or sa3_name
+    sa3_level = normal_skill_3_level if normal_skill_3_name else sa3_level
+    ws_name = special_skill_1_name or ws_name
+    ws_level = special_skill_1_level if special_skill_1_name else ws_level
+    ws_stack = special_skill_1_stack if special_skill_1_name else ws_stack
+    ws2_name = special_skill_2_name or ws2_name
+    ws2_level = special_skill_2_level if special_skill_2_name else ws2_level
+    ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
 
     main_attr = character.get('主能力', '')
     sub_attr = character.get('副能力', '')

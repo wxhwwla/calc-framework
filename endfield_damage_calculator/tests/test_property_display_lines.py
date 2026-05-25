@@ -12,6 +12,7 @@ from gui_design.display_lines import (
     build_weapon_attribute_lines,
     format_weapon_bonus_display_value,
 )
+from character_weapon_equipment.weapon_data.special_fields import read_weapon_skills_schema
 
 
 _CHARACTERS_JSON = (
@@ -105,6 +106,9 @@ class TestPropertyDisplayLines(unittest.TestCase):
 
     def test_weapon_lines_are_attribute_only(self):
         weapon = _load_by_name(_WEAPONS_JSON, "坚城铸造者")
+        schema = read_weapon_skills_schema(weapon)
+        normal = schema["normal_skills"]
+        special = schema["special_skills"]
         lines = build_weapon_attribute_lines(
             weapon,
             weapon_level=1,
@@ -119,18 +123,82 @@ class TestPropertyDisplayLines(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("基础攻击力:") for line in lines))
         zhishi = format_weapon_bonus_display_value(
-            weapon["智识+"][0], attr_name="智识+", is_first_skill=True,
+            normal[0]["curve"][0], attr_name="智识+", is_first_skill=True,
         )
         self.assertIn(f"智识+: {zhishi}", lines)
-        ce = format_weapon_bonus_display_value(weapon["终结技充能效率+"][0], attr_name="终结技充能效率+")
+        ce = format_weapon_bonus_display_value(normal[1]["curve"][0], attr_name="终结技充能效率+")
         self.assertIn(f"终结技充能效率+: {ce}", lines)
-        atk = format_weapon_bonus_display_value(weapon["攻击力+"][0], attr_name="攻击力+")
+        atk = format_weapon_bonus_display_value(normal[2]["curve"][0], attr_name="攻击力+")
         self.assertIn(f"攻击力+: {atk}", lines)
-        ws_raw = weapon["特殊能力1"][2][7]
+        ws_raw = special[0]["curve"][7]
         ws = format_weapon_bonus_display_value(ws_raw, attr_name="源石技艺强度+")
         self.assertIn(f"源石技艺强度+(特殊一): {ws}", lines)
         self.assertFalse(any(line.startswith("武器：") for line in lines))
         self.assertFalse(any(line.startswith("===") for line in lines))
+
+    def test_weapon_lines_support_new_weapon_skills_schema(self):
+        weapon = {
+            "名称": "测试武器",
+            "基础攻击力": [42] * 90,
+            "normal_skills": [
+                {"zone": 1, "effect": "敏捷+", "curve": [16.0] * 9},
+                {"zone": 2, "effect": "攻击力+", "curve": [5.0] * 9},
+            ],
+            "special_skills": [
+                {
+                    "zone": 3,
+                    "name": "施放战技后，法术伤害+",
+                    "condition": "施放战技后",
+                    "effect": "法术伤害+",
+                    "curve": [12.0] * 9,
+                    "max_stack": 2,
+                }
+            ],
+        }
+        lines = build_weapon_attribute_lines(
+            weapon,
+            weapon_level=1,
+            sa1_name="敏捷+",
+            sa1_level=9,
+            sa2_name="攻击力+",
+            sa2_level=8,
+            ws_name="施放战技后，法术伤害+",
+            ws_level=7,
+            ws_stack=2,
+        )
+        self.assertIn("敏捷+: 16", lines)
+        self.assertIn("攻击力+: 5%", lines)
+        self.assertIn("施放战技后，法术伤害+(特殊一): 24%", lines)
+
+    def test_weapon_lines_accept_new_named_kwargs(self):
+        weapon = {
+            "名称": "测试武器",
+            "基础攻击力": [42] * 90,
+            "normal_skills": [
+                {"zone": 1, "effect": "敏捷+", "curve": [16.0] * 9},
+            ],
+            "special_skills": [
+                {
+                    "zone": 3,
+                    "name": "施放战技后，法术伤害+",
+                    "condition": "施放战技后",
+                    "effect": "法术伤害+",
+                    "curve": [12.0] * 9,
+                    "max_stack": 2,
+                }
+            ],
+        }
+        lines = build_weapon_attribute_lines(
+            weapon,
+            weapon_level=1,
+            normal_skill_1_name="敏捷+",
+            normal_skill_1_level=9,
+            special_skill_1_name="施放战技后，法术伤害+",
+            special_skill_1_level=7,
+            special_skill_1_stack=2,
+        )
+        self.assertIn("敏捷+: 16", lines)
+        self.assertIn("施放战技后，法术伤害+(特殊一): 24%", lines)
 
 
 if __name__ == "__main__":

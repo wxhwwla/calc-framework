@@ -180,6 +180,8 @@ class LoadoutState:
             fixed_equipment_names=dict(self.fixed_equipment_names),
             multi_skill_counts=dict(self.manual_counts),
             use_manual_multi_skill_counts=self.use_manual_multi_skill_counts,
+            weapon_normal_levels=self.weapon_skill_selection()["weapon_normal_levels"],
+            weapon_special_states=self.weapon_skill_selection()["weapon_special_states"],
             physical_abnormal_counts=dict(self.physical_abnormal_counts),
             spell_abnormal_counts=dict(self.spell_abnormal_counts),
             damage_component_mode=self.damage_component_mode,

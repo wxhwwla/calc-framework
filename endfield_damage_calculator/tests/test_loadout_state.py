@@ -100,6 +100,8 @@ class TestLoadoutState(unittest.TestCase):
         preset = state.to_loadout_preset()
         self.assertEqual(preset.char_name, "测试干员")
         self.assertEqual(preset.char_level, 10)
+        self.assertEqual(preset.weapon_normal_levels, [9])
+        self.assertEqual(preset.weapon_special_states, [{"level": 8, "stack": 1}])
 
     def test_normalize_weapon_specials_migrates_legacy_ws_level(self) -> None:
         migrated = normalize_weapon_specials_tuple(

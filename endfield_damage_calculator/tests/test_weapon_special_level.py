@@ -42,6 +42,55 @@ class TestWeaponSpecialLevel(unittest.TestCase):
         self.assertEqual(off["main_bonus"], 0.0)
         self.assertEqual(on["main_bonus"], 5.0)
 
+    def test_new_named_special_skill_kwargs_are_supported(self):
+        char = {
+            "主能力": "力量",
+            "副能力": "敏捷",
+            "力量": [100.0] * 90,
+            "敏捷": [50.0] * 90,
+        }
+        weapon = {
+            "special_skills": [
+                {
+                    "zone": 3,
+                    "name": "主能力+",
+                    "condition": "",
+                    "effect": "主能力+",
+                    "curve": [5.0] * 9,
+                    "max_stack": 1,
+                }
+            ]
+        }
+        on = calculate_ability_bonus_with_details(
+            char,
+            weapon,
+            level=1,
+            special_skill_1_name="主能力+",
+            special_skill_1_level=1,
+            special_skill_1_stack=0,
+        )
+        self.assertEqual(on["main_bonus"], 5.0)
+
+    def test_ability_bonus_warns_on_legacy_skill_names(self):
+        char = {
+            "主能力": "力量",
+            "副能力": "敏捷",
+            "力量": [100.0] * 90,
+            "敏捷": [50.0] * 90,
+        }
+        weapon = {
+            "特殊能力1": [True, "主能力+", [5.0] * 9],
+            "特殊能力2": [False],
+        }
+        with self.assertWarns(DeprecationWarning):
+            calculate_ability_bonus_with_details(
+                char,
+                weapon,
+                level=1,
+                ws_name="主能力+",
+                ws_level=1,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

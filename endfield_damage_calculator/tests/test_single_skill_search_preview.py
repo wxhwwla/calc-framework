@@ -125,6 +125,40 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("装备范围: 仅散件装备") for line in lines))
 
+    def test_preview_accepts_new_weapon_skill_kwargs(self) -> None:
+        char = {
+            "名称": "测试角色",
+            "主能力": "力量",
+            "副能力": "敏捷",
+            "力量": [100.0] * 90,
+            "敏捷": [50.0] * 90,
+            "智识": [40.0] * 90,
+            "意志": [30.0] * 90,
+            "基础攻击力": [100.0] * 90,
+            "战技倍率": [[100.0] * 12],
+            "连携技倍率": [],
+            "终结技倍率": [],
+        }
+        weapon = {
+            "名称": "测试武器",
+            "基础攻击力": [100.0] * 90,
+            "normal_skills": [
+                {"zone": 2, "effect": "攻击力+", "curve": [10.0] * 9},
+            ],
+            "special_skills": [],
+        }
+        with_bonus = build_single_skill_search_preview_lines(
+            char_data=char,
+            weapon_data=weapon,
+            char_level=1,
+            weapon_level=1,
+            skill_1_level=1,
+            normal_skill_1_name="攻击力+",
+            normal_skill_1_level=1,
+            preview_equipment_catalog=_sample_catalog(),
+        )
+        self.assertTrue(any(line.startswith("Top1:") for line in with_bonus))
+
     @pytest.mark.real_data
     @unittest.skipUnless(
         os.environ.get("ENDFIELD_RUN_REAL_DATA_TESTS") == "1",

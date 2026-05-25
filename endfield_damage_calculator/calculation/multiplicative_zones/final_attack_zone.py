@@ -16,6 +16,7 @@
     - 能力值加成：来自 AbilityBonusZone 的计算结果（包含武器加成）
 """
 
+import warnings
 from typing import Dict, Any, Optional
 
 from .base_zone import BaseZone
@@ -87,6 +88,18 @@ def calculate_final_attack_with_details(
     trust_level: int = 0,
     equipment_stat_bonus: Optional[Dict[str, float]] = None,
     equipment_attack_percent: float = 0.0,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
 ) -> Dict[str, float]:
     """
     快捷函数：计算最终攻击力，返回详细信息
@@ -120,6 +133,21 @@ def calculate_final_attack_with_details(
             'final_attack': 最终攻击力（最终结果）
         }
     """
+    legacy_used = bool(sa1_name or sa2_name or sa3_name or ws_name or ws2_name)
+    new_used = bool(
+        normal_skill_1_name
+        or normal_skill_2_name
+        or normal_skill_3_name
+        or special_skill_1_name
+        or special_skill_2_name
+    )
+    if legacy_used and not new_used:
+        warnings.warn(
+            "参数 sa*/ws* 已弃用，请改用 normal_skill_* / special_skill_*。",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     if character is None:
         return {
             'base_attack': 0.0,
@@ -132,6 +160,19 @@ def calculate_final_attack_with_details(
             'ability_bonus': 0.0,
             'final_attack': 0.0
         }
+
+    sa1_name = normal_skill_1_name or sa1_name
+    sa1_level = normal_skill_1_level if normal_skill_1_name else sa1_level
+    sa2_name = normal_skill_2_name or sa2_name
+    sa2_level = normal_skill_2_level if normal_skill_2_name else sa2_level
+    sa3_name = normal_skill_3_name or sa3_name
+    sa3_level = normal_skill_3_level if normal_skill_3_name else sa3_level
+    ws_name = special_skill_1_name or ws_name
+    ws_level = special_skill_1_level if special_skill_1_name else ws_level
+    ws_stack = special_skill_1_stack if special_skill_1_name else ws_stack
+    ws2_name = special_skill_2_name or ws2_name
+    ws2_level = special_skill_2_level if special_skill_2_name else ws2_level
+    ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
 
     # 获取角色基础攻击力（使用角色等级）
     char_level_index = char_level - 1

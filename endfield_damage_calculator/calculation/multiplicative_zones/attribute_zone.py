@@ -16,6 +16,7 @@
     level: 等级（1-90）
 """
 
+import warnings
 from typing import Dict, Any, Optional
 from .base_zone import BaseZone
 
@@ -211,7 +212,19 @@ def calculate_attribute_zones_with_details(
     ws2_name: str = "",
     ws2_level: int = 1,
     ws2_stack: int = 1,
-    trust_level: int = 0
+    trust_level: int = 0,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
 ) -> Dict[str, Dict[str, float]]:
     """
     快捷函数：计算能力乘区，返回详细信息
@@ -238,7 +251,35 @@ def calculate_attribute_zones_with_details(
             ...
         }
     """
+    legacy_used = bool(sa1_name or sa2_name or sa3_name or ws_name or ws2_name)
+    new_used = bool(
+        normal_skill_1_name
+        or normal_skill_2_name
+        or normal_skill_3_name
+        or special_skill_1_name
+        or special_skill_2_name
+    )
+    if legacy_used and not new_used:
+        warnings.warn(
+            "参数 sa*/ws* 已弃用，请改用 normal_skill_* / special_skill_*。",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     manager = AttributeZoneManager()
+    sa1_name = normal_skill_1_name or sa1_name
+    sa1_level = normal_skill_1_level if normal_skill_1_name else sa1_level
+    sa2_name = normal_skill_2_name or sa2_name
+    sa2_level = normal_skill_2_level if normal_skill_2_name else sa2_level
+    sa3_name = normal_skill_3_name or sa3_name
+    sa3_level = normal_skill_3_level if normal_skill_3_name else sa3_level
+    ws_name = special_skill_1_name or ws_name
+    ws_level = special_skill_1_level if special_skill_1_name else ws_level
+    ws_stack = special_skill_1_stack if special_skill_1_name else ws_stack
+    ws2_name = special_skill_2_name or ws2_name
+    ws2_level = special_skill_2_level if special_skill_2_name else ws2_level
+    ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
+
     level_index = level - 1
     main_attr = character.get('主能力', '') if character else ''
     sub_attr = character.get('副能力', '') if character else ''

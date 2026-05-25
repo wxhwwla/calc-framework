@@ -69,6 +69,18 @@ def build_damage_snapshot(
     skill_levels: tuple[int, int, int],
     skill_counts: dict[str, int],
     use_manual_counts: bool = True,
+    normal_skill_1_name: str = "",
+    normal_skill_1_level: int = 1,
+    normal_skill_2_name: str = "",
+    normal_skill_2_level: int = 1,
+    normal_skill_3_name: str = "",
+    normal_skill_3_level: int = 0,
+    special_skill_1_name: str = "",
+    special_skill_1_level: int = 1,
+    special_skill_1_stack: int = 1,
+    special_skill_2_name: str = "",
+    special_skill_2_level: int = 1,
+    special_skill_2_stack: int = 1,
     sa1_name: str = "",
     sa1_level: int = 1,
     sa2_name: str = "",
@@ -84,6 +96,24 @@ def build_damage_snapshot(
     enemy_defense: float = 100.0,
 ) -> DamageSnapshot:
     """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。"""
+    has_normal_1 = bool(normal_skill_1_name)
+    has_normal_2 = bool(normal_skill_2_name)
+    has_normal_3 = bool(normal_skill_3_name)
+    has_special_1 = bool(special_skill_1_name)
+    has_special_2 = bool(special_skill_2_name)
+    normal_skill_1_name = normal_skill_1_name or sa1_name
+    normal_skill_1_level = normal_skill_1_level if has_normal_1 else sa1_level
+    normal_skill_2_name = normal_skill_2_name or sa2_name
+    normal_skill_2_level = normal_skill_2_level if has_normal_2 else sa2_level
+    normal_skill_3_name = normal_skill_3_name or sa3_name
+    normal_skill_3_level = normal_skill_3_level if has_normal_3 else sa3_level
+    special_skill_1_name = special_skill_1_name or ws_name
+    special_skill_1_level = special_skill_1_level if has_special_1 else ws_level
+    special_skill_1_stack = special_skill_1_stack if has_special_1 else ws_stack
+    special_skill_2_name = special_skill_2_name or ws2_name
+    special_skill_2_level = special_skill_2_level if has_special_2 else ws2_level
+    special_skill_2_stack = special_skill_2_stack if has_special_2 else ws2_stack
+
     scenarios = build_skill_scenarios_from_levels(
         char_data,
         skill_1_level=skill_levels[0],
@@ -103,18 +133,18 @@ def build_damage_snapshot(
         char_level=char_level,
         weapon_level=weapon_level,
         trust_level=trust_level,
-        sa1_name=sa1_name,
-        sa1_level=sa1_level,
-        sa2_name=sa2_name,
-        sa2_level=sa2_level,
-        sa3_name=sa3_name,
-        sa3_level=sa3_level,
-        ws_name=ws_name,
-        ws_level=ws_level,
-        ws_stack=ws_stack,
-        ws2_name=ws2_name,
-        ws2_level=ws2_level,
-        ws2_stack=ws2_stack,
+        normal_skill_1_name=normal_skill_1_name,
+        normal_skill_1_level=normal_skill_1_level,
+        normal_skill_2_name=normal_skill_2_name,
+        normal_skill_2_level=normal_skill_2_level,
+        normal_skill_3_name=normal_skill_3_name,
+        normal_skill_3_level=normal_skill_3_level,
+        special_skill_1_name=special_skill_1_name,
+        special_skill_1_level=special_skill_1_level,
+        special_skill_1_stack=special_skill_1_stack,
+        special_skill_2_name=special_skill_2_name,
+        special_skill_2_level=special_skill_2_level,
+        special_skill_2_stack=special_skill_2_stack,
     )
     final_attack = float(final["final_attack"])
 
