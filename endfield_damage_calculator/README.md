@@ -14,7 +14,7 @@
 | 功能模块 | 说明 |
 |---------|------|
 | 角色选择 | 支持按类型、星级筛选角色 |
-| 武器选择 | 支持按类型、星级筛选武器，包含特殊能力等级选择 |
+| 武器选择 | 支持按类型、星级筛选武器，含**普通技能 / 特殊技能**等级与层数选择 |
 | 属性展示 | **角色属性列**（四维、基础攻击与技能倍率）与**武器属性列**分列显示等级曲线明细（选择区仅负责操作，不重复摘要） |
 | 乘区计算 | 点击「确认选择」后，在角色与武器均有效时刷新右侧乘区（能力、攻击力等） |
 | 单段伤害 / 快照 | 计算模式：15 乘区单段伤害、乘区快照 |
@@ -206,7 +206,7 @@ python build.py
 - 启动后自动确认一次；切页不丢输入；关闭时保存 `ui_preferences.json`（启动页策略）。
 - 全量：开「使用手动次数」后按段级加权总伤排名，否则按当前技能单段伤害。
 - 角色或武器无效时，仅对应属性列显示提示，且不刷新乘区。
-- 武器属性列数值规则：**第一技能**对应条目为 JSON 整数；**其余** `xxx+` 与特殊能力字段按百分数显示（如 `27.6%`）。
+- 武器属性列数值规则：按词条名区分展示——`附加攻击力+`、四维+、主/副能力+ 等为**固定整数**；`攻击力+`、*伤害+、*率+、充能效率 带 `%`（与 `display_lines.weapon_bonus_display_uses_percent` 一致）。
 
 术语与列号说明见仓库根目录 [`CONTEXT.md`](../CONTEXT.md)。
 
@@ -331,41 +331,70 @@ python -m pytest tests/ -v
 
 ## 📦 数据格式
 
-### 角色数据 (characters.json)
+仓库内 JSON 为**中文键**、**数组曲线**，运行时经 `data.loader` 读取。详见 [`CONTEXT.md`](../CONTEXT.md) 与 `tests/test_game_data_contract.py`。
+
+### 角色数据 (`characters.json`)
+
+每条为数组元素（非嵌套 `角色ID` 对象）。示例：
 
 ```json
 {
-  "角色ID": {
-    "name": "角色名称",
-    "type": "角色类型",
-    "star": 5,
-    "attributes": {
-      "攻击力": {"base": 100, "growth": 10, "divisor": 1, "offset": 0},
-      "生命值": {"base": 1000, "growth": 50, "divisor": 1, "offset": 0}
-    },
-    "skills": {
-      "战技倍率": [100, 110, 120, ...]
+  "名称": "陈千语",
+  "类型": "近卫",
+  "星级": 5,
+  "主能力": "敏捷",
+  "副能力": "力量",
+  "力量": [10, 11, "…", 90],
+  "基础攻击力": [100, 105, "…", 90],
+  "战技倍率": [[100, 110, "…", 1200]],
+  "连携技倍率": [[50, "…", 600]],
+  "终结技倍率": [[200, "…", 800], [636, "…", 900]]
+}
+```
+
+### 武器数据 (`weapons.json`)
+
+每条须含 `normal_skills` 与 `special_skills`：
+
+```json
+{
+  "名称": "示例武器",
+  "类型": "单手剑",
+  "星级": 5,
+  "基础攻击力": [100, 105, "…", 280],
+  "normal_skills": [
+    {"zone": 1, "effect": "智识+", "curve": [12.0, "…", 93.0]},
+    {"zone": 2, "effect": "攻击力+", "curve": [3.0, "…", 23.4]}
+  ],
+  "special_skills": [
+    {
+      "zone": 3,
+      "name": "施放战技后，法术伤害+",
+      "condition": "施放战技后",
+      "effect": "法术伤害+",
+      "curve": [12.0, "…", 33.6],
+      "max_stack": 2
     }
-  }
+  ]
 }
 ```
 
-### 武器数据 (weapons.json)
+读写与迁移：`weapon_data/special_fields.py`；`tools/migrate_weapon_skills_schema.py`。
+
+### 配装预设 (`endfield_loadout_preset_v2`)
 
 ```json
 {
-  "武器ID": {
-    "name": "武器名称",
-    "type": "武器类型",
-    "star": 4,
-    "attributes": {
-      "基础攻击力": {"base": 34, "growth": 31, "divisor": 9, "offset": 8},
-      "攻击力+": {"base": 3.0, "growth": 12, "divisor": 5, "offset": 0, "special": [23.4]}
-    },
-    "special_ability": "特殊能力描述"
-  }
+  "schema": "endfield_loadout_preset_v2",
+  "char_name": "秋栗",
+  "weapon_name": "逐鳞3.0",
+  "weapon_normal_levels": [9, 8, 1],
+  "weapon_special_states": [{"level": 7, "stack": 2}],
+  "multi_skill_counts": {"战技:1": 2}
 }
 ```
+
+v1 与旧 `ws_*` 字段导入时自动归一（`loadout_preset.py`）。
 
 ---
 

@@ -70,9 +70,15 @@ python tools/bwiki_scout/compare_stats.py   # 仅离线重算报告
 | 干员 `力量/敏捷/智识/意志/基础攻击力` | `raw/<干员>/详细数据/wikitext.txt` | `wiki_sync.fit_growth_params_from_curve` |
 | 干员 `战技倍率` / `连携技倍率` / `终结技倍率` | `raw/<干员>/html.html` 技能 tab 中「伤害倍率」行 | `skill_tables` + `fit_skill_formula` |
 | 武器 `基础攻击力` | `raw/<武器>/wikitext.txt` 的 1 级与满级端点 | `weapon_wiki.fit_weapon_base_atk_from_endpoints` |
-| 武器第 3 技能（无条件） | `词条3内容` 首行 + `词条3副1rank1–9` | 写入 `bonus_attrs` 第三项（如 `法术伤害+`） |
-| 武器特殊能力1/2（有条件） | `词条3副1–4rank…`（视武器有无无条件第三技能） | 写入 `特殊能力1` / `特殊能力2`（如尖峰两条判定、J.E.T. 战技+连携） |
-| 武器 `xxx+`（词条 1/2） | 同页 `词条1/2rank1–9` | `fit_skill_formula_no_special`（9 档潜能） |
+| 武器 `normal_skills`（词条 1/2 与无条件第三技能） | `词条1/2rank1–9`；`词条3内容` + `词条3副1rank1–9`（视模板） | 写入 `normal_skills[]`（`zone` 1–3、`effect`、`curve[9]`） |
+| 武器 `special_skills`（有条件特殊能力） | `词条3副1–4rank…`（视武器有无无条件第三技能） | 写入 `special_skills[]`（`condition`、`effect`、`curve`、`max_stack`） |
+
+**注意**：`sync_weapons.py` / `add_weapon.py` 仍可能产出 **legacy** 字段（顶层 `xxx+`、`特殊能力1/2`）。正式 `weapons.json` 须为 `normal_skills` + `special_skills`；`--apply` 写回后请执行：
+
+```powershell
+python tools/migrate_weapon_skills_schema.py --apply
+python -m pytest endfield_damage_calculator/tests/test_game_data_contract.py -q
+```
 
 **武器限制**：须存在 `基础攻击力`、`满级基础攻击力` 与 `词条1rank1` 等字段；仅模板简介、无 rank 表的武器（如部分 Wiki 简页）会跳过。
 
