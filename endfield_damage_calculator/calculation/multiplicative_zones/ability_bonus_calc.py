@@ -31,6 +31,20 @@ def _get_weapon_bonus(bonus_data, level: int = 1) -> float:
     return 0.0
 
 
+def _get_bonus_from_normal_skills(
+    weapon: Dict[str, Any],
+    effect_name: str,
+    level: int = 1
+) -> float:
+    """从武器的 normal_skills 列表中获取指定效果的加成值"""
+    normal_skills = weapon.get("normal_skills", [])
+    for skill in normal_skills:
+        if isinstance(skill, dict) and skill.get("effect") == effect_name:
+            curve = skill.get("curve", [])
+            return _get_weapon_bonus(curve, level)
+    return 0.0
+
+
 def _warn_if_legacy_skill_kwargs_used(
     *,
     sa1_name: str,
@@ -168,34 +182,88 @@ def calculate_ability_bonus(
         if 0 <= level_index < len(attr_list):
             sub_value = float(attr_list[level_index])
 
+    main_pct = 0.0
+    sub_pct = 0.0
+
     if weapon:
-        # 使用特殊能力等级获取加成值
+        def _resolve_level(effect: str) -> int:
+            if effect == sa1_name:
+                return sa1_level
+            elif effect == sa2_name:
+                return sa2_level
+            elif effect == sa3_name:
+                return sa3_level
+            return 1
+
+        def _should_skip(effect: str) -> bool:
+            return effect == sa3_name and sa3_level == 0
+
+        def _classify(effect: str) -> str:
+            if effect == "主能力值+":
+                return "main_flat"
+            if effect == "副能力值+":
+                return "sub_flat"
+            if effect == f"{main_attr}+":
+                return "main_flat"
+            if effect == f"{sub_attr}+":
+                return "sub_flat"
+            if effect == "主能力+":
+                return "main_pct"
+            if effect == "副能力+":
+                return "sub_pct"
+            if effect == "全能力+":
+                return "both_pct"
+            return ""
+
+        # 1. 从 normal_skills 列表中获取加成
+        for skill in weapon.get("normal_skills", []):
+            if not isinstance(skill, dict):
+                continue
+            effect = skill.get("effect", "")
+            category = _classify(effect)
+            if not category:
+                continue
+            if _should_skip(effect):
+                continue
+            bonus_level = _resolve_level(effect)
+            bonus_value = _get_weapon_bonus(skill.get("curve", []), bonus_level)
+            if category == "main_flat":
+                main_value += bonus_value
+            elif category == "sub_flat":
+                sub_value += bonus_value
+            elif category == "main_pct":
+                main_pct += bonus_value
+            elif category == "sub_pct":
+                sub_pct += bonus_value
+            elif category == "both_pct":
+                main_pct += bonus_value
+                sub_pct += bonus_value
+
+        # 2. 从直接属性键中获取加成（向后兼容）
         bonus_attrs = [key for key in weapon.keys() if key.endswith('+')]
         for attr_name in bonus_attrs:
-            # 确定使用哪个特殊能力等级
-            if attr_name == sa1_name:
-                bonus_level = sa1_level
-            elif attr_name == sa2_name:
-                bonus_level = sa2_level
-            elif attr_name == sa3_name:
-                bonus_level = sa3_level
-            else:
-                # 默认使用武器等级（或第一个等级）
-                bonus_level = 1
-            
-            # 如果第三个特殊能力关闭，跳过
-            if attr_name == sa3_name and sa3_level == 0:
+            category = _classify(attr_name)
+            if not category:
                 continue
-            
-            # 添加到对应能力值
+            if _should_skip(attr_name):
+                continue
+            bonus_level = _resolve_level(attr_name)
             bonus_value = _get_weapon_bonus(weapon[attr_name], bonus_level)
-            if attr_name == f"{main_attr}+" or attr_name == "主能力+":
+            if category == "main_flat":
                 main_value += bonus_value
-            elif attr_name == f"{sub_attr}+" or attr_name == "副能力+":
+            elif category == "sub_flat":
                 sub_value += bonus_value
+            elif category == "main_pct":
+                main_pct += bonus_value
+            elif category == "sub_pct":
+                sub_pct += bonus_value
+            elif category == "both_pct":
+                main_pct += bonus_value
+                sub_pct += bonus_value
 
         from character_weapon_equipment.weapon_data.special_fields import (
             add_special_picks_to_main_sub_bonus,
+            add_special_picks_to_ability_pct,
         )
 
         md, sd = add_special_picks_to_main_sub_bonus(
@@ -212,6 +280,20 @@ def calculate_ability_bonus(
         main_value += md
         sub_value += sd
 
+        mp, sp = add_special_picks_to_ability_pct(
+            weapon,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws_stack=ws_stack,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+            ws2_stack=ws2_stack,
+            main_attr=main_attr,
+            sub_attr=sub_attr,
+        )
+        main_pct += mp
+        sub_pct += sp
+
     # 添加信赖加成到主能力（使用公式模块中的 trust_add 常量）
     if 0 <= trust_level < len(trust_add):
         main_value += trust_add[trust_level]
@@ -222,4 +304,7 @@ def calculate_ability_bonus(
         if sub_attr and sub_attr in equipment_stat_bonus:
             sub_value += float(equipment_stat_bonus[sub_attr])
 
-    return main_value * 0.005 + sub_value * 0.002
+    main_final = main_value * (1.0 + main_pct / 100.0)
+    sub_final = sub_value * (1.0 + sub_pct / 100.0)
+
+    return main_final * 0.005 + sub_final * 0.002

@@ -40,14 +40,20 @@ def apply_conditional_special_to_stats(
     ws2_stack: int = 1,
     main_attr: str,
     sub_attr: str,
-) -> tuple[float, float]:
+) -> tuple[float, float, float, float]:
     """
     按 GUI 选用档位，将特殊能力1/2 的数值计入主/副能力加成。
 
-    返回 (main_bonus_delta, sub_bonus_delta)。
+    返回 (main_flat_delta, sub_flat_delta, main_pct_delta, sub_pct_delta)。
+
+    分类规则：
+        - 平值加成：主能力值+、副能力值+、{main_attr}+、{sub_attr}+
+        - 百分比加成：主能力+、副能力+、全能力+（同时影响主副）
     """
-    main_delta = 0.0
-    sub_delta = 0.0
+    main_flat = 0.0
+    sub_flat = 0.0
+    main_pct = 0.0
+    sub_pct = 0.0
     picks = (
         (ws_name, ws_level, ws_stack),
         (ws2_name, ws2_level, ws2_stack),
@@ -61,11 +67,22 @@ def apply_conditional_special_to_stats(
         value = special_pick_bonus(
             curve, max_stack, skill_level=pick_level, stack_count=pick_stack
         )
-        if sa_name in (f"{main_attr}+", "主能力+"):
-            main_delta += value
-        elif sa_name in (f"{sub_attr}+", "副能力+"):
-            sub_delta += value
-    return main_delta, sub_delta
+        if sa_name == "主能力值+":
+            main_flat += value
+        elif sa_name == "副能力值+":
+            sub_flat += value
+        elif sa_name == f"{main_attr}+":
+            main_flat += value
+        elif sa_name == f"{sub_attr}+":
+            sub_flat += value
+        elif sa_name == "主能力+":
+            main_pct += value
+        elif sa_name == "副能力+":
+            sub_pct += value
+        elif sa_name == "全能力+":
+            main_pct += value
+            sub_pct += value
+    return main_flat, sub_flat, main_pct, sub_pct
 
 
 def add_special_picks_to_main_sub_bonus(
@@ -80,8 +97,8 @@ def add_special_picks_to_main_sub_bonus(
     main_attr: str,
     sub_attr: str,
 ) -> tuple[float, float]:
-    """将已启用的特殊能力1/2 档位加成累加到主/副能力（与旧 ``特殊能力`` 逻辑一致）。"""
-    return apply_conditional_special_to_stats(
+    """仅返回特殊能力中的平值加成 (主, 副) —— 向后兼容。"""
+    mf, sf, _, _ = apply_conditional_special_to_stats(
         weapon,
         ws_name=ws_name,
         ws_level=ws_level,
@@ -92,6 +109,34 @@ def add_special_picks_to_main_sub_bonus(
         main_attr=main_attr,
         sub_attr=sub_attr,
     )
+    return mf, sf
+
+
+def add_special_picks_to_ability_pct(
+    weapon: dict[str, Any],
+    *,
+    ws_name: str,
+    ws_level: int,
+    ws_stack: int = 1,
+    ws2_name: str = "",
+    ws2_level: int = 1,
+    ws2_stack: int = 1,
+    main_attr: str,
+    sub_attr: str,
+) -> tuple[float, float]:
+    """仅返回特殊能力中的百分比加成 (主, 副)。"""
+    _, _, mp, sp = apply_conditional_special_to_stats(
+        weapon,
+        ws_name=ws_name,
+        ws_level=ws_level,
+        ws_stack=ws_stack,
+        ws2_name=ws2_name,
+        ws2_level=ws2_level,
+        ws2_stack=ws2_stack,
+        main_attr=main_attr,
+        sub_attr=sub_attr,
+    )
+    return mp, sp
 
 
 def add_special_picks_attack_percent(

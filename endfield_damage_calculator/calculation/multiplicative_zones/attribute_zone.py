@@ -101,24 +101,34 @@ class AttributeZoneManager:
         character: Dict[str, Any],
         weapon: Dict[str, Any]
     ) -> None:
-        """从武器数据添加属性加成"""
+        """从武器数据添加属性加成（仅平值，百分比由 ability_bonus 链处理）"""
         main_attr = character.get('主能力', '')
         sub_attr = character.get('副能力', '')
 
         for attr in self.ATTRIBUTES:
             current_value = self._zones[attr]._params.get(attr, 0.0)
 
+            # 从 normal_skills 列表中获取平值加成
+            for skill in weapon.get("normal_skills", []):
+                if not isinstance(skill, dict):
+                    continue
+                effect = skill.get("effect", "")
+                if effect == f"{attr}+":
+                    current_value += self._get_weapon_bonus(skill.get("curve", []))
+                elif attr == main_attr and effect == "主能力值+":
+                    current_value += self._get_weapon_bonus(skill.get("curve", []))
+                elif attr == sub_attr and effect == "副能力值+":
+                    current_value += self._get_weapon_bonus(skill.get("curve", []))
+
+            # 从直接属性键中获取加成（向后兼容旧 schema）
             if f"{attr}+" in weapon:
-                bonus = self._get_weapon_bonus(weapon[f"{attr}+"])
-                current_value += bonus
+                current_value += self._get_weapon_bonus(weapon[f"{attr}+"])
 
-            if attr == main_attr and "主能力+" in weapon:
-                bonus = self._get_weapon_bonus(weapon["主能力+"])
-                current_value += bonus
+            if attr == main_attr and "主能力值+" in weapon:
+                current_value += self._get_weapon_bonus(weapon["主能力值+"])
 
-            if attr == sub_attr and "副能力+" in weapon:
-                bonus = self._get_weapon_bonus(weapon["副能力+"])
-                current_value += bonus
+            if attr == sub_attr and "副能力值+" in weapon:
+                current_value += self._get_weapon_bonus(weapon["副能力值+"])
 
             self._zones[attr].set_params(**{attr: current_value})
 
@@ -294,57 +304,62 @@ def calculate_attribute_zones_with_details(
             if 0 <= level_index < len(attr_list):
                 base_value = float(attr_list[level_index])
 
-        # 计算武器加成（使用特殊能力等级）
+        # 计算武器加成（仅平值，百分比由 ability_bonus 链处理）
         bonus_value = 0.0
         if weapon:
-            # 处理普通属性加成（如力量+、敏捷+等）
+            def _resolve_level(effect: str) -> int:
+                if effect == sa1_name:
+                    return sa1_level
+                if effect == sa2_name:
+                    return sa2_level
+                if effect == sa3_name:
+                    return sa3_level
+                return 1
+
+            def _should_skip(effect: str) -> bool:
+                return effect == sa3_name and sa3_level == 0
+
+            # 1. 从 normal_skills 列表中获取平值加成
+            for skill in weapon.get("normal_skills", []):
+                if not isinstance(skill, dict):
+                    continue
+                effect = skill.get("effect", "")
+                if effect == f"{attr}+":
+                    if _should_skip(effect):
+                        continue
+                    bonus_value += manager._get_weapon_bonus(
+                        skill.get("curve", []), _resolve_level(effect)
+                    )
+                elif attr == main_attr and effect == "主能力值+":
+                    if _should_skip(effect):
+                        continue
+                    bonus_value += manager._get_weapon_bonus(
+                        skill.get("curve", []), _resolve_level(effect)
+                    )
+                elif attr == sub_attr and effect == "副能力值+":
+                    if _should_skip(effect):
+                        continue
+                    bonus_value += manager._get_weapon_bonus(
+                        skill.get("curve", []), _resolve_level(effect)
+                    )
+
+            # 2. 从直接属性键中获取加成（向后兼容旧 schema）
             attr_bonus_name = f"{attr}+"
             if attr_bonus_name in weapon:
-                # 确定使用哪个特殊能力等级
-                if attr_bonus_name == sa1_name:
-                    bonus_level = sa1_level
-                elif attr_bonus_name == sa2_name:
-                    bonus_level = sa2_level
-                elif attr_bonus_name == sa3_name:
-                    bonus_level = sa3_level
-                else:
-                    bonus_level = 1
-                
-                # 如果第三个特殊能力关闭，跳过
-                if attr_bonus_name == sa3_name and sa3_level == 0:
-                    continue
-                bonus_value += manager._get_weapon_bonus(weapon[attr_bonus_name], bonus_level)
-            
-            # 处理主能力+加成
-            if attr == main_attr and "主能力+" in weapon:
-                if "主能力+" == sa1_name:
-                    bonus_level = sa1_level
-                elif "主能力+" == sa2_name:
-                    bonus_level = sa2_level
-                elif "主能力+" == sa3_name:
-                    bonus_level = sa3_level
-                else:
-                    bonus_level = 1
-                
-                if "主能力+" == sa3_name and sa3_level == 0:
-                    continue
-                bonus_value += manager._get_weapon_bonus(weapon["主能力+"], bonus_level)
-            
-            # 处理副能力+加成
-            if attr == sub_attr and "副能力+" in weapon:
-                if "副能力+" == sa1_name:
-                    bonus_level = sa1_level
-                elif "副能力+" == sa2_name:
-                    bonus_level = sa2_level
-                elif "副能力+" == sa3_name:
-                    bonus_level = sa3_level
-                else:
-                    bonus_level = 1
-                
-                if "副能力+" == sa3_name and sa3_level == 0:
-                    continue
-                bonus_value += manager._get_weapon_bonus(weapon["副能力+"], bonus_level)
-            
+                bonus_level = _resolve_level(attr_bonus_name)
+                if not _should_skip(attr_bonus_name):
+                    bonus_value += manager._get_weapon_bonus(weapon[attr_bonus_name], bonus_level)
+
+            if attr == main_attr and "主能力值+" in weapon:
+                bonus_level = _resolve_level("主能力值+")
+                if not _should_skip("主能力值+"):
+                    bonus_value += manager._get_weapon_bonus(weapon["主能力值+"], bonus_level)
+
+            if attr == sub_attr and "副能力值+" in weapon:
+                bonus_level = _resolve_level("副能力值+")
+                if not _should_skip("副能力值+"):
+                    bonus_value += manager._get_weapon_bonus(weapon["副能力值+"], bonus_level)
+
             from character_weapon_equipment.weapon_data.special_fields import (
                 add_special_picks_to_main_sub_bonus,
             )
@@ -364,10 +379,9 @@ def calculate_attribute_zones_with_details(
                 bonus_value += md
             elif attr == sub_attr:
                 bonus_value += sd
-            
+
             # 如果是主能力，加上信赖加成
             if attr == main_attr and trust_level > 0:
-                # 信赖加成列表：[0, 10, 15, 15, 20]
                 trust_add = [0, 10, 15, 15, 20]
                 if 0 <= trust_level < len(trust_add):
                     bonus_value += trust_add[trust_level]

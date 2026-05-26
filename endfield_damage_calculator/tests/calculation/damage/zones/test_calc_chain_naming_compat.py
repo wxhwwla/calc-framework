@@ -26,9 +26,9 @@ class TestCalcChainNamingCompat(unittest.TestCase):
             "special_skills": [
                 {
                     "zone": 3,
-                    "name": "主能力+",
+                    "name": "力量+",
                     "condition": "",
-                    "effect": "主能力+",
+                    "effect": "力量+",
                     "curve": [6.0] * 9,
                     "max_stack": 1,
                 }
@@ -38,7 +38,7 @@ class TestCalcChainNamingCompat(unittest.TestCase):
             char,
             weapon,
             level=1,
-            special_skill_1_name="主能力+",
+            special_skill_1_name="力量+",
             special_skill_1_level=1,
             special_skill_1_stack=0,
         )

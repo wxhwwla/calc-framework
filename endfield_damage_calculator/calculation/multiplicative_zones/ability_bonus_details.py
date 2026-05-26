@@ -128,29 +128,88 @@ def calculate_ability_bonus_with_details(
         if 0 <= level_index < len(attr_list):
             sub_base = float(attr_list[level_index])
 
+    main_pct = 0.0
+    sub_pct = 0.0
+
     if weapon:
+        def _resolve_level(attr_name: str) -> int:
+            if attr_name == sa1_name:
+                return sa1_level
+            elif attr_name == sa2_name:
+                return sa2_level
+            elif attr_name == sa3_name:
+                return sa3_level
+            return 1
+
+        def _should_skip(attr_name: str) -> bool:
+            return attr_name == sa3_name and sa3_name and sa3_level == 0
+
+        def _classify(attr_name: str) -> str:
+            if attr_name == "主能力值+":
+                return "main_flat"
+            if attr_name == "副能力值+":
+                return "sub_flat"
+            if attr_name == f"{main_attr}+":
+                return "main_flat"
+            if attr_name == f"{sub_attr}+":
+                return "sub_flat"
+            if attr_name == "主能力+":
+                return "main_pct"
+            if attr_name == "副能力+":
+                return "sub_pct"
+            if attr_name == "全能力+":
+                return "both_pct"
+            return ""
+
+        # 1. 从 normal_skills 列表中获取加成
+        for skill in weapon.get("normal_skills", []):
+            if not isinstance(skill, dict):
+                continue
+            effect = skill.get("effect", "")
+            category = _classify(effect)
+            if not category:
+                continue
+            if _should_skip(effect):
+                continue
+            bonus_level = _resolve_level(effect)
+            bonus_value = _get_weapon_bonus(skill.get("curve", []), bonus_level)
+            if category == "main_flat":
+                main_bonus += bonus_value
+            elif category == "sub_flat":
+                sub_bonus += bonus_value
+            elif category == "main_pct":
+                main_pct += bonus_value
+            elif category == "sub_pct":
+                sub_pct += bonus_value
+            elif category == "both_pct":
+                main_pct += bonus_value
+                sub_pct += bonus_value
+
+        # 2. 从直接属性键中获取加成（向后兼容）
         bonus_attrs = [key for key in weapon.keys() if key.endswith('+')]
         for attr_name in bonus_attrs:
-            if attr_name == sa1_name:
-                bonus_level = sa1_level
-            elif attr_name == sa2_name:
-                bonus_level = sa2_level
-            elif attr_name == sa3_name:
-                bonus_level = sa3_level
-            else:
-                bonus_level = 1
-
-            if attr_name == sa3_name and sa3_name and sa3_level == 0:
+            category = _classify(attr_name)
+            if not category:
                 continue
-
+            if _should_skip(attr_name):
+                continue
+            bonus_level = _resolve_level(attr_name)
             bonus_value = _get_weapon_bonus(weapon[attr_name], bonus_level)
-            if attr_name == f"{main_attr}+" or attr_name == "主能力+":
+            if category == "main_flat":
                 main_bonus += bonus_value
-            elif attr_name == f"{sub_attr}+" or attr_name == "副能力+":
+            elif category == "sub_flat":
                 sub_bonus += bonus_value
+            elif category == "main_pct":
+                main_pct += bonus_value
+            elif category == "sub_pct":
+                sub_pct += bonus_value
+            elif category == "both_pct":
+                main_pct += bonus_value
+                sub_pct += bonus_value
 
         from character_weapon_equipment.weapon_data.special_fields import (
             add_special_picks_to_main_sub_bonus,
+            add_special_picks_to_ability_pct,
         )
 
         md, sd = add_special_picks_to_main_sub_bonus(
@@ -167,20 +226,41 @@ def calculate_ability_bonus_with_details(
         main_bonus += md
         sub_bonus += sd
 
+        mp, sp = add_special_picks_to_ability_pct(
+            weapon,
+            ws_name=ws_name,
+            ws_level=ws_level,
+            ws_stack=ws_stack,
+            ws2_name=ws2_name,
+            ws2_level=ws2_level,
+            ws2_stack=ws2_stack,
+            main_attr=main_attr,
+            sub_attr=sub_attr,
+        )
+        main_pct += mp
+        sub_pct += sp
+
     trust_bonus = trust_add[trust_level] if 0 <= trust_level < len(trust_add) else 0.0
 
-    main_value = main_base + main_bonus + trust_bonus
-    sub_value = sub_base + sub_bonus
+    main_flat = main_base + main_bonus + trust_bonus
+    sub_flat = sub_base + sub_bonus
+
+    main_value = main_flat * (1.0 + main_pct / 100.0)
+    sub_value = sub_flat * (1.0 + sub_pct / 100.0)
 
     bonus = main_value * 0.005 + sub_value * 0.002
 
     return {
         'main_attr': main_attr,
         'main_value': main_value,
+        'main_flat': main_flat,
+        'main_pct': main_pct,
         'main_base': main_base,
         'main_bonus': main_bonus,
         'sub_attr': sub_attr,
         'sub_value': sub_value,
+        'sub_flat': sub_flat,
+        'sub_pct': sub_pct,
         'sub_base': sub_base,
         'sub_bonus': sub_bonus,
         'bonus': bonus

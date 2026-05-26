@@ -39,8 +39,8 @@ class TestWeaponSpecialLevel(unittest.TestCase):
         on = calculate_ability_bonus_with_details(
             char, weapon, level=1, ws_name="主能力+", ws_level=1
         )
-        self.assertEqual(off["main_bonus"], 0.0)
-        self.assertEqual(on["main_bonus"], 5.0)
+        self.assertEqual(off["main_pct"], 0.0)
+        self.assertEqual(on["main_pct"], 5.0)
 
     def test_new_named_special_skill_kwargs_are_supported(self):
         char = {
@@ -69,7 +69,7 @@ class TestWeaponSpecialLevel(unittest.TestCase):
             special_skill_1_level=1,
             special_skill_1_stack=0,
         )
-        self.assertEqual(on["main_bonus"], 5.0)
+        self.assertEqual(on["main_pct"], 5.0)
 
     def test_ability_bonus_warns_on_legacy_skill_names(self):
         char = {

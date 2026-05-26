@@ -196,7 +196,31 @@ def calculate_final_attack_with_details(
     # 获取武器攻击力+（使用特殊能力等级，同名效果叠加）
     attack_bonus_percent = 0.0
     if weapon:
-        # 1. 遍历所有以+结尾的属性，累加攻击力+（排除附加攻击力+）
+        # 1. 先从 normal_skills 列表中获取攻击力+
+        for skill in weapon.get("normal_skills", []):
+            if not isinstance(skill, dict):
+                continue
+            effect = skill.get("effect", "")
+            if effect == "攻击力+":
+                # 根据属性名称确定使用哪个特殊能力等级
+                if effect == sa1_name:
+                    level = sa1_level
+                elif effect == sa2_name:
+                    level = sa2_level
+                elif effect == sa3_name:
+                    level = sa3_level
+                else:
+                    level = 1
+                
+                bonus_data = skill.get("curve", [])
+                if isinstance(bonus_data, list):
+                    level_index = level - 1
+                    if 0 <= level_index < len(bonus_data):
+                        attack_bonus_percent += float(bonus_data[level_index])
+                elif isinstance(bonus_data, (int, float)):
+                    attack_bonus_percent += float(bonus_data)
+        
+        # 2. 再遍历所有以+结尾的属性，累加攻击力+（排除附加攻击力+）
         for attr_name in weapon.keys():
             if attr_name.endswith('+') and attr_name == '攻击力+':
                 # 根据属性名称确定使用哪个特殊能力等级
@@ -244,26 +268,57 @@ def calculate_final_attack_with_details(
 
     # 获取武器附加攻击力+（使用特殊能力等级）
     additional_attack = 0.0
-    if weapon and '附加攻击力+' in weapon:
-        # 确定使用哪个特殊能力等级
-        if '附加攻击力+' == sa1_name:
-            level = sa1_level
-        elif '附加攻击力+' == sa2_name:
-            level = sa2_level
-        elif '附加攻击力+' == sa3_name:
-            level = sa3_level
-        else:
-            level = 1
+    
+    if weapon:
+        # 1. 先从 normal_skills 列表中获取附加攻击力+
+        for skill in weapon.get("normal_skills", []):
+            if not isinstance(skill, dict):
+                continue
+            effect = skill.get("effect", "")
+            if effect == "附加攻击力+":
+                # 确定使用哪个特殊能力等级
+                if effect == sa1_name:
+                    level = sa1_level
+                elif effect == sa2_name:
+                    level = sa2_level
+                elif effect == sa3_name:
+                    level = sa3_level
+                else:
+                    level = 1
+                
+                # 如果第三个特殊能力关闭，跳过
+                if effect == sa3_name and sa3_level == 0:
+                    continue
+                
+                bonus_data = skill.get("curve", [])
+                if isinstance(bonus_data, list):
+                    level_index = level - 1
+                    if 0 <= level_index < len(bonus_data):
+                        additional_attack += float(bonus_data[level_index])
+                elif isinstance(bonus_data, (int, float)):
+                    additional_attack += float(bonus_data)
         
-        # 如果第三个特殊能力关闭，跳过
-        if not ('附加攻击力+' == sa3_name and sa3_level == 0):
-            bonus_data = weapon['附加攻击力+']
-            if isinstance(bonus_data, list):
-                level_index = level - 1
-                if 0 <= level_index < len(bonus_data):
-                    additional_attack = float(bonus_data[level_index])
-            elif isinstance(bonus_data, (int, float)):
-                additional_attack = float(bonus_data)
+        # 2. 再从直接属性键中获取附加攻击力+（向后兼容）
+        if '附加攻击力+' in weapon:
+            # 确定使用哪个特殊能力等级
+            if '附加攻击力+' == sa1_name:
+                level = sa1_level
+            elif '附加攻击力+' == sa2_name:
+                level = sa2_level
+            elif '附加攻击力+' == sa3_name:
+                level = sa3_level
+            else:
+                level = 1
+            
+            # 如果第三个特殊能力关闭，跳过
+            if not ('附加攻击力+' == sa3_name and sa3_level == 0):
+                bonus_data = weapon['附加攻击力+']
+                if isinstance(bonus_data, list):
+                    level_index = level - 1
+                    if 0 <= level_index < len(bonus_data):
+                        additional_attack += float(bonus_data[level_index])
+                elif isinstance(bonus_data, (int, float)):
+                    additional_attack += float(bonus_data)
 
     # 中间攻击力 = 攻击加成攻击力 + 附加攻击力+ + 装备平铺攻击力
     equipment_flat_attack = 0.0
