@@ -434,7 +434,27 @@ def _push_to_remote() -> bool:
         return True
 
 
-def commit_and_push(*, minor: bool = False, no_bump: bool = False) -> None:
+def _push_tag(version: str) -> bool:
+    tag = f"v{version}"
+    _, existing_tags, _ = run_git(["tag", "-l", tag], capture_output=True)
+    if tag in existing_tags.strip().split("\n"):
+        print(f"[信息] 标签 {tag} 已存在，跳过创建")
+    else:
+        print(f"[信息] 创建标签 {tag}")
+        cfg = resolve_signing_config()
+        extra = commit_extra_args(cfg)
+        tag_args = ["tag", "-a", tag, "-m", f"Release {tag}"]
+        if extra:
+            tag_args.extend(extra)
+        run_git(tag_args)
+
+    print(f"[信息] 推送标签 {tag} ...")
+    run_git(["push", "origin", tag], timeout=120)
+    print(f"[信息] 标签 {tag} 已推送，GitHub Actions 将自动构建发布版")
+    return True
+
+
+def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: bool = False) -> None:
     os.chdir(_repo_root())
     target_path = os.path.join(".", TARGET_DIR)
     if not os.path.isdir(target_path):
@@ -524,6 +544,10 @@ def commit_and_push(*, minor: bool = False, no_bump: bool = False) -> None:
         print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
         print(f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}（_EXE_VERSION 请打包前自行修改）")
 
+    if push_succeeded and push_tag:
+        version = meta.read_version(readme_path)
+        _push_tag(version)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -538,6 +562,11 @@ def parse_args() -> argparse.Namespace:
         "--no-bump",
         action="store_true",
         help="本次有业务改动也不递增 _VERSION",
+    )
+    parser.add_argument(
+        "--tag",
+        action="store_true",
+        help="推送 git 标签（v{version}），触发 GitHub Actions 构建并发布 Verified 发行版",
     )
     return parser.parse_args()
 
@@ -556,7 +585,7 @@ def main() -> None:
         if not sync_with_remote():
             print("[中止] 同步远程失败，未推送")
             sys.exit(1)
-        commit_and_push(minor=args.minor, no_bump=args.no_bump)
+        commit_and_push(minor=args.minor, no_bump=args.no_bump, push_tag=args.tag)
         print("=" * 60)
         print("[完成]")
         print("=" * 60)

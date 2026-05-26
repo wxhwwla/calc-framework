@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  verify-version:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: endfield_damage_calculator
+    outputs:
+      tag_version: ${{ steps.version.outputs.tag_version }}
+      code_version: ${{ steps.version.outputs.code_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check version consistency
+        id: version
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $tag_version = $tag -replace '^v', ''
+          $code_version = python -c "import please_read_me; print(please_read_me._VERSION)"
+          echo "tag_version=$tag_version" >> $env:GITHUB_OUTPUT
+          echo "code_version=$code_version" >> $env:GITHUB_OUTPUT
+          if ($tag_version -ne $code_version) {
+            Write-Error "Tag version v${tag_version} does not match _VERSION ${code_version}"
+            exit 1
+          }
+          Write-Host "Version check passed: v${tag_version}"
+          $exe_version = python -c "import please_read_me; print(please_read_me._EXE_VERSION)"
+          Write-Host "EXE version: v${exe_version}"
+
+  test:
+    needs: verify-version
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: endfield_damage_calculator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,viz,plugins]"
+      - name: Run tests
+        run: python -m pytest tests/ -q --tb=short
+
+  build:
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: endfield_damage_calculator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,build,viz]"
+      - name: Build release
+        run: python build.py
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $version = "${{ needs.verify-version.outputs.tag_version }}"
+          $name = "终末地伤害计算器_v${version}"
+          Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}.zip"
+          Write-Host "Created: dist/${name}.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-artifact
+          path: endfield_damage_calculator/dist/终末地伤害计算器_v*.zip
+
+  publish:
+    needs: [build, verify-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-artifact
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ needs.verify-version.outputs.tag_version }}"
+          tag_name: ${{ github.ref_name }}
+          files: "终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip"
+          generate_release_notes: true
+          make_latest: true
