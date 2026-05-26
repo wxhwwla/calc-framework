@@ -116,5 +116,6 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         skill_counts=loadout.manual_counts,
         use_manual_counts=loadout.use_manual_multi_skill_counts,
         enemy_defense=loadout.enemy_defense,
+        manual_buffs=loadout.manual_buffs if loadout.manual_buffs else None,
         **skill_kwargs,
     )

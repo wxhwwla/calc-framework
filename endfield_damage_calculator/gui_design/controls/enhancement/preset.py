@@ -198,6 +198,9 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
         app.extra_crit_rate_percent_var.set(str(float(preset.extra_crit_rate) * 100.0))
     if hasattr(app, "extra_crit_damage_percent_var"):
         app.extra_crit_damage_percent_var.set(str(float(preset.extra_crit_damage) * 100.0))
+    manual_buffs = getattr(preset, "manual_buffs", None)
+    if manual_buffs:
+        app._manual_buff_store = {k: [dict(e) for e in v] for k, v in manual_buffs.items()}
     ui_state = preset.ui_state or {}
     char_panel = getattr(app, "char_panel", None)
     if char_panel is not None and hasattr(char_panel, "_show_advanced_params_var"):

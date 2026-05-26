@@ -39,3 +39,11 @@ Using default triage label vocabulary: needs-triage, needs-info, ready-for-agent
 ### Domain docs
 
 Single-context layout: one CONTEXT.md + docs/adr/ at repo root. See `docs/agents/domain.md`.
+
+### Default development workflow
+
+**When the user requests feature implementation, bug fixes, or code changes**, default to the `design-then-build` workflow:
+1. First interview the user to clarify the design (grill-me style)
+2. Then implement with TDD (test-first, red-green-refactor)
+3. For non-risky operations (tests, code edits, dependency installs), auto-consent
+4. For high-risk operations (upload scripts, git push, destructive commands), ask user first

@@ -59,6 +59,58 @@ def _zone_share_percent(zone_values: dict[str, float]) -> dict[str, float]:
     return {name: weights[name] / total * 100.0 for name in ZONE_ORDER if weights[name] > 0}
 
 
+_SKILL_TYPE_ORDER = ("战技", "连携技", "终结技")
+
+
+def _compute_weighted_with_buffs(
+    segment_damage: dict[str, float],
+    counts: dict[str, int],
+    manual_buffs: Optional[dict[str, list[dict[str, float]]]],
+    scenarios: list[Any],
+    final_attack: float,
+    enemy_defense: float,
+) -> tuple[float, dict[str, float], dict[str, float]]:
+    """按次数加总，对每次出现查找 manual_buffs 注入。"""
+    scenario_by_key = {s.scenario_key: s for s in scenarios}
+    segment_totals: dict[str, float] = {}
+    skill_type_totals: dict[str, float] = {name: 0.0 for name in _SKILL_TYPE_ORDER}
+    weighted_total = 0.0
+    mb = manual_buffs or {}
+
+    for key, seg_count in counts.items():
+        if seg_count <= 0:
+            continue
+        scenario = scenario_by_key.get(key)
+        segment_total = 0.0
+        for occurrence_idx in range(1, seg_count + 1):
+            buff_key = f"{key}:{occurrence_idx}"
+            buffs = mb.get(buff_key)
+            if buffs is not None or scenario is not None:
+                result = calculate_single_hit_damage(
+                    DamageContext(
+                        final_attack=final_attack,
+                        skill_multiplier=scenario.skill_multiplier if scenario else 1.0,
+                        damage_type=scenario.damage_type or "物理" if scenario else "物理",
+                        skill_type=scenario.resolved_skill_type if scenario else "战技",
+                        enemy_defense=enemy_defense,
+                    ),
+                    crit_mode="non_crit",
+                    manual_buffs=buffs,
+                )
+                single_hit = float(result.final_damage)
+            else:
+                single_hit = float(segment_damage.get(key, 0.0))
+            segment_total += single_hit
+        segment_totals[key] = segment_total
+        weighted_total += segment_total
+        skill_type, _ = parse_segment_key(key)
+        if skill_type in skill_type_totals:
+            skill_type_totals[skill_type] += segment_total
+
+    skill_type_totals = {k: v for k, v in skill_type_totals.items() if v > 0}
+    return weighted_total, segment_totals, skill_type_totals
+
+
 def build_damage_snapshot(
     *,
     char_data: dict[str, Any],
@@ -94,8 +146,12 @@ def build_damage_snapshot(
     ws2_level: int = 1,
     ws2_stack: int = 1,
     enemy_defense: float = 100.0,
+    manual_buffs: Optional[dict[str, list[dict[str, float]]]] = None,
 ) -> DamageSnapshot:
-    """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。"""
+    """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。
+
+    manual_buffs: 手动场外 buff，key 为 "段键:次数"（如 "战技:1:2"），值为该次使用的 buff 条目列表。
+    """
     has_normal_1 = bool(normal_skill_1_name)
     has_normal_2 = bool(normal_skill_2_name)
     has_normal_3 = bool(normal_skill_3_name)
@@ -176,8 +232,8 @@ def build_damage_snapshot(
         counts = {segment_key(selected_label, 1): 1}
         active_counts = counts
 
-    weighted, segment_totals, skill_type_totals = aggregate_weighted_damage(
-        segment_damage, counts
+    weighted, segment_totals, skill_type_totals = _compute_weighted_with_buffs(
+        segment_damage, counts, manual_buffs, scenarios_list, final_attack, enemy_defense
     )
 
     rotation_share: dict[str, float] = {}

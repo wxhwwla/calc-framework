@@ -13,6 +13,26 @@ from character_weapon_equipment.weapon_data.special_fields import (
 )
 
 PRESET_SCHEMA = "endfield_loadout_preset_v2"
+
+
+def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, float]]]:
+    if not isinstance(raw, dict):
+        return {}
+    result: dict[str, list[dict[str, float]]] = {}
+    for key, entries in raw.items():
+        if not isinstance(entries, list):
+            continue
+        parsed: list[dict[str, float]] = []
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            parsed.append({
+                "effect_type": str(e.get("effect_type", "")),
+                "value": float(e.get("value", 0.0)),
+            })
+        if parsed:
+            result[str(key)] = parsed
+    return result
 LEGACY_PRESET_SCHEMA = "endfield_loadout_preset_v1"
 BATCH_PRESET_SCHEMA = "endfield_loadout_preset_batch_v1"
 
@@ -46,6 +66,7 @@ class LoadoutPreset:
     include_conditional_equipment_crit: bool = False
     extra_crit_rate: float = 0.0
     extra_crit_damage: float = 0.0
+    manual_buffs: dict[str, list[dict[str, float]]] = field(default_factory=dict)
     ui_state: dict[str, Any] | None = None
     note: str = ""
 
@@ -76,6 +97,10 @@ class LoadoutPreset:
             "include_conditional_equipment_crit": self.include_conditional_equipment_crit,
             "extra_crit_rate": float(self.extra_crit_rate),
             "extra_crit_damage": float(self.extra_crit_damage),
+            "manual_buffs": {
+                k: [dict(e) for e in v]
+                for k, v in self.manual_buffs.items()
+            },
             "ui_state": dict(self.ui_state or {}),
             "note": self.note,
         }
@@ -179,6 +204,7 @@ class LoadoutPreset:
             ),
             extra_crit_rate=float(data.get("extra_crit_rate", 0.0) or 0.0),
             extra_crit_damage=float(data.get("extra_crit_damage", 0.0) or 0.0),
+            manual_buffs=_parse_manual_buffs(data.get("manual_buffs")),
             ui_state={
                 "char_advanced_expanded": bool(
                     (data.get("ui_state") or {}).get("char_advanced_expanded", True)

@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""GUI 字体：与系统默认字体一致；matplotlib 图表复用同一套中文字体。"""
+"""
+GUI 字体：与系统默认字体一致；matplotlib 图表复用同一套中文字体。
+
+**字体创建规范**
+  应用内所有 CTk 控件必须在构造时显式传入 ``font=`` 参数。获取字体的途径：
+
+  1. 主应用内优先使用 ``self.small_font`` / ``self.big_font``（已在 App 初始化时
+     按系统字体创建）。
+  2. 独立模块（如 dialog / 工具窗口）可通过 ``default_ui_font(size=...)`` 获取。
+  3. ``configure_tk_default_font()`` 在根窗口创建后兜底：覆写 ``TkDefaultFont``
+     与 ``ThemeManager.theme["CTkFont"]["family"]``，确保 CTk 内部 ``CTkFont()``
+     无参路径（DropdownMenu 等）也使用系统字体；``configure_all_tk_fonts()`` 在
+     所有 widget 构建完毕后遍历全部 tk 命名字体二次兜底。
+"""
 
 from __future__ import annotations
 

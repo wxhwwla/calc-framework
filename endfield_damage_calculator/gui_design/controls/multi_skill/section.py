@@ -37,6 +37,13 @@ from .rows import (
     rebuild_multi_skill_segment_rows,
 )
 
+
+def _open_manual_buff_window(app: DamageCalculatorApp) -> None:
+    from gui_design.controls.manual_buff.window import open_manual_buff_window as _open
+
+    _open(app)
+
+
 def place_multi_skill_section(
     app: "DamageCalculatorApp",
     parent: ctk.CTkFrame,
@@ -107,6 +114,16 @@ def place_multi_skill_section(
     mr = _hint(mr, MULTI_SKILL_COUNTS_HINT, box_height=MULTI_SKILL_HINT_BOX_HEIGHT)
 
     rebuild_multi_skill_segment_rows(app)
+
+    manual_buff_btn = ctk.CTkButton(
+        content,
+        text="场外 Buff 微调",
+        font=app.small_font,
+        fg_color="#2d6a4f",
+        hover_color="#40916c",
+        command=lambda: _open_manual_buff_window(app),
+    )
+    mr = _place(mr, manual_buff_btn, pady=(4, 6))
 
     mr = _section("物理异常", mr)
     mr = _hint(mr, PHYSICAL_ABNORMAL_HINT, box_height=PHYSICAL_ABNORMAL_HINT_BOX_HEIGHT)

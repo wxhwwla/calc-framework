@@ -70,6 +70,7 @@ class LoadoutState:
     extra_crit_damage: float = 0.0
     enemy_defense: float = 100.0
     weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
+    manual_buffs: dict[str, list[dict[str, float]]] = field(default_factory=dict)
 
     def weapon_skills(self) -> WeaponSkillSelection:
         """当前武器技能选用状态（深 module 视图）。"""
@@ -184,6 +185,7 @@ class LoadoutState:
             include_conditional_equipment_crit=self.include_conditional_equipment_crit,
             extra_crit_rate=self.extra_crit_rate,
             extra_crit_damage=self.extra_crit_damage,
+            manual_buffs=dict(self.manual_buffs),
         )
 
     def to_search_job_inputs(
@@ -258,6 +260,7 @@ def read_loadout_from_panels(
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
     enemy_defense: float,
+    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
 ) -> Optional[LoadoutState]:
     """从角色/武器面板读取配装快照；无效选择时返回 None。"""
     char_data = char_panel.get_selected_data()
@@ -303,6 +306,7 @@ def read_loadout_from_panels(
         extra_crit_damage=float(extra_crit_damage),
         enemy_defense=float(enemy_defense),
         weapon_specials=read_weapon_skill_selection_from_panel(weapon_panel).to_legacy_tuple(),
+        manual_buffs=dict(manual_buffs or {}),
     )
 
 
@@ -356,4 +360,5 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Opti
             app._extra_crit_damage() if hasattr(app, "_extra_crit_damage") else 0.0
         ),
         enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
+        manual_buffs=getattr(app, "_manual_buff_store", None),
     )

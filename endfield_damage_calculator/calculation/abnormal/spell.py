@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
 from calculation.abnormal.spell_params import (
@@ -101,9 +102,14 @@ def evaluate_spell_abnormal_total(
     effects: list[DamageEffect],
     counts: dict[str, int] | None,
     char_level: int = 1,
+    manual_buffs: Optional[dict[str, list[dict[str, float]]]] = None,
 ) -> tuple[float, dict[str, float]]:
-    """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。"""
+    """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。
+
+    manual_buffs: key 格式为 "异常:等级:次数" 如 "灼热异常:1:1"。
+    """
     normalized = normalize_spell_abnormal_counts(counts)
+    mb = manual_buffs or {}
     total = 0.0
     breakdown: dict[str, float] = {}
     for abnormal in SPELL_ABNORMAL_TYPES:
@@ -111,14 +117,16 @@ def evaluate_spell_abnormal_total(
         if defn is None:
             continue
         for ui_level in SPELL_ABNORMAL_LEVELS:
-            count = normalized.get(f"{abnormal}:{ui_level}", 0)
+            base_key = f"{abnormal}:{ui_level}"
+            count = normalized.get(base_key, 0)
             if count <= 0:
                 continue
             multiplier = _skill_multiplier(defn, ui_level, char_level=char_level)
             if multiplier <= 0:
                 continue
-            result = calculate_single_hit_damage(
-                DamageContext(
+
+            def _make_ctx() -> DamageContext:
+                return DamageContext(
                     final_attack=float(context.final_attack),
                     skill_multiplier=multiplier,
                     damage_type=defn.damage_type,
@@ -132,18 +140,24 @@ def evaluate_spell_abnormal_total(
                     crit_rate=context.crit_rate,
                     crit_damage=context.crit_damage,
                     damage_type_bonus=context.damage_type_bonus,
-                    # 异常不吃技能增伤
                     skill_type_bonus=0.0,
                     imbalance_damage_bonus=context.imbalance_damage_bonus,
                     other_damage_bonus=context.other_damage_bonus,
-                ),
-                effects=effects,
-                crit_mode=crit_mode,
-            )
-            key = f"{abnormal}:{ui_level}"
-            single_hit = float(result.final_damage)
-            breakdown[key] = single_hit
-            total += single_hit * float(count)
+                )
+
+            segment_total = 0.0
+            for occurrence_idx in range(1, count + 1):
+                buff_key = f"{base_key}:{occurrence_idx}"
+                buffs = mb.get(buff_key)
+                result = calculate_single_hit_damage(
+                    _make_ctx(),
+                    effects=effects,
+                    crit_mode=crit_mode,
+                    manual_buffs=buffs,
+                )
+                segment_total += float(result.final_damage)
+            breakdown[base_key] = segment_total / float(count)
+            total += segment_total
     return total, breakdown
 
 

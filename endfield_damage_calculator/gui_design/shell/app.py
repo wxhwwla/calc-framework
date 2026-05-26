@@ -19,7 +19,7 @@ from calculation.search.plan.job import build_weapon_candidates
 from data.game_data_facade import GameDataFacade
 from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL
 from gui_design.app.confirm_orchestrator import schedule_confirm
-from gui_design.shared.gui_settings import gui_settings
+from gui_design.shared.gui_settings import gui_settings, configure_tk_default_font, configure_all_tk_fonts
 from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.panels.selection_panel import ChooseTypesStarsNamesLevels
 from gui_design.search_ui.search_settings import build_worker_option_labels
@@ -65,6 +65,7 @@ class DamageCalculatorApp(
         gui_settings()
 
         self.app: ctk.CTk = ctk.CTk()
+        configure_tk_default_font(self.app)
         self.app.geometry("1280x720")
         self.app.title(f"终末地伤害计算小工具 v{get_exe_version()}")
         self.app.minsize(1024, 600)
@@ -151,6 +152,7 @@ class DamageCalculatorApp(
         self._window_has_been_mapped: bool = False
 
         self._setup_ui()
+        configure_all_tk_fonts(self.app)
         self.app.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def run(self) -> None:

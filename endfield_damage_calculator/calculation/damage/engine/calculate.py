@@ -46,11 +46,67 @@ from .helpers import _collect_effects, _resolve_crit_zone
 from .types import CritMode, DamageContext, DamageEffect, DamageResult, ZONE_ORDER
 
 
+_CONTEXT_BUFF_MAP: dict[str, str] = {
+    "暴击率": "crit_rate",
+    "暴击伤害": "crit_damage",
+    "伤害类型加成": "damage_type_bonus",
+    "技能类型加成": "skill_type_bonus",
+    "失衡伤害加成": "imbalance_damage_bonus",
+    "其他伤害加成": "other_damage_bonus",
+}
+
+
+def _apply_manual_buffs(
+    context: DamageContext,
+    buffs: list[dict[str, float]],
+) -> tuple[DamageContext, list[DamageEffect]]:
+    extra_effects: list[DamageEffect] = []
+    overrides: dict[str, float] = {}
+    for entry in buffs:
+        effect_type = str(entry.get("effect_type", "")).strip()
+        value = float(entry.get("value", 0.0))
+        if not effect_type:
+            continue
+        context_field = _CONTEXT_BUFF_MAP.get(effect_type)
+        if context_field:
+            overrides[context_field] = overrides.get(context_field, 0.0) + value
+        else:
+            extra_effects.append(
+                DamageEffect(
+                    effect_type=effect_type,
+                    value=value,
+                    source="手动buff",
+                    raw_text=f"{effect_type}+{value * 100:.0f}%",
+                )
+            )
+    if overrides:
+        context = DamageContext(
+            final_attack=context.final_attack,
+            skill_multiplier=context.skill_multiplier,
+            damage_type=context.damage_type,
+            skill_type=context.skill_type,
+            is_unbalanced=context.is_unbalanced,
+            is_true_damage=context.is_true_damage,
+            enemy_defense=context.enemy_defense,
+            enemy_resistance=context.enemy_resistance,
+            ignore_resistance=context.ignore_resistance,
+            imbalance_vulnerability_coeff=context.imbalance_vulnerability_coeff,
+            crit_rate=context.crit_rate + overrides.get("crit_rate", 0.0),
+            crit_damage=context.crit_damage + overrides.get("crit_damage", 0.0),
+            damage_type_bonus=context.damage_type_bonus + overrides.get("damage_type_bonus", 0.0),
+            skill_type_bonus=context.skill_type_bonus + overrides.get("skill_type_bonus", 0.0),
+            imbalance_damage_bonus=context.imbalance_damage_bonus + overrides.get("imbalance_damage_bonus", 0.0),
+            other_damage_bonus=context.other_damage_bonus + overrides.get("other_damage_bonus", 0.0),
+        )
+    return context, extra_effects
+
+
 def calculate_single_hit_damage(
     context: DamageContext,
     *,
     effects: Optional[list[DamageEffect]] = None,
     crit_mode: CritMode = "non_crit",
+    manual_buffs: Optional[list[dict[str, float]]] = None,
 ) -> DamageResult:
     """计算单段伤害并返回 15 乘区明细。
 
@@ -60,11 +116,20 @@ def calculate_single_hit_damage(
         context: 伤害上下文，包含攻击力、技能倍率、敌方属性等所有基础参数
         effects: 伤害效果列表（可选），包含武器特殊能力、装备词条、套装效果等
         crit_mode: 暴击模式，默认为非暴击模式
+        manual_buffs: 手动场外 buff 列表（可选），每条为 {"effect_type": str, "value": float}
+            可选值：暴击率/暴击伤害/伤害类型加成/技能类型加成/失衡伤害加成/其他伤害加成/
+            增幅/脆弱/易伤/伤害减免/连击增伤/特殊乘区
 
     Returns:
         DamageResult 对象，包含最终伤害值、各乘区明细、警告信息和未识别效果
     """
-    all_effects = effects or []
+    buffs = manual_buffs or []
+    if buffs:
+        context, extra = _apply_manual_buffs(context, buffs)
+    else:
+        extra = []
+
+    all_effects = list(effects or []) + extra
     known_effects, unknown_effects, warnings = _collect_effects(context, all_effects)
 
     damage_bonus = (

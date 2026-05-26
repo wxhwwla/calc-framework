@@ -64,7 +64,7 @@ def show_search_results_dialog(
     textbox.insert("1.0", "\n".join(lines))
     textbox.configure(state="disabled")
 
-    close_btn = ctk.CTkButton(dialog, text="关闭", command=dialog.destroy, width=120)
+    close_btn = ctk.CTkButton(dialog, text="关闭", font=default_ui_font(size=12), command=dialog.destroy, width=120)
     close_btn.pack(pady=(0, 12))
 
     dialog.after(100, dialog.lift)
