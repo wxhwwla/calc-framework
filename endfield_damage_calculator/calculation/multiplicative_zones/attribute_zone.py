@@ -380,9 +380,9 @@ def calculate_attribute_zones_with_details(
             elif attr == sub_attr:
                 bonus_value += sd
 
-            # 如果是主能力，加上信赖加成
+            # 如果是主能力，加上信赖加成（累积值）
             if attr == main_attr and trust_level > 0:
-                trust_add = [0, 10, 15, 15, 20]
+                trust_add = [0, 10, 25, 40, 60]
                 if 0 <= trust_level < len(trust_add):
                     bonus_value += trust_add[trust_level]
 

@@ -198,7 +198,7 @@
     "normal_skills": [
       {
         "zone": 1,
-        "effect": "主能力+",
+        "effect": "主能力值+",
         "curve": [
           10.0,
           18.0,
@@ -428,7 +428,7 @@
     "normal_skills": [
       {
         "zone": 1,
-        "effect": "主能力+",
+        "effect": "主能力值+",
         "curve": [
           10.0,
           18.0,
@@ -658,7 +658,7 @@
     "normal_skills": [
       {
         "zone": 1,
-        "effect": "主能力+",
+        "effect": "主能力值+",
         "curve": [
           10.0,
           18.0,
@@ -888,7 +888,7 @@
     "normal_skills": [
       {
         "zone": 1,
-        "effect": "主能力+",
+        "effect": "主能力值+",
         "curve": [
           10.0,
           18.0,
@@ -1118,7 +1118,7 @@
     "normal_skills": [
       {
         "zone": 1,
-        "effect": "主能力+",
+        "effect": "主能力值+",
         "curve": [
           10.0,
           18.0,

@@ -30,8 +30,8 @@ talent = list(range(0, 6))
 # 信赖等级列表（0-4级）
 trust = list(range(0, 5))
 
-# 信赖加成列表（0-4级）
-trust_add = [0, 10, 15, 15, 20]
+# 信赖加成（累积值，0-4级：0→10→25→40→60）
+trust_add = [0, 10, 25, 40, 60]
 
 
 def has_fractional_part(value: int | float) -> bool:
