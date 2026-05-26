@@ -13,7 +13,7 @@ from gui_design.shared.calc_mode_labels import (
 
 class TestCalcModeLabels(unittest.TestCase):
     def test_default_label_is_chinese_not_internal_id(self):
-        self.assertEqual(DEFAULT_CALC_MODE_LABEL, "单段伤害计算")
+        self.assertEqual(DEFAULT_CALC_MODE_LABEL, "乘区快照")
         self.assertNotIn("single_hit", CALC_MODE_LABELS)
 
     def test_maps_chinese_labels_to_internal_modes(self):

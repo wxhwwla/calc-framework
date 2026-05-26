@@ -12,7 +12,7 @@ CALC_MODE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("多技能遍历(快速预览)", "multi_skill_search"),
 )
 
-DEFAULT_CALC_MODE_LABEL = CALC_MODE_OPTIONS[0][0]
+DEFAULT_CALC_MODE_LABEL = CALC_MODE_OPTIONS[1][0]
 
 CALC_MODE_LABELS: tuple[str, ...] = tuple(label for label, _ in CALC_MODE_OPTIONS)
 

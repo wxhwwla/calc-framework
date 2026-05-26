@@ -12,7 +12,7 @@ apply_platform_win32_patch()
 import customtkinter as ctk
 
 from calculation.skills.segments import list_segment_count_specs
-from calculation.abnormal.physical import PHYSICAL_ABNORMAL_LEVELS, PHYSICAL_ABNORMAL_TYPES
+from calculation.abnormal.physical import PHYSICAL_ABNORMAL_TYPES, abnormal_levels_for
 from calculation.abnormal.spell import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYPES
 from gui_design.app.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
 from gui_design.layout.gui_layout import (
@@ -228,7 +228,7 @@ def apply_physical_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: di
     """将物理异常次数写回矩阵输入框（预设导入用）。"""
     vars_map = getattr(app, "_physical_abnormal_count_vars", None) or {}
     for abnormal in PHYSICAL_ABNORMAL_TYPES:
-        for level in PHYSICAL_ABNORMAL_LEVELS:
+        for level in abnormal_levels_for(abnormal):
             key = f"{abnormal}:{level}"
             var = vars_map.get(key)
             if var is None:

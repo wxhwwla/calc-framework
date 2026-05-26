@@ -12,7 +12,7 @@ apply_platform_win32_patch()
 import customtkinter as ctk
 
 from calculation.skills.segments import list_segment_count_specs
-from calculation.abnormal.physical import PHYSICAL_ABNORMAL_LEVELS, PHYSICAL_ABNORMAL_TYPES
+from calculation.abnormal.physical import PHYSICAL_ABNORMAL_LEVELS, PHYSICAL_ABNORMAL_TYPES, abnormal_levels_for
 from calculation.abnormal.spell import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYPES
 from gui_design.app.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
 from gui_design.layout.gui_layout import (
@@ -216,7 +216,7 @@ def place_multi_skill_section(
             font=app.small_font,
             text_color="#CCCCCC",
         ).grid(row=row_idx, column=0, padx=(0, 4), pady=(0, 2), sticky="w")
-        for col_idx, level in enumerate(PHYSICAL_ABNORMAL_LEVELS, start=1):
+        for col_idx, level in enumerate(abnormal_levels_for(abnormal), start=1):
             key = f"{abnormal}:{level}"
             var = ctk.StringVar(value="0")
             app._physical_abnormal_count_vars[key] = var

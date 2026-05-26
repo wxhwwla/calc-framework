@@ -13,6 +13,14 @@ from calculation.damage.engine import CritMode, DamageContext, DamageEffect, cal
 PHYSICAL_ABNORMAL_TYPES: tuple[str, ...] = ("倒地", "击飞", "碎甲", "猛击")
 PHYSICAL_ABNORMAL_LEVELS: tuple[int, ...] = (0, 1, 2, 3, 4)
 
+_BINARY_ABNORMAL_TYPES = frozenset({"倒地", "击飞"})
+
+
+def abnormal_levels_for(abnormal: str) -> tuple[int, ...]:
+    if abnormal in _BINARY_ABNORMAL_TYPES:
+        return (0, 1)
+    return (0, 1, 2, 3, 4)
+
 _CRIT_RATE_RE = re.compile(r"暴击率\+?\s*([+-]?\d+(?:\.\d+)?)\s*%")
 _CRIT_DAMAGE_RE = re.compile(r"暴击伤害\+?\s*([+-]?\d+(?:\.\d+)?)\s*%")
 _CONDITIONAL_HINTS = ("当", "触发", "叠加", "持续", "命中后", "若", "如果")
@@ -46,7 +54,7 @@ def _normalized_component_mode(mode: str) -> str:
 def normalize_abnormal_counts(counts: dict[str, int] | None) -> dict[str, int]:
     normalized: dict[str, int] = {}
     for abnormal in PHYSICAL_ABNORMAL_TYPES:
-        for level in PHYSICAL_ABNORMAL_LEVELS:
+        for level in abnormal_levels_for(abnormal):
             key = f"{abnormal}:{level}"
             raw = 0 if counts is None else int(counts.get(key, 0))
             normalized[key] = max(0, raw)
@@ -64,7 +72,7 @@ def is_physical_abnormal_key(key: str) -> bool:
         lv = int(level)
     except (TypeError, ValueError):
         return False
-    return lv in PHYSICAL_ABNORMAL_LEVELS
+    return lv in abnormal_levels_for(name)
 
 
 def split_damage_breakdown(
@@ -107,7 +115,7 @@ def format_abnormal_breakdown_lines(
     lines: list[str] = []
     normalized = normalize_abnormal_counts(counts)
     for abnormal in PHYSICAL_ABNORMAL_TYPES:
-        for level in PHYSICAL_ABNORMAL_LEVELS:
+        for level in abnormal_levels_for(abnormal):
             key = f"{abnormal}:{level}"
             count = normalized.get(key, 0)
             if count <= 0:
@@ -207,7 +215,7 @@ def evaluate_physical_abnormal_total(
     total = 0.0
     breakdown: dict[str, float] = {}
     for abnormal in PHYSICAL_ABNORMAL_TYPES:
-        for ui_level in PHYSICAL_ABNORMAL_LEVELS:
+        for ui_level in abnormal_levels_for(abnormal):
             count = normalized.get(f"{abnormal}:{ui_level}", 0)
             if count <= 0:
                 continue

@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "2.0.5"
+_VERSION = "2.1.0"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,11 +209,13 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/calculation/damage/formula.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_calc.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/attribute_zone.py
-# - 更新 weapons.json 武器数据
+# - 修改 endfield_damage_calculator/calculation/abnormal/physical.py
+# - 修改 endfield_damage_calculator/gui_design/controls/multi_skill/rows.py
+# - 修改 endfield_damage_calculator/gui_design/controls/multi_skill/section.py
+# - 修改 endfield_damage_calculator/gui_design/shared/calc_mode_labels.py
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/tests/gui_design/shared/test_calc_mode_labels.py
+# - 变更 endfield_damage_calculator/ui_preferences.json
 # --- END UPLOAD_SUMMARY ---
