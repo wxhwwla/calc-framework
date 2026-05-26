@@ -21,6 +21,20 @@ _MAX_STACK_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 
+def is_accidental_rank_multiple_curve(curve: list[float]) -> bool:
+    """
+    误把满档「每层%」当 base 且 growth=base，导致九档呈 base×(1..9)（如 [21,42,…,189]）。
+
+    正确语义：九档为各精炼下「每层叠加%」，再乘叠加层数。
+    """
+    if len(curve) != 9:
+        return False
+    base = float(curve[0])
+    if base <= 0:
+        return False
+    return all(abs(float(curve[i]) - base * (i + 1)) <= 0.01 for i in range(9))
+
+
 def infer_max_stack_from_special(name: str = "", text: str = "") -> int:
     """从特殊能力名称与 Wiki/seed 条件文案推断最大叠加层数（默认 1）。"""
     combined = f"{name}\n{text}".strip()

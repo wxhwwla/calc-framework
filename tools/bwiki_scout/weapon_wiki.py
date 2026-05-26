@@ -186,23 +186,62 @@ def has_weapon_growth_block(wikitext: str) -> bool:
     return "基础攻击力" in p and "满级基础攻击力" in p and "词条1rank1" in p
 
 
+def bake_rank_curve_from_params(params: dict[str, Any]) -> list[float]:
+    """由 seed / add_weapon 参数字典烘焙 9 档潜能曲线。"""
+    if isinstance(params.get("curve"), list):
+        return [float(v) for v in params["curve"]]
+    growth_keys = ("base", "growth", "divisor", "offset")
+    if not all(k in params for k in growth_keys):
+        raise ValueError("缺少成长公式参数或 curve")
+    p = {k: params[k] for k in growth_keys}
+    special = params.get("special")
+    return calculate_bonus_attribute(special=special, **p)
+
+
+def baked_rank_curve_matches(
+    params: dict[str, Any],
+    curve9: list[float],
+    *,
+    tolerance: float = 0.05,
+) -> bool:
+    """反推参数烘焙后是否与 Wiki 九档一致。"""
+    try:
+        baked = bake_rank_curve_from_params(params)
+    except (ValueError, TypeError):
+        return False
+    if len(baked) != len(curve9):
+        return False
+    return all(abs(float(a) - float(b)) <= tolerance for a, b in zip(baked, curve9))
+
+
 def fit_bonus_params_from_rank_curve(curve9: list[float]) -> dict[str, Any]:
-    """9 档潜能曲线 → add_weapon / seed 用参数字典。"""
+    """9 档潜能曲线 → add_weapon / seed 用参数字典（优先可反推公式，否则保留原九档）。"""
+    from character_weapon_equipment.weapon_data.special_fields.codec import (
+        is_accidental_rank_multiple_curve,
+    )
+
     if len(curve9) != 9:
         raise ValueError(f"武器词条曲线长度应为 9，实际 {len(curve9)}")
+    wiki_curve = [float(v) for v in curve9]
+    if is_accidental_rank_multiple_curve(wiki_curve):
+        # 误把满档每层% 当 base、growth=base 时公式可完美拟合错误九档，禁止自动反推
+        return {"curve": wiki_curve}
     try:
         with redirect_stdout(io.StringIO()):
-            base, growth, divisor, offset, special = fit_skill_formula_no_special(curve9)
-        return {
+            base, growth, divisor, offset, special = fit_skill_formula_no_special(wiki_curve)
+        fitted = {
             "base": base,
             "growth": growth,
             "divisor": divisor,
             "offset": offset,
             "special": list(special),
         }
+        if baked_rank_curve_matches(fitted, wiki_curve):
+            return fitted
     except (ValueError, AssertionError):
-        # 部分有条件词条（如 O.B.J.尖峰 攻击力 副2）无法反推公式，直接烘焙 Wiki 九档
-        return {"curve": [float(v) for v in curve9]}
+        pass
+    # 无法反推或与 Wiki 九档不一致时，直接存九档（条件特殊能力语义：每层叠加%）
+    return {"curve": wiki_curve}
 
 
 def fit_weapon_base_atk_from_endpoints(

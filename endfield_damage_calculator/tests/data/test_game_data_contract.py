@@ -143,6 +143,27 @@ class TestGameDataContract(unittest.TestCase):
                     _assert_special_ability(name, weapon[key])
             _assert_weapon_skills_schema(name, weapon)
 
+    def test_weapon_special_curves_not_rank_multiple_mistake(self) -> None:
+        """可叠层特殊能力九档须为「每层%」，不得误录为 base×档序。"""
+        from character_weapon_equipment.weapon_data.special_fields import (
+            is_accidental_rank_multiple_curve,
+            read_weapon_special_slots,
+        )
+
+        bad: list[str] = []
+        for weapon in self.weapons:
+            name = weapon.get("名称", "<未命名>")
+            for enabled, sa_name, curve, max_stack in read_weapon_special_slots(weapon):
+                if not enabled or max_stack <= 1:
+                    continue
+                if is_accidental_rank_multiple_curve(curve):
+                    bad.append(f"{name}（{sa_name}）")
+        self.assertFalse(
+            bad,
+            "以下武器特殊曲线疑似把满档每层%误写成 base×(1..9)："
+            + "；".join(bad),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

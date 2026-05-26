@@ -12,8 +12,9 @@ from character_weapon_equipment.weapon_data.special_fields import (
 
 class TestSpecialPickBonus(unittest.TestCase):
     def test_stackable_special_multiplies_tier_value_by_stack_count(self) -> None:
-        curve = [float(i * 21) for i in range(1, 10)]
-        self.assertAlmostEqual(special_pick_bonus(curve, 2, skill_level=8, stack_count=2), 336.0)
+        # 九档为「每层叠加%」；8 档每层 18%，叠 2 层 → 36%
+        curve = [7.5, 9.0, 10.5, 12.0, 13.5, 15.0, 16.5, 18.0, 21.0]
+        self.assertAlmostEqual(special_pick_bonus(curve, 2, skill_level=8, stack_count=2), 36.0)
         self.assertAlmostEqual(special_pick_bonus(curve, 2, skill_level=8, stack_count=0), 0.0)
 
     def test_non_stackable_special_ignores_zero_stack_count(self) -> None:
@@ -25,7 +26,7 @@ class TestSpecialPickBonus(unittest.TestCase):
             "特殊能力1": [
                 True,
                 "造成'''物理异常'''时获得攻击力+",
-                [21.0, 42.0, 63.0, 84.0, 105.0, 126.0, 147.0, 168.0, 189.0],
+                [7.5, 9.0, 10.5, 12.0, 13.5, 15.0, 16.5, 18.0, 21.0],
                 2,
             ],
             "特殊能力2": [False],
@@ -34,11 +35,31 @@ class TestSpecialPickBonus(unittest.TestCase):
             add_special_picks_attack_percent(
                 weapon,
                 ws_name="造成'''物理异常'''时获得攻击力+",
+                ws_level=4,
+                ws_stack=1,
+                target_name="攻击力+",
+            ),
+            12.0,
+        )
+        self.assertAlmostEqual(
+            add_special_picks_attack_percent(
+                weapon,
+                ws_name="造成'''物理异常'''时获得攻击力+",
+                ws_level=9,
+                ws_stack=2,
+                target_name="攻击力+",
+            ),
+            42.0,
+        )
+        self.assertAlmostEqual(
+            add_special_picks_attack_percent(
+                weapon,
+                ws_name="造成'''物理异常'''时获得攻击力+",
                 ws_level=8,
                 ws_stack=2,
                 target_name="攻击力+",
             ),
-            336.0,
+            36.0,
         )
         self.assertAlmostEqual(
             add_special_picks_attack_percent(

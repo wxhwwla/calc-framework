@@ -178,5 +178,28 @@ class TestRunScoutOffline(unittest.TestCase):
             self.assertGreater(result["page_count"], 0)
 
 
+class TestWeaponWikiRankCurveFit(unittest.TestCase):
+    def test_steel_echo_conditional_curve_fits_and_bakes(self) -> None:
+        from bwiki_scout.weapon_wiki import (  # noqa: E402
+            bake_rank_curve_from_params,
+            fit_bonus_params_from_rank_curve,
+        )
+
+        wiki = [7.5, 9.0, 10.5, 12.0, 13.5, 15.0, 16.5, 18.0, 21.0]
+        params = fit_bonus_params_from_rank_curve(wiki)
+        self.assertEqual(bake_rank_curve_from_params(params), wiki)
+        self.assertEqual(params.get("base"), 7.5)
+        self.assertEqual(params.get("growth"), 1.5)
+
+    def test_wrong_rank_multiple_curve_not_auto_fitted(self) -> None:
+        from bwiki_scout.weapon_wiki import fit_bonus_params_from_rank_curve  # noqa: E402
+
+        wrong = [float(21 * (i + 1)) for i in range(9)]
+        params = fit_bonus_params_from_rank_curve(wrong)
+        # 虽可拟合 base=21 growth=21，但语义为误录；须保留九档并依赖契约/人工纠正
+        self.assertEqual(params.get("curve"), wrong)
+        self.assertNotIn("base", params)
+
+
 if __name__ == "__main__":
     unittest.main()

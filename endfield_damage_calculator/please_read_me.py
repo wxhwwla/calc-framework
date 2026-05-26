@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "2.0.1"
+_VERSION = "2.0.2"
 _EXE_VERSION = "0.4.0-beta"
 # ==============================================================
 
@@ -209,20 +209,14 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 14 处文件
+# TITLE: 更新 8 处文件
 # BODY:
-# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 修改 endfield_damage_calculator/calculation/damage/engine.py
-# - 变更 endfield_damage_calculator/calculation/damage/engine/
-# - 修改 endfield_damage_calculator/calculation/multi_skill/optimizer.py
-# - 变更 endfield_damage_calculator/calculation/multi_skill/optimizer/
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_calc.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_details.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_zone.py
-# - 修改 endfield_damage_calculator/gui_design/shared/display_view.py
-# - 变更 endfield_damage_calculator/gui_design/shared/display_view/
+# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/special_fields/codec.py
+# - 更新 weapons.json 武器数据
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 tools/split_module_by_symbols.py
+# - 修改 endfield_damage_calculator/scripts/seed_weapons.py
+# - 修改 endfield_damage_calculator/tests/character_weapon_equipment/test_weapon_special_stack_layers.py
+# - 修改 endfield_damage_calculator/tests/data/test_game_data_contract.py
+# - 修改 endfield_damage_calculator/tests/tools/test_bwiki_scout.py
+# - 修改 tools/bwiki_scout/weapon_wiki.py
 # --- END UPLOAD_SUMMARY ---
