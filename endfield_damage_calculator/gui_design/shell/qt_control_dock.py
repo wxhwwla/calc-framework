@@ -30,6 +30,15 @@ from PySide6.QtWidgets import (
 
 from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
 
+# 固定配装槽位配置：(catalog_key, 界面标签)
+_FIXED_SLOT_SPECS: list[tuple[str, str]] = [
+    ("chest", "护甲"),
+    ("gloves", "护手"),
+    ("accessory_a", "配件A"),
+    ("accessory_b", "配件B"),
+]
+_FIXED_SLOT_NONE_LABEL = "（不固定）"
+
 # 物理异常类型列表（5 等级）
 _PHYSICAL_ABNORMAL_TYPES = ["侵蚀", "灼烧", "冻伤", "战栗"]
 _PHYSICAL_ABNORMAL_LEVELS = ["L1", "L2", "L3", "L4", "L5"]
@@ -309,19 +318,19 @@ class QtControlDock(QWidget):
             lambda _: self._mark_pending())
         lay.addWidget(self.equipment_scope_combo)
 
-        # 固定配装
+        # 固定配装（四槽装备名称下拉）
         lay.addWidget(_SmallLabel("固定配装（0–4 件）", self._small))
-        slot_types = ["（无）", "护甲", "护手", "配件"]
         slots_grid = QHBoxLayout()
         slots_grid.setSpacing(4)
-        for i in range(4):
+        self.fixed_loadout_slots.clear()
+        for slot_key, slot_label in _FIXED_SLOT_SPECS:
             row = QVBoxLayout()
             row.setSpacing(2)
-            slot_lbl = QLabel(f"槽{i+1}")
+            slot_lbl = QLabel(slot_label)
             slot_lbl.setStyleSheet(f"color: {_HINT_COLOR};")
             slot_lbl.setFont(self._small)
             cb = QComboBox()
-            cb.addItems(slot_types)
+            cb.addItem(_FIXED_SLOT_NONE_LABEL)
             cb.setStyleSheet(_COMBO_STYLE)
             cb.currentTextChanged.connect(lambda _: self._mark_pending())
             row.addWidget(slot_lbl)
@@ -330,7 +339,7 @@ class QtControlDock(QWidget):
             self.fixed_loadout_slots.append(cb)
         lay.addLayout(slots_grid)
 
-        lay.addWidget(_HintLabel("固定配装后：槽位名称在角色/武器选择后自动填充。", self._small))
+        lay.addWidget(_HintLabel("选择装备名称固定该槽位，选「（不固定）」则遍历。", self._small))
 
         # 搜索按钮
         self.mvp_search_btn = self._make_btn("MVP 搜索", _SECONDARY_BTN_HEIGHT, primary=True,
@@ -485,6 +494,52 @@ class QtControlDock(QWidget):
         self.loadout_pending.emit()
 
     # ── 控制值读取 ──────────────────────────────
+
+    def populate_fixed_loadout_slots(
+        self,
+        catalog: dict[str, list[dict[str, Any]]],
+    ) -> None:
+        """从装备 catalog 填充四槽装备名称下拉。"""
+        from data.equipment_filters import equipment_names_from_rows
+
+        for i, (slot_key, _) in enumerate(_FIXED_SLOT_SPECS):
+            cb = self.fixed_loadout_slots[i]
+            current = cb.currentText()
+
+            catalog_key = "accessories" if slot_key in ("accessory_a", "accessory_b") else slot_key
+            rows = list(catalog.get(catalog_key) or [])
+            names = equipment_names_from_rows(rows)
+
+            cb.blockSignals(True)
+            cb.clear()
+            cb.addItem(_FIXED_SLOT_NONE_LABEL)
+            for name in names:
+                cb.addItem(name)
+            cb.setCurrentText(current if current in names else _FIXED_SLOT_NONE_LABEL)
+            cb.blockSignals(False)
+
+    def read_fixed_loadout_selection(
+        self,
+        catalog: dict[str, list[dict[str, Any]]],
+    ) -> Any:
+        """从四槽下拉读取 FixedLoadoutSelection。"""
+        from calculation.loadout.slot_search import FixedLoadoutSelection
+
+        def _pick(i: int, catalog_key: str):
+            name = self.fixed_loadout_slots[i].currentText()
+            if name == _FIXED_SLOT_NONE_LABEL:
+                return None
+            for row in catalog.get(catalog_key) or []:
+                if str(row.get("名称") or "") == name:
+                    return row
+            return None
+
+        return FixedLoadoutSelection(
+            chest=_pick(0, "chest"),
+            gloves=_pick(1, "gloves"),
+            accessory_a=_pick(2, "accessories"),
+            accessory_b=_pick(3, "accessories"),
+        )
 
     def read_skill_counts(self) -> dict[str, int]:
         try:

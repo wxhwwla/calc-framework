@@ -191,8 +191,26 @@ class QtDamageApp:
                 eid = id_by_label.get(initial_label, "")
                 self._enemy_defense = resolve_enemy_defense(eid)
 
+        # 装备 catalog + 固定配装槽
+        from data.equipment_catalog import get_equipment_catalog
+
+        self._equipment_catalog: dict[str, list[dict[str, Any]]] = get_equipment_catalog()
+        dock.populate_fixed_loadout_slots(self._equipment_catalog)
+
+        # 装备范围变更时刷新固定配装槽
+        dock.equipment_scope_combo.currentTextChanged.connect(
+            self._on_equipment_scope_changed
+        )
+
         # 手动 Buff 按钮
         dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
+
+    def _on_equipment_scope_changed(self, scope_label: str) -> None:
+        from data.equipment_catalog import get_equipment_catalog
+
+        self._equipment_catalog = get_equipment_catalog(scope_label=scope_label)
+        self.control_dock.populate_fixed_loadout_slots(self._equipment_catalog)
+        self._on_loadout_changed()
 
     # ── 信号连线 ──────────────────────────────
 
@@ -307,7 +325,6 @@ class QtDamageApp:
     def _build_request(self) -> Any:
         from gui_design.app.display_request import DisplayRequest
         from gui_design.app.loadout_state import read_loadout_from_panels
-        from calculation.loadout.slot_search import FixedLoadoutSelection
 
         dock = self.control_dock
 
@@ -317,7 +334,7 @@ class QtDamageApp:
             calculation_mode=self._current_calc_mode,
             weapon_scope_label=dock.single_skill_scope_combo.currentText(),
             equipment_scope_label=dock.equipment_scope_combo.currentText(),
-            fixed_loadout=FixedLoadoutSelection(),
+            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
             use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
             manual_counts=dock.read_skill_counts(),
             physical_abnormal_counts=dock.read_physical_abnormal_counts(),
