@@ -133,7 +133,7 @@ class TestGeneratedEndfieldDAG:
 
     @pytest.fixture(scope="class")
     def generated_dag(self):
-        from calculation.multiplicative_zones.dag_config import generate, OUTPUT_PATH
+        from calculation.multiplicative_zones.dag.config import generate, OUTPUT_PATH
 
         dag = generate()
         assert dag.name == "终末地伤害公式（完整版）"
@@ -143,7 +143,7 @@ class TestGeneratedEndfieldDAG:
     @pytest.fixture(scope="class")
     def saved_dag(self, generated_dag):
         import json
-        from calculation.multiplicative_zones.dag_config import save_dag
+        from calculation.multiplicative_zones.dag.config import save_dag
 
         save_dag(generated_dag)
         assert _EXPECTED_OUTPUT.exists(), f"输出文件不存在: {_EXPECTED_OUTPUT}"

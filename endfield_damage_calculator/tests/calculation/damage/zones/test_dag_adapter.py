@@ -37,7 +37,7 @@ class TestDAGAdapter(unittest.TestCase):
         self.level = 80
 
     def test_dag_adapter_imports(self):
-        from calculation.multiplicative_zones.dag_adapter import (
+        from calculation.multiplicative_zones.dag.adapter import (
             build_dag_context,
             evaluate_attack_chain_via_dag,
         )
@@ -45,7 +45,7 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertTrue(callable(evaluate_attack_chain_via_dag))
 
     def test_build_dag_context_returns_all_required_keys(self):
-        from calculation.multiplicative_zones.dag_adapter import build_dag_context
+        from calculation.multiplicative_zones.dag.adapter import build_dag_context
 
         ctx = build_dag_context(
             self.char, self.weapon,
@@ -64,7 +64,7 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertIn("主能力百分比", ctx["computed"])
 
     def test_evaluate_attack_chain_via_dag_matches_existing_engine(self):
-        from calculation.multiplicative_zones.dag_adapter import evaluate_attack_chain_via_dag
+        from calculation.multiplicative_zones.dag.adapter import evaluate_attack_chain_via_dag
         from calculation.multiplicative_zones.final_attack_zone import (
             calculate_final_attack_with_details,
         )
@@ -97,7 +97,7 @@ class TestDAGAdapter(unittest.TestCase):
         )
 
     def test_dag_adapted_snapshot_matches_existing_snapshot(self):
-        from calculation.multiplicative_zones.dag_adapter import compute_snapshot_with_dag
+        from calculation.multiplicative_zones.dag.adapter import compute_snapshot_with_dag
 
         selection = MultiplicativeZoneSelection(
             character=self.char,
@@ -125,7 +125,7 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertAlmostEqual(dag_val, existing_val, places=4)
 
     def test_dag_adapter_with_weapon_bonuses(self):
-        from calculation.multiplicative_zones.dag_adapter import compute_snapshot_with_dag
+        from calculation.multiplicative_zones.dag.adapter import compute_snapshot_with_dag
 
         selection = MultiplicativeZoneSelection(
             character=self.char,

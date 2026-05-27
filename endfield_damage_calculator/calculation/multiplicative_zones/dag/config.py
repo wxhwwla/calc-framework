@@ -17,7 +17,7 @@ import json
 import sys
 from pathlib import Path
 
-_FRAMEWORK_DIR = Path(__file__).resolve().parents[3] / "framework"
+_FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
 if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))

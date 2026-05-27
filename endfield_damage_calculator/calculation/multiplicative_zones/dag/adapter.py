@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from calc_framework.dag.schema import DAGGraph
     from calculation.multiplicative_zones.zone_snapshot import MultiplicativeZoneSelection
 
-_FRAMEWORK_DIR = Path(__file__).resolve().parents[3] / "framework"
+_FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
 
 if str(_SRC_DIR) not in sys.path:
@@ -145,7 +145,7 @@ def _get_dag_service() -> Any:
         return _DAG_SERVICE_CACHE
 
     _DAG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    from calculation.multiplicative_zones.dag_config import generate, save_dag
+    from calculation.multiplicative_zones.dag.config import generate, save_dag
     g = generate()
     save_dag(g)
     _DAG_SERVICE_CACHE = DAGService(g)
@@ -196,7 +196,7 @@ def compute_snapshot_with_dag(
     from calculation.multiplicative_zones.attribute_zone import (
         calculate_attribute_zones_with_details,
     )
-    from calculation.multiplicative_zones.defense_zone import DefenseReductionZone
+    from calculation.multiplicative_zones.base_zone import DefenseReductionZone
     from calculation.multiplicative_zones.final_attack_zone import (
         calculate_final_attack_with_details,
     )

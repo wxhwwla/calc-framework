@@ -17,7 +17,7 @@ from calculation.multiplicative_zones.ability_bonus_details import (
 from calculation.multiplicative_zones.attribute_zone import (
     calculate_attribute_zones_with_details,
 )
-from calculation.multiplicative_zones.defense_zone import DefenseReductionZone
+from calculation.multiplicative_zones.base_zone import DefenseReductionZone
 from calculation.multiplicative_zones.final_attack_zone import (
     calculate_final_attack_with_details,
 )
@@ -157,7 +157,7 @@ def compute_multiplicative_zone_snapshot(
         use_dag = os.environ.get("ENDFIELD_USE_DAG", "").strip().lower() in ("1", "true", "yes")
 
     if use_dag:
-        from calculation.multiplicative_zones.dag_adapter import compute_snapshot_with_dag
+        from calculation.multiplicative_zones.dag.adapter import compute_snapshot_with_dag
         return compute_snapshot_with_dag(selection)
     char = selection.character
     weapon = selection.weapon

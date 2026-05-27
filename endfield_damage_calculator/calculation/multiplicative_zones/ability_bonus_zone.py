@@ -18,9 +18,16 @@ class AbilityBonusZone(BaseZone):
         """
         计算能力值加成
 
+        公式：main_value×(1+main_pct/100)×0.005 + sub_value×(1+sub_pct/100)×0.002
+
         返回：
             能力值加成值（float）
         """
         main_value = self._params.get("main_value", 0.0)
         sub_value = self._params.get("sub_value", 0.0)
-        return main_value * 0.005 + sub_value * 0.002
+        main_pct = self._params.get("main_pct", 0.0)
+        sub_pct = self._params.get("sub_pct", 0.0)
+        return (
+            main_value * (1.0 + main_pct / 100.0) * 0.005
+            + sub_value * (1.0 + sub_pct / 100.0) * 0.002
+        )

@@ -30,8 +30,7 @@ from .attribute_zone import (
     calculate_attribute_zones,
     calculate_attribute_zones_with_details,
 )
-from .base_zone import BaseZone
-from .defense_zone import DefenseReductionZone
+from .base_zone import BaseZone, DefenseReductionZone
 from .final_attack_zone import FinalAttackZone, calculate_final_attack, calculate_final_attack_with_details
 from .zone_manager import ZoneManager
 from .zone_snapshot import (

@@ -92,3 +92,35 @@ class BaseZone(ABC):
     def __str__(self) -> str:
         """返回乘区的可读字符串表示"""
         return f"{self.name}: {self.description}"
+
+
+class DefenseReductionZone(BaseZone):
+    """敌方默认防御减伤区。
+
+    计算敌方防御对伤害的减伤倍率。
+    公式：100 / (防御 + 100)
+    """
+
+    DEFAULT_DEFENSE = 100
+
+    def __init__(self):
+        super().__init__(
+            name="敌方防御减伤区",
+            description="敌方防御对伤害的减伤倍率，公式：100 / (防御 + 100)",
+        )
+        self.set_params(defense=self.DEFAULT_DEFENSE)
+
+    def calculate(self) -> float:
+        defense = self._params.get("defense", self.DEFAULT_DEFENSE)
+        if defense < 0:
+            defense = 0
+        return 100.0 / (defense + 100.0)
+
+    def get_defense(self) -> int:
+        return self._params.get("defense", self.DEFAULT_DEFENSE)
+
+    def set_defense(self, defense: int) -> None:
+        self.set_params(defense=defense)
+
+    def __str__(self) -> str:
+        return f"{self.name}: 防御={self.get_defense()}, 减伤倍率={self.calculate():.4f}"
