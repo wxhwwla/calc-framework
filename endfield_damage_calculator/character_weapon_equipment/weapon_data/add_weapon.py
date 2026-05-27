@@ -13,8 +13,8 @@ from pathlib import Path
 # 添加项目根目录到路径，确保模块导入正确
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from calculation.formula import calculate_bonus_attribute
-from calculation.formula import (  # pyright: ignore[reportMissingImports]
+from calculation.damage.formula import calculate_bonus_attribute
+from calculation.damage.formula import (  # pyright: ignore[reportMissingImports]
     calculate_growth_curve as calculate_weapon_attack,
 )
 
@@ -28,6 +28,7 @@ def add_weapon(
     | None = None,  # {"属性名+": {"base": int, "growth": int, "divisor": int, "offset": int, "special": list}}
     special_ability: dict
     | None = None,  # {"enabled": bool, "name": str, "curve": list} or {"enabled": bool, "name": str, "base": int/float, "growth": int/float, "divisor": int/float, "offset": int/float, "special": list}
+    json_path: Path | None = None,
 ):
     """
     添加新武器到 weapons.json
@@ -58,8 +59,9 @@ def add_weapon(
             if not attr_name.endswith("+"):
                 attr_name = attr_name + "+"
             # 提取 special 字段（如果存在）
-            special = params.pop("special", None)
-            weapon[attr_name] = calculate_bonus_attribute(special=special, **params)
+            special = params.get("special")
+            other_params = {k: v for k, v in params.items() if k != "special"}
+            weapon[attr_name] = calculate_bonus_attribute(special=special, **other_params)
 
     # 添加特殊能力
     if special_ability and special_ability.get("enabled"):
@@ -81,8 +83,8 @@ def add_weapon(
         weapon["特殊能力"] = [False]
 
     # 读取现有数据
-    json_path = Path(__file__).parent / "weapons.json"
-    with open(json_path, encoding="utf-8") as f:
+    _json_path = json_path if json_path is not None else Path(__file__).parent / "weapons.json"
+    with open(_json_path, encoding="utf-8") as f:
         weapons = json.load(f)
 
     # 检查是否已存在
@@ -95,7 +97,7 @@ def add_weapon(
     weapons.append(weapon)
 
     # 保存
-    with open(json_path, "w", encoding="utf-8") as f:
+    with open(_json_path, "w", encoding="utf-8") as f:
         json.dump(weapons, f, ensure_ascii=False, indent=2)
 
     print(f"OK: 武器「{name}」已添加！")
@@ -106,6 +108,22 @@ def add_weapon(
     if special_ability and special_ability.get("enabled"):
         print(f"   特殊能力: {special_ability.get('name')}")
     print(f"   当前武器总数: {len(weapons)}")
+
+
+def remove_weapon(name: str, json_path: Path | None = None) -> bool:
+    """按名称从 weapons.json 删除武器条目，返回是否成功删除。"""
+    _json_path = json_path if json_path is not None else Path(__file__).parent / "weapons.json"
+    with open(_json_path, encoding="utf-8") as f:
+        weapons = json.load(f)
+
+    new_weapons = [w for w in weapons if w.get("名称") != name]
+    if len(new_weapons) == len(weapons):
+        return False
+
+    with open(_json_path, "w", encoding="utf-8") as f:
+        json.dump(new_weapons, f, ensure_ascii=False, indent=2)
+
+    return True
 
 
 if __name__ == "__main__":

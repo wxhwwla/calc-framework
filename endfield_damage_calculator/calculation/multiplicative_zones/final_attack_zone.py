@@ -195,6 +195,9 @@ def calculate_final_attack_with_details(
                 continue
             effect = skill.get("effect", "")
             if effect == "攻击力+":
+                # 如果第三个特殊能力关闭，跳过
+                if effect == sa3_name and sa3_level == 0:
+                    continue
                 # 根据属性名称确定使用哪个特殊能力等级
                 if effect == sa1_name:
                     level = sa1_level
@@ -216,6 +219,9 @@ def calculate_final_attack_with_details(
         # 2. 再遍历所有以+结尾的属性，累加攻击力+（排除附加攻击力+）
         for attr_name in weapon:
             if attr_name.endswith("+") and attr_name == "攻击力+":
+                # 如果第三个特殊能力关闭，跳过
+                if attr_name == sa3_name and sa3_level == 0:
+                    continue
                 # 根据属性名称确定使用哪个特殊能力等级
                 if attr_name == sa1_name:
                     level = sa1_level

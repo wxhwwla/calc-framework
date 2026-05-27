@@ -3,7 +3,7 @@
 
 import unittest
 
-from calculation.multiplicative_zones.ability_bonus_zone import (
+from calculation.multiplicative_zones.ability_bonus_details import (
     calculate_ability_bonus_with_details,
 )
 from character_weapon_equipment.weapon_data.special_fields import read_weapon_special_slots
