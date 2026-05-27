@@ -63,14 +63,14 @@ class SelectionPanelBuildMixin:
             self.special_ability_panel = SpecialAbilityPanel(self._advanced_body, self.my_font)
 
     def _build_level_preset_buttons(self) -> None:
-        """等级快捷预设：一键设置 80/90 级。"""
+        """等级快捷预设：80/90 级，一键满级 / 归零。"""
         preset_frame = ctk.CTkFrame(self.frame, fg_color="transparent")
         preset_frame.pack(fill="x", padx=10, pady=(0, 4))
         preset_frame.grid_columnconfigure(0, weight=1)
         preset_frame.grid_columnconfigure(1, weight=1)
         self._level_preset_80_btn = ctk.CTkButton(
             preset_frame,
-            text="80级",
+            text="等级80",
             font=self.my_font,
             height=28,
             command=lambda: self._apply_level_preset(80),
@@ -78,12 +78,28 @@ class SelectionPanelBuildMixin:
         self._level_preset_80_btn.grid(row=0, column=0, padx=(0, 3), sticky="ew")
         self._level_preset_90_btn = ctk.CTkButton(
             preset_frame,
-            text="90级",
+            text="等级90",
             font=self.my_font,
             height=28,
             command=lambda: self._apply_level_preset(90),
         )
         self._level_preset_90_btn.grid(row=0, column=1, padx=(3, 0), sticky="ew")
+        self._max_all_btn = ctk.CTkButton(
+            preset_frame,
+            text="满级",
+            font=self.my_font,
+            height=28,
+            command=self._apply_max_preset,
+        )
+        self._max_all_btn.grid(row=1, column=0, padx=(0, 3), pady=(3, 0), sticky="ew")
+        self._min_all_btn = ctk.CTkButton(
+            preset_frame,
+            text="归零",
+            font=self.my_font,
+            height=28,
+            command=self._apply_min_preset,
+        )
+        self._min_all_btn.grid(row=1, column=1, padx=(3, 0), pady=(3, 0), sticky="ew")
 
     def _apply_level_preset(self, target_level: int) -> None:
         """将当前面板等级设置为预设值（自动夹到有效范围）。"""
@@ -178,6 +194,14 @@ class SelectionPanelBuildMixin:
         self._advanced_body = ctk.CTkFrame(self.frame, fg_color="transparent")
         self._advanced_body.pack(fill="x", padx=0, pady=(0, 4))
         if not self.is_weapon_panel:
+            self._trust_preset_4_btn = ctk.CTkButton(
+                self._advanced_body,
+                text="信赖4级",
+                font=self.my_font,
+                height=28,
+                command=self._apply_trust_preset,
+            )
+            self._trust_preset_4_btn.pack(fill="x", padx=10, pady=(0, 4))
             self._skill_preset_9_btn = ctk.CTkButton(
                 self._advanced_body,
                 text="技能9级",
@@ -219,3 +243,65 @@ class SelectionPanelBuildMixin:
                 self._advanced_body.pack(fill="x", padx=0, pady=(0, 4))
             else:
                 self._advanced_body.pack_forget()
+
+    def _apply_trust_preset(self) -> None:
+        if self.trust_panel is not None:
+            self.trust_panel.set_trust_level(4)
+
+    def _apply_max_preset(self) -> None:
+        if self.level_slider is not None:
+            try:
+                max_level = int(float(self.level_slider.cget("to")))
+            except Exception:
+                max_level = 90
+            try:
+                self.level_slider.set(max_level)
+                self._on_level_slider_change(float(max_level))
+            except ZeroDivisionError:
+                self.selected_level.set(str(max_level))
+                if self.level_label is not None:
+                    self.level_label.configure(text=str(max_level))
+        if not self.is_weapon_panel:
+            if self.trust_panel is not None:
+                self.trust_panel.set_trust_level(4)
+            self._apply_character_skill_preset(12)
+        else:
+            self._apply_weapon_skill_preset(9)
+            panel = self.special_ability_panel
+            if panel is not None:
+                if panel._weapon_special_available and panel._weapon_special_stack_slider is not None:
+                    if str(panel._weapon_special_stack_slider.cget("state")) != "disabled":
+                        max_stack = panel._weapon_special_max_stack
+                        panel._weapon_special_stack_slider.set(max_stack)
+                        panel._on_weapon_special_stack_change(float(max_stack))
+                if panel._weapon_special_2_available and panel._weapon_special_2_stack_slider is not None:
+                    if str(panel._weapon_special_2_stack_slider.cget("state")) != "disabled":
+                        max_stack = panel._weapon_special_2_max_stack
+                        panel._weapon_special_2_stack_slider.set(max_stack)
+                        panel._on_weapon_special_2_stack_change(float(max_stack))
+
+    def _apply_min_preset(self) -> None:
+        if self.level_slider is not None:
+            try:
+                self.level_slider.set(1)
+                self._on_level_slider_change(1.0)
+            except ZeroDivisionError:
+                self.selected_level.set("1")
+                if self.level_label is not None:
+                    self.level_label.configure(text="1")
+        if not self.is_weapon_panel:
+            if self.trust_panel is not None:
+                self.trust_panel.set_trust_level(0)
+            self._apply_character_skill_preset(1)
+        else:
+            self._apply_weapon_skill_preset(1)
+            panel = self.special_ability_panel
+            if panel is not None:
+                if panel._weapon_special_available and panel._weapon_special_stack_slider is not None:
+                    if str(panel._weapon_special_stack_slider.cget("state")) != "disabled":
+                        panel._weapon_special_stack_slider.set(0)
+                        panel._on_weapon_special_stack_change(0.0)
+                if panel._weapon_special_2_available and panel._weapon_special_2_stack_slider is not None:
+                    if str(panel._weapon_special_2_stack_slider.cget("state")) != "disabled":
+                        panel._weapon_special_2_stack_slider.set(0)
+                        panel._on_weapon_special_2_stack_change(0.0)

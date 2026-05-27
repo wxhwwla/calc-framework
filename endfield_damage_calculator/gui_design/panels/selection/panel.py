@@ -71,6 +71,9 @@ class ChooseTypesStarsNamesLevels(
         self._level_preset_90_btn: ctk.CTkButton | None = None
         self._skill_preset_9_btn: ctk.CTkButton | None = None
         self._skill_preset_12_btn: ctk.CTkButton | None = None
+        self._max_all_btn: ctk.CTkButton | None = None
+        self._min_all_btn: ctk.CTkButton | None = None
+        self._trust_preset_4_btn: ctk.CTkButton | None = None
 
         # UI控件
         self.type_menu: ctk.CTkOptionMenu = ctk.CTkOptionMenu(

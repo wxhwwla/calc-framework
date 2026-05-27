@@ -71,3 +71,11 @@ class TrustPanel:
         if self.trust_label:
             self.trust_label.configure(text=str(level))
         self.trust_level.set(str(level))
+
+    def set_trust_level(self, level: int) -> None:
+        clamped = max(0, min(level, 4))
+        self.trust_level.set(str(clamped))
+        if self.trust_slider is not None:
+            self.trust_slider.set(clamped)
+        if self.trust_label is not None:
+            self.trust_label.configure(text=str(clamped))

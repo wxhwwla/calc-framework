@@ -100,6 +100,12 @@ class QtTrustPanel(QWidget):
         self._slider.setValue(0)
         self._val_lbl.setText("0")
 
+    def set_level(self, level: int) -> None:
+        clamped = max(0, min(level, 4))
+        self._level = clamped
+        self._slider.setValue(clamped)
+        self._val_lbl.setText(str(clamped))
+
 
 # ═══════════════════════════════════════════════════════
 #  2. 技能等级（战技/连携/终结）

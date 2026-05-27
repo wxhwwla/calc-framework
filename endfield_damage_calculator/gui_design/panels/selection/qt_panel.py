@@ -148,12 +148,22 @@ class QtSelectionPanel(QWidget):
         preset_row.setContentsMargins(0, 0, 0, 0)
         preset_row.setSpacing(4)
 
-        self._lvl80_btn = QPushButton("80")
-        self._lvl90_btn = QPushButton("90")
-        self._skill9_btn = QPushButton("9")
-        self._skill12_btn = QPushButton("12")
+        self._lvl80_btn = QPushButton("等级80")
+        self._lvl90_btn = QPushButton("等级90")
+        self._skill9_btn = QPushButton("技能9")
+        self._skill12_btn = QPushButton("技能12")
 
-        for btn in (self._lvl80_btn, self._lvl90_btn, self._skill9_btn, self._skill12_btn):
+        preset_btns: list[QPushButton] = [self._lvl80_btn, self._lvl90_btn, self._skill9_btn, self._skill12_btn]
+
+        if not self.is_weapon_panel:
+            self._trust4_btn = QPushButton("信赖4")
+            preset_btns.append(self._trust4_btn)
+
+        self._max_all_btn = QPushButton("满级")
+        self._min_all_btn = QPushButton("归零")
+        preset_btns.extend([self._max_all_btn, self._min_all_btn])
+
+        for btn in preset_btns:
             btn.setFont(self._font)
             btn.setStyleSheet("""
                 QPushButton {
@@ -198,6 +208,10 @@ class QtSelectionPanel(QWidget):
         self._lvl90_btn.clicked.connect(lambda: self._apply_level_preset(90))
         self._skill9_btn.clicked.connect(lambda: self._apply_skill_preset(9))
         self._skill12_btn.clicked.connect(lambda: self._apply_skill_preset(12))
+        if not self.is_weapon_panel:
+            self._trust4_btn.clicked.connect(self._apply_trust_preset)
+        self._max_all_btn.clicked.connect(self._apply_max_preset)
+        self._min_all_btn.clicked.connect(self._apply_min_preset)
 
     def _init_values(self) -> None:
         types = sorted({item["类型"] for item in self.data_list if "类型" in item})
@@ -276,6 +290,42 @@ class QtSelectionPanel(QWidget):
             self.special_panel.apply_skill_preset(target)
         elif self.skill_panel:
             self.skill_panel.apply_preset(target)
+
+    def _apply_trust_preset(self) -> None:
+        if self.trust_panel:
+            self.trust_panel.set_level(4)
+
+    def _apply_max_preset(self) -> None:
+        self.level_slider.setValue(self.level_slider.maximum())
+        self.level_label_widget.setText(str(self.level_slider.maximum()))
+        if not self.is_weapon_panel:
+            if self.trust_panel:
+                self.trust_panel.set_level(4)
+            if self.skill_panel:
+                self.skill_panel.apply_preset(12)
+        else:
+            if self.special_panel:
+                self.special_panel.apply_skill_preset(9)
+                for rd in self.special_panel._special_rows:
+                    if rd["row_w"].isVisible() and not rd["stk_slider"].isHidden():
+                        rd["stk_slider"].setValue(rd["stk_slider"].maximum())
+                        rd["stk_val_lbl"].setText(str(rd["stk_slider"].maximum()))
+
+    def _apply_min_preset(self) -> None:
+        self.level_slider.setValue(1)
+        self.level_label_widget.setText("1")
+        if not self.is_weapon_panel:
+            if self.trust_panel:
+                self.trust_panel.reset()
+            if self.skill_panel:
+                self.skill_panel.apply_preset(1)
+        else:
+            if self.special_panel:
+                self.special_panel.apply_skill_preset(1)
+                for rd in self.special_panel._special_rows:
+                    if rd["row_w"].isVisible() and not rd["stk_slider"].isHidden():
+                        rd["stk_slider"].setValue(0)
+                        rd["stk_val_lbl"].setText("0")
 
     # ── 对外读取接口 ──────────────────────────────────
 
