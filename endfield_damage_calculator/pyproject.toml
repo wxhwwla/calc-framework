@@ -103,8 +103,41 @@ ignore = [
 "gui_design/controls/enhancement/section.py" = ["F821"]  # 同上
 "**/__init__.py" = ["F401"]  # __init__.py 的显式 re-export
 "character_weapon_equipment/weapon_data/special_fields/__init__.py" = ["F403"]  # 子模块聚合 re-export
+"character_weapon_equipment/weapon_data/add_weapon.py" = ["E501"]  # 独立脚本，docstring 行长超限制
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+# ═══════════════════════════════════════════════════════
+# 类型注解规范（Pylance / pyright）
+# ═══════════════════════════════════════════════════════
+#
+# 在双后端架构（CTk + PySide6）下，以下规则可避免类型错误：
+#
+# 1. dict 注解必须与实际 value 类型一致
+#    ✅ manual_buffs: dict[str, list[dict[str, str | float]]]
+#    ❌ manual_buffs: dict[str, list[dict[str, float]]]
+#    # effect_type 是 str，value 是 float，所以是 str | float
+#
+# 2. 函数参数接受 None 时用 X | None
+#    ✅ rebuild_segment_rows(self, char_data: dict | None, ...)
+#    ❌ rebuild_segment_rows(self, char_data: dict, ...)
+#
+# 3. 双后端共享函数使用 Any
+#    ✅ get_app_calculation_history(app: Any)
+#    ❌ get_app_calculation_history(app: DamageCalculatorApp)
+#    # 只用 getattr/setattr 访问属性，不依赖 CTk 类型
+#
+# 4. 独立脚本的 import 路径问题
+#    ✅ from calculation.formula import ...  # pyright: ignore[reportMissingImports]
+#    # 独立脚本通过 sys.path.insert 添加路径，Pylance 静态分析不识别
+#
+# 5. Literal 约束要精确
+#    ✅ weight: Literal["normal", "bold"] = "normal"
+#    ❌ weight: str = "normal"
+#    # CTkFont 的 weight 参数只接受 "normal"/"bold"
+#
+# 配置参考：../pyrightconfig.json（抑制 mixin/可选访问等安全模式）
+

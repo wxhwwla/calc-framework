@@ -60,7 +60,7 @@ _SKILL_TYPE_ORDER = ("战技", "连携技", "终结技")
 def _compute_weighted_with_buffs(
     segment_damage: dict[str, float],
     counts: dict[str, int],
-    manual_buffs: dict[str, list[dict[str, float]]] | None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None,
     scenarios: list[Any],
     final_attack: float,
     enemy_defense: float,
@@ -141,7 +141,7 @@ def build_damage_snapshot(
     ws2_level: int = 1,
     ws2_stack: int = 1,
     enemy_defense: float = 100.0,
-    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> DamageSnapshot:
     """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。
 

@@ -100,7 +100,7 @@ def evaluate_spell_abnormal_total(
     effects: list[DamageEffect],
     counts: dict[str, int] | None,
     char_level: int = 1,
-    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> tuple[float, dict[str, float]]:
     """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。
 

@@ -51,7 +51,7 @@ _CONTEXT_BUFF_MAP: dict[str, str] = {
 
 def _apply_manual_buffs(
     context: DamageContext,
-    buffs: list[dict[str, float]],
+    buffs: list[dict[str, str | float]],
 ) -> tuple[DamageContext, list[DamageEffect]]:
     extra_effects: list[DamageEffect] = []
     overrides: dict[str, float] = {}
@@ -99,7 +99,7 @@ def calculate_single_hit_damage(
     *,
     effects: list[DamageEffect] | None = None,
     crit_mode: CritMode = "non_crit",
-    manual_buffs: list[dict[str, float]] | None = None,
+    manual_buffs: list[dict[str, str | float]] | None = None,
 ) -> DamageResult:
     """计算单段伤害并返回 15 乘区明细。
 

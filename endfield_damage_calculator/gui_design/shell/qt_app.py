@@ -682,10 +682,18 @@ class QtDamageApp:
         from gui_design.controls.enhancement.qt_dialogs import QtComparePresetsDialog
 
         def _build_preset() -> LoadoutPreset:
+            from calculation.loadout.optimizer import FixedLoadoutSelection
+
             loadout = read_loadout_from_panels(
                 self.char_panel,
                 self.weapon_panel,
                 calculation_mode=self._current_calc_mode,
+                weapon_scope_label="当前武器",
+                equipment_scope_label="全部装备",
+                fixed_loadout=FixedLoadoutSelection(),
+                use_manual_multi_skill_counts=False,
+                manual_counts={},
+                enemy_defense=self._enemy_defense,
             )
             if loadout is None:
                 raise ValueError("请先选择有效角色和武器")

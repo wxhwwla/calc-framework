@@ -70,7 +70,7 @@ class LoadoutState:
     extra_crit_damage: float = 0.0
     enemy_defense: float = 100.0
     weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
-    manual_buffs: dict[str, list[dict[str, float]]] = field(default_factory=dict)
+    manual_buffs: dict[str, list[dict[str, str | float]]] = field(default_factory=dict)
 
     def weapon_skills(self) -> WeaponSkillSelection:
         """当前武器技能选用状态（深 module 视图）。"""
@@ -260,7 +260,7 @@ def read_loadout_from_panels(
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
     enemy_defense: float,
-    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> LoadoutState | None:
     """从角色/武器面板读取配装快照；无效选择时返回 None。"""
     char_data = char_panel.get_selected_data()

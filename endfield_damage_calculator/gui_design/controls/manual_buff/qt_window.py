@@ -65,7 +65,7 @@ class QtManualBuffDialog(QDialog):
         self._big = big_font
         self._small = small_font
         self._read_counts = read_counts_callback
-        self._store: dict[str, list[dict[str, float]]] = empty_buff_dict()
+        self._store: dict[str, list[dict[str, str | float]]] = empty_buff_dict()
 
         main = QHBoxLayout(self)
         main.setContentsMargins(0, 0, 0, 0)
@@ -275,7 +275,7 @@ class QtManualBuffDialog(QDialog):
             _commit()
 
         def _commit() -> None:
-            result: list[dict[str, float]] = []
+            result: list[dict[str, str | float]] = []
             widgets_in_lay = []
             for i in range(self._edit_lay.count()):
                 w = self._edit_lay.itemAt(i)

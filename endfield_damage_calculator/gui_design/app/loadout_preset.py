@@ -15,14 +15,14 @@ from character_weapon_equipment.weapon_data.special_fields import (
 PRESET_SCHEMA = "endfield_loadout_preset_v2"
 
 
-def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, float]]]:
+def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:
     if not isinstance(raw, dict):
         return {}
-    result: dict[str, list[dict[str, float]]] = {}
+    result: dict[str, list[dict[str, str | float]]] = {}
     for key, entries in raw.items():
         if not isinstance(entries, list):
             continue
-        parsed: list[dict[str, float]] = []
+        parsed: list[dict[str, str | float]] = []
         for e in entries:
             if not isinstance(e, dict):
                 continue
@@ -70,7 +70,7 @@ class LoadoutPreset:
     include_conditional_equipment_crit: bool = False
     extra_crit_rate: float = 0.0
     extra_crit_damage: float = 0.0
-    manual_buffs: dict[str, list[dict[str, float]]] = field(default_factory=dict)
+    manual_buffs: dict[str, list[dict[str, str | float]]] = field(default_factory=dict)
     ui_state: dict[str, Any] | None = None
     note: str = ""
 

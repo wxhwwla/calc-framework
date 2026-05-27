@@ -27,21 +27,21 @@ class ManualBuffEntry:
     value: float
 
 
-def empty_buff_dict() -> dict[str, list[dict[str, float]]]:
+def empty_buff_dict() -> dict[str, list[dict[str, str | float]]]:
     return {}
 
 
 def get_buffs_for_key(
-    store: dict[str, list[dict[str, float]]],
+    store: dict[str, list[dict[str, str | float]]],
     key: str,
-) -> list[dict[str, float]]:
+) -> list[dict[str, str | float]]:
     return list(store.get(key, []))
 
 
 def set_buffs_for_key(
-    store: dict[str, list[dict[str, float]]],
+    store: dict[str, list[dict[str, str | float]]],
     key: str,
-    entries: list[dict[str, float]],
+    entries: list[dict[str, str | float]],
 ) -> None:
     if entries:
         store[key] = [dict(e) for e in entries]

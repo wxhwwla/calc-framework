@@ -26,7 +26,7 @@ class TestManualBuffModel(unittest.TestCase):
         self.assertEqual(empty_buff_dict(), {})
 
     def test_get_set_buffs(self):
-        store: dict[str, list[dict[str, float]]] = {}
+        store: dict[str, list[dict[str, str | float]]] = {}
         set_buffs_for_key(
             store,
             "战技:1:2",

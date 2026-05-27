@@ -30,13 +30,19 @@ from utils.operation_log import LogLevel, get_session_operation_log
 from utils.optional_deps import matplotlib_install_hint
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from gui_design.app.loadout_state import LoadoutState
     from gui_design.shell.app import DamageCalculatorApp
 
-from .preset import _lists_for_preset_compare, build_preset_from_app
+from .preset import (
+    _lists_for_preset_compare,
+    apply_preset_to_app,
+    build_preset_from_app,
+)
 
 
-def get_app_calculation_history(app: DamageCalculatorApp) -> CalculationHistory:
+def get_app_calculation_history(app: Any) -> CalculationHistory:
     history = getattr(app, "_calc_history", None)
     if history is None:
         history = CalculationHistory(max_entries=10)
@@ -95,7 +101,7 @@ def show_calculation_history_dialog(app: DamageCalculatorApp) -> None:
 
 
 def refresh_damage_snapshot(
-    app: DamageCalculatorApp,
+    app: Any,
     *,
     loadout: LoadoutState | None = None,
 ) -> None:

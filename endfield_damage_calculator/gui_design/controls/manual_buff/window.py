@@ -216,7 +216,7 @@ def _refresh_right_panel(window: ctk.Toplevel, app: DamageCalculatorApp) -> None
         _commit(store, key, row_data)
 
     def _commit(store_: dict, key_: str, rd: list[dict[str, Any]]) -> None:
-        result: list[dict[str, float]] = []
+        result: list[dict[str, str | float]] = []
         for item in rd:
             et = (item["var"].get() or "").strip()
             try:

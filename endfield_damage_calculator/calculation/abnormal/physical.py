@@ -207,7 +207,7 @@ def evaluate_physical_abnormal_total(
     effects: list[DamageEffect],
     counts: dict[str, int] | None,
     char_level: int,
-    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> tuple[float, dict[str, float]]:
     """计算物理异常总伤与单次分项（key 为 '异常:等级'）。
 

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import tkinter as tk
 import tkinter.font as tkfont
+from typing import Any, Literal
 
 # customtkinter 仅在 default_ui_font 内按需导入，避免 pytest/脚本触发 WMI 阻塞
 
@@ -40,7 +41,7 @@ def system_font_family() -> str:
     return str(tkfont.nametofont("TkDefaultFont").actual("family"))
 
 
-def default_ui_font(*, size: int = 12, weight: str = "normal"):
+def default_ui_font(*, size: int = 12, weight: Literal["normal", "bold"] = "normal") -> Any:
     """创建与系统一致的 CustomTkinter 字体。"""
     import customtkinter as ctk
 
