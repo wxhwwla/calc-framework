@@ -1,0 +1,19 @@
+{
+  "schema_version": "ui-v1",
+  "name": "终末地计算表",
+  "description": "终末地 15 乘区公式的 ComputeSheet 排版",
+  "sections": [
+    {
+      "id": "attack_chain",
+      "type": "outputs",
+      "title": "攻击力链",
+      "outputs": ["能力值加成", "最终攻击力"]
+    },
+    {
+      "id": "damage",
+      "type": "outputs",
+      "title": "伤害结果",
+      "outputs": ["最终伤害"]
+    }
+  ]
+}

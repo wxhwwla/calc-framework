@@ -1,0 +1,66 @@
+{
+  "schema_version": "dag-v1",
+  "name": "UI测试用简单DAG",
+  "description": "供 ComputeSheet 单元测试用的小型 DAG",
+  "variables": {
+    "user.暴击率": {
+      "type": "float",
+      "source": "user_input",
+      "description": "暴击率加成百分比",
+      "default": 0,
+      "min": 0,
+      "max": 100
+    },
+    "user.倍率": {
+      "type": "float",
+      "source": "user_input",
+      "description": "技能倍率",
+      "default": 1.0
+    },
+    "character.基础攻击": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础攻击力",
+      "default": 500
+    },
+    "computed.最终攻击力": {
+      "type": "float",
+      "source": "computed",
+      "description": "已计算的最终攻击力",
+      "default": 1000
+    }
+  },
+  "nodes": {
+    "crit_var": {
+      "type": "var",
+      "label": "暴击率",
+      "path": "user.暴击率"
+    },
+    "multiplier_var": {
+      "type": "var",
+      "label": "技能倍率",
+      "path": "user.倍率"
+    },
+    "final_atk_var": {
+      "type": "var",
+      "label": "最终攻击力",
+      "path": "computed.最终攻击力"
+    },
+    "crit_zone": {
+      "type": "expr",
+      "label": "暴击区",
+      "expr": "1.0 + crit / 100.0",
+      "inputs": {"crit": "crit_var"}
+    },
+    "damage": {
+      "type": "expr",
+      "label": "单段伤害",
+      "expr": "atk * mult * cz",
+      "inputs": {"atk": "final_atk_var", "mult": "multiplier_var", "cz": "crit_zone"}
+    }
+  },
+  "outputs": {
+    "单段伤害": {"label": "单段伤害", "node": "damage"},
+    "暴击区": {"label": "暴击区", "node": "crit_zone"}
+  }
+}
