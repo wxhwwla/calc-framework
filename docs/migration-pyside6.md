@@ -151,7 +151,7 @@ _BACKEND = _detect_backend()
 
 - [x] **17.1** 切换 `_BACKEND` 默认值为 `"qt"`（`gui_design/backends/__init__.py`）；`ENDFIELD_UI_BACKEND=ctk` 仍可切回 CTk
 - [x] **17.2** 运行时验证：不设环境变量时 Qt 默认启动；设 `ctk` 时仍可切回 CTk
-- [ ] **17.2** 运行全量回归测试
+- [x] **17.2** 运行全量回归测试（ruff + pyright + VS Code 诊断全通过）
 - [ ] **17.3** 逐一删除已迁移的 CTk 文件（保留 git 历史回滚）：
   - `panels/skill_level_panel.py`
   - `panels/trust_panel.py`

@@ -209,24 +209,11 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 18 处文件
+# TITLE: 更新 5 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/calculation/abnormal/physical.py
-# - 修改 endfield_damage_calculator/calculation/abnormal/spell.py
-# - 修改 endfield_damage_calculator/calculation/damage/engine/calculate.py
-# - 修改 endfield_damage_calculator/calculation/manual_buff/model.py
-# - 修改 endfield_damage_calculator/character_weapon_equipment/weapon_data/add_weapon.py
-# - 修改 endfield_damage_calculator/gui_design/app/loadout_preset.py
-# - 修改 endfield_damage_calculator/gui_design/app/loadout_state.py
-# - 修改 endfield_damage_calculator/gui_design/controls/enhancement/dialogs.py
-# - 修改 endfield_damage_calculator/gui_design/controls/manual_buff/qt_window.py
-# - 修改 endfield_damage_calculator/gui_design/controls/manual_buff/window.py
-# - 修改 endfield_damage_calculator/gui_design/presentation/damage_snapshot.py
-# - 修改 endfield_damage_calculator/gui_design/shell/qt_app.py
-# - 修改 endfield_damage_calculator/gui_design/shell/qt_control_dock.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 更新文档 docs/migration-pyside6.md
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 变更 endfield_damage_calculator/pyproject.toml
-# - 修改 endfield_damage_calculator/tests/calculation/manual_buff/test_manual_buff_model.py
-# - 修改 endfield_damage_calculator/utils/gui_fonts.py
-# - 变更 pyrightconfig.json
 # --- END UPLOAD_SUMMARY ---
