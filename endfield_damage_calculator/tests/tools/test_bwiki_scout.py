@@ -1,28 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """BWIKI 侦察模块测试（纯函数与离线 fixture，不访问网络）。"""
 
-import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from tests.fixtures.path_roots import REPO_ROOT, TOOLS_ROOT
-
-from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists  # noqa: E402
-from bwiki_scout.json_scan import find_json_hints  # noqa: E402
-from bwiki_scout.local_schema import compare_name_sets, summarize_local_schema  # noqa: E402
-from bwiki_scout.names import normalize_name_for_match  # noqa: E402
 from bwiki_scout.detail_levels import (  # noqa: E402
     compare_operator_to_local,
     operator_detail_title,
     parse_operator_detail_wikitext,
 )
+from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists  # noqa: E402
+from bwiki_scout.json_scan import find_json_hints  # noqa: E402
+from bwiki_scout.local_schema import compare_name_sets, summarize_local_schema  # noqa: E402
+from bwiki_scout.names import normalize_name_for_match  # noqa: E402
 from bwiki_scout.parse_draft import build_draft_record, extract_template_params  # noqa: E402
 from bwiki_scout.scout import run_scout  # noqa: E402
-from bwiki_scout.storage import save_page_bundle  # noqa: E402
 
-from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
+from tests.fixtures.path_roots import PKG_ROOT
+
 _CHARS = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
 _WEAPONS = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
 

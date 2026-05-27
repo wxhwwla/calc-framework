@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 路径工具模块
 
@@ -24,7 +23,7 @@ from pathlib import Path
 def _find_project_root() -> Path:
     """
     查找项目根目录（开发模式下使用）
-    
+
     返回：
         项目根目录路径对象
     """
@@ -44,15 +43,15 @@ def get_application_dir() -> Path:
 def _get_app_dir() -> Path:
     """
     获取应用程序根目录
-    
+
     支持两种运行模式：
     1. 打包模式：通过 sys.frozen 判断，返回 EXE 所在目录
     2. 开发模式：返回项目源码根目录
-    
+
     返回：
         应用程序根目录路径对象
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     else:
         return _find_project_root()

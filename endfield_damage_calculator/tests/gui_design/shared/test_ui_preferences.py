@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """ui_preferences 偏好读取与启动页策略测试。"""
 
 from __future__ import annotations
@@ -15,8 +14,8 @@ from gui_design.shared.ui_preferences import (
     STARTUP_MODE_REMEMBER_LAST,
     load_ui_preferences,
     record_char_advanced_expanded,
-    record_weapon_advanced_expanded,
     record_last_page,
+    record_weapon_advanced_expanded,
     resolve_startup_page,
     save_ui_preferences,
 )
@@ -111,4 +110,3 @@ class TestUiPreferences(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """选择面板：类型/星级/名称/等级联动。"""
 
 from __future__ import annotations
@@ -103,7 +102,7 @@ class SelectionPanelCascadeMixin:
 
         if char:
             max_level = len(char["等级"])
-            
+
             if max_level == 0:
                 # 没有等级数据（如"暂未收录"情况），清空显示
                 self.level_label.configure(text="")
@@ -112,7 +111,7 @@ class SelectionPanelCascadeMixin:
                 if self.is_weapon_panel and self.special_ability_panel:
                     self.special_ability_panel.hide()
                 return
-            
+
             current = int(self.selected_level.get()) if self.selected_level.get().isdigit() else 1
 
             # 配置滑块范围，确保 number_of_steps 至少为 1
@@ -137,7 +136,7 @@ class SelectionPanelCascadeMixin:
             if self.is_weapon_panel and self.special_ability_panel:
                 self.special_ability_panel.refresh(char)
                 self.special_ability_panel.show()
-            
+
             # 如果是角色面板，刷新技能等级面板
             if not self.is_weapon_panel and self.skill_level_panel:
                 self.skill_level_panel.refresh(char)
@@ -179,4 +178,3 @@ class SelectionPanelCascadeMixin:
         if self.level_label:
             self.level_label.configure(text=str(level))
         self.selected_level.set(str(level))
-

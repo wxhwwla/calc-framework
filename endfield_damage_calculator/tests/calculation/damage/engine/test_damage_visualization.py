@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """伤害可视化（matplotlib）测试。"""
 
 import unittest

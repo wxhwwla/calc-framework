@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """最近计算历史（内存环形缓冲，供侧边栏恢复参数）。"""
 
 from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Deque, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -23,7 +22,7 @@ class CalculationHistory:
 
     def __init__(self, *, max_entries: int = 10) -> None:
         self._max = max(1, int(max_entries))
-        self._entries: Deque[HistoryEntry] = deque(maxlen=self._max)
+        self._entries: deque[HistoryEntry] = deque(maxlen=self._max)
 
     def push(self, entry: HistoryEntry) -> None:
         self._entries.append(entry)
@@ -31,7 +30,7 @@ class CalculationHistory:
     def list_entries(self) -> tuple[HistoryEntry, ...]:
         return tuple(reversed(self._entries))
 
-    def get_snapshot(self, index: int) -> Optional[dict[str, Any]]:
+    def get_snapshot(self, index: int) -> dict[str, Any] | None:
         """index 0 为最新一条。"""
         items = self.list_entries()
         if index < 0 or index >= len(items):

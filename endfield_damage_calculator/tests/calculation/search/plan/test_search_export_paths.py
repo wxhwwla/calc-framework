@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索导出目录测试。"""
 
 import tempfile

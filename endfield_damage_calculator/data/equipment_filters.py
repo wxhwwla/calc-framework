@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备列表按套装筛选（GUI 固定配装用）。"""
 
 from __future__ import annotations

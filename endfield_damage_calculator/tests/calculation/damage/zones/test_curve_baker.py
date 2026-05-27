@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """曲线烘焙与录入脚本共用接缝测试。"""
 
 import unittest

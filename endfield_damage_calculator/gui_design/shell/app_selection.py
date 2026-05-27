@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """选择面板 trace、页签切换与关闭持久化。"""
 
 from __future__ import annotations
@@ -12,6 +11,7 @@ from gui_design.shared.ui_preferences import (
     record_weapon_advanced_expanded,
     save_ui_preferences,
 )
+
 
 class AppSelectionMixin:
     def _bind_live_refresh_traces(self) -> None:
@@ -103,4 +103,3 @@ class AppSelectionMixin:
             save_ui_preferences(self._ui_preferences)
         finally:
             self.app.destroy()
-

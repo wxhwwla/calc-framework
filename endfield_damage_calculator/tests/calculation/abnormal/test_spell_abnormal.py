@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """法术异常计算测试。"""
 
 import unittest
 
-from calculation.damage.engine import DamageContext
 from calculation.abnormal.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
@@ -16,6 +14,7 @@ from calculation.abnormal.spell_params import (
     base_multiplier_for_formula,
     calc_level_from_ui,
 )
+from calculation.damage.engine import DamageContext
 
 
 class TestSpellAbnormal(unittest.TestCase):

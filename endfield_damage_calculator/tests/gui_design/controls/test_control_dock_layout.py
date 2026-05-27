@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """底栏布局高度辅助测试。"""
 
 import unittest
@@ -13,9 +12,9 @@ from gui_design.layout.gui_layout import (
     SEARCH_STATUS_BOX_HEIGHT,
     SEARCH_WORKERS_HINT_BOX_HEIGHT,
     SECONDARY_ACTION_BUTTON_HEIGHT,
-    search_action_button_texts,
     hint_text_box_height,
     multi_skill_segment_box_height,
+    search_action_button_texts,
     should_use_compact_control_dock,
 )
 from gui_design.search_ui.search_settings import format_parallel_workers_help, get_cpu_parallel_info

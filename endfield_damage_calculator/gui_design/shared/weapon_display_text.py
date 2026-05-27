@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器技能/词条展示文案（无 CustomTkinter）。"""
 
 from __future__ import annotations

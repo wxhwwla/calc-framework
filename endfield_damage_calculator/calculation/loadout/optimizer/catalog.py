@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单技能最优配装搜索模块。
 
@@ -39,29 +38,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Iterator, Optional
+from collections.abc import Iterator
 
-from calculation.core.top_n_tracker import TopNTracker
-
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-from calculation.equipment.affix import aggregate_loadout_modifiers
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
-from calculation.loadout.attack_eval import final_attack_details_for_loadout
-from calculation.equipment.prune import character_ability_attrs, sort_equipment_catalog_by_priority
 from calculation.loadout.slot_search import (
     FixedLoadoutSelection,
-    VaryingSlotMask,
-    baseline_loadout_from_catalog,
     count_loadout_combinations_for_selection,
-    iter_loadout_combinations_for_mask,
     iter_loadout_combinations_for_selection,
     selection_from_legacy_slot_count,
 )
-from calculation.search.evaluate.context import SearchEvalContext
 
-from .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidate
-
+from .types import OptimizerConfig
 
 
 def _is_equipment_beneficial(item: dict) -> bool:
@@ -82,7 +68,7 @@ def _is_equipment_beneficial(item: dict) -> bool:
     return bool(affixes)
 
 
-def _apply_equipment_filter(items: list[dict], candidate_names: Optional[set[str]]) -> list[dict]:
+def _apply_equipment_filter(items: list[dict], candidate_names: set[str] | None) -> list[dict]:
     """根据候选名称集合过滤装备列表。
 
     Args:
@@ -121,8 +107,8 @@ def count_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
     allow_duplicate_accessory: bool = True,
-    selection: Optional[FixedLoadoutSelection] = None,
-    varying_slot_count: Optional[int] = None,
+    selection: FixedLoadoutSelection | None = None,
+    varying_slot_count: int | None = None,
 ) -> int:
     """统计配装组合数。
 
@@ -175,5 +161,3 @@ def _iter_loadout_combinations(
         selection=fixed_loadout,
         allow_duplicate_accessory=allow_duplicate_accessory,
     )
-
-

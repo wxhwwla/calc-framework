@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能最优配装搜索。"""
 
 from .catalog import count_loadout_combinations

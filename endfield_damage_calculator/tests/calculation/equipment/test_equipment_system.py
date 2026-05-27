@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备数据链路与四格装配测试。"""
 
 import unittest

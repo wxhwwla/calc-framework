@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量遍历结果展示（CTk 弹窗；文案见 search_results_lines）。"""
 
 from __future__ import annotations
-
-from typing import Any, Optional, Sequence
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from calculation.loadout.optimizer import LoadoutScore
 from gui_design.presentation.search_results_lines import (
     build_search_results_report_lines,
     export_paths_to_strings,

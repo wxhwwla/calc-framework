@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索用的多技能加权评分配置（与快速预览共用倍率/次数语义）。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from calculation.multi_skill.optimizer import SkillScenario
 from calculation.skills.segments import (
     build_segment_scenarios_from_levels,
     format_segment_count_label,
-    normalize_manual_segment_counts,
     scenario_counts_for_eval,
     segment_key,
 )
@@ -65,23 +63,14 @@ class MultiSkillSearchEval:
     @property
     def priority_skill_types(self) -> tuple[str, ...]:
         active_keys = {key for key, c in self.skill_counts.items() if c > 0}
-        return tuple(
-            dict.fromkeys(
-                s.resolved_skill_type
-                for s in self.scenarios
-                if s.scenario_key in active_keys
-            )
-        )
+        return tuple(dict.fromkeys(s.resolved_skill_type for s in self.scenarios if s.scenario_key in active_keys))
 
     def signature_token(self) -> str:
         """写入 run_signature，避免与单技能或不同次数混库。"""
         count_part = "|".join(
-            f"{key}:{max(0, int(self.skill_counts.get(key, 0)))}"
-            for key in sorted(self.skill_counts.keys())
+            f"{key}:{max(0, int(self.skill_counts.get(key, 0)))}" for key in sorted(self.skill_counts.keys())
         )
-        mult_part = "|".join(
-            f"{s.scenario_key}:{s.skill_multiplier:.6f}" for s in self.scenarios
-        )
+        mult_part = "|".join(f"{s.scenario_key}:{s.skill_multiplier:.6f}" for s in self.scenarios)
         return f"multi({count_part};{mult_part})"
 
     @property
@@ -96,7 +85,7 @@ def build_multi_skill_search_eval(
     skill_2_level: int,
     skill_3_level: int,
     manual_counts: dict[str, int],
-) -> tuple[Optional[MultiSkillSearchEval], Optional[str]]:
+) -> tuple[MultiSkillSearchEval | None, str | None]:
     """
     从角色技能等级与手动次数组装全量搜索评分配置。
 

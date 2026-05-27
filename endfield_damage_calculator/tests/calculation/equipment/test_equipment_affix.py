@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备属性词条解析测试。"""
 
 import unittest
 
 from calculation.damage.engine import DamageContext, calculate_single_hit_damage
 from calculation.equipment.affix import (
-    aggregate_loadout_modifiers,
     parse_equipment_affix_line,
 )
 from calculation.equipment.system import (
-    build_four_slot_loadout,
     build_runtime_equipment_from_local_record,
 )
 from calculation.loadout.optimizer import evaluate_task
@@ -121,9 +118,9 @@ class TestEquipmentAffix(unittest.TestCase):
             calculate_final_attack_with_details,
         )
 
-        fa = calculate_final_attack_with_details(
-            character=char, weapon=weapon, char_level=1, weapon_level=1
-        )["final_attack"]
+        fa = calculate_final_attack_with_details(character=char, weapon=weapon, char_level=1, weapon_level=1)[
+            "final_attack"
+        ]
         base = DamageContext(
             final_attack=fa,
             skill_multiplier=1.0,

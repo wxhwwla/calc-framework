@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单技能全量搜索编排（无 GUI 依赖）。
 
@@ -9,14 +8,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
 
-from calculation.loadout.optimizer import LoadoutScore, OptimizerConfig, optimizer_config_for_character
+from calculation.loadout.optimizer import OptimizerConfig, optimizer_config_for_character
+from utils.search_format import format_workload_estimate_line
+
 from ..plan.controller import optimizer_config_for_search_job
-from .mvp import MvpSearchOutcome, run_mvp_search_from_job
-from .cancel import SearchCancelToken
 from ..plan.estimate import (
     SearchDurationEstimate,
     SearchWorkloadPreview,
@@ -24,7 +23,8 @@ from ..plan.estimate import (
     preview_search_workload,
 )
 from ..plan.job import SingleSkillSearchJob
-from utils.search_format import format_workload_estimate_line
+from .cancel import SearchCancelToken
+from .mvp import MvpSearchOutcome, run_mvp_search_from_job
 
 
 @dataclass(frozen=True)
@@ -76,11 +76,11 @@ def run_exported_single_skill_search(
     job: SingleSkillSearchJob,
     *,
     export_root: Path,
-    config: Optional[OptimizerConfig] = None,
+    config: OptimizerConfig | None = None,
     top_n: int = 10,
     max_workers: int = 1,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
 ) -> MvpSearchOutcome:
     """在 export_root 下执行续跑搜索并导出 MVP 结果。"""
     if config is None:

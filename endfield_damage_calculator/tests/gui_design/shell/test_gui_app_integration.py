@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """DamageCalculatorApp 轻量集成测试（构造主窗口并调用关键辅助方法）。"""
 
 from __future__ import annotations
@@ -109,9 +108,7 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 with patch.object(app, "_is_window_iconified", return_value=True):
                     with patch.object(app, "_apply_control_dock_layout") as mock_layout:
                         app._control_dock_last_width = None
-                        app._on_window_resize(
-                            type("E", (), {"widget": app.app, "width": 1200, "height": 900})()
-                        )
+                        app._on_window_resize(type("E", (), {"widget": app.app, "width": 1200, "height": 900})())
                         mock_layout.assert_not_called()
             finally:
                 app.app.destroy()
@@ -197,10 +194,12 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 self.assertIsNotNone(app.weapon_frame)
 
                 char_child_types = {
-                    child.winfo_class() for child in app.char_frame.winfo_children()  # type: ignore[union-attr]
+                    child.winfo_class()
+                    for child in app.char_frame.winfo_children()  # type: ignore[union-attr]
                 }
                 weapon_child_types = {
-                    child.winfo_class() for child in app.weapon_frame.winfo_children()  # type: ignore[union-attr]
+                    child.winfo_class()
+                    for child in app.weapon_frame.winfo_children()  # type: ignore[union-attr]
                 }
                 self.assertNotIn("ctk_scrollable_frame", char_child_types)
                 self.assertNotIn("ctk_scrollable_frame", weapon_child_types)
@@ -328,10 +327,7 @@ class TestDamageCalculatorAppIntegration(unittest.TestCase):
                 char_panel._skill_preset_9_btn.invoke()  # type: ignore[union-attr]
                 self.assertEqual(char_panel.get_skill_1_level(), 9)
                 self.assertEqual(char_panel.get_skill_2_level(), 9)
-                if (
-                    char_panel.skill_level_panel is not None
-                    and char_panel.skill_level_panel.current_skill_3_name
-                ):
+                if char_panel.skill_level_panel is not None and char_panel.skill_level_panel.current_skill_3_name:
                     self.assertEqual(char_panel.get_skill_3_level(), 9)
 
                 weapon_panel._skill_preset_9_btn.invoke()  # type: ignore[union-attr]

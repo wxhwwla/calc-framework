@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CTk 后端 widget adapter。
 
@@ -32,18 +31,18 @@ CTkFont = ctk.CTkFont
 CTkComboBox = ctk.CTkComboBox
 
 __all__ = [
+    "CTkButton",
+    "CTkCheckBox",
+    "CTkComboBox",
+    "CTkEntry",
+    "CTkFont",
     "CTkFrame",
     "CTkLabel",
-    "CTkButton",
     "CTkOptionMenu",
+    "CTkScrollableFrame",
     "CTkSlider",
-    "CTkEntry",
-    "CTkCheckBox",
     "CTkSwitch",
     "CTkTabview",
-    "CTkScrollableFrame",
     "CTkTextbox",
     "CTkToplevel",
-    "CTkFont",
-    "CTkComboBox",
 ]

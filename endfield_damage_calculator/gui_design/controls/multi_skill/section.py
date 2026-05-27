@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """多技能高级页区块。"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from calculation.skills.segments import list_segment_count_specs
 from calculation.abnormal.physical import PHYSICAL_ABNORMAL_LEVELS, PHYSICAL_ABNORMAL_TYPES, abnormal_levels_for
 from calculation.abnormal.spell import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYPES
-from gui_design.app.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
+from gui_design.app.confirm_refresh import normalize_skill_count_text
 from gui_design.layout.gui_layout import (
     ANOMALY_MATRIX_LABEL_MINSIZE,
     MULTI_SKILL_HINT_BOX_HEIGHT,
     PHYSICAL_ABNORMAL_HINT_BOX_HEIGHT,
     SPELL_ABNORMAL_HINT_BOX_HEIGHT,
-    multi_skill_segment_box_height,
 )
 from gui_design.layout.panel_hints import (
     MULTI_SKILL_COUNTS_HINT,
@@ -45,7 +43,7 @@ def _open_manual_buff_window(app: DamageCalculatorApp) -> None:
 
 
 def place_multi_skill_section(
-    app: "DamageCalculatorApp",
+    app: DamageCalculatorApp,
     parent: ctk.CTkFrame,
     *,
     wrap_label: Callable[[ctk.CTkLabel, ctk.CTkBaseClass], None],
@@ -304,7 +302,7 @@ def place_multi_skill_section(
     _place(mr, clear_all_btn, pady=(0, 8))
 
 
-def on_manual_skill_counts_switch_changed(app: "DamageCalculatorApp") -> None:
+def on_manual_skill_counts_switch_changed(app: DamageCalculatorApp) -> None:
     """切换「使用手动次数」：不即时重绘三列，仅标记待确认。"""
     mark = getattr(app, "_mark_loadout_pending", None)
     if callable(mark):

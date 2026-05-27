@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """多技能加权总伤遍历测试。"""
 
 import unittest

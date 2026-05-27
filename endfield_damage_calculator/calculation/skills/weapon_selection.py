@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 武器技能选用状态：与配装预设 v2 同形，供 LoadoutState / 乘区 / 全量搜索共用。
 
@@ -8,8 +7,9 @@ legacy 12 元组仅作导入 adapter；新代码应优先使用本 module 的 in
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from character_weapon_equipment.weapon_data.special_fields import read_weapon_skills_schema
 
@@ -142,9 +142,7 @@ class WeaponSkillSelection:
         special_states: list[dict[str, int]] = []
         for name, level, stack in self.special_skills:
             if str(name).strip() and int(level) > 0:
-                special_states.append(
-                    {"level": int(level), "stack": max(0, int(stack))}
-                )
+                special_states.append({"level": int(level), "stack": max(0, int(stack))})
         return {
             "weapon_normal_levels": normal_levels,
             "weapon_special_states": special_states,
@@ -173,7 +171,5 @@ class WeaponSkillSelection:
         """供 run_signature 等哈希用的稳定 token。"""
         preset = self.to_preset_view()
         normal = ",".join(str(v) for v in preset["weapon_normal_levels"])
-        special = ",".join(
-            f"{s['level']}:{s['stack']}" for s in preset["weapon_special_states"]
-        )
+        special = ",".join(f"{s['level']}:{s['stack']}" for s in preset["weapon_special_states"])
         return f"n[{normal}]|s[{special}]"

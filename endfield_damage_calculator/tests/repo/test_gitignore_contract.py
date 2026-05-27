@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """仓库 .gitignore 应覆盖常见本地产物，且不含错误条目。"""
 
 import unittest
-from pathlib import Path
 
 from tests.fixtures.path_roots import REPO_ROOT
 

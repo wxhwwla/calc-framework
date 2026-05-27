@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """主窗口启动尺寸测试。"""
 
 import unittest

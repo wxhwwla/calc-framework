@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 终末地伤害计算小工具 - 项目入口文件
 
@@ -97,11 +96,11 @@ def main() -> None:
 if __name__ == "__main__":
     # 记录启动时间（用于调试）
     start_time = time.time()
-    
+
     # 调用主函数启动应用
     main()
-    
+
     # 输出启动耗时（仅在控制台运行时显示）
-    if not hasattr(sys, 'frozen'):
+    if not hasattr(sys, "frozen"):
         elapsed = (time.time() - start_time) * 1000
         print(f"启动耗时: {elapsed:.2f}ms")

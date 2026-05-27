@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索评估上下文（角色/武器/等级，供配装逐条重算面板）。"""
 
 from __future__ import annotations

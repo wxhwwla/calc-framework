@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能搜索编排（无头）测试。"""
 
 import unittest
 
 from calculation.damage.engine import DamageContext
-from calculation.loadout.optimizer import OptimizerConfig, WeaponCandidate
+from calculation.loadout.optimizer import WeaponCandidate
 from calculation.loadout.slot_search import FixedLoadoutSelection
 from calculation.search.plan.job import SingleSkillSearchJob
 from calculation.search.run.single_skill import estimate_single_skill_search

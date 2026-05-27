@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """能力值加成乘区：Zone 类定义。"""
 
 from .base_zone import BaseZone
@@ -13,10 +12,7 @@ class AbilityBonusZone(BaseZone):
     """
 
     def __init__(self):
-        super().__init__(
-            name="能力值加成",
-            description="主能力×0.005 + 副能力×0.002"
-        )
+        super().__init__(name="能力值加成", description="主能力×0.005 + 副能力×0.002")
 
     def calculate(self) -> float:
         """
@@ -25,11 +21,6 @@ class AbilityBonusZone(BaseZone):
         返回：
             能力值加成值（float）
         """
-        main_value = self._params.get('main_value', 0.0)
-        sub_value = self._params.get('sub_value', 0.0)
+        main_value = self._params.get("main_value", 0.0)
+        sub_value = self._params.get("sub_value", 0.0)
         return main_value * 0.005 + sub_value * 0.002
-
-
-
-from .ability_bonus_calc import calculate_ability_bonus
-from .ability_bonus_details import calculate_ability_bonus_with_details

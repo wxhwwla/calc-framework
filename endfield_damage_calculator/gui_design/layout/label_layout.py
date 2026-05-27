@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """可换行标签布局辅助。"""
 
 from __future__ import annotations
@@ -9,13 +8,8 @@ from utils.platform_win32_patch import apply_platform_win32_patch
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from gui_design.layout.label_wrap import compute_wraplength
-
 # 主界面各列建议最小宽度（像素）；布局常量以 gui_layout 为准
-from gui_design.layout.gui_layout import (  # noqa: E402
-    ATTR_COLUMN_MINSIZE,
-    SELECTION_COLUMN_MINSIZE,
-)
+from gui_design.layout.label_wrap import compute_wraplength
 
 # 旧版窄列宽（仅兼容引用，新布局使用底栏）
 CONTROL_COLUMN_MINSIZE = 360

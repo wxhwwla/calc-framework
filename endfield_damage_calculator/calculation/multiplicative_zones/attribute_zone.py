@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 能力乘区模块
 
@@ -17,7 +16,8 @@
 """
 
 import warnings
-from typing import Dict, Any, Optional
+from typing import Any
+
 from .base_zone import BaseZone
 
 
@@ -29,10 +29,7 @@ class AttributeMultiplierZone(BaseZone):
     """
 
     def __init__(self, attribute_name: str, base_value: float = 0.0):
-        super().__init__(
-            name=f"{attribute_name}乘区",
-            description=f"{attribute_name}属性乘区"
-        )
+        super().__init__(name=f"{attribute_name}乘区", description=f"{attribute_name}属性乘区")
         self.attribute_name = attribute_name
         self.set_params(**{attribute_name: base_value})
 
@@ -52,20 +49,14 @@ class AttributeZoneManager:
         results = manager.calculate_all()
     """
 
-    ATTRIBUTES = ['力量', '敏捷', '智识', '意志']
+    ATTRIBUTES = ["力量", "敏捷", "智识", "意志"]
 
     def __init__(self):
-        self._zones: Dict[str, AttributeMultiplierZone] = {
-            attr: AttributeMultiplierZone(attr)
-            for attr in self.ATTRIBUTES
+        self._zones: dict[str, AttributeMultiplierZone] = {
+            attr: AttributeMultiplierZone(attr) for attr in self.ATTRIBUTES
         }
 
-    def setup_from_data(
-        self,
-        character: Optional[Dict[str, Any]],
-        weapon: Optional[Dict[str, Any]],
-        level: int = 1
-    ) -> None:
+    def setup_from_data(self, character: dict[str, Any] | None, weapon: dict[str, Any] | None, level: int = 1) -> None:
         """
         从角色和武器数据设置乘区
 
@@ -81,7 +72,7 @@ class AttributeZoneManager:
         if weapon is not None:
             self._setup_from_weapon(character, weapon)
 
-    def _setup_from_character(self, character: Dict[str, Any], level: int) -> None:
+    def _setup_from_character(self, character: dict[str, Any], level: int) -> None:
         """从角色数据设置基础属性"""
         level_index = level - 1
 
@@ -96,14 +87,10 @@ class AttributeZoneManager:
                 value = 0.0
             self._zones[attr].set_params(**{attr: value})
 
-    def _setup_from_weapon(
-        self,
-        character: Dict[str, Any],
-        weapon: Dict[str, Any]
-    ) -> None:
+    def _setup_from_weapon(self, character: dict[str, Any], weapon: dict[str, Any]) -> None:
         """从武器数据添加属性加成（仅平值，百分比由 ability_bonus 链处理）"""
-        main_attr = character.get('主能力', '')
-        sub_attr = character.get('副能力', '')
+        main_attr = character.get("主能力", "")
+        sub_attr = character.get("副能力", "")
 
         for attr in self.ATTRIBUTES:
             current_value = self._zones[attr]._params.get(attr, 0.0)
@@ -113,11 +100,11 @@ class AttributeZoneManager:
                 if not isinstance(skill, dict):
                     continue
                 effect = skill.get("effect", "")
-                if effect == f"{attr}+":
-                    current_value += self._get_weapon_bonus(skill.get("curve", []))
-                elif attr == main_attr and effect == "主能力值+":
-                    current_value += self._get_weapon_bonus(skill.get("curve", []))
-                elif attr == sub_attr and effect == "副能力值+":
+                if (
+                    effect == f"{attr}+"
+                    or (attr == main_attr and effect == "主能力值+")
+                    or (attr == sub_attr and effect == "副能力值+")
+                ):
                     current_value += self._get_weapon_bonus(skill.get("curve", []))
 
             # 从直接属性键中获取加成（向后兼容旧 schema）
@@ -135,14 +122,14 @@ class AttributeZoneManager:
     def _get_weapon_bonus(self, bonus_data, level: int = 1) -> float:
         """
         从武器加成数据中提取加成值（支持等级选择）
-        
+
         参数：
             bonus_data: 武器加成数据（可以是列表或数值）
             level: 特殊能力等级（1-9），用于从列表中获取对应等级的加成值
-        
+
         返回：
             加成值（float）
-        
+
         说明：
             - 如果 bonus_data 是列表，根据 level 参数获取对应等级的值
             - 如果 bonus_data 是单个数值，直接返回该值
@@ -161,35 +148,24 @@ class AttributeZoneManager:
         """获取指定属性的乘区"""
         return self._zones[attribute]
 
-    def calculate_all(self) -> Dict[str, float]:
+    def calculate_all(self) -> dict[str, float]:
         """计算所有属性乘区的值"""
-        return {
-            attr: zone.calculate()
-            for attr, zone in self._zones.items()
-        }
+        return {attr: zone.calculate() for attr, zone in self._zones.items()}
 
     def calculate_total(self) -> float:
         """计算所有属性乘区的总和"""
         return sum(zone.calculate() for zone in self._zones.values())
 
-    def get_main_sub_info(
-        self,
-        character: Optional[Dict[str, Any]]
-    ) -> Dict[str, str]:
+    def get_main_sub_info(self, character: dict[str, Any] | None) -> dict[str, str]:
         """获取角色的主能力和副能力信息"""
         if character is None:
-            return {'主能力': '', '副能力': ''}
-        return {
-            '主能力': character.get('主能力', ''),
-            '副能力': character.get('副能力', '')
-        }
+            return {"主能力": "", "副能力": ""}
+        return {"主能力": character.get("主能力", ""), "副能力": character.get("副能力", "")}
 
 
 def calculate_attribute_zones(
-    character: Optional[Dict[str, Any]],
-    weapon: Optional[Dict[str, Any]],
-    level: int = 1
-) -> Dict[str, float]:
+    character: dict[str, Any] | None, weapon: dict[str, Any] | None, level: int = 1
+) -> dict[str, float]:
     """
     快捷函数：计算能力乘区
 
@@ -207,8 +183,8 @@ def calculate_attribute_zones(
 
 
 def calculate_attribute_zones_with_details(
-    character: Optional[Dict[str, Any]],
-    weapon: Optional[Dict[str, Any]],
+    character: dict[str, Any] | None,
+    weapon: dict[str, Any] | None,
     level: int = 1,
     sa1_name: str = "",
     sa1_level: int = 1,
@@ -235,7 +211,7 @@ def calculate_attribute_zones_with_details(
     special_skill_2_name: str = "",
     special_skill_2_level: int = 1,
     special_skill_2_stack: int = 1,
-) -> Dict[str, Dict[str, float]]:
+) -> dict[str, dict[str, float]]:
     """
     快捷函数：计算能力乘区，返回详细信息
 
@@ -291,8 +267,8 @@ def calculate_attribute_zones_with_details(
     ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
 
     level_index = level - 1
-    main_attr = character.get('主能力', '') if character else ''
-    sub_attr = character.get('副能力', '') if character else ''
+    main_attr = character.get("主能力", "") if character else ""
+    sub_attr = character.get("副能力", "") if character else ""
 
     result = {}
 
@@ -307,6 +283,7 @@ def calculate_attribute_zones_with_details(
         # 计算武器加成（仅平值，百分比由 ability_bonus 链处理）
         bonus_value = 0.0
         if weapon:
+
             def _resolve_level(effect: str) -> int:
                 if effect == sa1_name:
                     return sa1_level
@@ -324,24 +301,14 @@ def calculate_attribute_zones_with_details(
                 if not isinstance(skill, dict):
                     continue
                 effect = skill.get("effect", "")
-                if effect == f"{attr}+":
+                if (
+                    effect == f"{attr}+"
+                    or (attr == main_attr and effect == "主能力值+")
+                    or (attr == sub_attr and effect == "副能力值+")
+                ):
                     if _should_skip(effect):
                         continue
-                    bonus_value += manager._get_weapon_bonus(
-                        skill.get("curve", []), _resolve_level(effect)
-                    )
-                elif attr == main_attr and effect == "主能力值+":
-                    if _should_skip(effect):
-                        continue
-                    bonus_value += manager._get_weapon_bonus(
-                        skill.get("curve", []), _resolve_level(effect)
-                    )
-                elif attr == sub_attr and effect == "副能力值+":
-                    if _should_skip(effect):
-                        continue
-                    bonus_value += manager._get_weapon_bonus(
-                        skill.get("curve", []), _resolve_level(effect)
-                    )
+                    bonus_value += manager._get_weapon_bonus(skill.get("curve", []), _resolve_level(effect))
 
             # 2. 从直接属性键中获取加成（向后兼容旧 schema）
             attr_bonus_name = f"{attr}+"
@@ -386,10 +353,6 @@ def calculate_attribute_zones_with_details(
                 if 0 <= trust_level < len(trust_add):
                     bonus_value += trust_add[trust_level]
 
-        result[attr] = {
-            'base': base_value,
-            'bonus': bonus_value,
-            'total': base_value + bonus_value
-        }
+        result[attr] = {"base": base_value, "bonus": bonus_value, "total": base_value + bonus_value}
 
     return result

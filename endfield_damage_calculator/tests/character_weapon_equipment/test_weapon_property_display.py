@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器属性面板数值展示格式。"""
 
 import unittest
@@ -20,17 +19,13 @@ class TestFormatWeaponBonusDisplayValue(unittest.TestCase):
 
     def test_originium_art_skill_attr_shows_integer_without_percent_when_not_first(self):
         self.assertEqual(
-            format_weapon_bonus_display_value(
-                60.0, attr_name="源石技艺强度+", is_first_skill=False
-            ),
+            format_weapon_bonus_display_value(60.0, attr_name="源石技艺强度+", is_first_skill=False),
             "60",
         )
 
     def test_additional_attack_shows_flat_value_not_percent(self):
         self.assertEqual(
-            format_weapon_bonus_display_value(
-                12.0, attr_name="附加攻击力+", is_first_skill=False
-            ),
+            format_weapon_bonus_display_value(12.0, attr_name="附加攻击力+", is_first_skill=False),
             "12",
         )
 
@@ -46,9 +41,7 @@ class TestFormatWeaponBonusDisplayValue(unittest.TestCase):
 
     def test_non_originium_special_ability_field_shows_percent(self):
         self.assertEqual(
-            format_weapon_bonus_display_value(
-                37.1, attr_name="物理伤害+", is_first_skill=False
-            ),
+            format_weapon_bonus_display_value(37.1, attr_name="物理伤害+", is_first_skill=False),
             "37.1%",
         )
 

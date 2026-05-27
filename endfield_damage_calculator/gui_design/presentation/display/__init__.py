@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """属性/乘区/单段伤害展示文案。"""
 
 from .character import (

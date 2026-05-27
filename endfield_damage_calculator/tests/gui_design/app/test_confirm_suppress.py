@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """确认刷新抑制（手动次数开关）测试。"""
 
 import unittest

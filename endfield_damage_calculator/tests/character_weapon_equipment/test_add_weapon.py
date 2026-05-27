@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """add_weapon 无副作用测试"""
 
 import copy
@@ -52,10 +51,7 @@ class TestAddWeaponNoMutation(unittest.TestCase):
             )
             removed = remove_weapon("待删", json_path=json_path)
             self.assertTrue(removed)
-            names = [
-                w["名称"]
-                for w in json.loads(json_path.read_text(encoding="utf-8"))
-            ]
+            names = [w["名称"] for w in json.loads(json_path.read_text(encoding="utf-8"))]
             self.assertEqual(names, ["保留"])
 
     def test_remove_weapon_returns_false_when_missing(self):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 当前配装快照：从选择面板读取一次，供确认签名、预设、全量搜索共用。
 
@@ -9,18 +8,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from calculation.loadout.slot_search import FixedLoadoutSelection
 from calculation.search.plan.controller import SearchJobInputs
+from calculation.skills.weapon_selection import WeaponSkillSelection
+from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
+from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
+
 from .confirm_refresh import (
     build_confirm_refresh_signature,
     build_display_pending_signature,
 )
 from .loadout_preset import LoadoutPreset
-from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
-from calculation.skills.weapon_selection import WeaponSkillSelection
-from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
 
 def _resolve_selected_skill_for_search(
@@ -58,7 +58,7 @@ class LoadoutState:
     weapon_scope_label: str
     equipment_scope_label: str
     fixed_loadout: FixedLoadoutSelection
-    fixed_equipment_names: dict[str, Optional[str]]
+    fixed_equipment_names: dict[str, str | None]
     use_manual_multi_skill_counts: bool
     manual_counts: dict[str, int]
     physical_abnormal_counts: dict[str, int] = field(default_factory=dict)
@@ -228,8 +228,8 @@ class LoadoutState:
         )
 
 
-def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, Optional[str]]:
-    def _name(item: Optional[dict]) -> Optional[str]:
+def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None]:
+    def _name(item: dict | None) -> str | None:
         if not item:
             return None
         return str(item.get("名称") or "") or None
@@ -261,7 +261,7 @@ def read_loadout_from_panels(
     extra_crit_damage: float = 0.0,
     enemy_defense: float,
     manual_buffs: dict[str, list[dict[str, float]]] | None = None,
-) -> Optional[LoadoutState]:
+) -> LoadoutState | None:
     """从角色/武器面板读取配装快照；无效选择时返回 None。"""
     char_data = char_panel.get_selected_data()
     weapon_data = weapon_panel.get_selected_data()
@@ -310,7 +310,7 @@ def read_loadout_from_panels(
     )
 
 
-def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Optional[LoadoutState]:
+def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> LoadoutState | None:
     """从 DamageCalculatorApp 实例读取配装快照。"""
     char_panel = getattr(app, "char_panel", None)
     weapon_panel = getattr(app, "weapon_panel", None)
@@ -331,23 +331,17 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Opti
         use_manual_multi_skill_counts=bool(app.use_manual_skill_counts_var.get()),
         manual_counts=app._manual_multi_skill_counts(),
         physical_abnormal_counts=(
-            app._manual_physical_abnormal_counts()
-            if hasattr(app, "_manual_physical_abnormal_counts")
-            else {}
+            app._manual_physical_abnormal_counts() if hasattr(app, "_manual_physical_abnormal_counts") else {}
         ),
         spell_abnormal_counts=(
-            app._manual_spell_abnormal_counts()
-            if hasattr(app, "_manual_spell_abnormal_counts")
-            else {}
+            app._manual_spell_abnormal_counts() if hasattr(app, "_manual_spell_abnormal_counts") else {}
         ),
         damage_component_mode=(
             app._current_damage_component_mode()
             if hasattr(app, "_current_damage_component_mode")
             else "skill_and_abnormal"
         ),
-        use_expected_crit=bool(
-            getattr(getattr(app, "use_expected_crit_var", None), "get", lambda: False)()
-        ),
+        use_expected_crit=bool(getattr(getattr(app, "use_expected_crit_var", None), "get", lambda: False)()),
         include_conditional_equipment_crit=bool(
             getattr(
                 getattr(app, "include_conditional_equipment_crit_var", None),
@@ -356,9 +350,7 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Opti
             )()
         ),
         extra_crit_rate=float(app._extra_crit_rate() if hasattr(app, "_extra_crit_rate") else 0.0),
-        extra_crit_damage=float(
-            app._extra_crit_damage() if hasattr(app, "_extra_crit_damage") else 0.0
-        ),
+        extra_crit_damage=float(app._extra_crit_damage() if hasattr(app, "_extra_crit_damage") else 0.0),
         enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
         manual_buffs=getattr(app, "_manual_buff_store", None),
     )

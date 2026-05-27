@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 技能段场景：从角色 JSON 读取各段倍率，并规范化手动次数键。
 
@@ -8,13 +7,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
-from calculation.multi_skill.optimizer import SkillScenario
 from calculation.damage.types import (
     format_damage_type_display,
     resolve_segment_damage_type,
 )
+from calculation.multi_skill.optimizer import SkillScenario
 
 # 与 display_lines.CHARACTER_SKILL_TYPES 一致：(技能槽名, 倍率字段, 段伤害类型字段)
 CHARACTER_SKILL_TYPES: tuple[tuple[str, str, str], ...] = (
@@ -48,7 +47,7 @@ def segment_multiplier_at_level(
     *,
     skill_level: int,
     segment_index: int,
-) -> Optional[float]:
+) -> float | None:
     """读取指定段在指定等级下的倍率（小数）；无有效倍率返回 None。"""
     if skill_level <= 0:
         return None
@@ -94,9 +93,7 @@ def build_segment_scenarios_from_levels(
             )
             if multiplier is None:
                 continue
-            damage_type, explicit = resolve_segment_damage_type(
-                char_data, field_name, segment_index
-            )
+            damage_type, explicit = resolve_segment_damage_type(char_data, field_name, segment_index)
             scenarios.append(
                 SkillScenario(
                     skill_name=segment_key(skill_type, segment_index),
@@ -150,7 +147,7 @@ def resolve_active_segment_counts(
 
 
 def scenario_counts_for_eval(
-    manual_counts: Optional[dict[str, int]],
+    manual_counts: dict[str, int] | None,
     scenarios: list[SkillScenario],
     *,
     selected_skill_type: str = "战技",
@@ -193,8 +190,8 @@ def format_segment_count_label(counts: dict[str, int]) -> str:
 def segment_display_label(
     scenario_key: str,
     *,
-    multiplier_percent: Optional[float] = None,
-    damage_type_display: Optional[str] = None,
+    multiplier_percent: float | None = None,
+    damage_type_display: str | None = None,
 ) -> str:
     """GUI 行标签，如 ``连携技 第2段 (400%) · 灼热``。"""
     skill_type, seg = parse_segment_key(scenario_key)
@@ -238,9 +235,7 @@ def list_segment_count_specs(
             if multiplier is None:
                 continue
             key = segment_key(skill_type, segment_index)
-            damage_type, explicit = resolve_segment_damage_type(
-                char_data, field_name, segment_index
-            )
+            damage_type, explicit = resolve_segment_damage_type(char_data, field_name, segment_index)
             type_display = format_damage_type_display(damage_type, is_default=not explicit)
             specs.append(
                 {
@@ -307,9 +302,7 @@ def format_segment_breakdown_lines(
             total = segment_totals[key]
             _, seg = parse_segment_key(key)
             count = counts.get(key, 0)
-            lines.append(
-                f"{indent}{skill_type} 第{seg}段: 单次 {single:.1f} ×{count} = {total:.1f}"
-            )
+            lines.append(f"{indent}{skill_type} 第{seg}段: 单次 {single:.1f} ×{count} = {total:.1f}")
         if len(seg_keys) > 1:
             lines.append(f"{indent}{skill_type} 合计: {skill_type_totals[skill_type]:.1f}")
     return lines

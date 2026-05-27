@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """GameDataFacade 统一数据门面测试。"""
 
 import unittest

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """WeaponSkillSelection 接缝测试。"""
 
 import unittest
@@ -10,7 +9,6 @@ from gui_design.panels.weapon_skill_selection import (
     apply_weapon_skill_selection_to_panel,
     read_weapon_skill_selection_from_panel,
 )
-
 
 _SAMPLE_WEAPON = {
     "名称": "示例武器",
@@ -52,9 +50,7 @@ class TestWeaponSkillSelection(unittest.TestCase):
         self.assertEqual(view["weapon_special_states"], [{"level": 7, "stack": 2}])
 
     def test_calculation_kwargs_uses_new_naming(self) -> None:
-        selection = WeaponSkillSelection.from_legacy_tuple(
-            ("敏捷+", 9, "", 0, "", 0, "主能力+", 8, 1, "", 0, 0)
-        )
+        selection = WeaponSkillSelection.from_legacy_tuple(("敏捷+", 9, "", 0, "", 0, "主能力+", 8, 1, "", 0, 0))
         kwargs = selection.calculation_kwargs()
         self.assertEqual(kwargs["normal_skill_1_name"], "敏捷+")
         self.assertEqual(kwargs["normal_skill_1_level"], 9)
@@ -122,11 +118,8 @@ class TestWeaponSkillSelection(unittest.TestCase):
         self.assertEqual(sap.weapon_special_level.get(), "7")
         self.assertEqual(sap.weapon_special_stack.get(), "2")
 
-
     def test_read_weapon_skill_selection_from_panel_matches_legacy_tuple(self) -> None:
         from types import SimpleNamespace
-
-        from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
         panel = SimpleNamespace(
             get_normal_skill_1_name=lambda: "敏捷+",

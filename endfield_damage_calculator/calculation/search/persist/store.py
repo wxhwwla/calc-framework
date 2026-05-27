@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """SQLite 续跑与去重恢复。"""
 
 from __future__ import annotations
 
 import sqlite3
 import time
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterator, Optional
 
+from calculation.core.top_n_tracker import TopNTracker
 from calculation.damage.engine import DamageContext
 from calculation.loadout.optimizer import (
     LoadoutScore,
@@ -20,10 +20,10 @@ from calculation.loadout.optimizer import (
     evaluate_task,
     iter_optimizer_tasks,
 )
-from ..run.parallel import run_bounded_parallel
-from ..run.cancel import SearchCancelToken
+
 from ..evaluate.context import SearchEvalContext
-from calculation.core.top_n_tracker import TopNTracker
+from ..run.cancel import SearchCancelToken
+from ..run.parallel import run_bounded_parallel
 
 # 续跑进度批量写入条数
 PROCESSED_BATCH_SIZE = 500
@@ -269,10 +269,10 @@ def execute_search_with_resume(
     equipment_catalog: dict[str, list[dict]],
     config: OptimizerConfig,
     max_workers: int = 1,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
-    search_eval: Optional[SearchEvalContext] = None,
-    task_evaluator: Optional[Callable[[OptimizerTask], LoadoutScore]] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
+    search_eval: SearchEvalContext | None = None,
+    task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
 ) -> ResumeExecutionResult:
     """执行可续跑搜索：自动跳过已处理组合。"""
     store = SearchRunStore(db_path)

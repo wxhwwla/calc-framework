@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """confirm_selection 集成测试（真实 CTk 滚动区 + 模拟面板）。"""
 
 from __future__ import annotations
@@ -74,9 +73,7 @@ class TestPropertyDisplayIntegration(unittest.TestCase):
             calculation_mode="single_hit",
             enemy_defense=100.0,
         )
-        joined = " ".join(
-            getattr(c, "cget", lambda _k: "")("text") for c in self.right_scroll.winfo_children()
-        )
+        joined = " ".join(getattr(c, "cget", lambda _k: "")("text") for c in self.right_scroll.winfo_children())
         self.assertIn("最终伤害", joined)
 
 

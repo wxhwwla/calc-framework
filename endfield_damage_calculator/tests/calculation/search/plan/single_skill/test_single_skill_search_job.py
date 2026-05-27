@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能搜索作业（无头）测试。"""
 
 import unittest
 
-from calculation.damage.engine import DamageContext
-from calculation.loadout.optimizer import WeaponCandidate
 from calculation.search.plan.job import (
     build_weapon_candidates,
     prepare_single_skill_search_job,

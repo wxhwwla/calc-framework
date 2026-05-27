@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """计算模式文案与内部标识映射。"""
 
 import unittest

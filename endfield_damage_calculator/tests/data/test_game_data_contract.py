@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """characters.json / weapons.json 全库结构契约测试"""
 
 import json
 import unittest
-from pathlib import Path
 
 from data.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH
 from utils.path_utils import get_resource_path
@@ -17,7 +15,7 @@ BONUS_ATTR_LEN = 9
 
 def _load_json_list(relative_path: str) -> list:
     path = get_resource_path(relative_path)
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, list):
         raise AssertionError(f"{relative_path} 根节点必须是数组")
@@ -39,9 +37,7 @@ def _assert_special_ability(entry_name: str, field: list) -> None:
         raise AssertionError(f"{entry_name}: 特殊能力名称无效")
     curve = field[2]
     if not isinstance(curve, list) or len(curve) not in (9, 12):
-        raise AssertionError(
-            f"{entry_name}: 特殊能力曲线长度应为 9 或 12，实际 {len(curve)}"
-        )
+        raise AssertionError(f"{entry_name}: 特殊能力曲线长度应为 9 或 12，实际 {len(curve)}")
 
 
 def _assert_weapon_skills_schema(entry_name: str, weapon: dict) -> None:
@@ -59,9 +55,7 @@ def _assert_weapon_skills_schema(entry_name: str, weapon: dict) -> None:
             raise AssertionError(f"{entry_name}: normal_skills[{idx}] 缺少 effect")
         curve = item.get("curve")
         if not isinstance(curve, list) or len(curve) != BONUS_ATTR_LEN:
-            raise AssertionError(
-                f"{entry_name}: normal_skills[{idx}] curve 长度应为 {BONUS_ATTR_LEN}"
-            )
+            raise AssertionError(f"{entry_name}: normal_skills[{idx}] curve 长度应为 {BONUS_ATTR_LEN}")
 
     for idx, item in enumerate(special, start=1):
         if not isinstance(item, dict):
@@ -72,9 +66,7 @@ def _assert_weapon_skills_schema(entry_name: str, weapon: dict) -> None:
             raise AssertionError(f"{entry_name}: special_skills[{idx}] 缺少 effect")
         curve = item.get("curve")
         if not isinstance(curve, list) or len(curve) != BONUS_ATTR_LEN:
-            raise AssertionError(
-                f"{entry_name}: special_skills[{idx}] curve 长度应为 {BONUS_ATTR_LEN}"
-            )
+            raise AssertionError(f"{entry_name}: special_skills[{idx}] curve 长度应为 {BONUS_ATTR_LEN}")
         if int(item.get("max_stack", 1)) < 1:
             raise AssertionError(f"{entry_name}: special_skills[{idx}] max_stack 至少为 1")
 
@@ -160,8 +152,7 @@ class TestGameDataContract(unittest.TestCase):
                     bad.append(f"{name}（{sa_name}）")
         self.assertFalse(
             bad,
-            "以下武器特殊曲线疑似把满档每层%误写成 base×(1..9)："
-            + "；".join(bad),
+            "以下武器特殊曲线疑似把满档每层%误写成 base×(1..9)：" + "；".join(bad),
         )
 
 

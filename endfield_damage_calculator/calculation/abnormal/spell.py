@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """法术异常/爆发伤害计算（导电/腐蚀/燃烧/冻结 + 同属性爆发）。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
 from calculation.abnormal.spell_params import (
     SPELL_ABNORMAL_PARAM_ROWS,
     SPELL_LEVEL_COEFF_DIVISOR,
@@ -16,6 +13,7 @@ from calculation.abnormal.spell_params import (
     calc_level_from_ui,
     preview_level_multipliers,
 )
+from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
 
 
 @dataclass(frozen=True)
@@ -102,7 +100,7 @@ def evaluate_spell_abnormal_total(
     effects: list[DamageEffect],
     counts: dict[str, int] | None,
     char_level: int = 1,
-    manual_buffs: Optional[dict[str, list[dict[str, float]]]] = None,
+    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
 ) -> tuple[float, dict[str, float]]:
     """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。
 
@@ -183,9 +181,7 @@ def format_spell_abnormal_breakdown_lines(
             label = defn.game_name
             if defn.event_kind == "爆发":
                 label = "爆发"
-            lines.append(
-                f"{indent}{abnormal}({label}) Lv{level}: 单次 {single:.1f} ×{count} = {total:.1f}"
-            )
+            lines.append(f"{indent}{abnormal}({label}) Lv{level}: 单次 {single:.1f} ×{count} = {total:.1f}")
     return lines
 
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 插件化数据：从应用目录 ``plugins/`` 热加载 JSON/YAML 敌人等配置。
 
@@ -10,7 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     import yaml  # type: ignore[import-untyped]
@@ -60,7 +59,7 @@ class PluginRegistry:
             loaded += 1
         return loaded
 
-    def get_enemy(self, enemy_id: str) -> Optional[dict[str, Any]]:
+    def get_enemy(self, enemy_id: str) -> dict[str, Any] | None:
         return self._enemies.get(enemy_id)
 
     def list_enemy_ids(self) -> tuple[str, ...]:
@@ -70,7 +69,7 @@ class PluginRegistry:
         return len(self._enemies)
 
 
-_registry: Optional[PluginRegistry] = None
+_registry: PluginRegistry | None = None
 
 
 def get_plugin_registry() -> PluginRegistry:

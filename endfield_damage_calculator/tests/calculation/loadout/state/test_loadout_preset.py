@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """配装预设导入导出测试。"""
 
 import json
 import unittest
 
 from gui_design.app.loadout_preset import (
-    LoadoutPreset,
     PRESET_SCHEMA,
+    LoadoutPreset,
     export_preset_json,
     import_preset_json,
 )

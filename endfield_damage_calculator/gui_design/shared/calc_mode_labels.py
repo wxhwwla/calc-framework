@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """计算模式下拉：界面中文文案 ↔ 内部模式标识。"""
 
 from __future__ import annotations

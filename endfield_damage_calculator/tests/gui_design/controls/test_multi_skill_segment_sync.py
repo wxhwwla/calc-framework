@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """多技能段列表：确认后倍率标签同步。"""
 
 from __future__ import annotations

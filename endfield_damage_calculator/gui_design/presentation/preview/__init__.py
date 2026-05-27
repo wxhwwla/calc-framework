@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """预览文案子包。"""
 
 from .multi_skill import build_multi_skill_search_preview_lines

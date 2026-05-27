@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """确认刷新与右侧乘区展示的统一输入（LoadoutState + catalog + 武器候选）。"""
 
 from __future__ import annotations
@@ -9,6 +8,7 @@ from typing import Any
 
 from calculation.loadout.optimizer import WeaponCandidate
 from data.game_data_facade import GameDataFacade
+
 from .loadout_state import LoadoutState
 
 

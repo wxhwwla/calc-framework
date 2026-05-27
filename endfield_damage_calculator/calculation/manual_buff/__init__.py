@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动场外 buff 包。"""
 
 from calculation.manual_buff.model import (

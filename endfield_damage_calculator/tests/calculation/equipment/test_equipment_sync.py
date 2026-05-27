@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备草案同步到本地格式测试。"""
 
 import json
@@ -8,14 +7,13 @@ import unittest
 from pathlib import Path
 
 from calculation.equipment.system import (
-    EQUIPMENT_KIND_ARMOR,
     EQUIPMENT_KIND_ACCESSORY,
+    EQUIPMENT_KIND_ARMOR,
     EQUIPMENT_KIND_GLOVES,
     build_equipment_catalog_from_local_rows,
     infer_equipment_slot,
 )
-
-from tests.fixtures.path_roots import PKG_ROOT, TOOLS_ROOT
+from tests.fixtures.path_roots import PKG_ROOT
 
 _SAMPLE_WIKITEXT = """{{装备
 |装备名称=50式应龙护手
@@ -101,12 +99,7 @@ class TestEquipmentSync(unittest.TestCase):
 
     def test_local_equipments_file_yields_nonempty_catalog(self):
         """本地 equipments.json 存在时，遍历预览应能分到三部位。"""
-        local = (
-            PKG_ROOT
-            / "character_weapon_equipment"
-            / "equipment_data"
-            / "equipments.json"
-        )
+        local = PKG_ROOT / "character_weapon_equipment" / "equipment_data" / "equipments.json"
         if not local.is_file():
             self.skipTest("无本地 equipments.json")
         rows = json.loads(local.read_text(encoding="utf-8"))

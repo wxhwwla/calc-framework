@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """仓库根目录门面分区约定（tools / docs / legacy）。"""
 
 import unittest
-from pathlib import Path
 
 from tests.fixtures.path_roots import REPO_ROOT
 

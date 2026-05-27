@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备套装筛选（data/equipment_filters）测试。"""
 
 import unittest

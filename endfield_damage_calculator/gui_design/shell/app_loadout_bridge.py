@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """固定配装与搜索预估桥接。"""
 
 from __future__ import annotations
@@ -9,6 +8,7 @@ from gui_design.controls.fixed_loadout import (
     resolve_fixed_loadout_selection,
 )
 from gui_design.controls.search import refresh_search_estimate
+
 
 class AppLoadoutBridgeMixin:
     def _build_fixed_loadout_selection(self):
@@ -30,4 +30,3 @@ class AppLoadoutBridgeMixin:
     def _refresh_search_estimate(self) -> None:
         """刷新「预计组合数/耗时」标签（委托 search_controls）。"""
         refresh_search_estimate(self)
-

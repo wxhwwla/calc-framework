@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 发布目录布局：软件（exe）与游戏数据（JSON + DATA_LICENSE）分文件存放。
 

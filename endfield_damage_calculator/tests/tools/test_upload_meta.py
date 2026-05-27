@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """upload_meta 版本与总结块测试"""
 
 import tempfile
@@ -14,10 +13,10 @@ from upload_meta import (
     bump_patch,
     classify_changed_paths,
     read_summary_for_commit,
+    read_version,
     remove_summary_block,
     write_summary_block,
     write_version,
-    read_version,
 )
 
 

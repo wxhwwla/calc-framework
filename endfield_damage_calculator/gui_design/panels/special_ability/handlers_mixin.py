@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """特殊能力面板：滑块回调。"""
 
 from __future__ import annotations

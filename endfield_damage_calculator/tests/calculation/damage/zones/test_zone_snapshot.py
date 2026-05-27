@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """乘区快照：确认选择后的展示行测试。"""
 
 import json
@@ -13,18 +12,8 @@ from calculation.multiplicative_zones.zone_snapshot import (
 )
 from tests.fixtures.path_roots import PKG_ROOT
 
-_CHARACTERS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "character_data"
-    / "characters.json"
-)
-_WEAPONS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "weapon_data"
-    / "weapons.json"
-)
+_CHARACTERS_JSON = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
+_WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
 
 
 def _load_by_name(path: Path, name: str) -> dict:

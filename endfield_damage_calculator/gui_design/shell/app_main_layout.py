@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """计算页五列与高级页 dock 骨架布局。"""
 
 from __future__ import annotations
@@ -32,11 +31,12 @@ from gui_design.panels.selection_panel import ChooseTypesStarsNamesLevels
 from gui_design.shared.ui_preferences import resolve_startup_page
 from utils.operation_log import LogLevel, get_session_operation_log
 
+
 class AppMainLayoutMixin:
     def _setup_ui(self) -> None:
         """
         设置主界面布局（使用 grid 布局实现自适应缩放）
-        
+
         布局结构见 ``gui_layout``：双页签；计算页使用 5 列，操作控件集中在高级页。
         """
         self.app.grid_rowconfigure(0, weight=1)
@@ -66,8 +66,8 @@ class AppMainLayoutMixin:
 
         # ==================== 角色选择区（左侧）====================
         self.char_frame = ctk.CTkFrame(
-            self.main_page_frame,           # 父容器
-            corner_radius=20    # 圆角半径（美化）
+            self.main_page_frame,  # 父容器
+            corner_radius=20,  # 圆角半径（美化）
         )
         # 将角色框架放置在第 0 行第 0 列
         self.char_frame.grid(
@@ -93,38 +93,18 @@ class AppMainLayoutMixin:
         self.weapon_frame.grid_columnconfigure(0, weight=1)
 
         # ==================== 角色属性展示区 ====================
-        self.char_attr_frame = ctk.CTkFrame(
-            self.main_page_frame,
-            corner_radius=20
-        )
-        self.char_attr_frame.grid(
-            row=MAIN_CONTENT_ROW,
-            column=CHAR_ATTR_COLUMN,
-            padx=4,
-            pady=8,
-            sticky="nsew"
-        )
+        self.char_attr_frame = ctk.CTkFrame(self.main_page_frame, corner_radius=20)
+        self.char_attr_frame.grid(row=MAIN_CONTENT_ROW, column=CHAR_ATTR_COLUMN, padx=4, pady=8, sticky="nsew")
         self.char_attr_frame.grid_rowconfigure(0, weight=1)
         self.char_attr_frame.grid_columnconfigure(0, weight=1)
 
         self.char_attr_scroll = ctk.CTkScrollableFrame(
-            self.char_attr_frame,
-            label_text="角色属性",
-            label_font=self.big_font
+            self.char_attr_frame, label_text="角色属性", label_font=self.big_font
         )
-        self.char_attr_scroll.grid(
-            row=0,
-            column=0,
-            padx=5,
-            pady=5,
-            sticky="nsew"
-        )
+        self.char_attr_scroll.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         # ==================== 武器属性展示区 ====================
-        self.weapon_attr_frame = ctk.CTkFrame(
-            self.main_page_frame,
-            corner_radius=20
-        )
+        self.weapon_attr_frame = ctk.CTkFrame(self.main_page_frame, corner_radius=20)
         self.weapon_attr_frame.grid(
             row=MAIN_CONTENT_ROW,
             column=WEAPON_ATTR_COLUMN,
@@ -136,23 +116,12 @@ class AppMainLayoutMixin:
         self.weapon_attr_frame.grid_columnconfigure(0, weight=1)
 
         self.weapon_attr_scroll = ctk.CTkScrollableFrame(
-            self.weapon_attr_frame,
-            label_text="武器属性",
-            label_font=self.big_font
+            self.weapon_attr_frame, label_text="武器属性", label_font=self.big_font
         )
-        self.weapon_attr_scroll.grid(
-            row=0,
-            column=0,
-            padx=5,
-            pady=5,
-            sticky="nsew"
-        )
+        self.weapon_attr_scroll.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         # ==================== 右侧乘区展示区 ====================
-        self.right_frame = ctk.CTkFrame(
-            self.main_page_frame,
-            corner_radius=20
-        )
+        self.right_frame = ctk.CTkFrame(self.main_page_frame, corner_radius=20)
         self.right_frame.grid(
             row=MAIN_CONTENT_ROW,
             column=ZONE_COLUMN,
@@ -163,20 +132,14 @@ class AppMainLayoutMixin:
         # 配置右侧框架内部布局
         self.right_frame.grid_rowconfigure(0, weight=1)
         self.right_frame.grid_columnconfigure(0, weight=1)
-        
+
         # 滚动框架（用于展示乘区数据）
         self.right_scroll = ctk.CTkScrollableFrame(
-            self.right_frame,        # 父容器
-            label_text="乘区数据",    # 滚动框架标题
-            label_font=self.big_font # 标题字体
+            self.right_frame,  # 父容器
+            label_text="乘区数据",  # 滚动框架标题
+            label_font=self.big_font,  # 标题字体
         )
-        self.right_scroll.grid(
-            row=0,
-            column=0,
-            padx=5,
-            pady=5,
-            sticky="nsew"
-        )
+        self.right_scroll.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         quick_actions = ctk.CTkFrame(self.right_frame, fg_color="transparent")
         quick_actions.grid(row=1, column=0, padx=8, pady=(0, 6), sticky="ew")
@@ -245,7 +208,7 @@ class AppMainLayoutMixin:
     def _load_data_and_create_panels(self) -> None:
         """
         加载角色和武器数据并创建选择面板
-        
+
         执行流程：
         1. 调用 get_characters() 获取角色数据列表
         2. 调用 get_weapons() 获取武器数据列表
@@ -292,7 +255,7 @@ class AppMainLayoutMixin:
 
         # 创建武器选择面板（放在武器框架的第一行）
         assert self.weapon_frame is not None, "weapon_frame 未初始化"
-        
+
         # 武器选择与角色一致使用普通容器；高级操作已迁移到「高级页」
         weapon_select_body = ctk.CTkFrame(
             self.weapon_frame,
@@ -309,16 +272,16 @@ class AppMainLayoutMixin:
 
         self.weapon_panel = ChooseTypesStarsNamesLevels.use(
             weapon_select_body,
-            weapons,               # 武器数据列表
-            self.big_font,          # 使用的字体
-            is_weapon_panel=True   # 是否为武器面板（启用特殊能力滑块）
+            weapons,  # 武器数据列表
+            self.big_font,  # 使用的字体
+            is_weapon_panel=True,  # 是否为武器面板（启用特殊能力滑块）
         )
         self._apply_selection_panel_expand_preferences()
 
         # 设置角色选择变化时的回调
         self.char_panel.selected_name.trace_add("write", self._on_char_name_change)
         self._bind_live_refresh_traces()
-        
+
         # 根据默认选中的角色初始化武器面板
         # 角色面板初始化时已经自动选择了第一个角色，现在需要同步更新武器面板
         self._on_char_name_change()
@@ -338,4 +301,3 @@ class AppMainLayoutMixin:
         self.app.update_idletasks()
         get_session_operation_log().record(LogLevel.INFO, "app_ready", {})
         self.app.after_idle(self._startup_refresh)
-

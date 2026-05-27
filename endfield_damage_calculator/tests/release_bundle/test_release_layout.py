@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """发布目录布局：exe 与游戏数据分文件，供打包脚本与 path_utils 共用约定。"""
 
 import json
@@ -10,15 +9,14 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT
-
+from data.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 from release_bundle.release_layout import (
     LICENSE_FILES,
     RELEASE_APP_NAME,
     RELEASE_DATA_FILES,
     stage_release_folder,
 )
-from data.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
+from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT
 from utils.path_utils import get_resource_path
 
 
@@ -76,9 +74,7 @@ class TestReleaseLayout(unittest.TestCase):
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src_chars, dest)
 
-            with patch.object(sys, "frozen", True, create=True), patch.object(
-                sys, "executable", str(fake_exe)
-            ):
+            with patch.object(sys, "frozen", True, create=True), patch.object(sys, "executable", str(fake_exe)):
                 resolved = get_resource_path(CHARACTERS_JSON_PATH)
 
             self.assertEqual(resolved, dest)

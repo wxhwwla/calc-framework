@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """属性三列 CTk 渲染与确认刷新编排。"""
 
 from .confirm import confirm_from_display_request, confirm_selection

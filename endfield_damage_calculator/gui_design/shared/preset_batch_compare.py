@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """多条配装预设并行评估（供 GUI「多方案对比」）。"""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any
 
+from calculation.core.parallel_evaluate import evaluate_parallel
 from calculation.damage.engine import DamageContext
+from calculation.loadout.attack_eval import final_attack_details_for_loadout
 from calculation.loadout.optimizer import LoadoutScore, OptimizerTask, WeaponCandidate, evaluate_task
 from calculation.multi_skill.optimizer import evaluate_multi_skill_task
-from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from calculation.loadout.attack_eval import final_attack_details_for_loadout
-from calculation.core.parallel_evaluate import evaluate_parallel
 from calculation.search.evaluate.context import SearchEvalContext
+from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
 from gui_design.app.loadout_preset import LoadoutPreset
 
 
@@ -27,7 +27,7 @@ class PresetCompareRow:
     error: str = ""
 
 
-def _find_by_name(rows: Sequence[dict[str, Any]], name: str) -> Optional[dict[str, Any]]:
+def _find_by_name(rows: Sequence[dict[str, Any]], name: str) -> dict[str, Any] | None:
     target = (name or "").strip()
     if not target:
         return None
@@ -50,7 +50,7 @@ def _empty_equipment(*, slot_kind: str) -> dict[str, Any]:
 
 
 def _resolve_equipment(
-    name: Optional[str],
+    name: str | None,
     equipments: Sequence[dict[str, Any]],
     *,
     slot_kind: str,
@@ -133,11 +133,7 @@ def _build_eval_item(
             "战技": max(0, int(preset.multi_skill_counts.get("战技", 0))),
             "连携技": max(0, int(preset.multi_skill_counts.get("连携技", 0))),
             "终结技": max(0, int(preset.multi_skill_counts.get("终结技", 0))),
-            **{
-                k: int(v)
-                for k, v in preset.multi_skill_counts.items()
-                if ":" in k
-            },
+            **{k: int(v) for k, v in preset.multi_skill_counts.items() if ":" in k},
         },
         list(scenarios),
     )

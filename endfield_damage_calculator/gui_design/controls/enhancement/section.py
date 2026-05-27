@@ -1,39 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """工具与分享折叠区布局。"""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import filedialog, messagebox
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from gui_design.shared.calc_history import CalculationHistory, HistoryEntry
-from gui_design.shared.calc_mode_labels import CALC_MODE_OPTIONS
-from gui_design.presentation.damage_snapshot import get_snapshot_from_app, store_snapshot_on_app
-from gui_design.shared.damage_visualization import (
-    build_damage_pie_figure,
-    build_improvement_bar_figure,
-    damage_breakdown_from_skill_map,
-    is_matplotlib_available,
-)
-from utils.optional_deps import matplotlib_install_hint
 from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
 from gui_design.app.loadout_preset import (
-    LoadoutPreset,
     export_preset_json,
     import_preset_json,
-    import_presets_from_json_text,
 )
-from gui_design.shared.preset_batch_compare import compare_presets_parallel
-from data.game_data_facade import GameDataFacade
-from data.loader import get_characters, get_equipments, get_weapons
-from gui_design.search_ui.search_settings import resolve_parallel_workers
 from gui_design.layout.gui_layout import (
     MORE_SETTINGS_VIEWPORT_HEIGHT,
     SECONDARY_ACTION_BUTTON_HEIGHT,
@@ -43,21 +27,20 @@ from gui_design.shared.ui_preferences import (
     STARTUP_MODE_REMEMBER_LAST,
     save_ui_preferences,
 )
-from utils.gui_fonts import default_ui_font
 from utils.operation_log import LogLevel, get_session_operation_log
 
 if TYPE_CHECKING:
     from gui_design.shell.app import DamageCalculatorApp
-    from gui_design.app.loadout_state import LoadoutState
 
 from .preset import (
+    _refresh_more_settings_visibility,
     apply_preset_to_app,
     build_preset_from_app,
-    _refresh_more_settings_visibility,
 )
 
+
 def place_enhancement_section(
-    app: "DamageCalculatorApp",
+    app: DamageCalculatorApp,
     parent: ctk.CTkFrame,
     *,
     start_row: int,
@@ -269,5 +252,3 @@ def place_enhancement_section(
 
     _refresh_more_settings_visibility(app)
     return row
-
-

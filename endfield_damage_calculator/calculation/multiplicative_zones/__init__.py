@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 乘区计算模块
 
@@ -22,25 +21,17 @@
 - ``ZoneManager`` 为历史演示路径，生产 GUI/搜索不经过该类。
 """
 
-from .base_zone import BaseZone
-from .zone_manager import ZoneManager
-from .defense_zone import DefenseReductionZone
+from .ability_bonus_zone import AbilityBonusZone, calculate_ability_bonus, calculate_ability_bonus_with_details
 from .attribute_zone import (
     AttributeMultiplierZone,
     AttributeZoneManager,
     calculate_attribute_zones,
-    calculate_attribute_zones_with_details
+    calculate_attribute_zones_with_details,
 )
-from .ability_bonus_zone import (
-    AbilityBonusZone,
-    calculate_ability_bonus,
-    calculate_ability_bonus_with_details
-)
-from .final_attack_zone import (
-    FinalAttackZone,
-    calculate_final_attack,
-    calculate_final_attack_with_details
-)
+from .base_zone import BaseZone
+from .defense_zone import DefenseReductionZone
+from .final_attack_zone import FinalAttackZone, calculate_final_attack, calculate_final_attack_with_details
+from .zone_manager import ZoneManager
 from .zone_snapshot import (
     MultiplicativeZoneSelection,
     WeaponBonusSelection,
@@ -49,21 +40,21 @@ from .zone_snapshot import (
 )
 
 __all__ = [
-    'BaseZone',
-    'ZoneManager',
-    'DefenseReductionZone',
-    'AttributeMultiplierZone',
-    'AttributeZoneManager',
-    'calculate_attribute_zones',
-    'calculate_attribute_zones_with_details',
-    'AbilityBonusZone',
-    'calculate_ability_bonus',
-    'calculate_ability_bonus_with_details',
-    'FinalAttackZone',
-    'calculate_final_attack',
-    'calculate_final_attack_with_details',
-    'MultiplicativeZoneSelection',
-    'WeaponBonusSelection',
-    'ZoneDisplayLine',
-    'compute_multiplicative_zone_snapshot',
+    "AbilityBonusZone",
+    "AttributeMultiplierZone",
+    "AttributeZoneManager",
+    "BaseZone",
+    "DefenseReductionZone",
+    "FinalAttackZone",
+    "MultiplicativeZoneSelection",
+    "WeaponBonusSelection",
+    "ZoneDisplayLine",
+    "ZoneManager",
+    "calculate_ability_bonus",
+    "calculate_ability_bonus_with_details",
+    "calculate_attribute_zones",
+    "calculate_attribute_zones_with_details",
+    "calculate_final_attack",
+    "calculate_final_attack_with_details",
+    "compute_multiplicative_zone_snapshot",
 ]

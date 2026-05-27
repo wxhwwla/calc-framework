@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 分级操作日志：记录 GUI 用户路径，便于导出附在 Bug Issue。
 
@@ -13,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 class LogLevel(IntEnum):
@@ -36,9 +35,7 @@ class LogEntry:
     level: LogLevel
     action: str
     detail: dict[str, Any]
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
     def to_dict(self, *, include_debug_fields: bool = True) -> dict[str, Any]:
         row = {
@@ -48,9 +45,7 @@ class LogEntry:
             "detail": dict(self.detail),
         }
         if not include_debug_fields:
-            row["detail"] = {
-                k: v for k, v in row["detail"].items() if not str(k).startswith("_")
-            }
+            row["detail"] = {k: v for k, v in row["detail"].items() if not str(k).startswith("_")}
         return row
 
 
@@ -65,14 +60,12 @@ class OperationLog:
         self,
         level: LogLevel,
         action: str,
-        detail: Optional[dict[str, Any]] = None,
+        detail: dict[str, Any] | None = None,
     ) -> None:
         """追加一条记录；低于 min_level 的 DEBUG 等会被丢弃。"""
         if level < self._min_level:
             return
-        self._entries.append(
-            LogEntry(level=level, action=action, detail=dict(detail or {}))
-        )
+        self._entries.append(LogEntry(level=level, action=action, detail=dict(detail or {})))
 
     def export_payload(self) -> dict[str, Any]:
         """生成可序列化字典。"""
@@ -96,7 +89,7 @@ class OperationLog:
         self._entries.clear()
 
 
-_session_log: Optional[OperationLog] = None
+_session_log: OperationLog | None = None
 
 
 def get_session_operation_log() -> OperationLog:

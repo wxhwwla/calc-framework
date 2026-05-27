@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 高级页控制栏（PySide6 版）。
 
 与 CTk 版 ``app_control_dock.py`` 平行。
-三列：操作/乘区展示 | 全量搜索 | 多技能次数。
+三列布局：操作/乘区展示 | 全量搜索 | 多技能次数。
+包含固定配装槽、异常矩阵、搜索参数、增强工具按钮。
 """
 
 from __future__ import annotations
 
-from typing import Callable, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
@@ -28,14 +29,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
-
 from gui_design.search_ui.search_settings import (
     build_worker_option_labels,
     format_parallel_workers_help,
     get_cpu_parallel_info,
     resolve_parallel_workers,
 )
+from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
 
 # 固定配装槽位配置：(catalog_key, 界面标签)
 _FIXED_SLOT_SPECS: list[tuple[str, str]] = [
@@ -129,7 +129,7 @@ class _SmallLabel(QLabel):
 class _ComboRow(QWidget):
     """标签 + QComboBox 水平行。"""
 
-    def __init__(self, label: str, items: List[str], current: str, font: QFont) -> None:
+    def __init__(self, label: str, items: list[str], current: str, font: QFont) -> None:
         super().__init__()
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -149,8 +149,13 @@ class _ComboRow(QWidget):
 #  QtControlDock
 # ═══════════════════════════════════════════════════════
 
+
 class QtControlDock(QWidget):
-    """高级页三列控制栏。"""
+    """高级页三列控制栏。
+
+    包含操作按钮（确认/返回/许可）、计算模式选择、全量搜索参数、
+    固定配装槽、多技能次数段行、物理/法术异常矩阵、暴击微调。
+    """
 
     calc_mode_changed = Signal(str)
     confirm_requested = Signal()
@@ -158,13 +163,13 @@ class QtControlDock(QWidget):
 
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         *,
-        big_font: Optional[QFont] = None,
-        small_font: Optional[QFont] = None,
-        on_back_to_main: Optional[Callable[[], None]] = None,
-        on_confirm: Optional[Callable[[], None]] = None,
-        on_attribution: Optional[Callable[[], None]] = None,
+        big_font: QFont | None = None,
+        small_font: QFont | None = None,
+        on_back_to_main: Callable[[], None] | None = None,
+        on_confirm: Callable[[], None] | None = None,
+        on_attribution: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(parent)
         self._big = big_font or QFont()
@@ -180,7 +185,7 @@ class QtControlDock(QWidget):
         self.calc_mode_menu: QComboBox
         self.single_skill_scope_combo: QComboBox
         self.equipment_scope_combo: QComboBox
-        self.fixed_loadout_slots: List[QComboBox] = []
+        self.fixed_loadout_slots: list[QComboBox] = []
         self.use_manual_skill_counts_cb: QCheckBox
         self.damage_component_combo: QComboBox
         self.use_expected_crit_cb: QCheckBox
@@ -190,8 +195,8 @@ class QtControlDock(QWidget):
 
         self._build_ui()
 
-    def _make_btn(self, text: str, height: int, *, primary: bool = False,
-                  style: Optional[str] = None) -> QPushButton:
+    def _make_btn(self, text: str, height: int, *, primary: bool = False, style: str | None = None) -> QPushButton:
+        """创建一个统一样式的 QPushButton。"""
         btn = QPushButton(text)
         btn.setMinimumHeight(height)
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -199,6 +204,7 @@ class QtControlDock(QWidget):
         return btn
 
     def _build_ui(self) -> None:
+        """构建三列布局。"""
         outer = QHBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(6)
@@ -210,6 +216,7 @@ class QtControlDock(QWidget):
     # ── 列 1：操作 / 乘区展示 ──────────────────────
 
     def _build_col_actions(self) -> QWidget:
+        """构建第一列：操作按钮、计算模式、更多设置。"""
         col = QWidget()
         col.setMinimumWidth(200)
         lay = QVBoxLayout(col)
@@ -281,19 +288,23 @@ class QtControlDock(QWidget):
         return col
 
     def _toggle_more_settings(self) -> None:
+        """展开/折叠「更多设置」面板。"""
         visible = not self._more_settings_body.isVisible()
         self._more_settings_body.setVisible(visible)
         self._more_settings_btn.setText("更多设置 (折叠)" if visible else "更多设置 (展开)")
 
     def _on_calc_mode_changed(self, text: str) -> None:
+        """计算模式下拉变更：发射 calc_mode_changed 信号。"""
         self.calc_mode_changed.emit(text)
 
     def current_calc_mode(self) -> str:
+        """获取当前计算模式显示标签。"""
         return self.calc_mode_menu.currentText()
 
     # ── 列 2：全量搜索 ─────────────────────────────
 
     def _build_col_search(self) -> QWidget:
+        """构建第二列：武器/装备范围、固定配装、搜索按钮、预估/状态。"""
         col = QWidget()
         col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -313,16 +324,14 @@ class QtControlDock(QWidget):
         self.single_skill_scope_combo.addItems(["当前武器", "同类型同星级", "同类型全部"])
         self.single_skill_scope_combo.setStyleSheet(_COMBO_STYLE)
         lay.addWidget(_SmallLabel("武器候选范围", self._small))
-        self.single_skill_scope_combo.currentTextChanged.connect(
-            lambda _: self._mark_pending())
+        self.single_skill_scope_combo.currentTextChanged.connect(lambda _: self._mark_pending())
         lay.addWidget(self.single_skill_scope_combo)
 
         self.equipment_scope_combo = QComboBox()
         self.equipment_scope_combo.addItems(["全部装备", "仅套装装备", "仅散件装备"])
         self.equipment_scope_combo.setStyleSheet(_COMBO_STYLE)
         lay.addWidget(_SmallLabel("装备范围", self._small))
-        self.equipment_scope_combo.currentTextChanged.connect(
-            lambda _: self._mark_pending())
+        self.equipment_scope_combo.currentTextChanged.connect(lambda _: self._mark_pending())
         lay.addWidget(self.equipment_scope_combo)
 
         # 固定配装（四槽装备名称下拉）
@@ -349,12 +358,12 @@ class QtControlDock(QWidget):
         lay.addWidget(_HintLabel("选择装备名称固定该槽位，选「（不固定）」则遍历。", self._small))
 
         # 搜索按钮
-        self.mvp_search_btn = self._make_btn("MVP 搜索", _SECONDARY_BTN_HEIGHT, primary=True,
-                                              style=_BTN_PRIMARY_STYLE)
+        self.mvp_search_btn = self._make_btn("MVP 搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
         lay.addWidget(self.mvp_search_btn)
 
-        self.full_search_btn = self._make_btn("全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True,
-                                               style=_BTN_PRIMARY_STYLE)
+        self.full_search_btn = self._make_btn(
+            "全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE
+        )
         lay.addWidget(self.full_search_btn)
 
         self.search_cancel_btn = self._make_btn("取消搜索", _SECONDARY_BTN_HEIGHT)
@@ -382,9 +391,7 @@ class QtControlDock(QWidget):
         lay.addWidget(self.search_workers_hint_label)
 
         self._update_workers_hint()
-        self.search_workers_combo.currentTextChanged.connect(
-            lambda _: self._update_workers_hint()
-        )
+        self.search_workers_combo.currentTextChanged.connect(lambda _: self._update_workers_hint())
 
         # 搜索预估 & 状态
         self.search_estimate_label = _HintLabel("预计组合数：—", self._small)
@@ -406,6 +413,7 @@ class QtControlDock(QWidget):
     # ── 列 3：多技能次数 ───────────────────────────
 
     def _build_col_multi(self) -> QWidget:
+        """构建第三列：多技能次数段行、手动 Buff、异常矩阵、暴击微调。"""
         col = QWidget()
         col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -436,14 +444,17 @@ class QtControlDock(QWidget):
         self._build_segment_rows_fallback()
         lay.addWidget(self._segment_rows_container)
 
-        self._manual_buff_btn = self._make_btn("场外 Buff 微调", _SECONDARY_BTN_HEIGHT,
-                                                style="""
+        self._manual_buff_btn = self._make_btn(
+            "场外 Buff 微调",
+            _SECONDARY_BTN_HEIGHT,
+            style="""
             QPushButton {
                 background-color: #2d6a4f; color: white;
                 border-radius: 6px;
             }
             QPushButton:hover { background-color: #40916c; }
-        """)
+        """,
+        )
         lay.addWidget(self._manual_buff_btn)
 
         # 物理异常
@@ -485,14 +496,18 @@ class QtControlDock(QWidget):
 
         # 物理异常矩阵
         self._physical_abnormal_widget, self._physical_abnormal_edits = _build_abnormal_matrix(
-            self._small, _PHYSICAL_ABNORMAL_TYPES, _PHYSICAL_ABNORMAL_LEVELS,
+            self._small,
+            _PHYSICAL_ABNORMAL_TYPES,
+            _PHYSICAL_ABNORMAL_LEVELS,
         )
         lay.addWidget(self._physical_abnormal_widget)
 
         # 法术异常
         lay.addWidget(_SectionHeader("法术异常", self._big))
         self._spell_abnormal_widget, self._spell_abnormal_edits = _build_abnormal_matrix(
-            self._small, _SPELL_ABNORMAL_TYPES, _SPELL_ABNORMAL_LEVELS,
+            self._small,
+            _SPELL_ABNORMAL_TYPES,
+            _SPELL_ABNORMAL_LEVELS,
         )
         lay.addWidget(self._spell_abnormal_widget)
 
@@ -509,6 +524,7 @@ class QtControlDock(QWidget):
         return col
 
     def _mark_pending(self) -> None:
+        """标记配装待确认（发射 loadout_pending 信号）。"""
         self.loadout_pending.emit()
 
     # ── 段级次数动态行 ──────────────────────────
@@ -577,16 +593,17 @@ class QtControlDock(QWidget):
     # ── 搜索参数读取 ──────────────────────────
 
     def _update_workers_hint(self) -> None:
+        """刷新并行线程提示文字（基于 CPU 核心数）。"""
         info = get_cpu_parallel_info()
         workers = resolve_parallel_workers(self.search_workers_combo.currentText())
-        self.search_workers_hint_label.setText(
-            format_parallel_workers_help(info, selected_workers=workers)
-        )
+        self.search_workers_hint_label.setText(format_parallel_workers_help(info, selected_workers=workers))
 
     def read_workers_choice(self) -> str:
+        """读取并行线程选择标签。"""
         return self.search_workers_combo.currentText()
 
     def read_top_n_choice(self) -> str:
+        """读取 Top N 条数选择标签。"""
         return self.search_top_n_combo.currentText()
 
     # ── 控制值读取 ──────────────────────────────
@@ -638,8 +655,9 @@ class QtControlDock(QWidget):
         )
 
     def read_skill_counts(self) -> dict[str, int]:
+        """读取段级手动次数（仅正值）。"""
         result: dict[str, int] = {}
-        edits = getattr(self, '_segment_count_edits_dict', None)
+        edits = getattr(self, "_segment_count_edits_dict", None)
         if edits:
             for key, edit in edits.items():
                 try:
@@ -658,28 +676,33 @@ class QtControlDock(QWidget):
         )
 
     def read_spell_abnormal_counts(self) -> dict[str, int]:
+        """读取法术异常次数（按类型累加）。"""
         return _read_abnormal_edits(
             self._spell_abnormal_edits,
             _SPELL_ABNORMAL_KEYS,
         )
 
     def read_damage_component_mode(self) -> str:
+        """读取伤害口径模式（skill_only / abnormal_only / skill_and_abnormal）。"""
         mapping = {"仅技能": "skill_only", "仅异常": "abnormal_only", "技能+异常": "skill_and_abnormal"}
         return mapping.get(self.damage_component_combo.currentText(), "skill_and_abnormal")
 
     def read_extra_crit_rate(self) -> float:
+        """读取额外暴击率百分比。"""
         try:
             return float(self.extra_crit_rate_edit.text() or "0")
         except ValueError:
             return 0.0
 
     def read_extra_crit_damage(self) -> float:
+        """读取额外暴击伤害百分比。"""
         try:
             return float(self.extra_crit_damage_edit.text() or "0")
         except ValueError:
             return 0.0
 
     def _clear_abnormal_counts(self) -> None:
+        """清空所有异常次数输入（物理+法术）。"""
         for edits in self._physical_abnormal_edits.values():
             for e in edits:
                 e.setText("0")
@@ -707,9 +730,11 @@ def _read_abnormal_edits(
     return result
 
 
-def _build_abnormal_matrix(small_font: QFont,
-                           rows: List[str], cols: List[str],
-                           ) -> tuple[QWidget, dict[str, list[QLineEdit]]]:
+def _build_abnormal_matrix(
+    small_font: QFont,
+    rows: list[str],
+    cols: list[str],
+) -> tuple[QWidget, dict[str, list[QLineEdit]]]:
     """构建异常矩阵输入网格，返回 (widget, edits_by_row)。"""
     w = QWidget()
     grid = QGridLayout(w)

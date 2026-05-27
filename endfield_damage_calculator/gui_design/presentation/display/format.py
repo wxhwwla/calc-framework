@@ -1,28 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 属性/乘区/单段伤害的展示文案构建（无 GUI 依赖，便于单测）。
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from calculation.core.config import CHARACTER_NORMAL_ATTRS
-from calculation.damage.engine import (
-    ZONE_ORDER,
-    DamageContext,
-    DamageResult,
-    calculate_single_hit_damage,
-)
-from calculation.damage.types import format_damage_type_display, resolve_segment_damage_type
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.core.preview_cache import cached_preview, sync_confirm_dependencies
-from calculation.skills.segments import CHARACTER_SKILL_TYPES
-from character_weapon_equipment.weapon_data.special_fields import (
-    read_weapon_skills_schema,
-    special_pick_bonus,
-)
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
@@ -33,9 +18,7 @@ NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
 
 # 武器 xxx+ 中不按百分数展示的词条（JSON 为去掉 % 的数值，展示为整数）
 WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
-WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset(
-    {"附加攻击力+", "主能力+", "副能力+"}
-)
+WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset({"附加攻击力+", "主能力+", "副能力+"})
 
 
 def weapon_bonus_display_uses_percent(attr_name: str) -> bool:
@@ -70,9 +53,9 @@ def _weapon_bonus_uses_integer_display(attr_name: str, *, is_first_skill: bool =
 
 
 def evaluate_display_state(
-    char_data: Optional[Dict[str, Any]],
-    weapon_data: Optional[Dict[str, Any]],
-) -> Dict[str, Any]:
+    char_data: dict[str, Any] | None,
+    weapon_data: dict[str, Any] | None,
+) -> dict[str, Any]:
     """评估本次确认后各列提示及右侧乘区是否可更新（无 CTk）。"""
     state = {
         "char_message": "",
@@ -112,7 +95,7 @@ def format_weapon_bonus_display_value(
     return f"{text}%"
 
 
-def _get_attribute_value(data: Dict[str, Any], level: int, attr_name: str) -> str:
+def _get_attribute_value(data: dict[str, Any], level: int, attr_name: str) -> str:
     """根据等级从列表或标量字段取属性展示值。"""
     if attr_name not in data:
         return ""
@@ -137,7 +120,7 @@ def format_skill_multiplier_display_value(raw: Any) -> str:
     return f"{format(num, 'g')}%"
 
 
-def _skill_segment_display_value(segment: Any, skill_level: int) -> Optional[str]:
+def _skill_segment_display_value(segment: Any, skill_level: int) -> str | None:
     """取单段倍率展示值；无伤害倍率时返回 None。"""
     if not isinstance(segment, list) or not segment:
         return None
@@ -159,5 +142,3 @@ class SelectedSkillForDamage(NamedTuple):
     damage_type: str
     damage_type_display: str
     skill_type: str
-
-

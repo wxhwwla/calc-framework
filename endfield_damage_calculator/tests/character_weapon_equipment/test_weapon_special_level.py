@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器特殊能力：等级 0 表示关闭（无 GUI 开关）。"""
 
 import unittest
@@ -33,12 +32,8 @@ class TestWeaponSpecialLevel(unittest.TestCase):
             "特殊能力1": [True, "主能力+", [5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0]],
             "特殊能力2": [False],
         }
-        off = calculate_ability_bonus_with_details(
-            char, weapon, level=1, ws_name="主能力+", ws_level=0
-        )
-        on = calculate_ability_bonus_with_details(
-            char, weapon, level=1, ws_name="主能力+", ws_level=1
-        )
+        off = calculate_ability_bonus_with_details(char, weapon, level=1, ws_name="主能力+", ws_level=0)
+        on = calculate_ability_bonus_with_details(char, weapon, level=1, ws_name="主能力+", ws_level=1)
         self.assertEqual(off["main_pct"], 0.0)
         self.assertEqual(on["main_pct"], 5.0)
 

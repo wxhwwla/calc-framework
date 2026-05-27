@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """计算历史记录测试。"""
 
 import unittest
@@ -24,9 +23,7 @@ class TestCalculationHistory(unittest.TestCase):
 
     def test_restore_returns_snapshot_by_index(self) -> None:
         history = CalculationHistory(max_entries=10)
-        history.push(
-            HistoryEntry(label="a", summary="s", preset_snapshot={"char": "X"})
-        )
+        history.push(HistoryEntry(label="a", summary="s", preset_snapshot={"char": "X"}))
         restored = history.get_snapshot(0)
         self.assertEqual(restored["char"], "X")
 

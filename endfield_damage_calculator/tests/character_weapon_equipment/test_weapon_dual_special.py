@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """双特殊能力：Wiki 解析与 JSON 字段。"""
 
 import io
 import sys
 import unittest
 from contextlib import redirect_stdout
-from pathlib import Path
 
 from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
 

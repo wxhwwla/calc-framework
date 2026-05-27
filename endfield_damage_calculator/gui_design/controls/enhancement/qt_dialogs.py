@@ -1,48 +1,42 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """PySide6 增强工具弹窗：计算历史 / 多方案对比 / 伤害仪表盘。"""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-from gui_design.shared.calc_history import CalculationHistory, HistoryEntry
-from gui_design.shared.preset_batch_compare import compare_presets_parallel
+from data.loader import get_characters, get_equipments, get_weapons
+from gui_design.app.loadout_preset import (
+    LoadoutPreset,
+    import_presets_from_json_text,
+)
+from gui_design.search_ui.search_settings import resolve_parallel_workers
+from gui_design.shared.calc_history import CalculationHistory
 from gui_design.shared.damage_visualization import (
     build_damage_pie_figure,
     build_improvement_bar_figure,
     damage_breakdown_from_skill_map,
     is_matplotlib_available,
 )
-from gui_design.app.loadout_preset import (
-    LoadoutPreset,
-    import_presets_from_json_text,
-)
-from gui_design.search_ui.search_settings import resolve_parallel_workers
+from gui_design.shared.preset_batch_compare import compare_presets_parallel
 from utils.operation_log import LogLevel, get_session_operation_log
 from utils.optional_deps import matplotlib_install_hint
-from data.loader import get_characters, get_weapons, get_equipments
 
 _SMALL_LABEL = "color: #CCCCCC;"
 _HINT_COLOR = "color: #888888;"
@@ -66,12 +60,13 @@ _PRIMARY_BTN_STYLE = """
 #  1. 计算历史
 # ═══════════════════════════════════════════════════════
 
+
 class QtCalcHistoryDialog(QDialog):
     """计算历史（最近 10 次）+ 恢复此配置按钮。"""
 
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         *,
         big_font: QFont,
         small_font: QFont,
@@ -136,6 +131,7 @@ class QtCalcHistoryDialog(QDialog):
         layout.addWidget(btn_box)
 
     def _restore(self, index: int) -> None:
+        """恢复指定索引的历史配置到面板。"""
         snap = self._history.get_snapshot(index)
         if not snap:
             return
@@ -151,12 +147,13 @@ class QtCalcHistoryDialog(QDialog):
 #  2. 多方案对比
 # ═══════════════════════════════════════════════════════
 
+
 class QtComparePresetsDialog(QDialog):
     """选择多个预设 JSON，并行评估并展示排名。"""
 
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         *,
         big_font: QFont,
         small_font: QFont,
@@ -178,8 +175,10 @@ class QtComparePresetsDialog(QDialog):
         layout.setContentsMargins(12, 12, 12, 12)
 
         paths, _ = QFileDialog.getOpenFileNames(
-            self, "多方案对比 — 选择一个或多个配装预设 JSON",
-            "", "JSON (*.json)",
+            self,
+            "多方案对比 — 选择一个或多个配装预设 JSON",
+            "",
+            "JSON (*.json)",
         )
         if not paths:
             self._no_data = True
@@ -187,7 +186,7 @@ class QtComparePresetsDialog(QDialog):
             return
         self._no_data = False
 
-        presets: List[LoadoutPreset] = []
+        presets: list[LoadoutPreset] = []
         try:
             for p in paths:
                 presets.extend(import_presets_from_json_text(Path(p).read_text(encoding="utf-8")))
@@ -199,7 +198,8 @@ class QtComparePresetsDialog(QDialog):
 
         if len(presets) < 2:
             QMessageBox.information(
-                self, "需要至少 2 条方案",
+                self,
+                "需要至少 2 条方案",
                 "已自动包含当前配置；请再选一个或多个预设 JSON 文件。",
             )
             self._no_data = True
@@ -217,7 +217,8 @@ class QtComparePresetsDialog(QDialog):
             max_workers=self._workers,
         )
         get_session_operation_log().record(
-            LogLevel.USER, "preset_compare",
+            LogLevel.USER,
+            "preset_compare",
             {"count": len(presets), "workers": self._workers},
         )
 
@@ -260,12 +261,13 @@ class QtComparePresetsDialog(QDialog):
 #  3. 伤害仪表盘
 # ═══════════════════════════════════════════════════════
 
+
 class QtDamageDashboardDialog(QDialog):
     """伤害仪表盘：饼图（轮转伤害构成）+ 柱状图（乘区占比）。"""
 
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         *,
         big_font: QFont,
         small_font: QFont,
@@ -283,7 +285,8 @@ class QtDamageDashboardDialog(QDialog):
 
         if snapshot is None:
             QMessageBox.information(
-                self, "暂无数据",
+                self,
+                "暂无数据",
                 "请先选择角色与武器并点击「确认选择」。",
             )
             layout.addWidget(QLabel("暂无数据"))
@@ -291,7 +294,8 @@ class QtDamageDashboardDialog(QDialog):
 
         if not is_matplotlib_available():
             QMessageBox.warning(
-                self, "需要 matplotlib",
+                self,
+                "需要 matplotlib",
                 f"请安装:\n{matplotlib_install_hint()}",
             )
             layout.addWidget(QLabel("需要 matplotlib"))
@@ -300,23 +304,21 @@ class QtDamageDashboardDialog(QDialog):
         from calculation.skills.segments import segment_display_label
 
         rotation_damage = dict(snapshot.segment_totals)
-        pie_slices = damage_breakdown_from_skill_map({
-            segment_display_label(key): value
-            for key, value in rotation_damage.items()
-            if value > 0
-        })
+        pie_slices = damage_breakdown_from_skill_map(
+            {segment_display_label(key): value for key, value in rotation_damage.items() if value > 0}
+        )
         fig = build_damage_pie_figure(pie_slices, title="轮转伤害构成")
 
-        zone_items = tuple(
-            sorted(snapshot.zone_share_percent.items(), key=lambda item: -item[1])
-        )
+        zone_items = tuple(sorted(snapshot.zone_share_percent.items(), key=lambda item: -item[1]))
         bar_fig = build_improvement_bar_figure(
-            zone_items, title="乘区构成占比", ylabel="占比 %",
+            zone_items,
+            title="乘区构成占比",
+            ylabel="占比 %",
         )
 
         try:
-            from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
             import matplotlib.pyplot as plt
+            from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
             canvas_row = QHBoxLayout()
             canvas1 = FigureCanvasQTAgg(fig)

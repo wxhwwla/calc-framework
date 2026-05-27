@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索 GUI 参数解析测试。"""
 
 import unittest

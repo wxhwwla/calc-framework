@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单段伤害引擎（15 乘区链）。
 
@@ -38,9 +37,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Optional
-
-from calculation.damage.types import damage_type_matches_context
+from typing import Literal
 
 CritMode = Literal["non_crit", "expected", "always_crit"]
 """暴击模式类型：
@@ -157,7 +154,7 @@ class DamageEffect:
     stack_rule: str = "add"
     damage_types: tuple[str, ...] = ()
     skill_types: tuple[str, ...] = ()
-    require_unbalanced: Optional[bool] = None
+    require_unbalanced: bool | None = None
     source: str = ""
     raw_text: str = ""
 
@@ -181,5 +178,3 @@ class DamageResult:
     crit_mode: CritMode
     warnings: tuple[str, ...]
     unknown_effects: tuple[dict[str, str], ...]
-
-

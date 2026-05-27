@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器有条件特殊能力字段。"""
 
 from .codec import *

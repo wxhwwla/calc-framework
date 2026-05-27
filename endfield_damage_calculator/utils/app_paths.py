@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """应用路径：读资源、写搜索导出。"""
 
 from __future__ import annotations

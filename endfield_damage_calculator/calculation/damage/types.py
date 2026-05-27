@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """伤害类型推断与展示（装备词条、技能段共用）。"""
 
 from __future__ import annotations
@@ -123,6 +122,4 @@ def damage_type_matches_context(ctx_type: str, effect_types: tuple[str, ...]) ->
         return True
     if ctx_type in effect_types:
         return True
-    if ctx_type == "法术" and any(t.startswith("法术-") for t in effect_types):
-        return True
-    return False
+    return bool(ctx_type == "法术" and any(t.startswith("法术-") for t in effect_types))

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 PySide6 选择面板：类型/星级/名称/等级四级联动 + 子面板（信赖/技能/特殊能力）。
 
@@ -8,13 +7,12 @@ PySide6 选择面板：类型/星级/名称/等级四级联动 + 子面板（信
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QComboBox,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -73,20 +71,20 @@ class QtSelectionPanel(QWidget):
 
     def __init__(
         self,
-        data_list: List[Dict[str, Any]],
+        data_list: list[dict[str, Any]],
         font: QFont,
         *,
         is_weapon_panel: bool = False,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.data_list: List[Dict[str, Any]] = data_list
+        self.data_list: list[dict[str, Any]] = data_list
         self.is_weapon_panel: bool = is_weapon_panel
         self._font = font
 
-        self.trust_panel: Optional[QtTrustPanel] = None
-        self.skill_panel: Optional[QtSkillLevelPanel] = None
-        self.special_panel: Optional[QtSpecialAbilityPanel] = None
+        self.trust_panel: QtTrustPanel | None = None
+        self.skill_panel: QtSkillLevelPanel | None = None
+        self.special_panel: QtSpecialAbilityPanel | None = None
 
         self._build_gui()
         self._connect_signals()
@@ -208,7 +206,7 @@ class QtSelectionPanel(QWidget):
         else:
             self.type_combo.addItem("无数据")
 
-    def update_data_list(self, new_data: List[Dict[str, Any]]) -> None:
+    def update_data_list(self, new_data: list[dict[str, Any]]) -> None:
         """动态更新数据列表并重置选择（角色→武器过滤用）。"""
         self.data_list = new_data
         self.type_combo.blockSignals(True)
@@ -238,10 +236,7 @@ class QtSelectionPanel(QWidget):
         if not sel_type or not sel_star:
             self.name_combo.clear()
             return
-        filtered = [
-            ch for ch in self.data_list
-            if ch.get("类型") == sel_type and str(ch.get("星级", "")) == sel_star
-        ]
+        filtered = [ch for ch in self.data_list if ch.get("类型") == sel_type and str(ch.get("星级", "")) == sel_star]
         names = [ch["名称"] for ch in filtered if "名称" in ch]
         self.name_combo.clear()
         self.name_combo.addItems(names)
@@ -284,7 +279,7 @@ class QtSelectionPanel(QWidget):
 
     # ── 对外读取接口 ──────────────────────────────────
 
-    def get_selected_data(self) -> Optional[Dict[str, Any]]:
+    def get_selected_data(self) -> dict[str, Any] | None:
         name = self.name_combo.currentText()
         if not name:
             return None

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索会话（内存 / 续跑分支）测试。"""
 
 import tempfile

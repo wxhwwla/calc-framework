@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """matplotlib 图表与 CTk 主题同步。"""
 
 from __future__ import annotations

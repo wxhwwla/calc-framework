@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """data.loader 严格加载与错误类型测试"""
 
 import unittest

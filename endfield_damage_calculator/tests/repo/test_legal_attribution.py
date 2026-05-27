@@ -1,25 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """数据来源与许可模块测试。"""
 
 import unittest
-from pathlib import Path
 
 from legal.attribution_content import (
     ATTRIBUTION_DIALOG_MINSIZE,
     ATTRIBUTION_DIALOG_SIZE,
-    ATTRIBUTION_DOC_URL,
-    BWIKI_ZMD_URL,
-    COMMERCIAL_OUTLINE_URL,
-    DATA_LICENSE_URL,
-    LICENSE_URL,
-    NOTICES_URL,
     SUMMARY_TEXT,
     attribution_doc_local_path,
     data_license_local_path,
     notices_local_path,
 )
-
 from tests.fixtures.path_roots import REPO_ROOT
 
 

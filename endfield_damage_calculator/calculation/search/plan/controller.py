@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 全量遍历搜索编排（无 GUI 依赖）。
 
@@ -9,10 +8,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from calculation.loadout.optimizer import OptimizerConfig, optimizer_config_for_character
 from calculation.loadout.slot_search import FixedLoadoutSelection
+
 from ..evaluate.multi_skill import build_multi_skill_search_eval
 from .job import SingleSkillSearchJob, prepare_single_skill_search_job
 
@@ -40,9 +40,9 @@ class SearchJobInputs:
     skill_1_level: int = 0
     skill_2_level: int = 0
     skill_3_level: int = 0
-    manual_counts: Optional[dict[str, int]] = None
-    physical_abnormal_counts: Optional[dict[str, int]] = None
-    spell_abnormal_counts: Optional[dict[str, int]] = None
+    manual_counts: dict[str, int] | None = None
+    physical_abnormal_counts: dict[str, int] | None = None
+    spell_abnormal_counts: dict[str, int] | None = None
     damage_component_mode: str = "skill_and_abnormal"
     use_expected_crit: bool = False
     include_conditional_equipment_crit: bool = False
@@ -54,7 +54,7 @@ class SearchJobInputs:
 
 def prepare_search_job(
     inputs: SearchJobInputs,
-) -> tuple[Optional[SingleSkillSearchJob], Optional[str]]:
+) -> tuple[SingleSkillSearchJob | None, str | None]:
     """
     组装全量搜索作业（预估与实跑共用）。
 

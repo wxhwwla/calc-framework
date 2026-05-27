@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器普通/特殊技能与附加属性面板。"""
 
 from __future__ import annotations

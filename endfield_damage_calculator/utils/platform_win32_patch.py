@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 避免 ``platform`` 经 WMI 查询卡死（Windows）。
 
@@ -17,10 +16,10 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Callable, Tuple
+from collections.abc import Callable
 
 
-def _read_windows_version_from_registry() -> Tuple[str, str, str]:
+def _read_windows_version_from_registry() -> tuple[str, str, str]:
     """返回 (release 主版本, version 点分串, machine)。"""
     import winreg
 
@@ -35,11 +34,7 @@ def _read_windows_version_from_registry() -> Tuple[str, str, str]:
             minor = 0
     release = "11" if build >= 22000 else str(major)
     version = f"{major}.{minor}.{build}"
-    machine = (
-        os.environ.get("PROCESSOR_ARCHITEW6432")
-        or os.environ.get("PROCESSOR_ARCHITECTURE")
-        or "AMD64"
-    )
+    machine = os.environ.get("PROCESSOR_ARCHITEW6432") or os.environ.get("PROCESSOR_ARCHITECTURE") or "AMD64"
     return release, version, machine
 
 
@@ -108,8 +103,4 @@ def apply_platform_win32_patch() -> None:
 
 
 def _windows_machine_from_env() -> str:
-    return (
-        os.environ.get("PROCESSOR_ARCHITEW6432")
-        or os.environ.get("PROCESSOR_ARCHITECTURE")
-        or "AMD64"
-    )
+    return os.environ.get("PROCESSOR_ARCHITEW6432") or os.environ.get("PROCESSOR_ARCHITECTURE") or "AMD64"

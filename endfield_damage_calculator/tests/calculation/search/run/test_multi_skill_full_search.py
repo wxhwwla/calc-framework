@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索多技能加权评分测试。"""
 
 import unittest
@@ -8,8 +7,8 @@ from calculation.damage.engine import DamageContext
 from calculation.loadout.optimizer import WeaponCandidate, evaluate_task
 from calculation.multi_skill.optimizer import SkillScenario, evaluate_multi_skill_task
 from calculation.search.evaluate.multi_skill import build_multi_skill_search_eval
-from calculation.search.plan.job import prepare_single_skill_search_job
 from calculation.search.evaluate.task import make_loadout_task_evaluator
+from calculation.search.plan.job import prepare_single_skill_search_job
 
 
 class TestMultiSkillFullSearch(unittest.TestCase):

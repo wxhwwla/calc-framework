@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单技能最优配装搜索模块。
 
@@ -39,32 +38,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Iterator, Optional
+from collections.abc import Iterator
 
-from calculation.core.top_n_tracker import TopNTracker
-
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-from calculation.equipment.affix import aggregate_loadout_modifiers
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
-from calculation.loadout.attack_eval import final_attack_details_for_loadout
-from calculation.equipment.prune import character_ability_attrs, sort_equipment_catalog_by_priority
+from calculation.damage.engine import CritMode, DamageContext
+from calculation.equipment.prune import character_ability_attrs
 from calculation.loadout.slot_search import (
     FixedLoadoutSelection,
-    VaryingSlotMask,
-    baseline_loadout_from_catalog,
-    count_loadout_combinations_for_selection,
-    iter_loadout_combinations_for_mask,
-    iter_loadout_combinations_for_selection,
-    selection_from_legacy_slot_count,
 )
-from calculation.search.evaluate.context import SearchEvalContext
 
 from .catalog import _iter_loadout_combinations
 from .plan import build_optimizer_search_plan
 from .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidate
-
-
 
 OptimizerTask = tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]
 """搜索任务类型：(武器候选, (胸甲, 手套, 饰品A, 饰品B))"""
@@ -131,8 +115,8 @@ def optimizer_config_for_character(
     char_data: dict,
     *,
     priority_skill_types: tuple[str, ...],
-    fixed_loadout: Optional[FixedLoadoutSelection] = None,
-    varying_slot_count: Optional[int] = None,
+    fixed_loadout: FixedLoadoutSelection | None = None,
+    varying_slot_count: int | None = None,
     top_n: int = 10,
     crit_mode: CritMode = "non_crit",
     allow_duplicate_accessory: bool = True,
@@ -171,6 +155,3 @@ def optimizer_config_for_character(
         fixed_loadout=fixed_loadout if fixed_loadout is not None else FixedLoadoutSelection(),
         varying_slot_count=varying_slot_count,
     )
-
-
-

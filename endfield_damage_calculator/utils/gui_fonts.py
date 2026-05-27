@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 GUI 字体：与系统默认字体一致；matplotlib 图表复用同一套中文字体。
 

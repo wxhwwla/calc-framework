@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """高级页操作/搜索/多技能三列控件组装。"""
 
 from __future__ import annotations
 
 import customtkinter as ctk
 
-from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS
 from gui_design.app.confirm_orchestrator import handle_confirm
+from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.controls.enhancement import place_enhancement_section
 from gui_design.controls.multi_skill import place_multi_skill_section
 from gui_design.controls.search import place_search_section
@@ -16,8 +15,9 @@ from gui_design.layout.gui_layout import (
     SECONDARY_ACTION_BUTTON_HEIGHT,
 )
 from gui_design.layout.label_layout import bind_wrapped_label
-from gui_design.app.loadout_pending import mark_loadout_pending
+from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS
 from legal.attribution import open_attribution_dialog
+
 
 class AppControlDockMixin:
     def _on_attribution(self) -> None:
@@ -103,9 +103,7 @@ class AppControlDockMixin:
             command=lambda _v: mark_loadout_pending(self),
         )
         ar = _place(actions, ar, self.calc_mode_menu, pady=(0, 4))
-        ar = place_enhancement_section(
-            self, actions, start_row=ar, place_fn=_place
-        )
+        ar = place_enhancement_section(self, actions, start_row=ar, place_fn=_place)
 
         place_search_section(
             self,
@@ -119,4 +117,3 @@ class AppControlDockMixin:
             wrap_label=self._wrap_control_label,
             schedule_confirm=lambda **_kw: mark_loadout_pending(self),
         )
-

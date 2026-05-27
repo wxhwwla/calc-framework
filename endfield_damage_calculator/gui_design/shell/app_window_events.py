@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """窗口最小化/恢复/缩放防抖。"""
 
 from __future__ import annotations
@@ -9,6 +8,7 @@ from gui_design.layout.gui_layout import (
     control_dock_layout_needs_update,
     should_use_compact_control_dock,
 )
+
 
 class AppWindowEventsMixin:
     def _is_window_iconified(self) -> bool:
@@ -90,4 +90,3 @@ class AppWindowEventsMixin:
         if width is None:
             width = self.app.winfo_width()
         self._apply_responsive_layout(int(width))
-

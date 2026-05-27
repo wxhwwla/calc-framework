@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """配装预设 JSON 导入/导出（与 GUI 状态解耦，便于单测）。"""
 
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Optional, Sequence
+from typing import Any
 
 from character_weapon_equipment.weapon_data.special_fields import (
     migrate_legacy_weapon_special_level,
@@ -26,13 +26,17 @@ def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, float]]]:
         for e in entries:
             if not isinstance(e, dict):
                 continue
-            parsed.append({
-                "effect_type": str(e.get("effect_type", "")),
-                "value": float(e.get("value", 0.0)),
-            })
+            parsed.append(
+                {
+                    "effect_type": str(e.get("effect_type", "")),
+                    "value": float(e.get("value", 0.0)),
+                }
+            )
         if parsed:
             result[str(key)] = parsed
     return result
+
+
 LEGACY_PRESET_SCHEMA = "endfield_loadout_preset_v1"
 BATCH_PRESET_SCHEMA = "endfield_loadout_preset_batch_v1"
 
@@ -54,7 +58,7 @@ class LoadoutPreset:
     calculation_mode: str
     weapon_scope: str
     equipment_scope: str
-    fixed_equipment_names: dict[str, Optional[str]]
+    fixed_equipment_names: dict[str, str | None]
     multi_skill_counts: dict[str, int]
     use_manual_multi_skill_counts: bool
     weapon_normal_levels: list[int] = field(default_factory=list)
@@ -97,16 +101,13 @@ class LoadoutPreset:
             "include_conditional_equipment_crit": self.include_conditional_equipment_crit,
             "extra_crit_rate": float(self.extra_crit_rate),
             "extra_crit_damage": float(self.extra_crit_damage),
-            "manual_buffs": {
-                k: [dict(e) for e in v]
-                for k, v in self.manual_buffs.items()
-            },
+            "manual_buffs": {k: [dict(e) for e in v] for k, v in self.manual_buffs.items()},
             "ui_state": dict(self.ui_state or {}),
             "note": self.note,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "LoadoutPreset":
+    def from_dict(cls, data: dict[str, Any]) -> LoadoutPreset:
         schema = str(data.get("schema", ""))
         if schema not in {PRESET_SCHEMA, LEGACY_PRESET_SCHEMA}:
             raise ValueError(f"不支持的预设格式: {data.get('schema')}")
@@ -150,13 +151,9 @@ class LoadoutPreset:
         if not parsed_special_states:
             ws_level, ws_stack = migrate_legacy_weapon_special_level(
                 int(data.get("ws_level", 0) or 0),
-                ws_stack=(
-                    int(data["ws_stack"]) if "ws_stack" in data and data.get("ws_stack") is not None else None
-                ),
+                ws_stack=(int(data["ws_stack"]) if "ws_stack" in data and data.get("ws_stack") is not None else None),
             )
-            if int(data.get("ws_level", 0) or 0) > 0 or (
-                "ws_stack" in data and int(data.get("ws_stack", 0) or 0) > 0
-            ):
+            if int(data.get("ws_level", 0) or 0) > 0 or ("ws_stack" in data and int(data.get("ws_stack", 0) or 0) > 0):
                 parsed_special_states.append({"level": ws_level, "stack": ws_stack})
             ws2_level, ws2_stack = migrate_legacy_weapon_special_level(
                 int(data.get("ws2_level", 0) or 0),
@@ -190,31 +187,21 @@ class LoadoutPreset:
                 "accessory_b": fixed.get("accessory_b"),
             },
             multi_skill_counts=parsed_counts,
-            use_manual_multi_skill_counts=bool(
-                data.get("use_manual_multi_skill_counts", False)
-            ),
+            use_manual_multi_skill_counts=bool(data.get("use_manual_multi_skill_counts", False)),
             weapon_normal_levels=parsed_normal_levels,
             weapon_special_states=parsed_special_states,
             physical_abnormal_counts=parsed_abnormal_counts,
             spell_abnormal_counts=parsed_spell_abnormal_counts,
             damage_component_mode=str(data.get("damage_component_mode", "skill_and_abnormal")),
             use_expected_crit=bool(data.get("use_expected_crit", False)),
-            include_conditional_equipment_crit=bool(
-                data.get("include_conditional_equipment_crit", False)
-            ),
+            include_conditional_equipment_crit=bool(data.get("include_conditional_equipment_crit", False)),
             extra_crit_rate=float(data.get("extra_crit_rate", 0.0) or 0.0),
             extra_crit_damage=float(data.get("extra_crit_damage", 0.0) or 0.0),
             manual_buffs=_parse_manual_buffs(data.get("manual_buffs")),
             ui_state={
-                "char_advanced_expanded": bool(
-                    (data.get("ui_state") or {}).get("char_advanced_expanded", True)
-                ),
-                "weapon_advanced_expanded": bool(
-                    (data.get("ui_state") or {}).get("weapon_advanced_expanded", True)
-                ),
-                "more_settings_expanded": bool(
-                    (data.get("ui_state") or {}).get("more_settings_expanded", False)
-                ),
+                "char_advanced_expanded": bool((data.get("ui_state") or {}).get("char_advanced_expanded", True)),
+                "weapon_advanced_expanded": bool((data.get("ui_state") or {}).get("weapon_advanced_expanded", True)),
+                "more_settings_expanded": bool((data.get("ui_state") or {}).get("more_settings_expanded", False)),
                 "current_page": str((data.get("ui_state") or {}).get("current_page", "计算页")),
             },
             note=str(data.get("note", "")),

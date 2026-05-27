@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """matplotlib 图表主题：与 CustomTkinter 外观/颜色主题同步。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 # CustomTkinter 命名灰阶 → 十六进制（与官方主题一致）
 _CTK_GRAY_HEX: dict[str, str] = {

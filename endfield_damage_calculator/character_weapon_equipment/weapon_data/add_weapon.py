@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 通用武器添加脚本
 
@@ -7,6 +6,7 @@
     python -m character_weapon_equipment.weapon_data.add_weapon  # 查看说明
     python scripts/seed_weapons.py  # 批量录入示例武器
 """
+
 from __future__ import annotations
 
 import copy
@@ -82,7 +82,7 @@ def add_weapon(
     if json_path is None:
         json_path = Path(__file__).parent / "weapons.json"
 
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         weapons = json.load(f)
 
     if any(w["名称"] == name for w in weapons):
@@ -119,7 +119,7 @@ def remove_weapon(name: str, *, json_path: Path | None = None) -> bool:
     if json_path is None:
         json_path = Path(__file__).parent / "weapons.json"
 
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         weapons = json.load(f)
 
     before = len(weapons)

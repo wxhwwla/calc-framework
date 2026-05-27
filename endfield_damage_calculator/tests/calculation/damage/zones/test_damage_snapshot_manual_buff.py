@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """伤害快照接入手动 buff 测试。"""
 
 import unittest

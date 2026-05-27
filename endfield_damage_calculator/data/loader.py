@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 统一数据加载层（运行时唯一数据接缝）。
 
@@ -41,8 +40,7 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 from utils.path_utils import get_resource_path
 
@@ -64,13 +62,13 @@ class DataLoadError(Exception):
 
 
 # 全局缓存变量（懒加载）
-_characters: Optional[List[dict[str, Any]]] = None
+_characters: list[dict[str, Any]] | None = None
 """角色数据缓存，首次调用 get_characters() 时初始化"""
 
-_weapons: Optional[List[dict[str, Any]]] = None
+_weapons: list[dict[str, Any]] | None = None
 """武器数据缓存，首次调用 get_weapons() 时初始化"""
 
-_equipments: Optional[List[dict[str, Any]]] = None
+_equipments: list[dict[str, Any]] | None = None
 """装备数据缓存，首次调用 get_equipments() 时初始化"""
 
 # JSON 文件路径常量
@@ -84,7 +82,7 @@ EQUIPMENTS_JSON_PATH: str = "character_weapon_equipment/equipment_data/equipment
 """装备数据 JSON 文件路径"""
 
 
-def load_json_file(filepath: str, *, strict: bool = False) -> List[dict[str, Any]]:
+def load_json_file(filepath: str, *, strict: bool = False) -> list[dict[str, Any]]:
     """加载 JSON 文件并返回数据列表。
 
     Args:
@@ -106,7 +104,7 @@ def load_json_file(filepath: str, *, strict: bool = False) -> List[dict[str, Any
                 raise DataLoadError(filepath, msg)
             return []
 
-        with open(full_path, "r", encoding="utf-8") as f:
+        with open(full_path, encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, list):
             msg = "根节点必须是 JSON 数组"
@@ -131,7 +129,7 @@ def load_json_file(filepath: str, *, strict: bool = False) -> List[dict[str, Any
         return []
 
 
-def get_characters() -> List[dict[str, Any]]:
+def get_characters() -> list[dict[str, Any]]:
     """获取所有角色数据（带懒加载缓存）。
 
     首次调用时从 JSON 文件加载数据并填充缓存，后续调用直接返回缓存。
@@ -145,7 +143,7 @@ def get_characters() -> List[dict[str, Any]]:
     return _characters
 
 
-def get_weapons() -> List[dict[str, Any]]:
+def get_weapons() -> list[dict[str, Any]]:
     """获取所有武器数据（带懒加载缓存）。
 
     首次调用时从 JSON 文件加载数据并填充缓存，后续调用直接返回缓存。
@@ -177,7 +175,7 @@ def preload_game_data() -> None:
         raise facade.equipment_load_error
 
 
-def fetch_game_data_for_gui() -> Tuple[List[dict[str, Any]], List[dict[str, Any]], Optional[DataLoadError]]:
+def fetch_game_data_for_gui() -> tuple[list[dict[str, Any]], list[dict[str, Any]], DataLoadError | None]:
     """供 GUI 加载角色/武器列表。
 
     失败时返回空列表与错误对象，不抛出异常，适用于 GUI 界面初始化。
@@ -191,7 +189,7 @@ def fetch_game_data_for_gui() -> Tuple[List[dict[str, Any]], List[dict[str, Any]
     return facade.characters, facade.weapons, facade.load_error
 
 
-def get_equipments() -> List[dict[str, Any]]:
+def get_equipments() -> list[dict[str, Any]]:
     """获取所有装备数据（带懒加载缓存）。
 
     首次调用时从 JSON 文件加载数据并填充缓存，后续调用直接返回缓存。
@@ -232,7 +230,7 @@ def reload_equipments() -> None:
     _equipments = None
 
 
-def save_characters(data: List[dict[str, Any]]) -> bool:
+def save_characters(data: list[dict[str, Any]]) -> bool:
     """保存角色数据到 JSON 文件。
 
     保存后自动调用 reload_characters() 刷新缓存。
@@ -253,7 +251,7 @@ def save_characters(data: List[dict[str, Any]]) -> bool:
         return False
 
 
-def save_weapons(data: List[dict[str, Any]]) -> bool:
+def save_weapons(data: list[dict[str, Any]]) -> bool:
     """保存武器数据到 JSON 文件。
 
     保存后自动调用 reload_weapons() 刷新缓存。
@@ -274,7 +272,7 @@ def save_weapons(data: List[dict[str, Any]]) -> bool:
         return False
 
 
-def save_equipments(data: List[dict[str, Any]]) -> bool:
+def save_equipments(data: list[dict[str, Any]]) -> bool:
     """保存装备数据到 JSON 文件。
 
     保存后自动调用 reload_equipments() 刷新缓存。
@@ -295,7 +293,7 @@ def save_equipments(data: List[dict[str, Any]]) -> bool:
         return False
 
 
-def check_and_save_characters(characters: List[dict[str, Any]]) -> None:
+def check_and_save_characters(characters: list[dict[str, Any]]) -> None:
     """检查并保存角色数据（仅在数据有变化时保存）。
 
     比较新数据与当前缓存数据，仅在数据不同时才执行保存操作，避免不必要的 IO。
@@ -310,7 +308,7 @@ def check_and_save_characters(characters: List[dict[str, Any]]) -> None:
         save_characters(characters)
 
 
-def check_and_save_weapons(weapons: List[dict[str, Any]]) -> None:
+def check_and_save_weapons(weapons: list[dict[str, Any]]) -> None:
     """检查并保存武器数据（仅在数据有变化时保存）。
 
     比较新数据与当前缓存数据，仅在数据不同时才执行保存操作，避免不必要的 IO。

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 公式计算引擎
 
@@ -16,8 +15,6 @@
 """
 
 import math
-from typing import List
-
 
 # ==================== 通用常量 ====================
 
@@ -45,7 +42,7 @@ def infer_decimal_mode(
     divisor: int | float,
     offset: int | float = 0,
     *,
-    special: List[float | int] | None = None,
+    special: list[float | int] | None = None,
     is_decimal: bool | None = None,
 ) -> bool:
     """
@@ -67,13 +64,10 @@ def infer_decimal_mode(
 
 # ==================== 通用成长曲线计算器 ====================
 
+
 def calculate_growth_curve(
-    base: float | int,
-    growth: float | int,
-    divisor: float | int,
-    offset: float | int = 0,
-    max_level: int = 90
-) -> List[float]:
+    base: float | int, growth: float | int, divisor: float | int, offset: float | int = 0, max_level: int = 90
+) -> list[float]:
     """
     计算属性成长曲线（通用公式）
 
@@ -97,10 +91,7 @@ def calculate_growth_curve(
     if max_level < 1:
         raise ValueError("最大等级必须大于等于1")
 
-    return [
-        round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1)
-        for lv in range(1, max_level + 1)
-    ]
+    return [round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1) for lv in range(1, max_level + 1)]
 
 
 def calculate_skill_curve(
@@ -108,10 +99,10 @@ def calculate_skill_curve(
     growth: float | int,
     divisor: float | int,
     offset: float | int = 0,
-    special_values: List[float | int] | None = None,
+    special_values: list[float | int] | None = None,
     use_floor: bool = True,
-    is_decimal: bool | None = None
-) -> List[float]:
+    is_decimal: bool | None = None,
+) -> list[float]:
     """
     计算技能倍率成长曲线（支持特殊值）
 
@@ -138,10 +129,8 @@ def calculate_skill_curve(
         raise ValueError("除数必须大于0")
 
     if is_decimal is None:
-        is_decimal = infer_decimal_mode(
-            base, growth, divisor, offset, special=special_values
-        )
-    
+        is_decimal = infer_decimal_mode(base, growth, divisor, offset, special=special_values)
+
     # 小数数据：乘10处理
     scale_factor = 10 if is_decimal else 1
     scaled_base = base * scale_factor
@@ -149,12 +138,12 @@ def calculate_skill_curve(
     scaled_offset = offset * scale_factor
 
     curve = []
-    
+
     # 1-9级使用公式计算
     for lv in range(1, 10):
         # 统一使用整数计算逻辑（floor）
         calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
-        
+
         # 如果有特殊值且当前等级是9级，使用特殊值
         if special_values and len(special_values) == 1 and lv == 9:
             curve.append(round(special_values[0], 1))
@@ -178,10 +167,10 @@ def calculate_bonus_attribute(
     growth: float | int,
     divisor: float | int,
     offset: float | int = 0,
-    special: List[float | int] | None = None,
+    special: list[float | int] | None = None,
     max_level: int = 9,
-    is_decimal: bool | None = None
-) -> List[float]:
+    is_decimal: bool | None = None,
+) -> list[float]:
     """
     计算附加属性成长曲线（潜能1-9级）
 

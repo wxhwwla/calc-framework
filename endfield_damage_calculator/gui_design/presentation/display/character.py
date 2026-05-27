@@ -1,23 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 属性/乘区/单段伤害的展示文案构建（无 GUI 依赖，便于单测）。
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, NamedTuple, Optional
+from typing import Any
 
-from calculation.core.config import CHARACTER_NORMAL_ATTRS
-from calculation.damage.engine import (
-    ZONE_ORDER,
-    DamageContext,
-    DamageResult,
-    calculate_single_hit_damage,
-)
 from calculation.damage.types import format_damage_type_display, resolve_segment_damage_type
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.core.preview_cache import cached_preview, sync_confirm_dependencies
 from calculation.skills.segments import CHARACTER_SKILL_TYPES
 from character_weapon_equipment.weapon_data.special_fields import (
     read_weapon_skills_schema,
@@ -29,13 +19,9 @@ LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
 
 # 角色技能类型与 JSON 字段、选择区滑块等级参数对应（见 skill_segments.CHARACTER_SKILL_TYPES）
 
-NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
-
 # 武器 xxx+ 中不按百分数展示的词条（JSON 为去掉 % 的数值，展示为整数）
 WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
-WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset(
-    {"附加攻击力+", "主能力+", "副能力+"}
-)
+WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset({"附加攻击力+", "主能力+", "副能力+"})
 
 from .format import (
     NO_DAMAGE_MULTIPLIER_TEXT,
@@ -46,7 +32,7 @@ from .format import (
 
 
 def build_character_skill_damage_type_lines(
-    char_data: Dict[str, Any],
+    char_data: dict[str, Any],
     *,
     skill_1_level: int = 0,
     skill_2_level: int = 0,
@@ -62,16 +48,14 @@ def build_character_skill_damage_type_lines(
         if not isinstance(segments, list) or not segments:
             continue
         for segment_index in range(1, len(segments) + 1):
-            damage_type, explicit = resolve_segment_damage_type(
-                char_data, field_name, segment_index
-            )
+            damage_type, explicit = resolve_segment_damage_type(char_data, field_name, segment_index)
             type_display = format_damage_type_display(damage_type, is_default=not explicit)
             lines.append(f"{skill_type} 第{segment_index}段: {type_display}")
     return lines
 
 
 def build_character_skill_lines(
-    char_data: Dict[str, Any],
+    char_data: dict[str, Any],
     *,
     skill_1_level: int = 0,
     skill_2_level: int = 0,
@@ -92,18 +76,14 @@ def build_character_skill_lines(
                 value_text = NO_DAMAGE_MULTIPLIER_TEXT
             else:
                 value_text = display_value
-            damage_type, explicit = resolve_segment_damage_type(
-                char_data, field_name, segment_index
-            )
+            damage_type, explicit = resolve_segment_damage_type(char_data, field_name, segment_index)
             type_display = format_damage_type_display(damage_type, is_default=not explicit)
-            lines.append(
-                f"{skill_type} 等级{skill_level} 第{segment_index}段: {value_text} · {type_display}"
-            )
+            lines.append(f"{skill_type} 等级{skill_level} 第{segment_index}段: {value_text} · {type_display}")
     return lines
 
 
 def build_character_attribute_lines(
-    char_data: Optional[Dict[str, Any]],
+    char_data: dict[str, Any] | None,
     level: int,
     *,
     skill_1_level: int = 0,
@@ -140,7 +120,7 @@ def build_character_attribute_lines(
 
 
 def build_weapon_attribute_lines(
-    weapon_data: Optional[Dict[str, Any]],
+    weapon_data: dict[str, Any] | None,
     weapon_level: int,
     *,
     normal_skill_1_name: str = "",
@@ -246,5 +226,3 @@ def build_weapon_attribute_lines(
             )
         lines.append(f"{pick_name}({label}): {display_value}")
     return lines
-
-

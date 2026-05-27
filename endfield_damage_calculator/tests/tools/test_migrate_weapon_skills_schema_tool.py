@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """迁移脚本 tools/migrate_weapon_skills_schema.py 行为测试。"""
 
 from __future__ import annotations

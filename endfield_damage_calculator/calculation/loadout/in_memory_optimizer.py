@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """内存 TopN 配装搜索（无 SQLite 续跑）。"""
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from calculation.damage.engine import DamageContext
 from calculation.loadout.optimizer import (
@@ -14,9 +14,9 @@ from calculation.loadout.optimizer import (
     enumerate_optimizer_tasks,
     evaluate_task,
 )
-from calculation.search.run.parallel import run_bounded_parallel
-from calculation.search.run.cancel import SearchCancelToken
 from calculation.search.evaluate.context import SearchEvalContext
+from calculation.search.run.cancel import SearchCancelToken
+from calculation.search.run.parallel import run_bounded_parallel
 
 
 def run_enumerated_optimizer_parallel(
@@ -26,12 +26,10 @@ def run_enumerated_optimizer_parallel(
     equipment_catalog: dict[str, list[dict[str, Any]]],
     config: OptimizerConfig,
     max_workers: int = 1,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
-    search_eval: Optional[SearchEvalContext] = None,
-    task_evaluator: Optional[
-        Callable[[tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]], LoadoutScore]
-    ] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
+    search_eval: SearchEvalContext | None = None,
+    task_evaluator: Callable[[tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]], LoadoutScore] | None = None,
 ) -> tuple[tuple[LoadoutScore, ...], int, int, bool, tuple[str, ...]]:
     """
     枚举全部配装任务并在内存中保留 TopN。
@@ -56,6 +54,7 @@ def run_enumerated_optimizer_parallel(
             task=task,
             search_eval=search_eval,
         )
+
     top_results, processed, cancelled = run_bounded_parallel(
         work_items=tasks,
         total=total_combinations,

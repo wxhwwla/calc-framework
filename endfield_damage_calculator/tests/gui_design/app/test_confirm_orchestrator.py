@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """确认编排与 DisplayRequest 接缝测试。"""
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from calculation.loadout.slot_search import FixedLoadoutSelection
 from gui_design.app.display_request import build_display_request
 from gui_design.app.loadout_state import LoadoutState
-from calculation.loadout.slot_search import FixedLoadoutSelection
 
 
 class TestConfirmOrchestrator(unittest.TestCase):
@@ -41,6 +40,7 @@ class TestConfirmOrchestrator(unittest.TestCase):
         req = build_display_request(loadout, game_data, preview_weapon_candidates=[])
         game_data.equipment_catalog.assert_called_once_with("全部装备")
         self.assertIs(req.loadout, loadout)
+
 
 if __name__ == "__main__":
     unittest.main()

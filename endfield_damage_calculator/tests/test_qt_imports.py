@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """PySide6 模块冒烟测试：仅验证导入，不启动 QApplication。"""
 
 import os
@@ -17,7 +16,7 @@ def test_qt_app_import() -> None:
 
 def test_qt_backend_detection() -> None:
     """验证环境变量检测。"""
-    from gui_design.backends import is_qt, is_ctk
+    from gui_design.backends import is_ctk, is_qt
 
     # 本 test 文件在 ENDFIELD_UI_BACKEND=qt 环境下运行
     # 不 assert，仅做兼容性检查

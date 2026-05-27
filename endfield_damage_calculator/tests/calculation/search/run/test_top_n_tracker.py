@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """TopN 追踪器测试。"""
 
 import unittest
 
-from calculation.loadout.optimizer import LoadoutScore
 from calculation.core.top_n_tracker import TopNTracker
+from calculation.loadout.optimizer import LoadoutScore
 
 
 class TestTopNTracker(unittest.TestCase):

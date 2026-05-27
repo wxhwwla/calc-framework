@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索结果导出测试。"""
 
 import json
@@ -7,8 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from calculation.loadout.optimizer import LoadoutScore
 from calculation.core.result_export import export_search_outputs
+from calculation.loadout.optimizer import LoadoutScore
 
 
 class TestResultExport(unittest.TestCase):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """GUI 模块导入回归：防止确认刷新路径缺少关键符号。"""
 
 from __future__ import annotations
@@ -29,8 +28,8 @@ class TestGuiImportRegression(unittest.TestCase):
 
     def test_search_controls_resolves_fixed_loadout_hint(self) -> None:
         """place_search_section 依赖 FIXED_LOADOUT_HINT，须在模块作用域可解析。"""
-        from gui_design.layout.panel_hints import FIXED_LOADOUT_HINT
         from gui_design.controls.search import place_search_section
+        from gui_design.layout.panel_hints import FIXED_LOADOUT_HINT
 
         self.assertIs(
             place_search_section.__globals__["FIXED_LOADOUT_HINT"],

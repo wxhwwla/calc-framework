@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 四格配装搜索：用户可固定 0–4 件装备，未固定部位遍历 catalog 候选。
 
@@ -8,9 +7,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from itertools import product
-from typing import Iterator, Optional
 
 SLOT_KEYS = ("chest", "gloves", "accessory_a", "accessory_b")
 
@@ -33,10 +32,10 @@ class FixedLoadoutSelection:
     四格均可为 None（全套遍历）；亦可固定 1–4 件，其余格遍历。
     """
 
-    chest: Optional[dict] = None
-    gloves: Optional[dict] = None
-    accessory_a: Optional[dict] = None
-    accessory_b: Optional[dict] = None
+    chest: dict | None = None
+    gloves: dict | None = None
+    accessory_a: dict | None = None
+    accessory_b: dict | None = None
 
     def to_mask(self) -> VaryingSlotMask:
         return VaryingSlotMask(
@@ -47,16 +46,12 @@ class FixedLoadoutSelection:
         )
 
     def fixed_count(self) -> int:
-        return sum(
-            1
-            for item in (self.chest, self.gloves, self.accessory_a, self.accessory_b)
-            if item is not None
-        )
+        return sum(1 for item in (self.chest, self.gloves, self.accessory_a, self.accessory_b) if item is not None)
 
     def signature_token(self) -> str:
         """写入 run_signature 的固定格摘要。"""
 
-        def _part(key: str, item: Optional[dict]) -> str:
+        def _part(key: str, item: dict | None) -> str:
             if item is None:
                 return f"{key}:vary"
             return f"{key}:{item.get('名称', '')}"
@@ -116,7 +111,7 @@ def baseline_loadout_from_catalog(
 
 def _choices_for_slot(
     catalog_items: list[dict],
-    fixed_item: Optional[dict],
+    fixed_item: dict | None,
 ) -> list[dict]:
     if fixed_item is not None:
         return [fixed_item]
@@ -161,9 +156,7 @@ def iter_loadout_combinations_for_selection(
     if not chest_choices or not glove_choices or not acc_a_choices or not acc_b_choices:
         return
 
-    for chest, glove, acc_a, acc_b in product(
-        chest_choices, glove_choices, acc_a_choices, acc_b_choices
-    ):
+    for chest, glove, acc_a, acc_b in product(chest_choices, glove_choices, acc_a_choices, acc_b_choices):
         if not allow_duplicate_accessory and acc_a.get("名称") == acc_b.get("名称"):
             continue
         yield (chest, glove, acc_a, acc_b)
@@ -173,8 +166,8 @@ def count_loadout_combinations(
     equipment_catalog: dict[str, list[dict]],
     *,
     allow_duplicate_accessory: bool = True,
-    selection: Optional[FixedLoadoutSelection] = None,
-    varying_slot_count: Optional[int] = None,
+    selection: FixedLoadoutSelection | None = None,
+    varying_slot_count: int | None = None,
 ) -> int:
     """统计配装组合数；优先 ``selection``，否则回退旧 ``varying_slot_count``。"""
     if selection is None:

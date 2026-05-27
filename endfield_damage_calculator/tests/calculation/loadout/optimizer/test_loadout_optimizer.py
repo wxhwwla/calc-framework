@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能最优搜索 V1 测试。"""
 
 import unittest
 
 from calculation.damage.engine import DamageContext, DamageEffect
 from calculation.equipment.system import build_runtime_equipment_from_wiki_draft
-from calculation.loadout.slot_search import FixedLoadoutSelection
 from calculation.loadout.optimizer import (
     OptimizerConfig,
     WeaponCandidate,
     build_optimizer_search_plan,
     search_best_single_skill_loadouts,
 )
-from calculation.search.plan.estimate import preview_search_workload
+from calculation.loadout.slot_search import FixedLoadoutSelection
 from calculation.search.plan.job import SingleSkillSearchJob
 from calculation.search.run.single_skill import estimate_single_skill_search
 

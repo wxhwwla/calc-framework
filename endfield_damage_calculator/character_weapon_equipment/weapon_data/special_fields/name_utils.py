@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
 from __future__ import annotations
 
-from typing import Any
-
 import re
+from typing import Any
 
 from .codec import LEGACY_SPECIAL_KEY, SPECIAL_FIELD_KEYS
 
@@ -104,6 +102,4 @@ def _special_name_matches(pick_name: str, special_name: str, special_effect: str
     pick = (pick_name or "").strip()
     name = (special_name or "").strip()
     effect = (special_effect or "").strip() or _extract_effect_name_from_special_name(name)
-    return bool(pick and (pick == name or pick == effect))
-
-
+    return bool(pick and (pick in (name, effect)))

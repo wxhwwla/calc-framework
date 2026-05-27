@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索编排（search_controller）行为测试。"""
 
 import unittest
@@ -80,9 +79,7 @@ class TestSearchController(unittest.TestCase):
 
     def test_manual_multi_skill_attaches_eval_for_estimate_and_run(self) -> None:
         single, err1 = prepare_search_job(self._base_inputs(use_manual_multi_skill_counts=False))
-        multi, err2 = prepare_search_job(
-            self._base_inputs(use_manual_multi_skill_counts=True)
-        )
+        multi, err2 = prepare_search_job(self._base_inputs(use_manual_multi_skill_counts=True))
         self.assertIsNone(err1)
         self.assertIsNone(err2)
         assert single is not None and multi is not None
@@ -91,9 +88,7 @@ class TestSearchController(unittest.TestCase):
         self.assertNotEqual(single.run_signature, multi.run_signature)
 
     def test_optimizer_config_for_search_job_matches_estimate_priority(self) -> None:
-        job, _ = prepare_search_job(
-            self._base_inputs(use_manual_multi_skill_counts=True)
-        )
+        job, _ = prepare_search_job(self._base_inputs(use_manual_multi_skill_counts=True))
         assert job is not None and job.multi_skill_eval is not None
         cfg = optimizer_config_for_search_job(job, top_n=5)
         self.assertIsInstance(cfg, OptimizerConfig)

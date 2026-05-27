@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 全量遍历执行统一入口（内存 TopN 与 SQLite 续跑）。
 
@@ -8,13 +7,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from calculation.damage.engine import DamageContext
 from calculation.loadout.optimizer import LoadoutScore, OptimizerConfig, OptimizerTask, WeaponCandidate
-from .cancel import SearchCancelToken
+
 from ..evaluate.context import SearchEvalContext
+from .cancel import SearchCancelToken
 from .session import SearchSessionResult, run_search_session
 
 
@@ -29,12 +30,12 @@ class SearchRunner:
         equipment_catalog: dict[str, list[dict[str, Any]]],
         config: OptimizerConfig,
         max_workers: int = 1,
-        cancel_token: Optional[SearchCancelToken] = None,
-        progress_callback: Optional[Callable[[dict], None]] = None,
-        db_path: Optional[Path] = None,
-        run_signature: Optional[str] = None,
-        search_eval: Optional[SearchEvalContext] = None,
-        task_evaluator: Optional[Callable[[OptimizerTask], LoadoutScore]] = None,
+        cancel_token: SearchCancelToken | None = None,
+        progress_callback: Callable[[dict], None] | None = None,
+        db_path: Path | None = None,
+        run_signature: str | None = None,
+        search_eval: SearchEvalContext | None = None,
+        task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
     ) -> SearchSessionResult:
         return run_search_session(
             base_context=base_context,

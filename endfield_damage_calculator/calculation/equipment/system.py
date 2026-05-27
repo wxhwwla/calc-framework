@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备数据链路与四格装配。"""
 
 from __future__ import annotations
@@ -70,6 +69,7 @@ def equipment_kind(record: dict[str, Any]) -> str:
         return _SLOT_ALIASES[raw]
     return raw
 
+
 @dataclass(frozen=True)
 class FourSlotLoadout:
     """四格装备。"""
@@ -108,7 +108,9 @@ def _parse_effect_text(text: str, *, source: str) -> DamageEffect:
     if "庇护" in text:
         return DamageEffect("庇护", value=value, source=source, raw_text=text)
     if "伤害减免" in text:
-        return DamageEffect("伤害减免", value=value, source=source, raw_text=text, damage_types=_infer_damage_types(text))
+        return DamageEffect(
+            "伤害减免", value=value, source=source, raw_text=text, damage_types=_infer_damage_types(text)
+        )
     if "连击增伤" in text:
         return DamageEffect("连击增伤", value=value, source=source, raw_text=text)
     if "增幅" in text:
@@ -163,9 +165,7 @@ def build_runtime_equipment_from_wiki_draft(record: dict[str, Any]) -> dict[str,
     """将 BWIKI 草案记录转为可计算装备。"""
     params = record.get("_wiki_params") or {}
     name = str(record.get("名称") or params.get("名称") or "").strip()
-    slot_raw = str(
-        params.get("装备种类") or params.get("部位") or params.get("类型") or ""
-    ).strip()
+    slot_raw = str(params.get("装备种类") or params.get("部位") or params.get("类型") or "").strip()
     slot = infer_equipment_slot({"装备种类": slot_raw, "部位": slot_raw, "名称": name})
     if not slot:
         raise ValueError(f"无法推断装备种类：{name or '未命名装备'}")
@@ -204,14 +204,14 @@ def build_runtime_equipment_from_local_record(record: dict[str, Any]) -> dict[st
     source = f"{name or '未命名装备'}"
     flat_stats: dict[str, float] = {}
     direct_effects: list[DamageEffect] = []
-    for text in (record.get("效果") or []):
+    for text in record.get("效果") or []:
         if not str(text).strip():
             continue
         effs, flats = parse_equipment_effect_block(str(text), source=source)
         direct_effects.extend(effs)
         for key, val in flats.items():
             flat_stats[key] = flat_stats.get(key, 0.0) + val
-    for text in (record.get("属性词条") or []):
+    for text in record.get("属性词条") or []:
         if not str(text).strip():
             continue
         effs, flats = parse_equipment_affix_line(str(text), source=source)
@@ -219,7 +219,7 @@ def build_runtime_equipment_from_local_record(record: dict[str, Any]) -> dict[st
         for key, val in flats.items():
             flat_stats[key] = flat_stats.get(key, 0.0) + val
     set_effects: list[DamageEffect] = []
-    for text in (record.get("三件套效果") or []):
+    for text in record.get("三件套效果") or []:
         if not str(text).strip():
             continue
         effs, flats = parse_equipment_effect_block(str(text), source=source)

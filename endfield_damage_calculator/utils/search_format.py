@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索预估相关中性文案格式化（无 GUI 依赖）。"""
 
 from __future__ import annotations

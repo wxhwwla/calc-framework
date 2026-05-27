@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单段伤害引擎（15 乘区链）。
 
@@ -37,15 +36,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Literal, Optional
-
 from calculation.damage.types import damage_type_matches_context
 
 from .types import KNOWN_EFFECT_TYPES, CritMode, DamageContext, DamageEffect
 
 
-def _clamp(value: float, lower: float, upper: Optional[float] = None) -> float:
+def _clamp(value: float, lower: float, upper: float | None = None) -> float:
     """将值限制在指定范围内。
 
     Args:
@@ -100,9 +96,7 @@ def _match_scope(ctx: DamageContext, effect: DamageEffect) -> bool:
         return False
     if effect.skill_types and ctx.skill_type not in effect.skill_types:
         return False
-    if effect.require_unbalanced is not None and ctx.is_unbalanced != effect.require_unbalanced:
-        return False
-    return True
+    return not (effect.require_unbalanced is not None and ctx.is_unbalanced != effect.require_unbalanced)
 
 
 def _collect_effects(
@@ -131,12 +125,8 @@ def _collect_effects(
                 "raw_text": effect.raw_text,
             }
             unknown.append(unknown_item)
-            warnings.append(
-                f"检测到未识别效果：{effect.effect_type}（来源：{effect.source or '未知来源'}）"
-            )
+            warnings.append(f"检测到未识别效果：{effect.effect_type}（来源：{effect.source or '未知来源'}）")
             continue
         if _match_scope(ctx, effect):
             known.append(effect)
     return known, tuple(unknown), tuple(warnings)
-
-

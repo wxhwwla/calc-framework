@@ -1,38 +1,26 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """段级次数与异常行。"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from calculation.skills.segments import list_segment_count_specs
 from calculation.abnormal.physical import PHYSICAL_ABNORMAL_TYPES, abnormal_levels_for
 from calculation.abnormal.spell import SPELL_ABNORMAL_LEVELS, SPELL_ABNORMAL_TYPES
+from calculation.skills.segments import list_segment_count_specs
 from gui_design.app.confirm_refresh import normalize_skill_count_text, skill_count_commit_changed
-from gui_design.layout.gui_layout import (
-    ANOMALY_MATRIX_LABEL_MINSIZE,
-    MULTI_SKILL_HINT_BOX_HEIGHT,
-    PHYSICAL_ABNORMAL_HINT_BOX_HEIGHT,
-    SPELL_ABNORMAL_HINT_BOX_HEIGHT,
-    multi_skill_segment_box_height,
-)
-from gui_design.layout.panel_hints import (
-    MULTI_SKILL_COUNTS_HINT,
-    PHYSICAL_ABNORMAL_HINT,
-    SPELL_ABNORMAL_HINT,
-)
 
 if TYPE_CHECKING:
     from gui_design.shell.app import DamageCalculatorApp
 
 
-def ensure_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
+def ensure_multi_skill_segment_rows(app: DamageCalculatorApp) -> None:
     """技能等级或角色变化时重建段级输入行（保留同键次数）。"""
     char_data = app.char_panel.get_selected_data() if app.char_panel else None
     skill_panel = app.char_panel.skill_level_panel if app.char_panel else None
@@ -62,7 +50,7 @@ def segment_rows_signature(specs: list[dict[str, object]]) -> tuple[tuple[str, s
     return tuple((str(spec["key"]), str(spec["label"])) for spec in specs)
 
 
-def read_manual_multi_skill_counts(app: "DamageCalculatorApp") -> dict[str, int]:
+def read_manual_multi_skill_counts(app: DamageCalculatorApp) -> dict[str, int]:
     """读取 GUI 段级手动次数（键如 ``连携技:2``）。"""
 
     def _to_int(text: str) -> int:
@@ -78,7 +66,7 @@ def read_manual_multi_skill_counts(app: "DamageCalculatorApp") -> dict[str, int]
     return counts
 
 
-def read_manual_physical_abnormal_counts(app: "DamageCalculatorApp") -> dict[str, int]:
+def read_manual_physical_abnormal_counts(app: DamageCalculatorApp) -> dict[str, int]:
     """读取 GUI 物理异常矩阵次数（键如 ``猛击:3``）。"""
 
     def _to_int(text: str) -> int:
@@ -94,7 +82,7 @@ def read_manual_physical_abnormal_counts(app: "DamageCalculatorApp") -> dict[str
     return counts
 
 
-def read_manual_spell_abnormal_counts(app: "DamageCalculatorApp") -> dict[str, int]:
+def read_manual_spell_abnormal_counts(app: DamageCalculatorApp) -> dict[str, int]:
     """读取 GUI 法术异常矩阵次数（键如 ``灼热异常:2``）。"""
 
     def _to_int(text: str) -> int:
@@ -110,7 +98,7 @@ def read_manual_spell_abnormal_counts(app: "DamageCalculatorApp") -> dict[str, i
     return counts
 
 
-def rebuild_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
+def rebuild_multi_skill_segment_rows(app: DamageCalculatorApp) -> None:
     """按当前角色技能等级重建段级次数输入行。"""
     frame = getattr(app, "_multi_skill_counts_body", None)
     if frame is None:
@@ -195,7 +183,7 @@ def rebuild_multi_skill_segment_rows(app: "DamageCalculatorApp") -> None:
     app._segment_row_signature = segment_rows_signature(specs)
 
 
-def apply_segment_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
+def apply_segment_counts_to_app(app: DamageCalculatorApp, counts: dict[str, int]) -> None:
     """将段级次数写回动态输入框（预设导入用）。"""
     from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
     from calculation.skills.segments import normalize_manual_segment_counts
@@ -224,7 +212,7 @@ def apply_segment_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, in
         app._skill_count_last_committed[key] = normalize_skill_count_text(var.get())
 
 
-def apply_physical_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
+def apply_physical_abnormal_counts_to_app(app: DamageCalculatorApp, counts: dict[str, int]) -> None:
     """将物理异常次数写回矩阵输入框（预设导入用）。"""
     vars_map = getattr(app, "_physical_abnormal_count_vars", None) or {}
     for abnormal in PHYSICAL_ABNORMAL_TYPES:
@@ -237,7 +225,7 @@ def apply_physical_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: di
             var.set(str(value))
 
 
-def apply_spell_abnormal_counts_to_app(app: "DamageCalculatorApp", counts: dict[str, int]) -> None:
+def apply_spell_abnormal_counts_to_app(app: DamageCalculatorApp, counts: dict[str, int]) -> None:
     """将法术异常次数写回矩阵输入框（预设导入用）。"""
     vars_map = getattr(app, "_spell_abnormal_count_vars", None) or {}
     for abnormal in SPELL_ABNORMAL_TYPES:
@@ -261,7 +249,7 @@ def _spell_abnormal_row_label(abnormal_key: str) -> str:
     return abnormal_key
 
 
-def clear_all_abnormal_counts(app: "DamageCalculatorApp") -> None:
+def clear_all_abnormal_counts(app: DamageCalculatorApp) -> None:
     """一键清空物理与法术异常次数。"""
     for var in (getattr(app, "_physical_abnormal_count_vars", None) or {}).values():
         var.set("0")
@@ -272,7 +260,7 @@ def clear_all_abnormal_counts(app: "DamageCalculatorApp") -> None:
         schedule()
 
 
-def clear_physical_abnormal_counts(app: "DamageCalculatorApp") -> None:
+def clear_physical_abnormal_counts(app: DamageCalculatorApp) -> None:
     """一键清空异常次数。"""
     for var in (getattr(app, "_physical_abnormal_count_vars", None) or {}).values():
         var.set("0")
@@ -281,12 +269,10 @@ def clear_physical_abnormal_counts(app: "DamageCalculatorApp") -> None:
         schedule()
 
 
-def clear_spell_abnormal_counts(app: "DamageCalculatorApp") -> None:
+def clear_spell_abnormal_counts(app: DamageCalculatorApp) -> None:
     """一键清空法术异常次数。"""
     for var in (getattr(app, "_spell_abnormal_count_vars", None) or {}).values():
         var.set("0")
     schedule = getattr(app, "_mark_loadout_pending", None)
     if callable(schedule):
         schedule()
-
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """测试用仓库路径（任意深度子目录均可 import）。"""
 
 from __future__ import annotations

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """主界面列布局契约测试。"""
 
 import unittest

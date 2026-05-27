@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """物理异常（倒地/击飞/碎甲/猛击）加权伤害计算。"""
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
 
@@ -20,6 +18,7 @@ def abnormal_levels_for(abnormal: str) -> tuple[int, ...]:
     if abnormal in _BINARY_ABNORMAL_TYPES:
         return (0, 1)
     return (0, 1, 2, 3, 4)
+
 
 _CRIT_RATE_RE = re.compile(r"暴击率\+?\s*([+-]?\d+(?:\.\d+)?)\s*%")
 _CRIT_DAMAGE_RE = re.compile(r"暴击伤害\+?\s*([+-]?\d+(?:\.\d+)?)\s*%")
@@ -180,7 +179,7 @@ def extract_equipment_crit_bonus(
     return crit_rate, crit_damage
 
 
-def extract_weapon_crit_bonus(weapon_data: Optional[dict], *, weapon_level: int) -> tuple[float, float]:
+def extract_weapon_crit_bonus(weapon_data: dict | None, *, weapon_level: int) -> tuple[float, float]:
     """从武器静态字段抽取暴击率/暴伤（不处理条件触发）。"""
     if not weapon_data:
         return 0.0, 0.0
@@ -208,7 +207,7 @@ def evaluate_physical_abnormal_total(
     effects: list[DamageEffect],
     counts: dict[str, int] | None,
     char_level: int,
-    manual_buffs: Optional[dict[str, list[dict[str, float]]]] = None,
+    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
 ) -> tuple[float, dict[str, float]]:
     """计算物理异常总伤与单次分项（key 为 '异常:等级'）。
 

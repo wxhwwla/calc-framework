@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """LoadoutState 接缝测试。"""
 
 import unittest
 
 from calculation.loadout.slot_search import FixedLoadoutSelection
-from gui_design.app.loadout_state import LoadoutState, read_loadout_from_panels
 from calculation.skills.weapon_selection import normalize_weapon_specials_tuple
+from gui_design.app.loadout_state import LoadoutState, read_loadout_from_panels
 from tests.fixtures.gui_fixtures import MockSelectionPanel
 
 
@@ -106,9 +105,7 @@ class TestLoadoutState(unittest.TestCase):
         self.assertEqual(preset.weapon_special_states, [{"level": 8, "stack": 1}])
 
     def test_normalize_weapon_specials_migrates_legacy_ws_level(self) -> None:
-        migrated = normalize_weapon_specials_tuple(
-            ("", 1, "", 1, "", 0, "攻击力+", 0, "", 3)
-        )
+        migrated = normalize_weapon_specials_tuple(("", 1, "", 1, "", 0, "攻击力+", 0, "", 3))
         self.assertEqual(migrated[7:12], (1, 0, "", 3, 1))
 
     def test_weapon_skill_selection_uses_new_schema_shape(self) -> None:

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动场外 buff 编辑窗口（PySide6 版）。"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -19,7 +18,6 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -53,7 +51,7 @@ class QtManualBuffDialog(QDialog):
 
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         *,
         big_font: QFont,
         small_font: QFont,
@@ -67,7 +65,7 @@ class QtManualBuffDialog(QDialog):
         self._big = big_font
         self._small = small_font
         self._read_counts = read_counts_callback
-        self._store: Dict[str, List[Dict[str, float]]] = empty_buff_dict()
+        self._store: dict[str, list[dict[str, float]]] = empty_buff_dict()
 
         main = QHBoxLayout(self)
         main.setContentsMargins(0, 0, 0, 0)
@@ -90,7 +88,9 @@ class QtManualBuffDialog(QDialog):
         hdr_lay.addStretch()
         refresh_btn = QPushButton("刷新")
         refresh_btn.setFont(self._small)
-        refresh_btn.setStyleSheet("color: #D1D1D1; background: transparent; border: 1px solid #464646; border-radius: 4px; padding: 2px 8px;")
+        refresh_btn.setStyleSheet(
+            "color: #D1D1D1; background: transparent; border: 1px solid #464646; border-radius: 4px; padding: 2px 8px;"
+        )
         refresh_btn.clicked.connect(self._refresh_key_list)
         hdr_lay.addWidget(refresh_btn)
         left_lay.addWidget(left_header)
@@ -167,7 +167,7 @@ class QtManualBuffDialog(QDialog):
             item.setData(Qt.ItemDataRole.UserRole, key)
         self._key_list.blockSignals(False)
 
-    def _on_key_selected(self, current: Optional[QListWidgetItem], _previous: Any) -> None:
+    def _on_key_selected(self, current: QListWidgetItem | None, _previous: Any) -> None:
         for i in range(self._edit_lay.count()):
             w = self._edit_lay.itemAt(i)
             if w and w.widget():
@@ -187,13 +187,15 @@ class QtManualBuffDialog(QDialog):
 
     def _render_editor(self, key: str) -> None:
         entries = get_buffs_for_key(self._store, key)
-        row_data: List[Dict] = []
+        row_data: list[dict] = []
 
         for e in entries:
-            row_data.append({
-                "effect_type": e["effect_type"],
-                "value": str(e["value"] * 100),
-            })
+            row_data.append(
+                {
+                    "effect_type": e["effect_type"],
+                    "value": str(e["value"] * 100),
+                }
+            )
         if not row_data:
             row_data.append({"effect_type": MANUAL_BUFF_ZONE_OPTIONS[0][0], "value": "0"})
 
@@ -273,7 +275,7 @@ class QtManualBuffDialog(QDialog):
             _commit()
 
         def _commit() -> None:
-            result: List[Dict[str, float]] = []
+            result: list[dict[str, float]] = []
             widgets_in_lay = []
             for i in range(self._edit_lay.count()):
                 w = self._edit_lay.itemAt(i)

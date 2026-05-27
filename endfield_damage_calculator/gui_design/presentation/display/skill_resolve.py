@@ -1,28 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 属性/乘区/单段伤害的展示文案构建（无 GUI 依赖，便于单测）。
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, NamedTuple, Optional
+from typing import Any
 
-from calculation.core.config import CHARACTER_NORMAL_ATTRS
-from calculation.damage.engine import (
-    ZONE_ORDER,
-    DamageContext,
-    DamageResult,
-    calculate_single_hit_damage,
-)
 from calculation.damage.types import format_damage_type_display, resolve_segment_damage_type
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.core.preview_cache import cached_preview, sync_confirm_dependencies
-from calculation.skills.segments import CHARACTER_SKILL_TYPES
-from character_weapon_equipment.weapon_data.special_fields import (
-    read_weapon_skills_schema,
-    special_pick_bonus,
-)
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
@@ -33,15 +18,13 @@ NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
 
 # 武器 xxx+ 中不按百分数展示的词条（JSON 为去掉 % 的数值，展示为整数）
 WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
-WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset(
-    {"附加攻击力+", "主能力+", "副能力+"}
-)
+WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset({"附加攻击力+", "主能力+", "副能力+"})
 
-from .format import NO_DAMAGE_MULTIPLIER_TEXT, SelectedSkillForDamage
+from .format import SelectedSkillForDamage
 
 
 def resolve_selected_skill_for_damage(
-    char_data: Dict[str, Any],
+    char_data: dict[str, Any],
     *,
     skill_1_level: int = 0,
     skill_2_level: int = 0,
@@ -93,5 +76,3 @@ def resolve_selected_skill_for_damage(
 
 # 兼容旧私有名（历史模块名，勿再新增引用）
 _resolve_selected_skill_for_damage = resolve_selected_skill_for_damage
-
-

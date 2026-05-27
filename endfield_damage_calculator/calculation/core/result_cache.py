@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 计算结果缓存：相同 cache_key + 依赖快照命中；依赖变更时自动失效相关条目。
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -59,7 +59,7 @@ class CalculationResultCache:
         return {"entries": len(self._store), "dependencies": len(self._dependencies)}
 
 
-_global_cache: Optional[CalculationResultCache] = None
+_global_cache: CalculationResultCache | None = None
 
 
 def get_global_result_cache() -> CalculationResultCache:

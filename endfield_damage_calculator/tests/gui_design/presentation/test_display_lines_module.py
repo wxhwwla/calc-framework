@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """display_lines 模块接缝：无 CTk 依赖、技能解析可导入。"""
 
 import unittest
@@ -23,7 +22,10 @@ class TestDisplayLinesModule(unittest.TestCase):
             "终结技倍率": [],
         }
         skill = display_lines.resolve_selected_skill_for_damage(
-            char, skill_1_level=1, skill_2_level=0, skill_3_level=0,
+            char,
+            skill_1_level=1,
+            skill_2_level=0,
+            skill_3_level=0,
         )
         self.assertIn("战技", skill.label)
         self.assertAlmostEqual(skill.multiplier, 2.0)

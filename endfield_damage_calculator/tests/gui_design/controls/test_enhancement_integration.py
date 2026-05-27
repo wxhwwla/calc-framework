@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """增强功能 GUI 集成测试（模拟 app + 可选 CTk）。"""
 
 from __future__ import annotations
@@ -129,11 +128,7 @@ class TestEnhancementIntegration(unittest.TestCase):
         self.assertTrue(bool(self.app._show_more_settings_var.get()))
         self.assertIn("收起", toggle_btn.cget("text"))
 
-        labels = [
-            child.cget("text")
-            for child in body.winfo_children()
-            if isinstance(child, ctk.CTkButton)
-        ]
+        labels = [child.cget("text") for child in body.winfo_children() if isinstance(child, ctk.CTkButton)]
         self.assertIn("多方案对比", labels)
         self.assertIn("伤害仪表盘", labels)
 
@@ -168,11 +163,7 @@ class TestEnhancementIntegration(unittest.TestCase):
         self._ec.place_enhancement_section(self.app, parent, start_row=0, place_fn=place_fn)
         self.app._more_settings_toggle_btn.invoke()
         body = self.app._more_settings_body
-        titles = [
-            child.cget("text")
-            for child in body.winfo_children()
-            if isinstance(child, ctk.CTkLabel)
-        ]
+        titles = [child.cget("text") for child in body.winfo_children() if isinstance(child, ctk.CTkLabel)]
         self.assertIn("导入导出", titles)
         self.assertIn("分析工具", titles)
 

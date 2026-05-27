@@ -1,19 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """按搜索作业选择单技能或多技能加权评估器。"""
 
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
-from calculation.damage.engine import CritMode, DamageContext
-from calculation.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerTask,
-    build_runtime_eval_snapshot,
-    evaluate_task,
-)
-from calculation.multi_skill.optimizer import evaluate_multi_skill_task
 from calculation.abnormal.physical import (
     PhysicalAbnormalProfile,
     compose_damage_total,
@@ -22,8 +13,17 @@ from calculation.abnormal.physical import (
     extract_weapon_crit_bonus,
 )
 from calculation.abnormal.spell import evaluate_spell_abnormal_total
-from .context import SearchEvalContext
+from calculation.damage.engine import CritMode, DamageContext
+from calculation.loadout.optimizer import (
+    LoadoutScore,
+    OptimizerTask,
+    build_runtime_eval_snapshot,
+    evaluate_task,
+)
+from calculation.multi_skill.optimizer import evaluate_multi_skill_task
+
 from ..plan.job import SingleSkillSearchJob
+from .context import SearchEvalContext
 
 
 def _context_with_expected_crit(
@@ -52,7 +52,7 @@ def _context_with_expected_crit(
     )
 
 
-def _build_profile(job: SingleSkillSearchJob, search_eval: Optional[SearchEvalContext]) -> PhysicalAbnormalProfile:
+def _build_profile(job: SingleSkillSearchJob, search_eval: SearchEvalContext | None) -> PhysicalAbnormalProfile:
     if search_eval is None:
         return PhysicalAbnormalProfile(
             damage_component_mode=job.damage_component_mode,
@@ -79,7 +79,7 @@ def _expected_crit_context(
     job: SingleSkillSearchJob,
     task: OptimizerTask,
     profile: PhysicalAbnormalProfile,
-    search_eval: Optional[SearchEvalContext],
+    search_eval: SearchEvalContext | None,
 ) -> tuple[float, float]:
     if not profile.use_expected_crit:
         return job.base_context.crit_rate, job.base_context.crit_damage
@@ -106,7 +106,7 @@ def _evaluate_abnormal_damage(
     job: SingleSkillSearchJob,
     task: OptimizerTask,
     profile: PhysicalAbnormalProfile,
-    search_eval: Optional[SearchEvalContext],
+    search_eval: SearchEvalContext | None,
 ) -> tuple[float, dict[str, float]]:
     physical_counts = profile.counts or {}
     spell_counts = (
@@ -185,13 +185,14 @@ def make_loadout_task_evaluator(
     job: SingleSkillSearchJob,
     *,
     crit_mode: CritMode,
-    search_eval: Optional[SearchEvalContext] = None,
+    search_eval: SearchEvalContext | None = None,
 ) -> Callable[[OptimizerTask], LoadoutScore]:
     """根据作业是否含多技能配置返回对应 evaluate 闭包。"""
     profile = _build_profile(job, search_eval)
     component_mode = profile.damage_component_mode
     multi = job.multi_skill_eval
     if multi is None:
+
         def _eval_single(task: OptimizerTask) -> LoadoutScore:
             eval_context = job.base_context
             eval_crit_mode = crit_mode

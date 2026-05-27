@@ -1,36 +1,30 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """PySide6 搜索线程与结果弹窗。"""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
-    QPushButton,
     QPlainTextEdit,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
-from calculation.search.run.cancel import SearchCancelToken
-from calculation.search.run.mvp import MvpSearchOutcome
-from calculation.search.run.single_skill import (
-    estimate_single_skill_search,
-    run_exported_single_skill_search,
-)
 from calculation.search.plan.controller import (
     optimizer_config_for_search_job,
-    prepare_search_job,
 )
 from calculation.search.plan.job import SingleSkillSearchJob
+from calculation.search.run.cancel import SearchCancelToken
+from calculation.search.run.single_skill import (
+    run_exported_single_skill_search,
+)
 from gui_design.presentation.search_results_lines import (
-    build_search_results_report_lines,
     export_paths_to_strings,
 )
 from gui_design.search_ui.search_settings import (
@@ -39,10 +33,10 @@ from gui_design.search_ui.search_settings import (
     resolve_top_n,
 )
 
-
 # ═══════════════════════════════════════════════════════
 #  搜索线程 Worker
 # ═══════════════════════════════════════════════════════
+
 
 class SearchWorker(QObject):
     """在 QThread 中执行全量遍历搜索。"""
@@ -72,6 +66,7 @@ class SearchWorker(QObject):
         self._cancel_token = cancel_token
 
     def run(self) -> None:
+        """在 QThread 中执行全量遍历搜索，发射 progress/finished/error 信号。"""
         config = optimizer_config_for_search_job(self._job, top_n=self._top_n)
 
         def _progress(info: dict) -> None:
@@ -107,12 +102,13 @@ class SearchWorker(QObject):
 #  搜索弹窗
 # ═══════════════════════════════════════════════════════
 
+
 class QtSearchResultsDialog(QDialog):
     """全量 / MVP 搜索结果展示弹窗。"""
 
     def __init__(
         self,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         *,
         title: str,
         lines: list[str],

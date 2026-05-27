@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """预览/确认路径共用的结果缓存桥接。"""
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 from calculation.core.result_cache import get_global_result_cache
 
@@ -25,8 +25,8 @@ def cached_preview(cache_key: str, compute: Callable[[], T]) -> tuple[T, bool]:
 
 def sync_confirm_dependencies(
     *,
-    char_data: Optional[dict],
-    weapon_data: Optional[dict],
+    char_data: dict | None,
+    weapon_data: dict | None,
     char_level: int,
     weapon_level: int,
     trust_level: int,
@@ -34,10 +34,10 @@ def sync_confirm_dependencies(
     calculation_mode: str,
     weapon_scope: str = "",
     equipment_scope: str = "",
-    multi_skill_counts: Optional[dict[str, int]] = None,
+    multi_skill_counts: dict[str, int] | None = None,
     use_manual_multi_skill_counts: bool = False,
-    physical_abnormal_counts: Optional[dict[str, int]] = None,
-    spell_abnormal_counts: Optional[dict[str, int]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
     damage_component_mode: str = "skill_and_abnormal",
     use_expected_crit: bool = False,
     include_conditional_equipment_crit: bool = False,

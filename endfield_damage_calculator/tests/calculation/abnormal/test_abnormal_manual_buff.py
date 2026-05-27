@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """异常计算接入手动 buff 测试。"""
 
 import unittest
 
-from calculation.damage.engine import DamageContext
 from calculation.abnormal.physical import evaluate_physical_abnormal_total
 from calculation.abnormal.spell import evaluate_spell_abnormal_total
+from calculation.damage.engine import DamageContext
 
 
 class TestAbnormalManualBuff(unittest.TestCase):
@@ -37,9 +36,7 @@ class TestAbnormalManualBuff(unittest.TestCase):
             },
         )
         self.assertGreater(total_with_buffs, total_no_buffs)
-        self.assertAlmostEqual(
-            bk2["猛击:0"] * 2 + bk2["倒地:0"] * 3, total_with_buffs
-        )
+        self.assertAlmostEqual(bk2["猛击:0"] * 2 + bk2["倒地:0"] * 3, total_with_buffs)
 
     def test_spell_abnormal_per_occurrence_buffs(self):
         base_ctx = DamageContext(
@@ -70,9 +67,7 @@ class TestAbnormalManualBuff(unittest.TestCase):
             },
         )
         self.assertGreater(total_with_buffs, total_no_buffs)
-        self.assertAlmostEqual(
-            bk2["灼热异常:0"] * 2 + bk2["灼热爆发:1"] * 1, total_with_buffs
-        )
+        self.assertAlmostEqual(bk2["灼热异常:0"] * 2 + bk2["灼热爆发:1"] * 1, total_with_buffs)
 
 
 if __name__ == "__main__":

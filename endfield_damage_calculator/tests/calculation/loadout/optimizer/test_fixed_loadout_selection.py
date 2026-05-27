@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """固定配装 vs 遍历部位组合数。"""
 
 import unittest
@@ -10,12 +9,14 @@ from calculation.loadout.slot_search import FixedLoadoutSelection, count_loadout
 
 class TestFixedLoadoutSelection(unittest.TestCase):
     def _catalog(self):
-        mk = lambda name: {
-            "名称": name,
-            "属性词条": ["敏捷1"],
-            "效果": [],
-            "三件套效果": [],
-        }
+        def mk(name):
+            return {
+                "名称": name,
+                "属性词条": ["敏捷1"],
+                "效果": [],
+                "三件套效果": [],
+            }
+
         return {
             "chest": [mk("胸1"), mk("胸2")],
             "gloves": [mk("手1"), mk("手2")],
@@ -25,17 +26,13 @@ class TestFixedLoadoutSelection(unittest.TestCase):
     def test_zero_fixed_traverses_all_four_slots(self):
         catalog = self._catalog()
         selection = FixedLoadoutSelection()
-        total = count_loadout_combinations_for_selection(
-            catalog, selection=selection, allow_duplicate_accessory=True
-        )
+        total = count_loadout_combinations_for_selection(catalog, selection=selection, allow_duplicate_accessory=True)
         self.assertEqual(total, 16)
 
     def test_fix_chest_only_varies_other_slots(self):
         catalog = self._catalog()
         selection = FixedLoadoutSelection(chest=catalog["chest"][0])
-        total = count_loadout_combinations_for_selection(
-            catalog, selection=selection, allow_duplicate_accessory=True
-        )
+        total = count_loadout_combinations_for_selection(catalog, selection=selection, allow_duplicate_accessory=True)
         self.assertEqual(total, 2 * 2 * 2)
 
     def test_fix_all_four_slots_single_loadout(self):
@@ -46,9 +43,7 @@ class TestFixedLoadoutSelection(unittest.TestCase):
             accessory_a=catalog["accessories"][0],
             accessory_b=catalog["accessories"][1],
         )
-        total = count_loadout_combinations_for_selection(
-            catalog, selection=selection, allow_duplicate_accessory=True
-        )
+        total = count_loadout_combinations_for_selection(catalog, selection=selection, allow_duplicate_accessory=True)
         self.assertEqual(total, 1)
 
     def test_optimizer_plan_uses_fixed_loadout(self):

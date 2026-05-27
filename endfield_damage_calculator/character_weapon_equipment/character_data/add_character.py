@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 通用角色添加脚本
 
@@ -7,6 +6,7 @@
     python -m character_weapon_equipment.character_data.add_character  # 查看说明
     python scripts/seed_characters.py  # 批量录入角色配置
 """
+
 from __future__ import annotations
 
 import copy
@@ -69,7 +69,7 @@ def add_character(
     if json_path is None:
         json_path = Path(__file__).parent / "characters.json"
 
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         characters = json.load(f)
 
     if any(c["名称"] == name for c in characters):

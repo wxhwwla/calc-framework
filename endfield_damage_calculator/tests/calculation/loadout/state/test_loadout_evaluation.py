@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """LoadoutEvaluation 快照测试。"""
 
 import unittest
 from unittest.mock import patch
 
+from calculation.loadout.slot_search import FixedLoadoutSelection
 from gui_design.app.loadout_evaluation import (
     build_search_preview_lines,
     build_snapshot_from_loadout,
 )
-from calculation.loadout.slot_search import FixedLoadoutSelection
 from gui_design.app.loadout_state import LoadoutState
 
 
@@ -71,9 +70,7 @@ class TestLoadoutEvaluation(unittest.TestCase):
 
     @patch("gui_design.app.loadout_evaluation.build_single_skill_search_preview_lines")
     @patch("gui_design.app.loadout_evaluation.sync_evaluation_cache")
-    def test_build_search_preview_lines_single_skill(
-        self, mock_sync, mock_preview
-    ) -> None:
+    def test_build_search_preview_lines_single_skill(self, mock_sync, mock_preview) -> None:
         state = LoadoutState(
             char_data={"名称": "A"},
             weapon_data={"名称": "W"},
@@ -114,9 +111,7 @@ class TestLoadoutEvaluation(unittest.TestCase):
         mock_sync.assert_called_once_with(state)
         mock_preview.assert_called_once()
         self.assertEqual(lines, ["line"])
-        self.assertEqual(
-            mock_preview.call_args.kwargs["preview_equipment_catalog"], catalog
-        )
+        self.assertEqual(mock_preview.call_args.kwargs["preview_equipment_catalog"], catalog)
         self.assertEqual(mock_preview.call_args.kwargs["enemy_defense"], 80.0)
         self.assertEqual(mock_preview.call_args.kwargs["normal_skill_1_name"], "攻击力+")
         self.assertEqual(

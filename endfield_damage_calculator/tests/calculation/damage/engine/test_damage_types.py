@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """伤害类型推断与段级读取测试。"""
 
 import unittest

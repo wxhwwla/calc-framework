@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """确认刷新编排：签名去重、idle 合并、乘区/快照/历史副作用。"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .display_request import build_display_request
-from .loadout_state import read_loadout_from_app
 from gui_design.controls.search import refresh_search_estimate
 from utils.operation_log import LogLevel, get_session_operation_log
+
+from .display_request import build_display_request
+from .loadout_state import read_loadout_from_app
 
 if TYPE_CHECKING:
     from gui_design.shell.app import DamageCalculatorApp
@@ -18,26 +18,26 @@ if TYPE_CHECKING:
 WINDOW_RESTORE_SETTLE_MS = 80
 
 
-def is_window_iconified(app: "DamageCalculatorApp") -> bool:
+def is_window_iconified(app: DamageCalculatorApp) -> bool:
     try:
         return str(app.app.state()) == "iconic"
     except Exception:
         return False
 
 
-def confirm_signature_now(app: "DamageCalculatorApp") -> tuple:
+def confirm_signature_now(app: DamageCalculatorApp) -> tuple:
     state = read_loadout_from_app(app)
     if state is None:
         return ()
     return state.confirm_refresh_signature()
 
 
-def is_restore_settling(app: "DamageCalculatorApp") -> bool:
+def is_restore_settling(app: DamageCalculatorApp) -> bool:
     """窗口刚恢复显示，布局尚未稳定。"""
     return bool(getattr(app, "_restore_settling", False))
 
 
-def handle_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
+def handle_confirm(app: DamageCalculatorApp, *, force: bool = False) -> None:
     """合并去重后执行一次确认刷新。"""
     if not force and getattr(app, "_suppress_full_confirm_refresh", False):
         return
@@ -65,7 +65,7 @@ def handle_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
     run_confirm_refresh(app)
 
 
-def schedule_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None:
+def schedule_confirm(app: DamageCalculatorApp, *, force: bool = False) -> None:
     """将确认刷新合并到下一 idle。"""
     if not force and getattr(app, "_suppress_full_confirm_refresh", False):
         return
@@ -94,13 +94,13 @@ def schedule_confirm(app: "DamageCalculatorApp", *, force: bool = False) -> None
     app._confirm_after_id = app.app.after_idle(_dispatch)
 
 
-def run_confirm_refresh(app: "DamageCalculatorApp") -> None:
+def run_confirm_refresh(app: DamageCalculatorApp) -> None:
     """执行属性列、右侧乘区、快照与搜索预估刷新。"""
-    from gui_design.shared.display_view import confirm_from_display_request
     from gui_design.controls.enhancement import (
         record_calculation_history,
         refresh_damage_snapshot,
     )
+    from gui_design.shared.display_view import confirm_from_display_request
 
     assert app.char_attr_scroll is not None
     assert app.weapon_attr_scroll is not None

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 能力值加成乘区模块
 
@@ -15,7 +14,7 @@
 """
 
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any
 
 from calculation.damage.formula import trust_add
 
@@ -31,11 +30,7 @@ def _get_weapon_bonus(bonus_data, level: int = 1) -> float:
     return 0.0
 
 
-def _get_bonus_from_normal_skills(
-    weapon: Dict[str, Any],
-    effect_name: str,
-    level: int = 1
-) -> float:
+def _get_bonus_from_normal_skills(weapon: dict[str, Any], effect_name: str, level: int = 1) -> float:
     """从武器的 normal_skills 列表中获取指定效果的加成值"""
     normal_skills = weapon.get("normal_skills", [])
     for skill in normal_skills:
@@ -76,8 +71,8 @@ def _warn_if_legacy_skill_kwargs_used(
 
 
 def calculate_ability_bonus(
-    character: Optional[Dict[str, Any]],
-    weapon: Optional[Dict[str, Any]] = None,
+    character: dict[str, Any] | None,
+    weapon: dict[str, Any] | None = None,
     level: int = 1,
     sa1_name: str = "",
     sa1_level: int = 1,
@@ -92,7 +87,7 @@ def calculate_ability_bonus(
     ws2_level: int = 1,
     ws2_stack: int = 1,
     trust_level: int = 0,
-    equipment_stat_bonus: Optional[Dict[str, float]] = None,
+    equipment_stat_bonus: dict[str, float] | None = None,
     normal_skill_1_name: str = "",
     normal_skill_1_level: int = 1,
     normal_skill_2_name: str = "",
@@ -165,8 +160,8 @@ def calculate_ability_bonus(
     ws2_level = special_skill_2_level if special_skill_2_name else ws2_level
     ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
 
-    main_attr = character.get('主能力', '')
-    sub_attr = character.get('副能力', '')
+    main_attr = character.get("主能力", "")
+    sub_attr = character.get("副能力", "")
 
     level_index = level - 1
     main_value = 0.0
@@ -186,6 +181,7 @@ def calculate_ability_bonus(
     sub_pct = 0.0
 
     if weapon:
+
         def _resolve_level(effect: str) -> int:
             if effect == sa1_name:
                 return sa1_level
@@ -240,7 +236,7 @@ def calculate_ability_bonus(
                 sub_pct += bonus_value
 
         # 2. 从直接属性键中获取加成（向后兼容）
-        bonus_attrs = [key for key in weapon.keys() if key.endswith('+')]
+        bonus_attrs = [key for key in weapon if key.endswith("+")]
         for attr_name in bonus_attrs:
             category = _classify(attr_name)
             if not category:
@@ -262,8 +258,8 @@ def calculate_ability_bonus(
                 sub_pct += bonus_value
 
         from character_weapon_equipment.weapon_data.special_fields import (
-            add_special_picks_to_main_sub_bonus,
             add_special_picks_to_ability_pct,
+            add_special_picks_to_main_sub_bonus,
         )
 
         md, sd = add_special_picks_to_main_sub_bonus(

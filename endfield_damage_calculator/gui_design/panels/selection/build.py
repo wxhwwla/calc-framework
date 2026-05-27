@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """选择面板：布局构建与预设。"""
 
 from __future__ import annotations
@@ -9,7 +8,7 @@ from utils.platform_win32_patch import apply_platform_win32_patch
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from ..selection_components import SpecialAbilityPanel, SkillLevelPanel, TrustPanel
+from ..selection_components import SkillLevelPanel, SpecialAbilityPanel, TrustPanel
 
 
 class SelectionPanelBuildMixin:
@@ -43,11 +42,7 @@ class SelectionPanelBuildMixin:
 
         # 等级滑块（左侧，填充剩余空间）
         self.level_slider = ctk.CTkSlider(
-            level_frame,
-            from_=1,
-            to=90,
-            number_of_steps=89,
-            command=self._on_level_slider_change
+            level_frame, from_=1, to=90, number_of_steps=89, command=self._on_level_slider_change
         )
         self.level_slider.pack(side="left", fill="x", expand=True)
         try:
@@ -166,7 +161,7 @@ class SelectionPanelBuildMixin:
                 clamped = max(1, min(int(target_level), 9))
                 panel._weapon_special_2_slider.set(clamped)
                 panel._on_weapon_special_2_change(float(clamped))
-    
+
     def _build_advanced_params_container(self) -> None:
         """构建低频参数折叠区（角色=技能等级，武器=高级参数）。"""
         collapsed_label = f"{self._advanced_section_title}（展开）"
@@ -218,12 +213,9 @@ class SelectionPanelBuildMixin:
         expanded = bool(self._show_advanced_params_var.get())
         if self._advanced_toggle_btn is not None:
             title = self._advanced_section_title
-            self._advanced_toggle_btn.configure(
-                text=f"{title}（收起）" if expanded else f"{title}（展开）"
-            )
+            self._advanced_toggle_btn.configure(text=f"{title}（收起）" if expanded else f"{title}（展开）")
         if self._advanced_body is not None:
             if expanded:
                 self._advanced_body.pack(fill="x", padx=0, pady=(0, 4))
             else:
                 self._advanced_body.pack_forget()
-

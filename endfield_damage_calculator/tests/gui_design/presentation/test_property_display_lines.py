@@ -1,33 +1,21 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """属性列明细文本构建测试。"""
 
 import json
 import unittest
 from pathlib import Path
 
+from character_weapon_equipment.weapon_data.special_fields import read_weapon_skills_schema
 from gui_design.presentation.display_lines import (
     build_character_attribute_lines,
     build_character_skill_lines,
     build_weapon_attribute_lines,
     format_weapon_bonus_display_value,
 )
-from character_weapon_equipment.weapon_data.special_fields import read_weapon_skills_schema
 from tests.fixtures.path_roots import PKG_ROOT
 
-
-_CHARACTERS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "character_data"
-    / "characters.json"
-)
-_WEAPONS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "weapon_data"
-    / "weapons.json"
-)
+_CHARACTERS_JSON = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
+_WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
 
 
 def _load_by_name(path: Path, name: str) -> dict:
@@ -43,14 +31,22 @@ class TestPropertyDisplayLines(unittest.TestCase):
     def test_character_lines_include_war_skill_at_selected_level(self):
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         lines = build_character_attribute_lines(
-            char, level=1, skill_1_level=5, skill_2_level=1, skill_3_level=1,
+            char,
+            level=1,
+            skill_1_level=5,
+            skill_2_level=1,
+            skill_3_level=1,
         )
         self.assertIn("战技 等级5 第1段: 199% · 物理(默认物理)", lines)
 
     def test_character_lines_show_multiple_finale_segments(self):
         char = _load_by_name(_CHARACTERS_JSON, "陈千语")
         lines = build_character_attribute_lines(
-            char, level=1, skill_1_level=1, skill_2_level=1, skill_3_level=5,
+            char,
+            level=1,
+            skill_1_level=1,
+            skill_2_level=1,
+            skill_3_level=5,
         )
         self.assertIn("终结技 等级5 第1段: 50% · 物理(默认物理)", lines)
         self.assertIn("终结技 等级5 第2段: 636% · 物理(默认物理)", lines)
@@ -72,7 +68,11 @@ class TestPropertyDisplayLines(unittest.TestCase):
             ],
         }
         lines = build_character_attribute_lines(
-            char, level=1, skill_1_level=5, skill_2_level=5, skill_3_level=5,
+            char,
+            level=1,
+            skill_1_level=5,
+            skill_2_level=5,
+            skill_3_level=5,
         )
         self.assertTrue(any(line.startswith("战技 ") for line in lines))
         self.assertFalse(any(line.startswith("连携技 ") for line in lines))
@@ -124,7 +124,9 @@ class TestPropertyDisplayLines(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("基础攻击力:") for line in lines))
         zhishi = format_weapon_bonus_display_value(
-            normal[0]["curve"][0], attr_name="智识+", is_first_skill=True,
+            normal[0]["curve"][0],
+            attr_name="智识+",
+            is_first_skill=True,
         )
         self.assertIn(f"智识+: {zhishi}", lines)
         ce = format_weapon_bonus_display_value(normal[1]["curve"][0], attr_name="终结技充能效率+")

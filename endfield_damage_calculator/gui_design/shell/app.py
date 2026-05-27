@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 GUI 主应用壳层
 
@@ -11,18 +10,20 @@ from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
 
-import customtkinter as ctk
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from calculation.search.run.cancel import SearchCancelToken
+import customtkinter as ctk
+
 from calculation.search.plan.job import build_weapon_candidates
+from calculation.search.run.cancel import SearchCancelToken
 from data.game_data_facade import GameDataFacade
-from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL
 from gui_design.app.confirm_orchestrator import schedule_confirm
-from gui_design.shared.gui_settings import gui_settings, configure_tk_default_font, configure_all_tk_fonts
 from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.panels.selection_panel import ChooseTypesStarsNamesLevels
 from gui_design.search_ui.search_settings import build_worker_option_labels
+from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL
+from gui_design.shared.gui_settings import configure_all_tk_fonts, configure_tk_default_font, gui_settings
+from gui_design.shared.ui_preferences import load_ui_preferences
 from gui_design.shell.app_char_weapon_link import AppCharWeaponLinkMixin
 from gui_design.shell.app_control_dock import AppControlDockMixin
 from gui_design.shell.app_loadout_access import AppLoadoutAccessMixin
@@ -31,7 +32,6 @@ from gui_design.shell.app_main_layout import AppMainLayoutMixin
 from gui_design.shell.app_selection import AppSelectionMixin
 from gui_design.shell.app_window import AppWindowMixin
 from gui_design.shell.app_window_events import AppWindowEventsMixin
-from gui_design.shared.ui_preferences import load_ui_preferences
 from please_read_me import get_exe_version
 from utils.gui_fonts import default_ui_font
 from utils.gui_window import apply_startup_maximized
@@ -77,37 +77,35 @@ class DamageCalculatorApp(
         self.big_font: ctk.CTkFont = default_ui_font(size=14, weight="bold")
         self.small_font: ctk.CTkFont = default_ui_font(size=12)
 
-        self.char_frame: Optional[ctk.CTkFrame] = None
-        self.weapon_frame: Optional[ctk.CTkFrame] = None
-        self.page_tabs: Optional[ctk.CTkTabview] = None
-        self.main_page_frame: Optional[ctk.CTkFrame] = None
-        self.advanced_page_frame: Optional[ctk.CTkFrame] = None
-        self.control_frame: Optional[ctk.CTkFrame] = None
-        self._control_dock_body: Optional[ctk.CTkFrame] = None
-        self._control_col_actions: Optional[ctk.CTkFrame] = None
-        self._control_col_search: Optional[ctk.CTkFrame] = None
-        self._control_col_multi: Optional[ctk.CTkFrame] = None
-        self.goto_advanced_btn: Optional[ctk.CTkButton] = None
-        self.main_confirm_btn: Optional[ctk.CTkButton] = None
-        self.back_to_main_btn: Optional[ctk.CTkButton] = None
-        self.confirm_btn: Optional[ctk.CTkButton] = None
-        self.attribution_btn: Optional[ctk.CTkButton] = None
-        self.mvp_search_btn: Optional[ctk.CTkButton] = None
-        self.full_search_btn: Optional[ctk.CTkButton] = None
-        self.search_workers_var: ctk.StringVar = ctk.StringVar(
-            value=build_worker_option_labels()[0]
-        )
+        self.char_frame: ctk.CTkFrame | None = None
+        self.weapon_frame: ctk.CTkFrame | None = None
+        self.page_tabs: ctk.CTkTabview | None = None
+        self.main_page_frame: ctk.CTkFrame | None = None
+        self.advanced_page_frame: ctk.CTkFrame | None = None
+        self.control_frame: ctk.CTkFrame | None = None
+        self._control_dock_body: ctk.CTkFrame | None = None
+        self._control_col_actions: ctk.CTkFrame | None = None
+        self._control_col_search: ctk.CTkFrame | None = None
+        self._control_col_multi: ctk.CTkFrame | None = None
+        self.goto_advanced_btn: ctk.CTkButton | None = None
+        self.main_confirm_btn: ctk.CTkButton | None = None
+        self.back_to_main_btn: ctk.CTkButton | None = None
+        self.confirm_btn: ctk.CTkButton | None = None
+        self.attribution_btn: ctk.CTkButton | None = None
+        self.mvp_search_btn: ctk.CTkButton | None = None
+        self.full_search_btn: ctk.CTkButton | None = None
+        self.search_workers_var: ctk.StringVar = ctk.StringVar(value=build_worker_option_labels()[0])
         self.search_top_n_var: ctk.StringVar = ctk.StringVar(value="10")
-        self.search_workers_menu: Optional[ctk.CTkOptionMenu] = None
-        self.search_workers_hint_label: Optional[ctk.CTkLabel] = None
-        self.search_top_n_menu: Optional[ctk.CTkOptionMenu] = None
-        self.search_cancel_btn: Optional[ctk.CTkButton] = None
-        self._search_cancel_token: Optional[SearchCancelToken] = None
+        self.search_workers_menu: ctk.CTkOptionMenu | None = None
+        self.search_workers_hint_label: ctk.CTkLabel | None = None
+        self.search_top_n_menu: ctk.CTkOptionMenu | None = None
+        self.search_cancel_btn: ctk.CTkButton | None = None
+        self._search_cancel_token: SearchCancelToken | None = None
         self._search_estimated_total_seconds: float = 0.0
-        self.search_estimate_label: Optional[ctk.CTkLabel] = None
-        self.mvp_status_label: Optional[ctk.CTkLabel] = None
+        self.search_estimate_label: ctk.CTkLabel | None = None
+        self.mvp_status_label: ctk.CTkLabel | None = None
         self.calc_mode_var: ctk.StringVar = ctk.StringVar(value=DEFAULT_CALC_MODE_LABEL)
-        self.calc_mode_menu: Optional[ctk.CTkOptionMenu] = None
+        self.calc_mode_menu: ctk.CTkOptionMenu | None = None
         self.use_manual_skill_counts_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
         self.damage_component_mode_var: ctk.StringVar = ctk.StringVar(value="技能+异常")
         self.use_expected_crit_var: ctk.BooleanVar = ctk.BooleanVar(value=False)
@@ -115,40 +113,40 @@ class DamageCalculatorApp(
         self.extra_crit_rate_percent_var: ctk.StringVar = ctk.StringVar(value="0")
         self.extra_crit_damage_percent_var: ctk.StringVar = ctk.StringVar(value="0")
         self.single_skill_scope_var: ctk.StringVar = ctk.StringVar(value="当前武器")
-        self.single_skill_scope_menu: Optional[ctk.CTkOptionMenu] = None
+        self.single_skill_scope_menu: ctk.CTkOptionMenu | None = None
         self.single_skill_equipment_scope_var: ctk.StringVar = ctk.StringVar(value="全部装备")
-        self.single_skill_equipment_scope_menu: Optional[ctk.CTkOptionMenu] = None
-        self._fixed_loadout_slots: Dict[str, Any] = {}
-        self._fixed_loadout_frame: Optional[ctk.CTkFrame] = None
+        self.single_skill_equipment_scope_menu: ctk.CTkOptionMenu | None = None
+        self._fixed_loadout_slots: dict[str, Any] = {}
+        self._fixed_loadout_frame: ctk.CTkFrame | None = None
         self.skill_count_1_var: ctk.StringVar = ctk.StringVar(value="0")
         self.skill_count_2_var: ctk.StringVar = ctk.StringVar(value="0")
         self.skill_count_3_var: ctk.StringVar = ctk.StringVar(value="0")
-        self._segment_count_vars: Dict[str, ctk.StringVar] = {}
-        self._physical_abnormal_count_vars: Dict[str, ctk.StringVar] = {}
-        self._spell_abnormal_count_vars: Dict[str, ctk.StringVar] = {}
-        self._multi_skill_counts_body: Optional[ctk.CTkFrame] = None
-        self.char_attr_frame: Optional[ctk.CTkFrame] = None
-        self.char_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
-        self.weapon_attr_frame: Optional[ctk.CTkFrame] = None
-        self.weapon_attr_scroll: Optional[ctk.CTkScrollableFrame] = None
-        self.right_frame: Optional[ctk.CTkFrame] = None
-        self.right_scroll: Optional[ctk.CTkScrollableFrame] = None
-        self.char_panel: Optional[ChooseTypesStarsNamesLevels] = None
-        self.weapon_panel: Optional[ChooseTypesStarsNamesLevels] = None
+        self._segment_count_vars: dict[str, ctk.StringVar] = {}
+        self._physical_abnormal_count_vars: dict[str, ctk.StringVar] = {}
+        self._spell_abnormal_count_vars: dict[str, ctk.StringVar] = {}
+        self._multi_skill_counts_body: ctk.CTkFrame | None = None
+        self.char_attr_frame: ctk.CTkFrame | None = None
+        self.char_attr_scroll: ctk.CTkScrollableFrame | None = None
+        self.weapon_attr_frame: ctk.CTkFrame | None = None
+        self.weapon_attr_scroll: ctk.CTkScrollableFrame | None = None
+        self.right_frame: ctk.CTkFrame | None = None
+        self.right_scroll: ctk.CTkScrollableFrame | None = None
+        self.char_panel: ChooseTypesStarsNamesLevels | None = None
+        self.weapon_panel: ChooseTypesStarsNamesLevels | None = None
         self.game_data: GameDataFacade = GameDataFacade.create()
-        self.all_weapons: List[Dict[str, Any]] = list(self.game_data.weapons)
-        self._confirm_refresh_signature: Optional[tuple] = None
-        self._confirmed_display_signature: Optional[tuple] = None
-        self._confirm_after_id: Optional[str] = None
-        self._pending_ui_after_id: Optional[str] = None
+        self.all_weapons: list[dict[str, Any]] = list(self.game_data.weapons)
+        self._confirm_refresh_signature: tuple | None = None
+        self._confirmed_display_signature: tuple | None = None
+        self._confirm_after_id: str | None = None
+        self._pending_ui_after_id: str | None = None
         self._confirm_button_default_styles: dict[int, tuple] = {}
-        self._skill_count_last_committed: Dict[str, str] = {}
+        self._skill_count_last_committed: dict[str, str] = {}
         self._suppress_full_confirm_refresh: bool = False
-        self._ui_preferences: Dict[str, Any] = load_ui_preferences()
-        self._control_dock_last_width: Optional[int] = None
-        self._control_dock_last_compact: Optional[bool] = None
+        self._ui_preferences: dict[str, Any] = load_ui_preferences()
+        self._control_dock_last_width: int | None = None
+        self._control_dock_last_compact: bool | None = None
         self._restore_settling: bool = False
-        self._restore_after_id: Optional[str] = None
+        self._restore_after_id: str | None = None
         self._window_has_been_mapped: bool = False
 
         self._setup_ui()

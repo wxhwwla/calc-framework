@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量遍历结果报告文案（无 CustomTkinter）。"""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
 from calculation.abnormal.physical import (
     abnormal_weighted_total,
@@ -26,9 +26,9 @@ def _format_top_result_line(
     score: LoadoutScore,
     *,
     damage_metric: str = "伤害",
-    segment_counts: Optional[dict[str, int]] = None,
-    abnormal_counts: Optional[dict[str, int]] = None,
-    spell_abnormal_counts: Optional[dict[str, int]] = None,
+    segment_counts: dict[str, int] | None = None,
+    abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
 ) -> list[str]:
     loadout = score.loadout_names
     lines = [
@@ -76,9 +76,7 @@ def _format_top_result_line(
                 indent="       ",
             )
         )
-        spell_total = spell_abnormal_weighted_total(
-            spell_abnormal_breakdown, spell_abnormal_counts
-        )
+        spell_total = spell_abnormal_weighted_total(spell_abnormal_breakdown, spell_abnormal_counts)
         if spell_total > 0:
             lines.append(f"       法术异常合计: {spell_total:.1f}")
     return lines
@@ -92,12 +90,12 @@ def build_search_results_report_lines(
     processed_combinations: int,
     total_combinations: int,
     top_results: Sequence[LoadoutScore],
-    export_paths: Optional[dict[str, str]] = None,
+    export_paths: dict[str, str] | None = None,
     cancelled: bool = False,
     damage_metric: str = "伤害",
-    segment_counts: Optional[dict[str, int]] = None,
-    abnormal_counts: Optional[dict[str, int]] = None,
-    spell_abnormal_counts: Optional[dict[str, int]] = None,
+    segment_counts: dict[str, int] | None = None,
+    abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
 ) -> list[str]:
     """生成全量遍历结果报告（供弹窗与测试使用）。"""
     weapon_scope, equip_scope = scope_labels

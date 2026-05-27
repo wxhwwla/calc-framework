@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索失败回调须正确绑定异常文案（回归：except 变量被清除）。"""
 
 import unittest
@@ -15,6 +14,7 @@ class TestSearchErrorBinding(unittest.TestCase):
         try:
             raise RuntimeError("sqlite disk I/O error")
         except Exception as exc:
+
             def _report_failure(error: BaseException = exc) -> None:
                 captured.append(str(error))
 

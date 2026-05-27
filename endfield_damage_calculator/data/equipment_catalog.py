@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """统一装备目录接缝：范围过滤 + 三部位 catalog。"""
 
 from __future__ import annotations
@@ -72,9 +71,7 @@ def get_equipment_catalog(
 
 def catalog_has_any_rows(catalog: dict[str, list[dict[str, Any]]]) -> bool:
     """任一部位有条目（可能仍不完整）。"""
-    return bool(
-        catalog.get("chest") or catalog.get("gloves") or catalog.get("accessories")
-    )
+    return bool(catalog.get("chest") or catalog.get("gloves") or catalog.get("accessories"))
 
 
 def is_equipment_catalog_complete(catalog: dict[str, list[dict[str, Any]]]) -> bool:
@@ -104,10 +101,7 @@ def catalog_full_search_error(catalog: dict[str, list[dict[str, Any]]]) -> str |
         return None
     if not catalog_has_any_rows(catalog):
         return status
-    return (
-        "装备数据不完整（缺护甲/护手/配件）。"
-        "请先执行 sync_equipments.py --apply 同步 Wiki 装备。"
-    )
+    return "装备数据不完整（缺护甲/护手/配件）。请先执行 sync_equipments.py --apply 同步 Wiki 装备。"
 
 
 def catalog_preview_status_lines(

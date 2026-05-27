@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
 from __future__ import annotations
 
 from typing import Any
 
-import re
-
-from .codec import build_special_field, parse_special_field
 from .name_utils import (
     _extract_effect_name_from_special_name,
     _split_special_name,
@@ -109,9 +105,7 @@ def write_weapon_skills_schema(
         {
             "zone": int(item.get("zone", idx + 1)),
             "effect": str(item.get("effect", "")),
-            "curve": [
-                float(v) for v in (item.get("curve") if isinstance(item.get("curve"), list) else [])
-            ],
+            "curve": [float(v) for v in (item.get("curve") if isinstance(item.get("curve"), list) else [])],
         }
         for idx, item in enumerate(normal_skills)
         if isinstance(item, dict) and str(item.get("effect", "")).strip()
@@ -122,9 +116,7 @@ def write_weapon_skills_schema(
             "name": str(item.get("name", "")),
             "condition": str(item.get("condition", "")),
             "effect": str(item.get("effect", "")),
-            "curve": [
-                float(v) for v in (item.get("curve") if isinstance(item.get("curve"), list) else [])
-            ],
+            "curve": [float(v) for v in (item.get("curve") if isinstance(item.get("curve"), list) else [])],
             "max_stack": max(1, int(item.get("max_stack", 1))),
         }
         for item in special_skills
@@ -152,9 +144,7 @@ def migrate_weapon_record_to_skill_schema(weapon: dict[str, Any]) -> bool:
         if key.endswith("+") and isinstance(weapon.get(key), list):
             old_bonus_keys.append(key)
     old_special_keys = [key for key in weapon_special_field_keys(weapon) if key in weapon]
-    has_new_schema = isinstance(weapon.get("normal_skills"), list) and isinstance(
-        weapon.get("special_skills"), list
-    )
+    has_new_schema = isinstance(weapon.get("normal_skills"), list) and isinstance(weapon.get("special_skills"), list)
     needs_migration = bool(old_bonus_keys or old_special_keys or not has_new_schema)
     if not needs_migration:
         return False
@@ -176,5 +166,3 @@ def migrate_weapon_records_to_skill_schema(
         if migrate_weapon_record_to_skill_schema(weapon):
             changed_names.append(str(weapon.get("名称", "")))
     return changed_names
-
-

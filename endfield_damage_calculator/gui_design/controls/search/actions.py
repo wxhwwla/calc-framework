@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索线程与结果弹窗。"""
 
 from __future__ import annotations
@@ -7,49 +6,31 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 from tkinter import filedialog, messagebox
-from typing import TYPE_CHECKING, Callable, Dict, Optional
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 # Windows：PyInstaller 会单独 import 本模块，须在 CTk 之前打 WMI 补丁
 apply_platform_win32_patch()
-import customtkinter as ctk
 
-from calculation.loadout.optimizer import WeaponCandidate
-from calculation.search.run.mvp import MvpSearchOutcome
-from calculation.search.run.cancel import SearchCancelToken
 from calculation.search.plan.controller import (
-    SearchJobInputs,
     optimizer_config_for_search_job,
     prepare_search_job,
 )
 from calculation.search.plan.job import SingleSkillSearchJob
+from calculation.search.run.cancel import SearchCancelToken
+from calculation.search.run.mvp import MvpSearchOutcome
 from calculation.search.run.single_skill import (
     estimate_single_skill_search,
     run_exported_single_skill_search,
 )
-from ..fixed_loadout import (
-    create_fixed_loadout_controls,
-    refresh_all_fixed_slot_menus,
-)
-from gui_design.layout.gui_layout import (
-    FIXED_LOADOUT_HINT_BOX_HEIGHT,
-    PRIMARY_ACTION_BUTTON_HEIGHT,
-    SEARCH_ESTIMATE_BOX_HEIGHT,
-    search_action_button_texts,
-    SEARCH_STATUS_BOX_HEIGHT,
-    SEARCH_WORKERS_HINT_BOX_HEIGHT,
-    SECONDARY_ACTION_BUTTON_HEIGHT,
-)
-from gui_design.layout.panel_hints import FIXED_LOADOUT_HINT
-from gui_design.search_ui.search_estimate_message import compose_search_estimate_message
 from gui_design.presentation.search_results_lines import (
     build_search_results_report_lines,
     export_paths_to_strings,
 )
+from gui_design.search_ui.search_estimate_message import compose_search_estimate_message
 from gui_design.search_ui.search_results_view import show_search_results_dialog
 from gui_design.search_ui.search_settings import (
-    build_worker_option_labels,
     format_parallel_workers_help,
     format_search_progress_text,
     get_cpu_parallel_info,
@@ -58,18 +39,21 @@ from gui_design.search_ui.search_settings import (
 )
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
+from ..fixed_loadout import (
+    refresh_all_fixed_slot_menus,
+)
 from .section import build_search_job_inputs
 
 if TYPE_CHECKING:
     from gui_design.shell.app import DamageCalculatorApp
 
 
-def set_mvp_status(app: "DamageCalculatorApp", text: str) -> None:
+def set_mvp_status(app: DamageCalculatorApp, text: str) -> None:
     if app.mvp_status_label is not None:
         app.mvp_status_label.configure(text=text)
 
 
-def set_search_buttons_enabled(app: "DamageCalculatorApp", enabled: bool) -> None:
+def set_search_buttons_enabled(app: DamageCalculatorApp, enabled: bool) -> None:
     state = "normal" if enabled else "disabled"
     if app.mvp_search_btn is not None:
         app.mvp_search_btn.configure(state=state)
@@ -83,17 +67,15 @@ def set_search_buttons_enabled(app: "DamageCalculatorApp", enabled: bool) -> Non
         app.search_cancel_btn.configure(state="normal" if not enabled else "disabled")
 
 
-def refresh_parallel_workers_hint(app: "DamageCalculatorApp") -> None:
+def refresh_parallel_workers_hint(app: DamageCalculatorApp) -> None:
     if app.search_workers_hint_label is None:
         return
     info = get_cpu_parallel_info()
     workers = resolve_parallel_workers(app.search_workers_var.get())
-    app.search_workers_hint_label.configure(
-        text=format_parallel_workers_help(info, selected_workers=workers)
-    )
+    app.search_workers_hint_label.configure(text=format_parallel_workers_help(info, selected_workers=workers))
 
 
-def refresh_search_estimate(app: "DamageCalculatorApp") -> None:
+def refresh_search_estimate(app: DamageCalculatorApp) -> None:
     """刷新「预计组合数/耗时」标签。"""
     if app.search_estimate_label is None:
         return
@@ -102,12 +84,12 @@ def refresh_search_estimate(app: "DamageCalculatorApp") -> None:
     has_char = bool(app.char_panel.get_selected_data())
     has_weapon = bool(app.weapon_panel.get_selected_data())
     scope_label = str(app.single_skill_equipment_scope_var.get())
-    catalog_err: Optional[str] = None
+    catalog_err: str | None = None
     if has_char and has_weapon:
         catalog_err = app.game_data.catalog_search_error(scope_label)
     weapons_empty = False
-    job_error: Optional[str] = None
-    estimate_text: Optional[str] = None
+    job_error: str | None = None
+    estimate_text: str | None = None
     if has_char and has_weapon and not catalog_err:
         weapons = app._single_skill_preview_candidates()
         weapons_empty = not weapons
@@ -138,7 +120,7 @@ def refresh_search_estimate(app: "DamageCalculatorApp") -> None:
     app.search_estimate_label.configure(text=text)
 
 
-def compute_search_estimate_text(app: "DamageCalculatorApp", job: SingleSkillSearchJob) -> str:
+def compute_search_estimate_text(app: DamageCalculatorApp, job: SingleSkillSearchJob) -> str:
     estimate = estimate_single_skill_search(
         job,
         max_workers=resolve_parallel_workers(app.search_workers_var.get()),
@@ -148,7 +130,7 @@ def compute_search_estimate_text(app: "DamageCalculatorApp", job: SingleSkillSea
     return estimate.text
 
 
-def prepare_single_skill_search_job(app: "DamageCalculatorApp") -> Optional[SingleSkillSearchJob]:
+def prepare_single_skill_search_job(app: DamageCalculatorApp) -> SingleSkillSearchJob | None:
     inputs = build_search_job_inputs(app)
     if inputs is None:
         if not app.char_panel or not app.char_panel.get_selected_data():
@@ -163,25 +145,25 @@ def prepare_single_skill_search_job(app: "DamageCalculatorApp") -> Optional[Sing
     return job
 
 
-def on_fixed_loadout_changed(app: "DamageCalculatorApp") -> None:
+def on_fixed_loadout_changed(app: DamageCalculatorApp) -> None:
     catalog = app._single_skill_preview_equipment_catalog()
     refresh_all_fixed_slot_menus(catalog, app._fixed_loadout_slots)
     refresh_search_estimate(app)
 
 
-def on_cancel_search(app: "DamageCalculatorApp") -> None:
+def on_cancel_search(app: DamageCalculatorApp) -> None:
     if app._search_cancel_token is not None:
         app._search_cancel_token.cancel()
         set_mvp_status(app, "搜索状态：正在取消…")
 
 
 def show_search_result_popup(
-    app: "DamageCalculatorApp",
+    app: DamageCalculatorApp,
     *,
     mode_label: str,
     job: SingleSkillSearchJob,
     outcome: MvpSearchOutcome,
-    export_paths: Optional[Dict[str, str]] = None,
+    export_paths: dict[str, str] | None = None,
 ) -> None:
     damage_metric = "加权总伤" if job.multi_skill_eval is not None else "伤害"
     lines = build_search_results_report_lines(
@@ -194,9 +176,7 @@ def show_search_result_popup(
         export_paths=export_paths,
         cancelled=bool(outcome.cancelled),
         damage_metric=damage_metric,
-        segment_counts=(
-            dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None
-        ),
+        segment_counts=(dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None),
         abnormal_counts=dict(job.physical_abnormal_counts or {}),
         spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
     )
@@ -204,7 +184,7 @@ def show_search_result_popup(
 
 
 def start_search_worker(
-    app: "DamageCalculatorApp",
+    app: DamageCalculatorApp,
     *,
     mode_label: str,
     export_root: Path,
@@ -272,8 +252,7 @@ def start_search_worker(
             suffix = "（已取消）" if outcome.cancelled else "：完成"
             set_mvp_status(
                 app,
-                f"{status_done_prefix}{suffix}（{outcome.processed_combinations}/"
-                f"{outcome.total_combinations}）",
+                f"{status_done_prefix}{suffix}（{outcome.processed_combinations}/{outcome.total_combinations}）",
             )
             set_search_buttons_enabled(app, True)
             show_search_result_popup(
@@ -289,7 +268,7 @@ def start_search_worker(
     threading.Thread(target=_worker, daemon=True).start()
 
 
-def on_run_full_search(app: "DamageCalculatorApp") -> None:
+def on_run_full_search(app: DamageCalculatorApp) -> None:
     job = prepare_single_skill_search_job(app)
     if not job:
         return
@@ -302,11 +281,7 @@ def on_run_full_search(app: "DamageCalculatorApp") -> None:
         ):
             return
     export_root = allocate_search_run_directory(purpose="full_search")
-    mode_label = (
-        "多技能加权全量遍历"
-        if job.multi_skill_eval is not None
-        else "单技能全量遍历"
-    )
+    mode_label = "多技能加权全量遍历" if job.multi_skill_eval is not None else "单技能全量遍历"
     start_search_worker(
         app,
         mode_label=mode_label,
@@ -317,7 +292,7 @@ def on_run_full_search(app: "DamageCalculatorApp") -> None:
     )
 
 
-def on_run_mvp_search(app: "DamageCalculatorApp") -> None:
+def on_run_mvp_search(app: DamageCalculatorApp) -> None:
     job = prepare_single_skill_search_job(app)
     if not job:
         return

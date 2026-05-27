@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索：按部位固定装备（0–4 件）控件与解析。"""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
@@ -48,7 +48,7 @@ def resolve_fixed_loadout_selection(
 ) -> FixedLoadoutSelection:
     """从 GUI 状态解析固定配装；未勾选固定的部位为 None（遍历）。"""
 
-    def _pick(slot_key: str, catalog_key: str) -> Optional[dict]:
+    def _pick(slot_key: str, catalog_key: str) -> dict | None:
         binding = slots[slot_key]
         if not binding.enabled_var.get():
             return None

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 运行时与可选依赖：探测、启动提示（开发模式）、打包前检查。
 
@@ -10,14 +9,12 @@ matplotlib 已写入 ``pyproject.toml`` 运行时依赖；应在 ``pip install -
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from importlib.util import find_spec
-from typing import Callable, Sequence
 
 # (import 名, pip 规格) — 与 [project].dependencies 一致
-RUNTIME_PIP_PACKAGES: tuple[tuple[str, str], ...] = (
-    ("matplotlib", "matplotlib>=3.8"),
-)
+RUNTIME_PIP_PACKAGES: tuple[tuple[str, str], ...] = (("matplotlib", "matplotlib>=3.8"),)
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备属性词条解析（面板词条 → 伤害效果 / 平铺属性）。"""
 
 from __future__ import annotations
@@ -10,15 +9,9 @@ from typing import Any
 from calculation.damage.engine import DamageEffect
 from calculation.equipment.system import FourSlotLoadout, _infer_damage_types, _parse_percent_value
 
-_STAT_FLAT_RE = re.compile(
-    r"^(力量|敏捷|智识|意志|攻击力|防御力|生命值)(\d+(?:\.\d+)?)(%?)$"
-)
-_SKILL_BONUS_RE = re.compile(
-    r"^(战技|连携技|终结技)伤害(?:加成)?(\d+(?:\.\d+)?)%?$"
-)
-_DAMAGE_BONUS_RE = re.compile(
-    r"^(物理|灼热|电磁|寒冷|自然|法术|超域)?伤害(?:加成)?(\d+(?:\.\d+)?)%?$"
-)
+_STAT_FLAT_RE = re.compile(r"^(力量|敏捷|智识|意志|攻击力|防御力|生命值)(\d+(?:\.\d+)?)(%?)$")
+_SKILL_BONUS_RE = re.compile(r"^(战技|连携技|终结技)伤害(?:加成)?(\d+(?:\.\d+)?)%?$")
+_DAMAGE_BONUS_RE = re.compile(r"^(物理|灼热|电磁|寒冷|自然|法术|超域)?伤害(?:加成)?(\d+(?:\.\d+)?)%?$")
 
 
 def parse_equipment_affix_line(
@@ -117,9 +110,8 @@ def parse_equipment_affix_line(
         raw,
     )
     if stat_in_sentence:
-        flat_stats[stat_in_sentence.group(1)] = (
-            flat_stats.get(stat_in_sentence.group(1), 0.0)
-            + float(stat_in_sentence.group(2))
+        flat_stats[stat_in_sentence.group(1)] = flat_stats.get(stat_in_sentence.group(1), 0.0) + float(
+            stat_in_sentence.group(2)
         )
 
     return effects, flat_stats

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """工具与分享控件。"""
 
 from .dialogs import (

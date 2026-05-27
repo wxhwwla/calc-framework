@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """向后兼容：请改用 utils.app_paths。"""
 
 from utils.app_paths import (

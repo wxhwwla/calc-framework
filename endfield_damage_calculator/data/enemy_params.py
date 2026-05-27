@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """插件敌人参数解析（敌方防御/抗性等）。"""
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from data.plugin_registry import get_plugin_registry
 

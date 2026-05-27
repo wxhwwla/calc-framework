@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """选择面板：对外读取接口。"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class SelectionPanelAccessorsMixin:
-    def get_selected_data(self) -> Optional[Dict[str, Any]]:
+    def get_selected_data(self) -> dict[str, Any] | None:
         """
         获取当前选中的角色/武器数据
 
@@ -18,17 +17,17 @@ class SelectionPanelAccessorsMixin:
         name = self.selected_name.get()
         if not name:
             return None
-        
+
         data = next((ch for ch in self.list_c_w if ch["名称"] == name), None)
-        
+
         if data:
             # 检查是否是"暂未收录"提示（等级数组为空表示无效数据）
             levels = data.get("等级", [])
             if not levels:
                 return None
-        
+
         return data
-    
+
     def get_level(self) -> int:
         """
         获取当前选中的等级
@@ -38,7 +37,7 @@ class SelectionPanelAccessorsMixin:
         """
         level_str = self.selected_level.get()
         return int(level_str) if level_str.isdigit() else 1
-    
+
     def get_trust_level(self) -> int:
         """
         获取当前选中的信赖等级（仅角色面板有效）
@@ -50,7 +49,7 @@ class SelectionPanelAccessorsMixin:
             trust_str = self.trust_panel.trust_level.get()
             return int(trust_str) if trust_str.isdigit() else 0
         return 0
-    
+
     def get_normal_skill_1_name(self) -> str:
         """获取第一技能名称（仅武器面板有效）。"""
         if self.special_ability_panel:
@@ -189,7 +188,7 @@ class SelectionPanelAccessorsMixin:
             level_str = self.skill_level_panel.skill_1_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
-    
+
     def get_skill_2_level(self) -> int:
         """
         获取连携技等级（仅角色面板有效）
@@ -201,7 +200,7 @@ class SelectionPanelAccessorsMixin:
             level_str = self.skill_level_panel.skill_2_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
-    
+
     def get_skill_3_level(self) -> int:
         """
         获取终结技等级（仅角色面板有效）
@@ -213,4 +212,3 @@ class SelectionPanelAccessorsMixin:
             level_str = self.skill_level_panel.skill_3_level.get()
             return int(level_str) if level_str.isdigit() else 0
         return 0
-

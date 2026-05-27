@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 PySide6 后台 Worker 基础设施。
 
@@ -19,9 +18,10 @@ PySide6 后台 Worker 基础设施。
 from __future__ import annotations
 
 import traceback
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
-from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
+from PySide6.QtCore import QObject, QThread, Signal, Slot
 
 
 class CalcWorker(QObject):
@@ -47,14 +47,14 @@ class CalcWorker(QObject):
         self,
         fn: Callable[..., Any],
         args: tuple = (),
-        kwargs: Optional[dict] = None,
+        kwargs: dict | None = None,
     ) -> None:
         super().__init__()
         self._fn = fn
         self._args = args
         self._kwargs = kwargs or {}
         self._cancelled: bool = False
-        self._thread: Optional[QThread] = None
+        self._thread: QThread | None = None
 
     def start(self) -> None:
         """创建 QThread 并启动后台计算。"""

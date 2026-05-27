@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动场外 buff 数据模型。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 MANUAL_BUFF_ZONE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("暴击率", "crit_rate"),
@@ -65,7 +63,7 @@ def build_active_keys_from_counts(
     def _segment_rank(key: str) -> int:
         if ":" not in key:
             return 99
-        kind, rest = key.split(":", 1)
+        kind, _rest = key.split(":", 1)
         return segment_order.get(kind, 99)
 
     sorted_skills = sorted(skill_counts.items(), key=lambda kv: _segment_rank(kv[0]))

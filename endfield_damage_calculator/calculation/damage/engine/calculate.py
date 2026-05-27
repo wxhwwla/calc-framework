@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单段伤害引擎（15 乘区链）。
 
@@ -37,14 +36,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Literal, Optional
-
-from calculation.damage.types import damage_type_matches_context
-
 from .helpers import _collect_effects, _resolve_crit_zone
-from .types import CritMode, DamageContext, DamageEffect, DamageResult, ZONE_ORDER
-
+from .types import ZONE_ORDER, CritMode, DamageContext, DamageEffect, DamageResult
 
 _CONTEXT_BUFF_MAP: dict[str, str] = {
     "暴击率": "crit_rate",
@@ -104,9 +97,9 @@ def _apply_manual_buffs(
 def calculate_single_hit_damage(
     context: DamageContext,
     *,
-    effects: Optional[list[DamageEffect]] = None,
+    effects: list[DamageEffect] | None = None,
     crit_mode: CritMode = "non_crit",
-    manual_buffs: Optional[list[dict[str, float]]] = None,
+    manual_buffs: list[dict[str, float]] | None = None,
 ) -> DamageResult:
     """计算单段伤害并返回 15 乘区明细。
 
@@ -151,7 +144,7 @@ def calculate_single_hit_damage(
     resistance_extra = 0.0
     resistance_change = 0.0
     defense_change = 0.0
-    imbalance_coeff_override: Optional[float] = None
+    imbalance_coeff_override: float | None = None
 
     for effect in known_effects:
         value = float(effect.value)
@@ -169,13 +162,12 @@ def calculate_single_hit_damage(
             vulnerability += value
         elif effect.effect_type == "连击增伤":
             combo_bonus += value
-        elif effect.effect_type == "伤害类型伤害加成":
-            damage_bonus += value
-        elif effect.effect_type == "技能类型伤害加成":
-            damage_bonus += value
-        elif effect.effect_type == "失衡伤害加成":
-            damage_bonus += value
-        elif effect.effect_type == "其他伤害加成":
+        elif (
+            effect.effect_type == "伤害类型伤害加成"
+            or effect.effect_type == "技能类型伤害加成"
+            or effect.effect_type == "失衡伤害加成"
+            or effect.effect_type == "其他伤害加成"
+        ):
             damage_bonus += value
         elif effect.effect_type == "无视抗性":
             resistance_extra += value

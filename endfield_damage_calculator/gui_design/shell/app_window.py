@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """高级页三列响应式 grid 与按钮文案。"""
 
 from __future__ import annotations
@@ -13,6 +12,7 @@ from gui_design.layout.gui_layout import (
     search_action_button_texts,
     should_use_compact_control_dock,
 )
+
 
 class AppWindowMixin:
     def _apply_control_dock_layout(self, window_width: int) -> None:
@@ -57,4 +57,3 @@ class AppWindowMixin:
             self.full_search_btn.configure(text=full_text)
         if self.mvp_search_btn is not None:
             self.mvp_search_btn.configure(text=mvp_text)
-

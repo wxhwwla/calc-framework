@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能搜索会话：有界并行 + 可选 SQLite 续跑。"""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from calculation.damage.engine import DamageContext
 from calculation.loadout.in_memory_optimizer import run_enumerated_optimizer_parallel
@@ -16,9 +16,10 @@ from calculation.loadout.optimizer import (
     OptimizerTask,
     WeaponCandidate,
 )
+
 from ..evaluate.context import SearchEvalContext
-from .cancel import SearchCancelToken
 from ..persist.store import execute_search_with_resume
+from .cancel import SearchCancelToken
 
 
 @dataclass(frozen=True)
@@ -40,12 +41,12 @@ def run_search_session(
     equipment_catalog: dict[str, list[dict[str, Any]]],
     config: OptimizerConfig,
     max_workers: int = 1,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
-    db_path: Optional[Path] = None,
-    run_signature: Optional[str] = None,
-    search_eval: Optional[SearchEvalContext] = None,
-    task_evaluator: Optional[Callable[[OptimizerTask], LoadoutScore]] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
+    db_path: Path | None = None,
+    run_signature: str | None = None,
+    search_eval: SearchEvalContext | None = None,
+    task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
 ) -> SearchSessionResult:
     """
     执行单技能搜索。
@@ -75,18 +76,16 @@ def run_search_session(
             skipped_preprocessed=resume.skipped_preprocessed,
         )
 
-    top_results, total_combinations, processed, cancelled, warnings = (
-        run_enumerated_optimizer_parallel(
-            base_context=base_context,
-            weapons=weapons,
-            equipment_catalog=equipment_catalog,
-            config=config,
-            max_workers=max_workers,
-            cancel_token=cancel_token,
-            progress_callback=progress_callback,
-            search_eval=search_eval,
-            task_evaluator=task_evaluator,
-        )
+    top_results, total_combinations, processed, cancelled, warnings = run_enumerated_optimizer_parallel(
+        base_context=base_context,
+        weapons=weapons,
+        equipment_catalog=equipment_catalog,
+        config=config,
+        max_workers=max_workers,
+        cancel_token=cancel_token,
+        progress_callback=progress_callback,
+        search_eval=search_eval,
+        task_evaluator=task_evaluator,
     )
     return SearchSessionResult(
         top_results=top_results,

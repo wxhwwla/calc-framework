@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """配装待确认：展示签名与按钮状态。"""
 
 from __future__ import annotations
@@ -13,7 +12,6 @@ from gui_design.app.loadout_pending import (
     CONFIRM_BTN_TEXT_PENDING,
     capture_confirmed_display_signature,
     is_loadout_pending_confirm,
-    mark_loadout_pending,
     sync_confirm_button_pending_state,
 )
 
@@ -78,12 +76,8 @@ class TestLoadoutPendingUi(unittest.TestCase):
         app._confirm_button_default_styles = {}
         app.main_confirm_btn = MagicMock()
         app.confirm_btn = MagicMock()
-        app.main_confirm_btn.cget.side_effect = lambda key: (
-            "#1f538d" if key == "fg_color" else "#14375e"
-        )
-        app.confirm_btn.cget.side_effect = lambda key: (
-            "#1f538d" if key == "fg_color" else "#14375e"
-        )
+        app.main_confirm_btn.cget.side_effect = lambda key: "#1f538d" if key == "fg_color" else "#14375e"
+        app.confirm_btn.cget.side_effect = lambda key: "#1f538d" if key == "fg_color" else "#14375e"
 
         def _read_loadout(*_args, **_kwargs):
             state = MagicMock()
@@ -129,9 +123,7 @@ class TestLoadoutPendingUi(unittest.TestCase):
             capture_confirmed_display_signature(app)
         self.assertEqual(app._confirmed_display_signature, ("old",))
         texts = [
-            call.kwargs.get("text")
-            for call in app.main_confirm_btn.configure.call_args_list
-            if "text" in call.kwargs
+            call.kwargs.get("text") for call in app.main_confirm_btn.configure.call_args_list if "text" in call.kwargs
         ]
         self.assertIn(CONFIRM_BTN_TEXT_DEFAULT, texts)
 

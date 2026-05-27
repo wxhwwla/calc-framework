@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 PySide6 后端 widget adapter。
 
@@ -10,20 +9,40 @@ PySide6 后端 widget adapter。
 
 from __future__ import annotations
 
+from PySide6.QtGui import QFont as QtFont
 from PySide6.QtWidgets import (
-    QWidget as QtFrame,
-    QLabel as QtLabel,
-    QPushButton as QtButton,
-    QComboBox as QtOptionMenu,
-    QSlider as QtSlider,
-    QLineEdit as QtEntry,
     QCheckBox as QtCheckBox,
-    QTabWidget as QtTabview,
-    QScrollArea as QtScrollableFrame,
-    QTextEdit as QtTextbox,
+)
+from PySide6.QtWidgets import (
+    QComboBox as QtOptionMenu,
+)
+from PySide6.QtWidgets import (
     QDialog as QtToplevel,
 )
-from PySide6.QtGui import QFont as QtFont
+from PySide6.QtWidgets import (
+    QLabel as QtLabel,
+)
+from PySide6.QtWidgets import (
+    QLineEdit as QtEntry,
+)
+from PySide6.QtWidgets import (
+    QPushButton as QtButton,
+)
+from PySide6.QtWidgets import (
+    QScrollArea as QtScrollableFrame,
+)
+from PySide6.QtWidgets import (
+    QSlider as QtSlider,
+)
+from PySide6.QtWidgets import (
+    QTabWidget as QtTabview,
+)
+from PySide6.QtWidgets import (
+    QTextEdit as QtTextbox,
+)
+from PySide6.QtWidgets import (
+    QWidget as QtFrame,
+)
 
 # 统一命名（与 ctk_factory 保持一致，让后端无关代码无缝切换）
 CTkFrame = QtFrame
@@ -42,18 +61,18 @@ CTkFont = QtFont
 CTkComboBox = QtOptionMenu
 
 __all__ = [
+    "CTkButton",
+    "CTkCheckBox",
+    "CTkComboBox",
+    "CTkEntry",
+    "CTkFont",
     "CTkFrame",
     "CTkLabel",
-    "CTkButton",
     "CTkOptionMenu",
+    "CTkScrollableFrame",
     "CTkSlider",
-    "CTkEntry",
-    "CTkCheckBox",
     "CTkSwitch",
     "CTkTabview",
-    "CTkScrollableFrame",
     "CTkTextbox",
     "CTkToplevel",
-    "CTkFont",
-    "CTkComboBox",
 ]

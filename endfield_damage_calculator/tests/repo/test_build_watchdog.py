@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """build.py 看门狗：心跳与超时终止。"""
 
 from __future__ import annotations
@@ -35,9 +34,12 @@ class TestBuildWatchdog(unittest.TestCase):
         def _mono() -> float:
             return next(clock)
 
-        with patch("build.subprocess.Popen", return_value=proc), patch(
-            "build.time.monotonic", side_effect=_mono
-        ), patch("build.time.sleep"), patch("build._terminate_process_tree") as kill:
+        with (
+            patch("build.subprocess.Popen", return_value=proc),
+            patch("build.time.monotonic", side_effect=_mono),
+            patch("build.time.sleep"),
+            patch("build._terminate_process_tree") as kill,
+        ):
             with self.assertRaises(TimeoutError):
                 _run_with_watchdog(
                     ["dummy"],

@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能全量搜索作业（无头组装，供 GUI / 测试复用）。"""
 
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any
 
-from calculation.loadout.attack_eval import final_attack_details_for_loadout
 from calculation.damage.engine import DamageContext
+from calculation.loadout.attack_eval import final_attack_details_for_loadout
 from calculation.loadout.optimizer import WeaponCandidate
 from calculation.loadout.slot_search import FixedLoadoutSelection
-from ..evaluate.multi_skill import MultiSkillSearchEval
 from data.equipment_catalog import catalog_full_search_error
+
+from ..evaluate.multi_skill import MultiSkillSearchEval
 
 
 @dataclass(frozen=True)
@@ -33,7 +34,7 @@ class SingleSkillSearchJob:
     equipment_catalog: dict[str, list[dict[str, Any]]]
     weapon_data_by_name: dict[str, dict[str, Any]]
     run_signature: str
-    multi_skill_eval: Optional[MultiSkillSearchEval] = None
+    multi_skill_eval: MultiSkillSearchEval | None = None
     physical_abnormal_counts: dict[str, int] | None = None
     spell_abnormal_counts: dict[str, int] | None = None
     weapon_normal_levels: tuple[int, ...] = ()
@@ -107,10 +108,10 @@ def build_run_signature(
     include_conditional_equipment_crit: bool = False,
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
-    physical_abnormal_counts: Optional[dict[str, int]] = None,
-    spell_abnormal_counts: Optional[dict[str, int]] = None,
-    weapon_normal_levels: Optional[Sequence[int]] = None,
-    weapon_special_states: Optional[Sequence[dict[str, int]]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
+    weapon_normal_levels: Sequence[int] | None = None,
+    weapon_special_states: Sequence[dict[str, int]] | None = None,
 ) -> str:
     """
     生成续跑用 run_signature（写入 search_runs.db）。
@@ -145,22 +146,22 @@ def prepare_single_skill_search_job(
     damage_type: str = "物理",
     weapon_scope_label: str,
     equipment_scope_label: str,
-    fixed_loadout: Optional[FixedLoadoutSelection] = None,
+    fixed_loadout: FixedLoadoutSelection | None = None,
     all_weapons: list[dict[str, Any]],
     current_weapon: dict[str, Any],
     equipment_catalog: dict[str, list[dict[str, Any]]],
-    multi_skill_eval: Optional[MultiSkillSearchEval] = None,
+    multi_skill_eval: MultiSkillSearchEval | None = None,
     enemy_defense: float = 100.0,
-    physical_abnormal_counts: Optional[dict[str, int]] = None,
-    spell_abnormal_counts: Optional[dict[str, int]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
     damage_component_mode: str = "skill_and_abnormal",
     use_expected_crit: bool = False,
     include_conditional_equipment_crit: bool = False,
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
-    weapon_normal_levels: Optional[Sequence[int]] = None,
-    weapon_special_states: Optional[Sequence[dict[str, int]]] = None,
-) -> tuple[Optional[SingleSkillSearchJob], Optional[str]]:
+    weapon_normal_levels: Sequence[int] | None = None,
+    weapon_special_states: Sequence[dict[str, int]] | None = None,
+) -> tuple[SingleSkillSearchJob | None, str | None]:
     """
     组装搜索作业。
 
@@ -207,9 +208,7 @@ def prepare_single_skill_search_job(
         weapon_normal_levels=tuple(int(v) for v in (weapon_normal_levels or ())),
         weapon_special_states=tuple(dict(s) for s in (weapon_special_states or ())),
     )
-    weapon_data_by_name = {
-        str(w.get("名称", "")): w for w in all_weapons if w.get("名称")
-    }
+    weapon_data_by_name = {str(w.get("名称", "")): w for w in all_weapons if w.get("名称")}
     display_skill = multi_skill_eval.display_label if multi_skill_eval else skill_name
     job = SingleSkillSearchJob(
         char_data=char_data,
@@ -243,5 +242,3 @@ def prepare_single_skill_search_job(
         extra_crit_damage=float(extra_crit_damage),
     )
     return job, None
-
-

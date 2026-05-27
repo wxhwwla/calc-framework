@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """GUI 集成测试共用夹具（模拟面板 + 可选 CTk 根窗口）。"""
 
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Optional
+from typing import Any
 
 from tests.fixtures.path_roots import PKG_ROOT
 
@@ -56,7 +54,7 @@ class MockSelectionPanel:
         )
         self.list_c_w = [data]
 
-    def get_selected_data(self) -> Optional[dict[str, Any]]:
+    def get_selected_data(self) -> dict[str, Any] | None:
         name = (self.selected_name.get() or "").strip()
         for row in self.list_c_w:
             if str(row.get("名称", "")) == name:

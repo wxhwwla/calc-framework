@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """当前配装下的伤害求值（预览/仪表盘共用缓存接缝）。"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from calculation.loadout.optimizer import WeaponCandidate
 from calculation.core.preview_cache import sync_confirm_dependencies
+from calculation.loadout.optimizer import WeaponCandidate
 from gui_design.presentation.damage_snapshot import DamageSnapshot, build_damage_snapshot
-from .loadout_state import LoadoutState
 from gui_design.presentation.preview_lines import (
     build_multi_skill_search_preview_lines,
     build_single_skill_search_preview_lines,
 )
+
+from .loadout_state import LoadoutState
 
 
 def sync_evaluation_cache(loadout: LoadoutState) -> None:

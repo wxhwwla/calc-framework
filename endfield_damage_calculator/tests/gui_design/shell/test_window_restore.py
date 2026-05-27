@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """窗口最小化/恢复时的布局与确认刷新防抖测试。"""
 
 from __future__ import annotations

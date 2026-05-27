@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """特殊能力面板：控件构建与布局。"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
@@ -28,9 +27,7 @@ class SpecialAbilityBuildMixin:
             font=self.my_font,
         )
         self._ability_1_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
-        self._ability_1_label = ctk.CTkLabel(
-            self._ability_1_frame, text="1", font=self.my_font, width=30
-        )
+        self._ability_1_label = ctk.CTkLabel(self._ability_1_frame, text="1", font=self.my_font, width=30)
         self._ability_1_label.pack(side="right")
         self._ability_1_slider = ctk.CTkSlider(
             self._ability_1_frame,
@@ -48,9 +45,7 @@ class SpecialAbilityBuildMixin:
             font=self.my_font,
         )
         self._ability_2_frame = ctk.CTkFrame(self.parent_frame, fg_color="transparent")
-        self._ability_2_label = ctk.CTkLabel(
-            self._ability_2_frame, text="1", font=self.my_font, width=30
-        )
+        self._ability_2_label = ctk.CTkLabel(self._ability_2_frame, text="1", font=self.my_font, width=30)
         self._ability_2_label.pack(side="right")
         self._ability_2_slider = ctk.CTkSlider(
             self._ability_2_frame,
@@ -188,7 +183,7 @@ class SpecialAbilityBuildMixin:
     def _apply_layout(self: SpecialAbilityPanel) -> None:
         """按 普通技能 → 特殊技能 分段 pack。"""
         show_bonus = not self._bonus_rows_suppressed
-        normal_rows: List[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
+        normal_rows: list[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
             (
                 self._ability_1_name_label,
                 self._ability_1_frame,
@@ -201,7 +196,7 @@ class SpecialAbilityBuildMixin:
             ),
             (self._ability_3_name_label, self._ability_3_frame, True),
         ]
-        special_rows: List[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
+        special_rows: list[tuple[ctk.CTkLabel | None, ctk.CTkFrame | None, bool]] = [
             (
                 self._weapon_special_name_label,
                 self._weapon_special_frame,

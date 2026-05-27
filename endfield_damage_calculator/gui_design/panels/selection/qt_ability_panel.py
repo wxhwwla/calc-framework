@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 PySide6 武器特殊能力面板（独立子面板）。
 
@@ -8,7 +7,7 @@ PySide6 武器特殊能力面板（独立子面板）。
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -20,7 +19,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 _SLIDER_STYLE = """
     QSlider::groove:horizontal {
@@ -59,6 +57,7 @@ def _make_val_lbl(text: str, font: QFont) -> QLabel:
 #  QtSpecialAbilityPanel
 # ═══════════════════════════════════════════════════════
 
+
 class QtSpecialAbilityPanel(QWidget):
     """武器附加属性与特殊能力选择面板。
 
@@ -66,7 +65,7 @@ class QtSpecialAbilityPanel(QWidget):
     每个特殊能力附带可选的层数滑块。
     """
 
-    def __init__(self, font: QFont, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._font = font
 
@@ -77,7 +76,7 @@ class QtSpecialAbilityPanel(QWidget):
         # 3 条附加属性（普通技能）
         self._normal_rows: list[dict] = []
         for i in range(3):
-            rd = self._create_skill_row(layout, f"技能{i+1}", 1, 9, font)
+            rd = self._create_skill_row(layout, f"技能{i + 1}", 1, 9, font)
             self._normal_rows.append(rd)
 
         # 分隔线
@@ -89,15 +88,14 @@ class QtSpecialAbilityPanel(QWidget):
         # 2 个特殊能力（等级 + 可选层数）
         self._special_rows: list[dict] = []
         for i in range(2):
-            rd = self._create_special_row(layout, f"特殊{i+1}", font)
+            rd = self._create_special_row(layout, f"特殊{i + 1}", font)
             self._special_rows.append(rd)
 
         self._all_hidden()
 
     # ── 构建辅助 ──────────────────────────────────
 
-    def _create_skill_row(self, layout: QVBoxLayout, title: str,
-                          vmin: int, vmax: int, font: QFont) -> dict:
+    def _create_skill_row(self, layout: QVBoxLayout, title: str, vmin: int, vmax: int, font: QFont) -> dict:
         name_lbl = QLabel(title)
         name_lbl.setFont(font)
         name_lbl.setStyleSheet(_LABEL_STYLE)
@@ -178,7 +176,7 @@ class QtSpecialAbilityPanel(QWidget):
 
     # ── 刷新 ──────────────────────────────────
 
-    def refresh(self, weapon_data: Dict[str, Any]) -> None:
+    def refresh(self, weapon_data: dict[str, Any]) -> None:
         bonus = self._extract_bonus_attributes(weapon_data)
 
         for i in range(3):
@@ -220,7 +218,7 @@ class QtSpecialAbilityPanel(QWidget):
         self.setVisible(True)
 
     @staticmethod
-    def _extract_bonus_attributes(weapon_data: Dict[str, Any]) -> list[str]:
+    def _extract_bonus_attributes(weapon_data: dict[str, Any]) -> list[str]:
         normal_raw = weapon_data.get("normal_skills")
         if isinstance(normal_raw, list):
             out: list[str] = []
@@ -247,7 +245,7 @@ class QtSpecialAbilityPanel(QWidget):
         return out[:3]
 
     @staticmethod
-    def _read_special_slots(weapon_data: Dict[str, Any]) -> list[tuple]:
+    def _read_special_slots(weapon_data: dict[str, Any]) -> list[tuple]:
         special_raw = weapon_data.get("special_skills")
         if isinstance(special_raw, list):
             slots: list[tuple] = []

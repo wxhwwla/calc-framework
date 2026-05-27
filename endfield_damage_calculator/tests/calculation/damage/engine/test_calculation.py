@@ -1,23 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 计算模块单元测试
 """
 
 import unittest
-import math
-from calculation.damage.formula import (
-    calculate_growth_curve,
-    calculate_skill_curve,
-    calculate_bonus_attribute
-)
+
+from calculation.damage.formula import calculate_bonus_attribute, calculate_growth_curve, calculate_skill_curve
 from calculation.damage.inverse import (
-    fit_formula,
-    validate_formula,
-    remove_duplicates,
     fit_attribute_formula,
+    fit_formula,
     fit_skill_formula,
-    fit_skill_formula_no_special
+    fit_skill_formula_no_special,
+    remove_duplicates,
+    validate_formula,
 )
 
 
@@ -134,5 +129,5 @@ class TestInverseCalculations(unittest.TestCase):
         self.assertIsNotNone(special)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

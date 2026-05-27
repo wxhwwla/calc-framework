@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动场外 buff 编辑窗口。"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
@@ -64,6 +63,7 @@ def _read_all_counts(app: DamageCalculatorApp) -> tuple[dict[str, int], dict[str
         read_manual_physical_abnormal_counts,
         read_manual_spell_abnormal_counts,
     )
+
     skill_counts = read_manual_multi_skill_counts(app)
     pab_counts = read_manual_physical_abnormal_counts(app)
     sab_counts = read_manual_spell_abnormal_counts(app)
@@ -201,10 +201,12 @@ def _refresh_right_panel(window: ctk.Toplevel, app: DamageCalculatorApp) -> None
         row_data.clear()
         saved = get_buffs_for_key(store, key)
         for e in saved:
-            row_data.append({
-                "var": ctk.StringVar(value=e["effect_type"]),
-                "val": ctk.StringVar(value=str(e["value"] * 100)),
-            })
+            row_data.append(
+                {
+                    "var": ctk.StringVar(value=e["effect_type"]),
+                    "val": ctk.StringVar(value=str(e["value"] * 100)),
+                }
+            )
         _render_rows()
 
     def _add_row() -> None:

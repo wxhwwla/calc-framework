@@ -1,58 +1,42 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """历史/对比/仪表盘弹窗。"""
 
 from __future__ import annotations
 
 from pathlib import Path
 from tkinter import filedialog, messagebox
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from gui_design.shared.calc_history import CalculationHistory, HistoryEntry
-from gui_design.shared.calc_mode_labels import CALC_MODE_OPTIONS
+from gui_design.app.loadout_preset import (
+    LoadoutPreset,
+    import_presets_from_json_text,
+)
 from gui_design.presentation.damage_snapshot import get_snapshot_from_app, store_snapshot_on_app
+from gui_design.search_ui.search_settings import resolve_parallel_workers
+from gui_design.shared.calc_history import CalculationHistory, HistoryEntry
 from gui_design.shared.damage_visualization import (
     build_damage_pie_figure,
     build_improvement_bar_figure,
     damage_breakdown_from_skill_map,
     is_matplotlib_available,
 )
-from utils.optional_deps import matplotlib_install_hint
-from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
-from gui_design.app.loadout_preset import (
-    LoadoutPreset,
-    export_preset_json,
-    import_preset_json,
-    import_presets_from_json_text,
-)
 from gui_design.shared.preset_batch_compare import compare_presets_parallel
-from data.game_data_facade import GameDataFacade
-from data.loader import get_characters, get_equipments, get_weapons
-from gui_design.search_ui.search_settings import resolve_parallel_workers
-from gui_design.layout.gui_layout import (
-    MORE_SETTINGS_VIEWPORT_HEIGHT,
-    SECONDARY_ACTION_BUTTON_HEIGHT,
-)
-from gui_design.shared.ui_preferences import (
-    STARTUP_MODE_ALWAYS_MAIN,
-    STARTUP_MODE_REMEMBER_LAST,
-    save_ui_preferences,
-)
-from utils.gui_fonts import default_ui_font
 from utils.operation_log import LogLevel, get_session_operation_log
+from utils.optional_deps import matplotlib_install_hint
 
 if TYPE_CHECKING:
-    from gui_design.shell.app import DamageCalculatorApp
     from gui_design.app.loadout_state import LoadoutState
+    from gui_design.shell.app import DamageCalculatorApp
 
 from .preset import _lists_for_preset_compare, build_preset_from_app
 
-def get_app_calculation_history(app: "DamageCalculatorApp") -> CalculationHistory:
+
+def get_app_calculation_history(app: DamageCalculatorApp) -> CalculationHistory:
     history = getattr(app, "_calc_history", None)
     if history is None:
         history = CalculationHistory(max_entries=10)
@@ -60,7 +44,7 @@ def get_app_calculation_history(app: "DamageCalculatorApp") -> CalculationHistor
     return history
 
 
-def record_calculation_history(app: "DamageCalculatorApp", *, summary: str) -> None:
+def record_calculation_history(app: DamageCalculatorApp, *, summary: str) -> None:
     """确认选择后记录一条历史。"""
     preset = build_preset_from_app(app)
     label = f"{preset.char_name} / {preset.weapon_name}"
@@ -73,7 +57,7 @@ def record_calculation_history(app: "DamageCalculatorApp", *, summary: str) -> N
     )
 
 
-def show_calculation_history_dialog(app: "DamageCalculatorApp") -> None:
+def show_calculation_history_dialog(app: DamageCalculatorApp) -> None:
     dialog = ctk.CTkToplevel(app.app)
     dialog.title("计算历史（最近10次）")
     dialog.geometry("520x420")
@@ -105,19 +89,19 @@ def show_calculation_history_dialog(app: "DamageCalculatorApp") -> None:
             font=app.small_font,
             justify="left",
         ).pack(anchor="w", padx=8, pady=(6, 0))
-        ctk.CTkButton(
-            frame, text="恢复此配置", font=app.small_font, width=120, command=_restore
-        ).pack(anchor="e", padx=8, pady=6)
+        ctk.CTkButton(frame, text="恢复此配置", font=app.small_font, width=120, command=_restore).pack(
+            anchor="e", padx=8, pady=6
+        )
 
 
 def refresh_damage_snapshot(
-    app: "DamageCalculatorApp",
+    app: DamageCalculatorApp,
     *,
-    loadout: Optional["LoadoutState"] = None,
+    loadout: LoadoutState | None = None,
 ) -> None:
     """根据 LoadoutState 重建伤害快照（确认后调用）。"""
     from gui_design.app.loadout_evaluation import build_snapshot_from_loadout
-    from gui_design.app.loadout_state import LoadoutState, read_loadout_from_app
+    from gui_design.app.loadout_state import read_loadout_from_app
 
     if loadout is None:
         loadout = read_loadout_from_app(app)
@@ -126,7 +110,7 @@ def refresh_damage_snapshot(
     store_snapshot_on_app(app, build_snapshot_from_loadout(loadout))
 
 
-def show_preset_compare_dialog(app: "DamageCalculatorApp") -> None:
+def show_preset_compare_dialog(app: DamageCalculatorApp) -> None:
     """选择多个预设 JSON，并行评估并展示排名。"""
     paths = filedialog.askopenfilenames(
         parent=app.app,
@@ -193,12 +177,10 @@ def show_preset_compare_dialog(app: "DamageCalculatorApp") -> None:
         else:
             body = f"#{idx} {row.label}\n伤害: {row.final_damage:.1f}\n{row.loadout_summary}"
             color = "#B8B8B8"
-        ctk.CTkLabel(scroll, text=body, font=app.small_font, text_color=color, justify="left").pack(
-            anchor="w", pady=4
-        )
+        ctk.CTkLabel(scroll, text=body, font=app.small_font, text_color=color, justify="left").pack(anchor="w", pady=4)
 
 
-def show_damage_dashboard_dialog(app: "DamageCalculatorApp") -> None:
+def show_damage_dashboard_dialog(app: DamageCalculatorApp) -> None:
     if not is_matplotlib_available():
         messagebox.showwarning(
             "需要 matplotlib",
@@ -221,24 +203,18 @@ def show_damage_dashboard_dialog(app: "DamageCalculatorApp") -> None:
 
     rotation_damage = dict(snap.segment_totals)
     pie_slices = damage_breakdown_from_skill_map(
-        {
-            segment_display_label(key): value
-            for key, value in rotation_damage.items()
-            if value > 0
-        }
+        {segment_display_label(key): value for key, value in rotation_damage.items() if value > 0}
     )
     fig = build_damage_pie_figure(pie_slices, title="轮转伤害构成")
-    zone_items = tuple(
-        sorted(snap.zone_share_percent.items(), key=lambda item: -item[1])
-    )
+    zone_items = tuple(sorted(snap.zone_share_percent.items(), key=lambda item: -item[1]))
     bar_fig = build_improvement_bar_figure(
         zone_items,
         title="乘区构成占比",
         ylabel="占比 %",
     )
     try:
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
         dialog = ctk.CTkToplevel(app.app)
         dialog.title("伤害仪表盘")

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Wiki 数据同步到 characters.json / seed_characters 测试。"""
 
 import io
@@ -8,11 +7,17 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
+from tests.fixtures.path_roots import REPO_ROOT
 
 _RAW_QIULI = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗"
 _RAW_QIULI_DETAIL = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗_详细数据"
 
+from bwiki_scout.seed_persist import (  # noqa: E402
+    _flatten_seed_list,
+    load_seed_character_specs,
+    replace_seed_specs,
+    write_seed_character_specs,
+)
 from bwiki_scout.skill_tables import (  # noqa: E402
     parse_skill_damage_rows_from_html,
     skill_tabs_to_seed_skills,
@@ -23,17 +28,12 @@ from bwiki_scout.weapon_wiki import (  # noqa: E402
     fit_weapon_base_atk_from_endpoints,
     has_weapon_growth_block,
 )
-from bwiki_scout.seed_persist import (  # noqa: E402
-    _flatten_seed_list,
-    load_seed_character_specs,
-    replace_seed_specs,
-    write_seed_character_specs,
-)
 from bwiki_scout.wiki_sync import (  # noqa: E402
     build_seed_spec_from_wiki,
     fit_growth_params_from_curve,
     needs_sync_with_wiki,
 )
+
 from calculation.damage.formula import calculate_growth_curve  # noqa: E402
 
 _RAW_ZHULIN = REPO_ROOT / "tools/bwiki_scout/output/raw/逐鳞3.0"

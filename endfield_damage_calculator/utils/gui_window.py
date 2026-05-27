@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """主窗口尺寸与启动全屏（最大化）。"""
 
 from __future__ import annotations

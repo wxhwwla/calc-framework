@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
 from __future__ import annotations
 
 from typing import Any
-
-import re
 
 from .name_utils import _special_name_matches
 from .slots_io import read_weapon_special_slots
@@ -64,9 +61,7 @@ def apply_conditional_special_to_stats(
         enabled, sa_name, curve, max_stack = read_weapon_special_slots(weapon)[slot_idx]
         if not enabled or not _special_name_matches(pick_name, sa_name) or not curve:
             continue
-        value = special_pick_bonus(
-            curve, max_stack, skill_level=pick_level, stack_count=pick_stack
-        )
+        value = special_pick_bonus(curve, max_stack, skill_level=pick_level, stack_count=pick_stack)
         if sa_name == "主能力值+":
             main_flat += value
         elif sa_name == "副能力值+":
@@ -164,9 +159,7 @@ def add_special_picks_attack_percent(
         if not enabled or not _special_name_matches(pick_name, sa_name) or not curve:
             continue
         if target_name in sa_name:
-            total += special_pick_bonus(
-                curve, max_stack, skill_level=pick_level, stack_count=pick_stack
-            )
+            total += special_pick_bonus(curve, max_stack, skill_level=pick_level, stack_count=pick_stack)
     return total
 
 

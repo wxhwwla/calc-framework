@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
 from __future__ import annotations
 
-from typing import Any
-
 import re
+from typing import Any
 
 SPECIAL_FIELD_KEYS: tuple[str, ...] = ("特殊能力1", "特殊能力2")
 LEGACY_SPECIAL_KEY = "特殊能力"
@@ -76,5 +74,3 @@ def build_special_field(
     if max_stack > 1:
         out.append(int(max_stack))
     return out
-
-

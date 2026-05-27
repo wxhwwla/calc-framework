@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 PySide6 属性三列无闪渲染。
 
@@ -9,14 +8,11 @@ PySide6 属性三列无闪渲染。
 
 from __future__ import annotations
 
-from typing import Any, Optional
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
-    QHeaderView,
     QTableWidget,
     QTableWidgetItem,
     QWidget,
@@ -29,7 +25,6 @@ from gui_design.presentation.display_lines import (
     build_weapon_attribute_lines,
     evaluate_display_state,
 )
-from gui_design.shared.display_view.zone_panel import _display_zone_data
 
 
 class _ColumnTable(QTableWidget):
@@ -42,7 +37,7 @@ class _ColumnTable(QTableWidget):
     - 内容变更时不闪（QTableWidget 原生双缓冲）
     """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.verticalHeader().hide()
         self.horizontalHeader().hide()
@@ -60,7 +55,7 @@ class _ColumnTable(QTableWidget):
         lines: list[str],
         default_color: str,
         *,
-        zone_data: Optional[list[ZoneDisplayLine]] = None,
+        zone_data: list[ZoneDisplayLine] | None = None,
     ) -> None:
         """用文本行填充表格（原地更新，不销毁控件）。
 
@@ -106,7 +101,7 @@ class QtAttributeColumns(QWidget):
         self,
         big_font: QFont,
         small_font: QFont,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._big_font = big_font
@@ -174,12 +169,12 @@ class QtAttributeColumns(QWidget):
 
     def _build_zone_lines(self, request: DisplayRequest) -> list[ZoneDisplayLine]:
         """从 DisplayRequest 构建乘区展示行。"""
+        from calculation.core.preview_cache import sync_confirm_dependencies
         from calculation.multiplicative_zones.zone_snapshot import (
             MultiplicativeZoneSelection,
             WeaponBonusSelection,
             compute_multiplicative_zone_snapshot,
         )
-        from calculation.core.preview_cache import sync_confirm_dependencies
 
         loadout = request.loadout
         skill_specials = loadout.weapon_skill_kwargs()

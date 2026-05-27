@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 公式反推 GUI（开发/维护用，不随 exe 打包）
 
@@ -9,17 +8,17 @@
 
 import re
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import messagebox, scrolledtext, ttk
 
+from calculation.damage.formula import calculate_growth_curve, calculate_skill_curve
 from calculation.damage.inverse import (
     fit_attribute_formula,
     fit_skill_formula,
     fit_skill_formula_no_special,
+    remove_duplicates,
     validate_attribute_formula,
     validate_skill_formula,
-    remove_duplicates,
 )
-from calculation.damage.formula import calculate_growth_curve, calculate_skill_curve
 
 
 class InverseFormulaGUI:

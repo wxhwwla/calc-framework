@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """配装刮取、预览候选与计算模式读取。"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from calculation.loadout.optimizer import WeaponCandidate
 from calculation.search.plan.job import build_weapon_candidates
-from gui_design.shared.calc_mode_labels import calculation_mode_from_label
 from gui_design.app.confirm_orchestrator import schedule_confirm
+from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.controls.multi_skill import (
     read_manual_multi_skill_counts,
     read_manual_physical_abnormal_counts,
     read_manual_spell_abnormal_counts,
 )
-from gui_design.app.loadout_pending import mark_loadout_pending
 from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
+from gui_design.shared.calc_mode_labels import calculation_mode_from_label
+
 
 class AppLoadoutAccessMixin:
-    def _manual_multi_skill_counts(self) -> Dict[str, int]:
+    def _manual_multi_skill_counts(self) -> dict[str, int]:
         return read_manual_multi_skill_counts(self)
 
-    def _manual_physical_abnormal_counts(self) -> Dict[str, int]:
+    def _manual_physical_abnormal_counts(self) -> dict[str, int]:
         return read_manual_physical_abnormal_counts(self)
 
-    def _manual_spell_abnormal_counts(self) -> Dict[str, int]:
+    def _manual_spell_abnormal_counts(self) -> dict[str, int]:
         return read_manual_spell_abnormal_counts(self)
 
     def _current_damage_component_mode(self) -> str:
@@ -97,7 +97,7 @@ class AppLoadoutAccessMixin:
         """
         return str(self.calc_mode_var.get())
 
-    def _single_skill_preview_candidates(self) -> List[WeaponCandidate]:
+    def _single_skill_preview_candidates(self) -> list[WeaponCandidate]:
         """按候选范围生成单技能预览武器集合。
 
         根据当前选择的武器范围（当前武器/所有武器）生成候选武器列表，
@@ -112,7 +112,6 @@ class AppLoadoutAccessMixin:
         current_weapon = self.weapon_panel.get_selected_data()
         if not char_data or not current_weapon:
             return []
-        from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 
         skill_view = read_weapon_skill_selection_from_panel(self.weapon_panel).to_preset_view()
         return build_weapon_candidates(
@@ -127,7 +126,7 @@ class AppLoadoutAccessMixin:
             weapon_special_states=skill_view["weapon_special_states"],
         )
 
-    def _single_skill_preview_equipment_catalog(self) -> Dict[str, List[Dict[str, Any]]]:
+    def _single_skill_preview_equipment_catalog(self) -> dict[str, list[dict[str, Any]]]:
         """按装备范围构建单技能预览装备目录。
 
         根据当前选择的装备范围（全部装备/仅已选套装）构建装备目录，
@@ -136,9 +135,7 @@ class AppLoadoutAccessMixin:
         Returns:
             装备目录字典，键为装备部位（护甲/护手/配件），值为装备列表
         """
-        return self.game_data.equipment_catalog(
-            self.single_skill_equipment_scope_var.get()
-        )
+        return self.game_data.equipment_catalog(self.single_skill_equipment_scope_var.get())
 
     def _current_calculation_mode(self) -> str:
         """读取当前模式下拉框并转换为内部标识。
@@ -149,4 +146,3 @@ class AppLoadoutAccessMixin:
             计算模式内部标识（如"non_crit"、"crit"、"expected"）
         """
         return calculation_mode_from_label(self.calc_mode_var.get())
-

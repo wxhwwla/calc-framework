@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器特殊能力1/2 字段读写与迁移。"""
 
 import unittest
@@ -8,10 +7,9 @@ from character_weapon_equipment.weapon_data.special_fields import (
     LEGACY_SPECIAL_KEY,
     SPECIAL_FIELD_KEYS,
     bonus_attribute_keys,
-    build_special_field,
-    parse_special_field,
     migrate_weapon_record_to_skill_schema,
     migrate_weapon_records_to_skill_schema,
+    parse_special_field,
     read_weapon_skills_schema,
     read_weapon_special_slots,
     write_weapon_skills_schema,

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """增强功能与工具模块的补充覆盖率测试。"""
 
 import json
@@ -8,10 +7,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from calculation.equipment.system import build_runtime_equipment_from_wiki_draft
 from calculation.core.parallel_evaluate import evaluate_parallel
 from calculation.core.preview_cache import cached_preview, sync_confirm_dependencies
 from calculation.core.result_cache import get_global_result_cache, reset_global_result_cache
+from calculation.equipment.system import build_runtime_equipment_from_wiki_draft
 from data.enemy_params import (
     DEFAULT_ENEMY_DEFENSE,
     enemy_damage_context_overrides,
@@ -19,18 +18,18 @@ from data.enemy_params import (
     resolve_enemy_defense,
 )
 from data.plugin_registry import PluginRegistry
+from gui_design.app.loadout_preset import (
+    BATCH_PRESET_SCHEMA,
+    LoadoutPreset,
+    export_preset_batch_json,
+    import_presets_from_json_text,
+)
 from gui_design.shared.calc_history import CalculationHistory, HistoryEntry
 from gui_design.shared.damage_visualization import (
     build_damage_pie_figure,
     build_improvement_bar_figure,
     damage_breakdown_from_skill_map,
     is_matplotlib_available,
-)
-from gui_design.app.loadout_preset import (
-    BATCH_PRESET_SCHEMA,
-    LoadoutPreset,
-    export_preset_batch_json,
-    import_presets_from_json_text,
 )
 from gui_design.shared.preset_batch_compare import compare_presets_parallel
 from utils.operation_log import LogLevel, OperationLog

@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """BWIKI manifest → 同步目标解析测试。"""
 
 import json
 import tempfile
 import unittest
 from pathlib import Path
-
-from tests.fixtures.path_roots import REPO_ROOT, TOOLS_ROOT
 
 from bwiki_scout.detail_levels import operator_detail_title  # noqa: E402
 from bwiki_scout.import_targets import (  # noqa: E402
@@ -19,6 +16,8 @@ from bwiki_scout.import_targets import (  # noqa: E402
     weapon_wiki_import_ready,
 )
 from bwiki_scout.storage import save_page_bundle  # noqa: E402
+
+from tests.fixtures.path_roots import REPO_ROOT
 
 _RAW_QIULI = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗"
 _RAW_QIULI_DETAIL = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗_详细数据"
@@ -102,13 +101,7 @@ class TestImportTargets(unittest.TestCase):
 
     def test_wiki_imported_weapon_matches_project_json_shape(self):
         """BWIKI --new 写入后，条目须含 90 级基础攻击与潜能曲线字段。"""
-        path = (
-            REPO_ROOT
-            / "endfield_damage_calculator"
-            / "character_weapon_equipment"
-            / "weapon_data"
-            / "weapons.json"
-        )
+        path = REPO_ROOT / "endfield_damage_calculator" / "character_weapon_equipment" / "weapon_data" / "weapons.json"
         rows = json.loads(path.read_text(encoding="utf-8"))
         jet = next(r for r in rows if r.get("名称") == "J.E.T.")
         self.assertEqual(jet["类型"], "长柄武器")

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器技能面板：标题格式与 bonus 属性提取顺序（无 GUI）。"""
 
 import json
 import unittest
-from pathlib import Path
 
 from character_weapon_equipment.weapon_data.special_fields import (
     bonus_attribute_keys,
@@ -18,12 +16,7 @@ from gui_design.shared.weapon_display_text import (
 )
 from tests.fixtures.path_roots import PKG_ROOT
 
-_WEAPONS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "weapon_data"
-    / "weapons.json"
-)
+_WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
 
 
 def _load_weapon_by_name(name: str) -> dict:

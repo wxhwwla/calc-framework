@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """GUI 偏好读取：启动页策略与上次页面。"""
 
 from __future__ import annotations
@@ -66,9 +65,7 @@ def load_ui_preferences(*, base_dir: Path | None = None) -> dict[str, Any]:
     }
 
 
-def save_ui_preferences(
-    preferences: dict[str, Any], *, base_dir: Path | None = None
-) -> None:
+def save_ui_preferences(preferences: dict[str, Any], *, base_dir: Path | None = None) -> None:
     """持久化 GUI 偏好；失败时静默忽略（不阻塞主流程）。"""
     defaults = _default_preferences()
     path = _preferences_path(base_dir=base_dir)
@@ -76,9 +73,7 @@ def save_ui_preferences(
     payload = {
         "startup_page_mode": str(preferences.get("startup_page_mode", STARTUP_MODE_ALWAYS_MAIN)),
         "last_page": str(preferences.get("last_page", PAGE_MAIN)),
-        "char_advanced_expanded": bool(
-            preferences.get("char_advanced_expanded", defaults["char_advanced_expanded"])
-        ),
+        "char_advanced_expanded": bool(preferences.get("char_advanced_expanded", defaults["char_advanced_expanded"])),
         "weapon_advanced_expanded": bool(
             preferences.get("weapon_advanced_expanded", defaults["weapon_advanced_expanded"])
         ),
@@ -107,20 +102,15 @@ def record_last_page(preferences: dict[str, Any], *, page: str) -> dict[str, Any
     return updated
 
 
-def record_char_advanced_expanded(
-    preferences: dict[str, Any], *, expanded: bool
-) -> dict[str, Any]:
+def record_char_advanced_expanded(preferences: dict[str, Any], *, expanded: bool) -> dict[str, Any]:
     """更新内存中的角色「技能等级」折叠展开态。"""
     updated = dict(preferences)
     updated["char_advanced_expanded"] = bool(expanded)
     return updated
 
 
-def record_weapon_advanced_expanded(
-    preferences: dict[str, Any], *, expanded: bool
-) -> dict[str, Any]:
+def record_weapon_advanced_expanded(preferences: dict[str, Any], *, expanded: bool) -> dict[str, Any]:
     """更新内存中的武器「武器技能」折叠展开态。"""
     updated = dict(preferences)
     updated["weapon_advanced_expanded"] = bool(expanded)
     return updated
-

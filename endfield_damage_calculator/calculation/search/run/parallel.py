@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """有界并行的搜索任务执行（不一次性提交全部 future）。"""
 
 from __future__ import annotations
 
 import time
+from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
-from typing import Callable, Iterable, Optional, TypeVar
+from typing import TypeVar
 
-from calculation.loadout.optimizer import LoadoutScore
-from .cancel import SearchCancelToken
 from calculation.core.top_n_tracker import TopNTracker
+
+from .cancel import SearchCancelToken
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -22,10 +22,10 @@ def run_bounded_parallel(
     total: int,
     evaluate: Callable[[T], R],
     max_workers: int,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
-    on_result: Optional[Callable[[T, R], None]] = None,
-    top_n: Optional[int] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
+    on_result: Callable[[T, R], None] | None = None,
+    top_n: int | None = None,
     top_key: Callable[[R], float] = lambda score: float(score),  # type: ignore[arg-type]
 ) -> tuple[tuple[R, ...], int, bool]:
     """
@@ -113,4 +113,3 @@ def run_bounded_parallel(
         return tracker.results(), processed, cancelled
     assert all_results is not None
     return tuple(all_results), processed, cancelled
-

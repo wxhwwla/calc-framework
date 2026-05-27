@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 乘区快照：确认选择后的窄输入 → 右侧乘区可渲染结构。
 
@@ -9,7 +8,7 @@ GUI 只负责展示；本模块集中能力乘区、能力值加成与最终攻�
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from calculation.multiplicative_zones.ability_bonus_zone import (
     calculate_ability_bonus_with_details,
@@ -88,31 +87,17 @@ class WeaponBonusSelection:
         """统一输出给计算链的新参数名（兼容旧字段输入）。"""
         return {
             "normal_skill_1_name": self.normal_skill_1_name or self.sa1_name,
-            "normal_skill_1_level": (
-                self.normal_skill_1_level if self.normal_skill_1_name else self.sa1_level
-            ),
+            "normal_skill_1_level": (self.normal_skill_1_level if self.normal_skill_1_name else self.sa1_level),
             "normal_skill_2_name": self.normal_skill_2_name or self.sa2_name,
-            "normal_skill_2_level": (
-                self.normal_skill_2_level if self.normal_skill_2_name else self.sa2_level
-            ),
+            "normal_skill_2_level": (self.normal_skill_2_level if self.normal_skill_2_name else self.sa2_level),
             "normal_skill_3_name": self.normal_skill_3_name or self.sa3_name,
-            "normal_skill_3_level": (
-                self.normal_skill_3_level if self.normal_skill_3_name else self.sa3_level
-            ),
+            "normal_skill_3_level": (self.normal_skill_3_level if self.normal_skill_3_name else self.sa3_level),
             "special_skill_1_name": self.special_skill_1_name or self.ws_name,
-            "special_skill_1_level": (
-                self.special_skill_1_level if self.special_skill_1_name else self.ws_level
-            ),
-            "special_skill_1_stack": (
-                self.special_skill_1_stack if self.special_skill_1_name else self.ws_stack
-            ),
+            "special_skill_1_level": (self.special_skill_1_level if self.special_skill_1_name else self.ws_level),
+            "special_skill_1_stack": (self.special_skill_1_stack if self.special_skill_1_name else self.ws_stack),
             "special_skill_2_name": self.special_skill_2_name or self.ws2_name,
-            "special_skill_2_level": (
-                self.special_skill_2_level if self.special_skill_2_name else self.ws2_level
-            ),
-            "special_skill_2_stack": (
-                self.special_skill_2_stack if self.special_skill_2_name else self.ws2_stack
-            ),
+            "special_skill_2_level": (self.special_skill_2_level if self.special_skill_2_name else self.ws2_level),
+            "special_skill_2_stack": (self.special_skill_2_stack if self.special_skill_2_name else self.ws2_stack),
         }
 
     @classmethod
@@ -139,7 +124,7 @@ class MultiplicativeZoneSelection:
     """已确认的角色、武器与等级选择。"""
 
     character: dict[str, Any]
-    weapon: Optional[dict[str, Any]]
+    weapon: dict[str, Any] | None
     char_level: int
     weapon_level: int
     trust_level: int = 0

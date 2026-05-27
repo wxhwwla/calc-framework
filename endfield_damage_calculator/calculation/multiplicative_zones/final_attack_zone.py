@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 最终攻击力乘区模块
 
@@ -17,10 +16,10 @@
 """
 
 import warnings
-from typing import Dict, Any, Optional
+from typing import Any
 
-from .base_zone import BaseZone
 from .ability_bonus_zone import calculate_ability_bonus
+from .base_zone import BaseZone
 
 
 class FinalAttackZone(BaseZone):
@@ -31,10 +30,7 @@ class FinalAttackZone(BaseZone):
     """
 
     def __init__(self):
-        super().__init__(
-            name="最终攻击力",
-            description="基础攻击力 × (能力值加成 + 1)"
-        )
+        super().__init__(name="最终攻击力", description="基础攻击力 × (能力值加成 + 1)")
 
     def calculate(self) -> float:
         """
@@ -43,15 +39,12 @@ class FinalAttackZone(BaseZone):
         返回：
             最终攻击力值（float）
         """
-        base_attack = self._params.get('base_attack', 0.0)
-        ability_bonus = self._params.get('ability_bonus', 0.0)
+        base_attack = self._params.get("base_attack", 0.0)
+        ability_bonus = self._params.get("ability_bonus", 0.0)
         return base_attack * (ability_bonus + 1.0)
 
 
-def calculate_final_attack(
-    base_attack: float,
-    ability_bonus: float
-) -> float:
+def calculate_final_attack(base_attack: float, ability_bonus: float) -> float:
     """
     快捷函数：计算最终攻击力
 
@@ -69,8 +62,8 @@ def calculate_final_attack(
 
 
 def calculate_final_attack_with_details(
-    character: Optional[Dict[str, Any]],
-    weapon: Optional[Dict[str, Any]] = None,
+    character: dict[str, Any] | None,
+    weapon: dict[str, Any] | None = None,
     char_level: int = 1,
     weapon_level: int = 1,
     sa1_name: str = "",
@@ -86,7 +79,7 @@ def calculate_final_attack_with_details(
     ws2_level: int = 1,
     ws2_stack: int = 1,
     trust_level: int = 0,
-    equipment_stat_bonus: Optional[Dict[str, float]] = None,
+    equipment_stat_bonus: dict[str, float] | None = None,
     equipment_attack_percent: float = 0.0,
     normal_skill_1_name: str = "",
     normal_skill_1_level: int = 1,
@@ -100,7 +93,7 @@ def calculate_final_attack_with_details(
     special_skill_2_name: str = "",
     special_skill_2_level: int = 1,
     special_skill_2_stack: int = 1,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     快捷函数：计算最终攻击力，返回详细信息
 
@@ -150,15 +143,15 @@ def calculate_final_attack_with_details(
 
     if character is None:
         return {
-            'base_attack': 0.0,
-            'char_base_attack': 0.0,
-            'weapon_base_attack': 0.0,
-            'attack_bonus_multiplier': 1.0,
-            'attack_bonus_attack': 0.0,
-            'additional_attack': 0.0,
-            'intermediate_attack': 0.0,
-            'ability_bonus': 0.0,
-            'final_attack': 0.0
+            "base_attack": 0.0,
+            "char_base_attack": 0.0,
+            "weapon_base_attack": 0.0,
+            "attack_bonus_multiplier": 1.0,
+            "attack_bonus_attack": 0.0,
+            "additional_attack": 0.0,
+            "intermediate_attack": 0.0,
+            "ability_bonus": 0.0,
+            "final_attack": 0.0,
         }
 
     sa1_name = normal_skill_1_name or sa1_name
@@ -177,16 +170,16 @@ def calculate_final_attack_with_details(
     # 获取角色基础攻击力（使用角色等级）
     char_level_index = char_level - 1
     char_base_attack = 0.0
-    if '基础攻击力' in character and isinstance(character['基础攻击力'], list):
-        attack_list = character['基础攻击力']
+    if "基础攻击力" in character and isinstance(character["基础攻击力"], list):
+        attack_list = character["基础攻击力"]
         if 0 <= char_level_index < len(attack_list):
             char_base_attack = float(attack_list[char_level_index])
 
     # 获取武器基础攻击力（使用武器等级）
     weapon_base_attack = 0.0
-    if weapon and '基础攻击力' in weapon and isinstance(weapon['基础攻击力'], list):
+    if weapon and "基础攻击力" in weapon and isinstance(weapon["基础攻击力"], list):
         weapon_level_index = weapon_level - 1
-        attack_list = weapon['基础攻击力']
+        attack_list = weapon["基础攻击力"]
         if 0 <= weapon_level_index < len(attack_list):
             weapon_base_attack = float(attack_list[weapon_level_index])
 
@@ -211,7 +204,7 @@ def calculate_final_attack_with_details(
                     level = sa3_level
                 else:
                     level = 1
-                
+
                 bonus_data = skill.get("curve", [])
                 if isinstance(bonus_data, list):
                     level_index = level - 1
@@ -219,10 +212,10 @@ def calculate_final_attack_with_details(
                         attack_bonus_percent += float(bonus_data[level_index])
                 elif isinstance(bonus_data, (int, float)):
                     attack_bonus_percent += float(bonus_data)
-        
+
         # 2. 再遍历所有以+结尾的属性，累加攻击力+（排除附加攻击力+）
-        for attr_name in weapon.keys():
-            if attr_name.endswith('+') and attr_name == '攻击力+':
+        for attr_name in weapon:
+            if attr_name.endswith("+") and attr_name == "攻击力+":
                 # 根据属性名称确定使用哪个特殊能力等级
                 if attr_name == sa1_name:
                     level = sa1_level
@@ -233,7 +226,7 @@ def calculate_final_attack_with_details(
                 else:
                     # 属性不属于任何特殊能力时，使用默认等级1
                     level = 1
-                
+
                 # 获取该等级的加成值（直接属性总是应用，使用对应滑块等级或默认等级1）
                 bonus_data = weapon[attr_name]
                 if isinstance(bonus_data, list):
@@ -242,7 +235,7 @@ def calculate_final_attack_with_details(
                         attack_bonus_percent += float(bonus_data[level_index])
                 elif isinstance(bonus_data, (int, float)):
                     attack_bonus_percent += float(bonus_data)
-        
+
         from character_weapon_equipment.weapon_data.special_fields import (
             add_special_picks_attack_percent,
         )
@@ -268,7 +261,7 @@ def calculate_final_attack_with_details(
 
     # 获取武器附加攻击力+（使用特殊能力等级）
     additional_attack = 0.0
-    
+
     if weapon:
         # 1. 先从 normal_skills 列表中获取附加攻击力+
         for skill in weapon.get("normal_skills", []):
@@ -285,11 +278,11 @@ def calculate_final_attack_with_details(
                     level = sa3_level
                 else:
                     level = 1
-                
+
                 # 如果第三个特殊能力关闭，跳过
                 if effect == sa3_name and sa3_level == 0:
                     continue
-                
+
                 bonus_data = skill.get("curve", [])
                 if isinstance(bonus_data, list):
                     level_index = level - 1
@@ -297,22 +290,22 @@ def calculate_final_attack_with_details(
                         additional_attack += float(bonus_data[level_index])
                 elif isinstance(bonus_data, (int, float)):
                     additional_attack += float(bonus_data)
-        
+
         # 2. 再从直接属性键中获取附加攻击力+（向后兼容）
-        if '附加攻击力+' in weapon:
+        if "附加攻击力+" in weapon:
             # 确定使用哪个特殊能力等级
-            if '附加攻击力+' == sa1_name:
+            if sa1_name == "附加攻击力+":
                 level = sa1_level
-            elif '附加攻击力+' == sa2_name:
+            elif sa2_name == "附加攻击力+":
                 level = sa2_level
-            elif '附加攻击力+' == sa3_name:
+            elif sa3_name == "附加攻击力+":
                 level = sa3_level
             else:
                 level = 1
-            
+
             # 如果第三个特殊能力关闭，跳过
-            if not ('附加攻击力+' == sa3_name and sa3_level == 0):
-                bonus_data = weapon['附加攻击力+']
+            if not (sa3_name == "附加攻击力+" and sa3_level == 0):
+                bonus_data = weapon["附加攻击力+"]
                 if isinstance(bonus_data, list):
                     level_index = level - 1
                     if 0 <= level_index < len(bonus_data):
@@ -332,7 +325,9 @@ def calculate_final_attack_with_details(
         stat_bonus = {k: v for k, v in stat_bonus.items() if k != "攻击力"}
 
     ability_bonus = calculate_ability_bonus(
-        character, weapon, char_level,
+        character,
+        weapon,
+        char_level,
         sa1_name=sa1_name,
         sa1_level=sa1_level,
         sa2_name=sa2_name,
@@ -365,13 +360,13 @@ def calculate_final_attack_with_details(
     final_attack = intermediate_attack * (ability_bonus + 1.0)
 
     return {
-        'base_attack': base_attack,
-        'char_base_attack': char_base_attack,
-        'weapon_base_attack': weapon_base_attack,
-        'attack_bonus_multiplier': attack_bonus_multiplier,
-        'attack_bonus_attack': attack_bonus_attack,
-        'additional_attack': additional_attack,
-        'intermediate_attack': intermediate_attack,
-        'ability_bonus': ability_bonus,
-        'final_attack': final_attack
+        "base_attack": base_attack,
+        "char_base_attack": char_base_attack,
+        "weapon_base_attack": weapon_base_attack,
+        "attack_bonus_multiplier": attack_bonus_multiplier,
+        "attack_bonus_attack": attack_bonus_attack,
+        "additional_attack": additional_attack,
+        "intermediate_attack": intermediate_attack,
+        "ability_bonus": ability_bonus,
+        "final_attack": final_attack,
     }

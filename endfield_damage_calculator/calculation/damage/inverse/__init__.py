@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """属性/技能公式反推。"""
 
 from .api import fit_formula, validate_formula

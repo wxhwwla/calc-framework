@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """数据来源与许可：CTk 对话框（常量见 attribution_content）。"""
 
 from __future__ import annotations
@@ -39,8 +38,8 @@ __all__ = (
     "ATTRIBUTION_TEXTBOX_HEIGHT",
     "BWIKI_ZMD_URL",
     "CC_BY_SA_40_URL",
-    "COMMERCIAL_OUTLINE_URL",
     "COMMERCIAL_CONTACT",
+    "COMMERCIAL_OUTLINE_URL",
     "DATA_LICENSE_URL",
     "LICENSE_URL",
     "NOTICES_URL",
@@ -53,7 +52,7 @@ __all__ = (
 )
 
 # 兼容旧 import 路径
-from legal.attribution_content import (  # noqa: E402
+from legal.attribution_content import (
     COMMERCIAL_CONTACT,
     REPO_URL,
 )
@@ -79,9 +78,7 @@ def open_attribution_dialog(
     body_font = small_font or default_ui_font(size=12)
     title_font = font or default_ui_font(size=14, weight="bold")
 
-    ctk.CTkButton(dialog, text="关闭", font=body_font, command=dialog.destroy).pack(
-        side="bottom", pady=(0, 16)
-    )
+    ctk.CTkButton(dialog, text="关闭", font=body_font, command=dialog.destroy).pack(side="bottom", pady=(0, 16))
 
     btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
     btn_frame.pack(side="bottom", fill="x", padx=16, pady=(4, 8))
@@ -113,9 +110,7 @@ def open_attribution_dialog(
         side="top", padx=16, pady=(16, 8), anchor="w"
     )
 
-    textbox = ctk.CTkTextbox(
-        dialog, font=body_font, wrap="word", height=ATTRIBUTION_TEXTBOX_HEIGHT
-    )
+    textbox = ctk.CTkTextbox(dialog, font=body_font, wrap="word", height=ATTRIBUTION_TEXTBOX_HEIGHT)
     textbox.pack(side="top", fill="both", expand=True, padx=16, pady=8)
     textbox.insert("1.0", SUMMARY_TEXT)
     textbox.configure(state="disabled")

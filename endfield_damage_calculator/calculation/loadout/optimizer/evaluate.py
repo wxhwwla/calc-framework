@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单技能最优配装搜索模块。
 
@@ -39,30 +38,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Iterator, Optional
-
-from calculation.core.top_n_tracker import TopNTracker
-
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from calculation.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
 from calculation.equipment.affix import aggregate_loadout_modifiers
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
+from calculation.equipment.system import build_four_slot_loadout
 from calculation.loadout.attack_eval import final_attack_details_for_loadout
-from calculation.equipment.prune import character_ability_attrs, sort_equipment_catalog_by_priority
-from calculation.loadout.slot_search import (
-    FixedLoadoutSelection,
-    VaryingSlotMask,
-    baseline_loadout_from_catalog,
-    count_loadout_combinations_for_selection,
-    iter_loadout_combinations_for_mask,
-    iter_loadout_combinations_for_selection,
-    selection_from_legacy_slot_count,
-)
 from calculation.search.evaluate.context import SearchEvalContext
 
-from .tasks import OptimizerTask
-from .types import LoadoutScore, OptimizerConfig, RuntimeEvalSnapshot, WeaponCandidate
-
+from .types import LoadoutScore, RuntimeEvalSnapshot, WeaponCandidate
 
 
 def evaluate_task(
@@ -70,7 +52,7 @@ def evaluate_task(
     base_context: DamageContext,
     crit_mode: CritMode,
     task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]],
-    search_eval: Optional[SearchEvalContext] = None,
+    search_eval: SearchEvalContext | None = None,
 ) -> LoadoutScore:
     """评估单条搜索任务。
 
@@ -122,7 +104,7 @@ def evaluate_task(
 def build_runtime_eval_snapshot(
     *,
     task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]],
-    search_eval: Optional[SearchEvalContext] = None,
+    search_eval: SearchEvalContext | None = None,
 ) -> RuntimeEvalSnapshot:
     """将一条任务解析为可复用的运行时快照。
 
@@ -180,5 +162,3 @@ def build_runtime_eval_snapshot(
             "accessory_b": acc_b.get("名称", ""),
         },
     )
-
-

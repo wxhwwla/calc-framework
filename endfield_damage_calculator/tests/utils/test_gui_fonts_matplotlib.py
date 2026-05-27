@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """matplotlib 中文字体配置。"""
 
 from __future__ import annotations
@@ -7,14 +6,12 @@ from __future__ import annotations
 import unittest
 import warnings
 
-from utils.optional_deps import is_matplotlib_available
-
+from utils.gui_chart_theme import reset_matplotlib_gui_style_for_tests
 from utils.gui_fonts import (
     configure_matplotlib_font,
     matplotlib_sans_serif_families,
-    reset_matplotlib_font_config_for_tests,
 )
-from utils.gui_chart_theme import reset_matplotlib_gui_style_for_tests
+from utils.optional_deps import is_matplotlib_available
 
 
 class TestGuiFontsMatplotlib(unittest.TestCase):

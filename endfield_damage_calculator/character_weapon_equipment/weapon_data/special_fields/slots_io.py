@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
 from __future__ import annotations
 
 from typing import Any
-
-import re
 
 from .codec import LEGACY_SPECIAL_KEY, SPECIAL_FIELD_KEYS, build_special_field, parse_special_field
 from .name_utils import _extract_effect_name_from_special_name
@@ -92,9 +89,5 @@ def write_weapon_special_slots(
             slot = slots[idx]
             enabled, name, curve = slot[0], slot[1], slot[2]
             max_stack = int(slot[3]) if len(slot) > 3 else 1
-        weapon[key] = build_special_field(
-            enabled=enabled, name=name, curve=curve, max_stack=max_stack
-        )
+        weapon[key] = build_special_field(enabled=enabled, name=name, curve=curve, max_stack=max_stack)
     weapon.pop(LEGACY_SPECIAL_KEY, None)
-
-

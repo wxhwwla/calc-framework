@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索预估文案（无 CustomTkinter，供单测与 search_controls 共用）。"""
 
 from __future__ import annotations
-
-from typing import Optional
 
 
 def compose_search_estimate_message(
     *,
     has_char: bool,
     has_weapon: bool,
-    catalog_err: Optional[str],
+    catalog_err: str | None,
     weapons_empty: bool,
-    job_error: Optional[str],
-    estimate_text: Optional[str],
+    job_error: str | None,
+    estimate_text: str | None,
 ) -> str:
     """根据前置检查结果生成「预计组合数」标签文案（无 GUI 副作用）。"""
     if not has_char or not has_weapon:

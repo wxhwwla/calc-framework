@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """武器特殊能力：技能等级 × 叠加层数。"""
 
 import unittest

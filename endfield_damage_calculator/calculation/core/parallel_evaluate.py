@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """使用 concurrent.futures 并行评估多条配装方案（与全量搜索线程池语义一致）。"""
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable, Iterable, Sequence, TypeVar
+from typing import TypeVar
 
 from calculation.loadout.optimizer import OptimizerTask
 

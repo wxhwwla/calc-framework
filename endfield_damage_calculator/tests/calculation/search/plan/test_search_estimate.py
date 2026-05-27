@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """搜索工作量与耗时预估测试。"""
 
 import unittest
 
-from calculation.loadout.optimizer import OptimizerConfig, WeaponCandidate, enumerate_optimizer_tasks
 from calculation.damage.engine import DamageContext
+from calculation.loadout.optimizer import OptimizerConfig, WeaponCandidate, enumerate_optimizer_tasks
 from calculation.search.plan.estimate import (
     count_loadout_combinations,
     estimate_search_duration,

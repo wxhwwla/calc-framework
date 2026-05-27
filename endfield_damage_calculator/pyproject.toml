@@ -73,3 +73,38 @@ markers = [
 # 本地日常：pytest -m "not integration and not real_data and not slow"
 # CI 仍跑全量：pytest tests/ -q
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+# 第三级严格度（strict 为第四级）：E/F/W 基础 + I 导入 + N 命名 + UP 现代化 + SIM 简化 + RUF 专用
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "SIM", "RUF"]
+ignore = [
+    "RUF001",  # 允许中文全角字符（项目UI使用中文）
+    "RUF002",  # 允许中文全角标点（项目文档使用中文）
+    "RUF003",  # 允许注释使用中文全角标点
+    "RUF012",  # 允许 mutable class vars
+    "E402",    # 允许 WMI 补丁在 import CTk 之前运行
+    "N812",    # 允许下层 import 用别名
+    "N803",    # 允许参数名大写（与数据字段名一致）
+    "SIM108",  # 允许 if-else 替代三元表达式
+    "SIM117",  # 允许嵌套 with
+    "SIM102",  # 允许嵌套 if（可读性优先）
+    "SIM105",  # 允许 try-except-pass 替代 contextlib.suppress
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["RUF", "N802", "N806", "SIM115"]
+"gui_design/*" = ["N802", "N806"]  # 允许 GUI 控件名使用下划线/大写
+"gui_design/controls/search/section.py" = ["F821"]  # 函数内局部 import，ruff 静态分析误报
+"gui_design/controls/enhancement/dialogs.py" = ["F821"]  # 同上
+"gui_design/controls/enhancement/section.py" = ["F821"]  # 同上
+"**/__init__.py" = ["F401"]  # __init__.py 的显式 re-export
+"character_weapon_equipment/weapon_data/special_fields/__init__.py" = ["F403"]  # 子模块聚合 re-export
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

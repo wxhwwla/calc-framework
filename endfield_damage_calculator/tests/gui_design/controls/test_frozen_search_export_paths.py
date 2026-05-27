@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """打包模式下搜索导出目录应落在 exe 同级，而非系统临时目录。"""
 
 import sys
@@ -17,9 +16,7 @@ class TestFrozenSearchExportPaths(unittest.TestCase):
             root = Path(tmp)
             fake_exe = root / "终末地伤害计算器.exe"
             fake_exe.write_bytes(b"MZ")
-            with patch.object(sys, "frozen", True, create=True), patch.object(
-                sys, "executable", str(fake_exe)
-            ):
+            with patch.object(sys, "frozen", True, create=True), patch.object(sys, "executable", str(fake_exe)):
                 output_root = default_search_output_root()
             self.assertEqual(output_root, root / "search_output")
 
@@ -28,9 +25,7 @@ class TestFrozenSearchExportPaths(unittest.TestCase):
             root = Path(tmp)
             fake_exe = root / "终末地伤害计算器.exe"
             fake_exe.write_bytes(b"MZ")
-            with patch.object(sys, "frozen", True, create=True), patch.object(
-                sys, "executable", str(fake_exe)
-            ):
+            with patch.object(sys, "frozen", True, create=True), patch.object(sys, "executable", str(fake_exe)):
                 run_dir = allocate_search_run_directory(purpose="full_search")
             self.assertTrue(run_dir.is_relative_to(root))
             self.assertTrue(str(run_dir).startswith(str(root / "search_output")))

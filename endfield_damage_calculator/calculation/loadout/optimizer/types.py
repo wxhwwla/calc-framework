@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单技能最优配装搜索模块。
 
@@ -39,26 +38,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Iterator, Optional
+from dataclasses import dataclass, field
 
-from calculation.core.top_n_tracker import TopNTracker
-
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-from calculation.equipment.affix import aggregate_loadout_modifiers
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
-from calculation.loadout.attack_eval import final_attack_details_for_loadout
-from calculation.equipment.prune import character_ability_attrs, sort_equipment_catalog_by_priority
+from calculation.damage.engine import CritMode, DamageEffect
 from calculation.loadout.slot_search import (
     FixedLoadoutSelection,
-    VaryingSlotMask,
-    baseline_loadout_from_catalog,
-    count_loadout_combinations_for_selection,
-    iter_loadout_combinations_for_mask,
-    iter_loadout_combinations_for_selection,
-    selection_from_legacy_slot_count,
 )
-from calculation.search.evaluate.context import SearchEvalContext
 
 
 @dataclass(frozen=True)
@@ -108,11 +93,11 @@ class OptimizerConfig:
     main_attr: str = ""
     sub_attr: str = ""
     priority_skill_types: tuple[str, ...] = ()
-    candidate_weapon_names: Optional[set[str]] = None
-    candidate_equipment_names: Optional[set[str]] = None
+    candidate_weapon_names: set[str] | None = None
+    candidate_equipment_names: set[str] | None = None
     warn_on_unfiltered: bool = True
-    fixed_loadout: FixedLoadoutSelection = FixedLoadoutSelection()
-    varying_slot_count: Optional[int] = None
+    fixed_loadout: FixedLoadoutSelection = field(default_factory=FixedLoadoutSelection)
+    varying_slot_count: int | None = None
 
 
 @dataclass(frozen=True)
@@ -131,7 +116,7 @@ class LoadoutScore:
     weapon_name: str
     final_damage: float
     loadout_names: dict[str, str]
-    segment_breakdown: Optional[dict[str, float]] = None
+    segment_breakdown: dict[str, float] | None = None
 
 
 @dataclass(frozen=True)
@@ -195,5 +180,3 @@ class OptimizerSearchPlan:
     pruned_weapon_count: int
     warnings: tuple[str, ...]
     fixed_loadout: FixedLoadoutSelection
-
-

@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """整数 / 小数取整模式：行为规格测试。"""
 
-import io
 import contextlib
+import io
 import unittest
 
 from calculation.damage.formula import (
     calculate_bonus_attribute,
     calculate_skill_curve,
-    infer_decimal_mode,
     has_fractional_part,
+    infer_decimal_mode,
 )
-from calculation.damage.inverse import fit_skill_formula_no_special, _is_decimal_data
+from calculation.damage.inverse import _is_decimal_data, fit_skill_formula_no_special
 
 
 class TestScalingMode(unittest.TestCase):
@@ -26,9 +25,7 @@ class TestScalingMode(unittest.TestCase):
 
     def test_infer_decimal_mode_from_special_only(self):
         """seed 荧光雷羽：base 为 int，special 含 23.4 仍走小数模式"""
-        self.assertTrue(
-            infer_decimal_mode(3, 12, 5, 0, special=[23.4])
-        )
+        self.assertTrue(infer_decimal_mode(3, 12, 5, 0, special=[23.4]))
 
     def test_integer_params_use_direct_floor(self):
         expected = [10.0, 18.0, 26.0, 34.0, 42.0, 51.0, 59.0, 67.0, 79]
@@ -59,18 +56,14 @@ class TestScalingMode(unittest.TestCase):
         curve = [12, 14, 17, 19, 22, 24, 26, 29, 34]
         with contextlib.redirect_stdout(io.StringIO()):
             base, growth, divisor, offset, special = fit_skill_formula_no_special(curve)
-        rebuilt = calculate_bonus_attribute(
-            base, growth, divisor, offset, special=special, is_decimal=False
-        )
+        rebuilt = calculate_bonus_attribute(base, growth, divisor, offset, special=special, is_decimal=False)
         self.assertEqual(rebuilt, curve)
 
     def test_fit_decimal_curve_rebuilds_with_decimal_floor(self):
         data = [3.0, 5.4, 7.8, 10.2, 12.6, 15.0, 17.4, 19.8, 23.4]
         with contextlib.redirect_stdout(io.StringIO()):
             base, growth, divisor, offset, special = fit_skill_formula_no_special(data)
-        rebuilt = calculate_bonus_attribute(
-            base, growth, divisor, offset, special=special, is_decimal=True
-        )
+        rebuilt = calculate_bonus_attribute(base, growth, divisor, offset, special=special, is_decimal=True)
         self.assertEqual(rebuilt, data)
 
     def test_skill_curve_decimal_via_special(self):

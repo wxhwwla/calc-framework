@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """skill_tables 段伤害类型解析测试。"""
 
-import sys
 import unittest
-from pathlib import Path
-
-from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
 
 from bwiki_scout.skill_tables import parse_skill_damage_rows_from_html, skill_tabs_to_seed_skills  # noqa: E402
+
 from calculation.damage.types import infer_segment_damage_type  # noqa: E402
 
 

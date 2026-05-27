@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动场外 buff 注入单段伤害计算。"""
 
 import unittest

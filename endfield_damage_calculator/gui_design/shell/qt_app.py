@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-PySide6 主应用（阶段 11 — 高级页控件全连通）。
+PySide6 主应用。
 
-双页签（计算页 / 高级页），信号路由、面板联动、确认刷新、全部高级页控件连通。
+双页签（计算页 / 高级页），信号路由、面板联动、确认刷新、搜索、预设导入导出、
+增强工具（计算历史 / 多方案对比 / 伤害仪表盘）、UI 偏好持久化。
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
@@ -28,28 +28,37 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from data.loader import get_characters, get_weapons
+from gui_design.panels.selection.qt_panel import QtSelectionPanel
+from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
+from gui_design.shared.display_view.qt_columns import QtAttributeColumns
 from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
-from gui_design.shared.display_view.qt_columns import QtAttributeColumns
-from gui_design.panels.selection.qt_panel import QtSelectionPanel
-from gui_design.shared.calc_mode_labels import calculation_mode_from_label, DEFAULT_CALC_MODE_LABEL
-from data.loader import get_characters, get_weapons
 from please_read_me import get_exe_version
 
 
 class QtDamageApp:
     """PySide6 主应用。
 
+    管理顶层 QMainWindow、双页签布局、角色/武器选择面板联动、
+    确认计算、全量搜索线程、预设导入导出、UI 偏好持久化。
+
     属性：
-        app: QMainWindow
-        big_font / small_font: 字体
-        tabs: 双页签
-        char_panel / weapon_panel: 角色/武器选择面板
-        columns: 三列属性展示
-        control_dock: 高级页控制栏
+        app: QMainWindow 顶层窗口
+        big_font / small_font: 标题/正文字体
+        tabs: QTabWidget 双页签（计算页 / 高级页）
+        char_panel / weapon_panel: 角色/武器四级联动选择面板
+        columns: QtAttributeColumns 三列属性展示
+        control_dock: QtControlDock 高级页控制栏
         status_label: 底部状态文案
         all_weapons: 全量武器列表
+        _current_calc_mode: 当前计算模式内部标识
         _enemy_defense: 当前敌人防御值
+        _equipment_catalog: 当前装备目录（按装备范围筛选）
+        _search_cancel_token: 搜索取消令牌
+        _search_estimated_total_seconds: 最近搜索预估耗时（秒）
+        _confirm_in_progress: 确认防重入标志
+        _ui_preferences: UI 偏好字典
     """
 
     def __init__(self) -> None:
@@ -93,7 +102,7 @@ class QtDamageApp:
 
         characters = get_characters()
         weapons = get_weapons()
-        self.all_weapons: List[Dict[str, Any]] = list(weapons)
+        self.all_weapons: list[dict[str, Any]] = list(weapons)
 
         panels_frame = QFrame()
         panels_frame.setStyleSheet("QFrame { background-color: #1E1E1E; border-radius: 8px; }")
@@ -102,10 +111,15 @@ class QtDamageApp:
         panels_row.setSpacing(12)
 
         self.char_panel = QtSelectionPanel(
-            characters, self.big_font, parent=None,
+            characters,
+            self.big_font,
+            parent=None,
         )
         self.weapon_panel = QtSelectionPanel(
-            weapons, self.big_font, is_weapon_panel=True, parent=None,
+            weapons,
+            self.big_font,
+            is_weapon_panel=True,
+            parent=None,
         )
 
         panels_row.addWidget(self.char_panel, stretch=1)
@@ -121,9 +135,7 @@ class QtDamageApp:
             big_font=self.big_font,
             small_font=self.small_font,
         )
-        self.columns.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.columns.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         calc_layout.addWidget(self.columns, stretch=1)
 
         self.tabs.addTab(calc_page, "计算页")
@@ -141,9 +153,7 @@ class QtDamageApp:
         adv_layout = QVBoxLayout(adv_page)
         adv_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.control_dock.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.control_dock.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         adv_layout.addWidget(self.control_dock, stretch=1)
 
         self.status_label = QLabel("就绪")
@@ -165,7 +175,11 @@ class QtDamageApp:
     # ── 初始化控制栏 ──────────────────────────────
 
     def _init_control_dock(self) -> None:
+        """初始化高级页控制栏：敌人下拉、装备 catalog、固定配装槽、手动 Buff 按钮。"""
         dock = self.control_dock
+
+        # 保存确认按钮默认样式
+        self._confirm_btn_default_style = dock.confirm_btn.styleSheet()
 
         # 敌人下拉
         from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
@@ -198,16 +212,16 @@ class QtDamageApp:
         dock.populate_fixed_loadout_slots(self._equipment_catalog)
 
         self._search_cancel_token = None
+        self._search_estimated_total_seconds: float = 0.0
 
         # 装备范围变更时刷新固定配装槽
-        dock.equipment_scope_combo.currentTextChanged.connect(
-            self._on_equipment_scope_changed
-        )
+        dock.equipment_scope_combo.currentTextChanged.connect(self._on_equipment_scope_changed)
 
         # 手动 Buff 按钮
         dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
 
     def _on_equipment_scope_changed(self, scope_label: str) -> None:
+        """装备范围下拉变更：重新获取 catalog 并刷新固定配装槽。"""
         from data.equipment_catalog import get_equipment_catalog
 
         self._equipment_catalog = get_equipment_catalog(scope_label=scope_label)
@@ -217,6 +231,7 @@ class QtDamageApp:
     # ── 信号连线 ──────────────────────────────
 
     def _connect_signals(self) -> None:
+        """连接全局信号：面板联动、计算模式、搜索按钮、更多设置、搜索预估刷新。"""
         self.char_panel.name_combo.currentTextChanged.connect(self._on_char_name_change)
 
         for panel in (self.char_panel, self.weapon_panel):
@@ -231,30 +246,107 @@ class QtDamageApp:
         self.control_dock.full_search_btn.clicked.connect(self._on_full_search)
         self.control_dock.search_cancel_btn.clicked.connect(self._on_cancel_search)
         self._connect_more_settings_btns()
+        self._connect_search_estimate_triggers()
 
     def _connect_more_settings_btns(self) -> None:
+        """连接更多设置（工具与分享）内各按钮到对应回调。"""
         dock = self.control_dock
-        if hasattr(dock, '_export_btn') and dock._export_btn:
+        if hasattr(dock, "_export_btn") and dock._export_btn:
             dock._export_btn.clicked.connect(self._on_export_preset)
-        if hasattr(dock, '_import_btn') and dock._import_btn:
+        if hasattr(dock, "_import_btn") and dock._import_btn:
             dock._import_btn.clicked.connect(self._on_import_preset)
-        if hasattr(dock, '_compare_btn') and dock._compare_btn:
+        if hasattr(dock, "_compare_btn") and dock._compare_btn:
             dock._compare_btn.clicked.connect(self._on_compare_presets)
-        if hasattr(dock, '_dashboard_btn') and dock._dashboard_btn:
+        if hasattr(dock, "_dashboard_btn") and dock._dashboard_btn:
             dock._dashboard_btn.clicked.connect(self._on_damage_dashboard)
-        if hasattr(dock, '_history_btn') and dock._history_btn:
+        if hasattr(dock, "_history_btn") and dock._history_btn:
             dock._history_btn.clicked.connect(self._on_calc_history)
-        if hasattr(dock, '_export_log_btn') and dock._export_log_btn:
+        if hasattr(dock, "_export_log_btn") and dock._export_log_btn:
             dock._export_log_btn.clicked.connect(self._on_export_log)
 
+    def _connect_search_estimate_triggers(self) -> None:
+        """连接搜索预估刷新触发信号：武器范围、装备范围、并行线程、TopN。"""
+        dock = self.control_dock
+        dock.single_skill_scope_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        dock.equipment_scope_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        dock.search_workers_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        dock.search_top_n_combo.currentTextChanged.connect(self._refresh_search_estimate)
+
+    def _refresh_search_estimate(self) -> None:
+        """计算并刷新搜索预估文本（预计组合数/耗时），更新状态栏。"""
+        from calculation.search.plan.controller import prepare_search_job
+        from calculation.search.run.single_skill import estimate_single_skill_search
+        from gui_design.search_ui.search_settings import (
+            resolve_parallel_workers,
+            resolve_top_n,
+        )
+
+        dock = self.control_dock
+        label = dock.search_estimate_label
+        if label is None:
+            return
+        inputs = self._build_search_job_inputs()
+        if inputs is None:
+            label.setText("预计组合数：请先选择角色和武器")
+            return
+        try:
+            job, err = prepare_search_job(inputs)
+            if err or job is None:
+                label.setText(f"预计组合数：—（{err or '无法预估'}）")
+                return
+            estimate = estimate_single_skill_search(
+                job,
+                max_workers=resolve_parallel_workers(dock.read_workers_choice()),
+                top_n=resolve_top_n(dock.read_top_n_choice()),
+            )
+            self._search_estimated_total_seconds = estimate.estimated_seconds
+            label.setText(estimate.text)
+        except Exception as exc:
+            label.setText(f"预计组合数：—（{exc}）")
+
     def run(self) -> None:
-        """启动主事件循环。"""
-        self.app.show()
+        """启动主事件循环：加载偏好、绑定关闭事件、最大化显示。"""
+        self._load_preferences()
+        self.app.closeEvent = self._on_close
+        self.app.showMaximized()
         sys.exit(self._qapp.exec())
+
+    # ── 偏好持久化 ─────────────────────────────
+
+    def _load_preferences(self) -> None:
+        """加载 UI 偏好（上次页签），恢复启动页。"""
+        from gui_design.shared.ui_preferences import (
+            load_ui_preferences,
+            resolve_startup_page,
+        )
+
+        self._ui_preferences = load_ui_preferences()
+        page = resolve_startup_page(self._ui_preferences)
+        if page == "高级页":
+            self.tabs.setCurrentIndex(1)
+        else:
+            self.tabs.setCurrentIndex(0)
+
+    def _on_close(self, event: Any = None) -> None:
+        """关闭窗口：保存 UI 偏好（当前页签），接受关闭事件。"""
+        from gui_design.shared.ui_preferences import (
+            record_last_page,
+            save_ui_preferences,
+        )
+
+        try:
+            page_name = "高级页" if self.tabs.currentIndex() == 1 else "计算页"
+            self._ui_preferences = record_last_page(self._ui_preferences, page=page_name)
+            save_ui_preferences(self._ui_preferences)
+        except Exception:
+            pass
+        if event is not None:
+            event.accept()
 
     # ── 样式 ──────────────────────────────────
 
     def _apply_dark_style(self) -> None:
+        """应用暗色 Fusion 样式到 QApplication。"""
         self._qapp.setStyleSheet("""
             QMainWindow { background-color: #1A1A1A; }
             QWidget { background-color: #1A1A1A; }
@@ -262,6 +354,7 @@ class QtDamageApp:
         """)
 
     def _style_tabs(self) -> None:
+        """美化 QTabWidget 页签样式。"""
         self.tabs.setStyleSheet("""
             QTabWidget::pane {
                 border: 1px solid #464646;
@@ -292,11 +385,13 @@ class QtDamageApp:
     # ── 页面导航 ──────────────────────────────────
 
     def _show_main_page(self) -> None:
+        """切回计算页。"""
         self.tabs.setCurrentIndex(0)
 
     # ── 角色 → 武器联动 ──────────────────────────
 
     def _on_char_name_change(self) -> None:
+        """角色名称变更：按武器类型过滤武器面板，重建次数段行。"""
         char_data = self.char_panel.get_selected_data()
         if not char_data:
             self.weapon_panel.update_data_list(list(self.all_weapons))
@@ -316,6 +411,7 @@ class QtDamageApp:
         self._rebuild_segment_rows()
 
     def _rebuild_segment_rows(self) -> None:
+        """根据角色技能等级重建技能段数输入行。"""
         char_data = self.char_panel.get_selected_data()
         if not char_data:
             self.control_dock.rebuild_segment_rows(None, 1, 1, 1)
@@ -328,18 +424,29 @@ class QtDamageApp:
     # ── 计算模式 ──────────────────────────────────
 
     def _on_calc_mode_changed(self, label: str) -> None:
+        """计算模式下拉变更：更新内部标识，标记待确认。"""
         self._current_calc_mode = calculation_mode_from_label(label)
         self._on_loadout_changed()
 
     # ── 配装变更 ──────────────────────────────────
 
     def _on_loadout_changed(self) -> None:
+        """配装参数变更：按钮紫色「待更新」样式，重建次数段行。"""
         self.status_label.setText("待确认")
+        self.confirm_btn.setText("确认选择（待更新）")
+        self.confirm_btn.setStyleSheet("""
+            QPushButton { background-color: #7C3AED; color: white;
+                          border: none; border-radius: 4px;
+                          font-size: 14px; font-weight: bold; }
+            QPushButton:hover { background-color: #6D28D9; }
+            QPushButton:disabled { background-color: #444; color: #888; }
+        """)
         self._rebuild_segment_rows()
 
     # ── 确认计算 ──────────────────────────────────
 
     def _build_request(self) -> Any:
+        """从当前面板读取完整配装状态，构建 DisplayRequest。"""
         from gui_design.app.display_request import DisplayRequest
         from gui_design.app.loadout_state import read_loadout_from_panels
 
@@ -372,6 +479,9 @@ class QtDamageApp:
         )
 
     def _on_confirm(self) -> None:
+        """确认计算：同步求值缓存、刷新三列、记录历史 + 快照、更新搜索预估。"""
+        if getattr(self, "_confirm_in_progress", False):
+            return
         char_data = self.char_panel.get_selected_data()
         weapon_data = self.weapon_panel.get_selected_data()
         if not char_data or not weapon_data:
@@ -383,49 +493,64 @@ class QtDamageApp:
             QMessageBox.warning(self.app, "无法计算", "无法读取配装数据。")
             return
 
+        self._confirm_in_progress = True
         self.confirm_btn.setEnabled(False)
         self.confirm_btn.setText("计算中…")
         self.status_label.setText("计算中…")
         QApplication.processEvents()
 
-        self._sync_evaluation(request)
-
-        self.columns.refresh(request)
-
-        lds = request.loadout
-        from gui_design.shared.calc_history import HistoryEntry
-        from gui_design.controls.enhancement.dialogs import get_app_calculation_history
         try:
-            preset = lds.to_loadout_preset()
-            label = f"{preset.char_name} / {preset.weapon_name}"
-            get_app_calculation_history(self).push(
-                HistoryEntry(label=label, summary=label, preset_snapshot=preset.to_dict())
+            self._sync_evaluation(request)
+            self.columns.refresh(request)
+
+            lds = request.loadout
+            from gui_design.controls.enhancement.dialogs import (
+                get_app_calculation_history,
             )
-        except Exception as exc:
-            import logging
-            logging.getLogger(__name__).warning("历史记录失败: %s", exc)
-        try:
-            from gui_design.controls.enhancement.dialogs import refresh_damage_snapshot
-            refresh_damage_snapshot(self, loadout=lds)
-        except Exception as exc:
-            import logging
-            logging.getLogger(__name__).warning("快照刷新失败: %s", exc)
+            from gui_design.shared.calc_history import HistoryEntry
+
+            try:
+                preset = lds.to_loadout_preset()
+                label = f"{preset.char_name} / {preset.weapon_name}"
+                get_app_calculation_history(self).push(
+                    HistoryEntry(label=label, summary=label, preset_snapshot=preset.to_dict())
+                )
+            except Exception as exc:
+                import logging
+
+                logging.getLogger(__name__).warning("历史记录失败: %s", exc)
+            try:
+                from gui_design.controls.enhancement.dialogs import refresh_damage_snapshot
+
+                refresh_damage_snapshot(self, loadout=lds)
+            except Exception as exc:
+                import logging
+
+                logging.getLogger(__name__).warning("快照刷新失败: %s", exc)
+        finally:
+            self._confirm_in_progress = False
 
         self.status_label.setText("就绪")
         self.confirm_btn.setEnabled(True)
         self.confirm_btn.setText("确认选择")
+        self.confirm_btn.setStyleSheet(self._confirm_btn_default_style)
+        self._refresh_search_estimate()
 
     def _sync_evaluation(self, request: Any) -> None:
+        """将请求配装的求值结果写入缓存，避免重复计算。"""
         from gui_design.app.loadout_evaluation import sync_evaluation_cache
+
         try:
             sync_evaluation_cache(request.loadout)
         except Exception as exc:
             import logging
+
             logging.getLogger(__name__).warning("求值缓存同步失败: %s", exc)
 
     # ── 手动 Buff ─────────────────────────────
 
     def _on_manual_buff(self) -> None:
+        """打开手动 Buff 编辑窗（QDialog）。"""
         from gui_design.controls.manual_buff.qt_window import QtManualBuffDialog
 
         def _read_counts():
@@ -447,27 +572,38 @@ class QtDamageApp:
     # ── 更多设置（工具与分享）回调 ──────────────
 
     def _on_export_preset(self) -> None:
-        from gui_design.app.loadout_preset import (
-            LoadoutPreset,
-            export_preset_json,
-        )
-        preset = LoadoutPreset(
-            char_name=self.char_panel.name_combo.currentText(),
-            weapon_name=self.weapon_panel.name_combo.currentText(),
-            char_level=self.char_panel.level_slider.value(),
-            weapon_level=self.weapon_panel.level_slider.value(),
-            trust_level=self.char_panel.get_trust_level(),
-            skill_levels=(
-                self.char_panel.get_skill_1_level(),
-                self.char_panel.get_skill_2_level(),
-                self.char_panel.get_skill_3_level(),
-            ),
+        """导出当前配装为 JSON 预设（含完整字段）。"""
+        from gui_design.app.loadout_preset import export_preset_json
+        from gui_design.app.loadout_state import read_loadout_from_panels
+
+        dock = self.control_dock
+        loadout = read_loadout_from_panels(
+            self.char_panel,
+            self.weapon_panel,
             calculation_mode=self._current_calc_mode,
-            weapon_scope=self.control_dock.single_skill_scope_combo.currentText(),
-            equipment_scope=self.control_dock.equipment_scope_combo.currentText(),
+            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
+            equipment_scope_label=dock.equipment_scope_combo.currentText(),
+            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
+            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
+            manual_counts=dock.read_skill_counts(),
+            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
+            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
+            damage_component_mode=dock.read_damage_component_mode(),
+            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
+            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
+            extra_crit_rate=dock.read_extra_crit_rate(),
+            extra_crit_damage=dock.read_extra_crit_damage(),
+            enemy_defense=self._enemy_defense,
         )
+        if loadout is None:
+            QMessageBox.warning(self.app, "导出预设", "无法读取配装数据。")
+            return
+        preset = loadout.to_loadout_preset()
         path, _ = QFileDialog.getSaveFileName(
-            self.app, "导出配装预设", "preset.json", "JSON (*.json)",
+            self.app,
+            "导出配装预设",
+            "preset.json",
+            "JSON (*.json)",
         )
         if not path:
             return
@@ -475,9 +611,14 @@ class QtDamageApp:
         self.status_label.setText("预设已导出")
 
     def _on_import_preset(self) -> None:
+        """从 JSON 文件导入配装预设并恢复至面板。"""
         from gui_design.app.loadout_preset import import_presets_from_json_text
+
         path, _ = QFileDialog.getOpenFileName(
-            self.app, "导入配装预设", "", "JSON (*.json)",
+            self.app,
+            "导入配装预设",
+            "",
+            "JSON (*.json)",
         )
         if not path:
             return
@@ -490,7 +631,9 @@ class QtDamageApp:
             QMessageBox.warning(self.app, "导入失败", str(exc))
 
     def _apply_preset_to_qt_app(self, preset) -> None:
+        """将 LoadoutPreset 的各字段写回选择面板控件。"""
         from gui_design.app.loadout_preset import LoadoutPreset
+
         if not isinstance(preset, LoadoutPreset):
             return
         cp = self.char_panel
@@ -533,13 +676,15 @@ class QtDamageApp:
         self.status_label.setText("预设已恢复，请核对配装参数。")
 
     def _on_compare_presets(self) -> None:
-        from gui_design.controls.enhancement.qt_dialogs import QtComparePresetsDialog
+        """多方案对比：读取当前配置 + 选取预设 JSON，并行评估并展示排名。"""
         from gui_design.app.loadout_preset import LoadoutPreset
         from gui_design.app.loadout_state import read_loadout_from_panels
+        from gui_design.controls.enhancement.qt_dialogs import QtComparePresetsDialog
 
         def _build_preset() -> LoadoutPreset:
             loadout = read_loadout_from_panels(
-                self.char_panel, self.weapon_panel,
+                self.char_panel,
+                self.weapon_panel,
                 calculation_mode=self._current_calc_mode,
             )
             if loadout is None:
@@ -547,7 +692,9 @@ class QtDamageApp:
             return loadout.to_loadout_preset()
 
         dialog = QtComparePresetsDialog(
-            self.app, big_font=self.big_font, small_font=self.small_font,
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
             build_preset_fn=_build_preset,
             enemy_defense=self._enemy_defense,
             workers_choice=self.control_dock.search_workers_combo.currentText(),
@@ -555,34 +702,44 @@ class QtDamageApp:
         dialog.exec()
 
     def _on_damage_dashboard(self) -> None:
+        """打开伤害仪表盘弹窗（matplotlib 饼图 + 柱状图）。"""
         from gui_design.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
         from gui_design.presentation.damage_snapshot import get_snapshot_from_app
 
         snapshot = get_snapshot_from_app(self)
         dialog = QtDamageDashboardDialog(
-            self.app, big_font=self.big_font, small_font=self.small_font,
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
             snapshot=snapshot,
         )
         dialog.exec()
 
     def _on_calc_history(self) -> None:
-        from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        """打开计算历史弹窗（最近 10 次，支持恢复配置）。"""
         from gui_design.controls.enhancement.dialogs import get_app_calculation_history
+        from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
 
         history = get_app_calculation_history(self)
 
         dialog = QtCalcHistoryDialog(
-            self.app, big_font=self.big_font, small_font=self.small_font,
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
             history=history,
             apply_fn=self._apply_preset_to_qt_app,
         )
         dialog.exec()
 
     def _on_export_log(self) -> None:
+        """导出会话操作日志到 JSON 文件。"""
         from utils.operation_log import get_session_operation_log
 
         path, _ = QFileDialog.getSaveFileName(
-            self.app, "导出操作日志", "operation_log.json", "JSON (*.json)",
+            self.app,
+            "导出操作日志",
+            "operation_log.json",
+            "JSON (*.json)",
         )
         if not path:
             return
@@ -597,7 +754,6 @@ class QtDamageApp:
     def _build_search_job_inputs(self) -> Any:
         """从 Qt 面板构建 SearchJobInputs（与 CTk 版 build_search_job_inputs 等价）。"""
         from gui_design.app.loadout_state import read_loadout_from_panels
-        from calculation.search.plan.controller import SearchJobInputs
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -626,12 +782,14 @@ class QtDamageApp:
         )
 
     def _on_mvp_search(self) -> None:
+        """MVP 搜索：用户选择导出目录后启动 QThread 搜索。"""
         from pathlib import Path
+
         from PySide6.QtWidgets import QFileDialog
-        from calculation.search.run.cancel import SearchCancelToken
+
         from calculation.search.plan.controller import prepare_search_job
-        from gui_design.controls.search.qt_actions import SearchWorker, QtSearchResultsDialog
-        from gui_design.presentation.search_results_lines import build_search_results_report_lines
+        from calculation.search.run.cancel import SearchCancelToken
+        from gui_design.controls.search.qt_actions import SearchWorker
         from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
         inputs = self._build_search_job_inputs()
@@ -644,7 +802,8 @@ class QtDamageApp:
             return
 
         output_dir = QFileDialog.getExistingDirectory(
-            self.app, "选择 MVP 搜索导出目录",
+            self.app,
+            "选择 MVP 搜索导出目录",
             str(default_search_output_root()),
         )
         if not output_dir:
@@ -669,9 +828,15 @@ class QtDamageApp:
         self._start_search_thread(worker, "MVP搜索状态：计算中，请稍候...")
 
     def _on_full_search(self) -> None:
-        from calculation.search.run.cancel import SearchCancelToken
+        """全量遍历搜索：预估≥120s 时确认弹窗，启动 QThread 搜索。"""
         from calculation.search.plan.controller import prepare_search_job
+        from calculation.search.run.cancel import SearchCancelToken
+        from calculation.search.run.single_skill import estimate_single_skill_search
         from gui_design.controls.search.qt_actions import SearchWorker
+        from gui_design.search_ui.search_settings import (
+            resolve_parallel_workers,
+            resolve_top_n,
+        )
         from utils.app_paths import allocate_search_run_directory
 
         inputs = self._build_search_job_inputs()
@@ -684,15 +849,28 @@ class QtDamageApp:
             return
 
         dock = self.control_dock
+        estimate = estimate_single_skill_search(
+            job,
+            max_workers=resolve_parallel_workers(dock.read_workers_choice()),
+            top_n=resolve_top_n(dock.read_top_n_choice()),
+        )
+        self._search_estimated_total_seconds = estimate.estimated_seconds
+        if estimate.estimated_seconds >= 120:
+            reply = QMessageBox.question(
+                self.app,
+                "确认全量遍历",
+                f"{estimate.text}\n\n组合较多，是否仍要开始？",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
         cancel_token = SearchCancelToken()
         self._search_cancel_token = cancel_token
 
         export_root = allocate_search_run_directory(purpose="full_search")
-        mode_label = (
-            "多技能加权全量遍历"
-            if job.multi_skill_eval is not None
-            else "单技能全量遍历"
-        )
+        mode_label = "多技能加权全量遍历" if job.multi_skill_eval is not None else "单技能全量遍历"
 
         worker = SearchWorker(
             job,
@@ -706,9 +884,8 @@ class QtDamageApp:
 
         self._start_search_thread(worker, "全量遍历：计算中，请稍候…")
 
-    def _start_search_thread(
-        self, worker: Any, status_running: str
-    ) -> None:
+    def _start_search_thread(self, worker: Any, status_running: str) -> None:
+        """在 QThread 中启动 SearchWorker，连接进度/完成/错误信号。"""
         self._search_thread = QThread()
         worker.moveToThread(self._search_thread)
 
@@ -726,11 +903,11 @@ class QtDamageApp:
         self.control_dock.mvp_status_label.setText(status_running)
 
     def _on_search_progress(self, text: str) -> None:
+        """搜索进度更新：更新状态栏文本。"""
         self.control_dock.mvp_status_label.setText(text)
 
-    def _on_search_finished(
-        self, mode_label: str, job: Any, outcome: Any, export_paths: dict
-    ) -> None:
+    def _on_search_finished(self, mode_label: str, job: Any, outcome: Any, export_paths: dict) -> None:
+        """搜索完成：构建结果报告，弹出 QtSearchResultsDialog。"""
         from gui_design.controls.search.qt_actions import QtSearchResultsDialog
         from gui_design.presentation.search_results_lines import build_search_results_report_lines
 
@@ -749,9 +926,7 @@ class QtDamageApp:
             export_paths=export_paths,
             cancelled=bool(outcome.cancelled),
             damage_metric=damage_metric,
-            segment_counts=(
-                dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None
-            ),
+            segment_counts=(dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None),
             abnormal_counts=dict(job.physical_abnormal_counts or {}),
             spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
         )
@@ -774,8 +949,9 @@ class QtDamageApp:
         dialog.exec()
 
     def _on_search_error(self, error_msg: str) -> None:
+        """搜索异常回调：清理线程、更新状态、弹出错误弹窗。"""
         self._search_cancel_token = None
-        if hasattr(self, '_search_thread') and self._search_thread:
+        if hasattr(self, "_search_thread") and self._search_thread:
             self._search_thread.quit()
             self._search_thread.wait()
         self.control_dock.mvp_status_label.setText(f"搜索失败：{error_msg}")
@@ -783,11 +959,13 @@ class QtDamageApp:
         QMessageBox.critical(self.app, "搜索失败", error_msg)
 
     def _on_cancel_search(self) -> None:
+        """取消进行中的搜索。"""
         if self._search_cancel_token is not None:
             self._search_cancel_token.cancel()
             self.control_dock.mvp_status_label.setText("搜索状态：正在取消…")
 
     def _set_search_btns_enabled(self, enabled: bool) -> None:
+        """根据是否搜索中，启用/禁用搜索按钮组。"""
         dock = self.control_dock
         dock.mvp_search_btn.setEnabled(enabled)
         dock.full_search_btn.setEnabled(enabled)
@@ -798,6 +976,7 @@ class QtDamageApp:
     # ── 数据来源与许可 ──────────────────────────
 
     def _on_attribution(self) -> None:
+        """显示数据来源与许可声明。"""
         from legal.attribution_content import SUMMARY_TEXT
 
         QMessageBox.information(
@@ -808,4 +987,5 @@ class QtDamageApp:
 
     @property
     def confirm_btn(self):
+        """快捷访问 control_dock 中的确认按钮。"""
         return self.control_dock.confirm_btn

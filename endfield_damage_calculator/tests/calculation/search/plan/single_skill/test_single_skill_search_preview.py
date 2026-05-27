@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单技能遍历快速预览文案测试。"""
 
 import json
@@ -14,18 +13,8 @@ from data.equipment_catalog import get_equipment_catalog
 from gui_design.presentation.preview_lines import build_single_skill_search_preview_lines
 from tests.fixtures.path_roots import PKG_ROOT
 
-_CHARACTERS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "character_data"
-    / "characters.json"
-)
-_WEAPONS_JSON = (
-    PKG_ROOT
-    / "character_weapon_equipment"
-    / "weapon_data"
-    / "weapons.json"
-)
+_CHARACTERS_JSON = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
+_WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
 
 
 def _load_by_name(path: Path, name: str) -> dict:
@@ -38,14 +27,16 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 def _sample_catalog() -> dict:
-    row = lambda n, slot: {
-        "名称": n,
-        "装备种类": slot,
-        "部位": slot,
-        "套装": "",
-        "效果": [],
-        "三件套效果": [],
-    }
+    def row(n, slot):
+        return {
+            "名称": n,
+            "装备种类": slot,
+            "部位": slot,
+            "套装": "",
+            "效果": [],
+            "三件套效果": [],
+        }
+
     return {
         "chest": [row("胸甲A", "护甲")],
         "gloves": [row("护手A", "护手")],
@@ -118,7 +109,9 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             preview_weapon_candidates=[WeaponCandidate(name="候选A", final_attack=1000.0)],
             preview_scope_label="当前武器",
             preview_equipment_catalog={
-                "chest": [{"名称": "胸甲X", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}],
+                "chest": [
+                    {"名称": "胸甲X", "装备种类": "护甲", "部位": "护甲", "套装": "", "效果": [], "三件套效果": []}
+                ],
                 "gloves": [{"名称": "护手X", "部位": "护手", "套装": "", "效果": [], "三件套效果": []}],
                 "accessories": [{"名称": "配件X", "部位": "配件", "套装": "", "效果": [], "三件套效果": []}],
             },
@@ -167,12 +160,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
     )
     def test_preview_with_real_local_equipments_when_available(self) -> None:
         """真数据契约：显式传入有限 catalog，禁止 preview 内隐式 get_equipments。"""
-        equip_path = (
-            PKG_ROOT
-            / "character_weapon_equipment"
-            / "equipment_data"
-            / "equipments.json"
-        )
+        equip_path = PKG_ROOT / "character_weapon_equipment" / "equipment_data" / "equipments.json"
         if not equip_path.is_file():
             self.skipTest("无本地 equipments.json")
         rows = json.loads(equip_path.read_text(encoding="utf-8"))

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 单技能最优配装搜索模块。
 
@@ -39,30 +38,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Iterator, Optional
-
-from calculation.core.top_n_tracker import TopNTracker
-
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-from calculation.equipment.affix import aggregate_loadout_modifiers
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
-from calculation.loadout.attack_eval import final_attack_details_for_loadout
-from calculation.equipment.prune import character_ability_attrs, sort_equipment_catalog_by_priority
+from calculation.equipment.prune import sort_equipment_catalog_by_priority
 from calculation.loadout.slot_search import (
-    FixedLoadoutSelection,
-    VaryingSlotMask,
-    baseline_loadout_from_catalog,
     count_loadout_combinations_for_selection,
-    iter_loadout_combinations_for_mask,
-    iter_loadout_combinations_for_selection,
-    selection_from_legacy_slot_count,
 )
-from calculation.search.evaluate.context import SearchEvalContext
 
-from .catalog import _apply_equipment_filter, _is_equipment_beneficial, _resolve_config_fixed_loadout, count_loadout_combinations
-from .types import OptimizerConfig, OptimizerResult, OptimizerSearchPlan, WeaponCandidate
-
+from .catalog import (
+    _apply_equipment_filter,
+    _is_equipment_beneficial,
+    _resolve_config_fixed_loadout,
+)
+from .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidate
 
 
 def build_optimizer_search_plan(
@@ -89,11 +75,7 @@ def build_optimizer_search_plan(
         OptimizerSearchPlan 对象，包含过滤后的武器、装备目录和组合总数
     """
     warnings: list[str] = []
-    if (
-        config.warn_on_unfiltered
-        and not config.candidate_weapon_names
-        and not config.candidate_equipment_names
-    ):
+    if config.warn_on_unfiltered and not config.candidate_weapon_names and not config.candidate_equipment_names:
         warnings.append("当前未筛选候选武器/装备，可能耗时很长。")
 
     filtered_weapons = [
@@ -122,9 +104,7 @@ def build_optimizer_search_plan(
             if beneficial:
                 filtered_catalog[key] = beneficial
 
-    if config.sort_equipment_by_priority and (
-        config.main_attr or config.sub_attr or config.priority_skill_types
-    ):
+    if config.sort_equipment_by_priority and (config.main_attr or config.sub_attr or config.priority_skill_types):
         filtered_catalog = sort_equipment_catalog_by_priority(
             filtered_catalog,
             main_attr=config.main_attr,
@@ -149,5 +129,3 @@ def build_optimizer_search_plan(
         warnings=tuple(warnings),
         fixed_loadout=fixed_loadout,
     )
-
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 MVP 端到端搜索流水线。
 
@@ -9,19 +8,21 @@ GUI「全量遍历」「MVP 导出/续跑」最终都进入 ``run_mvp_search_fro
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
+from calculation.core.result_export import export_search_outputs
 from calculation.damage.engine import DamageContext
 from calculation.loadout.optimizer import LoadoutScore, OptimizerConfig, WeaponCandidate
-from calculation.core.result_export import export_search_outputs
-from .cancel import SearchCancelToken
-from ..evaluate.context import SearchEvalContext
-from .runner import SearchRunner
-from ..evaluate.task import make_loadout_task_evaluator
 from calculation.loadout.slot_search import FixedLoadoutSelection
+
+from ..evaluate.context import SearchEvalContext
+from ..evaluate.task import make_loadout_task_evaluator
 from ..plan.job import SingleSkillSearchJob
+from .cancel import SearchCancelToken
+from .runner import SearchRunner
 
 
 @dataclass(frozen=True)
@@ -44,8 +45,8 @@ def run_mvp_search_from_job(
     export_dir: Path,
     config: OptimizerConfig,
     max_workers: int = 1,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
 ) -> MvpSearchOutcome:
     """运行 MVP 主链路：续跑搜索 + 导出。"""
     search_eval = SearchEvalContext(
@@ -64,9 +65,7 @@ def run_mvp_search_from_job(
         weapon_normal_levels=tuple(job.weapon_normal_levels),
         weapon_special_states=tuple(dict(s) for s in job.weapon_special_states),
     )
-    task_evaluator = make_loadout_task_evaluator(
-        job, crit_mode=config.crit_mode, search_eval=search_eval
-    )
+    task_evaluator = make_loadout_task_evaluator(job, crit_mode=config.crit_mode, search_eval=search_eval)
     session = SearchRunner.run(
         db_path=db_path,
         run_signature=job.run_signature,
@@ -107,8 +106,8 @@ def run_mvp_search_pipeline(
     equipment_catalog: dict[str, list[dict[str, Any]]],
     config: OptimizerConfig,
     max_workers: int = 1,
-    cancel_token: Optional[SearchCancelToken] = None,
-    progress_callback: Optional[Callable[[dict], None]] = None,
+    cancel_token: SearchCancelToken | None = None,
+    progress_callback: Callable[[dict], None] | None = None,
 ) -> dict[str, Any]:
     """兼容：松散参数调用，返回 dict（新代码请用 run_mvp_search_from_job）。"""
     outcome = run_mvp_search_from_job(

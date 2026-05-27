@@ -1,54 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """预设构建/应用辅助。"""
 
 from __future__ import annotations
 
-from pathlib import Path
-from tkinter import filedialog, messagebox
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()
-import customtkinter as ctk
 
-from gui_design.shared.calc_history import CalculationHistory, HistoryEntry
-from gui_design.shared.calc_mode_labels import CALC_MODE_OPTIONS
-from gui_design.presentation.damage_snapshot import get_snapshot_from_app, store_snapshot_on_app
-from gui_design.shared.damage_visualization import (
-    build_damage_pie_figure,
-    build_improvement_bar_figure,
-    damage_breakdown_from_skill_map,
-    is_matplotlib_available,
-)
-from utils.optional_deps import matplotlib_install_hint
-from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
-from gui_design.app.loadout_preset import (
-    LoadoutPreset,
-    export_preset_json,
-    import_preset_json,
-    import_presets_from_json_text,
-)
-from gui_design.shared.preset_batch_compare import compare_presets_parallel
 from data.game_data_facade import GameDataFacade
 from data.loader import get_characters, get_equipments, get_weapons
-from gui_design.search_ui.search_settings import resolve_parallel_workers
-from gui_design.layout.gui_layout import (
-    MORE_SETTINGS_VIEWPORT_HEIGHT,
-    SECONDARY_ACTION_BUTTON_HEIGHT,
+from gui_design.app.loadout_preset import (
+    LoadoutPreset,
 )
-from gui_design.shared.ui_preferences import (
-    STARTUP_MODE_ALWAYS_MAIN,
-    STARTUP_MODE_REMEMBER_LAST,
-    save_ui_preferences,
-)
-from utils.gui_fonts import default_ui_font
-from utils.operation_log import LogLevel, get_session_operation_log
+from gui_design.shared.calc_mode_labels import CALC_MODE_OPTIONS
 
 if TYPE_CHECKING:
     from gui_design.shell.app import DamageCalculatorApp
-    from gui_design.app.loadout_state import LoadoutState
 
 
 def _label_for_mode(mode_id: str) -> str:
@@ -58,7 +27,7 @@ def _label_for_mode(mode_id: str) -> str:
     return mode_id
 
 
-def _lists_for_preset_compare(app: "DamageCalculatorApp") -> tuple[list, list, list]:
+def _lists_for_preset_compare(app: DamageCalculatorApp) -> tuple[list, list, list]:
     """多方案对比用的角色/武器/装备列表（优先 app.game_data）。"""
     game_data = getattr(app, "game_data", None)
     if isinstance(game_data, GameDataFacade):
@@ -70,7 +39,7 @@ def _lists_for_preset_compare(app: "DamageCalculatorApp") -> tuple[list, list, l
     return get_characters(), get_weapons(), get_equipments()
 
 
-def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
+def build_preset_from_app(app: DamageCalculatorApp) -> LoadoutPreset:
     """从当前 GUI 状态组装可导出预设。"""
     from gui_design.app.loadout_state import read_loadout_from_app
 
@@ -112,7 +81,7 @@ def build_preset_from_app(app: "DamageCalculatorApp") -> LoadoutPreset:
     )
 
 
-def _refresh_more_settings_visibility(app: "DamageCalculatorApp") -> None:
+def _refresh_more_settings_visibility(app: DamageCalculatorApp) -> None:
     """按 app._show_more_settings_var 刷新「更多设置」折叠区显隐。"""
     toggle_btn = getattr(app, "_more_settings_toggle_btn", None)
     body = getattr(app, "_more_settings_body", None)
@@ -139,7 +108,7 @@ def _select_panel_by_name(panel, name: str) -> bool:
     return True
 
 
-def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> None:
+def apply_preset_to_app(app: DamageCalculatorApp, preset: LoadoutPreset) -> None:
     """将预设写回 GUI（名称须存在于当前数据列表）。"""
     if not _select_panel_by_name(app.char_panel, preset.char_name):
         raise ValueError(f"未找到角色: {preset.char_name}")
@@ -174,8 +143,8 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
     app.use_manual_skill_counts_var.set(preset.use_manual_multi_skill_counts)
     from ..multi_skill import (
         apply_physical_abnormal_counts_to_app,
-        apply_spell_abnormal_counts_to_app,
         apply_segment_counts_to_app,
+        apply_spell_abnormal_counts_to_app,
     )
 
     apply_segment_counts_to_app(app, preset.multi_skill_counts)
@@ -191,9 +160,7 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
     if hasattr(app, "use_expected_crit_var"):
         app.use_expected_crit_var.set(bool(preset.use_expected_crit))
     if hasattr(app, "include_conditional_equipment_crit_var"):
-        app.include_conditional_equipment_crit_var.set(
-            bool(preset.include_conditional_equipment_crit)
-        )
+        app.include_conditional_equipment_crit_var.set(bool(preset.include_conditional_equipment_crit))
     if hasattr(app, "extra_crit_rate_percent_var"):
         app.extra_crit_rate_percent_var.set(str(float(preset.extra_crit_rate) * 100.0))
     if hasattr(app, "extra_crit_damage_percent_var"):
@@ -224,5 +191,3 @@ def apply_preset_to_app(app: "DamageCalculatorApp", preset: LoadoutPreset) -> No
                 app.page_tabs.set(target_page)
     app._refresh_fixed_loadout_menus()
     app._schedule_confirm(force=True)
-
-

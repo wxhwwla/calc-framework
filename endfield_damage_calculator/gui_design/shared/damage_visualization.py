@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """伤害构成可视化（matplotlib 嵌入 GUI，可选依赖）。"""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -24,11 +24,7 @@ def is_matplotlib_available() -> bool:
 
 def damage_breakdown_from_skill_map(skill_damage: dict[str, float]) -> tuple[DamageSlice, ...]:
     """从技能名→伤害映射生成切片（过滤非正数）。"""
-    slices = [
-        DamageSlice(label=name, value=float(dmg))
-        for name, dmg in skill_damage.items()
-        if float(dmg) > 0
-    ]
+    slices = [DamageSlice(label=name, value=float(dmg)) for name, dmg in skill_damage.items() if float(dmg) > 0]
     return tuple(slices)
 
 

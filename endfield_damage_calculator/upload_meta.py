@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 上传脚本用的版本号与临时提交说明（由 github_upload_module.py 调用）。
 
@@ -10,7 +9,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 # 写在 please_read_me.py 文件末尾的标记（推送成功后删除整块）
 SUMMARY_BEGIN = "# --- UPLOAD_SUMMARY ---"
@@ -20,13 +18,15 @@ _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
     re.MULTILINE,
 )
+
+
 def please_read_me_path(package_root: Path | None = None) -> Path:
     """返回 please_read_me.py 路径。"""
     root = package_root or Path(__file__).resolve().parent
     return root / "please_read_me.py"
 
 
-def parse_semver(version: str) -> Tuple[int, int, int]:
+def parse_semver(version: str) -> tuple[int, int, int]:
     parts = version.strip().split(".")
     if len(parts) != 3 or not all(p.isdigit() for p in parts):
         raise ValueError(f"无效语义化版本: {version!r}（需要 MAJOR.MINOR.PATCH）")
@@ -50,7 +50,7 @@ def write_version(path: Path, new_version: str) -> None:
     if not _VERSION_PATTERN.search(text):
         raise ValueError(f"未在 {path} 中找到 _VERSION")
     updated = _VERSION_PATTERN.sub(
-        rf'\g<1>{new_version}\g<3>',
+        rf"\g<1>{new_version}\g<3>",
         text,
         count=1,
     )
@@ -79,7 +79,7 @@ def strip_summary_block(text: str) -> str:
     return (text[:begin] + text[end:]).rstrip() + "\n"
 
 
-def write_summary_block(path: Path, title: str, bullets: List[str]) -> None:
+def write_summary_block(path: Path, title: str, bullets: list[str]) -> None:
     """在 please_read_me.py 末尾写入临时上传总结（注释行）。"""
     text = strip_summary_block(path.read_text(encoding="utf-8"))
     lines = [
@@ -100,7 +100,7 @@ def remove_summary_block(path: Path) -> None:
     path.write_text(strip_summary_block(text), encoding="utf-8")
 
 
-def read_summary_for_commit(path: Path) -> Tuple[str, List[str]]:
+def read_summary_for_commit(path: Path) -> tuple[str, list[str]]:
     """解析底部总结块，返回 (title, bullet_lines)。"""
     text = path.read_text(encoding="utf-8")
     begin = text.rfind(SUMMARY_BEGIN)
@@ -109,7 +109,7 @@ def read_summary_for_commit(path: Path) -> Tuple[str, List[str]]:
         raise ValueError("please_read_me.py 中缺少 UPLOAD_SUMMARY 标记块")
     block = text[begin:end]
     title = "Update"
-    bullets: List[str] = []
+    bullets: list[str] = []
     in_body = False
     for raw in block.splitlines():
         line = raw.strip()
@@ -124,7 +124,7 @@ def read_summary_for_commit(path: Path) -> Tuple[str, List[str]]:
     return title, bullets
 
 
-def build_commit_message(version: str, title: str, bullets: List[str]) -> str:
+def build_commit_message(version: str, title: str, bullets: list[str]) -> str:
     """生成 git commit 正文：首行 vX.Y.Z: 标题，下列表。"""
     first = f"v{version}: {title}"
     if not bullets:
@@ -132,7 +132,7 @@ def build_commit_message(version: str, title: str, bullets: List[str]) -> str:
     return first + "\n\n" + "\n".join(f"- {b}" for b in bullets)
 
 
-def classify_changed_paths(paths: List[str], package_dir_name: str = "endfield_damage_calculator") -> bool:
+def classify_changed_paths(paths: list[str], package_dir_name: str = "endfield_damage_calculator") -> bool:
     """
     是否存在除 please_read_me.py 以外的业务改动路径。
     用于判断本次上传是否应 bump _VERSION。
@@ -153,13 +153,13 @@ def classify_changed_paths(paths: List[str], package_dir_name: str = "endfield_d
     return False
 
 
-def summarize_changes(paths: List[str]) -> Tuple[str, List[str]]:
+def summarize_changes(paths: list[str]) -> tuple[str, list[str]]:
     """根据改动路径生成 (标题, 条目列表)。"""
     unique = sorted({p.replace("\\", "/") for p in paths if p.strip()})
     if not unique:
         return "维护性更新", ["无文件列表（请检查 git status）"]
 
-    bullets: List[str] = []
+    bullets: list[str] = []
     for p in unique:
         if p.endswith("weapons.json"):
             bullets.append("更新 weapons.json 武器数据")

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """按用户选择的装备件数（1–4）控制遍历格数。"""
 
 import unittest
@@ -20,12 +19,14 @@ from calculation.loadout.slot_search import (
 
 class TestLoadoutVaryingSlots(unittest.TestCase):
     def _catalog(self):
-        mk = lambda name: {
-            "名称": name,
-            "属性词条": ["敏捷1"],
-            "效果": [],
-            "三件套效果": [],
-        }
+        def mk(name):
+            return {
+                "名称": name,
+                "属性词条": ["敏捷1"],
+                "效果": [],
+                "三件套效果": [],
+            }
+
         return {
             "chest": [mk("胸1"), mk("胸2")],
             "gloves": [mk("手1"), mk("手2")],
@@ -67,10 +68,7 @@ class TestLoadoutVaryingSlots(unittest.TestCase):
                 warn_on_unfiltered=False,
             ),
         )
-        loadouts = [
-            task[1]
-            for task in iter_optimizer_tasks(plan, allow_duplicate_accessory=True)
-        ]
+        loadouts = [task[1] for task in iter_optimizer_tasks(plan, allow_duplicate_accessory=True)]
         self.assertEqual(len(loadouts), 2)
         self.assertEqual(loadouts[0][1].get("名称"), "手1")
         self.assertEqual(loadouts[0][2].get("名称"), "件1")

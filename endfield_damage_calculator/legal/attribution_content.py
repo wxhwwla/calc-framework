@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """数据来源与许可：文案常量与本地路径（无 GUI 依赖）。"""
 
 from __future__ import annotations
@@ -10,13 +9,8 @@ REPO_URL = "https://github.com/wxhwwla/endfield_damage_calculator_2.0"
 LICENSE_URL = f"{REPO_URL}/blob/main/LICENSE"
 DATA_LICENSE_URL = f"{REPO_URL}/blob/main/DATA_LICENSE"
 NOTICES_URL = f"{REPO_URL}/blob/main/NOTICES.md"
-ATTRIBUTION_DOC_URL = (
-    f"{REPO_URL}/blob/main/docs/%E6%95%B0%E6%8D%AE%E6%9D%A5%E6%BA%90%E4%B8%8E%E8%AE%B8%E5%8F%AF.md"
-)
-COMMERCIAL_OUTLINE_URL = (
-    f"{REPO_URL}/blob/main/docs/"
-    "%E5%95%86%E4%B8%9A%E8%AE%B8%E5%8F%AF%E8%A6%81%E7%82%B9.md"
-)
+ATTRIBUTION_DOC_URL = f"{REPO_URL}/blob/main/docs/%E6%95%B0%E6%8D%AE%E6%9D%A5%E6%BA%90%E4%B8%8E%E8%AE%B8%E5%8F%AF.md"
+COMMERCIAL_OUTLINE_URL = f"{REPO_URL}/blob/main/docs/%E5%95%86%E4%B8%9A%E8%AE%B8%E5%8F%AF%E8%A6%81%E7%82%B9.md"
 BWIKI_ZMD_URL = "https://wiki.biligame.com/zmd/"
 CC_BY_SA_40_URL = "https://creativecommons.org/licenses/by-sa/4.0/deed.zh"
 AGPL_30_URL = "https://www.gnu.org/licenses/agpl-3.0.html"
@@ -27,13 +21,16 @@ ATTRIBUTION_DIALOG_SIZE = (620, 760)
 ATTRIBUTION_DIALOG_MINSIZE = (560, 700)
 ATTRIBUTION_TEXTBOX_HEIGHT = 200
 
-SUMMARY_TEXT = """【非官方工具】
+SUMMARY_TEXT = (
+    """【非官方工具】
 本程序为爱好者计算器，不代表游戏官方或 BWIKI 运营方。
 使用本程序或数据即表示您已阅读相关许可。
 
 【数据来源】
 · JSON：本仓库维护（非商业可随软件使用）
-· 参考：终末地 BWIKI """ + BWIKI_ZMD_URL + """
+· 参考：终末地 BWIKI """
+    + BWIKI_ZMD_URL
+    + """
 · 游戏名称、数值、美术等：版权归游戏权利方
 
 【数据许可 DATA_LICENSE】
@@ -44,13 +41,16 @@ SUMMARY_TEXT = """【非官方工具】
 
 【软件许可 LICENSE】
 · 默认 AGPL-3.0（再分发 / 网络服务须满足开源义务）
-· 闭源或免开源义务商用：须书面商业许可（""" + COMMERCIAL_CONTACT + """）
+· 闭源或免开源义务商用：须书面商业许可（"""
+    + COMMERCIAL_CONTACT
+    + """）
 · 商业许可不包含游戏数据
 
 【免责声明】
 数据与计算结果仅供参考，不保证与游戏内一致。
 
 详细条款、典型情形与合规清单见下方链接。"""
+)
 
 
 def attribution_doc_local_path() -> Path:

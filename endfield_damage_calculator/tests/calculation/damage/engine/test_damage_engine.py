@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单段伤害引擎行为测试。"""
 
 import unittest

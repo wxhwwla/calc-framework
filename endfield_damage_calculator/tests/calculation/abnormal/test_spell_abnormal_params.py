@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """法术异常参数表测试。"""
 
 import unittest
@@ -34,9 +33,8 @@ class TestSpellAbnormalParams(unittest.TestCase):
         calc_level = calc_level_from_ui(2)
         mult = base_multiplier_for_formula("burn", calc_level=calc_level)
         level_factor = 1.0 + float(calc_level)
-        expected = (
-            SPELL_CROSS_ANOMALY_INITIAL_RATIO * level_factor
-            + 0.12 * level_factor * float(SPELL_BURN_DURATION_SECONDS)
+        expected = SPELL_CROSS_ANOMALY_INITIAL_RATIO * level_factor + 0.12 * level_factor * float(
+            SPELL_BURN_DURATION_SECONDS
         )
         self.assertAlmostEqual(mult, expected)
 

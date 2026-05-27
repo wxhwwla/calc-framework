@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """流式遍历任务生成测试。"""
 
 import unittest

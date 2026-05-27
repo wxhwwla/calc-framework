@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """特殊能力面板：数据刷新与行配置。"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import customtkinter as ctk
 
@@ -27,7 +26,7 @@ if TYPE_CHECKING:
 class SpecialAbilityRefreshMixin:
     """根据武器数据刷新面板控件。"""
 
-    def refresh(self: SpecialAbilityPanel, weapon_data: Dict[str, Any]) -> None:
+    def refresh(self: SpecialAbilityPanel, weapon_data: dict[str, Any]) -> None:
         """根据武器数据刷新面板。"""
         bonus_attrs = self._extract_bonus_attributes(weapon_data)
         slots = read_weapon_special_slots(weapon_data)
@@ -101,11 +100,11 @@ class SpecialAbilityRefreshMixin:
         self._apply_layout()
 
     @classmethod
-    def _extract_bonus_attributes(cls, weapon_data: Dict[str, Any]) -> List[str]:
+    def _extract_bonus_attributes(cls, weapon_data: dict[str, Any]) -> list[str]:
         return bonus_attribute_keys(weapon_data)[:3]
 
     @staticmethod
-    def _parse_weapon_special_field(weapon_data: Dict[str, Any]) -> tuple[bool, str]:
+    def _parse_weapon_special_field(weapon_data: dict[str, Any]) -> tuple[bool, str]:
         """兼容旧测试：仅返回特殊能力1（或旧 ``特殊能力``）。"""
         enabled, name, _ = read_weapon_special_slots(weapon_data)[0]
         return enabled, name
@@ -139,9 +138,7 @@ class SpecialAbilityRefreshMixin:
     def _configure_third_bonus_active(self: SpecialAbilityPanel, title: str) -> None:
         if self._ability_3_name_label:
             display = extract_effect_display_name(title) if title else ""
-            self._ability_3_name_label.configure(
-                text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2], display)
-            )
+            self._ability_3_name_label.configure(text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2], display))
         if self._ability_3_label:
             self._ability_3_label.configure(text="1")
         if self._ability_3_slider:
@@ -151,13 +148,9 @@ class SpecialAbilityRefreshMixin:
 
     def _configure_third_bonus_placeholder(self: SpecialAbilityPanel) -> None:
         if self._ability_3_name_label:
-            self._ability_3_name_label.configure(
-                text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2])
-            )
+            self._ability_3_name_label.configure(text=format_weapon_skill_title(self._BONUS_SKILL_PREFIX[2]))
         if self._ability_3_label:
-            self._ability_3_label.configure(
-                text=format_weapon_skill_slider_value(active=False)
-            )
+            self._ability_3_label.configure(text=format_weapon_skill_slider_value(active=False))
         if self._ability_3_slider:
             self._ability_3_slider.configure(state="disabled")
             self._ability_3_slider.set(1)

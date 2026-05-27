@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """并行评估多条配装任务测试。"""
 
 import unittest
 
-from calculation.loadout.optimizer import LoadoutScore, WeaponCandidate
 from calculation.core.parallel_evaluate import evaluate_tasks_parallel
+from calculation.loadout.optimizer import LoadoutScore, WeaponCandidate
 
 
 def _dummy_task(i: int):

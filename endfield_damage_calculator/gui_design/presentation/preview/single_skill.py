@@ -1,27 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单/多技能遍历快速预览文案（纯函数，无 CTk）。"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
-from calculation.damage.engine import DamageContext
-from calculation.loadout.optimizer import (
-    OptimizerConfig,
-    WeaponCandidate,
-    search_best_single_skill_loadouts,
-)
-from calculation.multi_skill.optimizer import (
-    MultiSkillConfig,
-    SkillScenario,
-    optimize_multi_skill_loadouts,
-)
-from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from calculation.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
-from calculation.core.preview_cache import cached_preview, sync_preview_dependencies
 from calculation.abnormal.physical import (
     compose_damage_total,
     evaluate_physical_abnormal_total,
@@ -31,12 +14,21 @@ from calculation.abnormal.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
 )
+from calculation.core.preview_cache import cached_preview, sync_preview_dependencies
+from calculation.damage.engine import DamageContext
+from calculation.loadout.optimizer import (
+    OptimizerConfig,
+    WeaponCandidate,
+    search_best_single_skill_loadouts,
+)
+from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 
 
 def build_single_skill_search_preview_lines(
     *,
-    char_data: Optional[Dict[str, Any]],
-    weapon_data: Optional[Dict[str, Any]],
+    char_data: dict[str, Any] | None,
+    weapon_data: dict[str, Any] | None,
     char_level: int,
     weapon_level: int,
     trust_level: int = 0,
@@ -55,13 +47,13 @@ def build_single_skill_search_preview_lines(
     special_skill_2_name: str = "",
     special_skill_2_level: int = 1,
     special_skill_2_stack: int = 1,
-    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_weapon_candidates: list[WeaponCandidate] | None = None,
     preview_scope_label: str = "",
-    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_catalog: dict[str, list[dict]] | None = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
-    physical_abnormal_counts: Optional[Dict[str, int]] = None,
-    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
     damage_component_mode: str = "skill_and_abnormal",
     use_expected_crit: bool = False,
     extra_crit_rate: float = 0.0,
@@ -84,9 +76,7 @@ def build_single_skill_search_preview_lines(
         weapon_scope=preview_scope_label,
         equipment_scope=preview_equipment_scope_label,
         enemy_defense=enemy_defense,
-        preview_weapon_names=tuple(
-            c.name for c in (preview_weapon_candidates or [])
-        ),
+        preview_weapon_names=tuple(c.name for c in (preview_weapon_candidates or [])),
         custom_equipment_catalog=preview_equipment_catalog is not None,
         physical_abnormal_counts=tuple(sorted((physical_abnormal_counts or {}).items())),
         spell_abnormal_counts=tuple(sorted((spell_abnormal_counts or {}).items())),
@@ -149,8 +139,8 @@ def build_single_skill_search_preview_lines(
 
 def _build_single_skill_search_preview_lines_impl(
     *,
-    char_data: Dict[str, Any],
-    weapon_data: Dict[str, Any],
+    char_data: dict[str, Any],
+    weapon_data: dict[str, Any],
     char_level: int,
     weapon_level: int,
     trust_level: int = 0,
@@ -169,13 +159,13 @@ def _build_single_skill_search_preview_lines_impl(
     special_skill_2_name: str = "",
     special_skill_2_level: int = 1,
     special_skill_2_stack: int = 1,
-    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_weapon_candidates: list[WeaponCandidate] | None = None,
     preview_scope_label: str = "",
-    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_catalog: dict[str, list[dict]] | None = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
-    physical_abnormal_counts: Optional[Dict[str, int]] = None,
-    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
     damage_component_mode: str = "skill_and_abnormal",
     use_expected_crit: bool = False,
     extra_crit_rate: float = 0.0,
@@ -187,9 +177,7 @@ def _build_single_skill_search_preview_lines_impl(
             "错误: 未提供装备 catalog，请通过 GameDataFacade 传入后再预览。",
         ]
     catalog = preview_equipment_catalog
-    blocked = catalog_preview_status_lines(
-        catalog, mode_label="单技能遍历(快速预览)"
-    )
+    blocked = catalog_preview_status_lines(catalog, mode_label="单技能遍历(快速预览)")
     if blocked:
         return blocked
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
@@ -314,5 +302,3 @@ def _build_single_skill_search_preview_lines_impl(
     if not result.top_results:
         lines.append("无可用结果，请检查装备数据。")
     return lines
-
-

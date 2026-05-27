@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 测试小数乘10处理逻辑
 
@@ -10,12 +9,12 @@
 """
 
 from calculation.damage.formula import (
+    calculate_bonus_attribute,
     calculate_growth_curve,
     calculate_skill_curve,
-    calculate_bonus_attribute,
 )
-from scripts.inverse_cli import parse_percent
 from calculation.damage.inverse import fit_skill_formula_no_special
+from scripts.inverse_cli import parse_percent
 
 
 def test_integer_data_direct_calculation():
@@ -57,7 +56,7 @@ def test_percent_integer_parsing():
     value = "89%"
     result, is_decimal = parse_percent(value)
     assert result == 89, f"整数百分比解析失败: {result} != 89"
-    assert is_decimal is False, f"整数百分比类型判断失败"
+    assert is_decimal is False, "整数百分比类型判断失败"
     print("✓ 整数百分比解析测试通过")
 
 
@@ -67,7 +66,7 @@ def test_percent_decimal_parsing():
     result, is_decimal = parse_percent(value)
     # 小数百分比应该乘10
     assert result == 89, f"小数百分比解析失败: {result} != 89"
-    assert is_decimal is True, f"小数百分比类型判断失败"
+    assert is_decimal is True, "小数百分比类型判断失败"
     print("✓ 小数百分比解析测试通过")
 
 
@@ -80,9 +79,7 @@ def test_inverse_formula_decimal_fitting():
     # 该数据无法用单一公式拟合，第9级作为special值
     assert special == [23.4], f"special错误: {special} != [23.4]"
 
-    result = calculate_bonus_attribute(
-        base, growth, divisor, offset, special, max_level=9, is_decimal=True
-    )
+    result = calculate_bonus_attribute(base, growth, divisor, offset, special, max_level=9, is_decimal=True)
     assert result == data, f"反推参数计算结果不匹配: {result} != {data}"
     print(f"✓ 小数数据反推公式测试通过 (参数: base={base}, growth={growth}, divisor={divisor}, offset={offset})")
 
@@ -100,7 +97,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print("          小数乘10处理逻辑测试")
     print("=" * 60)
-    
+
     test_integer_data_direct_calculation()
     test_decimal_data_scale_by_10()
     test_decimal_data_with_special_value()
@@ -108,7 +105,7 @@ if __name__ == "__main__":
     test_percent_decimal_parsing()
     test_inverse_formula_decimal_fitting()
     test_skill_curve_with_decimal()
-    
+
     print("=" * 60)
     print("          所有测试通过！")
     print("=" * 60)

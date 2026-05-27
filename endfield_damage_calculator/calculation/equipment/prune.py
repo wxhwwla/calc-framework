@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """装备剪枝：按角色主/副能力与目标技能类型排序候选。"""
 
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from calculation.equipment.affix import parse_equipment_affix_line
 
-_STAT_FLAT_IN_AFFIX = re.compile(
-    r"^(力量|敏捷|智识|意志|攻击力)(\d+(?:\.\d+)?)(%?)$"
-)
+_STAT_FLAT_IN_AFFIX = re.compile(r"^(力量|敏捷|智识|意志|攻击力)(\d+(?:\.\d+)?)(%?)$")
 
 
 def character_ability_attrs(character: dict[str, Any]) -> tuple[str, str]:
@@ -71,14 +69,8 @@ def equipment_stat_affinity_tier(
     0 同时含主、副；1 仅主；2 仅副；3 皆无。
     """
     flats = _collect_flat_stats_from_item(item)
-    has_main = bool(
-        (main_attr and flats.get(main_attr, 0.0) > 0)
-        or _has_ability_percent_tag(item, tag="主能力")
-    )
-    has_sub = bool(
-        (sub_attr and flats.get(sub_attr, 0.0) > 0)
-        or _has_ability_percent_tag(item, tag="副能力")
-    )
+    has_main = bool((main_attr and flats.get(main_attr, 0.0) > 0) or _has_ability_percent_tag(item, tag="主能力"))
+    has_sub = bool((sub_attr and flats.get(sub_attr, 0.0) > 0) or _has_ability_percent_tag(item, tag="副能力"))
     if has_main and has_sub:
         return 0
     if has_main:
@@ -93,10 +85,7 @@ def equipment_has_skill_damage_bonus(item: dict[str, Any], skill_type: str) -> b
     if not skill_type:
         return False
     needle = f"{skill_type}伤害"
-    for line in _iter_equipment_text_lines(item):
-        if needle in line.replace(" ", ""):
-            return True
-    return False
+    return any(needle in line.replace(" ", "") for line in _iter_equipment_text_lines(item))
 
 
 def equipment_skill_affinity_tier(
@@ -137,8 +126,6 @@ def sort_equipment_catalog_by_priority(
     result: dict[str, list[dict[str, Any]]] = {}
     for slot in ("chest", "gloves", "accessories"):
         items = list(catalog.get(slot) or [])
-        items.sort(
-            key=lambda it: equipment_prune_sort_key(it, main_attr, sub_attr, skill_types)
-        )
+        items.sort(key=lambda it: equipment_prune_sort_key(it, main_attr, sub_attr, skill_types))
         result[slot] = items
     return result

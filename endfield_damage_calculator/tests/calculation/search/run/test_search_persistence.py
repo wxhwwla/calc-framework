@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """SQLite 续跑与去重测试。"""
 
 import tempfile

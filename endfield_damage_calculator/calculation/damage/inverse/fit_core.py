@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 反向计算公式参数模块
 
@@ -15,7 +14,7 @@
 
 import math
 import os
-from typing import List, Tuple, Sequence, Optional
+from collections.abc import Sequence
 
 
 def _inverse_verbose() -> bool:
@@ -31,6 +30,7 @@ def _inv_print(*args: object, **kwargs: object) -> None:
 
 # ==================== 内部辅助函数 ====================
 
+
 def _is_decimal_data(data: Sequence[int | float]) -> bool:
     """
     判断数据是否包含小数（非整数的浮点数）。
@@ -44,7 +44,7 @@ def _is_decimal_data(data: Sequence[int | float]) -> bool:
     return any(isinstance(x, float) and x != int(x) for x in data)
 
 
-def _scale_data(data: Sequence[int | float], scale_factor: int = 10) -> Tuple[List[int], int]:
+def _scale_data(data: Sequence[int | float], scale_factor: int = 10) -> tuple[list[int], int]:
     """
     缩放数据（小数乘10转换为整数）。
 
@@ -60,12 +60,12 @@ def _scale_data(data: Sequence[int | float], scale_factor: int = 10) -> Tuple[Li
     """
     is_decimal = _is_decimal_data(data)
     actual_scale = scale_factor if is_decimal else 1
-    
+
     if is_decimal:
-        scaled = [int(round(x * actual_scale)) for x in data]
+        scaled = [round(x * actual_scale) for x in data]
     else:
         scaled = [int(x) for x in data]
-    
+
     return scaled, actual_scale
 
 
@@ -95,7 +95,7 @@ def _params_sort_key(
     growth: int,
     divisor: int,
     offset: int,
-) -> Tuple[int, int, int]:
+) -> tuple[int, int, int]:
     """
     参数排序键生成函数。
 
@@ -117,9 +117,9 @@ def _gcd_normalize_params(
     growth: int,
     divisor: int,
     offset: int,
-    scaled_data: List[int],
+    scaled_data: list[int],
     scaled_base: int,
-) -> Tuple[int, int, int]:
+) -> tuple[int, int, int]:
     """
     对参数进行最大公约数规范化。
 
@@ -151,12 +151,12 @@ def _gcd_normalize_params(
 
 
 def _offset_bounds_for_pair(
-    scaled_data: List[int],
+    scaled_data: list[int],
     scaled_base: int,
     growth: int,
     divisor: int,
     num_levels: int,
-) -> Tuple[bool, int, int]:
+) -> tuple[bool, int, int]:
     """
     计算使 floor 公式在各等级成立的 offset 整数区间。
 
@@ -174,7 +174,7 @@ def _offset_bounds_for_pair(
     Returns:
         元组：(是否存在有效区间, offset下界, offset上界)
     """
-    offset_lower = -10**18
+    offset_lower = -(10**18)
     offset_upper = 10**18
     for lv in range(1, num_levels + 1):
         target = scaled_data[lv - 1] - scaled_base
@@ -188,18 +188,18 @@ def _offset_bounds_for_pair(
 
 
 def _find_best_params(
-    scaled_data: List[int],
+    scaled_data: list[int],
     base: int | float,
     scaled_base: int,
     scale_factor: int,
     num_levels: int,
-    divisor_range: Tuple[int, int] = (1, 501),
-    growth_range: Tuple[int, int] = (1, 1001),
-    offset_search_limit: int = 500
-) -> Optional[Tuple[int | float, int, int | float]]:
+    divisor_range: tuple[int, int] = (1, 501),
+    growth_range: tuple[int, int] = (1, 1001),
+    offset_search_limit: int = 500,
+) -> tuple[int | float, int, int | float] | None:
     """
     查找最佳拟合参数（核心算法）
-    
+
     参数：
         scaled_data: 缩放后的数据
         base: 原始基础值
@@ -209,15 +209,15 @@ def _find_best_params(
         divisor_range: 除数搜索范围
         growth_range: 成长值搜索范围
         offset_search_limit: offset搜索限制
-    
+
     返回：
         (growth, divisor, offset) 或 None
 
     多条等价参数时，按 growth → divisor → |offset| 取字典序最小的一组。
     """
-    best_params: Tuple[int, int, int] | None = None
-    best_key: Tuple[int, int, int] | None = None
-    best_error = float('inf')
+    best_params: tuple[int, int, int] | None = None
+    best_key: tuple[int, int, int] | None = None
+    best_error = float("inf")
 
     def _consider(growth: int, divisor: int, offset: int, error: float) -> None:
         nonlocal best_params, best_key, best_error
@@ -246,14 +246,10 @@ def _find_best_params(
             for offset in range(offset_lower, offset_upper + 1):
                 error = 0
                 for lv in range(1, num_levels + 1):
-                    calculated = scaled_base + math.floor(
-                        (growth * (lv - 1) + offset) / divisor
-                    )
+                    calculated = scaled_base + math.floor((growth * (lv - 1) + offset) / divisor)
                     error += abs(calculated - scaled_data[lv - 1])
                 if error < 0.001:
-                    growth, divisor, offset = _gcd_normalize_params(
-                        growth, divisor, offset, scaled_data, scaled_base
-                    )
+                    growth, divisor, offset = _gcd_normalize_params(growth, divisor, offset, scaled_data, scaled_base)
                     return (
                         _restore_param(growth / scale_factor, scale_factor),
                         divisor,
@@ -264,16 +260,11 @@ def _find_best_params(
     for growth in range(*growth_range):
         for divisor in range(*divisor_range):
             total_offset = sum(
-                (scaled_data[lv - 1] - scaled_base) * divisor - growth * (lv - 1)
-                for lv in range(1, num_levels + 1)
+                (scaled_data[lv - 1] - scaled_base) * divisor - growth * (lv - 1) for lv in range(1, num_levels + 1)
             )
             offset = round(total_offset / num_levels)
             error = sum(
-                abs(
-                    scaled_base
-                    + math.floor((growth * (lv - 1) + offset) / divisor)
-                    - scaled_data[lv - 1]
-                )
+                abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
                 for lv in range(1, num_levels + 1)
             )
             _consider(growth, divisor, int(offset), float(error))
@@ -286,11 +277,7 @@ def _find_best_params(
             offset_end = min(offset_upper + 1, offset_lower + offset_search_limit)
             for offset in range(offset_lower, offset_end):
                 error = sum(
-                    abs(
-                        scaled_base
-                        + math.floor((growth * (lv - 1) + offset) / divisor)
-                        - scaled_data[lv - 1]
-                    )
+                    abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
                     for lv in range(1, num_levels + 1)
                 )
                 _consider(growth, divisor, offset, float(error))
@@ -300,9 +287,7 @@ def _find_best_params(
 
     growth, divisor, offset = best_params
     if best_error < 0.001:
-        growth, divisor, offset = _gcd_normalize_params(
-            growth, divisor, offset, scaled_data, scaled_base
-        )
+        growth, divisor, offset = _gcd_normalize_params(growth, divisor, offset, scaled_data, scaled_base)
     return (
         _restore_param(growth / scale_factor, scale_factor),
         divisor,
@@ -311,4 +296,3 @@ def _find_best_params(
 
 
 # ==================== 属性成长反向计算 ====================
-

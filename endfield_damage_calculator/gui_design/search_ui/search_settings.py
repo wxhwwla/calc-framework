@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索相关 GUI 参数解析（可单测）。"""
 
 from __future__ import annotations
@@ -109,9 +108,6 @@ def format_search_progress_text(
         remain_text = format_duration_human(eta_seconds)
         if estimated_total_seconds and estimated_total_seconds > 0:
             total_text = format_duration_human(estimated_total_seconds)
-            return (
-                f"{prefix}：{processed}/{total}\n"
-                f"剩余 {remain_text}，总预计 {total_text}"
-            )
+            return f"{prefix}：{processed}/{total}\n剩余 {remain_text}，总预计 {total_text}"
         return f"{prefix}：{processed}/{total}\n剩余 {remain_text}"
     return f"{prefix}：{processed}/{total}"

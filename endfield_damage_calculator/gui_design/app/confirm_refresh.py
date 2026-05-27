@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """确认刷新去重：避免最小化/失焦等触发整页重绘。"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 def normalize_skill_count_text(text: str) -> str:
@@ -16,7 +15,7 @@ def normalize_skill_count_text(text: str) -> str:
     return str(value)
 
 
-def skill_count_commit_changed(text: str, last_committed: Optional[str]) -> tuple[str, bool]:
+def skill_count_commit_changed(text: str, last_committed: str | None) -> tuple[str, bool]:
     """
     判断次数是否相对上次「已提交」值发生变化。
 
@@ -39,7 +38,7 @@ def build_confirm_refresh_signature(
     skill_levels: tuple[int, int, int],
     weapon_specials: tuple[Any, ...],
     use_manual_multi_skill_counts: bool,
-    multi_skill_manual_counts: Dict[str, int],
+    multi_skill_manual_counts: dict[str, int],
     preview_scope_label: str,
     preview_equipment_scope_label: str,
     fixed_loadout_token: str,
@@ -48,8 +47,8 @@ def build_confirm_refresh_signature(
     include_conditional_equipment_crit: bool = False,
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
-    physical_abnormal_counts: Optional[Dict[str, int]] = None,
-    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
 ) -> tuple:
     """生成可哈希签名；相同输入时跳过 destroy+重建三列展示。"""
     return (
@@ -87,14 +86,14 @@ def build_display_pending_signature(
     skill_levels: tuple[int, int, int],
     weapon_specials: tuple[Any, ...],
     use_manual_multi_skill_counts: bool,
-    multi_skill_manual_counts: Dict[str, int],
+    multi_skill_manual_counts: dict[str, int],
     damage_component_mode: str = "skill_and_abnormal",
     use_expected_crit: bool = False,
     include_conditional_equipment_crit: bool = False,
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
-    physical_abnormal_counts: Optional[Dict[str, int]] = None,
-    spell_abnormal_counts: Optional[Dict[str, int]] = None,
+    physical_abnormal_counts: dict[str, int] | None = None,
+    spell_abnormal_counts: dict[str, int] | None = None,
     enemy_defense: float = 100.0,
 ) -> tuple:
     """

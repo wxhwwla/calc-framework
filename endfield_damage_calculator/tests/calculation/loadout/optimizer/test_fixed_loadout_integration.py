@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """固定配装控件集成测试。"""
 
 from __future__ import annotations
@@ -58,6 +57,7 @@ class TestFixedLoadoutIntegration(unittest.TestCase):
 
     def setUp(self) -> None:
         import customtkinter as ctk
+
         from gui_design.controls.fixed_loadout import (
             create_fixed_loadout_controls,
             refresh_all_fixed_slot_menus,

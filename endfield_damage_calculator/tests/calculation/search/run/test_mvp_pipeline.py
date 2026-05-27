@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """MVP 端到端基线测试。"""
 
 import tempfile

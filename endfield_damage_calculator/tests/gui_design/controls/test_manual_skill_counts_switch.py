@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动次数开关：待确认行为测试。"""
 
 import unittest
 from types import SimpleNamespace
-from unittest.mock import MagicMock
 
 from gui_design.controls.multi_skill import on_manual_skill_counts_switch_changed
 

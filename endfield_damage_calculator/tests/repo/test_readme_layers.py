@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """仓库 README 双层结构约定。"""
 
 import unittest
-from pathlib import Path
 
 from tests.fixtures.path_roots import REPO_ROOT
 

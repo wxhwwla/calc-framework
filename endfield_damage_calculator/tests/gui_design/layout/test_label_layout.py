@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """可换行标签宽度计算（无 GUI 窗口）。"""
 
 import unittest

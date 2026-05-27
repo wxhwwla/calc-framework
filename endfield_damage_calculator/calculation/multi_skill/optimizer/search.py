@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 多技能加权总伤优化模块。
 
@@ -24,11 +23,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
-
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from calculation.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
 from calculation.equipment.affix import aggregate_loadout_modifiers
+from calculation.equipment.prune import character_ability_attrs
+from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
 from calculation.loadout.optimizer import (
     LoadoutScore,
     OptimizerConfig,
@@ -38,11 +36,8 @@ from calculation.loadout.optimizer import (
 )
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from calculation.search.evaluate.context import SearchEvalContext
-from calculation.equipment.prune import character_ability_attrs
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
 
 from .types import MultiSkillConfig, MultiSkillResult, MultiSkillScore, SkillScenario, resolve_scenario_damage_type
-
 
 
 def _resolve_skill_counts(
@@ -71,10 +66,7 @@ def _resolve_skill_counts(
     else:
         counts = {s.scenario_key: 0 for s in scenarios}
         for s in scenarios:
-            if (
-                s.resolved_skill_type == config.selected_skill
-                and s.resolved_segment_index == 1
-            ):
+            if s.resolved_skill_type == config.selected_skill and s.resolved_segment_index == 1:
                 counts[s.scenario_key] = 1
                 break
         else:
@@ -92,7 +84,7 @@ def optimize_multi_skill_loadouts(
     equipment_catalog: dict[str, list[dict]],
     scenarios: list[SkillScenario],
     config: MultiSkillConfig = MultiSkillConfig(),
-    character: Optional[dict] = None,
+    character: dict | None = None,
 ) -> MultiSkillResult:
     """按多技能加权总伤进行搜索（快速预览版）。
 
@@ -117,15 +109,7 @@ def optimize_multi_skill_loadouts(
     if not scenarios:
         return MultiSkillResult(top_results=(), skill_count_map={}, total_combinations=0)
     count_map = _resolve_skill_counts(scenarios, config)
-    skill_types = tuple(
-        dict.fromkeys(
-            (
-                s.resolved_skill_type
-                for s in scenarios
-                if count_map.get(s.scenario_key, 0) > 0
-            )
-        )
-    )
+    skill_types = tuple(dict.fromkeys(s.resolved_skill_type for s in scenarios if count_map.get(s.scenario_key, 0) > 0))
     main_attr, sub_attr = character_ability_attrs(character or {})
     tasks, total_combinations, _pruned, _warnings = enumerate_optimizer_tasks(
         base_context=base_context,
@@ -194,9 +178,7 @@ def optimize_multi_skill_loadouts(
                 weighted_total_damage=weighted_total,
             )
         )
-    top = tuple(
-        sorted(scores, key=lambda s: s.weighted_total_damage, reverse=True)[: max(1, config.top_n)]
-    )
+    top = tuple(sorted(scores, key=lambda s: s.weighted_total_damage, reverse=True)[: max(1, config.top_n)])
     return MultiSkillResult(
         top_results=top,
         skill_count_map=count_map,
@@ -211,7 +193,7 @@ def evaluate_multi_skill_task(
     task: OptimizerTask,
     scenarios: tuple[SkillScenario, ...],
     skill_counts: dict[str, int],
-    search_eval: Optional[SearchEvalContext] = None,
+    search_eval: SearchEvalContext | None = None,
 ) -> LoadoutScore:
     """评估单条配装的多技能加权总伤（供全量并行/续跑搜索）。
 

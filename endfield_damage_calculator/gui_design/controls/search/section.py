@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索区 UI。"""
 
 from __future__ import annotations
 
-import threading
-from pathlib import Path
-from tkinter import filedialog, messagebox
-from typing import TYPE_CHECKING, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
@@ -15,54 +12,32 @@ from utils.platform_win32_patch import apply_platform_win32_patch
 apply_platform_win32_patch()
 import customtkinter as ctk
 
-from calculation.loadout.optimizer import WeaponCandidate
-from calculation.search.run.mvp import MvpSearchOutcome
-from calculation.search.run.cancel import SearchCancelToken
 from calculation.search.plan.controller import (
     SearchJobInputs,
-    optimizer_config_for_search_job,
-    prepare_search_job,
-)
-from calculation.search.plan.job import SingleSkillSearchJob
-from calculation.search.run.single_skill import (
-    estimate_single_skill_search,
-    run_exported_single_skill_search,
-)
-from ..fixed_loadout import (
-    create_fixed_loadout_controls,
-    refresh_all_fixed_slot_menus,
 )
 from gui_design.layout.gui_layout import (
     FIXED_LOADOUT_HINT_BOX_HEIGHT,
     PRIMARY_ACTION_BUTTON_HEIGHT,
     SEARCH_ESTIMATE_BOX_HEIGHT,
-    search_action_button_texts,
     SEARCH_STATUS_BOX_HEIGHT,
     SEARCH_WORKERS_HINT_BOX_HEIGHT,
     SECONDARY_ACTION_BUTTON_HEIGHT,
+    search_action_button_texts,
 )
 from gui_design.layout.panel_hints import FIXED_LOADOUT_HINT
-from gui_design.search_ui.search_estimate_message import compose_search_estimate_message
-from gui_design.presentation.search_results_lines import (
-    build_search_results_report_lines,
-    export_paths_to_strings,
-)
-from gui_design.search_ui.search_results_view import show_search_results_dialog
 from gui_design.search_ui.search_settings import (
     build_worker_option_labels,
-    format_parallel_workers_help,
-    format_search_progress_text,
-    get_cpu_parallel_info,
-    resolve_parallel_workers,
-    resolve_top_n,
 )
-from utils.app_paths import allocate_search_run_directory, default_search_output_root
+
+from ..fixed_loadout import (
+    create_fixed_loadout_controls,
+)
 
 if TYPE_CHECKING:
     from gui_design.shell.app import DamageCalculatorApp
 
 
-def build_search_job_inputs(app: "DamageCalculatorApp") -> Optional[SearchJobInputs]:
+def build_search_job_inputs(app: DamageCalculatorApp) -> SearchJobInputs | None:
     """从当前 GUI 刮取全量搜索输入（预估与实跑共用）。"""
     from gui_design.app.loadout_state import read_loadout_from_app
 
@@ -76,7 +51,7 @@ def build_search_job_inputs(app: "DamageCalculatorApp") -> Optional[SearchJobInp
 
 
 def place_search_section(
-    app: "DamageCalculatorApp",
+    app: DamageCalculatorApp,
     parent: ctk.CTkFrame,
     *,
     wrap_label: Callable[[ctk.CTkLabel, ctk.CTkBaseClass], None],
@@ -145,9 +120,7 @@ def place_search_section(
         small_font=app.small_font,
         on_change=lambda: on_fixed_loadout_changed(app),
     )
-    fixed_hint_box = ctk.CTkFrame(
-        parent, height=FIXED_LOADOUT_HINT_BOX_HEIGHT, fg_color="transparent"
-    )
+    fixed_hint_box = ctk.CTkFrame(parent, height=FIXED_LOADOUT_HINT_BOX_HEIGHT, fg_color="transparent")
     fixed_hint_box.grid(row=sr, column=0, padx=4, pady=(0, 6), sticky="ew")
     fixed_hint_box.grid_propagate(False)
     fixed_hint_box.grid_columnconfigure(0, weight=1)
@@ -216,12 +189,12 @@ def place_search_section(
     search_param_row.grid_columnconfigure(0, weight=1)
     search_param_row.grid_columnconfigure(1, weight=1)
     sr += 1
-    ctk.CTkLabel(
-        search_param_row, text="并行线程", font=app.small_font, text_color="#CCCCCC"
-    ).grid(row=0, column=0, sticky="w")
-    ctk.CTkLabel(
-        search_param_row, text="Top 条数", font=app.small_font, text_color="#CCCCCC"
-    ).grid(row=0, column=1, sticky="w")
+    ctk.CTkLabel(search_param_row, text="并行线程", font=app.small_font, text_color="#CCCCCC").grid(
+        row=0, column=0, sticky="w"
+    )
+    ctk.CTkLabel(search_param_row, text="Top 条数", font=app.small_font, text_color="#CCCCCC").grid(
+        row=0, column=1, sticky="w"
+    )
     app.search_workers_menu = ctk.CTkOptionMenu(
         search_param_row,
         values=build_worker_option_labels(),
@@ -241,9 +214,7 @@ def place_search_section(
     )
     app.search_top_n_menu.grid(row=1, column=1, padx=(4, 0), pady=(0, 2), sticky="ew")
 
-    workers_hint_box = ctk.CTkFrame(
-        parent, height=SEARCH_WORKERS_HINT_BOX_HEIGHT, fg_color="transparent"
-    )
+    workers_hint_box = ctk.CTkFrame(parent, height=SEARCH_WORKERS_HINT_BOX_HEIGHT, fg_color="transparent")
     workers_hint_box.grid(row=sr, column=0, padx=4, pady=(0, 4), sticky="ew")
     workers_hint_box.grid_propagate(False)
     workers_hint_box.grid_columnconfigure(0, weight=1)
@@ -261,9 +232,7 @@ def place_search_section(
     wrap_label(app.search_workers_hint_label, workers_hint_box)
     refresh_parallel_workers_hint(app)
 
-    status_box = ctk.CTkFrame(
-        parent, height=SEARCH_STATUS_BOX_HEIGHT, fg_color="transparent"
-    )
+    status_box = ctk.CTkFrame(parent, height=SEARCH_STATUS_BOX_HEIGHT, fg_color="transparent")
     status_box.grid(row=sr, column=0, padx=4, pady=(0, 4), sticky="ew")
     status_box.grid_propagate(False)
     status_box.grid_columnconfigure(0, weight=1)
@@ -291,5 +260,3 @@ def place_search_section(
         command=lambda: on_cancel_search(app),
     )
     _place(sr, app.search_cancel_btn, pady=(0, 4))
-
-

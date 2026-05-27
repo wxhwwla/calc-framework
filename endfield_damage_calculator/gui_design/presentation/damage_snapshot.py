@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 当前配装下的伤害快照：供仪表盘与历史记录使用。
 
@@ -11,13 +10,12 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from calculation.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
-from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
 from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
 from calculation.skills.segments import (
-    aggregate_weighted_damage,
     normalize_manual_segment_counts,
     parse_segment_key,
     scenario_counts_for_eval,
@@ -51,10 +49,7 @@ class DamageSnapshot:
 
 def _zone_share_percent(zone_values: dict[str, float]) -> dict[str, float]:
     """将乘区链转为饼图占比（对数权重，仅用于可视化）。"""
-    weights = {
-        name: abs(math.log(max(float(zone_values.get(name, 1.0)), 1e-9)))
-        for name in ZONE_ORDER
-    }
+    weights = {name: abs(math.log(max(float(zone_values.get(name, 1.0)), 1e-9))) for name in ZONE_ORDER}
     total = sum(weights.values()) or 1.0
     return {name: weights[name] / total * 100.0 for name in ZONE_ORDER if weights[name] > 0}
 
@@ -65,7 +60,7 @@ _SKILL_TYPE_ORDER = ("战技", "连携技", "终结技")
 def _compute_weighted_with_buffs(
     segment_damage: dict[str, float],
     counts: dict[str, int],
-    manual_buffs: Optional[dict[str, list[dict[str, float]]]],
+    manual_buffs: dict[str, list[dict[str, float]]] | None,
     scenarios: list[Any],
     final_attack: float,
     enemy_defense: float,
@@ -146,7 +141,7 @@ def build_damage_snapshot(
     ws2_level: int = 1,
     ws2_stack: int = 1,
     enemy_defense: float = 100.0,
-    manual_buffs: Optional[dict[str, list[dict[str, float]]]] = None,
+    manual_buffs: dict[str, list[dict[str, float]]] | None = None,
 ) -> DamageSnapshot:
     """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。
 
@@ -282,5 +277,5 @@ def store_snapshot_on_app(app: Any, snapshot: DamageSnapshot) -> None:
     app._last_damage_snapshot = snapshot
 
 
-def get_snapshot_from_app(app: Any) -> Optional[DamageSnapshot]:
+def get_snapshot_from_app(app: Any) -> DamageSnapshot | None:
     return getattr(app, "_last_damage_snapshot", None)

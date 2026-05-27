@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """可选依赖探测与提示文案。"""
 
 from __future__ import annotations

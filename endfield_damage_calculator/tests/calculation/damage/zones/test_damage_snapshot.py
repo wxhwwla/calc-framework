@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """伤害快照（仪表盘数据）测试。"""
 
 import unittest

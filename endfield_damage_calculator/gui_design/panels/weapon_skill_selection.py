@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """GUI 层武器技能面板适配（re-export calculation 核心 + 面板读写）。"""
 
 from __future__ import annotations
@@ -13,14 +12,15 @@ from calculation.skills.weapon_selection import (
 
 __all__ = [
     "WeaponSkillSelection",
-    "normalize_weapon_specials_tuple",
     "apply_weapon_skill_selection_to_panel",
+    "normalize_weapon_specials_tuple",
     "read_weapon_skill_selection_from_panel",
 ]
 
 
 def read_weapon_skill_selection_from_panel(weapon_panel: Any) -> WeaponSkillSelection:
     """从武器选择面板读取当前武器技能选用状态。"""
+
     def _call(name: str, fallback: str) -> Any:
         getter = getattr(weapon_panel, name, None)
         if callable(getter):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """单段伤害引擎（15 乘区链）。"""
 
 from .calculate import calculate_single_hit_damage

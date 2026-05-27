@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """预览计算缓存接入测试。"""
 
 import unittest

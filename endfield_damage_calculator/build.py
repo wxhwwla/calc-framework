@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 终末地伤害计算器 - 打包脚本
 
@@ -29,13 +28,13 @@ from pathlib import Path
 # 添加项目根目录到路径，确保能导入 please_read_me
 sys.path.insert(0, str(Path(__file__).parent))
 
-from release_bundle.release_layout import (  # noqa: E402
+from please_read_me import get_exe_version, get_version
+from release_bundle.release_layout import (
     RELEASE_APP_NAME,
     release_dir_from_dist,
     stage_release_folder,
 )
-from please_read_me import get_exe_version, get_version  # noqa: E402
-from utils.platform_win32_patch import apply_platform_win32_patch  # noqa: E402
+from utils.platform_win32_patch import apply_platform_win32_patch
 
 DEFAULT_BUILD_TIMEOUT_SECONDS = 20 * 60
 DEFAULT_HEARTBEAT_SECONDS = 15
@@ -138,7 +137,7 @@ def check_build_dependencies() -> bool:
 
     if not is_matplotlib_available():
         print("缺少运行时依赖 matplotlib。请在 [包] 目录执行：")
-        print('  pip install -e .')
+        print("  pip install -e .")
         return False
     print("matplotlib 已安装（将打入发布包）", flush=True)
     return True
@@ -148,12 +147,8 @@ def build_release() -> Path:
     """构建 onedir 发布包（exe 不内嵌 JSON）。"""
     project_root = Path(__file__).parent
     repo_root = project_root.parent
-    timeout_seconds = _read_int_env(
-        "ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS
-    )
-    heartbeat_seconds = _read_int_env(
-        "ENDFIELD_BUILD_HEARTBEAT_SECONDS", DEFAULT_HEARTBEAT_SECONDS
-    )
+    timeout_seconds = _read_int_env("ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS)
+    heartbeat_seconds = _read_int_env("ENDFIELD_BUILD_HEARTBEAT_SECONDS", DEFAULT_HEARTBEAT_SECONDS)
 
     excludes = [
         "tests",
@@ -223,10 +218,7 @@ def main() -> None:
     apply_platform_win32_patch()
 
     print("=" * 60)
-    print(
-        f"终末地伤害计算器 — 打包工具"
-        f"（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）"
-    )
+    print(f"终末地伤害计算器 — 打包工具（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）")
     print("=" * 60)
 
     if not check_build_dependencies():
@@ -239,7 +231,7 @@ def main() -> None:
         sys.exit(1)
 
     print("\n" + "=" * 60)
-    print(f"打包完成！")
+    print("打包完成！")
     print(f"  EXE 版本（窗口标题）: v{get_exe_version()}")
     print(f"  源码包版本:         v{get_version()}")
     print(f"发布文件夹: {release_root}")

@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 重构后的反向计算公式单元测试
 """
 
-from typing import cast, Tuple
-
 import unittest
+from typing import cast
+
 from calculation.damage.inverse import (
-    fit_attribute_formula,
-    fit_skill_formula,
-    fit_skill_formula_no_special,
-    fit_formula,
+    _find_best_params,
     _is_decimal_data,
     _scale_data,
-    _find_best_params,
+    fit_attribute_formula,
+    fit_formula,
+    fit_skill_formula_no_special,
 )
 
 
@@ -54,7 +52,7 @@ class TestInverseRefactored(unittest.TestCase):
         params = _find_best_params(data, base, scaled_base, scale_factor, num_levels=9)
         self.assertIsNotNone(params)
         # 使用类型断言解决类型检查问题
-        params = cast(Tuple[int | float, int, int | float], params)
+        params = cast(tuple[int | float, int, int | float], params)
         self.assertEqual(len(params), 3)  # (growth, divisor, offset)
 
     def test_find_best_params_prefers_smallest_equivalent_tuple(self):
@@ -72,12 +70,96 @@ class TestInverseRefactored(unittest.TestCase):
     def test_fit_attribute_formula_single_offset_interval(self):
         """offset 可行区间退化为单点时仍能反推（floor 公式的常见情况）"""
         data = [
-            29, 31, 34, 37, 40, 43, 46, 49, 51, 54, 57, 60, 63, 66, 69, 71, 74, 77, 80, 83,
-            86, 89, 91, 94, 97, 100, 103, 106, 109, 111, 114, 117, 120, 123, 126, 129, 132,
-            134, 137, 140, 143, 146, 149, 152, 154, 157, 160, 163, 166, 169, 172, 174, 177,
-            180, 183, 186, 189, 192, 194, 197, 200, 203, 206, 209, 212, 214, 217, 220, 223,
-            226, 229, 232, 234, 237, 240, 243, 246, 249, 252, 254, 257, 260, 263, 266, 269,
-            272, 274, 277, 280, 283,
+            29,
+            31,
+            34,
+            37,
+            40,
+            43,
+            46,
+            49,
+            51,
+            54,
+            57,
+            60,
+            63,
+            66,
+            69,
+            71,
+            74,
+            77,
+            80,
+            83,
+            86,
+            89,
+            91,
+            94,
+            97,
+            100,
+            103,
+            106,
+            109,
+            111,
+            114,
+            117,
+            120,
+            123,
+            126,
+            129,
+            132,
+            134,
+            137,
+            140,
+            143,
+            146,
+            149,
+            152,
+            154,
+            157,
+            160,
+            163,
+            166,
+            169,
+            172,
+            174,
+            177,
+            180,
+            183,
+            186,
+            189,
+            192,
+            194,
+            197,
+            200,
+            203,
+            206,
+            209,
+            212,
+            214,
+            217,
+            220,
+            223,
+            226,
+            229,
+            232,
+            234,
+            237,
+            240,
+            243,
+            246,
+            249,
+            252,
+            254,
+            257,
+            260,
+            263,
+            266,
+            269,
+            272,
+            274,
+            277,
+            280,
+            283,
         ]
         from calculation.damage.formula import calculate_growth_curve
 
@@ -96,8 +178,8 @@ class TestInverseRefactored(unittest.TestCase):
 
     def test_fit_weapon_bonus_matches_seed_params(self):
         """武器附加属性（9级+第9级special）反推结果应能复现 JSON/seed 曲线"""
-        import io
         import contextlib
+        import io
 
         from calculation.damage.formula import calculate_bonus_attribute
 
@@ -121,9 +203,7 @@ class TestInverseRefactored(unittest.TestCase):
             )
             self.assertIsInstance(growth, int)
             self.assertIsInstance(offset, int)
-            rebuilt = calculate_bonus_attribute(
-                base, growth, divisor, offset, special=special, is_decimal=False
-            )
+            rebuilt = calculate_bonus_attribute(base, growth, divisor, offset, special=special, is_decimal=False)
             self.assertEqual(rebuilt, curve)
 
     def test_fit_skill_formula_no_special_float(self):
@@ -139,7 +219,7 @@ class TestInverseRefactored(unittest.TestCase):
         int_data = [100 + i * 5 for i in range(9)]
         base, growth, divisor, offset, special = fit_formula(int_data)
         self.assertEqual(base, 100)
-        
+
         # 测试小数数据
         float_data = [3.0, 5.4, 7.8, 10.2, 12.6, 15.0, 17.4, 19.8, 23.4]
         base, growth, divisor, offset, special = fit_formula(float_data)

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """打包/开发模式下游戏数据路径可解析（打包冒烟的轻量替代）。"""
 
 import unittest
-from pathlib import Path
 
 from data.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH, get_characters, get_weapons
 from utils.path_utils import get_resource_path

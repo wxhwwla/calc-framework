@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 反向计算公式参数模块
 
@@ -13,19 +12,23 @@
 - 支持整数和小数百分比格式
 """
 
-import math
-import os
-from typing import List, Tuple, Sequence, Optional
+from collections.abc import Sequence
 
 from .attribute import fit_attribute_formula, validate_attribute_formula
-from .skill import fit_skill_formula, fit_skill_formula_no_special, validate_skill_formula, validate_skill_formula_no_special
+from .skill import (
+    fit_skill_formula,
+    fit_skill_formula_no_special,
+    validate_skill_formula,
+    validate_skill_formula_no_special,
+)
 
 
-
-def fit_formula(data: Sequence[int | float]) -> Tuple[int | float, int | float, int, int | float, List[int | float] | None]:
+def fit_formula(
+    data: Sequence[int | float],
+) -> tuple[int | float, int | float, int, int | float, list[int | float] | None]:
     """
     统一拟合接口，自动检测数据类型
-    
+
     返回：(base, growth, divisor, offset, special_values)
     """
     if len(data) == 90:
@@ -39,7 +42,14 @@ def fit_formula(data: Sequence[int | float]) -> Tuple[int | float, int | float, 
         raise ValueError(f"不支持的数据长度: {len(data)}")
 
 
-def validate_formula(base: int | float, growth: int | float, divisor: int, offset: int | float, data: Sequence[int | float], special_values: List[int | float] | None = None) -> bool:
+def validate_formula(
+    base: int | float,
+    growth: int | float,
+    divisor: int,
+    offset: int | float,
+    data: Sequence[int | float],
+    special_values: list[int | float] | None = None,
+) -> bool:
     """
     统一验证接口，自动检测数据类型
     """

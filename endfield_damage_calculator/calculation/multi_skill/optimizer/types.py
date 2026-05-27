@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 多技能加权总伤优化模块。
 
@@ -25,21 +24,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
-from calculation.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-from calculation.equipment.affix import aggregate_loadout_modifiers
-from calculation.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    OptimizerTask,
-    WeaponCandidate,
-    enumerate_optimizer_tasks,
-)
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.search.evaluate.context import SearchEvalContext
-from calculation.equipment.prune import character_ability_attrs
-from calculation.equipment.system import build_four_slot_loadout, collect_loadout_effects
+from calculation.damage.engine import DamageContext, DamageEffect
 
 
 @dataclass(frozen=True)
@@ -123,7 +109,7 @@ class MultiSkillConfig:
 
     top_n: int = 10
     selected_skill: str = "战技"
-    skill_counts: Optional[dict[str, int]] = None
+    skill_counts: dict[str, int] | None = None
     crit_mode: str = "non_crit"
 
 
@@ -168,5 +154,3 @@ class MultiSkillResult:
             技能次数映射（值为 float 类型）
         """
         return {name: float(count) for name, count in self.skill_count_map.items()}
-
-

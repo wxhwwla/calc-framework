@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """技能段场景与段级次数测试。"""
 
 import unittest
 
-from calculation.multi_skill.optimizer import SkillScenario, evaluate_multi_skill_task
 from calculation.damage.engine import DamageContext
 from calculation.loadout.optimizer import WeaponCandidate
+from calculation.multi_skill.optimizer import evaluate_multi_skill_task
 from calculation.skills.segments import (
     aggregate_weighted_damage,
     build_segment_scenarios_from_levels,
     format_segment_breakdown_lines,
     normalize_manual_segment_counts,
-    segment_key,
 )
 
 

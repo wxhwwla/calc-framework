@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 PySide6 选择面板子组件：信赖等级 / 技能等级。
 
@@ -9,7 +8,7 @@ PySide6 选择面板子组件：信赖等级 / 技能等级。
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -20,7 +19,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 _SLIDER_STYLE = """
     QSlider::groove:horizontal {
@@ -59,10 +57,11 @@ def _slider(vmin: int, vmax: int, val: int) -> QSlider:
 #  1. 信赖等级
 # ═══════════════════════════════════════════════════════
 
+
 class QtTrustPanel(QWidget):
     """角色信赖等级滑块（0-4 级）。"""
 
-    def __init__(self, font: QFont, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._level = 0
 
@@ -106,10 +105,11 @@ class QtTrustPanel(QWidget):
 #  2. 技能等级（战技/连携/终结）
 # ═══════════════════════════════════════════════════════
 
+
 class QtSkillLevelPanel(QWidget):
     """角色战技/连携/终结技等级滑块（1-12 级）。"""
 
-    def __init__(self, font: QFont, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._names: list[str] = ["战技", "连携技", "终结技"]
         self._levels: list[int] = [1, 1, 1]
@@ -152,7 +152,7 @@ class QtSkillLevelPanel(QWidget):
         self._levels[idx] = value
         self._value_labels[idx].setText(str(value))
 
-    def refresh(self, char_data: Dict[str, Any]) -> None:
+    def refresh(self, char_data: dict[str, Any]) -> None:
         skill_keys = ["战技倍率", "连携技倍率", "终结技倍率"]
         for i, key in enumerate(skill_keys):
             data = char_data.get(key, [])

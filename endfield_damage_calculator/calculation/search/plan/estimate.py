@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """全量搜索工作量与耗时预估（不物化全部任务）。"""
 
 from __future__ import annotations

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """手动 buff 数据模型测试。"""
 
 import unittest
 
 from calculation.manual_buff.model import (
     MANUAL_BUFF_ZONE_OPTIONS,
-    ManualBuffEntry,
     build_active_keys_from_counts,
     empty_buff_dict,
     get_buffs_for_key,

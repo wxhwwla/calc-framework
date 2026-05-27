@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 属性三列 CTk 渲染与确认刷新编排（依赖 display_lines 文案）。
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from utils.platform_win32_patch import apply_platform_win32_patch
 
@@ -19,24 +18,17 @@ from calculation.multiplicative_zones.zone_snapshot import (
     WeaponBonusSelection,
     compute_multiplicative_zone_snapshot,
 )
-from calculation.core.preview_cache import sync_confirm_dependencies
-from gui_design.presentation.display_lines import (
-    build_character_attribute_lines,
-    build_single_hit_damage_lines,
-    build_weapon_attribute_lines,
-    evaluate_display_state,
-)
 from gui_design.app.loadout_evaluation import build_search_preview_lines
-from calculation.loadout.slot_search import FixedLoadoutSelection
-from gui_design.app.display_request import DisplayRequest
-from gui_design.app.loadout_state import LoadoutState, read_loadout_from_panels
-from gui_design.panels.selection_panel import ChooseTypesStarsNamesLevels
+from gui_design.app.loadout_state import LoadoutState
+from gui_design.presentation.display_lines import (
+    build_single_hit_damage_lines,
+)
 
 
 def _display_zone_data(
     right_scroll: ctk.CTkScrollableFrame,
-    char_data: Optional[Dict[str, Any]],
-    weapon_data: Optional[Dict[str, Any]],
+    char_data: dict[str, Any] | None,
+    weapon_data: dict[str, Any] | None,
     char_level: int,
     weapon_level: int,
     normal_skill_1_name: str = "",
@@ -52,18 +44,18 @@ def _display_zone_data(
     special_skill_2_level: int = 1,
     special_skill_2_stack: int = 0,
     trust_level: int = 0,
-    big_font: Optional[ctk.CTkFont] = None,
-    small_font: Optional[ctk.CTkFont] = None,
-    loadout: Optional[LoadoutState] = None,
+    big_font: ctk.CTkFont | None = None,
+    small_font: ctk.CTkFont | None = None,
+    loadout: LoadoutState | None = None,
     calculation_mode: str = "zone_snapshot",
     skill_1_level: int = 0,
     skill_2_level: int = 0,
     skill_3_level: int = 0,
-    multi_skill_manual_counts: Optional[Dict[str, int]] = None,
+    multi_skill_manual_counts: dict[str, int] | None = None,
     use_manual_multi_skill_counts: bool = False,
-    preview_weapon_candidates: Optional[list[WeaponCandidate]] = None,
+    preview_weapon_candidates: list[WeaponCandidate] | None = None,
     preview_scope_label: str = "",
-    preview_equipment_catalog: Optional[Dict[str, list[dict]]] = None,
+    preview_equipment_catalog: dict[str, list[dict]] | None = None,
     preview_equipment_scope_label: str = "",
     enemy_defense: float = 100.0,
 ) -> None:
@@ -112,10 +104,7 @@ def _display_zone_data(
             row_idx += 1
         return
 
-    if (
-        loadout is not None
-        and calculation_mode in ("single_skill_search", "multi_skill_search")
-    ):
+    if loadout is not None and calculation_mode in ("single_skill_search", "multi_skill_search"):
         for text in build_search_preview_lines(
             loadout,
             equipment_catalog=preview_equipment_catalog or {},
