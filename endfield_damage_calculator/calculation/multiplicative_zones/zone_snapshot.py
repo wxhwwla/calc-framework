@@ -7,6 +7,7 @@ GUI 只负责展示；本模块集中能力乘区、能力值加成与最终攻�
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -141,8 +142,23 @@ class ZoneDisplayLine:
 
 def compute_multiplicative_zone_snapshot(
     selection: MultiplicativeZoneSelection,
+    *,
+    use_dag: bool | None = None,
 ) -> list[ZoneDisplayLine]:
-    """计算完整乘区展示行（不含 CTk 控件）。"""
+    """计算完整乘区展示行（不含 GUI 控件）。
+
+    参数：
+        selection: 角色/武器/等级/武器技能选用组合
+        use_dag: None → 检查环境变量 ``ENDFIELD_USE_DAG`` 决定；
+                 True → 强制使用 DAG 引擎；
+                 False → 强制使用现有引擎
+    """
+    if use_dag is None:
+        use_dag = os.environ.get("ENDFIELD_USE_DAG", "").strip().lower() in ("1", "true", "yes")
+
+    if use_dag:
+        from calculation.multiplicative_zones.dag_adapter import compute_snapshot_with_dag
+        return compute_snapshot_with_dag(selection)
     char = selection.character
     weapon = selection.weapon
     b = selection.bonuses
