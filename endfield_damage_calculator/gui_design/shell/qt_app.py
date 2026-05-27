@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PySide6 主应用（阶段 7 完整集成）。
+PySide6 主应用（阶段 11 — 高级页控件全连通）。
 
-双页签（计算页 / 高级页），信号路由、后台计算、三列刷新全链路。
+双页签（计算页 / 高级页），信号路由、面板联动、确认刷新、全部高级页控件连通。
 """
 
 from __future__ import annotations
 
 import sys
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -36,7 +38,7 @@ from please_read_me import get_exe_version
 
 
 class QtDamageApp:
-    """PySide6 主应用（完整集成）。
+    """PySide6 主应用。
 
     属性：
         app: QMainWindow
@@ -46,7 +48,8 @@ class QtDamageApp:
         columns: 三列属性展示
         control_dock: 高级页控制栏
         status_label: 底部状态文案
-        all_weapons: 全量武器列表（角色联动过滤用）
+        all_weapons: 全量武器列表
+        _enemy_defense: 当前敌人防御值
     """
 
     def __init__(self) -> None:
@@ -64,6 +67,7 @@ class QtDamageApp:
         self.small_font.setPointSize(12)
 
         self._current_calc_mode: str = calculation_mode_from_label(DEFAULT_CALC_MODE_LABEL)
+        self._enemy_defense: float = 100.0
 
         self.app: QMainWindow = QMainWindow()
         self.app.setWindowTitle(f"终末地伤害计算小工具 v{get_exe_version()}")
@@ -76,13 +80,12 @@ class QtDamageApp:
         main_layout.setContentsMargins(8, 8, 8, 8)
         main_layout.setSpacing(0)
 
-        # ── 双页签 ────────────────────────────────
         self.tabs: QTabWidget = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
         self._style_tabs()
         main_layout.addWidget(self.tabs, stretch=1)
 
-        # 计算页：选择面板（上） + 三列属性展示（下）
+        # ── 计算页 ────────────────────────────────
         calc_page = QWidget()
         calc_layout = QVBoxLayout(calc_page)
         calc_layout.setContentsMargins(0, 0, 0, 0)
@@ -92,7 +95,6 @@ class QtDamageApp:
         weapons = get_weapons()
         self.all_weapons: List[Dict[str, Any]] = list(weapons)
 
-        # 选择面板（角色 + 武器左右并排）
         panels_frame = QFrame()
         panels_frame.setStyleSheet("QFrame { background-color: #1E1E1E; border-radius: 8px; }")
         panels_row = QHBoxLayout(panels_frame)
@@ -115,7 +117,6 @@ class QtDamageApp:
 
         calc_layout.addWidget(panels_frame)
 
-        # 三列属性展示
         self.columns: QtAttributeColumns = QtAttributeColumns(
             big_font=self.big_font,
             small_font=self.small_font,
@@ -127,7 +128,7 @@ class QtDamageApp:
 
         self.tabs.addTab(calc_page, "计算页")
 
-        # 高级页 → 三列控制栏
+        # ── 高级页 ────────────────────────────────
         self.control_dock: QtControlDock = QtControlDock(
             big_font=self.big_font,
             small_font=self.small_font,
@@ -153,28 +154,78 @@ class QtDamageApp:
 
         self.tabs.addTab(adv_page, "高级页")
 
+        # ── 初始化控制栏 ──────────────────────────
+        self._init_control_dock()
+
         # ── 信号连线 ──────────────────────────────
         self._connect_signals()
 
-        # 初始化武器过滤
         self._on_char_name_change()
 
+    # ── 初始化控制栏 ──────────────────────────────
+
+    def _init_control_dock(self) -> None:
+        dock = self.control_dock
+
+        # 敌人下拉
+        from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
+
+        enemy_choices = list_plugin_enemy_choices()
+        if enemy_choices and len(enemy_choices) > 1:
+            dock._enemy_combo.clear()
+            labels: list[str] = []
+            id_by_label: dict[str, str] = {}
+            for label, eid in enemy_choices:
+                labels.append(label)
+                id_by_label[label] = eid
+            dock._enemy_combo.addItems(labels)
+
+            def _on_enemy_change(text: str) -> None:
+                eid = id_by_label.get(text, "")
+                self._enemy_defense = resolve_enemy_defense(eid)
+
+            dock._enemy_combo.currentTextChanged.connect(_on_enemy_change)
+            dock._enemy_combo.setCurrentIndex(0)
+            initial_label = dock._enemy_combo.currentText()
+            if initial_label:
+                eid = id_by_label.get(initial_label, "")
+                self._enemy_defense = resolve_enemy_defense(eid)
+
+        # 手动 Buff 按钮
+        dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
+
+    # ── 信号连线 ──────────────────────────────
+
     def _connect_signals(self) -> None:
-        # 角色名称变化 → 过滤武器面板
         self.char_panel.name_combo.currentTextChanged.connect(self._on_char_name_change)
 
-        # 角色/武器各级联下拉、滑块 → 标记待确认
-        self.char_panel.type_combo.currentIndexChanged.connect(self._on_loadout_changed)
-        self.char_panel.star_combo.currentIndexChanged.connect(self._on_loadout_changed)
-        self.char_panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
-        self.char_panel.level_slider.valueChanged.connect(self._on_loadout_changed)
-        self.weapon_panel.type_combo.currentIndexChanged.connect(self._on_loadout_changed)
-        self.weapon_panel.star_combo.currentIndexChanged.connect(self._on_loadout_changed)
-        self.weapon_panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
-        self.weapon_panel.level_slider.valueChanged.connect(self._on_loadout_changed)
+        for panel in (self.char_panel, self.weapon_panel):
+            panel.type_combo.currentIndexChanged.connect(self._on_loadout_changed)
+            panel.star_combo.currentIndexChanged.connect(self._on_loadout_changed)
+            panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
+            panel.level_slider.valueChanged.connect(self._on_loadout_changed)
 
-        # 控制栏信号
         self.control_dock.calc_mode_changed.connect(self._on_calc_mode_changed)
+
+        self.control_dock.mvp_search_btn.clicked.connect(self._on_mvp_search)
+        self.control_dock.full_search_btn.clicked.connect(self._on_full_search)
+        self.control_dock.search_cancel_btn.clicked.connect(self._on_cancel_search)
+        self._connect_more_settings_btns()
+
+    def _connect_more_settings_btns(self) -> None:
+        dock = self.control_dock
+        if hasattr(dock, '_export_btn') and dock._export_btn:
+            dock._export_btn.clicked.connect(self._on_export_preset)
+        if hasattr(dock, '_import_btn') and dock._import_btn:
+            dock._import_btn.clicked.connect(self._on_import_preset)
+        if hasattr(dock, '_compare_btn') and dock._compare_btn:
+            dock._compare_btn.clicked.connect(self._on_compare_presets)
+        if hasattr(dock, '_dashboard_btn') and dock._dashboard_btn:
+            dock._dashboard_btn.clicked.connect(self._on_damage_dashboard)
+        if hasattr(dock, '_history_btn') and dock._history_btn:
+            dock._history_btn.clicked.connect(self._on_calc_history)
+        if hasattr(dock, '_export_log_btn') and dock._export_log_btn:
+            dock._export_log_btn.clicked.connect(self._on_export_log)
 
     def run(self) -> None:
         """启动主事件循环。"""
@@ -226,7 +277,6 @@ class QtDamageApp:
     # ── 角色 → 武器联动 ──────────────────────────
 
     def _on_char_name_change(self) -> None:
-        """角色名称变化 → 按角色武器类型过滤武器面板。"""
         char_data = self.char_panel.get_selected_data()
         if not char_data:
             self.weapon_panel.update_data_list(list(self.all_weapons))
@@ -245,31 +295,39 @@ class QtDamageApp:
 
     def _on_calc_mode_changed(self, label: str) -> None:
         self._current_calc_mode = calculation_mode_from_label(label)
+        self._on_loadout_changed()
 
     # ── 配装变更 ──────────────────────────────────
 
     def _on_loadout_changed(self) -> None:
-        """任意配装参数变化 → 更新状态文案。"""
         self.status_label.setText("待确认")
 
     # ── 确认计算 ──────────────────────────────────
 
     def _build_request(self) -> Any:
-        """在主线程构建 DisplayRequest（读取面板控件，不可在子线程执行）。"""
         from gui_design.app.display_request import DisplayRequest
         from gui_design.app.loadout_state import read_loadout_from_panels
         from calculation.loadout.slot_search import FixedLoadoutSelection
+
+        dock = self.control_dock
 
         loadout = read_loadout_from_panels(
             self.char_panel,
             self.weapon_panel,
             calculation_mode=self._current_calc_mode,
-            weapon_scope_label=self.control_dock.single_skill_scope_combo.currentText(),
-            equipment_scope_label=self.control_dock.equipment_scope_combo.currentText(),
+            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
+            equipment_scope_label=dock.equipment_scope_combo.currentText(),
             fixed_loadout=FixedLoadoutSelection(),
-            use_manual_multi_skill_counts=False,
-            manual_counts={},
-            enemy_defense=100.0,
+            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
+            manual_counts=dock.read_skill_counts(),
+            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
+            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
+            damage_component_mode=dock.read_damage_component_mode(),
+            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
+            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
+            extra_crit_rate=dock.read_extra_crit_rate(),
+            extra_crit_damage=dock.read_extra_crit_damage(),
+            enemy_defense=self._enemy_defense,
         )
         if loadout is None:
             return None
@@ -280,7 +338,6 @@ class QtDamageApp:
         )
 
     def _on_confirm(self) -> None:
-        """同步执行求值缓存 + 刷新三列（后续可改为后台线程）。"""
         char_data = self.char_panel.get_selected_data()
         weapon_data = self.weapon_panel.get_selected_data()
         if not char_data or not weapon_data:
@@ -295,10 +352,8 @@ class QtDamageApp:
         self.confirm_btn.setEnabled(False)
         self.confirm_btn.setText("计算中…")
         self.status_label.setText("计算中…")
-        from PySide6.QtWidgets import QApplication as QA
-        QA.processEvents()
+        QApplication.processEvents()
 
-        # 同步求值缓存（主线程内完成，后续可改为 CalcWorker）
         self._sync_evaluation(request)
 
         self.columns.refresh(request)
@@ -307,7 +362,6 @@ class QtDamageApp:
         self.confirm_btn.setText("确认选择")
 
     def _sync_evaluation(self, request: Any) -> None:
-        """调用求值缓存同步（主线程）。"""
         from gui_design.app.loadout_evaluation import sync_evaluation_cache
         try:
             sync_evaluation_cache(request.loadout)
@@ -315,8 +369,102 @@ class QtDamageApp:
             import logging
             logging.getLogger(__name__).warning("求值缓存同步失败: %s", exc)
 
+    # ── 手动 Buff ─────────────────────────────
+
+    def _on_manual_buff(self) -> None:
+        QMessageBox.information(
+            self.app, "场外 Buff 微调",
+            "手动 Buff 编辑窗口当前为 CTk 独占功能。\n"
+            "Qt 端将在此后版本支持。\n\n"
+            "暂占位：请在 CTk 后端配置 Buff 后切回 Qt 查看。",
+        )
+
+    # ── 更多设置（工具与分享）回调 ──────────────
+
+    def _on_export_preset(self) -> None:
+        from gui_design.app.loadout_preset import (
+            LoadoutPreset,
+            export_preset_json,
+        )
+        preset = LoadoutPreset(
+            char_name=self.char_panel.name_combo.currentText(),
+            weapon_name=self.weapon_panel.name_combo.currentText(),
+            char_level=self.char_panel.level_slider.value(),
+            weapon_level=self.weapon_panel.level_slider.value(),
+            trust_level=self.char_panel.get_trust_level(),
+            skill_levels=(
+                self.char_panel.get_skill_1_level(),
+                self.char_panel.get_skill_2_level(),
+                self.char_panel.get_skill_3_level(),
+            ),
+            calculation_mode=self._current_calc_mode,
+            weapon_scope=self.control_dock.single_skill_scope_combo.currentText(),
+            equipment_scope=self.control_dock.equipment_scope_combo.currentText(),
+        )
+        path, _ = QFileDialog.getSaveFileName(
+            self.app, "导出配装预设", "preset.json", "JSON (*.json)",
+        )
+        if not path:
+            return
+        Path(path).write_text(export_preset_json(preset), encoding="utf-8")
+        self.status_label.setText("预设已导出")
+
+    def _on_import_preset(self) -> None:
+        from gui_design.app.loadout_preset import import_presets_from_json_text
+        path, _ = QFileDialog.getOpenFileName(
+            self.app, "导入配装预设", "", "JSON (*.json)",
+        )
+        if not path:
+            return
+        try:
+            presets = import_presets_from_json_text(Path(path).read_text(encoding="utf-8"))
+            if presets:
+                self.status_label.setText(f"已导入 {len(presets)} 条预设")
+        except Exception as exc:
+            QMessageBox.warning(self.app, "导入失败", str(exc))
+
+    def _on_compare_presets(self) -> None:
+        QMessageBox.information(
+            self.app, "多方案对比",
+            "多方案对比需要选择多个预设 JSON 文件。\n"
+            "该功能当前为 CTk 独占，Qt 端将在此后版本支持。",
+        )
+
+    def _on_damage_dashboard(self) -> None:
+        QMessageBox.information(
+            self.app, "伤害仪表盘",
+            "伤害仪表盘基于 matplotlib，当前为 CTk 独占功能。\n"
+            "Qt 端将在此后版本支持。",
+        )
+
+    def _on_calc_history(self) -> None:
+        QMessageBox.information(
+            self.app, "计算历史",
+            "计算历史面板当前为 CTk 独占功能。\n"
+            "Qt 端将在此后版本支持。",
+        )
+
+    def _on_export_log(self) -> None:
+        QMessageBox.information(
+            self.app, "导出操作日志",
+            "操作日志导出当前为 CTk 独占功能。\n"
+            "Qt 端将在此后版本支持。",
+        )
+
+    # ── 搜索回调 ──────────────────────────────
+
+    def _on_mvp_search(self) -> None:
+        self.status_label.setText("MVP 搜索：CTk 独占，Qt 端待实现")
+
+    def _on_full_search(self) -> None:
+        self.status_label.setText("全量遍历搜索：CTk 独占，Qt 端待实现")
+
+    def _on_cancel_search(self) -> None:
+        self.status_label.setText("搜索已取消（占位）")
+
+    # ── 数据来源与许可 ──────────────────────────
+
     def _on_attribution(self) -> None:
-        """打开数据来源与许可说明（纯 Qt 实现）。"""
         from legal.attribution_content import SUMMARY_TEXT
 
         QMessageBox.information(

@@ -30,6 +30,17 @@ from PySide6.QtWidgets import (
 
 from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
 
+# 物理异常类型列表（5 等级）
+_PHYSICAL_ABNORMAL_TYPES = ["侵蚀", "灼烧", "冻伤", "战栗"]
+_PHYSICAL_ABNORMAL_LEVELS = ["L1", "L2", "L3", "L4", "L5"]
+
+# 法术异常类型列表（4 等级）
+_SPELL_ABNORMAL_TYPES = ["侵蚀(法术)", "灼烧(法术)"]
+_SPELL_ABNORMAL_LEVELS = ["L1", "L2", "L3", "L4"]
+
+_PHYSICAL_ABNORMAL_KEYS = ["erosion", "burn", "frostbite", "trembling"]
+_SPELL_ABNORMAL_KEYS = ["erosion_spell", "burn_spell"]
+
 _PRIMARY_BTN_HEIGHT = 40
 _SECONDARY_BTN_HEIGHT = 32
 _SECTION_COLOR = "#FF6B6B"
@@ -375,15 +386,16 @@ class QtControlDock(QWidget):
         self.use_manual_skill_counts_cb.toggled.connect(lambda: self._mark_pending())
         lay.addWidget(self.use_manual_skill_counts_cb)
 
-        # 技能段数占位
         self._segment_counts_widget = QWidget()
         seg_lay = QVBoxLayout(self._segment_counts_widget)
         seg_lay.setContentsMargins(0, 0, 0, 0)
         seg_lay.setSpacing(2)
-        seg_lay.addWidget(_SmallLabel("技能段数（待填充）", self._small))
+        seg_lay.addWidget(_SmallLabel("技能段数", self._small))
+        skill_labels = ["战技", "连携技", "终结技"]
+        self._segment_count_edits: list[QLineEdit] = []
         for i in range(3):
             row = QHBoxLayout()
-            lbl = QLabel(f"技能{i+1} 次数:")
+            lbl = QLabel(f"{skill_labels[i]} 次数:")
             lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
             lbl.setFont(self._small)
             edit = QLineEdit("0")
@@ -394,6 +406,7 @@ class QtControlDock(QWidget):
             row.addWidget(edit)
             row.addStretch()
             seg_lay.addLayout(row)
+            self._segment_count_edits.append(edit)
         lay.addWidget(self._segment_counts_widget)
 
         self._manual_buff_btn = self._make_btn("场外 Buff 微调", _SECONDARY_BTN_HEIGHT,
@@ -444,21 +457,20 @@ class QtControlDock(QWidget):
         lay.addLayout(crit_row)
 
         # 物理异常矩阵
-        self._physical_abnormal_widget = _build_abnormal_matrix(
-            self._small, ["侵蚀", "灼烧", "冻伤", "战栗"],
-            ["L1", "L2", "L3", "L4", "L5"]
+        self._physical_abnormal_widget, self._physical_abnormal_edits = _build_abnormal_matrix(
+            self._small, _PHYSICAL_ABNORMAL_TYPES, _PHYSICAL_ABNORMAL_LEVELS,
         )
         lay.addWidget(self._physical_abnormal_widget)
 
         # 法术异常
         lay.addWidget(_SectionHeader("法术异常", self._big))
-        self._spell_abnormal_widget = _build_abnormal_matrix(
-            self._small, ["侵蚀(法术)", "灼烧(法术)"],
-            ["L1", "L2", "L3", "L4"]
+        self._spell_abnormal_widget, self._spell_abnormal_edits = _build_abnormal_matrix(
+            self._small, _SPELL_ABNORMAL_TYPES, _SPELL_ABNORMAL_LEVELS,
         )
         lay.addWidget(self._spell_abnormal_widget)
 
         clear_btn = self._make_btn("清空全部异常次数", _SECONDARY_BTN_HEIGHT)
+        clear_btn.clicked.connect(self._clear_abnormal_counts)
         lay.addWidget(clear_btn)
 
         lay.addStretch()
@@ -472,13 +484,88 @@ class QtControlDock(QWidget):
     def _mark_pending(self) -> None:
         self.loadout_pending.emit()
 
+    # ── 控制值读取 ──────────────────────────────
+
+    def read_skill_counts(self) -> dict[str, int]:
+        try:
+            edits = getattr(self, '_segment_count_edits', None)
+            if edits and len(edits) == 3:
+                return {
+                    "战技": max(0, int(edits[0].text() or "0")),
+                    "连携技": max(0, int(edits[1].text() or "0")),
+                    "终结技": max(0, int(edits[2].text() or "0")),
+                }
+        except (ValueError, AttributeError, TypeError):
+            pass
+        return {}
+
+    def read_physical_abnormal_counts(self) -> dict[str, int]:
+        """按级别累加各等级次数，返回 {异常键: 总次数}。"""
+        return _read_abnormal_edits(
+            self._physical_abnormal_edits,
+            _PHYSICAL_ABNORMAL_KEYS,
+        )
+
+    def read_spell_abnormal_counts(self) -> dict[str, int]:
+        return _read_abnormal_edits(
+            self._spell_abnormal_edits,
+            _SPELL_ABNORMAL_KEYS,
+        )
+
+    def read_damage_component_mode(self) -> str:
+        mapping = {"仅技能": "skill_only", "仅异常": "abnormal_only", "技能+异常": "skill_and_abnormal"}
+        return mapping.get(self.damage_component_combo.currentText(), "skill_and_abnormal")
+
+    def read_extra_crit_rate(self) -> float:
+        try:
+            return float(self.extra_crit_rate_edit.text() or "0")
+        except ValueError:
+            return 0.0
+
+    def read_extra_crit_damage(self) -> float:
+        try:
+            return float(self.extra_crit_damage_edit.text() or "0")
+        except ValueError:
+            return 0.0
+
+    def _clear_abnormal_counts(self) -> None:
+        for edits in self._physical_abnormal_edits.values():
+            for e in edits:
+                e.setText("0")
+        for edits in self._spell_abnormal_edits.values():
+            for e in edits:
+                e.setText("0")
+        self._mark_pending()
+
+
+def _read_abnormal_edits(
+    edits_by_row: dict[str, list[QLineEdit]],
+    keys: list[str],
+) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for i, (row_name, edits) in enumerate(edits_by_row.items()):
+        total = 0
+        for e in edits:
+            try:
+                val = int(e.text() or "0")
+            except ValueError:
+                val = 0
+            total += max(0, val)
+        if i < len(keys):
+            result[keys[i]] = total
+    return result
+
 
 def _build_abnormal_matrix(small_font: QFont,
-                           rows: List[str], cols: List[str]) -> QWidget:
+                           rows: List[str], cols: List[str],
+                           ) -> tuple[QWidget, dict[str, list[QLineEdit]]]:
+    """构建异常矩阵输入网格，返回 (widget, edits_by_row)。"""
     w = QWidget()
     grid = QGridLayout(w)
     grid.setSpacing(2)
     grid.setContentsMargins(0, 0, 0, 0)
+
+    edits_by_row: dict[str, list[QLineEdit]] = {}
 
     # 列标题
     for j, c in enumerate(cols, start=1):
@@ -494,11 +581,14 @@ def _build_abnormal_matrix(small_font: QFont,
         lbl.setFont(small_font)
         lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
         grid.addWidget(lbl, i, 0)
+        row_edits: list[QLineEdit] = []
         for j in range(len(cols)):
             edit = QLineEdit("0")
             edit.setStyleSheet(_ENTRY_STYLE)
             edit.setFixedWidth(44)
             edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
             grid.addWidget(edit, i, j + 1)
+            row_edits.append(edit)
+        edits_by_row[row_name] = row_edits
 
-    return w
+    return w, edits_by_row
