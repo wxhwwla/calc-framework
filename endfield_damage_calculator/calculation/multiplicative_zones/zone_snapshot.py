@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from calculation.multiplicative_zones.ability_bonus_zone import (
+from calculation.multiplicative_zones.ability_bonus_details import (
     calculate_ability_bonus_with_details,
 )
 from calculation.multiplicative_zones.attribute_zone import (

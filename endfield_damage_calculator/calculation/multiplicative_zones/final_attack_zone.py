@@ -18,7 +18,7 @@
 import warnings
 from typing import Any
 
-from .ability_bonus_zone import calculate_ability_bonus
+from .ability_bonus_calc import calculate_ability_bonus
 from .base_zone import BaseZone
 
 
