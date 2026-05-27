@@ -3,13 +3,13 @@
 """
 高级页控制栏（PySide6 版）。
 
-与 CTk 版 ``app_control_dock.py`` 平行的 Qt 实现。
-当前仅迁移操作/乘区展示列；搜索与多技能区块为占位符，待后续阶段迁移。
+与 CTk 版 ``app_control_dock.py`` 平行。
+三列：操作/乘区展示 | 全量搜索 | 多技能次数。
 """
 
 from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
@@ -17,9 +17,12 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -27,46 +30,104 @@ from PySide6.QtWidgets import (
 
 from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
 
-# ── 尺寸常量（与 gui_layout 同步） ──────────────────────────
 _PRIMARY_BTN_HEIGHT = 40
 _SECONDARY_BTN_HEIGHT = 32
-_SECTION_HEADER_COLOR = "#FF6B6B"
-_LABEL_SECONDARY_COLOR = "#CCCCCC"
+_SECTION_COLOR = "#FF6B6B"
+_LABEL_COLOR = "#CCCCCC"
+_HINT_COLOR = "#888888"
+
+_COMBO_STYLE = """
+    QComboBox {
+        background-color: #2B2B2B; color: #D1D1D1;
+        border: 1px solid #464646; border-radius: 4px;
+        padding: 2px 6px; min-height: 28px;
+    }
+    QComboBox:hover { border-color: #2B6CB6; }
+    QComboBox::drop-down { border-left: 1px solid #464646; width: 20px; }
+    QComboBox QAbstractItemView {
+        background-color: #2B2B2B; color: #D1D1D1;
+        selection-background-color: #2B6CB6; border: 1px solid #464646;
+    }
+"""
+
+_ENTRY_STYLE = """
+    QLineEdit {
+        background-color: #2B2B2B; color: #D1D1D1;
+        border: 1px solid #464646; border-radius: 4px;
+        padding: 2px 6px; min-height: 24px;
+    }
+    QLineEdit:focus { border-color: #2B6CB6; }
+"""
+
+_BTN_SECONDARY_STYLE = """
+    QPushButton {
+        background-color: transparent; color: #D1D1D1;
+        border: 1px solid #464646; border-radius: 6px;
+    }
+    QPushButton:hover { border-color: #2B6CB6; color: white; }
+"""
+
+_BTN_PRIMARY_STYLE = """
+    QPushButton {
+        background-color: #2B6CB6; color: white;
+        border-radius: 6px; font-weight: bold;
+    }
+    QPushButton:hover { background-color: #3182CE; }
+    QPushButton:pressed { background-color: #2C5282; }
+"""
 
 
 class _SectionHeader(QLabel):
-    """区块标题（红色高亮）。"""
-
     def __init__(self, text: str, font: QFont) -> None:
         super().__init__(text)
         self.setFont(font)
-        self.setStyleSheet(f"color: {_SECTION_HEADER_COLOR};")
+        self.setStyleSheet(f"color: {_SECTION_COLOR}; padding: 4px 0;")
 
 
-class _PlaceholderSection(QFrame):
-    """待迁移区块占位符。"""
+class _HintLabel(QLabel):
+    def __init__(self, text: str, font: QFont) -> None:
+        super().__init__(text)
+        self.setFont(font)
+        self.setStyleSheet(f"color: {_HINT_COLOR};")
+        self.setWordWrap(True)
 
-    def __init__(self, title: str, hint: str, font: QFont) -> None:
+
+class _SmallLabel(QLabel):
+    def __init__(self, text: str, font: QFont) -> None:
+        super().__init__(text)
+        self.setFont(font)
+        self.setStyleSheet(f"color: {_LABEL_COLOR};")
+
+
+class _ComboRow(QWidget):
+    """标签 + QComboBox 水平行。"""
+
+    def __init__(self, label: str, items: List[str], current: str, font: QFont) -> None:
         super().__init__()
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet("QFrame { border: 1px dashed #464646; border-radius: 4px; }")
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 6, 8, 6)
-        title_lbl = QLabel(title)
-        title_lbl.setFont(font)
-        title_lbl.setStyleSheet(f"color: {_SECTION_HEADER_COLOR}; border: none;")
-        layout.addWidget(title_lbl)
-        hint_lbl = QLabel(hint)
-        hint_lbl.setStyleSheet("color: #828282; border: none;")
-        hint_lbl.setWordWrap(True)
-        layout.addWidget(hint_lbl)
-        layout.addStretch()
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.label = _SmallLabel(label, font)
+        layout.addWidget(self.label)
+        self.combo = QComboBox()
+        self.combo.addItems(items)
+        self.combo.setCurrentText(current)
+        self.combo.setStyleSheet(_COMBO_STYLE)
+        layout.addWidget(self.combo, stretch=1)
 
+    def current(self) -> str:
+        return self.combo.currentText()
+
+
+# ═══════════════════════════════════════════════════════
+#  QtControlDock
+# ═══════════════════════════════════════════════════════
 
 class QtControlDock(QWidget):
-    """高级页三列控制栏（PySide6 版）。"""
+    """高级页三列控制栏。"""
 
     calc_mode_changed = Signal(str)
+    confirm_requested = Signal()
+    loadout_pending = Signal()
 
     def __init__(
         self,
@@ -79,145 +140,365 @@ class QtControlDock(QWidget):
         on_attribution: Optional[Callable[[], None]] = None,
     ) -> None:
         super().__init__(parent)
-        self._big_font = big_font or QFont()
-        self._small_font = small_font or QFont()
+        self._big = big_font or QFont()
+        self._small = small_font or QFont()
         self._on_back_to_main = on_back_to_main
         self._on_confirm = on_confirm
         self._on_attribution = on_attribution
 
+        # 暴露给外部的控件引用
         self.back_to_main_btn: QPushButton
         self.confirm_btn: QPushButton
         self.attribution_btn: QPushButton
         self.calc_mode_menu: QComboBox
+        self.single_skill_scope_combo: QComboBox
+        self.equipment_scope_combo: QComboBox
+        self.fixed_loadout_slots: List[QComboBox] = []
+        self.use_manual_skill_counts_cb: QCheckBox
+        self.damage_component_combo: QComboBox
+        self.use_expected_crit_cb: QCheckBox
+        self.include_conditional_crit_cb: QCheckBox
+        self.extra_crit_rate_edit: QLineEdit
+        self.extra_crit_damage_edit: QLineEdit
 
         self._build_ui()
 
-    def _make_btn(self, text: str, height: int, primary: bool = False) -> QPushButton:
+    def _make_btn(self, text: str, height: int, *, primary: bool = False,
+                  style: Optional[str] = None) -> QPushButton:
         btn = QPushButton(text)
         btn.setMinimumHeight(height)
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        if primary:
-            btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #2B6CB6;
-                    color: white;
-                    border-radius: 6px;
-                    font-weight: bold;
-                }
-                QPushButton:hover { background-color: #3182CE; }
-                QPushButton:pressed { background-color: #2C5282; }
-            """)
-        else:
-            btn.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    color: #D1D1D1;
-                    border: 1px solid #464646;
-                    border-radius: 6px;
-                }
-                QPushButton:hover { border-color: #2B6CB6; color: white; }
-            """)
+        btn.setStyleSheet(style or (_BTN_PRIMARY_STYLE if primary else _BTN_SECONDARY_STYLE))
         return btn
 
     def _build_ui(self) -> None:
         outer = QHBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
-        outer.setSpacing(8)
+        outer.setSpacing(6)
 
-        # ── 列 1：操作 / 乘区展示 ──────────────────────
-        col_actions = QWidget()
-        col_actions.setMinimumWidth(200)
-        col_actions.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        al = QVBoxLayout(col_actions)
-        al.setContentsMargins(4, 4, 4, 4)
-        al.setSpacing(4)
+        outer.addWidget(self._build_col_actions(), stretch=1)
+        outer.addWidget(self._build_col_search(), stretch=2)
+        outer.addWidget(self._build_col_multi(), stretch=3)
 
-        al.addWidget(_SectionHeader("操作", self._big_font))
+    # ── 列 1：操作 / 乘区展示 ──────────────────────
+
+    def _build_col_actions(self) -> QWidget:
+        col = QWidget()
+        col.setMinimumWidth(200)
+        lay = QVBoxLayout(col)
+        lay.setContentsMargins(4, 4, 4, 4)
+        lay.setSpacing(4)
+
+        lay.addWidget(_SectionHeader("操作", self._big))
 
         self.back_to_main_btn = self._make_btn("返回计算页", _SECONDARY_BTN_HEIGHT)
         if self._on_back_to_main:
             self.back_to_main_btn.clicked.connect(self._on_back_to_main)
-        al.addWidget(self.back_to_main_btn)
+        lay.addWidget(self.back_to_main_btn)
 
         self.confirm_btn = self._make_btn("确认选择", _PRIMARY_BTN_HEIGHT, primary=True)
         if self._on_confirm:
             self.confirm_btn.clicked.connect(self._on_confirm)
-        al.addWidget(self.confirm_btn)
+        lay.addWidget(self.confirm_btn)
 
         self.attribution_btn = self._make_btn("数据来源与许可", _SECONDARY_BTN_HEIGHT)
         if self._on_attribution:
             self.attribution_btn.clicked.connect(self._on_attribution)
-        al.addWidget(self.attribution_btn)
+        lay.addWidget(self.attribution_btn)
 
-        al.addSpacing(8)
-        al.addWidget(_SectionHeader("乘区展示", self._big_font))
-
-        mode_label = QLabel("计算模式")
-        mode_label.setStyleSheet(f"color: {_LABEL_SECONDARY_COLOR};")
-        al.addWidget(mode_label)
+        lay.addSpacing(8)
+        lay.addWidget(_SectionHeader("乘区展示", self._big))
+        lay.addWidget(_SmallLabel("计算模式", self._small))
 
         self.calc_mode_menu = QComboBox()
         self.calc_mode_menu.addItems(list(CALC_MODE_LABELS))
         self.calc_mode_menu.setCurrentText(DEFAULT_CALC_MODE_LABEL)
         self.calc_mode_menu.currentTextChanged.connect(self._on_calc_mode_changed)
-        self.calc_mode_menu.setStyleSheet("""
-            QComboBox {
-                background-color: #2B2B2B;
-                color: #D1D1D1;
-                border: 1px solid #464646;
-                border-radius: 4px;
-                padding: 2px 6px;
-                min-height: 28px;
-            }
-            QComboBox:hover { border-color: #2B6CB6; }
-            QComboBox::drop-down {
-                subcontrol-origin: padding;
-                subcontrol-position: top right;
-                width: 20px;
-                border-left: 1px solid #464646;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #2B2B2B;
-                color: #D1D1D1;
-                selection-background-color: #2B6CB6;
-                border: 1px solid #464646;
-            }
-        """)
-        al.addWidget(self.calc_mode_menu)
+        self.calc_mode_menu.setStyleSheet(_COMBO_STYLE)
+        lay.addWidget(self.calc_mode_menu)
 
-        # 增强操作区块（占位符）
-        al.addWidget(_PlaceholderSection(
-            "工具与分享", "导入导出、仪表盘、插件等（待迁移）", self._big_font
-        ))
+        # 增强操作区域
+        lay.addSpacing(8)
+        lay.addWidget(_SectionHeader("工具与分享", self._big))
 
-        al.addStretch()
+        self._more_settings_btn = self._make_btn("更多设置 (展开)", _SECONDARY_BTN_HEIGHT)
+        self._more_settings_btn.clicked.connect(self._toggle_more_settings)
+        lay.addWidget(self._more_settings_btn)
 
-        # ── 列 2：全量搜索（占位符） ─────────────────
-        col_search = QWidget()
-        col_search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        sl = QVBoxLayout(col_search)
-        sl.setContentsMargins(4, 4, 4, 4)
-        sl.addWidget(_PlaceholderSection(
-            "全量搜索", "搜索参数、固定配装、遍历按钮等（待迁移）", self._big_font
-        ))
-        sl.addStretch()
+        self._more_settings_body = QWidget()
+        self._more_settings_body.setVisible(False)
+        ms_lay = QVBoxLayout(self._more_settings_body)
+        ms_lay.setContentsMargins(0, 0, 0, 0)
+        ms_lay.setSpacing(4)
 
-        # ── 列 3：多技能次数（占位符） ──────────────
-        col_multi = QWidget()
-        col_multi.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        ml = QVBoxLayout(col_multi)
-        ml.setContentsMargins(4, 4, 4, 4)
-        ml.addWidget(_PlaceholderSection(
-            "多技能次数", "技能段数、异常矩阵、手动增益等（待迁移）", self._big_font
-        ))
-        ml.addStretch()
+        self._enemy_combo = QComboBox()
+        self._enemy_combo.setStyleSheet(_COMBO_STYLE)
+        ms_lay.addWidget(_SmallLabel("插件敌人", self._small))
+        ms_lay.addWidget(self._enemy_combo)
 
-        outer.addWidget(col_actions, stretch=1)
-        outer.addWidget(col_search, stretch=2)
-        outer.addWidget(col_multi, stretch=3)
+        def _make_tool_btn(text: str) -> QPushButton:
+            b = self._make_btn(text, _SECONDARY_BTN_HEIGHT)
+            ms_lay.addWidget(b)
+            return b
+
+        self._export_btn = _make_tool_btn("导出配装 (.json)")
+        self._import_btn = _make_tool_btn("导入配装 (.json)")
+        self._compare_btn = _make_tool_btn("多方案对比")
+        self._dashboard_btn = _make_tool_btn("伤害仪表盘")
+        self._history_btn = _make_tool_btn("计算历史")
+        self._export_log_btn = _make_tool_btn("导出操作日志")
+
+        ms_lay.addStretch()
+        lay.addWidget(self._more_settings_body)
+        lay.addStretch()
+        return col
+
+    def _toggle_more_settings(self) -> None:
+        visible = not self._more_settings_body.isVisible()
+        self._more_settings_body.setVisible(visible)
+        self._more_settings_btn.setText("更多设置 (折叠)" if visible else "更多设置 (展开)")
 
     def _on_calc_mode_changed(self, text: str) -> None:
         self.calc_mode_changed.emit(text)
 
     def current_calc_mode(self) -> str:
         return self.calc_mode_menu.currentText()
+
+    # ── 列 2：全量搜索 ─────────────────────────────
+
+    def _build_col_search(self) -> QWidget:
+        col = QWidget()
+        col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("QScrollArea { background: transparent; }")
+
+        body = QWidget()
+        lay = QVBoxLayout(body)
+        lay.setContentsMargins(4, 4, 4, 4)
+        lay.setSpacing(4)
+
+        lay.addWidget(_SectionHeader("全量遍历", self._big))
+
+        self.single_skill_scope_combo = QComboBox()
+        self.single_skill_scope_combo.addItems(["当前武器", "同类型同星级", "同类型全部"])
+        self.single_skill_scope_combo.setStyleSheet(_COMBO_STYLE)
+        lay.addWidget(_SmallLabel("武器候选范围", self._small))
+        self.single_skill_scope_combo.currentTextChanged.connect(
+            lambda _: self._mark_pending())
+        lay.addWidget(self.single_skill_scope_combo)
+
+        self.equipment_scope_combo = QComboBox()
+        self.equipment_scope_combo.addItems(["全部装备", "仅套装装备", "仅散件装备"])
+        self.equipment_scope_combo.setStyleSheet(_COMBO_STYLE)
+        lay.addWidget(_SmallLabel("装备范围", self._small))
+        self.equipment_scope_combo.currentTextChanged.connect(
+            lambda _: self._mark_pending())
+        lay.addWidget(self.equipment_scope_combo)
+
+        # 固定配装
+        lay.addWidget(_SmallLabel("固定配装（0–4 件）", self._small))
+        slot_types = ["（无）", "护甲", "护手", "配件"]
+        slots_grid = QHBoxLayout()
+        slots_grid.setSpacing(4)
+        for i in range(4):
+            row = QVBoxLayout()
+            row.setSpacing(2)
+            slot_lbl = QLabel(f"槽{i+1}")
+            slot_lbl.setStyleSheet(f"color: {_HINT_COLOR};")
+            slot_lbl.setFont(self._small)
+            cb = QComboBox()
+            cb.addItems(slot_types)
+            cb.setStyleSheet(_COMBO_STYLE)
+            cb.currentTextChanged.connect(lambda _: self._mark_pending())
+            row.addWidget(slot_lbl)
+            row.addWidget(cb)
+            slots_grid.addLayout(row)
+            self.fixed_loadout_slots.append(cb)
+        lay.addLayout(slots_grid)
+
+        lay.addWidget(_HintLabel("固定配装后：槽位名称在角色/武器选择后自动填充。", self._small))
+
+        # 搜索按钮
+        self.mvp_search_btn = self._make_btn("MVP 搜索", _SECONDARY_BTN_HEIGHT, primary=True,
+                                              style=_BTN_PRIMARY_STYLE)
+        lay.addWidget(self.mvp_search_btn)
+
+        self.full_search_btn = self._make_btn("全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True,
+                                               style=_BTN_PRIMARY_STYLE)
+        lay.addWidget(self.full_search_btn)
+
+        self.search_cancel_btn = self._make_btn("取消搜索", _SECONDARY_BTN_HEIGHT)
+        self.search_cancel_btn.setEnabled(False)
+        lay.addWidget(self.search_cancel_btn)
+
+        # 搜索预估
+        self.search_estimate_label = _HintLabel("", self._small)
+        self.search_estimate_label.setVisible(False)
+        lay.addWidget(self.search_estimate_label)
+
+        self.mvp_status_label = _HintLabel("", self._small)
+        self.mvp_status_label.setVisible(False)
+        lay.addWidget(self.mvp_status_label)
+
+        lay.addStretch()
+        scroll.setWidget(body)
+
+        outer = QVBoxLayout(col)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(scroll)
+        return col
+
+    # ── 列 3：多技能次数 ───────────────────────────
+
+    def _build_col_multi(self) -> QWidget:
+        col = QWidget()
+        col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("QScrollArea { background: transparent; }")
+
+        body = QWidget()
+        lay = QVBoxLayout(body)
+        lay.setContentsMargins(4, 4, 4, 4)
+        lay.setSpacing(4)
+
+        lay.addWidget(_SectionHeader("多技能次数", self._big))
+
+        self.use_manual_skill_counts_cb = QCheckBox("使用手动次数")
+        self.use_manual_skill_counts_cb.setFont(self._small)
+        self.use_manual_skill_counts_cb.setStyleSheet("color: #D1D1D1;")
+        self.use_manual_skill_counts_cb.toggled.connect(lambda: self._mark_pending())
+        lay.addWidget(self.use_manual_skill_counts_cb)
+
+        # 技能段数占位
+        self._segment_counts_widget = QWidget()
+        seg_lay = QVBoxLayout(self._segment_counts_widget)
+        seg_lay.setContentsMargins(0, 0, 0, 0)
+        seg_lay.setSpacing(2)
+        seg_lay.addWidget(_SmallLabel("技能段数（待填充）", self._small))
+        for i in range(3):
+            row = QHBoxLayout()
+            lbl = QLabel(f"技能{i+1} 次数:")
+            lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+            lbl.setFont(self._small)
+            edit = QLineEdit("0")
+            edit.setStyleSheet(_ENTRY_STYLE)
+            edit.setFixedWidth(60)
+            edit.textChanged.connect(lambda: self._mark_pending())
+            row.addWidget(lbl)
+            row.addWidget(edit)
+            row.addStretch()
+            seg_lay.addLayout(row)
+        lay.addWidget(self._segment_counts_widget)
+
+        self._manual_buff_btn = self._make_btn("场外 Buff 微调", _SECONDARY_BTN_HEIGHT,
+                                                style="""
+            QPushButton {
+                background-color: #2d6a4f; color: white;
+                border-radius: 6px;
+            }
+            QPushButton:hover { background-color: #40916c; }
+        """)
+        lay.addWidget(self._manual_buff_btn)
+
+        # 物理异常
+        lay.addWidget(_SectionHeader("物理异常", self._big))
+        lay.addWidget(_HintLabel("按异常类型与等级填入触发次数。", self._small))
+
+        self.damage_component_combo = QComboBox()
+        self.damage_component_combo.addItems(["仅技能", "仅异常", "技能+异常"])
+        self.damage_component_combo.setStyleSheet(_COMBO_STYLE)
+        cc_row = QHBoxLayout()
+        cc_row.addWidget(_SmallLabel("伤害口径", self._small))
+        cc_row.addWidget(self.damage_component_combo)
+        lay.addLayout(cc_row)
+
+        self.use_expected_crit_cb = QCheckBox("期望伤害模式")
+        self.use_expected_crit_cb.setFont(self._small)
+        self.use_expected_crit_cb.setStyleSheet("color: #D1D1D1;")
+        lay.addWidget(self.use_expected_crit_cb)
+
+        self.include_conditional_crit_cb = QCheckBox("装备条件暴击")
+        self.include_conditional_crit_cb.setFont(self._small)
+        self.include_conditional_crit_cb.setStyleSheet("color: #D1D1D1;")
+        lay.addWidget(self.include_conditional_crit_cb)
+
+        # 额外暴击率/暴伤
+        crit_row = QHBoxLayout()
+        self.extra_crit_rate_edit = QLineEdit("0")
+        self.extra_crit_rate_edit.setStyleSheet(_ENTRY_STYLE)
+        self.extra_crit_rate_edit.setFixedWidth(72)
+        self.extra_crit_damage_edit = QLineEdit("0")
+        self.extra_crit_damage_edit.setStyleSheet(_ENTRY_STYLE)
+        self.extra_crit_damage_edit.setFixedWidth(72)
+        crit_row.addWidget(_SmallLabel("额外暴击率%", self._small))
+        crit_row.addWidget(self.extra_crit_rate_edit)
+        crit_row.addSpacing(8)
+        crit_row.addWidget(_SmallLabel("额外暴伤%", self._small))
+        crit_row.addWidget(self.extra_crit_damage_edit)
+        lay.addLayout(crit_row)
+
+        # 物理异常矩阵
+        self._physical_abnormal_widget = _build_abnormal_matrix(
+            self._small, ["侵蚀", "灼烧", "冻伤", "战栗"],
+            ["L1", "L2", "L3", "L4", "L5"]
+        )
+        lay.addWidget(self._physical_abnormal_widget)
+
+        # 法术异常
+        lay.addWidget(_SectionHeader("法术异常", self._big))
+        self._spell_abnormal_widget = _build_abnormal_matrix(
+            self._small, ["侵蚀(法术)", "灼烧(法术)"],
+            ["L1", "L2", "L3", "L4"]
+        )
+        lay.addWidget(self._spell_abnormal_widget)
+
+        clear_btn = self._make_btn("清空全部异常次数", _SECONDARY_BTN_HEIGHT)
+        lay.addWidget(clear_btn)
+
+        lay.addStretch()
+        scroll.setWidget(body)
+
+        outer = QVBoxLayout(col)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(scroll)
+        return col
+
+    def _mark_pending(self) -> None:
+        self.loadout_pending.emit()
+
+
+def _build_abnormal_matrix(small_font: QFont,
+                           rows: List[str], cols: List[str]) -> QWidget:
+    w = QWidget()
+    grid = QGridLayout(w)
+    grid.setSpacing(2)
+    grid.setContentsMargins(0, 0, 0, 0)
+
+    # 列标题
+    for j, c in enumerate(cols, start=1):
+        lbl = QLabel(c)
+        lbl.setFont(small_font)
+        lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid.addWidget(lbl, 0, j)
+
+    # 行标题 + 输入框
+    for i, row_name in enumerate(rows, start=1):
+        lbl = QLabel(row_name)
+        lbl.setFont(small_font)
+        lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+        grid.addWidget(lbl, i, 0)
+        for j in range(len(cols)):
+            edit = QLineEdit("0")
+            edit.setStyleSheet(_ENTRY_STYLE)
+            edit.setFixedWidth(44)
+            edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            grid.addWidget(edit, i, j + 1)
+
+    return w

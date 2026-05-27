@@ -211,6 +211,20 @@ class QtSelectionPanel(QWidget):
         else:
             self.type_combo.addItem("无数据")
 
+    def update_data_list(self, new_data: List[Dict[str, Any]]) -> None:
+        """动态更新数据列表并重置选择（角色→武器过滤用）。"""
+        self.data_list = new_data
+        self.type_combo.blockSignals(True)
+        self.star_combo.blockSignals(True)
+        self.name_combo.blockSignals(True)
+        self.type_combo.clear()
+        self.star_combo.clear()
+        self.name_combo.clear()
+        self.type_combo.blockSignals(False)
+        self.star_combo.blockSignals(False)
+        self.name_combo.blockSignals(False)
+        self._init_values()
+
     def _on_type_changed(self) -> None:
         sel_type = self.type_combo.currentText()
         if not sel_type or sel_type == "无数据":

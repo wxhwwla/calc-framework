@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PySide6 主应用壳层（阶段 3）。
+PySide6 主应用（阶段 7 完整集成）。
 
-布局：双页签（计算页 / 高级页）。
-计算页嵌入 QtAttributeColumns（三列无闪渲染）。
-高级页嵌入 QtControlDock。
-确认按钮通过 QThread 在后台执行，GUI 不卡顿。
+双页签（计算页 / 高级页），信号路由、后台计算、三列刷新全链路。
 """
 
 from __future__ import annotations
 
 import sys
-from typing import Optional
+from typing import Any, Dict, List
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -23,7 +20,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
-    QScrollArea,
     QSizePolicy,
     QTabWidget,
     QVBoxLayout,
@@ -34,29 +30,23 @@ from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
 from gui_design.shared.display_view.qt_columns import QtAttributeColumns
 from gui_design.panels.selection.qt_panel import QtSelectionPanel
-from gui_design.backends.qt_worker import CalcWorker
+from gui_design.shared.calc_mode_labels import calculation_mode_from_label, DEFAULT_CALC_MODE_LABEL
 from data.loader import get_characters, get_weapons
 from please_read_me import get_exe_version
 
 
-def _demo_heavy_calc() -> str:
-    """模拟耗时计算（阶段 2 演示用，后续替换为真正的计算函数）。"""
-    import time as _time
-    _time.sleep(0.5)
-    return "计算完成（演示结果）"
-
-
 class QtDamageApp:
-    """PySide6 主应用。
+    """PySide6 主应用（完整集成）。
 
     属性：
-        app: QMainWindow 实例
-        big_font: 标题/主按钮字体（14px bold）
-        small_font: 正文/次按钮字体（12px normal）
+        app: QMainWindow
+        big_font / small_font: 字体
         tabs: 双页签
-        columns: 计算页三列属性展示（QtAttributeColumns 实例）
-        control_dock: 高级页控制栏（QtControlDock 实例）
-        status_label: 计算状态文案（高级页底部）
+        char_panel / weapon_panel: 角色/武器选择面板
+        columns: 三列属性展示
+        control_dock: 高级页控制栏
+        status_label: 底部状态文案
+        all_weapons: 全量武器列表（角色联动过滤用）
     """
 
     def __init__(self) -> None:
@@ -73,7 +63,7 @@ class QtDamageApp:
         self.small_font: QFont = QFont()
         self.small_font.setPointSize(12)
 
-        self._worker: Optional[CalcWorker] = None
+        self._current_calc_mode: str = calculation_mode_from_label(DEFAULT_CALC_MODE_LABEL)
 
         self.app: QMainWindow = QMainWindow()
         self.app.setWindowTitle(f"终末地伤害计算小工具 v{get_exe_version()}")
@@ -98,9 +88,9 @@ class QtDamageApp:
         calc_layout.setContentsMargins(0, 0, 0, 0)
         calc_layout.setSpacing(4)
 
-        # 加载游戏数据
         characters = get_characters()
         weapons = get_weapons()
+        self.all_weapons: List[Dict[str, Any]] = list(weapons)
 
         # 选择面板（角色 + 武器左右并排）
         panels_frame = QFrame()
@@ -110,10 +100,10 @@ class QtDamageApp:
         panels_row.setSpacing(12)
 
         self.char_panel = QtSelectionPanel(
-            characters, self.big_font, parent=self,
+            characters, self.big_font, parent=None,
         )
         self.weapon_panel = QtSelectionPanel(
-            weapons, self.big_font, is_weapon_panel=True, parent=self,
+            weapons, self.big_font, is_weapon_panel=True, parent=None,
         )
 
         panels_row.addWidget(self.char_panel, stretch=1)
@@ -163,12 +153,35 @@ class QtDamageApp:
 
         self.tabs.addTab(adv_page, "高级页")
 
+        # ── 信号连线 ──────────────────────────────
+        self._connect_signals()
+
+        # 初始化武器过滤
+        self._on_char_name_change()
+
+    def _connect_signals(self) -> None:
+        # 角色名称变化 → 过滤武器面板
+        self.char_panel.name_combo.currentTextChanged.connect(self._on_char_name_change)
+
+        # 角色/武器各级联下拉、滑块 → 标记待确认
+        self.char_panel.type_combo.currentIndexChanged.connect(self._on_loadout_changed)
+        self.char_panel.star_combo.currentIndexChanged.connect(self._on_loadout_changed)
+        self.char_panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
+        self.char_panel.level_slider.valueChanged.connect(self._on_loadout_changed)
+        self.weapon_panel.type_combo.currentIndexChanged.connect(self._on_loadout_changed)
+        self.weapon_panel.star_combo.currentIndexChanged.connect(self._on_loadout_changed)
+        self.weapon_panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
+        self.weapon_panel.level_slider.valueChanged.connect(self._on_loadout_changed)
+
+        # 控制栏信号
+        self.control_dock.calc_mode_changed.connect(self._on_calc_mode_changed)
+
     def run(self) -> None:
         """启动主事件循环。"""
         self.app.show()
         sys.exit(self._qapp.exec())
 
-    # ── 内部方法 ──────────────────────────────────
+    # ── 样式 ──────────────────────────────────
 
     def _apply_dark_style(self) -> None:
         self._qapp.setStyleSheet("""
@@ -205,45 +218,111 @@ class QtDamageApp:
             }
         """)
 
+    # ── 页面导航 ──────────────────────────────────
+
     def _show_main_page(self) -> None:
         self.tabs.setCurrentIndex(0)
 
+    # ── 角色 → 武器联动 ──────────────────────────
+
+    def _on_char_name_change(self) -> None:
+        """角色名称变化 → 按角色武器类型过滤武器面板。"""
+        char_data = self.char_panel.get_selected_data()
+        if not char_data:
+            self.weapon_panel.update_data_list(list(self.all_weapons))
+            return
+        char_weapon_type = char_data.get("武器", "")
+        if not char_weapon_type:
+            self.weapon_panel.update_data_list(list(self.all_weapons))
+            return
+        filtered = [w for w in self.all_weapons if w.get("类型") == char_weapon_type]
+        if not filtered:
+            self.weapon_panel.update_data_list(list(self.all_weapons))
+            return
+        self.weapon_panel.update_data_list(filtered)
+
+    # ── 计算模式 ──────────────────────────────────
+
+    def _on_calc_mode_changed(self, label: str) -> None:
+        self._current_calc_mode = calculation_mode_from_label(label)
+
+    # ── 配装变更 ──────────────────────────────────
+
+    def _on_loadout_changed(self) -> None:
+        """任意配装参数变化 → 更新状态文案。"""
+        self.status_label.setText("待确认")
+
+    # ── 确认计算 ──────────────────────────────────
+
+    def _build_request(self) -> Any:
+        """在主线程构建 DisplayRequest（读取面板控件，不可在子线程执行）。"""
+        from gui_design.app.display_request import DisplayRequest
+        from gui_design.app.loadout_state import read_loadout_from_panels
+        from calculation.loadout.slot_search import FixedLoadoutSelection
+
+        loadout = read_loadout_from_panels(
+            self.char_panel,
+            self.weapon_panel,
+            calculation_mode=self._current_calc_mode,
+            weapon_scope_label=self.control_dock.single_skill_scope_combo.currentText(),
+            equipment_scope_label=self.control_dock.equipment_scope_combo.currentText(),
+            fixed_loadout=FixedLoadoutSelection(),
+            use_manual_multi_skill_counts=False,
+            manual_counts={},
+            enemy_defense=100.0,
+        )
+        if loadout is None:
+            return None
+        return DisplayRequest(
+            loadout=loadout,
+            equipment_catalog={},
+            preview_weapon_candidates=(),
+        )
+
     def _on_confirm(self) -> None:
-        """后台执行计算，GUI 不卡顿。完成后刷新三列。"""
-        if self._worker is not None:
-            self.status_label.setText("已有计算进行中")
+        """同步执行求值缓存 + 刷新三列（后续可改为后台线程）。"""
+        char_data = self.char_panel.get_selected_data()
+        weapon_data = self.weapon_panel.get_selected_data()
+        if not char_data or not weapon_data:
+            QMessageBox.warning(self.app, "无法计算", "请选择有效的角色和武器。")
+            return
+
+        request = self._build_request()
+        if request is None:
+            QMessageBox.warning(self.app, "无法计算", "无法读取配装数据。")
             return
 
         self.confirm_btn.setEnabled(False)
         self.confirm_btn.setText("计算中…")
         self.status_label.setText("计算中…")
+        from PySide6.QtWidgets import QApplication as QA
+        QA.processEvents()
 
-        self._worker = CalcWorker(fn=_demo_heavy_calc)
-        self._worker.finished.connect(self._on_calc_result)
-        self._worker.error.connect(self._on_calc_error)
-        self._worker.start()
+        # 同步求值缓存（主线程内完成，后续可改为 CalcWorker）
+        self._sync_evaluation(request)
 
-    def _on_calc_result(self, result: str) -> None:
-        self.status_label.setText(f"就绪 — {result}")
+        self.columns.refresh(request)
+        self.status_label.setText("就绪")
         self.confirm_btn.setEnabled(True)
         self.confirm_btn.setText("确认选择")
 
-        self.columns.refresh_from_demo()
-
-        self._worker = None
-
-    def _on_calc_error(self, message: str) -> None:
-        self.status_label.setText("计算失败")
-        QMessageBox.critical(self.app, "计算错误", message)
-        self.confirm_btn.setEnabled(True)
-        self.confirm_btn.setText("确认选择")
-        self._worker = None
+    def _sync_evaluation(self, request: Any) -> None:
+        """调用求值缓存同步（主线程）。"""
+        from gui_design.app.loadout_evaluation import sync_evaluation_cache
+        try:
+            sync_evaluation_cache(request.loadout)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("求值缓存同步失败: %s", exc)
 
     def _on_attribution(self) -> None:
+        """打开数据来源与许可说明（纯 Qt 实现）。"""
+        from legal.attribution_content import SUMMARY_TEXT
+
         QMessageBox.information(
             self.app,
             "数据来源与许可",
-            "数据来源与许可说明待迁移",
+            SUMMARY_TEXT,
         )
 
     @property
