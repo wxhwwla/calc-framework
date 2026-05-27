@@ -116,6 +116,7 @@ class DAGOutput:
     """输出定义。"""
     node: str = ""
     label: str = ""
+    format: str = ""
     is_primary: bool = False
 
 
@@ -252,8 +253,9 @@ def _parse_output(raw: dict[str, Any]) -> DAGOutput:
     label = raw.get("label")
     if not isinstance(label, str) or not label:
         raise DAGCompileError("output 缺少 label")
+    format_spec = str(raw.get("format", ""))
     is_primary = bool(raw.get("is_primary", False))
-    return DAGOutput(node=node, label=label, is_primary=is_primary)
+    return DAGOutput(node=node, label=label, format=format_spec, is_primary=is_primary)
 
 
 def _parse_subgraph(raw: dict[str, Any]) -> DAGSubgraph:

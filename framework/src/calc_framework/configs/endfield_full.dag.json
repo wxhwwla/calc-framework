@@ -204,6 +204,7 @@
         "ability_bonus": {
           "node": "ability_bonus",
           "label": "能力值加成",
+          "format": "",
           "is_primary": false
         }
       }
@@ -297,6 +298,7 @@
         "final_attack": {
           "node": "final_atk",
           "label": "最终攻击力",
+          "format": "",
           "is_primary": true
         }
       }
@@ -496,6 +498,7 @@
         "final_damage": {
           "node": "zone_14",
           "label": "最终伤害",
+          "format": "",
           "is_primary": true
         }
       }
@@ -837,16 +840,19 @@
     "能力值加成": {
       "node": "ability_bonus",
       "label": "能力值加成",
+      "format": "",
       "is_primary": false
     },
     "最终攻击力": {
       "node": "final_attack_calc",
       "label": "最终攻击力",
+      "format": "",
       "is_primary": true
     },
     "最终伤害": {
       "node": "final_damage",
       "label": "最终伤害",
+      "format": "",
       "is_primary": true
     }
   }

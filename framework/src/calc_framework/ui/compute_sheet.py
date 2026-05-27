@@ -54,7 +54,7 @@ class ComputeSheet(QObject):
         self,
         dag_service: DAGService,
         layout: Layout,
-        variables: dict[str, dict[str, Any]],
+        variables: dict[str, DAGVariable | dict[str, Any]],
         base_context: dict[str, Any] | None = None,
         parent: QWidget | None = None,
     ):
@@ -66,6 +66,11 @@ class ComputeSheet(QObject):
         self._widget: QWidget | None = None
         self._output_labels: dict[str, QLabel] = {}
         self._input_widgets: dict[str, tuple[QWidget, ControlSpec]] = {}
+        self._output_formats: dict[str, str] = {
+            oid: odef.format
+            for oid, odef in dag_service.dag.outputs.items()
+            if odef.format
+        }
 
     @property
     def widget(self) -> QWidget:
@@ -128,7 +133,8 @@ class ComputeSheet(QObject):
                 if label is None:
                     continue
                 value = result.outputs.get(out_name)
-                label.setText(format_node_value(value, ".4f"))
+                fmt = self._output_formats.get(out_name, ".4f")
+                label.setText(format_node_value(value, fmt))
 
     def _build(self) -> QWidget:
         root = QWidget()
