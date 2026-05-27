@@ -1,6 +1,6 @@
 # 终末地伤害计算小工具
 
-> 《明日方舟：终末地》配装与乘区辅助工具（CustomTkinter GUI）
+> 《明日方舟：终末地》配装与乘区辅助工具（PySide6 / CustomTkinter 双后端 GUI）
 
 ## 文档分层
 
@@ -19,6 +19,7 @@
 | 名称 | 路径 | 典型操作 |
 |------|------|----------|
 | **仓库根** `[根]` | 本目录 | `github_upload_module.py`、`github_download_module.py`、`CONTEXT.md`、许可文件 |
+| **通用框架** `[框架]` | [`framework/`](framework/) | `calc-framework` 独立 pip 包：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器 |
 | **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、审计脚本（`tools/audit/`） |
 | **人类文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构 |
 | **Python 包** `[包]` | `endfield_damage_calculator/` | `main.py`、`pytest`、`build.py`、包内 `scripts/`（反推、seed） |
@@ -27,6 +28,7 @@
 
 ```
 [根]/
+├── framework/                    # [框架] 通用计算框架 calc-framework
 ├── endfield_damage_calculator/   # [包] 产品代码与测试
 ├── docs/                         # 操作指令集、许可、算法说明
 ├── tools/                        # [工具] 仓库级维护（非包内 scripts）

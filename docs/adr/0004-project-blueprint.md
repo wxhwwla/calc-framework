@@ -89,10 +89,10 @@
 
 | Phase | 模块 | 内容 | 优先级 |
 |-------|------|------|:--:|
-| 3 | DAG outputs `format` 字段 | outputs 节点支持 `.2f` / `.1%` 等格式 hint | **立即** |
-| 3 | ComputeSheet 接入现有 GUI | 终末地 GUI 右侧乘区展示改用 ComputeSheet 渲染 | **立即** |
-| 3 | `calc_framework/editor/` | 可视化布局编辑器，拖拽编排 section → 导出 layout.json | 高 |
-| 4 | 框架独立 pip 包 | `framework/` 可 `pip install calc-framework`，终末地以依赖引用 | 中 |
+| 3 | DAG outputs `format` 字段 | outputs 节点支持 `.2f` / `.1%` 等格式 hint | ✅ |
+| 3 | ComputeSheet 接入现有 GUI | 终末地 GUI 右侧乘区展示改用 ComputeSheet 渲染 | ✅ |
+| 3 | `calc_framework/editor/` | 可视化布局编辑器，API+CLI+PySide6 GUI，编排 section → 导出 layout.json | ✅ |
+| 4 | 框架独立 pip 包 | `framework/` 可 `pip install -e ./framework`，终末地通过 sys.path 引用 | ✅ |
 | 4 | 社区适配器生态 | 贡献指南 + 示例适配器（如星穹铁道） | 低 |
 
 ---
@@ -105,8 +105,8 @@
 阶段四 ─ 自定义乘区公式  ←→  ADR-0003 Phase 1  DAG 引擎     ✅
 阶段四 ─ 数据适配器框架  ←→  ADR-0003 Phase 2  数据引擎     ✅
 阶段四 ─ JSON 配置分享   ←→  ADR-0003 Phase 3  声明式 UI    ✅
-阶段四 ─ 可视化编辑器    ←→  ADR-0003 Phase 3  editor/      ❌
-阶段四 ─ 社区生态        ←→  ADR-0003 Phase 4  独立包+生态  ❌
+阶段四 ─ 可视化编辑器    ←→  ADR-0003 Phase 3  editor/      ✅
+阶段四 ─ 社区生态        ←→  ADR-0003 Phase 4  独立包+生态  ✅
 阶段一 ─ QThread 迁移    ←→  (无对应 — 纯产品决策)          ❌
 阶段二 ─ 云函数+混合计算 ←→  (无对应 — 纯产品决策)          ❌
 阶段三 ─ OCR+YOLO        ←→  (无对应 — 纯产品决策)          ❌
@@ -120,12 +120,12 @@
 
 按维护者要求"先做抽象框架"：
 
-1. **DAG outputs `format` 字段** — 5 分钟
-2. **ComputeSheet 接入现有 GUI** — 验证声明式 UI 真正可用
-3. **布局编辑器** — `framework/src/calc_framework/editor/`
-4. **独立 pip 包** — 框架彻底脱离终末地
+1. ~~DAG outputs `format` 字段~~ ✅
+2. ~~ComputeSheet 接入现有 GUI~~ ✅
+3. ~~布局编辑器~~ ✅ `framework/src/calc_framework/editor/`
+4. ~~独立 pip 包~~ ✅ 框架彻底脱离终末地
 
-框架闭环后，转入产品阶段一（QThread / ProcessPoolExecutor）。
+**框架闭环已完成（2026-05-28）**。下一优先级：产品阶段一（QThread / ProcessPoolExecutor）。
 
 ---
 

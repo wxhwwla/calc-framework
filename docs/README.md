@@ -8,6 +8,7 @@
 |------|------|
 | [代码结构规范.md](代码结构规范.md) | **目录 ≤10、文件 ≤400 行**；迁移 backlog、PR 自检 |
 | [adr/0001-code-layout-constraints.md](adr/0001-code-layout-constraints.md) | 结构约束 ADR（Agent/评审依据） |
+| [代码规范-ruff修复模式.md](代码规范-ruff修复模式.md) | **ruff + pyright 规范修复模式**：E501/F401/N806/E741/`**kwargs`拆包/QDoubleSpinBox stub |
 | [会话接续手册.md](会话接续手册.md) | **Agent 与长期协作**：接缝表、已完成项、勿重复工作、测试基线 |
 | [操作指令集.md](操作指令集.md) | **日常首选**：`[根]` / `[工具]` / `[包]` 路径与可复制命令（含 BWIKI §9 侦察与同步） |
 | [依赖说明.md](依赖说明.md) | `pyproject.toml` 运行时/开发/打包依赖、传递依赖与打包约定 |

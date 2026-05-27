@@ -1,9 +1,9 @@
 # 终末地伤害计算小工具（详细文档）
 
 > 本文件为 **Python 包目录** `[包]` 下的详细说明。  
-> GitHub 首页与速览见仓库根 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../docs/算法与架构.md)。
+> GitHub 首页与速览见仓库根 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../docs/算法与架构.md)；通用框架见 [**framework/**](../framework/)。
 
-> 基于 CustomTkinter 开发的《明日方舟：终末地》伤害计算辅助工具
+> PySide6 / CustomTkinter 双后端 GUI，支持乘区计算、全量搜索、配装对比
 
 ## 🌟 项目简介
 
@@ -45,6 +45,7 @@ endfield_damage_calculator/
 │       ├── defense_zone.py    # 防御减伤区
 │       ├── ability_bonus_zone.py  # 能力值加成区
 │       ├── final_attack_zone.py   # 最终攻击力区
+│       ├── dag/               # DAG 引擎适配器（桥接 calc-framework）
 │       └── zone_manager.py    # 乘区管理器
 ├── character_weapon_equipment/# 数据文件目录
 │   ├── DATA_README.md         # 数据许可说明（见仓库根 DATA_LICENSE）
@@ -103,6 +104,7 @@ endfield_damage_calculator/
 
 | 路径 | 说明 |
 |------|------|
+| [`framework/`](../framework/) | **通用计算框架 calc-framework**：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器（独立 pip 包） |
 | [`tools/`](../tools/README.md) | BWIKI 侦察、审计等；在 `[根]` 执行 `python tools/bwiki_scout/scout.py` |
 | [`docs/`](../docs/README.md) | 操作指令集、许可、算法文档 |
 | [`legacy/`](../legacy/README.md) | 遗留脚本，新录入请用本包 `add_character` / `add_weapon` |
@@ -115,7 +117,8 @@ endfield_damage_calculator/
 ### 环境要求
 
 - Python 3.10+
-- CustomTkinter 5.2.2+
+- PySide6 6.5+（默认 GUI 后端；`ENDFIELD_UI_BACKEND=ctk` 切 CustomTkinter）
+- CustomTkinter 5.2.2+（备选后端）
 - matplotlib 3.8+（运行时依赖，含伤害仪表盘）
 
 首次安装：`pip install -e .`（或 `pip install -e ".[dev]"`）。缺依赖时 `main.py` 会警告但不会自动 pip。

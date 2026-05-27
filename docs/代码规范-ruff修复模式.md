@@ -193,18 +193,39 @@ box.setMinimum(spec.min_val)  # type: ignore[reportArgumentType]
 box.setMaximum(spec.max_val)  # type: ignore[reportArgumentType]
 ```
 
+**`**kwargs` 拆包 + 联合值类型**
+
+当函数返回 `dict[str, int | str]` 时，`**` 拆包后每个 keyword 值被推断为 `int | str`，无法赋值给分别要求 `int` 或 `str` 的形参。
+
+```python
+# 根源：返回类型过窄
+def calculation_kwargs(self) -> dict[str, int | str]:  # ← 联合值类型
+    return {"name": "abc", "level": 1}
+
+# ❌ 拆包后每个值都是 int | str
+def f(*, name: str, level: int): ...
+f(**calculation_kwargs())  # reportArgumentType ×2
+
+# ✅ 修复：调用点标注为 dict[str, Any]（拆包语义上确实是 Any）
+kwargs: dict[str, Any] = obj.calculation_kwargs()
+f(**kwargs)
+```
+
+> **原则**：`**kwargs` 拆包在 Python 类型系统中无法保留 per-key 粒度。当返回 `dict[str, T1 | T2]` 时，应该标注变量为 `dict[str, Any]`，在拆包前 "抹平" 联合类型。这不应滥用——只在 `**` 拆包场景下使用。
+
 ### 7.3 当前 pyright 状态（2026-05-28）
 
 | 端 | 总错误 | 本轮修复引入 | 本轮修复消除 | 剩余 pre-existing | 核心来源 |
 |----|--------|------------|------------|-----------------|---------|
-| 包端 | 538 | 1 | 1 | 536 | 测试文件 `dict` 解包类型拓宽（338/512 `reportArgumentType`） |
-| 框架 | 7 | 4 | 4 | 3 | `sandbox.py` ast 类型 + `test_context.py` TypedDict |
+| 包端 | 390 | 0 | 148 | 390 | 测试 `dict` 解包 + gui_design mixin + shell 桥接 |
+| 框架 | 3 | 0 | 0 | 3 | `sandbox.py` ast 类型 + `test_context.py` TypedDict |
 
 **pre-existing 说明**（不打算大批量修复）：
 
-- **`reportArgumentType` (512)**：主要在 `tests/` 和 `gui_design/shell/`。测试文件将松散 `dict` 传递给严格类型签名，修复需结构性修改测试基类或全面加 `cast()`。
+- **`reportArgumentType` (364)**：主要在 `tests/`（~338）和 `gui_design/shell/`。测试文件将松散 `dict` 传递给严格类型签名，修复需结构性修改测试基类。
 - **`reportGeneralTypeIssues` (14)**：gui_design mixin 模式（`Self@Mixin` 类型推断），不影响运行时。
-- **框架 pre-existing (3)**：`sandbox.py` 的 ast `_ConstantValue` 和 `test_context.py` 的 TypedDict 协变，深度类型问题，不加类型忽略注释。
+- **框架 pre-existing (3)**：`sandbox.py` 的 ast `_ConstantValue` 和 `test_context.py` 的 TypedDict 协变，深度类型问题。
+- **本轮消除 148 个**：`zone_snapshot.py` 和 `adapter.py` 的 `**kwargs` + `int|str` 级联错误，在调用点标注 `dict[str, Any]`。
 
 ### 7.4 VS Code Problems 面板
 

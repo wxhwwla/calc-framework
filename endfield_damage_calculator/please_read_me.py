@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.0.12"
+_VERSION = "3.1.0"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,29 +209,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 23 处文件
+# TITLE: 更新 13 处文件
 # BODY:
+# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
 # - 变更 "docs//344/273/243/347/240/201/350/247/204/350/214/203-ruff/344/277/256/345/244/215/346/250/241/345/274/217.md"
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 README.md
+# - 更新文档 docs/README.md
+# - 更新文档 docs/adr/0004-project-blueprint.md
+# - 更新文档 endfield_damage_calculator/README.md
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/adapter.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 framework/src/calc_framework/dag/schema.py
-# - 修改 framework/src/calc_framework/editor/__init__.py
-# - 修改 framework/src/calc_framework/editor/__main__.py
-# - 修改 framework/src/calc_framework/editor/editor.py
-# - 修改 framework/src/calc_framework/ui/compute_sheet.py
-# - 修改 framework/tests/config/test_adapter.py
-# - 修改 framework/tests/dag/test_engine.py
-# - 修改 framework/tests/dag/test_sandbox.py
-# - 修改 framework/tests/dag/test_schema.py
-# - 修改 framework/tests/dag/test_serializer.py
-# - 修改 framework/tests/dag/test_service.py
-# - 修改 framework/tests/dag/test_subgraph.py
-# - 修改 framework/tests/data/test_loader.py
-# - 修改 framework/tests/data/test_schema.py
-# - 修改 framework/tests/editor/test_cli.py
-# - 修改 framework/tests/editor/test_editor.py
-# - 修改 framework/tests/editor/test_gui.py
-# - 修改 framework/tests/ui/test_compute_sheet.py
-# - 修改 framework/tests/ui/test_endfield_compute_sheet.py
-# - 修改 framework/tests/ui/test_layout.py
 # --- END UPLOAD_SUMMARY ---

@@ -162,7 +162,7 @@ def compute_multiplicative_zone_snapshot(
     char = selection.character
     weapon = selection.weapon
     b = selection.bonuses
-    kwargs = b.calculation_kwargs()
+    kwargs: dict[str, Any] = b.calculation_kwargs()
     lines: list[ZoneDisplayLine] = []
 
     defense = DefenseReductionZone().calculate()

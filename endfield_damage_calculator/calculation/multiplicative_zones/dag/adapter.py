@@ -102,7 +102,7 @@ def compute_snapshot_with_dag(
 
     char = selection.character
     weapon = selection.weapon
-    kwargs = selection.bonuses.calculation_kwargs()
+    kwargs: dict[str, Any] = selection.bonuses.calculation_kwargs()
     lines: list[ZoneDisplayLine] = []
 
     defense = DefenseReductionZone().calculate()

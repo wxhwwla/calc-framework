@@ -74,4 +74,26 @@
 | **代码结构约束** | 每目录直接子项 **≤ 10**；业务 `.py` **≤ 400 行**（硬顶 500）；见 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)、[`docs/代码结构规范.md`](docs/代码结构规范.md) |
 | **BWIKI 侦察** | `tools/bwiki_scout/`：阶段 C 拉取 Wiki 至 `output/raw/`（gitignore）；阶段 B `parse_draft.py` 仅生成对照草案 |
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
-| **项目依赖** | 运行时：`customtkinter`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
+| **项目依赖** | 运行时：`customtkinter`、`PySide6`（双后端；默认 PySide6，`ENDFIELD_UI_BACKEND=ctk` 切回 CTk） + `matplotlib`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
+
+## 通用计算框架（calc-framework）
+
+| 术语 | 含义 |
+|------|------|
+| **框架目录** | `framework/`：独立 pip 包 `calc-framework`，zero 终末地依赖，位于仓库根 |
+| **DAG 公式图** | `DAGGraph` — 有向无环图表达的公式网络（nodes + variables + subgraphs + outputs）；建图→拓扑排序→求值 |
+| **DAG 节点** | 9 种类型：`const` / `var` / `unary` / `binary` / `condition` / `expr` / `user_input` / `call` / `subgraph` |
+| **DAG 变量** | `DAGVariable` — 公式图中变量的元数据（type / source / default / description） |
+| **DAG 输出** | `DAGOutput` — 指定图中哪个节点的值作为输出，可选 `format` 格式串（`.4f` / `.1f` / `.0%`） |
+| **子图** | `DAGSubgraph` — 可复用的 DAG 片段，通过 `call` 节点在主图中实例化 |
+| **DAG 沙箱** | AST 受限求值器（`sandbox.py`）：白名单函数、禁止属性访问/导入/循环；安全执行 `user_input` 节点的 Python 表达式 |
+| **拓扑排序** | DAG 求值前的节点依赖排序（`engine.py`）；检测循环依赖 |
+| **ComputeSheet** | `calc_framework.ui.compute_sheet.ComputeSheet` — 声明式计算表 QWidget：读 DAG + layout.json → 自动生成输入控件 + 计算/展示输出 |
+| **Layout / Section** | `layout.json` 声明式排版：每个 `Section` 含 `name`、`inputs`（变量路径列表）、`outputs`（输出节点列表） |
+| **布局编辑器** | `calc_framework.editor.LayoutEditor` — 从 DAG 编排 layout.json 的 API + CLI（`calc-layout`）+ PySide6 GUI |
+| **DataContext** | `TypedDict` 定义的数据上下文 schema：`character` / `weapon` / `equipment` / `enemy` / `computed` / `user_input` 六区 |
+| **DataContextLoader** | ABC 接口：实现 `load()` 方法，从游戏数据构建符合 schema 的变量字典 |
+| **EndfieldContextLoader** | 终末地适配器实现，位于 `endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py` |
+| **AdapterPackage** | `calc_framework.config.adapter.AdapterPackage` — 从适配器目录加载 DAG + layout + context loader，零自定义缓存 |
+| **DAG 适配器 (adapter.py)** | `endfield_damage_calculator/.../dag/adapter.py` — 将 DAG 引擎接入 zone_snapshot 计算链的桥接模块 |
+| **控制规格** | `ControlSpec` — 声明输入控件的类型：`QLineEdit` / `QSpinBox` / `QDoubleSpinBox` / `QSlider` / `QCheckBox` / `QComboBox`8，带 min/max/step/choices/default 元数据 |
