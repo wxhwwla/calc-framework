@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """AST 沙箱单元测试。"""
 
-import math
 
 import pytest
 

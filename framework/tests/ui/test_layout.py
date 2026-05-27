@@ -3,7 +3,6 @@
 import pytest
 
 from calc_framework.ui.layout import (
-    Layout,
     Section,
     LayoutValidationError,
     load_layout,

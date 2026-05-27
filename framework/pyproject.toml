@@ -1,11 +1,15 @@
 [project]
 name = "calc-framework"
 version = "0.1.0"
-description = "通用游戏数值计算框架 — DAG 公式引擎"
+description = "通用游戏数值计算框架 — DAG 公式引擎 + 声明式 UI 渲染"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.scripts]
+calc-layout = "calc_framework.editor.__main__:main"
+
 [project.optional-dependencies]
+ui = ["PySide6>=6.5"]
 dev = ["pytest>=8"]
 
 [build-system]

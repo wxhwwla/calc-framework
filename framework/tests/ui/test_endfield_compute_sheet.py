@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from calc_framework.dag.serializer import load_dag
 from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout_json

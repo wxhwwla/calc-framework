@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """DAG 异常类单元测试。"""
 
-import pytest
 
 from calc_framework.dag.errors import (
     DAGCompileError,

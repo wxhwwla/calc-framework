@@ -14,7 +14,6 @@ from .schema import (
     ConditionNode,
     ConstNode,
     DAGGraph,
-    DAGOutput,
     DAGSubgraph,
     DAGVariable,
     ExprNode,

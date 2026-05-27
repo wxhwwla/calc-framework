@@ -60,17 +60,13 @@ def compute_attr_weapon_bonus(
     def _classify_and_add(effect: str, value: float) -> None:
         nonlocal flat_bonus, pct_bonus
         category = _classify(effect)
-        if category == "main_flat" and attr_is_main:
+        if (
+            (category == "main_flat" and attr_is_main)
+            or (category == "sub_flat" and attr_is_sub)
+            or category == "attr_flat"
+        ):
             flat_bonus += value
-        elif category == "sub_flat" and attr_is_sub:
-            flat_bonus += value
-        elif category == "attr_flat":
-            flat_bonus += value
-        elif category == "main_pct":
-            pct_bonus += value
-        elif category == "sub_pct":
-            pct_bonus += value
-        elif category == "both_pct":
+        elif category == "main_pct" or category == "sub_pct" or category == "both_pct":
             pct_bonus += value
 
     for skill in weapon.get("normal_skills", []):

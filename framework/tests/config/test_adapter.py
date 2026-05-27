@@ -1,7 +1,6 @@
 """适配包加载器 — 单元测试。"""
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest

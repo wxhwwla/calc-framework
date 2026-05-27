@@ -10,7 +10,6 @@ from typing import Any
 from PySide6.QtCore import Qt, Signal, QObject
 from PySide6.QtWidgets import (
     QGroupBox,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
@@ -22,7 +21,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QGridLayout,
-    QSizePolicy,
 )
 
 from calc_framework.dag.service import DAGService

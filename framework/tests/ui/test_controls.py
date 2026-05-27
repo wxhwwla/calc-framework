@@ -3,9 +3,8 @@
 根据 DAG variables 声明推断对应的 UI 控件类型。
 """
 
-import pytest
 
-from calc_framework.ui.controls import ControlSpec, infer_control
+from calc_framework.ui.controls import infer_control
 
 
 class TestInferControl:

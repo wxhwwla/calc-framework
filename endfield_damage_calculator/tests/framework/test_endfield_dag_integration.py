@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""生成的完整终末地 DAG 与现有引擎的数值对比测试。
+"""终末地 DAG 与现有引擎的数值对比测试。
 
-通过 AdapterPackage 加载 DAG，EndfieldContextLoader 构建 DataContext。
+通过框架 AdapterPackage 加载 DAG，EndfieldContextLoader 构建 DataContext。
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from calc_framework.config.adapter import AdapterPackage
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -68,10 +67,10 @@ def _minimal_context() -> dict[str, dict[str, Any]]:
     }
 
 
-class TestGeneratedEndfieldDAG:
+class TestEndfieldDAGIntegration:
     @pytest.fixture(scope="class")
     def generated_dag(self):
-        from calculation.multiplicative_zones.dag.config import generate, OUTPUT_PATH
+        from calculation.multiplicative_zones.dag.config import OUTPUT_PATH, generate
 
         dag = generate()
         assert dag.name == "终末地伤害公式（完整版）"
@@ -132,11 +131,11 @@ class TestGeneratedEndfieldDAG:
         )
 
     def test_final_attack_parity(self, adapter_pkg):
-        from calculation.multiplicative_zones.final_attack_zone import (
-            calculate_final_attack_with_details,
-        )
         from calculation.multiplicative_zones.ability_bonus_details import (
             calculate_ability_bonus_with_details,
+        )
+        from calculation.multiplicative_zones.final_attack_zone import (
+            calculate_final_attack_with_details,
         )
 
         char = _load_by_name(PARTICIPANTS_JSON, "秋栗")
@@ -195,8 +194,8 @@ class TestGeneratedEndfieldDAG:
         assert result2.outputs.get("最终伤害", 0.0) > 0
 
     def test_single_hit_damage_parity(self, adapter_pkg):
-        from calculation.damage.engine.types import DamageContext
         from calculation.damage.engine.calculate import calculate_single_hit_damage
+        from calculation.damage.engine.types import DamageContext
 
         ctx = DamageContext(
             final_attack=1254.9936,
@@ -231,7 +230,7 @@ class TestGeneratedEndfieldDAG:
             "脆弱": 1.0,
             "易伤": 1.0,
             "防御": 100.0 / (100.0 + ctx.enemy_defense),
-            "失衡易伤": float(1.0),
+            "失衡易伤": 1.0,
             "抗性": 1.0,
             "非主控减伤": 1.0,
             "连击增伤": 1.0,

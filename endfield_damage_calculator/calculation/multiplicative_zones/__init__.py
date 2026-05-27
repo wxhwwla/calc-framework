@@ -21,9 +21,9 @@
 - ``ZoneManager`` 为历史演示路径，生产 GUI/搜索不经过该类。
 """
 
-from .ability_bonus_zone import AbilityBonusZone
 from .ability_bonus_calc import calculate_ability_bonus
 from .ability_bonus_details import calculate_ability_bonus_with_details
+from .ability_bonus_zone import AbilityBonusZone
 from .attribute_zone import (
     AttributeMultiplierZone,
     AttributeZoneManager,

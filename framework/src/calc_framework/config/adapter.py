@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-from calc_framework.dag.schema import DAGGraph
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.service import DAGService
 

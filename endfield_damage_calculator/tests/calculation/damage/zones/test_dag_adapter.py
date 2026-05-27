@@ -64,12 +64,12 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertIn("主能力百分比", ctx["computed"])
 
     def test_evaluate_attack_chain_via_dag_matches_existing_engine(self):
+        from calculation.multiplicative_zones.ability_bonus_details import (
+            calculate_ability_bonus_with_details,
+        )
         from calculation.multiplicative_zones.dag.adapter import evaluate_attack_chain_via_dag
         from calculation.multiplicative_zones.final_attack_zone import (
             calculate_final_attack_with_details,
-        )
-        from calculation.multiplicative_zones.ability_bonus_details import (
-            calculate_ability_bonus_with_details,
         )
 
         existing_final = calculate_final_attack_with_details(
@@ -118,8 +118,8 @@ class TestDAGAdapter(unittest.TestCase):
                 f"第 {i} 行颜色不一致: DAG={dag_line.color} vs existing={existing_line.color}",
             )
 
-        dag_final = [l for l in dag_lines if l.text.startswith("最终攻击力:")][0]
-        existing_final = [l for l in existing_lines if l.text.startswith("最终攻击力:")][0]
+        dag_final = [line for line in dag_lines if line.text.startswith("最终攻击力:")][0]
+        existing_final = [line for line in existing_lines if line.text.startswith("最终攻击力:")][0]
         dag_val = float(dag_final.text.split(":")[1].strip().split(" ")[0])
         existing_val = float(existing_final.text.split(":")[1].strip().split(" ")[0])
         self.assertAlmostEqual(dag_val, existing_val, places=4)

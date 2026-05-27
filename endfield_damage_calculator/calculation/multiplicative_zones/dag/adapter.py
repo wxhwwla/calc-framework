@@ -98,7 +98,7 @@ def compute_snapshot_with_dag(
         calculate_final_attack_with_details,
     )
 
-    ATTR_DISPLAY_ORDER = ("力量", "敏捷", "智识", "意志")
+    attr_display_order = ("力量", "敏捷", "智识", "意志")
 
     char = selection.character
     weapon = selection.weapon
@@ -111,7 +111,7 @@ def compute_snapshot_with_dag(
     attr_details = calculate_attribute_zones_with_details(
         char, weapon, level=selection.char_level, trust_level=selection.trust_level, **kwargs,
     )
-    for attr_name in ATTR_DISPLAY_ORDER:
+    for attr_name in attr_display_order:
         details = attr_details.get(attr_name, {"base": 0.0, "bonus": 0.0, "total": 0.0})
         base_value = details["base"]
         bonus_value = details["bonus"]

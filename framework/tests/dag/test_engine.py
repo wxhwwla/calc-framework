@@ -4,7 +4,7 @@
 import pytest
 
 from calc_framework.dag.errors import DAGCycleError
-from calc_framework.dag.engine import DAGResult, evaluate_graph, topological_sort
+from calc_framework.dag.engine import evaluate_graph, topological_sort
 from calc_framework.dag.serializer import dag_from_dict
 
 

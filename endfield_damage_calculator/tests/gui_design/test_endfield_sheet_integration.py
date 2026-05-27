@@ -28,8 +28,9 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 @pytest.fixture(scope="module")
 def qapp():
-    from PySide6.QtWidgets import QApplication
     import sys
+
+    from PySide6.QtWidgets import QApplication
 
     app = QApplication.instance()
     if app is None:
@@ -49,10 +50,10 @@ class TestEndfieldSheetIntegration:
         assert w is not None
 
     def test_evaluates_attack_chain(self, qapp):
-        from gui_design.shared.display_view.endfield_sheet import build_endfield_sheet
         from calculation.multiplicative_zones.final_attack_zone import (
             calculate_final_attack_with_details,
         )
+        from gui_design.shared.display_view.endfield_sheet import build_endfield_sheet
 
         char = _load_by_name(_CHARS, "秋栗")
         weapon = _load_by_name(_WEAPONS, "逐鳞3.0")

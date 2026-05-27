@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.0.10"
+_VERSION = "3.0.11"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,14 +209,38 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 8 处文件
+# TITLE: 更新 32 处文件
 # BODY:
+# - 变更 "docs//344/273/243/347/240/201/350/247/204/350/214/203-ruff/344/277/256/345/244/215/346/250/241/345/274/217.md"
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 更新文档 docs/adr/0004-project-blueprint.md
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/_attribute_zone_bonus.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/adapter.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/config.py
+# - 修改 endfield_damage_calculator/gui_design/presentation/preview_lines.py
 # - 修改 endfield_damage_calculator/gui_design/shared/display_view/endfield_sheet.py
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 endfield_damage_calculator/tests/calculation/damage/zones/test_dag_adapter.py
+# - 变更 endfield_damage_calculator/tests/framework/
 # - 修改 endfield_damage_calculator/tests/gui_design/test_endfield_sheet_integration.py
-# - 变更 framework/src/calc_framework/configs/endfield_full.dag.json
-# - 修改 framework/src/calc_framework/dag/schema.py
+# - 变更 framework/pyproject.toml
+# - 修改 framework/src/calc_framework/config/adapter.py
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/dag/sandbox.py
+# - 修改 framework/src/calc_framework/dag/serializer.py
+# - 修改 framework/src/calc_framework/dag/subgraph.py
+# - 变更 framework/src/calc_framework/editor/
 # - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/tests/config/test_adapter.py
+# - 修改 framework/tests/dag/test_engine.py
+# - 修改 framework/tests/dag/test_errors.py
+# - 修改 framework/tests/dag/test_sandbox.py
+# - 修改 framework/tests/dag/test_schema.py
+# - 变更 framework/tests/editor/
+# - 修改 framework/tests/integration/__init__.py
+# - 修改 framework/tests/integration/test_generated_endfield_dag.py
+# - 修改 framework/tests/ui/test_controls.py
+# - 修改 framework/tests/ui/test_endfield_compute_sheet.py
+# - 修改 framework/tests/ui/test_format.py
+# - 修改 framework/tests/ui/test_layout.py
 # --- END UPLOAD_SUMMARY ---

@@ -1,6 +1,5 @@
 """节点值格式化 — 单元测试。"""
 
-import pytest
 
 from calc_framework.ui.format import format_node_value
 

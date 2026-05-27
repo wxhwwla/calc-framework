@@ -41,10 +41,22 @@ def _make_ability_bonus_subgraph() -> DAGSubgraph:
     return DAGSubgraph(
         description="能力值加成 = 主能力最终值×0.005 + 副能力最终值×0.002",
         parameters={
-            "main_flat": DAGVariable(type="float", source="computed", description="主能力平值（基础 + 武器平值加成 + 信赖）"),
-            "sub_flat": DAGVariable(type="float", source="computed", description="副能力平值（基础 + 武器平值加成）"),
-            "main_pct": DAGVariable(type="float", source="computed", description="主能力百分比加成（主能力+% + 全能力+%）"),
-            "sub_pct": DAGVariable(type="float", source="computed", description="副能力百分比加成（副能力+% + 全能力+%）"),
+            "main_flat": DAGVariable(
+                type="float", source="computed",
+                description="主能力平值（基础 + 武器平值加成 + 信赖）",
+            ),
+            "sub_flat": DAGVariable(
+                type="float", source="computed",
+                description="副能力平值（基础 + 武器平值加成）",
+            ),
+            "main_pct": DAGVariable(
+                type="float", source="computed",
+                description="主能力百分比加成（主能力+% + 全能力+%）",
+            ),
+            "sub_pct": DAGVariable(
+                type="float", source="computed",
+                description="副能力百分比加成（副能力+% + 全能力+%）",
+            ),
         },
         nodes={
             "main_final": ExprNode(
@@ -93,7 +105,10 @@ def _make_final_attack_subgraph() -> DAGSubgraph:
         parameters={
             "char_base_atk": DAGVariable(type="float", source="character", description="角色基础攻击力"),
             "weapon_base_atk": DAGVariable(type="float", source="weapon", description="武器基础攻击力"),
-            "atk_bonus": DAGVariable(type="float", source="weapon", description="攻击力+ 加成值（已换算为小数，如 0.15 表示 15%）"),
+            "atk_bonus": DAGVariable(
+                type="float", source="weapon",
+                description="攻击力+ 加成值（已换算为小数，如 0.15 表示 15%）",
+            ),
             "additional_atk": DAGVariable(type="float", source="weapon", description="附加攻击力+ 平值"),
             "equip_flat_atk": DAGVariable(type="float", source="equipment", description="装备平铺攻击力"),
             "ability_bonus": DAGVariable(type="float", source="computed", description="能力值加成"),
@@ -216,21 +231,37 @@ def _make_master_graph() -> DAGGraph:
     return DAGGraph(
         schema_version="dag-v1",
         name="终末地伤害公式（完整版）",
-        description="终末地 15 乘区完整伤害公式 DAG。子图含 ability_bonus / final_attack / single_hit_damage 用于独立校验；主图扁平求值。",
+        description=(
+            "终末地 15 乘区完整伤害公式 DAG。"
+            "子图含 ability_bonus / final_attack / single_hit_damage 用于独立校验；"
+            "主图扁平求值。"
+        ),
         variables={
             "character.基础攻击": DAGVariable(type="float", source="character", description="角色基础攻击力"),
             "weapon.基础攻击": DAGVariable(type="float", source="weapon", description="武器基础攻击力"),
-            "weapon.攻击力+": DAGVariable(type="float", source="weapon", description="攻击力+ 小数加成（0.15 = 15%）"),
+            "weapon.攻击力+": DAGVariable(
+                type="float", source="weapon", description="攻击力+ 小数加成（0.15 = 15%）",
+            ),
             "weapon.附加攻击力+": DAGVariable(type="float", source="weapon", description="附加攻击力+ 平值"),
-            "equipment.攻击力平值": DAGVariable(type="float", source="equipment", description="装备平铺攻击力", default=0.0),
-            "computed.主能力平值加算": DAGVariable(type="float", source="computed", description="主能力平值全部来源"),
+            "equipment.攻击力平值": DAGVariable(
+                type="float", source="equipment", description="装备平铺攻击力", default=0.0,
+            ),
+            "computed.主能力平值加算": DAGVariable(
+                type="float", source="computed", description="主能力平值全部来源",
+            ),
             "computed.副能力平值加算": DAGVariable(type="float", source="computed", description="副能力平值全部来源"),
             "computed.主能力百分比": DAGVariable(type="float", source="computed", description="主能力百分比加成"),
             "computed.副能力百分比": DAGVariable(type="float", source="computed", description="副能力百分比加成"),
-            "computed.最终攻击力": DAGVariable(type="float", source="computed", description="最终攻击力（可由本 DAG 计算或外部传入）"),
+            "computed.最终攻击力": DAGVariable(
+                type="float", source="computed",
+                description="最终攻击力（可由本 DAG 计算或外部传入）",
+            ),
             "computed.技能倍率": DAGVariable(type="float", source="computed", description="技能倍率"),
             "computed.暴击区": DAGVariable(type="float", source="computed", description="暴击区倍数"),
-            "computed.伤害加成": DAGVariable(type="float", source="computed", description="伤害加成区 = 1+类型+技能+失衡+其他"),
+            "computed.伤害加成": DAGVariable(
+                type="float", source="computed",
+                description="伤害加成区 = 1+类型+技能+失衡+其他",
+            ),
             "computed.伤害减免": DAGVariable(type="float", source="computed", description="伤害减免区 = ∏(1-减免值)"),
             "computed.增幅": DAGVariable(type="float", source="computed", description="增幅区 = 1+Σ增幅值"),
             "computed.虚弱": DAGVariable(type="float", source="computed", description="虚弱区 = ∏(1-虚弱值)"),
@@ -274,9 +305,18 @@ def _make_master_graph() -> DAGGraph:
                 inputs={"sub_flat": "sub_flat", "sub_pct": "sub_pct"},
                 label="副能力最终值",
             ),
-            "ability_main_contrib": BinaryNode(type="binary", op="*", lhs="ability_final_main", rhs="c0005", label="主能力贡献"),
-            "ability_sub_contrib": BinaryNode(type="binary", op="*", lhs="ability_final_sub", rhs="c0002", label="副能力贡献"),
-            "ability_bonus": BinaryNode(type="binary", op="+", lhs="ability_main_contrib", rhs="ability_sub_contrib", label="能力值加成"),
+            "ability_main_contrib": BinaryNode(
+                type="binary", op="*", lhs="ability_final_main", rhs="c0005",
+                label="主能力贡献",
+            ),
+            "ability_sub_contrib": BinaryNode(
+                type="binary", op="*", lhs="ability_final_sub", rhs="c0002",
+                label="副能力贡献",
+            ),
+            "ability_bonus": BinaryNode(
+                type="binary", op="+", lhs="ability_main_contrib",
+                rhs="ability_sub_contrib", label="能力值加成",
+            ),
 
             "base_atk": BinaryNode(type="binary", op="+", lhs="char_atk", rhs="weapon_atk", label="基础攻击合计"),
             "atk_mult": BinaryNode(type="binary", op="+", lhs="atk_bonus", rhs="const_one", label="攻击力+乘数"),
@@ -287,7 +327,10 @@ def _make_master_graph() -> DAGGraph:
                 label="中间攻击力",
             ),
             "ability_mult": BinaryNode(type="binary", op="+", lhs="const_one", rhs="ability_bonus", label="能力值乘数"),
-            "final_attack_calc": BinaryNode(type="binary", op="*", lhs="mid_atk", rhs="ability_mult", label="最终攻击力"),
+            "final_attack_calc": BinaryNode(
+                type="binary", op="*", lhs="mid_atk", rhs="ability_mult",
+                label="最终攻击力",
+            ),
             "final_atk_var": VarNode(type="var", path="computed.最终攻击力", label="最终攻击力(外部)"),
 
             "skill_mult": VarNode(type="var", path="computed.技能倍率", label="技能倍率"),
@@ -319,7 +362,10 @@ def _make_master_graph() -> DAGGraph:
             "zone_combo": VarNode(type="var", path="computed.连击增伤", label="连击增伤区"),
             "z13": BinaryNode(type="binary", op="*", lhs="z12", rhs="zone_combo", label="×连击增伤区"),
             "zone_special": VarNode(type="var", path="computed.特殊乘区", label="特殊乘区"),
-            "final_damage": BinaryNode(type="binary", op="*", lhs="z13", rhs="zone_special", label="×特殊乘区=最终伤害"),
+            "final_damage": BinaryNode(
+                type="binary", op="*", lhs="z13", rhs="zone_special",
+                label="×特殊乘区=最终伤害",
+            ),
         },
         outputs={
             "能力值加成": DAGOutput(node="ability_bonus", label="能力值加成"),
