@@ -30,6 +30,13 @@ from PySide6.QtWidgets import (
 
 from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
 
+from gui_design.search_ui.search_settings import (
+    build_worker_option_labels,
+    format_parallel_workers_help,
+    get_cpu_parallel_info,
+    resolve_parallel_workers,
+)
+
 # 固定配装槽位配置：(catalog_key, 界面标签)
 _FIXED_SLOT_SPECS: list[tuple[str, str]] = [
     ("chest", "护甲"),
@@ -354,13 +361,38 @@ class QtControlDock(QWidget):
         self.search_cancel_btn.setEnabled(False)
         lay.addWidget(self.search_cancel_btn)
 
-        # 搜索预估
-        self.search_estimate_label = _HintLabel("", self._small)
-        self.search_estimate_label.setVisible(False)
+        # 并行线程 + TopN
+        param_row = QHBoxLayout()
+        self.search_workers_combo = QComboBox()
+        self.search_workers_combo.addItems(build_worker_option_labels())
+        self.search_workers_combo.setStyleSheet(_COMBO_STYLE)
+        param_row.addWidget(_SmallLabel("并行线程", self._small))
+        param_row.addWidget(self.search_workers_combo, stretch=1)
+        param_row.addSpacing(8)
+        self.search_top_n_combo = QComboBox()
+        self.search_top_n_combo.addItems(["3", "5", "10", "20", "50"])
+        self.search_top_n_combo.setCurrentText("10")
+        self.search_top_n_combo.setStyleSheet(_COMBO_STYLE)
+        param_row.addWidget(_SmallLabel("Top 条数", self._small))
+        param_row.addWidget(self.search_top_n_combo, stretch=1)
+        lay.addLayout(param_row)
+
+        self.search_workers_hint_label = _HintLabel("", self._small)
+        self.search_workers_hint_label.setVisible(True)
+        lay.addWidget(self.search_workers_hint_label)
+
+        self._update_workers_hint()
+        self.search_workers_combo.currentTextChanged.connect(
+            lambda _: self._update_workers_hint()
+        )
+
+        # 搜索预估 & 状态
+        self.search_estimate_label = _HintLabel("预计组合数：—", self._small)
+        self.search_estimate_label.setVisible(True)
         lay.addWidget(self.search_estimate_label)
 
-        self.mvp_status_label = _HintLabel("", self._small)
-        self.mvp_status_label.setVisible(False)
+        self.mvp_status_label = _HintLabel("搜索状态：未开始", self._small)
+        self.mvp_status_label.setVisible(True)
         lay.addWidget(self.mvp_status_label)
 
         lay.addStretch()
@@ -395,28 +427,14 @@ class QtControlDock(QWidget):
         self.use_manual_skill_counts_cb.toggled.connect(lambda: self._mark_pending())
         lay.addWidget(self.use_manual_skill_counts_cb)
 
-        self._segment_counts_widget = QWidget()
-        seg_lay = QVBoxLayout(self._segment_counts_widget)
-        seg_lay.setContentsMargins(0, 0, 0, 0)
-        seg_lay.setSpacing(2)
-        seg_lay.addWidget(_SmallLabel("技能段数", self._small))
-        skill_labels = ["战技", "连携技", "终结技"]
-        self._segment_count_edits: list[QLineEdit] = []
-        for i in range(3):
-            row = QHBoxLayout()
-            lbl = QLabel(f"{skill_labels[i]} 次数:")
-            lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
-            lbl.setFont(self._small)
-            edit = QLineEdit("0")
-            edit.setStyleSheet(_ENTRY_STYLE)
-            edit.setFixedWidth(60)
-            edit.textChanged.connect(lambda: self._mark_pending())
-            row.addWidget(lbl)
-            row.addWidget(edit)
-            row.addStretch()
-            seg_lay.addLayout(row)
-            self._segment_count_edits.append(edit)
-        lay.addWidget(self._segment_counts_widget)
+        self._segment_rows_container = QWidget()
+        self._segment_rows_lay = QVBoxLayout(self._segment_rows_container)
+        self._segment_rows_lay.setContentsMargins(0, 0, 0, 0)
+        self._segment_rows_lay.setSpacing(2)
+        self._segment_rows_lay.addWidget(_SmallLabel("技能段数", self._small))
+        self._segment_count_edits_dict: dict[str, QLineEdit] = {}
+        self._build_segment_rows_fallback()
+        lay.addWidget(self._segment_rows_container)
 
         self._manual_buff_btn = self._make_btn("场外 Buff 微调", _SECONDARY_BTN_HEIGHT,
                                                 style="""
@@ -493,6 +511,84 @@ class QtControlDock(QWidget):
     def _mark_pending(self) -> None:
         self.loadout_pending.emit()
 
+    # ── 段级次数动态行 ──────────────────────────
+
+    def _build_segment_rows_fallback(self) -> None:
+        """初始占位：3 个基础段次数输入。"""
+        skill_labels = ["战技", "连携技", "终结技"]
+        self._segment_count_edits_dict.clear()
+        for i in range(3):
+            row = QHBoxLayout()
+            lbl = QLabel(f"{skill_labels[i]} 次数:")
+            lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+            lbl.setFont(self._small)
+            edit = QLineEdit("0")
+            edit.setStyleSheet(_ENTRY_STYLE)
+            edit.setFixedWidth(60)
+            edit.textChanged.connect(self._mark_pending)
+            row.addWidget(lbl)
+            row.addWidget(edit)
+            row.addStretch()
+            w = QWidget()
+            w.setLayout(row)
+            self._segment_rows_lay.addWidget(w)
+            self._segment_count_edits_dict[skill_labels[i]] = edit
+
+    def rebuild_segment_rows(self, char_data: dict, s1: int, s2: int, s3: int) -> None:
+        """按角色技能段规格重建段级次数输入行。"""
+        from calculation.skills.segments import list_segment_count_specs
+
+        # 清空容器
+        while self._segment_rows_lay.count():
+            item = self._segment_rows_lay.takeAt(0)
+            if item and item.widget():
+                item.widget().deleteLater()
+
+        self._segment_rows_lay.addWidget(_SmallLabel("技能段数", self._small))
+        self._segment_count_edits_dict.clear()
+
+        if not char_data:
+            self._build_segment_rows_fallback()
+            return
+
+        specs = list_segment_count_specs(char_data, skill_1_level=s1, skill_2_level=s2, skill_3_level=s3)
+        if not specs:
+            self._build_segment_rows_fallback()
+            return
+
+        for spec in specs:
+            key = str(spec["key"])
+            label_text = str(spec["label"])
+            row = QHBoxLayout()
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+            lbl.setFont(self._small)
+            edit = QLineEdit("0")
+            edit.setStyleSheet(_ENTRY_STYLE)
+            edit.setFixedWidth(60)
+            edit.textChanged.connect(self._mark_pending)
+            row.addWidget(lbl, stretch=1)
+            row.addWidget(edit)
+            w = QWidget()
+            w.setLayout(row)
+            self._segment_rows_lay.addWidget(w)
+            self._segment_count_edits_dict[key] = edit
+
+    # ── 搜索参数读取 ──────────────────────────
+
+    def _update_workers_hint(self) -> None:
+        info = get_cpu_parallel_info()
+        workers = resolve_parallel_workers(self.search_workers_combo.currentText())
+        self.search_workers_hint_label.setText(
+            format_parallel_workers_help(info, selected_workers=workers)
+        )
+
+    def read_workers_choice(self) -> str:
+        return self.search_workers_combo.currentText()
+
+    def read_top_n_choice(self) -> str:
+        return self.search_top_n_combo.currentText()
+
     # ── 控制值读取 ──────────────────────────────
 
     def populate_fixed_loadout_slots(
@@ -542,17 +638,17 @@ class QtControlDock(QWidget):
         )
 
     def read_skill_counts(self) -> dict[str, int]:
-        try:
-            edits = getattr(self, '_segment_count_edits', None)
-            if edits and len(edits) == 3:
-                return {
-                    "战技": max(0, int(edits[0].text() or "0")),
-                    "连携技": max(0, int(edits[1].text() or "0")),
-                    "终结技": max(0, int(edits[2].text() or "0")),
-                }
-        except (ValueError, AttributeError, TypeError):
-            pass
-        return {}
+        result: dict[str, int] = {}
+        edits = getattr(self, '_segment_count_edits_dict', None)
+        if edits:
+            for key, edit in edits.items():
+                try:
+                    val = max(0, int(edit.text() or "0"))
+                except ValueError:
+                    val = 0
+                if val > 0:
+                    result[key] = val
+        return result
 
     def read_physical_abnormal_counts(self) -> dict[str, int]:
         """按级别累加各等级次数，返回 {异常键: 总次数}。"""

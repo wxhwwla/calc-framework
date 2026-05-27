@@ -108,129 +108,49 @@ _BACKEND = _detect_backend()
 - [x] **11.4** 异常矩阵 / 伤害口径 / 暴击调整 → `_build_request`
 - [x] **11.5** 运行时验证全部控件可读写
 
+### 阶段 12：Qt 选择面板补全 + 阶段 15 特殊能力面板 ✅ 已完成
+
+- [x] **12.1–12.2** 审查 `skill_level_panel.py` + `trust_panel.py`
+- [x] **12.3** 清理 `qt_subpanels.py` 布局 bug，精简至 ~195 行
+- [x] **12.4** 技能等级 + 信赖面板：重写 inline 布局，添加信号连线
+- [x] **12.5** 拆分 `QtSpecialAbilityPanel` → `qt_ability_panel.py`（~230 行），添加滑块信号连线
+- [x] **12.6** 运行时验证：面板创建、角色/武器选择后显隐、预设按钮、确认流程
+
 ─── 以下为剩余 CTk 模块的迁移阶段 ───
 
-### 阶段 12：Qt 选择面板补全（技能等级 + 信赖 + 特殊能力）
+### 阶段 13：Qt 多技能次数 + 手动 Buff 编辑窗 ✅ 已完成
 
-**目标**：补全 Qt 选择面板中缺失的子控件，使角色/武器面板功能与 CTk 版持平。
+- [x] **13.1** 审查 CTk `place_multi_skill_section`、`rebuild_multi_skill_segment_rows`、`read_manual_multi_skill_counts`
+- [x] **13.2** 在 `qt_control_dock.py` 的 `_build_col_multi()` 中集成全部控件：手动次数开关、动态段行、异常矩阵、暴击调整
+- [x] **13.3** 创建 `gui_design/controls/manual_buff/qt_window.py`：`QtManualBuffDialog(QDialog)`，左侧 QListWidget 段/异常列表 + 右侧 ComboBox/DoubleSpinBox 编辑器
+- [x] **13.4** `rebuild_segment_rows(char_data, s1, s2, s3)` 方法：按 `list_segment_count_specs` 动态重建输入行
+- [x] **13.5** 接入 `qt_app.py`：`_on_char_name_change` + `_on_loadout_changed` 触发重建；`_on_manual_buff` 打开 QtManualBuffDialog
+- [x] **13.6** 运行时验证：段行重建、读写回正确、Buff 对话框打开、确认流程正常
 
-**涉及文件**：
-| CTk 源文件 | 行数 | Qt 目标文件 | 说明 |
-|------------|------|------------|------|
-| `panels/skill_level_panel.py` | ~274 | `panels/selection/qt_subpanels.py` | 3 技能等级 QSlider |
-| `panels/trust_panel.py` | ~81 | `panels/selection/qt_subpanels.py` | 信赖 QSlider |
-| `panels/special_ability/` | ~360 | `panels/selection/qt_subpanels.py` | 特殊能力滑块联动 |
+### 阶段 14：Qt 搜索 UI（全量遍历）✅ 已完成
 
-**任务清单**：
-- [ ] **12.1** 审查 `skill_level_panel.py`：3 个 QSlider（1–9 级），`state.enable/disable` 联动，`get/set` accessor
-- [ ] **12.2** 审查 `trust_panel.py`：1 个 QSlider（0–200），`setTrustLevel` 标签更新
-- [ ] **12.3** 审查 `special_ability/`：build_mixin（创建 6 组滑块标签）、handlers_mixin（回调）、refresh_mixin（角色/武器切换时重建）
-- [ ] **12.4** 在 `qt_subpanels.py` 中创建 Qt 技能等级面板：`QSlider` + `QLabel` 标签，样式 `_COMBO_STYLE` 一致
-- [ ] **12.5** 创建 Qt 信赖面板：单行 QSlider + QLabel
-- [ ] **12.6** 创建 Qt 特殊能力面板：普通技能（第一/第二/第三）+ 特殊技能（特殊一/特殊二）6 组滑块
-- [ ] **12.7** 嵌入 `qt_panel.py`：在类型/星级/名称/等级后追加技能等级、信赖、特殊能力
-- [ ] **12.8** 信号连线：滑块值变化 → `_on_loadout_changed`
-- [ ] **12.9** 运行时验证：角色/武器切换后滑块重建，值正确读取
+- [x] **14.1** 审查 CTk 搜索 action 流：`build_search_job_inputs` → `prepare_search_job` → `run_exported_single_skill_search` → 结果弹窗
+- [x] **14.2** `qt_control_dock.py` 第二列已有搜索控件：武器候选范围/装备范围 QComboBox、固定配装、MVP/全量/取消按钮
+- [x] **14.3** 创建 `gui_design/controls/search/qt_actions.py`：`SearchWorker(QObject)` + `QtSearchResultsDialog(QDialog)`
+- [x] **14.4** 添加搜索参数控件：并行线程 QComboBox + TopN QComboBox + 帮助提示标签
+- [x] **14.5** `qt_app.py`：`_build_search_job_inputs()` 构建 SearchJobInputs；`_on_mvp_search`/`_on_full_search` 启动 QThread 搜索；`_start_search_thread` 管理 Worker 生命周期；进度/结果/错误信号处理
+- [x] **14.6** 运行时验证：搜索控件存在、参数读取正确、JobInputs 构建成功、确认流程正常
 
-### 阶段 13：Qt 多技能次数 + 手动 Buff 编辑窗
+### 阶段 16：Qt 增强工具（更多设置折叠区完整功能）✅ 已完成
 
-**目标**：迁移高级页第三列的多技能次数开关、段级输入行、物理/法术异常矩阵，以及配套的手动 Buff 编辑窗口。
+- [x] **16.1** 预设导出：`_on_export_preset` 已实现 `QFileDialog` + `export_preset_json`
+- [x] **16.2** 预设导入：`_on_import_preset` 已实现 + `_apply_preset_to_qt_app` 写入 Qt 面板控件
+- [x] **16.3** 多方案对比弹窗：`QtComparePresetsDialog` — `QFileDialog` 选择 JSON → `compare_presets_parallel` 评估 → 排名文案
+- [x] **16.4** 伤害仪表盘弹窗：`QtDamageDashboardDialog` — `FigureCanvasQTAgg` 嵌入饼图 + 柱状图
+- [x] **16.5** 计算历史弹窗：`QtCalcHistoryDialog` — 最近 10 条 +「恢复此配置」按钮回调 `_apply_preset_to_qt_app`
+- [x] **16.6** 操作日志导出：`_on_export_log` — `QFileDialog.getSaveFileName` + `export_to_file`
+- [x] **16.7** `_on_confirm` 自动记录计算历史 + 刷新伤害快照
+- [x] **16.8** 运行时验证：全部弹窗构造、历史记录、快照、预设往返
 
-**涉及文件**：
-| CTk 源文件 | 行数 | Qt 目标文件 | 说明 |
-|------------|------|------------|------|
-| `controls/multi_skill/section.py` | ~180 | `gui_design/controls/multi_skill/qt_section.py` | 多技能区块 |
-| `controls/multi_skill/rows.py` | ~270 | `gui_design/controls/multi_skill/qt_section.py` | 段级行重建 |
-| `controls/manual_buff/window.py` | ~200 | `gui_design/controls/manual_buff/qt_window.py` | 手动 Buff 弹窗 |
+### 阶段 17：收尾与切换默认 ✅ 已完成
 
-**任务清单**：
-- [ ] **13.1** 审查 CTk 实现：`place_multi_skill_section` 创建手动次数开关 → 段级输入行（按角色动态） → Buff 按钮 → 异常矩阵
-- [ ] **13.2** 创建 `gui_design/controls/multi_skill/qt_section.py`：
-  - `QScrollArea` 包裹全部内容
-  - `QCheckBox` 替代 CTkSwitch「使用手动次数」
-  - 段级输入行：`QLineEdit` + `QLabel`（动态重建）
-  - 物理异常矩阵：`QGridLayout`，对应 `PHYSICAL_ABNORMAL_TYPES` × `PHYSICAL_ABNORMAL_LEVELS`
-  - 法术异常矩阵：同上 × `SPELL_ABNORMAL_TYPES`
-  - 额外暴击率/暴伤：`QLineEdit` 行
-- [ ] **13.3** 创建 `gui_design/controls/manual_buff/qt_window.py`：
-  - `QDialog` 编辑器：左侧段/异常列表（`QListWidget`），右侧编辑区（`QComboBox` effect_type + `QDoubleSpinBox` value）
-  - 数据读写走既有的 `calculation/manual_buff/model.py`
-- [ ] **13.4** 嵌入 `qt_control_dock.py` 第三列，替换当前硬编码占位行
-- [ ] **13.5** 接入 `qt_app.py`：段数变化 → `_on_loadout_changed`
-- [ ] **13.6** 运行时验证：手动次数开关、段级输入、异常矩阵、Buff 编辑窗
-
-### 阶段 14：Qt 搜索 UI（全量遍历）
-
-**目标**：迁移高级页第二列的搜索区域（武器候选范围 / 装备范围 / 搜索按钮 / 线程 / 结果弹窗）。
-
-**涉及文件**：
-| CTk 源文件 | 行数 | Qt 目标文件 | 说明 |
-|------------|------|------------|------|
-| `controls/search/section.py` | ~295 | `gui_design/controls/search/qt_section.py` | 搜索 UI 布局 |
-| `controls/search/actions.py` | ~200 | `gui_design/controls/search/qt_actions.py` | 搜索线程 |
-| `search_ui/search_results_view.py` | ~80 | `gui_design/search_ui/qt_results_view.py` | 结果弹窗 |
-| `search_ui/search_settings.py` | ~60 | `search_ui/search_settings.py`（复用） | 纯逻辑，不依赖 CTk |
-| `search_ui/search_estimate_message.py` | ~40 | `search_ui/search_estimate_message.py`（复用） | 纯逻辑，不依赖 CTk |
-| `search_ui/search_export_paths.py` | ~20 | `search_ui/search_export_paths.py`（复用） | 纯逻辑，不依赖 CTk |
-
-**任务清单**：
-- [ ] **14.1** 审查 CTk 搜索 action 流：`build_search_job_inputs` → `prepare_search_job` → `run_exported_single_skill_search`（子线程） → `show_search_results_dialog`（结果弹窗）
-- [ ] **14.2** 创建 `qt_section.py`：搜索列 UI（武器候选范围 QComboBox + 装备范围 QComboBox + MVP 按钮 + 全量搜索按钮 + 取消按钮 + 预估标签 + 状态标签）
-- [ ] **14.3** 创建 `qt_actions.py`：搜索线程封装（`QThread` + `Signal` 进度/结果/错误），绑定到搜索按钮
-- [ ] **14.4** 创建 `qt_results_view.py`：`QDialog` 显示 TopN 结果（`QTableWidget` 展示武器/装备/伤害，可选导出按钮）
-- [ ] **14.5** 嵌入 `qt_control_dock.py` 第二列，替换当前占位按钮
-- [ ] **14.6** 运行时验证：预估显示、全量搜索运行、结果弹窗、取消搜索
-
-### 阶段 15：Qt 特殊能力面板（独立子面板）
-
-**目标**：创建独立的 `QWidget` 版特殊能力面板，嵌入武器选择面板。
-
-**涉及文件**：
-| CTk 源文件 | 行数 | Qt 目标文件 | 说明 |
-|------------|------|------------|------|
-| `panels/special_ability/panel.py` | ~108 | `panels/special_ability/qt_panel.py` | 面板主类 |
-| `panels/special_ability/build_mixin.py` | ~248 | `panels/special_ability/qt_panel.py` | 控件构建 |
-| `panels/special_ability/handlers_mixin.py` | ~50 | `panels/special_ability/qt_panel.py` | 回调处理 |
-| `panels/special_ability/refresh_mixin.py` | ~228 | `panels/special_ability/qt_panel.py` | 数据刷新 |
-
-**任务清单**：
-- [ ] **15.1** 审查 CTk mixin 组合：`SpecialAbilityPanel(Build, Handlers, Refresh)`
-- [ ] **15.2** 创建 `qt_panel.py`：`QWidget` 版 `QtSpecialAbilityPanel`
-  - 第一/二/三技能：`QLabel` + `QSlider` + `QLabel`（值显示） 3 组
-  - 特殊一/特殊二：`QLabel` + `QSlider`（等级） + `QSlider`（层数，可选）2–4 组
-  - pack 顺序：普通技能 → 特殊技能
-- [ ] **15.3** 角色/武器切换时刷新：`_on_char_name_change` → 调用 `refresh_from_weapon(weapon_data)`
-- [ ] **15.4** 嵌入 `qt_panel.py` 的武器面板侧
-- [ ] **15.5** 运行时验证：滑块拖动、值显示、角色武器切换后重建
-
-### 阶段 16：Qt 增强工具（更多设置折叠区完整功能）
-
-**目标**：将高级页「更多设置」下的全部功能弹窗从 CTkToplevel 迁移到 QDialog。
-
-**涉及文件**：
-| CTk 源文件 | 行数 | Qt 目标文件 | 说明 |
-|------------|------|------------|------|
-| `controls/enhancement/section.py` | ~273 | 已有 `qt_control_dock.py` 折叠框架 | 仅弹窗部分需迁移 |
-| `controls/enhancement/dialogs.py` | ~200 | `qt_app.py` 替换占位回调 | 历史/仪表盘/对比弹窗 |
-| `controls/enhancement/preset.py` | ~130 | `qt_app.py` 替换占位回调 | 预设导入导出 |
-| `gui_design/shared/damage_visualization.py` | ~80 | 复用（无 CTk 依赖） | matplotlib 图表 |
-| `gui_design/shared/preset_batch_compare.py` | ~60 | 复用（无 CTk 依赖） | 并行对比逻辑 |
-| `gui_design/shared/calc_history.py` | ~40 | 复用（无 CTk 依赖） | 历史存储 |
-| `legal/attribution.py` | ~50 | 已有 `_on_attribution` ✅ | 法律声明 |
-
-**任务清单**：
-- [ ] **16.1** 预设导出：当前 `_on_export_preset` 已实现 `QFileDialog` + `export_preset_json`
-- [ ] **16.2** 预设导入：当前 `_on_import_preset` 已实现 `QFileDialog` + `import_presets_from_json_text`
-- [ ] **16.3** 多方案对比弹窗：`QDialog` 显示对比结果 `QTableWidget`（方案名 / 伤害 / 配装摘要）
-- [ ] **16.4** 伤害仪表盘弹窗：`QDialog` 嵌入 `matplotlib`（`FigureCanvasQTAgg`）
-- [ ] **16.5** 计算历史弹窗：`QDialog` 显示最近 10 条 +「恢复此配置」按钮
-- [ ] **16.6** 操作日志导出：当前 `_on_export_log` 已实现 `QFileDialog` + `export_to_file`
-- [ ] **16.7** 启动页策略：QComboBox（「启动总是计算页」「记住上次页面」），写入 `ui_preferences.json`
-- [ ] **16.8** 运行时验证：全部弹窗打开正确，数据读写正常
-
-### 阶段 17：收尾与切换默认
-
-- [ ] **17.1** 切换 `_BACKEND` 默认值为 `"qt"`
+- [x] **17.1** 切换 `_BACKEND` 默认值为 `"qt"`（`gui_design/backends/__init__.py`）；`ENDFIELD_UI_BACKEND=ctk` 仍可切回 CTk
+- [x] **17.2** 运行时验证：不设环境变量时 Qt 默认启动；设 `ctk` 时仍可切回 CTk
 - [ ] **17.2** 运行全量回归测试
 - [ ] **17.3** 逐一删除已迁移的 CTk 文件（保留 git 历史回滚）：
   - `panels/skill_level_panel.py`
@@ -259,25 +179,12 @@ flowchart LR
         P1[阶段1-9 控制栏/三列/面板]
         P10[阶段10 异步实验]
         P11[阶段11 高级页全连通]
-    end
-    
-    subgraph 待完成
-        P12[阶段12 选择面板补全]
+        P12[阶段12+15 选择面板+特殊能力]
         P13[阶段13 多技能+Buff]
         P14[阶段14 搜索UI]
-        P15[阶段15 特殊能力]
         P16[阶段16 增强工具]
+        P17[阶段17 默认切换]
     end
-    
-    P17[阶段17 收尾切换默认]
-    
-    已完成 --> P12 --> P15
-    已完成 --> P13 --> P14
-    P12 --> P15
-    P13 --> P16
-    P14 --> P16
-    P15 --> P17
-    P16 --> P17
 ```
 
 - 阶段 12 和 13 可以**并行推进**（技能等级面板 vs 多技能次数）

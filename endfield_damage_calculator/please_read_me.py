@@ -17,7 +17,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "2.3.6"
+_VERSION = "2.3.7"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,10 +209,16 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 11 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 更新文档 docs/migration-pyside6.md
+# - 修改 endfield_damage_calculator/gui_design/backends/__init__.py
+# - 修改 endfield_damage_calculator/gui_design/controls/enhancement/qt_dialogs.py
+# - 修改 endfield_damage_calculator/gui_design/controls/manual_buff/qt_window.py
+# - 修改 endfield_damage_calculator/gui_design/controls/search/qt_actions.py
+# - 修改 endfield_damage_calculator/gui_design/panels/selection/qt_ability_panel.py
+# - 修改 endfield_damage_calculator/gui_design/panels/selection/qt_panel.py
+# - 修改 endfield_damage_calculator/gui_design/panels/selection/qt_subpanels.py
 # - 修改 endfield_damage_calculator/gui_design/shell/qt_app.py
 # - 修改 endfield_damage_calculator/gui_design/shell/qt_control_dock.py
 # - 修改 endfield_damage_calculator/please_read_me.py

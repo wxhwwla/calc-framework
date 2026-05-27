@@ -23,11 +23,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .qt_subpanels import (
-    QtSpecialAbilityPanel,
-    QtSkillLevelPanel,
-    QtTrustPanel,
-)
+from .qt_ability_panel import QtSpecialAbilityPanel
+from .qt_subpanels import QtSkillLevelPanel, QtTrustPanel
 
 
 def _empty_list_cb() -> QComboBox:

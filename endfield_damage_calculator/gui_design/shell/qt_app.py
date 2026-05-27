@@ -197,6 +197,8 @@ class QtDamageApp:
         self._equipment_catalog: dict[str, list[dict[str, Any]]] = get_equipment_catalog()
         dock.populate_fixed_loadout_slots(self._equipment_catalog)
 
+        self._search_cancel_token = None
+
         # 装备范围变更时刷新固定配装槽
         dock.equipment_scope_combo.currentTextChanged.connect(
             self._on_equipment_scope_changed
@@ -298,16 +300,30 @@ class QtDamageApp:
         char_data = self.char_panel.get_selected_data()
         if not char_data:
             self.weapon_panel.update_data_list(list(self.all_weapons))
+            self._rebuild_segment_rows()
             return
         char_weapon_type = char_data.get("武器", "")
         if not char_weapon_type:
             self.weapon_panel.update_data_list(list(self.all_weapons))
+            self._rebuild_segment_rows()
             return
         filtered = [w for w in self.all_weapons if w.get("类型") == char_weapon_type]
         if not filtered:
             self.weapon_panel.update_data_list(list(self.all_weapons))
+            self._rebuild_segment_rows()
             return
         self.weapon_panel.update_data_list(filtered)
+        self._rebuild_segment_rows()
+
+    def _rebuild_segment_rows(self) -> None:
+        char_data = self.char_panel.get_selected_data()
+        if not char_data:
+            self.control_dock.rebuild_segment_rows(None, 1, 1, 1)
+            return
+        s1 = self.char_panel.get_skill_1_level()
+        s2 = self.char_panel.get_skill_2_level()
+        s3 = self.char_panel.get_skill_3_level()
+        self.control_dock.rebuild_segment_rows(char_data, s1, s2, s3)
 
     # ── 计算模式 ──────────────────────────────────
 
@@ -319,6 +335,7 @@ class QtDamageApp:
 
     def _on_loadout_changed(self) -> None:
         self.status_label.setText("待确认")
+        self._rebuild_segment_rows()
 
     # ── 确认计算 ──────────────────────────────────
 
@@ -374,6 +391,26 @@ class QtDamageApp:
         self._sync_evaluation(request)
 
         self.columns.refresh(request)
+
+        lds = request.loadout
+        from gui_design.shared.calc_history import HistoryEntry
+        from gui_design.controls.enhancement.dialogs import get_app_calculation_history
+        try:
+            preset = lds.to_loadout_preset()
+            label = f"{preset.char_name} / {preset.weapon_name}"
+            get_app_calculation_history(self).push(
+                HistoryEntry(label=label, summary=label, preset_snapshot=preset.to_dict())
+            )
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("历史记录失败: %s", exc)
+        try:
+            from gui_design.controls.enhancement.dialogs import refresh_damage_snapshot
+            refresh_damage_snapshot(self, loadout=lds)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("快照刷新失败: %s", exc)
+
         self.status_label.setText("就绪")
         self.confirm_btn.setEnabled(True)
         self.confirm_btn.setText("确认选择")
@@ -389,12 +426,23 @@ class QtDamageApp:
     # ── 手动 Buff ─────────────────────────────
 
     def _on_manual_buff(self) -> None:
-        QMessageBox.information(
-            self.app, "场外 Buff 微调",
-            "手动 Buff 编辑窗口当前为 CTk 独占功能。\n"
-            "Qt 端将在此后版本支持。\n\n"
-            "暂占位：请在 CTk 后端配置 Buff 后切回 Qt 查看。",
+        from gui_design.controls.manual_buff.qt_window import QtManualBuffDialog
+
+        def _read_counts():
+            dock = self.control_dock
+            return (
+                dock.read_skill_counts(),
+                dock.read_physical_abnormal_counts(),
+                dock.read_spell_abnormal_counts(),
+            )
+
+        dialog = QtManualBuffDialog(
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
+            read_counts_callback=_read_counts,
         )
+        dialog.exec()
 
     # ── 更多设置（工具与分享）回调 ──────────────
 
@@ -436,48 +484,316 @@ class QtDamageApp:
         try:
             presets = import_presets_from_json_text(Path(path).read_text(encoding="utf-8"))
             if presets:
+                self._apply_preset_to_qt_app(presets[0])
                 self.status_label.setText(f"已导入 {len(presets)} 条预设")
         except Exception as exc:
             QMessageBox.warning(self.app, "导入失败", str(exc))
 
+    def _apply_preset_to_qt_app(self, preset) -> None:
+        from gui_design.app.loadout_preset import LoadoutPreset
+        if not isinstance(preset, LoadoutPreset):
+            return
+        cp = self.char_panel
+        wp = self.weapon_panel
+
+        def _select_by_name(panel, name: str) -> bool:
+            idx = panel.name_combo.findText(name)
+            if idx >= 0:
+                panel.name_combo.setCurrentIndex(idx)
+                return True
+            for i in range(panel.name_combo.count()):
+                if name in panel.name_combo.itemText(i):
+                    panel.name_combo.setCurrentIndex(i)
+                    return True
+            return False
+
+        if not _select_by_name(cp, preset.char_name):
+            QMessageBox.warning(self.app, "导入", f"未找到角色: {preset.char_name}")
+            return
+        self._on_char_name_change()
+
+        if not _select_by_name(wp, preset.weapon_name):
+            QMessageBox.warning(self.app, "导入", f"未找到武器: {preset.weapon_name}")
+            return
+
+        cp.level_slider.setValue(min(preset.char_level, cp.level_slider.maximum()))
+        wp.level_slider.setValue(min(preset.weapon_level, wp.level_slider.maximum()))
+
+        if cp.trust_panel:
+            cp.trust_panel._slider.setValue(min(preset.trust_level, 4))
+
+        if cp.skill_panel:
+            s = cp.skill_panel
+            s.apply_levels(
+                min(preset.skill_levels[0], 12),
+                min(preset.skill_levels[1], 12),
+                min(preset.skill_levels[2], 12),
+            )
+
+        self.status_label.setText("预设已恢复，请核对配装参数。")
+
     def _on_compare_presets(self) -> None:
-        QMessageBox.information(
-            self.app, "多方案对比",
-            "多方案对比需要选择多个预设 JSON 文件。\n"
-            "该功能当前为 CTk 独占，Qt 端将在此后版本支持。",
+        from gui_design.controls.enhancement.qt_dialogs import QtComparePresetsDialog
+        from gui_design.app.loadout_preset import LoadoutPreset
+        from gui_design.app.loadout_state import read_loadout_from_panels
+
+        def _build_preset() -> LoadoutPreset:
+            loadout = read_loadout_from_panels(
+                self.char_panel, self.weapon_panel,
+                calculation_mode=self._current_calc_mode,
+            )
+            if loadout is None:
+                raise ValueError("请先选择有效角色和武器")
+            return loadout.to_loadout_preset()
+
+        dialog = QtComparePresetsDialog(
+            self.app, big_font=self.big_font, small_font=self.small_font,
+            build_preset_fn=_build_preset,
+            enemy_defense=self._enemy_defense,
+            workers_choice=self.control_dock.search_workers_combo.currentText(),
         )
+        dialog.exec()
 
     def _on_damage_dashboard(self) -> None:
-        QMessageBox.information(
-            self.app, "伤害仪表盘",
-            "伤害仪表盘基于 matplotlib，当前为 CTk 独占功能。\n"
-            "Qt 端将在此后版本支持。",
+        from gui_design.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
+        from gui_design.presentation.damage_snapshot import get_snapshot_from_app
+
+        snapshot = get_snapshot_from_app(self)
+        dialog = QtDamageDashboardDialog(
+            self.app, big_font=self.big_font, small_font=self.small_font,
+            snapshot=snapshot,
         )
+        dialog.exec()
 
     def _on_calc_history(self) -> None:
-        QMessageBox.information(
-            self.app, "计算历史",
-            "计算历史面板当前为 CTk 独占功能。\n"
-            "Qt 端将在此后版本支持。",
+        from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        from gui_design.controls.enhancement.dialogs import get_app_calculation_history
+
+        history = get_app_calculation_history(self)
+
+        dialog = QtCalcHistoryDialog(
+            self.app, big_font=self.big_font, small_font=self.small_font,
+            history=history,
+            apply_fn=self._apply_preset_to_qt_app,
         )
+        dialog.exec()
 
     def _on_export_log(self) -> None:
-        QMessageBox.information(
-            self.app, "导出操作日志",
-            "操作日志导出当前为 CTk 独占功能。\n"
-            "Qt 端将在此后版本支持。",
+        from utils.operation_log import get_session_operation_log
+
+        path, _ = QFileDialog.getSaveFileName(
+            self.app, "导出操作日志", "operation_log.json", "JSON (*.json)",
         )
+        if not path:
+            return
+        try:
+            get_session_operation_log().export_to_file(Path(path))
+            self.status_label.setText("操作日志已导出")
+        except Exception as exc:
+            QMessageBox.warning(self.app, "导出失败", str(exc))
 
     # ── 搜索回调 ──────────────────────────────
 
+    def _build_search_job_inputs(self) -> Any:
+        """从 Qt 面板构建 SearchJobInputs（与 CTk 版 build_search_job_inputs 等价）。"""
+        from gui_design.app.loadout_state import read_loadout_from_panels
+        from calculation.search.plan.controller import SearchJobInputs
+
+        dock = self.control_dock
+        loadout = read_loadout_from_panels(
+            self.char_panel,
+            self.weapon_panel,
+            calculation_mode=self._current_calc_mode,
+            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
+            equipment_scope_label=dock.equipment_scope_combo.currentText(),
+            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
+            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
+            manual_counts=dock.read_skill_counts(),
+            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
+            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
+            damage_component_mode=dock.read_damage_component_mode(),
+            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
+            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
+            extra_crit_rate=dock.read_extra_crit_rate(),
+            extra_crit_damage=dock.read_extra_crit_damage(),
+            enemy_defense=self._enemy_defense,
+        )
+        if loadout is None:
+            return None
+        return loadout.to_search_job_inputs(
+            all_weapons=list(self.all_weapons),
+            equipment_catalog=dict(self._equipment_catalog),
+        )
+
     def _on_mvp_search(self) -> None:
-        self.status_label.setText("MVP 搜索：CTk 独占，Qt 端待实现")
+        from pathlib import Path
+        from PySide6.QtWidgets import QFileDialog
+        from calculation.search.run.cancel import SearchCancelToken
+        from calculation.search.plan.controller import prepare_search_job
+        from gui_design.controls.search.qt_actions import SearchWorker, QtSearchResultsDialog
+        from gui_design.presentation.search_results_lines import build_search_results_report_lines
+        from utils.app_paths import allocate_search_run_directory, default_search_output_root
+
+        inputs = self._build_search_job_inputs()
+        if inputs is None:
+            QMessageBox.warning(self.app, "MVP 搜索", "请先选择有效的角色和武器。")
+            return
+        job, err = prepare_search_job(inputs)
+        if err or job is None:
+            QMessageBox.warning(self.app, "MVP 搜索", err or "无法准备搜索任务")
+            return
+
+        output_dir = QFileDialog.getExistingDirectory(
+            self.app, "选择 MVP 搜索导出目录",
+            str(default_search_output_root()),
+        )
+        if not output_dir:
+            export_root = allocate_search_run_directory(purpose="mvp_search")
+        else:
+            export_root = Path(output_dir)
+
+        dock = self.control_dock
+        cancel_token = SearchCancelToken()
+        self._search_cancel_token = cancel_token
+
+        worker = SearchWorker(
+            job,
+            mode_label="MVP搜索并导出",
+            export_root=export_root,
+            top_n_choice=dock.read_top_n_choice(),
+            workers_choice=dock.read_workers_choice(),
+            status_prefix="MVP搜索状态",
+            cancel_token=cancel_token,
+        )
+
+        self._start_search_thread(worker, "MVP搜索状态：计算中，请稍候...")
 
     def _on_full_search(self) -> None:
-        self.status_label.setText("全量遍历搜索：CTk 独占，Qt 端待实现")
+        from calculation.search.run.cancel import SearchCancelToken
+        from calculation.search.plan.controller import prepare_search_job
+        from gui_design.controls.search.qt_actions import SearchWorker
+        from utils.app_paths import allocate_search_run_directory
+
+        inputs = self._build_search_job_inputs()
+        if inputs is None:
+            QMessageBox.warning(self.app, "全量遍历", "请先选择有效的角色和武器。")
+            return
+        job, err = prepare_search_job(inputs)
+        if err or job is None:
+            QMessageBox.warning(self.app, "全量遍历", err or "无法准备搜索任务")
+            return
+
+        dock = self.control_dock
+        cancel_token = SearchCancelToken()
+        self._search_cancel_token = cancel_token
+
+        export_root = allocate_search_run_directory(purpose="full_search")
+        mode_label = (
+            "多技能加权全量遍历"
+            if job.multi_skill_eval is not None
+            else "单技能全量遍历"
+        )
+
+        worker = SearchWorker(
+            job,
+            mode_label=mode_label,
+            export_root=export_root,
+            top_n_choice=dock.read_top_n_choice(),
+            workers_choice=dock.read_workers_choice(),
+            status_prefix="全量遍历",
+            cancel_token=cancel_token,
+        )
+
+        self._start_search_thread(worker, "全量遍历：计算中，请稍候…")
+
+    def _start_search_thread(
+        self, worker: Any, status_running: str
+    ) -> None:
+        self._search_thread = QThread()
+        worker.moveToThread(self._search_thread)
+
+        worker.progress.connect(self._on_search_progress)
+        worker.finished.connect(self._on_search_finished)
+        worker.error.connect(self._on_search_error)
+
+        self._search_thread.started.connect(worker.run)
+        self._search_thread.finished.connect(self._search_thread.deleteLater)
+        self._search_thread.start()
+
+        self._set_search_btns_enabled(False)
+        self.control_dock.search_cancel_btn.setEnabled(True)
+        self.control_dock.mvp_status_label.setVisible(True)
+        self.control_dock.mvp_status_label.setText(status_running)
+
+    def _on_search_progress(self, text: str) -> None:
+        self.control_dock.mvp_status_label.setText(text)
+
+    def _on_search_finished(
+        self, mode_label: str, job: Any, outcome: Any, export_paths: dict
+    ) -> None:
+        from gui_design.controls.search.qt_actions import QtSearchResultsDialog
+        from gui_design.presentation.search_results_lines import build_search_results_report_lines
+
+        self._search_cancel_token = None
+        self._search_thread.quit()
+        self._search_thread.wait()
+
+        damage_metric = "加权总伤" if job.multi_skill_eval is not None else "伤害"
+        lines = build_search_results_report_lines(
+            mode_label=mode_label,
+            skill_label=str(job.skill_label),
+            scope_labels=(str(job.weapon_scope), str(job.equipment_scope)),
+            processed_combinations=int(outcome.processed_combinations),
+            total_combinations=int(outcome.total_combinations),
+            top_results=outcome.top_results,
+            export_paths=export_paths,
+            cancelled=bool(outcome.cancelled),
+            damage_metric=damage_metric,
+            segment_counts=(
+                dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None
+            ),
+            abnormal_counts=dict(job.physical_abnormal_counts or {}),
+            spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
+        )
+
+        suffix = "（已取消）" if outcome.cancelled else "：完成"
+        status = (
+            f"{'全量遍历' if '全量' in mode_label else 'MVP搜索状态'}{suffix}"
+            f"（{outcome.processed_combinations}/{outcome.total_combinations}）"
+        )
+        self.control_dock.mvp_status_label.setText(status)
+        self._set_search_btns_enabled(True)
+
+        dialog = QtSearchResultsDialog(
+            self.app,
+            title=mode_label,
+            lines=lines,
+            big_font=self.big_font,
+            small_font=self.small_font,
+        )
+        dialog.exec()
+
+    def _on_search_error(self, error_msg: str) -> None:
+        self._search_cancel_token = None
+        if hasattr(self, '_search_thread') and self._search_thread:
+            self._search_thread.quit()
+            self._search_thread.wait()
+        self.control_dock.mvp_status_label.setText(f"搜索失败：{error_msg}")
+        self._set_search_btns_enabled(True)
+        QMessageBox.critical(self.app, "搜索失败", error_msg)
 
     def _on_cancel_search(self) -> None:
-        self.status_label.setText("搜索已取消（占位）")
+        if self._search_cancel_token is not None:
+            self._search_cancel_token.cancel()
+            self.control_dock.mvp_status_label.setText("搜索状态：正在取消…")
+
+    def _set_search_btns_enabled(self, enabled: bool) -> None:
+        dock = self.control_dock
+        dock.mvp_search_btn.setEnabled(enabled)
+        dock.full_search_btn.setEnabled(enabled)
+        dock.search_workers_combo.setEnabled(enabled)
+        dock.search_top_n_combo.setEnabled(enabled)
+        dock.search_cancel_btn.setEnabled(not enabled)
 
     # ── 数据来源与许可 ──────────────────────────
 
