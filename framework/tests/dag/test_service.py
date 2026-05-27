@@ -4,7 +4,6 @@
 from pathlib import Path
 
 import pytest
-
 from calc_framework.dag.schema import (
     BinaryNode,
     ConstNode,

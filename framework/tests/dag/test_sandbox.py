@@ -3,7 +3,6 @@
 
 
 import pytest
-
 from calc_framework.dag.errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
 from calc_framework.dag.sandbox import evaluate, parse_expr, validate_expr
 

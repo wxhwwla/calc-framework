@@ -153,8 +153,70 @@ python -m pytest tests/ -q
 
 ---
 
+## 7. Pyright / Pylance 类型检查
+
+### 7.1 pyrightconfig.json 抑制规则
+
+项目根目录 [`pyrightconfig.json`](../pyrightconfig.json) 配置了 `typeCheckingMode: standard` 并抑制了以下不适合本项目的规则：
+
+| 抑制的规则 | 原因 |
+|-----------|------|
+| `reportAttributeAccessIssue` | 双后端（CTk + PySide6）共用 Any 类型访问 |
+| `reportMissingImports` | 独立脚本通过 sys.path.insert 添加路径 |
+| `reportOptionalMemberAccess` | 大量 `dict.get()` 和可选链模式的正常用法 |
+| `reportInconsistentConstructor` | GUI mixin 多重继承的构造差异 |
+| `reportPrivateImportUsage` | 内部模块跨目录引用 |
+
+### 7.2 常见类型错误与修复
+
+**dict 值类型不变性 (invariance)**
+
+pyright 严格检查 `dict[K, V]` 的值类型。`dict[str, SubType]` 不能赋值给 `dict[str, SuperType]`。
+
+```python
+# ❌ reportArgumentType
+# 函数签名: def f(variables: dict[str, DAGVariable | dict[str, Any]])
+# 调用: f(variables=dag.variables)  # dag.variables 类型是 dict[str, DAGVariable]
+# pyright 报错: dict[str, DAGVariable] 不能赋值给 dict[str, DAGVariable | dict[str, Any]]
+
+# ✅ 修复：将参数类型缩窄为实际调用类型
+# 函数签名: def f(variables: dict[str, DAGVariable])
+```
+
+**QDoubleSpinBox setMinimum/setMaximum**
+
+PySide6 类型 stub 将 `setMinimum`/`setMaximum` 标注为 `int`（继承自 `QAbstractSpinBox`），但 `QDoubleSpinBox` 实际接受 `float`。
+
+```python
+# ✅
+box.setMinimum(spec.min_val)  # type: ignore[reportArgumentType]
+box.setMaximum(spec.max_val)  # type: ignore[reportArgumentType]
+```
+
+### 7.3 当前 pyright 状态（2026-05-28）
+
+| 端 | 总错误 | 本轮修复引入 | 本轮修复消除 | 剩余 pre-existing | 核心来源 |
+|----|--------|------------|------------|-----------------|---------|
+| 包端 | 538 | 1 | 1 | 536 | 测试文件 `dict` 解包类型拓宽（338/512 `reportArgumentType`） |
+| 框架 | 7 | 4 | 4 | 3 | `sandbox.py` ast 类型 + `test_context.py` TypedDict |
+
+**pre-existing 说明**（不打算大批量修复）：
+
+- **`reportArgumentType` (512)**：主要在 `tests/` 和 `gui_design/shell/`。测试文件将松散 `dict` 传递给严格类型签名，修复需结构性修改测试基类或全面加 `cast()`。
+- **`reportGeneralTypeIssues` (14)**：gui_design mixin 模式（`Self@Mixin` 类型推断），不影响运行时。
+- **框架 pre-existing (3)**：`sandbox.py` 的 ast `_ConstantValue` 和 `test_context.py` 的 TypedDict 协变，深度类型问题，不加类型忽略注释。
+
+### 7.4 VS Code Problems 面板
+
+VS Code 的 `#problems_and_diagnostics` 面板显示 Pylance + ruff 的全部诊断。当前面板中的问题来自上述 pre-existing 项，而非本轮新引入。
+
+ruff 双端 **All checks passed**，pyright 我们引入的 5 处错误已全部修复。
+
+---
+
 ## 变更记录
 
 | 日期 | 说明 |
 |------|------|
 | 2026-05-28 | 初始版本。基于 `ruff check` 全量修复过程中发现的规律编写。涵盖 E501 / F401 / N806 / E741 四类高频问题。 |
+| 2026-05-28 | 新增 §7 Pyright/Pylance 类型检查。记录 `reportArgumentType` / dict 不变性 / QDoubleSpinBox 等典型修复模式与 pre-existing 状态。 |

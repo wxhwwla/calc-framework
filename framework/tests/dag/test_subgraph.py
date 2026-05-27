@@ -4,7 +4,6 @@
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.subgraph import expand_subgraphs
 
-
 _SIMPLE_SUBGRAPH: dict = {
     "schema_version": "dag-v1",
     "name": "子图展开测试",
@@ -63,7 +62,10 @@ class TestSubgraphExpansion:
             "subgraphs": {
                 "inner": {
                     "parameters": {"x": {"type": "float"}},
-                    "nodes": {"one": {"type": "const", "value": 1}, "sum": {"type": "binary", "op": "+", "lhs": "x", "rhs": "one"}},
+                    "nodes": {
+                        "one": {"type": "const", "value": 1},
+                        "sum": {"type": "binary", "op": "+", "lhs": "x", "rhs": "one"},
+                    },
                     "outputs": {"out": {"node": "sum", "label": "+1"}},
                 },
                 "outer": {

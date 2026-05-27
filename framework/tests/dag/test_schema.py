@@ -2,21 +2,19 @@
 """DAG schema 定义与校验单元测试。"""
 
 import pytest
-
 from calc_framework.dag.errors import DAGCompileError
 from calc_framework.dag.schema import (
-    DAGVariable,
-    ConstNode,
-    VarNode,
-    UnaryNode,
     BinaryNode,
-    ConditionNode,
-    ExprNode,
-    UserInputNode,
     CallNode,
+    ConditionNode,
+    ConstNode,
+    DAGVariable,
+    ExprNode,
+    UnaryNode,
+    UserInputNode,
+    VarNode,
     validate_graph,
 )
-
 
 _MINIMAL_GRAPH: dict = {
     "schema_version": "dag-v1",

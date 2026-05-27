@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout_json
@@ -58,8 +57,9 @@ def base_context():
 
 @pytest.fixture(scope="module")
 def qapp():
-    from PySide6.QtWidgets import QApplication
     import sys
+
+    from PySide6.QtWidgets import QApplication
 
     app = QApplication.instance()
     if app is None:

@@ -98,7 +98,10 @@ def main(argv: list[str] | None = None) -> int:
         description="calc-framework 布局编辑器 — 从 DAG 编排 layout.json",
     )
     parser.add_argument("--dag", required=True, help="DAG JSON 文件路径")
-    parser.add_argument("--auto", action="store_true", help="自动生成布局（所有 user_input → inputs, 所有 outputs → outputs）")
+    parser.add_argument(
+        "--auto", action="store_true",
+        help="自动生成布局（所有 user_input → inputs, 所有 outputs → outputs）",
+    )
     parser.add_argument("-o", "--output", default="layout.json", help="输出 layout.json 路径")
     parser.add_argument("--name", default="Computed Layout", help="布局名称")
     args = parser.parse_args(argv)

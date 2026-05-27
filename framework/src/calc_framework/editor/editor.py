@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from calc_framework.dag.schema import DAGGraph
+from calc_framework.dag.schema import DAGGraph, DAGSubgraph
 from calc_framework.dag.serializer import load_dag
 from calc_framework.ui.layout import Layout, Section, load_layout
 
@@ -60,7 +60,7 @@ def discover_input_variables(dag: DAGGraph) -> list[str]:
     for var_id, var_def in dag.variables.items():
         if var_def.source != "computed":
             vars_list.append(var_id)
-    var_map: dict[str, DAGGraph] = dag.subgraphs if hasattr(dag, "subgraphs") else {}
+    var_map: dict[str, DAGSubgraph] = dag.subgraphs if hasattr(dag, "subgraphs") else {}
     for _sg_name, subgraph in var_map.items():
         for var_id, var_def in subgraph.parameters.items():
             if var_def.source != "computed":
@@ -72,7 +72,7 @@ def discover_input_variables(dag: DAGGraph) -> list[str]:
 def discover_outputs(dag: DAGGraph) -> list[str]:
     """收集全部 output 节点的名称。"""
     result = list(dag.outputs.keys())
-    var_map: dict[str, DAGGraph] = dag.subgraphs if hasattr(dag, "subgraphs") else {}
+    var_map: dict[str, DAGSubgraph] = dag.subgraphs if hasattr(dag, "subgraphs") else {}
     for _sg_name, subgraph in var_map.items():
         for out_name in subgraph.outputs:
             if out_name not in result:

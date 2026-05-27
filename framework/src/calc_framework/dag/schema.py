@@ -302,7 +302,11 @@ def _collect_node_refs(node: NodeType) -> list[str]:
     return refs
 
 
-def _validate_references(nodes: dict[str, NodeType], subgraphs: dict[str, DAGSubgraph], params: set[str] | None = None) -> None:
+def _validate_references(
+    nodes: dict[str, NodeType],
+    subgraphs: dict[str, DAGSubgraph],
+    params: set[str] | None = None,
+) -> None:
     known_params = params or set()
     for nid, node in nodes.items():
         refs = _collect_node_refs(node)

@@ -4,10 +4,9 @@ import json
 from pathlib import Path
 
 import pytest
-
 from calc_framework.config.adapter import (
-    AdapterPackage,
     AdapterNotFoundError,
+    AdapterPackage,
     InvalidMetaError,
 )
 
@@ -63,7 +62,7 @@ class TestAdapterPackage:
         assert result.outputs["answer"] == 42.0
 
     def test_missing_meta_raises(self, tmp_path: Path):
-        with pytest.raises(AdapterNotFoundError, match="meta.json"):
+        with pytest.raises(AdapterNotFoundError, match=r"meta\.json"):
             AdapterPackage(tmp_path)
 
     def test_meta_without_entry_dag_raises(self, tmp_path: Path):

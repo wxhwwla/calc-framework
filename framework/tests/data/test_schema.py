@@ -1,10 +1,9 @@
 """变量 Schema 校验 — 单元测试。"""
 
 import pytest
-
 from calc_framework.dag.schema import DAGGraph, DAGVariable
 from calc_framework.data.context import make_context
-from calc_framework.data.schema import validate_variables, VariableValidationError
+from calc_framework.data.schema import VariableValidationError, validate_variables
 
 
 def _make_graph(variables: dict[str, DAGVariable]) -> DAGGraph:
@@ -34,7 +33,7 @@ class TestValidateVariables:
             "character.攻击": DAGVariable(type="float", source="character"),
         })
         ctx = make_context()
-        with pytest.raises(VariableValidationError, match="character.攻击"):
+        with pytest.raises(VariableValidationError, match=r"character\.攻击"):
             validate_variables(graph, ctx)
 
     def test_var_with_default_does_not_raise_when_missing(self):

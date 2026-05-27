@@ -2,11 +2,9 @@
 """DAG 求值引擎单元测试。"""
 
 import pytest
-
-from calc_framework.dag.errors import DAGCycleError
 from calc_framework.dag.engine import evaluate_graph, topological_sort
+from calc_framework.dag.errors import DAGCycleError
 from calc_framework.dag.serializer import dag_from_dict
-
 
 _SIMPLE_LINEAR: dict = {
     "schema_version": "dag-v1",

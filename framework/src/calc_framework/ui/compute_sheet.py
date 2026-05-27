@@ -7,25 +7,25 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDoubleSpinBox,
+    QGridLayout,
     QGroupBox,
     QLabel,
     QLineEdit,
     QPushButton,
     QSlider,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
-    QSpinBox,
-    QDoubleSpinBox,
-    QCheckBox,
-    QComboBox,
-    QGridLayout,
 )
 
-from calc_framework.dag.service import DAGService
 from calc_framework.dag.engine import DAGResult
 from calc_framework.dag.schema import DAGVariable
+from calc_framework.dag.service import DAGService
 from calc_framework.ui.controls import ControlSpec, infer_control
 from calc_framework.ui.format import format_node_value
 from calc_framework.ui.layout import Layout, Section
@@ -52,7 +52,7 @@ class ComputeSheet(QObject):
         self,
         dag_service: DAGService,
         layout: Layout,
-        variables: dict[str, DAGVariable | dict[str, Any]],
+        variables: dict[str, DAGVariable],
         base_context: dict[str, Any] | None = None,
         parent: QWidget | None = None,
     ):
@@ -230,9 +230,9 @@ class ComputeSheet(QObject):
             box.setSingleStep(spec.step)
             box.setDecimals(max(0, -int(spec.step).bit_length() if spec.step < 1 else 2))
         if spec.min_val is not None:
-            box.setMinimum(spec.min_val)
+            box.setMinimum(spec.min_val)  # type: ignore[reportArgumentType]
         if spec.max_val is not None:
-            box.setMaximum(spec.max_val)
+            box.setMaximum(spec.max_val)  # type: ignore[reportArgumentType]
         return box
 
     def _make_checkbox(self, spec: ControlSpec) -> QWidget:

@@ -1,10 +1,9 @@
 """layout.json 加载与校验 — 单元测试。"""
 
 import pytest
-
 from calc_framework.ui.layout import (
-    Section,
     LayoutValidationError,
+    Section,
     load_layout,
     load_layout_json,
 )

@@ -9,7 +9,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from calc_framework.dag.serializer import load_dag
 from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
@@ -52,8 +51,9 @@ def layout():
 
 @pytest.fixture(scope="module")
 def qapp():
-    from PySide6.QtWidgets import QApplication
     import sys
+
+    from PySide6.QtWidgets import QApplication
 
     app = QApplication.instance()
     if app is None:

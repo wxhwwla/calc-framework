@@ -5,7 +5,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from calc_framework.dag.serializer import dag_to_dict, dag_from_dict, load_dag, save_dag
+from calc_framework.dag.serializer import dag_from_dict, dag_to_dict, load_dag, save_dag
 
 _MINIMAL_DICT: dict = {
     "schema_version": "dag-v1",

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 
-
 from calc_framework.dag.schema import (
     DAGGraph,
     DAGOutput,

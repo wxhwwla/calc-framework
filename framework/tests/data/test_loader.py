@@ -3,7 +3,6 @@
 from abc import ABC
 
 import pytest
-
 from calc_framework.data.context import make_context
 from calc_framework.data.loader import DataContextLoader
 
