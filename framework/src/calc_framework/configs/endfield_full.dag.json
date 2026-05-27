@@ -3,27 +3,27 @@
   "name": "终末地伤害公式（完整版）",
   "description": "终末地 15 乘区完整伤害公式 DAG。子图含 ability_bonus / final_attack / single_hit_damage 用于独立校验；主图扁平求值。",
   "variables": {
-    "角色.基础攻击": {
+    "character.基础攻击": {
       "type": "float",
       "source": "character",
       "description": "角色基础攻击力"
     },
-    "武器.基础攻击": {
+    "weapon.基础攻击": {
       "type": "float",
       "source": "weapon",
       "description": "武器基础攻击力"
     },
-    "武器.攻击力+": {
+    "weapon.攻击力+": {
       "type": "float",
       "source": "weapon",
       "description": "攻击力+ 小数加成（0.15 = 15%）"
     },
-    "武器.附加攻击力+": {
+    "weapon.附加攻击力+": {
       "type": "float",
       "source": "weapon",
       "description": "附加攻击力+ 平值"
     },
-    "装备.攻击力平值": {
+    "equipment.攻击力平值": {
       "type": "float",
       "source": "equipment",
       "description": "装备平铺攻击力",
@@ -504,27 +504,27 @@
   "nodes": {
     "char_atk": {
       "type": "var",
-      "path": "角色.基础攻击",
+      "path": "character.基础攻击",
       "label": "角色攻击"
     },
     "weapon_atk": {
       "type": "var",
-      "path": "武器.基础攻击",
+      "path": "weapon.基础攻击",
       "label": "武器攻击"
     },
     "atk_bonus": {
       "type": "var",
-      "path": "武器.攻击力+",
+      "path": "weapon.攻击力+",
       "label": "攻击力+"
     },
     "add_atk": {
       "type": "var",
-      "path": "武器.附加攻击力+",
+      "path": "weapon.附加攻击力+",
       "label": "附加攻击"
     },
     "equip_atk": {
       "type": "var",
-      "path": "装备.攻击力平值",
+      "path": "equipment.攻击力平值",
       "label": "装备攻击"
     },
     "main_flat": {

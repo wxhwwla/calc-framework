@@ -18,6 +18,7 @@
 import warnings
 from typing import Any
 
+from ._attribute_zone_bonus import compute_attr_weapon_bonus as _compute_attr_weapon_bonus
 from .base_zone import BaseZone
 
 
@@ -273,135 +274,29 @@ def calculate_attribute_zones_with_details(
     result = {}
 
     for attr in manager.ATTRIBUTES:
-        # 计算基础值（角色属性）
         base_value = 0.0
         if character and attr in character and isinstance(character[attr], list):
             attr_list = character[attr]
             if 0 <= level_index < len(attr_list):
                 base_value = float(attr_list[level_index])
 
-        # 计算武器加成（区分平值与百分比）
-        flat_bonus = 0.0
-        pct_bonus = 0.0
         is_main = attr == main_attr
         is_sub = attr == sub_attr
 
-        if weapon:
-
-            def _resolve_level(effect: str) -> int:
-                if effect == sa1_name:
-                    return sa1_level
-                if effect == sa2_name:
-                    return sa2_level
-                if effect == sa3_name:
-                    return sa3_level
-                return 1
-
-            def _should_skip(effect: str) -> bool:
-                return effect == sa3_name and sa3_level == 0
-
-            def _classify(effect: str) -> str:
-                if effect == "主能力值+":
-                    return "main_flat"
-                if effect == "副能力值+":
-                    return "sub_flat"
-                if effect == f"{attr}+":
-                    return "attr_flat"
-                if is_main and effect == "主能力+":
-                    return "main_pct"
-                if is_sub and effect == "副能力+":
-                    return "sub_pct"
-                if (is_main or is_sub) and effect == "全能力+":
-                    return "both_pct"
-                return ""
-
-            # 1. 从 normal_skills 列表中获取加成
-            for skill in weapon.get("normal_skills", []):
-                if not isinstance(skill, dict):
-                    continue
-                effect = skill.get("effect", "")
-                category = _classify(effect)
-                if not category:
-                    continue
-                if _should_skip(effect):
-                    continue
-                value = manager._get_weapon_bonus(skill.get("curve", []), _resolve_level(effect))
-                if category == "main_flat" and is_main:
-                    flat_bonus += value
-                elif category == "sub_flat" and is_sub:
-                    flat_bonus += value
-                elif category == "attr_flat":
-                    flat_bonus += value
-                elif category == "main_pct":
-                    pct_bonus += value
-                elif category == "sub_pct":
-                    pct_bonus += value
-                elif category == "both_pct":
-                    pct_bonus += value
-
-            # 2. 从直接属性键中获取加成（向后兼容旧 schema）
-            bonus_attrs = [key for key in weapon if key.endswith("+")]
-            for bonus_key in bonus_attrs:
-                category = _classify(bonus_key)
-                if not category:
-                    continue
-                if _should_skip(bonus_key):
-                    continue
-                bonus_level = _resolve_level(bonus_key)
-                value = manager._get_weapon_bonus(weapon[bonus_key], bonus_level)
-                if category == "main_flat" and is_main:
-                    flat_bonus += value
-                elif category == "sub_flat" and is_sub:
-                    flat_bonus += value
-                elif category == "attr_flat":
-                    flat_bonus += value
-                elif category == "main_pct":
-                    pct_bonus += value
-                elif category == "sub_pct":
-                    pct_bonus += value
-                elif category == "both_pct":
-                    pct_bonus += value
-
-            # 3. 特殊能力（ws1/ws2）的平值 + 百分比
-            from character_weapon_equipment.weapon_data.special_fields import (
-                add_special_picks_to_ability_pct,
-                add_special_picks_to_main_sub_bonus,
-            )
-
-            md, sd = add_special_picks_to_main_sub_bonus(
-                weapon,
-                ws_name=ws_name,
-                ws_level=ws_level,
-                ws_stack=ws_stack,
-                ws2_name=ws2_name,
-                ws2_level=ws2_level,
-                ws2_stack=ws2_stack,
-                main_attr=main_attr,
-                sub_attr=sub_attr,
-            )
-            mp, sp = add_special_picks_to_ability_pct(
-                weapon,
-                ws_name=ws_name,
-                ws_level=ws_level,
-                ws_stack=ws_stack,
-                ws2_name=ws2_name,
-                ws2_level=ws2_level,
-                ws2_stack=ws2_stack,
-                main_attr=main_attr,
-                sub_attr=sub_attr,
-            )
-            if is_main:
-                flat_bonus += md
-                pct_bonus += mp
-            elif is_sub:
-                flat_bonus += sd
-                pct_bonus += sp
-
-            # 4. 信赖加成（仅主能力，平值）
-            if is_main and trust_level > 0:
-                trust_add = [0, 10, 25, 40, 60]
-                if 0 <= trust_level < len(trust_add):
-                    flat_bonus += trust_add[trust_level]
+        flat_bonus, pct_bonus = _compute_attr_weapon_bonus(
+            attr=attr,
+            attr_is_main=is_main,
+            attr_is_sub=is_sub,
+            weapon=weapon,
+            manager=manager,
+            sa1_name=sa1_name, sa1_level=int(sa1_level),
+            sa2_name=sa2_name, sa2_level=int(sa2_level),
+            sa3_name=sa3_name, sa3_level=int(sa3_level),
+            ws_name=ws_name, ws_level=int(ws_level), ws_stack=int(ws_stack),
+            ws2_name=ws2_name, ws2_level=int(ws2_level), ws2_stack=int(ws2_stack),
+            main_attr=main_attr, sub_attr=sub_attr,
+            trust_level=int(trust_level),
+        )
 
         if is_main or is_sub:
             total = (base_value + flat_bonus) * (1.0 + pct_bonus / 100.0)

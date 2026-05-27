@@ -51,15 +51,15 @@ class TestDAGAdapter(unittest.TestCase):
             self.char, self.weapon,
             char_level=self.level, weapon_level=self.level, trust_level=0,
         )
-        self.assertIn("角色", ctx)
-        self.assertIn("武器", ctx)
-        self.assertIn("装备", ctx)
+        self.assertIn("character", ctx)
+        self.assertIn("weapon", ctx)
+        self.assertIn("equipment", ctx)
         self.assertIn("computed", ctx)
-        self.assertIn("基础攻击", ctx["角色"])
-        self.assertIn("基础攻击", ctx["武器"])
-        self.assertIn("攻击力+", ctx["武器"])
-        self.assertIn("附加攻击力+", ctx["武器"])
-        self.assertIn("攻击力平值", ctx["装备"])
+        self.assertIn("基础攻击", ctx["character"])
+        self.assertIn("基础攻击", ctx["weapon"])
+        self.assertIn("攻击力+", ctx["weapon"])
+        self.assertIn("附加攻击力+", ctx["weapon"])
+        self.assertIn("攻击力平值", ctx["equipment"])
         self.assertIn("主能力平值加算", ctx["computed"])
         self.assertIn("主能力百分比", ctx["computed"])
 

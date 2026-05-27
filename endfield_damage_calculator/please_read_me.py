@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.0.7"
+_VERSION = "3.0.8"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,18 +209,23 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 17 处文件
 # BODY:
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_zone.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/_attribute_zone_bonus.py
 # - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/attribute_zone.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/base_zone.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag_adapter.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag_config.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/defense_zone.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/adapter.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/config.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py
 # - 修改 endfield_damage_calculator/please_read_me.py
 # - 修改 endfield_damage_calculator/tests/calculation/damage/zones/test_dag_adapter.py
+# - 变更 framework/adapters/
+# - 变更 framework/src/calc_framework/config/
+# - 变更 framework/src/calc_framework/configs/endfield_full.dag.json
+# - 变更 framework/src/calc_framework/data/
+# - 变更 framework/tests/config/
+# - 修改 framework/tests/dag/test_service.py
+# - 变更 framework/tests/data/
+# - 变更 framework/tests/fixtures/endfield_attack_chain.dag.json
+# - 修改 framework/tests/integration/test_endfield_parity.py
 # - 修改 framework/tests/integration/test_generated_endfield_dag.py
 # --- END UPLOAD_SUMMARY ---

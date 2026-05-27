@@ -46,8 +46,8 @@ class TestDAGService:
 
         svc = DAGService.from_file(fixture_dag_path)
         result = svc.evaluate({
-            "角色": {"基础攻击": 123},
-            "武器": {"基础攻击": 456, "攻击加成": 1.15, "附加攻击": 80},
+            "character": {"基础攻击": 123},
+            "weapon": {"基础攻击": 456, "攻击加成": 1.15, "附加攻击": 80},
             "computed": {"能力乘数": 1.12},
         })
         assert result.outputs["最终攻击力"] is not None

@@ -2,8 +2,8 @@
 """DAG 适配器：将 DAG 引擎接入 zone_snapshot 计算链。
 
 设计：
-- ``build_dag_context`` 从 char/weapon/levels 提取 DAG 所需上下文（委托现有引擎做预处理）
-- ``evaluate_attack_chain_via_dag`` 加载 DAG → 构建上下文 → 求值 → 返回攻击力/能力值结果
+- ``EndfieldContextLoader`` 实现框架 ``DataContextLoader`` 接口
+- ``AdapterPackage`` 替代旧的 ``_get_dag_service()``，零自定义缓存
 - ``compute_snapshot_with_dag`` 用 DAG 引擎替代现有引擎生成乘区展示行
 """
 
@@ -14,53 +14,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from calc_framework.dag.schema import DAGGraph
     from calculation.multiplicative_zones.zone_snapshot import MultiplicativeZoneSelection
 
 _FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
+_ADAPTER_DIR = _FRAMEWORK_DIR / "adapters" / "endfield"
 
 if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
-_CONFIGS_DIR = _SRC_DIR / "calc_framework" / "configs"
-_DAG_PATH = _CONFIGS_DIR / "endfield_full.dag.json"
+from calc_framework.config.adapter import AdapterPackage
 
 from calculation.multiplicative_zones import ZoneDisplayLine
-
-
-def _existing_attack_chain(
-    char: dict[str, Any],
-    weapon: dict[str, Any] | None,
-    *,
-    char_level: int,
-    weapon_level: int,
-    trust_level: int,
-    bonuses_kwargs: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    """运行现有引擎三层计算，返回 (attr_details, ability, final)。"""
-    from calculation.multiplicative_zones.ability_bonus_details import (
-        calculate_ability_bonus_with_details,
-    )
-    from calculation.multiplicative_zones.attribute_zone import (
-        calculate_attribute_zones_with_details,
-    )
-    from calculation.multiplicative_zones.final_attack_zone import (
-        calculate_final_attack_with_details,
-    )
-
-    attr = calculate_attribute_zones_with_details(
-        char, weapon, level=char_level, trust_level=trust_level, **bonuses_kwargs,
-    )
-    ability = calculate_ability_bonus_with_details(
-        char, weapon, level=char_level, trust_level=trust_level, **bonuses_kwargs,
-    )
-    final = calculate_final_attack_with_details(
-        char, weapon,
-        char_level=char_level, weapon_level=weapon_level,
-        trust_level=trust_level, **bonuses_kwargs,
-    )
-    return attr, ability, final
+from calculation.multiplicative_zones.dag.loader import EndfieldContextLoader
 
 
 def build_dag_context(
@@ -72,84 +38,16 @@ def build_dag_context(
     trust_level: int = 0,
     bonuses_kwargs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """从角色/武器数据构建 DAG 求值上下文。
-
-    委托现有引擎做预处理（装备词条解析、武器技能分类等重型逻辑），
-    然后将中间结果填入 DAG 上下文完成公式求值。
-    """
-    kwargs = bonuses_kwargs or {}
-    attr, ability, final = _existing_attack_chain(
-        char, weapon,
-        char_level=char_level, weapon_level=weapon_level,
-        trust_level=trust_level, bonuses_kwargs=kwargs,
+    """从角色/武器数据构建 DAG 求值上下文（委托 EndfieldContextLoader）。"""
+    loader = EndfieldContextLoader()
+    return loader.build_context(
+        character=char,
+        weapon=weapon,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+        bonuses_kwargs=bonuses_kwargs or {},
     )
-
-    return {
-        "角色": {
-            "基础攻击": final["char_base_attack"],
-            "力量": attr["力量"]["base"],
-            "敏捷": attr["敏捷"]["base"],
-            "智识": attr["智识"]["base"],
-            "意志": attr["意志"]["base"],
-            "主能力": ability["main_attr"],
-            "副能力": ability["sub_attr"],
-        },
-        "武器": {
-            "基础攻击": final["weapon_base_attack"],
-            "攻击力+": final["attack_bonus_multiplier"] - 1.0,
-            "附加攻击力+": final["additional_attack"],
-        },
-        "装备": {
-            "攻击力平值": 0.0,
-        },
-        "computed": {
-            "主能力平值加算": ability["main_flat"],
-            "副能力平值加算": ability["sub_flat"],
-            "主能力百分比": ability["main_pct"],
-            "副能力百分比": ability["sub_pct"],
-            "主能力": ability["main_attr"],
-            "副能力": ability["sub_attr"],
-            "最终攻击力": 0.0,
-            "技能倍率": 1.0,
-            "暴击区": 1.0,
-            "伤害加成": 1.0,
-            "伤害减免": 1.0,
-            "增幅": 1.0,
-            "虚弱": 1.0,
-            "庇护": 1.0,
-            "脆弱": 1.0,
-            "易伤": 1.0,
-            "防御": 0.5,
-            "失衡易伤": 1.0,
-            "抗性": 1.0,
-            "非主控减伤": 1.0,
-            "连击增伤": 1.0,
-            "特殊乘区": 1.0,
-        },
-    }
-
-
-_DAG_SERVICE_CACHE: Any = None
-
-
-def _get_dag_service() -> Any:
-    """获取 DAGService（模块级缓存 + 惰性生成）。"""
-    global _DAG_SERVICE_CACHE
-    if _DAG_SERVICE_CACHE is not None:
-        return _DAG_SERVICE_CACHE
-
-    from calc_framework.dag.service import DAGService
-
-    if _DAG_PATH.exists():
-        _DAG_SERVICE_CACHE = DAGService.from_file(_DAG_PATH)
-        return _DAG_SERVICE_CACHE
-
-    _DAG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    from calculation.multiplicative_zones.dag.config import generate, save_dag
-    g = generate()
-    save_dag(g)
-    _DAG_SERVICE_CACHE = DAGService(g)
-    return _DAG_SERVICE_CACHE
 
 
 def evaluate_attack_chain_via_dag(
@@ -166,8 +64,7 @@ def evaluate_attack_chain_via_dag(
     返回:
         {"final_attack": float, "ability_bonus": float}
     """
-    svc = _get_dag_service()
-
+    pkg = _ensure_dag()
     kwargs = bonuses_kwargs or {}
     ctx = build_dag_context(
         char, weapon,
@@ -175,7 +72,7 @@ def evaluate_attack_chain_via_dag(
         trust_level=trust_level, bonuses_kwargs=kwargs,
     )
 
-    result = svc.evaluate(ctx)
+    result = pkg.dag_service.evaluate(ctx)
     return {
         "final_attack": result.outputs.get("最终攻击力", 0.0),
         "ability_bonus": result.outputs.get("能力值加成", 0.0),
@@ -289,3 +186,50 @@ def compute_snapshot_with_dag(
         )
     )
     return lines
+
+
+_ADAPTER_PACKAGE: AdapterPackage | None = None
+
+
+def _ensure_dag() -> AdapterPackage:
+    """获取终末地 AdapterPackage（模块级缓存 + 惰性生成）。
+
+    首次访问如 DAG JSON 缺失，则自动运行 config 脚本生成。
+    """
+    global _ADAPTER_PACKAGE
+    if _ADAPTER_PACKAGE is not None:
+        return _ADAPTER_PACKAGE
+
+    if not _ADAPTER_DIR.is_dir():
+        _ADAPTER_DIR.mkdir(parents=True)
+        _write_default_meta()
+
+    try:
+        _ADAPTER_PACKAGE = AdapterPackage(_ADAPTER_DIR)
+    except Exception:
+        _generate_dag_json()
+        _ADAPTER_PACKAGE = AdapterPackage(_ADAPTER_DIR)
+
+    return _ADAPTER_PACKAGE
+
+
+def _generate_dag_json() -> None:
+    from calculation.multiplicative_zones.dag.config import generate, save_dag
+
+    g = generate()
+    save_dag(g)
+
+
+def _write_default_meta() -> None:
+    import json
+
+    (_ADAPTER_DIR / "meta.json").write_text(
+        json.dumps({
+            "name": "终末地伤害计算",
+            "game": "明日方舟：终末地",
+            "version": "3.0.0",
+            "schema_version": "dag-v1",
+            "entry_dag": "../../src/calc_framework/configs/endfield_full.dag.json",
+        }, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
