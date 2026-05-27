@@ -209,11 +209,7 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 修改 endfield_damage_calculator/please_read_me.py
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//344/276/235/350/265/226/350/257/264/346/230/216.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
-# - 更新文档 docs/migration-pyside6.md
 # - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
