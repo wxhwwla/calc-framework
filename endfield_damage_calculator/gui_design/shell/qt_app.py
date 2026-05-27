@@ -18,10 +18,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
+    QScrollArea,
     QSizePolicy,
     QTabWidget,
     QVBoxLayout,
@@ -31,7 +33,9 @@ from PySide6.QtWidgets import (
 from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
 from gui_design.shared.display_view.qt_columns import QtAttributeColumns
+from gui_design.panels.selection.qt_panel import QtSelectionPanel
 from gui_design.backends.qt_worker import CalcWorker
+from data.loader import get_characters, get_weapons
 from please_read_me import get_exe_version
 
 
@@ -88,11 +92,40 @@ class QtDamageApp:
         self._style_tabs()
         main_layout.addWidget(self.tabs, stretch=1)
 
-        # 计算页 → 三列属性展示
+        # 计算页：选择面板（上） + 三列属性展示（下）
         calc_page = QWidget()
         calc_layout = QVBoxLayout(calc_page)
         calc_layout.setContentsMargins(0, 0, 0, 0)
+        calc_layout.setSpacing(4)
 
+        # 加载游戏数据
+        characters = get_characters()
+        weapons = get_weapons()
+
+        # 选择面板（角色 + 武器左右并排）
+        panels_frame = QFrame()
+        panels_frame.setStyleSheet("QFrame { background-color: #1E1E1E; border-radius: 8px; }")
+        panels_row = QHBoxLayout(panels_frame)
+        panels_row.setContentsMargins(8, 8, 8, 8)
+        panels_row.setSpacing(12)
+
+        self.char_panel = QtSelectionPanel(
+            characters, self.big_font, parent=self,
+        )
+        self.weapon_panel = QtSelectionPanel(
+            weapons, self.big_font, is_weapon_panel=True, parent=self,
+        )
+
+        panels_row.addWidget(self.char_panel, stretch=1)
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.VLine)
+        line.setStyleSheet("color: #333333;")
+        panels_row.addWidget(line)
+        panels_row.addWidget(self.weapon_panel, stretch=1)
+
+        calc_layout.addWidget(panels_frame)
+
+        # 三列属性展示
         self.columns: QtAttributeColumns = QtAttributeColumns(
             big_font=self.big_font,
             small_font=self.small_font,
@@ -100,7 +133,7 @@ class QtDamageApp:
         self.columns.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
-        calc_layout.addWidget(self.columns)
+        calc_layout.addWidget(self.columns, stretch=1)
 
         self.tabs.addTab(calc_page, "计算页")
 
