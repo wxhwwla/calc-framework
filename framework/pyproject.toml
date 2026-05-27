@@ -1,0 +1,16 @@
+[project]
+name = "calc-framework"
+version = "0.1.0"
+description = "通用游戏数值计算框架 — DAG 公式引擎"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

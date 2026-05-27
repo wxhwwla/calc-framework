@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""AST 沙箱：解析表达式字符串并在白名单约束下安全求值。"""
+
+from __future__ import annotations
+
+import ast
+import math
+import operator
+from typing import Any
+
+from .errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
+
+_SAFE_BUILTINS: dict[str, Any] = {
+    "floor": math.floor,
+    "ceil": math.ceil,
+    "abs": abs,
+    "sqrt": math.sqrt,
+    "min": min,
+    "max": max,
+}
+
+_SAFE_NODE_TYPES: frozenset[type] = frozenset({
+    ast.Constant,
+    ast.Name,
+    ast.UnaryOp,
+    ast.BinOp,
+    ast.Call,
+    ast.Expression,
+    ast.Load,
+})
+
+_SAFE_UNARY_OPS: frozenset[type] = frozenset({ast.USub})
+
+_SAFE_BIN_OPS: frozenset[type] = frozenset({ast.Add, ast.Sub, ast.Mult, ast.Div})
+
+
+def _check_node(node: ast.AST) -> None:
+    """递归校验 AST 节点树是否符合白名单。"""
+    tp = type(node)
+    if tp is ast.Call:
+        func_node = node.func
+        if not isinstance(func_node, ast.Name):
+            raise DAGSecurityError(
+                f"不允许调用非命名函数: {type(func_node).__name__}",
+                offending_node=type(func_node).__name__,
+            )
+        if func_node.id not in _SAFE_BUILTINS:
+            raise DAGSecurityError(
+                f"未授权的函数调用: {func_node.id}",
+                offending_node=f"Call:{func_node.id}",
+            )
+        for arg in node.args:
+            _check_node(arg)
+        return
+
+    if tp not in _SAFE_NODE_TYPES:
+        raise DAGSecurityError(
+            f"表达式使用了禁止的语法: {tp.__name__}",
+            offending_node=tp.__name__,
+        )
+
+    if tp is ast.UnaryOp:
+        if type(node.op) not in _SAFE_UNARY_OPS:
+            raise DAGSecurityError(
+                f"禁止的一元运算符: {type(node.op).__name__}",
+                offending_node=type(node.op).__name__,
+            )
+        _check_node(node.operand)
+    elif tp is ast.BinOp:
+        if type(node.op) not in _SAFE_BIN_OPS:
+            raise DAGSecurityError(
+                f"禁止的二元运算符: {type(node.op).__name__}",
+                offending_node=type(node.op).__name__,
+            )
+        _check_node(node.left)
+        _check_node(node.right)
+    elif tp is ast.Expression:
+        _check_node(node.body)
+
+
+def _eval_node(node: ast.AST, scope: dict[str, float]) -> float:
+    """在给定 scope 中递归求值 AST 节点。"""
+    if isinstance(node, ast.Constant):
+        return float(node.value)
+    if isinstance(node, ast.Name):
+        val = scope.get(node.id)
+        if val is None:
+            raise DAGRuntimeError(f"变量未定义: {node.id}")
+        return float(val)
+    if isinstance(node, ast.UnaryOp):
+        operand = _eval_node(node.operand, scope)
+        if isinstance(node.op, ast.USub):
+            return -operand
+        raise DAGRuntimeError(f"不支持的一元运算符: {type(node.op).__name__}")
+    if isinstance(node, ast.BinOp):
+        lhs = _eval_node(node.left, scope)
+        rhs = _eval_node(node.right, scope)
+        try:
+            if isinstance(node.op, ast.Add):
+                return lhs + rhs
+            if isinstance(node.op, ast.Sub):
+                return lhs - rhs
+            if isinstance(node.op, ast.Mult):
+                return lhs * rhs
+            if isinstance(node.op, ast.Div):
+                return lhs / rhs
+        except ZeroDivisionError:
+            raise DAGRuntimeError("除零错误")
+        raise DAGRuntimeError(f"不支持的二元运算符: {type(node.op).__name__}")
+    if isinstance(node, ast.Call):
+        func_name = node.func.id
+        args = [_eval_node(a, scope) for a in node.args]
+        try:
+            return float(_SAFE_BUILTINS[func_name](*args))
+        except (ValueError, ZeroDivisionError) as e:
+            raise DAGRuntimeError(f"函数 {func_name} 执行错误: {e}")
+    if isinstance(node, ast.Expression):
+        return _eval_node(node.body, scope)
+    raise DAGRuntimeError(f"不支持的节点类型: {type(node).__name__}")
+
+
+def parse_expr(expr_str: str) -> ast.Expression:
+    """解析表达式字符串为白名单校验过的 AST 树。
+
+    Raises:
+        DAGCompileError: 表达式语法错误
+        DAGSecurityError: 表达式使用了白名单外的语法
+    """
+    expr_str = expr_str.strip()
+    if not expr_str:
+        raise DAGCompileError("表达式为空")
+    try:
+        tree = ast.parse(expr_str, mode="eval")
+    except SyntaxError as e:
+        raise DAGCompileError(f"表达式语法错误: {e}")
+    _check_node(tree)
+    return tree
+
+
+def validate_expr(expr_str: str) -> None:
+    """校验表达式（不执行求值）。
+
+    Raises:
+        DAGCompileError: 表达式语法错误
+        DAGSecurityError: 表达式使用了白名单外的语法
+    """
+    parse_expr(expr_str)
+
+
+def evaluate(tree: ast.Expression, scope: dict[str, float]) -> float:
+    """在白名单 scope 中求值已解析的 AST 表达式。
+
+    Args:
+        tree: parse_expr 返回的已验证 AST
+        scope: 变量名 → 浮点数的映射
+
+    Returns:
+        表达式计算结果
+
+    Raises:
+        DAGRuntimeError: 运行时错误（变量缺失、除零等）
+    """
+    return _eval_node(tree, scope)

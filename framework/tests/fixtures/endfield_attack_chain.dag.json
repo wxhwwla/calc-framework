@@ -1,0 +1,47 @@
+{
+  "schema_version": "dag-v1",
+  "name": "终末地伤害公式",
+  "description": "终末地最终攻击力链 DAG — 验证 DAG 引擎数值与现有引擎一致",
+  "variables": {
+    "角色.基础攻击": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础攻击力"
+    },
+    "武器.基础攻击": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器基础攻击力"
+    },
+    "武器.攻击加成": {
+      "type": "float",
+      "source": "weapon",
+      "description": "攻击力+ 乘数 (1 + 攻击力+/100)"
+    },
+    "武器.附加攻击": {
+      "type": "float",
+      "source": "weapon",
+      "description": "附加攻击力+"
+    },
+    "computed.能力乘数": {
+      "type": "float",
+      "source": "computed",
+      "description": "能力值加成乘数 (1 + ability_bonus)"
+    }
+  },
+  "nodes": {
+    "char_atk": {"type": "var", "path": "角色.基础攻击", "label": "角色攻击"},
+    "weapon_atk": {"type": "var", "path": "武器.基础攻击", "label": "武器攻击"},
+    "atk_bonus_mult": {"type": "var", "path": "武器.攻击加成", "label": "攻击力+"},
+    "flat_bonus": {"type": "var", "path": "武器.附加攻击", "label": "附加攻击"},
+    "ability_mult": {"type": "var", "path": "computed.能力乘数", "label": "能力乘数"},
+
+    "base_atk": {"type": "binary", "op": "+", "lhs": "char_atk", "rhs": "weapon_atk", "label": "基础攻击合计"},
+    "attack_bonus_atk": {"type": "binary", "op": "*", "lhs": "base_atk", "rhs": "atk_bonus_mult", "label": "攻击加成攻击力"},
+    "mid_atk": {"type": "binary", "op": "+", "lhs": "attack_bonus_atk", "rhs": "flat_bonus", "label": "中间攻击力"},
+    "final_attack": {"type": "binary", "op": "*", "lhs": "mid_atk", "rhs": "ability_mult", "label": "最终攻击力"}
+  },
+  "outputs": {
+    "最终攻击力": {"node": "final_attack", "label": "最终攻击力", "is_primary": true}
+  }
+}
