@@ -4,6 +4,7 @@
 import json
 import unittest
 from pathlib import Path
+from typing import Any
 
 from calculation.multiplicative_zones.zone_snapshot import (
     MultiplicativeZoneSelection,
@@ -26,6 +27,10 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestDAGAdapter(unittest.TestCase):
+    char: dict[str, Any]
+    weapon: dict[str, Any]
+    level: int
+
     def setUp(self):
         self.char = _load_by_name(_CHARACTERS_JSON, "秋栗")
         self.weapon = _load_by_name(_WEAPONS_JSON, "逐鳞3.0")

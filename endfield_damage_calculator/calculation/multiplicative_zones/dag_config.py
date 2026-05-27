@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成终末地完整伤害公式 DAG JSON 配置文件。
+"""终末地完整伤害公式 DAG JSON 配置文件生成脚本。
 
 输出文件位于 ``framework/src/calc_framework/configs/endfield_full.dag.json``。
 
@@ -17,8 +17,10 @@ import json
 import sys
 from pathlib import Path
 
-_PARENT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_PARENT / "src"))
+_FRAMEWORK_DIR = Path(__file__).resolve().parents[3] / "framework"
+_SRC_DIR = _FRAMEWORK_DIR / "src"
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
 
 from calc_framework.dag.schema import (
     BinaryNode,
@@ -32,7 +34,7 @@ from calc_framework.dag.schema import (
 )
 from calc_framework.dag.serializer import dag_to_dict
 
-OUTPUT_PATH = _PARENT / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
+OUTPUT_PATH = _SRC_DIR / "calc_framework" / "configs" / "endfield_full.dag.json"
 
 
 def _make_ability_bonus_subgraph() -> DAGSubgraph:
@@ -188,7 +190,6 @@ def _make_single_hit_damage_subgraph() -> DAGSubgraph:
 
     for i in range(2, len(zones)):
         prev_id = f"zone_{i-2}" if i > 2 else "zone_0"
-        # zone index corresponds to the parameter after the first two
         param_name = zones[i]
         node_id = f"zone_{i-1}"
         nodes[node_id] = BinaryNode(
@@ -212,7 +213,7 @@ def _make_single_hit_damage_subgraph() -> DAGSubgraph:
 
 
 def _make_master_graph() -> DAGGraph:
-    g = DAGGraph(
+    return DAGGraph(
         schema_version="dag-v1",
         name="终末地伤害公式（完整版）",
         description="终末地 15 乘区完整伤害公式 DAG。子图含 ability_bonus / final_attack / single_hit_damage 用于独立校验；主图扁平求值。",
@@ -326,7 +327,6 @@ def _make_master_graph() -> DAGGraph:
             "最终伤害": DAGOutput(node="final_damage", label="最终伤害", is_primary=True),
         },
     )
-    return g
 
 
 def generate() -> DAGGraph:
@@ -342,7 +342,6 @@ def save_dag(graph: DAGGraph, path: Path | None = None) -> Path:
     with target.open("w", encoding="utf-8") as f:
         json.dump(d, f, ensure_ascii=False, indent=2)
     return target
-
 
 
 def main() -> None:

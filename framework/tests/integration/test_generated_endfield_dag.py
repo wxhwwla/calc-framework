@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -14,12 +15,9 @@ from calc_framework.dag.serializer import load_dag
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _FRAMEWORK_DIR = _REPO_ROOT / "framework"
 _PKG_ROOT = _REPO_ROOT / "endfield_damage_calculator"
-_TOOLS_DIR = _FRAMEWORK_DIR / "tools"
 
 if str(_PKG_ROOT) not in sys.path:
     sys.path.insert(0, str(_PKG_ROOT))
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
 
 
 PARTICIPANTS_JSON = (
@@ -32,7 +30,7 @@ WEAPONS_JSON = (
 _EXPECTED_OUTPUT = _FRAMEWORK_DIR / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
 
 
-def _minimal_context() -> dict:
+def _minimal_context() -> dict[str, dict[str, Any]]:
     """构建最小完整上下文，所有变量均有默认值。"""
     return {
         "角色": {
@@ -60,7 +58,7 @@ def _minimal_context() -> dict:
     }
 
 
-def _build_dag_context(char: dict, weapon: dict, level: int, trust_level: int) -> dict:
+def _build_dag_context(char: dict[str, Any], weapon: dict[str, Any], level: int, trust_level: int) -> dict[str, dict[str, Any]]:
     """从现有引擎计算结果中提取 DAG 所需的所有上下文变量。"""
     from calculation.multiplicative_zones.ability_bonus_details import (
         calculate_ability_bonus_with_details,
@@ -131,11 +129,11 @@ def _build_dag_context(char: dict, weapon: dict, level: int, trust_level: int) -
 
 
 class TestGeneratedEndfieldDAG:
-    """验证 generate_endfield_dag.py 产出的 DAG 与现有引擎一致。"""
+    """验证 dag_config.py 产出的 DAG 与现有引擎一致。"""
 
     @pytest.fixture(scope="class")
     def generated_dag(self):
-        from generate_endfield_dag import generate, OUTPUT_PATH
+        from calculation.multiplicative_zones.dag_config import generate, OUTPUT_PATH
 
         dag = generate()
         assert dag.name == "终末地伤害公式（完整版）"
@@ -145,7 +143,7 @@ class TestGeneratedEndfieldDAG:
     @pytest.fixture(scope="class")
     def saved_dag(self, generated_dag):
         import json
-        from generate_endfield_dag import save_dag
+        from calculation.multiplicative_zones.dag_config import save_dag
 
         save_dag(generated_dag)
         assert _EXPECTED_OUTPUT.exists(), f"输出文件不存在: {_EXPECTED_OUTPUT}"
@@ -162,8 +160,8 @@ class TestGeneratedEndfieldDAG:
     def context(self):
         import json
 
-        char = []
-        weapon = []
+        char: dict[str, Any] | None = None
+        weapon: dict[str, Any] | None = None
         for item in json.loads(PARTICIPANTS_JSON.read_text(encoding="utf-8")):
             if item.get("名称") == "秋栗":
                 char = item
@@ -172,7 +170,7 @@ class TestGeneratedEndfieldDAG:
             if item.get("名称") == "逐鳞3.0":
                 weapon = item
                 break
-        if not char or not weapon:
+        if char is None or weapon is None:
             pytest.skip("测试数据不可用")
         return _build_dag_context(char, weapon, level=80, trust_level=0)
 
@@ -183,8 +181,8 @@ class TestGeneratedEndfieldDAG:
         )
         import json
 
-        char = []
-        weapon = []
+        char: dict[str, Any] | None = None
+        weapon: dict[str, Any] | None = None
         for item in json.loads(PARTICIPANTS_JSON.read_text(encoding="utf-8")):
             if item.get("名称") == "秋栗":
                 char = item
@@ -221,8 +219,8 @@ class TestGeneratedEndfieldDAG:
         )
         import json
 
-        char = []
-        weapon = []
+        char: dict[str, Any] | None = None
+        weapon: dict[str, Any] | None = None
         for item in json.loads(PARTICIPANTS_JSON.read_text(encoding="utf-8")):
             if item.get("名称") == "秋栗":
                 char = item

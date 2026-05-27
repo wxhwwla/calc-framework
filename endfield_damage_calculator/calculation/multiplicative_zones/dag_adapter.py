@@ -3,25 +3,27 @@
 
 设计：
 - ``build_dag_context`` 从 char/weapon/levels 提取 DAG 所需上下文（委托现有引擎做预处理）
-- ``evaluate_attack_chain_via_dag`` 加载 DAG JSON → 构建上下文 → 求值 → 返回攻击力/能力值结果
-- ``compute_snapshot_with_dag`` 替代 ``compute_multiplicative_zone_snapshot``，用 DAG 替换三个 calculate_* 调用
+- ``evaluate_attack_chain_via_dag`` 加载 DAG → 构建上下文 → 求值 → 返回攻击力/能力值结果
+- ``compute_snapshot_with_dag`` 用 DAG 引擎替代现有引擎生成乘区展示行
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from calc_framework.dag.schema import DAGGraph
+    from calculation.multiplicative_zones.zone_snapshot import MultiplicativeZoneSelection
 
 _FRAMEWORK_DIR = Path(__file__).resolve().parents[3] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
-_TOOLS_DIR = _FRAMEWORK_DIR / "tools"
+
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
+
 _CONFIGS_DIR = _SRC_DIR / "calc_framework" / "configs"
-
-for _d in (_SRC_DIR, _TOOLS_DIR):
-    if str(_d) not in sys.path:
-        sys.path.insert(0, str(_d))
-
 _DAG_PATH = _CONFIGS_DIR / "endfield_full.dag.json"
 
 from calculation.multiplicative_zones import ZoneDisplayLine
@@ -127,26 +129,27 @@ def build_dag_context(
     }
 
 
-_DAG_CACHE: Any = None
+_DAG_SERVICE_CACHE: Any = None
 
 
-def _get_dag():
-    """获取 DAG 图（模块级缓存 + 惰性生成）。"""
-    global _DAG_CACHE
-    if _DAG_CACHE is not None:
-        return _DAG_CACHE
+def _get_dag_service() -> Any:
+    """获取 DAGService（模块级缓存 + 惰性生成）。"""
+    global _DAG_SERVICE_CACHE
+    if _DAG_SERVICE_CACHE is not None:
+        return _DAG_SERVICE_CACHE
+
+    from calc_framework.dag.service import DAGService
 
     if _DAG_PATH.exists():
-        from calc_framework.dag.serializer import load_dag
-        _DAG_CACHE = load_dag(_DAG_PATH)
-        return _DAG_CACHE
+        _DAG_SERVICE_CACHE = DAGService.from_file(_DAG_PATH)
+        return _DAG_SERVICE_CACHE
 
     _DAG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    from generate_endfield_dag import generate, save_dag
+    from calculation.multiplicative_zones.dag_config import generate, save_dag
     g = generate()
     save_dag(g)
-    _DAG_CACHE = g
-    return _DAG_CACHE
+    _DAG_SERVICE_CACHE = DAGService(g)
+    return _DAG_SERVICE_CACHE
 
 
 def evaluate_attack_chain_via_dag(
@@ -163,9 +166,7 @@ def evaluate_attack_chain_via_dag(
     返回:
         {"final_attack": float, "ability_bonus": float}
     """
-    from calc_framework.dag.engine import evaluate_graph
-
-    dag = _get_dag()
+    svc = _get_dag_service()
 
     kwargs = bonuses_kwargs or {}
     ctx = build_dag_context(
@@ -174,7 +175,7 @@ def evaluate_attack_chain_via_dag(
         trust_level=trust_level, bonuses_kwargs=kwargs,
     )
 
-    result = evaluate_graph(dag, ctx)
+    result = svc.evaluate(ctx)
     return {
         "final_attack": result.outputs.get("最终攻击力", 0.0),
         "ability_bonus": result.outputs.get("能力值加成", 0.0),
@@ -182,7 +183,7 @@ def evaluate_attack_chain_via_dag(
 
 
 def compute_snapshot_with_dag(
-    selection,  # MultiplicativeZoneSelection
+    selection: MultiplicativeZoneSelection,
 ) -> list[ZoneDisplayLine]:
     """用 DAG 引擎计算完整乘区快照，返回展示行列表。
 
@@ -278,7 +279,6 @@ def compute_snapshot_with_dag(
         )
     )
 
-    ability_bonus_existing = final["ability_bonus"]
     ability_multiplier = 1.0 + dag_ability_bonus
 
     lines.append(
