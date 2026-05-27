@@ -65,8 +65,13 @@ def main() -> None:
 
     # 导入 GUI 模块（含 customtkinter，首次较慢）
     from data.plugin_registry import load_default_plugins
-    from gui_design.shell.app import DamageCalculatorApp
+    from gui_design.backends import is_qt
     from utils.path_utils import get_application_dir
+
+    if is_qt():
+        from gui_design.shell.qt_app import QtDamageApp as DamageCalculatorApp
+    else:
+        from gui_design.shell.app import DamageCalculatorApp
 
     if not getattr(sys, "frozen", False):
         print("正在创建主窗口…", flush=True)

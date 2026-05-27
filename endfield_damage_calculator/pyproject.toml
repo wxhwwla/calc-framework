@@ -34,6 +34,8 @@ plugins = [
 build = [
     "pyinstaller>=6.0",
 ]
+# PySide6 迁移（双后端并行期可选安装）
+qt = ["PySide6>=6.6"]
 
 [project.scripts]
 endfield-calculator = "main:main"
