@@ -95,6 +95,10 @@ def build_display_pending_signature(
     physical_abnormal_counts: dict[str, int] | None = None,
     spell_abnormal_counts: dict[str, int] | None = None,
     enemy_defense: float = 100.0,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    imbalance_vulnerability_coeff: float = 1.3,
+    is_unbalanced: bool = False,
 ) -> tuple:
     """
     三列展示 + 快照/历史所用配装签名（不含搜索范围、固定配装等仅影响预估/搜索的字段）。
@@ -118,4 +122,8 @@ def build_display_pending_signature(
         tuple(sorted((physical_abnormal_counts or {}).items())),
         tuple(sorted((spell_abnormal_counts or {}).items())),
         float(enemy_defense),
+        float(enemy_resistance),
+        float(ignore_resistance),
+        float(imbalance_vulnerability_coeff),
+        bool(is_unbalanced),
     )

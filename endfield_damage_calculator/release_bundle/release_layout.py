@@ -14,9 +14,8 @@
 from __future__ import annotations
 
 import shutil
-from typing import Literal
-
 from pathlib import Path
+from typing import Literal
 
 from data.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 

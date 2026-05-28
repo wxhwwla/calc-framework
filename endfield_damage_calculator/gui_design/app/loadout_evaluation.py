@@ -120,6 +120,10 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         skill_counts=loadout.manual_counts,
         use_manual_counts=loadout.use_manual_multi_skill_counts,
         enemy_defense=loadout.enemy_defense,
+        enemy_resistance=loadout.enemy_resistance,
+        ignore_resistance=loadout.ignore_resistance,
+        imbalance_vulnerability_coeff=loadout.imbalance_vulnerability_coeff,
+        is_unbalanced=loadout.is_unbalanced,
         manual_buffs=loadout.manual_buffs if loadout.manual_buffs else None,
         **skill_kwargs,
     )

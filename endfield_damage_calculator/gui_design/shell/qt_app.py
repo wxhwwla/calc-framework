@@ -83,6 +83,10 @@ class QtDamageApp:
         all_weapons: 全量武器列表
         _current_calc_mode: 当前计算模式内部标识
         _enemy_defense: 当前敌人防御值
+        _enemy_resistance: 当前敌人抗性
+        _ignore_resistance: 无视抗性比例
+        _imbalance_vulnerability_coeff: 失衡易伤系数
+        _is_unbalanced: 是否处于失衡状态
         _equipment_catalog: 当前装备目录（按装备范围筛选）
         _search_cancel_token: 搜索取消令牌
         _search_estimated_total_seconds: 最近搜索预估耗时（秒）
@@ -104,6 +108,10 @@ class QtDamageApp:
 
         self._current_calc_mode: str = calculation_mode_from_label(DEFAULT_CALC_MODE_LABEL)
         self._enemy_defense: float = 100.0
+        self._enemy_resistance: float = 0.0
+        self._ignore_resistance: float = 0.0
+        self._imbalance_vulnerability_coeff: float = 1.3
+        self._is_unbalanced: bool = False
 
         self.app: QMainWindow = QMainWindow()
         self.app.setWindowTitle(f"终末地伤害计算小工具 v{get_exe_version()}")
@@ -238,29 +246,10 @@ class QtDamageApp:
         # 保存确认按钮默认样式
         self._confirm_btn_default_style = dock.confirm_btn.styleSheet()
 
-        # 敌人下拉
-        from data.enemy_params import list_plugin_enemy_choices, resolve_enemy_defense
-
-        enemy_choices = list_plugin_enemy_choices()
-        if enemy_choices and len(enemy_choices) > 1:
-            dock._enemy_combo.clear()
-            labels: list[str] = []
-            id_by_label: dict[str, str] = {}
-            for label, eid in enemy_choices:
-                labels.append(label)
-                id_by_label[label] = eid
-            dock._enemy_combo.addItems(labels)
-
-            def _on_enemy_change(text: str) -> None:
-                eid = id_by_label.get(text, "")
-                self._enemy_defense = resolve_enemy_defense(eid)
-
-            dock._enemy_combo.currentTextChanged.connect(_on_enemy_change)
-            dock._enemy_combo.setCurrentIndex(0)
-            initial_label = dock._enemy_combo.currentText()
-            if initial_label:
-                eid = id_by_label.get(initial_label, "")
-                self._enemy_defense = resolve_enemy_defense(eid)
+        # 敌人参数面板
+        dock._enemy_panel.enemy_params_changed.connect(self._on_enemy_params_changed)
+        initial_params = dock._enemy_panel.get_params()
+        self._apply_enemy_params(initial_params)
 
         # 装备 catalog + 固定配装槽
         from data.equipment_catalog import get_equipment_catalog
@@ -527,6 +516,10 @@ class QtDamageApp:
             extra_crit_rate=dock.read_extra_crit_rate(),
             extra_crit_damage=dock.read_extra_crit_damage(),
             enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
+            ignore_resistance=self._ignore_resistance,
+            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
+            is_unbalanced=self._is_unbalanced,
         )
         if loadout is None:
             return None
@@ -535,6 +528,20 @@ class QtDamageApp:
             equipment_catalog={},
             preview_weapon_candidates=(),
         )
+
+    # ── 敌方参数 ──────────────────────────────────
+
+    def _apply_enemy_params(self, params: dict) -> None:
+        """从 dict 更新所有敌方参数字段。"""
+        self._enemy_defense = float(params.get("enemy_defense", 100.0))
+        self._enemy_resistance = float(params.get("enemy_resistance", 0.0))
+        self._ignore_resistance = float(params.get("ignore_resistance", 0.0))
+        self._imbalance_vulnerability_coeff = float(params.get("imbalance_vulnerability_coeff", 1.3))
+        self._is_unbalanced = bool(params.get("is_unbalanced", False))
+
+    def _on_enemy_params_changed(self, params: dict) -> None:
+        """敌方参数面板变更时更新存储。"""
+        self._apply_enemy_params(params)
 
     def _on_confirm(self) -> None:
         """确认计算：同步求值缓存、刷新三列、记录历史 + 快照、更新搜索预估。"""
@@ -713,6 +720,10 @@ class QtDamageApp:
             extra_crit_rate=dock.read_extra_crit_rate(),
             extra_crit_damage=dock.read_extra_crit_damage(),
             enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
+            ignore_resistance=self._ignore_resistance,
+            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
+            is_unbalanced=self._is_unbalanced,
         )
         if loadout is None:
             QMessageBox.warning(self.app, "导出预设", "无法读取配装数据。")
@@ -813,6 +824,10 @@ class QtDamageApp:
                 use_manual_multi_skill_counts=False,
                 manual_counts={},
                 enemy_defense=self._enemy_defense,
+                enemy_resistance=self._enemy_resistance,
+                ignore_resistance=self._ignore_resistance,
+                imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
+                is_unbalanced=self._is_unbalanced,
             )
             if loadout is None:
                 raise ValueError("请先选择有效角色和武器")
@@ -824,6 +839,10 @@ class QtDamageApp:
             small_font=self.small_font,
             build_preset_fn=_build_preset,
             enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
+            ignore_resistance=self._ignore_resistance,
+            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
+            is_unbalanced=self._is_unbalanced,
             workers_choice=self.control_dock.search_workers_combo.currentText(),
         )
         dialog.exec()
@@ -900,6 +919,10 @@ class QtDamageApp:
             extra_crit_rate=dock.read_extra_crit_rate(),
             extra_crit_damage=dock.read_extra_crit_damage(),
             enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
+            ignore_resistance=self._ignore_resistance,
+            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
+            is_unbalanced=self._is_unbalanced,
         )
         if loadout is None:
             return None

@@ -159,6 +159,10 @@ class QtComparePresetsDialog(QDialog):
         small_font: QFont,
         build_preset_fn,
         enemy_defense: float = 100.0,
+        enemy_resistance: float = 0.0,
+        ignore_resistance: float = 0.0,
+        imbalance_vulnerability_coeff: float = 1.3,
+        is_unbalanced: bool = False,
         workers_choice: str = "自动",
     ) -> None:
         super().__init__(parent)

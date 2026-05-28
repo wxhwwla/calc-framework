@@ -68,6 +68,10 @@ class LoadoutState:
     extra_crit_rate: float = 0.0
     extra_crit_damage: float = 0.0
     enemy_defense: float = 100.0
+    enemy_resistance: float = 0.0
+    ignore_resistance: float = 0.0
+    imbalance_vulnerability_coeff: float = 1.3
+    is_unbalanced: bool = False
     weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
     manual_buffs: dict[str, list[dict[str, str | float]]] = field(default_factory=dict)
 
@@ -159,6 +163,10 @@ class LoadoutState:
             physical_abnormal_counts=self.physical_abnormal_counts,
             spell_abnormal_counts=self.spell_abnormal_counts,
             enemy_defense=self.enemy_defense,
+            enemy_resistance=self.enemy_resistance,
+            ignore_resistance=self.ignore_resistance,
+            imbalance_vulnerability_coeff=self.imbalance_vulnerability_coeff,
+            is_unbalanced=self.is_unbalanced,
         )
 
     def to_loadout_preset(self) -> LoadoutPreset:
@@ -259,6 +267,10 @@ def read_loadout_from_panels(
     extra_crit_rate: float = 0.0,
     extra_crit_damage: float = 0.0,
     enemy_defense: float,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    imbalance_vulnerability_coeff: float = 1.3,
+    is_unbalanced: bool = False,
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> LoadoutState | None:
     """从角色/武器面板读取配装快照；无效选择时返回 None。"""
@@ -304,6 +316,10 @@ def read_loadout_from_panels(
         extra_crit_rate=float(extra_crit_rate),
         extra_crit_damage=float(extra_crit_damage),
         enemy_defense=float(enemy_defense),
+        enemy_resistance=float(enemy_resistance),
+        ignore_resistance=float(ignore_resistance),
+        imbalance_vulnerability_coeff=float(imbalance_vulnerability_coeff),
+        is_unbalanced=bool(is_unbalanced),
         weapon_specials=_read_weapon_specials_from_panel(weapon_panel),
         manual_buffs=dict(manual_buffs or {}),
     )
@@ -367,5 +383,9 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Load
         extra_crit_rate=float(app._extra_crit_rate() if hasattr(app, "_extra_crit_rate") else 0.0),
         extra_crit_damage=float(app._extra_crit_damage() if hasattr(app, "_extra_crit_damage") else 0.0),
         enemy_defense=float(getattr(app, "_enemy_defense", 100.0)),
+        enemy_resistance=float(getattr(app, "_enemy_resistance", 0.0)),
+        ignore_resistance=float(getattr(app, "_ignore_resistance", 0.0)),
+        imbalance_vulnerability_coeff=float(getattr(app, "_imbalance_vulnerability_coeff", 1.3)),
+        is_unbalanced=bool(getattr(app, "_is_unbalanced", False)),
         manual_buffs=getattr(app, "_manual_buff_store", None),
     )

@@ -2,7 +2,6 @@
 """WeaponSkillSelection 接缝测试。"""
 
 import unittest
-from types import SimpleNamespace
 
 from calculation.skills.weapon_selection import WeaponSkillSelection
 

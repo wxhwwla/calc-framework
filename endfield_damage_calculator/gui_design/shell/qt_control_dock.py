@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui_design.controls.enemy import QtEnemyPanel
 from gui_design.search_ui.search_settings import (
     build_worker_option_labels,
     format_parallel_workers_help,
@@ -281,10 +282,8 @@ class QtControlDock(QWidget):
         ms_lay.setContentsMargins(0, 0, 0, 0)
         ms_lay.setSpacing(4)
 
-        self._enemy_combo = QComboBox()
-        self._enemy_combo.setStyleSheet(_COMBO_STYLE)
-        ms_lay.addWidget(_SmallLabel("插件敌人", self._small))
-        ms_lay.addWidget(self._enemy_combo)
+        self._enemy_panel = QtEnemyPanel(self._small)
+        ms_lay.addWidget(self._enemy_panel)
 
         def _make_tool_btn(text: str) -> QPushButton:
             b = self._make_btn(text, _SECONDARY_BTN_HEIGHT)

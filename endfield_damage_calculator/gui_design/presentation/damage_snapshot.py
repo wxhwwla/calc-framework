@@ -64,6 +64,10 @@ def _compute_weighted_with_buffs(
     scenarios: list[Any],
     final_attack: float,
     enemy_defense: float,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    imbalance_vulnerability_coeff: float = 1.3,
+    is_unbalanced: bool = False,
 ) -> tuple[float, dict[str, float], dict[str, float]]:
     """按次数加总，对每次出现查找 manual_buffs 注入。"""
     scenario_by_key = {s.scenario_key: s for s in scenarios}
@@ -88,6 +92,10 @@ def _compute_weighted_with_buffs(
                         damage_type=scenario.damage_type or "物理" if scenario else "物理",
                         skill_type=scenario.resolved_skill_type if scenario else "战技",
                         enemy_defense=enemy_defense,
+                        enemy_resistance=enemy_resistance,
+                        ignore_resistance=ignore_resistance,
+                        imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+                        is_unbalanced=is_unbalanced,
                     ),
                     crit_mode="non_crit",
                     manual_buffs=buffs,
@@ -141,6 +149,10 @@ def build_damage_snapshot(
     ws2_level: int = 1,
     ws2_stack: int = 1,
     enemy_defense: float = 100.0,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    imbalance_vulnerability_coeff: float = 1.3,
+    is_unbalanced: bool = False,
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> DamageSnapshot:
     """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。
@@ -208,6 +220,10 @@ def build_damage_snapshot(
                 damage_type=scenario.damage_type or "物理",
                 skill_type=scenario.resolved_skill_type,
                 enemy_defense=enemy_defense,
+                enemy_resistance=enemy_resistance,
+                ignore_resistance=ignore_resistance,
+                imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+                is_unbalanced=is_unbalanced,
             ),
             crit_mode="non_crit",
         )
@@ -228,7 +244,11 @@ def build_damage_snapshot(
         active_counts = counts
 
     weighted, segment_totals, skill_type_totals = _compute_weighted_with_buffs(
-        segment_damage, counts, manual_buffs, scenarios_list, final_attack, enemy_defense
+        segment_damage, counts, manual_buffs, scenarios_list, final_attack, enemy_defense,
+        enemy_resistance=enemy_resistance,
+        ignore_resistance=ignore_resistance,
+        imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+        is_unbalanced=is_unbalanced,
     )
 
     rotation_share: dict[str, float] = {}
@@ -250,6 +270,10 @@ def build_damage_snapshot(
                 damage_type=primary.damage_type or "物理",
                 skill_type=primary.resolved_skill_type,
                 enemy_defense=enemy_defense,
+                enemy_resistance=enemy_resistance,
+                ignore_resistance=ignore_resistance,
+                imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+                is_unbalanced=is_unbalanced,
             ),
             crit_mode="non_crit",
         )
