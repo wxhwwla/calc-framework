@@ -27,7 +27,7 @@ DONATION_TIERS: tuple[DonationTier, ...] = (
     DonationTier(
         amount=2,
         label="¥2.00",
-        description="能让作者喝两天的热水",
+        description="能让作者喝两天的热水（学校一热水瓶一块钱）",
     ),
     DonationTier(
         amount=6,
@@ -50,9 +50,9 @@ DONATION_TIERS: tuple[DonationTier, ...] = (
         description="这是让作者用 pro 更新一天代码的量",
     ),
     DonationTier(
-        amount=648,
-        label="¥648.00",
-        description="如果你真的很喜欢也很有钱的话，这个也不是不行",
+        amount=200,
+        label="¥200.00",
+        description="如果你真的很喜欢也很有钱的话，这个也不是不行（已经是上限啦）",
     ),
 )
 
@@ -61,7 +61,7 @@ DIALOG_SIZE = (480, 560)
 DIALOG_MINSIZE = (420, 500)
 
 DIALOG_TITLE = "自愿捐赠"
-DIALOG_HEADER = "🤝 请作者喝杯奶茶"
+DIALOG_HEADER = "🤝 请作者喝杯奶茶（实际上作者几乎不喝饮料）"
 
 DIALOG_INTRO = (
     "本工具完全免费开源。如果你觉得好用，欢迎自愿投喂，"

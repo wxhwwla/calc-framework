@@ -183,6 +183,12 @@ class QtDamageApp:
         sheet_layout = QVBoxLayout(self._compute_sheet_widget)
         sheet_layout.setContentsMargins(0, 0, 0, 0)
         sheet_layout.addWidget(QLabel("按「确认选择」加载乘区数据"))
+
+        from gui_design.presentation.total_damage_panel import TotalDamagePanel
+
+        self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
+        sheet_layout.addWidget(self._total_damage_panel)
+
         sheet_scroll = QScrollArea()
         sheet_scroll.setWidgetResizable(True)
         sheet_scroll.setWidget(self._compute_sheet_widget)
@@ -192,11 +198,6 @@ class QtDamageApp:
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(6)
         right_layout.addWidget(sheet_scroll, stretch=1)
-
-        from gui_design.presentation.total_damage_panel import TotalDamagePanel
-
-        self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
-        right_layout.addWidget(self._total_damage_panel)
 
         content_split.addWidget(right_wrapper)
         content_split.setSizes([400, 400])
@@ -653,13 +654,20 @@ class QtDamageApp:
 
             sheet_layout = self._compute_sheet_widget.layout()
             assert isinstance(sheet_layout, QVBoxLayout)
+
+            total_panel = self._total_damage_panel
+            sheet_layout.removeWidget(total_panel)
+
             while sheet_layout.count():
                 item = sheet_layout.takeAt(0)
                 w = item.widget()
                 if w:
                     w.deleteLater()
+
             sheet_layout.addWidget(new_sheet.widget, stretch=1)
             new_sheet.evaluate()
+
+            sheet_layout.addWidget(total_panel)
 
             if old is not None:
                 old.deleteLater()

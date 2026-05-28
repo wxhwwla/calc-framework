@@ -160,7 +160,7 @@ def build_release(target: BuildTarget) -> Path:
             "--hidden-import",
             "matplotlib.backends.backend_tkagg",
         ]
-    else:
+    elif target == "designer":
         excludes = [
             "tests",
             "scripts",
@@ -168,6 +168,21 @@ def build_release(target: BuildTarget) -> Path:
             "gui_design",
             "legal",
             "search_output",
+            "add_character",
+            "add_weapon",
+            "test_",
+        ]
+        collect_args = []
+    else:
+        excludes = [
+            "tests",
+            "scripts",
+            "release_bundle",
+            "gui_design",
+            "designer",
+            "legal",
+            "search_output",
+            "character_weapon_equipment",
             "add_character",
             "add_weapon",
             "test_",
@@ -229,9 +244,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="终末地双目标打包工具")
     parser.add_argument(
         "--target",
-        choices=["calculator", "designer"],
+        choices=["calculator", "designer", "layout-editor"],
         default="calculator",
-        help="打包目标：calculator（计算器，默认）| designer（设计器）",
+        help="打包目标：calculator（计算器，默认）| designer（设计器）| layout-editor（布局编辑器）",
     )
     args = parser.parse_args()
     target: BuildTarget = args.target
