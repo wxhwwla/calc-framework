@@ -76,6 +76,22 @@
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
 | **项目依赖** | 运行时：`customtkinter`、`PySide6`（双后端；默认 PySide6，`ENDFIELD_UI_BACKEND=ctk` 切回 CTk） + `matplotlib`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
 
+## 标准数据录入（四层数据契约）
+
+| 术语 | 含义 |
+|------|------|
+| **四层数据契约** | 从实体→属性→技能→数值的四层嵌套结构，由 `docs/adr/0005-data-schema-design.md` 定义，`tools/data_pipeline/schema.py` 实现 TypedDict |
+| **ETL 工具链** | `tools/data_pipeline/`：CSV/旧JSON → schema 校验 → 标准 JSON 输出；CLI `python -m tools.data_pipeline.cli` |
+| **EntitySchema（L1）** | 实体层。必填 `名称`，可选 `_entity_type`（character/weapon/equipment/mount） |
+| **属性筛选层（L2）** | 开发者自由平铺的筛选字段（星级、类型、属性等），框架不约束 |
+| **SkillSchema（L3）** | 技能层。`名称`（即筛选 key）、`标签`（主动/被动）、`百分比`（倍率是否 ÷100）、`技能类型`（可选默认类型）、`段[]` |
+| **SegmentSchema（L4）** | 数值层。`倍率`（int[]）、`伤害类型`（可选，覆盖技能级类型） |
+| **百分比标记** | `百分比: true` 表示倍率整数需 ÷100 再用（如 169 → 1.69）；`false` 表示直接使用原始值 |
+| **主动 / 被动** | 技能标签。`"主动"` = 倍率类技能（角色的战技/连携技）；`"被动"` = 加成型技能（武器的主能力值+） |
+| **伤害类型默认链** | 适配器级默认 → 技能级 `技能类型` → 段级 `伤害类型`；空则继承上层 |
+| **迁移器 from_legacy_endfield** | `tools/data_pipeline/transformers/from_legacy_endfield.py`：将旧 `characters.json`/`weapons.json` 自动转换为标准 EntitySchema |
+| **校验器 — schema_check** | `tools/data_pipeline/validators/schema_check.py`：检查必填字段、标签合法性、段完整性 |
+
 ## 通用计算框架（calc-framework）
 
 | 术语 | 含义 |
