@@ -56,6 +56,10 @@ def main() -> None:
     preload_thread = threading.Thread(target=preload_data, daemon=True)
     preload_thread.start()
 
+    # 初始化框架日志系统（环境变量 CALC_FRAMEWORK_LOG_LEVEL 控制级别）
+    from calc_framework.logging import setup_logging as fw_setup_logging
+    fw_setup_logging()
+
     if not getattr(sys, "frozen", False):
         from utils.optional_deps import ensure_runtime_dependencies
 

@@ -35,6 +35,9 @@ from gui_design.shared.display_view.qt_columns import QtAttributeColumns
 from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
 from please_read_me import get_exe_version
+from calc_framework.logging import get_logger
+
+_qt_logger = get_logger("gui.qt_app")
 
 # ── 框架 ComputeSheet ──────────────────────────
 import sys as _sys
@@ -556,17 +559,13 @@ class QtDamageApp:
                     HistoryEntry(label=label, summary=label, preset_snapshot=preset.to_dict())
                 )
             except Exception as exc:
-                import logging
-
-                logging.getLogger(__name__).warning("历史记录失败: %s", exc)
+                _qt_logger.warning("历史记录失败: %s", exc)
             try:
                 from gui_design.controls.enhancement.dialogs import refresh_damage_snapshot
 
                 refresh_damage_snapshot(self, loadout=lds)
             except Exception as exc:
-                import logging
-
-                logging.getLogger(__name__).warning("快照刷新失败: %s", exc)
+                _qt_logger.warning("快照刷新失败: %s", exc)
         finally:
             self._confirm_in_progress = False
 
@@ -583,9 +582,7 @@ class QtDamageApp:
         try:
             sync_evaluation_cache(request.loadout)
         except Exception as exc:
-            import logging
-
-            logging.getLogger(__name__).warning("求值缓存同步失败: %s", exc)
+            _qt_logger.warning("求值缓存同步失败: %s", exc)
 
     def _refresh_compute_sheet(self) -> None:
         """用当前角色/武器选择重建并刷新 ComputeSheet。"""
@@ -635,9 +632,7 @@ class QtDamageApp:
             if old is not None:
                 old.deleteLater()
         except Exception as exc:
-            import logging
-
-            logging.getLogger(__name__).warning("ComputeSheet 刷新失败: %s", exc)
+            _qt_logger.warning("ComputeSheet 刷新失败: %s", exc)
 
     # ── 手动 Buff ─────────────────────────────
 

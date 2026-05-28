@@ -8,6 +8,9 @@ import math
 from typing import Any
 
 from .errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
+from calc_framework.logging import get_logger
+
+logger = get_logger(__name__)
 
 _SAFE_BUILTINS: dict[str, Any] = {
     "floor": math.floor,
@@ -39,11 +42,13 @@ def _check_node(node: ast.AST) -> None:
     if tp is ast.Call:
         func_node = node.func
         if not isinstance(func_node, ast.Name):
+            logger.warning("安全违规: 尝试调用非命名函数 %s", type(func_node).__name__)
             raise DAGSecurityError(
                 f"不允许调用非命名函数: {type(func_node).__name__}",
                 offending_node=type(func_node).__name__,
             )
         if func_node.id not in _SAFE_BUILTINS:
+            logger.warning("安全违规: 未授权的函数调用 %s", func_node.id)
             raise DAGSecurityError(
                 f"未授权的函数调用: {func_node.id}",
                 offending_node=f"Call:{func_node.id}",
@@ -53,6 +58,7 @@ def _check_node(node: ast.AST) -> None:
         return
 
     if tp not in _SAFE_NODE_TYPES:
+        logger.warning("安全违规: 禁止的语法 %s", tp.__name__)
         raise DAGSecurityError(
             f"表达式使用了禁止的语法: {tp.__name__}",
             offending_node=tp.__name__,
@@ -60,6 +66,7 @@ def _check_node(node: ast.AST) -> None:
 
     if tp is ast.UnaryOp:
         if type(node.op) not in _SAFE_UNARY_OPS:
+            logger.warning("安全违规: 禁止的一元运算符 %s", type(node.op).__name__)
             raise DAGSecurityError(
                 f"禁止的一元运算符: {type(node.op).__name__}",
                 offending_node=type(node.op).__name__,
@@ -67,6 +74,7 @@ def _check_node(node: ast.AST) -> None:
         _check_node(node.operand)
     elif tp is ast.BinOp:
         if type(node.op) not in _SAFE_BIN_OPS:
+            logger.warning("安全违规: 禁止的二元运算符 %s", type(node.op).__name__)
             raise DAGSecurityError(
                 f"禁止的二元运算符: {type(node.op).__name__}",
                 offending_node=type(node.op).__name__,
@@ -131,6 +139,7 @@ def parse_expr(expr_str: str) -> ast.Expression:
     try:
         tree = ast.parse(expr_str, mode="eval")
     except SyntaxError as e:
+        logger.warning("表达式语法错误: %s — %r", e, expr_str[:80])
         raise DAGCompileError(f"表达式语法错误: {e}")
     _check_node(tree)
     return tree

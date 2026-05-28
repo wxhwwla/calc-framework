@@ -23,6 +23,9 @@ from .schema import (
     VarNode,
 )
 from .subgraph import expand_subgraphs
+from calc_framework.logging import get_logger
+
+logger = get_logger(__name__)
 
 _BINARY_OPS: dict[str, Any] = {
     "+": op.add,
@@ -80,8 +83,10 @@ def topological_sort(graph: DAGGraph) -> list[str]:
 
     if len(order) != len(graph.nodes):
         remaining = [nid for nid, deg in in_degree.items() if deg > 0]
+        logger.error("检测到循环依赖: %s", remaining)
         raise DAGCycleError(f"循环依赖: {remaining}")
 
+    logger.debug("拓扑排序完成: %d 个节点", len(order))
     return order
 
 
@@ -105,6 +110,7 @@ def _eval_single_node(node: NodeType, values: dict[str, float], context: dict[st
     if isinstance(node, VarNode):
         val = _resolve_path(context, node.path)
         if val is None:
+            logger.warning("变量 %s 未在上下文中找到（将使用默认值）", node.path)
             raise DAGRuntimeError(f"变量 {node.path} 未在上下文或默认值中找到")
         return float(val)
     if isinstance(node, UserInputNode):
@@ -124,6 +130,7 @@ def _eval_single_node(node: NodeType, values: dict[str, float], context: dict[st
         try:
             return float(fn(lhs, rhs))
         except ZeroDivisionError:
+            logger.warning("节点 %s 除零错误 (lhs=%s, rhs=%s)", node.label or node.op, lhs, rhs)
             raise DAGRuntimeError(f"节点 {node.label or node.op} 除零错误")
     if isinstance(node, ConditionNode):
         cond_val = values[node.cond]
@@ -157,20 +164,30 @@ def evaluate_graph(graph: DAGGraph, context: dict[str, Any]) -> DAGResult:
     数据上下文按变量声明的 source 分区，例如:
         context = {"character": {"力量": 100}, "weapon": {"基础攻击": 50}}
     """
+    logger.info("开始 DAG 求值: %d 个变量, %d 个输出",
+                 len(graph.variables), len(graph.outputs))
     context = _apply_defaults(graph, context)
     expanded = expand_subgraphs(graph)
     order = topological_sort(expanded)
     values: dict[str, float] = {}
     for nid in order:
         node = expanded.nodes[nid]
-        values[nid] = _eval_single_node(node, values, context)
+        try:
+            values[nid] = _eval_single_node(node, values, context)
+        except DAGRuntimeError:
+            logger.error("节点 %s (%s) 求值失败", nid, type(node).__name__)
+            raise
 
     outputs: dict[str, float] = {}
     for oid, odef in expanded.outputs.items():
         ref = odef.node
         if ref in values:
             outputs[oid] = values[ref]
+        else:
+            logger.warning("输出 %s 引用的节点 %s 无求值结果", oid, ref)
 
+    logger.info("DAG 求值完成: %d 个输出, %d 个节点执行",
+                 len(outputs), len(order))
     return DAGResult(
         outputs=outputs,
         node_values=values,

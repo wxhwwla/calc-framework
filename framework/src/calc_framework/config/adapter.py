@@ -10,6 +10,9 @@ from typing import Any
 
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.service import DAGService
+from calc_framework.logging import get_logger
+
+logger = get_logger(__name__)
 
 _SUPPORTED_SCHEMA_VERSIONS = frozenset({"dag-v1"})
 
@@ -38,6 +41,10 @@ class AdapterPackage:
         self._meta: dict[str, Any] = self._load_meta()
         self._validate_meta()
         self._dag_service: DAGService | None = None
+        logger.info("适配包加载成功: %s (schema=%s, version=%s)",
+                      self._adapter_dir.name,
+                      self._meta.get("schema_version", "?"),
+                      self._meta.get("version", "?"))
 
     @property
     def meta(self) -> dict[str, Any]:

@@ -16,6 +16,9 @@ from .schema import (
     UnaryNode,
     VarNode,
 )
+from calc_framework.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _prefixed_node(node: NodeType, prefix: str) -> NodeType:
@@ -61,6 +64,8 @@ def _apply_ref_map_to_node(node: NodeType, ref_map: dict[str, str]) -> NodeType:
 
 
 def expand_subgraphs(graph: DAGGraph) -> DAGGraph:
+    logger.debug("开始子图展开: %d 个节点, %d 个子图",
+                  len(graph.nodes), len(graph.subgraphs))
     expanded = DAGGraph(
         schema_version=graph.schema_version,
         name=graph.name,
@@ -111,6 +116,8 @@ def expand_subgraphs(graph: DAGGraph) -> DAGGraph:
         _apply_ref_map_to_node(node, ref_map)
 
     _finalize_outputs(expanded, graph, ref_map)
+    logger.debug("子图展开完成: %d 个节点, %d 个输出",
+                  len(expanded.nodes), len(expanded.outputs))
     return expanded
 
 

@@ -149,19 +149,20 @@
 ## 7. 工程化 / 稳定性
 
 **用户评估：10%**  
-**修正后：25%**
+**修正后：40%**
 
 ### 已完成（代码实况）
 
 - 参数校验：DAG schema 层有 `DAGCompileError`、`_validate_references`、拓扑排序检测循环依赖
 - 运行时异常：`DAGRuntimeError`、`LayoutValidationError`、`AdapterError` 层次清晰
 - 测试覆盖率：框架 206 测试 + 终末地包 553 测试
+- **日志系统**：`calc_framework.logging` 已创建（2026-05-28），统一 `setup_logging()` + `get_logger()`，支持环境变量级别/文件配置、RotatingFileHandler。已集成到 engine/sandbox/subgraph/adapter/ComputeSheet 及部分 endfield 模块（data/loader, qt_app）
 
 ### 真实缺口
 
 | 缺口 | 严重程度 | 说明 |
 |------|---------|------|
-| 无日志系统 | 🔴 高 | 没有任何 `logging` 调用，调试全靠 print/异常 |
+| ~~无日志系统~~ | ✅ **已解决** | `calc_framework/logging.py` 已实现 |
 | 无调试模式（分步/中间值可视化） | 🟡 中 | DAGResult 有 node_values 但无可视化展示 |
 | 无框架使用文档 | 🟡 中 | ADR 作为架构文档存在，但无入门指南/API 参考 |
 | 无版本兼容协议 | 🟢 低 | schema_version 声明了但无迁移代码 |
@@ -177,24 +178,29 @@
 | 接口/适配层 | 20% | **55%** | DataContextLoader + AdapterPackage + ETL 已存在 |
 | UI 渲染层 | 40% | **55%** | ComputeSheet + infer_control + theme.json 已存在 |
 | 扩展功能 | 0% | **0%** | 完全空白，属实 |
-| 工程化/稳定性 | 10% | **25%** | 异常体系 + 测试存在，缺日志和文档 |
+| 工程化/稳定性 | 10% | **40%** | 异常体系 + 测试 + 日志系统已存在，缺调试/文档 |
 
 ---
 
 ## 9. 后续开发优先级（基于真实缺口）
 
+### ✅ 已完成（2026-05-28）
+
+| 任务 | 关联缺口 | 说明 |
+|------|---------|------|
+| 日志系统 | 工程 #1 | `calc_framework/logging.py` — 统一 `setup_logging()` + `get_logger()`，环境变量配置，RotatingFileHandler |
+
 ### P0（阻碍依赖）
 
 | 任务 | 关联缺口 | 预估 |
 |------|---------|------|
-| ComputeSheet 接入主线 GUI | UI #1 — Phase 2 | 正在进行 |
+| ~~ComputeSheet 接入主线 GUI~~ | UI #1 — Phase 2 | **已完成** |
 
 ### P1（核心能力）
 
 | 任务 | 关联缺口 | 路径 |
 |------|---------|------|
 | 自定义算法扩展（插件函数注册） | 引擎 #1 | `dag/sandbox.py` 增加函数注册表 |
-| 日志系统 | 工程 #1 | `framework/src/calc_framework/logging.py` |
 | 多游戏切换 UI | 扩展 #3 | `tools/designer/` 增加游戏选择器 |
 | 框架入门文档 | 工程 #4 | `framework/README.md` + `docs/quickstart.md` |
 

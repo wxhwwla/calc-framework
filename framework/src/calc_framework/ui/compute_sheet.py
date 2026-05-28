@@ -29,6 +29,9 @@ from calc_framework.dag.service import DAGService
 from calc_framework.ui.controls import ControlSpec, infer_control
 from calc_framework.ui.format import format_node_value
 from calc_framework.ui.layout import Layout, Section
+from calc_framework.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _var_to_dict(var: DAGVariable | dict[str, Any]) -> dict[str, Any]:
@@ -77,6 +80,8 @@ class ComputeSheet(QObject):
         return self._widget
 
     def evaluate(self) -> DAGResult:
+        logger.debug("ComputeSheet 求值开始: %d 个输出, %d 个变量",
+                      len(self._dag_service.dag.outputs), len(self._variables))
         context = dict(self._base_context)
 
         for path, var in self._variables.items():
