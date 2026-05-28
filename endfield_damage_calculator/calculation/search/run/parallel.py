@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""有界并行的搜索任务执行（不一次性提交全部 future）。"""
+"""有界并行的搜索任务执行（不一次性提交全部 future）。
+
+保留原始增量算法，组件（TopNTracker / SearchCancelToken）来自框架。
+"""
 
 from __future__ import annotations
 
@@ -8,9 +11,7 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from typing import TypeVar
 
-from calculation.core.top_n_tracker import TopNTracker
-
-from .cancel import SearchCancelToken
+from calc_framework.search import SearchCancelToken, TopNTracker
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -35,7 +36,6 @@ def run_bounded_parallel(
     """
     token = cancel_token or SearchCancelToken()
     workers = max(1, int(max_workers))
-    # 在途任务约为线程数的数倍，平衡吞吐与内存
     max_inflight = max(workers * 4, 8)
     tracker: TopNTracker[R] | None = None
     all_results: list[R] | None = None

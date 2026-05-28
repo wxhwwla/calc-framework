@@ -17,6 +17,8 @@ from calculation.loadout.optimizer import (
     WeaponCandidate,
 )
 
+from calc_framework.search import SearchResult
+
 from ..evaluate.context import SearchEvalContext
 from ..persist.store import execute_search_with_resume
 from .cancel import SearchCancelToken
@@ -32,6 +34,19 @@ class SearchSessionResult:
     cancelled: bool
     warnings: tuple[str, ...]
     skipped_preprocessed: int = 0
+
+    def to_search_result(self) -> SearchResult:
+        """转换为框架通用 SearchResult。"""
+        return SearchResult(
+            items=self.top_results,
+            total_evaluated=self.processed_combinations,
+            total_candidates=self.total_combinations,
+            metadata={
+                "cancelled": self.cancelled,
+                "warnings": self.warnings,
+                "skipped_preprocessed": self.skipped_preprocessed,
+            },
+        )
 
 
 def run_search_session(

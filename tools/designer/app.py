@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from calc_framework.config.manager import AdapterManager
+
 from tools.designer.data_editor.panel import DataEditorPanel
 from tools.designer.layout_editor.canvas import LayoutCanvasPanel
 from tools.designer.theme_editor.panel import ThemePanel
@@ -32,6 +34,8 @@ class DesignerWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("配置包设计器")
         self.resize(1200, 800)
+
+        self._adapter_mgr = AdapterManager()
 
         self._tabs = QTabWidget()
         self.setCentralWidget(self._tabs)
@@ -54,6 +58,8 @@ class DesignerWindow(QMainWindow):
         self._update_status()
 
     def _on_tab_changed(self, index: int) -> None:
+        if index == 1:
+            self._layout_panel.populate_adapters(self._adapter_mgr.names)
         self._update_status()
 
     def _update_status(self) -> None:
