@@ -209,12 +209,7 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 6 处文件
+# TITLE: 修改 endfield_damage_calculator/please_read_me.py
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 变更 framework/adapters/fps/
-# - 变更 framework/adapters/moba/
-# - 修改 framework/tests/adapters/test_moba_fps.py
 # --- END UPLOAD_SUMMARY ---
