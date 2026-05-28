@@ -67,7 +67,8 @@
 | **UI 偏好** | `<应用根>/ui_preferences.json`：启动页策略（总是计算页 / 记住上次）、`last_page` |
 | **预设 ui_state** | 配装 JSON 可选字段：折叠区展开态、`current_page`（计算页/高级页） |
 | **配装预设 v2** | `schema: endfield_loadout_preset_v2`；含 `weapon_normal_levels`、`weapon_special_states[{level, stack}]`；v1 与旧 `ws_*` 导入仍兼容 |
-| **上传流程** | 根目录 `github_upload_module.py`；`_VERSION` 自动 bump；可选提交签名；说明见 `please_read_me.UPLOAD_WORKFLOW` |
+| **Web 版框架** | `web/frontend/`（React + TypeScript + Vite + MUI v6 + Zustand + React Flow）+ `web/backend/`（FastAPI）。前端接入 DAG 引擎 API，支持适配器选择、参数表单、结果展示、DAG 可视化 |
+| **Upload Script** | `github_upload_module.py`：版本 bump + commit + push（可选 `--minor` / `--no-bump` / `--tag`）。中途终止会残留 `UPLOAD_SUMMARY` 块和 git stash，需手动清理 |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
 | **仓库维护工具** | `tools/`：仓库级脚本（BWIKI 侦察、审计等），与包内 `endfield_damage_calculator/scripts/` 区分 |
@@ -119,6 +120,11 @@
 | **搜索/枚举引擎** | `framework/src/calc_framework/search/`，通用搜索基础设施：TopNTracker / SearchCancelToken / run_parallel / SearchResult |
 | **插件系统** | `framework/src/calc_framework/plugin/`，BasePlugin + PluginRegistry，3 内置插件（暴击/闪避/距离衰减），可注册变量/模板/函数 |
 | **发布/分享工具** | `framework/src/calc_framework/publish/`，JSON Schema 校验 + catalog HTML 生成器 |
+| **MOBA 适配器** | `framework/adapters/moba/`：通用 MOBA 伤害公式，AD/AP 加成 → 护甲/魔抗减伤 → 暴击判定 → 冷却缩减 → 攻速；含 `percent_of()` / `armor_mult()` 自定义函数 |
+| **FPS 适配器** | `framework/adapters/fps/`：通用 FPS 武器伤害公式，基础伤害 × 距离衰减 × 部位倍率 × 穿透减伤 → 实际伤害；含 `le()` / `ge()` / `clamp()` / `lerp()` 自定义函数 |
+| **DAGService** | DAG 求值服务的统一入口，通过 `evaluate(context)` 求值，返回 `DAGResult` |
+| **DAGResult** | 包含 `outputs`（dict[str, float]）、`node_values`、`execution_order` 的数据类 |
+| **注册函数** | 通过 `DAGService.register_function()` 注册自定义函数到沙箱，供 `expr` 节点调用 |
 | **theme.json** | 主题定义，`ui/theme.json`：font（族/大小/粗细）、colors（primary/background/text 等）、spacing |
 | **布局编辑器画布** | `tools/designer/layout_editor/canvas.py`：QGraphicsView 网格画布，支持网格列数/间距/吸附配置 |
 | **碰撞检测** | `tools/designer/layout_editor/collision.py`：QGraphicsItem 矩形重叠实时检测 |
@@ -145,3 +151,9 @@
 | **AdapterPackage** | `calc_framework.config.adapter.AdapterPackage` — 从适配器目录加载 DAG + layout + context loader，零自定义缓存 |
 | **DAG 适配器 (adapter.py)** | `endfield_damage_calculator/.../dag/adapter.py` — 将 DAG 引擎接入 zone_snapshot 计算链的桥接模块 |
 | **控制规格** | `ControlSpec` — 声明输入控件的类型：`QLineEdit` / `QSpinBox` / `QDoubleSpinBox` / `QSlider` / `QCheckBox` / `QComboBox`8，带 min/max/step/choices/default 元数据 |
+| **框架测试** | `[框架]` `python -m pytest tests/ -q` → **374 passed**（含 MOBA 8 + FPS 11 + CardRPG 21 适配器集成测试） |
+| **包端测试** | `[包]` `python -m pytest tests/ -q` → **553 passed / 1 skipped / 9 subtests passed** |
+| **DAG 沙箱限制** | `expr` 节点使用 AST 沙箱，禁止 `IfExp`（Python 三元表达式），只支持基本算术运算和已注册函数调用。条件分支用 `condition` 节点 |
+| **`VarNode` 路径解析** | VarNode 通过 `_resolve_path(context, path)` 按点分隔路径在上下文中取值，需要嵌套字典结构 |
+| **`AttributeSchema`** | 属性声明 Schema，有效 `source` 只允许 `character/weapon/equipment/enemy/computed`，不支持 `user_input` |
+| **`condition` 节点** | DAG 引擎内置条件分支节点，根据 `cond` 节点的真假值选择 `true_val` 或 `false_val` |
