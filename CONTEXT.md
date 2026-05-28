@@ -113,6 +113,8 @@
 | **商业双授权** | GPL（个人/非商用免费）+ 商业授权（企业/团队需购买） |
 | **社区配置市场** | Web 平台，用户上传/下载/评分 `.calcpack` 适配包，内核 100% 本地计算 |
 | **ECA** | Entity-Context-Action 三层设计模式（可选），用于表达任意游戏战斗规则 |
+| **属性声明 Schema** | `attr_schema.json`，适配器声明自己的属性结构（名称/类型/来源/默认值），框架据此自动构建 DataContext |
+| **CardRPG 适配器** | `framework/adapters/card_rpg/`，经典攻击-防御公式的卡牌RPG示例适配器，证明框架跨品类通用 |
 | **theme.json** | 主题定义，`ui/theme.json`：font（族/大小/粗细）、colors（primary/background/text 等）、spacing |
 | **布局编辑器画布** | `tools/designer/layout_editor/canvas.py`：QGraphicsView 网格画布，支持网格列数/间距/吸附配置 |
 | **碰撞检测** | `tools/designer/layout_editor/collision.py`：QGraphicsItem 矩形重叠实时检测 |

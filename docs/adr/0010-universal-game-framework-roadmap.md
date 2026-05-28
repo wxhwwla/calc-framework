@@ -625,12 +625,54 @@ DAG JSON 中通过 `"template": "defense_reduction"` 引用。
 | 🔴 **核心级** 公式配置化 | 🟢 **已完成 85%** | DAG JSON 已配置，缺标准属性声明 |
 | 🔴 **愿景级** GUI 配置化 | 🟡 **~60%** | ComputeSheet 支持，实战未启用 input 区段 |
 
-### 实际最急需的事（修正后）
+### 实际最急需的事（当前已全部完成）
 
-1. **通用属性 Schema**（Step 1）— 今天推进
-2. **建第二个适配器**（Step 2）— 本周推进
-3. 插件模板库（Step 3）— 下周推进
+1. ✅ **通用属性 Schema**（Step 1）— **已完成**（2026-05-28）
+2. ✅ **建第二个适配器（卡牌RPG）**（Step 2）— **已完成**（2026-05-28）
+3. **插件模板库**（Step 3）— ⏳ 待推进
 
 ### 结论
 
 审查者的**方向完全正确**——框架必须通用化、配置化、可分享。但其分析建立在对代码现状的**错误假设**上。代码的真实完成度约 **60%**，最难的核心引擎已通用，剩余工作是 **配置层 + 模板层 + 生态层** 的扩展，AI 辅助下 3~5 天可完成核心抽象。
+
+---
+
+## 附录 E：Step 1+2 完成记录（2026-05-28）
+
+### Step 1 — 通用属性声明 Schema
+
+**文件**：`framework/src/calc_framework/data/attr_schema.py`
+
+为层3（通用数据模型）补齐了缺失的关键组件：
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| AttributeDecl | `attr_schema.py` | 单属性声明（name/type/source/default/description） |
+| AttributeSchema | `attr_schema.py` | 多属性集合，支持 from_file/from_dict/resolve/validate |
+| 终末地声明 | `adapters/endfield/attr_schema.json` | 14 个属性（含默认值） |
+| 单元测试 | `tests/data/test_attr_schema.py` | 27 个测试 |
+
+**效果**：适配器现在可以用纯 JSON 声明自己的字段结构，框架自动构建 DataContext 并校验。
+
+### Step 2 — 卡牌RPG 适配器（跨品类验证）
+
+**文件**：`framework/adapters/card_rpg/`
+
+| 组件 | 说明 |
+|------|------|
+| `meta.json` | 适配器元信息 + attr_schema + functions 引用 |
+| `attr_schema.json` | 7 个属性（ATK/DEF/HP/crit_rate/crit_dmg/ATK_bonus/enemy.DEF） |
+| `card_rpg.dag.json` | DAG 公式：`max((ATK + ATK_bonus) × skill_mult - DEF × 0.5, 0) × crit_mult` |
+| `loader.py` | CardRPGLoader（DataContextLoader 实现，支持 attr_schema 驱动） |
+| `functions.py` | clamp 自定义函数 |
+| `ui/layout.json` | ComputeSheet 排版（inputs + outputs 双区段） |
+| 集成测试 | `tests/adapters/test_card_rpg_adapter.py` — 21 个测试 |
+
+**验证结论**：不动一行框架核心代码，纯写 JSON + 一个 loader 就接入了完全不同的游戏品类（攻击-防御公式 vs 终末地 15 乘区）。框架五层架构通用性得到实际验证。
+
+### 测试结果
+
+| 套件 | 之前 | 之后 |
+|------|------|------|
+| 框架测试 | 241 passed | **262 passed**（+21） |
+| 终末地包测试 | 540 passed | 540 passed（无回归） |

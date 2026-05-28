@@ -155,6 +155,51 @@ framework/adapters/my-game/
 
 ---
 
+## 第三步 B（可选）：属性声明 Schema
+
+框架支持适配器用 `attr_schema.json` 声明自己的属性结构，由框架自动构建 DataContext 并校验数据完整性。
+
+```json
+{
+  "attributes": [
+    { "name": "ATK", "type": "float", "source": "character", "description": "角色攻击力" },
+    { "name": "DEF", "type": "float", "source": "enemy", "default": 50, "description": "敌方防御" },
+    { "name": "crit_rate", "type": "float", "source": "character", "default": 0.05 }
+  ]
+}
+```
+
+在 `meta.json` 中引用：
+
+```json
+{
+  "name": "我的游戏",
+  "entry_dag": "dag/main.dag.json",
+  "attr_schema": "attr_schema.json"
+}
+```
+
+然后在 Python 中使用：
+
+```python
+from calc_framework.data.attr_schema import AttributeSchema
+
+schema = AttributeSchema.from_file("attr_schema.json")
+
+# 自动构建 DataContext（含类型转换和默认值回退）
+ctx = schema.resolve({
+    "character": {"ATK": 100, "crit_rate": 0.05},
+    "enemy": {"DEF": 60},
+})
+
+# 校验数据完整性
+errors = schema.validate(ctx)  # 空列表 = 校验通过
+```
+
+支持的属性类型：`float`、`int`、`bool`、`str`、`percent`。
+
+---
+
 ## 第四步：编写布局文件
 
 `ui/layout.json` — 告诉 ComputeSheet 哪些输出要展示：
@@ -254,7 +299,9 @@ python main.py
 
 ---
 
-## 完整接入示例：终末地适配器
+## 完整接入示例
+
+### 示例 1：终末地适配器（15 乘区）
 
 参考 `framework/adapters/endfield/`：
 
@@ -263,10 +310,10 @@ python main.py
 | `meta.json` | 终末地适配器元信息 |
 | `../../src/calc_framework/configs/endfield_full.dag.json` | 15 乘区 DAG 定义（5 子图、58 节点、18 输出） |
 | `ui/layout.json` | 乘区展示排版 |
+| `attr_schema.json` | 属性声明（14 个属性） |
 | `endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py` | `EndfieldContextLoader` 实现 |
 
 ```python
-# 终末地调用方式
 from calculation.multiplicative_zones.dag.loader import EndfieldContextLoader
 
 loader = EndfieldContextLoader()
@@ -277,6 +324,33 @@ context = loader.build_context(
     weapon_level=80,
     trust_level=0,
 )
+```
+
+### 示例 2：卡牌RPG适配器（攻击-防御公式，验证跨品类通用性）
+
+参考 `framework/adapters/card_rpg/`：
+
+| 文件 | 用途 |
+|------|------|
+| `meta.json` | 适配器元信息（含 attr_schema + functions 引用） |
+| `attr_schema.json` | 属性声明（ATK/DEF/crit_rate/crit_dmg/ATK_bonus） |
+| `card_rpg.dag.json` | DAG 公式（`max(ATK × skill - DEF × 0.5, 0) × crit`） |
+| `loader.py` | CardRPGLoader 实现（可选——无 loader 也可直接传入 raw dict） |
+| `ui/layout.json` | ComputeSheet 排版（含 inputs + outputs 双区段） |
+
+```python
+from calc_framework.config.adapter import AdapterPackage
+
+pkg = AdapterPackage("framework/adapters/card_rpg")
+ctx = {
+    "character": {"ATK": 100, "DEF": 50, "crit_rate": 0.05, "crit_dmg": 0.5},
+    "weapon": {"ATK_bonus": 15},
+    "enemy": {"DEF": 60},
+    "user_input": {"skill_mult": 1.0, "is_crit": True},
+}
+result = pkg.dag_service.evaluate(ctx)
+print(result.outputs)
+# 不动一行框架代码，接入了完全不同的游戏品类
 ```
 
 ---

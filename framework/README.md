@@ -83,6 +83,7 @@ print(result.outputs)
 | `context.py` | DataContext TypedDict + make_context 工厂 |
 | `loader.py` | DataContextLoader 抽象基类 |
 | `schema.py` | 四层数据契约（EntitySchema / SkillSchema / SegmentSchema） |
+| `attr_schema.py` | 属性声明 Schema — 适配器声明字段结构，框架自动构建 DataContext（resolve/validate） |
 
 ### UI 层 — `calc_framework.ui`
 
@@ -108,6 +109,7 @@ print(result.outputs)
 ```
 my-game-adapter/
 ├── meta.json              # 元信息
+├── attr_schema.json       # 属性声明 Schema（可选）
 ├── dag/                   # DAG 公式定义
 │   └── main.dag.json
 └── ui/                    # UI 排版定义
@@ -124,6 +126,60 @@ my-game-adapter/
   "schema_version": "dag-v1",
   "entry_dag": "dag/main.dag.json"
 }
+```
+
+也可引用 `attr_schema.json` 和自定义函数：
+
+```json
+{
+  "name": "卡牌RPG伤害计算",
+  "game": "经典卡牌RPG（示例）",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "card_rpg.dag.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {
+    "clamp": "functions.py"
+  }
+}
+```
+
+## 适配器示例
+
+### 终末地（15 乘区）
+
+`framework/adapters/endfield/` — 真实游戏完整适配器。
+
+### 卡牌RPG（攻击-防御公式）
+
+`framework/adapters/card_rpg/` — 示例适配器，证明框架跨品类通用。
+
+```
+framework/adapters/card_rpg/
+├── meta.json               # 适配器元信息
+├── attr_schema.json        # 属性声明（ATK/DEF/crit_rate/crit_dmg）
+├── card_rpg.dag.json       # DAG 公式（attack - def × 0.5 + crit）
+├── functions.py            # 自定义函数（clamp）
+├── loader.py               # CardRPGLoader（DataContextLoader 实现）
+└── ui/layout.json          # ComputeSheet 排版
+```
+
+```python
+from calc_framework.config.adapter import AdapterPackage
+
+# 加载卡牌RPG适配器
+pkg = AdapterPackage("framework/adapters/card_rpg")
+
+# 构建上下文并求值
+ctx = {
+    "character": {"ATK": 100, "crit_rate": 0.05, "crit_dmg": 0.5},
+    "weapon": {"ATK_bonus": 15},
+    "enemy": {"DEF": 60},
+    "user_input": {"skill_mult": 1.0, "is_crit": True},
+}
+result = pkg.dag_service.evaluate(ctx)
+print(result.outputs)
+# {"总攻击力": 115.0, "基础伤害": 85.0, "暴击倍率": 1.5, "最终伤害": 127.5}
 ```
 
 ---
@@ -170,6 +226,7 @@ DAG JSON 是框架的核心配置。一个完整 DAG 包含：
 
 ```python
 from calc_framework.logging import setup_logging, get_logger
+from calc_framework.data.attr_schema import AttributeSchema
 
 # 在应用入口调用一次
 setup_logging(level="INFO", log_file="calc.log")
@@ -177,6 +234,11 @@ setup_logging(level="INFO", log_file="calc.log")
 # 在各模块获取 logger
 logger = get_logger(__name__)
 logger.info("DAG 求值完成")
+
+# 加载属性 Schema
+schema = AttributeSchema.from_file("attr_schema.json")
+ctx = schema.resolve(raw_data)
+errors = schema.validate(ctx)
 ```
 
 环境变量控制：`CALC_FRAMEWORK_LOG_LEVEL`（默认 WARNING）、`CALC_FRAMEWORK_LOG_FILE`。
@@ -187,5 +249,5 @@ logger.info("DAG 求值完成")
 
 ```bash
 cd framework
-python -m pytest tests/
+python -m pytest tests/ -q    # 262 passed
 ```
