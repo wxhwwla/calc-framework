@@ -241,37 +241,56 @@ def build_release(target: BuildTarget) -> Path:
 def main() -> None:
     apply_platform_win32_patch()
 
-    parser = argparse.ArgumentParser(description="终末地双目标打包工具")
+    parser = argparse.ArgumentParser(description="终末地多目标打包工具")
     parser.add_argument(
         "--target",
         choices=["calculator", "designer", "layout-editor"],
-        default="calculator",
-        help="打包目标：calculator（计算器，默认）| designer（设计器）| layout-editor（布局编辑器）",
+        default=None,
+        help="打包目标：calculator（计算器）| designer（设计器）| layout-editor（布局编辑器）",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="一次性打包 calculator + designer + layout-editor 全部目标",
     )
     args = parser.parse_args()
-    target: BuildTarget = args.target
 
-    app_name = target_app_name(target)
-    print("=" * 60)
-    print(f"{app_name} — 打包工具（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）")
-    print("=" * 60)
+    if not args.all and args.target is None:
+        parser.error("请指定 --target 或使用 --all 打包全部目标")
 
-    if not check_build_dependencies(target):
-        sys.exit(1)
+    targets: list[BuildTarget]
+    if args.all:
+        targets = ["calculator", "designer", "layout-editor"]
+    else:
+        targets = [args.target]
 
-    try:
-        release_root = build_release(target)
-    except (subprocess.CalledProcessError, FileNotFoundError, TimeoutError) as exc:
-        print(f"\n打包失败: {exc}")
-        sys.exit(1)
+    any_failed = False
+    for target in targets:
+        app_name = target_app_name(target)
+        print("\n" + "=" * 60)
+        print(f"{app_name} — 打包工具（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）")
+        print("=" * 60)
+
+        if not check_build_dependencies(target):
+            any_failed = True
+            continue
+
+        try:
+            release_root = build_release(target)
+            print(f"  ✓ {app_name} 打包成功 → {release_root}")
+        except (subprocess.CalledProcessError, FileNotFoundError, TimeoutError) as exc:
+            print(f"  ✗ {app_name} 打包失败: {exc}")
+            any_failed = True
 
     print("\n" + "=" * 60)
-    print("打包完成！")
-    print(f"  EXE 版本（窗口标题）: v{get_exe_version()}")
-    print(f"  源码包版本:         v{get_version()}")
-    print(f"发布文件夹: {release_root}")
-    print("请将整个文件夹分发给用户（勿只发 exe，否则无法加载角色/武器数据）。")
+    if any_failed:
+        print("部分目标打包失败，请查看上方错误信息。")
+    else:
+        print("全部目标打包完成！")
     print("=" * 60)
+
+    if any_failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
