@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.5.4"
+_VERSION = "3.5.5"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -211,9 +211,9 @@ if __name__ == "__main__":
 # --- UPLOAD_SUMMARY ---
 # TITLE: 更新 5 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/designer/data_browser_tab.py
-# - 修改 endfield_damage_calculator/designer/data_editor_tab.py
-# - 修改 endfield_damage_calculator/designer/designer_main.py
-# - 修改 endfield_damage_calculator/designer/inverse_tab.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 endfield_damage_calculator/README.md
 # - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---

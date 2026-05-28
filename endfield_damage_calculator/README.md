@@ -63,6 +63,11 @@ endfield_damage_calculator/
 ├── data/                      # 统一数据加载层
 │   └── loader.py              # get_characters / get_weapons / get_equipments
 ├── calculation/               # 伤害引擎、装备、搜索、MVP 流水线（见 docs/MVP搜索验收说明.md）
+├── designer/                  # 终末地数据设计器
+│   ├── designer_main.py       # 设计器主入口（公式反推 + 数据编辑 + 数据浏览）
+│   ├── data_editor_tab.py     # 数据编辑页签（新增/编辑/删除角色、武器、装备）
+│   ├── data_browser_tab.py    # 数据浏览页签（查看 JSON 列表）
+│   └── inverse_tab.py         # 公式反推页签
 ├── gui_design/                # GUI 界面模块（PySide6）
 │   ├── shell/                 # 主窗口与控制栏
 │   │   ├── qt_app.py          # 主应用（双页签：计算页 + 高级页）

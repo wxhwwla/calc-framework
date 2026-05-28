@@ -70,12 +70,15 @@
 | **Web 版框架** | `web/frontend/`（React + TypeScript + Vite + MUI v6 + Zustand + React Flow）+ `web/backend/`（FastAPI）。前端接入 DAG 引擎 API，支持适配器选择、参数表单、结果展示、DAG 可视化 |
 | **Upload Script** | `github_upload_module.py`：版本 bump + commit + push（可选 `--minor` / `--no-bump` / `--tag`）。中途终止会残留 `UPLOAD_SUMMARY` 块和 git stash，需手动清理 |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
+| **双目标打包** | `build.py --target {calculator|designer}`：计算器输出 `dist/终末地伤害计算器/`，设计器输出 `dist/终末地数据设计器/`，各自排除无用模块 |
+| **终末地数据设计器** | `designer/designer_main.py` — 三个页签：公式反推（InverseTab）、数据编辑（DataEditorTab）、数据浏览（DataBrowserTab）。独立于计算器主 GUI |
+| **DataEditorTab** | `designer/data_editor_tab.py` — 图形化新增/编辑/删除角色、武器、装备，通过 `data.loader` 读写 JSON 并刷新缓存 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
 | **仓库维护工具** | `tools/`：仓库级脚本（BWIKI 侦察、审计等），与包内 `endfield_damage_calculator/scripts/` 区分 |
 | **代码结构约束** | 每目录直接子项 **≤ 10**；业务 `.py` **≤ 400 行**（硬顶 500）；见 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)、[`docs/代码结构规范.md`](docs/代码结构规范.md) |
 | **BWIKI 侦察** | `tools/bwiki_scout/`：阶段 C 拉取 Wiki 至 `output/raw/`（gitignore）；阶段 B `parse_draft.py` 仅生成对照草案 |
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
-| **项目依赖** | 运行时：`customtkinter`、`PySide6`（双后端；默认 PySide6，`ENDFIELD_UI_BACKEND=ctk` 切回 CTk） + `matplotlib`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
+| **项目依赖** | 运行时：`PySide6` + `matplotlib`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
 
 ## 标准数据录入（四层数据契约）
 
@@ -117,7 +120,10 @@
 | **属性声明 Schema** | `attr_schema.json`，适配器声明自己的属性结构（名称/类型/来源/默认值），框架据此自动构建 DataContext |
 | **CardRPG 适配器** | `framework/adapters/card_rpg/`，经典攻击-防御公式的卡牌RPG示例适配器，证明框架跨品类通用 |
 | **DAG 模板库** | `framework/src/calc_framework/dag/templates.py`，可复用的子图模式 registry，内置 5 个通用模板（防御减伤/暴击倍率/钳制/百分比/等级成长），DAG JSON 中用 `"template"` 字段引用 |
-| **搜索/枚举引擎** | `framework/src/calc_framework/search/`，通用搜索基础设施：TopNTracker / SearchCancelToken / run_parallel / SearchResult |
+| **搜索/枚举引擎** | `framework/src/calc_framework/search/`，通用搜索基础设施：SearchEngine[C, R] ABC / SearchConfig / TopNTracker / SearchCancelToken / run_parallel / SearchResult |
+| **SearchEngine[C, R]** | `framework/src/calc_framework/search/engine.py` — 泛型 ABC，子类需实现 `generate_candidates()` / `evaluate()` / `score_key()`；基类提供 `run()` / `estimate_workload()` |
+| **SearchConfig** | `top_n` / `max_workers` / `max_seconds` 通用搜索配置 dataclass |
+| **EndfieldSearchEngine** | `calculation/search/adapter.py` — 终末地配装搜索适配器，包装 OptimizerTask 评估流水线，提供 `from_job()` 工厂方法 |
 | **插件系统** | `framework/src/calc_framework/plugin/`，BasePlugin + PluginRegistry，3 内置插件（暴击/闪避/距离衰减），可注册变量/模板/函数 |
 | **发布/分享工具** | `framework/src/calc_framework/publish/`，JSON Schema 校验 + catalog HTML 生成器 |
 | **MOBA 适配器** | `framework/adapters/moba/`：通用 MOBA 伤害公式，AD/AP 加成 → 护甲/魔抗减伤 → 暴击判定 → 冷却缩减 → 攻速；含 `percent_of()` / `armor_mult()` 自定义函数 |
