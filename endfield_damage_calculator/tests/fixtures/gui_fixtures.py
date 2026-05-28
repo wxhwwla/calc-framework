@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GUI 集成测试共用夹具（模拟面板 + 可选 CTk 根窗口）。"""
+"""GUI 测试夹具：MockSelectionPanel（CTk 已移除）。"""
 
 from __future__ import annotations
 
@@ -150,116 +150,9 @@ class _TabsVar:
         self._value = str(value)
 
 
-def build_mock_app(
-    *,
-    char_name: str = "秋栗",
-    weapon_name: str = "坚城铸造者",
-    root: Any = None,
-) -> SimpleNamespace:
-    """组装 enhancement_controls / gui 辅助方法测试用的 app 替身。"""
-    import customtkinter as ctk
 
-    char = load_character_by_name(char_name)
-    weapon = load_weapon_by_name(weapon_name)
-    if root is None:
-        root = ctk.CTk()
-        root.withdraw()
-        root._gui_fixture_owns_root = True  # type: ignore[attr-defined]
-    else:
-        root._gui_fixture_owns_root = False  # type: ignore[attr-defined]
-
-    app = SimpleNamespace(
-        app=root,
-        char_panel=MockSelectionPanel(char, skills=(1, 0, 0)),
-        weapon_panel=MockSelectionPanel(weapon),
-        small_font=ctk.CTkFont(size=12),
-        big_font=ctk.CTkFont(size=14, weight="bold"),
-        _show_more_settings_var=ctk.BooleanVar(value=False),
-        _ui_preferences={"startup_page_mode": "always_main", "last_page": "计算页"},
-        page_tabs=_TabsVar("计算页"),
-        calc_mode_var=ctk.StringVar(value="乘区快照"),
-        single_skill_scope_var=ctk.StringVar(value="当前武器"),
-        single_skill_equipment_scope_var=ctk.StringVar(value="全部装备"),
-        use_manual_skill_counts_var=ctk.BooleanVar(value=False),
-        damage_component_mode_var=ctk.StringVar(value="技能+异常"),
-        use_expected_crit_var=ctk.BooleanVar(value=False),
-        include_conditional_equipment_crit_var=ctk.BooleanVar(value=False),
-        extra_crit_rate_percent_var=ctk.StringVar(value="0"),
-        extra_crit_damage_percent_var=ctk.StringVar(value="0"),
-        skill_count_1_var=ctk.StringVar(value="0"),
-        skill_count_2_var=ctk.StringVar(value="0"),
-        skill_count_3_var=ctk.StringVar(value="0"),
-        _segment_count_vars={"战技:1": ctk.StringVar(value="0")},
-        _skill_count_last_committed={},
-        _multi_skill_counts_body=None,
-        _segment_row_keys=("战技:1",),
-        search_workers_var=ctk.StringVar(value="1"),
-        _fixed_loadout_slots={},
-        _enemy_defense=100.0,
-        _plugin_enemy_id="",
-        _schedule_confirm_calls=0,
-    )
-
-    def _manual_multi_skill_counts() -> dict[str, int]:
-        from gui_design.controls.multi_skill import read_manual_multi_skill_counts
-
-        return read_manual_multi_skill_counts(app)  # type: ignore[arg-type]
-
-    def _build_fixed_loadout_selection():
-        from calculation.loadout.slot_search import FixedLoadoutSelection
-
-        return FixedLoadoutSelection()
-
-    def _current_calculation_mode() -> str:
-        from gui_design.shared.calc_mode_labels import calculation_mode_from_label
-
-        return calculation_mode_from_label(str(app.calc_mode_var.get()))
-
-    def _single_skill_preview_equipment_catalog():
-        from data.equipment_catalog import get_equipment_catalog
-
-        return get_equipment_catalog(scope_label=app.single_skill_equipment_scope_var.get())
-
-    def _on_char_name_change() -> None:
-        pass
-
-    def _refresh_fixed_loadout_menus() -> None:
-        pass
-
-    def _schedule_confirm(*, force: bool = False) -> None:
-        app._schedule_confirm_calls += 1
-
-    app._manual_multi_skill_counts = _manual_multi_skill_counts
-    app._build_fixed_loadout_selection = _build_fixed_loadout_selection
-    app._current_calculation_mode = _current_calculation_mode
-    app._single_skill_preview_equipment_catalog = _single_skill_preview_equipment_catalog
-    app._on_char_name_change = _on_char_name_change
-    app._refresh_fixed_loadout_menus = _refresh_fixed_loadout_menus
-    app._schedule_confirm = _schedule_confirm
-    return app
-
-
-def destroy_mock_app_root(app: SimpleNamespace) -> None:
-    """仅销毁由 build_mock_app 自行创建的根窗口。"""
-    if getattr(app.app, "_gui_fixture_owns_root", False):
-        app.app.destroy()
-
-
-_CTK_AVAILABLE: bool | None = None
 
 
 def ctk_available() -> bool:
-    """探测 Tcl/CTk 是否可用（结果缓存，避免每个集成文件重复初始化）。"""
-    global _CTK_AVAILABLE
-    if _CTK_AVAILABLE is not None:
-        return _CTK_AVAILABLE
-    try:
-        import customtkinter as ctk
-
-        root = ctk.CTk()
-        root.withdraw()
-        root.destroy()
-        _CTK_AVAILABLE = True
-    except Exception:
-        _CTK_AVAILABLE = False
-    return _CTK_AVAILABLE
+    """CTk 已移除，始终返回 False。"""
+    return False

@@ -244,3 +244,19 @@ class TestEndfieldDAGIntegration:
         assert dag_damage == pytest.approx(existing.final_damage, rel=1e-9), (
             f"DAG: {dag_damage}, Existing: {existing.final_damage}"
         )
+
+    def test_attribute_zones_output(self, context):
+        """验证属性乘区 DAG 输出 力量/敏捷/智识/意志 最终值。"""
+        from calc_framework.config.adapter import AdapterPackage
+
+        pkg = AdapterPackage(_ADAPTER_DIR)
+        result = pkg.dag_service.evaluate(dict(context))
+        for attr_name in ("力量", "敏捷", "智识", "意志"):
+            output_key = f"{attr_name}最终值"
+            total = result.outputs.get(output_key)
+            assert total is not None, f"DAG 未输出 {output_key}"
+            base = context["character"].get(attr_name, 0.0)
+            bonus = context["computed"].get(f"{attr_name}加成值", 0.0)
+            assert total == pytest.approx(base + bonus, rel=1e-9), (
+                f"{attr_name}: DAG total={total}, base+bonus={base}+{bonus}"
+            )

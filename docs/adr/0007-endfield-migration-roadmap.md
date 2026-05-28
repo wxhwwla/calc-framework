@@ -42,7 +42,7 @@
 
 ## 2. 迁移阶段
 
-### Phase 1：15 乘区 DAG 完整化（本次推进）
+### Phase 1：15 乘区 DAG 完整化（✅ 已完成）
 
 将 15 个伤害乘区的计算逻辑从手写代码迁移为 DAG 子图，覆盖当前 `zone_snapshot.py` 的全部输出。
 
@@ -86,9 +86,20 @@
 
 框架当前无搜索能力。需要将 `calculation/search/` 抽象为框架可选的优化模块。
 
-### Phase 4：数据加载 DAG 化
+### Phase 4：数据加载 DAG 化（✅ 已完成）
 
-将角色/武器/装备数据读取路径改为全部通过 `EndfieldContextLoader`，移除 `data/loader.py` 的手写加载。
+角色/武器/装备数据读取路径已全部通过 `EndfieldContextLoader`，移除 `compute_multiplicative_zone_snapshot` 的旧引擎路径和 `use_dag` 开关。
+
+**具体改进**：
+
+| 改进项 | 说明 |
+|--------|------|
+| `EndfieldContextLoader` 增强 | 存储属性乘区 full details（base+bonus+total）和攻击力链中间值到 `computed` 区 |
+| DAG 属性乘区节点 | 新增 `attr_力量_total`/`attr_敏捷_total`/`attr_智识_total`/`attr_意志_total` 四个 BinaryNode，计算 total = base + bonus |
+| DAG 输出扩展 | 22 个输出（+4 属性最终值），70 个节点 |
+| `compute_snapshot_with_dag` 增强 | 输出与旧引擎同级别详细展示行（攻击加成攻击力/中间攻击力/基础攻击力分项） |
+| `zone_snapshot.py` | `compute_multiplicative_zone_snapshot` 始终委托 DAG，移除 `use_dag` 参数和旧引擎代码路径 |
+| 测试 | 新增 `test_attribute_zones_output` 验证属性乘区 DAG 输出
 
 ---
 

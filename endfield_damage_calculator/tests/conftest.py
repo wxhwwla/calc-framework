@@ -18,14 +18,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from calculation.core.result_cache import reset_global_result_cache
 
-_INTEGRATION_FILES = frozenset(
-    {
-        "gui_design/presentation/test_property_display_integration.py",
-        "gui_design/controls/test_enhancement_integration.py",
-        "gui_design/shell/test_gui_app_integration.py",
-        "gui_design/controls/test_fixed_loadout_integration.py",
-    }
-)
+_INTEGRATION_FILES: frozenset[str] = frozenset()
 
 _SLOW_FILES = frozenset(
     {

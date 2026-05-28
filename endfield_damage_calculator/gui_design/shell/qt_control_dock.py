@@ -170,6 +170,7 @@ class QtControlDock(QWidget):
         on_back_to_main: Callable[[], None] | None = None,
         on_confirm: Callable[[], None] | None = None,
         on_attribution: Callable[[], None] | None = None,
+        on_donation: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(parent)
         self._big = big_font or QFont()
@@ -177,11 +178,13 @@ class QtControlDock(QWidget):
         self._on_back_to_main = on_back_to_main
         self._on_confirm = on_confirm
         self._on_attribution = on_attribution
+        self._on_donation = on_donation
 
         # 暴露给外部的控件引用
         self.back_to_main_btn: QPushButton
         self.confirm_btn: QPushButton
         self.attribution_btn: QPushButton
+        self.donation_btn: QPushButton
         self.calc_mode_menu: QComboBox
         self.single_skill_scope_combo: QComboBox
         self.equipment_scope_combo: QComboBox
@@ -239,6 +242,11 @@ class QtControlDock(QWidget):
         if self._on_attribution:
             self.attribution_btn.clicked.connect(self._on_attribution)
         lay.addWidget(self.attribution_btn)
+
+        self.donation_btn = self._make_btn("🤝 自愿捐赠", _SECONDARY_BTN_HEIGHT)
+        if self._on_donation:
+            self.donation_btn.clicked.connect(self._on_donation)
+        lay.addWidget(self.donation_btn)
 
         lay.addSpacing(8)
         lay.addWidget(_SectionHeader("乘区展示", self._big))

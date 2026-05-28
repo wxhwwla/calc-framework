@@ -33,7 +33,6 @@ from data.loader import get_characters, get_weapons
 from gui_design.panels.selection.qt_panel import QtSelectionPanel
 from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
 from gui_design.shared.display_view.qt_columns import QtAttributeColumns
-from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
 from please_read_me import get_exe_version
 
@@ -91,8 +90,6 @@ class QtDamageApp:
     """
 
     def __init__(self) -> None:
-        gui_settings()
-
         self._qapp: QApplication = QApplication(sys.argv)
         self._qapp.setStyle("Fusion")
         self._apply_dark_style()
@@ -189,6 +186,7 @@ class QtDamageApp:
             on_back_to_main=self._show_main_page,
             on_confirm=self._on_confirm,
             on_attribution=self._on_attribution,
+            on_donation=self._on_donation,
         )
 
         adv_page = QWidget()
@@ -547,7 +545,7 @@ class QtDamageApp:
             self._refresh_compute_sheet()
 
             lds = request.loadout
-            from gui_design.controls.enhancement.dialogs import (
+            from gui_design.shared.calc_history import (
                 get_app_calculation_history,
             )
             from gui_design.shared.calc_history import HistoryEntry
@@ -561,7 +559,7 @@ class QtDamageApp:
             except Exception as exc:
                 _qt_logger.warning("历史记录失败: %s", exc)
             try:
-                from gui_design.controls.enhancement.dialogs import refresh_damage_snapshot
+                from gui_design.app.loadout_evaluation import refresh_damage_snapshot
 
                 refresh_damage_snapshot(self, loadout=lds)
             except Exception as exc:
@@ -812,7 +810,7 @@ class QtDamageApp:
 
     def _on_calc_history(self) -> None:
         """打开计算历史弹窗（最近 10 次，支持恢复配置）。"""
-        from gui_design.controls.enhancement.dialogs import get_app_calculation_history
+        from gui_design.shared.calc_history import get_app_calculation_history
         from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
 
         history = get_app_calculation_history(self)
@@ -1079,6 +1077,15 @@ class QtDamageApp:
             "数据来源与许可",
             SUMMARY_TEXT,
         )
+
+    # ── 自愿捐赠 ──────────────────────────────
+
+    def _on_donation(self) -> None:
+        """打开自愿捐赠对话框。"""
+        from legal.donation_qt import open_donation_dialog
+
+        dialog = open_donation_dialog(self.app)
+        dialog.exec()
 
     @property
     def confirm_btn(self):

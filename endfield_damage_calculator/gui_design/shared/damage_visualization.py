@@ -35,7 +35,7 @@ def build_damage_pie_figure(
 ) -> Any:
     """构建饼图 Figure（调用方负责 plt.close）。"""
     from utils.gui_chart_theme import (
-        chart_theme_from_ctk,
+        chart_theme_dark,
         configure_matplotlib_gui_style,
         series_color,
         style_axes,
@@ -45,7 +45,7 @@ def build_damage_pie_figure(
     configure_matplotlib_gui_style()
     import matplotlib.pyplot as plt
 
-    theme = chart_theme_from_ctk()
+    theme = chart_theme_dark()
     labels = [s.label for s in slices]
     values = [s.value for s in slices]
     fig, ax = plt.subplots(figsize=(5, 4), dpi=100)
@@ -85,7 +85,7 @@ def build_improvement_bar_figure(
     """构建柱状图（默认用于提升率；亦可传入乘区占比等百分比序列）。"""
     from utils.gui_chart_theme import (
         bar_colors,
-        chart_theme_from_ctk,
+        chart_theme_dark,
         configure_matplotlib_gui_style,
         style_axes,
         style_figure,
@@ -94,7 +94,7 @@ def build_improvement_bar_figure(
     configure_matplotlib_gui_style()
     import matplotlib.pyplot as plt
 
-    theme = chart_theme_from_ctk()
+    theme = chart_theme_dark()
     labels = [name for name, _ in items]
     values = [val for _, val in items]
     fig, ax = plt.subplots(figsize=(6, 4), dpi=100)

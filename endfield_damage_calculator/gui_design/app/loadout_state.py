@@ -13,7 +13,6 @@ from typing import Any
 from calculation.loadout.slot_search import FixedLoadoutSelection
 from calculation.search.plan.controller import SearchJobInputs
 from calculation.skills.weapon_selection import WeaponSkillSelection
-from gui_design.panels.weapon_skill_selection import read_weapon_skill_selection_from_panel
 from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
 
 from .confirm_refresh import (
@@ -305,9 +304,29 @@ def read_loadout_from_panels(
         extra_crit_rate=float(extra_crit_rate),
         extra_crit_damage=float(extra_crit_damage),
         enemy_defense=float(enemy_defense),
-        weapon_specials=read_weapon_skill_selection_from_panel(weapon_panel).to_legacy_tuple(),
+        weapon_specials=_read_weapon_specials_from_panel(weapon_panel),
         manual_buffs=dict(manual_buffs or {}),
     )
+
+
+def _read_weapon_specials_from_panel(panel: Any) -> tuple[Any, ...]:
+    """从选择面板读取武器技能选择并序列化为旧版 12 元组。"""
+    return WeaponSkillSelection.from_legacy_tuple(
+        (
+            str(getattr(panel, "get_normal_skill_1_name", lambda: "")() or ""),
+            int(getattr(panel, "get_normal_skill_1_level", lambda: 0)() or 0),
+            str(getattr(panel, "get_normal_skill_2_name", lambda: "")() or ""),
+            int(getattr(panel, "get_normal_skill_2_level", lambda: 0)() or 0),
+            str(getattr(panel, "get_normal_skill_3_name", lambda: "")() or ""),
+            int(getattr(panel, "get_normal_skill_3_level", lambda: 0)() or 0),
+            str(getattr(panel, "get_special_skill_1_name", lambda: "")() or ""),
+            int(getattr(panel, "get_special_skill_1_level", lambda: 1)() or 1),
+            int(getattr(panel, "get_special_skill_1_stack", lambda: 0)() or 0),
+            str(getattr(panel, "get_special_skill_2_name", lambda: "")() or ""),
+            int(getattr(panel, "get_special_skill_2_level", lambda: 1)() or 1),
+            int(getattr(panel, "get_special_skill_2_stack", lambda: 0)() or 0),
+        )
+    ).to_legacy_tuple()
 
 
 def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> LoadoutState | None:
@@ -316,10 +335,6 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Load
     weapon_panel = getattr(app, "weapon_panel", None)
     if char_panel is None or weapon_panel is None:
         return None
-    if ensure_segment_rows:
-        from gui_design.controls.multi_skill import ensure_multi_skill_segment_rows
-
-        ensure_multi_skill_segment_rows(app)
     fixed = app._build_fixed_loadout_selection()
     return read_loadout_from_panels(
         char_panel,

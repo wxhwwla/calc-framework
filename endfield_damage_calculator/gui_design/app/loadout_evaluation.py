@@ -7,7 +7,11 @@ from typing import Any
 
 from calculation.core.preview_cache import sync_confirm_dependencies
 from calculation.loadout.optimizer import WeaponCandidate
-from gui_design.presentation.damage_snapshot import DamageSnapshot, build_damage_snapshot
+from gui_design.presentation.damage_snapshot import (
+    DamageSnapshot,
+    build_damage_snapshot,
+    store_snapshot_on_app,
+)
 from gui_design.presentation.preview_lines import (
     build_multi_skill_search_preview_lines,
     build_single_skill_search_preview_lines,
@@ -119,3 +123,18 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         manual_buffs=loadout.manual_buffs if loadout.manual_buffs else None,
         **skill_kwargs,
     )
+
+
+def refresh_damage_snapshot(
+    app: Any,
+    *,
+    loadout: LoadoutState | None = None,
+) -> None:
+    """确认后刷新伤害快照（从 LoadoutState 重建并存储）。"""
+    from gui_design.app.loadout_state import read_loadout_from_app
+
+    if loadout is None:
+        loadout = read_loadout_from_app(app)
+    if loadout is None:
+        return
+    store_snapshot_on_app(app, build_snapshot_from_loadout(loadout))

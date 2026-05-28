@@ -5,10 +5,6 @@ import unittest
 from types import SimpleNamespace
 
 from calculation.skills.weapon_selection import WeaponSkillSelection
-from gui_design.panels.weapon_skill_selection import (
-    apply_weapon_skill_selection_to_panel,
-    read_weapon_skill_selection_from_panel,
-)
 
 _SAMPLE_WEAPON = {
     "名称": "示例武器",
@@ -88,56 +84,6 @@ class TestWeaponSkillSelection(unittest.TestCase):
             restored.calculation_kwargs()["normal_skill_1_level"],
             original.calculation_kwargs()["normal_skill_1_level"],
         )
-
-    def test_apply_weapon_skill_selection_updates_panel_vars(self) -> None:
-        panel = SimpleNamespace(
-            special_ability_panel=SimpleNamespace(
-                current_special_ability_1_name="敏捷+",
-                current_special_ability_2_name="攻击力+",
-                current_special_ability_3_name="",
-                current_weapon_special_name="施放战技后，攻击力+",
-                current_weapon_special_2_name="",
-                special_ability_1_level=_StrVar("1"),
-                special_ability_2_level=_StrVar("1"),
-                special_ability_3_level=_StrVar("0"),
-                weapon_special_level=_StrVar("1"),
-                weapon_special_stack=_StrVar("0"),
-                weapon_special_2_level=_StrVar("1"),
-                weapon_special_2_stack=_StrVar("0"),
-            )
-        )
-        selection = WeaponSkillSelection.from_preset_view(
-            _SAMPLE_WEAPON,
-            weapon_normal_levels=[9, 8],
-            weapon_special_states=[{"level": 7, "stack": 2}],
-        )
-        apply_weapon_skill_selection_to_panel(panel, selection)
-        sap = panel.special_ability_panel
-        self.assertEqual(sap.special_ability_1_level.get(), "9")
-        self.assertEqual(sap.special_ability_2_level.get(), "8")
-        self.assertEqual(sap.weapon_special_level.get(), "7")
-        self.assertEqual(sap.weapon_special_stack.get(), "2")
-
-    def test_read_weapon_skill_selection_from_panel_matches_legacy_tuple(self) -> None:
-        from types import SimpleNamespace
-
-        panel = SimpleNamespace(
-            get_normal_skill_1_name=lambda: "敏捷+",
-            get_normal_skill_1_level=lambda: 9,
-            get_normal_skill_2_name=lambda: "",
-            get_normal_skill_2_level=lambda: 0,
-            get_normal_skill_3_name=lambda: "",
-            get_normal_skill_3_level=lambda: 0,
-            get_special_skill_1_name=lambda: "",
-            get_special_skill_1_level=lambda: 1,
-            get_special_skill_1_stack=lambda: 0,
-            get_special_skill_2_name=lambda: "",
-            get_special_skill_2_level=lambda: 1,
-            get_special_skill_2_stack=lambda: 0,
-        )
-        selection = read_weapon_skill_selection_from_panel(panel)
-        self.assertEqual(selection.calculation_kwargs()["normal_skill_1_level"], 9)
-
 
 if __name__ == "__main__":
     unittest.main()

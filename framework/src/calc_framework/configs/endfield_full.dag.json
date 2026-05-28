@@ -146,6 +146,72 @@
       "source": "enemy",
       "description": "敌方防御值",
       "default": 100
+    },
+    "character.力量": {
+      "type": "float",
+      "source": "character",
+      "description": "力量基础值",
+      "default": 0.0
+    },
+    "character.敏捷": {
+      "type": "float",
+      "source": "character",
+      "description": "敏捷基础值",
+      "default": 0.0
+    },
+    "character.智识": {
+      "type": "float",
+      "source": "character",
+      "description": "智识基础值",
+      "default": 0.0
+    },
+    "character.意志": {
+      "type": "float",
+      "source": "character",
+      "description": "意志基础值",
+      "default": 0.0
+    },
+    "computed.力量加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "力量加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.敏捷加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "敏捷加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.智识加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "智识加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.意志加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "意志加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.基础攻击力合计": {
+      "type": "float",
+      "source": "computed",
+      "description": "角色基础攻击+武器基础攻击",
+      "default": 0.0
+    },
+    "computed.攻击加成攻击力": {
+      "type": "float",
+      "source": "computed",
+      "description": "基础攻击力合计×(1+攻击力+%)",
+      "default": 0.0
+    },
+    "computed.中间攻击力": {
+      "type": "float",
+      "source": "computed",
+      "description": "攻击加成攻击力+附加攻击+装备平值",
+      "default": 0.0
     }
   },
   "subgraphs": {
@@ -761,6 +827,74 @@
       "path": "computed.最终攻击力",
       "label": "最终攻击力(外部)"
     },
+    "char_attr_力量": {
+      "type": "var",
+      "path": "character.力量",
+      "label": "力量基础"
+    },
+    "char_attr_敏捷": {
+      "type": "var",
+      "path": "character.敏捷",
+      "label": "敏捷基础"
+    },
+    "char_attr_智识": {
+      "type": "var",
+      "path": "character.智识",
+      "label": "智识基础"
+    },
+    "char_attr_意志": {
+      "type": "var",
+      "path": "character.意志",
+      "label": "意志基础"
+    },
+    "comp_attr_力量_bonus": {
+      "type": "var",
+      "path": "computed.力量加成值",
+      "label": "力量加成"
+    },
+    "comp_attr_敏捷_bonus": {
+      "type": "var",
+      "path": "computed.敏捷加成值",
+      "label": "敏捷加成"
+    },
+    "comp_attr_智识_bonus": {
+      "type": "var",
+      "path": "computed.智识加成值",
+      "label": "智识加成"
+    },
+    "comp_attr_意志_bonus": {
+      "type": "var",
+      "path": "computed.意志加成值",
+      "label": "意志加成"
+    },
+    "attr_力量_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_力量",
+      "rhs": "comp_attr_力量_bonus",
+      "label": "力量最终值"
+    },
+    "attr_敏捷_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_敏捷",
+      "rhs": "comp_attr_敏捷_bonus",
+      "label": "敏捷最终值"
+    },
+    "attr_智识_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_智识",
+      "rhs": "comp_attr_智识_bonus",
+      "label": "智识最终值"
+    },
+    "attr_意志_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_意志",
+      "rhs": "comp_attr_意志_bonus",
+      "label": "意志最终值"
+    },
     "skill_mult": {
       "type": "var",
       "path": "computed.技能倍率",
@@ -1070,6 +1204,30 @@
     "基础伤害区": {
       "node": "zone_base",
       "label": "基础伤害区",
+      "format": "",
+      "is_primary": false
+    },
+    "力量最终值": {
+      "node": "attr_力量_total",
+      "label": "力量最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "敏捷最终值": {
+      "node": "attr_敏捷_total",
+      "label": "敏捷最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "智识最终值": {
+      "node": "attr_智识_total",
+      "label": "智识最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "意志最终值": {
+      "node": "attr_意志_total",
+      "label": "意志最终值",
       "format": "",
       "is_primary": false
     }

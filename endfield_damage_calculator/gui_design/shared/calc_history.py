@@ -36,3 +36,12 @@ class CalculationHistory:
         if index < 0 or index >= len(items):
             return None
         return dict(items[index].preset_snapshot)
+
+
+def get_app_calculation_history(app: Any) -> CalculationHistory:
+    """从 app 实例获取/创建 CalculationHistory。"""
+    history = getattr(app, "_calc_history", None)
+    if history is None:
+        history = CalculationHistory(max_entries=10)
+        app._calc_history = history
+    return history

@@ -292,6 +292,7 @@ def _make_crit_zone_subgraph() -> DAGSubgraph:
     )
 
 
+
 def _make_master_graph() -> DAGGraph:
     return DAGGraph(
         schema_version="dag-v1",
@@ -350,6 +351,50 @@ def _make_master_graph() -> DAGGraph:
             "enemy.防御": DAGVariable(
                 type="float", source="enemy",
                 description="敌方防御值", default=100,
+            ),
+            "character.力量": DAGVariable(
+                type="float", source="character",
+                description="力量基础值", default=0.0,
+            ),
+            "character.敏捷": DAGVariable(
+                type="float", source="character",
+                description="敏捷基础值", default=0.0,
+            ),
+            "character.智识": DAGVariable(
+                type="float", source="character",
+                description="智识基础值", default=0.0,
+            ),
+            "character.意志": DAGVariable(
+                type="float", source="character",
+                description="意志基础值", default=0.0,
+            ),
+            "computed.力量加成值": DAGVariable(
+                type="float", source="computed",
+                description="力量加成值（武器技能）", default=0.0,
+            ),
+            "computed.敏捷加成值": DAGVariable(
+                type="float", source="computed",
+                description="敏捷加成值（武器技能）", default=0.0,
+            ),
+            "computed.智识加成值": DAGVariable(
+                type="float", source="computed",
+                description="智识加成值（武器技能）", default=0.0,
+            ),
+            "computed.意志加成值": DAGVariable(
+                type="float", source="computed",
+                description="意志加成值（武器技能）", default=0.0,
+            ),
+            "computed.基础攻击力合计": DAGVariable(
+                type="float", source="computed",
+                description="角色基础攻击+武器基础攻击", default=0.0,
+            ),
+            "computed.攻击加成攻击力": DAGVariable(
+                type="float", source="computed",
+                description="基础攻击力合计×(1+攻击力+%)", default=0.0,
+            ),
+            "computed.中间攻击力": DAGVariable(
+                type="float", source="computed",
+                description="攻击加成攻击力+附加攻击+装备平值", default=0.0,
             ),
         },
         subgraphs={
@@ -411,6 +456,35 @@ def _make_master_graph() -> DAGGraph:
                 label="最终攻击力",
             ),
             "final_atk_var": VarNode(type="var", path="computed.最终攻击力", label="最终攻击力(外部)"),
+
+            "char_attr_力量": VarNode(type="var", path="character.力量", label="力量基础"),
+            "char_attr_敏捷": VarNode(type="var", path="character.敏捷", label="敏捷基础"),
+            "char_attr_智识": VarNode(type="var", path="character.智识", label="智识基础"),
+            "char_attr_意志": VarNode(type="var", path="character.意志", label="意志基础"),
+            "comp_attr_力量_bonus": VarNode(type="var", path="computed.力量加成值", label="力量加成"),
+            "comp_attr_敏捷_bonus": VarNode(type="var", path="computed.敏捷加成值", label="敏捷加成"),
+            "comp_attr_智识_bonus": VarNode(type="var", path="computed.智识加成值", label="智识加成"),
+            "comp_attr_意志_bonus": VarNode(type="var", path="computed.意志加成值", label="意志加成"),
+            "attr_力量_total": BinaryNode(
+                type="binary", op="+",
+                lhs="char_attr_力量", rhs="comp_attr_力量_bonus",
+                label="力量最终值",
+            ),
+            "attr_敏捷_total": BinaryNode(
+                type="binary", op="+",
+                lhs="char_attr_敏捷", rhs="comp_attr_敏捷_bonus",
+                label="敏捷最终值",
+            ),
+            "attr_智识_total": BinaryNode(
+                type="binary", op="+",
+                lhs="char_attr_智识", rhs="comp_attr_智识_bonus",
+                label="智识最终值",
+            ),
+            "attr_意志_total": BinaryNode(
+                type="binary", op="+",
+                lhs="char_attr_意志", rhs="comp_attr_意志_bonus",
+                label="意志最终值",
+            ),
 
             "skill_mult": VarNode(type="var", path="computed.技能倍率", label="技能倍率"),
             "zone_base": BinaryNode(type="binary", op="*", lhs="final_atk_var", rhs="skill_mult", label="基础伤害区"),
@@ -476,6 +550,10 @@ def _make_master_graph() -> DAGGraph:
             "连击增伤区": DAGOutput(node="zone_combo", label="连击增伤区"),
             "特殊乘区": DAGOutput(node="zone_special", label="特殊乘区"),
             "基础伤害区": DAGOutput(node="zone_base", label="基础伤害区"),
+            "力量最终值": DAGOutput(node="attr_力量_total", label="力量最终值"),
+            "敏捷最终值": DAGOutput(node="attr_敏捷_total", label="敏捷最终值"),
+            "智识最终值": DAGOutput(node="attr_智识_total", label="智识最终值"),
+            "意志最终值": DAGOutput(node="attr_意志_total", label="意志最终值"),
         },
     )
 
