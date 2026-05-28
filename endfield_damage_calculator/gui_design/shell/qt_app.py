@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from calc_framework.logging import get_logger
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -35,7 +36,6 @@ from gui_design.shared.display_view.qt_columns import QtAttributeColumns
 from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
 from please_read_me import get_exe_version
-from calc_framework.logging import get_logger
 
 _qt_logger = get_logger("gui.qt_app")
 

@@ -124,7 +124,7 @@ def review() -> list[str]:
 
     # 结论
     all_ok = len(missing) == 0
-    findings.append(f"\n📋 结论：15 乘区 DAG 完整性审查通过 ✅" if all_ok else "\n📋 结论：发现缺口 ❌")
+    findings.append("\n📋 结论：15 乘区 DAG 完整性审查通过 ✅" if all_ok else "\n📋 结论：发现缺口 ❌")
 
     return findings
 

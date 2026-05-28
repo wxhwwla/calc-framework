@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from calc_framework.search.cancel import SearchCancelToken
 from calc_framework.search.result import ParallelProgress

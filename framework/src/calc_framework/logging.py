@@ -18,7 +18,6 @@ import logging
 import os
 import sys
 from logging.handlers import RotatingFileHandler
-from typing import Literal
 
 _LOG_FORMAT = "[%(asctime)s.%(msecs)03d] [%(levelname)-7s] [%(name)s] %(message)s"
 _LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"

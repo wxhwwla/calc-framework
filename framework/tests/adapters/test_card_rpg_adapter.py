@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
+# 上述 E402 是必需的：framework 未安装为 pip 包，需 sys.path.insert 后才能 import
 """卡牌RPG 适配器集成测试 — 验证框架能无缝加载和执行跨品类游戏。"""
 
 from __future__ import annotations
@@ -57,7 +59,7 @@ class TestAdapterLoads:
         assert len(graph.outputs) == 4
 
     def test_functions_registered(self, adapter_pkg):
-        svc = adapter_pkg.dag_service
+        adapter_pkg.dag_service  # trigger lazy load
         from calc_framework.dag.sandbox import list_functions
         funcs = list_functions()
         assert "clamp" in funcs

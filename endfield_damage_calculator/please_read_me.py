@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.3.0"
+_VERSION = "3.3.1"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,12 +209,25 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 6 处文件
+# TITLE: 更新 19 处文件
 # BODY:
-# - 变更 "docs//344/273/243/347/240/201/350/247/204/350/214/203-ruff/344/277/256/345/244/215/346/250/241/345/274/217.md"
-# - 变更 .gitignore
+# - 修改 endfield_damage_calculator/calculation/core/top_n_tracker.py
+# - 修改 endfield_damage_calculator/calculation/search/run/cancel.py
+# - 修改 endfield_damage_calculator/calculation/search/run/session.py
+# - 修改 endfield_damage_calculator/data/loader.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_app.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 修改 framework/src/calc_framework/config/adapter.py
-# - 变更 tsconfig.json
-# - 变更 web/
+# - 修改 framework/src/calc_framework/config/watcher.py
+# - 修改 framework/src/calc_framework/launcher.py
+# - 修改 framework/src/calc_framework/logging.py
+# - 修改 framework/src/calc_framework/publish/catalog.py
+# - 修改 framework/src/calc_framework/search/parallel.py
+# - 修改 framework/tests/adapters/test_card_rpg_adapter.py
+# - 修改 framework/tests/config/test_dag_review.py
+# - 修改 framework/tests/config/test_manager.py
+# - 修改 framework/tests/config/test_watcher.py
+# - 修改 framework/tests/plugin/test_plugin.py
+# - 修改 framework/tests/publish/test_publish.py
+# - 修改 framework/tests/search/test_parallel.py
+# - 修改 framework/tests/search/test_tracker.py
 # --- END UPLOAD_SUMMARY ---

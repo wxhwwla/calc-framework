@@ -7,7 +7,7 @@ import pytest
 from calc_framework.dag.engine import evaluate_graph
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.service import DAGService
-from calc_framework.plugin import BasePlugin, PluginMeta, get_registry, list_plugins
+from calc_framework.plugin import list_plugins
 from calc_framework.plugin.builtin import CritPlugin, DistanceDecayPlugin, DodgePlugin
 from calc_framework.plugin.registry import PluginRegistry
 
@@ -93,7 +93,6 @@ class TestBuiltinRegistration:
 class TestPluginApplyToAdapter:
     def _make_svc(self):
         from calc_framework.dag.serializer import dag_from_dict
-        from calc_framework.dag.service import DAGService
         graph = dag_from_dict({
             "schema_version": "dag-v1",
             "name": "test",

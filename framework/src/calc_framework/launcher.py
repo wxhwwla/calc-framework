@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import sys
-import time
 from pathlib import Path
+from typing import Any
 
 from calc_framework.config.manager import AdapterManager, discover_adapters
 from calc_framework.data.context import make_context
@@ -127,7 +127,7 @@ def _launch_ui(adapter_name: str, pkg: Any) -> None:
     # 实时显示结果
     def _on_evaluated(result):
         lines = format_output(result.outputs)
-        status.showMessage(f"   ".join(lines), 5000)
+        status.showMessage("   ".join(lines), 5000)
 
     sheet.evaluated.connect(_on_evaluated)
 

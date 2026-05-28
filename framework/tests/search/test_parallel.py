@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from calc_framework.search import SearchCancelToken, TopNTracker, run_parallel
 

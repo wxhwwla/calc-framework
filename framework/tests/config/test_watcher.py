@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import tempfile
-import threading
 import time
 from pathlib import Path
 
@@ -121,7 +120,6 @@ class TestAdapterWatcher:
     def test_watcher_reloads_adapter_in_manager(self, temp_adapter: Path):
         """验证热加载后 AdapterManager 返回新版适配包。"""
         mgr = AdapterManager(adapters_dir=temp_adapter.parent)
-        names = mgr.names
 
         # 根据 meta.json 中的 name
         pkg_name = "test_hot_reload" if "test_hot_reload" in mgr.names else mgr.names[0]

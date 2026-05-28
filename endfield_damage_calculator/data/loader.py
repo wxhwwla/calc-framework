@@ -41,8 +41,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from utils.path_utils import get_resource_path
 from calc_framework.logging import get_logger
+
+from utils.path_utils import get_resource_path
 
 logger = get_logger("endfield.data_loader")
 

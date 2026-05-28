@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from calc_framework.search import SearchResult
+
 from calculation.damage.engine import DamageContext
 from calculation.loadout.in_memory_optimizer import run_enumerated_optimizer_parallel
 from calculation.loadout.optimizer import (
@@ -16,8 +18,6 @@ from calculation.loadout.optimizer import (
     OptimizerTask,
     WeaponCandidate,
 )
-
-from calc_framework.search import SearchResult
 
 from ..evaluate.context import SearchEvalContext
 from ..persist.store import execute_search_with_resume

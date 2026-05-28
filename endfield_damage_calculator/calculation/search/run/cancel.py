@@ -6,6 +6,6 @@
 
 from __future__ import annotations
 
-from calc_framework.search import SearchCancelToken  # noqa: F401
+from calc_framework.search import SearchCancelToken
 
 __all__ = ["SearchCancelToken"]

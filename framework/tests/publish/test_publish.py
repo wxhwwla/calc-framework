@@ -6,7 +6,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from calc_framework.publish.catalog import build_catalog
 from calc_framework.publish.schema import validate_against_schema, validate_package
