@@ -178,7 +178,19 @@ class QtDamageApp:
         sheet_scroll = QScrollArea()
         sheet_scroll.setWidgetResizable(True)
         sheet_scroll.setWidget(self._compute_sheet_widget)
-        content_split.addWidget(sheet_scroll)
+
+        right_wrapper = QWidget()
+        right_layout = QVBoxLayout(right_wrapper)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(6)
+        right_layout.addWidget(sheet_scroll, stretch=1)
+
+        from gui_design.presentation.total_damage_panel import TotalDamagePanel
+
+        self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
+        right_layout.addWidget(self._total_damage_panel)
+
+        content_split.addWidget(right_wrapper)
         content_split.setSizes([400, 400])
 
         self.tabs.addTab(calc_page, "计算页")
@@ -476,7 +488,7 @@ class QtDamageApp:
     # ── 配装变更 ──────────────────────────────────
 
     def _on_loadout_changed(self) -> None:
-        """配装参数变更：按钮紫色「待更新」样式，重建次数段行。"""
+        """配装参数变更：按钮紫色「待更新」样式，重建次数段行，清空总伤面板。"""
         self.status_label.setText("待确认")
         self.confirm_btn.setText("确认选择（待更新）")
         self.confirm_btn.setStyleSheet("""
@@ -487,6 +499,7 @@ class QtDamageApp:
             QPushButton:disabled { background-color: #444; color: #888; }
         """)
         self._rebuild_segment_rows()
+        self._total_damage_panel.hide_damage()
 
     # ── 确认计算 ──────────────────────────────────
 
@@ -551,9 +564,9 @@ class QtDamageApp:
 
             lds = request.loadout
             from gui_design.shared.calc_history import (
+                HistoryEntry,
                 get_app_calculation_history,
             )
-            from gui_design.shared.calc_history import HistoryEntry
 
             try:
                 preset = lds.to_loadout_preset()
@@ -569,6 +582,8 @@ class QtDamageApp:
                 refresh_damage_snapshot(self, loadout=lds)
             except Exception as exc:
                 _qt_logger.warning("快照刷新失败: %s", exc)
+
+            self._update_total_damage_panel()
         finally:
             self._confirm_in_progress = False
 
@@ -643,6 +658,13 @@ class QtDamageApp:
                 old.deleteLater()
         except Exception as exc:
             _qt_logger.warning("ComputeSheet 刷新失败: %s", exc)
+
+    def _update_total_damage_panel(self) -> None:
+        """从 app._last_damage_snapshot 刷新总伤面板。"""
+        from gui_design.presentation.damage_snapshot import get_snapshot_from_app
+
+        snapshot = get_snapshot_from_app(self)
+        self._total_damage_panel.update_from_snapshot(snapshot)
 
     # ── 手动 Buff ─────────────────────────────
 
@@ -822,8 +844,8 @@ class QtDamageApp:
 
     def _on_calc_history(self) -> None:
         """打开计算历史弹窗（最近 10 次，支持恢复配置）。"""
-        from gui_design.shared.calc_history import get_app_calculation_history
         from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        from gui_design.shared.calc_history import get_app_calculation_history
 
         history = get_app_calculation_history(self)
 
