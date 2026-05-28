@@ -187,6 +187,7 @@ class QtDamageApp:
             on_confirm=self._on_confirm,
             on_attribution=self._on_attribution,
             on_donation=self._on_donation,
+            on_open_help=self._on_open_help,
         )
 
         adv_page = QWidget()
@@ -1086,6 +1087,18 @@ class QtDamageApp:
 
         dialog = open_donation_dialog(self.app)
         dialog.exec()
+
+    # ── 使用说明 ──────────────────────────────
+
+    def _on_open_help(self) -> None:
+        """用系统默认浏览器打开 GUI 使用说明文档。"""
+        import webbrowser
+
+        doc_path = Path(__file__).resolve().parents[2] / "docs" / "GUI使用说明.md"
+        if doc_path.is_file():
+            webbrowser.open(doc_path.as_uri())
+        else:
+            QMessageBox.warning(self.app, "找不到文档", f"使用说明文件不存在：\n{doc_path}")
 
     @property
     def confirm_btn(self):

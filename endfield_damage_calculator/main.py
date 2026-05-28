@@ -25,7 +25,7 @@ import sys
 import threading
 import time
 
-# Windows：须在 customtkinter（darkdetect）之前规避 WMI 卡死
+# Windows：在 platform.release() 等调用前规避 WMI 卡死（PyInstaller 兼容）
 from utils.platform_win32_patch import apply_platform_win32_patch
 
 apply_platform_win32_patch()

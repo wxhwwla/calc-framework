@@ -37,6 +37,7 @@ build = [
 
 [project.scripts]
 endfield-calculator = "main:main"
+endfield-designer = "designer.designer_main:main"
 
 [tool.setuptools.dynamic]
 version = { attr = "please_read_me._VERSION" }

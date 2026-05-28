@@ -3,7 +3,7 @@
 > 本文件为 **Python 包目录** `[包]` 下的详细说明。  
 > GitHub 首页与速览见仓库根 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../docs/算法与架构.md)；通用框架见 [**framework/**](../framework/)。
 
-> PySide6 / CustomTkinter 双后端 GUI，支持乘区计算、全量搜索、配装对比
+> PySide6 GUI，支持乘区计算、全量搜索、配装对比
 
 ## 🌟 项目简介
 
@@ -63,22 +63,50 @@ endfield_damage_calculator/
 ├── data/                      # 统一数据加载层
 │   └── loader.py              # get_characters / get_weapons / get_equipments
 ├── calculation/               # 伤害引擎、装备、搜索、MVP 流水线（见 docs/MVP搜索验收说明.md）
-├── gui_design/                # GUI 界面模块
-│   ├── gui.py                 # 主应用（双页签：计算页 + 高级页）
-│   ├── gui_layout.py          # grid 常量、窄屏重排、按钮尺寸
-│   ├── ui_preferences.py      # 启动页策略、ui_preferences.json
-│   ├── fixed_loadout_controls.py  # 固定配装 UI
-│   ├── confirm_refresh.py     # 确认刷新去重
-│   ├── preview_lines.py       # 单/多技能快速预览文案（带缓存）
-│   ├── enhancement_controls.py # 高级页工具与分享、「更多设置」
-│   ├── damage_snapshot.py     # 确认后伤害快照
-│   ├── damage_visualization.py # matplotlib 图表（CTk 主题同步）
-│   ├── loadout_preset.py / calc_history.py
-│   ├── search_export_paths.py # search_output/ 导出路径
-│   ├── gui_settings.py        # 主题与字体
-│   ├── selection_panel.py     # 选择面板
-│   ├── selection_components.py
-│   ├── display_lines.py / display_view.py  # 确认后属性列与乘区
+├── gui_design/                # GUI 界面模块（PySide6）
+│   ├── shell/                 # 主窗口与控制栏
+│   │   ├── qt_app.py          # 主应用（双页签：计算页 + 高级页）
+│   │   └── qt_control_dock.py # 高级页三列控制栏
+│   ├── panels/                # 选择面板
+│   │   └── selection/
+│   │       ├── qt_panel.py    # 四级联动选择面板（类型/星级/名称/等级）
+│   │       ├── qt_subpanels.py # 技能等级面板
+│   │       └── qt_ability_panel.py  # 能力值面板
+│   ├── shared/                # 共享模块
+│   │   ├── display_view/
+│   │   │   └── qt_columns.py  # QtAttributeColumns 属性列展示
+│   │   ├── calc_history.py    # 计算历史管理
+│   │   ├── calc_mode_labels.py # 计算模式标签映射
+│   │   ├── damage_visualization.py # matplotlib 伤害仪表盘
+│   │   ├── preset_batch_compare.py # 多方案对比
+│   │   └── ui_preferences.py  # 启动页策略、ui_preferences.json
+│   ├── app/                   # 应用逻辑层
+│   │   ├── confirm_refresh.py # 确认刷新去重与签名
+│   │   ├── display_request.py # 确认刷新统一输入
+│   │   ├── loadout_evaluation.py # 预览/仪表盘求值
+│   │   ├── loadout_preset.py  # 配装预设 JSON 导入导出
+│   │   └── loadout_state.py   # 从面板刮取配装状态
+│   ├── backends/              # Qt 后端工具
+│   │   ├── qt_factory.py      # Qt 控件工厂
+│   │   └── qt_worker.py       # 搜索线程
+│   ├── controls/              # 控件目录
+│   │   ├── enhancement/       # 高级控制对话框
+│   │   ├── manual_buff/       # 场外 Buff 窗口
+│   │   ├── multi_skill/       # 多技能次数
+│   │   └── search/            # 搜索操作
+│   ├── presentation/          # 展示层
+│   │   ├── display/           # 属性列文本格式
+│   │   ├── preview/           # 技能预览
+│   │   ├── damage_snapshot.py # 确认后伤害快照
+│   │   ├── display_lines.py   # 属性列格式化文案
+│   │   ├── preview_lines.py   # 单/多技能快速预览（带缓存）
+│   │   └── search_results_lines.py # 搜索结果格式化
+│   ├── search_ui/             # 搜索 UI
+│   │   ├── search_settings.py # 并行线程/TopN 配置
+│   │   ├── search_export_paths.py # search_output/ 导出路径
+│   │   └── search_estimate_message.py # 搜索预估文案
+│   └── layout/
+│       └── gui_layout.py      # grid 常量、窄屏重排、按钮尺寸
 ├── legal/                     # 许可与数据来源（GUI 对话框）
 │   └── attribution.py
 ├── scripts/                   # 包内维护脚本（非 pytest；≠ 仓库 tools/）
@@ -117,9 +145,13 @@ endfield_damage_calculator/
 ### 环境要求
 
 - Python 3.10+
-- PySide6 6.5+（默认 GUI 后端；`ENDFIELD_UI_BACKEND=ctk` 切 CustomTkinter）
-- CustomTkinter 5.2.2+（备选后端）
+- PySide6 6.6+（默认 GUI 后端）
 - matplotlib 3.8+（运行时依赖，含伤害仪表盘）
+
+### 项目依赖
+
+- 运行时：`PySide6` + `matplotlib`（见 `pyproject.toml`）
+- 开发：`[dev]` → pytest；打包：`[build]` → PyInstaller
 
 首次安装：`pip install -e .`（或 `pip install -e ".[dev]"`）。缺依赖时 `main.py` 会警告但不会自动 pip。
 
@@ -190,21 +222,34 @@ python build.py
 
 ## 📖 使用指南
 
+### GUI 使用说明（详细）
+
+完整的 GUI 操作文档见 **[docs/GUI使用说明.md](../docs/GUI使用说明.md)**，涵盖：
+
+- 计算页：角色/武器选择、属性展示、乘区计算
+- 高级页：全量搜索、多技能加权、异常矩阵
+- 确认计算流程、预设系统、外部 Buff 微调
+- 工具与分享：多方案对比、伤害仪表盘、计算历史
+
 ### 基本操作流程
 
-1. **选择角色**：计算页第 0 列选择类型、星级、名称与等级（信赖等在「高级参数」折叠内）
-2. **选择武器**：计算页第 1 列选择武器（词条滑块在「高级参数」折叠内）
-3. **确认**：计算页乘区下方或高级页「确认选择」——刷新属性列与乘区/预览
-4. **全量搜索**（可选）：切换到 **高级页**，设置范围、固定配装、多技能次数后点「全量遍历」
+1. **选择角色**：计算页左起第一个面板，四级联动（类型 → 星级 → 名称 → 等级）
+2. **选择武器**：计算页第二面板，自动按角色武器类型过滤
+3. **调整参数**：技能等级、信赖等级、潜能（武器）、层数（特殊技能）
+4. **确认**：点击「确认选择」——刷新属性列与乘区
+5. **高级操作**（可选）：切换到**高级页**
+   - 全量搜索、多技能加权
+   - 工具与分享、导入导出配装
+   - 异常矩阵、Buff 微调
 
 ### GUI 布局
 
-主窗口为 **双页签**（`gui.py` + `gui_layout.py`）：
+主窗口为 **双页签**（`shell/qt_app.py` + `shell/qt_control_dock.py`）：
 
 | 页签 | 布局 | 说明 |
 |------|------|------|
-| **计算页** | 五列 `APP_COLUMN_WEIGHTS = (0, 0, 1, 1, 0)` | 选择、属性、乘区（固定宽 340px）；快速确认 |
-| **高级页** | 三列（原底栏） | 操作/工具、全量搜索、多技能次数 |
+| **计算页** | 两列 Splitter + 顶部选择面板 | 左：角色/武器选择 + 属性列；右：乘区展示（ComputeSheet） |
+| **高级页** | 三列 | 操作/工具、全量搜索、多技能次数 |
 
 - 启动后自动确认一次；切页不丢输入；关闭时保存 `ui_preferences.json`（启动页策略）。
 - 全量：开「使用手动次数」后按段级加权总伤排名，否则按当前技能单段伤害。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""display_lines 模块接缝：无 CTk 依赖、技能解析可导入。"""
+"""display_lines 模块：无 PySide6 依赖、技能解析可导入。"""
 
 import unittest
 

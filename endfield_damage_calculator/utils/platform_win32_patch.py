@@ -2,14 +2,11 @@
 """
 避免 ``platform`` 经 WMI 查询卡死（Windows）。
 
-CustomTkinter → darkdetect、PyInstaller.compat 等在导入时会调用
+某些库（如 PyInstaller.compat）在导入时会调用
 ``platform.release()`` / ``platform.win32_ver()`` 等；部分机器上 WMI 会无限阻塞，
 表现为 ``main.py`` / ``build.py`` 启动后长时间无响应。
 
-在导入 customtkinter 或 PyInstaller 之前调用 ``apply_platform_win32_patch()``。
-
-凡**顶层** ``import customtkinter`` 的模块（含 ``gui_design/*``、``legal/attribution.py``）
-都须在 import 前调用本补丁；否则 PyInstaller 分析依赖时会单独 import 这些模块并卡死。
+在可能触发 WMI 的导入前调用 ``apply_platform_win32_patch()``。
 """
 
 from __future__ import annotations

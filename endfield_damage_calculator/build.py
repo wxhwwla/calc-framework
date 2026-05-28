@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-终末地伤害计算器 - 打包脚本
+打包脚本 — 支持双目标构建
 
-使用 PyInstaller onedir 生成「文件夹发布包」：exe 与游戏 JSON、许可文件分开放置，
-便于遵守软件（LICENSE）与数据（DATA_LICENSE）分离分发，并支持单独更新数据。
+使用方法：
+    python build.py                     # 默认构建计算器（终末地伤害计算器）
+    python build.py --target calculator # 同上
+    python build.py --target designer   # 构建设计器（终末地数据设计器）
 
-输出：dist/终末地伤害计算器/
-  ├── 终末地伤害计算器.exe
-  ├── character_weapon_equipment/.../*.json（含 equipments.json）
-  ├── DATA_LICENSE、LICENSE、NOTICES.md
-  ├── 发布说明.txt
-  └── search_output/（首次全量/MVP 搜索后自动创建，与 exe 同级）
+输出：
+  dist/终末地伤害计算器/  ── 伤害计算器（默认）
+  dist/终末地数据设计器/  ── 数据设计器（--target designer）
 
 看门狗（可选环境变量）：
   ENDFIELD_BUILD_TIMEOUT_SECONDS  默认 1200（20 分钟），超时自动终止 PyInstaller
@@ -19,20 +18,22 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-# 添加项目根目录到路径，确保能导入 please_read_me
 sys.path.insert(0, str(Path(__file__).parent))
 
 from please_read_me import get_exe_version, get_version
 from release_bundle.release_layout import (
-    RELEASE_APP_NAME,
+    BuildTarget,
     release_dir_from_dist,
     stage_release_folder,
+    target_app_name,
+    target_entry,
 )
 from utils.platform_win32_patch import apply_platform_win32_patch
 
@@ -41,7 +42,6 @@ DEFAULT_HEARTBEAT_SECONDS = 15
 
 
 def _read_int_env(name: str, default: int) -> int:
-    """读取正整数环境变量；非法值回退到默认值。"""
     raw = os.getenv(name, "").strip()
     if not raw:
         return default
@@ -53,7 +53,6 @@ def _read_int_env(name: str, default: int) -> int:
 
 
 def _terminate_process_tree(proc: subprocess.Popen[bytes]) -> None:
-    """尽量终止进程树，避免 PyInstaller 子进程残留。"""
     if proc.poll() is not None:
         return
     try:
@@ -80,16 +79,9 @@ def _run_with_watchdog(
     timeout_seconds: int,
     heartbeat_seconds: int,
 ) -> None:
-    """
-    带心跳与超时的子进程执行器。
-
-    - 每 heartbeat_seconds 打印一次“仍在进行中”，避免用户误判卡死。
-    - 超时后自动终止子进程树并抛出 TimeoutError。
-    """
     proc = subprocess.Popen(args, cwd=cwd)
     start = time.monotonic()
     last_heartbeat = start
-
     while True:
         rc = proc.poll()
         now = time.monotonic()
@@ -110,8 +102,7 @@ def _run_with_watchdog(
         time.sleep(1)
 
 
-def check_build_dependencies() -> bool:
-    """检查打包依赖：PyInstaller 及其所需的 PyPI ``packaging``（勿与 release_bundle 混淆）。"""
+def check_build_dependencies(target: BuildTarget) -> bool:
     import importlib.util
     from importlib.metadata import PackageNotFoundError, version
 
@@ -133,42 +124,59 @@ def check_build_dependencies() -> bool:
         pyi_ver = "未知"
     print(f"PyInstaller 已安装: {pyi_ver}", flush=True)
 
-    from utils.optional_deps import is_matplotlib_available
+    if target == "calculator":
+        from utils.optional_deps import is_matplotlib_available
 
-    if not is_matplotlib_available():
-        print("缺少运行时依赖 matplotlib。请在 [包] 目录执行：")
-        print("  pip install -e .")
-        return False
-    print("matplotlib 已安装（将打入发布包）", flush=True)
+        if not is_matplotlib_available():
+            print("缺少运行时依赖 matplotlib。请在 [包] 目录执行：")
+            print("  pip install -e .")
+            return False
+        print("matplotlib 已安装（将打入发布包）", flush=True)
     return True
 
 
-def build_release() -> Path:
-    """构建 onedir 发布包（exe 不内嵌 JSON）。"""
+def build_release(target: BuildTarget) -> Path:
     project_root = Path(__file__).parent
     repo_root = project_root.parent
     timeout_seconds = _read_int_env("ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS)
     heartbeat_seconds = _read_int_env("ENDFIELD_BUILD_HEARTBEAT_SECONDS", DEFAULT_HEARTBEAT_SECONDS)
 
-    excludes = [
-        "tests",
-        "scripts",
-        "release_bundle",
-        "add_character",
-        "add_weapon",
-        "test_",
-    ]
+    app_name = target_app_name(target)
+    entry = target_entry(target)
+
+    if target == "calculator":
+        excludes = [
+            "tests",
+            "scripts",
+            "release_bundle",
+            "designer",
+            "add_character",
+            "add_weapon",
+            "test_",
+        ]
+        collect_args = [
+            "--collect-all",
+            "matplotlib",
+            "--hidden-import",
+            "matplotlib.backends.backend_tkagg",
+        ]
+    else:
+        excludes = [
+            "tests",
+            "scripts",
+            "release_bundle",
+            "gui_design",
+            "legal",
+            "search_output",
+            "add_character",
+            "add_weapon",
+            "test_",
+        ]
+        collect_args = []
+
     exclude_args: list[str] = []
     for item in excludes:
         exclude_args.extend(["--exclude-module", item])
-
-    # matplotlib 需随包收集字体/后端，否则 exe 内仪表盘空白或报错
-    pyinstaller_collect_args = [
-        "--collect-all",
-        "matplotlib",
-        "--hidden-import",
-        "matplotlib.backends.backend_tkagg",
-    ]
 
     args = [
         sys.executable,
@@ -177,15 +185,15 @@ def build_release() -> Path:
         "--onedir",
         "--windowed",
         "--noconfirm",
-        f"--name={RELEASE_APP_NAME}",
+        f"--name={app_name}",
         "--clean",
-        *pyinstaller_collect_args,
+        *collect_args,
         *exclude_args,
-        str(project_root / "main.py"),
+        str(project_root / entry),
     ]
 
     print("=" * 60)
-    print("开始打包（onedir，游戏数据不写入 exe）...")
+    print(f"开始打包 {app_name}（onedir，游戏数据不写入 exe）...")
     print("（PyInstaller 分析依赖可能需数分钟，请耐心等待下方日志）")
     print(
         f"（已启用看门狗：超时 {timeout_seconds}s，心跳 {heartbeat_seconds}s）",
@@ -201,8 +209,8 @@ def build_release() -> Path:
     )
 
     dist_dir = project_root / "dist"
-    release_root = release_dir_from_dist(dist_dir)
-    exe_path = release_root / f"{RELEASE_APP_NAME}.exe"
+    release_root = release_dir_from_dist(dist_dir, target=target)
+    exe_path = release_root / f"{app_name}.exe"
     if not exe_path.is_file():
         raise FileNotFoundError(f"未找到打包产物: {exe_path}")
 
@@ -210,6 +218,7 @@ def build_release() -> Path:
         release_root,
         project_root=project_root,
         repo_root=repo_root,
+        target=target,
     )
     return release_root
 
@@ -217,15 +226,26 @@ def build_release() -> Path:
 def main() -> None:
     apply_platform_win32_patch()
 
+    parser = argparse.ArgumentParser(description="终末地双目标打包工具")
+    parser.add_argument(
+        "--target",
+        choices=["calculator", "designer"],
+        default="calculator",
+        help="打包目标：calculator（计算器，默认）| designer（设计器）",
+    )
+    args = parser.parse_args()
+    target: BuildTarget = args.target
+
+    app_name = target_app_name(target)
     print("=" * 60)
-    print(f"终末地伤害计算器 — 打包工具（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）")
+    print(f"{app_name} — 打包工具（源码包 v{get_version()}，目标 EXE v{get_exe_version()}）")
     print("=" * 60)
 
-    if not check_build_dependencies():
+    if not check_build_dependencies(target):
         sys.exit(1)
 
     try:
-        release_root = build_release()
+        release_root = build_release(target)
     except (subprocess.CalledProcessError, FileNotFoundError, TimeoutError) as exc:
         print(f"\n打包失败: {exc}")
         sys.exit(1)
