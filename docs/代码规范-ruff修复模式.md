@@ -311,3 +311,119 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 | 2026-05-28 | 初始版本。基于 `ruff check` 全量修复过程中发现的规律编写。涵盖 E501 / F401 / N806 / E741 四类高频问题。 |
 | 2026-05-28 | 新增 §7 Pyright/Pylance 类型检查。记录 `reportArgumentType` / dict 不变性 / QDoubleSpinBox 等典型修复模式与 pre-existing 状态。 |
 | 2026-05-28 | 新增 §8 TypeScript 前端诊断。记录隐式 any 事件类型、VS Code 工作区模块解析、Monorepo composite 配置。 |
+| 2026-05-28 | 新增 §9 Pylance 可选依赖模式。记录 try/except 条件导入的 _QtWidgets/_QtGui 未绑定问题及修复方案。 |
+
+---
+
+## 9. Pylance 可选依赖条件导入模式
+
+### 9.1 问题描述
+
+当代码通过 `try/except ImportError` + `if guard` 实现可选依赖时，Pylance（VS Code 的类型检查器）无法理解这种运行时条件模式，会认为在 `if _HAS_PYSIDE:` 块内部的 `_QtWidgets`、`_QtGui` 等导入变量**可能未绑定**。
+
+**典型报错**：
+
+```
+"_QtWidgets" 可能未绑定   (reportGeneralTypeIssues)
+```
+
+**根因**：Pylance 的静态分析在 `try/except` 之后无法确定 `_QtWidgets` 是否确实被赋值。虽然运行时因为 `_HAS_PYSIDE` guard 保证了 `_QtWidgets` 一定存在，但 Pylance 不追踪 `if guard` 和 `try` 的关联性。
+
+此外，`if/else` 各定义一个同名类也会触发：
+
+```
+类声明"StepDebuggerWidget"被同名的声明遮蔽   (reportGeneralTypeIssues)
+```
+
+### 9.2 修复方案
+
+**方案 A（推荐）**：在 `if` 块内使用 `type: ignore[no-redef]`，在 **每个** 使用到可选导入变量的行加 `type: ignore[reportGeneralTypeIssues]`。
+
+```python
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PySide6 import QtGui as _QtGui
+    from PySide6 import QtWidgets as _QtWidgets
+
+try:
+    from PySide6 import QtGui as _QtGui
+    from PySide6 import QtWidgets as _QtWidgets
+    _HAS_PYSIDE = True
+except ImportError:
+    _HAS_PYSIDE = False
+
+
+if _HAS_PYSIDE:
+
+    class StepDebuggerWidget(_QtWidgets.QWidget):  # type: ignore[no-redef]
+        def __init__(self) -> None:
+            super().__init__()
+            layout = _QtWidgets.QVBoxLayout(self)  # type: ignore[reportGeneralTypeIssues]
+            ...
+else:
+
+    class StepDebuggerWidget:  # type: ignore[no-redef]
+        ...
+```
+
+| 标注 | 解决什么问题 | 加在哪里 |
+|------|------------|---------|
+| `TYPE_CHECKING` 导入 | 为 Pylance 提供类型信息（解决 `type: ignore` 时的裸类型需求） | `if TYPE_CHECKING:` 块 |
+| `no-redef` | 同名类在两个分支定义 | `class` 行 |
+| `reportGeneralTypeIssues` | 可选导入的变量 `_QtWidgets` 等被认为未绑定 | **每个**使用到这些变量的行 |
+
+**方案 B（不推荐）**：使用 `cast()` 或 `Any` 类型标注。但这样会丢失具体的类型信息，IDE 代码补全也会失效。
+
+**方案 C（不推荐）**：使用 `importlib.util.find_spec` 代替 `try/except`。但这同样无法解决 Pylance 的静态推断限制。
+
+### 9.3 TYPE_CHECKING 模式详解
+
+`TYPE_CHECKING` 是 Python 3.5+ 内置常量，仅在类型检查时（如 Pylance/pyright/mypy）为 `True`，运行时为 `False`。利用此特性，可以为 `try/except` 可选导入提供类型信息：
+
+```python
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+# 类型检查时：使 Pylance 知道这两个模块的存在和类型
+# 运行时：不导入，避免拉取未安装的依赖
+if TYPE_CHECKING:
+    from PySide6 import QtGui as _QtGui
+    from PySide6 import QtWidgets as _QtWidgets
+
+try:
+    from PySide6 import QtGui as _QtGui    # 运行时真实导入
+    from PySide6 import QtWidgets as _QtWidgets
+    _HAS_PYSIDE = True
+except ImportError:
+    _HAS_PYSIDE = False
+```
+
+**关键注意点**：
+
+1. `TYPE_CHECKING` 块中的导入必须与其他导入同级（顶层），不能放在 `if _HAS_PYSIDE:` 内部
+2. `from __future__ import annotations` 是必要的——它将所有注解变为惰性求值的字符串，避免 `TYPE_CHECKING` 中的类型在运行时被实际求值
+3. 类型检查时有效的类、函数签名中的 `QtWidgets.QWidget`、`DAGGraph` 等类型引用都依赖此机制
+4. 运行时 `_QtWidgets` 仍然来自 `try` 块的 `import`，`TYPE_CHECKING` 块不影响运行时行为
+
+### 9.4 与现有模式的比较
+
+| 模式 | 解决 | 不解决 |
+|------|------|--------|
+| **§7.2 QDoubleSpinBox** | stub 类型错误 `int≠float` | — |
+| **§7.2 `**kwargs` 拆包** | 联合值类型无法匹配形参 | — |
+| **§9.2 try/except 可选依赖** | `_QtWidgets` 可能未绑定 + 类遮蔽 | 每行一个 `type: ignore` 的冗长问题 |
+
+**原则**：`type: ignore` 不是"脏标记"，而是告知类型检查器"我知道这个边界情况，请接受"。在可选依赖场景下，这是无法避免的。核心代码应尽量减少此类标注，但工具/ui 代码可以接受。
+
+### 9.5 当前 VS Code 诊断状态（2026-05-28）
+
+| 文件 | 诊断数 | 说明 |
+|------|--------|------|
+| `debugger_gui.py` | **0** | 已用 §9 模式完全修复 |
+| 框架其他文件 | **0** | 无诊断 |
+| 包端 | **0** | `pyrightconfig.json` 的 `include` 限定到 `endfield_damage_calculator`，不含 `web/` |
+| Web 前端 | **0** | `tsc --noEmit` 通过 |
+| **总计** | **0** | ✅ 全零 |
