@@ -1,0 +1,11 @@
+{
+  "attributes": [
+    { "name": "ATK", "type": "float", "source": "character", "description": "角色攻击力" },
+    { "name": "DEF", "type": "float", "source": "character", "description": "角色防御力" },
+    { "name": "HP", "type": "float", "source": "character", "description": "角色生命值" },
+    { "name": "crit_rate", "type": "percent", "source": "character", "default": 0.05, "description": "暴击率" },
+    { "name": "crit_dmg", "type": "percent", "source": "character", "default": 0.5, "description": "暴击伤害" },
+    { "name": "ATK_bonus", "type": "float", "source": "weapon", "default": 0, "description": "武器攻击力加成" },
+    { "name": "DEF", "type": "float", "source": "enemy", "default": 50, "description": "敌方防御力" }
+  ]
+}

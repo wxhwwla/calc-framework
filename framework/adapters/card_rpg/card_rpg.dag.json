@@ -1,0 +1,179 @@
+{
+  "schema_version": "dag-v1",
+  "name": "卡牌RPG伤害公式",
+  "description": "经典回合制卡牌 RPG 伤害公式：damage = max((ATK + weapon_ATK) × skill_mult - DEF × 0.5, 0) × crit_mult",
+  "variables": {
+    "character.ATK": {
+      "type": "float",
+      "source": "character",
+      "description": "角色攻击力"
+    },
+    "character.DEF": {
+      "type": "float",
+      "source": "character",
+      "description": "角色防御力"
+    },
+    "character.crit_rate": {
+      "type": "float",
+      "source": "character",
+      "default": 0.05,
+      "description": "暴击率（小数，0.05=5%）"
+    },
+    "character.crit_dmg": {
+      "type": "float",
+      "source": "character",
+      "default": 0.5,
+      "description": "暴击伤害（小数，0.5=50%）"
+    },
+    "weapon.ATK_bonus": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0,
+      "description": "武器攻击力加成"
+    },
+    "enemy.DEF": {
+      "type": "float",
+      "source": "enemy",
+      "default": 50,
+      "description": "敌方防御力"
+    },
+    "user_input.skill_mult": {
+      "type": "float",
+      "source": "user_input",
+      "default": 1.0,
+      "description": "技能倍率"
+    },
+    "user_input.is_crit": {
+      "type": "bool",
+      "source": "user_input",
+      "default": false,
+      "description": "是否暴击"
+    }
+  },
+  "subgraphs": {},
+  "nodes": {
+    "atk_char": {
+      "type": "var",
+      "path": "character.ATK",
+      "label": "角色ATK"
+    },
+    "atk_weapon": {
+      "type": "var",
+      "path": "weapon.ATK_bonus",
+      "label": "武器ATK"
+    },
+    "total_atk": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "atk_char",
+      "rhs": "atk_weapon",
+      "label": "总攻击力"
+    },
+    "skill_mult_node": {
+      "type": "var",
+      "path": "user_input.skill_mult",
+      "label": "技能倍率"
+    },
+    "atk_x_skill": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "total_atk",
+      "rhs": "skill_mult_node",
+      "label": "ATK×倍率"
+    },
+    "enemy_def": {
+      "type": "var",
+      "path": "enemy.DEF",
+      "label": "敌方防御"
+    },
+    "const_0_5": {
+      "type": "const",
+      "value": 0.5,
+      "label": "0.5"
+    },
+    "half_def": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "enemy_def",
+      "rhs": "const_0_5",
+      "label": "防御×0.5"
+    },
+    "base_dmg": {
+      "type": "binary",
+      "op": "-",
+      "lhs": "atk_x_skill",
+      "rhs": "half_def",
+      "label": "基础伤害"
+    },
+    "clamped": {
+      "type": "expr",
+      "expr": "clamp(base_dmg, 0, 999999)",
+      "inputs": {
+        "base_dmg": "base_dmg"
+      },
+      "label": "钳制（≥0）"
+    },
+    "const_1": {
+      "type": "const",
+      "value": 1.0,
+      "label": "1.0"
+    },
+    "crit_dmg_char": {
+      "type": "var",
+      "path": "character.crit_dmg",
+      "label": "暴击伤害"
+    },
+    "crit_mult_base": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "const_1",
+      "rhs": "crit_dmg_char",
+      "label": "暴击倍率基数"
+    },
+    "is_crit_node": {
+      "type": "var",
+      "path": "user_input.is_crit",
+      "label": "是否暴击"
+    },
+    "crit_mult": {
+      "type": "condition",
+      "cond": "is_crit_node",
+      "true_val": "crit_mult_base",
+      "false_val": "const_1",
+      "label": "暴击倍率"
+    },
+    "final_damage": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "clamped",
+      "rhs": "crit_mult",
+      "label": "最终伤害"
+    }
+  },
+  "outputs": {
+    "总攻击力": {
+      "node": "total_atk",
+      "label": "总攻击力",
+      "format": "",
+      "is_primary": true
+    },
+    "基础伤害": {
+      "node": "clamped",
+      "label": "基础伤害",
+      "format": "",
+      "is_primary": true
+    },
+    "暴击倍率": {
+      "node": "crit_mult",
+      "label": "暴击倍率",
+      "format": "",
+      "is_primary": false
+    },
+    "最终伤害": {
+      "node": "final_damage",
+      "label": "最终伤害",
+      "format": "",
+      "is_primary": true
+    }
+  }
+}
