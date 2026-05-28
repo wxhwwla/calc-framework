@@ -239,9 +239,9 @@ def setup_git_repo() -> str:
     return remote
 
 
-def sync_with_remote() -> bool:
-    if SKIP_PULL:
-        print("[信息] 已跳过拉取（SKIP_PULL=True）")
+def sync_with_remote(*, skip_pull: bool = False) -> bool:
+    if skip_pull or SKIP_PULL:
+        print("[信息] 已跳过拉取" + ("（--skip-pull）" if skip_pull else "（SKIP_PULL=True）"))
         return True
 
     print("[信息] 拉取远程更新...")
@@ -251,10 +251,25 @@ def sync_with_remote() -> bool:
     code, status_out, _ = run_git(["status", "--porcelain"], check=False, capture_output=True)
     stashed = False
     if status_out.strip() and has_commits:
+        has_untracked = False
+        for line in status_out.splitlines():
+            if line[:2].strip() == "??":
+                has_untracked = True
+                break
+        if has_untracked:
+            print("[信息] 检测到未跟踪文件，暂先 add 以便 pull 时安全暂存")
+            run_git(["add", "-A"], check=False)
+
         print("[信息] 暂存本地未提交更改")
-        stash_code, _, stash_err = run_git(["stash", "push", "-m", "upload-script"], check=False, capture_output=True)
+        stash_code, _, stash_err = run_git(
+            ["stash", "push", "--include-untracked", "-m", "upload-script"],
+            check=False,
+            capture_output=True,
+        )
         if stash_code != 0:
             print(f"[警告] 暂存失败: {stash_err.strip()}")
+            if has_untracked:
+                run_git(["reset", "HEAD"], check=False)
             return False
         stashed = True
 
@@ -282,9 +297,15 @@ def sync_with_remote() -> bool:
                 print(f"[警告] 拉取失败: {stderr.strip()}")
 
     if stashed and pull_ok:
-        code, _, stderr = run_git(["stash", "pop"], check=False, capture_output=True)
+        code, _, stderr = run_git(
+            ["stash", "pop", "--index"],
+            check=False,
+            capture_output=True,
+        )
         if code != 0:
-            print(f"[警告] 恢复暂存失败: {stderr.strip()}")
+            print(f"[警告] 暂存恢复有冲突（本地文件已被远程版本覆盖），使用本地版本覆盖")
+            run_git(["checkout", "--theirs", "."], check=False)
+            run_git(["reset", "HEAD", "."], check=False)
 
     return pull_ok
 
@@ -568,21 +589,34 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="推送 git 标签（v{version}），触发 GitHub Actions 构建并发布 Verified 发行版",
     )
+    parser.add_argument(
+        "--skip-pull",
+        action="store_true",
+        help="跳过远程拉取，直接提交并推送",
+    )
+    parser.add_argument(
+        "--force-push",
+        action="store_true",
+        help="使用 --force-with-lease 推送（覆盖远程历史，用于修复损坏提交后重推）",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
+    global FORCE_PUSH
     args = parse_args()
     if args.minor and args.no_bump:
         print("[错误] --minor 与 --no-bump 不能同时使用")
         sys.exit(1)
+    if args.force_push:
+        FORCE_PUSH = True
 
     print("=" * 60)
     print("GitHub 上传脚本（SSH）")
     print("=" * 60)
     try:
         setup_git_repo()
-        if not sync_with_remote():
+        if not sync_with_remote(skip_pull=args.skip_pull):
             print("[中止] 同步远程失败，未推送")
             sys.exit(1)
         commit_and_push(minor=args.minor, no_bump=args.no_bump, push_tag=args.tag)

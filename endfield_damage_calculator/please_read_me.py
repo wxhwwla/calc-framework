@@ -209,8 +209,26 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 20 处文件
 # BODY:
-# - 修改 endfield_damage_calculator/build.py
-# - 修改 endfield_damage_calculator/please_read_me.py
+# - 更新文档 docs/agents/encoding-corruption-handling.md
+# - 修改 endfield_damage_calculator/calculation/manual_buff/physical.py
+# - 修改 endfield_damage_calculator/calculation/manual_buff/spell.py
+# - 修改 endfield_damage_calculator/calculation/manual_buff/spell_params.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/_subgraph_builders.py
+# - 修改 endfield_damage_calculator/gui_design/controls/search/search_estimate_message.py
+# - 修改 endfield_damage_calculator/gui_design/controls/search/search_export_paths.py
+# - 修改 endfield_damage_calculator/gui_design/controls/search/search_settings.py
+# - 变更 endfield_damage_calculator/gui_design/designer/
+# - 变更 endfield_damage_calculator/gui_design/legal/
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_app_confirm_mixin.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_app_dialog_mixin.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_app_search_mixin.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_control_dock_builders.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_control_dock_widgets.py
+# - 修改 endfield_damage_calculator/scripts/__init__.py
+# - 修改 endfield_damage_calculator/scripts/build.py
+# - 修改 endfield_damage_calculator/scripts/editor_app.py
+# - 修改 endfield_damage_calculator/tests/repo/test_release_layout.py
+# - 修改 github_upload_module.py
 # --- END UPLOAD_SUMMARY ---
