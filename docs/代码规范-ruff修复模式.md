@@ -297,10 +297,48 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 }
 ```
 
-注意：
-- `composite: true` 与 `noEmit: true` **冲突**，需要用 `emitDeclarationOnly: true`
-- `outDir` 输出的是 `.d.ts` 声明文件（Vite/esbuild 不依赖它们）
-- `dist-types/` 已加入根 `.gitignore`
+### 7.5 `QLayout.addWidget` 的 `stretch` 参数 — 类型收窄
+
+**背景**：通过 `widget.layout()` 获取的布局返回类型为 `QLayout | None`，Pylance 推断为基类 `QLayout`。而 `QLayout.addWidget(w)` 只接受 1 个参数（widget），不接受 `stretch` 关键字参数。`stretch` 仅在 `QBoxLayout.addWidget(w, stretch, alignment)` 上可用。
+
+**现象**：Pylance 报错 `没有名为"stretch"的参数` 或 `应为 1 个位置参数`。
+
+**修复模式**：使用 `assert isinstance()` 将类型收窄为子类（`QVBoxLayout` / `QHBoxLayout`）：
+
+```python
+# ❌ Pylance 报错（QLayout.addWidget 无 stretch 参数）
+sheet_layout = self._compute_sheet_widget.layout()  # 类型: QLayout | None
+sheet_layout.addWidget(widget, stretch=1)
+
+# ✅ assert isinstance 收窄类型
+sheet_layout = self._compute_sheet_widget.layout()
+assert isinstance(sheet_layout, QVBoxLayout)   # 告知 Pylance 实际类型
+sheet_layout.addWidget(widget, stretch=1)       # 现在 QVBoxLayout.addWidget 接受 stretch
+```
+
+**原理**：`QVBoxLayout` → `QHBoxLayout` → `QBoxLayout` 全部继承自 `QLayout`。`QWidget.layout()` 返回基类指针，但运行时实际类型就是创建时指定的子类。`assert isinstance` 在运行时可被 `-O` 移除（零成本 assert），同时在静态分析层面完成类型收窄。
+
+**适用场景**：任何通过 `widget.layout()` 获取布局后需要调用 `stretch` 关键字参数的地方。
+
+**例外**：直接创建的 `QVBoxLayout()` / `QHBoxLayout()` 局部变量无需收窄，因为 Pylance 已经知道它们的类型。
+
+---
+
+## 9. 诊断工作流总结
+
+```bash
+# VS Code Problems 面板 — 查看全部诊断
+# 使用 `#problems_and_diagnostics` 查看实时状态
+
+# ruff 检查（不影响类型诊断）
+ruff check
+
+# pyright 专项检查
+pyright .
+
+# 全量回归验证
+python -m pytest tests/ -q
+```
 
 ---
 
@@ -311,6 +349,7 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 | 2026-05-28 | 初始版本。基于 `ruff check` 全量修复过程中发现的规律编写。涵盖 E501 / F401 / N806 / E741 四类高频问题。 |
 | 2026-05-28 | 新增 §7 Pyright/Pylance 类型检查。记录 `reportArgumentType` / dict 不变性 / QDoubleSpinBox 等典型修复模式与 pre-existing 状态。 |
 | 2026-05-28 | 新增 §8 TypeScript 前端诊断。记录隐式 any 事件类型、VS Code 工作区模块解析、Monorepo composite 配置。 |
+| 2026-05-28 | 新增 §7.5 `QLayout.addWidget` stretch 参数类型收窄模式。新增 §9 诊断工作流总结。 |
 | 2026-05-28 | 新增 §9 Pylance 可选依赖模式。记录 try/except 条件导入的 _QtWidgets/_QtGui 未绑定问题及修复方案。 |
 
 ---

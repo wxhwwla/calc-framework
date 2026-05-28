@@ -58,12 +58,22 @@ class ComputeSheet(QObject):
         variables: dict[str, DAGVariable],
         base_context: dict[str, Any] | None = None,
         parent: QWidget | None = None,
+        user_context_overrides: dict[str, tuple[str, list[str]]] | None = None,
     ):
+        """user_context_overrides: {user_input_var_path: (target_dotted_path, [merge_keys])}
+        将 user_input 变量的值合并到 DAG context 的目标路径下。
+        示例:
+          "user_input.敌人防御" → ("enemy.防御", ["override"])
+            → 用 user_input 值直接覆盖 enemy.防御
+          "user_input.额外暴击率" → ("character.暴击率", ["add"])
+            → 将 user_input 值加到 character.暴击率上
+        """
         super().__init__(parent)
         self._dag_service = dag_service
         self._layout = layout
         self._variables = variables
         self._base_context = base_context or {}
+        self._user_context_overrides = user_context_overrides or {}
         self._widget: QWidget | None = None
         self._output_labels: dict[str, QLabel] = {}
         self._input_widgets: dict[str, tuple[QWidget, ControlSpec]] = {}
@@ -84,6 +94,7 @@ class ComputeSheet(QObject):
                       len(self._dag_service.dag.outputs), len(self._variables))
         context = dict(self._base_context)
 
+        user_values: dict[str, float] = {}
         for path, var in self._variables.items():
             vd = _var_to_dict(var)
             source = vd.get("source", "")
@@ -92,10 +103,35 @@ class ComputeSheet(QObject):
                 parts = path.split(".", 1)
                 if len(parts) == 2:
                     context.setdefault(parts[0], {})[parts[1]] = value
+                user_values[path] = value
+
+        for user_path, (target_path, merge_keys) in self._user_context_overrides.items():
+            uv = user_values.get(user_path)
+            if uv is None:
+                continue
+            parts = target_path.split(".", 1)
+            if len(parts) != 2:
+                continue
+            ns, key = parts
+            for mk in merge_keys:
+                if mk == "override":
+                    context.setdefault(ns, {})[key] = uv
+                elif mk == "add":
+                    current = context.get(ns, {}).get(key, 0.0)
+                    context.setdefault(ns, {})[key] = current + uv
 
         result = self._dag_service.evaluate(context)
         self._update_outputs(result)
         self.evaluated.emit(result)
+        return result
+
+    def read_user_inputs(self) -> dict[str, Any]:
+        """读取所有 user_input 类型变量的当前值（用于调用方合并到 DAG context）。"""
+        result: dict[str, Any] = {}
+        for path, raw_var in self._variables.items():
+            vd = _var_to_dict(raw_var) if raw_var else {}
+            if vd.get("source") == "user_input":
+                result[path] = self._read_input(path)
         return result
 
     def _read_input(self, path: str) -> Any:

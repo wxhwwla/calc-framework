@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
+    QScrollArea,
     QSizePolicy,
     QTabWidget,
     QVBoxLayout,
@@ -174,7 +175,10 @@ class QtDamageApp:
         sheet_layout = QVBoxLayout(self._compute_sheet_widget)
         sheet_layout.setContentsMargins(0, 0, 0, 0)
         sheet_layout.addWidget(QLabel("按「确认选择」加载乘区数据"))
-        content_split.addWidget(self._compute_sheet_widget)
+        sheet_scroll = QScrollArea()
+        sheet_scroll.setWidgetResizable(True)
+        sheet_scroll.setWidget(self._compute_sheet_widget)
+        content_split.addWidget(sheet_scroll)
         content_split.setSizes([400, 400])
 
         self.tabs.addTab(calc_page, "计算页")
@@ -615,11 +619,18 @@ class QtDamageApp:
                 variables=pkg.dag_service.dag.variables,
                 base_context=context,
                 parent=None,
+                user_context_overrides={
+                    "user_input.敌人防御": ("enemy.防御", ["override"]),
+                    "user_input.额外暴击率": ("character.暴击率", ["add"]),
+                    "user_input.额外暴击伤害": ("character.暴击伤害", ["add"]),
+                    "user_input.额外伤害加成": ("computed.伤害加成", ["add"]),
+                },
             )
             old = self._compute_sheet
             self._compute_sheet = new_sheet
 
             sheet_layout = self._compute_sheet_widget.layout()
+            assert isinstance(sheet_layout, QVBoxLayout)
             while sheet_layout.count():
                 item = sheet_layout.takeAt(0)
                 w = item.widget()

@@ -4,16 +4,102 @@
   "description": "终末地 15 乘区公式的 ComputeSheet 排版",
   "sections": [
     {
+      "id": "enemy_and_extra",
+      "type": "inputs",
+      "title": "敌人参数与额外加成",
+      "columns": 2,
+      "variables": [
+        "user_input.敌人防御",
+        "user_input.额外暴击率",
+        "user_input.额外暴击伤害",
+        "user_input.额外伤害加成"
+      ]
+    },
+    {
+      "id": "character_attrs",
+      "type": "outputs",
+      "title": "角色属性",
+      "columns": 2,
+      "outputs": [
+        "力量最终值",
+        "敏捷最终值",
+        "智识最终值",
+        "意志最终值"
+      ]
+    },
+    {
       "id": "attack_chain",
       "type": "outputs",
       "title": "攻击力链",
-      "outputs": ["能力值加成", "最终攻击力"]
+      "columns": 2,
+      "outputs": [
+        "能力值加成",
+        "最终攻击力"
+      ]
     },
     {
-      "id": "damage",
+      "id": "base_and_crit",
       "type": "outputs",
-      "title": "伤害结果",
-      "outputs": ["最终伤害"]
+      "title": "基础伤害区 & 暴击区",
+      "columns": 2,
+      "outputs": [
+        "基础伤害区",
+        "暴击区"
+      ]
+    },
+    {
+      "id": "dmg_bonus_group",
+      "type": "outputs",
+      "title": "伤害加成/减免/增幅",
+      "columns": 2,
+      "outputs": [
+        "伤害加成区",
+        "伤害减免区",
+        "增幅区"
+      ]
+    },
+    {
+      "id": "debuff_zones",
+      "type": "outputs",
+      "title": "减益乘区",
+      "columns": 2,
+      "outputs": [
+        "虚弱区",
+        "庇护区",
+        "脆弱区",
+        "易伤区"
+      ]
+    },
+    {
+      "id": "defense_zones",
+      "type": "outputs",
+      "title": "防御/抗性/失衡",
+      "columns": 2,
+      "outputs": [
+        "防御区",
+        "失衡易伤区",
+        "抗性区",
+        "非主控减伤区"
+      ]
+    },
+    {
+      "id": "other_zones",
+      "type": "outputs",
+      "title": "其他乘区",
+      "columns": 2,
+      "outputs": [
+        "连击增伤区",
+        "特殊乘区"
+      ]
+    },
+    {
+      "id": "final_result",
+      "type": "outputs",
+      "title": "最终伤害",
+      "columns": 1,
+      "outputs": [
+        "最终伤害"
+      ]
     }
   ]
 }
