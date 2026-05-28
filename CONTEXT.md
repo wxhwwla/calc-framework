@@ -115,6 +115,10 @@
 | **ECA** | Entity-Context-Action 三层设计模式（可选），用于表达任意游戏战斗规则 |
 | **属性声明 Schema** | `attr_schema.json`，适配器声明自己的属性结构（名称/类型/来源/默认值），框架据此自动构建 DataContext |
 | **CardRPG 适配器** | `framework/adapters/card_rpg/`，经典攻击-防御公式的卡牌RPG示例适配器，证明框架跨品类通用 |
+| **DAG 模板库** | `framework/src/calc_framework/dag/templates.py`，可复用的子图模式 registry，内置 5 个通用模板（防御减伤/暴击倍率/钳制/百分比/等级成长），DAG JSON 中用 `"template"` 字段引用 |
+| **搜索/枚举引擎** | `framework/src/calc_framework/search/`，通用搜索基础设施：TopNTracker / SearchCancelToken / run_parallel / SearchResult |
+| **插件系统** | `framework/src/calc_framework/plugin/`，BasePlugin + PluginRegistry，3 内置插件（暴击/闪避/距离衰减），可注册变量/模板/函数 |
+| **发布/分享工具** | `framework/src/calc_framework/publish/`，JSON Schema 校验 + catalog HTML 生成器 |
 | **theme.json** | 主题定义，`ui/theme.json`：font（族/大小/粗细）、colors（primary/background/text 等）、spacing |
 | **布局编辑器画布** | `tools/designer/layout_editor/canvas.py`：QGraphicsView 网格画布，支持网格列数/间距/吸附配置 |
 | **碰撞检测** | `tools/designer/layout_editor/collision.py`：QGraphicsItem 矩形重叠实时检测 |

@@ -676,3 +676,57 @@ DAG JSON 中通过 `"template": "defense_reduction"` 引用。
 |------|------|------|
 | 框架测试 | 241 passed | **262 passed**（+21） |
 | 终末地包测试 | 540 passed | 540 passed（无回归） |
+
+---
+
+## 附录 F：Step 3 完成记录 — DAG 模板库（2026-05-28）
+
+### 实现内容
+
+**文件**：`framework/src/calc_framework/dag/templates.py`
+
+| 组件 | 说明 |
+|------|------|
+| `register_template()` | 全局模板注册函数 |
+| `expand_template_refs()` | 在 DAG JSON 加载时自动展开模板引用为实际节点 |
+| `_register_builtin_templates()` | 注册 5 个内置通用模板 |
+
+### 内置模板一览
+
+| 模板名 | 公式 | 用途 |
+|--------|------|------|
+| `defense_reduction` | `100 / (100 + defense × scale)` | 经典防御减伤公式 |
+| `crit_multiplier` | `is_crit ? (1 + crit_dmg) : 1` | 暴击倍率判定 |
+| `clamp_to_range` | `clamp(value, min, max)` | 值钳制（需注册 `clamp` 函数） |
+| `percent_of` | `value / total` | 百分比计算（需注册 `percent_of` 函数） |
+| `attribute_scaling` | `base + floor((growth×(level-1) + offset) / divisor)` | 等级成长公式 |
+
+### DAG JSON 中的引用方式
+
+```json
+{
+  "def_reduc": {
+    "template": "defense_reduction",
+    "bindings": {
+      "defense": "enemy_def",
+      "scale": "const_0_5"
+    }
+  }
+}
+```
+
+加载时自动展开为完整节点，等价于：
+
+```json
+{
+  "def_reduc": { "type": "expr", "expr": "100 / (100 + def_scaled)", "inputs": {"def_scaled": "def_reduc_mult"} },
+  "def_reduc_mult": { "type": "binary", "op": "*", "lhs": "enemy_def", "rhs": "const_0_5" }
+}
+```
+
+### 测试结果
+
+| 套件 | 之前 | 之后 |
+|------|------|------|
+| 框架测试 | 262 passed | **293 passed**（+31） |
+| 终末地包测试 | 540 passed | 540 passed（无回归） |

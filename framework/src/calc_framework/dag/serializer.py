@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""DAG 序列化：JSON 文件 ↔ DAGGraph 互转。"""
+"""DAG 序列化：JSON 文件 ↔ DAGGraph 互转。
+
+模板引用（``"template"`` 字段）在加载时自动展开。"""
 
 from __future__ import annotations
 
@@ -23,6 +25,7 @@ from .schema import (
     VarNode,
     validate_graph,
 )
+from .templates import expand_template_refs
 
 
 def _variable_to_dict(var: DAGVariable) -> dict[str, Any]:
@@ -101,7 +104,11 @@ def dag_to_dict(graph: DAGGraph) -> dict[str, Any]:
 
 
 def dag_from_dict(raw: dict[str, Any]) -> DAGGraph:
-    """从字典解析并校验 DAGGraph。"""
+    """从字典解析并校验 DAGGraph。
+
+    自动展开模板引用节点后再进行校验。
+    """
+    raw = expand_template_refs(raw)
     return validate_graph(raw)
 
 

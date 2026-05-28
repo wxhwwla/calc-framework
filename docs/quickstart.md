@@ -127,6 +127,33 @@ framework/adapters/my-game/
 | `expr` | 内联表达式 | `expr`（如 `a * (b + c)`）, `inputs` |
 | `user_input` | GUI 输入控件 | `default`, `min`, `max`, `step` |
 | `call` | 子图调用 | `subgraph`, `bindings` |
+| `template` | 公式模板引用 | `template`, `bindings` |
+
+### 使用公式模板
+
+框架内置 5 个通用公式模板，可直接引用：
+
+```json
+{
+  "def_reduc": {
+    "template": "defense_reduction",
+    "bindings": {
+      "defense": "enemy_def",
+      "scale": "const_0_5"
+    }
+  }
+}
+```
+
+加载时自动展开为完整节点。内置模板：
+
+| 模板名 | 公式 |
+|--------|------|
+| `defense_reduction` | `100 / (100 + defense × scale)` |
+| `crit_multiplier` | `is_crit ? (1 + crit_dmg) : 1` |
+| `clamp_to_range` | `clamp(value, min, max)` |
+| `percent_of` | `value / total` |
+| `attribute_scaling` | `base + floor((growth×(level-1) + offset) / divisor)` |
 
 ### 子图
 

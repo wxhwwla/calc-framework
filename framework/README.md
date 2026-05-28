@@ -73,8 +73,42 @@ print(result.outputs)
 | `engine.py` | 拓扑排序 + 节点求值 + 默认值回退 |
 | `subgraph.py` | call 节点内联展开 |
 | `sandbox.py` | AST 解析 + 白名单校验 + 安全求值 |
-| `serializer.py` | DAG JSON ↔ DAGGraph |
+| `serializer.py` | DAG JSON ↔ DAGGraph（加载时自动展开模板引用） |
 | `service.py` | DAGService 统一入口 |
+| `templates.py` | 可复用公式模板库（5 内置模板，支持 ``"template"`` 字段引用） |
+
+### 配置/加载层 — `calc_framework.config`
+
+| 模块 | 职责 |
+|------|------|
+| `adapter.py` | 适配包加载器（meta.json → DAGService） |
+| `manager.py` | 适配器管理器（发现/缓存/加载多个适配包） |
+
+### 搜索/枚举引擎 — `calc_framework.search`
+
+| 模块 | 职责 |
+|------|------|
+| `tracker.py` | Top-N 结果追踪（通用泛型） |
+| `cancel.py` | 搜索取消令牌（超量/主动取消） |
+| `parallel.py` | 并行执行器（进度回调、Top-N、取消） |
+| `result.py` | 通用搜索结果类型 |
+
+适用于任何需要遍历大量候选并保留最优结果的场景（配装搜索、参数枚举、伤害最大化等）。
+
+### 插件系统 — `calc_framework.plugin`
+
+| 模块 | 职责 |
+|------|------|
+| `base.py` | BasePlugin / PluginMeta 基类 |
+| `registry.py` | PluginRegistry 全局注册表 |
+| `builtin.py` | 3 内置插件（crit_handler / dodge_handler / distance_decay） |
+
+### 发布/分享 — `calc_framework.publish`
+
+| 模块 | 职责 |
+|------|------|
+| `schema.py` | JSON Schema 校验（validate_package） |
+| `catalog.py` | 静态 HTML 目录生成（build_catalog） |
 
 ### 数据层 — `calc_framework.data`
 
@@ -220,6 +254,24 @@ DAG JSON 是框架的核心配置。一个完整 DAG 包含：
 }
 ```
 
+### DAG 模板
+
+框架内置 5 个通用公式模板（`defense_reduction`、`crit_multiplier`、`clamp_to_range`、`percent_of`、`attribute_scaling`），可在 DAG JSON 中直接引用：
+
+```json
+{
+  "def_reduc": {
+    "template": "defense_reduction",
+    "bindings": {
+      "defense": "enemy_def",
+      "scale": "const_0_5"
+    }
+  }
+}
+```
+
+加载时自动展开为完整节点。也可通过 `register_template()` 注册自定义模板。
+
 ---
 
 ## 日志
@@ -243,11 +295,37 @@ errors = schema.validate(ctx)
 
 环境变量控制：`CALC_FRAMEWORK_LOG_LEVEL`（默认 WARNING）、`CALC_FRAMEWORK_LOG_FILE`。
 
+## 游戏启动器
+
+通过 ``calc_framework.launcher`` 可交互选择适配包并启动 ComputeSheet GUI：
+
+```bash
+# 交互选择
+python -m calc_framework.launcher
+
+# 直接指定
+python -m calc_framework.launcher 终末地伤害计算器
+```
+
+适配器搜索路径由 ``CALC_ADAPTERS_DIR`` 环境变量控制（默认 ``framework/adapters/``）。
+
+## 发布 Catalog
+
+```bash
+python -c "from calc_framework.publish import build_catalog; build_catalog('dist')"
+```
+
+生成 ``dist/index.html``，可部署到 GitHub Pages 作为社区适配器市场。
+
+---
+
+## 开发与测试
+
 ---
 
 ## 测试
 
 ```bash
 cd framework
-python -m pytest tests/ -q    # 262 passed
+python -m pytest tests/ -q    # 293 passed
 ```
