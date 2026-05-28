@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""开发者工具主窗口 — 三页签：数据录入 / 布局编辑 / 主题与导出。"""
+
+from __future__ import annotations
+
+import sys
+import os
+
+_project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QStatusBar,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+from tools.designer.data_editor.panel import DataEditorPanel
+from tools.designer.layout_editor.canvas import LayoutCanvasPanel
+from tools.designer.theme_editor.panel import ThemePanel
+
+
+class DesignerWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("配置包设计器")
+        self.resize(1200, 800)
+
+        self._tabs = QTabWidget()
+        self.setCentralWidget(self._tabs)
+
+        self._data_panel = DataEditorPanel()
+        self._layout_panel = LayoutCanvasPanel()
+        self._theme_panel = ThemePanel()
+        self._theme_panel.export_requested.connect(self._on_export)
+
+        self._tabs.addTab(self._data_panel, "数据录入")
+        self._tabs.addTab(self._layout_panel, "布局编辑")
+        self._tabs.addTab(self._theme_panel, "主题与导出")
+
+        self._status = QStatusBar()
+        self._status_label = QLabel("就绪")
+        self._status.addWidget(self._status_label)
+        self.setStatusBar(self._status)
+
+        self._tabs.currentChanged.connect(self._on_tab_changed)
+        self._update_status()
+
+    def _on_tab_changed(self, index: int) -> None:
+        self._update_status()
+
+    def _update_status(self) -> None:
+        tab_name = self._tabs.tabText(self._tabs.currentIndex())
+        self._status_label.setText(f"当前页签: {tab_name}")
+
+    def _on_export(self, path: str) -> None:
+        self._status_label.setText(f"已导出 → {path}")
+
+
+def main() -> None:
+    app = QApplication(sys.argv)
+    app.setApplicationName("配置包设计器")
+    win = DesignerWindow()
+    win.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

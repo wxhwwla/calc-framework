@@ -92,6 +92,17 @@
 | **迁移器 from_legacy_endfield** | `tools/data_pipeline/transformers/from_legacy_endfield.py`：将旧 `characters.json`/`weapons.json` 自动转换为标准 EntitySchema |
 | **校验器 — schema_check** | `tools/data_pipeline/validators/schema_check.py`：检查必填字段、标签合法性、段完整性 |
 
+## 配置包与开发者工具
+
+| 术语 | 含义 |
+|------|------|
+| **.calcpack** | 游戏配置包，ZIP 格式，含 DAG 公式 + 数据 + UI 布局 + 主题，供用户 ComputeSheet 加载 |
+| **`tools/designer/`** | 配置包设计器，独立 GUI：数据录入 + 布局编辑 + 主题编辑 → `.calcpack` 导出 |
+| **theme.json** | 主题定义，`ui/theme.json`：font（族/大小/粗细）、colors（primary/background/text 等）、spacing |
+| **布局编辑器画布** | `tools/designer/layout_editor/canvas.py`：QGraphicsView 网格画布，支持网格列数/间距/吸附配置 |
+| **碰撞检测** | `tools/designer/layout_editor/collision.py`：QGraphicsItem 矩形重叠实时检测 |
+| **开发者 GUI 入口** | `python -m tools.designer`，独立进程，不依赖终末地包 |
+
 ## 通用计算框架（calc-framework）
 
 | 术语 | 含义 |
