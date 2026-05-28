@@ -11,6 +11,7 @@ from typing import Any
 
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.service import DAGService
+from calc_framework.data.attr_schema import AttributeSchema
 from calc_framework.logging import get_logger
 
 logger = get_logger(__name__)
@@ -42,7 +43,9 @@ class AdapterPackage:
         self._meta: dict[str, Any] = self._load_meta()
         self._validate_meta()
         self._dag_service: DAGService | None = None
+        self._attr_schema: AttributeSchema | None = None
         self._load_functions()
+        self._load_attr_schema()
         logger.info("适配包加载成功: %s (schema=%s, version=%s)",
                       self._adapter_dir.name,
                       self._meta.get("schema_version", "?"),
@@ -54,6 +57,25 @@ class AdapterPackage:
         委托给 ``DAGService.register_function``，在适配包层面暴露。
         """
         self.dag_service.register_function(name, fn)
+
+    @property
+    def attr_schema(self) -> AttributeSchema | None:
+        return self._attr_schema
+
+    def _load_attr_schema(self) -> None:
+        ref = self._meta.get("attr_schema")
+        if not ref:
+            return
+        schema_path = self._adapter_dir / ref
+        if not schema_path.is_file():
+            logger.warning("attr_schema 文件未找到: %s", schema_path)
+            return
+        try:
+            raw = schema_path.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            self._attr_schema = AttributeSchema.from_dict(data)
+        except Exception as exc:
+            logger.warning("加载 attr_schema 失败: %s", exc)
 
     def _load_functions(self) -> None:
         """从 ``meta.json`` 的 ``functions`` 字段加载自定义函数。

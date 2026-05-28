@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.1.13"
+_VERSION = "3.3.0"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,7 +209,12 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 修改 endfield_damage_calculator/please_read_me.py
+# TITLE: 更新 6 处文件
 # BODY:
+# - 变更 "docs//344/273/243/347/240/201/350/247/204/350/214/203-ruff/344/277/256/345/244/215/346/250/241/345/274/217.md"
+# - 变更 .gitignore
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 framework/src/calc_framework/config/adapter.py
+# - 变更 tsconfig.json
+# - 变更 web/
 # --- END UPLOAD_SUMMARY ---

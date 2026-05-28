@@ -22,6 +22,9 @@ pip-wheel-metadata/
 venv/
 env/
 
+# Node.js（web/frontend 前端）
+node_modules/
+
 # 测试 / 覆盖率
 .pytest_cache/
 pytest-cache-files-*/
@@ -35,6 +38,7 @@ htmlcov/
 # 构建输出（PyInstaller）
 build/
 dist/
+dist-types/
 *.spec
 *.exe
 终末地伤害计算器.exe

@@ -235,9 +235,79 @@ ruff 双端 **All checks passed**，pyright 我们引入的 5 处错误已全部
 
 ---
 
+## 8. TypeScript 前端诊断（web/ 子项目）
+
+`web/` 目录下的 React + TypeScript 前端有一个独立的 `tsconfig.json` 和 `node_modules/`，诊断规则与 Python 后端不同。
+
+### 8.1 隐式 any 类型（ts(7006)）
+
+**规则**：`tsconfig.json` 中 `strict: true` 包含 `noImplicitAny`。
+
+**典型场景**：MUI 组件的事件回调没有类型标注。
+
+```tsx
+// ❌ 参数 "e" 隐式具有 "any" 类型
+<Select onChange={(e) => selectAdapter(e.target.value)} />
+
+// ✅ 添加事件类型
+import type { SelectChangeEvent } from "@mui/material/Select";
+<Select onChange={(e: SelectChangeEvent) => selectAdapter(e.target.value)} />
+
+// ✅ 通用 DOM 事件
+<Switch onChange={(e: React.ChangeEvent<HTMLInputElement>) => setParam(key, e.target.checked)} />
+<TextField onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => ...} />
+```
+
+**修复模式**：MUI 组件优先使用 MUI 专有类型（`SelectChangeEvent`），通用 HTML 控件用 `React.ChangeEvent<HTMLInputElement>`。
+
+### 8.2 VS Code 工作区找不到模块（ts(2307) — 仅 VS Code 面板）
+
+**症状**：`#problems_and_diagnostics` 面板显示大量"找不到模块"错误，但 `npm run build`（`tsc -b && vite build`）通过。
+
+**根因**：这是 **VS Code 工作区级别的假阳性**，不是真正的构建错误。原因：
+
+1. VS Code 打开的是仓库根目录（`e:\endfield_damage_calculator\`）
+2. 根目录没有 `tsconfig.json`（或与 `web/frontend/` 无关），VS Code 的 TS language service 使用推断的配置
+3. 推断配置不知道 `web/frontend/node_modules/` 的存在，因此无法解析 `react`、`@mui/material`、`vite` 等模块
+
+**修复方案**：
+
+| 层级 | 方案 | 说明 |
+|------|------|------|
+| 项目级 | 添加根 `tsconfig.json` 用 `references` | 已实施：根 `tsconfig.json` → `{ "references": [{ "path": "web/frontend" }] }` |
+| 前端 | `web/frontend/tsconfig.json` 加 `composite: true` | 已实施，同时配置 `emitDeclarationOnly` + `outDir` |
+| 用户级 | 重新打开 VS Code 或重载 TS Server | `Ctrl+Shift+P` → `TypeScript: Reload Project` |
+
+**如果仍然出现**：这是 VS Code 工作区缓存问题，不影响 CI 和实际构建。可打开 `web/frontend/` 作为单独工作区根来彻底消除。
+
+### 8.3 项目引用配置（composite）
+
+当 Monorepo 根 `tsconfig.json` 使用 `references` 引用子项目时，子项目 `tsconfig.json` 必须满足：
+
+```jsonc
+// web/frontend/tsconfig.json — 被引用的子项目
+{
+  "compilerOptions": {
+    "composite": true,                    // 必须
+    "emitDeclarationOnly": true,          // 替代 noEmit（Vite 负责打包）
+    "outDir": "./dist-types",             // 声明输出目录
+    "tsBuildInfoFile": "./dist-types/tsconfig.tsbuildinfo",
+    "rootDir": ".",                       // 明确指定
+  }
+}
+```
+
+注意：
+- `composite: true` 与 `noEmit: true` **冲突**，需要用 `emitDeclarationOnly: true`
+- `outDir` 输出的是 `.d.ts` 声明文件（Vite/esbuild 不依赖它们）
+- `dist-types/` 已加入根 `.gitignore`
+
+---
+
 ## 变更记录
 
 | 日期 | 说明 |
 |------|------|
 | 2026-05-28 | 初始版本。基于 `ruff check` 全量修复过程中发现的规律编写。涵盖 E501 / F401 / N806 / E741 四类高频问题。 |
 | 2026-05-28 | 新增 §7 Pyright/Pylance 类型检查。记录 `reportArgumentType` / dict 不变性 / QDoubleSpinBox 等典型修复模式与 pre-existing 状态。 |
+| 2026-05-28 | 新增 §8 TypeScript 前端诊断。记录隐式 any 事件类型、VS Code 工作区模块解析、Monorepo composite 配置。 |
