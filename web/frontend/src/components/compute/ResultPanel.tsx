@@ -5,6 +5,9 @@ import {
   TableCell,
   TableRow,
   Paper,
+  Skeleton,
+  Box,
+  Alert,
 } from "@mui/material";
 import { useComputeStore } from "../../store/computeStore";
 
@@ -16,20 +19,36 @@ export default function ResultPanel() {
   if (loading) {
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
-        <Typography>计算中...</Typography>
+        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          结算结果
+        </Typography>
+        <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 1 }} />
+        <Box sx={{ mt: 1 }}>
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} variant="text" width={`${60 + i * 10}%`} />
+          ))}
+        </Box>
       </Paper>
     );
   }
 
   if (error) {
     return (
-      <Paper sx={{ p: 2, mt: 2, bgcolor: "error.main" }}>
-        <Typography color="error.contrastText">{error}</Typography>
-      </Paper>
+      <Alert severity="error" sx={{ mt: 2 }}>
+        {error}
+      </Alert>
     );
   }
 
-  if (!result) return null;
+  if (!result) {
+    return (
+      <Paper sx={{ p: 2, mt: 2, textAlign: "center" }}>
+        <Typography color="text.secondary">
+          选择适配器并输入参数后点击"计算 (Compute)"
+        </Typography>
+      </Paper>
+    );
+  }
 
   const entries = Object.entries(result.outputs);
 

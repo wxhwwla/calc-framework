@@ -8,10 +8,11 @@ import { useComputeStore } from "../store/computeStore";
 export default function ComputePage() {
   const runCompute = useComputeStore((s) => s.runCompute);
   const selectedAdapter = useComputeStore((s) => s.selectedAdapter);
+  const loading = useComputeStore((s) => s.loading);
 
   return (
     <Grid container spacing={2}>
-      <Grid size={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <Paper sx={{ p: 2 }}>
           <AdapterSelector />
           <ParamForm />
@@ -21,14 +22,14 @@ export default function ComputePage() {
               fullWidth
               startIcon={<PlayArrowIcon />}
               onClick={runCompute}
-              disabled={!selectedAdapter}
+              disabled={!selectedAdapter || loading}
             >
-              计算 (Compute)
+              {loading ? "计算中..." : "计算 (Compute)"}
             </Button>
           </Box>
         </Paper>
       </Grid>
-      <Grid size={8}>
+      <Grid size={{ xs: 12, md: 8 }}>
         <ResultPanel />
       </Grid>
     </Grid>

@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.3.2"
+_VERSION = "3.4.0"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,10 +209,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 4 处文件
+# TITLE: 更新 11 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 更新文档 CONTEXT.md
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 修改 framework/src/calc_framework/dag/__init__.py
+# - 修改 framework/src/calc_framework/dag/debugger.py
+# - 修改 framework/src/calc_framework/dag/debugger_cli.py
+# - 修改 framework/src/calc_framework/dag/debugger_gui.py
+# - 修改 framework/src/calc_framework/dag/service.py
+# - 修改 framework/tests/dag/test_debugger.py
+# - 修改 web/backend/main.py
+# - 变更 web/frontend/src/components/compute/ResultPanel.tsx
+# - 变更 web/frontend/src/pages/ComputePage.tsx
 # --- END UPLOAD_SUMMARY ---

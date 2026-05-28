@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from calc_framework.dag.debugger import StepDebugger
 from calc_framework.dag.engine import DAGResult, evaluate_graph
 from calc_framework.dag.sandbox import register_function as _register_sandbox_fn
 from calc_framework.dag.schema import DAGGraph
@@ -47,6 +48,21 @@ class DAGService:
         注册后的函数可在 ``expr`` 节点的表达式中直接调用。
         """
         _register_sandbox_fn(name, fn)
+
+    def step_debug(self, context: dict[str, Any]) -> StepDebugger:
+        """创建分步调试器，逐步执行 DAG 图节点。
+
+        返回 ``StepDebugger`` 实例，支持 ``step()`` / ``run_all()`` /
+        ``run_to()`` / ``reset()`` 等操作。
+
+        用法::
+
+            debugger = svc.step_debug(context)
+            while not debugger.finished:
+                result = debugger.step()
+                print(result.node_id, result.value)
+        """
+        return StepDebugger(self._dag, context)
 
     @property
     def dag(self) -> DAGGraph:
