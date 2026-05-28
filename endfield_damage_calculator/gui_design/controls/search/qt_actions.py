@@ -27,7 +27,7 @@ from calculation.search.run.single_skill import (
 from gui_design.presentation.search_results_lines import (
     export_paths_to_strings,
 )
-from gui_design.search_ui.search_settings import (
+from gui_design.controls.search.search_settings import (
     format_search_progress_text,
     resolve_parallel_workers,
     resolve_top_n,

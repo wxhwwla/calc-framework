@@ -12,6 +12,10 @@ GUI 壳层：主窗口与应用生命周期。
 - app_loadout_bridge / app_loadout_access：配装刮取与预览候选
 """
 
+from __future__ import annotations
+
+from typing import Literal
+
 __all__ = [
     "app",
     "app_char_weapon_link",
@@ -23,3 +27,13 @@ __all__ = [
     "app_window",
     "app_window_events",
 ]
+
+_BACKEND: Literal["qt"] = "qt"
+
+
+def current_backend() -> Literal["qt"]:
+    return _BACKEND
+
+
+def is_qt() -> bool:
+    return True

@@ -6,7 +6,7 @@ import sys
 import unittest
 from contextlib import redirect_stdout
 
-from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
+from tests.conftest import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
 
 for p in (TOOLS_ROOT, PKG_ROOT):
     if str(p) not in sys.path:

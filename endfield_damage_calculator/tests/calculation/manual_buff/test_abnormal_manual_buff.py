@@ -3,8 +3,8 @@
 
 import unittest
 
-from calculation.abnormal.physical import evaluate_physical_abnormal_total
-from calculation.abnormal.spell import evaluate_spell_abnormal_total
+from calculation.manual_buff.physical import evaluate_physical_abnormal_total
+from calculation.manual_buff.spell import evaluate_spell_abnormal_total
 from calculation.damage.engine import DamageContext
 
 

@@ -3,13 +3,13 @@
 
 import unittest
 
-from calculation.abnormal.spell import (
+from calculation.manual_buff.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
     get_spell_abnormal_param_snapshot,
     normalize_spell_abnormal_counts,
 )
-from calculation.abnormal.spell_params import (
+from calculation.manual_buff.spell_params import (
     SPELL_LEVEL_COEFF_DIVISOR,
     base_multiplier_for_formula,
     calc_level_from_ui,

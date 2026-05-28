@@ -5,12 +5,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from calculation.abnormal.physical import (
+from calculation.manual_buff.physical import (
     compose_damage_total,
     evaluate_physical_abnormal_total,
     format_abnormal_breakdown_lines,
 )
-from calculation.abnormal.spell import (
+from calculation.manual_buff.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
 )

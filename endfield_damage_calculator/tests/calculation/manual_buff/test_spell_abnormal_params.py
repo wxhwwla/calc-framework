@@ -3,7 +3,7 @@
 
 import unittest
 
-from calculation.abnormal.spell_params import (
+from calculation.manual_buff.spell_params import (
     SPELL_ABNORMAL_PARAM_ROWS,
     SPELL_BURN_DURATION_SECONDS,
     SPELL_BURST_RATIO,

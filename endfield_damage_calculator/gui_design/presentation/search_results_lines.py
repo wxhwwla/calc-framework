@@ -7,12 +7,12 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from calculation.abnormal.physical import (
+from calculation.manual_buff.physical import (
     abnormal_weighted_total,
     format_abnormal_breakdown_lines,
     split_damage_breakdown,
 )
-from calculation.abnormal.spell import (
+from calculation.manual_buff.spell import (
     format_spell_abnormal_breakdown_lines,
     is_spell_abnormal_key,
     spell_abnormal_weighted_total,

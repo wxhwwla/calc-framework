@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from calculation.loadout.slot_search import FixedLoadoutSelection
 from gui_design.app.loadout_state import read_loadout_from_panels
 from gui_design.presentation.display_lines import build_character_attribute_lines
-from tests.fixtures.path_roots import PKG_ROOT
+from tests.conftest import PKG_ROOT
 
 _CHARACTERS_JSON = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
 

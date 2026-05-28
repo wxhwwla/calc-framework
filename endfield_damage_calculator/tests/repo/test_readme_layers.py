@@ -3,7 +3,7 @@
 
 import unittest
 
-from tests.fixtures.path_roots import REPO_ROOT
+from tests.conftest import REPO_ROOT
 
 _ROOT_README = REPO_ROOT / "README.md"
 _PKG_README = REPO_ROOT / "endfield_damage_calculator" / "README.md"

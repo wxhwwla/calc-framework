@@ -17,7 +17,7 @@ from release_bundle.release_layout import (
     stage_release_folder,
     target_app_name,
 )
-from tests.fixtures.path_roots import PKG_ROOT, REPO_ROOT
+from tests.conftest import PKG_ROOT, REPO_ROOT
 from utils.path_utils import get_resource_path
 
 

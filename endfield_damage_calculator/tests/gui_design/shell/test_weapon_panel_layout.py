@@ -14,7 +14,7 @@ from gui_design.shared.weapon_display_text import (
     format_weapon_skill_title,
     split_special_skill_display,
 )
-from tests.fixtures.path_roots import PKG_ROOT
+from tests.conftest import PKG_ROOT
 
 _WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
 

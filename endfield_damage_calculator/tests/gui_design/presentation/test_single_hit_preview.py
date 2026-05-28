@@ -7,7 +7,7 @@ from pathlib import Path
 
 from calculation.damage.engine import ZONE_ORDER
 from gui_design.presentation.display_lines import build_single_hit_damage_lines
-from tests.fixtures.path_roots import PKG_ROOT
+from tests.conftest import PKG_ROOT
 
 _CHARACTERS_JSON = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
 _WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"

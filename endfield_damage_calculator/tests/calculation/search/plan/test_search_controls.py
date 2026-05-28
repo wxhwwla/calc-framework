@@ -3,7 +3,7 @@
 
 import unittest
 
-from gui_design.search_ui.search_estimate_message import compose_search_estimate_message
+from gui_design.controls.search.search_estimate_message import compose_search_estimate_message
 
 
 class TestSearchControls(unittest.TestCase):

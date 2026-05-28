@@ -4,13 +4,13 @@
 
 def test_qt_app_import() -> None:
     """验证 qt_app 模块可导入。"""
-    from gui_design.backends import _BACKEND
+    from gui_design.shell import _BACKEND
 
     assert _BACKEND == "qt"
 
 
 def test_qt_backend_detection() -> None:
     """验证后端始终为 qt。"""
-    from gui_design.backends import is_qt
+    from gui_design.shell import is_qt
 
     assert is_qt()

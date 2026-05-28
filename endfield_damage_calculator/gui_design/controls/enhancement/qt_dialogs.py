@@ -26,7 +26,7 @@ from gui_design.app.loadout_preset import (
     LoadoutPreset,
     import_presets_from_json_text,
 )
-from gui_design.search_ui.search_settings import resolve_parallel_workers
+from gui_design.controls.search.search_settings import resolve_parallel_workers
 from gui_design.shared.calc_history import CalculationHistory
 from gui_design.shared.damage_visualization import (
     build_damage_pie_figure,

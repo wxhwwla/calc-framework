@@ -3,7 +3,7 @@
 
 import unittest
 
-from gui_design.search_ui.search_settings import (
+from gui_design.controls.search.search_settings import (
     format_parallel_workers_help,
     format_search_progress_text,
     get_cpu_parallel_info,
@@ -42,7 +42,7 @@ class TestSearchSettings(unittest.TestCase):
         self.assertIn("50/100", text)
 
     def test_format_search_progress_text_shows_total_and_remaining(self):
-        from gui_design.search_ui.search_settings import format_search_progress_text
+        from gui_design.controls.search.search_settings import format_search_progress_text
 
         text = format_search_progress_text(
             prefix="全量遍历",

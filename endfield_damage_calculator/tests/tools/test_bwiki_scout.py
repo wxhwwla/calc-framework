@@ -17,7 +17,7 @@ from bwiki_scout.names import normalize_name_for_match  # noqa: E402
 from bwiki_scout.parse_draft import build_draft_record, extract_template_params  # noqa: E402
 from bwiki_scout.scout import run_scout  # noqa: E402
 
-from tests.fixtures.path_roots import PKG_ROOT
+from tests.conftest import PKG_ROOT
 
 _CHARS = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
 _WEAPONS = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"

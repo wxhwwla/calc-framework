@@ -17,7 +17,7 @@ from bwiki_scout.import_targets import (  # noqa: E402
 )
 from bwiki_scout.storage import save_page_bundle  # noqa: E402
 
-from tests.fixtures.path_roots import REPO_ROOT
+from tests.conftest import REPO_ROOT
 
 _RAW_QIULI = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗"
 _RAW_QIULI_DETAIL = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗_详细数据"

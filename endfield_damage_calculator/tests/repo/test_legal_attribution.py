@@ -11,7 +11,7 @@ from legal.attribution_content import (
     data_license_local_path,
     notices_local_path,
 )
-from tests.fixtures.path_roots import REPO_ROOT
+from tests.conftest import REPO_ROOT
 
 
 class TestLegalAttribution(unittest.TestCase):

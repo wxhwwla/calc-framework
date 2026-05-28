@@ -3,7 +3,7 @@
 
 import unittest
 
-from tests.fixtures.path_roots import REPO_ROOT
+from tests.conftest import REPO_ROOT
 
 GITIGNORE = REPO_ROOT / ".gitignore"
 

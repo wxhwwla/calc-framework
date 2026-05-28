@@ -323,7 +323,7 @@ class QtDamageApp:
         """计算并刷新搜索预估文本（预计组合数/耗时），更新状态栏。"""
         from calculation.search.plan.controller import prepare_search_job
         from calculation.search.run.single_skill import estimate_single_skill_search
-        from gui_design.search_ui.search_settings import (
+        from gui_design.controls.search.search_settings import (
             resolve_parallel_workers,
             resolve_top_n,
         )
@@ -991,7 +991,7 @@ class QtDamageApp:
         from calculation.search.run.cancel import SearchCancelToken
         from calculation.search.run.single_skill import estimate_single_skill_search
         from gui_design.controls.search.qt_actions import SearchWorker
-        from gui_design.search_ui.search_settings import (
+        from gui_design.controls.search.search_settings import (
             resolve_parallel_workers,
             resolve_top_n,
         )

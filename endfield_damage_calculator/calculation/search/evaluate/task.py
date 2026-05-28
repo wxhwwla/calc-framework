@@ -5,14 +5,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from calculation.abnormal.physical import (
+from calculation.manual_buff.physical import (
     PhysicalAbnormalProfile,
     compose_damage_total,
     evaluate_physical_abnormal_total,
     extract_equipment_crit_bonus,
     extract_weapon_crit_bonus,
 )
-from calculation.abnormal.spell import evaluate_spell_abnormal_total
+from calculation.manual_buff.spell import evaluate_spell_abnormal_total
 from calculation.damage.engine import CritMode, DamageContext
 from calculation.loadout.optimizer import (
     LoadoutScore,

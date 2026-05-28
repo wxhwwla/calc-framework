@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui_design.controls.enemy import QtEnemyPanel
-from gui_design.search_ui.search_settings import (
+from gui_design.controls.search.search_settings import (
     build_worker_option_labels,
     format_parallel_workers_help,
     get_cpu_parallel_info,

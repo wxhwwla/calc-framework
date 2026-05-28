@@ -23,7 +23,7 @@
 
 from .ability_bonus_calc import calculate_ability_bonus
 from .ability_bonus_details import calculate_ability_bonus_with_details
-from .ability_bonus_zone import AbilityBonusZone
+from .ability_bonus_calc import AbilityBonusZone
 from .attribute_zone import (
     AttributeMultiplierZone,
     AttributeZoneManager,

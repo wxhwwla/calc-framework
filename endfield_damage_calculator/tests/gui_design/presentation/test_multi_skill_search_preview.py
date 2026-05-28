@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from gui_design.presentation.preview_lines import build_multi_skill_search_preview_lines
-from tests.fixtures.path_roots import PKG_ROOT
+from tests.conftest import PKG_ROOT
 
 _CHARACTERS_JSON = PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
 _WEAPONS_JSON = PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"

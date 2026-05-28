@@ -13,7 +13,7 @@ from calculation.equipment.system import (
     build_equipment_catalog_from_local_rows,
     infer_equipment_slot,
 )
-from tests.fixtures.path_roots import PKG_ROOT
+from tests.conftest import PKG_ROOT
 
 _SAMPLE_WIKITEXT = """{{装备
 |装备名称=50式应龙护手

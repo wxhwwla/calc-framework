@@ -6,7 +6,7 @@ import unittest
 from calculation.loadout.slot_search import FixedLoadoutSelection
 from calculation.skills.weapon_selection import normalize_weapon_specials_tuple
 from gui_design.app.loadout_state import LoadoutState, read_loadout_from_panels
-from tests.fixtures.gui_fixtures import MockSelectionPanel
+from tests.conftest import MockSelectionPanel
 
 
 class TestLoadoutState(unittest.TestCase):
