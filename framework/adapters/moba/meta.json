@@ -1,0 +1,15 @@
+{
+  "name": "MOBA 英雄伤害计算",
+  "game": "通用 MOBA (LOL/Dota2)",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "moba.dag.json",
+  "description": "通用 MOBA 游戏伤害公式：技能基础伤害 + AD/AP 加成 → 护甲/魔抗双减伤 → 最终伤害",
+  "functions": {
+    "percent_of": "functions.py",
+    "armor_mult": "functions.py"
+  },
+  "tags": ["moba", "rpg", "multiplayer"],
+  "author": "Calc Framework",
+  "attr_schema": "attr_schema.json"
+}

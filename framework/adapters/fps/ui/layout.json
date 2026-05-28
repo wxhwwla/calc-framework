@@ -1,0 +1,14 @@
+{
+  "sections": [
+    {"id": "weapon", "type": "inputs", "title": "武器参数",
+     "variables": ["weapon.base_damage", "weapon.fire_rate", "weapon.mag_size", "weapon.reload_time",
+                   "weapon.decay_start", "weapon.decay_end", "weapon.min_damage_ratio"]},
+    {"id": "enemy", "type": "inputs", "title": "目标参数",
+     "variables": ["enemy.distance", "enemy.armor", "enemy.head_mult", "enemy.body_mult",
+                   "user_input.is_head", "user_input.is_limb", "user_input.wall_pen_count"]},
+    {"id": "results", "type": "outputs", "title": "结算结果",
+     "outputs": ["单发伤害", "距离衰减系数", "部位倍率", "护甲减伤比"]},
+    {"id": "dps", "type": "outputs", "title": "DPS 分析",
+     "outputs": ["原始 DPS", "持续 DPS(含换弹)", "持续 DPS(含护甲)"]}
+  ]
+}

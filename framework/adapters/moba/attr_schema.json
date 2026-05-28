@@ -1,0 +1,25 @@
+{
+  "attributes": [
+    {"name": "character.attack_damage", "type": "float", "source": "character", "default": 60, "description": "英雄攻击力(AD)"},
+    {"name": "character.ability_power", "type": "float", "source": "character", "default": 0, "description": "英雄法术强度(AP)"},
+    {"name": "character.armor", "type": "float", "source": "character", "default": 30, "description": "英雄护甲"},
+    {"name": "character.magic_resist", "type": "float", "source": "character", "default": 30, "description": "英雄魔抗"},
+    {"name": "character.max_hp", "type": "float", "source": "character", "default": 500, "description": "英雄最大生命值"},
+    {"name": "character.cooldown_reduction", "type": "float", "source": "character", "default": 0, "description": "冷却缩减(0~0.4)"},
+    {"name": "character.attack_speed_bonus", "type": "float", "source": "character", "default": 0, "description": "攻速加成%"}, 
+    {"name": "character.crit_rate", "type": "float", "source": "character", "default": 0, "description": "暴击率"},
+    {"name": "character.crit_dmg", "type": "float", "source": "character", "default": 1.75, "description": "暴击伤害倍率"},
+    {"name": "character.lethality", "type": "float", "source": "character", "default": 0, "description": "穿甲(固定)"},
+    {"name": "character.armor_pen_pct", "type": "float", "source": "character", "default": 0, "description": "百分比护甲穿透"},
+    {"name": "character.magic_pen", "type": "float", "source": "character", "default": 0, "description": "法术穿透(固定)"},
+    {"name": "character.magic_pen_pct", "type": "float", "source": "character", "default": 0, "description": "百分比法术穿透"},
+    {"name": "enemy.armor", "type": "float", "source": "enemy", "default": 50, "description": "目标护甲"},
+    {"name": "enemy.magic_resist", "type": "float", "source": "enemy", "default": 30, "description": "目标魔抗"},
+    {"name": "user_input.skill_base_damage", "type": "float", "source": "character", "default": 100, "description": "技能基础伤害"},
+    {"name": "user_input.ad_ratio", "type": "float", "source": "character", "default": 0, "description": "AD 加成率(1.0=100%)"},
+    {"name": "user_input.ap_ratio", "type": "float", "source": "character", "default": 0, "description": "AP 加成率(1.0=100%)"},
+    {"name": "user_input.is_physical", "type": "bool", "source": "character", "default": true, "description": "是否为物理伤害"},
+    {"name": "user_input.is_crit", "type": "bool", "source": "character", "default": false, "description": "是否暴击"},
+    {"name": "user_input.skill_cooldown", "type": "float", "source": "character", "default": 10, "description": "技能基础冷却(秒)"}
+  ]
+}

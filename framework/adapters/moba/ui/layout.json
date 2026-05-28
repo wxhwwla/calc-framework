@@ -1,0 +1,12 @@
+{
+  "sections": [
+    {"id": "inputs", "type": "inputs", "title": "技能参数",
+     "variables": ["user_input.skill_base_damage", "user_input.ad_ratio", "user_input.ap_ratio", "user_input.is_physical", "user_input.is_crit", "user_input.skill_cooldown"]},
+    {"id": "hero", "type": "outputs", "title": "英雄属性",
+     "outputs": ["攻击间隔(秒)"]},
+    {"id": "damage", "type": "outputs", "title": "伤害结算",
+     "outputs": ["技能总伤害", "基础伤害", "暴击后伤害", "实际冷却(秒)"]},
+    {"id": "mitigation", "type": "outputs", "title": "减伤明细",
+     "outputs": ["物理减伤比", "魔法减伤比"]}
+  ]
+}

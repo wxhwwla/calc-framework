@@ -1,0 +1,19 @@
+{
+  "attributes": [
+    {"name": "weapon.base_damage", "type": "float", "source": "weapon", "default": 30, "description": "武器基础伤害"},
+    {"name": "weapon.fire_rate", "type": "float", "source": "weapon", "default": 600, "description": "射速(发/分钟)"},
+    {"name": "weapon.mag_size", "type": "int", "source": "weapon", "default": 30, "description": "弹匣容量"},
+    {"name": "weapon.reload_time", "type": "float", "source": "weapon", "default": 2.5, "description": "换弹时间(秒)"},
+    {"name": "weapon.decay_start", "type": "float", "source": "weapon", "default": 15, "description": "衰减起始距离(米)"},
+    {"name": "weapon.decay_end", "type": "float", "source": "weapon", "default": 50, "description": "衰减结束距离(米)"},
+    {"name": "weapon.min_damage_ratio", "type": "float", "source": "weapon", "default": 0.5, "description": "最小伤害比例(0~1)"},
+    {"name": "weapon.penetration", "type": "float", "source": "weapon", "default": 0, "description": "穿透值(可穿透人数)"},
+    {"name": "enemy.distance", "type": "float", "source": "enemy", "default": 20, "description": "射击距离(米)"},
+    {"name": "enemy.armor", "type": "float", "source": "enemy", "default": 50, "description": "目标护甲值"},
+    {"name": "enemy.head_mult", "type": "float", "source": "enemy", "default": 2.0, "description": "头部命中倍率"},
+    {"name": "enemy.body_mult", "type": "float", "source": "enemy", "default": 1.0, "description": "躯干命中倍率"},
+    {"name": "user_input.is_head", "type": "bool", "source": "character", "default": false, "description": "是否为爆头"},
+    {"name": "user_input.is_limb", "type": "bool", "source": "character", "default": false, "description": "是否命中肢体"},
+    {"name": "user_input.wall_pen_count", "type": "int", "source": "character", "default": 0, "description": "穿透墙体数"}
+  ]
+}
