@@ -54,6 +54,8 @@ class EndfieldContextLoader(DataContextLoader):
                 "敏捷": attr["敏捷"]["base"],
                 "智识": attr["智识"]["base"],
                 "意志": attr["意志"]["base"],
+                "暴击率": char.get("暴击率", char.get("crit_rate", 0.05)),
+                "暴击伤害": char.get("暴击伤害", char.get("crit_damage", 0.5)),
                 "主能力": main_attr,
                 "副能力": sub_attr,
             },
@@ -65,6 +67,9 @@ class EndfieldContextLoader(DataContextLoader):
             equipment={
                 "攻击力平值": 0.0,
             },
+            enemy={
+                "防御": 100,
+            },
             computed={
                 "主能力平值加算": ability["main_flat"],
                 "副能力平值加算": ability["sub_flat"],
@@ -72,7 +77,7 @@ class EndfieldContextLoader(DataContextLoader):
                 "副能力百分比": ability["sub_pct"],
                 "主能力": main_attr,
                 "副能力": sub_attr,
-                "最终攻击力": 0.0,
+                "最终攻击力": final["final_attack"],
                 "技能倍率": 1.0,
                 "暴击区": 1.0,
                 "伤害加成": 1.0,

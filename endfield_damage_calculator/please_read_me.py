@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.1.2"
+_VERSION = "3.1.3"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,12 +209,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 6 处文件
+# TITLE: 更新 13 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 更新文档 CONTEXT.md
-# - 更新文档 docs/adr/0006-calcpack-and-designer.md
+# - 更新文档 docs/adr/0007-endfield-migration-roadmap.md
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/adapter.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/config.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/zone_snapshot.py
 # - 修改 endfield_damage_calculator/please_read_me.py
-# - 变更 tools/designer/
+# - 修改 endfield_damage_calculator/tests/calculation/damage/zones/test_dag_adapter.py
+# - 修改 endfield_damage_calculator/tests/calculation/damage/zones/test_zone_snapshot.py
+# - 修改 endfield_damage_calculator/tests/framework/test_endfield_dag_integration.py
+# - 变更 framework/src/calc_framework/configs/endfield_full.dag.json
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/dag/subgraph.py
 # --- END UPLOAD_SUMMARY ---

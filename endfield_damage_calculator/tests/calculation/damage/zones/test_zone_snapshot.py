@@ -40,7 +40,7 @@ class TestZoneSnapshot(unittest.TestCase):
         )
         texts = [line.text for line in lines]
         self.assertTrue(any(t.startswith("敌方防御减伤:") for t in texts))
-        self.assertTrue(any(t.startswith("最终攻击力:") for t in texts))
+        self.assertTrue(any(t.startswith("最终伤害:") for t in texts))
         self.assertTrue(any(t.startswith("力量:") for t in texts))
 
     def test_snapshot_accepts_new_bonus_selection_names(self):
@@ -64,7 +64,7 @@ class TestZoneSnapshot(unittest.TestCase):
             )
         )
         texts = [line.text for line in lines]
-        self.assertTrue(any(t.startswith("最终攻击力:") for t in texts))
+        self.assertTrue(any(t.startswith("最终伤害:") for t in texts))
 
 
 if __name__ == "__main__":

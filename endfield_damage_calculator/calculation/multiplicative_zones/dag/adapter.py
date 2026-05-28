@@ -84,32 +84,45 @@ def compute_snapshot_with_dag(
 ) -> list[ZoneDisplayLine]:
     """用 DAG 引擎计算完整乘区快照，返回展示行列表。
 
-    攻击力链（最终攻击力 + 能力值加成）由 DAG 求值，
-    属性显示行（力量/敏捷/智识/意志）仍委托现有引擎（DAG 未做装备平铺解析）。
+    全部乘区值由 DAG 求值：
+    - ability_bonus / final_attack / defense_reduction / crit_zone 由 DAG 子图直接计算
+    - 其余乘区值由 EndfieldContextLoader 从旧引擎计算后传入 DAG Context
+    - 属性显示行（力量/敏捷/智识/意志）仍委托旧引擎（DAG 未做装备平铺解析）
+
+    所有 zone 中间值均从 DAG 输出读取，不再调用旧引擎的 zone_snapshot 逻辑。
     """
-    from calculation.multiplicative_zones.ability_bonus_details import (
-        calculate_ability_bonus_with_details,
-    )
     from calculation.multiplicative_zones.attribute_zone import (
         calculate_attribute_zones_with_details,
-    )
-    from calculation.multiplicative_zones.base_zone import DefenseReductionZone
-    from calculation.multiplicative_zones.final_attack_zone import (
-        calculate_final_attack_with_details,
     )
 
     attr_display_order = ("力量", "敏捷", "智识", "意志")
 
     char = selection.character
     weapon = selection.weapon
-    kwargs: dict[str, Any] = selection.bonuses.calculation_kwargs()
+    b = selection.bonuses
+    kwargs: dict[str, Any] = b.calculation_kwargs()
+
+    pkg = _ensure_dag()
+    ctx = build_dag_context(
+        char, weapon,
+        char_level=selection.char_level,
+        weapon_level=selection.weapon_level,
+        trust_level=selection.trust_level,
+        bonuses_kwargs=kwargs,
+    )
+    result = pkg.dag_service.evaluate(ctx)
+    zo = result.outputs  # zone outputs
+
     lines: list[ZoneDisplayLine] = []
 
-    defense = DefenseReductionZone().calculate()
-    lines.append(ZoneDisplayLine(f"敌方防御减伤: {defense:.4f}", "#4ECDC4"))
+    # 防御减伤 — DAG 计算
+    def_reduction = zo.get("防御区", 0.5)
+    lines.append(ZoneDisplayLine(f"敌方防御减伤: {def_reduction:.4f}", "#4ECDC4"))
 
+    # 属性乘区 — 旧引擎（DAG 未做装备平铺解析）
     attr_details = calculate_attribute_zones_with_details(
-        char, weapon, level=selection.char_level, trust_level=selection.trust_level, **kwargs,
+        char, weapon, level=selection.char_level,
+        trust_level=selection.trust_level, **kwargs,
     )
     for attr_name in attr_display_order:
         details = attr_details.get(attr_name, {"base": 0.0, "bonus": 0.0, "total": 0.0})
@@ -122,69 +135,23 @@ def compute_snapshot_with_dag(
             text = f"{attr_name}: {total_value:.1f}"
         lines.append(ZoneDisplayLine(text, "#B8B8B8"))
 
-    ability = calculate_ability_bonus_with_details(
-        char, weapon, level=selection.char_level, trust_level=selection.trust_level, **kwargs,
-    )
+    # 能力值加成 — DAG 计算
+    ability_bonus = zo.get("能力值加成", 0.0)
+    lines.append(ZoneDisplayLine(f"能力值加成: {ability_bonus:.4f}", "#FFD700"))
 
-    dag_result = evaluate_attack_chain_via_dag(
-        char, weapon,
-        char_level=selection.char_level,
-        weapon_level=selection.weapon_level,
-        trust_level=selection.trust_level,
-        bonuses_kwargs=kwargs,
-    )
-    dag_ability_bonus = dag_result["ability_bonus"]
-    dag_final_attack = dag_result["final_attack"]
-
-    main_attr = ability["main_attr"]
-    sub_attr = ability["sub_attr"]
-    if main_attr and sub_attr:
-        ab_text = (
-            f"能力值加成: {dag_ability_bonus:.4f} "
-            f"({main_attr}:{ability['main_value']:.1f}*0.005+"
-            f"{sub_attr}:{ability['sub_value']:.1f}*0.002)"
-        )
-    else:
-        ab_text = f"能力值加成: {dag_ability_bonus:.4f}"
-    lines.append(ZoneDisplayLine(ab_text, "#FFD700"))
-
-    final = calculate_final_attack_with_details(
-        char, weapon,
-        char_level=selection.char_level, weapon_level=selection.weapon_level,
-        trust_level=selection.trust_level, **kwargs,
-    )
-
+    # 基础攻击力 — DAG 计算
+    base_atk = zo.get("最终攻击力", 0.0)
     lines.append(
         ZoneDisplayLine(
-            f"基础攻击力: {final['base_attack']:.1f} "
-            f"({final['char_base_attack']:.1f}+{final['weapon_base_attack']:.1f})",
+            f"基础攻击力: {base_atk:.1f}",
             "#00D4AA",
         )
     )
-    lines.append(
-        ZoneDisplayLine(
-            f"攻击加成攻击力: {final['attack_bonus_attack']:.1f} "
-            f"({final['base_attack']:.1f}×{final['attack_bonus_multiplier']:.3f})",
-            "#9B59B6",
-        )
-    )
-    lines.append(
-        ZoneDisplayLine(
-            f"中间攻击力: {final['intermediate_attack']:.1f} "
-            f"({final['attack_bonus_attack']:.1f}+{final['additional_attack']:.1f})",
-            "#3498DB",
-        )
-    )
 
-    ability_multiplier = 1.0 + dag_ability_bonus
+    # 最终伤害 — DAG 计算（15 乘区连乘）
+    final_dmg = zo.get("最终伤害", 0.0)
+    lines.append(ZoneDisplayLine(f"最终伤害: {final_dmg:.2f}", "#E74C3C"))
 
-    lines.append(
-        ZoneDisplayLine(
-            f"最终攻击力: {dag_final_attack:.1f} "
-            f"({final['intermediate_attack']:.1f}×{ability_multiplier:.4f})",
-            "#E74C3C",
-        )
-    )
     return lines
 
 

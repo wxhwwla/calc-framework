@@ -157,6 +157,7 @@ def evaluate_graph(graph: DAGGraph, context: dict[str, Any]) -> DAGResult:
     数据上下文按变量声明的 source 分区，例如:
         context = {"character": {"力量": 100}, "weapon": {"基础攻击": 50}}
     """
+    context = _apply_defaults(graph, context)
     expanded = expand_subgraphs(graph)
     order = topological_sort(expanded)
     values: dict[str, float] = {}
@@ -175,3 +176,27 @@ def evaluate_graph(graph: DAGGraph, context: dict[str, Any]) -> DAGResult:
         node_values=values,
         execution_order=order,
     )
+
+
+def _apply_defaults(graph: DAGGraph, context: dict[str, Any]) -> dict[str, Any]:
+    """将变量声明中的默认值填入上下文（如果上下文中没有对应值）。"""
+    result = {}
+    for key, section in context.items():
+        if isinstance(section, dict):
+            result[key] = dict(section)
+        else:
+            result[key] = section
+
+    for path, var in graph.variables.items():
+        if var.default is None:
+            continue
+        parts = path.split(".")
+        if len(parts) != 2:
+            continue
+        section, field = parts
+        if section not in result:
+            result[section] = {}
+        if isinstance(result[section], dict) and field not in result[section]:
+            result[section][field] = var.default
+
+    return result

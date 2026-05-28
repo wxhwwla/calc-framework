@@ -99,6 +99,14 @@ def expand_subgraphs(graph: DAGGraph) -> DAGGraph:
             for sub_oid, sub_odef in sub.outputs.items():
                 ref_map[f"{call_id}.{sub_oid}"] = f"{call_id}.{sub_odef.node}"
 
+            primary_outputs = {oid: odef for oid, odef in sub.outputs.items() if odef.is_primary}
+            if primary_outputs:
+                first_primary = next(iter(primary_outputs.values()))
+                ref_map[call_id] = f"{call_id}.{first_primary.node}"
+            elif sub.outputs:
+                first_output = next(iter(sub.outputs.values()))
+                ref_map[call_id] = f"{call_id}.{first_output.node}"
+
     for node in expanded.nodes.values():
         _apply_ref_map_to_node(node, ref_map)
 

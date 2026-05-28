@@ -154,7 +154,7 @@ def compute_multiplicative_zone_snapshot(
                  False → 强制使用现有引擎
     """
     if use_dag is None:
-        use_dag = os.environ.get("ENDFIELD_USE_DAG", "").strip().lower() in ("1", "true", "yes")
+        use_dag = os.environ.get("ENDFIELD_USE_DAG", "").strip().lower() not in ("0", "false", "no")
 
     if use_dag:
         from calculation.multiplicative_zones.dag.adapter import compute_snapshot_with_dag

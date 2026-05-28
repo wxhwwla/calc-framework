@@ -7,8 +7,10 @@
 - ``ability_bonus``：能力值加成 = main_flat×(1+main_pct/100)×0.005 + sub_flat×(1+sub_pct/100)×0.002
 - ``final_attack``：最终攻击力 = (char_atk+weapon_atk)×(1+atk_bonus)+add_atk+equip_atk×(1+ability_bonus)
 - ``single_hit_damage``：15 乘区连乘 → 最终伤害
+- ``defense_reduction``：防御减伤 = 100 / (敌防 + 100)
+- ``crit_zone``：暴击区 = 1 + 暴击率 × (暴击伤害 - 1)
 
-主图：扁平化调用三个子图的计算逻辑，直接使用已预处理的参数名。
+主图：扁平化调用五个子图的计算逻辑，全部乘区值从 DAG 中间输出读取。
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ if str(_SRC_DIR) not in sys.path:
 
 from calc_framework.dag.schema import (
     BinaryNode,
+    CallNode,
     ConstNode,
     DAGGraph,
     DAGOutput,
@@ -227,6 +230,68 @@ def _make_single_hit_damage_subgraph() -> DAGSubgraph:
     )
 
 
+def _make_defense_reduction_subgraph() -> DAGSubgraph:
+    return DAGSubgraph(
+        description="防御减伤 = 100 / (敌防 + 100)",
+        parameters={
+            "enemy_defense": DAGVariable(
+                type="float", source="enemy",
+                description="敌方防御值",
+            ),
+        },
+        nodes={
+            "c100": ConstNode(type="const", value=100.0),
+            "def_plus_100": BinaryNode(
+                type="binary", op="+", lhs="enemy_defense", rhs="c100",
+                label="敌防+100",
+            ),
+            "def_reduction": BinaryNode(
+                type="binary", op="/", lhs="c100", rhs="def_plus_100",
+                label="防御减伤",
+            ),
+        },
+        outputs={
+            "defense_reduction": DAGOutput(
+                node="def_reduction", label="防御减伤", is_primary=True,
+            ),
+        },
+    )
+
+
+def _make_crit_zone_subgraph() -> DAGSubgraph:
+    return DAGSubgraph(
+        description="暴击区 = 1 + 暴击率 × (暴击伤害 - 1)",
+        parameters={
+            "crit_rate": DAGVariable(
+                type="float", source="character",
+                description="暴击率（小数，如 0.05 = 5%）",
+            ),
+            "crit_damage": DAGVariable(
+                type="float", source="character",
+                description="暴击伤害（小数，如 0.5 = 50%）",
+            ),
+        },
+        nodes={
+            "const_one": ConstNode(type="const", value=1.0),
+            "crit_dmg_minus_1": BinaryNode(
+                type="binary", op="-", lhs="crit_damage", rhs="const_one",
+                label="暴击伤害 - 1",
+            ),
+            "rate_times_dmg": BinaryNode(
+                type="binary", op="*", lhs="crit_rate", rhs="crit_dmg_minus_1",
+                label="暴击率 × (暴击伤害 - 1)",
+            ),
+            "crit_zone": BinaryNode(
+                type="binary", op="+", lhs="const_one", rhs="rate_times_dmg",
+                label="暴击区",
+            ),
+        },
+        outputs={
+            "crit_zone": DAGOutput(node="crit_zone", label="暴击区", is_primary=True),
+        },
+    )
+
+
 def _make_master_graph() -> DAGGraph:
     return DAGGraph(
         schema_version="dag-v1",
@@ -274,11 +339,25 @@ def _make_master_graph() -> DAGGraph:
             "computed.非主控减伤": DAGVariable(type="float", source="computed", description="非主控减伤区 = ∏(1-值)"),
             "computed.连击增伤": DAGVariable(type="float", source="computed", description="连击增伤区 = 1+Σ值"),
             "computed.特殊乘区": DAGVariable(type="float", source="computed", description="特殊乘区 = ∏值"),
+            "character.暴击率": DAGVariable(
+                type="float", source="character",
+                description="暴击率（小数，如 0.05 = 5%）", default=0.05,
+            ),
+            "character.暴击伤害": DAGVariable(
+                type="float", source="character",
+                description="暴击伤害（小数，如 0.5 = 50%）", default=0.5,
+            ),
+            "enemy.防御": DAGVariable(
+                type="float", source="enemy",
+                description="敌方防御值", default=100,
+            ),
         },
         subgraphs={
             "ability_bonus": _make_ability_bonus_subgraph(),
             "final_attack": _make_final_attack_subgraph(),
             "single_hit_damage": _make_single_hit_damage_subgraph(),
+            "defense_reduction": _make_defense_reduction_subgraph(),
+            "crit_zone": _make_crit_zone_subgraph(),
         },
         nodes={
             "char_atk": VarNode(type="var", path="character.基础攻击", label="角色攻击"),
@@ -335,7 +414,13 @@ def _make_master_graph() -> DAGGraph:
 
             "skill_mult": VarNode(type="var", path="computed.技能倍率", label="技能倍率"),
             "zone_base": BinaryNode(type="binary", op="*", lhs="final_atk_var", rhs="skill_mult", label="基础伤害区"),
-            "zone_crit": VarNode(type="var", path="computed.暴击区", label="暴击区"),
+            "zone_crit": CallNode(
+                type="call", subgraph="crit_zone",
+                bindings={"crit_rate": "char_crit_rate", "crit_damage": "char_crit_dmg"},
+                label="暴击区",
+            ),
+            "char_crit_rate": VarNode(type="var", path="character.暴击率", label="暴击率"),
+            "char_crit_dmg": VarNode(type="var", path="character.暴击伤害", label="暴击伤害"),
             "z1": BinaryNode(type="binary", op="*", lhs="zone_base", rhs="zone_crit", label="×暴击区"),
             "zone_dmg_bonus": VarNode(type="var", path="computed.伤害加成", label="伤害加成区"),
             "z2": BinaryNode(type="binary", op="*", lhs="z1", rhs="zone_dmg_bonus", label="×伤害加成区"),
@@ -351,7 +436,12 @@ def _make_master_graph() -> DAGGraph:
             "z7": BinaryNode(type="binary", op="*", lhs="z6", rhs="zone_fragile", label="×脆弱区"),
             "zone_vuln": VarNode(type="var", path="computed.易伤", label="易伤区"),
             "z8": BinaryNode(type="binary", op="*", lhs="z7", rhs="zone_vuln", label="×易伤区"),
-            "zone_def": VarNode(type="var", path="computed.防御", label="防御区"),
+            "zone_def": CallNode(
+                type="call", subgraph="defense_reduction",
+                bindings={"enemy_defense": "enemy_def"},
+                label="防御区",
+            ),
+            "enemy_def": VarNode(type="var", path="enemy.防御", label="敌方防御"),
             "z9": BinaryNode(type="binary", op="*", lhs="z8", rhs="zone_def", label="×防御区"),
             "zone_imbal": VarNode(type="var", path="computed.失衡易伤", label="失衡易伤区"),
             "z10": BinaryNode(type="binary", op="*", lhs="z9", rhs="zone_imbal", label="×失衡易伤区"),
@@ -371,6 +461,21 @@ def _make_master_graph() -> DAGGraph:
             "能力值加成": DAGOutput(node="ability_bonus", label="能力值加成"),
             "最终攻击力": DAGOutput(node="final_attack_calc", label="最终攻击力", is_primary=True),
             "最终伤害": DAGOutput(node="final_damage", label="最终伤害", is_primary=True),
+            "暴击区": DAGOutput(node="zone_crit", label="暴击区"),
+            "伤害加成区": DAGOutput(node="zone_dmg_bonus", label="伤害加成区"),
+            "伤害减免区": DAGOutput(node="zone_dmg_reduc", label="伤害减免区"),
+            "增幅区": DAGOutput(node="zone_amp", label="增幅区"),
+            "虚弱区": DAGOutput(node="zone_weak", label="虚弱区"),
+            "庇护区": DAGOutput(node="zone_shelter", label="庇护区"),
+            "脆弱区": DAGOutput(node="zone_fragile", label="脆弱区"),
+            "易伤区": DAGOutput(node="zone_vuln", label="易伤区"),
+            "防御区": DAGOutput(node="zone_def", label="防御区"),
+            "失衡易伤区": DAGOutput(node="zone_imbal", label="失衡易伤区"),
+            "抗性区": DAGOutput(node="zone_res", label="抗性区"),
+            "非主控减伤区": DAGOutput(node="zone_ncr", label="非主控减伤区"),
+            "连击增伤区": DAGOutput(node="zone_combo", label="连击增伤区"),
+            "特殊乘区": DAGOutput(node="zone_special", label="特殊乘区"),
+            "基础伤害区": DAGOutput(node="zone_base", label="基础伤害区"),
         },
     )
 

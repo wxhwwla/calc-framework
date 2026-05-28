@@ -128,6 +128,24 @@
       "type": "float",
       "source": "computed",
       "description": "特殊乘区 = ∏值"
+    },
+    "character.暴击率": {
+      "type": "float",
+      "source": "character",
+      "description": "暴击率（小数，如 0.05 = 5%）",
+      "default": 0.05
+    },
+    "character.暴击伤害": {
+      "type": "float",
+      "source": "character",
+      "description": "暴击伤害（小数，如 0.5 = 50%）",
+      "default": 0.5
+    },
+    "enemy.防御": {
+      "type": "float",
+      "source": "enemy",
+      "description": "敌方防御值",
+      "default": 100
     }
   },
   "subgraphs": {
@@ -502,6 +520,94 @@
           "is_primary": true
         }
       }
+    },
+    "defense_reduction": {
+      "description": "防御减伤 = 100 / (敌防 + 100)",
+      "parameters": {
+        "enemy_defense": {
+          "type": "float",
+          "source": "enemy",
+          "description": "敌方防御值"
+        }
+      },
+      "nodes": {
+        "c100": {
+          "type": "const",
+          "value": 100.0
+        },
+        "def_plus_100": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "enemy_defense",
+          "rhs": "c100",
+          "label": "敌防+100"
+        },
+        "def_reduction": {
+          "type": "binary",
+          "op": "/",
+          "lhs": "c100",
+          "rhs": "def_plus_100",
+          "label": "防御减伤"
+        }
+      },
+      "outputs": {
+        "defense_reduction": {
+          "node": "def_reduction",
+          "label": "防御减伤",
+          "format": "",
+          "is_primary": true
+        }
+      }
+    },
+    "crit_zone": {
+      "description": "暴击区 = 1 + 暴击率 × (暴击伤害 - 1)",
+      "parameters": {
+        "crit_rate": {
+          "type": "float",
+          "source": "character",
+          "description": "暴击率（小数，如 0.05 = 5%）"
+        },
+        "crit_damage": {
+          "type": "float",
+          "source": "character",
+          "description": "暴击伤害（小数，如 0.5 = 50%）"
+        }
+      },
+      "nodes": {
+        "const_one": {
+          "type": "const",
+          "value": 1.0
+        },
+        "crit_dmg_minus_1": {
+          "type": "binary",
+          "op": "-",
+          "lhs": "crit_damage",
+          "rhs": "const_one",
+          "label": "暴击伤害 - 1"
+        },
+        "rate_times_dmg": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "crit_rate",
+          "rhs": "crit_dmg_minus_1",
+          "label": "暴击率 × (暴击伤害 - 1)"
+        },
+        "crit_zone": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_one",
+          "rhs": "rate_times_dmg",
+          "label": "暴击区"
+        }
+      },
+      "outputs": {
+        "crit_zone": {
+          "node": "crit_zone",
+          "label": "暴击区",
+          "format": "",
+          "is_primary": true
+        }
+      }
     }
   },
   "nodes": {
@@ -668,9 +774,23 @@
       "label": "基础伤害区"
     },
     "zone_crit": {
-      "type": "var",
-      "path": "computed.暴击区",
+      "type": "call",
+      "subgraph": "crit_zone",
+      "bindings": {
+        "crit_rate": "char_crit_rate",
+        "crit_damage": "char_crit_dmg"
+      },
       "label": "暴击区"
+    },
+    "char_crit_rate": {
+      "type": "var",
+      "path": "character.暴击率",
+      "label": "暴击率"
+    },
+    "char_crit_dmg": {
+      "type": "var",
+      "path": "character.暴击伤害",
+      "label": "暴击伤害"
     },
     "z1": {
       "type": "binary",
@@ -764,9 +884,17 @@
       "label": "×易伤区"
     },
     "zone_def": {
-      "type": "var",
-      "path": "computed.防御",
+      "type": "call",
+      "subgraph": "defense_reduction",
+      "bindings": {
+        "enemy_defense": "enemy_def"
+      },
       "label": "防御区"
+    },
+    "enemy_def": {
+      "type": "var",
+      "path": "enemy.防御",
+      "label": "敌方防御"
     },
     "z9": {
       "type": "binary",
@@ -854,6 +982,96 @@
       "label": "最终伤害",
       "format": "",
       "is_primary": true
+    },
+    "暴击区": {
+      "node": "zone_crit",
+      "label": "暴击区",
+      "format": "",
+      "is_primary": false
+    },
+    "伤害加成区": {
+      "node": "zone_dmg_bonus",
+      "label": "伤害加成区",
+      "format": "",
+      "is_primary": false
+    },
+    "伤害减免区": {
+      "node": "zone_dmg_reduc",
+      "label": "伤害减免区",
+      "format": "",
+      "is_primary": false
+    },
+    "增幅区": {
+      "node": "zone_amp",
+      "label": "增幅区",
+      "format": "",
+      "is_primary": false
+    },
+    "虚弱区": {
+      "node": "zone_weak",
+      "label": "虚弱区",
+      "format": "",
+      "is_primary": false
+    },
+    "庇护区": {
+      "node": "zone_shelter",
+      "label": "庇护区",
+      "format": "",
+      "is_primary": false
+    },
+    "脆弱区": {
+      "node": "zone_fragile",
+      "label": "脆弱区",
+      "format": "",
+      "is_primary": false
+    },
+    "易伤区": {
+      "node": "zone_vuln",
+      "label": "易伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "防御区": {
+      "node": "zone_def",
+      "label": "防御区",
+      "format": "",
+      "is_primary": false
+    },
+    "失衡易伤区": {
+      "node": "zone_imbal",
+      "label": "失衡易伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "抗性区": {
+      "node": "zone_res",
+      "label": "抗性区",
+      "format": "",
+      "is_primary": false
+    },
+    "非主控减伤区": {
+      "node": "zone_ncr",
+      "label": "非主控减伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "连击增伤区": {
+      "node": "zone_combo",
+      "label": "连击增伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "特殊乘区": {
+      "node": "zone_special",
+      "label": "特殊乘区",
+      "format": "",
+      "is_primary": false
+    },
+    "基础伤害区": {
+      "node": "zone_base",
+      "label": "基础伤害区",
+      "format": "",
+      "is_primary": false
     }
   }
 }
