@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""
-GUI 主应用壳层
+"""GUI 主应用壳层（已弃用 — 请使用 qt_app.py）。
+
+本模块已被 PySide6 版 `qt_app.py` 替代，仅在 ``ENDFIELD_UI_BACKEND=ctk`` 时保留。
+预计于 2026-Q3 移除。
 
 DamageCalculatorApp 通过 mixin 组合布局、选择联动、高级页控件与配装刮取；
 具体实现见 ``gui_design.shell.app_*`` 子模块。

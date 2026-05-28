@@ -36,6 +36,32 @@ from gui_design.shared.gui_settings import gui_settings
 from gui_design.shell.qt_control_dock import QtControlDock
 from please_read_me import get_exe_version
 
+# ── 框架 ComputeSheet ──────────────────────────
+import sys as _sys
+from pathlib import Path as _Path
+
+_FRAMEWORK_SRC = _Path(__file__).resolve().parents[3] / "framework" / "src"
+if str(_FRAMEWORK_SRC) not in _sys.path:
+    _sys.path.insert(0, str(_FRAMEWORK_SRC))
+
+from calc_framework.config.adapter import AdapterPackage
+from calc_framework.ui.compute_sheet import ComputeSheet
+from calc_framework.ui.layout import load_layout_json
+
+_FRAMEWORK_ADAPTER = _Path(__file__).resolve().parents[3] / "framework" / "adapters" / "endfield"
+
+_adapter_pkg: AdapterPackage | None = None
+_adapter_layout = None
+
+
+def _ensure_adapter():
+    global _adapter_pkg, _adapter_layout
+    if _adapter_pkg is None:
+        _adapter_pkg = AdapterPackage(str(_FRAMEWORK_ADAPTER))
+        layout_path = _FRAMEWORK_ADAPTER / "ui" / "layout.json"
+        _adapter_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
+    return _adapter_pkg, _adapter_layout
+
 
 class QtDamageApp:
     """PySide6 主应用。
@@ -131,12 +157,25 @@ class QtDamageApp:
 
         calc_layout.addWidget(panels_frame)
 
+        # ── 内容区：左 属性 + 右 ComputeSheet ──────
+        from PySide6.QtWidgets import QSplitter
+
+        content_split = QSplitter(Qt.Orientation.Horizontal)
+        calc_layout.addWidget(content_split, stretch=1)
+
         self.columns: QtAttributeColumns = QtAttributeColumns(
             big_font=self.big_font,
             small_font=self.small_font,
         )
-        self.columns.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        calc_layout.addWidget(self.columns, stretch=1)
+        content_split.addWidget(self.columns)
+
+        self._compute_sheet: ComputeSheet | None = None
+        self._compute_sheet_widget: QWidget = QWidget()
+        sheet_layout = QVBoxLayout(self._compute_sheet_widget)
+        sheet_layout.setContentsMargins(0, 0, 0, 0)
+        sheet_layout.addWidget(QLabel("按「确认选择」加载乘区数据"))
+        content_split.addWidget(self._compute_sheet_widget)
+        content_split.setSizes([400, 400])
 
         self.tabs.addTab(calc_page, "计算页")
 
@@ -502,6 +541,7 @@ class QtDamageApp:
         try:
             self._sync_evaluation(request)
             self.columns.refresh(request)
+            self._refresh_compute_sheet()
 
             lds = request.loadout
             from gui_design.controls.enhancement.dialogs import (
@@ -546,6 +586,58 @@ class QtDamageApp:
             import logging
 
             logging.getLogger(__name__).warning("求值缓存同步失败: %s", exc)
+
+    def _refresh_compute_sheet(self) -> None:
+        """用当前角色/武器选择重建并刷新 ComputeSheet。"""
+        from calculation.multiplicative_zones.dag.loader import EndfieldContextLoader
+
+        char_data = self.char_panel.get_selected_data()
+        weapon_data = self.weapon_panel.get_selected_data()
+        if not char_data or not weapon_data:
+            return
+
+        try:
+            pkg, layout = _ensure_adapter()
+            bonuses_kwargs = {
+                "normal_skill_1_level": self.char_panel.get_skill_1_level(),
+                "normal_skill_2_level": self.char_panel.get_skill_2_level(),
+                "normal_skill_3_level": self.char_panel.get_skill_3_level(),
+            }
+            loader = EndfieldContextLoader()
+            context = loader.build_context(
+                character=char_data,
+                weapon=weapon_data,
+                char_level=self.char_panel.level_slider.value(),
+                weapon_level=self.weapon_panel.level_slider.value(),
+                trust_level=self.char_panel.get_trust_level(),
+                bonuses_kwargs=bonuses_kwargs,
+            )
+
+            new_sheet = ComputeSheet(
+                dag_service=pkg.dag_service,
+                layout=layout,
+                variables=pkg.dag_service.dag.variables,
+                base_context=context,
+                parent=None,
+            )
+            old = self._compute_sheet
+            self._compute_sheet = new_sheet
+
+            sheet_layout = self._compute_sheet_widget.layout()
+            while sheet_layout.count():
+                item = sheet_layout.takeAt(0)
+                w = item.widget()
+                if w:
+                    w.deleteLater()
+            sheet_layout.addWidget(new_sheet.widget, stretch=1)
+            new_sheet.evaluate()
+
+            if old is not None:
+                old.deleteLater()
+        except Exception as exc:
+            import logging
+
+            logging.getLogger(__name__).warning("ComputeSheet 刷新失败: %s", exc)
 
     # ── 手动 Buff ─────────────────────────────
 
