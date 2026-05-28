@@ -372,3 +372,265 @@ attrs["attack_power"] = 50
 - 风险分析与缓解
 
 **下一步待续**：用户尚有部分想法因字数限制未输入，待后续补充。
+
+---
+
+## 附录 B：代码可行性审查 — 五层架构逐层评估（2026-05-28）
+
+### 审查方法
+
+逐层对照 ADR-0010 §4 的目标架构，检查 `framework/src/calc_framework/` 当前代码是否满足要求。
+
+### 层 1：纯数学计算内核
+
+**目标**：只做数学运算，完全不知道角色/装备/技能是什么。
+
+| 组件 | 状态 | 文件 | 说明 |
+|------|------|------|------|
+| 9 种节点类型 | ✅ | `dag/schema.py` | const/var/unary/binary/condition/expr/user_input/call — 无游戏语义 |
+| 拓扑排序 | ✅ | `dag/engine.py` | 纯图算法，无业务耦合 |
+| AST 沙箱 | ✅ | `dag/sandbox.py` | 白名单校验 + 安全求值，纯表达式 |
+| 子图展开 | ✅ | `dag/subgraph.py` | 递归内联 call 节点，通用 |
+| 上下文取值 | ✅ | `engine._resolve_path()` | 按点分隔路径遍历 dict，零假设 |
+
+**结论**：✅ **已完成。** 层 1 无需任何改动，永久通用。
+
+### 层 2：通用战斗规则引擎
+
+**目标**：动态表达式引擎 + 可插拔模块，乘区顺序全配置化。
+
+| 组件 | 状态 | 文件 | 说明 |
+|------|------|------|------|
+| DAG JSON 外部配置 | ✅ | `configs/endfield_full.dag.json` | 公式/乘区/顺序全部在 JSON 中定义 |
+| 自定义函数注册 | ✅ | `dag/sandbox.py:register_function()` | 本日完成 |
+| Expr 节点 AST 求值 | ✅ | `dag/sandbox.py:evaluate()` | 完整白名单表达式引擎 |
+| **插件模块系统（crit/dodge/shield/distance_decay）** | ❌ | — | 无按需加载的模块注册机制 |
+| **DAG 模板库（常见公式模板）** | ⚠️ 部分 | `configs/` | 仅终末地一个 DAG，无通用模板 |
+| 版本兼容 | ⚠️ 部分 | `meta.json schema_version` | 声明了但无迁移代码 |
+
+**结论**：⚠️ **完成 ~70%。** DAG 引擎本身是通用规则引擎。缺失的是「插件模块化」机制和「通用 DAG 模板库」。
+
+### 层 3：通用数据模型
+
+**目标**：动态键值对，不固定任何游戏专属字段。
+
+| 组件 | 状态 | 文件 | 说明 |
+|------|------|------|------|
+| DataContext TypedDict | ✅ | `data/context.py` | 5 个通用顶层 key（character/weapon/equipment/enemy/computed） |
+| 变量声明 | ✅ | `dag/schema.py:DAGVariable` | type/source/description/default/min/max，完全通用 |
+| _resolve_path 取值 | ✅ | `dag/engine.py` | dict.get 链，对字段名零假设 |
+| **通用属性 Schema** | ❌ | — | 无从「属性键值对」到 DAG variables 的标准映射 |
+| **适配器 data→context 转换规范** | ⚠️ 部分 | `data/loader.py:DataContextLoader` | 抽象基类存在但无标准转换模板 |
+
+**结论**：⚠️ **完成 ~60%。** 数据模型机制已通用，但缺一个「属性声明 Schema」让适配器声明自己的字段结构。
+
+### 层 4：游戏适配器层
+
+**目标**：每游戏一个独立适配包，几十~几百行，不动内核。
+
+| 组件 | 状态 | 文件 | 说明 |
+|------|------|------|------|
+| AdapterPackage | ✅ | `config/adapter.py` | 加载 meta.json + DAG + 自定义函数 |
+| EndfieldContextLoader | ✅ | `endfield/../loader.py` | 终末地适配器实现 |
+| 自定义函数自动加载 | ✅ | `config/adapter.py:_load_functions()` | 从 meta.json 自动注册 |
+| **非终末地适配器示例** | ❌ | — | 只有终末地一个适配器 |
+| **适配器开发模板/脚手架** | ❌ | — | 无快速生成新适配器的 CLI 工具 |
+
+**结论**：⚠️ **完成 ~50%。** 适配器框架已成熟，但需要第二个非二游适配器来验证通用性，而且缺脚手架。
+
+### 层 5：表现层
+
+**目标**：配置驱动动态 UI、多主题、游戏字段自动渲染。
+
+| 组件 | 状态 | 文件 | 说明 |
+|------|------|------|------|
+| ComputeSheet | ✅ | `ui/compute_sheet.py` | 根据 layout.json + DAG variables 自动渲染输入控件 |
+| infer_control | ✅ | `ui/controls.py` | 根据变量类型推断控件类型 |
+| theme.json | ✅ | 适配包 ui/theme.json | 字体/色板/间距可配置 |
+| layout.json | ✅ | 适配包 ui/layout.json | 输出区段排版 |
+| **通用 input 区段渲染** | ⚠️ 部分 | `ui/compute_sheet.py` | 已支持但终末地 layout.json 未定义 input sections |
+| **多主题运行时切换** | ❌ | — | theme.json 仅在加载时读取 |
+| **响应式布局** | ❌ | — | 当前固定 QGridLayout |
+
+**结论**：⚠️ **完成 ~55%。** 核心组件已通用，但实际终末地 layout.json 只用了 outputs 区段，inputs 区段未启用。
+
+### 层间依赖审计
+
+| 依赖路径 | 是否干净 | 说明 |
+|---------|---------|------|
+| 层1 ← 层2 | ✅ | 引擎不知道表达式是什么 |
+| 层2 ← 层3 | ✅ | DAG variables 不绑定 DataContext 结构 |
+| 层1/2/3 ← 层4 | ✅ | 所有适配器调用通过接口 |
+| 层5 ← 层1~4 | ⚠️ | ComputeSheet 通过 DAGService + layout 耦合，但这是合理的设计依赖 |
+
+### 总体可行性评估
+
+| 层级 | 完成度 | 从 0 到目标所需工作量 | AI 辅助后工作量 |
+|------|--------|---------------------|----------------|
+| 层1 纯数学内核 | **100%** | 0 | 0 |
+| 层2 战斗规则引擎 | **~70%** | 6~10 天 | **2~4 天** |
+| 层3 通用数据模型 | **~60%** | 3~5 天 | **1~2 天** |
+| 层4 游戏适配器 | **~50%** | 2~4 天（每适配器） | **1 天（每适配器）** |
+| 层5 表现层 | **~55%** | 4~7 天 | **1~2 天** |
+| **社区分享平台** | **0%** | 1~3 天（静态网站） | **1~2 天** |
+
+**核心发现**：当前代码已完成 **~60%** 的通用化改造。最难的部分（层1层2核心引擎）已经完成。
+
+---
+
+## 附录 C：下一步行动计划
+
+### 原则
+
+1. **不一次做完 — 渐进式迭代**
+2. **每个步骤产出可验证的结果**
+3. **优先做「投资回报比最高」的任务**
+
+### Step 1：层3 通用属性 Schema（1~2 天 AI）
+
+当前每个适配器在 `_load_functions` 或 `build_context` 中硬编码字段名。需定义一种标准声明格式，让适配器可以描述自己的属性结构：
+
+```json
+{
+  "属性": [
+    { "name": "基础攻击力", "type": "float", "source": "character" },
+    { "name": "防御", "type": "float", "source": "character" },
+    { "name": "法术强度", "type": "float", "source": "character" }
+  ]
+}
+```
+
+**产出**：`calc_framework/data/schema.py` 扩展，支持属性声明验证 + 自动生成 DataContext。
+
+### Step 2：建第二个适配器 — 卡牌或 MMORPG（1~2 天 AI）
+
+目标：证明框架真正跨品类。
+- 选一款属性结构简单的游戏（如 MTG-like 卡牌 RPG）
+- 写一个完整的适配器（meta.json + dag.json + loader）
+- 编写集成测试
+
+**产出**：`framework/adapters/example-card-game/` 完整示例适配器。
+
+### Step 3：层2 插件模块化（2~3 天 AI）
+
+```python
+# 注册一个公式模板模块
+from calc_framework.dag.templates import register_template
+
+register_template("defense_reduction", {
+    "nodes": {
+        "def": {"type": "var", "path": "enemy.防御"},
+        "reduction": {"type": "expr", "expr": "100 / (100 + defense)", "inputs": {"defense": "def"}},
+    },
+    "outputs": {"def_ratio": {"node": "reduction"}}
+})
+```
+
+DAG JSON 中通过 `"template": "defense_reduction"` 引用。
+
+**产出**：`calc_framework/dag/templates/` 目录 + 3~5 个通用模板（防御减伤、暴击区、属性缩放）。
+
+### Step 4：社区分享平台 MVP（1~2 天）
+
+- 统一插件 JSON Schema（gui-theme, game-calc, ocr-rule）
+- GitHub Pages 静态网站（插件列表 + 预览 + 下载）
+- 工具内置导入接口
+
+### 优先级建议
+
+| 时间 | 任务 | 原因 |
+|------|------|------|
+| **本周** | Step 1 + Step 2 | 先证明跨品类通用性，这是战略最核心的验证 |
+| **下周** | Step 3 | 模块化降低新游戏适配成本 |
+| **下月** | Step 4 + Web 版 | 生态建设，需要有社区能用的适配器示例 |
+
+### 不推荐在当前节点做的事
+
+| 事项 | 原因 |
+|------|------|
+| MOBA/FPS 专用模块 | 品类太远，等层2~层3稳定后再做 |
+| 商业授权系统 | MVP 阶段用户量不够，过早引入增加复杂度 |
+| 多主题运行时切换 | 当前 ComputeSheet 单实例生命周期短，收益有限 |
+| 响应式布局 | 等待 ComputeSheet 在更多游戏中使用后再优化 |
+| OCR 通用化 | OCR 本身是独立模块，不依赖五层架构 |
+
+---
+
+## 附录 D：代码现状修正分析（2026-05-28）
+
+### 背景
+
+2026-05-28 外部审查者给出了一份分析，前提假设本项目是 **JS/HTML/CSS 单页应用**（``core-engine.js``、``game-data.js``、``gui.html/css``），所有代码揉在一个文件里。该分析提出了 3 步紧急改造计划。
+
+以下对照**代码实况**修正该分析，并将正确结论反映到行动清单中。
+
+### 前提差异
+
+| 审查者假设 | 代码实况 |
+|-----------|---------|
+| JS 单页面应用 | **Python/PySide6 桌面应用** |
+| 所有代码揉在一个文件 | **已拆分为框架 + 游戏 + GUI 三层** |
+| 无任何分层/配置化 | **DAG 公式已在 JSON 中可配置** |
+| HTML 界面写死终末地文案 | **ComputeSheet 从 layout.json 配置驱动渲染** |
+
+### 三步映射到代码实况
+
+#### 审查者第 1 步：拆分解耦
+
+**原文**："所有代码揉在一个文件里，JS 里同时写伤害公式、角色数据、界面操作、按钮逻辑"
+
+**代码实况**：该项目为 Python 桌面应用，计算引擎、数据、GUI **已分离**：
+
+| 层 | 文件 | 是否包含游戏代码 |
+|----|------|---------------|
+| 纯数学引擎 | `framework/src/calc_framework/dag/engine.py` | **无** — 9 种通用节点类型 |
+| DAG 公式定义 | `endfield_full.dag.json` | 终末地表达式字符串，纯配置 |
+| 游戏数据 | `character_weapon_equipment/*.json` | 纯 JSON 数据 |
+| GUI 界面 | `gui_design/shell/qt_app.py` | 有终末地耦合 |
+| ComputeSheet | `framework/src/calc_framework/ui/compute_sheet.py` | **游戏无关** — 从 layout.json 渲染 |
+
+**真实缺口**：`build_context()` 仍硬编码字段名（`"基础攻击"`、`"暴击率"`），需通用属性 Schema。工作量：**1~2 天**（非「大量重构」）。
+
+#### 审查者第 2 步：计算逻辑配置化
+
+**原文**："伤害公式全部写死在代码里"
+
+**代码实况**：所有 15 乘区已在 `endfield_full.dag.json` 中配置化：
+
+```json
+"def_reduction": {
+  "type": "expr",
+  "expr": "100 / (100 + defense)",
+  "inputs": { "defense": "enemy_def" }
+}
+```
+
+改变乘区顺序、增删乘区、修改公式 **无需改代码**，只需编辑 JSON。
+
+**真实缺口**：DAG 引擎通用，但缺少「标准属性声明 Schema」（见 Step 1）。工作量：**半天**（非「全部重写」）。
+
+#### 审查者第 3 步：GUI 界面配置化
+
+**原文**："HTML 界面是终末地专属，无法修改、无法分享"
+
+**代码实况**：ComputeSheet 已支持从 `layout.json` + DAG variables **配置驱动渲染**。终末地 `layout.json` 当前只用了 outputs 区段，inputs 区段未启用。
+
+**真实缺口**：需要一个完整使用 input+output 区段的适配器示例来验证。工作量：**1 天**（非「界面全部重做」）。
+
+### 修正后的紧急程度
+
+| 审查者评级 | 修正后评级 | 说明 |
+|-----------|-----------|------|
+| 🔴 **生死级** 拆分解耦 | 🟢 **已完成 80%** | 层1~层2已解耦，层3需通用属性 Schema |
+| 🔴 **核心级** 公式配置化 | 🟢 **已完成 85%** | DAG JSON 已配置，缺标准属性声明 |
+| 🔴 **愿景级** GUI 配置化 | 🟡 **~60%** | ComputeSheet 支持，实战未启用 input 区段 |
+
+### 实际最急需的事（修正后）
+
+1. **通用属性 Schema**（Step 1）— 今天推进
+2. **建第二个适配器**（Step 2）— 本周推进
+3. 插件模板库（Step 3）— 下周推进
+
+### 结论
+
+审查者的**方向完全正确**——框架必须通用化、配置化、可分享。但其分析建立在对代码现状的**错误假设**上。代码的真实完成度约 **60%**，最难的核心引擎已通用，剩余工作是 **配置层 + 模板层 + 生态层** 的扩展，AI 辅助下 3~5 天可完成核心抽象。

@@ -1,0 +1,18 @@
+{
+  "attributes": [
+    { "name": "基础攻击", "type": "float", "source": "character", "description": "角色基础攻击力" },
+    { "name": "力量", "type": "float", "source": "character", "description": "角色力量属性" },
+    { "name": "敏捷", "type": "float", "source": "character", "description": "角色敏捷属性" },
+    { "name": "智识", "type": "float", "source": "character", "description": "角色智识属性" },
+    { "name": "意志", "type": "float", "source": "character", "description": "角色意志属性" },
+    { "name": "暴击率", "type": "percent", "source": "character", "default": 0.05, "description": "角色暴击率" },
+    { "name": "暴击伤害", "type": "percent", "source": "character", "default": 0.5, "description": "角色暴击伤害" },
+    { "name": "主能力", "type": "str", "source": "character", "description": "角色主能力名称" },
+    { "name": "副能力", "type": "str", "source": "character", "description": "角色副能力名称" },
+    { "name": "基础攻击", "type": "float", "source": "weapon", "description": "武器基础攻击力" },
+    { "name": "攻击力+", "type": "percent", "source": "weapon", "default": 0.0, "description": "武器攻击力百分比加成" },
+    { "name": "附加攻击力+", "type": "float", "source": "weapon", "default": 0.0, "description": "武器附加攻击力" },
+    { "name": "攻击力平值", "type": "float", "source": "equipment", "default": 0.0, "description": "装备攻击力平值" },
+    { "name": "防御", "type": "float", "source": "enemy", "default": 100.0, "description": "敌方防御值" }
+  ]
+}
