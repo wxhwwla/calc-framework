@@ -98,6 +98,21 @@
 |------|------|
 | **.calcpack** | 游戏配置包，ZIP 格式，含 DAG 公式 + 数据 + UI 布局 + 主题，供用户 ComputeSheet 加载 |
 | **`tools/designer/`** | 配置包设计器，独立 GUI：数据录入 + 布局编辑 + 主题编辑 → `.calcpack` 导出 |
+
+## 通用框架（全品类规划）
+
+| 术语 | 含义 |
+|------|------|
+| **五层架构** | ADR-0010 定义：纯数学内核 → 通用战斗规则引擎 → 通用数据模型 → 游戏适配器 → 表现层 |
+| **纯数学内核** | 层1，只做四则运算/百分比/区间/概率/循环，完全不知道游戏对象 |
+| **通用战斗规则引擎** | 层2，动态表达式引擎 + 可插拔模块（暴击/命中/护盾/衰减等），乘区顺序配置化 |
+| **通用数据模型** | 层3，动态键值对 `{key, value}`，不固定任何游戏专属字段名 |
+| **游戏适配器** | 层4，每游戏一个适配包，将游戏数据转换为标准格式，不动内核 |
+| **插件化模块** | 层2的子概念，按游戏品类按需加载的规则模块（crit/dodge/shield/distance_decay） |
+| **全品类适配** | 从二游扩展到 MMORPG/卡牌/动作/MOBA/FPS/战棋的覆盖能力 |
+| **商业双授权** | GPL（个人/非商用免费）+ 商业授权（企业/团队需购买） |
+| **社区配置市场** | Web 平台，用户上传/下载/评分 `.calcpack` 适配包，内核 100% 本地计算 |
+| **ECA** | Entity-Context-Action 三层设计模式（可选），用于表达任意游戏战斗规则 |
 | **theme.json** | 主题定义，`ui/theme.json`：font（族/大小/粗细）、colors（primary/background/text 等）、spacing |
 | **布局编辑器画布** | `tools/designer/layout_editor/canvas.py`：QGraphicsView 网格画布，支持网格列数/间距/吸附配置 |
 | **碰撞检测** | `tools/designer/layout_editor/collision.py`：QGraphicsItem 矩形重叠实时检测 |
