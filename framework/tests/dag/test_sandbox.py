@@ -4,7 +4,15 @@
 
 import pytest
 from calc_framework.dag.errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
-from calc_framework.dag.sandbox import evaluate, parse_expr, validate_expr
+from calc_framework.dag.sandbox import (
+    clear_functions,
+    evaluate,
+    list_functions,
+    parse_expr,
+    register_function,
+    unregister_function,
+    validate_expr,
+)
 
 
 class TestSimpleArithmetic:
@@ -175,3 +183,54 @@ class TestComplexExpressions:
     def test_ability_formula(self) -> None:
         expr = "(total_attrs - 4 * 10) / 100 + 1"
         assert evaluate(parse_expr(expr), {"total_attrs": 80.0}) == pytest.approx(1.4)
+
+
+class TestCustomFunctionRegistration:
+    """自定义函数注册与调用。"""
+
+    def setup_method(self) -> None:
+        clear_functions()
+
+    def teardown_method(self) -> None:
+        clear_functions()
+
+    def test_register_and_call_custom_fn(self) -> None:
+        register_function("triple", lambda x: x * 3)
+        assert evaluate(parse_expr("triple(5)"), {}) == pytest.approx(15.0)
+
+    def test_custom_fn_with_vars(self) -> None:
+        register_function("clamp", lambda v, lo, hi: max(lo, min(hi, v)))
+        assert evaluate(parse_expr("clamp(val, 0, 10)"), {"val": 25.0}) == pytest.approx(10.0)
+        assert evaluate(parse_expr("clamp(val, 0, 10)"), {"val": -5.0}) == pytest.approx(0.0)
+
+    def test_custom_fn_in_expr_node(self) -> None:
+        register_function("bonus", lambda x: x * 1.5)
+        assert evaluate(parse_expr("bonus(base) + flat"), {"base": 100.0, "flat": 20.0}) == pytest.approx(170.0)
+
+    def test_unregistered_fn_rejected(self) -> None:
+        with pytest.raises(DAGSecurityError, match="未授权"):
+            parse_expr("unknown_fn(1)")
+
+    def test_unregister_function(self) -> None:
+        register_function("temp_fn", lambda: 42.0)
+        assert evaluate(parse_expr("temp_fn()"), {}) == pytest.approx(42.0)
+        unregister_function("temp_fn")
+        with pytest.raises(DAGSecurityError, match="未授权"):
+            parse_expr("temp_fn()")
+
+    def test_list_functions_includes_custom(self) -> None:
+        register_function("my_fn", lambda: 0.0)
+        names = list_functions()
+        assert "my_fn" in names
+        assert "floor" in names
+
+    def test_register_name_conflict_raises(self) -> None:
+        with pytest.raises(ValueError, match="冲突"):
+            register_function("floor", lambda: 0.0)
+
+    def test_clear_functions(self) -> None:
+        register_function("a", lambda: 1.0)
+        register_function("b", lambda: 2.0)
+        clear_functions()
+        with pytest.raises(DAGSecurityError, match="未授权"):
+            parse_expr("a(1)")

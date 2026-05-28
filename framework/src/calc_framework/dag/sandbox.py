@@ -35,6 +35,48 @@ _SAFE_UNARY_OPS: frozenset[type] = frozenset({ast.USub})
 
 _SAFE_BIN_OPS: frozenset[type] = frozenset({ast.Add, ast.Sub, ast.Mult, ast.Div})
 
+_GLOBAL_FUNCTIONS: dict[str, Any] = {}
+
+
+def register_function(name: str, fn: Any) -> None:
+    """注册一个自定义函数到 DAG 表达式沙箱。
+
+    注册后的函数可在 DAG ``expr`` 节点的表达式中直接调用，
+    例如 ``my_func(a, b)``。
+
+    参数:
+        name: 函数名（在表达式中使用的标识符）
+        fn: 可调用对象，接收位置参数并返回数值
+
+     Raises:
+        ValueError: 函数名与内置函数冲突
+    """
+    if name in _SAFE_BUILTINS:
+        raise ValueError(f"函数名 {name!r} 与内置函数冲突")
+    _GLOBAL_FUNCTIONS[name] = fn
+    logger.info("注册自定义函数: %s", name)
+
+
+def unregister_function(name: str) -> None:
+    """移除已注册的自定义函数。"""
+    _GLOBAL_FUNCTIONS.pop(name, None)
+    logger.info("移除自定义函数: %s", name)
+
+
+def clear_functions() -> None:
+    """清空所有已注册的自定义函数。"""
+    _GLOBAL_FUNCTIONS.clear()
+    logger.debug("清空所有自定义函数")
+
+
+def list_functions() -> list[str]:
+    """返回所有可用函数名列表（内置 + 自定义）。"""
+    return sorted(_SAFE_BUILTINS) + sorted(_GLOBAL_FUNCTIONS)
+
+
+def _all_allowed_names() -> frozenset[str]:
+    return frozenset(_SAFE_BUILTINS) | frozenset(_GLOBAL_FUNCTIONS)
+
 
 def _check_node(node: ast.AST) -> None:
     """递归校验 AST 节点树是否符合白名单。"""
@@ -47,7 +89,7 @@ def _check_node(node: ast.AST) -> None:
                 f"不允许调用非命名函数: {type(func_node).__name__}",
                 offending_node=type(func_node).__name__,
             )
-        if func_node.id not in _SAFE_BUILTINS:
+        if func_node.id not in _all_allowed_names():
             logger.warning("安全违规: 未授权的函数调用 %s", func_node.id)
             raise DAGSecurityError(
                 f"未授权的函数调用: {func_node.id}",
@@ -117,8 +159,12 @@ def _eval_node(node: ast.AST, scope: dict[str, float]) -> float:
     if isinstance(node, ast.Call):
         func_name = node.func.id
         args = [_eval_node(a, scope) for a in node.args]
+        all_funcs = {**_SAFE_BUILTINS, **_GLOBAL_FUNCTIONS}
+        fn = all_funcs.get(func_name)
+        if fn is None:
+            raise DAGRuntimeError(f"未注册的函数: {func_name}")
         try:
-            return float(_SAFE_BUILTINS[func_name](*args))
+            return float(fn(*args))
         except (ValueError, ZeroDivisionError) as e:
             raise DAGRuntimeError(f"函数 {func_name} 执行错误: {e}")
     if isinstance(node, ast.Expression):

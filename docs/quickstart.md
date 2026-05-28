@@ -1,0 +1,296 @@
+# quickstart — 第三方游戏接入 calc-framework
+
+本文演示如何为一个新 RPG 游戏接入 calc-framework 框架。
+使用框架的 DAG 引擎定义伤害公式、用 ComputeSheet 自动渲染 UI。
+
+---
+
+## 前置
+
+```bash
+pip install PySide6
+```
+
+框架位置：`framework/`，适配器位置：`framework/adapters/<game>/`。
+
+---
+
+## 第一步：创建适配包目录结构
+
+```
+framework/adapters/my-game/
+├── meta.json
+├── dag/
+│   └── main.dag.json
+└── ui/
+    └── layout.json
+```
+
+---
+
+## 第二步：定义 meta.json
+
+```json
+{
+  "name": "我的游戏伤害计算",
+  "game": "我的游戏",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "dag/main.dag.json"
+}
+```
+
+---
+
+## 第三步：编写 DAG 公式
+
+以最终攻击力 = 基础攻击力 × (1 + 攻击力%) + 固定攻击力 为例。
+
+`dag/main.dag.json`：
+
+```json
+{
+  "schema_version": "dag-v1",
+  "name": "攻击力链",
+  "variables": {
+    "character.基础攻击力": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础攻击力"
+    },
+    "computed.攻击力百分比": {
+      "type": "float",
+      "source": "computed",
+      "description": "攻击力%加成总和",
+      "default": 0.0
+    },
+    "computed.固定攻击力": {
+      "type": "float",
+      "source": "computed",
+      "description": "固定攻击力加成总和",
+      "default": 0.0
+    }
+  },
+  "nodes": {
+    "base": {
+      "type": "var",
+      "path": "character.基础攻击力"
+    },
+    "pct": {
+      "type": "var",
+      "path": "computed.攻击力百分比"
+    },
+    "flat": {
+      "type": "var",
+      "path": "computed.固定攻击力"
+    },
+    "pct_bonus": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "base",
+      "rhs": "pct",
+      "label": "百分比加成"
+    },
+    "total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "base",
+      "rhs": "pct_bonus",
+      "label": "百分比加成后"
+    },
+    "final": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "total",
+      "rhs": "flat",
+      "label": "最终攻击力"
+    }
+  },
+  "outputs": {
+    "最终攻击力": {
+      "node": "final",
+      "label": "最终攻击力"
+    }
+  }
+}
+```
+
+### 节点类型速查
+
+| 类型 | 用途 | 关键字段 |
+|------|------|---------|
+| `const` | 常量 | `value` |
+| `var` | 从上下文取值 | `path`（点分隔） |
+| `unary` | 一元运算 | `op`（neg/floor/ceil/abs/sqrt）, `input` |
+| `binary` | 二元运算 | `op`（+-*/^ min max）, `lhs`, `rhs` |
+| `condition` | 条件分支 | `cond`, `true_val`, `false_val` |
+| `expr` | 内联表达式 | `expr`（如 `a * (b + c)`）, `inputs` |
+| `user_input` | GUI 输入控件 | `default`, `min`, `max`, `step` |
+| `call` | 子图调用 | `subgraph`, `bindings` |
+
+### 子图
+
+大型公式可拆分子图，通过 `call` 节点引用：
+
+```json
+{
+  "subgraphs": {
+    "final_attack": {
+      "nodes": { ... },
+      "outputs": { "result": { "node": "final" } }
+    }
+  },
+  "nodes": {
+    "calc_atk": {
+      "type": "call",
+      "subgraph": "final_attack",
+      "bindings": {
+        "base_atk": "base",
+        "atk_pct": "pct"
+      }
+    }
+  }
+}
+```
+
+---
+
+## 第四步：编写布局文件
+
+`ui/layout.json` — 告诉 ComputeSheet 哪些输出要展示：
+
+```json
+{
+  "schema_version": "ui-v1",
+  "name": "攻击力计算表",
+  "sections": [
+    {
+      "id": "attack",
+      "type": "outputs",
+      "title": "攻击力",
+      "outputs": ["最终攻击力"]
+    }
+  ]
+}
+```
+
+---
+
+## 第五步：Python 中加载并求值
+
+```python
+from calc_framework.config.adapter import AdapterPackage
+from calc_framework.data.context import make_context
+
+pkg = AdapterPackage("framework/adapters/my-game")
+
+context = make_context(
+    character={"基础攻击力": 100},
+    computed={
+        "攻击力百分比": 0.5,    # 50%
+        "固定攻击力": 30,
+    },
+)
+
+result = pkg.dag_service.evaluate(context)
+print(result.outputs)  # {"最终攻击力": 180.0}
+```
+
+---
+
+## 第六步：用 ComputeSheet 渲染 UI
+
+```python
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from calc_framework.config.adapter import AdapterPackage
+from calc_framework.ui.compute_sheet import ComputeSheet
+from calc_framework.ui.layout import load_layout_json
+
+app = QApplication([])
+win = QMainWindow()
+central = QWidget()
+win.setCentralWidget(central)
+layout = QVBoxLayout(central)
+
+pkg = AdapterPackage("framework/adapters/my-game")
+layout_def = load_layout_json(...)  # 从文件或字符串加载
+
+sheet = ComputeSheet(
+    dag_service=pkg.dag_service,
+    layout=layout_def,
+    variables=pkg.dag_service.dag.variables,
+    base_context=make_context(character={"基础攻击力": 100}),
+)
+layout.addWidget(sheet.widget)
+sheet.evaluate()
+
+win.show()
+app.exec()
+```
+
+ComputeSheet 会自动：
+- 为 `user_input` 类型的变量渲染滑块/输入框
+- 展示 outputs 区段的计算结果
+- 点击「计算」按钮刷新求值
+
+---
+
+## 第七步：接入日志
+
+```python
+from calc_framework.logging import setup_logging
+
+# 在应用入口调用一次
+setup_logging(level="DEBUG", log_file="my_game.log")
+```
+
+环境变量快捷方式：
+
+```bash
+set CALC_FRAMEWORK_LOG_LEVEL=INFO
+set CALC_FRAMEWORK_LOG_FILE=calc.log
+python main.py
+```
+
+---
+
+## 完整接入示例：终末地适配器
+
+参考 `framework/adapters/endfield/`：
+
+| 文件 | 用途 |
+|------|------|
+| `meta.json` | 终末地适配器元信息 |
+| `../../src/calc_framework/configs/endfield_full.dag.json` | 15 乘区 DAG 定义（5 子图、58 节点、18 输出） |
+| `ui/layout.json` | 乘区展示排版 |
+| `endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py` | `EndfieldContextLoader` 实现 |
+
+```python
+# 终末地调用方式
+from calculation.multiplicative_zones.dag.loader import EndfieldContextLoader
+
+loader = EndfieldContextLoader()
+context = loader.build_context(
+    character=char_dict,
+    weapon=weapon_dict,
+    char_level=80,
+    weapon_level=80,
+    trust_level=0,
+)
+```
+
+---
+
+## 测试你的适配器
+
+```python
+# tests/test_my_game_adapter.py
+from calc_framework.config.adapter import AdapterPackage
+
+def test_basic_dag_eval():
+    pkg = AdapterPackage("framework/adapters/my-game")
+    ctx = make_context(character={"基础攻击力": 100},
+                       computed={"攻击力百分比": 0.0, "固定攻击力": 0})
+    result = pkg.dag_service.evaluate(ctx)
+    assert result.outputs["最终攻击力"] == 100.0
+```

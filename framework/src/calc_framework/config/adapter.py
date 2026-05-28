@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -41,10 +42,75 @@ class AdapterPackage:
         self._meta: dict[str, Any] = self._load_meta()
         self._validate_meta()
         self._dag_service: DAGService | None = None
+        self._load_functions()
         logger.info("适配包加载成功: %s (schema=%s, version=%s)",
                       self._adapter_dir.name,
                       self._meta.get("schema_version", "?"),
                       self._meta.get("version", "?"))
+
+    def register_function(self, name: str, fn: Any) -> None:
+        """注册一个自定义函数到适配包的 DAG 表达式沙箱。
+
+        委托给 ``DAGService.register_function``，在适配包层面暴露。
+        """
+        self.dag_service.register_function(name, fn)
+
+    def _load_functions(self) -> None:
+        """从 ``meta.json`` 的 ``functions`` 字段加载自定义函数。
+
+        ``meta.json`` 可选字段，格式::
+
+            "functions": {
+                "clamp": "functions.py",
+                "calc_bonus": "extras/math.py"
+            }
+
+        key 为函数名（DAG 表达式中使用的标识符），
+        value 为相对于适配包目录的 Python 文件路径。
+        该文件**顶层定义**的同名函数将被注册到 DAG 沙箱。
+
+        也支持点分隔的 Python 导入路径格式（当 value 不含 ``.py`` 时）：
+            "my_func": "my_game.functions.my_func"
+        """
+        funcs: dict[str, str] = self._meta.get("functions", {})
+        if not funcs:
+            return
+        for name, ref in funcs.items():
+            try:
+                if ref.endswith(".py"):
+                    fn = self._load_function_from_file(name, ref)
+                else:
+                    fn = self._load_function_from_dotted(name, ref)
+                self.dag_service.register_function(name, fn)
+                logger.info("从 meta.json 加载自定义函数: %s -> %s", name, ref)
+            except Exception as exc:
+                logger.warning("加载自定义函数失败 %s -> %s: %s", name, ref, exc)
+
+    def _load_function_from_file(self, name: str, file_path: str) -> Any:
+        full_path = self._adapter_dir / file_path
+        if not full_path.is_file():
+            raise FileNotFoundError(f"函数文件未找到: {full_path}")
+        spec = importlib.util.spec_from_file_location(f"_adapter_fn_{name}", full_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"无法加载函数文件: {full_path}")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        fn = getattr(mod, name)
+        if not callable(fn):
+            raise TypeError(f"{name} 不是可调用对象")
+        return fn
+
+    def _load_function_from_dotted(self, name: str, dotted_path: str) -> Any:
+        parts = dotted_path.rsplit(".", 1)
+        if len(parts) != 2:
+            raise ValueError(f"无效的导入路径: {dotted_path}")
+        module_path, func_name = parts
+        import importlib
+        mod = importlib.import_module(module_path)
+        fn = getattr(mod, func_name)
+        if not callable(fn):
+            raise TypeError(f"{func_name} 不是可调用对象")
+        return fn
 
     @property
     def meta(self) -> dict[str, Any]:

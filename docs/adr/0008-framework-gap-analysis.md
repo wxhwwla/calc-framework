@@ -37,7 +37,7 @@
 
 | 缺口 | 严重程度 | 说明 |
 |------|---------|------|
-| 无自定义算法扩展接口 | 🔴 高 | 无法注册自定义 Python 函数到 DAG 引擎（当前只支持内置的 +-*/^ min max 和 AST expr） |
+| ~~无自定义算法扩展接口~~ | ✅ **已解决** | `sandbox.register_function()` + `AdapterPackage` 自动加载 + 终末地适配器注册示例（clamp/lerp/percent_of） |
 | 无异常伤害/持续伤害预置模板 | 🟡 中 | DAG 引擎本身可以表达 DoT，但没有开箱即用的预置子图模板 |
 | 无分步调试/断点求值 | 🟡 中 | 求值全量一次性完成，无法在中间节点设断点观察 |
 
@@ -173,7 +173,7 @@
 
 | 模块 | 用户评分 | 修正评分 | 说明 |
 |------|---------|---------|------|
-| 核心计算引擎 | 60% | **70%** | 公式已是可配置 JSON，非硬编码 |
+| 核心计算引擎 | 60% | **75%** | 公式可配置 + 自定义函数注册接口已完成 |
 | 数据配置层 | 30% | **65%** | 四层契约 + 适配包 + schema_check 已存在 |
 | 接口/适配层 | 20% | **55%** | DataContextLoader + AdapterPackage + ETL 已存在 |
 | UI 渲染层 | 40% | **55%** | ComputeSheet + infer_control + theme.json 已存在 |
@@ -189,6 +189,8 @@
 | 任务 | 关联缺口 | 说明 |
 |------|---------|------|
 | 日志系统 | 工程 #1 | `calc_framework/logging.py` — 统一 `setup_logging()` + `get_logger()`，环境变量配置，RotatingFileHandler |
+| 自定义算法扩展 | 引擎 #1 | `sandbox.register_function()` + `AdapterPackage` 自动加载 + 终末地适配器注册示例 |
+| 框架入门文档 | 工程 #4 | `framework/README.md` + `docs/quickstart.md` 已创建 |
 
 ### P0（阻碍依赖）
 
@@ -200,9 +202,7 @@
 
 | 任务 | 关联缺口 | 路径 |
 |------|---------|------|
-| 自定义算法扩展（插件函数注册） | 引擎 #1 | `dag/sandbox.py` 增加函数注册表 |
 | 多游戏切换 UI | 扩展 #3 | `tools/designer/` 增加游戏选择器 |
-| 框架入门文档 | 工程 #4 | `framework/README.md` + `docs/quickstart.md` |
 
 ### P2（体验完善）
 

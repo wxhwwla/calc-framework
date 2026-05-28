@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.1.5"
+_VERSION = "3.1.6"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,17 +209,16 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 10 处文件
 # BODY:
 # - 更新文档 docs/adr/0008-framework-gap-analysis.md
-# - 修改 endfield_damage_calculator/data/loader.py
-# - 修改 endfield_damage_calculator/gui_design/shell/qt_app.py
-# - 修改 endfield_damage_calculator/main.py
+# - 更新文档 docs/quickstart.md
 # - 修改 endfield_damage_calculator/please_read_me.py
+# - 更新文档 framework/README.md
+# - 修改 framework/adapters/endfield/functions.py
+# - 变更 framework/adapters/endfield/meta.json
 # - 修改 framework/src/calc_framework/config/adapter.py
-# - 修改 framework/src/calc_framework/dag/engine.py
 # - 修改 framework/src/calc_framework/dag/sandbox.py
-# - 修改 framework/src/calc_framework/dag/subgraph.py
-# - 修改 framework/src/calc_framework/logging.py
-# - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/src/calc_framework/dag/service.py
+# - 修改 framework/tests/dag/test_sandbox.py
 # --- END UPLOAD_SUMMARY ---

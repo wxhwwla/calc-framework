@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.dag.engine import DAGResult, evaluate_graph
+from calc_framework.dag.sandbox import register_function as _register_sandbox_fn
 from calc_framework.dag.schema import DAGGraph
 from calc_framework.dag.serializer import dag_from_dict, load_dag
 
@@ -39,6 +40,13 @@ class DAGService:
     def evaluate(self, context: dict[str, Any]) -> DAGResult:
         """用给定上下文求值 DAG 图，返回包含所有输出值的 DAGResult。"""
         return evaluate_graph(self._dag, context)
+
+    def register_function(self, name: str, fn: Any) -> None:
+        """注册一个自定义函数到 DAG 表达式沙箱。
+
+        注册后的函数可在 ``expr`` 节点的表达式中直接调用。
+        """
+        _register_sandbox_fn(name, fn)
 
     @property
     def dag(self) -> DAGGraph:
