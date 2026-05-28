@@ -16,8 +16,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget, QVBoxLayout, QWidget
 
-from designer.inverse_tab import InverseTab
 from designer.data_browser_tab import DataBrowserTab
+from designer.data_editor_tab import DataEditorTab
+from designer.inverse_tab import InverseTab
 
 APP_NAME = "终末地设计器"
 APP_VERSION = "1.0.0"
@@ -44,6 +45,7 @@ class DesignerApp(QMainWindow):
 
         self.tabs = QTabWidget()
         self.tabs.addTab(InverseTab(self.big_font, self.small_font), "公式反推")
+        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), "数据编辑")
         self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), "数据浏览")
         layout.addWidget(self.tabs, stretch=1)
 
