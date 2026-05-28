@@ -1,4 +1,4 @@
-"""对话框/预设/工具回调(DialogMixin,混合入 QtDamageApp)。"""
+"""对话框/预设/工具/信号回调（DialogMixin，混合入 QtDamageApp）。"""
 
 from __future__ import annotations
 
@@ -6,15 +6,26 @@ import webbrowser
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtCore import Qt, QThread
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from gui_design.legal.attribution_content import SUMMARY_TEXT
 from gui_design.legal.donation_qt import open_donation_dialog
 
 
 class DialogMixin:
-    """手动 Buff、预设导入导出、方案对比、仪表盘、历史、捐赠等。"""
-
     def _on_manual_buff(self) -> None:
         from gui_design.controls.manual_buff.qt_window import QtManualBuffDialog
 
@@ -98,27 +109,101 @@ class DialogMixin:
         )
         dialog.exec()
 
-    def _on_dashboard(self) -> None:
-        from gui_design.controls.enhancement.qt_dialogs import QtDamageDashboard
-
-        dialog = QtDamageDashboard(
-            parent=self.app, big_font=self.big_font, small_font=self.small_font,
-        )
-        dialog.exec()
-
-    def _on_history(self) -> None:
-        from gui_design.shared.calc_history import QtCalculationHistoryDialog
-
-        dialog = QtCalculationHistoryDialog(
-            parent=self.app, big_font=self.big_font, small_font=self.small_font,
-        )
-        dialog.exec()
-
     def _on_attribution(self) -> None:
         QMessageBox.about(self.app, "数据来源与声明", SUMMARY_TEXT)
 
     def _on_donation(self) -> None:
         open_donation_dialog(self.app)
 
-    def _on_github(self) -> None:
-        webbrowser.open("https://github.com/your-repo/endfield-damage-calculator")
+    # ── 信号连接 ──────────────────────────────
+
+    def _connect_signals(self) -> None:
+        self.char_panel.name_combo.currentTextChanged.connect(self._on_char_name_change)
+
+        for panel in (self.char_panel, self.weapon_panel):
+            panel.type_combo.currentIndexChanged.connect(self._on_loadout_changed)
+            panel.star_combo.currentIndexChanged.connect(self._on_loadout_changed)
+            panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
+            panel.level_slider.valueChanged.connect(self._on_loadout_changed)
+
+        self.control_dock.calc_mode_changed.connect(self._on_calc_mode_changed)
+
+        self.control_dock.mvp_search_btn.clicked.connect(self._on_mvp_search)
+        self.control_dock.full_search_btn.clicked.connect(self._on_full_search)
+        self.control_dock.search_cancel_btn.clicked.connect(self._on_cancel_search)
+        self._connect_more_settings_btns()
+        self._connect_search_estimate_triggers()
+
+    def _connect_more_settings_btns(self) -> None:
+        dock = self.control_dock
+        if hasattr(dock, "_export_btn") and dock._export_btn:
+            dock._export_btn.clicked.connect(self._on_export_preset)
+        if hasattr(dock, "_import_btn") and dock._import_btn:
+            dock._import_btn.clicked.connect(self._on_import_preset)
+        if hasattr(dock, "_compare_btn") and dock._compare_btn:
+            dock._compare_btn.clicked.connect(self._on_compare_presets)
+        if hasattr(dock, "_dashboard_btn") and dock._dashboard_btn:
+            dock._dashboard_btn.clicked.connect(self._on_damage_dashboard)
+        if hasattr(dock, "_history_btn") and dock._history_btn:
+            dock._history_btn.clicked.connect(self._on_calc_history)
+        if hasattr(dock, "_export_log_btn") and dock._export_log_btn:
+            dock._export_log_btn.clicked.connect(self._on_export_log)
+
+    def _connect_search_estimate_triggers(self) -> None:
+        dock = self.control_dock
+        dock.single_skill_scope_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        dock.equipment_scope_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        dock.search_workers_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        dock.search_top_n_combo.currentTextChanged.connect(self._refresh_search_estimate)
+
+    # ── 伤害仪表盘 / 计算历史 / 操作日志 ──────────
+
+    def _on_damage_dashboard(self) -> None:
+        from gui_design.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
+        from gui_design.presentation.damage_snapshot import get_snapshot_from_app
+
+        snapshot = get_snapshot_from_app(self)
+        dialog = QtDamageDashboardDialog(
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
+            snapshot=snapshot,
+        )
+        dialog.exec()
+
+    def _on_calc_history(self) -> None:
+        from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        from gui_design.shared.calc_history import get_app_calculation_history
+
+        history = get_app_calculation_history(self)
+        dialog = QtCalcHistoryDialog(
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
+            history=history,
+            apply_fn=self._apply_preset_to_qt_app,
+        )
+        dialog.exec()
+
+    def _on_export_log(self) -> None:
+        from utils.operation_log import get_session_operation_log
+
+        path, _ = QFileDialog.getSaveFileName(
+            self.app, "导出操作日志", "operation_log.json", "JSON (*.json)",
+        )
+        if not path:
+            return
+        try:
+            get_session_operation_log().export_to_file(Path(path))
+            self.status_label.setText("操作日志已导出")
+        except Exception as exc:
+            QMessageBox.warning(self.app, "导出失败", str(exc))
+
+    def _on_open_help(self) -> None:
+        import webbrowser
+
+        doc_path = Path(__file__).resolve().parents[2] / "docs" / "GUI使用说明.md"
+        if doc_path.is_file():
+            webbrowser.open(doc_path.as_uri())
+        else:
+            QMessageBox.warning(self.app, "找不到文档", f"使用说明文件不存在：\n{doc_path}")

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSizePolicy
+from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -63,6 +63,14 @@ _BTN_PRIMARY_STYLE = """
                   border-radius: 6px; font-weight: bold; }
     QPushButton:hover { background-color: #3182CE; }
     QPushButton:pressed { background-color: #2C5282; }
+"""
+
+_BTN_SECONDARY_STYLE = """
+    QPushButton {
+        background-color: transparent; color: #D1D1D1;
+        border: 1px solid #464646; border-radius: 6px;
+    }
+    QPushButton:hover { border-color: #2B6CB6; color: white; }
 """
 
 
@@ -244,3 +252,67 @@ class BuilderMixin:
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
         return col
+
+    def _build_segment_rows_fallback(self) -> None:
+        """初始占位：3 个基础段次数输入。"""
+        skill_labels = ["战技", "连携技", "终结技"]
+        self._segment_count_edits_dict.clear()
+        for i in range(3):
+            row = QHBoxLayout()
+            lbl = QLabel(f"{skill_labels[i]} 次数:")
+            lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+            lbl.setFont(self._small)
+            edit = QLineEdit("0")
+            edit.setStyleSheet(_ENTRY_STYLE)
+            edit.setFixedWidth(60)
+            edit.textChanged.connect(self._mark_pending)
+            row.addWidget(lbl)
+            row.addWidget(edit)
+            row.addStretch()
+            w = QWidget()
+            w.setLayout(row)
+            self._segment_rows_lay.addWidget(w)
+            self._segment_count_edits_dict[skill_labels[i]] = edit
+
+    def rebuild_segment_rows(self, char_data: dict | None, s1: int, s2: int, s3: int) -> None:
+        """按角色技能段规格重建段级次数输入行。"""
+        from calculation.skills.segments import list_segment_count_specs
+
+        # 清空容器
+        while self._segment_rows_lay.count():
+            item = self._segment_rows_lay.takeAt(0)
+            if item and item.widget():
+                item.widget().deleteLater()
+
+        self._segment_rows_lay.addWidget(SmallLabel("技能段数", self._small))
+        self._segment_count_edits_dict.clear()
+
+        if not char_data:
+            self._build_segment_rows_fallback()
+            return
+
+        specs = list_segment_count_specs(char_data, skill_1_level=s1, skill_2_level=s2, skill_3_level=s3)
+        if not specs:
+            self._build_segment_rows_fallback()
+            return
+
+        for spec in specs:
+            key = str(spec["key"])
+            label_text = str(spec["label"])
+            row = QHBoxLayout()
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
+            lbl.setFont(self._small)
+            edit = QLineEdit("0")
+            edit.setStyleSheet(_ENTRY_STYLE)
+            edit.setFixedWidth(60)
+            edit.textChanged.connect(self._mark_pending)
+            row.addWidget(lbl, stretch=1)
+            row.addWidget(edit)
+            w = QWidget()
+            w.setLayout(row)
+            self._segment_rows_lay.addWidget(w)
+            self._segment_count_edits_dict[key] = edit
+
+    # ── 搜索参数读取 ──────────────────────────
+

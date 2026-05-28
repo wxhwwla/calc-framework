@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import QVBoxLayout
+from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QScrollArea
 
 from calc_framework.ui.compute_sheet import ComputeSheet

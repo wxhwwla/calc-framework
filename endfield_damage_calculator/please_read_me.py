@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.7.1"
+_VERSION = "3.7.2"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,62 +209,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 56 处文件
+# TITLE: 更新 11 处文件
 # BODY:
 # - 修改 _fix_imports.py
-# - 修改 endfield_damage_calculator/calculation/abnormal/__init__.py
-# - 修改 endfield_damage_calculator/calculation/abnormal/physical.py
-# - 修改 endfield_damage_calculator/calculation/abnormal/spell.py
-# - 修改 endfield_damage_calculator/calculation/abnormal/spell_params.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/__init__.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_calc.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/ability_bonus_zone.py
-# - 修改 endfield_damage_calculator/calculation/search/evaluate/task.py
-# - 修改 endfield_damage_calculator/gui_design/backends/__init__.py
-# - 修改 endfield_damage_calculator/gui_design/controls/enhancement/qt_dialogs.py
-# - 修改 endfield_damage_calculator/gui_design/controls/search/qt_actions.py
-# - 修改 endfield_damage_calculator/gui_design/controls/search/search_estimate_message.py
-# - 修改 endfield_damage_calculator/gui_design/controls/search/search_export_paths.py
-# - 修改 endfield_damage_calculator/gui_design/controls/search/search_settings.py
-# - 修改 endfield_damage_calculator/gui_design/presentation/preview/multi_skill.py
-# - 修改 endfield_damage_calculator/gui_design/presentation/preview/single_skill.py
-# - 修改 endfield_damage_calculator/gui_design/presentation/search_results_lines.py
-# - 修改 endfield_damage_calculator/gui_design/search_ui/__init__.py
-# - 修改 endfield_damage_calculator/gui_design/search_ui/search_estimate_message.py
-# - 修改 endfield_damage_calculator/gui_design/search_ui/search_export_paths.py
-# - 修改 endfield_damage_calculator/gui_design/search_ui/search_settings.py
-# - 修改 endfield_damage_calculator/gui_design/shell/__init__.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/_subgraph_builders.py
+# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/config.py
+# - 修改 endfield_damage_calculator/gui_design/panels/selection/qt_panel.py
+# - 修改 endfield_damage_calculator/gui_design/panels/selection/qt_panel_getters_mixin.py
 # - 修改 endfield_damage_calculator/gui_design/shell/qt_app.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_app_confirm_mixin.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_app_dialog_mixin.py
 # - 修改 endfield_damage_calculator/gui_design/shell/qt_control_dock.py
-# - 修改 endfield_damage_calculator/gui_design/shell/qt_factory.py
-# - 修改 endfield_damage_calculator/gui_design/shell/qt_worker.py
-# - 修改 endfield_damage_calculator/tests/calculation/damage/zones/test_dag_adapter.py
-# - 修改 endfield_damage_calculator/tests/calculation/damage/zones/test_zone_snapshot.py
-# - 修改 endfield_damage_calculator/tests/calculation/equipment/test_equipment_sync.py
-# - 修改 endfield_damage_calculator/tests/calculation/loadout/state/test_loadout_state.py
-# - 修改 endfield_damage_calculator/tests/calculation/manual_buff/test_abnormal_manual_buff.py
-# - 修改 endfield_damage_calculator/tests/calculation/manual_buff/test_spell_abnormal.py
-# - 修改 endfield_damage_calculator/tests/calculation/manual_buff/test_spell_abnormal_params.py
-# - 修改 endfield_damage_calculator/tests/calculation/search/plan/single_skill/test_search_settings.py
-# - 修改 endfield_damage_calculator/tests/calculation/search/plan/single_skill/test_single_skill_search_preview.py
-# - 修改 endfield_damage_calculator/tests/calculation/search/plan/test_search_controls.py
-# - 修改 endfield_damage_calculator/tests/character_weapon_equipment/test_weapon_dual_special.py
-# - 修改 endfield_damage_calculator/tests/conftest.py
-# - 修改 endfield_damage_calculator/tests/fixtures/gui_fixtures.py
-# - 修改 endfield_damage_calculator/tests/fixtures/path_roots.py
-# - 修改 endfield_damage_calculator/tests/gui_design/app/test_confirm_selection_skill_levels.py
-# - 修改 endfield_damage_calculator/tests/gui_design/presentation/test_multi_skill_search_preview.py
-# - 修改 endfield_damage_calculator/tests/gui_design/presentation/test_property_display_lines.py
-# - 修改 endfield_damage_calculator/tests/gui_design/presentation/test_single_hit_preview.py
-# - 修改 endfield_damage_calculator/tests/gui_design/shell/test_weapon_panel_layout.py
-# - 修改 endfield_damage_calculator/tests/repo/test_gitignore_contract.py
-# - 修改 endfield_damage_calculator/tests/repo/test_legal_attribution.py
-# - 修改 endfield_damage_calculator/tests/repo/test_readme_layers.py
-# - 修改 endfield_damage_calculator/tests/repo/test_release_layout.py
-# - 修改 endfield_damage_calculator/tests/repo/test_repo_layout.py
-# - 修改 endfield_damage_calculator/tests/repo/test_repo_release_layout.py
-# - 修改 endfield_damage_calculator/tests/test_qt_imports.py
-# - 修改 endfield_damage_calculator/tests/tools/test_bwiki_scout.py
-# - 修改 endfield_damage_calculator/tests/tools/test_import_targets.py
-# - 修改 endfield_damage_calculator/tests/tools/test_wiki_sync.py
+# - 修改 endfield_damage_calculator/gui_design/shell/qt_control_dock_builders.py
+# - 修改 endfield_damage_calculator/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
