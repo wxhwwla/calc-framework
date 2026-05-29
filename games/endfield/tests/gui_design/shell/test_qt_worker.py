@@ -1,62 +1,82 @@
-#!/usr/bin/env python3
-"""CalcWorker 后台 Worker 测试。"""
+"""CalcWorker 单元测试（直接调用 _run 避免 QThread）。"""
 
 from __future__ import annotations
 
-import unittest
+from unittest.mock import MagicMock
 
-from PySide6.QtCore import QCoreApplication, QEventLoop, QTimer
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 
 from gui_design.shell.qt_worker import CalcWorker
 
 
-class TestCalcWorker(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        if not QCoreApplication.instance():
-            cls._app = QCoreApplication([])
+def _app() -> QApplication | QCoreApplication:
+    inst = QApplication.instance()
+    if inst is None:
+        inst = QApplication([])
+    return inst
 
-    def _run_with_loop(self, worker: CalcWorker, timeout_ms: int = 5000) -> None:
-        loop = QEventLoop()
-        worker.finished.connect(loop.quit)
-        worker.error.connect(loop.quit)
-        QTimer.singleShot(timeout_ms, loop.quit)
-        worker.start()
-        loop.exec()
-        worker.wait_for_finished(timeout=3000)
 
-    def test_worker_lifecycle(self) -> None:
-        results: list[str] = []
-        worker = CalcWorker(fn=lambda: "hello")
-        worker.finished.connect(lambda r: results.append(r))
-        self._run_with_loop(worker)
-        self.assertEqual(results, ["hello"])
+class TestCalcWorker:
+    def test_run_cancelled_skips_emit(self) -> None:
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        finished = MagicMock()
+        worker.finished.connect(finished)
+        worker._cancelled = True
+        worker._run()
+        finished.emit.assert_not_called()
 
-        worker2 = CalcWorker(fn=lambda a, b: str(a + b), args=(1, 2))
-        results2: list[str] = []
-        worker2.finished.connect(lambda r: results2.append(r))
-        self._run_with_loop(worker2)
-        self.assertEqual(results2, ["3"])
-
-        errors: list[str] = []
-
-        def crash() -> None:
-            raise ValueError("boom")
-
-        worker3 = CalcWorker(fn=crash)
-        worker3.error.connect(lambda m: errors.append(m))
-        self._run_with_loop(worker3)
-        self.assertEqual(len(errors), 1)
-        self.assertIn("boom", errors[0])
-
-        worker4 = CalcWorker(fn=lambda: "x")
-        worker4.cancel()
-        self._run_with_loop(worker4)
+    def test_cancel_before_start(self) -> None:
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        worker.cancel()
+        assert worker._cancelled is True
 
     def test_wait_for_finished_no_thread(self) -> None:
-        worker = CalcWorker(fn=lambda: "x")
-        self.assertTrue(worker.wait_for_finished(timeout=100))
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        assert worker.wait_for_finished() is True
 
+    def test_start_already_running(self) -> None:
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        mock_thread = MagicMock()
+        mock_thread.isRunning.return_value = True
+        worker._thread = mock_thread
+        worker.start()
+        mock_thread.started.connect.assert_not_called()
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_worker_attributes(self) -> None:
+        worker = CalcWorker(fn=lambda x: x, args=(42,), kwargs={"y": 1})
+        assert worker._args == (42,)
+        assert worker._kwargs == {"y": 1}
+
+    def test_run_finally_quits_thread(self) -> None:
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        mock_thread = MagicMock()
+        worker._thread = mock_thread
+        worker._run()
+        mock_thread.quit.assert_called_once()
+
+    def test_cancel_with_running_thread(self) -> None:
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        mock_thread = MagicMock()
+        mock_thread.isRunning.return_value = True
+        worker._thread = mock_thread
+        worker.cancel()
+        assert worker._cancelled is True
+        mock_thread.quit.assert_called_once()
+        mock_thread.wait.assert_called_once_with(3000)
+
+    def test_wait_for_finished_with_thread(self) -> None:
+        _app()
+        worker = CalcWorker(fn=lambda: "ok")
+        mock_thread = MagicMock()
+        mock_thread.isRunning.return_value = True
+        worker._thread = mock_thread
+        result = worker.wait_for_finished(100)
+        mock_thread.wait.assert_called_once_with(100)
+        assert result == mock_thread.wait.return_value

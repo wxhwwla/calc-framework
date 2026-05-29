@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 from calculation.loadout.optimizer import LoadoutScore
@@ -15,7 +16,7 @@ from gui_design.controls.search.qt_actions import (
 )
 
 
-def _app() -> QApplication:
+def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:
         inst = QApplication([])

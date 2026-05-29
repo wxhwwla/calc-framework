@@ -5,14 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QCoreApplication, QObject
 from PySide6.QtWidgets import QApplication
 
 from calculation.search.run.cancel import SearchCancelToken
 from gui_design.controls.search.qt_actions import SearchWorker
 
 
-def _app() -> QApplication:
+def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:
         inst = QApplication([])

@@ -6,12 +6,13 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 from gui_design.controls.search.qt_search_browser import SearchHistoryDialog, _human_size
 
 
-def _app() -> QApplication:
+def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:
         inst = QApplication([])

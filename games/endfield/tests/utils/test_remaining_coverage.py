@@ -81,6 +81,20 @@ class TestGuiWindowDetail:
         win.winfo_screenwidth.side_effect = Exception("no")
         _geometry_fill_screen(win)
 
+    def test_apply_calls_geometry_when_both_zoom_fail(self) -> None:
+        win = MagicMock()
+        win.state.side_effect = Exception("no zoomed")
+        win.attributes.side_effect = Exception("no attr")
+        win.winfo_screenwidth.return_value = 1920
+        win.winfo_screenheight.return_value = 1080
+
+        def side_effect(fn):
+            fn()
+
+        win.after_idle.side_effect = side_effect
+        apply_startup_maximized(win)
+        win.geometry.assert_called_once()
+
     def test_apply_startup_maximized(self) -> None:
         win = MagicMock()
 
@@ -154,6 +168,12 @@ class TestGuiFonts:
         with patch("utils.gui_fonts.system_font_family", side_effect=tk.TclError("no tk")):
             families = matplotlib_sans_serif_families()
             assert len(families) >= 2
+
+    def test_matplotlib_sans_serif_families_with_valid_font(self) -> None:
+        with patch("utils.gui_fonts.system_font_family", return_value="CustomFont"):
+            families = matplotlib_sans_serif_families()
+            assert families[0] == "CustomFont"
+            assert any("DejaVu" in f for f in families)
 
     def test_matplotlib_sans_serif_families_contains_dejavu(self) -> None:
         families = matplotlib_sans_serif_families()

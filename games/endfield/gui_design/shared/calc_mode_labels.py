@@ -27,8 +27,6 @@ def calculation_mode_from_label(label: str) -> str:
     if text in _LABEL_TO_MODE:
         return _LABEL_TO_MODE[text]
     for option_label, mode_id in CALC_MODE_OPTIONS:
-        if text == option_label:
-            return mode_id
         if option_label.startswith("单技能遍历") and text.startswith("单技能遍历"):
             return "single_skill_search"
         if option_label.startswith("多技能遍历") and text.startswith("多技能遍历"):
