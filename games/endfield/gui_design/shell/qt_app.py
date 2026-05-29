@@ -214,6 +214,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
             on_attribution=self._on_attribution,
             on_donation=self._on_donation,
             on_open_help=self._on_open_help,
+            on_ocr_detect=self._on_ocr_detect,
         )
 
         adv_page = QWidget()

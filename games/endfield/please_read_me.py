@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.8.4"
+_VERSION = "3.8.5"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,15 +209,14 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 9 处文件
+# TITLE: 更新 8 处文件
 # BODY:
-# - 修改 framework/tests/conftest.py
-# - 修改 framework/tests/ocr/__init__.py
-# - 修改 framework/tests/ocr/test_detector.py
-# - 变更 framework/yolov8n.pt
+# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
+# - 修改 games/endfield/gui_design/shell/qt_app.py
+# - 修改 games/endfield/gui_design/shell/qt_app_dialog_mixin.py
+# - 修改 games/endfield/gui_design/shell/qt_control_dock.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 tools/ocr/__init__.py
-# - 修改 tools/ocr/cli.py
-# - 修改 tools/ocr/detector.py
-# - 变更 yolov8n.pt
+# - 修改 tools/ocr/collector.py
+# - 修改 tools/ocr/download_models.py
+# - 修改 tools/ocr/recognizer.py
 # --- END UPLOAD_SUMMARY ---

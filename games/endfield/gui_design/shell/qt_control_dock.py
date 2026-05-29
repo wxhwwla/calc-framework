@@ -82,6 +82,7 @@ class QtControlDock(BuilderMixin, QWidget):
         on_attribution: Callable[[], None] | None = None,
         on_donation: Callable[[], None] | None = None,
         on_open_help: Callable[[], None] | None = None,
+        on_ocr_detect: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(parent)
         self._big = big_font or QFont()
@@ -91,6 +92,7 @@ class QtControlDock(BuilderMixin, QWidget):
         self._on_attribution = on_attribution
         self._on_donation = on_donation
         self._on_open_help = on_open_help
+        self._on_ocr_detect = on_ocr_detect
 
         # 暴露给外部的控件引用
         self.back_to_main_btn: QPushButton
@@ -205,6 +207,9 @@ class QtControlDock(BuilderMixin, QWidget):
         self._dashboard_btn = _make_tool_btn("伤害仪表盘")
         self._history_btn = _make_tool_btn("计算历史")
         self._export_log_btn = _make_tool_btn("导出操作日志")
+        self._ocr_btn = _make_tool_btn("截图识装")
+        if self._on_ocr_detect:
+            self._ocr_btn.clicked.connect(self._on_ocr_detect)
 
         ms_lay.addStretch()
         lay.addWidget(self._more_settings_body)

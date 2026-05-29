@@ -207,3 +207,11 @@ class DialogMixin:
             webbrowser.open(doc_path.as_uri())
         else:
             QMessageBox.warning(self.app, "找不到文档", f"使用说明文件不存在：\n{doc_path}")
+
+    def _on_ocr_detect(self) -> None:
+        """打开截图识装检测对话框。"""
+        try:
+            from gui_design.controls.ocr import open_ocr_detection_dialog
+            open_ocr_detection_dialog(self.app)
+        except Exception as exc:
+            QMessageBox.warning(self.app, "截图识装", f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install ultralytics easyocr")
