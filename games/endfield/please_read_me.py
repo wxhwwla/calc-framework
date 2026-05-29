@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.9.2"
+_VERSION = "3.9.3"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,11 +209,24 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 18 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 修改 games/endfield/please_read_me.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_search_estimate_message.py
-# - 修改 games/endfield/tests/gui_design/panels/selection/test_qt_panel_getters.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_gui_damage_snapshot.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_actions_extended.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_search_browser_dialog.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_search_browser_sqlite.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_search_settings.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_search_worker_run.py
+# - 修改 games/endfield/tests/gui_design/presentation/test_display_format_coverage.py
+# - 修改 games/endfield/tests/gui_design/shared/test_calc_history.py
+# - 修改 games/endfield/tests/gui_design/shared/test_calc_mode_labels.py
+# - 修改 games/endfield/tests/gui_design/shared/test_gui_damage_visualization.py
+# - 修改 games/endfield/tests/gui_design/shared/test_preset_batch_compare.py
+# - 修改 games/endfield/tests/gui_design/shared/test_ui_preferences_detail.py
+# - 修改 games/endfield/tests/gui_design/shared/test_weapon_display_text_detail.py
+# - 修改 games/endfield/tests/utils/test_gui_window.py
+# - 修改 games/endfield/tests/utils/test_platform_win32_patch.py
+# - 修改 games/endfield/tests/utils/test_remaining_coverage.py
+# - 修改 games/endfield/tests/utils/test_utils_optional_deps.py
+# - 修改 games/endfield/tests/utils/test_utils_search_format.py
 # --- END UPLOAD_SUMMARY ---

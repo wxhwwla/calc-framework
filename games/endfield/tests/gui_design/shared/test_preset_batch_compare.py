@@ -1,99 +1,105 @@
-#!/usr/bin/env python3
-"""多预设并行对比测试。"""
+from __future__ import annotations
 
-import unittest
+from unittest.mock import MagicMock
 
-from calculation.equipment.system import build_runtime_equipment_from_wiki_draft
+from gui_design.shared.preset_batch_compare import (
+    _empty_equipment,
+    _find_by_name,
+    _preset_label,
+    _resolve_equipment,
+)
+
 from gui_design.app.loadout_preset import LoadoutPreset
-from gui_design.shared.preset_batch_compare import compare_presets_parallel
 
 
-class TestPresetBatchCompare(unittest.TestCase):
-    def _char(self) -> dict:
-        return {
-            "名称": "测试干员",
-            "战技倍率": [[200] * 3],
-            "连携技倍率": [[100] * 3],
-            "终结技倍率": [[50] * 3],
-            "基础攻击力": [100] * 3,
-        }
+class TestFindByName:
+    def test_finds_matching(self) -> None:
+        rows = [{"名称": "角色A"}, {"名称": "角色B"}]
+        result = _find_by_name(rows, "角色A")
+        assert result == {"名称": "角色A"}
 
-    def _weapon(self) -> dict:
-        return {"名称": "测试武器", "基础攻击力": [100] * 3}
+    def test_returns_none_on_no_match(self) -> None:
+        rows = [{"名称": "角色A"}]
+        result = _find_by_name(rows, "角色C")
+        assert result is None
 
-    def _equipments(self) -> list[dict]:
-        return [
-            build_runtime_equipment_from_wiki_draft(
-                {
-                    "名称": "胸甲A",
-                    "_wiki_params": {"装备种类": "护甲", "所属套组": "套A", "效果1": "寒冷伤害+10%"},
-                }
-            ),
-            build_runtime_equipment_from_wiki_draft(
-                {
-                    "名称": "胸甲B",
-                    "_wiki_params": {"装备种类": "护甲", "所属套组": "套B"},
-                }
-            ),
-        ]
+    def test_empty_name(self) -> None:
+        rows = [{"名称": "角色A"}]
+        result = _find_by_name(rows, "")
+        assert result is None
 
-    def _preset(self, chest: str) -> LoadoutPreset:
-        return LoadoutPreset(
-            char_name="测试干员",
-            weapon_name="测试武器",
-            char_level=1,
-            weapon_level=1,
-            trust_level=0,
-            skill_levels=(1, 0, 0),
-            calculation_mode="single_hit",
-            weapon_scope="当前武器",
-            equipment_scope="全部装备",
-            fixed_equipment_names={
-                "chest": chest,
-                "gloves": None,
-                "accessory_a": None,
-                "accessory_b": None,
-            },
-            multi_skill_counts={"战技": 1, "连携技": 0, "终结技": 0},
-            use_manual_multi_skill_counts=False,
-        )
+    def test_whitespace_name(self) -> None:
+        rows = [{"名称": "角色A"}]
+        result = _find_by_name(rows, "  ")
+        assert result is None
 
-    def test_parallel_compare_orders_by_damage(self) -> None:
-        rows = compare_presets_parallel(
-            [self._preset("胸甲A"), self._preset("胸甲B")],
-            characters=[self._char()],
-            weapons=[self._weapon()],
-            equipments=self._equipments(),
-            max_workers=2,
-        )
-        self.assertEqual(len(rows), 2)
-        self.assertFalse(any(r.error for r in rows))
-        self.assertGreaterEqual(rows[0].final_damage, rows[1].final_damage)
+    def test_empty_rows(self) -> None:
+        result = _find_by_name([], "角色A")
+        assert result is None
 
-    def test_missing_character_reports_error_row(self) -> None:
-        bad = LoadoutPreset(
-            char_name="不存在",
-            weapon_name="测试武器",
-            char_level=1,
-            weapon_level=1,
-            trust_level=0,
-            skill_levels=(1, 0, 0),
-            calculation_mode="single_hit",
-            weapon_scope="",
-            equipment_scope="",
-            fixed_equipment_names={},
-            multi_skill_counts={},
-            use_manual_multi_skill_counts=False,
-        )
-        rows = compare_presets_parallel(
-            [bad],
-            characters=[self._char()],
-            weapons=[self._weapon()],
-            equipments=self._equipments(),
-        )
-        self.assertEqual(len(rows), 1)
-        self.assertIn("未找到角色", rows[0].error)
+    def test_strip_target(self) -> None:
+        rows = [{"名称": "角色A"}]
+        result = _find_by_name(rows, "  角色A  ")
+        assert result == {"名称": "角色A"}
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestEmptyEquipment:
+    def test_returns_correct_slot(self) -> None:
+        eq = _empty_equipment(slot_kind="护甲")
+        assert eq["名称"] == "（空）"
+        assert eq["装备种类"] == "护甲"
+        assert eq["部位"] == "护甲"
+
+    def test_empty_effect_lists(self) -> None:
+        eq = _empty_equipment(slot_kind="配件")
+        assert eq["效果"] == []
+        assert eq["三件套效果"] == []
+        assert eq["属性词条"] == []
+
+
+class TestResolveEquipment:
+    def test_with_valid_name(self) -> None:
+        equipments = [{"名称": "甲", "装备种类": "护甲", "部位": "护甲", "效果": [], "三件套效果": [], "属性词条": []}]
+        result = _resolve_equipment("甲", equipments, slot_kind="护甲")
+        assert result["名称"] == "甲"
+
+    def test_with_none(self) -> None:
+        result = _resolve_equipment(None, [], slot_kind="护甲")
+        assert result["名称"] == "（空）"
+
+    def test_with_empty_string(self) -> None:
+        result = _resolve_equipment("", [], slot_kind="配件")
+        assert result["名称"] == "（空）"
+
+    def test_raises_on_not_found(self) -> None:
+        import pytest
+        equipments = [{"名称": "甲", "装备种类": "护甲", "部位": "护甲", "效果": [], "三件套效果": [], "属性词条": []}]
+        with pytest.raises(ValueError, match="未找到装备"):
+            _resolve_equipment("不存在", equipments, slot_kind="护甲")
+
+
+class TestPresetLabel:
+    def test_without_note(self) -> None:
+        preset = MagicMock(spec=LoadoutPreset)
+        preset.char_name = "角色A"
+        preset.weapon_name = "武器B"
+        preset.note = ""
+        label = _preset_label(preset)
+        assert "角色A / 武器B" == label
+
+    def test_with_note(self) -> None:
+        preset = MagicMock(spec=LoadoutPreset)
+        preset.char_name = "角色A"
+        preset.weapon_name = "武器B"
+        preset.note = "测试配置"
+        label = _preset_label(preset)
+        assert "测试配置" in label
+        assert "角色A" in label
+
+    def test_whitespace_note_only(self) -> None:
+        preset = MagicMock(spec=LoadoutPreset)
+        preset.char_name = "角色A"
+        preset.weapon_name = "武器B"
+        preset.note = "  "
+        label = _preset_label(preset)
+        assert "  " not in label

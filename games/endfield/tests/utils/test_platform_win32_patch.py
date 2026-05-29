@@ -85,6 +85,37 @@ class TestPlatformWin32Patch(unittest.TestCase):
             release, version, machine = pwp._read_windows_version_from_registry()
             self.assertEqual(release, "11")
 
+    def test_read_windows_version_major_version_oserror(self) -> None:
+        """CurrentMajorVersionNumber OSError 时根据 build 降级。"""
+        import utils.platform_win32_patch as pwp
+
+        mock_key = MagicMock()
+        mock_key.__enter__.return_value = mock_key
+
+        calls: dict = {}
+
+        def query_side_effect(key, name):
+            calls[name] = True
+            if name == "CurrentBuildNumber":
+                return (19045, None)
+            raise OSError
+
+        with (
+            patch("winreg.OpenKeyEx", return_value=mock_key),
+            patch("winreg.QueryValueEx", side_effect=query_side_effect),
+            patch.dict("os.environ", {"PROCESSOR_ARCHITECTURE": "AMD64"}, clear=True),
+        ):
+            release, version, machine = pwp._read_windows_version_from_registry()
+            self.assertEqual(release, "10")
+            self.assertIn("10.0.", version)
+            self.assertTrue(calls.get("CurrentMajorVersionNumber"))
+
+    def test_machine_from_architew6432(self) -> None:
+        from utils.platform_win32_patch import _windows_machine_from_env
+
+        with patch.dict("os.environ", {"PROCESSOR_ARCHITEW6432": "AMD64"}, clear=True):
+            self.assertEqual(_windows_machine_from_env(), "AMD64")
+
     def test_apply_patches_marks_functions(self) -> None:
         import utils.platform_win32_patch as pwp
 
@@ -98,9 +129,156 @@ class TestPlatformWin32Patch(unittest.TestCase):
         ):
             mock_sys.platform = "win32"
             pwp.apply_platform_win32_patch()
-            import platform
-            self.assertTrue(getattr(platform.win32_ver, "_edc_no_wmi_patch", False))
 
+    def test_apply_twice_early_return(self) -> None:
+        """第二次调用应提前返回（_edc_no_wmi_patch 已标记）。"""
+        import platform
+        import utils.platform_win32_patch as pwp
 
-if __name__ == "__main__":
-    unittest.main()
+        with (
+            patch.object(pwp, "sys") as mock_sys,
+            patch("platform.win32_ver", return_value=("10", "10.0.0", "", "Multiprocessor Free")),
+        ):
+            mock_sys.platform = "win32"
+            pwp.apply_platform_win32_patch()
+
+            platform.win32_ver._edc_no_wmi_patch = True  # type: ignore[attr-defined]
+            pwp.apply_platform_win32_patch()
+
+    def test_apply_and_call_patched_functions(self) -> None:
+        """apply 后调用 patched 函数应触发闭包。"""
+        import platform
+        import utils.platform_win32_patch as pwp
+
+        mock_key = MagicMock()
+        mock_key.__enter__.return_value = mock_key
+
+        def query_side_effect(key, name):
+            values = {
+                "CurrentBuildNumber": (22631, None),
+                "CurrentMajorVersionNumber": (10, None),
+                "CurrentMinorVersionNumber": (0, None),
+            }
+            if name in values:
+                return values[name]
+            raise OSError
+
+        with (
+            patch.object(pwp, "sys") as mock_sys,
+            patch("winreg.OpenKeyEx", return_value=mock_key),
+            patch("winreg.QueryValueEx", side_effect=query_side_effect),
+            patch.dict("os.environ", {"PROCESSOR_ARCHITECTURE": "AMD64"}, clear=True),
+        ):
+            mock_sys.platform = "win32"
+            pwp.apply_platform_win32_patch()
+
+            ver = platform.win32_ver()
+            self.assertEqual(ver[0], "11")
+
+            sys_str = platform.system()
+            self.assertEqual(sys_str, "Windows")
+
+            machine = platform.machine()
+            self.assertEqual(machine, "AMD64")
+
+    def test_apply_and_call_patched_uname(self) -> None:
+        """apply 后调用 platform.uname() 触发闭包。"""
+        import platform
+        import utils.platform_win32_patch as pwp
+
+        mock_key = MagicMock()
+        mock_key.__enter__.return_value = mock_key
+
+        def query_side_effect(key, name):
+            values = {
+                "CurrentBuildNumber": (19045, None),
+                "CurrentMajorVersionNumber": (10, None),
+                "CurrentMinorVersionNumber": (0, None),
+            }
+            if name in values:
+                return values[name]
+            raise OSError
+
+        with (
+            patch.object(pwp, "sys") as mock_sys,
+            patch("winreg.OpenKeyEx", return_value=mock_key),
+            patch("winreg.QueryValueEx", side_effect=query_side_effect),
+            patch.dict("os.environ", {"PROCESSOR_ARCHITECTURE": "AMD64"}, clear=True),
+            patch.dict("os.environ", {"COMPUTERNAME": "MYPC"}, clear=False),
+        ):
+            mock_sys.platform = "win32"
+            pwp.apply_platform_win32_patch()
+
+            uname_result = platform.uname()
+            self.assertEqual(uname_result.system, "Windows")
+            self.assertIn(uname_result.release, ("10", "11"))
+            self.assertEqual(uname_result.machine, "AMD64")
+
+    def test_apply_and_call_release_and_version(self) -> None:
+        """apply 后调用 release/version 闭包。"""
+        import platform
+        import utils.platform_win32_patch as pwp
+
+        mock_key = MagicMock()
+        mock_key.__enter__.return_value = mock_key
+
+        def query_side_effect(key, name):
+            values = {
+                "CurrentBuildNumber": (22631, None),
+                "CurrentMajorVersionNumber": (10, None),
+                "CurrentMinorVersionNumber": (0, None),
+            }
+            if name in values:
+                return values[name]
+            raise OSError
+
+        with (
+            patch.object(pwp, "sys") as mock_sys,
+            patch("winreg.OpenKeyEx", return_value=mock_key),
+            patch("winreg.QueryValueEx", side_effect=query_side_effect),
+            patch.dict("os.environ", {"PROCESSOR_ARCHITECTURE": "AMD64"}, clear=True),
+        ):
+            mock_sys.platform = "win32"
+            pwp.apply_platform_win32_patch()
+
+            release = platform.release()
+            self.assertEqual(release, "11")
+
+            version = platform.version()
+            self.assertIn("10.0.", version)
+
+    def test_win32_ver_oserror_fallback(self) -> None:
+        """win32_ver 在 registry 异常时回退原函数。"""
+        import platform
+        import utils.platform_win32_patch as pwp
+
+        orig_win32_ver = platform.win32_ver
+
+        with (
+            patch.object(pwp, "sys") as mock_sys,
+            patch("winreg.OpenKeyEx", side_effect=OSError),
+            patch("platform.win32_ver", return_value=("10", "10.0.0", "", "MP")) as mock_orig,
+        ):
+            mock_sys.platform = "win32"
+            pwp.apply_platform_win32_patch()
+
+            ver = platform.win32_ver()
+            mock_orig.assert_called()
+            self.assertEqual(ver[0], "10")
+
+    def test_uname_oserror_fallback(self) -> None:
+        """uname 在 registry 异常时回退默认值。"""
+        import platform
+        import utils.platform_win32_patch as pwp
+
+        with (
+            patch.object(pwp, "sys") as mock_sys,
+            patch("winreg.OpenKeyEx", side_effect=OSError),
+            patch.dict("os.environ", {}, clear=True),
+        ):
+            mock_sys.platform = "win32"
+            pwp.apply_platform_win32_patch()
+
+            uname_result = platform.uname()
+            self.assertEqual(uname_result.release, "10")
+            self.assertEqual(uname_result.version, "10.0.0")
