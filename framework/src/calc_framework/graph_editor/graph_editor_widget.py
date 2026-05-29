@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
@@ -183,6 +183,7 @@ class GraphEditorWidget(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setAcceptDrops(True)
         self._scene = GraphScene(self)
         self._view = QGraphicsView(self._scene)
         self._view.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -191,6 +192,8 @@ class GraphEditorWidget(QWidget):
         self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._view.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+        self._view.setAcceptDrops(True)
+        self._view.installEventFilter(self)
         self._view.wheelEvent = self._zoom_event
 
         layout = QVBoxLayout(self)
@@ -273,6 +276,40 @@ class GraphEditorWidget(QWidget):
         self._scene._wire_start_port = None
         self._scene._ghost_wire = None
         self.node_changed.emit()
+
+    # ── 拖放支持（从左侧节点面板拖入） ──
+
+    def eventFilter(self, obj, event) -> bool:
+        if obj is self._view and event.type() in (
+            QEvent.Type.DragEnter, QEvent.Type.DragMove, QEvent.Type.Drop,
+        ):
+            et = event.type()
+            if et == QEvent.Type.DragEnter:
+                self.dragEnterEvent(event)
+            elif et == QEvent.Type.DragMove:
+                self.dragMoveEvent(event)
+            elif et == QEvent.Type.Drop:
+                self.dropEvent(event)
+            return True
+        return super().eventFilter(obj, event)
+
+    def dragEnterEvent(self, event) -> None:
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event) -> None:
+        event.acceptProposedAction()
+
+    def dropEvent(self, event) -> None:
+        type_id = event.mimeData().text()
+        if not type_id:
+            return
+        scene_pos = self._view.mapToScene(event.position().toPoint())
+        from calc_framework.graph_editor.registry import create_default_node
+        node = create_default_node(type_id)
+        node.position = {"x": scene_pos.x() - _NODE_WIDTH / 2, "y": scene_pos.y() - _NODE_HEIGHT / 2}
+        self.add_graph_node(node)
+        event.acceptProposedAction()
 
 
 def _find_parent_node_id(port: PortItem) -> str | None:

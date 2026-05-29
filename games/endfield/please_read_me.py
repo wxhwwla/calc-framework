@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.10.3"
+_VERSION = "3.10.4"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,8 +209,12 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 6 处文件
 # BODY:
-# - 修改 framework/src/calc_framework/graph_editor/node_panel.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
+# - 修改 framework/src/calc_framework/graph_editor/help_content.py
+# - 修改 framework/src/calc_framework/graph_editor/help_dialog.py
+# - 修改 games/endfield/graph_editor_main.py
 # - 修改 games/endfield/please_read_me.py
 # --- END UPLOAD_SUMMARY ---

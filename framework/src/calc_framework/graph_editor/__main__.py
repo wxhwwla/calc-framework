@@ -41,6 +41,7 @@ def main() -> None:
     from calc_framework.graph_editor.prop_panel import PropPanel
     from calc_framework.graph_editor.registry import create_default_node
     from calc_framework.graph_editor.schema import GraphDocument
+    from calc_framework.graph_editor.help_dialog import HelpDialog
 
     app = QApplication(sys.argv)
 
@@ -237,6 +238,18 @@ def main() -> None:
     save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
     save_as_action.triggered.connect(lambda: _save_as_file())
     file_menu.addAction(save_as_action)
+
+    # ── 帮助菜单 ──
+    help_menu = menubar.addMenu("帮助")
+
+    def _show_help() -> None:
+        dialog = HelpDialog(window)
+        dialog.exec()
+
+    help_action = QAction("使用说明", window)
+    help_action.setShortcut(QKeySequence(Qt.Key.Key_F1))
+    help_action.triggered.connect(lambda: _show_help())
+    help_menu.addAction(help_action)
 
     window.show()
     sys.exit(app.exec())

@@ -52,6 +52,7 @@ def main() -> None:
 
     from calc_framework.dag.engine import evaluate_graph
     from calc_framework.graph_editor.compiler import compile_graph
+    from calc_framework.graph_editor.help_dialog import HelpDialog
 
     app = QApplication(sys.argv)
 
@@ -220,6 +221,19 @@ def main() -> None:
         action.setShortcut(shortcut_key)
         action.triggered.connect(callback)
         file_menu.addAction(action)
+
+    # ── 帮助菜单 ──
+    help_menu = window.menuBar().addMenu("帮助")
+
+    def _show_help() -> None:
+        from calc_framework.graph_editor.help_dialog import HelpDialog
+        dialog = HelpDialog(window)
+        dialog.exec()
+
+    help_action = QAction("使用说明", window)
+    help_action.setShortcut(QKeySequence(Qt.Key.Key_F1))
+    help_action.triggered.connect(lambda: _show_help())
+    help_menu.addAction(help_action)
 
     # 如果命令行提供了文件路径，打开它
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
