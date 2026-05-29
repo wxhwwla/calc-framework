@@ -1,3 +1,6 @@
+# Framework CI — calc-framework 包
+# 包路径：framework/，含 DAG 引擎 + graph_editor 可视化编辑器
+
 name: Framework CI
 
 on:
@@ -5,6 +8,7 @@ on:
     branches: [main, master]
     paths:
       - "framework/**"
+      - ".github/workflows/framework-ci.yml"
   pull_request:
     branches: [main, master]
     paths:
@@ -21,9 +25,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install system deps for Qt6 (PySide6)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev libegl1-mesa libegl1 xvfb
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
-      - name: Run tests
-        run: python -m pytest tests/ -q
+          python -m pip install -e ".[dev,ui]"
+      - name: Run tests (with xvfb for Qt)
+        run: xvfb-run python -m pytest tests/ -q

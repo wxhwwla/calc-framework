@@ -2,7 +2,7 @@
 """
 公式计算图编辑器 — 根入口文件
 
-启动可视化公式图编辑器。
+启动可视化公式图编辑器（含实时预览）。
 
 使用方式：
     python graph_editor_main.py               # 启动编辑器
@@ -132,8 +132,6 @@ def main() -> None:
                 err_msg = err_msg[:57] + "..."
             prop_panel.set_preview_value(f"错误: {err_msg}")
 
-    prop_panel.node_changed.connect(_on_node_config_changed)
-
     def _on_node_config_changed(node_id: str) -> None:
         item = canvas.find_node_item(node_id)
         if item:
@@ -144,6 +142,8 @@ def main() -> None:
             if ni:
                 prop_panel.show_node(ni.to_graph_node())
         _update_preview()
+
+    prop_panel.node_changed.connect(_on_node_config_changed)
 
     canvas.node_changed.connect(lambda: _update_preview())
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, cast
 
 from calc_framework.graph_editor.schema import (
     GraphDocument,
@@ -11,6 +11,7 @@ from calc_framework.graph_editor.schema import (
     GraphLayout,
     GraphNode,
     NodeConfig,
+    NodeType,
     SectionDef,
 )
 
@@ -88,7 +89,7 @@ def _node_from_dict(d: dict[str, Any]) -> GraphNode:
         position = {"x": 0.0, "y": 0.0}
     return GraphNode(
         id=d["id"],
-        type=d.get("type", "const"),
+        type=cast(NodeType, d.get("type", "const")),
         op=d.get("op"),
         label=d.get("label", ""),
         config=config,

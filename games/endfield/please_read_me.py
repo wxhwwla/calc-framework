@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.10.1"
+_VERSION = "3.10.2"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,9 +209,21 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 15 处文件
 # BODY:
-# - 修改 framework/src/calc_framework/graph_editor/schema.py
-# - 修改 framework/tests/graph_editor/test_file_io.py
+# - 变更 "docs//344/273/243/347/240/201/350/247/204/350/214/203-ruff/344/277/256/345/244/215/346/250/241/345/274/217.md"
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 .github/workflows/ci.yml
+# - 变更 .github/workflows/framework-ci.yml
+# - 变更 .github/workflows/framework-publish.yml
+# - 变更 .github/workflows/release.yml
+# - 变更 framework/.github/workflows/ci.yml
+# - 变更 framework/.github/workflows/publish.yml
+# - 修改 framework/src/calc_framework/dag/sandbox.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/registry.py
+# - 修改 framework/src/calc_framework/graph_editor/serializer.py
+# - 修改 games/endfield/graph_editor_main.py
 # - 修改 games/endfield/please_read_me.py
+# - 修改 graph_editor_main.py
 # --- END UPLOAD_SUMMARY ---

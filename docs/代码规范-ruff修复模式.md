@@ -324,7 +324,152 @@ sheet_layout.addWidget(widget, stretch=1)       # 现在 QVBoxLayout.addWidget �
 
 ---
 
-## 9. 诊断工作流总结
+## 9. 常见 Pylance 类型诊断与修复（持续更新）
+
+本节记录本项目中反复出现的 Pylance（pyright）类型诊断问题及其标准修复模式。不同于 §7（pyright CLI 的 pre-existing 宏观状态），本节聚焦**可立即修复的具体模式**。
+
+---
+
+### 9.1 `from __future__ import annotations` 破坏 dataclass 类型推断
+
+**根源**：`from __future__ import annotations` 将所有注解变为惰性求值的字符串，Pylance 无法正确推断 `@dataclass` 生成的 `__init__` 签名。这导致所有 dataclass 的构造调用参数都报 `没有名为"xxx"的参数`。
+
+```python
+# ❌ schema.py 顶部有 from __future__ import annotations
+# Pylance 报错：test_file_io.py 中 GraphDocument(name=..., nodes=...)
+# → "没有名为 name/nodes/edges/layout 的参数"
+
+# ✅ 移除 from __future__ import annotations
+# Python 3.13 原生支持 list[X] / dict[str, X] / X | Y 语法，无需此导入
+```
+
+**检查清单**：所有 `@dataclass` 所在的文件都应检查是否因遗留原因保留了 `from __future__ import annotations`。在 Python ≥ 3.10 项目中，仅当需要在 `isinstance` 中使用 `str | int` 等联合类型注解时才需要此导入（3.10 之前只能用 `Optional[str]`）。Python 3.13 已完全支持类型运算中的原生泛型，通常不需要。
+
+**修复模式**：
+
+```python
+# ❌ 有 from __future__ import annotations
+# Pylance → GraphDocument 构造参数不可见
+@dataclass
+class GraphDocument:
+    nodes: list[GraphNode] = field(default_factory=list)
+    edges: list[GraphEdge] = field(default_factory=list)
+    ...
+
+# ✅ 无 from __future__ import annotations
+# Pylance 正确推断：GraphDocument(nodes=..., edges=..., ...)
+@dataclass
+class GraphDocument:
+    nodes: list[GraphNode] = field(default_factory=list)
+    edges: list[GraphEdge] = field(default_factory=list)
+```
+
+---
+
+### 9.2 嵌套函数向前引用（reportUnboundVariable）
+
+**根源**：Pylance 静态分析要求变量/函数在被引用之前已定义。在嵌套函数（`def fn()` 定义在 `def outer()` 内部）中，如果先 `connect(fn)` 再 `def fn()`，Pylance 认为 `fn` 未绑定。
+
+```python
+# ❌ Pylance 报错: "fn" 未绑定
+prop_panel.node_changed.connect(_on_node_config_changed)  # ← 此时 _on_node_config_changed 尚未定义
+
+def _on_node_config_changed(node_id: str) -> None:
+    ...
+
+# ✅ 修复：先定义函数，再绑定信号
+def _on_node_config_changed(node_id: str) -> None:
+    ...
+
+prop_panel.node_changed.connect(_on_node_config_changed)
+```
+
+**原理**：Python 运行时对于嵌套函数确实允许向前引用（函数定义在运行时一次性执行，`def` 语句执行前函数名不存在）。但 Pylance 遵循静态分析规则，无法确定运行时执行顺序。标准做法是将 `connect` 调用放在函数定义之后。
+
+**适用场景**：任何在 Qt 信号连接、装饰器、回调注册等场景中引用尚未定义的嵌套函数的地方。
+
+---
+
+### 9.3 字符串赋值给 Literal 类型（reportArgumentType）
+
+**根源**：`NodeType = Literal["const", "var", ...]` 是严格的联合字面量类型。从外部来源（JSON 反序列化、用户输入、注册表 key）获取的 `str` 值无法直接赋值给 `NodeType`，即使运行时可确保值的合法性。
+
+```python
+# ❌ Pylance 报错: 类型 "str" 不可分配给类型 "Literal['const', 'var', ...]"
+node.type = json_dict.get("type", "const")  # d.get() 返回 str
+
+# ✅ 修复：在边界处用 cast() 类型转换
+from typing import cast
+node.type = cast(NodeType, json_dict.get("type", "const"))
+```
+
+**原则**：`cast()` 应仅在**边界处**使用——即值来自类型系统无法验证的外部来源（JSON、数据库、用户输入），但业务逻辑已经确保其合法性的场景。不要在内部纯计算链中使用 `cast()`。
+
+**安全前提**：对于 `NodeType`，调用 `cast` 之前应有校验函数（如 `validate_graph()`）确保值属于 `VALID_NODE_TYPES`。也可在 `cast` 之前加 `assert`：
+
+```python
+type_str = json_dict.get("type", "const")
+assert type_str in VALID_NODE_TYPES, f"无效节点类型: {type_str}"
+node.type = cast(NodeType, type_str)
+```
+
+---
+
+### 9.4 函数返回类型 `-> float` 与可选 `str` 返回值冲突（reportReturnType）
+
+**根源**：当函数需要在特定条件下返回字符串（而非 float）时，如果函数签名标注 `-> float`，Pylance 会报错。
+
+```python
+# ❌ Pylance 报错: 类型 "str" 不可分配给返回类型 "float"
+def _eval_node(node, scope) -> float:
+    if isinstance(node.value, str):
+        return node.value       # ← str 不能赋值给 float
+    return float(node.value)
+
+# ✅ 修复：返回类型改为 Any（调用方负责类型判断）
+def _eval_node(node, scope) -> Any:
+    if isinstance(node.value, str):
+        return node.value       # 字符串常量保持原值
+    if isinstance(node.value, (int, float)):
+        return float(node.value)
+    raise ValueError(f"不支持的常量类型: {type(node.value).__name__}")
+```
+
+**适用场景**：求值器、解释器、表达式引擎等需要处理多类型常量的函数。返回 `Any` 表示调用方应使用 `isinstance` 检查实际返回类型。
+
+---
+
+### 9.5 `float(x)` 接收非数值类型（reportArgumentType）
+
+**根源**：`ast.Constant.value` 的类型是 `_ConstantValue`（`bytes | bool | int | float | complex | str | EllipsisType | None` 的联合）。对任意值不加区地调用 `float()` 会触发 Pylance 的 `reportArgumentType`，因为 `EllipsisType` / `bytes` / `complex` 等类型无法转换为 `float`。
+
+```python
+# ❌ Pylance 报错: "bytes | bool | int | float | complex | EllipsisType | None" 不可赋值给 "ConvertibleToFloat"
+return float(node.value)  # EllipsisType / bytes / complex 不可转换
+
+# ✅ 修复：isinstance 守卫窄化类型
+if isinstance(node.value, (int, float)):
+    return float(node.value)
+raise DAGRuntimeError(f"不支持的常量类型: {type(node.value).__name__}")
+```
+
+**原则**：在调用 `float(x)` / `int(x)` 之前，先用 `isinstance` 过滤掉不支持的类型。这既是类型安全的，也是运行时安全的。
+
+---
+
+### 9.6 修复模式速查表
+
+| # | 症状 | 修复 | 关键字 |
+|---|------|------|--------|
+| 9.1 | `没有名为"xxx"的参数` (dataclass) | 移除 `from __future__ import annotations` | `__future__` / dataclass |
+| 9.2 | `"fn" 未绑定` (嵌套函数) | 把 `connect(fn)` 移到 `def fn()` 之后 | forward ref / unbound |
+| 9.3 | `"str" 不可分配给 Literal` | 边界处 `cast(LiteralType, value)` + 前置 `assert` | cast / Literal |
+| 9.4 | `"str" 不可分配给 "float"` | 返回类型改为 `-> Any` | return type / Any |
+| 9.5 | `EllipsisType 无法转 float` | `isinstance` 守卫窄化 + 抛异常 | isinstance guard / float |
+
+---
+
+## 10. 诊断工作流总结
 
 ```bash
 # VS Code Problems 面板 — 查看全部诊断
@@ -351,6 +496,7 @@ python -m pytest tests/ -q
 | 2026-05-28 | 新增 §8 TypeScript 前端诊断。记录隐式 any 事件类型、VS Code 工作区模块解析、Monorepo composite 配置。 |
 | 2026-05-28 | 新增 §7.5 `QLayout.addWidget` stretch 参数类型收窄模式。新增 §9 诊断工作流总结。 |
 | 2026-05-28 | 新增 §9 Pylance 可选依赖模式。记录 try/except 条件导入的 _QtWidgets/_QtGui 未绑定问题及修复方案。 |
+| 2026-05-29 | 新增 §9.1–§9.6 Pylance 常见诊断模式。记录 `__future__` annotations 破坏 dataclass、嵌套函数向前引用、str→Literal cast、返回类型 Any、isinstance 守卫 float 转换。 |
 
 ---
 

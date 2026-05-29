@@ -138,12 +138,14 @@ def _check_node(node: ast.AST) -> None:
         _check_node(node.body)
 
 
-def _eval_node(node: ast.AST, scope: dict[str, float]) -> float:
+def _eval_node(node: ast.AST, scope: dict[str, float]) -> Any:
     """在给定 scope 中递归求值 AST 节点。"""
     if isinstance(node, ast.Constant):
         if isinstance(node.value, str):
             return node.value
-        return float(node.value)
+        if isinstance(node.value, (int, float)):
+            return float(node.value)
+        raise DAGRuntimeError(f"不支持的常量类型: {type(node.value).__name__}")
     if isinstance(node, ast.Name):
         val = scope.get(node.id)
         if val is None:

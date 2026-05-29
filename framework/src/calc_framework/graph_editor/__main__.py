@@ -134,8 +134,6 @@ def main() -> None:
                 err_msg = err_msg[:57] + "..."
             prop_panel.set_preview_value(f"错误: {err_msg}")
 
-    prop_panel.node_changed.connect(_on_node_config_changed)
-
     def _on_node_config_changed(node_id: str) -> None:
         item = canvas.find_node_item(node_id)
         if item:
@@ -147,17 +145,19 @@ def main() -> None:
                 prop_panel.show_node(ni.to_graph_node())
         _update_preview()
 
+    prop_panel.node_changed.connect(_on_node_config_changed)
+
     # 图结构变更后更新预览
     canvas.node_changed.connect(lambda: _update_preview())
 
     # Delete 快捷键
-    delete_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Delete), canvas)
-    delete_shortcut.activated.connect(_delete_selected)
-
     def _delete_selected() -> None:
         for item in canvas.scene().selectedItems():
             if isinstance(item, NodeItem):
                 canvas.remove_node(item.node_id)
+
+    delete_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Delete), canvas)
+    delete_shortcut.activated.connect(_delete_selected)
 
     # ── 菜单栏 ──
     menubar = window.menuBar()

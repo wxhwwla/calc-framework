@@ -1,3 +1,6 @@
+# Release — 终末地伤害计算器打包发布
+# 包路径：games/endfield/，build.py / please_read_me.py 在此目录下
+
 name: Release
 
 on:
@@ -10,7 +13,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: endfield_damage_calculator
+        working-directory: games/endfield
     outputs:
       tag_version: ${{ steps.version.outputs.tag_version }}
       code_version: ${{ steps.version.outputs.code_version }}
@@ -19,8 +22,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install framework
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ../../framework
+      - name: Install game package
+        run: python -m pip install -e ".[dev]"
       - name: Check version consistency
         id: version
+        shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
           $tag_version = $tag -replace '^v', ''
@@ -40,7 +50,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: endfield_damage_calculator
+        working-directory: games/endfield
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,7 +59,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev,viz,plugins]"
+          python -m pip install -e ../../framework
+          python -m pip install -e ".[dev]"
       - name: Run tests
         run: python -m pytest tests/ -q --tb=short
 
@@ -58,7 +69,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: endfield_damage_calculator
+        working-directory: games/endfield
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -67,7 +78,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev,build,viz]"
+          python -m pip install -e ../../framework
+          python -m pip install -e ".[dev,build]"
       - name: Build release
         run: python build.py
       - name: Package artifact
@@ -75,12 +87,17 @@ jobs:
         run: |
           $version = "${{ needs.verify-version.outputs.tag_version }}"
           $name = "终末地伤害计算器_v${version}"
-          Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}.zip"
-          Write-Host "Created: dist/${name}.zip"
+          if (Test-Path "dist/终末地伤害计算器") {
+            Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}.zip"
+            Write-Host "Created: dist/${name}.zip"
+          } else {
+            Write-Host "dist/ directory contents:"
+            Get-ChildItem dist/ -Recurse | Select-Object FullName
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: release-artifact
-          path: endfield_damage_calculator/dist/终末地伤害计算器_v*.zip
+          path: games/endfield/dist/终末地伤害计算器_v*.zip
 
   publish:
     needs: [build, verify-version]

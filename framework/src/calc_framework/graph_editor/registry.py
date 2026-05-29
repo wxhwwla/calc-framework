@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
-from calc_framework.graph_editor.schema import GraphNode, NodeConfig
+from calc_framework.graph_editor.schema import GraphNode, NodeConfig, NodeType
 
 
 @dataclass
@@ -188,7 +188,7 @@ def create_default_node(type_id: str, node_id: str | None = None) -> GraphNode:
 
     return GraphNode(
         id=nid,
-        type=type_id,
+        type=cast(NodeType, type_id),
         op=entry.default_op,
         label=entry.display_name,
         config=NodeConfig(
