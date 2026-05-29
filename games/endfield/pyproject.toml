@@ -53,9 +53,7 @@ include = [
     "data*",
     "gui_design*",
     "character_weapon_equipment*",
-    "utils*",
     "legal*",
-    "release_bundle*",
 ]
 exclude = ["tests*", "scripts*"]
 
@@ -64,7 +62,7 @@ exclude = ["tests*", "scripts*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "../.."]
 markers = [
     "integration: 需要 CustomTkinter/Tcl（本地可 -m 'not integration' 跳过）",
     "real_data: 读取本地 characters/weapons/equipments JSON（默认跳过，见 ENDFIELD_RUN_REAL_DATA_TESTS）",
@@ -76,7 +74,7 @@ markers = [
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
-source = ["calculation", "data", "gui_design", "utils"]
+source = ["calculation", "data", "gui_design"]
 
 [tool.coverage.report]
 fail_under = 60

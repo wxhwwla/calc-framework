@@ -53,12 +53,7 @@ def _package_path() -> Path:
 
 
 def _import_upload_meta():
-    """从 Python 包目录加载 upload_meta（运行时改 sys.path；见仓库根 pyrightconfig.json）。"""
-    pkg = str(_package_path())
-    if pkg not in sys.path:
-        sys.path.insert(0, pkg)
-    import upload_meta  # noqa: E402  # pyright: 依赖 extraPaths，运行时由上方 sys.path 保证
-
+    import upload_meta  # noqa: E402
     return upload_meta
 
 
@@ -486,7 +481,7 @@ def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: boo
         sys.exit(1)
 
     meta = _import_upload_meta()
-    readme_path = meta.please_read_me_path(_package_path())
+    readme_path = meta.please_read_me_path()
 
     _, remote_heads, _ = run_git(
         ["ls-remote", "--heads", "origin", DEFAULT_BRANCH],

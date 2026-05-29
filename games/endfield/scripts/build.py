@@ -28,6 +28,10 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# repo 根（共享 release_bundle/、utils/）
+_REPO_BUILD_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+if str(_REPO_BUILD_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_BUILD_ROOT))
 
 from please_read_me import get_exe_version, get_version
 from release_bundle.release_layout import (
