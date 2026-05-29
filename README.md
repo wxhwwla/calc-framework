@@ -7,7 +7,7 @@
 | 层级 | 文件 | 适合谁 |
 |------|------|--------|
 | **门面（本页）** | 仓库根 `README.md` | 第一次打开仓库、GitHub 首页 |
-| **详细开发** | [`endfield_damage_calculator/README.md`](endfield_damage_calculator/README.md) | 安装、GUI、测试、API、数据格式 |
+| **详细开发** | [`games/endfield/README.md`](games/endfield/README.md) | 安装、GUI、测试、API、数据格式 |
 | **操作速查** | [`docs/操作指令集.md`](docs/操作指令集.md) | 日常命令与 `[根]` / `[工具]` / `[包]` 目录约定 |
 | **文档索引** | [`docs/README.md`](docs/README.md) | `docs/` 下各文件用途 |
 | **领域术语** | [`CONTEXT.md`](CONTEXT.md) | Issue、测试、文档统一用语 |
@@ -22,14 +22,15 @@
 | **通用框架** `[框架]` | [`framework/`](framework/) | `calc-framework` 独立 pip 包：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器 |
 | **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、审计脚本（`tools/audit/`） |
 | **人类文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构 |
-| **Python 包** `[包]` | `endfield_damage_calculator/` | `main.py`、`pytest`、`build.py`、包内 `scripts/`（反推、seed） |
+| **Python 包** `[包]` | `games/endfield/` | `main.py`、`pytest`、`build.py`、包内 `scripts/`（反推、seed） |
 
 ### 仓库顶层一览
 
 ```
 [根]/
 ├── framework/                    # [框架] 通用计算框架 calc-framework
-├── endfield_damage_calculator/   # [包] 产品代码与测试
+├── games/                         # [包] 游戏适配包
+│   └── endfield/                  #   终末地伤害计算器（产品代码与测试）
 ├── docs/                         # 操作指令集、许可、算法说明
 ├── tools/                        # [工具] 仓库级维护（非包内 scripts）
 ├── legacy/                       # 遗留脚本，不参与日常流程
@@ -47,7 +48,7 @@ IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `
 
 ```powershell
 # [包] 安装并启动 GUI
-cd endfield_damage_calculator
+cd games/endfield
 pip install -e ".[dev]"
 python main.py
 ```
@@ -69,7 +70,7 @@ python github_upload_module.py
 - 高级页「工具与分享」（「更多设置」折叠内）：配装预设、操作日志、计算历史、伤害仪表盘（见 [操作指令集 §6.1](docs/操作指令集.md)）
 - BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
 
-细节与布局说明见 [**详细 README**](endfield_damage_calculator/README.md)。
+细节与布局说明见 [**详细 README**](games/endfield/README.md)。
 
 ## 反馈与 Issue
 

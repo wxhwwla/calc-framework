@@ -31,13 +31,15 @@ from bwiki_scout.wiki_sync import (  # noqa: E402
 
 _SEED_CHAR_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / "endfield_damage_calculator"
+    / "games"
+    / "endfield"
     / "scripts"
     / "seed_characters.py"
 )
 _SEED_WEAPON_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / "endfield_damage_calculator"
+    / "games"
+    / "endfield"
     / "scripts"
     / "seed_weapons.py"
 )

@@ -46,7 +46,7 @@ _qt_logger = get_logger("gui.qt_app")
 import sys as _sys
 from pathlib import Path as _Path
 
-_FRAMEWORK_SRC = _Path(__file__).resolve().parents[3] / "framework" / "src"
+_FRAMEWORK_SRC = _Path(__file__).resolve().parents[4] / "framework" / "src"
 if str(_FRAMEWORK_SRC) not in _sys.path:
     _sys.path.insert(0, str(_FRAMEWORK_SRC))
 
@@ -54,7 +54,7 @@ from calc_framework.config.adapter import AdapterPackage
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout_json
 
-_FRAMEWORK_ADAPTER = _Path(__file__).resolve().parents[3] / "framework" / "adapters" / "endfield"
+_FRAMEWORK_ADAPTER = _Path(__file__).resolve().parents[4] / "framework" / "adapters" / "endfield"
 
 _adapter_pkg: AdapterPackage | None = None
 _adapter_layout = None

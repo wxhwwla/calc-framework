@@ -132,7 +132,7 @@ def build_commit_message(version: str, title: str, bullets: list[str]) -> str:
     return first + "\n\n" + "\n".join(f"- {b}" for b in bullets)
 
 
-def classify_changed_paths(paths: list[str], package_dir_name: str = "endfield_damage_calculator") -> bool:
+def classify_changed_paths(paths: list[str], package_dir_name: str = "games/endfield") -> bool:
     """
     是否存在除 please_read_me.py 以外的业务改动路径。
     用于判断本次上传是否应 bump _VERSION。

@@ -202,7 +202,7 @@ class DialogMixin:
     def _on_open_help(self) -> None:
         import webbrowser
 
-        doc_path = Path(__file__).resolve().parents[2] / "docs" / "GUI使用说明.md"
+        doc_path = Path(__file__).resolve().parents[4] / "docs" / "GUI使用说明.md"
         if doc_path.is_file():
             webbrowser.open(doc_path.as_uri())
         else:

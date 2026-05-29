@@ -6,13 +6,13 @@ import unittest
 from tests.conftest import REPO_ROOT
 
 _ROOT_README = REPO_ROOT / "README.md"
-_PKG_README = REPO_ROOT / "endfield_damage_calculator" / "README.md"
+_PKG_README = REPO_ROOT / "games" / "endfield" / "README.md"
 
 
 class TestReadmeLayers(unittest.TestCase):
     def test_repo_root_has_facade_readme(self):
         text = _ROOT_README.read_text(encoding="utf-8")
-        self.assertIn("endfield_damage_calculator/README.md", text)
+        self.assertIn("games/endfield/README.md", text)
         self.assertIn("docs/操作指令集.md", text)
         self.assertIn("tools/", text)
         self.assertIn("LICENSE", text)

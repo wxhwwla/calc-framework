@@ -2,7 +2,7 @@
 """
 公式反推 GUI（开发/维护用，不随 exe 打包）
 
-用法（在 endfield_damage_calculator 目录，且已 pip install -e .）：
+用法（在 games/endfield 目录，且已 pip install -e .）：
     python scripts/inverse_formula_gui.py
 """
 

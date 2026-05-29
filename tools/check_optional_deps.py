@@ -13,7 +13,7 @@ import sys
 from importlib.util import find_spec
 from pathlib import Path
 
-_PKG = Path(__file__).resolve().parent.parent / "endfield_damage_calculator"
+_PKG = Path(__file__).resolve().parent.parent / "games" / "endfield"
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 

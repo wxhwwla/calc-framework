@@ -11,7 +11,7 @@
     python github_upload_module.py --minor      # 第二位 +1（新武器/新乘区等）
     python github_upload_module.py --no-bump    # 提交并推送，但不改 _VERSION
 
-版本与提交说明流程详见 endfield_damage_calculator/please_read_me.py 中的 UPLOAD_WORKFLOW。
+版本与提交说明流程详见 games/endfield/please_read_me.py 中的 UPLOAD_WORKFLOW。
 
 若本机已配置 Git 提交签名（GPG/SSH），脚本会在 commit 时自动签名，便于 GitHub 显示 Verified。
 """
@@ -34,7 +34,7 @@ AUTH_MODE = "ssh"
 REMOTE_HTTPS = "https://github.com/wxhwwla/endfield_damage_calculator_2.0.git"
 KEY_FILE = "git_key.txt"
 
-TARGET_DIR = "endfield_damage_calculator"
+TARGET_DIR = "games/endfield"
 DEFAULT_BRANCH = "main"
 SKIP_PULL = False
 FORCE_PUSH = False

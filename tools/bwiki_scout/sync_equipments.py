@@ -3,7 +3,7 @@
 """
 以 BWIKI 装备草案为准同步本地装备 JSON。
 
-默认仅预览；加 --apply 写入 endfield_damage_calculator/character_weapon_equipment/equipment_data/equipments.json。
+默认仅预览；加 --apply 写入 games/endfield/character_weapon_equipment/equipment_data/equipments.json。
 """
 
 from __future__ import annotations

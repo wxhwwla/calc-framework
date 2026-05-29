@@ -24,11 +24,11 @@ from PySide6.QtWidgets import (
 )
 
 # ── 框架路径 ──────────────────────────
-_FRAMEWORK_SRC = Path(__file__).resolve().parents[1] / "framework" / "src"
+_FRAMEWORK_SRC = Path(__file__).resolve().parents[2] / "framework" / "src"
 if str(_FRAMEWORK_SRC) not in sys.path:
     sys.path.insert(0, str(_FRAMEWORK_SRC))
 
-_ADAPTER_DIR = Path(__file__).resolve().parents[1] / "framework" / "adapters" / "endfield"
+_ADAPTER_DIR = Path(__file__).resolve().parents[2] / "framework" / "adapters" / "endfield"
 _DAG_PATH = _ADAPTER_DIR.parent.parent / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
 
 from calc_framework.editor.gui import LayoutEditorWidget

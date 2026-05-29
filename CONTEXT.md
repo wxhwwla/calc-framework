@@ -47,7 +47,7 @@
 | 术语 | 含义 |
 |------|------|
 | **仓库根目录** | Git 克隆顶层（含 `CONTEXT.md`、`.github/`（CI + Issue 模板）、`github_upload_module.py`、`docs/`、`tools/`） |
-| **Python 包目录** | `endfield_damage_calculator/`（`main.py`、`tests/`、`pip install -e` 的工作目录） |
+| **Python 包目录** | `games/endfield/`（`main.py`、`tests/`、`pip install -e` 的工作目录） |
 | **遗留目录** | `legacy/`：旧脚本归档，新功能勿依赖 |
 | **应用根目录** | `utils.path_utils.get_application_dir()`：开发=包目录，打包=exe 所在发布文件夹 |
 | **打包路径** | `get_resource_path` 读 exe **同级** JSON（非 onefile 内嵌） |
@@ -78,7 +78,7 @@
 | **终末地数据设计器** | `designer/designer_main.py` — 三个页签：公式反推（InverseTab）、数据编辑（DataEditorTab）、数据浏览（DataBrowserTab）。独立于计算器主 GUI |
 | **DataEditorTab** | `designer/data_editor_tab.py` — 图形化新增/编辑/删除角色、武器、装备，通过 `data.loader` 读写 JSON 并刷新缓存 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
-| **仓库维护工具** | `tools/`：仓库级脚本（BWIKI 侦察、审计等），与包内 `endfield_damage_calculator/scripts/` 区分 |
+| **仓库维护工具** | `tools/`：仓库级脚本（BWIKI 侦察、审计等），与包内 `games/endfield/scripts/` 区分 |
 | **代码结构约束** | 每目录直接子项 **≤ 10**；业务 `.py` **≤ 400 行**（硬顶 500）；见 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)、[`docs/代码结构规范.md`](docs/代码结构规范.md) |
 | **BWIKI 侦察** | `tools/bwiki_scout/`：阶段 C 拉取 Wiki 至 `output/raw/`（gitignore）；阶段 B `parse_draft.py` 仅生成对照草案 |
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
@@ -157,9 +157,9 @@
 | **布局编辑器** | `calc_framework.editor.LayoutEditor` — 从 DAG 编排 layout.json 的 API + CLI（`calc-layout`）+ PySide6 GUI |
 | **DataContext** | `TypedDict` 定义的数据上下文 schema：`character` / `weapon` / `equipment` / `enemy` / `computed` / `user_input` 六区 |
 | **DataContextLoader** | ABC 接口：实现 `load()` 方法，从游戏数据构建符合 schema 的变量字典 |
-| **EndfieldContextLoader** | 终末地适配器实现，位于 `endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py` |
+| **EndfieldContextLoader** | 终末地适配器实现，位于 `games/endfield/calculation/multiplicative_zones/dag/loader.py` |
 | **AdapterPackage** | `calc_framework.config.adapter.AdapterPackage` — 从适配器目录加载 DAG + layout + context loader，零自定义缓存 |
-| **DAG 适配器 (adapter.py)** | `endfield_damage_calculator/.../dag/adapter.py` — 将 DAG 引擎接入 zone_snapshot 计算链的桥接模块 |
+| **DAG 适配器 (adapter.py)** | `games/endfield/.../dag/adapter.py` — 将 DAG 引擎接入 zone_snapshot 计算链的桥接模块 |
 | **控制规格** | `ControlSpec` — 声明输入控件的类型：`QLineEdit` / `QSpinBox` / `QDoubleSpinBox` / `QSlider` / `QCheckBox` / `QComboBox`8，带 min/max/step/choices/default 元数据 |
 | **框架测试** | `[框架]` `python -m pytest tests/ -q` → **374 passed**（含 MOBA 8 + FPS 11 + CardRPG 21 适配器集成测试） |
 | **包端测试** | `[包]` `python -m pytest tests/ -q` → **553 passed / 1 skipped / 9 subtests passed** |

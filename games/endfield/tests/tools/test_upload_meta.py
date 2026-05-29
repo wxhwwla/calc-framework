@@ -28,14 +28,14 @@ class TestUploadMeta(unittest.TestCase):
     def test_classify_business_paths(self):
         self.assertTrue(
             classify_changed_paths(
-                ["endfield_damage_calculator/gui_design/gui.py"],
-                "endfield_damage_calculator",
+                ["games/endfield/gui_design/gui.py"],
+                "games/endfield",
             )
         )
         self.assertFalse(
             classify_changed_paths(
-                ["endfield_damage_calculator/please_read_me.py"],
-                "endfield_damage_calculator",
+                ["games/endfield/please_read_me.py"],
+                "games/endfield",
             )
         )
 

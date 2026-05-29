@@ -54,15 +54,15 @@ SUMMARY_TEXT = (
 
 
 def attribution_doc_local_path() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "docs" / "数据来源与许可.md"
+    return Path(__file__).resolve().parent.parent.parent.parent / "docs" / "数据来源与许可.md"
 
 
 def data_license_local_path() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "DATA_LICENSE"
+    return Path(__file__).resolve().parent.parent.parent.parent / "DATA_LICENSE"
 
 
 def notices_local_path() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "NOTICES.md"
+    return Path(__file__).resolve().parent.parent.parent.parent / "NOTICES.md"
 
 
 def local_or_remote(local: Path, remote: str) -> str:

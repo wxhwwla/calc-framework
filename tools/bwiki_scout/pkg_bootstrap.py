@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""将 endfield_damage_calculator 包加入 sys.path（BWIKI 工具调用反推/录入用）。"""
+"""将 games/endfield 包加入 sys.path（BWIKI 工具调用反推/录入用）。"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PKG = _REPO_ROOT / "endfield_damage_calculator"
+_PKG = _REPO_ROOT / "games" / "endfield"
 
 
 def ensure_package_path() -> Path:

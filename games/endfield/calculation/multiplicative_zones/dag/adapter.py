@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from calculation.multiplicative_zones.zone_snapshot import MultiplicativeZoneSelection
 
-_FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
+_FRAMEWORK_DIR = Path(__file__).resolve().parents[5] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
 _ADAPTER_DIR = _FRAMEWORK_DIR / "adapters" / "endfield"
 

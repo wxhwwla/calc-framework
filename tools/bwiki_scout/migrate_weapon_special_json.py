@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parent.parent.parent
-_PKG = _REPO / "endfield_damage_calculator"
+_PKG = _REPO / "games" / "endfield"
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 

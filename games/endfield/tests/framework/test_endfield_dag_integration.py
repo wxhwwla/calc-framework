@@ -14,9 +14,9 @@ from typing import Any
 import pytest
 from calc_framework.config.adapter import AdapterPackage
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = Path(__file__).resolve().parents[4]
 _FRAMEWORK_DIR = _REPO_ROOT / "framework"
-_PKG_ROOT = _REPO_ROOT / "endfield_damage_calculator"
+_PKG_ROOT = _REPO_ROOT / "games" / "endfield"
 _ADAPTER_DIR = _FRAMEWORK_DIR / "adapters" / "endfield"
 
 if str(_PKG_ROOT) not in sys.path:

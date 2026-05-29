@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-PKG = REPO / "endfield_damage_calculator"
+PKG = REPO / "games" / "endfield"
 SKIP_DIR_NAMES = frozenset({"__pycache__", ".pytest_cache", "dist", ".venv", "build"})
 SKIP_FILE_SUFFIXES = (".pyc",)
 

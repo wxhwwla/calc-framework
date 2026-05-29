@@ -33,7 +33,8 @@ from bwiki_scout.wiki_sync import sync_weapons_from_cache
 
 _SEED_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / "endfield_damage_calculator"
+    / "games"
+    / "endfield"
     / "scripts"
     / "seed_weapons.py"
 )

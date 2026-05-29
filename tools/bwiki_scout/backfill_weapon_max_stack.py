@@ -26,7 +26,8 @@ from bwiki_scout.weapon_wiki import backfill_weapon_max_stack_from_cache
 
 _SEED_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / "endfield_damage_calculator"
+    / "games"
+    / "endfield"
     / "scripts"
     / "seed_weapons.py"
 )
