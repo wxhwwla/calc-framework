@@ -64,8 +64,10 @@ class _DraggableListItem(QWidget):
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
+            from PySide6.QtCore import QMimeData
+
             drag = QDrag(self)
-            mime = drag.mimeData()
+            mime = QMimeData()
             mime.setText(self._type_id)
             drag.setMimeData(mime)
             drag.exec(Qt.DropAction.CopyAction)
