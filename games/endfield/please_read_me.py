@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.9.11"
+_VERSION = "3.9.12"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,13 +209,26 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 20 处文件
 # BODY:
-# - 修改 framework/src/calc_framework/editor/__main__.py
-# - 修改 framework/src/calc_framework/editor/gui.py
-# - 修改 games/endfield/editor_app.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 更新文档 docs/ADRs/0002-formula-graph-editor.md
+# - 变更 framework/pyproject.toml
+# - 修改 framework/src/calc_framework/graph_editor/__init__.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
+# - 修改 framework/src/calc_framework/graph_editor/ports.py
+# - 修改 framework/src/calc_framework/graph_editor/schema.py
+# - 修改 framework/src/calc_framework/graph_editor/serializer.py
+# - 修改 framework/src/calc_framework/graph_editor/wire.py
+# - 修改 framework/tests/graph_editor/__init__.py
+# - 修改 framework/tests/graph_editor/conftest.py
+# - 修改 framework/tests/graph_editor/test_graph_editor_widget.py
+# - 修改 framework/tests/graph_editor/test_node_operations.py
+# - 修改 framework/tests/graph_editor/test_ports_and_wire.py
+# - 修改 framework/tests/graph_editor/test_schema.py
+# - 修改 framework/tests/graph_editor/test_serializer.py
+# - 修改 framework/tests/graph_editor/test_wire_creation.py
+# - 修改 games/endfield/graph_editor_main.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 games/endfield/release_bundle/release_layout.py
-# - 修改 games/endfield/scripts/editor_app.py
-# - 修改 release_bundle/release_layout.py
 # --- END UPLOAD_SUMMARY ---

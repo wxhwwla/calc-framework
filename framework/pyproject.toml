@@ -35,6 +35,7 @@ Documentation = "https://github.com/wxhwwla/calc-framework#readme"
 
 [project.scripts]
 calc-layout = "calc_framework.editor.__main__:main"
+calc-graph = "calc_framework.graph_editor.__main__:main"
 calc-launcher = "calc_framework.launcher:run_launcher"
 
 [project.optional-dependencies]
