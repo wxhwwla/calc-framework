@@ -46,21 +46,17 @@ class TestZoneSharePercent(unittest.TestCase):
     def test_all_equal(self) -> None:
         zones = {"基础伤害区": 2000.0, "暴击区": 2.0, "防御区": 0.5}
         result = _zone_share_percent(zones)
-        # 基础伤害区: log(2000)=7.6, 暴击区: log(2)=0.693, 防御区: log(0.5)=0.693
-        # 实际已取绝对值, 所以防御区也是 0.693
         self.assertAlmostEqual(sum(result.values()), 100.0, places=4)
 
     def test_skip_identity(self) -> None:
         zones = {"暴击区": 1.0, "防御区": 2.0}
         result = _zone_share_percent(zones)
-        # 暴击区: log(1)=0 → weights[name]==0 → excluded
         self.assertNotIn("暴击区", result)
         self.assertIn("防御区", result)
 
     def test_zero_no_division_error(self) -> None:
         zones = {name: 0.0 for name in ["基础伤害区", "暴击区", "防御区"]}
         result = _zone_share_percent(zones)
-        # 全零值时 weights 为 log(1e-9)*abs=20.7, 因此有值
         self.assertGreater(len(result), 0)
         self.assertAlmostEqual(sum(result.values()), 100.0, places=4)
 

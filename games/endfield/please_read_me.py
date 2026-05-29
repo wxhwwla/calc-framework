@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.9.1"
+_VERSION = "3.9.2"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,13 +209,11 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 5 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 修改 games/endfield/gui_design/controls/search/qt_search_browser.py
-# - 修改 games/endfield/gui_design/shell/qt_app.py
-# - 修改 games/endfield/gui_design/shell/qt_app_dialog_mixin.py
-# - 修改 games/endfield/gui_design/shell/qt_control_dock.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_search_browser.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_search_estimate_message.py
+# - 修改 games/endfield/tests/gui_design/panels/selection/test_qt_panel_getters.py
+# - 修改 games/endfield/tests/gui_design/presentation/test_gui_damage_snapshot.py
 # --- END UPLOAD_SUMMARY ---
