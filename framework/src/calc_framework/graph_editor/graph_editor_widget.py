@@ -409,6 +409,26 @@ class GraphEditorWidget(QWidget):
             return []
         return item.ports
 
+    def view(self) -> GraphView:
+        return self._view
+
+    def fit_all(self) -> None:
+        """缩放画布以适配所有节点。"""
+        items = [it for it in self._scene.items() if isinstance(it, NodeItem)]
+        if not items:
+            return
+        from PySide6.QtCore import QRectF
+        bounds = QRectF()
+        for it in items:
+            bounds = bounds.united(it.sceneBoundingRect())
+        margin = 80
+        bounds.adjust(-margin, -margin, margin, margin)
+        self._view.fitInView(bounds, Qt.AspectRatioMode.KeepAspectRatio)
+
+    def reset_zoom(self) -> None:
+        """重置缩放为 100%。"""
+        self._view.resetTransform()
+
     def find_node_item(self, node_id: str) -> NodeItem | None:
         return _node_item_from_id(self._scene, node_id)
 

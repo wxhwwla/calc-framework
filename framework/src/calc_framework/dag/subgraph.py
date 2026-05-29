@@ -105,7 +105,8 @@ def expand_subgraphs(graph: DAGGraph) -> DAGGraph:
                 expanded.nodes[prefixed_id] = prefixed
 
             for pbinding_name, target_nid in call_node.bindings.items():
-                ref_map[f"{call_id}.{pbinding_name}"] = target_nid
+                if target_nid:
+                    ref_map[f"{call_id}.{pbinding_name}"] = target_nid
 
             for sub_oid, sub_odef in sub.outputs.items():
                 resolved = f"{call_id}.{sub_odef.node}"

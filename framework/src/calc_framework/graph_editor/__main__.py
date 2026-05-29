@@ -234,6 +234,60 @@ def main() -> None:
     help_action.triggered.connect(lambda: _show_help())
     help_menu.addAction(help_action)
 
+    # ── 工具栏 ──
+    toolbar = window.addToolBar("常用操作")
+    toolbar.setMovable(False)
+    toolbar.setStyleSheet("""
+        QToolBar {
+            background: #252526; border-bottom: 1px solid #3c3c3c;
+            padding: 2px; spacing: 4px;
+        }
+        QToolButton {
+            color: #cccccc; background: transparent;
+            border: 1px solid transparent; border-radius: 4px;
+            padding: 6px 12px; font-family: "Microsoft YaHei"; font-size: 13px;
+        }
+        QToolButton:hover { background: #2a2d2e; border-color: #094771; color: white; }
+        QToolButton:pressed { background: #094771; color: white; }
+    """)
+
+    from PySide6.QtWidgets import QToolButton
+
+    def _tb(text: str, tip: str, cb: callable) -> None:
+        btn = QToolButton()
+        btn.setText(text)
+        btn.setToolTip(tip)
+        btn.clicked.connect(cb)
+        toolbar.addWidget(btn)
+
+    def _run_evaluate() -> None:
+        try:
+            doc = collect_document(canvas)
+            dag = compile_graph(doc)
+            res = evaluate_graph(dag, {})
+            output_lines = [f"{k}: {v}" for k, v in res.outputs.items()]
+            node_lines = [f"{k}: {v}" for k, v in res.node_values.items()]
+            msg = "【输出结果】\n" + "\n".join(output_lines) if output_lines else "(无输出)"
+            msg += "\n\n【节点值】\n" + "\n".join(node_lines) if node_lines else ""
+            QMessageBox.information(window, "运算结果", msg)
+        except Exception as e:
+            QMessageBox.critical(window, "运算失败", str(e))
+
+    _tb("[新建]", "新建空白计算图 (Ctrl+N)", _new_file)
+    _tb("[打开]", "打开计算图文件 (Ctrl+O)", _open_file)
+    _tb("[保存]", "保存当前计算图 (Ctrl+S)", _save_file)
+    toolbar.addSeparator()
+    _tb("[导入包]", "导入计算包 (ZIP/JSON)", lambda: node_panel._on_import_package())
+    toolbar.addSeparator()
+    _tb("[删除]", "删除选中节点 (Delete)", _delete_selected)
+    toolbar.addSeparator()
+    _tb("[适配]", "缩放画布以适配所有节点", canvas.fit_all)
+    _tb("[重置]", "重置缩放为 100%", canvas.reset_zoom)
+    toolbar.addSeparator()
+    _tb("[运算]", "编译并求值整个计算图", _run_evaluate)
+    toolbar.addSeparator()
+    _tb("[清除]", "清除画布上所有节点和连线", _new_file)
+
     window.showMaximized()
     sys.exit(app.exec())
 

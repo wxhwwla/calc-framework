@@ -57,12 +57,17 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
                                 min=sub_node.config.min,
                                 max=sub_node.config.max,
                             )
-                    # 输出：自动检测 output 节点
+                    # 输出：自动检测 output 节点，解析到其输入源
                     sub_outputs: dict[str, DAGOutput] = {}
+                    sub_port_inputs: dict[tuple[str, int], str] = {}
+                    for e in sub_doc.edges:
+                        sub_port_inputs[(e.to_node, e.to_port)] = e.from_node
                     for sub_node in sub_doc.nodes:
                         if sub_node.type == "output":
+                            resolved = sub_port_inputs.get((sub_node.id, 0))
+                            actual_node = resolved if resolved and resolved in sub_dag.nodes else sub_node.id
                             sub_outputs[sub_node.id] = DAGOutput(
-                                node=sub_node.id,
+                                node=actual_node,
                                 label=sub_node.label or sub_node.id,
                             )
                     subgraphs[sub_name] = DAGSubgraph(

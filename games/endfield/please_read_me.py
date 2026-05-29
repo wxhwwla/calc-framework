@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.1"
+_VERSION = "3.11.2"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,16 +209,18 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 10 处文件
+# TITLE: 更新 12 处文件
 # BODY:
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs/GUI/344/275/277/347/224/250/350/257/264/346/230/216.md"
+# - 更新文档 docs/ADRs/0002-formula-graph-editor.md
+# - 修改 framework/src/calc_framework/dag/subgraph.py
 # - 修改 framework/src/calc_framework/graph_editor/__main__.py
 # - 修改 framework/src/calc_framework/graph_editor/compiler.py
-# - 修改 framework/src/calc_framework/graph_editor/file_actions.py
 # - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
-# - 修改 framework/src/calc_framework/graph_editor/help_content.py
-# - 修改 framework/src/calc_framework/graph_editor/layout_panel.py
-# - 修改 framework/tests/graph_editor/test_file_io.py
-# - 修改 framework/tests/graph_editor/test_layout_panel.py
+# - 修改 framework/src/calc_framework/graph_editor/node_panel.py
+# - 修改 framework/tests/graph_editor/test_endfield_zone_package.py
 # - 修改 games/endfield/graph_editor_main.py
 # - 修改 games/endfield/please_read_me.py
+# - 修改 tools/generate_endfield_zone_package.py
 # --- END UPLOAD_SUMMARY ---

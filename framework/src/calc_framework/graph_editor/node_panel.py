@@ -96,7 +96,7 @@ class NodePanel(QTabWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setTabPosition(QTabWidget.TabPosition.West)
+        self.setTabPosition(QTabWidget.TabPosition.North)
         self._build_tabs()
 
     def _build_tabs(self) -> None:
@@ -188,6 +188,11 @@ class NodePanel(QTabWidget):
             QMessageBox.critical(self, "导入失败", f"无法加载文件:\n{e}")
             return
         self.refresh_package_tab()
+        # 自动切换到"包"选项卡
+        for i in range(self.count()):
+            if self.tabText(i) == "包":
+                self.setCurrentIndex(i)
+                break
         self.package_loaded.emit()
 
     @staticmethod
