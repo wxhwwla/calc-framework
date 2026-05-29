@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-打包脚本 — 支持双目标构建
+打包脚本 — 默认打包全部目标
 
 使用方法：
-    python build.py                     # 默认构建计算器（终末地伤害计算器）
-    python build.py --target calculator # 同上
-    python build.py --target designer   # 构建设计器（终末地数据设计器）
+    python build.py                     # 默认打包全部（计算器 + 设计器 + 布局编辑器）
+    python build.py --all               # 同上
+    python build.py --target calculator # 仅打包计算器
+    python build.py --target designer   # 仅打包设计器
 
 输出：
-  dist/终末地伤害计算器/  ── 伤害计算器（默认）
-  dist/终末地数据设计器/  ── 数据设计器（--target designer）
+  dist/终末地伤害计算器/  ── 伤害计算器
+  dist/终末地数据设计器/  ── 数据设计器
 
 看门狗（可选环境变量）：
   ENDFIELD_BUILD_TIMEOUT_SECONDS  默认 1200（20 分钟），超时自动终止 PyInstaller
@@ -246,17 +247,18 @@ def main() -> None:
         "--target",
         choices=["calculator", "designer", "layout-editor"],
         default=None,
-        help="打包目标：calculator（计算器）| designer（设计器）| layout-editor（布局编辑器）",
+        help="仅打包指定目标：calculator（计算器）| designer（设计器）| layout-editor（布局编辑器）",
     )
     parser.add_argument(
         "--all",
         action="store_true",
-        help="一次性打包 calculator + designer + layout-editor 全部目标",
+        default=True,
+        help="一次性打包 calculator + designer + layout-editor 全部目标（默认）",
     )
     args = parser.parse_args()
 
-    if not args.all and args.target is None:
-        parser.error("请指定 --target 或使用 --all 打包全部目标")
+    if args.target is not None:
+        args.all = False
 
     targets: list[BuildTarget]
     if args.all:

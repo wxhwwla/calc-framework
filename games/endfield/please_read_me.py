@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.7.10"
+_VERSION = "3.7.11"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,11 +209,9 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 3 处文件
 # BODY:
 # - 修改 build.py
-# - 修改 dag_main.py
-# - 修改 designer_main.py
+# - 修改 games/endfield/build.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 main.py
 # --- END UPLOAD_SUMMARY ---

@@ -3,8 +3,8 @@
 
 用法::
 
-    python build.py
-    python build.py --target designer
+    python build.py                     # 默认打包全部目标
+    python build.py --target designer   # 仅打包设计器
 
 实际代码位于: games/endfield/build.py
 """
