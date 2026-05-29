@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, cast
 
 from calc_framework.graph_editor.schema import GraphNode, NodeConfig, NodeType
+from calc_framework.graph_editor.package_manager import CompositeTypeDef, PackageManager
 
 
 @dataclass
@@ -135,6 +136,26 @@ def _build_registry() -> Registry:
 
 
 _registry: Registry | None = None
+_composite_registry: dict[str, CompositeTypeDef] = {}
+_package_manager: PackageManager | None = None
+
+
+def get_package_manager() -> PackageManager:
+    """返回全局包管理器（单例）。"""
+    global _package_manager
+    if _package_manager is None:
+        _package_manager = PackageManager()
+    return _package_manager
+
+
+def register_composite_type(tdef: CompositeTypeDef) -> None:
+    """注册一个复合节点类型。"""
+    _composite_registry[tdef.type_id] = tdef
+
+
+def get_composite_type_ids() -> list[str]:
+    """返回所有已注册的复合节点类型 ID。"""
+    return sorted(_composite_registry.keys())
 
 
 def get_registry() -> Registry:
@@ -153,38 +174,76 @@ def get_node_type_ids() -> list[str]:
 def get_display_name(type_id: str) -> str:
     """返回节点类型的中文显示名。"""
     entry = get_registry().get(type_id)
-    if entry is None:
-        return type_id
-    return entry.display_name
+    if entry is not None:
+        return entry.display_name
+    ct = _composite_registry.get(type_id)
+    if ct is not None:
+        return ct.display_name
+    return type_id
 
 
 def get_category(type_id: str) -> str:
     """返回节点类型所属分类。"""
     entry = get_registry().get(type_id)
-    if entry is None:
-        return "其他"
-    return entry.category
+    if entry is not None:
+        return entry.category
+    if type_id in _composite_registry:
+        return "包"
+    return "其他"
 
 
 def get_nodes_by_category() -> dict[str, list[NodeTypeDef]]:
-    """按分类分组返回所有节点类型。"""
+    """按分类分组返回所有节点类型（含复合节点）。"""
     cats: dict[str, list[NodeTypeDef]] = {}
     for entry in get_registry().values():
         cat = entry.category
         if cat not in cats:
             cats[cat] = []
         cats[cat].append(entry)
+
+    # 复合节点归入"包"
+    if _composite_registry:
+        cat = "包"
+        if cat not in cats:
+            cats[cat] = []
+        for type_id, ct in sorted(_composite_registry.items()):
+            pseudo = NodeTypeDef(
+                type_id=type_id,
+                display_name=ct.display_name,
+                category="包",
+                description=f"来自包 [{ct.package_name}] 的复合节点",
+                in_count=ct.in_count,
+                out_count=ct.out_count,
+                in_labels=ct.in_labels,
+                out_labels=ct.out_labels,
+            )
+            cats[cat].append(pseudo)
     return cats
 
 
 def create_default_node(type_id: str, node_id: str | None = None) -> GraphNode:
     """创建一个默认配置的节点实例。"""
+    import uuid
+    nid = node_id or f"node_{uuid.uuid4().hex[:8]}"
+
+    # 复合节点
+    ct = _composite_registry.get(type_id)
+    if ct is not None:
+        return GraphNode(
+            id=nid,
+            type=cast(NodeType, "composite"),
+            op=type_id,
+            label=ct.display_name,
+            config=NodeConfig(
+                source_graph=ct.source_graph_json,
+                package_name=ct.package_name,
+            ),
+        )
+
+    # 内置节点
     entry = get_registry().get(type_id)
     if entry is None:
         raise ValueError(f"未知节点类型: {type_id}")
-
-    import uuid
-    nid = node_id or f"node_{uuid.uuid4().hex[:8]}"
 
     return GraphNode(
         id=nid,

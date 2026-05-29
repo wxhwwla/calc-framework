@@ -74,3 +74,33 @@ class TestDeleteNode:
         assert len(w.graph_wires()) == 1
         w.remove_node("a")
         assert len(w.graph_wires()) == 0
+
+
+class TestGridSnapping:
+    def test_node_snaps_to_grid_when_moved(self, qapp) -> None:
+        w = GraphEditorWidget()
+        w.add_graph_node(GraphNode(id="n", type="const", position={"x": 0, "y": 0}))
+        w.show()
+
+        item = w.find_node_item("n")
+        assert item is not None
+
+        item.setPos(23, 47)
+        pos = item.pos()
+        assert pos.x() == 40.0, f"期望 x=40, 实际 x={pos.x()}"
+        assert pos.y() == 40.0, f"期望 y=40, 实际 y={pos.y()}"
+
+        item.setPos(-13, 88)
+        pos = item.pos()
+        assert pos.x() == 0.0, f"期望 x=0, 实际 x={pos.x()}"
+        assert pos.y() == 80.0, f"期望 y=80, 实际 y={pos.y()}"
+
+    def test_drop_snaps_to_grid(self, qapp) -> None:
+        w = GraphEditorWidget()
+        w._on_drop_node("const", 27.0, 83.0)
+
+        nodes = w.graph_nodes()
+        assert len(nodes) == 1
+        pos = nodes[0].position
+        assert pos["x"] == -40.0, f"期望 x=-40, 实际 x={pos['x']}"
+        assert pos["y"] == 40.0, f"期望 y=40, 实际 y={pos['y']}"

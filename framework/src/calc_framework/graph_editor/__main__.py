@@ -251,7 +251,7 @@ def main() -> None:
     help_action.triggered.connect(lambda: _show_help())
     help_menu.addAction(help_action)
 
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec())
 
 

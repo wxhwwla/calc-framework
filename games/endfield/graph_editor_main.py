@@ -248,7 +248,7 @@ def main() -> None:
             except Exception as e:
                 print(f"加载失败: {e}")
 
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec())
 
 

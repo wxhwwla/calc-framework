@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 # ── 支持的所有节点类型 ──────────────────────────
-NodeType = Literal["const", "var", "user_input", "unary", "binary", "condition", "output"]
+NodeType = Literal["const", "var", "user_input", "unary", "binary", "condition", "output", "composite"]
 
-VALID_NODE_TYPES: set[str] = {"const", "var", "user_input", "unary", "binary", "condition", "output"}
+VALID_NODE_TYPES: set[str] = {"const", "var", "user_input", "unary", "binary", "condition", "output", "composite"}
 
 # 基础包一元运算
 UNARY_OPS: set[str] = {"neg", "floor", "ceil", "abs", "sqrt"}
@@ -31,6 +31,8 @@ class NodeConfig:
     min: float = 0.0
     max: float = 100.0
     step: float = 1.0
+    source_graph: str = ""
+    package_name: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {}
@@ -46,7 +48,24 @@ class NodeConfig:
             d["max"] = self.max
         if self.step != 1.0:
             d["step"] = self.step
+        if self.source_graph:
+            d["source_graph"] = self.source_graph
+        if self.package_name:
+            d["package_name"] = self.package_name
         return d
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "NodeConfig":
+        return cls(
+            value=d.get("value", 0.0),
+            path=d.get("path", ""),
+            default=d.get("default", 0.0),
+            min=d.get("min", 0.0),
+            max=d.get("max", 100.0),
+            step=d.get("step", 1.0),
+            source_graph=d.get("source_graph", ""),
+            package_name=d.get("package_name", ""),
+        )
 
 
 @dataclass

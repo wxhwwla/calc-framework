@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from calc_framework.dag.schema import (
     DAGGraph,
     DAGOutput,
+    DAGSubgraph,
     DAGVariable,
     BinaryNode,
+    CallNode,
     ConditionNode,
     ConstNode,
     UnaryNode,
@@ -20,30 +23,65 @@ from calc_framework.graph_editor.schema import (
     GraphEdge,
     GraphNode,
 )
+from calc_framework.graph_editor.serializer import document_from_json
 
 
 def compile_graph(doc: GraphDocument) -> DAGGraph:
     """将可视化编辑器格式编译为 DAG 引擎格式。"""
     # ── 1. 构建端口→节点映射 ──
-    # key: (target_node_id, target_port) → source_node_id
     port_inputs: dict[tuple[str, int], str] = {}
     for edge in doc.edges:
         port_inputs[(edge.to_node, edge.to_port)] = edge.from_node
 
-    # 反向映射：source_node → (target_node, target_port)（用于 output 节点回溯）
     source_to_target: dict[str, list[tuple[str, int]]] = {}
     for edge in doc.edges:
         if edge.from_node not in source_to_target:
             source_to_target[edge.from_node] = []
         source_to_target[edge.from_node].append((edge.to_node, edge.to_port))
 
-    # ── 2. 编译非 output 类型的节点 ──
+    # ── 2. 编译节点（含复合节点） ──
     dag_nodes: dict[str, Any] = {}
+    subgraphs: dict[str, DAGSubgraph] = {}
     for node in doc.nodes:
         if node.type == "output":
-            continue  # output 标记节点不进入 DAG
+            continue
         dag_n = _compile_single_node(node, port_inputs)
-        dag_nodes[node.id] = dag_n
+        if node.type == "composite" and dag_n is not None and isinstance(dag_n, CallNode):
+            # 递归编译子图
+            sub_name = dag_n.subgraph
+            if sub_name not in subgraphs:
+                sub_doc = _parse_sub_graph(node.config.source_graph)
+                if sub_doc is not None:
+                    sub_dag = compile_graph(sub_doc)
+                    # 提取参数（user_input 节点）
+                    params: dict[str, DAGVariable] = {}
+                    for sub_node in sub_doc.nodes:
+                        if sub_node.type == "user_input":
+                            params[sub_node.id] = DAGVariable(
+                                type="float",
+                                source="user_input",
+                                default=sub_node.config.default,
+                                min=sub_node.config.min,
+                                max=sub_node.config.max,
+                            )
+                    # 输出
+                    sub_outputs: dict[str, DAGOutput] = {}
+                    for sec in sub_doc.layout.sections:
+                        for out_id in sec.output_nodes:
+                            label = out_id
+                            src_n = next((n for n in sub_doc.nodes if n.id == out_id), None)
+                            if src_n and src_n.label:
+                                label = src_n.label
+                            sub_outputs[out_id] = DAGOutput(node=out_id, label=label)
+                    subgraphs[sub_name] = DAGSubgraph(
+                        description=sub_doc.description,
+                        parameters=params,
+                        nodes=sub_dag.nodes,
+                        outputs=sub_outputs,
+                    )
+            dag_nodes[node.id] = dag_n
+        elif dag_n is not None:
+            dag_nodes[node.id] = dag_n
 
     # ── 3. 编译变量声明 ──
     variables: dict[str, DAGVariable] = {}
@@ -53,7 +91,6 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
             source=str(raw.get("source", "computed")),
             description=str(raw.get("description", "")),
         )
-    # 自动发现 var 节点中的路径
     for node in doc.nodes:
         if node.type == "var" and node.config.path:
             if node.config.path not in variables:
@@ -74,19 +111,30 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
         name=doc.name,
         description=doc.description,
         variables=variables,
+        subgraphs=subgraphs,
         nodes=dag_nodes,
         outputs=outputs,
     )
 
 
+def _parse_sub_graph(source_graph: str) -> GraphDocument | None:
+    """解析复合节点中的子图 JSON 字符串。"""
+    if not source_graph:
+        return None
+    try:
+        data = json.loads(source_graph)
+        return document_from_json(data)
+    except Exception:
+        return None
+
+
 def _resolve_output_node(node_id: str, port_inputs: dict[tuple[str, int], str], doc: GraphDocument) -> str | None:
-    """解析输出节点：如果 node_id 对应的是 output 标记节点，则回溯到它的输入源。"""
+    """解析输出节点。"""
     src_node = next((n for n in doc.nodes if n.id == node_id), None)
     if src_node is None:
         return None
     if src_node.type != "output":
-        return node_id  # 不是标记节点，直接使用
-    # output 标记节点 → 找谁连到了它的 port 0
+        return node_id
     source = port_inputs.get((node_id, 0))
     return source
 
@@ -121,5 +169,28 @@ def _compile_single_node(node: GraphNode, port_inputs: dict[tuple[str, int], str
         true_val = port_inputs.get((node.id, 1), "")
         false_val = port_inputs.get((node.id, 2), "")
         return ConditionNode(cond=cond, true_val=true_val, false_val=false_val, label=node.label or "条件分支")
+
+    if node.type == "composite":
+        if not cfg.source_graph:
+            raise ValueError(f"复合节点 {node.id} 缺少 source_graph 配置")
+        # 解析子图以获取参数
+        sub_doc = _parse_sub_graph(cfg.source_graph)
+        if sub_doc is None:
+            raise ValueError(f"复合节点 {node.id} 的 source_graph 解析失败")
+        # 构建绑定：子图的 user_input → 父图的输入
+        bindings: dict[str, str] = {}
+        input_idx = 0
+        for sub_node in sub_doc.nodes:
+            if sub_node.type == "user_input":
+                # 父图的哪个节点连到了这个复合节点的 input_idx 端口？
+                parent_input = port_inputs.get((node.id, input_idx), "")
+                bindings[sub_node.id] = parent_input
+                input_idx += 1
+        sub_name = node.op or "sub"
+        return CallNode(
+            subgraph=sub_name,
+            bindings=bindings,
+            label=node.label or "复合节点",
+        )
 
     raise ValueError(f"未知节点类型: {node.type}")

@@ -76,14 +76,7 @@ def document_from_json(data: dict[str, Any] | str) -> GraphDocument:
 
 def _node_from_dict(d: dict[str, Any]) -> GraphNode:
     cfg_raw = d.get("config", {}) or {}
-    config = NodeConfig(
-        value=cfg_raw.get("value", 0.0),
-        path=cfg_raw.get("path", ""),
-        default=cfg_raw.get("default", 0.0),
-        min=cfg_raw.get("min", 0.0),
-        max=cfg_raw.get("max", 100.0),
-        step=cfg_raw.get("step", 1.0),
-    )
+    config = NodeConfig.from_dict(cfg_raw)
     position = d.get("position")
     if position is None:
         position = {"x": 0.0, "y": 0.0}

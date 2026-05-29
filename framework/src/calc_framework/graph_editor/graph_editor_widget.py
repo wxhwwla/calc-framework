@@ -7,12 +7,15 @@ from typing import Any
 from PySide6.QtCore import QPoint, QPointF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsSimpleTextItem,
     QGraphicsView,
+    QMessageBox,
     QVBoxLayout,
     QWidget,
 )
@@ -25,6 +28,7 @@ _NODE_WIDTH = 160
 _NODE_HEIGHT = 50
 _BG_COLOR = QColor("#1E1E1E")
 _GRID_COLOR = QColor("#2A2A2A")
+_GRID_SIZE = 40
 _NODE_BG = QColor("#2D2D2D")
 _NODE_BORDER = QColor("#555555")
 _NODE_TEXT = QColor("#D1D1D1")
@@ -36,6 +40,7 @@ _NODE_TYPE_COLORS: dict[str, QColor] = {
     "binary": QColor("#FF6B6B"),
     "condition": QColor("#DDA0DD"),
     "output": QColor("#FF8C00"),
+    "composite": QColor("#AB47BC"),
 }
 
 _BRUSH_BG = QBrush(_BG_COLOR)
@@ -65,6 +70,7 @@ class NodeItem(QGraphicsRectItem):
         self._node_label = node.label or node.id
         self._config = node.config
         self._ports: list[PortItem] = []
+        self._on_double_click: callable | None = None
 
         self.setPos(node.position.get("x", 0), node.position.get("y", 0))
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
@@ -73,6 +79,34 @@ class NodeItem(QGraphicsRectItem):
 
         self._setup_appearance()
         self._create_ports()
+
+    def set_double_click_callback(self, cb: callable) -> None:
+        self._on_double_click = cb
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if self._node_type == "composite" and self._on_double_click:
+            self._on_double_click(self._node_id, self._config.source_graph)
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            # 吸附到网格
+            snapped = QPointF(
+                round(value.x() / _GRID_SIZE) * _GRID_SIZE,
+                round(value.y() / _GRID_SIZE) * _GRID_SIZE,
+            )
+            return snapped
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            scene = self.scene()
+            if scene is not None:
+                for wire in scene._wires:
+                    src_parent = wire.source_port.parentItem()
+                    tgt_parent = wire.target_port.parentItem()
+                    if src_parent is self or tgt_parent is self:
+                        wire.update_path()
+        return super().itemChange(change, value)
 
     def _setup_appearance(self) -> None:
         color = _NODE_TYPE_COLORS.get(self._node_type, _NODE_BORDER)
@@ -97,8 +131,13 @@ class NodeItem(QGraphicsRectItem):
         type_tag.setPos(_NODE_WIDTH - tr.width() - 8, _NODE_HEIGHT - tr.height() - 4)
 
     def _create_ports(self) -> None:
-        spec = _PORT_SPECS.get(self._node_type, (0, 0, [], []))
-        in_count, out_count, in_labels, out_labels = spec
+        if self._node_type == "composite":
+            in_labels, out_labels = _composite_port_labels(self._config.source_graph)
+            in_count = len(in_labels)
+            out_count = len(out_labels)
+        else:
+            spec = _PORT_SPECS.get(self._node_type, (0, 0, [], []))
+            in_count, out_count, in_labels, out_labels = spec
 
         for i in range(in_count):
             lbl = in_labels[i] if i < len(in_labels) else f"in{i}"
@@ -151,7 +190,7 @@ class GraphScene(QGraphicsScene):
     def drawBackground(self, painter: QPainter, rect: Any) -> None:
         super().drawBackground(painter, rect)
         painter.setPen(_PEN_GRID)
-        grid_size = 40
+        grid_size = _GRID_SIZE
         left = int(rect.left()) - int(rect.left()) % grid_size
         top = int(rect.top()) - int(rect.top()) % grid_size
         x = left
@@ -163,13 +202,20 @@ class GraphScene(QGraphicsScene):
             painter.drawLine(int(rect.left()), y, int(rect.right()), y)
             y += grid_size
 
+    def _port_at(self, scene_pos: QPointF) -> PortItem | None:
+        """返回场景坐标位置处的端口（跨过非端口项查找）。"""
+        for item in self.items(scene_pos):
+            if isinstance(item, PortItem):
+                return item
+        return None
+
     def mousePressEvent(self, event) -> None:
         if event.button() != Qt.MouseButton.LeftButton:
             super().mousePressEvent(event)
             return
-        item = self.itemAt(event.scenePos(), self.views()[0].transform() if self.views() else None)
-        if isinstance(item, PortItem) and item.direction == PortDirection.OUTPUT:
-            self._wire_start_port = item
+        port = self._port_at(event.scenePos())
+        if port is not None and port.direction == PortDirection.OUTPUT:
+            self._wire_start_port = port
             self._ghost_wire = QGraphicsPathItem()
             pen = QPen(QColor("#4ECDC4"), 2, Qt.PenStyle.DashLine)
             self._ghost_wire.setPen(pen)
@@ -190,12 +236,14 @@ class GraphScene(QGraphicsScene):
     def mouseReleaseEvent(self, event) -> None:
         if self._wire_start_port and self._ghost_wire:
             source_port = self._wire_start_port
-            item = self.itemAt(event.scenePos(), self.views()[0].transform() if self.views() else None)
+            self.removeItem(self._ghost_wire)
+            self._ghost_wire = None
+
             target_port: PortItem | None = None
-            if isinstance(item, PortItem) and item.direction == PortDirection.INPUT:
-                # 不允许连接到同一个节点
-                if item.parentItem() is not source_port.parentItem():
-                    target_port = item
+            port = self._port_at(event.scenePos())
+            if port is not None and port.direction == PortDirection.INPUT:
+                if port.parentItem() is not source_port.parentItem():
+                    target_port = port
 
             if target_port:
                 wire = WireItem(source_port, target_port)
@@ -206,8 +254,6 @@ class GraphScene(QGraphicsScene):
                 if src_node and tgt_node:
                     self.wire_created.emit(src_node, tgt_node, source_port.port_index, target_port.port_index)
 
-            self.removeItem(self._ghost_wire)
-            self._ghost_wire = None
             self._wire_start_port = None
             event.accept()
             return
@@ -338,7 +384,9 @@ class GraphEditorWidget(QWidget):
     def _on_drop_node(self, type_id: str, scene_x: float, scene_y: float) -> None:
         from calc_framework.graph_editor.registry import create_default_node
         node = create_default_node(type_id)
-        node.position = {"x": scene_x - _NODE_WIDTH / 2, "y": scene_y - _NODE_HEIGHT / 2}
+        snap_x = round((scene_x - _NODE_WIDTH / 2) / _GRID_SIZE) * _GRID_SIZE
+        snap_y = round((scene_y - _NODE_HEIGHT / 2) / _GRID_SIZE) * _GRID_SIZE
+        node.position = {"x": snap_x, "y": snap_y}
         self.add_graph_node(node)
 
     def _on_wire_created(self, src_id: str, tgt_id: str, src_port: int, tgt_port: int) -> None:
@@ -349,6 +397,8 @@ class GraphEditorWidget(QWidget):
 
     def add_graph_node(self, node: GraphNode) -> NodeItem:
         item = NodeItem(node)
+        if node.type == "composite":
+            item.set_double_click_callback(self._open_subgraph_editor)
         self._scene.addItem(item)
         self.node_changed.emit()
         return item
@@ -412,6 +462,126 @@ class GraphEditorWidget(QWidget):
         self._scene._wire_start_port = None
         self._scene._ghost_wire = None
         self.node_changed.emit()
+
+    # ── 子图编辑器（复合节点双击） ──
+
+    def _open_subgraph_editor(self, node_id: str, source_graph: str) -> None:
+        if not source_graph:
+            QMessageBox.information(self, "子图编辑器", "该复合节点没有嵌入的子图数据。")
+            return
+        dialog = SubGraphDialog(source_graph, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_json = dialog.get_graph_json()
+            if new_json and new_json != source_graph:
+                # 更新节点配置
+                item = self.find_node_item(node_id)
+                if item is not None:
+                    item._config.source_graph = new_json
+                    # 重建端口
+                    for port in item._ports[:]:
+                        item.scene().removeItem(port)
+                    item._ports.clear()
+                    item._create_ports()
+                    self.node_changed.emit()
+
+
+def _composite_port_labels(source_graph: str) -> tuple[list[str], list[str]]:
+    """解析子图 JSON，返回 (输入标签列表, 输出标签列表)。"""
+    import json
+    in_labels: list[str] = []
+    out_labels: list[str] = []
+    if not source_graph:
+        return in_labels, out_labels
+    try:
+        data = json.loads(source_graph)
+        nodes = data.get("nodes", [])
+        for n in nodes:
+            ntype = n.get("type", "")
+            if ntype == "user_input":
+                label = n.get("label", "") or n.get("id", "输入")
+                in_labels.append(label)
+            elif ntype == "output":
+                label = n.get("label", "") or n.get("id", "输出")
+                out_labels.append(label)
+    except Exception:
+        pass
+    return in_labels, out_labels
+
+
+class SubGraphDialog(QDialog):
+    """子图编辑器对话框 — 双击复合节点时打开。"""
+
+    def __init__(self, source_graph: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("子图编辑器")
+        self.resize(800, 600)
+
+        from calc_framework.graph_editor.serializer import document_from_json
+        from calc_framework.graph_editor.file_actions import load_document
+        from calc_framework.graph_editor.layout_panel import LayoutPanel
+        from calc_framework.graph_editor.prop_panel import PropPanel
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # 子图的 GraphEditorWidget
+        from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
+        self._editor = GraphEditorWidget()
+        self._layout_panel = LayoutPanel()
+        self._prop_panel = PropPanel(self._editor)
+
+        # 加载子图
+        self._source_graph = source_graph
+        try:
+            data = json.loads(source_graph)
+            doc = document_from_json(data)
+            load_document(doc, self._editor, self._layout_panel)
+        except Exception:
+            pass
+
+        # 把编辑器放到对话框里
+        from PySide6.QtWidgets import QHBoxLayout, QSplitter
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(self._editor)
+        right_panel = QWidget()
+        rl = QVBoxLayout(right_panel)
+        rl.setContentsMargins(0, 0, 0, 0)
+        rl.addWidget(self._layout_panel)
+        rl.addWidget(self._prop_panel)
+        splitter.addWidget(right_panel)
+        splitter.setSizes([550, 250])
+
+        layout.addWidget(splitter, 1)
+
+        # 底部按钮
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+        # 选节点时更新属性面板
+        self._editor.scene().selectionChanged.connect(self._on_selection_changed)
+
+    def _on_selection_changed(self) -> None:
+        selected = self._editor.scene().selectedItems()
+        node_item = None
+        for item in selected:
+            if isinstance(item, NodeItem):
+                node_item = item
+                break
+        if node_item is not None:
+            self._prop_panel.show_node(node_item)
+        else:
+            self._prop_panel.show_node(None)
+
+    def get_graph_json(self) -> str:
+        """获取编辑后的子图 JSON。"""
+        from calc_framework.graph_editor.file_actions import collect_document
+        from calc_framework.graph_editor.serializer import document_to_json
+        doc = collect_document(self._editor, self._layout_panel)
+        return document_to_json(doc)
 
 
 def _find_parent_node_id(port: PortItem) -> str | None:
