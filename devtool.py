@@ -12,6 +12,9 @@
     python devtool.py sync-bwiki --apply      # BWIKI 数据同步（写入）
     python devtool.py launcher                # 框架游戏选择器（交互）
     python devtool.py launcher endfield       # 框架游戏选择器（直接启动）
+    python devtool.py hub                     # 启动 Calc Hub 社区市场
+    python devtool.py framework build         # 构建 framework PyPI wheel
+    python devtool.py framework publish       # 构建+发布 framework 到 PyPI
 """
 
 from __future__ import annotations
@@ -89,6 +92,14 @@ def _cmd_hub(args: argparse.Namespace) -> None:
             print("\n已停止")
 
 
+def _cmd_framework(args: argparse.Namespace) -> int:
+    """构建/发布 framework PyPI 包。"""
+    from tools.framework_publish import main as fw_main
+    passthrough = _sub_args()
+    sys.argv = [sys.argv[0], *passthrough] if passthrough else [sys.argv[0], "--help"]
+    return fw_main()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="终末地计算器 — 开发者工具箱",
@@ -103,6 +114,7 @@ def main() -> None:
     sub.add_parser("launcher", help="框架游戏选择器", add_help=False)
     hub_parser = sub.add_parser("hub", help="启动 Calc Hub 社区市场", add_help=False)
     hub_parser.add_argument("--port", type=int, default=8080, help="端口 (默认 8080)")
+    sub.add_parser("framework", help="构建/发布 framework PyPI 包", add_help=False)
 
     # 用 parse_known_args 避免 --flags 被 argparse 拦截
     args, _ = parser.parse_known_args()
@@ -116,6 +128,7 @@ def main() -> None:
         "sync-bwiki": _cmd_sync_bwiki,
         "launcher": _cmd_launcher,
         "hub": _cmd_hub,
+        "framework": _cmd_framework,
     }
     result = funcs[args.command](args)
     if isinstance(result, int):

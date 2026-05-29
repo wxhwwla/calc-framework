@@ -1,0 +1,55 @@
+name: Framework PyPI Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "发布版本号 (如 0.2.0)"
+        required: true
+        type: string
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: framework
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install build twine
+
+      - name: Update version
+        run: |
+          sed -i "s/version = \".*\"/version = \"${{ github.event.inputs.version }}\"/" pyproject.toml
+
+      - name: Run tests
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m pytest tests/ -q
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python -m twine upload dist/*
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: framework-v${{ github.event.inputs.version }}
+          name: calc-framework v${{ github.event.inputs.version }}
+          body: |
+            calc-framework v${{ github.event.inputs.version }}
+
+            安装：`pip install calc-framework`
+          draft: false
+          prerelease: false
+          files: framework/dist/calc_framework-${{ github.event.inputs.version }}*.whl

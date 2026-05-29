@@ -11,6 +11,7 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "calc-framework>=0.2.0",
     "matplotlib>=3.8",
     "PySide6>=6.6",
 ]

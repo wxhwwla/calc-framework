@@ -3,19 +3,31 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QObject, Qt, Signal
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
-    QPlainTextEdit,
+    QHeaderView,
     QPushButton,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
+from calculation.loadout.optimizer import LoadoutScore
+from calculation.manual_buff.physical import (
+    format_abnormal_breakdown_lines,
+    split_damage_breakdown,
+)
+from calculation.manual_buff.spell import (
+    format_spell_abnormal_breakdown_lines,
+    is_spell_abnormal_key,
+)
 from calculation.search.plan.controller import (
     optimizer_config_for_search_job,
 )
@@ -24,13 +36,17 @@ from calculation.search.run.cancel import SearchCancelToken
 from calculation.search.run.single_skill import (
     run_exported_single_skill_search,
 )
-from gui_design.presentation.search_results_lines import (
-    export_paths_to_strings,
+from calculation.skills.segments import (
+    aggregate_weighted_damage,
+    format_segment_breakdown_lines,
 )
 from gui_design.controls.search.search_settings import (
     format_search_progress_text,
     resolve_parallel_workers,
     resolve_top_n,
+)
+from gui_design.presentation.search_results_lines import (
+    export_paths_to_strings,
 )
 
 # ═══════════════════════════════════════════════════════
@@ -102,9 +118,110 @@ class SearchWorker(QObject):
 #  搜索弹窗
 # ═══════════════════════════════════════════════════════
 
+_DARK_BG = "#1E1E1E"
+_DARK_FG = "#D1D1D1"
+_ACCENT = "#2B6CB6"
+_HEADER_BG = "#2A2A2A"
+_SEG_FG = QColor("#9BB9E0")
+_ABNORMAL_FG = QColor("#C9A96E")
+
+
+def _build_tree_items(
+    lines: list[str],
+    top_results: Sequence[LoadoutScore] | None,
+    *,
+    damage_metric: str,
+    segment_counts: dict[str, int] | None,
+    abnormal_counts: dict[str, int] | None,
+    spell_abnormal_counts: dict[str, int] | None,
+) -> list[QTreeWidgetItem]:
+    """构建搜索结果树节点。
+
+    当提供 top_results 时生成结构化树；否则退化为纯文本 flat 列表。
+    """
+    items: list[QTreeWidgetItem] = []
+
+    if not top_results:
+        for line in lines:
+            item = QTreeWidgetItem([line])
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            items.append(item)
+        return items
+
+    for idx, score in enumerate(top_results, start=1):
+        loadout = score.loadout_names
+        header_text = (
+            f"Top{idx}: {score.weapon_name}  |  "
+            f"{damage_metric} {score.final_damage:.1f}  |  "
+            f"护甲 {loadout.get('chest', '')}  |  "
+            f"护手 {loadout.get('gloves', '')}  |  "
+            f"配件A {loadout.get('accessory_a', '')}  |  "
+            f"配件B {loadout.get('accessory_b', '')}"
+        )
+        root = QTreeWidgetItem([header_text])
+        root.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsAutoTristate)
+        root.setExpanded(idx <= 3)
+
+        if score.segment_breakdown and (segment_counts or abnormal_counts):
+            base_skill_breakdown, physical_abnormal_breakdown = split_damage_breakdown(
+                score.segment_breakdown
+            )
+            spell_abnormal_breakdown: dict[str, float] = {}
+            skill_breakdown: dict[str, float] = {}
+            for key, value in base_skill_breakdown.items():
+                if is_spell_abnormal_key(key):
+                    spell_abnormal_breakdown[key] = value
+                else:
+                    skill_breakdown[key] = value
+
+            if skill_breakdown and segment_counts:
+                breakdown_lines = format_segment_breakdown_lines(
+                    skill_breakdown, segment_counts, indent=""
+                )
+                for b_line in breakdown_lines:
+                    child = QTreeWidgetItem([b_line])
+                    child.setForeground(0, _SEG_FG)
+                    child.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                    root.addChild(child)
+
+                weighted_total, _, skill_type_totals = aggregate_weighted_damage(
+                    skill_breakdown, segment_counts
+                )
+                if len(skill_type_totals) > 1:
+                    parts = [f"{k} {v:.1f}" for k, v in skill_type_totals.items()]
+                    total_line = QTreeWidgetItem([f"加权合计: {weighted_total:.1f}（{' + '.join(parts)}）"])
+                else:
+                    total_line = QTreeWidgetItem([f"加权合计: {weighted_total:.1f}"])
+                total_line.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                root.addChild(total_line)
+
+            if physical_abnormal_breakdown and abnormal_counts:
+                ab_lines = format_abnormal_breakdown_lines(
+                    physical_abnormal_breakdown, abnormal_counts, indent=""
+                )
+                for ab_line in ab_lines:
+                    child = QTreeWidgetItem([ab_line])
+                    child.setForeground(0, _ABNORMAL_FG)
+                    child.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                    root.addChild(child)
+
+            if spell_abnormal_breakdown and spell_abnormal_counts:
+                sp_lines = format_spell_abnormal_breakdown_lines(
+                    spell_abnormal_breakdown, spell_abnormal_counts, indent=""
+                )
+                for sp_line in sp_lines:
+                    child = QTreeWidgetItem([sp_line])
+                    child.setForeground(0, _ABNORMAL_FG)
+                    child.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                    root.addChild(child)
+
+        items.append(root)
+
+    return items
+
 
 class QtSearchResultsDialog(QDialog):
-    """全量 / MVP 搜索结果展示弹窗。"""
+    """全量 / MVP 搜索结果展示弹窗（结构化树视图）。"""
 
     def __init__(
         self,
@@ -114,39 +231,93 @@ class QtSearchResultsDialog(QDialog):
         lines: list[str],
         big_font: QFont,
         small_font: QFont,
+        top_results: Sequence[LoadoutScore] | None = None,
+        damage_metric: str = "伤害",
+        segment_counts: dict[str, int] | None = None,
+        abnormal_counts: dict[str, int] | None = None,
+        spell_abnormal_counts: dict[str, int] | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.resize(920, 720)
-        self.setMinimumSize(640, 480)
+        self.resize(960, 760)
+        self.setMinimumSize(680, 480)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
 
-        text = QPlainTextEdit()
-        text.setFont(small_font)
-        text.setReadOnly(True)
-        text.setPlainText("\n".join(lines))
-        text.setStyleSheet("""
-            QPlainTextEdit {
-                background-color: #1E1E1E; color: #D1D1D1;
+        tree = QTreeWidget()
+        tree.setFont(small_font)
+        tree.setHeaderLabels(["搜索结果"])
+        tree.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        tree.header().setVisible(False)
+        tree.setAlternatingRowColors(True)
+        tree.setStyleSheet(f"""
+            QTreeWidget {{
+                background-color: {_DARK_BG}; color: {_DARK_FG};
                 border: 1px solid #464646; border-radius: 6px;
-                padding: 8px;
+                padding: 4px;
+                alternate-background-color: #252525;
+            }}
+            QTreeWidget::item {{
+                padding: 3px 4px;
+                border-bottom: 1px solid #333;
+            }}
+            QTreeWidget::item:selected {{
+                background-color: {_ACCENT}; color: white;
+            }}
+            QTreeWidget::branch:has-children:!has-siblings:closed,
+            QTreeWidget::branch:closed:has-children:has-siblings {{
+                border-image: none;
+                image: none;
+            }}
+            QTreeWidget::branch:open:has-children:!has-siblings,
+            QTreeWidget::branch:open:has-children:has-siblings {{
+                border-image: none;
+                image: none;
+            }}
+        """)
+        tree.setIndentation(20)
+        tree.setAnimated(True)
+        tree.setRootIsDecorated(True)
+
+        tree_items = _build_tree_items(
+            lines, top_results,
+            damage_metric=damage_metric,
+            segment_counts=segment_counts,
+            abnormal_counts=abnormal_counts,
+            spell_abnormal_counts=spell_abnormal_counts,
+        )
+        for item in tree_items:
+            tree.addTopLevelItem(item)
+
+        layout.addWidget(tree, stretch=1)
+
+        info_label = QPushButton(
+            f"共 {len(top_results) if top_results else 0} 个结果  |  "
+            f"前 {min(3, len(top_results) if top_results else 0)} 项已展开"
+            if top_results else ""
+        )
+        info_label.setFont(small_font)
+        info_label.setStyleSheet("""
+            QPushButton {
+                background-color: transparent; color: #888;
+                border: none; text-align: left; padding: 2px 0;
             }
         """)
-        layout.addWidget(text, stretch=1)
+        info_label.setEnabled(False)
+        layout.addWidget(info_label)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
         close_btn = QPushButton("关闭")
         close_btn.setFont(small_font)
-        close_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent; color: #D1D1D1;
+        close_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: transparent; color: {_DARK_FG};
                 border: 1px solid #464646; border-radius: 6px;
                 padding: 6px 24px;
-            }
-            QPushButton:hover { border-color: #2B6CB6; color: white; }
+            }}
+            QPushButton:hover {{ border-color: {_ACCENT}; color: white; }}
         """)
         close_btn.clicked.connect(self.accept)
         btn_row.addWidget(close_btn)

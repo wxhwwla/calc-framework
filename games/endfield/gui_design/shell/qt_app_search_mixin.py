@@ -8,7 +8,7 @@ from typing import Any
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from gui_design.controls.search.qt_actions import SearchWorker, QtSearchResultsDialog
+from gui_design.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
 from gui_design.presentation.search_results_lines import build_search_results_report_lines
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
@@ -159,6 +159,11 @@ class SearchMixin:
         dialog = QtSearchResultsDialog(
             self.app, title=mode_label, lines=lines,
             big_font=self.big_font, small_font=self.small_font,
+            top_results=outcome.top_results,
+            damage_metric=damage_metric,
+            segment_counts=(dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None),
+            abnormal_counts=dict(job.physical_abnormal_counts or {}),
+            spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
         )
         dialog.exec()
 

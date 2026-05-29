@@ -1,20 +1,49 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "calc-framework"
-version = "0.1.0"
-description = "通用游戏数值计算框架 — DAG 公式引擎 + 声明式 UI 渲染"
+version = "0.2.0"
+description = "通用游戏数值计算框架 — DAG 公式引擎 + 声明式 UI 渲染 + 搜索枚举引擎"
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "AGPL-3.0-only" }
+authors = [
+    { name = "wxhwwla", email = "wxhwwla@gmail.com" },
+]
+keywords = ["game", "calculator", "damage", "dag", "framework"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/wxhwwla/calc-framework"
+Repository = "https://github.com/wxhwwla/calc-framework"
+Documentation = "https://github.com/wxhwwla/calc-framework#readme"
+"Bug Tracker" = "https://github.com/wxhwwla/calc-framework/issues"
 
 [project.scripts]
 calc-layout = "calc_framework.editor.__main__:main"
+calc-launcher = "calc_framework.launcher:run_launcher"
 
 [project.optional-dependencies]
 ui = ["PySide6>=6.5"]
 dev = ["pytest>=8"]
 
-[build-system]
-requires = ["setuptools>=75"]
-build-backend = "setuptools.build_meta"
-
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
