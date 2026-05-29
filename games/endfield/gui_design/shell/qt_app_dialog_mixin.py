@@ -212,6 +212,26 @@ class DialogMixin:
         """打开截图识装检测对话框。"""
         try:
             from gui_design.controls.ocr import open_ocr_detection_dialog
-            open_ocr_detection_dialog(self.app)
+
+            def _apply_ocr(preset_dict: dict) -> None:
+                char_name = preset_dict.get("char_name", "")
+                weapon_name = preset_dict.get("weapon_name", "")
+                char_level = int(preset_dict.get("char_level", 1))
+                weapon_level = int(preset_dict.get("weapon_level", 1))
+                trust_level = int(preset_dict.get("trust_level", 0))
+
+                if char_name:
+                    ok = self.char_panel.select_by_name(char_name)
+                    if ok and weapon_name:
+                        self.weapon_panel.select_by_name(weapon_name)
+
+                    self.char_panel.level_slider.setValue(char_level)
+                    self.weapon_panel.level_slider.setValue(weapon_level)
+                    if trust_level and self.char_panel.trust_panel:
+                        self.char_panel.trust_panel.set_level(min(trust_level, 4))
+
+                    self._on_confirm()
+
+            open_ocr_detection_dialog(self.app, on_apply=_apply_ocr)
         except Exception as exc:
             QMessageBox.warning(self.app, "截图识装", f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install ultralytics easyocr")

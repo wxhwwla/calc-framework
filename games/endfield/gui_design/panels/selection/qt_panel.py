@@ -328,3 +328,21 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
                         rd["stk_slider"].setValue(0)
                         rd["stk_val_lbl"].setText("0")
 
+    def select_by_name(self, name: str) -> bool:
+        """按名称选择角色/武器（触发级联）。"""
+        for item in self.data_list:
+            if item.get("名称") == name:
+                item_type = item.get("类型", "")
+                item_star = str(item.get("星级", ""))
+                idx_type = self.type_combo.findText(item_type)
+                if idx_type >= 0:
+                    self.type_combo.setCurrentIndex(idx_type)
+                idx_star = self.star_combo.findText(item_star)
+                if idx_star >= 0:
+                    self.star_combo.setCurrentIndex(idx_star)
+                idx_name = self.name_combo.findText(name)
+                if idx_name >= 0:
+                    self.name_combo.setCurrentIndex(idx_name)
+                    return True
+        return False
+

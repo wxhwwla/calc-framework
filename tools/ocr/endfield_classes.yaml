@@ -1,0 +1,14 @@
+# 终末地截图识别 YOLO 类别定义
+# 用于微调 YOLOv8n 检测游戏 UI 面板区域
+#
+# 使用方式:
+#   from tools.ocr.train import train_yolo
+#   train_yolo("./终末地数据集", "yolov8n.pt", epochs=50)
+
+names:
+  0: character_panel    # 角色面板（角色名、等级、信赖、能力值）
+  1: weapon_panel       # 武器面板（武器名、等级、词条）
+  2: equipment_panel    # 装备面板（装备名、主/副词条）
+  3: skill_panel        # 技能面板（技能等级、倍率）
+  4: zone_values        # 乘区数值（各乘区最终数值）
+  5: enemy_panel        # 敌方面板（防御、抗性等）
