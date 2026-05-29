@@ -13,6 +13,14 @@ from calc_framework.dag.schema import DAGGraph
 from calc_framework.dag.serializer import dag_from_dict, load_dag
 
 
+def _import_graph_editor() -> tuple[Any, Any]:
+    """延迟导入 graph_editor 模块（避免循环依赖）。"""
+    from calc_framework.graph_editor.compiler import compile_graph
+    from calc_framework.graph_editor.schema import GraphDocument
+    from calc_framework.graph_editor.serializer import document_from_json
+    return compile_graph, document_from_json
+
+
 class DAGService:
     """DAG 公式图的求值服务。
 
@@ -36,6 +44,23 @@ class DAGService:
     def from_dict(cls, data: dict[str, Any]) -> DAGService:
         """从 dict 解析 DAG 并创建服务。"""
         dag = dag_from_dict(data)
+        return cls(dag)
+
+    @classmethod
+    def from_graph_document(cls, doc: Any) -> DAGService:
+        """从 graph_editor 的 GraphDocument 编译并创建服务。"""
+        compile_graph_fn, _ = _import_graph_editor()
+        dag = compile_graph_fn(doc)
+        return cls(dag)
+
+    @classmethod
+    def from_graph_file(cls, path: str | Path) -> DAGService:
+        """从 graph_editor 格式的 graph.json 文件加载并创建服务。"""
+        import json
+        compile_graph_fn, document_from_json_fn = _import_graph_editor()
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        doc = document_from_json_fn(data)
+        dag = compile_graph_fn(doc)
         return cls(dag)
 
     def evaluate(self, context: dict[str, Any]) -> DAGResult:

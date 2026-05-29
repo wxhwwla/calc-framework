@@ -37,6 +37,7 @@ _BINARY_OPS: dict[str, Any] = {
     "^": pow,
     "min": min,
     "max": max,
+    "mod": lambda a, b: a % b if b != 0 else 0.0,
 }
 
 _UNARY_OPS: dict[str, Any] = {
