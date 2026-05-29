@@ -10,7 +10,7 @@
 
 输出：
   dist/终末地伤害计算器/  ── 伤害计算器
-  dist/终末地数据设计器/  ── 数据设计器
+  dist/数据设计器/  ── 数据设计器
 
 看门狗（可选环境变量）：
   ENDFIELD_BUILD_TIMEOUT_SECONDS  默认 1200（20 分钟），超时自动终止 PyInstaller

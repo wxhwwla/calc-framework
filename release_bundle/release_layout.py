@@ -19,8 +19,8 @@ BuildTarget = Literal["calculator", "designer", "layout-editor"]
 
 TARGET_APP_NAMES: dict[BuildTarget, str] = {
     "calculator": "终末地伤害计算器",
-    "designer": "终末地数据设计器",
-    "layout-editor": "终末地布局编辑器",
+    "designer": "数据设计器",
+    "layout-editor": "布局编辑器",
 }
 
 TARGET_ENTRIES: dict[BuildTarget, str] = {
@@ -69,10 +69,10 @@ def _calculator_readme(exe_version: str, package_version: str) -> str:
 
 
 def _designer_readme(exe_version: str, package_version: str) -> str:
-    return f"""终末地数据设计器 — 发布包说明
+    return f"""数据设计器 — 发布包说明
 
 【版本】EXE v{exe_version}（源码包 v{package_version}）
-【软件】终末地数据设计器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+【软件】数据设计器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
 【数据】character_weapon_equipment/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
 
 本工具用于角色/武器数据的公式反推与数据浏览，不包含伤害计算功能。
@@ -83,10 +83,10 @@ def _designer_readme(exe_version: str, package_version: str) -> str:
 
 
 def _layout_editor_readme(exe_version: str, package_version: str) -> str:
-    return f"""终末地布局编辑器 — 发布包说明
+    return f"""布局编辑器 — 发布包说明
 
 【版本】EXE v{exe_version}（源码包 v{package_version}）
-【软件】终末地布局编辑器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+【软件】布局编辑器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
 【数据】本工具不包含游戏数据，仅编辑 DAG 排版配置。
 
 使用方式：

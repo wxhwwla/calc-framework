@@ -33,7 +33,7 @@ _DAG_PATH = _ADAPTER_DIR.parent.parent / "src" / "calc_framework" / "configs" / 
 
 from calc_framework.editor.gui import LayoutEditorWidget
 
-APP_NAME = "终末地布局编辑器"
+APP_NAME = "布局编辑器"
 APP_VERSION = "1.0.0"
 
 

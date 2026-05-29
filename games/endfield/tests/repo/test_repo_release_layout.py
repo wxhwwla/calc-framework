@@ -39,7 +39,7 @@ class TestReleaseLayout(unittest.TestCase):
 
     def test_target_app_names(self):
         self.assertEqual(target_app_name("calculator"), "终末地伤害计算器")
-        self.assertEqual(target_app_name("designer"), "终末地数据设计器")
+        self.assertEqual(target_app_name("designer"), "数据设计器")
 
     def test_stage_release_folder_copies_json_and_licenses_calculator(self):
         repo_root = REPO_ROOT
@@ -73,7 +73,7 @@ class TestReleaseLayout(unittest.TestCase):
         )
         self.assertEqual(
             release_dir_from_dist(dist_dir, target="designer"),
-            dist_dir / "终末地数据设计器",
+            dist_dir / "数据设计器",
         )
 
     def test_frozen_exe_loads_json_from_sibling_data_tree(self):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""终末地设计器——主入口。
+"""数据设计器——主入口。
 
 PySide6 GUI，提供公式反推、数据浏览等功能，用于角色/武器数据的维护与验证。
 """
@@ -27,7 +27,7 @@ from gui_design.designer.data_browser_tab import DataBrowserTab
 from gui_design.designer.data_editor_tab import DataEditorTab
 from gui_design.designer.inverse_tab import InverseTab
 
-APP_NAME = "终末地设计器"
+APP_NAME = "数据设计器"
 APP_VERSION = "1.0.0"
 
 

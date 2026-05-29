@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""终末地布局编辑器——独立入口。
+"""布局编辑器——独立入口。
 
 可视化编辑 DAG 变量的 layout.json Section。
 打包入口：python scripts/build.py --target layout-editor

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-终末地 DAG 工具 — 根入口文件
+DAG 工具 — 根入口文件
 
 生成/调试 DAG JSON 配置文件。
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""终末地 DAG 工具 — 根入口。
+"""DAG 工具 — 根入口。
 
 用法::
 
