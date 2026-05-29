@@ -207,20 +207,3 @@ def show_help() -> None:
 
 if __name__ == "__main__":
     show_help()
-
-# --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
-# BODY:
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_character_detail.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_format_coverage.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_lines_module.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_skill_resolve_detail.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_multi_skill_search_preview.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_preview_cache.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_property_display_lines.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_single_hit_preview.py
-# - 修改 games/endfield/tests/gui_design/shared/test_preset_batch_compare.py
-# - 修改 games/endfield/tests/gui_design/shared/test_preset_batch_coverage.py
-# - 修改 games/endfield/tests/gui_design/shared/test_ui_preferences.py
-# - 修改 games/endfield/tests/gui_design/shared/test_ui_preferences_detail.py
-# --- END UPLOAD_SUMMARY ---
