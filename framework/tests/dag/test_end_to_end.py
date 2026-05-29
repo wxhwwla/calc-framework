@@ -277,3 +277,92 @@ class TestEndToEndEdgeCases:
         svc = DAGService.from_graph_document(doc)
         res = svc.evaluate({})
         assert res.outputs["add"] == 30.0
+
+
+class TestExtendedOps:
+    """Phase 5: 扩展操作符（三角函数、对数）端到端测试。"""
+
+    def test_ln_log10(self) -> None:
+        """ln(e) = 1, log10(100) = 2"""
+        doc = GraphDocument(
+            name="对数",
+            nodes=[
+                GraphNode(id="val_e", type="const", config=NodeConfig(value=2.718281828)),
+                GraphNode(id="ln_op", type="unary", op="ln", label="自然对数"),
+                GraphNode(id="val_100", type="const", config=NodeConfig(value=100)),
+                GraphNode(id="log10_op", type="unary", op="log10", label="常用对数"),
+            ],
+            edges=[
+                GraphEdge(from_node="val_e", from_port=0, to_node="ln_op", to_port=0),
+                GraphEdge(from_node="val_100", from_port=0, to_node="log10_op", to_port=0),
+            ],
+            layout=GraphLayout(sections=[
+                SectionDef(id="r1", title="ln", output_nodes=["ln_op"]),
+                SectionDef(id="r2", title="log10", output_nodes=["log10_op"]),
+            ]),
+        )
+        svc = DAGService.from_graph_document(doc)
+        res = svc.evaluate({})
+        assert abs(res.outputs["ln_op"] - 1.0) < 1e-4
+        assert abs(res.outputs["log10_op"] - 2.0) < 1e-9
+
+    def test_sin_cos_tan(self) -> None:
+        """sin(0)=0, cos(0)=1, tan(π/4)=1"""
+        import math
+        doc = GraphDocument(
+            name="三角函数",
+            nodes=[
+                GraphNode(id="val_0", type="const", config=NodeConfig(value=0)),
+                GraphNode(id="sin_op", type="unary", op="sin", label="正弦"),
+                GraphNode(id="cos_op", type="unary", op="cos", label="余弦"),
+                GraphNode(id="val_pi4", type="const", config=NodeConfig(value=math.pi / 4)),
+                GraphNode(id="tan_op", type="unary", op="tan", label="正切"),
+            ],
+            edges=[
+                GraphEdge(from_node="val_0", from_port=0, to_node="sin_op", to_port=0),
+                GraphEdge(from_node="val_0", from_port=0, to_node="cos_op", to_port=0),
+                GraphEdge(from_node="val_pi4", from_port=0, to_node="tan_op", to_port=0),
+            ],
+            layout=GraphLayout(sections=[
+                SectionDef(id="r1", title="sin", output_nodes=["sin_op"]),
+                SectionDef(id="r2", title="cos", output_nodes=["cos_op"]),
+                SectionDef(id="r3", title="tan", output_nodes=["tan_op"]),
+            ]),
+        )
+        svc = DAGService.from_graph_document(doc)
+        res = svc.evaluate({})
+        assert abs(res.outputs["sin_op"]) < 1e-9
+        assert abs(res.outputs["cos_op"] - 1.0) < 1e-9
+        assert abs(res.outputs["tan_op"] - 1.0) < 1e-9
+
+    def test_extended_ops_chain(self) -> None:
+        """链式：ln(10) + sin(π/2) * cos(0)"""
+        import math
+        doc = GraphDocument(
+            name="扩展链式",
+            nodes=[
+                GraphNode(id="val_10", type="const", config=NodeConfig(value=10)),
+                GraphNode(id="ln_op", type="unary", op="ln", label="ln"),
+                GraphNode(id="val_pi2", type="const", config=NodeConfig(value=math.pi / 2)),
+                GraphNode(id="sin_op", type="unary", op="sin", label="sin"),
+                GraphNode(id="val_0", type="const", config=NodeConfig(value=0)),
+                GraphNode(id="cos_op", type="unary", op="cos", label="cos"),
+                GraphNode(id="mul", type="binary", op="*", label="乘法"),
+                GraphNode(id="add", type="binary", op="+", label="求和"),
+            ],
+            edges=[
+                GraphEdge(from_node="val_10", from_port=0, to_node="ln_op", to_port=0),
+                GraphEdge(from_node="val_pi2", from_port=0, to_node="sin_op", to_port=0),
+                GraphEdge(from_node="val_0", from_port=0, to_node="cos_op", to_port=0),
+                GraphEdge(from_node="sin_op", from_port=0, to_node="mul", to_port=0),
+                GraphEdge(from_node="cos_op", from_port=0, to_node="mul", to_port=1),
+                GraphEdge(from_node="ln_op", from_port=0, to_node="add", to_port=0),
+                GraphEdge(from_node="mul", from_port=0, to_node="add", to_port=1),
+            ],
+            layout=GraphLayout(sections=[SectionDef(id="r", title="求和", output_nodes=["add"])]),
+        )
+        svc = DAGService.from_graph_document(doc)
+        res = svc.evaluate({})
+        # ln(10) + sin(π/2)*cos(0) = ln(10) + 1*1 = ln(10) + 1
+        expected = 1.0 + 1.0  # sin(π/2)=1, cos(0)=1
+        assert abs(res.outputs["add"] - (math.log(10) + 1.0)) < 1e-9

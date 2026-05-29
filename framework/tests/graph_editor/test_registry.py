@@ -32,6 +32,15 @@ class TestRegistryData:
         entry = get_registry()["unary"]
         assert len(entry.ops) >= 5  # neg floor ceil abs sqrt
 
+    def test_unary_has_extended_ops(self) -> None:
+        entry = get_registry()["unary"]
+        op_ids = [op_id for op_id, _ in entry.ops]
+        assert "ln" in op_ids
+        assert "log10" in op_ids
+        assert "sin" in op_ids
+        assert "cos" in op_ids
+        assert "tan" in op_ids
+
     def test_all_registered_types(self) -> None:
         ids = get_node_type_ids()
         assert "const" in ids

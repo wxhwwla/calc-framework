@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import math
 import operator as op
 import time
 from collections import Counter, deque
@@ -46,6 +47,11 @@ _UNARY_OPS: dict[str, Any] = {
     "ceil": lambda x: float(int(x) + 1 if x > int(x) else int(x)),
     "abs": abs,
     "sqrt": lambda x: float(x ** 0.5),
+    "ln": math.log,
+    "log10": math.log10,
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
 }
 
 

@@ -136,7 +136,7 @@ class TestNodeTypes:
                 "variables": {"a": {"type": "float", "source": "computed"}},
                 "nodes": {
                     "a_node": {"type": "var", "path": "a"},
-                    "u": {"type": "unary", "op": "sin", "input": "a_node"},
+                    "u": {"type": "unary", "op": "bogus_op", "input": "a_node"},
                 },
                 "outputs": {"x": {"node": "u", "label": "x"}},
             })

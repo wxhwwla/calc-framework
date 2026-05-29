@@ -76,6 +76,11 @@ def _build_registry() -> Registry:
             ("ceil", "向上取整"),
             ("abs", "绝对值"),
             ("sqrt", "平方根"),
+            ("ln", "自然对数"),
+            ("log10", "常用对数"),
+            ("sin", "正弦"),
+            ("cos", "余弦"),
+            ("tan", "正切"),
         ],
         default_op="floor",
     )
