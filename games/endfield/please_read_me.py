@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.9.7"
+_VERSION = "3.9.8"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,21 +209,8 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 15 处文件
+# TITLE: 更新 2 处文件
 # BODY:
-# - 变更 "docs/GUI/344/275/277/347/224/250/350/257/264/346/230/216.md"
-# - 修改 games/endfield/gui_design/controls/manual_buff/qt_window.py
-# - 修改 games/endfield/gui_design/controls/search/qt_actions.py
-# - 修改 games/endfield/gui_design/controls/search/qt_search_browser.py
-# - 修改 games/endfield/gui_design/layout/gui_layout.py
-# - 修改 games/endfield/gui_design/presentation/preview/multi_skill.py
-# - 修改 games/endfield/gui_design/presentation/preview/single_skill.py
-# - 修改 games/endfield/gui_design/presentation/search_results_lines.py
-# - 修改 games/endfield/gui_design/shell/qt_app_search_mixin.py
-# - 修改 games/endfield/gui_design/shell/qt_control_dock_builders.py
-# - 修改 games/endfield/tests/calculation/search/plan/single_skill/test_single_skill_search_preview.py
-# - 修改 games/endfield/tests/calculation/search/run/test_search_results_view.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_actions.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_multi_skill_search_preview.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_search_results_lines.py
+# - 修改 games/endfield/gui_design/designer/designer_main.py
+# - 修改 games/endfield/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
