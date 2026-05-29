@@ -76,7 +76,9 @@ class PortItem(QGraphicsEllipseItem):
         return self.mapToScene(self.boundingRect().center())
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
-        super().mousePressEvent(event)
+        if event is not None:
+            event.ignore()
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
-        super().mouseReleaseEvent(event)
+        if event is not None:
+            event.ignore()

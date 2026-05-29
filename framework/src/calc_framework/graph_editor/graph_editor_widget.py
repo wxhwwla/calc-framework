@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PySide6.QtCore import QPoint, QPointF, Qt, Signal
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
+    QGraphicsPathItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsSimpleTextItem,
@@ -135,7 +136,9 @@ class NodeItem(QGraphicsRectItem):
 
 
 class GraphScene(QGraphicsScene):
-    """公式编辑器的场景，管理所有节点项。"""
+    """公式编辑器的场景，管理所有节点项和连线创建。"""
+
+    wire_created = Signal(str, str, int, int)  # src_node_id, tgt_node_id, src_port, tgt_port
 
     def __init__(self, parent: Any = None) -> None:
         super().__init__(parent)
@@ -143,7 +146,7 @@ class GraphScene(QGraphicsScene):
         self.setSceneRect(-2000, -2000, 4000, 4000)
         self._wires: list[WireItem] = []
         self._wire_start_port: PortItem | None = None
-        self._ghost_wire: WireItem | None = None
+        self._ghost_wire: QGraphicsPathItem | None = None
 
     def drawBackground(self, painter: QPainter, rect: Any) -> None:
         super().drawBackground(painter, rect)
@@ -160,6 +163,69 @@ class GraphScene(QGraphicsScene):
             painter.drawLine(int(rect.left()), y, int(rect.right()), y)
             y += grid_size
 
+    def mousePressEvent(self, event) -> None:
+        if event.button() != Qt.MouseButton.LeftButton:
+            super().mousePressEvent(event)
+            return
+        item = self.itemAt(event.scenePos(), self.views()[0].transform() if self.views() else None)
+        if isinstance(item, PortItem) and item.direction == PortDirection.OUTPUT:
+            self._wire_start_port = item
+            self._ghost_wire = QGraphicsPathItem()
+            pen = QPen(QColor("#4ECDC4"), 2, Qt.PenStyle.DashLine)
+            self._ghost_wire.setPen(pen)
+            self._ghost_wire.setZValue(100)
+            self.addItem(self._ghost_wire)
+            self._update_ghost(event.scenePos())
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if self._wire_start_port and self._ghost_wire:
+            self._update_ghost(event.scenePos())
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if self._wire_start_port and self._ghost_wire:
+            source_port = self._wire_start_port
+            item = self.itemAt(event.scenePos(), self.views()[0].transform() if self.views() else None)
+            target_port: PortItem | None = None
+            if isinstance(item, PortItem) and item.direction == PortDirection.INPUT:
+                # 不允许连接到同一个节点
+                if item.parentItem() is not source_port.parentItem():
+                    target_port = item
+
+            if target_port:
+                wire = WireItem(source_port, target_port)
+                self.addItem(wire)
+                self._wires.append(wire)
+                src_node = _find_parent_node_id(source_port)
+                tgt_node = _find_parent_node_id(target_port)
+                if src_node and tgt_node:
+                    self.wire_created.emit(src_node, tgt_node, source_port.port_index, target_port.port_index)
+
+            self.removeItem(self._ghost_wire)
+            self._ghost_wire = None
+            self._wire_start_port = None
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def _update_ghost(self, scene_pos: QPointF) -> None:
+        if not self._wire_start_port or not self._ghost_wire:
+            return
+        p1 = self._wire_start_port.scene_center()
+        p2 = scene_pos
+        path = QPainterPath()
+        path.moveTo(p1)
+        dx = abs(p2.x() - p1.x()) * 0.5
+        cp1 = QPointF(p1.x() + dx, p1.y())
+        cp2 = QPointF(p2.x() - dx, p2.y())
+        path.cubicTo(cp1, cp2, p2)
+        self._ghost_wire.setPath(path)
+
 
 def _node_item_from_id(scene: GraphScene, node_id: str) -> NodeItem | None:
     for item in scene.items():
@@ -168,44 +234,115 @@ def _node_item_from_id(scene: GraphScene, node_id: str) -> NodeItem | None:
     return None
 
 
+class GraphView(QGraphicsView):
+    """自定义视图：鼠标中键平移、滚轮缩放、接收节点面板拖放。"""
+
+    node_drop_requested = Signal(str, float, float)
+
+    def __init__(self, scene: QGraphicsScene, parent: QWidget | None = None) -> None:
+        super().__init__(scene, parent)
+        self._panning = False
+        self._pan_start = QPoint()
+        self._pan_start_h = 0
+        self._pan_start_v = 0
+
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.setDragMode(QGraphicsView.DragMode.NoDrag)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+        self.setAcceptDrops(True)
+        self.setMouseTracking(False)
+
+    def wheelEvent(self, event) -> None:
+        if self._panning:
+            event.ignore()
+            return
+        factor = 1.15
+        if event.angleDelta().y() > 0:
+            self.scale(factor, factor)
+        else:
+            self.scale(1 / factor, 1 / factor)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.MiddleButton:
+            self._panning = True
+            self._pan_start = event.pos()
+            self._pan_start_h = self.horizontalScrollBar().value()
+            self._pan_start_v = self.verticalScrollBar().value()
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if self._panning:
+            delta = event.pos() - self._pan_start
+            self.horizontalScrollBar().setValue(self._pan_start_h - delta.x())
+            self.verticalScrollBar().setValue(self._pan_start_v - delta.y())
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.MiddleButton:
+            self._panning = False
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def dragEnterEvent(self, event) -> None:
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event) -> None:
+        event.acceptProposedAction()
+
+    def dropEvent(self, event) -> None:
+        type_id = event.mimeData().text()
+        if not type_id:
+            return
+        viewport_pos = event.position().toPoint()
+        scene_pos = self.mapToScene(viewport_pos)
+        self.node_drop_requested.emit(type_id, scene_pos.x(), scene_pos.y())
+        event.acceptProposedAction()
+
+
 class GraphEditorWidget(QWidget):
     """公式编辑器主组件。
 
-    包含 GraphScene + QGraphicsView，支持：
+    包含 GraphScene + GraphView，支持：
     - 添加/删除节点
     - 中键平移
     - 滚轮缩放
     - 网格背景
     - 连线创建（从输出端口拖到输入端口）
+    - 拖放创建节点（从节点面板拖入）
     """
 
     node_changed = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setAcceptDrops(True)
         self._scene = GraphScene(self)
-        self._view = QGraphicsView(self._scene)
-        self._view.setRenderHint(QPainter.RenderHint.Antialiasing)
-        self._view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-        self._view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._view.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
-        self._view.setAcceptDrops(True)
-        self._view.installEventFilter(self)
-        self._view.wheelEvent = self._zoom_event
+        self._view = GraphView(self._scene)
+        self._view.node_drop_requested.connect(self._on_drop_node)
+        self._scene.wire_created.connect(self._on_wire_created)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._view)
 
-    def _zoom_event(self, event: Any) -> None:
-        factor = 1.15
-        if event.angleDelta().y() > 0:
-            self._view.scale(factor, factor)
-        else:
-            self._view.scale(1 / factor, 1 / factor)
+    def _on_drop_node(self, type_id: str, scene_x: float, scene_y: float) -> None:
+        from calc_framework.graph_editor.registry import create_default_node
+        node = create_default_node(type_id)
+        node.position = {"x": scene_x - _NODE_WIDTH / 2, "y": scene_y - _NODE_HEIGHT / 2}
+        self.add_graph_node(node)
+
+    def _on_wire_created(self, src_id: str, tgt_id: str, src_port: int, tgt_port: int) -> None:
+        self.node_changed.emit()
 
     def scene(self) -> GraphScene:
         return self._scene
@@ -229,7 +366,6 @@ class GraphEditorWidget(QWidget):
         item = _node_item_from_id(self._scene, node_id)
         if item is None:
             return
-        # Remove connected wires from scene and list
         remaining_wires: list[WireItem] = []
         for w in self._scene._wires:
             src_id = _find_parent_node_id(w.source_port)
@@ -276,40 +412,6 @@ class GraphEditorWidget(QWidget):
         self._scene._wire_start_port = None
         self._scene._ghost_wire = None
         self.node_changed.emit()
-
-    # ── 拖放支持（从左侧节点面板拖入） ──
-
-    def eventFilter(self, obj, event) -> bool:
-        if obj is self._view and event.type() in (
-            QEvent.Type.DragEnter, QEvent.Type.DragMove, QEvent.Type.Drop,
-        ):
-            et = event.type()
-            if et == QEvent.Type.DragEnter:
-                self.dragEnterEvent(event)
-            elif et == QEvent.Type.DragMove:
-                self.dragMoveEvent(event)
-            elif et == QEvent.Type.Drop:
-                self.dropEvent(event)
-            return True
-        return super().eventFilter(obj, event)
-
-    def dragEnterEvent(self, event) -> None:
-        if event.mimeData().hasText():
-            event.acceptProposedAction()
-
-    def dragMoveEvent(self, event) -> None:
-        event.acceptProposedAction()
-
-    def dropEvent(self, event) -> None:
-        type_id = event.mimeData().text()
-        if not type_id:
-            return
-        scene_pos = self._view.mapToScene(event.position().toPoint())
-        from calc_framework.graph_editor.registry import create_default_node
-        node = create_default_node(type_id)
-        node.position = {"x": scene_pos.x() - _NODE_WIDTH / 2, "y": scene_pos.y() - _NODE_HEIGHT / 2}
-        self.add_graph_node(node)
-        event.acceptProposedAction()
 
 
 def _find_parent_node_id(port: PortItem) -> str | None:
