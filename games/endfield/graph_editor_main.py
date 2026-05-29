@@ -45,7 +45,6 @@ def main() -> None:
         GraphEditorWidget,
         NodeItem,
     )
-    from calc_framework.graph_editor.layout_panel import LayoutPanel
     from calc_framework.graph_editor.node_panel import NodePanel
     from calc_framework.graph_editor.prop_panel import PropPanel
     from calc_framework.graph_editor.registry import create_default_node
@@ -69,23 +68,15 @@ def main() -> None:
     mid_splitter = QSplitter(Qt.Horizontal)
     node_panel = NodePanel()
     canvas = GraphEditorWidget()
-
-    right_panel = QSplitter(Qt.Vertical)
-    layout_panel = LayoutPanel()
     prop_panel = PropPanel()
-    prop_panel.setMaximumHeight(300)
-    right_panel.addWidget(layout_panel)
-    right_panel.addWidget(prop_panel)
-    right_panel.setStretchFactor(0, 1)
-    right_panel.setStretchFactor(1, 0)
 
     mid_splitter.addWidget(node_panel)
     mid_splitter.addWidget(canvas)
-    mid_splitter.addWidget(right_panel)
+    mid_splitter.addWidget(prop_panel)
     mid_splitter.setStretchFactor(0, 0)
     mid_splitter.setStretchFactor(1, 1)
     mid_splitter.setStretchFactor(2, 0)
-    mid_splitter.setSizes([180, 800, 280])
+    mid_splitter.setSizes([180, 900, 280])
     root_layout.addWidget(mid_splitter)
 
     current_file: Path | None = None
@@ -103,7 +94,6 @@ def main() -> None:
         _update_preview()
 
     def _update_preview() -> None:
-        """编译当前图并求值，在属性面板显示选中节点的计算结果。"""
         selected = canvas.scene().selectedItems()
         node_items = [it for it in selected if isinstance(it, NodeItem)]
         if not node_items:
@@ -111,7 +101,7 @@ def main() -> None:
             return
         node_id = node_items[0].node_id
         try:
-            doc = collect_document(canvas, layout_panel)
+            doc = collect_document(canvas)
             dag = compile_graph(doc)
             if not dag.nodes:
                 prop_panel.set_preview_value("—")
@@ -145,7 +135,6 @@ def main() -> None:
         _update_preview()
 
     prop_panel.node_changed.connect(_on_node_config_changed)
-
     canvas.node_changed.connect(lambda: _update_preview())
 
     delete_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Delete), canvas)
@@ -159,7 +148,6 @@ def main() -> None:
 
     def _new_file() -> None:
         canvas.clear_scene()
-        layout_panel.clear_all()
         prop_panel.show_node(None)
         nonlocal current_file
         current_file = None
@@ -174,7 +162,7 @@ def main() -> None:
         p = Path(path_str)
         try:
             doc = open_graph_file(p)
-            load_document(doc, canvas, layout_panel)
+            load_document(doc, canvas)
             nonlocal current_file
             current_file = p
             window.setWindowTitle(f"公式计算图编辑器 — {p.name}")
@@ -186,7 +174,7 @@ def main() -> None:
         if current_file is None:
             _save_as_file()
             return
-        doc = collect_document(canvas, layout_panel)
+        doc = collect_document(canvas)
         try:
             save_graph_file(doc, current_file)
             window.setWindowTitle(f"公式计算图编辑器 — {current_file.name}")
@@ -202,7 +190,7 @@ def main() -> None:
         p = Path(path_str)
         if p.suffix not in (".json",):
             p = p.with_suffix(".json")
-        doc = collect_document(canvas, layout_panel)
+        doc = collect_document(canvas)
         try:
             save_graph_file(doc, p)
             nonlocal current_file
@@ -222,11 +210,9 @@ def main() -> None:
         action.triggered.connect(callback)
         file_menu.addAction(action)
 
-    # ── 帮助菜单 ──
     help_menu = window.menuBar().addMenu("帮助")
 
     def _show_help() -> None:
-        from calc_framework.graph_editor.help_dialog import HelpDialog
         dialog = HelpDialog(window)
         dialog.exec()
 
@@ -235,14 +221,13 @@ def main() -> None:
     help_action.triggered.connect(lambda: _show_help())
     help_menu.addAction(help_action)
 
-    # 如果命令行提供了文件路径，打开它
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     if args:
         p = Path(args[0])
         if p.exists():
             try:
                 doc = open_graph_file(p)
-                load_document(doc, canvas, layout_panel)
+                load_document(doc, canvas)
                 current_file = p
                 window.setWindowTitle(f"公式计算图编辑器 — {p.name}")
             except Exception as e:

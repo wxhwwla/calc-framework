@@ -20,7 +20,6 @@ from calc_framework.dag.schema import (
 )
 from calc_framework.graph_editor.schema import (
     GraphDocument,
-    GraphEdge,
     GraphNode,
 )
 from calc_framework.graph_editor.serializer import document_from_json
@@ -32,12 +31,6 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
     port_inputs: dict[tuple[str, int], str] = {}
     for edge in doc.edges:
         port_inputs[(edge.to_node, edge.to_port)] = edge.from_node
-
-    source_to_target: dict[str, list[tuple[str, int]]] = {}
-    for edge in doc.edges:
-        if edge.from_node not in source_to_target:
-            source_to_target[edge.from_node] = []
-        source_to_target[edge.from_node].append((edge.to_node, edge.to_port))
 
     # ── 2. 编译节点（含复合节点） ──
     dag_nodes: dict[str, Any] = {}
@@ -64,15 +57,14 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
                                 min=sub_node.config.min,
                                 max=sub_node.config.max,
                             )
-                    # 输出
+                    # 输出：自动检测 output 节点
                     sub_outputs: dict[str, DAGOutput] = {}
-                    for sec in sub_doc.layout.sections:
-                        for out_id in sec.output_nodes:
-                            label = out_id
-                            src_n = next((n for n in sub_doc.nodes if n.id == out_id), None)
-                            if src_n and src_n.label:
-                                label = src_n.label
-                            sub_outputs[out_id] = DAGOutput(node=out_id, label=label)
+                    for sub_node in sub_doc.nodes:
+                        if sub_node.type == "output":
+                            sub_outputs[sub_node.id] = DAGOutput(
+                                node=sub_node.id,
+                                label=sub_node.label or sub_node.id,
+                            )
                     subgraphs[sub_name] = DAGSubgraph(
                         description=sub_doc.description,
                         parameters=params,
@@ -98,12 +90,20 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
 
     # ── 4. 编译输出 ──
     outputs: dict[str, DAGOutput] = {}
+    # 4a. 从 sections 收集输出（向后兼容旧文件）
     for sec in doc.layout.sections:
         for node_id in sec.output_nodes:
             resolved = _resolve_output_node(node_id, port_inputs, doc)
             if resolved and resolved not in outputs:
                 src_node = next((n for n in doc.nodes if n.id == node_id), None)
                 label = src_node.label if src_node and src_node.label else resolved
+                outputs[resolved] = DAGOutput(node=resolved, label=label)
+    # 4b. 自动检测 output 节点（新方式）
+    for node in doc.nodes:
+        if node.type == "output":
+            resolved = port_inputs.get((node.id, 0))
+            if resolved and resolved not in outputs:
+                label = node.label if node.label else resolved
                 outputs[resolved] = DAGOutput(node=resolved, label=label)
 
     return DAGGraph(

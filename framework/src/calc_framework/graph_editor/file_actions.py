@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
-from calc_framework.graph_editor.layout_panel import LayoutPanel
 from calc_framework.graph_editor.schema import (
     GraphDocument,
     GraphEdge,
@@ -20,11 +19,14 @@ from calc_framework.graph_editor.schema import (
 from calc_framework.graph_editor.serializer import document_from_json, document_to_json
 
 
-def collect_document(widget: GraphEditorWidget, panel: LayoutPanel) -> GraphDocument:
+def collect_document(widget: GraphEditorWidget) -> GraphDocument:
     """从编辑器状态收集 GraphDocument。"""
     nodes = widget.graph_nodes()
     edges = widget.graph_wires()
-    sections = panel.sections()
+
+    # 自动收集所有 output 节点作为默认输出
+    output_nodes = [n.id for n in nodes if n.type == "output"]
+    sections = [SectionDef(id="outputs", title="输出", output_nodes=output_nodes, columns=1)] if output_nodes else []
 
     return GraphDocument(
         name="未命名",
@@ -34,19 +36,13 @@ def collect_document(widget: GraphEditorWidget, panel: LayoutPanel) -> GraphDocu
     )
 
 
-def load_document(doc: GraphDocument, widget: GraphEditorWidget, panel: LayoutPanel) -> None:
+def load_document(doc: GraphDocument, widget: GraphEditorWidget) -> None:
     """将 GraphDocument 加载到编辑器。"""
     widget.clear_scene()
-    panel.clear_all()
 
-    # 加载节点
     for node in doc.nodes:
         widget.add_graph_node(node)
 
-    # 加载排版
-    panel.set_sections(doc.layout.sections)
-
-    # 加载连线（需要节点项已存在）
     for edge in doc.edges:
         src_ports = widget.node_ports(edge.from_node)
         tgt_ports = widget.node_ports(edge.to_node)

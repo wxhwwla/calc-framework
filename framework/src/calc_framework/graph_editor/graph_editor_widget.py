@@ -518,7 +518,6 @@ class SubGraphDialog(QDialog):
 
         from calc_framework.graph_editor.serializer import document_from_json
         from calc_framework.graph_editor.file_actions import load_document
-        from calc_framework.graph_editor.layout_panel import LayoutPanel
         from calc_framework.graph_editor.prop_panel import PropPanel
 
         layout = QVBoxLayout(self)
@@ -527,7 +526,6 @@ class SubGraphDialog(QDialog):
         # 子图的 GraphEditorWidget
         from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
         self._editor = GraphEditorWidget()
-        self._layout_panel = LayoutPanel()
         self._prop_panel = PropPanel(self._editor)
 
         # 加载子图
@@ -535,7 +533,7 @@ class SubGraphDialog(QDialog):
         try:
             data = json.loads(source_graph)
             doc = document_from_json(data)
-            load_document(doc, self._editor, self._layout_panel)
+            load_document(doc, self._editor)
         except Exception:
             pass
 
@@ -546,7 +544,6 @@ class SubGraphDialog(QDialog):
         right_panel = QWidget()
         rl = QVBoxLayout(right_panel)
         rl.setContentsMargins(0, 0, 0, 0)
-        rl.addWidget(self._layout_panel)
         rl.addWidget(self._prop_panel)
         splitter.addWidget(right_panel)
         splitter.setSizes([550, 250])
@@ -580,7 +577,7 @@ class SubGraphDialog(QDialog):
         """获取编辑后的子图 JSON。"""
         from calc_framework.graph_editor.file_actions import collect_document
         from calc_framework.graph_editor.serializer import document_to_json
-        doc = collect_document(self._editor, self._layout_panel)
+        doc = collect_document(self._editor)
         return document_to_json(doc)
 
 
