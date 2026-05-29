@@ -209,9 +209,7 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 修改 games/endfield/please_read_me.py
 # BODY:
-# - 修改 build.py
-# - 修改 games/endfield/build.py
 # - 修改 games/endfield/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
