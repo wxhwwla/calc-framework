@@ -78,12 +78,12 @@ class TestCollectDocument:
 
 class TestLoadDocument:
     def _make_doc(self, name: str = "test", nodes=None, edges=None, sections=None) -> GraphDocument:
-        return GraphDocument(
-            name=name,
-            nodes=nodes or [],
-            edges=edges or [],
-            layout=GraphLayout(sections=sections or []),
-        )
+        doc = GraphDocument()
+        doc.name = name
+        doc.nodes = nodes or []
+        doc.edges = edges or []
+        doc.layout = GraphLayout(sections=sections or [])
+        return doc
 
     def test_load_nodes(self, qapp) -> None:
         widget = GraphEditorWidget()
