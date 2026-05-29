@@ -59,7 +59,8 @@ class _SectionWidget(QGroupBox):
         layout = QVBoxLayout(self)
 
         header = QHBoxLayout()
-        header.addWidget(QLabel(f"类型: {section_type}"))
+        type_label = "输入" if section_type == "inputs" else "输出"
+        header.addWidget(QLabel(f"类型: {type_label}"))
         header.addStretch()
         remove_btn = QPushButton("删除")
         remove_btn.setFixedWidth(60)
@@ -140,16 +141,16 @@ class LayoutEditorWidget(QWidget):
 
         center = QWidget()
         center_layout = QVBoxLayout(center)
-        center_layout.addWidget(QLabel("Sections"))
+        center_layout.addWidget(QLabel("节列表"))
 
         add_btn_row = QHBoxLayout()
         self._section_title_input = QLineEdit()
-        self._section_title_input.setPlaceholderText("Section 标题")
+        self._section_title_input.setPlaceholderText("节标题")
         add_btn_row.addWidget(self._section_title_input)
-        add_inputs_btn = QPushButton("+ Inputs")
+        add_inputs_btn = QPushButton("+ 输入节")
         add_inputs_btn.clicked.connect(lambda: self._add_section("inputs"))
         add_btn_row.addWidget(add_inputs_btn)
-        add_outputs_btn = QPushButton("+ Outputs")
+        add_outputs_btn = QPushButton("+ 输出节")
         add_outputs_btn.clicked.connect(lambda: self._add_section("outputs"))
         add_btn_row.addWidget(add_outputs_btn)
         center_layout.addLayout(add_btn_row)
@@ -166,7 +167,7 @@ class LayoutEditorWidget(QWidget):
 
         bottom = QHBoxLayout()
         bottom.addWidget(QLabel("布局名称:"))
-        self._name_input = QLineEdit("Computed Layout")
+        self._name_input = QLineEdit("计算布局")
         bottom.addWidget(self._name_input)
         bottom.addStretch()
         self._status_label = QLabel("")
@@ -236,7 +237,7 @@ class LayoutEditorWidget(QWidget):
             return
         title = self._section_title_input.text().strip()
         if not title:
-            title = sec_type
+            title = "输入节" if sec_type == "inputs" else "输出节"
         sec_id = f"section_{len(self._editor.state.sections) + 1}"
         self._editor.add_section(sec_id, type=sec_type, title=title)
         self._rebuild_sections()
@@ -260,7 +261,7 @@ class LayoutEditorWidget(QWidget):
         if not self._editor:
             QMessageBox.warning(self, "警告", "请先加载 DAG")
             return
-        self._editor.set_name(self._name_input.text().strip() or "Computed Layout")
+        self._editor.set_name(self._name_input.text().strip() or "计算布局")
         path, _ = QFileDialog.getSaveFileName(
             self, "导出 layout.json", "layout.json", "JSON Files (*.json)"
         )
@@ -278,7 +279,7 @@ class LayoutEditorWidget(QWidget):
             return
 
         self._sync_sections()
-        self._editor.set_name(self._name_input.text().strip() or "Computed Layout")
+        self._editor.set_name(self._name_input.text().strip() or "计算布局")
         layout = self._editor.state.to_layout()
 
         try:

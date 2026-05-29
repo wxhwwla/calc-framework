@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""布局编辑器——独立入口。
+"""
+布局编辑器——独立入口。
 
-可视化编辑 DAG 变量的 layout.json Section。
-打包入口：python scripts/build.py --target layout-editor
+可视化编辑 DAG 变量的 layout.json 节。
+任何人都可直接使用（无需 Python 环境），编辑后导出配置供计算器使用。
 """
 
 from __future__ import annotations

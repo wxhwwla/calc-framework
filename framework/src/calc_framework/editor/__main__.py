@@ -27,7 +27,7 @@ def _interactive(editor: LayoutEditor) -> None:
         print(f"    - {o}")
     print()
 
-    editor.set_name(input("布局名称: ").strip() or "Computed Layout")
+    editor.set_name(input("布局名称: ").strip() or "计算布局")
 
     while True:
         print("\n--- 当前 section ---")

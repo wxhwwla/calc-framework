@@ -90,8 +90,8 @@ def _layout_editor_readme(exe_version: str, package_version: str) -> str:
 【数据】本工具不包含游戏数据，仅编辑 DAG 排版配置。
 
 使用方式：
-1. 启动后自动加载终末地 DAG（framework/configs/endfield_full.dag.json）
-2. 在左侧查看可用变量，中间编排 Section
+1. 启动后自动加载 DAG（framework/configs/endfield_full.dag.json）
+2. 在左侧查看可用变量，中间编排节
 3. 导出 layout.json 供计算器使用
 4. 也可通过「加载 DAG」打开其他适配包
 

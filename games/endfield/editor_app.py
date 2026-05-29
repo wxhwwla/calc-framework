@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-终末地布局编辑器 — 独立入口
+布局编辑器 — 独立入口
 
-可视化编排 DAG 变量到 layout.json Section。
+可视化编排 DAG 变量到 layout.json 节。
 任何人都可直接使用（无需 Python 环境），编辑后导出配置给计算器使用。
 
 打包入口：python build.py --target layout-editor
@@ -40,7 +40,7 @@ APP_VERSION = "1.0.0"
 class LayoutEditorApp(QMainWindow):
     """布局编辑器主窗口。
 
-    自动加载终末地 DAG，也可通过「加载 DAG」按钮切换其他适配包。
+    自动加载 DAG，也可通过「加载 DAG」按钮切换其他适配包。
     """
 
     def __init__(self) -> None:
@@ -82,7 +82,7 @@ class LayoutEditorApp(QMainWindow):
         """)
 
     def _load_default_dag(self) -> None:
-        """启动时自动加载终末地 DAG。"""
+        """启动时自动加载 DAG。"""
         dag_path = _DAG_PATH.resolve()
         if dag_path.is_file():
             try:
