@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.7.7"
+_VERSION = "3.7.8"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,18 +209,13 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 7 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 修改 check_code_layout.py
 # - 修改 check_deps.py
-# - 调整乘区逻辑 endfield_damage_calculator/calculation/multiplicative_zones/dag/__main__.py
-# - 修改 endfield_damage_calculator/dag_main.py
-# - 修改 endfield_damage_calculator/designer/__main__.py
-# - 修改 endfield_damage_calculator/designer_main.py
+# - 修改 devtool.py
 # - 修改 endfield_damage_calculator/please_read_me.py
 # - 修改 launcher.py
 # - 修改 sync_bwiki.py
-# - 修改 tools/bwiki_scout/__main__.py
-# - 修改 tools/data_pipeline/__main__.py
 # --- END UPLOAD_SUMMARY ---
