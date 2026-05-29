@@ -16,8 +16,8 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.9.4"
-_EXE_VERSION = "0.5.0-beta"
+_VERSION = "3.9.5"
+_EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
 # ==================== GitHub 上传流程（必读） ====================
@@ -209,20 +209,9 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 14 处文件
+# TITLE: 更新 3 处文件
 # BODY:
-# - 修改 games/endfield/gui_design/shared/calc_mode_labels.py
+# - 修改 games/endfield/build.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_actions_extended.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_search_browser_dialog.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_search_worker_run.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_character_detail.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_format_coverage.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_display_skill_resolve_detail.py
-# - 修改 games/endfield/tests/gui_design/shared/test_gui_layout_detail.py
-# - 修改 games/endfield/tests/gui_design/shared/test_preset_batch_coverage.py
-# - 修改 games/endfield/tests/gui_design/shared/test_weapon_display_remaining.py
-# - 修改 games/endfield/tests/gui_design/shell/test_qt_worker.py
-# - 修改 games/endfield/tests/utils/test_extra_coverage.py
-# - 修改 games/endfield/tests/utils/test_remaining_coverage.py
+# - 修改 games/endfield/scripts/build.py
 # --- END UPLOAD_SUMMARY ---

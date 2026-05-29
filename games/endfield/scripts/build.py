@@ -139,7 +139,7 @@ def check_build_dependencies(target: BuildTarget) -> bool:
 
 def build_release(target: BuildTarget) -> Path:
     project_root = Path(__file__).resolve().parent.parent
-    repo_root = project_root.parent
+    repo_root = project_root.parent.parent
     timeout_seconds = _read_int_env("ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS)
     heartbeat_seconds = _read_int_env("ENDFIELD_BUILD_HEARTBEAT_SECONDS", DEFAULT_HEARTBEAT_SECONDS)
 
