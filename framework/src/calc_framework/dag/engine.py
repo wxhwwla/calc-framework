@@ -52,6 +52,9 @@ _UNARY_OPS: dict[str, Any] = {
     "sin": math.sin,
     "cos": math.cos,
     "tan": math.tan,
+    "asin": math.asin,
+    "acos": math.acos,
+    "atan": math.atan,
 }
 
 

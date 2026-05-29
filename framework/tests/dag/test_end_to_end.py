@@ -366,3 +366,82 @@ class TestExtendedOps:
         # ln(10) + sin(π/2)*cos(0) = ln(10) + 1*1 = ln(10) + 1
         expected = 1.0 + 1.0  # sin(π/2)=1, cos(0)=1
         assert abs(res.outputs["add"] - (math.log(10) + 1.0)) < 1e-9
+
+    def test_asin_acos_atan(self) -> None:
+        """asin(0)=0, acos(1)=0, atan(1)=π/4"""
+        import math
+        doc = GraphDocument(
+            name="反三角",
+            nodes=[
+                GraphNode(id="v0", type="const", config=NodeConfig(value=0)),
+                GraphNode(id="v1", type="const", config=NodeConfig(value=1)),
+                GraphNode(id="asin_op", type="unary", op="asin"),
+                GraphNode(id="acos_op", type="unary", op="acos"),
+                GraphNode(id="atan_op", type="unary", op="atan"),
+            ],
+            edges=[
+                GraphEdge(from_node="v0", to_node="asin_op"),
+                GraphEdge(from_node="v1", to_node="acos_op"),
+                GraphEdge(from_node="v1", to_node="atan_op"),
+            ],
+            layout=GraphLayout(sections=[
+                SectionDef(id="r1", title="asin", output_nodes=["asin_op"]),
+                SectionDef(id="r2", title="acos", output_nodes=["acos_op"]),
+                SectionDef(id="r3", title="atan", output_nodes=["atan_op"]),
+            ]),
+        )
+        svc = DAGService.from_graph_document(doc)
+        res = svc.evaluate({})
+        assert abs(res.outputs["asin_op"]) < 1e-9
+        assert abs(res.outputs["acos_op"]) < 1e-9
+        assert abs(res.outputs["atan_op"] - math.pi / 4) < 1e-9
+
+
+class TestSandboxFunctions:
+    """Phase 5: 沙箱注册函数（sum/avg/count/integral）通过 expr 节点求值。"""
+
+    def test_sum_avg_count(self) -> None:
+        from calc_framework.dag.engine import evaluate_graph
+        from calc_framework.dag.schema import validate_graph
+
+        dag = validate_graph({
+            "schema_version": "dag-v1",
+            "name": "统计测试",
+            "nodes": {
+                "r_sum": {"type": "expr", "expr": "sum(1, 2, 3, 4, 5)", "inputs": {}},
+                "r_avg": {"type": "expr", "expr": "avg(10, 20, 30)", "inputs": {}},
+                "r_cnt": {"type": "expr", "expr": "count(1, 2, 3)", "inputs": {}},
+            },
+            "outputs": {
+                "o_sum": {"node": "r_sum", "label": "和"},
+                "o_avg": {"node": "r_avg", "label": "平均"},
+                "o_cnt": {"node": "r_cnt", "label": "数量"},
+            },
+        })
+        res = evaluate_graph(dag, {})
+        assert res.outputs["o_sum"] == 15.0
+        assert res.outputs["o_avg"] == 20.0
+        assert res.outputs["o_cnt"] == 3.0
+
+    def test_integral_registered_function(self) -> None:
+        """通过 register_function 注册平方函数，积分 ∫₀¹ x² dx = 1/3"""
+        from calc_framework.dag.sandbox import register_function, clear_functions
+        from calc_framework.dag.engine import evaluate_graph
+        from calc_framework.dag.schema import validate_graph
+
+        clear_functions()
+        register_function("square", lambda x: x * x)
+
+        dag = validate_graph({
+            "schema_version": "dag-v1",
+            "name": "积分测试",
+            "nodes": {
+                "r": {"type": "expr", "expr": "integral(\"square\", 0, 1, 100)", "inputs": {}},
+            },
+            "outputs": {
+                "o": {"node": "r", "label": "积分"},
+            },
+        })
+        res = evaluate_graph(dag, {})
+        # ∫₀¹ x² dx = [x³/3]₀¹ = 1/3
+        assert abs(res.outputs["o"] - 1.0 / 3.0) < 1e-4

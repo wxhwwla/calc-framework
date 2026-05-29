@@ -71,3 +71,18 @@ class TestPropPanel:
         node = GraphNode(id="n1", type="binary", op="+", label="加法")
         panel.show_node(node)
         assert panel.current_node is not None
+
+    def test_preview_label_exists(self, qapp) -> None:
+        """预览标签默认显示"—"。"""
+        panel = PropPanel()
+        assert panel._preview_label is not None
+
+    def test_set_preview_value(self, qapp) -> None:
+        panel = PropPanel()
+        panel.set_preview_value("42.000000")
+        assert panel._preview_label.text() == "42.000000"
+
+    def test_set_preview_error(self, qapp) -> None:
+        panel = PropPanel()
+        panel.set_preview_value("错误: 变量未找到")
+        assert "错误" in panel._preview_label.text()

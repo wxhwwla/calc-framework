@@ -50,6 +50,9 @@ def main() -> None:
     from calc_framework.graph_editor.prop_panel import PropPanel
     from calc_framework.graph_editor.registry import create_default_node
 
+    from calc_framework.dag.engine import evaluate_graph
+    from calc_framework.graph_editor.compiler import compile_graph
+
     app = QApplication(sys.argv)
 
     window = QMainWindow()
@@ -96,6 +99,38 @@ def main() -> None:
         selected = canvas.scene().selectedItems()
         nodes = [it for it in selected if isinstance(it, NodeItem)]
         prop_panel.show_node(nodes[0].to_graph_node() if nodes else None)
+        _update_preview()
+
+    def _update_preview() -> None:
+        """编译当前图并求值，在属性面板显示选中节点的计算结果。"""
+        selected = canvas.scene().selectedItems()
+        node_items = [it for it in selected if isinstance(it, NodeItem)]
+        if not node_items:
+            prop_panel.set_preview_value("—")
+            return
+        node_id = node_items[0].node_id
+        try:
+            doc = collect_document(canvas, layout_panel)
+            dag = compile_graph(doc)
+            if not dag.nodes:
+                prop_panel.set_preview_value("—")
+                return
+            res = evaluate_graph(dag, {})
+            val = res.node_values.get(node_id)
+            if val is not None:
+                formatted = f"{val:.6f}" if isinstance(val, float) else str(val)
+                prop_panel.set_preview_value(formatted)
+            else:
+                val = res.outputs.get(node_id)
+                if val is not None:
+                    prop_panel.set_preview_value(f"{val:.6f}")
+                else:
+                    prop_panel.set_preview_value("(无法计算)")
+        except Exception as e:
+            err_msg = str(e)
+            if len(err_msg) > 60:
+                err_msg = err_msg[:57] + "..."
+            prop_panel.set_preview_value(f"错误: {err_msg}")
 
     prop_panel.node_changed.connect(_on_node_config_changed)
 
@@ -108,6 +143,9 @@ def main() -> None:
             ni = canvas.find_node_item(node_id)
             if ni:
                 prop_panel.show_node(ni.to_graph_node())
+        _update_preview()
+
+    canvas.node_changed.connect(lambda: _update_preview())
 
     delete_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Delete), canvas)
     delete_shortcut.activated.connect(lambda: [

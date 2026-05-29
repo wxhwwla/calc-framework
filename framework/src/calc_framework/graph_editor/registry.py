@@ -81,6 +81,9 @@ def _build_registry() -> Registry:
             ("sin", "正弦"),
             ("cos", "余弦"),
             ("tan", "正切"),
+            ("asin", "反正弦"),
+            ("acos", "反余弦"),
+            ("atan", "反正切"),
         ],
         default_op="floor",
     )

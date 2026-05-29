@@ -54,6 +54,15 @@ class PropPanel(QWidget):
         self._form_row.setSpacing(4)
         layout.addWidget(self._form_group)
 
+        # ── 预览值（只读） ──
+        preview_group = QGroupBox()
+        preview_layout = QFormLayout(preview_group)
+        self._preview_label = QLabel("—")
+        self._preview_label.setFont(QFont("Consolas", 12, QFont.Weight.Bold))
+        self._preview_label.setStyleSheet("color: #4fc3f7; padding: 4px;")
+        preview_layout.addRow("预览值", self._preview_label)
+        layout.addWidget(preview_group)
+
         layout.addStretch()
 
     @property
@@ -195,6 +204,10 @@ class PropPanel(QWidget):
         if self._current_node:
             self._current_node.op = op_id
             self.node_changed.emit(self._current_node.id)
+
+    def set_preview_value(self, value_text: str) -> None:
+        """设置预览值的显示文本。"""
+        self._preview_label.setText(value_text)
 
     @staticmethod
     def _clear_layout(layout: QFormLayout) -> None:

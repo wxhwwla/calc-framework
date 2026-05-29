@@ -10,7 +10,7 @@ from .errors import DAGCompileError
 
 _VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
 _VALID_VAR_SOURCES = frozenset({"character", "weapon", "equipment", "enemy", "user_input", "computed"})
-_VALID_UNARY_OPS = frozenset({"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan"})
+_VALID_UNARY_OPS = frozenset({"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"})
 _VALID_BINARY_OPS = frozenset({"+", "-", "*", "/", "^", "min", "max", "mod"})
 _VALID_NODE_TYPES = frozenset({"const", "var", "unary", "binary", "condition", "expr", "user_input", "call"})
 

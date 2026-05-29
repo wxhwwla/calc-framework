@@ -12,6 +12,24 @@ from calc_framework.logging import get_logger
 
 logger = get_logger(__name__)
 
+
+def _integral_simpson(fn_name: str, a: float, b: float, n: float = 100.0) -> float:
+    """辛普森数值积分：在 [a,b] 上对名为 fn_name 的函数求定积分。"""
+    fn = _GLOBAL_FUNCTIONS.get(fn_name) or _SAFE_BUILTINS.get(fn_name)
+    if fn is None:
+        raise DAGRuntimeError(f"积分函数 {fn_name!r} 未注册")
+    n_int = max(2, int(n))
+    if n_int % 2 != 0:
+        n_int += 1
+    h = (b - a) / n_int
+    s = fn(a) + fn(b)
+    for i in range(1, n_int, 2):
+        s += 4 * fn(a + i * h)
+    for i in range(2, n_int - 1, 2):
+        s += 2 * fn(a + i * h)
+    return s * h / 3
+
+
 _SAFE_BUILTINS: dict[str, Any] = {
     "floor": math.floor,
     "ceil": math.ceil,
@@ -19,6 +37,10 @@ _SAFE_BUILTINS: dict[str, Any] = {
     "sqrt": math.sqrt,
     "min": min,
     "max": max,
+    "sum": lambda *args: sum(args),
+    "avg": lambda *args: sum(args) / len(args) if args else 0.0,
+    "count": lambda *args: float(len(args)),
+    "integral": _integral_simpson,
 }
 
 _SAFE_NODE_TYPES: frozenset[type] = frozenset({
@@ -39,18 +61,7 @@ _GLOBAL_FUNCTIONS: dict[str, Any] = {}
 
 
 def register_function(name: str, fn: Any) -> None:
-    """注册一个自定义函数到 DAG 表达式沙箱。
-
-    注册后的函数可在 DAG ``expr`` 节点的表达式中直接调用，
-    例如 ``my_func(a, b)``。
-
-    参数:
-        name: 函数名（在表达式中使用的标识符）
-        fn: 可调用对象，接收位置参数并返回数值
-
-     Raises:
-        ValueError: 函数名与内置函数冲突
-    """
+    """注册一个自定义函数到 DAG 表达式沙箱。"""
     if name in _SAFE_BUILTINS:
         raise ValueError(f"函数名 {name!r} 与内置函数冲突")
     _GLOBAL_FUNCTIONS[name] = fn
@@ -130,6 +141,8 @@ def _check_node(node: ast.AST) -> None:
 def _eval_node(node: ast.AST, scope: dict[str, float]) -> float:
     """在给定 scope 中递归求值 AST 节点。"""
     if isinstance(node, ast.Constant):
+        if isinstance(node.value, str):
+            return node.value
         return float(node.value)
     if isinstance(node, ast.Name):
         val = scope.get(node.id)
@@ -185,19 +198,14 @@ def parse_expr(expr_str: str) -> ast.Expression:
     try:
         tree = ast.parse(expr_str, mode="eval")
     except SyntaxError as e:
-        logger.warning("表达式语法错误: %s — %r", e, expr_str[:80])
+        logger.warning("表达式语法错误 %s -> %r", e, expr_str[:80])
         raise DAGCompileError(f"表达式语法错误: {e}")
     _check_node(tree)
     return tree
 
 
 def validate_expr(expr_str: str) -> None:
-    """校验表达式（不执行求值）。
-
-    Raises:
-        DAGCompileError: 表达式语法错误
-        DAGSecurityError: 表达式使用了白名单外的语法
-    """
+    """校验表达式（不执行求值）。"""
     parse_expr(expr_str)
 
 
@@ -206,7 +214,7 @@ def evaluate(tree: ast.Expression, scope: dict[str, float]) -> float:
 
     Args:
         tree: parse_expr 返回的已验证 AST
-        scope: 变量名 → 浮点数的映射
+        scope: 变量名 -> 浮点数的映射
 
     Returns:
         表达式计算结果
