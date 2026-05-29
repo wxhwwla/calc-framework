@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.8.0"
+_VERSION = "3.8.1"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,8 +209,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 11 处文件
 # BODY:
-# - 修改 framework/src/calc_framework/config/file_watcher.py
-# - 修改 framework/tests/config/test_file_watcher.py
+# - 修改 framework/src/calc_framework/search/__init__.py
+# - 修改 framework/src/calc_framework/search/cancel.py
+# - 修改 framework/src/calc_framework/search/engine.py
+# - 修改 framework/src/calc_framework/search/parallel.py
+# - 修改 framework/src/calc_framework/search/persist.py
+# - 修改 framework/src/calc_framework/search/session.py
+# - 修改 framework/tests/search/test_persist.py
+# - 修改 games/endfield/calculation/search/adapter.py
+# - 修改 games/endfield/calculation/search/persist/store.py
+# - 修改 games/endfield/calculation/search/run/session.py
+# - 修改 games/endfield/please_read_me.py
 # --- END UPLOAD_SUMMARY ---

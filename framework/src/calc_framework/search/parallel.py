@@ -24,6 +24,7 @@ def run_parallel(
     progress_callback: Callable[[ParallelProgress], None] | None = None,
     top_n_tracker: TopNTracker[R] | None = None,
     submit_batch_size: int = 100,
+    on_result: Callable[[T, R], None] | None = None,
 ) -> list[R]:
     """并行评估一组任务，支持取消和进度回调。
 
@@ -35,6 +36,7 @@ def run_parallel(
         progress_callback: 进度回调，每完成一批调用一次
         top_n_tracker: 可选 Top-N 追踪器，仅保留最优结果
         submit_batch_size: 每批提交的任务数
+        on_result: 可选逐结果回调，接收 (task, result)，用于续跑写入等
 
     Returns:
         所有结果列表（若提供 top_n_tracker，则仅含其最终结果）
@@ -48,6 +50,10 @@ def run_parallel(
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         task_iter = iter(tasks)
         futures: set[Future[R]] = set()
+        _task_map: dict[Future[R], T] = {}
+
+        def _wrap_task(task: T) -> R:
+            return evaluator(task)
 
         def _submit_batch(count: int) -> int:
             submitted = 0
@@ -58,7 +64,9 @@ def run_parallel(
                     task = next(task_iter)
                 except StopIteration:
                     break
-                futures.add(executor.submit(evaluator, task))
+                future = executor.submit(_wrap_task, task)
+                futures.add(future)
+                _task_map[future] = task
                 submitted += 1
             return submitted
 
@@ -68,8 +76,11 @@ def run_parallel(
             done, futures = wait(futures, return_when=FIRST_COMPLETED)
             for f in done:
                 processed += 1
+                task = _task_map.pop(f, None)
                 try:
                     result = f.result()
+                    if on_result is not None and task is not None:
+                        on_result(task, result)
                     results.append(result)
                     if top_n_tracker is not None:
                         top_n_tracker.offer(result)

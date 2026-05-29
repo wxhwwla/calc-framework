@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""SQLite 续跑与去重恢复。"""
+"""SQLite 续跑与去重恢复。
+
+终末地 ``SearchRunStore`` 继承框架 ``calc_framework.search.persist.SearchRunStore``，
+在基础 ``runs`` / ``processed`` 表之上增加端特有 ``scores`` 表。
+"""
 
 from __future__ import annotations
 
-import sqlite3
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
+
+from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
 
 from calculation.core.top_n_tracker import TopNTracker
 from calculation.damage.engine import DamageContext
@@ -41,103 +46,29 @@ class ResumeExecutionResult:
     cancelled: bool
 
 
-class SearchRunStore:
-    """搜索任务 SQLite 存储。"""
+class SearchRunStore(BaseSearchRunStore):
+    """搜索任务 SQLite 存储（终末地扩展）。
 
-    def __init__(self, db_path: Path):
-        self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_schema()
+    继承框架基础表（``runs`` / ``processed``），增加 ``scores`` 表
+    用于持久化 Top-N 配装得分。
+    """
 
-    def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
+    def _schema_sql(self) -> str:
+        return super()._schema_sql() + """
+        CREATE TABLE IF NOT EXISTS scores (
+            signature TEXT NOT NULL,
+            combo_key TEXT NOT NULL,
+            weapon_name TEXT NOT NULL,
+            final_damage REAL NOT NULL,
+            chest TEXT NOT NULL,
+            gloves TEXT NOT NULL,
+            accessory_a TEXT NOT NULL,
+            accessory_b TEXT NOT NULL,
+            PRIMARY KEY (signature, combo_key)
+        );
+        """
 
-    def _init_schema(self) -> None:
-        conn = self._connect()
-        try:
-            conn.executescript(
-                """
-                CREATE TABLE IF NOT EXISTS runs (
-                    signature TEXT PRIMARY KEY,
-                    total_combinations INTEGER NOT NULL,
-                    status TEXT NOT NULL DEFAULT 'running'
-                );
-
-                CREATE TABLE IF NOT EXISTS processed (
-                    signature TEXT NOT NULL,
-                    combo_key TEXT NOT NULL,
-                    PRIMARY KEY (signature, combo_key)
-                );
-
-                CREATE TABLE IF NOT EXISTS scores (
-                    signature TEXT NOT NULL,
-                    combo_key TEXT NOT NULL,
-                    weapon_name TEXT NOT NULL,
-                    final_damage REAL NOT NULL,
-                    chest TEXT NOT NULL,
-                    gloves TEXT NOT NULL,
-                    accessory_a TEXT NOT NULL,
-                    accessory_b TEXT NOT NULL,
-                    PRIMARY KEY (signature, combo_key)
-                );
-                """
-            )
-            conn.commit()
-        finally:
-            conn.close()
-
-    def ensure_run(self, signature: str, total_combinations: int) -> None:
-        conn = self._connect()
-        try:
-            conn.execute(
-                """
-                INSERT INTO runs(signature, total_combinations, status)
-                VALUES (?, ?, 'running')
-                ON CONFLICT(signature) DO UPDATE SET total_combinations=excluded.total_combinations
-                """,
-                (signature, total_combinations),
-            )
-            conn.commit()
-        finally:
-            conn.close()
-
-    def mark_run_status(self, signature: str, status: str) -> None:
-        conn = self._connect()
-        try:
-            conn.execute("UPDATE runs SET status=? WHERE signature=?", (status, signature))
-            conn.commit()
-        finally:
-            conn.close()
-
-    def get_processed_keys(self, signature: str) -> set[str]:
-        conn = self._connect()
-        try:
-            rows = conn.execute(
-                "SELECT combo_key FROM processed WHERE signature=?",
-                (signature,),
-            ).fetchall()
-        finally:
-            conn.close()
-        return {row["combo_key"] for row in rows}
-
-    def mark_processed_batch(self, signature: str, combo_keys: list[str]) -> None:
-        """批量标记已处理组合（单次提交）。"""
-        if not combo_keys:
-            return
-        conn = self._connect()
-        try:
-            conn.executemany(
-                """
-                INSERT OR IGNORE INTO processed(signature, combo_key)
-                VALUES (?, ?)
-                """,
-                [(signature, key) for key in combo_keys],
-            )
-            conn.commit()
-        finally:
-            conn.close()
+    # ── scores ─────────────────────────────────────────
 
     def replace_top_scores(self, signature: str, scores: tuple[LoadoutScore, ...]) -> None:
         """仅持久化 TopN 得分（结束时写入）。"""

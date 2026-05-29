@@ -34,4 +34,7 @@ class SearchCancelToken:
     def should_cancel(self, processed_count: int) -> bool:
         if self._cancelled:
             return True
-        return bool(self.cancel_after is not None and processed_count >= self.cancel_after)
+        if self.cancel_after is not None and processed_count >= self.cancel_after:
+            self._cancelled = True
+            return True
+        return False

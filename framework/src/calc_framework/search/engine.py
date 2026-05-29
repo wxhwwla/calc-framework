@@ -21,12 +21,15 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from calc_framework.search.cancel import SearchCancelToken
 from calc_framework.search.parallel import run_parallel
 from calc_framework.search.result import SearchResult
 from calc_framework.search.tracker import TopNTracker
+
+if TYPE_CHECKING:
+    from calc_framework.search.persist import SearchRunStore
 
 C = TypeVar("C")
 R = TypeVar("R")
@@ -66,6 +69,14 @@ class SearchEngine(ABC, Generic[C, R]):
     def score_key(self, result: R) -> float:
         ...
 
+    def candidate_key(self, candidate: C) -> str:
+        """返回候选的唯一标识键，用于续跑去重。
+
+        子类可覆盖以提供更精确的键（如武器名+装备名组合）。
+        默认使用 ``str(candidate)``。
+        """
+        return str(candidate)
+
     def estimate_workload(self) -> int:
         return len(self.generate_candidates())
 
@@ -75,15 +86,33 @@ class SearchEngine(ABC, Generic[C, R]):
         *,
         cancel_token: SearchCancelToken | None = None,
         progress_callback: Any | None = None,
-        db_path: str | None = None,
+        run_store: SearchRunStore | None = None,
         run_signature: str | None = None,
     ) -> SearchResult[R]:
         cfg = config or SearchConfig()
         cancel = cancel_token or SearchCancelToken()
-        candidates = self.generate_candidates()
-        total = len(candidates)
+        total = self.estimate_workload()
 
-        tracker = TopNTracker[R](cfg.top_n, key_fn=self.score_key)
+        if run_store is not None and run_signature is not None:
+            return self._run_with_persist(cfg, cancel, run_store, run_signature, progress_callback)
+
+        return self._run_in_memory(cfg, cancel, progress_callback, total)
+
+    def _run_in_memory(
+        self,
+        config: SearchConfig,
+        cancel_token: SearchCancelToken,
+        progress_callback: Any | None,
+        total: int,
+    ) -> SearchResult[R]:
+        candidates = self.generate_candidates()
+        tracker = TopNTracker[R](config.top_n, key_fn=self.score_key)
+        evaluated_count = 0
+
+        def _tracked_evaluate(candidate: C) -> R:
+            nonlocal evaluated_count
+            evaluated_count += 1
+            return self.evaluate(candidate)
 
         def _progress(p):
             if progress_callback is not None:
@@ -91,19 +120,87 @@ class SearchEngine(ABC, Generic[C, R]):
 
         results = run_parallel(
             tasks=candidates,
-            evaluator=self.evaluate,
-            max_workers=cfg.max_workers,
-            cancel_token=cancel,
+            evaluator=_tracked_evaluate,
+            max_workers=config.max_workers,
+            cancel_token=cancel_token,
             progress_callback=_progress,
             top_n_tracker=tracker,
         )
 
         return SearchResult[R](
             items=tuple(results),
-            total_evaluated=len(results),
+            total_evaluated=evaluated_count,
             total_candidates=total,
             metadata={
-                "cancelled": cancel.is_cancelled,
-                "max_workers": cfg.max_workers,
+                "cancelled": cancel_token.is_cancelled,
+                "max_workers": config.max_workers,
+            },
+        )
+
+    def _run_with_persist(
+        self,
+        config: SearchConfig,
+        cancel_token: SearchCancelToken,
+        run_store: SearchRunStore,
+        run_signature: str,
+        progress_callback: Any | None,
+    ) -> SearchResult[R]:
+        """执行可续跑搜索：跳过已处理组合，批量写入 processed。"""
+        from calc_framework.search.persist import PROCESSED_BATCH_SIZE
+
+        total = self.estimate_workload()
+        run_store.ensure_run(run_signature, total)
+        existing_keys = run_store.get_processed_keys(run_signature)
+
+        candidates = self.generate_candidates()
+        pending = [(self.candidate_key(c), c) for c in candidates if self.candidate_key(c) not in existing_keys]
+        skipped = len(candidates) - len(pending)
+
+        tracker = TopNTracker[R](config.top_n, key_fn=self.score_key)
+        processed_buf: list[str] = []
+        processed_count = 0
+
+        def _on_result(key_and_candidate: tuple[str, C], result: R) -> None:
+            nonlocal processed_count
+            key, _ = key_and_candidate
+            processed_count += 1
+            tracker.offer(result)
+            processed_buf.append(key)
+            if len(processed_buf) >= PROCESSED_BATCH_SIZE:
+                run_store.mark_processed_batch(run_signature, processed_buf)
+                processed_buf.clear()
+
+        def _progress(p):
+            if progress_callback is not None:
+                total_with_skipped = processed_count + skipped
+                progress_callback(p)
+
+        from calc_framework.search.parallel import run_parallel as _run_parallel
+
+        results = _run_parallel(
+            tasks=pending,
+            evaluator=lambda kc: self.evaluate(kc[1]),
+            max_workers=config.max_workers,
+            cancel_token=cancel_token,
+            progress_callback=_progress,
+            top_n_tracker=tracker,
+            on_result=_on_result,
+        )
+
+        if processed_buf:
+            run_store.mark_processed_batch(run_signature, processed_buf)
+
+        cancelled = cancel_token.is_cancelled
+        status = "cancelled" if cancelled else "completed"
+        run_store.mark_run_status(run_signature, status)
+
+        return SearchResult[R](
+            items=tuple(results),
+            total_evaluated=processed_count + skipped,
+            total_candidates=total,
+            metadata={
+                "cancelled": cancelled,
+                "skipped_preprocessed": skipped,
+                "max_workers": config.max_workers,
             },
         )

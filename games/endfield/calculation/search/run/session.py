@@ -1,5 +1,8 @@
-#!/usr/bin/env python3
-"""单技能搜索会话：有界并行 + 可选 SQLite 续跑。"""
+"""单技能搜索会话 — 委托框架 SearchSession。
+
+``run_search_session`` 将终末地特有输入转换为 ``EndfieldSearchEngine``，
+通过框架 ``SearchSession`` 执行搜索，支持内存 TopN 和 SQLite 续跑。
+"""
 
 from __future__ import annotations
 
@@ -8,10 +11,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from calc_framework.search import SearchResult
+from calc_framework.search import SearchConfig, SearchResult, SearchSession
 
 from calculation.damage.engine import DamageContext
-from calculation.loadout.in_memory_optimizer import run_enumerated_optimizer_parallel
 from calculation.loadout.optimizer import (
     LoadoutScore,
     OptimizerConfig,
@@ -19,8 +21,9 @@ from calculation.loadout.optimizer import (
     WeaponCandidate,
 )
 
+from ..adapter import EndfieldSearchEngine
 from ..evaluate.context import SearchEvalContext
-from ..persist.store import execute_search_with_resume
+from ..persist.store import SearchRunStore
 from .cancel import SearchCancelToken
 
 
@@ -49,6 +52,25 @@ class SearchSessionResult:
         )
 
 
+def _build_engine(
+    *,
+    base_context: DamageContext,
+    weapons: list[WeaponCandidate],
+    equipment_catalog: dict[str, list[dict[str, Any]]],
+    config: OptimizerConfig,
+    search_eval: SearchEvalContext | None = None,
+    task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
+) -> EndfieldSearchEngine:
+    return EndfieldSearchEngine(
+        base_context=base_context,
+        weapons=weapons,
+        equipment_catalog=equipment_catalog,
+        config=config,
+        search_eval=search_eval,
+        task_evaluator=task_evaluator,
+    )
+
+
 def run_search_session(
     *,
     base_context: DamageContext,
@@ -67,45 +89,114 @@ def run_search_session(
     执行单技能搜索。
 
     提供 db_path 与 run_signature 时走 SQLite 续跑；否则仅内存 TopN。
+    内部使用框架 ``SearchSession`` + ``EndfieldSearchEngine`` 执行。
     """
-    if db_path is not None and run_signature is not None:
-        resume = execute_search_with_resume(
-            db_path=Path(db_path),
-            run_signature=str(run_signature),
-            base_context=base_context,
-            weapons=weapons,
-            equipment_catalog=equipment_catalog,
-            config=config,
-            max_workers=max_workers,
-            cancel_token=cancel_token,
-            progress_callback=progress_callback,
-            search_eval=search_eval,
-            task_evaluator=task_evaluator,
-        )
-        return SearchSessionResult(
-            top_results=resume.top_results,
-            total_combinations=resume.total_combinations,
-            processed_combinations=resume.processed_combinations,
-            cancelled=resume.cancelled,
-            warnings=(),
-            skipped_preprocessed=resume.skipped_preprocessed,
-        )
-
-    top_results, total_combinations, processed, cancelled, warnings = run_enumerated_optimizer_parallel(
+    engine = _build_engine(
         base_context=base_context,
         weapons=weapons,
         equipment_catalog=equipment_catalog,
         config=config,
-        max_workers=max_workers,
-        cancel_token=cancel_token,
-        progress_callback=progress_callback,
         search_eval=search_eval,
         task_evaluator=task_evaluator,
     )
+
+    progress_adapter: Any = _build_progress_adapter(progress_callback)
+
+    if db_path is not None and run_signature is not None:
+        return _run_with_persist(
+            engine=engine,
+            config=config,
+            max_workers=max_workers,
+            cancel_token=cancel_token,
+            progress_callback=progress_adapter,
+            db_path=db_path,
+            run_signature=run_signature,
+        )
+
+    return _run_in_memory(
+        engine=engine,
+        config=config,
+        max_workers=max_workers,
+        cancel_token=cancel_token,
+        progress_callback=progress_adapter,
+    )
+
+
+def _build_progress_adapter(
+    progress_callback: Callable[[dict], None] | None,
+) -> Any:
+    """将框架 ParallelProgress 回调适配为端侧 dict 回调。"""
+    if progress_callback is None:
+        return None
+
+    def _adapter(p: Any) -> None:
+        if hasattr(p, "processed"):
+            progress_callback({
+                "processed": p.processed,
+                "total": p.total,
+                "speed_per_sec": p.processed / max(getattr(p, "elapsed", 0.001), 0.001),
+                "eta_seconds": getattr(p, "estimated_remaining", 0.0),
+            })
+        else:
+            progress_callback(dict(p))
+
+    return _adapter
+
+
+def _run_in_memory(
+    *,
+    engine: EndfieldSearchEngine,
+    config: OptimizerConfig,
+    max_workers: int,
+    cancel_token: SearchCancelToken | None,
+    progress_callback: Any | None,
+) -> SearchSessionResult:
+    """内存 TopN 搜索（无 SQLite 续跑）。"""
+    cfg = SearchConfig(top_n=config.top_n, max_workers=max_workers)
+    session = SearchSession(engine)
+    result = session.run(cfg, cancel_token=cancel_token, progress_callback=progress_callback)
+    cancelled = bool(result.metadata.get("cancelled", False))
     return SearchSessionResult(
-        top_results=top_results,
-        total_combinations=total_combinations,
-        processed_combinations=processed,
+        top_results=tuple(result.items) if result.items else (),
+        total_combinations=result.total_candidates,
+        processed_combinations=result.total_evaluated,
         cancelled=cancelled,
-        warnings=warnings,
+        warnings=(),
+    )
+
+
+def _run_with_persist(
+    *,
+    engine: EndfieldSearchEngine,
+    config: OptimizerConfig,
+    max_workers: int,
+    cancel_token: SearchCancelToken | None,
+    progress_callback: Any | None,
+    db_path: Path,
+    run_signature: str,
+) -> SearchSessionResult:
+    """SQLite 续跑搜索。"""
+    store = SearchRunStore(db_path)
+    cfg = SearchConfig(top_n=config.top_n, max_workers=max_workers)
+    session = SearchSession(engine, store=store)
+    result = session.run(
+        cfg,
+        cancel_token=cancel_token,
+        progress_callback=progress_callback,
+        run_signature=run_signature,
+    )
+    cancelled = bool(result.metadata.get("cancelled", False))
+    skipped_preprocessed = int(result.metadata.get("skipped_preprocessed", 0))
+
+    top_scores: tuple[LoadoutScore, ...] = tuple(result.items) if result.items else ()
+    if top_scores:
+        store.replace_top_scores(run_signature, top_scores)
+
+    return SearchSessionResult(
+        top_results=top_scores,
+        total_combinations=result.total_candidates,
+        processed_combinations=result.total_evaluated,
+        cancelled=cancelled,
+        warnings=(),
+        skipped_preprocessed=skipped_preprocessed,
     )

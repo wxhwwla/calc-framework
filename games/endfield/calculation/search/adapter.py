@@ -98,7 +98,7 @@ class EndfieldSearchEngine(SearchEngine[OptimizerTask, LoadoutScore]):
         )
 
     def score_key(self, result: LoadoutScore) -> float:
-        return result.total_score
+        return result.final_damage
 
     def estimate_workload(self) -> int:
         plan = build_optimizer_search_plan(
