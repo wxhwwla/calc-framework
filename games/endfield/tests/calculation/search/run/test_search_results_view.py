@@ -32,7 +32,7 @@ class TestSearchResultsReportLines(unittest.TestCase):
         joined = "\n".join(lines)
         self.assertIn("单技能全量遍历", joined)
         self.assertIn("12/100", joined)
-        self.assertIn("Top1:", joined)
+        self.assertIn("第1名:", joined)
         self.assertIn("逐鳞3.0", joined)
         self.assertIn("5432.1", joined)
         self.assertIn("top_results.json", joined)

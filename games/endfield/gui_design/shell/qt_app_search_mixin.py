@@ -58,7 +58,7 @@ class SearchMixin:
             return
         job, err = prepare_search_job(inputs)
         if err or job is None:
-            QMessageBox.warning(self.app, "MVP 搜索", err or "无法准备搜索任务")
+            QMessageBox.warning(self.app, "最优搜索", err or "无法准备搜索任务")
             return
 
         output_dir = QFileDialog.getExistingDirectory(
@@ -69,12 +69,12 @@ class SearchMixin:
         cancel_token = SearchCancelToken()
         self._search_cancel_token = cancel_token
         worker = SearchWorker(
-            job, mode_label="MVP搜索并导出", export_root=export_root,
+            job, mode_label="最优搜索并导出", export_root=export_root,
             top_n_choice=self.control_dock.read_top_n_choice(),
             workers_choice=self.control_dock.read_workers_choice(),
-            status_prefix="MVP搜索状态", cancel_token=cancel_token,
+            status_prefix="最优搜索状态", cancel_token=cancel_token,
         )
-        self._start_search_thread(worker, "MVP搜索状态：计算中，请稍候...")
+        self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
 
     def _on_full_search(self) -> None:
         from calculation.search.plan.controller import prepare_search_job

@@ -151,7 +151,7 @@ def _build_tree_items(
     for idx, score in enumerate(top_results, start=1):
         loadout = score.loadout_names
         header_text = (
-            f"Top{idx}: {score.weapon_name}  |  "
+            f"第{idx}名: {score.weapon_name}  |  "
             f"{damage_metric} {score.final_damage:.1f}  |  "
             f"护甲 {loadout.get('chest', '')}  |  "
             f"护手 {loadout.get('gloves', '')}  |  "

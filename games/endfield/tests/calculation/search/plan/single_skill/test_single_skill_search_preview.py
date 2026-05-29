@@ -60,7 +60,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("计算模式: 单技能遍历(快速预览)") for line in lines))
         self.assertTrue(any(line.startswith("预览组合数:") for line in lines))
-        self.assertTrue(any(line.startswith("Top1:") for line in lines))
+        self.assertTrue(any(line.startswith("第1名:") for line in lines))
 
     def test_preview_lines_respect_candidate_scope_and_weapon_list(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
@@ -81,7 +81,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             preview_equipment_catalog=_sample_catalog(),
         )
         self.assertTrue(any(line.startswith("候选范围: 同类型全部") for line in lines))
-        self.assertTrue(any("Top1:" in line and "候选B" in line for line in lines))
+        self.assertTrue(any("第1名:" in line and "候选B" in line for line in lines))
 
     def test_preview_requires_explicit_catalog(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
@@ -151,7 +151,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
             normal_skill_1_level=1,
             preview_equipment_catalog=_sample_catalog(),
         )
-        self.assertTrue(any(line.startswith("Top1:") for line in with_bonus))
+        self.assertTrue(any(line.startswith("第1名:") for line in with_bonus))
 
     @pytest.mark.real_data
     @unittest.skipUnless(
@@ -183,7 +183,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
         )
         joined = "\n".join(lines)
         self.assertNotIn("装备数据不完整", joined, msg=joined)
-        self.assertTrue(any(line.startswith("Top1:") for line in lines), msg=joined)
+        self.assertTrue(any(line.startswith("第1名:") for line in lines), msg=joined)
 
 
 if __name__ == "__main__":

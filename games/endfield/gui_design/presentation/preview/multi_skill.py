@@ -328,7 +328,7 @@ def _build_multi_skill_search_preview_lines_impl(
             result.skill_count_map,
             indent="  ",
         )
-        lines.append(f"Top{idx}: 总伤 {score.weighted_total_damage:.1f}")
+        lines.append(f"第{idx}名: 总伤 {score.weighted_total_damage:.1f}")
         if abnormal_total > 0:
             merged = compose_damage_total(
                 skill_damage=score.weighted_total_damage,

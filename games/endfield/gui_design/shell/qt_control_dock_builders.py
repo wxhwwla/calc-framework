@@ -33,9 +33,9 @@ _FIXED_SLOT_SPECS: list[tuple[str, str]] = [
 ]
 _FIXED_SLOT_NONE_LABEL = "（不固定）"
 _PHYSICAL_ABNORMAL_TYPES = ["侵蚀", "灼烧", "冻伤", "战栗"]
-_PHYSICAL_ABNORMAL_LEVELS = ["L1", "L2", "L3", "L4", "L5"]
+_PHYSICAL_ABNORMAL_LEVELS = ["1级", "2级", "3级", "4级", "5级"]
 _SPELL_ABNORMAL_TYPES = ["侵蚀(法术)", "灼烧(法术)"]
-_SPELL_ABNORMAL_LEVELS = ["L1", "L2", "L3", "L4"]
+_SPELL_ABNORMAL_LEVELS = ["1级", "2级", "3级", "4级"]
 _PHYSICAL_ABNORMAL_KEYS = ["erosion", "burn", "frostbite", "trembling"]
 _SPELL_ABNORMAL_KEYS = ["erosion_spell", "burn_spell"]
 _SECTION_COLOR = "#FF6B6B"
@@ -123,7 +123,7 @@ class BuilderMixin:
         lay.addLayout(slots_grid)
         lay.addWidget(HintLabel("选择装备名称固定该槽位，选「（不固定）」则遍历。", self._small))
 
-        self.mvp_search_btn = self._make_btn("MVP 搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
+        self.mvp_search_btn = self._make_btn("最优搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
         lay.addWidget(self.mvp_search_btn)
         self.full_search_btn = self._make_btn("全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
         lay.addWidget(self.full_search_btn)
@@ -142,7 +142,7 @@ class BuilderMixin:
         self.search_top_n_combo.addItems(["3", "5", "10", "20", "50"])
         self.search_top_n_combo.setCurrentText("10")
         self.search_top_n_combo.setStyleSheet(_COMBO_STYLE)
-        param_row.addWidget(SmallLabel("Top 条数", self._small))
+        param_row.addWidget(SmallLabel("前列条数", self._small))
         param_row.addWidget(self.search_top_n_combo, stretch=1)
         lay.addLayout(param_row)
 
@@ -194,7 +194,7 @@ class BuilderMixin:
         self._build_segment_rows_fallback()
         lay.addWidget(self._segment_rows_container)
 
-        self._manual_buff_btn = self._make_btn("场外 Buff 微调", _SECONDARY_BTN_HEIGHT, style="""
+        self._manual_buff_btn = self._make_btn("额外加成微调", _SECONDARY_BTN_HEIGHT, style="""
             QPushButton { background-color: #2d6a4f; color: white; border-radius: 6px; }
             QPushButton:hover { background-color: #40916c; }
         """)

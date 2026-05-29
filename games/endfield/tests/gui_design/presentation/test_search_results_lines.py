@@ -21,7 +21,7 @@ class TestFormatTopResultLine(unittest.TestCase):
         )
         lines = _format_top_result_line(1, score, damage_metric="伤害")
         text = "\n".join(lines)
-        self.assertIn("Top1", text)
+        self.assertIn("第1名", text)
         self.assertIn("测试剑", text)
         self.assertIn("5000.0", text)
 
@@ -75,7 +75,7 @@ class TestBuildSearchResultsReportLines(unittest.TestCase):
             total_combinations=100,
             top_results=[],
         )
-        self.assertTrue(any("无可用 Top" in l for l in lines))
+        self.assertTrue(any("无可用前列" in l for l in lines))
 
     def test_cancelled_flag(self) -> None:
         score = LoadoutScore(weapon_name="剑", final_damage=100.0, loadout_names={})
@@ -89,7 +89,7 @@ class TestBuildSearchResultsReportLines(unittest.TestCase):
         )
         text = "\n".join(lines)
         self.assertIn("已取消", text)
-        self.assertIn("Top 配装", text)
+        self.assertIn("前列配装", text)
 
     def test_with_export_paths(self) -> None:
         score = LoadoutScore(weapon_name="剑", final_damage=100.0, loadout_names={})

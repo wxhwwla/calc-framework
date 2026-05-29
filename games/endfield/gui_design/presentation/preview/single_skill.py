@@ -288,7 +288,7 @@ def _build_single_skill_search_preview_lines_impl(
     for idx, score in enumerate(result.top_results, start=1):
         loadout = score.loadout_names
         lines.append(
-            f"Top{idx}: 武器:{score.weapon_name} 伤害 {score.final_damage:.1f} | "
+            f"第{idx}名: 武器:{score.weapon_name} 伤害 {score.final_damage:.1f} | "
             f"护甲:{loadout['chest']} 护手:{loadout['gloves']} "
             f"配件A:{loadout['accessory_a']} 配件B:{loadout['accessory_b']}"
         )

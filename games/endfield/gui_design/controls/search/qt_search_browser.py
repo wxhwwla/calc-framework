@@ -164,9 +164,9 @@ def format_clipboard_text(
                          f"组合: {ri.processed_combinations}/{ri.total_combinations}")
         lines.append("")
     if score_infos:
-        lines.append("=== Top 配装 ===")
+        lines.append("=== 前列配装 ===")
         for idx, si in enumerate(score_infos, start=1):
-            lines.append(f"Top{idx}: {format_loadout_line(si)}")
+            lines.append(f"第{idx}名: {format_loadout_line(si)}")
         lines.append("")
     if db_path:
         lines.append(f"数据库: {db_path}")
@@ -336,7 +336,7 @@ class SearchHistoryDialog(QDialog):
                 scores = list_scores(db_path, run.signature)
                 for idx, sc in enumerate(scores, start=1):
                     score_text = format_loadout_line(sc)
-                    child = QTreeWidgetItem([f"Top{idx}", f"{sc.final_damage:.1f}", score_text])
+                    child = QTreeWidgetItem([f"第{idx}名", f"{sc.final_damage:.1f}", score_text])
                     child.setForeground(0, _SCORE_FG)
                     child.setForeground(1, _DMG_FG)
                     child.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)

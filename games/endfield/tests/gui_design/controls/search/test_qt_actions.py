@@ -88,7 +88,7 @@ class TestBuildTreeItems(unittest.TestCase):
             spell_abnormal_counts=None,
         )
         for idx, item in enumerate(items, start=1):
-            self.assertIn(f"Top{idx}", item.text(0))
+            self.assertIn(f"第{idx}名", item.text(0))
 
     def test_damage_metric_in_header(self) -> None:
         scores = [

@@ -71,8 +71,8 @@ def control_dock_layout_needs_update(
 def search_action_button_texts(*, compact: bool) -> tuple[str, str]:
     """按布局密度返回搜索主按钮文案（全量、MVP）。"""
     if compact:
-        return ("全量遍历", "MVP导出")
-    return ("全量遍历（弹窗）", "MVP搜索导出")
+        return ("全量遍历", "最优导出")
+    return ("全量遍历（弹窗）", "最优搜索导出")
 
 
 # 底栏可变文案区固定高度，避免换行/改字导致整窗比例跳动

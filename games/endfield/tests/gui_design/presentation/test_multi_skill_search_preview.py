@@ -45,7 +45,7 @@ class TestMultiSkillSearchPreview(unittest.TestCase):
         )
         self.assertTrue(any(line.startswith("计算模式: 多技能遍历(快速预览)") for line in lines))
         self.assertTrue(any(line.startswith("默认次数:") for line in lines))
-        self.assertTrue(any(line.startswith("Top1:") for line in lines))
+        self.assertTrue(any(line.startswith("第1名:") for line in lines))
 
     def test_preview_lines_use_manual_counts_when_provided(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")

@@ -30,7 +30,7 @@ from calculation.manual_buff.model import (
     set_buffs_for_key,
 )
 
-_WINDOW_TITLE = "场外 Buff 微调"
+_WINDOW_TITLE = "额外加成微调"
 _WINDOW_WIDTH = 900
 _WINDOW_HEIGHT = 600
 

@@ -32,7 +32,7 @@ def _format_top_result_line(
 ) -> list[str]:
     loadout = score.loadout_names
     lines = [
-        f"Top{rank}: 武器 {score.weapon_name}  {damage_metric} {score.final_damage:.1f}",
+        f"第{rank}名: 武器 {score.weapon_name}  {damage_metric} {score.final_damage:.1f}",
         f"       护甲 {loadout.get('chest', '')}  |  "
         f"护手 {loadout.get('gloves', '')}  |  "
         f"配件A {loadout.get('accessory_a', '')}  |  "
@@ -109,13 +109,13 @@ def build_search_results_report_lines(
         lines.append(f"装备范围: {equip_scope}")
     lines.append(
         f"组合进度: {processed_combinations}/{total_combinations}"
-        + ("（已取消，以下为目前已完成中的 Top）" if cancelled else "")
+        + ("（已取消，以下为目前已完成中的前列）" if cancelled else "")
     )
     lines.append("")
     if not top_results:
-        lines.append("无可用 Top 结果，请检查装备数据或缩小候选范围。")
+        lines.append("无可用前列结果，请检查装备数据或缩小候选范围。")
     else:
-        lines.append("—— Top 配装 ——")
+        lines.append("—— 前列配装 ——")
         for idx, score in enumerate(top_results, start=1):
             lines.extend(
                 _format_top_result_line(
