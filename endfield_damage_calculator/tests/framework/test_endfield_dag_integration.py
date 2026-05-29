@@ -218,25 +218,31 @@ class TestEndfieldDAGIntegration:
         )
         existing = calculate_single_hit_damage(ctx, effects=[], crit_mode="non_crit")
 
-        dag_ctx = _minimal_context()
-        dag_ctx["computed"].update({
-            "最终攻击力": ctx.final_attack,
-            "技能倍率": ctx.skill_multiplier,
-            "暴击区": 1.0,
-            "伤害加成": 1.0 + ctx.damage_type_bonus,
-            "伤害减免": 1.0,
-            "增幅": 1.0,
-            "虚弱": 1.0,
-            "庇护": 1.0,
-            "脆弱": 1.0,
-            "易伤": 1.0,
-            "防御": 100.0 / (100.0 + ctx.enemy_defense),
-            "失衡易伤": 1.0,
-            "抗性": 1.0,
-            "非主控减伤": 1.0,
-            "连击增伤": 1.0,
-            "特殊乘区": 1.0,
-        })
+        dag_ctx = {
+            "character": {
+                "基础攻击": ctx.final_attack,
+                "力量": 0.0, "敏捷": 0.0, "智识": 0.0, "意志": 0.0,
+                "主能力": "", "副能力": "",
+                "暴击率": ctx.crit_rate, "暴击伤害": ctx.crit_damage,
+            },
+            "weapon": {
+                "基础攻击": 0.0, "攻击力+": 0.0, "附加攻击力+": 0.0,
+            },
+            "equipment": {"攻击力平值": 0.0},
+            "enemy": {"防御": ctx.enemy_defense},
+            "computed": {
+                "主能力平值加算": 0.0, "副能力平值加算": 0.0,
+                "主能力百分比": 0.0, "副能力百分比": 0.0,
+                "主能力": "", "副能力": "",
+                "技能倍率": ctx.skill_multiplier,
+                "伤害加成": 1.0 + ctx.damage_type_bonus,
+                "伤害减免": 1.0,
+                "增幅": 1.0, "虚弱": 1.0, "庇护": 1.0,
+                "脆弱": 1.0, "易伤": 1.0,
+                "失衡易伤": 1.0, "抗性": 1.0,
+                "非主控减伤": 1.0, "连击增伤": 1.0, "特殊乘区": 1.0,
+            },
+        }
 
         result = adapter_pkg.dag_service.evaluate(dag_ctx)
         dag_damage = result.outputs.get("最终伤害")

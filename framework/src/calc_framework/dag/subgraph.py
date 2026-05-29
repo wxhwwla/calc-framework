@@ -43,7 +43,13 @@ def _prefixed_node(node: NodeType, prefix: str) -> NodeType:
 
 def _apply_ref_map_to_node(node: NodeType, ref_map: dict[str, str]) -> NodeType:
     def _map(ref: str) -> str:
-        return ref_map.get(ref, ref)
+        visited = set()
+        while ref in ref_map:
+            if ref in visited:
+                break
+            visited.add(ref)
+            ref = ref_map[ref]
+        return ref
 
     if isinstance(node, UnaryNode):
         node.input = _map(node.input)
@@ -102,15 +108,21 @@ def expand_subgraphs(graph: DAGGraph) -> DAGGraph:
                 ref_map[f"{call_id}.{pbinding_name}"] = target_nid
 
             for sub_oid, sub_odef in sub.outputs.items():
-                ref_map[f"{call_id}.{sub_oid}"] = f"{call_id}.{sub_odef.node}"
+                resolved = f"{call_id}.{sub_odef.node}"
+                if f"{call_id}.{sub_oid}" != resolved:
+                    ref_map[f"{call_id}.{sub_oid}"] = resolved
 
             primary_outputs = {oid: odef for oid, odef in sub.outputs.items() if odef.is_primary}
             if primary_outputs:
                 first_primary = next(iter(primary_outputs.values()))
-                ref_map[call_id] = f"{call_id}.{first_primary.node}"
+                call_out = f"{call_id}.{first_primary.node}"
+                if call_id != call_out:
+                    ref_map[call_id] = call_out
             elif sub.outputs:
                 first_output = next(iter(sub.outputs.values()))
-                ref_map[call_id] = f"{call_id}.{first_output.node}"
+                call_out = f"{call_id}.{first_output.node}"
+                if call_id != call_out:
+                    ref_map[call_id] = call_out
 
     for node in expanded.nodes.values():
         _apply_ref_map_to_node(node, ref_map)
