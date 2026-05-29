@@ -15,6 +15,7 @@ from typing import Any
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -33,6 +34,8 @@ from gui_design.shell.qt_control_dock_builders import (
     _BTN_SECONDARY_STYLE,
     _COMBO_STYLE,
     _ENTRY_STYLE,
+    _FIXED_SLOT_NONE_LABEL,
+    _FIXED_SLOT_SPECS,
     _PHYSICAL_ABNORMAL_KEYS,
     _PRIMARY_BTN_HEIGHT,
     _SECONDARY_BTN_HEIGHT,
@@ -45,6 +48,11 @@ from gui_design.shell.qt_control_dock_widgets import (
     read_abnormal_edits,
 )
 from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
+from gui_design.controls.search.search_settings import (
+    get_cpu_parallel_info,
+    resolve_parallel_workers,
+    format_parallel_workers_help,
+)
 
 # 固定配装槽位配置：(catalog_key, 界面标签)
 
