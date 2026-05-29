@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 import operator as op
-from collections import deque
+import time
+from collections import Counter, deque
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -70,6 +71,7 @@ def topological_sort(graph: DAGGraph) -> list[str]:
                 adj[ref].append(nid)
                 in_degree[nid] += 1
 
+    orig_in_degree = dict(in_degree)
     queue: deque[str] = deque(nid for nid, deg in in_degree.items() if deg == 0)
     order: list[str] = []
 
@@ -86,7 +88,10 @@ def topological_sort(graph: DAGGraph) -> list[str]:
         logger.error("检测到循环依赖: %s", remaining)
         raise DAGCycleError(f"循环依赖: {remaining}")
 
-    logger.debug("拓扑排序完成: %d 个节点", len(order))
+    degree_dist = Counter(orig_in_degree.values())
+    dist_desc = ", ".join(f"入度={k} × {v}" for k, v in sorted(degree_dist.items()))
+    logger.info("拓扑排序: %d 个节点 (%s)", len(order), dist_desc)
+    logger.debug("执行顺序: %s", order)
     return order
 
 
@@ -101,6 +106,33 @@ def _node_dependencies(node: NodeType) -> list[str]:
     if isinstance(node, ExprNode):
         return list(node.inputs.values())
     return []
+
+
+def _node_display(node: NodeType) -> str:
+    """返回节点的可读描述（用于日志）。"""
+    if isinstance(node, ConstNode):
+        return f"Const({node.value})"
+    if isinstance(node, VarNode):
+        return f"Var({node.path})"
+    if isinstance(node, UserInputNode):
+        return f"UserInput(default={node.default})"
+    if isinstance(node, UnaryNode):
+        return f"Unary({node.op}, input={node.input})"
+    if isinstance(node, BinaryNode):
+        return f"Binary({node.op}, lhs={node.lhs}, rhs={node.rhs})"
+    if isinstance(node, ConditionNode):
+        return f"Condition(cond={node.cond})"
+    if isinstance(node, ExprNode):
+        return f"Expr({node.expr}, inputs={dict(node.inputs)})"
+    return type(node).__name__
+
+
+def _log_node_failure(logger_obj: Any, nid: str, node: NodeType, values: dict[str, float], exc: Exception) -> None:
+    """记录节点求值失败的详细上下文。"""
+    detail = _node_display(node)
+    available = {k: v for k, v in values.items() if k in _node_dependencies(node)}
+    logger_obj.error("节点 %s 求值失败: %s | 可用输入: %s | 错误: %s",
+                     nid, detail, available, exc)
 
 
 def _eval_single_node(node: NodeType, values: dict[str, float], context: dict[str, Any]) -> float:
@@ -172,11 +204,15 @@ def evaluate_graph(graph: DAGGraph, context: dict[str, Any]) -> DAGResult:
     values: dict[str, float] = {}
     for nid in order:
         node = expanded.nodes[nid]
+        t0 = time.perf_counter()
         try:
             values[nid] = _eval_single_node(node, values, context)
-        except DAGRuntimeError:
-            logger.error("节点 %s (%s) 求值失败", nid, type(node).__name__)
+        except DAGRuntimeError as exc:
+            _log_node_failure(logger, nid, node, values, exc)
             raise
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        logger.debug("节点 %s [%s] 求值完成: %s (耗时 %.3f ms)",
+                     nid, type(node).__name__, values.get(nid, "?"), elapsed_ms)
 
     outputs: dict[str, float] = {}
     for oid, odef in expanded.outputs.items():
