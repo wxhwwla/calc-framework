@@ -9,7 +9,6 @@ PySide6 主应用。
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 from typing import Any
 
 from calc_framework.logging import get_logger
@@ -17,12 +16,10 @@ from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
-    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
-    QMessageBox,
     QScrollArea,
     QSizePolicy,
     QTabWidget,
@@ -34,10 +31,10 @@ from data.loader import get_characters, get_weapons
 from gui_design.panels.selection.qt_panel import QtSelectionPanel
 from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
 from gui_design.shared.display_view.qt_columns import QtAttributeColumns
-from gui_design.shell.qt_control_dock import QtControlDock
 from gui_design.shell.qt_app_confirm_mixin import ConfirmMixin
 from gui_design.shell.qt_app_dialog_mixin import DialogMixin
 from gui_design.shell.qt_app_search_mixin import SearchMixin
+from gui_design.shell.qt_control_dock import QtControlDock
 from please_read_me import get_exe_version
 
 _qt_logger = get_logger("gui.qt_app")
@@ -215,6 +212,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
             on_donation=self._on_donation,
             on_open_help=self._on_open_help,
             on_ocr_detect=self._on_ocr_detect,
+            on_search_history=self._on_search_history,
         )
 
         adv_page = QWidget()

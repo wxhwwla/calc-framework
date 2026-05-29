@@ -4,21 +4,10 @@ from __future__ import annotations
 
 import webbrowser
 from pathlib import Path
-from typing import Any
 
-from PySide6.QtCore import Qt, QThread
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QApplication,
     QFileDialog,
-    QHBoxLayout,
-    QLabel,
-    QMainWindow,
     QMessageBox,
-    QPushButton,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
 )
 
 from gui_design.legal.attribution_content import SUMMARY_TEXT
@@ -200,7 +189,6 @@ class DialogMixin:
             QMessageBox.warning(self.app, "导出失败", str(exc))
 
     def _on_open_help(self) -> None:
-        import webbrowser
 
         doc_path = Path(__file__).resolve().parents[4] / "docs" / "GUI使用说明.md"
         if doc_path.is_file():
@@ -235,3 +223,14 @@ class DialogMixin:
             open_ocr_detection_dialog(self.app, on_apply=_apply_ocr)
         except Exception as exc:
             QMessageBox.warning(self.app, "截图识装", f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install ultralytics easyocr")
+
+    def _on_search_history(self) -> None:
+        """打开搜索历史浏览对话框。"""
+        from gui_design.controls.search.qt_search_browser import SearchHistoryDialog
+
+        dialog = SearchHistoryDialog(
+            self.app,
+            big_font=self.big_font,
+            small_font=self.small_font,
+        )
+        dialog.exec()

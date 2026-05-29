@@ -83,6 +83,7 @@ class QtControlDock(BuilderMixin, QWidget):
         on_donation: Callable[[], None] | None = None,
         on_open_help: Callable[[], None] | None = None,
         on_ocr_detect: Callable[[], None] | None = None,
+        on_search_history: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(parent)
         self._big = big_font or QFont()
@@ -93,6 +94,7 @@ class QtControlDock(BuilderMixin, QWidget):
         self._on_donation = on_donation
         self._on_open_help = on_open_help
         self._on_ocr_detect = on_ocr_detect
+        self._on_search_history = on_search_history
 
         # 暴露给外部的控件引用
         self.back_to_main_btn: QPushButton
@@ -167,6 +169,11 @@ class QtControlDock(BuilderMixin, QWidget):
         if self._on_open_help:
             self.help_btn.clicked.connect(self._on_open_help)
         lay.addWidget(self.help_btn)
+
+        self.search_history_btn = self._make_btn("📂 搜索历史", _SECONDARY_BTN_HEIGHT)
+        if self._on_search_history:
+            self.search_history_btn.clicked.connect(self._on_search_history)
+        lay.addWidget(self.search_history_btn)
 
         lay.addSpacing(8)
         lay.addWidget(SectionHeader("乘区展示", self._big))
