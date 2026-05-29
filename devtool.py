@@ -16,8 +16,9 @@
 
 from __future__ import annotations
 
-import sys
 import argparse
+import os
+import sys
 from pathlib import Path
 
 
@@ -29,7 +30,6 @@ def _add_path() -> None:
 
 def _sub_args() -> list[str]:
     """返回子命令后的剩余参数（绕过 argparse 对 --flags 的拦截）。"""
-    cmd = sys.argv[0]
     rest = sys.argv[1:]
     # 找到子命令位置
     for i, a in enumerate(rest):
@@ -69,6 +69,26 @@ def _cmd_launcher(args: argparse.Namespace) -> None:
     run_launcher(adapter)
 
 
+def _cmd_hub(args: argparse.Namespace) -> None:
+    """启动 Calc Hub 本地预览服务器。"""
+    import http.server
+    import socketserver
+
+    hub_dir = Path(__file__).resolve().parent / "web" / "hub"
+    port = args.port if hasattr(args, "port") and args.port else 8080
+
+    os.chdir(str(hub_dir))
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        print(f"Calc Hub 已启动 → http://localhost:{port}")
+        print(f"目录: {hub_dir}")
+        print("按 Ctrl+C 停止")
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n已停止")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="终末地计算器 — 开发者工具箱",
@@ -81,6 +101,8 @@ def main() -> None:
     sub.add_parser("check-layout", help="代码布局门禁", add_help=False)
     sub.add_parser("sync-bwiki", help="BWIKI 数据同步", add_help=False)
     sub.add_parser("launcher", help="框架游戏选择器", add_help=False)
+    hub_parser = sub.add_parser("hub", help="启动 Calc Hub 社区市场", add_help=False)
+    hub_parser.add_argument("--port", type=int, default=8080, help="端口 (默认 8080)")
 
     # 用 parse_known_args 避免 --flags 被 argparse 拦截
     args, _ = parser.parse_known_args()
@@ -93,6 +115,7 @@ def main() -> None:
         "check-layout": _cmd_check_layout,
         "sync-bwiki": _cmd_sync_bwiki,
         "launcher": _cmd_launcher,
+        "hub": _cmd_hub,
     }
     result = funcs[args.command](args)
     if isinstance(result, int):

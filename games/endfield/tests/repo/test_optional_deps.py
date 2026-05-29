@@ -43,3 +43,15 @@ class TestOptionalDeps(unittest.TestCase):
         if not is_matplotlib_available():
             self.assertIn("matplotlib", text)
             self.assertIn("pip install -e .", text)
+
+    def test_gui_optional_deps_contains_pyyaml(self) -> None:
+        names = [dep.module for dep in GUI_OPTIONAL_DEPS]
+        self.assertIn("yaml", names)
+
+    def test_format_missing_runtime_dependencies_all_installed(self) -> None:
+        text = format_missing_runtime_dependencies()
+        self.assertNotIn("未知", text)
+
+
+if __name__ == "__main__":
+    unittest.main()

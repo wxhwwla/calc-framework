@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Calc Hub — 游戏数值配置工坊</title>
+<style>
+:root { --bg: #1a1a2e; --card: #16213e; --accent: #2B6CB6; --text: #e0e0e0; --dim: #8a8a8a; --border: #2a2a4a; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+header { background: linear-gradient(135deg, var(--card), #0f3460); padding: 2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); }
+header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+header p { color: var(--dim); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+nav { background: var(--card); padding: 0.75rem 1rem; display: flex; gap: 1.5rem; justify-content: center; border-bottom: 1px solid var(--border); }
+nav a { color: var(--accent); text-decoration: none; font-size: 0.95rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: background 0.2s; }
+nav a:hover { background: rgba(43, 108, 182, 0.2); }
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.section-title { font-size: 1.3rem; margin: 2rem 0 1rem; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 0.75rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; transition: transform 0.2s, box-shadow 0.2s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(43, 108, 182, 0.2); }
+.card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+.card .tag { display: inline-block; background: var(--accent); color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-right: 0.25rem; }
+.card p { color: var(--dim); font-size: 0.9rem; margin: 0.5rem 0; }
+.card .meta { font-size: 0.8rem; color: var(--dim); margin-top: 0.75rem; display: flex; justify-content: space-between; }
+.card .btn { display: inline-block; background: var(--accent); color: #fff; padding: 0.4rem 1rem; border-radius: 4px; text-decoration: none; font-size: 0.85rem; margin-top: 0.5rem; transition: background 0.2s; }
+.card .btn:hover { background: #1a4f8a; }
+footer { text-align: center; padding: 2rem; color: var(--dim); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem; }
+footer a { color: var(--accent); }
+.empty { text-align: center; padding: 3rem; color: var(--dim); }
+</style>
+</head>
+<body>
+<header>
+<h1>🎮 Game Calc Hub</h1>
+<p>游戏数值计算适配器 &amp; 社区插件工坊 — 浏览、下载、分享配置包</p>
+</header>
+
+<nav>
+<a href="#adapters">适配器市场</a>
+<a href="#plugins">社区插件</a>
+<a href="#upload">上传分享</a>
+<a href="#about">关于</a>
+</nav>
+
+<div class="container">
+
+<h2 class="section-title" id="adapters">📦 适配器市场</h2>
+<p style="color: var(--dim); margin-bottom: 1rem;">下载即用的游戏计算适配包，放入 <code>framework/adapters/</code> 即可加载。</p>
+<div class="grid" id="adapter-list">
+<div class="empty">加载中...</div>
+</div>
+
+<h2 class="section-title" id="plugins">🔌 社区插件</h2>
+<p style="color: var(--dim); margin-bottom: 1rem;">玩家上传的 GUI 主题、计算规则、OCR 配置。</p>
+<div class="grid" id="plugin-list">
+<div class="empty">暂无社区插件 — 成为第一个贡献者！</div>
+</div>
+
+<h2 class="section-title" id="upload">📤 上传分享</h2>
+<div class="card" style="max-width: 500px;">
+<h3>分享你的适配器或插件</h3>
+<p>通过 GitHub Issue 或 Pull Request 提交：</p>
+<ol style="color: var(--dim); font-size: 0.9rem; margin: 0.75rem 0; padding-left: 1.5rem;">
+<li>打包适配器目录为 <code>.calcpack</code> ZIP</li>
+<li>在 <a href="https://github.com/wxhwwla/endfield_damage_calculator/issues" target="_blank" style="color: var(--accent);">GitHub Issues</a> 提交</li>
+<li>审核通过后上架至本市场</li>
+</ol>
+<a class="btn" href="https://github.com/wxhwwla/endfield_damage_calculator/issues/new/choose" target="_blank">提交适配器</a>
+</div>
+
+<h2 class="section-title" id="about">ℹ️ 关于</h2>
+<div class="card">
+<p><strong>Game Calc Hub</strong> 是 <a href="https://github.com/wxhwwla/endfield_damage_calculator" target="_blank" style="color: var(--accent);">终末地伤害计算器</a> 项目的社区插件市场。</p>
+<ul style="color: var(--dim); font-size: 0.9rem; margin: 0.75rem 0; padding-left: 1.5rem;">
+<li>底层引擎：<strong>calc-framework</strong> — 通用 DAG 数值仿真框架（GPL）</li>
+<li>适配器：各游戏的数值计算包（独立资源，自由分享）</li>
+<li>插件：GUI 主题、OCR 规则、公式模板</li>
+</ul>
+<p style="color: var(--dim); font-size: 0.9rem;">本市场静态托管于 GitHub Pages，无需后端服务器。</p>
+</div>
+
+</div>
+
+<footer>
+<p>Game Calc Hub · <a href="https://github.com/wxhwwla/endfield_damage_calculator" target="_blank">GitHub</a></p>
+<p style="margin-top: 0.5rem;">底层框架 GPL 开源 · 适配器/插件由贡献者自行授权 · 商业授权见 <a href="../../docs/商业许可要点.md" target="_blank">商业许可要点</a></p>
+</footer>
+
+<script>
+async function loadAdapters() {
+  const url = './catalog.json';
+  try {
+    const resp = await fetch(url + '?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    renderAdapters(data.adapters || []);
+  } catch (e) {
+    document.getElementById('adapter-list').innerHTML =
+      '<div class="empty">无法加载适配器列表（' + e.message + '）</div>';
+  }
+}
+
+function renderAdapters(adapters) {
+  const container = document.getElementById('adapter-list');
+  if (!adapters.length) {
+    container.innerHTML = '<div class="empty">暂无适配器</div>';
+    return;
+  }
+  container.innerHTML = adapters.map(a => `
+    <div class="card">
+      <h3>${a.name || '未命名'}</h3>
+      <span class="tag">${a.type || '游戏'}</span>
+      <span class="tag">${a.genre || '通用'}</span>
+      <p>${a.description || '暂无描述'}</p>
+      <div class="meta">
+        <span>📅 ${a.updated || '未知'}</span>
+        <span>⭐ ${a.stars || 0}</span>
+      </div>
+      <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        ${a.download_url
+          ? `<a class="btn" href="${a.download_url}" target="_blank">📥 下载</a>`
+          : ''}
+        ${a.source_url
+          ? `<a class="btn" href="${a.source_url}" target="_blank">📂 源码</a>`
+          : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+loadAdapters();
+</script>
+</body>
+</html>

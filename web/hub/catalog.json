@@ -1,0 +1,63 @@
+{
+  "schema_version": "hub-v1",
+  "name": "Game Calc Hub Catalog",
+  "updated": "2026-05-29",
+  "adapters": [
+    {
+      "name": "卡牌RPG伤害计算",
+      "id": "card_rpg",
+      "type": "game",
+      "genre": "",
+      "description": "",
+      "version": "1.0.0",
+      "updated": "",
+      "stars": 0,
+      "download_url": "",
+      "source_url": "",
+      "dependencies": [],
+      "schema_version": "dag-v1"
+    },
+    {
+      "name": "终末地伤害计算",
+      "id": "endfield",
+      "type": "game",
+      "genre": "",
+      "description": "",
+      "version": "3.0.0",
+      "updated": "",
+      "stars": 0,
+      "download_url": "",
+      "source_url": "",
+      "dependencies": [],
+      "schema_version": "dag-v1"
+    },
+    {
+      "name": "FPS 武器伤害计算",
+      "id": "fps",
+      "type": "game",
+      "genre": "",
+      "description": "通用 FPS 武器伤害公式：基础伤害 × 距离衰减 × 部位倍率 × 穿透减伤 → 实际伤害",
+      "version": "1.0.0",
+      "updated": "",
+      "stars": 0,
+      "download_url": "",
+      "source_url": "",
+      "dependencies": [],
+      "schema_version": "dag-v1"
+    },
+    {
+      "name": "MOBA 英雄伤害计算",
+      "id": "moba",
+      "type": "game",
+      "genre": "",
+      "description": "通用 MOBA 游戏伤害公式：技能基础伤害 + AD/AP 加成 → 护甲/魔抗双减伤 → 最终伤害",
+      "version": "1.0.0",
+      "updated": "",
+      "stars": 0,
+      "download_url": "",
+      "source_url": "",
+      "dependencies": [],
+      "schema_version": "dag-v1"
+    }
+  ]
+}

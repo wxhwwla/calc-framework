@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -12,7 +10,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -114,7 +111,12 @@ def read_abnormal_edits(
 ) -> dict[str, int]:
     result: dict[str, int] = {}
     for i, (row_name, edits) in enumerate(edits_by_row.items()):
-        total = sum(max(0, int(e.text() or "0")) for e in edits)
+        total = 0
+        for e in edits:
+            try:
+                total += max(0, int(e.text() or "0"))
+            except ValueError:
+                total += 0
         if i < len(keys):
             result[keys[i]] = total
     return result

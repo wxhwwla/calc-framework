@@ -77,6 +77,9 @@ class CalcWorker(QObject):
             if not self._cancelled:
                 tb = traceback.format_exc()
                 self.error.emit(f"{exc}\n{tb}")
+        finally:
+            if self._thread is not None:
+                self._thread.quit()
 
     def cancel(self) -> None:
         """取消计算并终止线程。"""

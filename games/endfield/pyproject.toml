@@ -71,7 +71,24 @@ markers = [
 ]
 # 本地日常：pytest -m "not integration and not real_data and not slow"
 # CI 仍跑全量：pytest tests/ -q
+# --cov-fail-under=60 对应长期目标 80%，目前先提至 60
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["calculation", "data", "gui_design", "utils"]
+
+[tool.coverage.report]
+fail_under = 60
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if False:",
+]
 
 [tool.ruff]
 # 第三级严格度（strict 为第四级）：E/F/W 基础 + I 导入 + N 命名 + UP 现代化 + SIM 简化 + RUF 专用

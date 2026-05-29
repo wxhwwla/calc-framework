@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.8.8"
+_VERSION = "3.8.9"
 _EXE_VERSION = "0.5.0-beta"
 # ==============================================================
 
@@ -209,9 +209,28 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 22 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 更新文档 CONTEXT.md
+# - 变更 .github/workflows/ci.yml
+# - 修改 devtool.py
+# - 修改 games/endfield/gui_design/shell/qt_control_dock_widgets.py
+# - 修改 games/endfield/gui_design/shell/qt_worker.py
 # - 修改 games/endfield/please_read_me.py
+# - 变更 games/endfield/pyproject.toml
+# - 修改 games/endfield/tests/gui_design/legal/test_donation_qt.py
+# - 修改 games/endfield/tests/gui_design/panels/selection/__init__.py
+# - 修改 games/endfield/tests/gui_design/panels/selection/test_qt_subpanels.py
+# - 修改 games/endfield/tests/gui_design/presentation/test_total_damage_panel.py
+# - 修改 games/endfield/tests/gui_design/shell/test_qt_control_dock_widgets.py
+# - 修改 games/endfield/tests/gui_design/shell/test_qt_factory.py
+# - 修改 games/endfield/tests/gui_design/shell/test_qt_worker.py
+# - 修改 games/endfield/tests/gui_design/shell/test_shell_init.py
+# - 修改 games/endfield/tests/repo/test_optional_deps.py
+# - 修改 games/endfield/tests/utils/test_gui_window.py
+# - 修改 games/endfield/tests/utils/test_platform_win32_patch.py
+# - 修改 tools/designer/layout_editor/canvas.py
+# - 修改 web/hub/build_catalog.py
+# - 变更 web/hub/catalog.json
+# - 变更 web/hub/index.html
 # --- END UPLOAD_SUMMARY ---

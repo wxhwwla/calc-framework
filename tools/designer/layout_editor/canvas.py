@@ -2,6 +2,7 @@
 """布局编辑器画布 — 基于 QGraphicsView 的可视化布局编辑器。
 
 支持通过 AdapterManager 加载适配包变量和 layout.json。
+新增多分辨率预览功能。
 """
 
 from __future__ import annotations
@@ -18,19 +19,137 @@ if _project_root not in sys.path:
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
+    QDialog,
     QFileDialog,
     QGraphicsScene,
     QGraphicsView,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QMessageBox,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
     QWidget,
 )
+
+_RESOLUTION_PRESETS = [
+    ("1920×1080 (Full HD)", 1920, 1080),
+    ("2560×1440 (2K)", 2560, 1440),
+    ("3840×2160 (4K)", 3840, 2160),
+    ("1366×768 (笔记本)", 1366, 768),
+    ("375×667 (手机)", 375, 667),
+    ("768×1024 (平板竖屏)", 768, 1024),
+]
+
+
+class ResolutionPreviewDialog(QDialog):
+    """多分辨率预览对话框 — 渲染 layout.json 并模拟不同屏幕尺寸。"""
+
+    def __init__(
+        self,
+        layout_data: dict,
+        dag_service,
+        adapter_name: str,
+        parent: QWidget | None = None,
+    ):
+        super().__init__(parent)
+        self._layout_data = layout_data
+        self._dag_service = dag_service
+        self._adapter_name = adapter_name
+        self._current_width = 1920
+        self._current_height = 1080
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        self.setWindowTitle(f"多分辨率预览 — {self._adapter_name}")
+        layout = QVBoxLayout(self)
+
+        toolbar = QHBoxLayout()
+        toolbar.addWidget(QLabel("模拟分辨率:"))
+
+        self._res_combo = QComboBox()
+        for label, *_ in _RESOLUTION_PRESETS:
+            self._res_combo.addItem(label)
+        self._res_combo.currentIndexChanged.connect(self._on_resolution_changed)
+        toolbar.addWidget(self._res_combo)
+
+        self._size_label = QLabel("1920 × 1080")
+        toolbar.addWidget(self._size_label)
+
+        toolbar.addStretch()
+
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(self.accept)
+        toolbar.addWidget(close_btn)
+
+        layout.addLayout(toolbar)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        self._preview_container = QWidget()
+        self._preview_layout = QVBoxLayout(self._preview_container)
+        scroll.setWidget(self._preview_container)
+        layout.addWidget(scroll, stretch=1)
+
+        self._render_preview()
+
+    def _on_resolution_changed(self, index: int) -> None:
+        if 0 <= index < len(_RESOLUTION_PRESETS):
+            _, w, h = _RESOLUTION_PRESETS[index]
+            self._current_width = w
+            self._current_height = h
+            self._size_label.setText(f"{w} × {h}")
+            self._render_preview()
+
+    def _render_preview(self) -> None:
+        while self._preview_layout.count():
+            item = self._preview_layout.takeAt(0)
+            w = item.widget()
+            if w:
+                w.deleteLater()
+
+        try:
+            from calc_framework.dag.service import DAGService
+            from calc_framework.ui.compute_sheet import ComputeSheet
+            from calc_framework.ui.layout import load_layout
+
+            service = self._dag_service
+            if isinstance(service, DAGService):
+                pass
+            else:
+                service = DAGService(service)
+
+            layout_obj = load_layout(self._layout_data)
+
+            sheet = ComputeSheet(
+                dag_service=service,
+                layout=layout_obj,
+                variables={},
+                base_context={},
+                parent=self._preview_container,
+            )
+
+            sheet_widget = sheet.widget
+            sheet_widget.setMinimumWidth(min(self._current_width, 800))
+            sheet_widget.setMaximumWidth(self._current_width)
+
+            group = QGroupBox(f"预览 @ {self._current_width}×{self._current_height}")
+            group_layout = QVBoxLayout(group)
+            group_layout.addWidget(sheet_widget)
+            self._preview_layout.addWidget(group)
+
+            self._preview_layout.addStretch()
+
+            sheet.evaluate()
+        except Exception as e:
+            error_lbl = QLabel(f"渲染失败: {e}")
+            error_lbl.setStyleSheet("color: #FF6B6B; padding: 16px;")
+            self._preview_layout.addWidget(error_lbl)
 
 
 class LayoutCanvasPanel(QWidget):
@@ -41,6 +160,7 @@ class LayoutCanvasPanel(QWidget):
         self._dag_data: dict | None = None
         self._layout_data: dict | None = None
         self._adapter_path: Path | None = None
+        self._dag_service = None
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -80,6 +200,16 @@ class LayoutCanvasPanel(QWidget):
         self._collision_btn.setCheckable(True)
         self._collision_btn.setChecked(True)
         toolbar.addWidget(self._collision_btn)
+
+        toolbar.addWidget(QLabel("预览:"))
+        self._res_combo = QComboBox()
+        for label, *_ in _RESOLUTION_PRESETS:
+            self._res_combo.addItem(label)
+        toolbar.addWidget(self._res_combo)
+
+        preview_btn = QPushButton("渲染预览")
+        preview_btn.clicked.connect(self._open_preview)
+        toolbar.addWidget(preview_btn)
 
         save_btn = QPushButton("保存布局")
         save_btn.clicked.connect(self._save_layout)
@@ -138,6 +268,7 @@ class LayoutCanvasPanel(QWidget):
             mgr = AdapterManager()
             pkg = mgr.load(name)
             self._adapter_path = Path(pkg._adapter_dir)
+            self._dag_service = pkg.dag_service
 
             self._var_list.clear()
             for var_name in pkg.dag_service.dag.variables:
@@ -146,9 +277,11 @@ class LayoutCanvasPanel(QWidget):
             layout_path = self._adapter_path / "ui" / "layout.json"
             if layout_path.is_file():
                 self._layout_data = json.loads(layout_path.read_text(encoding="utf-8"))
-                self._status_label.setText(f"已加载 {name} — layout.json + {len(pkg.dag_service.dag.variables)} 变量")
+                self._status_label.setText(
+                    f"已加载 {name} — layout.json + {len(pkg.dag_service.dag.variables)} 变量"
+                )
             else:
-                self._layout_data = {"sections": []}
+                self._layout_data = {"schema_version": "ui-v1", "name": name, "sections": []}
                 self._status_label.setText(f"已加载 {name} — 无 layout.json，新建空白布局")
 
             self._dag_data = {"name": name}
@@ -162,7 +295,9 @@ class LayoutCanvasPanel(QWidget):
         ui_dir = self._adapter_path / "ui"
         ui_dir.mkdir(parents=True, exist_ok=True)
         path = ui_dir / "layout.json"
-        path.write_text(json.dumps(self._layout_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        path.write_text(
+            json.dumps(self._layout_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         self._status_label.setText(f"布局已保存 → {path}")
 
     def _load_dag(self) -> None:
@@ -185,3 +320,20 @@ class LayoutCanvasPanel(QWidget):
 
     def _toggle_snap(self) -> None:
         self._snap_btn.setText("吸附: 开" if self._snap_btn.isChecked() else "吸附: 关")
+
+    def _open_preview(self) -> None:
+        if not self._layout_data:
+            QMessageBox.information(self, "提示", "请先选择适配器以加载 layout.json")
+            return
+        if not self._dag_service:
+            QMessageBox.information(self, "提示", "请先选择适配器以加载 DAG 服务")
+            return
+
+        dialog = ResolutionPreviewDialog(
+            layout_data=self._layout_data,
+            dag_service=self._dag_service,
+            adapter_name=self._adapter_selector.currentText(),
+            parent=self,
+        )
+        dialog.setMinimumSize(900, 600)
+        dialog.exec()
