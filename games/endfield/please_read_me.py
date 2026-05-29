@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.4"
+_VERSION = "3.11.5"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,7 +209,10 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 变更 games/endfield/gui_design/legal/wechat_reward.jpg
+# TITLE: 更新 4 处文件
 # BODY:
-# - 变更 games/endfield/gui_design/legal/wechat_reward.jpg
+# - 变更 games/endfield/tests/gui_design/presentation/display/
+# - 变更 games/endfield/tests/gui_design/presentation/preview/
+# - 变更 games/endfield/tests/gui_design/shared/preset/
+# - 变更 games/endfield/tests/gui_design/shared/ui/
 # --- END UPLOAD_SUMMARY ---
