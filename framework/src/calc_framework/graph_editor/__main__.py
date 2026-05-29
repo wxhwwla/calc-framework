@@ -15,9 +15,7 @@ def main() -> None:
     from PySide6.QtWidgets import (
         QApplication,
         QFileDialog,
-        QHBoxLayout,
         QMainWindow,
-        QMenuBar,
         QMessageBox,
         QSplitter,
         QVBoxLayout,
@@ -39,7 +37,6 @@ def main() -> None:
     from calc_framework.graph_editor.node_panel import NodePanel
     from calc_framework.graph_editor.prop_panel import PropPanel
     from calc_framework.graph_editor.registry import create_default_node
-    from calc_framework.graph_editor.schema import GraphDocument
     from calc_framework.graph_editor.help_dialog import HelpDialog
 
     app = QApplication(sys.argv)
@@ -251,9 +248,10 @@ def main() -> None:
         QToolButton:pressed { background: #094771; color: white; }
     """)
 
+    from collections.abc import Callable
     from PySide6.QtWidgets import QToolButton
 
-    def _tb(text: str, tip: str, cb: callable) -> None:
+    def _tb(text: str, tip: str, cb: Callable[[], None]) -> None:
         btn = QToolButton()
         btn.setText(text)
         btn.setToolTip(tip)

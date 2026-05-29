@@ -238,9 +238,10 @@ def main() -> None:
         QToolButton:pressed { background: #094771; color: white; }
     """)
 
+    from collections.abc import Callable
     from PySide6.QtWidgets import QToolButton, QMessageBox
 
-    def _tb(text: str, tip: str, cb: callable) -> None:
+    def _tb(text: str, tip: str, cb: Callable[[], None]) -> None:
         btn = QToolButton()
         btn.setText(text)
         btn.setToolTip(tip)
