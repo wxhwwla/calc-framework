@@ -12,13 +12,14 @@
   "reportOptionalIterable": false,
   "reportOptionalSubscript": false,
   "include": [
-    "endfield_damage_calculator"
+    "games"
   ],
   "exclude": [
     "**/node_modules",
     "**/__pycache__",
     "**/.*",
     "**/dist",
-    "**/build"
+    "**/build",
+    ".venv"
   ]
 }
