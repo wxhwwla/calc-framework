@@ -531,7 +531,7 @@ def _markexpr(config: pytest.Config) -> str:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """带 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import CTk）。"""
+    """带 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import PySide6）。"""
     expr = _markexpr(config)
     if not expr:
         return

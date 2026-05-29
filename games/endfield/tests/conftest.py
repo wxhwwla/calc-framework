@@ -37,7 +37,7 @@ def _markexpr(config: pytest.Config) -> str:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """带 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import CTk）。"""
+    """带 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import PySide6）。"""
     expr = _markexpr(config)
     if not expr:
         return
@@ -78,7 +78,7 @@ TOOLS_ROOT = _TOOLS_ROOT
 
 
 # === from fixtures/gui_fixtures.py ===
-"""GUI 测试夹具：MockSelectionPanel（CTk 已移除）。"""
+"""GUI 测试夹具：MockSelectionPanel（已迁移至 PySide6）。"""
 
 import json
 from types import SimpleNamespace
@@ -217,5 +217,5 @@ class _BoolVar:
 
 
 def ctk_available() -> bool:
-    """CTk 已移除，始终返回 False。"""
+    """已迁移至 PySide6，CTk 兼容别名在 qt_factory.py 中保留。"""
     return False

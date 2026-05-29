@@ -3,7 +3,7 @@
 终末地伤害计算小工具 - 项目说明文档
 
 项目简介：
-    本工具是一个基于 CustomTkinter 开发的伤害计算辅助工具，用于游戏《明日方舟：终末地》。
+    本工具是一个基于 PySide6 开发的伤害计算辅助工具，用于游戏《明日方舟：终末地》。
     玩家可以通过选择角色和武器，查看属性面板和乘区数据，帮助优化配装和战斗策略。
 
 功能特性：
@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.9.8"
+_VERSION = "3.9.9"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -136,7 +136,7 @@ USAGE_INFO = """
 
 技术栈：
     - Python 3.10+
-    - CustomTkinter 5.2.2+（GUI框架）
+    - PySide6（GUI框架）
     - JSON（数据存储）
     - PyInstaller（打包工具）
 """
@@ -209,8 +209,11 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 5 处文件
 # BODY:
-# - 修改 games/endfield/gui_design/designer/designer_main.py
+# - 修改 games/endfield/gui_design/panels/__init__.py
 # - 修改 games/endfield/please_read_me.py
+# - 修改 games/endfield/tests/conftest.py
+# - 修改 tools/layout_migrate_breaking.py
+# - 修改 tools/split_module_by_symbols.py
 # --- END UPLOAD_SUMMARY ---

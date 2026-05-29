@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-角色/武器选择面板（CustomTkinter）。
+角色/武器选择面板（PySide6）。
 
 子模块：
 - selection_panel：类型/星级/名称/等级联动面板
