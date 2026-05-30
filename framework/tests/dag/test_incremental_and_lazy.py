@@ -335,6 +335,42 @@ _BLOCK_DAG = {
     },
 }
 
+_BLOCK_DAG_CONST = {
+    "schema_version": "dag-v1",
+    "name": "块Const绑定测试图",
+    "variables": {
+        "character.x": {"type": "float", "source": "character"},
+    },
+    "subgraphs": {
+        "add_block": {
+            "description": "加法块",
+            "parameters": {
+                "x": {"type": "float", "source": "computed"},
+                "y": {"type": "float", "source": "computed"},
+            },
+            "nodes": {
+                "sum": {"type": "binary", "op": "+", "lhs": "x", "rhs": "y", "label": "x+y"},
+            },
+            "outputs": {
+                "result": {"node": "sum", "label": "结果", "is_primary": True},
+            },
+        },
+    },
+    "nodes": {
+        "var_x": {"type": "var", "path": "character.x", "label": "x"},
+        "const_five": {"type": "const", "value": 5},
+        "block_add": {
+            "type": "call",
+            "subgraph": "add_block",
+            "bindings": {"x": "var_x", "y": "const_five"},
+            "label": "加法块",
+        },
+    },
+    "outputs": {
+        "add_result": {"node": "block_add", "label": "x+5"},
+    },
+}
+
 
 class TestBlockCacheWithIncremental:
     def test_both_caches_work_together(self) -> None:
@@ -375,6 +411,32 @@ class TestBlockCacheWithIncremental:
         r3 = svc.evaluate({"character": {"a": 3.0, "b": 4.0}})
         assert r3.outputs["add_result"] == 7.0
         assert svc.dag_state.evaluation_count == 1  # Reset, so back to 1
+
+    def test_block_cache_with_const_bindings(self) -> None:
+        g = dag_from_dict(_BLOCK_DAG_CONST)
+        cache = BlockCache()
+        state = DAGState()
+        r1 = evaluate_graph(g, {"character": {"x": 3.0}}, block_cache=cache, dag_state=state)
+        assert r1.outputs["add_result"] == 8.0
+        r2 = evaluate_graph(g, {"character": {"x": 10.0}}, block_cache=cache, dag_state=state)
+        assert r2.outputs["add_result"] == 15.0
+        assert state.evaluation_count == 2
+
+    def test_block_cache_without_call_nodes(self) -> None:
+        g = dag_from_dict(_SIMPLE_DAG)
+        cache = BlockCache()
+        state = DAGState()
+        result = evaluate_graph(g, {"character": {"a": 3.0, "b": 4.0}}, block_cache=cache, dag_state=state)
+        assert result.outputs["sum_result"] == 7.0
+        assert result.outputs["product_result"] == 49.0
+
+    def test_get_primary_output_node_missing_subgraph(self) -> None:
+        from calc_framework.dag.engine import _get_primary_output_node
+        from calc_framework.dag.schema import DAGGraph, CallNode
+        expanded = DAGGraph()
+        call_node = CallNode(subgraph="nonexistent", bindings={})
+        result = _get_primary_output_node(expanded, call_node, "block_id")
+        assert result is None
 
 
 # ── Test: DAGService integration ──────────────────────

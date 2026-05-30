@@ -6,11 +6,13 @@ import pytest
 from calc_framework.dag.schema import (
     DAGGraph,
     DAGOutput,
+    DAGSubgraph,
     DAGVariable,
     ExprNode,
 )
 from calc_framework.dag.serializer import dag_to_dict
 from calc_framework.editor import (
+    EditorState,
     LayoutEditor,
     discover_input_variables,
     discover_outputs,
@@ -32,6 +34,34 @@ SAMPLE_DAG = DAGGraph(
     },
 )
 
+DAG_WITH_SUBGRAPHS = DAGGraph(
+    name="test_sg",
+    variables={
+        "char_atk": DAGVariable(type="float", source="character", description="角色攻击"),
+    },
+    subgraphs={
+        "calc_buff": DAGSubgraph(
+            description="buff计算",
+            parameters={
+                "buff_rate": DAGVariable(type="float", source="character", description="buff倍率"),
+                "base": DAGVariable(type="float", source="computed", description="基础值"),
+            },
+            nodes={
+                "calc": ExprNode(expr="buff_rate * base"),
+            },
+            outputs={
+                "buff_value": DAGOutput(node="calc", label="buff值"),
+            },
+        ),
+    },
+    nodes={
+        "main": ExprNode(expr="char_atk"),
+    },
+    outputs={
+        "final": DAGOutput(node="main", label="最终"),
+    },
+)
+
 
 class TestDiscover:
     def test_finds_user_input_vars(self):
@@ -41,6 +71,14 @@ class TestDiscover:
     def test_finds_outputs(self):
         result = discover_outputs(SAMPLE_DAG)
         assert result == ["最终攻击力"]
+
+    def test_finds_input_vars_with_subgraphs(self):
+        result = discover_input_variables(DAG_WITH_SUBGRAPHS)
+        assert set(result) == {"buff_rate", "char_atk"}
+
+    def test_finds_outputs_with_subgraphs(self):
+        result = discover_outputs(DAG_WITH_SUBGRAPHS)
+        assert result == ["buff_value", "final"]
 
 
 class TestLayoutEditorAPI:
@@ -169,3 +207,43 @@ class TestLayoutEditorAPI:
         layout = editor.auto_layout()
         assert len(layout.sections) == 1
         assert layout.sections[0].type == "outputs"
+
+    def test_dag_property(self, tmp_path):
+        dag_path = tmp_path / "test.dag.json"
+        dag_path.write_text(json.dumps(dag_to_dict(SAMPLE_DAG)), encoding="utf-8")
+        editor = LayoutEditor(dag_path)
+        assert editor.dag is not None
+        assert editor.dag.name == "test"
+
+    def test_set_name(self, tmp_path):
+        dag_path = tmp_path / "test.dag.json"
+        dag_path.write_text(json.dumps(dag_to_dict(SAMPLE_DAG)), encoding="utf-8")
+        editor = LayoutEditor(dag_path)
+        editor.set_name("Custom Name")
+        assert editor.state.layout_name == "Custom Name"
+
+    def test_set_section_variables_missing(self, tmp_path):
+        dag_path = tmp_path / "test.dag.json"
+        dag_path.write_text(json.dumps(dag_to_dict(SAMPLE_DAG)), encoding="utf-8")
+        editor = LayoutEditor(dag_path)
+        with pytest.raises(KeyError, match="不存在"):
+            editor.set_section_variables("nonexistent", ["x"])
+
+    def test_set_section_outputs(self, tmp_path):
+        dag_path = tmp_path / "test.dag.json"
+        dag_path.write_text(json.dumps(dag_to_dict(SAMPLE_DAG)), encoding="utf-8")
+        editor = LayoutEditor(dag_path)
+        editor.add_section("outs", type="outputs", title="结果")
+        sec = editor.set_section_outputs("outs", ["最终攻击力"])
+        assert sec.outputs == ["最终攻击力"]
+
+    def test_set_section_outputs_missing(self, tmp_path):
+        dag_path = tmp_path / "test.dag.json"
+        dag_path.write_text(json.dumps(dag_to_dict(SAMPLE_DAG)), encoding="utf-8")
+        editor = LayoutEditor(dag_path)
+        with pytest.raises(KeyError, match="不存在"):
+            editor.set_section_outputs("nonexistent", ["x"])
+
+    def test_editor_state_find_section_none(self):
+        state = EditorState()
+        assert state.find_section("nope") is None

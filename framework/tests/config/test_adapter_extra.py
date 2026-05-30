@@ -87,7 +87,7 @@ class TestAdapterPackageExtra:
         bad_schema = tmp_path / "bad_schema.json"
         bad_schema.write_text("{invalid json content", encoding="utf-8")
 
-        pkg = AdapterPackage(tmp_path)
+        AdapterPackage(tmp_path)
         assert "加载 attr_schema 失败" in caplog.text
 
     def test_load_function_file_not_found_warns(self, tmp_path: Path, caplog):

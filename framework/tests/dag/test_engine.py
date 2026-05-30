@@ -3,7 +3,7 @@
 
 import pytest
 from calc_framework.dag.engine import evaluate_graph, topological_sort
-from calc_framework.dag.errors import DAGCycleError
+from calc_framework.dag.errors import DAGCycleError, DAGRuntimeError
 from calc_framework.dag.serializer import dag_from_dict
 
 _SIMPLE_LINEAR: dict = {
@@ -72,6 +72,41 @@ _CYCLE_GRAPH: dict = {
         "b": {"type": "binary", "op": "+", "lhs": "a", "rhs": "a"},
     },
     "outputs": {"x": {"node": "a", "label": "x"}},
+}
+
+
+_RESOLVE_PATH_DICT: dict = {
+    "schema_version": "dag-v1",
+    "name": "嵌套路径 dict",
+    "variables": {"character.attack": {"type": "float", "source": "character"}},
+    "nodes": {
+        "atk_node": {"type": "var", "path": "character.attack"},
+    },
+    "outputs": {"atk": {"node": "atk_node", "label": "攻击"}},
+}
+
+
+_MISSING_OUTPUT_DAG: dict = {
+    "schema_version": "dag-v1",
+    "name": "缺失输出引用",
+    "subgraphs": {
+        "add_one": {
+            "parameters": {"val": {"type": "float"}},
+            "nodes": {
+                "one": {"type": "const", "value": 1},
+                "result": {"type": "binary", "op": "+", "lhs": "val", "rhs": "one"},
+            },
+            "outputs": {"out": {"node": "result", "label": "val+1", "is_primary": True}},
+        },
+    },
+    "nodes": {
+        "in_val": {"type": "const", "value": 5},
+        "call_add": {"type": "call", "subgraph": "add_one", "bindings": {"val": "in_val"}},
+    },
+    "outputs": {
+        "valid": {"node": "call_add", "label": "有效输出"},
+        "invalid": {"node": "call_add.nonexistent", "label": "无效输出"},
+    },
 }
 
 
@@ -151,3 +186,59 @@ class TestEvaluateGraph:
         })
         result = evaluate_graph(g, {"x": 3.0})
         assert result.outputs["o"] == pytest.approx(-3.0)
+
+    def test_unknown_unary_op(self) -> None:
+        from calc_framework.dag.schema import DAGGraph, DAGOutput, DAGVariable, UnaryNode, VarNode
+        g = DAGGraph(
+            name="unknown_unary",
+            variables={"x": DAGVariable(type="float", source="computed")},
+            nodes={
+                "x_node": VarNode(path="x"),
+                "bad": UnaryNode(op="foo", input="x_node"),
+            },
+            outputs={"o": DAGOutput(node="bad", label="o")},
+        )
+        with pytest.raises(DAGRuntimeError, match="未知一元运算"):
+            evaluate_graph(g, {"x": 1.0})
+
+    def test_unknown_binary_op(self) -> None:
+        from calc_framework.dag.schema import DAGGraph, DAGOutput, DAGVariable, BinaryNode, ConstNode, VarNode
+        g = DAGGraph(
+            name="unknown_binary",
+            variables={"x": DAGVariable(type="float", source="computed")},
+            nodes={
+                "x_node": VarNode(path="x"),
+                "two": ConstNode(value=2),
+                "bad": BinaryNode(op="^^^", lhs="x_node", rhs="two"),
+            },
+            outputs={"o": DAGOutput(node="bad", label="o")},
+        )
+        with pytest.raises(DAGRuntimeError, match="未知二元运算"):
+            evaluate_graph(g, {"x": 1.0})
+
+    def test_unsupported_node_type(self) -> None:
+        from dataclasses import dataclass
+        from calc_framework.dag.engine import _eval_single_node
+
+        @dataclass
+        class MockNode:
+            type: str = "mock"
+
+        with pytest.raises(DAGRuntimeError, match="不支持的节点类型"):
+            _eval_single_node(MockNode(), {}, {})
+
+    def test_resolve_path_with_dict(self) -> None:
+        g = dag_from_dict(_RESOLVE_PATH_DICT)
+        result = evaluate_graph(g, {"character": {"attack": 100.0}})
+        assert result.outputs["atk"] == pytest.approx(100.0)
+
+    def test_resolve_path_non_dict_intermediate(self) -> None:
+        g = dag_from_dict(_RESOLVE_PATH_DICT)
+        with pytest.raises(DAGRuntimeError):
+            evaluate_graph(g, {"character": 10.0})
+
+    def test_missing_output_reference(self) -> None:
+        g = dag_from_dict(_MISSING_OUTPUT_DAG)
+        result = evaluate_graph(g, {})
+        assert result.outputs["valid"] == pytest.approx(6.0)
+        assert "invalid" not in result.outputs

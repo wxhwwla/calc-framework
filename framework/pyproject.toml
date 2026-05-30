@@ -48,3 +48,31 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+omit = [
+    "*/dag/debugger_cli.py",
+    "*/dag/debugger_gui.py",
+    "*/graph_editor/__main__.py",
+    "*/graph_editor/help_content.py",
+    "*/graph_editor/help_dialog.py",
+    "*/launcher.py",
+    "*/ui/__main__.py",
+    "*/ui/theme.py",
+    "*/ui/viewer.py",
+    "*/editor/__main__.py",
+    "*/editor/gui.py",
+    "*/graph_editor/graph_editor_widget.py",
+    "*/graph_editor/node_panel.py",
+    "*/graph_editor/prop_panel.py",
+    "*/ui/compute_sheet.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
