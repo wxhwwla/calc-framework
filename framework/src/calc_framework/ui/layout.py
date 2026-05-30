@@ -14,6 +14,10 @@ class LayoutValidationError(ValueError):
     """layout.json 校验失败。"""
 
 
+VALID_SECTION_TYPES = ("inputs", "outputs", "widget")
+VALID_WIDGET_TYPES = ("donation",)
+
+
 @dataclass
 class Section:
     id: str
@@ -22,6 +26,7 @@ class Section:
     variables: list[str] = field(default_factory=list)
     outputs: list[str] = field(default_factory=list)
     columns: int = 2
+    widget_type: str = ""
 
 
 @dataclass
@@ -74,8 +79,10 @@ def _validate(data: dict[str, Any]) -> None:
         seen_ids.add(section_id)
 
         sec_type = sec.get("type")
-        if sec_type not in ("inputs", "outputs"):
-            raise LayoutValidationError(f"section type 必须为 inputs 或 outputs，收到: {sec_type}")
+        if sec_type not in VALID_SECTION_TYPES:
+            raise LayoutValidationError(
+                f"section type 必须为 {'/'.join(VALID_SECTION_TYPES)}，收到: {sec_type}"
+            )
 
         if not isinstance(sec.get("title"), str) or not sec["title"]:
             raise LayoutValidationError(f"section {section_id} 缺少 title")
@@ -84,6 +91,13 @@ def _validate(data: dict[str, Any]) -> None:
             raise LayoutValidationError(f"inputs section {section_id} 缺少 variables 列表")
         if sec_type == "outputs" and not isinstance(sec.get("outputs"), list):
             raise LayoutValidationError(f"outputs section {section_id} 缺少 outputs 列表")
+        if sec_type == "widget":
+            widget_type = sec.get("widget_type", "")
+            if widget_type not in VALID_WIDGET_TYPES:
+                raise LayoutValidationError(
+                    f"widget section {section_id} 的 widget_type 必须为 "
+                    f"{'/'.join(VALID_WIDGET_TYPES)}，收到: {widget_type}"
+                )
 
 
 def _build_sections(raw: list[dict[str, Any]]) -> list[Section]:
@@ -96,5 +110,6 @@ def _build_sections(raw: list[dict[str, Any]]) -> list[Section]:
             variables=sec.get("variables", []),
             outputs=sec.get("outputs", []),
             columns=sec.get("columns", 2),
+            widget_type=sec.get("widget_type", ""),
         ))
     return result

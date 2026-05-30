@@ -67,12 +67,13 @@ class _ControlItem(QGraphicsRectItem):
 class _SectionItem(QGraphicsRectItem):
     """画布上的一个 Section 区块。"""
 
-    def __init__(self, section_id: str, title: str, section_type: str, columns: int, parent=None):
+    def __init__(self, section_id: str, title: str, section_type: str, columns: int, widget_type: str = "", parent=None):
         h = _SECTION_HEADER_H + _CONTROL_MARGIN
         super().__init__(0, 0, _SECTION_WIDTH, h, parent)
         self._section_id = section_id
         self._section_type = section_type
         self._columns = columns
+        self._widget_type = widget_type
         self._title = title
         self._controls: list[_ControlItem] = []
 
@@ -87,7 +88,10 @@ class _SectionItem(QGraphicsRectItem):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setAcceptDrops(True)
 
-        title_text = f"{title} [{section_type}]"
+        title_parts = [title, f"[{section_type}]"]
+        if widget_type:
+            title_parts.append(f"({widget_type})")
+        title_text = " ".join(title_parts)
         self._title_item = QGraphicsSimpleTextItem(title_text, self)
         self._title_item.setFont(QFont("Microsoft YaHei", 10, QFont.Weight.Bold))
         self._title_item.setBrush(QBrush(QColor("#F0F0F0")))
@@ -142,6 +146,11 @@ class _SectionItem(QGraphicsRectItem):
         return self._title
 
     def to_section(self) -> Section:
+        if self._section_type == "widget":
+            return Section(
+                id=self._section_id, title=self._title,
+                type="widget", widget_type=self._widget_type,
+            )
         inp_vars = [c.var_name for c in self._controls if c.var_name.startswith("character.") or c.var_name.startswith("weapon.") or c.var_name.startswith("equipment.") or c.var_name.startswith("enemy.") or c.var_name.startswith("user.")]
         out_vars = [c.var_name for c in self._controls if not (c.var_name.startswith("character.") or c.var_name.startswith("weapon.") or c.var_name.startswith("equipment.") or c.var_name.startswith("enemy.") or c.var_name.startswith("user."))]
         if self._section_type == "inputs":
@@ -153,7 +162,7 @@ class _SectionItem(QGraphicsRectItem):
 class SectionEditDialog(QDialog):
     """新建/编辑 Section 的对话框。"""
 
-    def __init__(self, title="", section_type="inputs", columns=2, parent=None):
+    def __init__(self, title="", section_type="inputs", columns=2, widget_type="", parent=None):
         super().__init__(parent)
         self.setWindowTitle("Section 属性")
         self._result: dict | None = None
@@ -163,9 +172,16 @@ class SectionEditDialog(QDialog):
         layout.addRow("标题:", self._title_edit)
 
         self._type_combo = QComboBox()
-        self._type_combo.addItems(["inputs", "outputs"])
+        self._type_combo.addItems(["inputs", "outputs", "widget"])
         self._type_combo.setCurrentText(section_type)
+        self._type_combo.currentTextChanged.connect(self._on_type_changed)
         layout.addRow("类型:", self._type_combo)
+
+        self._widget_type_combo = QComboBox()
+        self._widget_type_combo.addItems(["donation"])
+        self._widget_type_combo.setCurrentText(widget_type or "donation")
+        self._widget_type_label = QLabel("组件类型:")
+        layout.addRow(self._widget_type_label, self._widget_type_combo)
 
         self._cols_spin = QSpinBox()
         self._cols_spin.setRange(1, 6)
@@ -181,11 +197,20 @@ class SectionEditDialog(QDialog):
         btns.addWidget(cancel_btn)
         layout.addRow(btns)
 
+        self._on_type_changed(section_type)
+
+    def _on_type_changed(self, sec_type: str) -> None:
+        is_widget = sec_type == "widget"
+        self._widget_type_combo.setVisible(is_widget)
+        self._widget_type_label.setVisible(is_widget)
+        self._cols_spin.setVisible(not is_widget)
+
     def _accept(self) -> None:
         self._result = {
             "title": self._title_edit.text() or "新 Section",
             "type": self._type_combo.currentText(),
             "columns": self._cols_spin.value(),
+            "widget_type": self._widget_type_combo.currentText() if self._type_combo.currentText() == "widget" else "",
         }
         self.accept()
 
@@ -219,6 +244,11 @@ class LayoutCanvasPanel(QWidget):
         del_section_btn = QPushButton("删除选中")
         del_section_btn.clicked.connect(self._delete_selected)
         toolbar.addWidget(del_section_btn)
+
+        donation_section_btn = QPushButton("+ 捐赠")
+        donation_section_btn.setStyleSheet("QPushButton { color: #e74c3c; }")
+        donation_section_btn.clicked.connect(self._add_donation_section)
+        toolbar.addWidget(donation_section_btn)
 
         toolbar.addWidget(QLabel("  适配器:"))
         self._adapter_selector = QComboBox()
@@ -332,12 +362,24 @@ class LayoutCanvasPanel(QWidget):
         r = dialog.result
         self._section_id_counter += 1
         sid = f"section_{self._section_id_counter}"
-        sec_item = _SectionItem(sid, r["title"], r["type"], r["columns"])
+        sec_item = _SectionItem(sid, r["title"], r["type"], r["columns"], r.get("widget_type", ""))
         x = 30 + (self._section_id_counter % 3) * 40
         y = 30 + (self._section_id_counter % 3) * 30
         sec_item.setPos(x, y)
         self._scene.addItem(sec_item)
         self._status_label.setText(f"已添加 Section: {r['title']}")
+        self._emit_layout_changed()
+
+    def _add_donation_section(self) -> None:
+        self._section_id_counter += 1
+        sid = f"widget_donation_{self._section_id_counter}"
+        sec_item = _SectionItem(sid, "自愿捐赠", "widget", 1, widget_type="donation")
+        x = 30 + (self._section_id_counter % 3) * 40
+        y = 30 + (self._section_id_counter % 3) * 30
+        sec_item.setPos(x, y)
+        sec_item._resize_to_fit()
+        self._scene.addItem(sec_item)
+        self._status_label.setText("已添加捐赠组件")
         self._emit_layout_changed()
 
     def _delete_selected(self) -> None:
@@ -454,9 +496,12 @@ class LayoutCanvasPanel(QWidget):
         self._section_id_counter = 0
         for i, sec in enumerate(layout.sections):
             self._section_id_counter += 1
-            sec_item = _SectionItem(sec.id, sec.title, sec.type, sec.columns)
+            sec_item = _SectionItem(sec.id, sec.title, sec.type, sec.columns, sec.widget_type)
             sec_item.setPos(30 + (i % 2) * 60, 30 + (i % 2) * 30)
             self._scene.addItem(sec_item)
+            if sec.type == "widget":
+                sec_item._resize_to_fit()
+                continue
             for var_name in sec.variables:
                 sec_item.add_control(var_name, var_name)
             for out_name in sec.outputs:
@@ -478,6 +523,7 @@ class LayoutCanvasPanel(QWidget):
                     "variables": sec.variables,
                     "outputs": sec.outputs,
                     "columns": sec.columns,
+                    "widget_type": sec.widget_type,
                 })
         return {
             "schema_version": "ui-v1",

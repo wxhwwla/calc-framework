@@ -6,11 +6,12 @@
     python main_build.py                     # 默认打包全部
     python main_build.py --target calculator # 仅打包计算器
     python main_build.py --target designer   # 仅打包数据设计器
+    python main_build.py --target pack-designer # 仅打包配置包设计器
 
 输出：
   dist/终末地伤害计算器/  ── 伤害计算器
   dist/数据设计器/  ── 数据设计器
-  dist/布局编辑器/  ── 布局编辑器
+  dist/配置包设计器/  ── 配置包设计器
 """
 
 from __future__ import annotations
@@ -121,8 +122,8 @@ def _build_target(
     print(f"  输出: {release_root}")
     print(f"{'=' * 60}")
 
-    work_dir = tempfile.mkdtemp(prefix=f"build_{target}_")
-    spec_dir = tempfile.mkdtemp(prefix=f"spec_{target}_")
+    work_dir = tempfile.mkdtemp(prefix=f"build_{target}_", dir=base_dir)
+    spec_dir = tempfile.mkdtemp(prefix=f"spec_{target}_", dir=base_dir)
     cmd: list[str] = [
         sys.executable,
         "-m",
@@ -138,6 +139,17 @@ def _build_target(
     ]
     if extra_args:
         cmd.extend(extra_args)
+
+    if target == "calculator":
+        cmd.extend([
+            "--paths", str(base_dir / "games"),
+            "--paths", str(base_dir / "games" / "endfield"),
+        ])
+    elif target == "designer":
+        cmd.extend(["--paths", str(base_dir / "tools")])
+    elif target == "pack-designer":
+        cmd.extend(["--paths", str(base_dir / "tools")])
+
     cmd.append(entry)
 
     timeout = _read_int_env("ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS)
@@ -164,7 +176,7 @@ def main() -> None:
     apply_platform_win32_patch()
 
     parser = argparse.ArgumentParser(description="终末地伤害计算器 — 打包脚本")
-    parser.add_argument("--target", choices=["calculator", "designer", "all"], default="all")
+    parser.add_argument("--target", choices=["calculator", "designer", "pack-designer", "all"], default="all")
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
     args = parser.parse_args()
 
@@ -173,7 +185,7 @@ def main() -> None:
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     targets: list[BuildTarget] = (
-        ["calculator", "designer"] if args.target == "all" else [args.target]
+        ["calculator", "designer", "pack-designer"] if args.target == "all" else [args.target]
     )
 
     if not args.no_bump:
@@ -186,7 +198,7 @@ def main() -> None:
         release_root = exe_path.parent
         stage_release_folder(
             release_root,
-            project_root=base_dir / "games" / "endfield",
+            project_root=base_dir,
             repo_root=base_dir,
             target=target,
         )

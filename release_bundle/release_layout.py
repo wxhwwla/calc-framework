@@ -15,16 +15,18 @@ from typing import Literal
 
 from adapters.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
-BuildTarget = Literal["calculator", "designer"]
+BuildTarget = Literal["calculator", "designer", "pack-designer"]
 
 TARGET_APP_NAMES: dict[BuildTarget, str] = {
     "calculator": "终末地伤害计算器",
     "designer": "数据设计器",
+    "pack-designer": "配置包设计器",
 }
 
 TARGET_ENTRIES: dict[BuildTarget, str] = {
     "calculator": "main.py",
     "designer": "main_designer.py",
+    "pack-designer": "main_pack_designer.py",
 }
 
 RELEASE_DATA_FILES: tuple[tuple[str, str], ...] = (
@@ -80,6 +82,22 @@ def _designer_readme(exe_version: str, package_version: str) -> str:
 """
 
 
+def _pack_designer_readme(exe_version: str, package_version: str) -> str:
+    return f"""配置包设计器 — 发布包说明
+
+【版本】EXE v{exe_version}（源码包 v{package_version}）
+【软件】配置包设计器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+
+本工具用于创建 .calcpack 配置包，包含数据录入、布局编辑、主题与导出三页签。
+生成的 .calcpack 可用启动器或 CalcPackViewer 打开使用。
+
+【三种导出方式】
+1. 数据 + 布局 + 主题 → 导出 .calcpack
+2. 仅布局 → 导出 layout.json
+3. 设置 → 导出 DAG JSON
+"""
+
+
 def stage_release_folder(
     release_root: Path,
     *,
@@ -89,13 +107,14 @@ def stage_release_folder(
 ) -> None:
     release_root.mkdir(parents=True, exist_ok=True)
 
-    for dest_rel, src_rel in RELEASE_DATA_FILES:
-        src = project_root / src_rel
-        if not src.is_file():
-            raise FileNotFoundError(f"缺少游戏数据源文件: {src}")
-        dest = release_root / dest_rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dest)
+    if target != "pack-designer":
+        for dest_rel, src_rel in RELEASE_DATA_FILES:
+            src = project_root / src_rel
+            if not src.is_file():
+                raise FileNotFoundError(f"缺少游戏数据源文件: {src}")
+            dest = release_root / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
 
     for dest_rel, src_rel in LICENSE_FILES:
         src = repo_root / src_rel
@@ -106,8 +125,10 @@ def stage_release_folder(
     exe_version, package_version = _read_release_versions()
     if target == "calculator":
         readme_fn = _calculator_readme
-    else:
+    elif target == "designer":
         readme_fn = _designer_readme
+    else:
+        readme_fn = _pack_designer_readme
     (release_root / RELEASE_README_NAME).write_text(
         readme_fn(exe_version=exe_version, package_version=package_version),
         encoding="utf-8",

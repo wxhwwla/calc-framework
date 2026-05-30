@@ -225,6 +225,8 @@ class ComputeSheet(QObject):
                 root_layout.addWidget(self._build_input_section(sec))
             elif sec.type == "outputs":
                 root_layout.addWidget(self._build_output_section(sec))
+            elif sec.type == "widget":
+                root_layout.addWidget(self._build_widget_section(sec))
 
         eval_btn = QPushButton("计算")
         eval_btn.clicked.connect(self.evaluate)
@@ -271,6 +273,19 @@ class ComputeSheet(QObject):
             self._output_labels[out_name] = value_label
 
         layout.addLayout(grid)
+        return group
+
+    def _build_widget_section(self, sec: Section) -> QWidget:
+        if sec.widget_type == "donation":
+            from utils.donation import DonationWidget
+            group = QGroupBox(sec.title)
+            layout = QVBoxLayout(group)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(DonationWidget(group))
+            return group
+        group = QGroupBox(sec.title)
+        layout = QVBoxLayout(group)
+        layout.addWidget(QLabel(f"未知组件: {sec.widget_type}"))
         return group
 
     def _create_control(self, spec: ControlSpec) -> QWidget | None:

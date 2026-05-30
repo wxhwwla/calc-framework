@@ -30,6 +30,8 @@ from endfield_designer.data_editor_tab import DataEditorTab
 from endfield_designer.inverse_tab import InverseTab
 from endfield_designer.seed_tab import SeedTab
 
+from utils.donation import open_donation_dialog
+
 APP_NAME = "数据设计器"
 APP_VERSION = "1.0.0"
 
@@ -72,6 +74,16 @@ class DesignerApp(QMainWindow):
         self._bwiki_btn.clicked.connect(self._sync_bwiki)
         bottom_bar.addWidget(self._bwiki_btn)
         bottom_bar.addStretch()
+
+        donation_btn = QPushButton("自愿捐赠")
+        donation_btn.setFont(self.small_font)
+        donation_btn.setStyleSheet("""
+            QPushButton { background-color: #c0392b; color: white;
+                          border: none; border-radius: 6px; padding: 6px 16px; }
+            QPushButton:hover { background-color: #e74c3c; }
+        """)
+        donation_btn.clicked.connect(lambda: open_donation_dialog(self))
+        bottom_bar.addWidget(donation_btn)
 
         status = QLabel(f"{APP_NAME} v{APP_VERSION} — 数据维护工具，不包含伤害计算功能")
         status.setFont(self.small_font)

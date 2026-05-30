@@ -30,6 +30,8 @@ from PySide6.QtWidgets import (
 
 from utils.gui_help_dialog import HelpSection
 
+from utils.donation import open_donation_dialog
+
 from calc_framework.config.manager import AdapterManager
 
 from tools.designer.data_editor.panel import DataEditorPanel
@@ -77,6 +79,10 @@ class DesignerWindow(QMainWindow):
         help_action.setShortcut(QKeySequence("F1"))
         help_action.triggered.connect(self._show_help)
         help_menu.addAction(help_action)
+        help_menu.addSeparator()
+        donation_action = QAction("自愿捐赠(&D)", self)
+        donation_action.triggered.connect(lambda: open_donation_dialog(self))
+        help_menu.addAction(donation_action)
 
     def _show_help(self) -> None:
         from utils.gui_help_dialog import HelpDialog
@@ -248,7 +254,7 @@ def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName("配置包设计器")
     win = DesignerWindow()
-    win.show()
+    win.showMaximized()
     sys.exit(app.exec())
 
 
