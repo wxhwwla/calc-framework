@@ -2,9 +2,12 @@
 
 ## Session continuity (new conversations)
 
-**At the start of every new conversation** on this repo (unless the user only asks a one-off question unrelated to the codebase), read [`docs/会话接续手册.md`](docs/会话接续手册.md) first. It summarizes architecture seams, recent completed work, commands, and what not to redo.
+**At the start of every new conversation** on this repo (unless the user only asks a one-off question unrelated to the codebase), read these two documents first:
 
-If the user @-mentions that file, treat it as mandatory context before any code change.
+1. [`docs/会话接续手册.md`](docs/会话接续手册.md) — architecture seams, recent completed work, commands, what not to redo
+2. [`docs/项目目标.md`](docs/项目目标.md) — long-term vision and current focus areas
+
+If the user @-mentions either file, treat it as mandatory context before any code change.
 
 **Layout constraints:** Before structural refactors or adding modules, read [`docs/代码结构规范.md`](docs/代码结构规范.md) and [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md) (≤10 items per directory, ~400 lines per file).
 

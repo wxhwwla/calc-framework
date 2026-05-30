@@ -1,0 +1,144 @@
+# Endfield Damage Calculator - Cursor Rules
+
+## Session Start
+Before ANY code change, read `docs/会话接续手册.md` (conversation continuity manual) for:
+- Current project status & architecture seams
+- Recent completed work & what not to redo
+- Commands & version info
+
+Also read this entire file: `.cursorrules`
+
+## Pre-Change Reading
+| File | When to Read |
+|------|-------------|
+| `docs/操作指令集.md` | Before code changes or GitHub push |
+| `docs/代码结构规范.md` | Before structural refactors or adding modules |
+| `docs/adr/0001-code-layout-constraints.md` | Before structural refactors or adding modules |
+| `CONTEXT.md` | Domain terminology |
+| `tools/README.md` | Repo maintenance scripts |
+
+## CVSS-Style Severity Labels
+Mark ALL diagnostics with a severity label:
+
+| Label | Meaning |
+|-------|---------|
+| `[SEV-OK]` | No issue found |
+| `[SEV-LOW]` | Cosmetic, style, minor refactor |
+| `[SEV-MED]` | Logic bug, missing edge case, potential regression |
+| `[SEV-HIGH]` | Silent data loss, arithmetic overflow, wrong answer in calc |
+
+## Code Style
+- NO comments unless explicitly asked
+- NO emojis unless explicitly asked
+- Match existing code conventions (imports, typing, framework choices)
+- Before adding a new library, check that it's already used in the project
+
+## Task Completion Protocol
+When ALL tasks are marked done, MUST do these in order:
+
+1. **Update CI**: If changes affect tests/deps/build, update `.github/workflows/*.yml`
+2. **Update docs**: If changes affect features/structure/config/ops, sync:
+   - `docs/会话接续手册.md` — date, §3 tree, §4 recent work
+   - `docs/操作指令集.md` — new commands/flags
+   - `docs/代码结构规范.md` — dir overflow records
+   - `README.md` (root + `games/endfield/`) — features, dir listing
+   - `CONTEXT.md` — new terms
+3. **Clean up**: Delete `.trae/plans/当前任务计划.md` (current task plan)
+4. **Output summary**: Completed items + Pending items + Staging area status
+5. **Ask user**: "Push to GitHub? Need anything else?"
+
+**NEVER** stop mid-way without summary. **NEVER** leave docs out of sync.
+
+## Task Plan File
+Before starting code changes, write a plan to `.trae/plans/当前任务计划.md`.
+Delete it when done.
+
+## CRITICAL: trae-sandbox / Cursor Run Safety
+
+**KNOWN BUG — CONFIRMED BY EXPERIMENT (2026-05-30):** Running Git write commands (git rm, git add, git reset, git checkout HEAD --, git commit) inside the AI sandbox causes REAL file deletion on the user's disk. The sandbox `git rm` implementation has a defect: it deletes the specified files AND all files with the same basename anywhere in the repo.
+
+### DO NOT run these commands in sandbox:
+| Command | Reason |
+|---------|--------|
+| `git rm` | Deletes real files + basename-matching files on disk |
+| `git rm --cached` | Triggers sync bug → mass file loss |
+| `git reset HEAD` | Changes index state → triggers sandbox sync |
+| `git checkout HEAD -- <path>` | Recovery ops → user runs in real terminal |
+| `git add` | Changes index → triggers sandbox sync |
+| `git commit` | Not allowed in sandbox |
+
+### ONLY these Git commands are safe in sandbox:
+- `git status` (read-only)
+- `git log` (read-only)
+- `git diff` (read-only)
+- `git ls-tree` / `git ls-files` (read-only)
+- `git show` (read-only)
+
+### Workflow for Git write operations:
+1. Agent runs `git status --short` in sandbox (read-only, safe)
+2. Agent tells user: exact command to run
+3. **User runs the command in their real terminal**
+4. User pastes output back
+5. Agent verifies result
+
+### Exception (safe ops in sandbox):
+- `mkdir`, file creation (new files only)
+- `git add` for newly created files only (no risk)
+- Reading/writing non-Git-tracked files
+
+## Pre-Deletion Informed Consent
+Before ANY deletion/restore/discard operation:
+
+### User promises:
+1. Run `git status` first (plus `git diff --cached --stat` if needed)
+2. Paste the output to Agent
+3. State the goal clearly ("delete these 12 old files")
+
+### Agent promises:
+1. Analyze the paste line by line (staged changes, unstaged changes, untracked files, deleted files)
+2. Report ALL anomalies found
+3. Do NOT execute until user confirms they're informed
+4. Write the operation list to `.trae/plans/当前任务计划.md` for user review
+
+### Skip this protocol:
+- Only creating new files (no deletes/moves/modifies)
+- User says "just do it, no need to check"
+
+## Delete Verification
+Before proposing to delete any file:
+1. Search for imports/references/test dependencies → confirm zero references
+2. Write the deletion list to `.trae/plans/当前任务计划.md`
+3. Tell user: WHAT, WHY (with evidence of zero references), IMPACT
+4. Wait for explicit authorization
+
+For bulk deletion (3+ files), check EVERY file's references individually.
+
+## CI Workflow Changes
+Before modifying `.github/workflows/*.yml`, read ALL existing workflow files to understand test flow, coverage thresholds, and trigger paths.
+
+## RED LINE — Never do without user saying "execute" / "delete":
+| Operation | Example | Why |
+|-----------|---------|-----|
+| Delete Git-tracked files | `git rm` | Permanent, unrecoverable |
+| Delete workspace files | `del`, `rm -rf` | May delete important code |
+| Discard uncommitted changes | `git checkout --`, `git reset --hard` | Irreversible |
+| Push to remote | `git push`, upload script | Affects collaborators |
+
+## Upload to GitHub
+- **Default: human runs upload** with `python github_upload_module.py`
+- Agent **must not** run upload unless user explicitly asks in THIS conversation
+- When work is ready but user hasn't asked → tell them the command, don't upload yourself
+- **Do not** use bare `git commit` + `git push`
+- Version bumps go through the upload script only
+- When user asks for upload → `python github_upload_module.py` (add `--minor` or `--no-bump` when appropriate)
+
+## Download from GitHub
+- **Do not** run `github_download_module.py` unless user explicitly wants to discard local work
+- Script requires typing `覆盖本地` to confirm (runs `reset --hard` + `git clean -fd`)
+
+## Default Dev Workflow
+Feature / bug fix / code change → default to `design-then-build`:
+1. Interview user to clarify design (grill-me style)
+2. TDD: red → green → refactor
+3. Low-risk ops (tests, edits, deps installs) → auto-consent
+4. High-risk ops (upload script, git push, destructive) → ask user first
