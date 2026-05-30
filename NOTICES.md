@@ -10,12 +10,16 @@
 | Python | PSF License | https://www.python.org/psf-license/ |
 | PySide6 | LGPL-3.0-only | GUI 框架（Qt 的 Python 绑定）；详见 https://www.qt.io/licensing/ |
 | matplotlib | matplotlib License (BSD-compatible) | 伤害仪表盘 / 图表渲染 |
+| numpy | BSD-3-Clause | 科学计算（OCR 可选依赖 `[ocr]` 传递依赖；tools/ocr/ 直接使用） |
 | EasyOCR | Apache 2.0 | OCR 截图识装（可选依赖 `[ocr]`） |
 | ultralytics | AGPL-3.0 | YOLO 目标检测（可选依赖 `[ocr]`）；商业使用 YOLO 模型须另行取得许可 |
 | pillow | HPND (Historical) | 图像处理（可选依赖 `[ocr]` 传递依赖） |
 | pyyaml | MIT | 插件 YAML 配置（可选依赖 `[plugins]`） |
 | PyInstaller | GPL-2.0（含例外） | 仅打包时使用，不随分发物提供；https://pyinstaller.org/ |
 | pytest / pytest-cov | MIT | 仅开发/测试使用 |
+| fastapi | MIT | Web 版后端（web/backend/）；仅在 web 部署时使用 |
+| pydantic | MIT | Web 版后端数据校验（web/backend/）；仅在 web 部署时使用 |
+| uvicorn | BSD-3-Clause | Web 版后端 ASGI 服务器（web/backend/）；仅在 web 部署时使用 |
 
 ## 游戏与 Wiki 内容
 
