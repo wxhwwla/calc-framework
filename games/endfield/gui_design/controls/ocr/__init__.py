@@ -6,14 +6,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QThread, Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPlainTextEdit,
+    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -160,6 +162,74 @@ class _DetectionDialog(QDialog):
             self._on_apply(self._mapped_preset)
             self.accept()
 
+    def _on_download_model(self) -> None:
+        """在后台线程下载 OCR 模型。"""
+        self._download_btn.setEnabled(False)
+        self._download_btn.setText("下载中...")
+        self._download_progress.setVisible(True)
+        self._download_progress.setValue(0)
+        self._result_text.setPlainText("正在下载 EasyOCR 模型...\n\n这可能需要几分钟，请耐心等待。\n模型将下载到用户目录的 .EasyOCR/model/ 下。")
+        self._thread = _DownloadThread()
+        self._thread.finished.connect(self._on_download_finished)
+        self._thread.progress.connect(self._download_progress.setValue)
+        self._thread.start()
+
+    def _on_download_finished(self, success: bool) -> None:
+        self._download_btn.setEnabled(True)
+        self._download_btn.setText("下载 OCR 模型")
+        self._download_progress.setVisible(False)
+        if success:
+            QMessageBox.information(self, "下载完成", "EasyOCR 模型已下载完成！\n现在可以正常使用截图识装功能。")
+            self._run_detection()
+        else:
+            QMessageBox.critical(self, "下载失败",
+                                 "模型下载失败。\n\n请尝试在终端手动运行:\n  python tools/ocr/download_models.py")
+
+
+class _DownloadThread(QThread):
+    """后台下载 OCR 模型。"""
+    finished = Signal(bool)
+    progress = Signal(int)
+
+    def run(self) -> None:
+        try:
+            from tools.ocr.download_models import REQUIRED_MODELS
+            from urllib.request import urlopen, Request
+            from pathlib import Path
+            import zipfile
+
+            cache = Path.home() / ".EasyOCR" / "model"
+            cache.mkdir(parents=True, exist_ok=True)
+
+            total_models = len(REQUIRED_MODELS)
+            completed = 0
+            for model in REQUIRED_MODELS:
+                pth_path = cache / model["filename"]
+                if pth_path.exists():
+                    completed += 1
+                    self.progress.emit(int(completed / total_models * 100))
+                    continue
+
+                zip_path = cache / f"{model['filename']}.zip"
+                zip_url = model["zip_url"]
+                try:
+                    req = Request(zip_url, headers={"User-Agent": "Mozilla/5.0"})
+                    resp = urlopen(req, timeout=120)
+                    with open(zip_path, "wb") as f:
+                        f.write(resp.read())
+                    with zipfile.ZipFile(zip_path, "r") as zf:
+                        zf.extractall(cache)
+                    zip_path.unlink()
+                except Exception:
+                    self.finished.emit(False)
+                    return
+                completed += 1
+                self.progress.emit(int(completed / total_models * 100))
+
+            self.finished.emit(True)
+        except Exception:
+            self.finished.emit(False)
+
 
 def _build_ui(dialog: _DetectionDialog) -> None:
     """构建对话框 UI。"""
@@ -186,8 +256,27 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     """)
     layout.addWidget(dialog._result_text, stretch=1)
 
+    dialog._download_progress = QProgressBar()
+    dialog._download_progress.setVisible(False)
+    dialog._download_progress.setStyleSheet("""
+        QProgressBar { background-color: #2B2B2B; border: 1px solid #464646;
+                       border-radius: 4px; text-align: center; color: #D1D1D1; }
+        QProgressBar::chunk { background-color: #2B6CB6; border-radius: 4px; }
+    """)
+    layout.addWidget(dialog._download_progress)
+
     btn_layout = QHBoxLayout()
     btn_layout.setSpacing(8)
+
+    dialog._download_btn = QPushButton("下载 OCR 模型")
+    dialog._download_btn.setMinimumHeight(36)
+    dialog._download_btn.setStyleSheet("""
+        QPushButton { background-color: transparent; color: #D1D1D1;
+                      border: 1px solid #464646; border-radius: 6px; padding: 8px 14px; }
+        QPushButton:hover { border-color: #48BB78; color: #48BB78; }
+    """)
+    dialog._download_btn.clicked.connect(dialog._on_download_model)
+    btn_layout.addWidget(dialog._download_btn)
 
     dialog._apply_btn = QPushButton("📥 填入计算器")
     dialog._apply_btn.setMinimumHeight(36)

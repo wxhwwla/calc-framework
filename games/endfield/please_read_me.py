@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.19"
+_VERSION = "3.11.20"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,17 +209,21 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 15 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
-# - 变更 .github/workflows/ci.yml
-# - 变更 .github/workflows/release.yml
-# - 修改 adapters/endfield/tests/conftest.py
-# - 更新文档 docs/adr/0012-p3-launcher-marketplace-installer.md
-# - 修改 framework/tests/adapters/__init__.py
-# - 修改 framework/tests/adapters/test_card_rpg_adapter.py
+# - 修改 adapters/endfield/calc/damage/inverse/fit_core.py
+# - 更新文档 docs/adr/0013-generic-inverse-engine.md
+# - 修改 framework/src/calc_framework/inverse/__init__.py
+# - 修改 framework/src/calc_framework/inverse/base.py
+# - 修改 framework/src/calc_framework/inverse/engine.py
+# - 修改 framework/src/calc_framework/inverse/registry.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
+# - 修改 framework/tests/inverse/__init__.py
+# - 修改 framework/tests/inverse/test_engine.py
+# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 main_launcher.py
+# - 修改 tools/endfield_designer/designer_main.py
+# - 修改 tools/endfield_designer/seed_tab.py
 # --- END UPLOAD_SUMMARY ---

@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QProgressBar,
+    QPushButton,
     QScrollArea,
     QSlider,
     QSpinBox,
@@ -517,9 +518,9 @@ class CalcPackViewer(QMainWindow):
             self._splitter.setSizes([220, width - 420, 200])
 
     def _show_plugin_manager(self) -> None:
-        """显示插件管理器对话框。"""
+        """显示插件管理器对话框（含导入/打包按钮）。"""
         try:
-            from calc_framework.plugin.registry import get_registry, list_plugins
+            from calc_framework.plugin.registry import PluginMeta, get_registry, list_plugins
         except ImportError:
             QMessageBox.information(self, "插件", "框架未安装 calc_framework.plugin 模块")
             return
@@ -529,11 +530,42 @@ class CalcPackViewer(QMainWindow):
 
         dialog = QDialog(self)
         dialog.setWindowTitle(f"插件管理器 ({len(plugins)} 已注册)")
-        dialog.resize(500, 400)
+        dialog.resize(560, 460)
         layout = QVBoxLayout(dialog)
 
+        # 工具栏
+        toolbar = QHBoxLayout()
+        import_btn = QPushButton("导入 .calcplugin...")
+        import_btn.setStyleSheet("""
+            QPushButton { background-color: #2B6CB6; color: white;
+                          border: none; border-radius: 4px; padding: 6px 14px; }
+            QPushButton:hover { background-color: #3182CE; }
+        """)
+        import_btn.clicked.connect(lambda: self._import_plugin(dialog))
+        toolbar.addWidget(import_btn)
+
+        build_btn = QPushButton("打包插件目录...")
+        build_btn.setStyleSheet("""
+            QPushButton { background-color: #2B6CB6; color: white;
+                          border: none; border-radius: 4px; padding: 6px 14px; }
+            QPushButton:hover { background-color: #3182CE; }
+        """)
+        build_btn.clicked.connect(lambda: self._build_plugin(dialog))
+        toolbar.addWidget(build_btn)
+
+        refresh_btn = QPushButton("刷新")
+        refresh_btn.setStyleSheet("""
+            QPushButton { background-color: transparent; color: #D1D1D1;
+                          border: 1px solid #464646; border-radius: 4px; padding: 6px 14px; }
+            QPushButton:hover { border-color: #2B6CB6; }
+        """)
+        refresh_btn.clicked.connect(lambda: (dialog.accept(), self._show_plugin_manager()))
+        toolbar.addWidget(refresh_btn)
+        toolbar.addStretch()
+        layout.addLayout(toolbar)
+
         if not plugins:
-            layout.addWidget(QLabel("暂无已注册的插件。"))
+            layout.addWidget(QLabel("暂无已注册的插件。\n点击「导入 .calcplugin」安装一个插件，或「打包插件目录」将源码目录打包为 .calcplugin。"))
         else:
             for name in plugins:
                 plugin = reg.get(name)
@@ -553,6 +585,44 @@ class CalcPackViewer(QMainWindow):
         close_btn.clicked.connect(dialog.accept)
         layout.addWidget(close_btn)
         dialog.exec()
+
+    def _import_plugin(self, parent: QWidget) -> None:
+        """导入 .calcplugin 文件。"""
+        path, _ = QFileDialog.getOpenFileName(
+            parent, "导入插件", "",
+            "CalcPlugin (*.calcplugin);;ZIP (*.zip);;All Files (*)",
+        )
+        if not path:
+            return
+        try:
+            from tools.plugin_pack import install_plugin
+            repo = Path(__file__).resolve().parents[3]
+            target = repo / "web" / "hub" / "plugins"
+            installed = install_plugin(path, target)
+            self._status_label.setText(f"插件已安装: {installed.name}")
+            QMessageBox.information(parent, "导入成功",
+                                    f"插件已安装到:\n{installed}\n\n点击「刷新」查看已注册的插件。")
+        except Exception as e:
+            QMessageBox.critical(parent, "导入失败", f"导入插件时出错:\n{e}")
+
+    def _build_plugin(self, parent: QWidget) -> None:
+        """从目录打包 .calcplugin。"""
+        dir_path = QFileDialog.getExistingDirectory(parent, "选择插件源码目录")
+        if not dir_path:
+            return
+        try:
+            from tools.plugin_pack import build_plugin
+            output, _ = QFileDialog.getSaveFileName(
+                parent, "保存为 .calcplugin", "",
+                "CalcPlugin (*.calcplugin)",
+            )
+            if not output:
+                return
+            result = build_plugin(dir_path, output)
+            self._status_label.setText(f"插件已打包: {result.name}")
+            QMessageBox.information(parent, "打包成功", f"插件已打包:\n{result}")
+        except Exception as e:
+            QMessageBox.critical(parent, "打包失败", f"打包插件时出错:\n{e}")
 
 
 def open_calcpack(path: str | Path) -> None:
