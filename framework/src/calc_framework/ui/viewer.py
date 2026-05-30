@@ -46,6 +46,7 @@ from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout, Layout
 from calc_framework.ui.theme import ThemeManager
+from utils.gui_help_dialog import HelpDialog, HelpSection
 
 _VARIABLE_FIELD_MAP: dict[str, str] = {
     "基础攻击力": "基础攻击",
@@ -319,7 +320,6 @@ class CalcPackViewer(QMainWindow):
         help_menu.addAction(help_action)
 
     def _show_help(self) -> None:
-        from utils.gui_help_dialog import HelpDialog, HelpSection
         dialog = HelpDialog(self._build_viewer_help, self, title="CalcPackViewer 使用说明")
         dialog.exec()
 
