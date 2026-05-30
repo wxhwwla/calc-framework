@@ -81,7 +81,7 @@ class TestSearchWorkerRun:
         cancel = SearchCancelToken()
 
         with patch(
-            "gui_design.controls.search.qt_actions.run_exported_single_skill_search",
+            "games.endfield.gui_design.controls.search.qt_actions.run_exported_single_skill_search",
             side_effect=ValueError("search failed"),
         ):
             worker = SearchWorker(

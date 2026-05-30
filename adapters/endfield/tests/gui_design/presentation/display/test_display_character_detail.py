@@ -20,10 +20,11 @@ def _make_char_data() -> dict[str, Any]:
 
 def _make_weapon_data() -> dict[str, Any]:
     return {
-        "攻击力+": 27.6,
-        "效果": [
-            {"effect": "攻击力+", "curve": [10, 20, 30]},
+        "基础攻击力": [100, 110, 120, 130, 140, 150, 160, 170, 180],
+        "normal_skills": [
+            {"zone": 1, "effect": "攻击力+", "curve": [10.0, 15.0, 20.0]},
         ],
+        "special_skills": [],
     }
 
 

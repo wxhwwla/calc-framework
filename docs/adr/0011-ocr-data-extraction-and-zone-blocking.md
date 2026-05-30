@@ -1,7 +1,7 @@
 # ADR-0011：截图识装 — YOLO 目标检测 + OCR 数据提取 + 乘区块化
 
-**状态**：草案  
-**日期**：2026-05-29  
+**状态**：生效  
+**日期**：2026-05-30  
 **决策者**：维护者  
 **影响范围**：`framework/`、`endfield_damage_calculator/calculation/`、`tools/`（新增识管管线）
 

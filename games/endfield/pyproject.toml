@@ -35,6 +35,12 @@ plugins = [
 build = [
     "pyinstaller>=6.0",
 ]
+# OCR 截图识装（可选运行时）
+ocr = [
+    "easyocr>=1.7",
+    "ultralytics>=8.0",
+    "pillow>=10.0",
+]
 
 [project.scripts]
 endfield-calculator = "main:main"
