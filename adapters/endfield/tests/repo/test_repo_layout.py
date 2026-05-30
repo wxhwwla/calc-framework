@@ -26,10 +26,10 @@ class TestRepoLayout(unittest.TestCase):
         self.assertTrue(stub.is_file())
         self.assertIn("算法与架构", stub.read_text(encoding="utf-8"))
 
-    def test_legacy_character_script_not_at_root(self):
+    def test_legacy_character_script_fully_removed(self):
         self.assertFalse((REPO_ROOT / "_add_character_legacy.py").exists())
-        legacy = REPO_ROOT / "legacy" / "_add_character_legacy.py"
-        self.assertTrue(legacy.is_file())
+        self.assertFalse((REPO_ROOT / "legacy").exists(),
+                         "legacy/ 目录已清理完毕")
 
     def test_tools_readme_describes_maintenance_zone(self):
         readme = REPO_ROOT / "tools" / "README.md"

@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.11"
+_VERSION = "3.11.12"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,34 +209,9 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 28 处文件
+# TITLE: 更新 3 处文件
 # BODY:
-# - 修改 build.py
+# - 修改 adapters/endfield/tests/repo/test_repo_layout.py
 # - 修改 games/endfield/please_read_me.py
-# - 更新文档 legacy/README.md
-# - 修改 legacy/_add_character_legacy.py
-# - 修改 main_build.py
-# - 更新文档 test_reproduce/AGENTS.md
-# - 修改 test_reproduce/legal/__init__.py
-# - 修改 test_reproduce/legal/donation.py
-# - 修改 test_reproduce/presentation/test_file_1.py
-# - 修改 test_reproduce/presentation/test_file_2.py
-# - 修改 test_reproduce/presentation/test_file_3.py
-# - 修改 test_reproduce/presentation/test_file_4.py
-# - 修改 test_reproduce/presentation/test_file_5.py
-# - 修改 test_reproduce/presentation/test_file_6.py
-# - 修改 test_reproduce/presentation/test_file_7.py
-# - 修改 test_reproduce/presentation/test_file_8.py
-# - 修改 test_reproduce/presentation/test_preview.py
-# - 修改 test_reproduce/shared/test_batch_1.py
-# - 修改 test_reproduce/shared/test_batch_2.py
-# - 修改 test_reproduce/shared/test_batch_3.py
-# - 修改 test_reproduce/shared/test_batch_4.py
-# - 修改 test_reproduce/shared/test_ui_detail.py
-# - 修改 test_reproduce/shared/test_ui_prefs.py
-# - 修改 tools/fix_search_imports.py
-# - 修改 tools/layout_migrate_breaking.py
-# - 修改 tools/migrate_calculation_search.py
-# - 修改 tools/split_core_modules.py
-# - 修改 tools/split_module_by_symbols.py
+# - 修改 main_editor.py
 # --- END UPLOAD_SUMMARY ---
