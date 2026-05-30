@@ -17,22 +17,26 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction, QFont, QIcon, QKeySequence
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
-    QMenuBar,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QStatusBar,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
+
+from utils.updater import UpdateInfo, check_update, download_update, extract_and_replace
 
 _REPO = Path(__file__).resolve().parent
 
@@ -105,6 +109,164 @@ def _launch_adapter(adapter_name: str) -> None:
         QMessageBox.critical(None, "启动失败", f"框架导入失败:\n{e}")
 
 
+# ── 更新检查线程 ─────────────────────────────────────
+class _UpdateCheckThread(QThread):
+    found = Signal(object)
+    error = Signal(str)
+
+    def __init__(self, current_version: str) -> None:
+        super().__init__()
+        self._current = current_version
+
+    def run(self) -> None:
+        try:
+            info = check_update(self._current)
+            if info:
+                self.found.emit(info)
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+class _DownloadThread(QThread):
+    progress = Signal(int, int)
+    status = Signal(str)
+    finished = Signal(object)
+    error = Signal(str)
+
+    def __init__(self, update: UpdateInfo) -> None:
+        super().__init__()
+        self._update = update
+
+    def run(self) -> None:
+        try:
+            path = download_update(
+                self._update,
+                progress=lambda d, t: self.progress.emit(d, t),
+                status=lambda s: self.status.emit(s),
+            )
+            self.finished.emit(path)
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+# ── 更新通知/下载对话框 ─────────────────────────────────────
+class _UpdateDialog(QDialog):
+    def __init__(self, info: UpdateInfo, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._info = info
+        self._downloaded_path: Path | None = None
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        self.setWindowTitle("发现新版本")
+        self.setMinimumSize(480, 360)
+        self.resize(540, 420)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+
+        title = QLabel(f"新版本 v{self._info.latest_version} 可用！")
+        title_font = QFont()
+        title_font.setPointSize(14)
+        title_font.setBold(True)
+        title.setFont(title_font)
+        layout.addWidget(title)
+
+        if self._info.published_at:
+            date_label = QLabel(f"发布日期: {self._info.published_at}")
+            date_label.setStyleSheet("color: #888;")
+            layout.addWidget(date_label)
+
+        notes_label = QLabel("更新说明:")
+        layout.addWidget(notes_label)
+
+        notes = QTextBrowser()
+        notes.setPlainText(self._info.release_notes or "暂无更新说明")
+        notes.setMaximumHeight(180)
+        notes.setStyleSheet("background: #1e1e2e; color: #ccc; border: 1px solid #333; border-radius: 4px;")
+        layout.addWidget(notes)
+
+        self._status_label = QLabel("")
+        self._status_label.setStyleSheet("color: #aaa;")
+        layout.addWidget(self._status_label)
+
+        self._progress = QProgressBar()
+        self._progress.setVisible(False)
+        self._progress.setTextVisible(True)
+        layout.addWidget(self._progress)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+
+        self._skip_btn = QPushButton("忽略此版本")
+        self._skip_btn.clicked.connect(self.reject)
+        btn_row.addWidget(self._skip_btn)
+
+        self._download_btn = QPushButton("下载更新")
+        self._download_btn.setStyleSheet("""
+            QPushButton { background: #2B6CB6; color: white; border: none;
+                          border-radius: 4px; padding: 6px 16px; font-size: 12px; }
+            QPushButton:hover { background: #1a4f8a; }
+        """)
+        self._download_btn.clicked.connect(self._start_download)
+        btn_row.addWidget(self._download_btn)
+
+        self._apply_btn = QPushButton("安装并重启")
+        self._apply_btn.setVisible(False)
+        self._apply_btn.setStyleSheet("""
+            QPushButton { background: #38a169; color: white; border: none;
+                          border-radius: 4px; padding: 6px 16px; font-size: 12px; }
+            QPushButton:hover { background: #2f855a; }
+        """)
+        self._apply_btn.clicked.connect(self._apply_update)
+        btn_row.addWidget(self._apply_btn)
+
+        layout.addLayout(btn_row)
+
+    def _start_download(self) -> None:
+        self._download_btn.setEnabled(False)
+        self._skip_btn.setEnabled(False)
+        self._progress.setVisible(True)
+        self._progress.setValue(0)
+
+        self._thread = _DownloadThread(self._info)
+        self._thread.progress.connect(self._on_progress)
+        self._thread.status.connect(self._status_label.setText)
+        self._thread.finished.connect(self._on_downloaded)
+        self._thread.error.connect(self._on_error)
+        self._thread.start()
+
+    def _on_progress(self, downloaded: int, total: int) -> None:
+        pct = int(downloaded / max(total, 1) * 100)
+        self._progress.setValue(pct)
+
+    def _on_downloaded(self, path: object) -> None:
+        self._downloaded_path = Path(str(path))
+        self._status_label.setText("下载完成！")
+        self._progress.setValue(100)
+        self._download_btn.setVisible(False)
+        self._apply_btn.setVisible(True)
+
+    def _on_error(self, msg: str) -> None:
+        self._status_label.setText(f"下载失败: {msg}")
+        self._download_btn.setEnabled(True)
+        self._skip_btn.setEnabled(True)
+        self._progress.setVisible(False)
+
+    def _apply_update(self) -> None:
+        if self._downloaded_path is None:
+            return
+        self._status_label.setText("正在安装更新...")
+        ok = extract_and_replace(self._downloaded_path)
+        if ok:
+            from utils.updater import restart_launcher
+            self._status_label.setText("更新完成，正在重启...")
+            restart_launcher()
+        else:
+            self._status_label.setText("安装失败，请手动更新")
+            self._apply_btn.setEnabled(False)
+
+
 # ── 主窗口 ─────────────────────────────────────
 class LauncherWindow(QMainWindow):
     def __init__(self):
@@ -123,7 +285,7 @@ class LauncherWindow(QMainWindow):
         layout.setSpacing(12)
 
         # ── 标题 ──
-        title = QLabel(f"Game Calc Platform")
+        title = QLabel("Game Calc Platform")
         title_font = QFont()
         title_font.setPointSize(18)
         title_font.setBold(True)
@@ -180,11 +342,42 @@ class LauncherWindow(QMainWindow):
 
     def _setup_menu(self) -> None:
         menubar = self.menuBar()
+
+        tools_menu = menubar.addMenu("工具(&T)")
+        check_update_action = QAction("检查更新(&U)", self)
+        check_update_action.triggered.connect(self._check_for_updates)
+        tools_menu.addAction(check_update_action)
+
         help_menu = menubar.addMenu("帮助(&H)")
         help_action = QAction("使用说明(&U)", self)
         help_action.setShortcut(QKeySequence("F1"))
         help_action.triggered.connect(self._show_help)
         help_menu.addAction(help_action)
+
+    def _check_for_updates(self) -> None:
+        cur = _read_version()
+        self._status.showMessage("正在检查更新...")
+        self._check_thread = _UpdateCheckThread(cur)
+        self._check_thread.found.connect(self._on_update_found)
+        self._check_thread.error.connect(self._on_update_error)
+        self._check_thread.start()
+
+    def _on_update_found(self, info: object) -> None:
+        self._status.showMessage("发现新版本")
+        ui = UpdateInfo(
+            latest_version=info.latest_version,
+            download_url=info.download_url,
+            asset_name=info.asset_name,
+            asset_size=info.asset_size,
+            release_notes=info.release_notes,
+            published_at=info.published_at,
+        )
+        dialog = _UpdateDialog(ui, self)
+        dialog.exec()
+
+    def _on_update_error(self, msg: str) -> None:
+        self._status.showMessage("检查更新失败")
+        QMessageBox.warning(self, "检查失败", f"无法检查更新:\n{msg}")
 
     def _show_help(self) -> None:
         from utils.gui_help_dialog import HelpDialog

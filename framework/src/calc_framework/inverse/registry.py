@@ -90,3 +90,30 @@ try:
     registry.get("floor_linear")._fitter = FloorFormulaFitter()
 except ImportError:
     pass
+
+# ── 注册高级公式类型 ──────────────────────────
+try:
+    from calc_framework.inverse.advanced import ExponentialFormulaFitter, PiecewiseFormulaFitter, ThresholdFormulaFitter
+
+    registry.register(FormulaType(
+        id="exponential",
+        name="指数公式",
+        description="value = base × growth^(level-1) + offset",
+        fitter=ExponentialFormulaFitter(),
+    ))
+
+    registry.register(FormulaType(
+        id="piecewise",
+        name="分段公式",
+        description="多段线性公式，自动检测断点",
+        fitter=PiecewiseFormulaFitter(),
+    ))
+
+    registry.register(FormulaType(
+        id="threshold",
+        name="阈值公式",
+        description="阈值前线性，阈值后切换到第二公式",
+        fitter=ThresholdFormulaFitter(),
+    ))
+except ImportError:
+    pass

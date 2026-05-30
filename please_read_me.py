@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.12.18"
+_VERSION = "3.12.19"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -216,9 +216,29 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 23 处文件
 # BODY:
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
+# - 变更 .github/workflows/code-origin-check.yml
+# - 修改 devtool.py
+# - 修改 framework/src/calc_framework/dag/__init__.py
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/dag/service.py
+# - 修改 framework/src/calc_framework/dag/state.py
+# - 修改 framework/src/calc_framework/inverse/__init__.py
+# - 修改 framework/src/calc_framework/inverse/advanced.py
+# - 修改 framework/src/calc_framework/inverse/registry.py
+# - 修改 framework/tests/config/test_adapter_extra.py
+# - 修改 framework/tests/dag/test_incremental_and_lazy.py
+# - 修改 framework/tests/data/test_schema.py
+# - 修改 framework/tests/inverse/test_advanced_extra.py
+# - 修改 framework/tests/inverse/test_advanced_formulas.py
+# - 修改 framework/tests/utils/__init__.py
+# - 修改 framework/tests/utils/test_updater.py
+# - 修改 main_launcher.py
 # - 修改 please_read_me.py
-# - 修改 tools/ocr/detector.py
-# - 变更 web/frontend/src/components/dag/DagEditorCanvas.tsx
+# - 修改 tools/check_code_origin.py
+# - 修改 utils/updater.py
 # --- END UPLOAD_SUMMARY ---

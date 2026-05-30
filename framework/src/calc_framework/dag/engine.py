@@ -25,6 +25,15 @@ from .schema import (
     UserInputNode,
     VarNode,
 )
+from .state import (
+    DAGState,
+    compute_affected_nodes,
+    compute_context_hash,
+    compute_required_nodes,
+    find_changed_paths,
+    flatten_context,
+    propagate_dirty,
+)
 from .subgraph import expand_subgraphs
 from calc_framework.logging import get_logger
 
@@ -331,8 +340,19 @@ def evaluate_graph(
     graph: DAGGraph,
     context: dict[str, Any],
     block_cache: BlockCache | None = None,
+    dag_state: DAGState | None = None,
 ) -> DAGResult:
     """展开子图、拓扑排序、求值所有节点，返回结果。
+
+    支持增量求值（通过 ``dag_state`` 参数保留跨调用状态）：
+
+    - 首次调用传入 ``dag_state=DAGState()``，引擎自动填充状态。
+    - 后续调用传入同一状态对象，仅重算上下文变化的节点。
+    - 上下文未变化时完全跳过求值（返回缓存结果）。
+
+    支持惰性求值（通过 ``graph`` 的 outputs 定义）：
+
+    - 只求值对输出有贡献的节点，跳过"死节点"。
 
     数据上下文按变量声明的 source 分区，例如:
         context = {"character": {"力量": 100}, "weapon": {"基础攻击": 50}}
@@ -341,13 +361,30 @@ def evaluate_graph(
                  len(graph.variables), len(graph.outputs))
     context = _apply_defaults(graph, context)
 
+    # ── 增量求值：检测上下文变化 ─────────────────────
+    incremental_skip: set[str] = set()
+    changed_paths: set[str] = set()
+    new_context_hash = compute_context_hash(context)
+    new_flat_context = flatten_context(context)
+    if dag_state is not None and dag_state.context_hash != 0:
+        if dag_state.context_hash == new_context_hash:
+            logger.debug("增量求值: 上下文未变化, 跳过全部求值")
+            dag_state.evaluation_count += 1
+            return DAGResult(
+                outputs=dict(dag_state.prev_outputs),
+                node_values=dict(dag_state.node_values),
+                execution_order=list(dag_state.node_values.keys()),
+            )
+        changed_paths = find_changed_paths(dag_state.prev_flat_context, new_flat_context)
+        if changed_paths:
+            logger.debug("增量求值: %d 个上下文路径变化", len(changed_paths))
+
     # ── Block cache pre-computation ────────────────────
     cached_outputs: dict[str, dict[str, float]] = {}
     cached_primary_nodes: set[str] = set()
     re_evaluated_blocks: set[str] = set()
     if block_cache is not None:
         block_inputs = _compute_block_inputs(graph, context)
-        # Build block dependency graph for chain invalidation
         block_dependents: dict[str, set[str]] = {}
         for nid, node in graph.nodes.items():
             if not isinstance(node, CallNode):
@@ -365,7 +402,6 @@ def evaluate_graph(
             else:
                 re_evaluated_blocks.add(block_id)
                 block_cache.invalidate(block_id)
-                # Chain invalidation: BFS invalidate all downstream blocks
                 to_invalidate = {block_id}
                 while to_invalidate:
                     bid = to_invalidate.pop()
@@ -378,6 +414,25 @@ def evaluate_graph(
 
     expanded = expand_subgraphs(graph)
 
+    # ── 增量求值：脏节点传播 ───────────────────────────
+    if dag_state is not None and dag_state.context_hash != 0 and changed_paths:
+        seed = compute_affected_nodes(graph, changed_paths)
+        if seed:
+            incremental_skip = propagate_dirty(expanded.nodes, seed)
+            logger.debug("增量求值: %d 个种子节点 -> %d 个脏节点待重算",
+                         len(seed), len(incremental_skip))
+
+    # ── 惰性求值：从展开图的输出引用反向遍历 ──────────
+    # 注意：使用展开图(expanded)而非原始图的输出引用，
+    # 因为子图展开后节点ID改变（如 block_add → block_add.sum）
+    required_nodes: set[str] | None = None
+    if expanded.outputs:
+        output_refs = {odef.node for odef in expanded.outputs.values()}
+        required_nodes = compute_required_nodes(expanded.nodes, output_refs)
+        if required_nodes and len(required_nodes) < len(expanded.nodes):
+            logger.debug("惰性求值: %d / %d 节点被输出引用",
+                         len(required_nodes), len(expanded.nodes))
+
     # ── Build block membership ─────────────────────────
     block_membership: dict[str, set[str]] = {}
     skip_nodes: set[str] = set()
@@ -386,7 +441,6 @@ def evaluate_graph(
         for block_id in cached_outputs:
             members = block_membership.get(block_id, set())
             skip_nodes.update(members)
-            # Resolve primary output node ID
             call_node = graph.nodes.get(block_id)
             if isinstance(call_node, CallNode):
                 primary = _get_primary_output_node(expanded, call_node, block_id)
@@ -394,7 +448,7 @@ def evaluate_graph(
                     cached_primary_nodes.add(primary)
 
     order = topological_sort(expanded)
-    values: dict[str, float] = {}
+    values: dict[str, float] = dict(dag_state.node_values) if dag_state is not None else {}
 
     # Inject cached primary output values so downstream refs resolve
     for block_id, outputs in cached_outputs.items():
@@ -403,13 +457,17 @@ def evaluate_graph(
             continue
         primary = _get_primary_output_node(expanded, call_node, block_id)
         if primary:
-            # Use first output value as the block's representative value
             first_val = next(iter(outputs.values()), 0.0)
             values[primary] = first_val
             logger.debug("块 %s 注入缓存输出: %s = %s", block_id, primary, first_val)
 
+    evaluated_count = 0
     for nid in order:
         if nid in skip_nodes:
+            continue
+        if required_nodes is not None and nid not in required_nodes:
+            continue
+        if incremental_skip and nid not in incremental_skip and nid in values:
             continue
         node = expanded.nodes[nid]
         t0 = time.perf_counter()
@@ -419,6 +477,7 @@ def evaluate_graph(
             _log_node_failure(logger, nid, node, values, exc)
             raise
         elapsed_ms = (time.perf_counter() - t0) * 1000
+        evaluated_count += 1
         logger.debug("节点 %s [%s] 求值完成: %s (耗时 %.3f ms)",
                      nid, type(node).__name__, values.get(nid, "?"), elapsed_ms)
 
@@ -444,11 +503,19 @@ def evaluate_graph(
                 block_cache.put(block_id, bound_inputs, block_outs)
                 logger.debug("块 %s 缓存已更新: %s", block_id, block_outs)
             elif block_outs:
-                # Cache even without all inputs resolved
                 block_cache.put(block_id, bound_inputs, block_outs)
 
-    logger.info("DAG 求值完成: %d 个输出, %d 个节点执行 (缓存跳过 %d 节点)",
-                 len(outputs), len(order) - len(skip_nodes), len(skip_nodes))
+    # ── Update DAGState for next incremental call ──────
+    if dag_state is not None:
+        dag_state.node_values = dict(values)
+        dag_state.prev_outputs = dict(outputs)
+        dag_state.prev_flat_context = new_flat_context
+        dag_state.context_hash = new_context_hash
+        dag_state.evaluation_count += 1
+
+    logger.info("DAG 求值完成: %d 个输出, %d 个节点执行 (跳过 %d 个缓存/惰性节点)",
+                 len(outputs), evaluated_count,
+                 len(order) - evaluated_count - len(skip_nodes))
     return DAGResult(
         outputs=outputs,
         node_values=values,

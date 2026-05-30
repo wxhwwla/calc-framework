@@ -11,12 +11,12 @@ from calc_framework.dag.engine import BlockCache, DAGResult, evaluate_graph
 from calc_framework.dag.sandbox import register_function as _register_sandbox_fn
 from calc_framework.dag.schema import DAGGraph
 from calc_framework.dag.serializer import dag_from_dict, load_dag
+from calc_framework.dag.state import DAGState
 
 
 def _import_graph_editor() -> tuple[Any, Any]:
     """延迟导入 graph_editor 模块（避免循环依赖）。"""
     from calc_framework.graph_editor.compiler import compile_graph
-    from calc_framework.graph_editor.schema import GraphDocument
     from calc_framework.graph_editor.serializer import document_from_json
     return compile_graph, document_from_json
 
@@ -34,6 +34,7 @@ class DAGService:
     def __init__(self, dag: DAGGraph):
         self._dag = dag
         self._block_cache = BlockCache()
+        self._dag_state = DAGState()
 
     @classmethod
     def from_file(cls, path: str | Path) -> DAGService:
@@ -68,8 +69,14 @@ class DAGService:
         """用给定上下文求值 DAG 图，返回包含所有输出值的 DAGResult。
 
         使用内部 BlockCache 实现块级缓存，相同输入跳过块内求值。
+        使用内部 DAGState 实现增量求值，仅重算上下文变化的节点。
         """
-        return evaluate_graph(self._dag, context, block_cache=self._block_cache)
+        return evaluate_graph(
+            self._dag,
+            context,
+            block_cache=self._block_cache,
+            dag_state=self._dag_state,
+        )
 
     def register_function(self, name: str, fn: Any) -> None:
         """注册一个自定义函数到 DAG 表达式沙箱。
@@ -104,10 +111,20 @@ class DAGService:
         else:
             self._block_cache.invalidate(block_id)
 
+    def reset_state(self) -> None:
+        """重置增量求值状态（强制下次全量求值）。"""
+        self._dag_state = DAGState()
+        self._block_cache = BlockCache()
+
     @property
     def block_cache(self) -> BlockCache:
         """返回内部 BlockCache 实例。"""
         return self._block_cache
+
+    @property
+    def dag_state(self) -> DAGState:
+        """返回内部 DAGState 实例。"""
+        return self._dag_state
 
     @property
     def dag(self) -> DAGGraph:

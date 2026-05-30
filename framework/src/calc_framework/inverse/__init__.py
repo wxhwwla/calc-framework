@@ -13,15 +13,19 @@
     result = engine.fit(data, "floor_linear", num_levels=90)
 """
 
+from .advanced import ExponentialFormulaFitter, PiecewiseFormulaFitter, ThresholdFormulaFitter
 from .base import FitResult, FloorFormulaFitter, FormulaFitter
 from .engine import InverseEngine
 from .registry import FormulaType, registry
 
 __all__ = [
+    "ExponentialFormulaFitter",
     "FitResult",
     "FloorFormulaFitter",
     "FormulaFitter",
     "FormulaType",
     "InverseEngine",
+    "PiecewiseFormulaFitter",
+    "ThresholdFormulaFitter",
     "registry",
 ]

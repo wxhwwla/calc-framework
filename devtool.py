@@ -18,6 +18,7 @@
     python devtool.py plugin rebuild-catalog  # 重建插件目录 JSON
     python devtool.py framework build         # 构建 framework PyPI wheel
     python devtool.py framework publish       # 构建+发布 framework 到 PyPI
+    python devtool.py check-origin            # AI 代码来源/版权检测
 """
 
 from __future__ import annotations
@@ -134,6 +135,14 @@ def _cmd_plugin(args: argparse.Namespace) -> int:
     return 1
 
 
+def _cmd_check_origin(args: argparse.Namespace) -> int:
+    """AI 代码来源/版权检测。"""
+    _add_path()
+    from tools.check_code_origin import main
+    sys.argv = [sys.argv[0]] + _sub_args()
+    return main()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="终末地计算器 — 开发者工具箱",
@@ -150,6 +159,7 @@ def main() -> None:
     hub_parser.add_argument("--port", type=int, default=8080, help="端口 (默认 8080)")
     sub.add_parser("framework", help="构建/发布 framework PyPI 包", add_help=False)
     sub.add_parser("plugin", help="插件打包/安装/目录管理", add_help=False)
+    sub.add_parser("check-origin", help="AI 代码来源/版权检测", add_help=False)
 
     # 用 parse_known_args 避免 --flags 被 argparse 拦截
     args, _ = parser.parse_known_args()
@@ -165,6 +175,7 @@ def main() -> None:
         "hub": _cmd_hub,
         "framework": _cmd_framework,
         "plugin": _cmd_plugin,
+        "check-origin": _cmd_check_origin,
     }
     result = funcs[args.command](args)
     if isinstance(result, int):
