@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from calculation.core.preview_cache import sync_confirm_dependencies
-from calculation.loadout.optimizer import WeaponCandidate
+from adapters.endfield.calc.core.preview_cache import sync_confirm_dependencies
+from adapters.endfield.calc.loadout.optimizer import WeaponCandidate
 from gui_design.presentation.damage_snapshot import (
     DamageSnapshot,
     build_damage_snapshot,

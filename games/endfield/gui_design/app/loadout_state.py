@@ -10,9 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from calculation.loadout.slot_search import FixedLoadoutSelection
-from calculation.search.plan.controller import SearchJobInputs
-from calculation.skills.weapon_selection import WeaponSkillSelection
+from adapters.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+from adapters.endfield.calc.search.plan.controller import SearchJobInputs
+from adapters.endfield.calc.skills.weapon_selection import WeaponSkillSelection
 from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
 
 from .confirm_refresh import (

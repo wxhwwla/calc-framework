@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calculation.multiplicative_zones.zone_snapshot import ZoneDisplayLine
+from adapters.endfield.calc.multiplicative_zones.zone_snapshot import ZoneDisplayLine
 from gui_design.app.display_request import DisplayRequest
 from gui_design.presentation.display_lines import (
     build_character_attribute_lines,
@@ -169,8 +169,8 @@ class QtAttributeColumns(QWidget):
 
     def _build_zone_lines(self, request: DisplayRequest) -> list[ZoneDisplayLine]:
         """从 DisplayRequest 构建乘区展示行。"""
-        from calculation.core.preview_cache import sync_confirm_dependencies
-        from calculation.multiplicative_zones.zone_snapshot import (
+        from adapters.endfield.calc.core.preview_cache import sync_confirm_dependencies
+        from adapters.endfield.calc.multiplicative_zones.zone_snapshot import (
             MultiplicativeZoneSelection,
             WeaponBonusSelection,
             compute_multiplicative_zone_snapshot,

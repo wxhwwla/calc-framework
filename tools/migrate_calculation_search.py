@@ -59,18 +59,18 @@ STUB_TEMPLATE = '''#!/usr/bin/env python3
 # -*- coding: utf-8__
 """兼容 re-export：实现位于 calculation.search.{target}。"""
 
-from calculation.search.{target} import *  # noqa: F403
+from adapters.endfield.calc.search.{target} import *  # noqa: F403
 '''
 
 
 def rewrite_imports(text: str) -> str:
     for old, new in OLD_TO_NEW.items():
-        text = text.replace(f"from calculation.{old} import", f"from {new} import")
-        text = text.replace(f"import calculation.{old}", f"import {new}")
+        text = text.replace(f"from adapters.endfield.calc.{old} import", f"from {new} import")
+        text = text.replace(f"import adapters.endfield.calc.{old}", f"import {new}")
     # search 包内相对 import
     for old, new in OLD_TO_NEW.items():
         short = new.split(".")[-1]
-        text = text.replace(f"from calculation.{old} import", f"from .{short} import")
+        text = text.replace(f"from adapters.endfield.calc.{old} import", f"from .{short} import")
     return text
 
 
@@ -88,7 +88,7 @@ def main() -> None:
         for old_mod, new_path in OLD_TO_NEW.items():
             short = new_path.split(".")[-1]
             content = content.replace(
-                f"from calculation.{old_mod} import",
+                f"from adapters.endfield.calc.{old_mod} import",
                 f"from .{short} import",
             )
         dst.write_text(content, encoding="utf-8")
@@ -101,7 +101,7 @@ def main() -> None:
 # -*- coding: utf-8 -*-
 """兼容 re-export：实现位于 calculation.search.{target}。"""
 
-from calculation.search.{target} import *  # noqa: F403
+from adapters.endfield.calc.search.{target} import *  # noqa: F403
 '''
         (PKG / old_name).write_text(stub, encoding="utf-8")
         print("migrated", old_name, "->", new_name)

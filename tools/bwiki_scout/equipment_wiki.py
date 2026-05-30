@@ -108,7 +108,7 @@ def equipment_record_from_draft(draft: dict[str, Any]) -> dict[str, Any]:
         from bwiki_scout.pkg_bootstrap import ensure_package_path
 
         ensure_package_path()
-        from calculation.equipment.system import infer_equipment_slot
+        from adapters.endfield.calc.equipment.system import infer_equipment_slot
 
         inferred = infer_equipment_slot({"名称": name, "部位": "", "装备种类": ""})
         row["装备种类"] = inferred

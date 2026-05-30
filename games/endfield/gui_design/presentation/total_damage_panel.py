@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calculation.skills.segments import parse_segment_key
+from adapters.endfield.calc.skills.segments import parse_segment_key
 
 _SECTION_COLOR = "#FF6B6B"
 _TOTAL_COLOR = "#4FC3F7"

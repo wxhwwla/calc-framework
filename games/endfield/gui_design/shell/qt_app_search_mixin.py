@@ -49,8 +49,8 @@ class SearchMixin:
         )
 
     def _on_mvp_search(self) -> None:
-        from calculation.search.plan.controller import prepare_search_job
-        from calculation.search.run.cancel import SearchCancelToken
+        from adapters.endfield.calc.search.plan.controller import prepare_search_job
+        from adapters.endfield.calc.search.run.cancel import SearchCancelToken
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
@@ -77,9 +77,9 @@ class SearchMixin:
         self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
 
     def _on_full_search(self) -> None:
-        from calculation.search.plan.controller import prepare_search_job
-        from calculation.search.run.cancel import SearchCancelToken
-        from calculation.search.run.single_skill import estimate_single_skill_search
+        from adapters.endfield.calc.search.plan.controller import prepare_search_job
+        from adapters.endfield.calc.search.run.cancel import SearchCancelToken
+        from adapters.endfield.calc.search.run.single_skill import estimate_single_skill_search
         from gui_design.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
         from utils.app_paths import allocate_search_run_directory
 

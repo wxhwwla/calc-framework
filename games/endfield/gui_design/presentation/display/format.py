@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
-from calculation.core.config import CHARACTER_NORMAL_ATTRS
+from adapters.endfield.calc.core.config import CHARACTER_NORMAL_ATTRS
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]

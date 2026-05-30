@@ -276,7 +276,7 @@ class BuilderMixin:
 
     def rebuild_segment_rows(self, char_data: dict | None, s1: int, s2: int, s3: int) -> None:
         """按角色技能段规格重建段级次数输入行。"""
-        from calculation.skills.segments import list_segment_count_specs
+        from adapters.endfield.calc.skills.segments import list_segment_count_specs
 
         # 清空容器
         while self._segment_rows_lay.count():

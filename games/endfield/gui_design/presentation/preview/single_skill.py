@@ -5,24 +5,24 @@ from __future__ import annotations
 
 from typing import Any
 
-from calculation.manual_buff.physical import (
+from adapters.endfield.calc.manual_buff.physical import (
     compose_damage_total,
     evaluate_physical_abnormal_total,
     format_abnormal_breakdown_lines,
 )
-from calculation.manual_buff.spell import (
+from adapters.endfield.calc.manual_buff.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
 )
-from calculation.core.preview_cache import cached_preview, sync_preview_dependencies
-from calculation.damage.engine import DamageContext
-from calculation.loadout.optimizer import (
+from adapters.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
+from adapters.endfield.calc.damage.engine import DamageContext
+from adapters.endfield.calc.loadout.optimizer import (
     OptimizerConfig,
     WeaponCandidate,
     search_best_single_skill_loadouts,
 )
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
+from adapters.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from adapters.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 
 
 def build_single_skill_search_preview_lines(

@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 _GAMES = Path(__file__).resolve().parent / "games" / "endfield"
-if str(_GAMES) not in sys.path:
+if str(_GAMES.parent) not in sys.path:
     sys.path.insert(0, str(_GAMES))
 
 main = importlib.import_module("designer_main").main

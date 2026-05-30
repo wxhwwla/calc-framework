@@ -504,7 +504,7 @@ from pathlib import Path
 
 import pytest
 
-from calculation.core.result_cache import reset_global_result_cache
+from adapters.endfield.calc.core.result_cache import reset_global_result_cache
 
 _INTEGRATION_FILES = frozenset(
     {

@@ -5,29 +5,29 @@ from __future__ import annotations
 
 from typing import Any
 
-from calculation.manual_buff.physical import (
+from adapters.endfield.calc.manual_buff.physical import (
     compose_damage_total,
     evaluate_physical_abnormal_total,
     format_abnormal_breakdown_lines,
 )
-from calculation.manual_buff.spell import (
+from adapters.endfield.calc.manual_buff.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
 )
-from calculation.core.preview_cache import cached_preview, sync_preview_dependencies
-from calculation.damage.engine import DamageContext
-from calculation.loadout.optimizer import (
+from adapters.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
+from adapters.endfield.calc.damage.engine import DamageContext
+from adapters.endfield.calc.loadout.optimizer import (
     WeaponCandidate,
 )
-from calculation.multi_skill.optimizer import (
+from adapters.endfield.calc.multi_skill.optimizer import (
     MultiSkillConfig,
     SkillScenario,
     optimize_multi_skill_loadouts,
 )
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from calculation.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
-from data.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
+from adapters.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from adapters.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
+from adapters.endfield.calc.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
+from adapters.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 
 
 def build_multi_skill_search_preview_lines(
@@ -237,11 +237,11 @@ def _build_multi_skill_search_preview_lines_impl(
             skill_counts=active_counts,
             crit_mode="expected" if use_expected_crit else "non_crit",
         )
-        from calculation.skills.segments import format_segment_count_label
+        from adapters.endfield.calc.skills.segments import format_segment_count_label
 
         count_desc = f"手动次数: {format_segment_count_label(active_counts)}"
 
-    from calculation.damage.types import format_damage_type_display
+    from adapters.endfield.calc.damage.types import format_damage_type_display
 
     segment_type_lines = []
     for scenario in scenarios:

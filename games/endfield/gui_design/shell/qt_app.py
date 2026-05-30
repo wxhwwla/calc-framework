@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from data.loader import get_characters, get_weapons
+from adapters.endfield.data_loading.loader import get_characters, get_weapons
 from gui_design.panels.selection.qt_panel import QtSelectionPanel
 from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
 from gui_design.shared.display_view.qt_columns import QtAttributeColumns
@@ -253,7 +253,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
         self._apply_enemy_params(initial_params)
 
         # 装备 catalog + 固定配装槽
-        from data.equipment_catalog import get_equipment_catalog
+        from adapters.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
         self._equipment_catalog: dict[str, list[dict[str, Any]]] = get_equipment_catalog()
         dock.populate_fixed_loadout_slots(self._equipment_catalog)
@@ -269,7 +269,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
     def _on_equipment_scope_changed(self, scope_label: str) -> None:
         """装备范围下拉变更：重新获取 catalog 并刷新固定配装槽。"""
-        from data.equipment_catalog import get_equipment_catalog
+        from adapters.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
         self._equipment_catalog = get_equipment_catalog(scope_label=scope_label)
         self.control_dock.populate_fixed_loadout_slots(self._equipment_catalog)

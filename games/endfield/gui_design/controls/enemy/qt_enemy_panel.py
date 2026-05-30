@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from data.enemy_params import (
+from adapters.endfield.data_loading.enemy_params import (
     DEFAULT_ENEMY_DEFENSE,
     DEFAULT_ENEMY_RESISTANCE,
     DEFAULT_IGNORE_RESISTANCE,

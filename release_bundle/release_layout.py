@@ -13,7 +13,7 @@ import shutil
 from pathlib import Path
 from typing import Literal
 
-from data.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
+from adapters.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
 BuildTarget = Literal["calculator", "designer", "layout-editor"]
 
@@ -25,8 +25,8 @@ TARGET_APP_NAMES: dict[BuildTarget, str] = {
 
 TARGET_ENTRIES: dict[BuildTarget, str] = {
     "calculator": "main.py",
-    "designer": "designer/designer_main.py",
-    "layout-editor": "editor_app.py",
+    "designer": "main_designer.py",
+    "layout-editor": "main_editor.py",
 }
 
 RELEASE_DATA_FILES: tuple[tuple[str, str], ...] = (

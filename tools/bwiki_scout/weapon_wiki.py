@@ -17,8 +17,8 @@ if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
 from bwiki_scout.parse_draft import extract_template_params, _parse_int  # noqa: E402
-from calculation.damage.formula import calculate_bonus_attribute, calculate_growth_curve  # noqa: E402
-from calculation.damage.inverse import fit_attribute_formula, fit_skill_formula_no_special  # noqa: E402
+from adapters.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve  # noqa: E402
+from adapters.endfield.calc.damage.inverse import fit_attribute_formula, fit_skill_formula_no_special  # noqa: E402
 
 # Wiki 稀有度 → 本地星级
 _RARITY_STAR: dict[str, int] = {

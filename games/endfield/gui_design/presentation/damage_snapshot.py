@@ -12,10 +12,10 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from calculation.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
-from calculation.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calculation.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from calculation.skills.segments import (
+from adapters.endfield.calc.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
+from adapters.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from adapters.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
+from adapters.endfield.calc.skills.segments import (
     normalize_manual_segment_counts,
     parse_segment_key,
     scenario_counts_for_eval,

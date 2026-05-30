@@ -18,9 +18,9 @@ _PKG = _REPO_ROOT / "games" / "endfield"
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
-from calculation.damage.types import infer_segment_damage_type  # noqa: E402
-from calculation.damage.formula import calculate_skill_curve  # noqa: E402
-from calculation.damage.inverse import fit_skill_formula  # noqa: E402
+from adapters.endfield.calc.damage.types import infer_segment_damage_type  # noqa: E402
+from adapters.endfield.calc.damage.formula import calculate_skill_curve  # noqa: E402
+from adapters.endfield.calc.damage.inverse import fit_skill_formula  # noqa: E402
 
 _PERCENT_RE = re.compile(r"([\d.]+)\s*%?")
 _SKIP_ROW_KEYWORDS = ("失衡", "技力", "消耗", "冷却", "范围")

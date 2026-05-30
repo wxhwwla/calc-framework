@@ -38,7 +38,6 @@ build = [
 
 [project.scripts]
 endfield-calculator = "main:main"
-endfield-designer = "designer.designer_main:main"
 
 [tool.setuptools.dynamic]
 version = { attr = "please_read_me._VERSION" }
@@ -49,25 +48,15 @@ py-modules = ["main", "please_read_me"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "calculation*",
-    "data*",
     "gui_design*",
     "character_weapon_equipment*",
     "legal*",
 ]
-exclude = ["tests*", "scripts*"]
-
-# 打包由 build.py 驱动（PyInstaller --onedir，JSON 外挂于 exe 旁）。
-# 勿使用旧版 onefile + --add-data 内嵌数据；见 release_bundle/ 与 docs/操作指令集.md §7。
+exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = [".", "../.."]
-markers = [
-    "integration: 需要 CustomTkinter/Tcl（本地可 -m 'not integration' 跳过）",
-    "real_data: 读取本地 characters/weapons/equipments JSON（默认跳过，见 ENDFIELD_RUN_REAL_DATA_TESTS）",
-    "slow: 公式暴力反推（CPU 密集，外观像卡住；本地建议跳过）",
-]
+testpaths = ["../adapters/endfield/tests"]
+pythonpath = [".", "../..", "../adapters"]
 # 本地日常：pytest -m "not integration and not real_data and not slow"
 # CI 仍跑全量：pytest tests/ -q
 # --cov-fail-under=60 对应长期目标 80%，目前先提至 60

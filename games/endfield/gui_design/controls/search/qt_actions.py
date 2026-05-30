@@ -19,24 +19,24 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calculation.loadout.optimizer import LoadoutScore
-from calculation.manual_buff.physical import (
+from adapters.endfield.calc.loadout.optimizer import LoadoutScore
+from adapters.endfield.calc.manual_buff.physical import (
     format_abnormal_breakdown_lines,
     split_damage_breakdown,
 )
-from calculation.manual_buff.spell import (
+from adapters.endfield.calc.manual_buff.spell import (
     format_spell_abnormal_breakdown_lines,
     is_spell_abnormal_key,
 )
-from calculation.search.plan.controller import (
+from adapters.endfield.calc.search.plan.controller import (
     optimizer_config_for_search_job,
 )
-from calculation.search.plan.job import SingleSkillSearchJob
-from calculation.search.run.cancel import SearchCancelToken
-from calculation.search.run.single_skill import (
+from adapters.endfield.calc.search.plan.job import SingleSkillSearchJob
+from adapters.endfield.calc.search.run.cancel import SearchCancelToken
+from adapters.endfield.calc.search.run.single_skill import (
     run_exported_single_skill_search,
 )
-from calculation.skills.segments import (
+from adapters.endfield.calc.skills.segments import (
     aggregate_weighted_damage,
     format_segment_breakdown_lines,
 )
