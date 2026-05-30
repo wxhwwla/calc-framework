@@ -6,20 +6,19 @@
     python build.py                     # 默认打包全部目标
     python build.py --target designer   # 仅打包设计器
 
-实际代码位于: games/endfield/build.py
+实际代码位于: main_build.py
 """
 
 from __future__ import annotations
 
-import importlib
 import sys
 from pathlib import Path
 
-_GAMES = Path(__file__).resolve().parent / "games" / "endfield"
-if str(_GAMES) not in sys.path:
-    sys.path.insert(0, str(_GAMES))
+_REPO = Path(__file__).resolve().parent
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
 
-main = importlib.import_module("build").main
+from main_build import main
 
 if __name__ == "__main__":
     main()
