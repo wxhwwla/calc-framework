@@ -67,13 +67,14 @@ class _ControlItem(QGraphicsRectItem):
 class _SectionItem(QGraphicsRectItem):
     """画布上的一个 Section 区块。"""
 
-    def __init__(self, section_id: str, title: str, section_type: str, columns: int, widget_type: str = "", parent=None):
+    def __init__(self, section_id: str, title: str, section_type: str, columns: int, widget_type: str = "", widget_config: dict | None = None, parent=None):
         h = _SECTION_HEADER_H + _CONTROL_MARGIN
         super().__init__(0, 0, _SECTION_WIDTH, h, parent)
         self._section_id = section_id
         self._section_type = section_type
         self._columns = columns
         self._widget_type = widget_type
+        self._widget_config = widget_config or {}
         self._title = title
         self._controls: list[_ControlItem] = []
 
@@ -150,6 +151,7 @@ class _SectionItem(QGraphicsRectItem):
             return Section(
                 id=self._section_id, title=self._title,
                 type="widget", widget_type=self._widget_type,
+                widget_config=dict(self._widget_config),
             )
         inp_vars = [c.var_name for c in self._controls if c.var_name.startswith("character.") or c.var_name.startswith("weapon.") or c.var_name.startswith("equipment.") or c.var_name.startswith("enemy.") or c.var_name.startswith("user.")]
         out_vars = [c.var_name for c in self._controls if not (c.var_name.startswith("character.") or c.var_name.startswith("weapon.") or c.var_name.startswith("equipment.") or c.var_name.startswith("enemy.") or c.var_name.startswith("user."))]
@@ -211,6 +213,58 @@ class SectionEditDialog(QDialog):
             "type": self._type_combo.currentText(),
             "columns": self._cols_spin.value(),
             "widget_type": self._widget_type_combo.currentText() if self._type_combo.currentText() == "widget" else "",
+        }
+        self.accept()
+
+    @property
+    def result(self) -> dict | None:
+        return self._result
+
+
+class DonationConfigDialog(QDialog):
+    """配置捐赠组件的文字和图片。"""
+
+    def __init__(self, text="", image_path="", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("捐赠组件配置")
+        self.setMinimumWidth(450)
+        self._result: dict | None = None
+
+        layout = QFormLayout(self)
+
+        self._text_edit = QLineEdit(text or "感谢使用！如果觉得有用，欢迎支持开发者。")
+        layout.addRow("描述文字:", self._text_edit)
+
+        path_layout = QHBoxLayout()
+        self._path_edit = QLineEdit(image_path)
+        self._path_edit.setPlaceholderText("如: qr_code.png")
+        path_layout.addWidget(self._path_edit, stretch=1)
+        browse_btn = QPushButton("浏览...")
+        browse_btn.clicked.connect(self._browse_image)
+        path_layout.addWidget(browse_btn)
+        layout.addRow("图片路径:", path_layout)
+
+        btns = QHBoxLayout()
+        ok_btn = QPushButton("确定")
+        ok_btn.clicked.connect(self._accept)
+        cancel_btn = QPushButton("取消")
+        cancel_btn.clicked.connect(self.reject)
+        btns.addWidget(ok_btn)
+        btns.addWidget(cancel_btn)
+        layout.addRow(btns)
+
+    def _browse_image(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+        path, _ = QFileDialog.getOpenFileName(
+            self, "选择捐赠图片", "", "图片 (*.png *.jpg *.jpeg *.bmp)"
+        )
+        if path:
+            self._path_edit.setText(path)
+
+    def _accept(self) -> None:
+        self._result = {
+            "text": self._text_edit.text().strip(),
+            "image_path": self._path_edit.text().strip(),
         }
         self.accept()
 
@@ -371,9 +425,13 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _add_donation_section(self) -> None:
+        dialog = DonationConfigDialog(parent=self)
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result:
+            return
+        cfg = dialog.result
         self._section_id_counter += 1
         sid = f"widget_donation_{self._section_id_counter}"
-        sec_item = _SectionItem(sid, "自愿捐赠", "widget", 1, widget_type="donation")
+        sec_item = _SectionItem(sid, "自愿捐赠", "widget", 1, widget_type="donation", widget_config=cfg)
         x = 30 + (self._section_id_counter % 3) * 40
         y = 30 + (self._section_id_counter % 3) * 30
         sec_item.setPos(x, y)
@@ -496,7 +554,7 @@ class LayoutCanvasPanel(QWidget):
         self._section_id_counter = 0
         for i, sec in enumerate(layout.sections):
             self._section_id_counter += 1
-            sec_item = _SectionItem(sec.id, sec.title, sec.type, sec.columns, sec.widget_type)
+            sec_item = _SectionItem(sec.id, sec.title, sec.type, sec.columns, sec.widget_type, dict(sec.widget_config))
             sec_item.setPos(30 + (i % 2) * 60, 30 + (i % 2) * 30)
             self._scene.addItem(sec_item)
             if sec.type == "widget":
@@ -524,6 +582,7 @@ class LayoutCanvasPanel(QWidget):
                     "outputs": sec.outputs,
                     "columns": sec.columns,
                     "widget_type": sec.widget_type,
+                    "widget_config": sec.widget_config,
                 })
         return {
             "schema_version": "ui-v1",

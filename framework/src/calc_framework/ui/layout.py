@@ -27,6 +27,7 @@ class Section:
     outputs: list[str] = field(default_factory=list)
     columns: int = 2
     widget_type: str = ""
+    widget_config: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -111,5 +112,6 @@ def _build_sections(raw: list[dict[str, Any]]) -> list[Section]:
             outputs=sec.get("outputs", []),
             columns=sec.get("columns", 2),
             widget_type=sec.get("widget_type", ""),
+            widget_config=sec.get("widget_config", {}),
         ))
     return result
