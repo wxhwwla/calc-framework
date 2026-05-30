@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -107,7 +108,6 @@ class DesignerApp(QMainWindow):
         import sys
         self._bwiki_btn.setEnabled(False)
         self._bwiki_btn.setText("同步中...")
-        from PySide6.QtWidgets import QMessageBox
         try:
             result = bwiki_main()
             if result == 0:

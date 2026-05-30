@@ -74,7 +74,7 @@
 | **Web 版框架** | `web/frontend/`（React + TypeScript + Vite + MUI v6 + Zustand + React Flow）+ `web/backend/`（FastAPI）。前端接入 DAG 引擎 API，支持适配器选择、参数表单、结果展示、DAG 可视化 |
 | **Upload Script** | `github_upload_module.py`：版本 bump + commit + push（可选 `--minor` / `--no-bump` / `--tag`）。中途终止会残留 `UPLOAD_SUMMARY` 块和 git stash，需手动清理 |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
-| **双目标打包** | `build.py --target {calculator|designer}`：计算器输出 `dist/终末地伤害计算器/`，设计器输出 `dist/终末地数据设计器/`，各自排除无用模块 |
+| **双目标打包** | `build.py --target {calculator|designer|pack-designer}`：计算器/数据设计器/配置包设计器三个 exe |
 | **终末地数据设计器** | `designer/designer_main.py` — 三个页签：公式反推（InverseTab）、数据编辑（DataEditorTab）、数据浏览（DataBrowserTab）。独立于计算器主 GUI |
 | **DataEditorTab** | `designer/data_editor_tab.py` — 图形化新增/编辑/删除角色、武器、装备，通过 `data.loader` 读写 JSON 并刷新缓存 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |
@@ -83,6 +83,12 @@
 | **BWIKI 侦察** | `tools/bwiki_scout/`：阶段 C 拉取 Wiki 至 `output/raw/`（gitignore）；阶段 B `parse_draft.py` 仅生成对照草案 |
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
 | **项目依赖** | 运行时：`PySide6` + `matplotlib`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
+| **捐赠组件** | `utils/donation.py`：所有 GUI 共享的`DonationWidget`+`open_donation_dialog()`；捐赠不构成购买软件对价 |
+| **捐赠 widget（布局）** | `type:"widget"` + `widget_type:"donation"` — 可嵌入 .calcpack 布局的捐赠卡片，含自定义文字和图片，随配置包传播 |
+| **数据许可** | `DATA_LICENSE`：商业禁止使用本仓库 JSON；须自行从游戏/Wiki 获取 |
+| **许可结构** | 软件 AGPL-3.0/商业双许可（`LICENSE`）+ 数据单独许可（`DATA_LICENSE`）；发布包须同时附带 |
+| **PySide6 LGPL** | 打包 exe 以动态链接方式使用 Qt，符合 LGPL 要求；须保留 PySide6 版权声明 |
+| **OCR 依赖** | `tools/ocr/` 可选依赖 EasyOCR（Apache 2.0）+ ultralytics（AGPL-3.0）；YOLO 模型商用受限 |
 
 ## 标准数据录入（四层数据契约）
 

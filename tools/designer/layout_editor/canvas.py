@@ -217,7 +217,7 @@ class SectionEditDialog(QDialog):
         self.accept()
 
     @property
-    def result(self) -> dict | None:
+    def section_result(self) -> dict | None:
         return self._result
 
 
@@ -269,7 +269,7 @@ class DonationConfigDialog(QDialog):
         self.accept()
 
     @property
-    def result(self) -> dict | None:
+    def config_result(self) -> dict | None:
         return self._result
 
 
@@ -411,9 +411,9 @@ class LayoutCanvasPanel(QWidget):
 
     def _add_section(self) -> None:
         dialog = SectionEditDialog(parent=self)
-        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result:
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.section_result:
             return
-        r = dialog.result
+        r = dialog.section_result
         self._section_id_counter += 1
         sid = f"section_{self._section_id_counter}"
         sec_item = _SectionItem(sid, r["title"], r["type"], r["columns"], r.get("widget_type", ""))
@@ -426,9 +426,9 @@ class LayoutCanvasPanel(QWidget):
 
     def _add_donation_section(self) -> None:
         dialog = DonationConfigDialog(parent=self)
-        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.result:
+        if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.config_result:
             return
-        cfg = dialog.result
+        cfg = dialog.config_result
         self._section_id_counter += 1
         sid = f"widget_donation_{self._section_id_counter}"
         sec_item = _SectionItem(sid, "自愿捐赠", "widget", 1, widget_type="donation", widget_config=cfg)
