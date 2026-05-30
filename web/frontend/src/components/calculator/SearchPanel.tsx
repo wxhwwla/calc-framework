@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Box,
   Typography,
@@ -17,7 +17,8 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import EstimateIcon from "@mui/icons-material/Calculate";
-import { estimateSearch, runSearch, type SearchRequest, type SearchResult, type SearchEstimate } from "../../api/search";
+import CancelIcon from "@mui/icons-material/Cancel";
+import { estimateSearch, runSearch, runSearchStream, type SearchRequest, type SearchResult, type SearchEstimate, type LoadoutResult, type StreamEvent } from "../../api/search";
 
 interface SearchPanelProps {
   currentParams: SearchRequest;
@@ -32,6 +33,10 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [topN, setTopN] = useState(10);
   const [maxWorkers, setMaxWorkers] = useState(4);
+  const [streamProgress, setStreamProgress] = useState<{ processed: number; total: number } | null>(null);
+  const [streamResults, setStreamResults] = useState<LoadoutResult[]>([]);
+  const [useStreaming, setUseStreaming] = useState(true);
+  const abortRef = useRef<AbortController | null>(null);
 
   const handleEstimate = useCallback(async () => {
     setStatus("estimating");
@@ -50,25 +55,95 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
   const handleRun = useCallback(async () => {
     setStatus("running");
     setError(null);
-    try {
-      const res = await runSearch({
-        ...currentParams,
-        top_n: topN,
-        max_workers: maxWorkers,
-      });
-      setResult(res);
-      setStatus("done");
-    } catch (e: unknown) {
-      setError(String(e));
-      setStatus("error");
+    setStreamProgress(null);
+    setStreamResults([]);
+
+    if (useStreaming) {
+      const abortController = new AbortController();
+      abortRef.current = abortController;
+      let accumulatedResults: LoadoutResult[] = [];
+
+      try {
+        await runSearchStream(
+          { ...currentParams, top_n: topN, max_workers: maxWorkers },
+          (event: StreamEvent) => {
+            switch (event.type) {
+              case "start":
+                setStreamProgress({ processed: 0, total: event.total_combinations || 0 });
+                break;
+              case "summary":
+                setStreamProgress({
+                  processed: event.searched_combinations || 0,
+                  total: event.total_combinations || 0,
+                });
+                break;
+              case "chunk":
+                if (event.results) {
+                  accumulatedResults = [...accumulatedResults, ...event.results];
+                  setStreamResults(accumulatedResults);
+                }
+                break;
+              case "stream_end":
+                setResult({
+                  top_results: accumulatedResults,
+                  total_combinations: 0,
+                  searched_combinations: 0,
+                  cancelled: false,
+                  warnings: [],
+                });
+                setStatus("done");
+                break;
+              case "error":
+                setError(event.message || "搜索失败");
+                setStatus("error");
+                break;
+            }
+          },
+          abortController.signal,
+        );
+      } catch (e: unknown) {
+        if ((e as Error).name === "AbortError") {
+          setStatus("idle");
+          setStreamProgress(null);
+        } else {
+          setError(String(e));
+          setStatus("error");
+        }
+      } finally {
+        abortRef.current = null;
+      }
+    } else {
+      try {
+        const res = await runSearch({
+          ...currentParams,
+          top_n: topN,
+          max_workers: maxWorkers,
+        });
+        setResult(res);
+        setStatus("done");
+      } catch (e: unknown) {
+        setError(String(e));
+        setStatus("error");
+      }
     }
-  }, [currentParams, topN, maxWorkers]);
+  }, [currentParams, topN, maxWorkers, useStreaming]);
 
   const handleReset = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
     setStatus("idle");
     setEstimate(null);
     setResult(null);
     setError(null);
+    setStreamProgress(null);
+    setStreamResults([]);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setStatus("idle");
+    setStreamProgress(null);
   }, []);
 
   const formatDuration = (seconds: number): string => {
@@ -120,11 +195,29 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
           >
             {status === "ready" ? "开始搜索" : "全量搜索"}
           </Button>
+          {status === "running" && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<CancelIcon />}
+              onClick={handleCancel}
+            >
+              取消
+            </Button>
+          )}
           {(status !== "idle" && status !== "error") && (
             <Button size="small" variant="text" onClick={handleReset}>
               重置
             </Button>
           )}
+          <Chip
+            label={useStreaming ? "流式模式" : "批量模式"}
+            size="small"
+            color={useStreaming ? "info" : "default"}
+            variant="outlined"
+            onClick={() => setUseStreaming(!useStreaming)}
+            sx={{ cursor: "pointer" }}
+          />
         </Box>
 
         {status === "estimating" && (
@@ -151,11 +244,67 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
 
         {status === "running" && (
           <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="info.main">搜索进行中…请耐心等待</Typography>
-            <LinearProgress color="info" />
+            {streamProgress ? (
+              <Box>
+                <Typography variant="body2" color="info.main">
+                  搜索中: {streamProgress.processed.toLocaleString()} / {streamProgress.total.toLocaleString()} 组合
+                </Typography>
+                <LinearProgress
+                  color="info"
+                  variant={streamProgress.total > 0 ? "determinate" : "indeterminate"}
+                  value={streamProgress.total > 0 ? (streamProgress.processed / streamProgress.total) * 100 : undefined}
+                />
+              </Box>
+            ) : (
+              <Box>
+                <Typography variant="body2" color="info.main">搜索进行中…请耐心等待</Typography>
+                <LinearProgress color="info" />
+              </Box>
+            )}
           </Box>
         )}
       </Paper>
+
+      {status === "running" && streamResults.length > 0 && (
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+            <Typography variant="subtitle2">
+              实时结果 (已到 {streamResults.length} 条)
+            </Typography>
+          </Box>
+
+          <TableContainer sx={{ maxHeight: 300 }}>
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>#</TableCell>
+                  <TableCell>武器</TableCell>
+                  <TableCell>护甲</TableCell>
+                  <TableCell>护手</TableCell>
+                  <TableCell>配件A</TableCell>
+                  <TableCell>配件B</TableCell>
+                  <TableCell align="right">伤害</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {streamResults.slice(0, topN).map((r, idx) => (
+                  <TableRow key={idx} hover selected>
+                    <TableCell>{idx + 1}</TableCell>
+                    <TableCell>{r.weapon_name}</TableCell>
+                    <TableCell>{r.chest}</TableCell>
+                    <TableCell>{r.gloves}</TableCell>
+                    <TableCell>{r.accessory_a}</TableCell>
+                    <TableCell>{r.accessory_b}</TableCell>
+                    <TableCell align="right">
+                      <strong>{Math.round(r.final_damage).toLocaleString()}</strong>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
 
       {result && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>

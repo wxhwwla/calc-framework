@@ -87,3 +87,61 @@ export async function fetchEquipmentCatalog(): Promise<Record<string, { 名称: 
   if (!r.ok) throw new Error(`获取装备目录失败: ${r.statusText}`);
   return r.json();
 }
+
+export interface StreamEvent {
+  type: "start" | "heartbeat" | "summary" | "chunk" | "stream_end" | "error";
+  total_combinations?: number;
+  searched_combinations?: number;
+  cancelled?: boolean;
+  elapsed_seconds?: number;
+  results?: LoadoutResult[];
+  chunk_index?: number;
+  total_chunks?: number;
+  message?: string;
+}
+
+export async function runSearchStream(
+  params: SearchRequest,
+  onEvent: (event: StreamEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const r = await fetch(`${BASE}/run_stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+    signal,
+  });
+
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`流式搜索失败: ${text}`);
+  }
+
+  const reader = r.body?.getReader();
+  if (!reader) {
+    throw new Error("响应体不可读");
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        try {
+          const data: StreamEvent = JSON.parse(line.slice(6));
+          onEvent(data);
+        } catch {
+          // skip malformed lines
+        }
+      }
+    }
+  }
+}

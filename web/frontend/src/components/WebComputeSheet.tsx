@@ -22,6 +22,7 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import type { DagVariable, ControlSpec } from "../utils/controlInference";
 import { inferControl, getUserInputVariables } from "../utils/controlInference";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import LazySection from "./LazySection";
 
 /** layout.json Section 类型 */
 export interface LayoutSection {
@@ -177,82 +178,105 @@ export default function WebComputeSheet({
     return cache;
   }, [variables]);
 
+  const firstSectionId = layout.sections[0]?.id;
+
   return (
     <Box>
       {layout.sections.map((section) => {
-        if (section.type === "inputs") {
-          return (
-            <Paper key={section.id} sx={{ p: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                {section.title}
-              </Typography>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: `repeat(${section.columns || 2}, 1fr)`,
-                  gap: 2,
-                }}
-              >
-                {(section.variables || []).map((varPath) => {
-                  const spec = specCache[varPath];
-                  if (!spec || spec.widget === "none") return null;
-                  const value = inputValues[varPath] ?? spec.default;
-                  const label = spec.description || varPath.split(".").pop() || varPath;
-                  return (
-                    <Box key={varPath}>
-                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        {label}
-                      </Typography>
-                      <InputControl spec={spec} value={value as number | boolean | string} onChange={(v) => handleChange(varPath, v)} />
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Paper>
-          );
-        }
+        const isFirst = section.id === firstSectionId;
+        const shouldLazy = !isFirst && section.type !== "inputs";
 
-        if (section.type === "outputs") {
-          return (
-            <Paper key={section.id} sx={{ p: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                {section.title}
-              </Typography>
-              <TableContainer>
-                <Table size="small">
-                  <TableBody>
-                    {(section.outputs || []).map((outName) => {
-                      const val = outputValues?.[outName];
-                      return (
-                        <TableRow key={outName}>
-                          <TableCell sx={{ border: "none", pl: 0 }}>{outName}</TableCell>
-                          <TableCell sx={{ border: "none", textAlign: "right", fontWeight: "bold" }}>
-                            {val !== undefined ? val.toFixed(4) : "--"}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          );
-        }
-
-        if (section.type === "widget") {
-          if (section.widget_type === "donation") {
+        const sectionContent = (() => {
+          if (section.type === "inputs") {
             return (
-              <Paper key={section.id} sx={{ p: 2, mb: 2, textAlign: "center" }}>
-                <Typography variant="body2" color="text.secondary">
-                  {section.widget_config?.text as string || "感谢使用！"}
+              <Paper key={section.id} sx={{ p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  {section.title}
                 </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${section.columns || 2}, 1fr)`,
+                    gap: 2,
+                  }}
+                >
+                  {(section.variables || []).map((varPath) => {
+                    const spec = specCache[varPath];
+                    if (!spec || spec.widget === "none") return null;
+                    const value = inputValues[varPath] ?? spec.default;
+                    const label = spec.description || varPath.split(".").pop() || varPath;
+                    return (
+                      <Box key={varPath}>
+                        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                          {label}
+                        </Typography>
+                        <InputControl spec={spec} value={value as number | boolean | string} onChange={(v) => handleChange(varPath, v)} />
+                      </Box>
+                    );
+                  })}
+                </Box>
               </Paper>
             );
           }
+
+          if (section.type === "outputs") {
+            return (
+              <Paper key={section.id} sx={{ p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  {section.title}
+                </Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableBody>
+                      {(section.outputs || []).map((outName) => {
+                        const val = outputValues?.[outName];
+                        return (
+                          <TableRow key={outName}>
+                            <TableCell sx={{ border: "none", pl: 0 }}>{outName}</TableCell>
+                            <TableCell sx={{ border: "none", textAlign: "right", fontWeight: "bold" }}>
+                              {val !== undefined ? val.toFixed(4) : "--"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            );
+          }
+
+          if (section.type === "widget") {
+            if (section.widget_type === "donation") {
+              return (
+                <Paper key={section.id} sx={{ p: 2, mb: 2, textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {section.widget_config?.text as string || "感谢使用！"}
+                  </Typography>
+                </Paper>
+              );
+            }
+            return null;
+          }
+
           return null;
+        })();
+
+        if (sectionContent === null) return null;
+
+        if (shouldLazy) {
+          const sectionHeight = section.type === "outputs"
+            ? Math.min(60 * (section.outputs?.length || 3) + 80, 400)
+            : 100;
+
+          return (
+            <LazySection key={section.id} height={sectionHeight}>
+              {sectionContent}
+            </LazySection>
+          );
         }
 
-        return null;
+        return sectionContent;
       })}
 
       <Button
