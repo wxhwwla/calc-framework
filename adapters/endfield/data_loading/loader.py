@@ -72,14 +72,14 @@ _weapons: list[dict[str, Any]] | None = None
 _equipments: list[dict[str, Any]] | None = None
 """装备数据缓存，首次调用 get_equipments() 时初始化"""
 
-# JSON 文件路径常量
-CHARACTERS_JSON_PATH: str = "character_weapon_equipment/character_data/characters.json"
+# JSON 文件路径常量（相对于仓库根，由 get_resource_path 解析）
+CHARACTERS_JSON_PATH: str = "adapters/endfield/data/characters.json"
 """角色数据 JSON 文件路径"""
 
-WEAPONS_JSON_PATH: str = "character_weapon_equipment/weapon_data/weapons.json"
+WEAPONS_JSON_PATH: str = "adapters/endfield/data/weapons.json"
 """武器数据 JSON 文件路径"""
 
-EQUIPMENTS_JSON_PATH: str = "character_weapon_equipment/equipment_data/equipments.json"
+EQUIPMENTS_JSON_PATH: str = "adapters/endfield/data/equipments.json"
 """装备数据 JSON 文件路径"""
 
 

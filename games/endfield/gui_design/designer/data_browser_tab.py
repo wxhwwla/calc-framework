@@ -18,9 +18,9 @@ from PySide6.QtWidgets import (
 )
 
 _JSON_PATHS = {
-    "角色": Path(__file__).resolve().parents[3] / "character_weapon_equipment" / "character_data" / "characters.json",
-    "武器": Path(__file__).resolve().parents[3] / "character_weapon_equipment" / "weapon_data" / "weapons.json",
-    "装备": Path(__file__).resolve().parents[3] / "character_weapon_equipment" / "equipments.json",
+    "角色": Path(__file__).resolve().parents[4] / "adapters" / "endfield" / "data" / "character_data" / "characters.json",
+    "武器": Path(__file__).resolve().parents[4] / "adapters" / "endfield" / "data" / "weapon_data" / "weapons.json",
+    "装备": Path(__file__).resolve().parents[4] / "adapters" / "endfield" / "data" / "equipments.json",
 }
 
 _STYLE = """

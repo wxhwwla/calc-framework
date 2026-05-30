@@ -10,10 +10,10 @@ from adapters.endfield.calc.multiplicative_zones.zone_snapshot import (
     WeaponBonusSelection,
     compute_multiplicative_zone_snapshot,
 )
-from adapters.endfield.tests.conftest import PKG_ROOT, GAMES_END
+from adapters.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
 
-_CHARACTERS_JSON = GAMES_END / "character_weapon_equipment" / "character_data" / "characters.json"
-_WEAPONS_JSON = GAMES_END / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+_CHARACTERS_JSON = DATA_DIR / "characters.json"
+_WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
 def _load_by_name(path: Path, name: str) -> dict:

@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.20"
+_VERSION = "3.11.21"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,21 +209,105 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 15 处文件
+# TITLE: 更新 99 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 .github/workflows/release.yml
 # - 修改 adapters/endfield/calc/damage/inverse/fit_core.py
-# - 更新文档 docs/adr/0013-generic-inverse-engine.md
-# - 修改 framework/src/calc_framework/inverse/__init__.py
-# - 修改 framework/src/calc_framework/inverse/base.py
-# - 修改 framework/src/calc_framework/inverse/engine.py
-# - 修改 framework/src/calc_framework/inverse/registry.py
-# - 修改 framework/src/calc_framework/ui/viewer.py
-# - 修改 framework/tests/inverse/__init__.py
-# - 修改 framework/tests/inverse/test_engine.py
+# - 调整乘区逻辑 adapters/endfield/calc/multiplicative_zones/_attribute_zone_bonus.py
+# - 调整乘区逻辑 adapters/endfield/calc/multiplicative_zones/ability_bonus_calc.py
+# - 调整乘区逻辑 adapters/endfield/calc/multiplicative_zones/ability_bonus_details.py
+# - 调整乘区逻辑 adapters/endfield/calc/multiplicative_zones/final_attack_zone.py
+# - 修改 adapters/endfield/calc/skills/special_fields/__init__.py
+# - 修改 adapters/endfield/calc/skills/special_fields/codec.py
+# - 修改 adapters/endfield/calc/skills/special_fields/name_utils.py
+# - 修改 adapters/endfield/calc/skills/special_fields/runtime_bonus.py
+# - 修改 adapters/endfield/calc/skills/special_fields/skills_schema.py
+# - 修改 adapters/endfield/calc/skills/special_fields/slots_io.py
+# - 修改 adapters/endfield/calc/skills/weapon_selection.py
+# - 更新文档 adapters/endfield/data/DATA_README.md
+# - 更新 characters.json 角色数据
+# - 变更 adapters/endfield/data/equipments.json
+# - 更新 weapons.json 武器数据
+# - 修改 adapters/endfield/data_loading/loader.py
+# - 修改 adapters/endfield/tests/calculation/damage/zones/test_dag_adapter.py
+# - 修改 adapters/endfield/tests/calculation/damage/zones/test_zone_snapshot.py
+# - 修改 adapters/endfield/tests/calculation/equipment/test_equipment_sync.py
+# - 修改 adapters/endfield/tests/calculation/search/plan/single_skill/test_single_skill_search_preview.py
+# - 修改 adapters/endfield/tests/character_weapon_equipment/test_add_character.py
+# - 修改 adapters/endfield/tests/character_weapon_equipment/test_add_weapon.py
+# - 修改 adapters/endfield/tests/character_weapon_equipment/test_weapon_special_fields.py
+# - 修改 adapters/endfield/tests/character_weapon_equipment/test_weapon_special_level.py
+# - 修改 adapters/endfield/tests/character_weapon_equipment/test_weapon_special_stack_layers.py
+# - 修改 adapters/endfield/tests/conftest.py
+# - 修改 adapters/endfield/tests/data/test_game_data_contract.py
+# - 修改 adapters/endfield/tests/framework/test_endfield_dag_integration.py
+# - 修改 adapters/endfield/tests/gui_design/app/test_confirm_selection_skill_levels.py
+# - 修改 adapters/endfield/tests/gui_design/presentation/display/test_property_display_lines.py
+# - 修改 adapters/endfield/tests/gui_design/presentation/preview/test_multi_skill_search_preview.py
+# - 修改 adapters/endfield/tests/gui_design/presentation/preview/test_single_hit_preview.py
+# - 修改 adapters/endfield/tests/gui_design/shell/test_weapon_panel_layout.py
+# - 修改 adapters/endfield/tests/repo/test_legal_attribution.py
+# - 修改 adapters/endfield/tests/repo/test_release_layout.py
+# - 修改 adapters/endfield/tests/repo/test_repo_release_layout.py
+# - 修改 adapters/endfield/tests/tools/test_bwiki_scout.py
+# - 修改 adapters/endfield/tests/tools/test_import_targets.py
+# - 修改 adapters/endfield/tests/tools/test_wiki_sync.py
+# - 修改 devtool.py
+# - 修改 games/endfield/character_weapon_equipment/__init__.py
+# - 修改 games/endfield/character_weapon_equipment/character_data/__init__.py
+# - 修改 games/endfield/character_weapon_equipment/weapon_data/__init__.py
+# - 修改 games/endfield/gui_design/app/loadout_preset.py
 # - 修改 games/endfield/gui_design/controls/ocr/__init__.py
-# - 修改 games/endfield/please_read_me.py
-# - 修改 tools/endfield_designer/designer_main.py
+# - 修改 games/endfield/gui_design/designer/data_browser_tab.py
+# - 修改 games/endfield/gui_design/legal/attribution_content.py
+# - 修改 games/endfield/gui_design/presentation/display/character.py
+# - 修改 games/endfield/legal/__init__.py
+# - 修改 games/endfield/legal/attribution_content.py
+# - 修改 games/endfield/legal/donation_content.py
+# - 修改 games/endfield/legal/donation_qt.py
+# - 变更 games/endfield/legal/wechat_reward.jpg
+# - 更新文档 games/endfield/plugins/README.md
+# - 修改 games/endfield/release_bundle/__init__.py
+# - 修改 games/endfield/release_bundle/pyinstaller_entry.py
+# - 修改 games/endfield/release_bundle/release_layout.py
+# - 修改 games/endfield/utils/__init__.py
+# - 修改 games/endfield/utils/app_paths.py
+# - 修改 games/endfield/utils/gui_chart_theme.py
+# - 修改 games/endfield/utils/gui_fonts.py
+# - 修改 games/endfield/utils/gui_window.py
+# - 修改 games/endfield/utils/operation_log.py
+# - 修改 games/endfield/utils/optional_deps.py
+# - 修改 games/endfield/utils/path_utils.py
+# - 修改 games/endfield/utils/platform_win32_patch.py
+# - 修改 games/endfield/utils/search_format.py
+# - 修改 github_upload_module.py
+# - 修改 main_editor.py
+# - 修改 please_read_me.py
+# - 修改 release_bundle/platform_win32_patch.py
+# - 修改 tools/bwiki_scout/config.py
+# - 修改 tools/bwiki_scout/migrate_weapon_special_json.py
+# - 修改 tools/bwiki_scout/sync_equipments.py
+# - 修改 tools/bwiki_scout/weapon_wiki.py
+# - 修改 tools/bwiki_scout/wiki_sync.py
+# - 修改 tools/check_layout.py
+# - 修改 tools/endfield_designer/data_browser_tab.py
 # - 修改 tools/endfield_designer/seed_tab.py
+# - 修改 tools/endfield_scripts/add_character.py
+# - 修改 tools/endfield_scripts/add_weapon.py
+# - 修改 tools/endfield_scripts/build.py
+# - 修改 tools/endfield_scripts/seed_characters.py
+# - 修改 tools/endfield_scripts/seed_weapons.py
+# - 修改 tools/migrate_weapon_skills_schema.py
+# - 修改 upload_meta.py
+# - 修改 utils/app_paths.py
+# - 修改 utils/gui_chart_theme.py
+# - 修改 utils/gui_fonts.py
+# - 修改 utils/gui_window.py
+# - 修改 utils/operation_log.py
+# - 修改 utils/optional_deps.py
+# - 修改 utils/path_utils.py
+# - 修改 utils/platform_win32_patch.py
+# - 修改 utils/search_format.py
 # --- END UPLOAD_SUMMARY ---

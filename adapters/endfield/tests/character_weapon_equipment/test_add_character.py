@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from character_weapon_equipment.character_data.add_character import add_character
+from tools.endfield_scripts.add_character import add_character
 
 
 class TestAddCharacterNoMutation(unittest.TestCase):

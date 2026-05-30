@@ -207,7 +207,7 @@ def calculate_ability_bonus_with_details(
                 main_pct += bonus_value
                 sub_pct += bonus_value
 
-        from character_weapon_equipment.weapon_data.special_fields import (
+        from adapters.endfield.calc.skills.special_fields import (
             add_special_picks_to_ability_pct,
             add_special_picks_to_main_sub_bonus,
         )

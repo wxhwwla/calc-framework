@@ -84,7 +84,7 @@ def compute_attr_weapon_bonus(
         value = manager._get_weapon_bonus(weapon[bonus_key], _resolve_level(bonus_key))
         _classify_and_add(bonus_key, value)
 
-    from character_weapon_equipment.weapon_data.special_fields import (
+    from adapters.endfield.calc.skills.special_fields import (
         add_special_picks_to_ability_pct,
         add_special_picks_to_main_sub_bonus,
     )

@@ -3,7 +3,7 @@
 
 import unittest
 
-from character_weapon_equipment.weapon_data.special_fields import (
+from adapters.endfield.calc.skills.special_fields import (
     LEGACY_SPECIAL_KEY,
     SPECIAL_FIELD_KEYS,
     bonus_attribute_keys,
@@ -171,7 +171,7 @@ class TestWeaponSpecialFields(unittest.TestCase):
         )
 
     def test_infer_max_stack_from_special_text(self):
-        from character_weapon_equipment.weapon_data.special_fields import (
+        from adapters.endfield.calc.skills.special_fields import (
             infer_max_stack_from_special,
         )
 
@@ -212,7 +212,7 @@ class TestWeaponSpecialFields(unittest.TestCase):
         self.assertIn(SPECIAL_FIELD_KEYS[1], weapon)
 
     def test_migrate_legacy_weapon_special_level(self):
-        from character_weapon_equipment.weapon_data.special_fields import (
+        from adapters.endfield.calc.skills.special_fields import (
             migrate_legacy_weapon_special_level,
         )
 

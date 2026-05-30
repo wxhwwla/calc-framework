@@ -34,8 +34,8 @@ if str(_GAMES) not in sys.path:
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-from character_weapon_equipment.character_data.add_character import add_character
-from character_weapon_equipment.weapon_data.add_weapon import add_weapon
+from tools.endfield_scripts.add_character import add_character
+from tools.endfield_scripts.add_weapon import add_weapon
 
 _LABEL = "color: #CCCCCC;"
 _BTN = """

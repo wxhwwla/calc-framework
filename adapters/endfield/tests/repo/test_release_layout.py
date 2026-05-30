@@ -61,7 +61,7 @@ class TestReleaseLayout(unittest.TestCase):
         app_name = target_app_name("calculator")
         with tempfile.TemporaryDirectory() as tmp:
             release_root = Path(tmp) / app_name
-            stage_release_folder(release_root, project_root=GAMES_END, repo_root=repo_root, target="calculator")
+            stage_release_folder(release_root, project_root=REPO_ROOT, repo_root=repo_root, target="calculator")
             for rel, _ in RELEASE_DATA_FILES:
                 target = release_root / rel
                 self.assertTrue(target.is_file(), f"缺少数据文件: {target}")
@@ -78,7 +78,7 @@ class TestReleaseLayout(unittest.TestCase):
         app_name = target_app_name("designer")
         with tempfile.TemporaryDirectory() as tmp:
             release_root = Path(tmp) / app_name
-            stage_release_folder(release_root, project_root=GAMES_END, repo_root=repo_root, target="designer")
+            stage_release_folder(release_root, project_root=REPO_ROOT, repo_root=repo_root, target="designer")
             for rel, _ in RELEASE_DATA_FILES:
                 target = release_root / rel
                 self.assertTrue(target.is_file(), f"缺少数据文件: {target}")

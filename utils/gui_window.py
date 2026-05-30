@@ -8,6 +8,12 @@ from typing import Any
 
 
 def apply_startup_maximized(window: Any) -> None:
+    """
+    启动后将主窗口最大化（Windows 为 zoomed，其它平台尽量铺满工作区）。
+
+    在 mainloop 前调用；内部用 after_idle 等待窗口完成初次布局。
+    """
+
     def _apply() -> None:
         window.update_idletasks()
         if _try_zoomed_state(window):
@@ -46,5 +52,6 @@ def _geometry_fill_screen(window: Any) -> None:
         return
     if width < 400 or height < 300:
         return
+    # 非 Windows 有时任务栏占一条边，略留边距
     margin = 0 if sys.platform == "win32" else 32
     window.geometry(f"{max(400, width - margin)}x{max(300, height - margin)}+0+0")

@@ -17,10 +17,10 @@ from bwiki_scout.names import normalize_name_for_match  # noqa: E402
 from bwiki_scout.parse_draft import build_draft_record, extract_template_params  # noqa: E402
 from bwiki_scout.scout import run_scout  # noqa: E402
 
-from adapters.endfield.tests.conftest import PKG_ROOT, GAMES_END
+from adapters.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
 
-_CHARS = GAMES_END / "character_weapon_equipment" / "character_data" / "characters.json"
-_WEAPONS = GAMES_END / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+_CHARS = DATA_DIR / "characters.json"
+_WEAPONS = DATA_DIR / "weapons.json"
 
 
 _DETAIL_FIXTURE = """{{干员/逐级等级|

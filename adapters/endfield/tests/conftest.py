@@ -13,12 +13,12 @@ _PKG_ROOT = Path(__file__).resolve().parent.parent
 _REPO_ROOT = _PKG_ROOT.parent.parent
 _TOOLS_ROOT = _REPO_ROOT / "tools"
 _GAMES_ENDFIELD = _REPO_ROOT / "games" / "endfield"
+if str(_GAMES_ENDFIELD) not in sys.path:
+    sys.path.insert(0, str(_GAMES_ENDFIELD))
 if str(_TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(_TOOLS_ROOT))
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
-if str(_GAMES_ENDFIELD) not in sys.path:
-    sys.path.insert(0, str(_GAMES_ENDFIELD))
 
 from adapters.endfield.calc.core.result_cache import reset_global_result_cache
 
@@ -40,7 +40,7 @@ def _markexpr(config: pytest.Config) -> str:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """带 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import PySide6）。"""
+    """当 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import PySide6）。"""
     expr = _markexpr(config)
     if not expr:
         return
@@ -83,6 +83,7 @@ PKG_ROOT = _PKG_ROOT
 REPO_ROOT = _REPO_ROOT
 TOOLS_ROOT = _TOOLS_ROOT
 GAMES_END = _GAMES_ENDFIELD
+DATA_DIR = _REPO_ROOT / "adapters" / "endfield" / "data"
 
 
 # === from fixtures/gui_fixtures.py ===
@@ -92,8 +93,8 @@ import json
 from types import SimpleNamespace
 from typing import Any
 
-_CHARACTERS_JSON = GAMES_END / "character_weapon_equipment" / "character_data" / "characters.json"
-_WEAPONS_JSON = GAMES_END / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+_CHARACTERS_JSON = DATA_DIR / "characters.json"
+_WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
 def load_character_by_name(name: str) -> dict[str, Any]:

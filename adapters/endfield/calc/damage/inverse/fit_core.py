@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
+from typing import Any
 
 from calc_framework.inverse.base import FloorFormulaFitter
 
@@ -20,7 +21,7 @@ def _inverse_verbose() -> bool:
     return os.environ.get("INVERSE_FIT_VERBOSE", "").strip().lower() in ("1", "true", "yes")
 
 
-def _inv_print(*args: object, **kwargs: object) -> None:
+def _inv_print(*args: Any, **kwargs: Any) -> None:
     """调试输出函数。"""
     if _inverse_verbose():
         print(*args, **kwargs)

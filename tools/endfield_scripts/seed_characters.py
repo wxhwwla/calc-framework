@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """批量录入角色配置（与 add_character 库分离，避免 import 时执行）。"""
 
-from character_weapon_equipment.character_data.add_character import add_character
+from tools.endfield_scripts.add_character import add_character
 
 _SEED_CHARACTERS = [
     {

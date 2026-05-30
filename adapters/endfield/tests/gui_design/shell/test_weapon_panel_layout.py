@@ -4,7 +4,7 @@
 import json
 import unittest
 
-from character_weapon_equipment.weapon_data.special_fields import (
+from adapters.endfield.calc.skills.special_fields import (
     bonus_attribute_keys,
     read_weapon_special_slots,
 )
@@ -14,9 +14,9 @@ from games.endfield.gui_design.shared.weapon_display_text import (
     format_weapon_skill_title,
     split_special_skill_display,
 )
-from adapters.endfield.tests.conftest import PKG_ROOT, REPO_ROOT, GAMES_END
+from adapters.endfield.tests.conftest import PKG_ROOT, REPO_ROOT, GAMES_END, DATA_DIR
 
-_WEAPONS_JSON = GAMES_END / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+_WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
 def _load_weapon_by_name(name: str) -> dict:

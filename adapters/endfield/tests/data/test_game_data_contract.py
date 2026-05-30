@@ -121,7 +121,7 @@ class TestGameDataContract(unittest.TestCase):
                         f"武器「{name}」附加属性「{key}」长度应为 {BONUS_ATTR_LEN}",
                     )
 
-            from character_weapon_equipment.weapon_data.special_fields import (
+            from adapters.endfield.calc.skills.special_fields import (
                 SPECIAL_FIELD_KEYS,
                 read_weapon_special_slots,
                 write_weapon_special_slots,
@@ -137,7 +137,7 @@ class TestGameDataContract(unittest.TestCase):
 
     def test_weapon_special_curves_not_rank_multiple_mistake(self) -> None:
         """可叠层特殊能力九档须为「每层%」，不得误录为 base×档序。"""
-        from character_weapon_equipment.weapon_data.special_fields import (
+        from adapters.endfield.calc.skills.special_fields import (
             is_accidental_rank_multiple_curve,
             read_weapon_special_slots,
         )

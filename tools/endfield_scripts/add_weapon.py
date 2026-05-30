@@ -83,7 +83,7 @@ def add_weapon(
         weapon["特殊能力"] = [False]
 
     # 读取现有数据
-    _json_path = json_path if json_path is not None else Path(__file__).parent / "weapons.json"
+    _json_path = json_path if json_path is not None else Path(__file__).resolve().parent.parent.parent / "adapters" / "endfield" / "data" / "weapons.json"
     with open(_json_path, encoding="utf-8") as f:
         weapons = json.load(f)
 
@@ -112,7 +112,7 @@ def add_weapon(
 
 def remove_weapon(name: str, json_path: Path | None = None) -> bool:
     """按名称从 weapons.json 删除武器条目，返回是否成功删除。"""
-    _json_path = json_path if json_path is not None else Path(__file__).parent / "weapons.json"
+    _json_path = json_path if json_path is not None else Path(__file__).resolve().parent.parent.parent / "adapters" / "endfield" / "data" / "weapons.json"
     with open(_json_path, encoding="utf-8") as f:
         weapons = json.load(f)
 

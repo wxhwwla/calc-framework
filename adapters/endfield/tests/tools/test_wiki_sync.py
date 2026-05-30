@@ -119,7 +119,7 @@ class TestWikiSync(unittest.TestCase):
         }
         header = (
             "# -*- coding: utf-8 -*-\n"
-            "from character_weapon_equipment.character_data.add_character import add_character\n\n"
+            "from tools.endfield_scripts.add_character import add_character\n\n"
             "_SEED_CHARACTERS = [\n]\n\n\ndef main():\n    pass\n"
         )
         with tempfile.TemporaryDirectory() as tmp:

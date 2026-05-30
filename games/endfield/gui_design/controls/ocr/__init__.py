@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,61 @@ from PySide6.QtWidgets import (
 from calc_framework.logging import get_logger
 
 _logger = get_logger("gui.ocr")
+
+
+def run_ocr_detection(folder: str | Path) -> dict[str, Any] | None:
+    """对截图文件夹执行 YOLO 检测 + OCR 识别 + 映射。
+
+    Args:
+        folder: 截图文件夹路径
+
+    Returns:
+        preset_dict 或 None（识别失败）
+    """
+    try:
+        from tools.ocr.detector import YOLODetector
+        from tools.ocr.mapper import OcrMapper
+        from tools.ocr.recognizer import OCRRecognizer
+
+        detector = YOLODetector("yolov8n.pt", conf_threshold=0.25)
+        ocr = OCRRecognizer()
+        mapper = OcrMapper()
+
+        batch = detector.detect_folder(
+            str(folder),
+            save_json=False,
+            save_annotated=False,
+        )
+
+        all_ocr_texts: list[tuple[str, float, str | None]] = []
+        mapped_preset = None
+
+        for r in batch.results:
+            for d in r.detections:
+                pass
+            try:
+                ocr_result = ocr.recognize(r.image_path)
+                for t in ocr_result.texts:
+                    all_ocr_texts.append((t.text, t.confidence, None))
+                if mapped_preset is None:
+                    mapped = mapper.map_texts([(t.text, t.confidence, None) for t in ocr_result.texts])
+                    if mapped.is_valid:
+                        mapped_preset = mapped.to_loadout_preset_dict()
+            except Exception:
+                continue
+
+        if mapped_preset is None and all_ocr_texts:
+            mapped = mapper.map_texts(all_ocr_texts)
+            if mapped.is_valid:
+                mapped_preset = mapped.to_loadout_preset_dict()
+
+        return mapped_preset
+
+    except ImportError:
+        return None
+    except Exception:
+        _logger.exception("OCR 检测异常")
+        return None
 
 
 def open_ocr_detection_dialog(
@@ -54,15 +110,31 @@ def open_ocr_detection_dialog(
     dialog.exec()
 
 
+def _summary_from_preset(preset: dict[str, Any]) -> str:
+    """从 preset_dict 生成可读摘要。"""
+    parts = []
+    if preset.get("char_name"):
+        parts.append(f"角色={preset['char_name']}")
+    if preset.get("weapon_name"):
+        parts.append(f"武器={preset['weapon_name']}")
+    if preset.get("char_level"):
+        parts.append(f"等级={preset['char_level']}")
+    if preset.get("weapon_level"):
+        parts.append(f"武器等级={preset['weapon_level']}")
+    return "  ".join(parts) if parts else "空"
+
+
 class _DetectionDialog(QDialog):
     """检测结果显示弹窗。"""
+
+    _download_btn: QPushButton
 
     def __init__(
         self,
         folder: Path,
         parent: QWidget | None = None,
         *,
-        on_apply: Any = None,
+        on_apply: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         super().__init__(parent)
         self._folder = folder
@@ -79,54 +151,34 @@ class _DetectionDialog(QDialog):
 
     def _run_detection(self) -> None:
         """后台运行 YOLO + OCR + 映射。"""
+        lines: list[str] = []
+        lines.append(f"截图文件夹: {self._folder}")
         try:
             from tools.ocr.detector import YOLODetector
-            from tools.ocr.mapper import OcrMapper
-            from tools.ocr.recognizer import OCRRecognizer
-
             detector = YOLODetector("yolov8n.pt", conf_threshold=0.25)
-            ocr = OCRRecognizer()
-            mapper = OcrMapper()
-
             batch = detector.detect_folder(
                 str(self._folder),
                 save_json=False,
                 save_annotated=False,
             )
-
-            lines: list[str] = []
-            lines.append(f"截图文件夹: {self._folder}")
             lines.append(f"总图片数: {batch.total_images}")
             lines.append(f"总检测目标: {batch.total_detections}")
             lines.append(f"平均推理: {batch.summary()['avg_inference_ms']} ms/张")
             lines.append("")
-
-            all_ocr_texts: list[tuple[str, float, str | None]] = []
-            mapped_preset = None
 
             for r in batch.results[:20]:
                 lines.append(f"── {Path(r.image_path).name} ──")
                 if r.detections:
                     for d in r.detections[:10]:
                         lines.append(f"  [{d.confidence:.2f}] {d.class_name} ({d.x1:.0f},{d.y1:.0f},{d.x2:.0f},{d.y2:.0f})")
-
                 try:
+                    from tools.ocr.recognizer import OCRRecognizer
+                    ocr = OCRRecognizer()
                     ocr_result = ocr.recognize(r.image_path)
                     if ocr_result.texts:
                         lines.append(f"  OCR:")
                         for t in ocr_result.texts[:15]:
                             lines.append(f"    [{t.confidence:.2f}] {t.text}")
-
-                        # Collect for mapping
-                        for t in ocr_result.texts:
-                            all_ocr_texts.append((t.text, t.confidence, None))
-
-                        # Map the first image's results
-                        if mapped_preset is None:
-                            mapped = mapper.map_texts([(t.text, t.confidence, None) for t in ocr_result.texts])
-                            if mapped.is_valid:
-                                mapped_preset = mapped.to_loadout_preset_dict()
-                                lines.append(f"  → 识别: {mapped.summary()}")
                 except Exception as e:
                     lines.append(f"  OCR 失败: {e}")
                 lines.append("")
@@ -134,32 +186,29 @@ class _DetectionDialog(QDialog):
             if len(batch.results) > 20:
                 lines.append(f"... 还有 {len(batch.results) - 20} 张未显示")
 
-            # Try mapping from all texts if first image didn't yield results
-            if mapped_preset is None and all_ocr_texts:
-                mapped = mapper.map_texts(all_ocr_texts)
-                if mapped.is_valid:
-                    mapped_preset = mapped.to_loadout_preset_dict()
-                    lines.append(f"\n→ 综合识别: {mapped.summary()}")
-                else:
-                    lines.append(f"\n→ 未能识别出角色和武器名称")
-
-            self._mapped_preset = mapped_preset
-            if mapped_preset:
+            self._mapped_preset = run_ocr_detection(self._folder)
+            if self._mapped_preset:
+                lines.append(f"→ 识别: {_summary_from_preset(self._mapped_preset)}")
                 self._apply_btn.setEnabled(True)
-
-            self._result_text.setPlainText("\n".join(lines))
-            self._result_text.setStyleSheet("color: #D1D1D1;")
+            else:
+                lines.append(f"\n→ 未能识别出角色和武器名称")
 
         except ImportError as e:
-            self._result_text.setPlainText(f"[错误] 导入失败: {e}\n请运行: pip install ultralytics easyocr")
+            lines.append(f"[错误] 导入失败: {e}\n请运行: pip install ultralytics easyocr")
+            lines.append("或点击对话框中的「下载 OCR 模型」按钮")
         except Exception as e:
-            self._result_text.setPlainText(f"[错误] 检测失败: {e}")
+            lines.append(f"[错误] 检测失败: {e}")
             _logger.exception("截图识装检测异常")
 
-    def _on_apply(self) -> None:
+        self._result_text.setPlainText("\n".join(lines))
+        self._result_text.setStyleSheet("color: #D1D1D1;")
+
+    def _handle_apply(self) -> None:
         """点击「填入计算器」按钮。"""
         if self._mapped_preset and self._on_apply:
-            self._on_apply(self._mapped_preset)
+            cb = self._on_apply
+            assert cb is not None
+            cb(self._mapped_preset)
             self.accept()
 
     def _on_download_model(self) -> None:
@@ -289,7 +338,7 @@ def _build_ui(dialog: _DetectionDialog) -> None:
         QPushButton:hover { background-color: #3182CE; }
         QPushButton:disabled { background-color: #444; color: #888; }
     """)
-    dialog._apply_btn.clicked.connect(dialog._on_apply)
+    dialog._apply_btn.clicked.connect(dialog._handle_apply)
     btn_layout.addWidget(dialog._apply_btn)
 
     close_btn = QPushButton("关闭")

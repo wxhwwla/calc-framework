@@ -3,7 +3,7 @@
 
 import unittest
 
-from legal.attribution_content import (
+from games.endfield.gui_design.legal.attribution_content import (
     ATTRIBUTION_DIALOG_MINSIZE,
     ATTRIBUTION_DIALOG_SIZE,
     SUMMARY_TEXT,

@@ -16,17 +16,17 @@ from calc_framework.config.adapter import AdapterPackage
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _FRAMEWORK_DIR = _REPO_ROOT / "framework"
-_PKG_ROOT = _REPO_ROOT / "games" / "endfield"
+_PKG_ROOT = _REPO_ROOT / "adapters" / "endfield" / "calc"
 _ADAPTER_DIR = _FRAMEWORK_DIR / "adapters" / "endfield"
 
 if str(_PKG_ROOT) not in sys.path:
     sys.path.insert(0, str(_PKG_ROOT))
 
 PARTICIPANTS_JSON = (
-    _PKG_ROOT / "character_weapon_equipment" / "character_data" / "characters.json"
+    _REPO_ROOT / "adapters" / "endfield" / "data" / "characters.json"
 )
 WEAPONS_JSON = (
-    _PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+    _REPO_ROOT / "adapters" / "endfield" / "data" / "weapons.json"
 )
 _EXPECTED_OUTPUT = _FRAMEWORK_DIR / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
 

@@ -82,7 +82,7 @@ def _slot3_conditional_attr_key(p: dict[str, str], sub: str) -> str:
 
 def _parse_max_stack_from_text(text: str, *, name: str = "") -> int:
     """从 Wiki 条件描述解析最大叠加层数。"""
-    from character_weapon_equipment.weapon_data.special_fields import (
+    from adapters.endfield.calc.skills.special_fields import (
         infer_max_stack_from_special,
     )
 
@@ -216,7 +216,7 @@ def baked_rank_curve_matches(
 
 def fit_bonus_params_from_rank_curve(curve9: list[float]) -> dict[str, Any]:
     """9 档潜能曲线 → add_weapon / seed 用参数字典（优先可反推公式，否则保留原九档）。"""
-    from character_weapon_equipment.weapon_data.special_fields.codec import (
+    from adapters.endfield.calc.skills.special_fields.codec import (
         is_accidental_rank_multiple_curve,
     )
 
@@ -390,7 +390,7 @@ def backfill_weapon_max_stack_from_cache(
 
     from bwiki_scout.seed_persist import load_seed_weapon_specs, write_seed_weapon_specs
     from bwiki_scout.storage import load_page_bundle
-    from character_weapon_equipment.weapon_data.special_fields import (
+    from adapters.endfield.calc.skills.special_fields import (
         infer_max_stack_from_special,
         read_weapon_special_slots,
         write_weapon_special_slots,
@@ -525,7 +525,7 @@ def needs_weapon_sync_with_wiki(
             if abs(float(la) - float(wa)) > tolerance:
                 return True
 
-    from character_weapon_equipment.weapon_data.special_fields import (
+    from adapters.endfield.calc.skills.special_fields import (
         read_weapon_special_slots,
     )
 

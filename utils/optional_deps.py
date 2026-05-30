@@ -13,11 +13,14 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from importlib.util import find_spec
 
+# (import 名, pip 规格) — 与 [project].dependencies 一致
 RUNTIME_PIP_PACKAGES: tuple[tuple[str, str], ...] = (("matplotlib", "matplotlib>=3.8"),)
 
 
 @dataclass(frozen=True)
 class OptionalDependency:
+    """一项可选能力及其安装方式。"""
+
     feature: str
     module: str
     pip_hint: str
@@ -31,12 +34,14 @@ class OptionalDependency:
 
 def _probe_matplotlib() -> bool:
     try:
-        import matplotlib
+        import matplotlib  # noqa: F401
+
         return True
     except ImportError:
         return False
 
 
+# 仍可选（未写入运行时 dependencies）
 GUI_OPTIONAL_DEPS: tuple[OptionalDependency, ...] = (
     OptionalDependency(
         feature="plugins/*.yaml 敌人配置",
@@ -64,10 +69,11 @@ def is_matplotlib_available() -> bool:
 
 
 def matplotlib_install_hint() -> str:
-    return 'pip install -e .  或  pip install matplotlib>=3.8'
+    return "pip install -e .  或  pip install matplotlib>=3.8"
 
 
 def missing_runtime_packages() -> list[tuple[str, str]]:
+    """返回缺失的运行时 (import 名, pip 规格) 列表。"""
     missing: list[tuple[str, str]] = []
     for module, spec in RUNTIME_PIP_PACKAGES:
         if module == "matplotlib":
@@ -80,12 +86,13 @@ def missing_runtime_packages() -> list[tuple[str, str]]:
 
 
 def format_missing_runtime_dependencies() -> str:
+    """供 main.py 在开发模式启动时提示缺失的运行时依赖。"""
     missing = missing_runtime_packages()
     if not missing:
         return ""
-    specs = " ".join(spec for _, spec in missing)
+    specs = "、".join(spec for _, spec in missing)
     lines = [
-        f"警告: 缺少运行时依赖 {specs}",
+        f"警告: 缺少运行时依赖: {specs}",
         "请在本 venv 的 [包] 目录执行:",
         "  pip install -e .",
         "（仪表盘需要 matplotlib；其余 GUI 功能可正常使用）",
@@ -94,6 +101,7 @@ def format_missing_runtime_dependencies() -> str:
 
 
 def ensure_runtime_dependencies() -> None:
+    """开发模式：提示缺失运行时依赖，不阻塞 GUI（打包 exe 不执行）。"""
     if getattr(sys, "frozen", False):
         return
     message = format_missing_runtime_dependencies()
@@ -118,11 +126,8 @@ def format_missing_lines(
 
 
 def format_missing_gui_extras() -> str:
+    """供 main.py 提示仍缺失的可选功能（如 PyYAML 插件）。"""
     body = format_missing_lines(GUI_OPTIONAL_DEPS)
     if not body:
         return ""
     return "可选功能未安装：\n" + body
-
-
-def check_optional_deps() -> list[OptionalDependency]:
-    return [dep for dep in GUI_OPTIONAL_DEPS if not dep.available()]

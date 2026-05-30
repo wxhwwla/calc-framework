@@ -100,7 +100,8 @@ def _cmd_framework(args: argparse.Namespace) -> int:
     from tools.framework_publish import main as fw_main
     passthrough = _sub_args()
     sys.argv = [sys.argv[0], *passthrough] if passthrough else [sys.argv[0], "--help"]
-    return fw_main()
+    result = fw_main()
+    return result if result is not None else 0
 
 
 def _cmd_plugin(args: argparse.Namespace) -> int:

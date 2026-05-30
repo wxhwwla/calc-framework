@@ -13,13 +13,13 @@ _PKG = _REPO / "games" / "endfield"
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
-from character_weapon_equipment.weapon_data.special_fields import (  # noqa: E402
+from adapters.endfield.calc.skills.special_fields import (  # noqa: E402
     read_weapon_special_slots,
     write_weapon_special_slots,
 )
 
 _WEAPONS = (
-    _PKG / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+    _PKG / "adapters/endfield/data" / "weapon_data" / "weapons.json"
 )
 
 

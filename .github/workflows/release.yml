@@ -1,5 +1,7 @@
 # Release — 终末地伤害计算器打包发布
 # 包路径：games/endfield/，build.py / please_read_me.py 在此目录下
+# 触发方式：python github_upload_module.py --tag（本地创建并推送已签名的 tag）
+# Verified 保障：tag 由上传脚本带 -s 签名，推送后 GitHub 应显示 Verified 标记
 
 name: Release
 

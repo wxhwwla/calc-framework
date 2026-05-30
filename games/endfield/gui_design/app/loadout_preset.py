@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from character_weapon_equipment.weapon_data.special_fields import (
+from adapters.endfield.calc.skills.special_fields import (
     migrate_legacy_weapon_special_level,
 )
 

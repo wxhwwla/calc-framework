@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from character_weapon_equipment.weapon_data.add_weapon import add_weapon, remove_weapon
+from tools.endfield_scripts.add_weapon import add_weapon, remove_weapon
 
 
 class TestAddWeaponNoMutation(unittest.TestCase):

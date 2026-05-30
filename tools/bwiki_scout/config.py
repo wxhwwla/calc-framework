@@ -35,27 +35,6 @@ CATEGORY_TITLES: dict[str, str] = {
     "equipment": "Category:装备",
 }
 
-LOCAL_CHARACTERS_JSON = (
-    REPO_ROOT
-    / "games"
-    / "endfield"
-    / "character_weapon_equipment"
-    / "character_data"
-    / "characters.json"
-)
-LOCAL_WEAPONS_JSON = (
-    REPO_ROOT
-    / "games"
-    / "endfield"
-    / "character_weapon_equipment"
-    / "weapon_data"
-    / "weapons.json"
-)
-LOCAL_EQUIPMENTS_JSON = (
-    REPO_ROOT
-    / "games"
-    / "endfield"
-    / "character_weapon_equipment"
-    / "equipment_data"
-    / "equipments.json"
-)
+LOCAL_CHARACTERS_JSON = REPO_ROOT / "adapters" / "endfield" / "data" / "characters.json"
+LOCAL_WEAPONS_JSON = REPO_ROOT / "adapters" / "endfield" / "data" / "weapons.json"
+LOCAL_EQUIPMENTS_JSON = REPO_ROOT / "adapters" / "endfield" / "data" / "equipments.json"

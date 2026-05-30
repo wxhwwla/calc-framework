@@ -237,7 +237,7 @@ def sync_operators_from_cache(
     dry_run=True 时不写文件，只报告将更新谁。
     include_new=True 时，将 manifest 中缓存齐全、本地尚无的干员一并写入。
     """
-    from character_weapon_equipment.character_data.add_character import add_character
+    from tools.endfield_scripts.add_character import add_character
 
     raw_dir = output_root / "raw"
     with characters_json.open(encoding="utf-8") as f:
@@ -323,7 +323,7 @@ def sync_weapons_from_cache(
 
     include_new=True 时，将 manifest 中可反推、本地尚无的武器写入 JSON/seed。
     """
-    from character_weapon_equipment.weapon_data.add_weapon import add_weapon
+    from tools.endfield_scripts.add_weapon import add_weapon
 
     raw_dir = output_root / "raw"
     with weapons_json.open(encoding="utf-8") as f:

@@ -67,7 +67,7 @@ def add_character(
     }
 
     if json_path is None:
-        json_path = Path(__file__).parent / "characters.json"
+        json_path = Path(__file__).resolve().parent.parent.parent / "adapters" / "endfield" / "data" / "characters.json"
 
     with open(json_path, encoding="utf-8") as f:
         characters = json.load(f)

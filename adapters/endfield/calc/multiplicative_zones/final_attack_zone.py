@@ -242,7 +242,7 @@ def calculate_final_attack_with_details(
                 elif isinstance(bonus_data, (int, float)):
                     attack_bonus_percent += float(bonus_data)
 
-        from character_weapon_equipment.weapon_data.special_fields import (
+        from adapters.endfield.calc.skills.special_fields import (
             add_special_picks_attack_percent,
         )
 

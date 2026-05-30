@@ -11,7 +11,7 @@
     python github_upload_module.py --minor      # 第二位 +1（新武器/新乘区等）
     python github_upload_module.py --no-bump    # 提交并推送，但不改 _VERSION
 
-版本与提交说明流程详见 games/endfield/please_read_me.py 中的 UPLOAD_WORKFLOW。
+版本与提交说明流程详见 please_read_me.py 中的 UPLOAD_WORKFLOW。
 
 若本机已配置 Git 提交签名（GPG/SSH），脚本会在 commit 时自动签名，便于 GitHub 显示 Verified。
 """
@@ -381,6 +381,17 @@ def commit_extra_args(cfg: SigningConfig) -> list[str]:
     return []
 
 
+def tag_extra_args(cfg: SigningConfig) -> list[str]:
+    """
+    返回追加到 `git tag` 的参数。
+
+    Git 没有 `tag.gpgsign` 自动签名配置，tag 须显式 -s。
+    """
+    if is_signing_configured(cfg):
+        return ["-s"]
+    return []
+
+
 def is_signing_configured(cfg: SigningConfig) -> bool:
     return bool(commit_extra_args(cfg)) or _is_truthy_git_config(cfg.gpgsign)
 
@@ -389,15 +400,17 @@ def signing_status_message(cfg: SigningConfig) -> str:
     if is_signing_configured(cfg):
         fmt = (cfg.gpg_format or "openpgp").strip().lower()
         return (
-            f"[信息] 已配置提交签名（{fmt}），本次 commit 可在 GitHub 显示 Verified"
-            "（密钥须已添加到 GitHub → Settings → SSH and GPG keys）"
+            f"[信息] 已配置提交签名（{fmt}），commit 和 tag 均会签名，"
+            "推送后 GitHub 可显示 Verified\n"
+            "（密钥须已添加到 GitHub → Settings → SSH and GPG keys → Signing keys）"
         )
     return (
-        "[提示] 未检测到提交签名；推送后 commit 可能无 Verified 标记。\n"
+        "[提示] 未检测到提交签名；推送后 commit/tag 可能无 Verified 标记。\n"
         "  配置示例（SSH 签名）：\n"
         "    git config --global gpg.format ssh\n"
         "    git config --global user.signingkey <你的 SSH 公钥路径>\n"
-        "    git config --global commit.gpgsign true"
+        "    git config --global commit.gpgsign true\n"
+        "  然后将你的 SSH 公钥添加到 GitHub → Settings → SSH and GPG keys → Signing keys"
     )
 
 
@@ -458,10 +471,8 @@ def _push_tag(version: str) -> bool:
     else:
         print(f"[信息] 创建标签 {tag}")
         cfg = resolve_signing_config()
-        extra = commit_extra_args(cfg)
         tag_args = ["tag", "-a", tag, "-m", f"Release {tag}"]
-        if extra:
-            tag_args.extend(extra)
+        tag_args.extend(tag_extra_args(cfg))
         run_git(tag_args)
 
     print(f"[信息] 推送标签 {tag} ...")

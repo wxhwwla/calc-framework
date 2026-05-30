@@ -51,11 +51,11 @@ _BTN_STYLE = """
 
 # 数据源配置
 _DATA_SOURCES: list[tuple[str, str, list[str]]] = [
-    ("character", "character_weapon_equipment/character_data/characters.json",
+    ("character", "character_data/characters.json",
      ["名称", "类型", "星级", "主能力", "副能力", "武器"]),
-    ("weapon", "character_weapon_equipment/weapon_data/weapons.json",
+    ("weapon", "weapon_data/weapons.json",
      ["名称", "类型", "星级"]),
-    ("equipment", "character_weapon_equipment/equipment_data/equipments.json",
+    ("equipment", "equipment_data/equipments.json",
      ["名称", "部位", "星级"]),
 ]
 
@@ -67,7 +67,7 @@ class DataBrowserTab(QWidget):
         super().__init__()
         self._big = big_font
         self._small = small_font
-        self._pkg_root = Path(__file__).resolve().parent.parent
+        self._pkg_root = Path(__file__).resolve().parent.parent.parent / "adapters" / "endfield"
         self._all_data: list[dict[str, Any]] = []
         self._build_ui()
         self._load_data()

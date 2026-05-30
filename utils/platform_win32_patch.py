@@ -17,7 +17,9 @@ from collections.abc import Callable
 
 
 def _read_windows_version_from_registry() -> tuple[str, str, str]:
+    """返回 (release 主版本, version 点分串, machine)。"""
     import winreg
+
     cvkey = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
     with winreg.OpenKeyEx(winreg.HKEY_LOCAL_MACHINE, cvkey) as key:
         build = int(winreg.QueryValueEx(key, "CurrentBuildNumber")[0])
@@ -34,9 +36,12 @@ def _read_windows_version_from_registry() -> tuple[str, str, str]:
 
 
 def apply_platform_win32_patch() -> None:
+    """在导入 GUI / PyInstaller 之前调用，替换会触发 WMI 的 ``platform`` 接口。"""
     if sys.platform != "win32":
         return
+
     import platform
+
     if getattr(platform.win32_ver, "_edc_no_wmi_patch", False):
         return
 
@@ -79,19 +84,19 @@ def apply_platform_win32_patch() -> None:
     def _version_no_wmi() -> str:
         return _uname_no_wmi().version
 
-    _win32_ver_via_registry._edc_no_wmi_patch = True
-    _uname_no_wmi._edc_no_wmi_patch = True
-    _system_no_wmi._edc_no_wmi_patch = True
-    _machine_no_wmi._edc_no_wmi_patch = True
-    _release_no_wmi._edc_no_wmi_patch = True
-    _version_no_wmi._edc_no_wmi_patch = True
+    _win32_ver_via_registry._edc_no_wmi_patch = True  # type: ignore[attr-defined]
+    _uname_no_wmi._edc_no_wmi_patch = True  # type: ignore[attr-defined]
+    _system_no_wmi._edc_no_wmi_patch = True  # type: ignore[attr-defined]
+    _machine_no_wmi._edc_no_wmi_patch = True  # type: ignore[attr-defined]
+    _release_no_wmi._edc_no_wmi_patch = True  # type: ignore[attr-defined]
+    _version_no_wmi._edc_no_wmi_patch = True  # type: ignore[attr-defined]
 
-    platform.win32_ver = _win32_ver_via_registry
-    platform.uname = _uname_no_wmi
-    platform.system = _system_no_wmi
-    platform.machine = _machine_no_wmi
-    platform.release = _release_no_wmi
-    platform.version = _version_no_wmi
+    platform.win32_ver = _win32_ver_via_registry  # type: ignore[assignment]
+    platform.uname = _uname_no_wmi  # type: ignore[assignment]
+    platform.system = _system_no_wmi  # type: ignore[assignment]
+    platform.machine = _machine_no_wmi  # type: ignore[assignment]
+    platform.release = _release_no_wmi  # type: ignore[assignment]
+    platform.version = _version_no_wmi  # type: ignore[assignment]
 
 
 def _windows_machine_from_env() -> str:

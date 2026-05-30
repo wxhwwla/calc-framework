@@ -37,7 +37,7 @@ def check_directory_width(*, max_items: int = 10) -> list[str]:
         PKG / "gui_design",
         PKG / "calculation",
         PKG / "tests",
-        PKG / "character_weapon_equipment",
+        PKG / "adapters/endfield/data",
         PKG / "data",
         PKG / "scripts",
     ]

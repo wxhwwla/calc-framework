@@ -6,7 +6,7 @@ import unittest
 from adapters.endfield.calc.multiplicative_zones.ability_bonus_details import (
     calculate_ability_bonus_with_details,
 )
-from character_weapon_equipment.weapon_data.special_fields import read_weapon_special_slots
+from adapters.endfield.calc.skills.special_fields import read_weapon_special_slots
 
 
 class TestWeaponSpecialLevel(unittest.TestCase):

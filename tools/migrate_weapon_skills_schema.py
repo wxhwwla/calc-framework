@@ -21,7 +21,7 @@ PKG_ROOT = REPO_ROOT / "endfield_damage_calculator"
 if str(PKG_ROOT) not in sys.path:
     sys.path.insert(0, str(PKG_ROOT))
 
-from character_weapon_equipment.weapon_data.special_fields import (  # noqa: E402
+from adapters.endfield.calc.skills.special_fields import (  # noqa: E402
     migrate_weapon_record_to_skill_schema,
 )
 
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--weapons-json",
         type=Path,
-        default=PKG_ROOT / "character_weapon_equipment" / "weapon_data" / "weapons.json",
+        default=PKG_ROOT / "adapters/endfield/data" / "weapon_data" / "weapons.json",
         help="武器 JSON 路径",
     )
     parser.add_argument(

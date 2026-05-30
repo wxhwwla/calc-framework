@@ -182,7 +182,7 @@ def build_release(target: BuildTarget) -> Path:
             "tests",
             "scripts",
             "gui_design",
-            "character_weapon_equipment",
+            "adapters/endfield/data",
             "add_character",
             "add_weapon",
             "test_",

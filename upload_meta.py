@@ -2,7 +2,7 @@
 """
 上传脚本用的版本号与临时提交说明（由 github_upload_module.py 调用）。
 
-说明全文见 games/endfield/please_read_me.py 中的 UPLOAD_WORKFLOW。
+说明全文见 please_read_me.py 中的 UPLOAD_WORKFLOW。
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ _VERSION_PATTERN = re.compile(
 
 def please_read_me_path(repo_root: Path | None = None) -> Path:
     root = repo_root or Path(__file__).resolve().parent
-    return root / "games" / "endfield" / "please_read_me.py"
+    return root / "please_read_me.py"
 
 
 def parse_semver(version: str) -> tuple[int, int, int]:

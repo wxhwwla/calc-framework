@@ -231,10 +231,10 @@ class LayoutEditorApp(QMainWindow):
         layout.addWidget(header)
 
         characters = _load_json(
-            _REPO_ROOT / "games" / "endfield" / "character_weapon_equipment" / "character_data" / "characters.json"
+            _REPO_ROOT / "adapters" / "endfield" / "data" / "characters.json"
         )
         weapons = _load_json(
-            _REPO_ROOT / "games" / "endfield" / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+            _REPO_ROOT / "adapters" / "endfield" / "data" / "weapons.json"
         )
 
         self.editor = EndfieldLayoutEditor(

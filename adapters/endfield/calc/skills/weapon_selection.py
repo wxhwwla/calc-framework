@@ -11,12 +11,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from character_weapon_equipment.weapon_data.special_fields import read_weapon_skills_schema
+from adapters.endfield.calc.skills.special_fields import read_weapon_skills_schema
 
 
 def normalize_weapon_specials_tuple(raw: tuple[Any, ...]) -> tuple[Any, ...]:
     """将旧版 10 元组迁移为 (技能/叠加)×2 + 三附加技能。"""
-    from character_weapon_equipment.weapon_data.special_fields import (
+    from adapters.endfield.calc.skills.special_fields import (
         migrate_legacy_weapon_special_level,
     )
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+# Qt Fusion Dark 调色板常量
 _FIGURE_BG = "#1E1E1E"
 _AXES_BG = "#2A2A2A"
 _TEXT = "#E0E0E0"
@@ -27,111 +28,100 @@ _DARK_SERIES = (
     "#C75C5C",
 )
 
-_DARK_GRID = "#373737"
-_DARK_LEGEND_BG = "#2A2A2A"
+_matplotlib_gui_style_configured = False
 
 
-@dataclass
+@dataclass(frozen=True)
 class ChartTheme:
-    figure_bg: str = _FIGURE_BG
-    axes_bg: str = _AXES_BG
-    text: str = _TEXT
-    text_secondary: str = _TEXT_SECONDARY
-    text_muted: str = _TEXT_MUTED
-    accent: str = _ACCENT
-    primary: str = _PRIMARY
-    primary_hover: str = _PRIMARY_HOVER
-    border: str = _BORDER
-    grid: str = _DARK_GRID
-    legend_bg: str = _DARK_LEGEND_BG
-    series: tuple[str, ...] = _DARK_SERIES
+    """嵌入 PySide6 暗色 GUI 的图表配色。"""
+
+    figure_bg: str
+    axes_bg: str
+    text: str
+    text_secondary: str
+    text_muted: str
+    accent: str
+    primary: str
+    primary_hover: str
+    border: str
+    grid: str
+    series_colors: tuple[str, ...]
 
 
 def chart_theme_dark() -> ChartTheme:
-    return ChartTheme()
+    """生成 Qt Fusion Dark 匹配的图表配色。"""
+    return ChartTheme(
+        figure_bg=_FIGURE_BG,
+        axes_bg=_AXES_BG,
+        text=_TEXT,
+        text_secondary=_TEXT_SECONDARY,
+        text_muted=_TEXT_MUTED,
+        accent=_ACCENT,
+        primary=_PRIMARY,
+        primary_hover=_PRIMARY_HOVER,
+        border=_BORDER,
+        grid=_BORDER,
+        series_colors=_DARK_SERIES,
+    )
 
 
-def configure_matplotlib_gui_style() -> dict[str, Any]:
-    global _MATPLOTLIB_GUI_STYLE_CONFIGURED
-    if _MATPLOTLIB_GUI_STYLE_CONFIGURED:
-        return {}
-    _MATPLOTLIB_GUI_STYLE_CONFIGURED = True
+def configure_matplotlib_gui_style() -> None:
+    """配置 matplotlib 字体 + 暗色样式（幂等，绘图前调用）。"""
+    global _matplotlib_gui_style_configured
+    from utils.gui_fonts import configure_matplotlib_font
+
+    configure_matplotlib_font()
+    if _matplotlib_gui_style_configured:
+        return
+
     import matplotlib.pyplot as plt
-    rc = {
-        "figure.facecolor": _FIGURE_BG,
-        "axes.facecolor": _AXES_BG,
-        "axes.edgecolor": _BORDER,
-        "axes.labelcolor": _TEXT,
-        "axes.titlecolor": _TEXT,
-        "xtick.color": _TEXT_SECONDARY,
-        "ytick.color": _TEXT_SECONDARY,
-        "grid.color": _DARK_GRID,
-        "text.color": _TEXT,
-        "legend.facecolor": _DARK_LEGEND_BG,
-        "legend.edgecolor": _BORDER,
-        "legend.labelcolor": _TEXT,
-        "figure.subplot.left": 0.1,
-        "figure.subplot.right": 0.92,
-        "figure.subplot.top": 0.92,
-        "figure.subplot.bottom": 0.12,
-    }
-    plt.rcParams.update(rc)
-    return rc
 
-
-def apply_dark_theme() -> dict[str, Any]:
-    return configure_matplotlib_gui_style()
-
-
-def style_axes(ax: Any, theme: ChartTheme | None = None) -> None:
-    if theme is None:
-        theme = chart_theme_dark()
-    ax.set_facecolor(theme.axes_bg)
-    ax.tick_params(colors=theme.text_secondary)
-    for spine in ax.spines.values():
-        spine.set_color(theme.border)
-    ax.xaxis.label.set_color(theme.text)
-    ax.yaxis.label.set_color(theme.text)
-    ax.title.set_color(theme.text)
-
-
-def style_figure(fig: Any, theme: ChartTheme | None = None) -> None:
-    if theme is None:
-        theme = chart_theme_dark()
-    fig.patch.set_facecolor(theme.figure_bg)
-
-
-def series_color(theme: ChartTheme | None = None, index: int = 0) -> str:
-    if theme is None:
-        theme = chart_theme_dark()
-    return theme.series[index % len(theme.series)]
-
-
-def bar_colors(theme: ChartTheme | None = None, count: int = 1) -> list[str]:
-    if theme is None:
-        theme = chart_theme_dark()
-    return [theme.series[i % len(theme.series)] for i in range(count)]
-
-
-_MATPLOTLIB_GUI_STYLE_CONFIGURED = False
+    chart = chart_theme_dark()
+    plt.rcParams.update(
+        {
+            "figure.facecolor": chart.figure_bg,
+            "axes.facecolor": chart.axes_bg,
+            "axes.edgecolor": chart.border,
+            "axes.labelcolor": chart.text,
+            "axes.titlecolor": chart.text,
+            "xtick.color": chart.text_secondary,
+            "ytick.color": chart.text_secondary,
+            "text.color": chart.text,
+            "grid.color": chart.grid,
+            "grid.alpha": 0.35,
+        }
+    )
+    _matplotlib_gui_style_configured = True
 
 
 def reset_matplotlib_gui_style_for_tests() -> None:
-    global _MATPLOTLIB_GUI_STYLE_CONFIGURED
-    _MATPLOTLIB_GUI_STYLE_CONFIGURED = False
+    """测试专用：允许重复配置。"""
+    global _matplotlib_gui_style_configured
+    from utils.gui_fonts import reset_matplotlib_font_config_for_tests
+
+    reset_matplotlib_font_config_for_tests()
+    _matplotlib_gui_style_configured = False
 
 
-_DARK_PALETTE = {
-    "figure_bg": _FIGURE_BG,
-    "axes_bg": _AXES_BG,
-    "text": _TEXT,
-    "text_secondary": _TEXT_SECONDARY,
-    "text_muted": _TEXT_MUTED,
-    "accent": _ACCENT,
-    "primary": _PRIMARY,
-    "primary_hover": _PRIMARY_HOVER,
-    "border": _BORDER,
-    "grid": _DARK_GRID,
-    "legend_bg": _DARK_LEGEND_BG,
-    "series": list(_DARK_SERIES),
-}
+def style_axes(ax: Any, theme: ChartTheme) -> None:
+    """将单个子图背景/刻度/边框与主题对齐。"""
+    ax.set_facecolor(theme.axes_bg)
+    ax.tick_params(colors=theme.text_secondary, which="both")
+    for spine in ax.spines.values():
+        spine.set_color(theme.border)
+
+
+def style_figure(fig: Any, theme: ChartTheme) -> None:
+    """设置 Figure 背景。"""
+    fig.patch.set_facecolor(theme.figure_bg)
+
+
+def series_color(theme: ChartTheme, index: int) -> str:
+    """按序取系列色（循环）。"""
+    colors = theme.series_colors
+    return colors[index % len(colors)]
+
+
+def bar_colors(theme: ChartTheme, count: int) -> list[str]:
+    """柱状图配色：默认主色。"""
+    return [theme.primary] * max(0, count)

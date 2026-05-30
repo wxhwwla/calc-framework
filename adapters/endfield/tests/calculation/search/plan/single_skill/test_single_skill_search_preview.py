@@ -11,10 +11,10 @@ import pytest
 from adapters.endfield.calc.loadout.optimizer import WeaponCandidate
 from adapters.endfield.data_loading.equipment_catalog import get_equipment_catalog
 from games.endfield.gui_design.presentation.preview_lines import build_single_skill_search_preview_lines
-from adapters.endfield.tests.conftest import PKG_ROOT, GAMES_END
+from adapters.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
 
-_CHARACTERS_JSON = GAMES_END / "character_weapon_equipment" / "character_data" / "characters.json"
-_WEAPONS_JSON = GAMES_END / "character_weapon_equipment" / "weapon_data" / "weapons.json"
+_CHARACTERS_JSON = DATA_DIR / "characters.json"
+_WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
 def _load_by_name(path: Path, name: str) -> dict:
@@ -160,7 +160,7 @@ class TestSingleSkillSearchPreview(unittest.TestCase):
     )
     def test_preview_with_real_local_equipments_when_available(self) -> None:
         """真数据契约：显式传入有限 catalog，禁止 preview 内隐式 get_equipments。"""
-        equip_path = GAMES_END / "character_weapon_equipment" / "equipment_data" / "equipments.json"
+        equip_path = DATA_DIR / "equipments.json"
         if not equip_path.is_file():
             self.skipTest("无本地 equipments.json")
         rows = json.loads(equip_path.read_text(encoding="utf-8"))

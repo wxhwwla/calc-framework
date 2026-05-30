@@ -5,6 +5,7 @@ from __future__ import annotations
 
 
 def format_duration_human(seconds: float) -> str:
+    """将秒数格式化为中文可读时长。"""
     total = max(0, int(seconds))
     if total < 1:
         return "少于 1 秒"
@@ -22,6 +23,7 @@ def format_duration_human(seconds: float) -> str:
 
 
 def format_workload_estimate_line(*, workload, duration) -> str:
+    """生成「预计组合数/耗时」文案（workload / duration 为 search_estimate 数据类）。"""
     total = workload.total_combinations
     if total <= 0:
         return "预计组合数：0（请检查候选范围与装备数据）"
