@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.dag.debugger import StepDebugger
-from calc_framework.dag.engine import DAGResult, evaluate_graph
+from calc_framework.dag.engine import BlockCache, DAGResult, evaluate_graph
 from calc_framework.dag.sandbox import register_function as _register_sandbox_fn
 from calc_framework.dag.schema import DAGGraph
 from calc_framework.dag.serializer import dag_from_dict, load_dag
@@ -33,6 +33,7 @@ class DAGService:
 
     def __init__(self, dag: DAGGraph):
         self._dag = dag
+        self._block_cache = BlockCache()
 
     @classmethod
     def from_file(cls, path: str | Path) -> DAGService:
@@ -64,8 +65,11 @@ class DAGService:
         return cls(dag)
 
     def evaluate(self, context: dict[str, Any]) -> DAGResult:
-        """用给定上下文求值 DAG 图，返回包含所有输出值的 DAGResult。"""
-        return evaluate_graph(self._dag, context)
+        """用给定上下文求值 DAG 图，返回包含所有输出值的 DAGResult。
+
+        使用内部 BlockCache 实现块级缓存，相同输入跳过块内求值。
+        """
+        return evaluate_graph(self._dag, context, block_cache=self._block_cache)
 
     def register_function(self, name: str, fn: Any) -> None:
         """注册一个自定义函数到 DAG 表达式沙箱。
@@ -88,6 +92,22 @@ class DAGService:
                 print(result.node_id, result.value)
         """
         return StepDebugger(self._dag, context)
+
+    def invalidate_block_cache(self, block_id: str | None = None) -> None:
+        """使块级缓存失效。
+
+        Args:
+            block_id: 指定块 ID，为 None 时清除全部缓存。
+        """
+        if block_id is None:
+            self._block_cache.invalidate_all()
+        else:
+            self._block_cache.invalidate(block_id)
+
+    @property
+    def block_cache(self) -> BlockCache:
+        """返回内部 BlockCache 实例。"""
+        return self._block_cache
 
     @property
     def dag(self) -> DAGGraph:

@@ -250,8 +250,8 @@ def _compute_block_inputs(
 ) -> dict[str, dict[str, float]]:
     """预计算各块调用节点的输入值（用于缓存键）。
 
-    只解析可直接从 context 或 const 节点获取的输入；
-    依赖其他块输出的输入无法在此阶段确定。
+    解析可直接从 context 或 const 节点获取的输入；
+    块到块依赖使用源块 ID 的哈希作为代理。
     """
     result: dict[str, dict[str, float]] = {}
     for nid, node in graph.nodes.items():
@@ -266,6 +266,8 @@ def _compute_block_inputs(
                 val = _resolve_path(context, source_node.path)
                 if val is not None:
                     inputs[param_name] = float(val)
+            elif isinstance(source_node, CallNode):
+                inputs[param_name] = hash(source_nid)
         if inputs:
             result[nid] = inputs
     return result
@@ -342,13 +344,37 @@ def evaluate_graph(
     # ── Block cache pre-computation ────────────────────
     cached_outputs: dict[str, dict[str, float]] = {}
     cached_primary_nodes: set[str] = set()
+    re_evaluated_blocks: set[str] = set()
     if block_cache is not None:
         block_inputs = _compute_block_inputs(graph, context)
+        # Build block dependency graph for chain invalidation
+        block_dependents: dict[str, set[str]] = {}
+        for nid, node in graph.nodes.items():
+            if not isinstance(node, CallNode):
+                continue
+            for _param_name, source_nid in node.bindings.items():
+                source_node = graph.nodes.get(source_nid)
+                if isinstance(source_node, CallNode):
+                    block_dependents.setdefault(source_nid, set()).add(nid)
+
         for block_id, inputs in block_inputs.items():
             cached = block_cache.get(block_id, inputs)
             if cached is not None:
                 cached_outputs[block_id] = cached
                 logger.debug("块 %s 缓存命中, 跳过求值", block_id)
+            else:
+                re_evaluated_blocks.add(block_id)
+                block_cache.invalidate(block_id)
+                # Chain invalidation: BFS invalidate all downstream blocks
+                to_invalidate = {block_id}
+                while to_invalidate:
+                    bid = to_invalidate.pop()
+                    for dep_id in block_dependents.get(bid, set()):
+                        if dep_id not in re_evaluated_blocks:
+                            re_evaluated_blocks.add(dep_id)
+                            block_cache.invalidate(dep_id)
+                            cached_outputs.pop(dep_id, None)
+                            to_invalidate.add(dep_id)
 
     expanded = expand_subgraphs(graph)
 
