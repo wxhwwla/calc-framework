@@ -83,6 +83,7 @@
 | **BWIKI 侦察** | `tools/bwiki_scout/`：阶段 C 拉取 Wiki 至 `output/raw/`（gitignore）；阶段 B `parse_draft.py` 仅生成对照草案 |
 | **BWIKI 同步** | `sync_operators.py` / `sync_weapons.py`：默认预览差异；`--apply` 反推公式后写入 `characters.json`/`weapons.json` 与 `seed_*.py`（以 Wiki 为准） |
 | **项目依赖** | 运行时：`PySide6` + `matplotlib`（见 `pyproject.toml`）；开发：`[dev]`→pytest；打包：`[build]`→PyInstaller；布局模块：`release_bundle/`（勿命名 `packaging`） |
+| **资源目录** | `resources/` — 业务资源文件（如捐赠二维码 `donation/donation_qr.png`）；打包时 `--add-data` 包含 |
 | **捐赠组件** | `utils/donation.py`：所有 GUI 共享的`DonationWidget`+`open_donation_dialog()`；捐赠不构成购买软件对价 |
 | **捐赠 widget（布局）** | `type:"widget"` + `widget_type:"donation"` — 可嵌入 .calcpack 布局的捐赠卡片，含自定义文字和图片，随配置包传播 |
 | **数据许可** | `DATA_LICENSE`：商业禁止使用本仓库 JSON；须自行从游戏/Wiki 获取 |
