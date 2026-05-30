@@ -13,6 +13,9 @@
     python devtool.py launcher                # 框架游戏选择器（交互）
     python devtool.py launcher endfield       # 框架游戏选择器（直接启动）
     python devtool.py hub                     # 启动 Calc Hub 社区市场
+    python devtool.py plugin build <dir>      # 打包插件为 .calcplugin
+    python devtool.py plugin install <file>   # 安装 .calcplugin
+    python devtool.py plugin rebuild-catalog  # 重建插件目录 JSON
     python devtool.py framework build         # 构建 framework PyPI wheel
     python devtool.py framework publish       # 构建+发布 framework 到 PyPI
 """
@@ -100,6 +103,36 @@ def _cmd_framework(args: argparse.Namespace) -> int:
     return fw_main()
 
 
+def _cmd_plugin(args: argparse.Namespace) -> int:
+    """插件管理子命令。"""
+    passthrough = _sub_args()
+    if not passthrough:
+        print("用法: python devtool.py plugin <build|install|rebuild-catalog> [...]")
+        return 1
+
+    cmd = passthrough[0]
+    rest = passthrough[1:]
+
+    if cmd == "build":
+        from tools.plugin_pack import _demo_build
+        return _demo_build(rest)
+
+    if cmd == "install":
+        from tools.plugin_pack import _demo_install
+        return _demo_install(rest)
+
+    if cmd == "rebuild-catalog":
+        from web.hub.build_plugin_catalog import build_plugin_catalog
+        repo = Path(__file__).resolve().parent
+        output = repo / "web" / "hub" / "plugins_catalog.json"
+        build_plugin_catalog(output)
+        return 0
+
+    print(f"未知的子命令: {cmd}", file=sys.stderr)
+    print("可用子命令: build, install, rebuild-catalog")
+    return 1
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="终末地计算器 — 开发者工具箱",
@@ -115,6 +148,7 @@ def main() -> None:
     hub_parser = sub.add_parser("hub", help="启动 Calc Hub 社区市场", add_help=False)
     hub_parser.add_argument("--port", type=int, default=8080, help="端口 (默认 8080)")
     sub.add_parser("framework", help="构建/发布 framework PyPI 包", add_help=False)
+    sub.add_parser("plugin", help="插件打包/安装/目录管理", add_help=False)
 
     # 用 parse_known_args 避免 --flags 被 argparse 拦截
     args, _ = parser.parse_known_args()
@@ -129,6 +163,7 @@ def main() -> None:
         "launcher": _cmd_launcher,
         "hub": _cmd_hub,
         "framework": _cmd_framework,
+        "plugin": _cmd_plugin,
     }
     result = funcs[args.command](args)
     if isinstance(result, int):

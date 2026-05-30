@@ -1,0 +1,55 @@
+{
+  "schema_version": "plugins-v1",
+  "name": "Calc Hub Plugin Catalog",
+  "updated": "2026-05-30",
+  "plugins": [
+    {
+      "name": "crit_handler",
+      "version": "1.0.0",
+      "description": "暴击率/暴击伤害计算：crit_rate × (1 + crit_dmg)",
+      "author": "framework",
+      "type": "builtin",
+      "dependencies": [],
+      "stats": {
+        "variables": 2,
+        "templates": 1,
+        "functions": 0
+      },
+      "tags": [
+        "内置"
+      ]
+    },
+    {
+      "name": "dodge_handler",
+      "version": "1.0.0",
+      "description": "闪避/命中率计算",
+      "author": "framework",
+      "type": "builtin",
+      "dependencies": [],
+      "stats": {
+        "variables": 2,
+        "templates": 1,
+        "functions": 0
+      },
+      "tags": [
+        "内置"
+      ]
+    },
+    {
+      "name": "distance_decay",
+      "version": "1.0.0",
+      "description": "远程攻击距离衰减：start_at 内 100%, end_at 外 0%, 之间线性",
+      "author": "framework",
+      "type": "builtin",
+      "dependencies": [],
+      "stats": {
+        "variables": 3,
+        "templates": 1,
+        "functions": 0
+      },
+      "tags": [
+        "内置"
+      ]
+    }
+  ]
+}

@@ -101,6 +101,19 @@ async function loadAdapters() {
   }
 }
 
+async function loadPlugins() {
+  const url = './plugins_catalog.json';
+  try {
+    const resp = await fetch(url + '?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    renderPlugins(data.plugins || []);
+  } catch (e) {
+    document.getElementById('plugin-list').innerHTML =
+      '<div class="empty">无法加载插件列表（' + e.message + '）</div>';
+  }
+}
+
 function renderAdapters(adapters) {
   const container = document.getElementById('adapter-list');
   if (!adapters.length) {
@@ -129,7 +142,31 @@ function renderAdapters(adapters) {
   `).join('');
 }
 
+function renderPlugins(plugins) {
+  const container = document.getElementById('plugin-list');
+  if (!plugins.length) {
+    container.innerHTML = '<div class="empty">暂无社区插件 — 成为第一个贡献者！</div>';
+    return;
+  }
+  container.innerHTML = plugins.map(p => `
+    <div class="card">
+      <h3>${p.name || '未命名'}</h3>
+      <span class="tag">${p.type || '未知'}</span>
+      ${p.author ? `<span class="tag">作者: ${p.author}</span>` : ''}
+      <p>${p.description || '暂无描述'}</p>
+      <div class="meta">
+        <span>v${p.version || '?'}</span>
+        <span>📊 ${(p.stats?.variables || 0)} 变量 / ${(p.stats?.templates || 0)} 模板</span>
+      </div>
+      <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        ${(p.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
 loadAdapters();
+loadPlugins();
 </script>
 </body>
 </html>

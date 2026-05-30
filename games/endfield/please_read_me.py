@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.15"
+_VERSION = "3.11.16"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,11 +209,15 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 9 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
-# - 修改 framework/src/calc_framework/dag/engine.py
-# - 修改 framework/src/calc_framework/dag/service.py
+# - 修改 devtool.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
 # - 修改 games/endfield/please_read_me.py
+# - 修改 tools/plugin_pack.py
+# - 修改 web/hub/build_plugin_catalog.py
+# - 变更 web/hub/index.html
+# - 变更 web/hub/plugins_catalog.json
 # --- END UPLOAD_SUMMARY ---

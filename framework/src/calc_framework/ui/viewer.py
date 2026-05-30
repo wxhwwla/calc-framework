@@ -20,6 +20,7 @@ from PySide6.QtGui import QAction, QActionGroup, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QDialog,
     QFileDialog,
     QFormLayout,
     QGroupBox,
@@ -238,6 +239,11 @@ class CalcPackViewer(QMainWindow):
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+
+        tools_menu = mb.addMenu("工具")
+        plugin_action = QAction("插件管理器...", self)
+        plugin_action.triggered.connect(self._show_plugin_manager)
+        tools_menu.addAction(plugin_action)
 
         theme_menu = mb.addMenu("主题")
         self._theme_actions: dict[str, QAction] = {}
@@ -509,6 +515,44 @@ class CalcPackViewer(QMainWindow):
                 self._splitter.setSizes([180, width - 360, 180])
         elif self._splitter.sizes()[0] == 0 and self._splitter.sizes()[2] == 0:
             self._splitter.setSizes([220, width - 420, 200])
+
+    def _show_plugin_manager(self) -> None:
+        """显示插件管理器对话框。"""
+        try:
+            from calc_framework.plugin.registry import get_registry, list_plugins
+        except ImportError:
+            QMessageBox.information(self, "插件", "框架未安装 calc_framework.plugin 模块")
+            return
+
+        plugins = list_plugins()
+        reg = get_registry()
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"插件管理器 ({len(plugins)} 已注册)")
+        dialog.resize(500, 400)
+        layout = QVBoxLayout(dialog)
+
+        if not plugins:
+            layout.addWidget(QLabel("暂无已注册的插件。"))
+        else:
+            for name in plugins:
+                plugin = reg.get(name)
+                if plugin is None:
+                    continue
+                meta = plugin.meta
+                group = QGroupBox(f"{meta.name}  v{meta.version}")
+                fl = QFormLayout(group)
+                fl.addRow("描述:", QLabel(meta.description))
+                fl.addRow("作者:", QLabel(meta.author or "—"))
+                if meta.dependencies:
+                    fl.addRow("依赖:", QLabel(", ".join(meta.dependencies)))
+                layout.addWidget(group)
+
+        layout.addStretch()
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(dialog.accept)
+        layout.addWidget(close_btn)
+        dialog.exec()
 
 
 def open_calcpack(path: str | Path) -> None:
