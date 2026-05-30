@@ -7,8 +7,6 @@ PySide6 GUI，提供公式反推、数据浏览等功能，用于角色/武器�
 from __future__ import annotations
 
 import sys
-import webbrowser
-from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -83,12 +81,10 @@ class DesignerApp(QMainWindow):
         self._apply_dark_style()
 
     def _open_help(self) -> None:
-        doc_path = Path(__file__).resolve().parents[3] / "docs" / "GUI使用说明.md"
-        if doc_path.is_file():
-            webbrowser.open(doc_path.as_uri())
-        else:
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "找不到文档", f"使用说明文件不存在：\n{doc_path}")
+        from utils.gui_help_dialog import HelpDialog
+        from utils.gui_help_designer import build_designer_help
+        dialog = HelpDialog(build_designer_help, self, title="数据设计器 使用说明")
+        dialog.exec()
 
     def _apply_dark_style(self) -> None:
         self.setStyleSheet("""

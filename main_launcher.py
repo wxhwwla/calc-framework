@@ -18,12 +18,14 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction, QFont, QIcon
+from PySide6.QtGui import QAction, QFont, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMenuBar,
     QMessageBox,
     QPushButton,
     QScrollArea,
@@ -113,6 +115,9 @@ class LauncherWindow(QMainWindow):
         self.setMinimumSize(680, 520)
         self.resize(780, 580)
 
+        # ── 菜单栏 ──
+        self._setup_menu()
+
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
@@ -142,7 +147,7 @@ class LauncherWindow(QMainWindow):
 
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)
-            scroll.setFrameShape(0)
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
             scroll.setStyleSheet("QScrollArea { border: none; }")
             container = QWidget()
             grid = QVBoxLayout(container)
@@ -174,6 +179,20 @@ class LauncherWindow(QMainWindow):
         self._status = QStatusBar()
         self.setStatusBar(self._status)
         self._status.showMessage(f"发现 {len(adapters)} 个适配器")
+
+    def _setup_menu(self) -> None:
+        menubar = self.menuBar()
+        help_menu = menubar.addMenu("帮助(&H)")
+        help_action = QAction("使用说明(&U)", self)
+        help_action.setShortcut(QKeySequence("F1"))
+        help_action.triggered.connect(self._show_help)
+        help_menu.addAction(help_action)
+
+    def _show_help(self) -> None:
+        from utils.gui_help_dialog import HelpDialog
+        from utils.gui_help_launcher import build_launcher_help
+        dialog = HelpDialog(build_launcher_help, self, title="Game Calc Platform 使用说明")
+        dialog.exec()
 
     def _build_adapter_card(self, adp: dict) -> QWidget:
         card = QWidget()

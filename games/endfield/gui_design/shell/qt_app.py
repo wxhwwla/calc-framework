@@ -12,8 +12,8 @@ import sys
 from typing import Any
 
 from calc_framework.logging import get_logger
-from PySide6.QtCore import Qt, QThread
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt, QThread, QTimer
+from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -115,6 +115,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
         self.app.setWindowTitle(f"终末地伤害计算小工具 v{get_exe_version()}")
         self.app.setMinimumSize(1024, 600)
         self.app.resize(1280, 720)
+        self._setup_app_menu()
 
         central = QWidget()
         self.app.setCentralWidget(central)
@@ -352,6 +353,16 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
                 background-color: #333333;
             }
         """)
+
+    # ── 帮助菜单 ──────────────────────────────────
+
+    def _setup_app_menu(self) -> None:
+        menubar = self.app.menuBar()
+        help_menu = menubar.addMenu("帮助(&H)")
+        help_action = QAction("使用说明(&U)", self.app)
+        help_action.setShortcut(QKeySequence("F1"))
+        help_action.triggered.connect(self._on_open_help)
+        help_menu.addAction(help_action)
 
     # ── 页面导航 ──────────────────────────────────
 

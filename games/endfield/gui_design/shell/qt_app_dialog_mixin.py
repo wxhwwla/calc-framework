@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import webbrowser
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -189,12 +188,10 @@ class DialogMixin:
             QMessageBox.warning(self.app, "导出失败", str(exc))
 
     def _on_open_help(self) -> None:
-
-        doc_path = Path(__file__).resolve().parents[4] / "docs" / "GUI使用说明.md"
-        if doc_path.is_file():
-            webbrowser.open(doc_path.as_uri())
-        else:
-            QMessageBox.warning(self.app, "找不到文档", f"使用说明文件不存在：\n{doc_path}")
+        from utils.gui_help_dialog import HelpDialog
+        from utils.gui_help_calculator import build_calculator_help
+        dialog = HelpDialog(build_calculator_help, self.app, title="终末地伤害计算器 使用说明")
+        dialog.exec()
 
     def _on_ocr_detect(self) -> None:
         """打开截图识装检测对话框。"""

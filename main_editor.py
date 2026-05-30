@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
+    QMenuBar,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
@@ -50,6 +51,7 @@ from calc_framework.dag.service import DAGService
 from calc_framework.editor.gui import LayoutEditorWidget
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout
+from utils.gui_help_dialog import HelpSection
 
 APP_NAME = "布局编辑器"
 APP_VERSION = "1.0.0"
@@ -212,6 +214,8 @@ class LayoutEditorApp(QMainWindow):
         self.setMinimumSize(1000, 700)
         self.resize(1200, 800)
 
+        self._setup_menu()
+
         self.big_font = QFont()
         self.big_font.setPointSize(14)
         self.big_font.setBold(True)
@@ -244,6 +248,117 @@ class LayoutEditorApp(QMainWindow):
         )
         self.editor._load_default_dag()
         layout.addWidget(self.editor, 1)
+
+    def _setup_menu(self) -> None:
+        menubar = self.menuBar()
+        help_menu = menubar.addMenu("帮助(&H)")
+        help_action = QAction("使用说明(&U)", self)
+        help_action.setShortcut(QKeySequence("F1"))
+        help_action.triggered.connect(self._show_help)
+        help_menu.addAction(help_action)
+
+    def _show_help(self) -> None:
+        from utils.gui_help_dialog import HelpDialog
+        sections = self._build_layout_editor_help()
+        dialog = HelpDialog(lambda: sections, self, title="布局编辑器 使用说明")
+        dialog.exec()
+
+    @staticmethod
+    def _build_layout_editor_help() -> list[HelpSection]:
+        return [
+            HelpSection(
+                category="入门",
+                title="概述",
+                content="""\
+<h2>布局编辑器</h2>
+
+<p>布局编辑器是一个可视化编排工具，用于管理 DAG 变量到 Layout Section 的映射。<br>
+同时内置终末地角色/武器数据支持，可进行实时 DAG 求值和预览。</p>
+
+<h3>主要功能</h3>
+<ul>
+<li>可视化编排 DAG 变量到 Section</li>
+<li>角色/武器选择与实时 DAG 求值预览</li>
+<li>导出 layout.json 配置文件</li>
+<li>布局自动平衡（均匀分配变量到各 Section）</li>
+</ul>
+
+<h3>工作流程</h3>
+<ol>
+<li>选择角色和武器（可选，用于预览求值）</li>
+<li>查看 DAG 变量列表</li>
+<li>将变量拖拽分配到不同 Section</li>
+<li>点击「导出 layout.json」保存配置文件</li>
+</ol>
+""",
+            ),
+            HelpSection(
+                category="界面",
+                title="界面说明",
+                content="""\
+<h2>界面说明</h2>
+
+<h3>标题栏</h3>
+<p>显示应用名称和版本号。</p>
+
+<h3>DAG 编辑器主体</h3>
+<p>由 LayoutEditorWidget 提供核心功能，包含：</p>
+<ul>
+<li><b>角色/武器选择</b> — 选择角色和武器进行实时 DAG 求值预览</li>
+<li><b>变量列表</b> — 显示所有 DAG 变量，可拖拽到 Section 中</li>
+<li><b>Section 面板</b> — 可视化编排变量的分组</li>
+<li><b>预览面板</b> — 当前约束下 DAG 的求值结果</li>
+</ul>
+
+<h3>工具栏</h3>
+<ul>
+<li><b>导出 layout.json</b> — 保存 Section 编排结果</li>
+<li><b>加载 layout.json</b> — 载入已有的编排配置</li>
+<li><b>自动平衡</b> — 自动将变量均匀分配到各 Section</li>
+</ul>
+""",
+            ),
+            HelpSection(
+                category="操作",
+                title="操作说明",
+                content="""\
+<h2>操作说明</h2>
+
+<h3>选择角色/武器</h3>
+<p>在顶部下拉框中选择角色和武器。选择后：</p>
+<ul>
+<li>系统自动加载对应的 DAG 数据</li>
+<li>预览面板会显示基于当前选角的求值结果</li>
+<li>变量值随角色/武器切换而变化</li>
+</ul>
+
+<h3>编排 Section</h3>
+<ul>
+<li><b>创建 Section</b> — 点击「新建 Section」按钮</li>
+<li><b>分配变量</b> — 从变量列表拖拽变量到 Section 中</li>
+<li><b>重命名 Section</b> — 双击 Section 标题编辑名称</li>
+<li><b>删除 Section</b> — 右键或点击删除按钮</li>
+</ul>
+
+<h3>导出配置</h3>
+<p>编排完成后，点击「导出 layout.json」按钮保存配置。<br>
+导出的文件可以在计算器中使用。</p>
+""",
+            ),
+            HelpSection(
+                category="常见问题",
+                title="使用技巧",
+                content="""\
+<h2>使用技巧</h2>
+
+<ul>
+<li>先在角色/武器选择中选定目标，再编排 Section，可以看到变量实际值</li>
+<li>「自动平衡」功能适合初始编排，后续再手动微调</li>
+<li>导出前可以先「预览」，确认结果是否正确</li>
+</ul>
+""",
+            ),
+        ]
 
 
 def main() -> None:

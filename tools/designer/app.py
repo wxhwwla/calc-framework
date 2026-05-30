@@ -16,6 +16,7 @@ if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QLabel,
@@ -26,6 +27,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from utils.gui_help_dialog import HelpSection
 
 from calc_framework.config.manager import AdapterManager
 
@@ -59,11 +62,137 @@ class DesignerWindow(QMainWindow):
         self._status.addWidget(self._status_label)
         self.setStatusBar(self._status)
 
+        self._setup_menu()
+
         self._tabs.currentChanged.connect(self._on_tab_changed)
 
         self._layout_panel.layout_changed.connect(self._on_layout_changed)
 
         self._update_status()
+
+    def _setup_menu(self) -> None:
+        menubar = self.menuBar()
+        help_menu = menubar.addMenu("帮助(&H)")
+        help_action = QAction("使用说明(&U)", self)
+        help_action.setShortcut(QKeySequence("F1"))
+        help_action.triggered.connect(self._show_help)
+        help_menu.addAction(help_action)
+
+    def _show_help(self) -> None:
+        from utils.gui_help_dialog import HelpDialog
+        dialog = HelpDialog(self._build_designer_help, self, title="配置包设计器 使用说明")
+        dialog.exec()
+
+    @staticmethod
+    def _build_designer_help() -> list[HelpSection]:
+        return [
+            HelpSection(
+                category="入门",
+                title="概述",
+                content="""\
+<h2>配置包设计器</h2>
+
+<p>配置包设计器用于创建和编辑 .calcpack 配置文件，包含数据、布局和主题的完整设计流程。<br>
+生成的 .calcpack 文件可以通过 CalcPackViewer 加载使用。</p>
+
+<h3>启动方式</h3>
+<pre>python -m tools.designer</pre>
+
+<h3>三个页签</h3>
+<ol>
+<li><b>数据录入</b> — 录入角色/武器/装备数据</li>
+<li><b>布局编辑</b> — 可视化编排 DAG 节点和布局</li>
+<li><b>主题与导出</b> — 编辑主题样式并导出 .calcpack</li>
+</ol>
+""",
+            ),
+            HelpSection(
+                category="数据录入",
+                title="数据录入页签",
+                content="""\
+<h2>数据录入</h2>
+
+<p>提供标准化的数据录入界面，支持角色、武器、装备等实体的数据管理：</p>
+<ul>
+<li><b>角色数据</b> — 名称、类型、星级、能力值、基础属性、技能 JSON 等</li>
+<li><b>武器数据</b> — 名称、类型、星级、基础攻击力、附加属性、特殊能力等</li>
+<li><b>装备数据</b> — 装备属性、套装效果等</li>
+</ul>
+
+<h3>操作说明</h3>
+<ul>
+<li>填写表单后点击「保存」</li>
+<li>已保存的数据会传递到「主题与导出」页签，用于打包</li>
+<li>支持导入已有 JSON 数据进行编辑</li>
+</ul>
+""",
+            ),
+            HelpSection(
+                category="布局编辑",
+                title="布局编辑页签",
+                content="""\
+<h2>布局编辑</h2>
+
+<p>可视化编排 DAG 节点和布局，设计计算器的界面结构：</p>
+<ul>
+<li>从适配器列表选择目标游戏适配器</li>
+<li>加载 DAG 数据和布局模板</li>
+<li>拖拽编排节点位置</li>
+<li>网格吸附 + 碰撞检测辅助对齐</li>
+</ul>
+
+<h3>操作说明</h3>
+<ul>
+<li>选择适配器后自动加载数据</li>
+<li>编排完成后布局数据自动同步到导出页签</li>
+<li>支持实时预览编排效果</li>
+</ul>
+""",
+            ),
+            HelpSection(
+                category="主题与导出",
+                title="主题与导出页签",
+                content="""\
+<h2>主题与导出</h2>
+
+<h3>主题编辑</h3>
+<ul>
+<li><b>字体</b> — 选择界面字体和字号</li>
+<li><b>色板</b> — 编辑界面配色方案</li>
+<li>修改实时生效，可随时预览效果</li>
+</ul>
+
+<h3>导出 .calcpack</h3>
+<ol>
+<li>确认数据、布局、主题都已配置完成</li>
+<li>检查各页签数据是否已同步</li>
+<li>点击「导出」按钮</li>
+<li>选择导出路径，系统会打包为 .calcpack 文件</li>
+</ol>
+
+<p>.calcpack 文件生成后，可以用 CalcPackViewer 或启动器直接打开使用。</p>
+""",
+            ),
+            HelpSection(
+                category="常见问题",
+                title="常见问题",
+                content="""\
+<h2>使用技巧与常见问题</h2>
+
+<h3>数据同步</h3>
+<p>切换到「主题与导出」页签时，系统会自动同步其他页签的数据。<br>
+如果需要手动同步，可以切换页签触发。</p>
+
+<h3>常见问题</h3>
+
+<p><b>Q: 生成的 .calcpack 怎么用？</b><br>
+A: 用启动器（<code>python main_launcher.py path/to/game.calcpack</code>）或 CalcPackViewer 打开。</p>
+
+<p><b>Q: 数据格式有要求吗？</b><br>
+A: 系统使用标准四层 schema，数据录入界面会自动引导填写正确格式。</p>
+""",
+            ),
+        ]
 
     def _on_tab_changed(self, index: int) -> None:
         if index == 1:
