@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -26,7 +27,17 @@ if str(_ADAPTER_PARENT) not in sys.path:
 from calc_framework.config.adapter import AdapterPackage
 from calc_framework.data.attr_schema import AttributeSchema
 
-from adapters.card_rpg.loader import CardRPGLoader
+
+def _load_card_rpg_loader():
+    """用 importlib 直接文件加载，避开 adapters 命名空间冲突。"""
+    loader_path = _ADAPTER_DIR / "loader.py"
+    spec = importlib.util.spec_from_file_location("card_rpg_loader", loader_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.CardRPGLoader
+
+
+CardRPGLoader = _load_card_rpg_loader()
 
 
 @pytest.fixture

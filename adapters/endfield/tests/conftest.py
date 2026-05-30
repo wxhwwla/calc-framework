@@ -58,8 +58,12 @@ def pytest_configure(config: pytest.Config) -> None:
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:  # noqa: ARG001
     """为慢测模块自动打 slow 标记（全量收集时生效）。"""
+    tests_dir = Path(__file__).resolve().parent
     for item in items:
-        rel = item.path.relative_to(Path(__file__).resolve().parent).as_posix()
+        try:
+            rel = item.path.relative_to(tests_dir).as_posix()
+        except ValueError:
+            continue
         if rel in _SLOW_FILES:
             item.add_marker(pytest.mark.slow)
 

@@ -62,7 +62,7 @@ jobs:
           python -m pip install -e framework
           python -m pip install -e games/endfield ".[dev]"
       - name: Run tests
-        run: python -m pytest games/endfield/tests/ adapters/endfield/tests/repo/ adapters/endfield/tests/framework/ -q --tb=short
+        run: python -m pytest adapters/endfield/tests/ framework/tests/ -q --tb=short
 
   build:
     needs: test
