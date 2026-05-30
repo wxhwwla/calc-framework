@@ -1,4 +1,4 @@
-import { useCallback, useRef, type DragEvent } from "react";
+import React, { useCallback, useRef, type DragEvent } from "react";
 import {
   ReactFlow,
   Background,
@@ -36,7 +36,7 @@ const isValidConnection = (connection: Edge | Connection): boolean => {
   return true;
 };
 
-export default function DagEditorCanvas({ onNodeDoubleClick }: DagEditorCanvasProps) {
+const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) => {
   const storeNodes = useEditorStore((s) => s.nodes);
   const storeEdges = useEditorStore((s) => s.edges);
   const setNodes = useEditorStore((s) => s.setNodes);
@@ -167,3 +167,5 @@ export default function DagEditorCanvas({ onNodeDoubleClick }: DagEditorCanvasPr
     </Box>
   );
 }
+
+export default DagEditorCanvas;

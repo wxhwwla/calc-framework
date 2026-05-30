@@ -24,6 +24,10 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+torch: Any = None
+_detection_model: Any = None
+_VISION_AVAILABLE = False
+
 try:
     import torch
     from torchvision.models.detection import (
@@ -31,7 +35,7 @@ try:
     )
     _VISION_AVAILABLE = True
 except ImportError:
-    _VISION_AVAILABLE = False
+    pass
 
 _COCO_CLASSES: list[str] = [
     "__background__", "person", "bicycle", "car", "motorcycle", "airplane", "bus",
@@ -151,7 +155,7 @@ def _get_color(class_id: int) -> tuple[int, int, int]:
     return _CLASS_COLORS[class_id % len(_CLASS_COLORS)]
 
 
-def _to_tensor(image: Image.Image, device: str = "cpu") -> torch.Tensor:
+def _to_tensor(image: Image.Image, device: str = "cpu") -> Any:
     """PIL Image → 归一化 [1,3,H,W] tensor。"""
     img = image.convert("RGB")
     arr = np.array(img, dtype=np.float32) / 255.0
@@ -181,6 +185,7 @@ class YOLOXDetector:
         self._conf = conf_threshold
         self._iou = iou_threshold
         self._device = device
+        self._model_path = str(model_path) if model_path else None
 
         self._model = _detection_model(
             weights="DEFAULT",
