@@ -93,7 +93,7 @@ def main() -> None:
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     window = DesignerApp()
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec())
 
 

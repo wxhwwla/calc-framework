@@ -249,7 +249,7 @@ class LayoutEditorApp(QMainWindow):
 def main() -> None:
     app = QApplication(sys.argv)
     window = LayoutEditorApp()
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec())
 
 

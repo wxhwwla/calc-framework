@@ -32,9 +32,8 @@ def main() -> None:
 
     from calc_framework.graph_editor.file_actions import (
         collect_document,
-        load_document,
-        save_graph_file,
         open_graph_file,
+        save_graph_file,
     )
     from calc_framework.graph_editor.graph_editor_widget import (
         GraphEditorWidget,
@@ -42,10 +41,8 @@ def main() -> None:
     )
     from calc_framework.graph_editor.node_panel import NodePanel
     from calc_framework.graph_editor.prop_panel import PropPanel
-    from calc_framework.graph_editor.registry import create_default_node
 
     from calc_framework.dag.engine import evaluate_graph
-    from calc_framework.graph_editor.compiler import compile_graph
     from calc_framework.graph_editor.help_dialog import HelpDialog
 
     app = QApplication(sys.argv)
@@ -100,7 +97,7 @@ def main() -> None:
             return
         path = Path(path_str)
         doc = collect_document(editor)
-        save_graph_file(path, doc)
+        save_graph_file(doc, path)
 
     save_action = QAction("保存(&S)", window)
     save_action.setShortcut(QKeySequence("Ctrl+S"))
@@ -124,8 +121,25 @@ def main() -> None:
     file_menu.addAction(help_action)
 
     # ── 快捷键 ──
+    def _eval_selected() -> None:
+        """对选中的节点执行局部求值并显示结果。"""
+        selected = [i for i in editor.scene().selectedItems() if isinstance(i, NodeItem)]
+        if not selected:
+            return
+        node_item = selected[0]
+        graph = editor.graph
+        try:
+            result = evaluate_graph(graph, {})
+            if node_item.node_id in result.node_values:
+                display = str(result.node_values[node_item.node_id])
+            else:
+                display = "（该节点无输出）"
+            prop_panel.set_result(display)
+        except Exception as e:
+            prop_panel.set_result(f"求值错误: {e}")
+
     QShortcut(QKeySequence("Ctrl+Shift+E"), window).activated.connect(
-        lambda: _eval_selected(editor, prop_panel)
+        _eval_selected
     )
 
     # ── 命令行打开 ──
@@ -138,27 +152,8 @@ def main() -> None:
                 if doc:
                     editor.load_document(doc)
 
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec())
-
-
-def _eval_selected(editor: GraphEditorWidget, prop_panel: PropPanel) -> None:
-    """对选中的节点执行局部求值并显示结果。"""
-    selected = [i for i in editor.scene().selectedItems() if isinstance(i, NodeItem)]
-    if not selected:
-        return
-    node_item = selected[0]
-    graph = editor.graph
-    try:
-        result = evaluate_graph(graph)
-        doc = collect_document(editor)
-        if node_item.node_id in result:
-            display = str(result[node_item.node_id])
-        else:
-            display = "（该节点无输出）"
-        prop_panel.set_result(display)
-    except Exception as e:
-        prop_panel.set_result(f"求值错误: {e}")
 
 
 if __name__ == "__main__":
