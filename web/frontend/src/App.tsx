@@ -13,10 +13,12 @@ import {
 import CalculateIcon from "@mui/icons-material/Calculate";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import BuildIcon from "@mui/icons-material/Build";
 import { useNavigate, useLocation } from "react-router-dom";
 import ComputePage from "./pages/ComputePage";
 import AdaptersPage from "./pages/AdaptersPage";
 import EditorPage from "./pages/EditorPage";
+import DesignerPage from "./pages/DesignerPage";
 
 const drawerWidth = 240;
 
@@ -24,6 +26,7 @@ const navItems = [
   { label: "计算 (Compute)", path: "/compute", icon: <CalculateIcon /> },
   { label: "适配器 (Adapters)", path: "/adapters", icon: <ExtensionIcon /> },
   { label: "DAG 编辑器 (Editor)", path: "/editor", icon: <AccountTreeIcon /> },
+  { label: "数据设计器 (Designer)", path: "/designer", icon: <BuildIcon /> },
 ];
 
 function Shell() {
@@ -67,6 +70,7 @@ function Shell() {
           <Route path="/compute" element={<ComputePage />} />
           <Route path="/adapters" element={<AdaptersPage />} />
           <Route path="/editor" element={<EditorPage />} />
+          <Route path="/designer" element={<DesignerPage />} />
           <Route path="*" element={<Navigate to="/compute" replace />} />
         </Routes>
       </Box>

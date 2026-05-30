@@ -1,9 +1,15 @@
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_ADAPTERS = str(_REPO_ROOT)
+if _ADAPTERS not in sys.path:
+    sys.path.insert(0, _ADAPTERS)
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
@@ -32,12 +38,34 @@ def _save_json(path: Path, data: list[dict[str, Any]]) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def _find_by_name(data: list[dict[str, Any]], name: str) -> int | None:
+    for i, item in enumerate(data):
+        if item.get("名称") == name:
+            return i
+    return None
+
+
+class InverseRequest(BaseModel):
+    type: str
+    values: list[float]
+
+
+class InverseResponse(BaseModel):
+    base: float
+    growth: float
+    divisor: int
+    offset: float
+    special: float | None = None
+    formula: str
+    valid: bool
+    details: str
+
+
 # ── 角色 ──────────────────────────────────────────────
 
 
 @router.get("/characters", summary="获取所有角色列表（精简）")
 async def list_characters():
-    """返回所有角色的摘要信息（不含成长曲线数组）。"""
     raw = _load_json(CHARACTERS_PATH)
     result = []
     for c in raw:
@@ -54,7 +82,6 @@ async def list_characters():
 
 @router.get("/characters/{name}", summary="获取指定角色完整数据")
 async def get_character(name: str):
-    """返回指定名称角色的完整 JSON 数据（含成长曲线）。"""
     name = name.strip()
     raw = _load_json(CHARACTERS_PATH)
     for c in raw:
@@ -65,8 +92,39 @@ async def get_character(name: str):
 
 @router.get("/characters/detail/all", summary="获取所有角色完整数据")
 async def list_characters_full():
-    """返回所有角色的完整 JSON 数据。"""
     return _load_json(CHARACTERS_PATH)
+
+
+@router.post("/characters", summary="新增角色")
+async def create_character(data: dict[str, Any]):
+    raw = _load_json(CHARACTERS_PATH)
+    if _find_by_name(raw, data.get("名称", "")) is not None:
+        raise HTTPException(status_code=409, detail=f"角色 '{data.get('名称')}' 已存在")
+    raw.append(data)
+    _save_json(CHARACTERS_PATH, raw)
+    return {"message": "ok"}
+
+
+@router.put("/characters/{name}", summary="更新角色")
+async def update_character(name: str, data: dict[str, Any]):
+    raw = _load_json(CHARACTERS_PATH)
+    idx = _find_by_name(raw, name)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
+    raw[idx] = data
+    _save_json(CHARACTERS_PATH, raw)
+    return {"message": "ok"}
+
+
+@router.delete("/characters/{name}", summary="删除角色")
+async def delete_character(name: str):
+    raw = _load_json(CHARACTERS_PATH)
+    idx = _find_by_name(raw, name)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
+    raw.pop(idx)
+    _save_json(CHARACTERS_PATH, raw)
+    return {"message": "ok"}
 
 
 # ── 武器 ──────────────────────────────────────────────
@@ -74,7 +132,6 @@ async def list_characters_full():
 
 @router.get("/weapons", summary="获取所有武器列表（精简）")
 async def list_weapons():
-    """返回所有武器的摘要信息（不含成长曲线数组）。"""
     raw = _load_json(WEAPONS_PATH)
     result = []
     for w in raw:
@@ -83,21 +140,15 @@ async def list_weapons():
             "类型": w.get("类型"),
             "星级": w.get("星级"),
         }
-        if "附加属性" in w:
-            entry["附加属性"] = w["附加属性"]
-        if "武器技能" in w:
-            entry["武器技能"] = w["武器技能"]
-        if "普通技能" in w:
-            entry["普通技能"] = w["普通技能"]
-        if "特殊技能" in w:
-            entry["特殊技能"] = w["特殊技能"]
+        for k in ("附加属性", "武器技能", "普通技能", "特殊技能"):
+            if k in w:
+                entry[k] = w[k]
         result.append(entry)
     return result
 
 
 @router.get("/weapons/{name}", summary="获取指定武器完整数据")
 async def get_weapon(name: str):
-    """返回指定名称武器的完整 JSON 数据（含成长曲线）。"""
     name = name.strip()
     raw = _load_json(WEAPONS_PATH)
     for w in raw:
@@ -108,8 +159,39 @@ async def get_weapon(name: str):
 
 @router.get("/weapons/detail/all", summary="获取所有武器完整数据")
 async def list_weapons_full():
-    """返回所有武器的完整 JSON 数据。"""
     return _load_json(WEAPONS_PATH)
+
+
+@router.post("/weapons", summary="新增武器")
+async def create_weapon(data: dict[str, Any]):
+    raw = _load_json(WEAPONS_PATH)
+    if _find_by_name(raw, data.get("名称", "")) is not None:
+        raise HTTPException(status_code=409, detail=f"武器 '{data.get('名称')}' 已存在")
+    raw.append(data)
+    _save_json(WEAPONS_PATH, raw)
+    return {"message": "ok"}
+
+
+@router.put("/weapons/{name}", summary="更新武器")
+async def update_weapon(name: str, data: dict[str, Any]):
+    raw = _load_json(WEAPONS_PATH)
+    idx = _find_by_name(raw, name)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
+    raw[idx] = data
+    _save_json(WEAPONS_PATH, raw)
+    return {"message": "ok"}
+
+
+@router.delete("/weapons/{name}", summary="删除武器")
+async def delete_weapon(name: str):
+    raw = _load_json(WEAPONS_PATH)
+    idx = _find_by_name(raw, name)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
+    raw.pop(idx)
+    _save_json(WEAPONS_PATH, raw)
+    return {"message": "ok"}
 
 
 # ── 装备 ──────────────────────────────────────────────
@@ -117,7 +199,6 @@ async def list_weapons_full():
 
 @router.get("/equipments", summary="获取所有装备列表（精简）")
 async def list_equipments():
-    """返回所有装备的摘要信息。"""
     raw = _load_json(EQUIPMENTS_PATH)
     result = []
     for e in raw:
@@ -135,7 +216,6 @@ async def list_equipments():
 
 @router.get("/equipments/{name}", summary="获取指定装备完整数据")
 async def get_equipment(name: str):
-    """返回指定名称装备的完整 JSON 数据。"""
     name = name.strip()
     raw = _load_json(EQUIPMENTS_PATH)
     for e in raw:
@@ -146,8 +226,39 @@ async def get_equipment(name: str):
 
 @router.get("/equipments/detail/all", summary="获取所有装备完整数据")
 async def list_equipments_full():
-    """返回所有装备的完整 JSON 数据。"""
     return _load_json(EQUIPMENTS_PATH)
+
+
+@router.post("/equipments", summary="新增装备")
+async def create_equipment(data: dict[str, Any]):
+    raw = _load_json(EQUIPMENTS_PATH)
+    if _find_by_name(raw, data.get("名称", "")) is not None:
+        raise HTTPException(status_code=409, detail=f"装备 '{data.get('名称')}' 已存在")
+    raw.append(data)
+    _save_json(EQUIPMENTS_PATH, raw)
+    return {"message": "ok"}
+
+
+@router.put("/equipments/{name}", summary="更新装备")
+async def update_equipment(name: str, data: dict[str, Any]):
+    raw = _load_json(EQUIPMENTS_PATH)
+    idx = _find_by_name(raw, name)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"装备 '{name}' 未找到")
+    raw[idx] = data
+    _save_json(EQUIPMENTS_PATH, raw)
+    return {"message": "ok"}
+
+
+@router.delete("/equipments/{name}", summary="删除装备")
+async def delete_equipment(name: str):
+    raw = _load_json(EQUIPMENTS_PATH)
+    idx = _find_by_name(raw, name)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"装备 '{name}' 未找到")
+    raw.pop(idx)
+    _save_json(EQUIPMENTS_PATH, raw)
+    return {"message": "ok"}
 
 
 # ── 装备过滤与分类 ────────────────────────────────────
@@ -155,7 +266,6 @@ async def list_equipments_full():
 
 @router.get("/equipments/set/{set_name}", summary="按套组名称过滤装备")
 async def get_equipment_by_set(set_name: str):
-    """返回指定套组名称下的所有装备。"""
     raw = _load_json(EQUIPMENTS_PATH)
     result = [e for e in raw if e.get("所属套组") == set_name or e.get("套装") == set_name]
     if not result:
@@ -165,7 +275,6 @@ async def get_equipment_by_set(set_name: str):
 
 @router.get("/equipments/slot/{slot}", summary="按部位过滤装备")
 async def get_equipment_by_slot(slot: str):
-    """返回指定部位的装备列表（护手/护甲/配件）。"""
     raw = _load_json(EQUIPMENTS_PATH)
     return [e for e in raw if e.get("部位") == slot]
 
@@ -175,7 +284,6 @@ async def get_equipment_by_slot(slot: str):
 
 @router.get("/summary", summary="数据摘要统计")
 async def data_summary():
-    """返回角色/武器/装备的数量统计。"""
     chars = _load_json(CHARACTERS_PATH)
     weps = _load_json(WEAPONS_PATH)
     equips = _load_json(EQUIPMENTS_PATH)
@@ -187,3 +295,55 @@ async def data_summary():
         "character_types": list({c.get("类型") for c in chars if c.get("类型")}),
         "weapon_types": list({w.get("类型") for w in weps if w.get("类型")}),
     }
+
+
+# ── 公式反推 ──────────────────────────────────────────
+
+
+@router.post("/inverse", summary="公式反推", response_model=InverseResponse)
+async def inverse_formula(req: InverseRequest):
+    try:
+        from adapters.endfield.calc.damage.inverse import (
+            fit_attribute_formula,
+            fit_skill_formula,
+            fit_skill_formula_no_special,
+            remove_duplicates,
+            validate_attribute_formula,
+            validate_skill_formula,
+        )
+        from adapters.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"逆推引擎导入失败: {e}")
+
+    data = req.values
+    mode = req.type
+
+    try:
+        if mode == "attribute":
+            if len(data) == 94:
+                data = remove_duplicates(data)
+            if len(data) != 90:
+                raise HTTPException(status_code=400, detail=f"属性数据需要90个值，当前{len(data)}个")
+            base, growth, divisor, offset = fit_attribute_formula(data)
+            formula = f"base + floor(({growth} * (lv - 1) + {offset}) / {divisor})"
+            valid = validate_attribute_formula(base, growth, divisor, offset, data)
+            curve = calculate_growth_curve(base, growth, divisor, offset)
+            details = f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}\n已验证: {'✓' if valid else '✗'}\n生成曲线（前10级）: {', '.join(map(str, curve[:10]))}…"
+            return InverseResponse(base=float(base), growth=float(growth), divisor=int(divisor), offset=float(offset), special=None, formula=formula, valid=valid, details=details)
+        elif mode == "skill":
+            if len(data) == 12:
+                base, growth, divisor, offset, special = fit_skill_formula(data)
+            elif len(data) == 9:
+                base, growth, divisor, offset, special = fit_skill_formula_no_special(data)
+            else:
+                raise HTTPException(status_code=400, detail=f"技能数据需要9或12个值，当前{len(data)}个")
+            formula = f"base + floor(({growth} * (lv - 1) + {offset}) / {divisor})"
+            valid = validate_skill_formula(base, growth, divisor, offset, special, data)
+            details = f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}, special={special}\n已验证: {'✓' if valid else '✗'}"
+            return InverseResponse(base=float(base), growth=float(growth), divisor=int(divisor), offset=float(offset), special=float(special), formula=formula, valid=valid, details=details)
+        else:
+            raise HTTPException(status_code=400, detail=f"不支持的逆推类型: {mode}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"逆推计算失败: {e}")
