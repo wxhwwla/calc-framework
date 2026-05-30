@@ -25,8 +25,8 @@ UPLOAD_WORKFLOW = """
 GitHub 上传与版本号（仓库根目录执行: python github_upload_module.py）
 
 1. 版本分工
-   - _VERSION：上传脚本在有「业务改动」并 push 成功时自动递增（第三位 +1 为默认）。
-   - _EXE_VERSION：仅在你重新打包 exe 前手动修改，上传脚本不会改它。
+   - _VERSION：上传脚本在有「业务改动」并 push 成功时自动递增（第三位 +1 为默认）。commit 消息使用此版本。
+   - _EXE_VERSION：GUI 窗口标题与 exe 版本号，仅你手动修改。**git 标签使用此版本**（`--tag` 时）。
    - 第一位 MAJOR：永远只在下方 _VERSION 行手动改，脚本不会动。
 
 2. 何时自动 bump _VERSION
@@ -43,23 +43,30 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 4. 提交说明（临时写在「本文件最下面」）
    - 上传前：脚本根据 git 改动自动生成 # --- UPLOAD_SUMMARY --- 块（勿手删标记行）。
    - commit 消息格式：
-       v1.8.2: 一句话标题
+       v3.11.21: 一句话标题
 
        - 修改 xxx
        - 更新 weapons.json ...
    - push 成功后：脚本删除该总结块（_VERSION 保留）。
    - push 失败：总结块保留，版本不回滚；修好网络后可只 push 或 --no-bump 再传。
 
-5. 常用命令
+5. 发布标签（Tag）
+   - `python github_upload_module.py --tag` 会创建并推送 git 标签。
+   - 标签版本使用 **`_EXE_VERSION`**（如 `v0.6.0-beta`），触发 GitHub Actions 自动构建发行版。
+   - 确保标签被 SSH 签名（需配置签名密钥并添加到 GitHub Signing keys）。
+
+6. 常用命令
    python github_upload_module.py
    python github_upload_module.py --minor
    python github_upload_module.py --no-bump
+   python github_upload_module.py --tag         # 正常推送 + 创建发行版标签
+   python github_upload_module.py --no-bump --tag   # 不 bump 版本 + 创建标签
 
-6. 提交签名（可选，便于 GitHub 显示 Verified）
-   - 若本机已配置 commit.gpgsign 或 user.signingkey，上传脚本会自动签名。
+7. 提交签名（推荐，GitHub Verified）
+   - 若已配置 commit.gpgsign 和 SSH 签名密钥，commit 和 tag 均会自动签名。
    - 未配置时脚本会打印设置提示；见 docs/操作指令集.md §1.5。
 
-7. 从远程覆盖本地（危险，勿误点）
+8. 从远程覆盖本地（危险，勿误点）
    - 仓库根：python github_download_module.py
    - 须完整输入确认词「覆盖本地」才会执行；会 reset --hard 并 clean 未跟踪文件。
 
@@ -209,8 +216,10 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 4 处文件
 # BODY:
 # - 变更 .github/workflows/release.yml
+# - 修改 github_upload_module.py
 # - 修改 please_read_me.py
+# - 修改 upload_meta.py
 # --- END UPLOAD_SUMMARY ---

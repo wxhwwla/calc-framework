@@ -18,6 +18,11 @@ _VERSION_PATTERN = re.compile(
     re.MULTILINE,
 )
 
+_EXE_VERSION_PATTERN = re.compile(
+    r'^(_EXE_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
+    re.MULTILINE,
+)
+
 
 def please_read_me_path(repo_root: Path | None = None) -> Path:
     root = repo_root or Path(__file__).resolve().parent
@@ -40,6 +45,14 @@ def read_version(path: Path) -> str:
     match = _VERSION_PATTERN.search(text)
     if not match:
         raise ValueError(f"未在 {path} 中找到 _VERSION")
+    return match.group(2)
+
+
+def read_exe_version(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    match = _EXE_VERSION_PATTERN.search(text)
+    if not match:
+        raise ValueError(f"未在 {path} 中找到 _EXE_VERSION")
     return match.group(2)
 
 

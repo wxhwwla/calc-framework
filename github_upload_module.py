@@ -569,10 +569,10 @@ def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: boo
     if push_succeeded and created_commit:
         meta.remove_summary_block(readme_path)
         print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
-        print(f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}（_EXE_VERSION 请打包前自行修改）")
+        print(f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}（_EXE_VERSION = {meta.read_exe_version(readme_path)}）")
 
     if push_succeeded and push_tag:
-        version = meta.read_version(readme_path)
+        version = meta.read_exe_version(readme_path)
         _push_tag(version)
 
 

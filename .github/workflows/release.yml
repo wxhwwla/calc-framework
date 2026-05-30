@@ -36,16 +36,16 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $tag_version = $tag -replace '^v', ''
-          $code_version = python -c "import please_read_me; print(please_read_me._VERSION)"
+          $code_version = python -c "import please_read_me; print(please_read_me._EXE_VERSION)"
           echo "tag_version=$tag_version" >> $env:GITHUB_OUTPUT
           echo "code_version=$code_version" >> $env:GITHUB_OUTPUT
           if ($tag_version -ne $code_version) {
-            Write-Error "Tag version v${tag_version} does not match _VERSION ${code_version}"
+            Write-Error "Tag version v${tag_version} does not match _EXE_VERSION ${code_version}"
             exit 1
           }
           Write-Host "Version check passed: v${tag_version}"
-          $exe_version = python -c "import please_read_me; print(please_read_me._EXE_VERSION)"
-          Write-Host "EXE version: v${exe_version}"
+          $source_version = python -c "import please_read_me; print(please_read_me._VERSION)"
+          Write-Host "Source _VERSION: ${source_version}"
 
   test:
     needs: verify-version
