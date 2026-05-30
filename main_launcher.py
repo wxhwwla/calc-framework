@@ -78,8 +78,6 @@ def _discover_adapters() -> list[dict]:
 # ── 入口映射 ─────────────────────────────────────
 _TOOL_ENTRIES: dict[str, tuple[str, str]] = {
     "终末地计算器": ("main.py", "games/endfield/main.py"),
-    "图编辑器": ("main_graph_editor.py", "main_graph_editor.py"),
-    "布局编辑器": ("main_editor.py", "main_editor.py"),
     "数据设计器": ("main_designer.py", "main_designer.py"),
 }
 

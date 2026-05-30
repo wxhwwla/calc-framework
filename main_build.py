@@ -6,7 +6,6 @@
     python main_build.py                     # 默认打包全部
     python main_build.py --target calculator # 仅打包计算器
     python main_build.py --target designer   # 仅打包数据设计器
-    python main_build.py --target layout-editor # 仅打包布局编辑器
 
 输出：
   dist/终末地伤害计算器/  ── 伤害计算器
@@ -165,7 +164,7 @@ def main() -> None:
     apply_platform_win32_patch()
 
     parser = argparse.ArgumentParser(description="终末地伤害计算器 — 打包脚本")
-    parser.add_argument("--target", choices=["calculator", "designer", "layout-editor", "all"], default="all")
+    parser.add_argument("--target", choices=["calculator", "designer", "all"], default="all")
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
     args = parser.parse_args()
 
@@ -174,7 +173,7 @@ def main() -> None:
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     targets: list[BuildTarget] = (
-        ["calculator", "designer", "layout-editor"] if args.target == "all" else [args.target]
+        ["calculator", "designer"] if args.target == "all" else [args.target]
     )
 
     if not args.no_bump:

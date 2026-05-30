@@ -51,14 +51,6 @@ def _tools() -> HelpSection:
 <p>伤害计算主工具。选择角色和武器，查看详细的伤害乘区分析。<br>
 适合日常计算和配装优化。</p>
 
-<h3>图编辑器</h3>
-<p>可视化公式编辑工具。通过拖拽节点和连线来构建计算流程。<br>
-适合高级用户和公式设计者。</p>
-
-<h3>布局编辑器</h3>
-<p>可视化布局编排工具。设计计算器的界面布局。<br>
-适合主题/布局设计者。</p>
-
 <h3>数据设计器</h3>
 <p>数据管理工具。维护角色、武器、装备数据。<br>
 适合数据维护者。</p>
@@ -106,8 +98,6 @@ def _tips() -> HelpSection:
 <ul>
 <li><code>python main.py</code> — 直接启动计算器</li>
 <li><code>python main_designer.py</code> — 直接启动数据设计器</li>
-<li><code>python main_editor.py</code> — 直接启动布局编辑器</li>
-<li><code>python main_graph_editor.py</code> — 直接启动图编辑器</li>
 </ul>
 
 <h3>适配器切换</h3>
