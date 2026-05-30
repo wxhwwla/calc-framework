@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-截图标注工具（PySide6）— 为 YOLO 微调标注终末地 UI 区域。
+截图标注工具（PySide6）— 为 TorchVision 检测模型标注终末地 UI 区域。
 
 用法:
     python -m tools.ocr.label                      # 弹文件夹选择对话框
@@ -369,7 +369,7 @@ class LabelTool(QWidget):
         self._save_btn.clicked.connect(self._save_labels)
         left_layout.addWidget(self._save_btn)
 
-        self._export_btn = QPushButton("📦 导出 YOLO 数据集")
+        self._export_btn = QPushButton("导出标注数据集")
         self._export_btn.setMinimumHeight(36)
         self._export_btn.setStyleSheet(self._btn_style())
         self._export_btn.clicked.connect(self._export_dataset)
@@ -516,7 +516,7 @@ class LabelTool(QWidget):
 
         QMessageBox.information(
             self, "导出完成",
-            f"YOLO 数据集导出到:\n{output}\n\n"
+            f"标注数据集导出到:\n{output}\n\n"
             f"{copied} 张已标注图片\n\n"
             f"可用以下命令训练:\n"
             f"  python -m tools.ocr.train --data {output / 'dataset.yaml'}\n"

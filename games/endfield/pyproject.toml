@@ -38,7 +38,8 @@ build = [
 # OCR 截图识装（可选运行时）
 ocr = [
     "easyocr>=1.7",
-    "ultralytics>=8.0",
+    "torch>=2.0",
+    "torchvision>=0.18",
     "pillow>=10.0",
 ]
 

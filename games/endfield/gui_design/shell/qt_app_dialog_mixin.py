@@ -219,7 +219,7 @@ class DialogMixin:
 
             open_ocr_detection_dialog(self.app, on_apply=_apply_ocr)
         except Exception as exc:
-            QMessageBox.warning(self.app, "截图识装", f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install ultralytics easyocr")
+            QMessageBox.warning(self.app, "截图识装", f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install torchvision easyocr")
 
     def _on_search_history(self) -> None:
         """打开搜索历史浏览对话框。"""

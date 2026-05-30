@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""截图识装检测对话框 — 选择截图文件夹 → YOLO 检测 + OCR 识别 → 映射 → 填入计算器。"""
+"""截图识装检测对话框 — 选择截图文件夹 → TorchVision 检测 + OCR 识别 → 映射 → 填入计算器。"""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ _logger = get_logger("gui.ocr")
 
 
 def run_ocr_detection(folder: str | Path) -> dict[str, Any] | None:
-    """对截图文件夹执行 YOLO 检测 + OCR 识别 + 映射。
+    """对截图文件夹执行目标检测 + OCR 识别 + 映射。
 
     Args:
         folder: 截图文件夹路径
@@ -37,11 +37,11 @@ def run_ocr_detection(folder: str | Path) -> dict[str, Any] | None:
         preset_dict 或 None（识别失败）
     """
     try:
-        from tools.ocr.detector import YOLODetector
+        from tools.ocr.detector import YOLOXDetector
         from tools.ocr.mapper import OcrMapper
         from tools.ocr.recognizer import OCRRecognizer
 
-        detector = YOLODetector("yolov8n.pt", conf_threshold=0.25)
+        detector = YOLOXDetector(conf_threshold=0.25)
         ocr = OCRRecognizer()
         mapper = OcrMapper()
 
@@ -150,12 +150,12 @@ class _DetectionDialog(QDialog):
         self._run_detection()
 
     def _run_detection(self) -> None:
-        """后台运行 YOLO + OCR + 映射。"""
+        """后台运行目标检测 + OCR + 映射。"""
         lines: list[str] = []
         lines.append(f"截图文件夹: {self._folder}")
         try:
-            from tools.ocr.detector import YOLODetector
-            detector = YOLODetector("yolov8n.pt", conf_threshold=0.25)
+            from tools.ocr.detector import YOLOXDetector
+            detector = YOLOXDetector(conf_threshold=0.25)
             batch = detector.detect_folder(
                 str(self._folder),
                 save_json=False,
@@ -194,7 +194,7 @@ class _DetectionDialog(QDialog):
                 lines.append(f"\n→ 未能识别出角色和武器名称")
 
         except ImportError as e:
-            lines.append(f"[错误] 导入失败: {e}\n请运行: pip install ultralytics easyocr")
+            lines.append(f"[错误] 导入失败: {e}\n请运行: pip install torchvision easyocr")
             lines.append("或点击对话框中的「下载 OCR 模型」按钮")
         except Exception as e:
             lines.append(f"[错误] 检测失败: {e}")
@@ -286,7 +286,7 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     layout.setContentsMargins(16, 16, 16, 16)
     layout.setSpacing(8)
 
-    title = QLabel("🔍 截图识装 — YOLO 检测 + OCR 识别")
+    title = QLabel("截图识装 — 目标检测 + OCR 识别")
     title_font = QFont()
     title_font.setPointSize(14)
     title.setFont(title_font)

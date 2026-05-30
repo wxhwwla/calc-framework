@@ -12,7 +12,7 @@
 | matplotlib | matplotlib License (BSD-compatible) | 伤害仪表盘 / 图表渲染 |
 | numpy | BSD-3-Clause | 科学计算（OCR 可选依赖 `[ocr]` 传递依赖；tools/ocr/ 直接使用） |
 | EasyOCR | Apache 2.0 | OCR 截图识装（可选依赖 `[ocr]`） |
-| ultralytics | AGPL-3.0 | YOLO 目标检测（可选依赖 `[ocr]`）；商业使用 YOLO 模型须另行取得许可 |
+| torchvision | BSD-3-Clause | TorchVision 目标检测（可选依赖 `[ocr]`）；替代 AGPL-3.0 的 ultralytics |
 | pillow | HPND (Historical) | 图像处理（可选依赖 `[ocr]` 传递依赖） |
 | pyyaml | MIT | 插件 YAML 配置（可选依赖 `[plugins]`） |
 | PyInstaller | GPL-2.0（含例外） | 仅打包时使用，不随分发物提供；https://pyinstaller.org/ |

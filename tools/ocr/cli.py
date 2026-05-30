@@ -17,7 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .detector import YOLODetector
+from .detector import YOLOXDetector
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -50,32 +50,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _ensure_default_model(model_path: str | None) -> Path:
-    """如果未指定模型，下载 YOLOv8n 作为默认。"""
-    if model_path is not None:
-        return Path(model_path)
-
-    home = Path.home() / ".cache" / "endfield_ocr"
-    home.mkdir(parents=True, exist_ok=True)
-    default_model = home / "yolov8n.pt"
-
-    if not default_model.exists():
-        print(f"[信息] 下载默认模型 YOLOv8n → {default_model}")
-        from ultralytics import YOLO
-        model = YOLO("yolov8n.pt")
-        model.export()  # 触发下载
-        # YOLO 自动缓存到 torch hub，复制到我们的缓存目录
-        import shutil
-        cached = Path.home() / ".cache" / "ultralytics" / "yolov8n.pt"
-        if cached.exists():
-            shutil.copy2(cached, default_model)
-            print("[信息] 默认模型就绪")
-
-    if not default_model.exists():
-        # fallback: 让 YOLO 直接加载名字
-        return Path("yolov8n.pt")
-
-    return default_model
+def _ensure_default_model(model_path: str | None) -> Path | None:
+    """TorchVision 预训练模型无需手动下载，返回 None 表示使用默认。"""
+    return Path(model_path) if model_path else None
 
 
 def _pick_folder_dialog() -> str | None:
@@ -126,33 +103,26 @@ def main(argv: list[str] | None = None) -> None:
 
     # ── 交互选择模型 ──────────────────────────────
     model_path = _ensure_default_model(args.model)
-    if model_path.name == "yolov8n.pt" and not model_path.exists():
-        model_file = _pick_file_dialog()
-        if model_file:
-            model_path = Path(model_file)
-        else:
-            print("[警告] 使用 YOLOv8n 通用模型（非终末地专用）")
-    else:
-        print(f"模型: {model_path}")
+    print(f"模型: {model_path or 'TorchVision 预训练 (MIT 许可)'}")
 
     # ── 初始化检测器 ──────────────────────────────
-    detector = YOLODetector(
-        model_path=str(model_path),
+    detector = YOLOXDetector(
+        model_path=str(model_path) if model_path else None,
         conf_threshold=args.conf,
         iou_threshold=args.iou,
         device=args.device,
     )
-    print(f"类别数: {len(detector.class_names)}")
+    print("推理引擎: TorchVision Faster R-CNN (MIT 许可证)")
     print(f"推理设备: {args.device}")
     print()
 
     # ── 执行检测 ──────────────────────────────────
-    result = detector.detect(
+    detector.detect(
         path=input_path,
         output_dir=args.output,
     )
 
-    print(f"\n检测完成! 类别列表: {detector.class_names[:10]}{'...' if len(detector.class_names) > 10 else ''}")
+    print("\n检测完成!")
 
 
 if __name__ == "__main__":

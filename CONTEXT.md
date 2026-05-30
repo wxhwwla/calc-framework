@@ -89,7 +89,7 @@
 | **数据许可** | `DATA_LICENSE`：商业禁止使用本仓库 JSON；须自行从游戏/Wiki 获取 |
 | **许可结构** | 软件 AGPL-3.0/商业双许可（`LICENSE`）+ 数据单独许可（`DATA_LICENSE`）；发布包须同时附带 |
 | **PySide6 LGPL** | 打包 exe 以动态链接方式使用 Qt，符合 LGPL 要求；须保留 PySide6 版权声明 |
-| **OCR 依赖** | `tools/ocr/` 可选依赖 EasyOCR（Apache 2.0）+ ultralytics（AGPL-3.0）；YOLO 模型商用受限 |
+| **OCR 依赖** | `tools/ocr/` 可选依赖 EasyOCR（Apache 2.0）+ TorchVision（BSD-3-Clause，替代原 AGPL-3.0 ultralytics） |
 
 ## 标准数据录入（四层数据契约）
 
@@ -118,16 +118,16 @@
 
 | 术语 | 含义 |
 |------|------|
-| **OCR 管线** | 截图文件夹 → YOLO 区域检测 → EasyOCR 文字识别 → 模糊匹配 → 一键填入计算器 |
-| **YOLO 区域检测** | `tools/ocr/detector.py`：使用 ultralytics YOLO 模型检测 UI 区域（6 类），输出检测框 |
-| **EasyOCR 文字识别** | `tools/ocr/recognizer.py`：在 YOLO 裁剪区域内做 ch_sim+en 文字识别，附带 `GAME_TERMS` 纠错字典 |
+| **OCR 管线** | 截图文件夹 → TorchVision 目标检测 → EasyOCR 文字识别 → 模糊匹配 → 一键填入计算器 |
+| **TorchVision 目标检测** | `tools/ocr/detector.py`：基于 torchvision Faster R-CNN (MIT/BSD-3-Clause)，输出检测框 |
+| **EasyOCR 文字识别** | `tools/ocr/recognizer.py`：在检测区域内做 ch_sim+en 文字识别，附带 `GAME_TERMS` 纠错字典 |
 | **OcrMapper** | `tools/ocr/mapper.py`：通过 `difflib.get_close_matches` 对 OCR 文本做模糊匹配，输出角色/武器名称、等级、信赖 |
 | **6 类 UI 区域** | `endfield_classes.yaml` 定义：character_panel（角色面板）、weapon_panel（武器面板）、equipment_panel（装备面板）、skill_panel（技能面板）、zone_values（乘区数值）、enemy_panel（敌方面板） |
-| **标注工具** | `tools/ocr/label.py`：PySide6 GUI，在截图上拖拽标注 bounding box，导出 YOLO 格式训练集 |
-| **YOLO 训练** | `tools/ocr/train.py`：基于 ultralytics 对标注数据集 finetune，产出 `.pt` 文件替换 `detector.py` 的默认模型 |
+| **标注工具** | `tools/ocr/label.py`：PySide6 GUI，在截图上拖拽标注 bounding box，导出 COCO 格式训练集 |
+| **TorchVision 训练** | `tools/ocr/train.py`：基于 torchvision 对标注数据集 finetune |
 | **GAME_TERMS** | `recognizer.py` 内的 31 条游戏术语纠错表（如「秋粟→秋栗」「攻击力→攻击力」），提高 OCR 专有名词准确率 |
 | **select_by_name()** | `QtSelectionPanel` 新增方法，按名称级联选择类型/星级/名称 combo，实现一键填入 |
-| **截图识装按钮** | GUI 底栏「截图识装」按钮 → 打开检测对话框 → 选文件夹 → YOLO+OCR → 点击「填入计算器」一键应用 |
+| **截图识装按钮** | GUI 底栏「截图识装」按钮 → 打开检测对话框 → 选文件夹 → TorchVision+OCR → 点击「填入计算器」一键应用 |
 
 ## 通用框架（全品类规划）
 

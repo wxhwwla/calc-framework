@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.12.16"
+_VERSION = "3.12.17"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -216,15 +216,24 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 9 处文件
+# TITLE: 更新 18 处文件
 # BODY:
+# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
+# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
 # - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 NOTICES.md
+# - 修改 framework/tests/ocr/test_detector.py
+# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
+# - 修改 games/endfield/gui_design/shell/qt_app_dialog_mixin.py
+# - 变更 games/endfield/pyproject.toml
 # - 修改 please_read_me.py
-# - 修改 web/backend/api/search.py
-# - 变更 web/frontend/src/api/search.ts
-# - 变更 web/frontend/src/components/LazySection.tsx
-# - 变更 web/frontend/src/components/WebComputeSheet.tsx
-# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
+# - 修改 release_bundle/release_layout.py
+# - 修改 tools/ocr/__init__.py
+# - 修改 tools/ocr/cli.py
+# - 修改 tools/ocr/detector.py
+# - 修改 tools/ocr/label.py
+# - 修改 tools/ocr/train.py
 # --- END UPLOAD_SUMMARY ---

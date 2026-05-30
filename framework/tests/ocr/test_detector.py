@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.ocr.detector import BBox, BatchResult, DetectionResult, YOLODetector
+from tools.ocr.detector import BBox, BatchResult, DetectionResult, YOLOXDetector
 
 # ── 数据类测试 ────────────────────────────────────
 
@@ -79,29 +79,29 @@ class TestBatchResult:
         assert s["class_counts"]["text"] == 1
 
 
-# ── YOLODetector 集成测试 ─────────────────────────
+# ── YOLOXDetector 集成测试 ─────────────────────────
 
 _TEST_IMAGE_DIR = Path(__file__).parents[2] / "tests_ocr_data"
-_HAS_YOLO = False
+_HAS_TORCHVISION = False
 try:
-    d = YOLODetector("yolov8n.pt")
-    _HAS_YOLO = True
+    d = YOLOXDetector()
+    _HAS_TORCHVISION = True
 except Exception:
     pass
 
 
-@pytest.mark.skipif(not _HAS_YOLO, reason="ultralytics/yolov8n.pt 不可用")
-class TestYOLODetectorIntegration:
+@pytest.mark.skipif(not _HAS_TORCHVISION, reason="torch/torchvision 不可用")
+class TestYOLOXDetectorIntegration:
     def test_load_model(self) -> None:
-        d = YOLODetector("yolov8n.pt")
+        d = YOLOXDetector()
         assert d.class_names
-        assert len(d.class_names) == 80
+        assert len(d.class_names) == 81
 
     def test_detect_single_runs(self) -> None:
         img = _TEST_IMAGE_DIR / "test_0.png"
         if not img.exists():
             pytest.skip("测试图片不存在")
-        d = YOLODetector("yolov8n.pt")
+        d = YOLOXDetector()
         r = d.detect_single(img)
         assert r.image_size == (640, 480)
         assert r.inference_ms > 0
@@ -109,10 +109,9 @@ class TestYOLODetectorIntegration:
     def test_detect_folder_creates_outputs(self, tmp_path: Path) -> None:
         if not _TEST_IMAGE_DIR.is_dir():
             pytest.skip("测试图片目录不存在")
-        d = YOLODetector("yolov8n.pt")
+        d = YOLOXDetector()
         batch = d.detect_folder(str(_TEST_IMAGE_DIR), output_dir=str(tmp_path))
         assert batch.total_images > 0
-        # Check output files
         json_files = list(tmp_path.glob("*.json"))
         assert any(f.name == "_summary.json" for f in json_files)
         png_files = list(tmp_path.glob("*_annotated.png"))
@@ -122,14 +121,14 @@ class TestYOLODetectorIntegration:
         img = _TEST_IMAGE_DIR / "test_0.png"
         if not img.exists():
             pytest.skip("测试图片不存在")
-        d = YOLODetector("yolov8n.pt")
+        d = YOLOXDetector()
         r = d.detect(str(img))
         assert isinstance(r, DetectionResult)
 
     def test_detect_auto_folder(self, tmp_path: Path) -> None:
         if not _TEST_IMAGE_DIR.is_dir():
             pytest.skip("测试图片目录不存在")
-        d = YOLODetector("yolov8n.pt")
+        d = YOLOXDetector()
         r = d.detect(str(_TEST_IMAGE_DIR), output_dir=str(tmp_path))
         assert isinstance(r, BatchResult)
         assert r.total_images > 0

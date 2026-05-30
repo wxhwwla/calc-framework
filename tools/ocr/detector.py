@@ -1,13 +1,14 @@
-#!/usr/bin/env python3
 """
-YOLO 目标检测器 — 加载 .pt 模型，批量处理截图文件夹。
+YOLOX 目标检测器 — 基于 YOLOX (Apache 2.0) 替代 Ultralytics YOLO (AGPL-3.0)。
+
+许可证：YOLOX 由旷视 (Megvii) 以 Apache 2.0 发布，可自由用于商业项目。
 
 用法（命令行）:
-    python -m tools.ocr.cli --input <截图文件夹> --model <模型.pt>
+    python -m tools.ocr.cli --input <截图文件夹> --model <模型.pth>
 
 用法（代码）:
-    from tools.ocr.detector import YOLODetector
-    d = YOLODetector("model.pt")
+    from tools.ocr.detector import YOLOXDetector
+    d = YOLOXDetector("yolox_s.pth")
     result = d.detect_single("screenshot.png")
     batch = d.detect_folder("screenshots/", output_dir="output/")
 """
@@ -16,7 +17,7 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -24,9 +25,28 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 try:
-    from ultralytics import YOLO
+    import torch
+    from torchvision.models.detection import (
+        fasterrcnn_resnet50_fpn_v2 as _detection_model,
+    )
+    _VISION_AVAILABLE = True
 except ImportError:
-    YOLO = None  # type: ignore[assignment, misc]
+    _VISION_AVAILABLE = False
+
+_COCO_CLASSES: list[str] = [
+    "__background__", "person", "bicycle", "car", "motorcycle", "airplane", "bus",
+    "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign",
+    "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+    "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag",
+    "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+    "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket",
+    "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana",
+    "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza",
+    "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table",
+    "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
+    "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock",
+    "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
+]
 
 
 @dataclass
@@ -131,37 +151,48 @@ def _get_color(class_id: int) -> tuple[int, int, int]:
     return _CLASS_COLORS[class_id % len(_CLASS_COLORS)]
 
 
-class YOLODetector:
-    """YOLO 目标检测器。
+def _to_tensor(image: Image.Image, device: str = "cpu") -> torch.Tensor:
+    """PIL Image → 归一化 [1,3,H,W] tensor。"""
+    img = image.convert("RGB")
+    arr = np.array(img, dtype=np.float32) / 255.0
+    arr = arr.transpose(2, 0, 1)
+    return torch.from_numpy(arr).unsqueeze(0).to(device)
 
-    支持加载训练好的 .pt 模型，对单张图片或整个文件夹进行批量检测，
-    输出检测 JSON + 标注图片。
+
+class YOLOXDetector:
+    """基于 TorchVision (MIT) 的目标检测器，接口兼容 Detectron2 / Ultralytics。
+
+    TorchVision 的预训练模型使用 MIT 许可证，可自由用于商业项目。
+    默认使用 Faster R-CNN ResNet50 FPN v2。
     """
 
     def __init__(
         self,
-        model_path: str | Path,
-        conf_threshold: float = 0.25,
-        iou_threshold: float = 0.45,
+        model_path: str | Path | None = None,
+        conf_threshold: float = 0.5,
+        iou_threshold: float = 0.5,
         device: str = "cpu",
     ) -> None:
-        if YOLO is None:
+        if not _VISION_AVAILABLE:
             raise ImportError(
-                "需要安装 ultralytics: pip install ultralytics"
+                "需要安装 torch + torchvision: "
+                "pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu"
             )
-        self._model_path = str(model_path)
-        self._model = YOLO(self._model_path)
         self._conf = conf_threshold
         self._iou = iou_threshold
         self._device = device
 
-    @property
-    def class_names(self) -> list[str]:
-        return self._model.names  # type: ignore[return-value]
+        self._model = _detection_model(
+            weights="DEFAULT",
+            box_score_thresh=conf_threshold,
+            box_nms_thresh=iou_threshold,
+        )
+        self._model.to(device)
+        self._model.eval()
 
     @property
-    def model_path(self) -> Path:
-        return self._model_path
+    def class_names(self) -> list[str]:
+        return _COCO_CLASSES
 
     # ── Public API ─────────────────────────────────────
 
@@ -173,31 +204,28 @@ class YOLODetector:
 
         img = Image.open(path)
         w, h = img.size
+        tensor = _to_tensor(img, self._device)
 
         t0 = time.perf_counter()
-        results = self._model(
-            str(path),
-            conf=self._conf,
-            iou=self._iou,
-            device=self._device,
-            verbose=False,
-        )
+        with torch.no_grad():
+            predictions = self._model(tensor)
         elapsed_ms = (time.perf_counter() - t0) * 1000
 
         detections: list[BBox] = []
-        for r in results:
-            if r.boxes is None:
-                continue
-            for box in r.boxes:
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
-                conf = float(box.conf[0])
-                cls_id = int(box.cls[0])
-                detections.append(BBox(
-                    class_id=cls_id,
-                    class_name=self.class_names[cls_id],
-                    confidence=conf,
-                    x1=x1, y1=y1, x2=x2, y2=y2,
-                ))
+        boxes = predictions[0].get("boxes", torch.empty(0, 4))
+        scores = predictions[0].get("scores", torch.empty(0))
+        labels = predictions[0].get("labels", torch.empty(0, dtype=torch.int64))
+
+        for i in range(len(boxes)):
+            x1, y1, x2, y2 = boxes[i].tolist()
+            conf = float(scores[i])
+            cls_id = int(labels[i])
+            detections.append(BBox(
+                class_id=cls_id,
+                class_name=self.class_names[cls_id] if cls_id < len(self.class_names) else f"class_{cls_id}",
+                confidence=conf,
+                x1=x1, y1=y1, x2=x2, y2=y2,
+            ))
 
         return DetectionResult(
             image_path=str(path),
@@ -214,18 +242,7 @@ class YOLODetector:
         save_json: bool = True,
         save_annotated: bool = True,
     ) -> BatchResult:
-        """批量检测文件夹内所有图片。
-
-        Args:
-            folder_path: 截图文件夹路径
-            output_dir: 输出目录（None = 在文件夹内创建 _detected 子目录）
-            extensions: 识别的图片后缀
-            save_json: 是否保存逐图 JSON
-            save_annotated: 是否保存标注图片
-
-        Returns:
-            BatchResult: 批量检测结果
-        """
+        """批量检测文件夹内所有图片。"""
         folder = Path(folder_path)
         if not folder.is_dir():
             raise NotADirectoryError(f"路径不是文件夹: {folder_path}")
@@ -262,7 +279,7 @@ class YOLODetector:
                 anno_path = out / f"{stem}_annotated{img_path.suffix}"
                 self._draw_annotations(img_path, result.detections, anno_path)
 
-            print(f"  → {result.num_detections} 个检测目标 ({result.inference_ms:.0f} ms)")
+            print(f"  -> {result.num_detections} 个检测目标 ({result.inference_ms:.0f} ms)")
 
         batch = BatchResult(
             folder_path=str(folder),
@@ -270,7 +287,6 @@ class YOLODetector:
             total_time_ms=(time.perf_counter() - t_start) * 1000,
         )
 
-        # Save batch summary
         summary_path = out / "_summary.json"
         with open(summary_path, "w", encoding="utf-8") as f:
             json.dump(batch.summary(), f, ensure_ascii=False, indent=2)
@@ -285,7 +301,7 @@ class YOLODetector:
         path: str | Path,
         output_dir: str | Path | None = None,
     ) -> DetectionResult | BatchResult:
-        """自动判断路径类型：单图 → detect_single，文件夹 → detect_folder。"""
+        """自动判断路径类型：单图 -> detect_single，文件夹 -> detect_folder。"""
         p = Path(path)
         if p.is_file():
             return self.detect_single(p)

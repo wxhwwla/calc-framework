@@ -60,7 +60,7 @@ def _calculator_readme(exe_version: str, package_version: str) -> str:
 【数据】adapters/endfield/data/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
 
 GUI 框架：PySide6（LGPL-3.0）。仪表盘：matplotlib。
-可选 OCR 截图识装（tools/ocr/）：EasyOCR（Apache 2.0）、ultralytics YOLO（AGPL-3.0）。
+可选 OCR 截图识装（tools/ocr/）：EasyOCR（Apache 2.0）、TorchVision（MIT，替代 YOLO）。
 
 完整说明：docs/数据来源与许可.md（源码仓库）或 GUI「数据来源与许可」按钮。
 
