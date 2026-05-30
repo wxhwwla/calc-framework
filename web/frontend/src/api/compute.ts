@@ -36,7 +36,7 @@ export async function fetchSchema(name: string): Promise<AdapterAttr[]> {
 
 export async function evaluate(
   adapter: string,
-  context: Record<string, Record<string, number | boolean>>,
+  context: Record<string, Record<string, number | boolean | string>>,
 ): Promise<EvaluateResult> {
   const r = await fetch(`${BASE}/compute/evaluate`, {
     method: "POST",

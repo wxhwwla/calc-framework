@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.12.9"
+_VERSION = "3.12.10"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -216,13 +216,20 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 14 处文件
 # BODY:
-# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
-# - 更新文档 CONTEXT.md
-# - 更新文档 README.md
 # - 修改 please_read_me.py
+# - 修改 web/backend/api/data.py
+# - 修改 web/backend/api/layout.py
+# - 修改 web/backend/main.py
+# - 变更 web/frontend/src/api/compute.ts
+# - 变更 web/frontend/src/api/data.ts
+# - 变更 web/frontend/src/api/layout.ts
+# - 变更 web/frontend/src/components/WebComputeSheet.tsx
+# - 变更 web/frontend/src/components/calculator/AttributeDisplay.tsx
+# - 变更 web/frontend/src/components/calculator/CharacterSelector.tsx
+# - 变更 web/frontend/src/pages/ComputePage.tsx
+# - 变更 web/frontend/src/utils/controlInference.ts
 # --- END UPLOAD_SUMMARY ---

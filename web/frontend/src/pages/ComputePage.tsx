@@ -1,37 +1,174 @@
-import { Box, Button, Grid2 as Grid, Paper } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import AdapterSelector from "../components/compute/AdapterSelector";
-import ParamForm from "../components/compute/ParamForm";
-import ResultPanel from "../components/compute/ResultPanel";
+import { useEffect, useState, useCallback } from "react";
+import { Box, Paper, Grid2 as Grid, Typography } from "@mui/material";
+import CharacterSelector from "../components/calculator/CharacterSelector";
+import AttributeDisplay from "../components/calculator/AttributeDisplay";
+import WebComputeSheet from "../components/WebComputeSheet";
+import type { LayoutDefinition } from "../components/WebComputeSheet";
+import type { DagVariable } from "../utils/controlInference";
 import { useComputeStore } from "../store/computeStore";
+import { fetchLayout, fetchVariables } from "../api/layout";
+import { evaluate } from "../api/compute";
 
 export default function ComputePage() {
-  const runCompute = useComputeStore((s) => s.runCompute);
-  const selectedAdapter = useComputeStore((s) => s.selectedAdapter);
   const loading = useComputeStore((s) => s.loading);
+  const error = useComputeStore((s) => s.error);
+
+  const [selectedChar, setSelectedChar] = useState("");
+  const [selectedWeapon, setSelectedWeapon] = useState("");
+  const [charData, setCharData] = useState<Record<string, unknown> | null>(null);
+  const [weaponData, setWeaponData] = useState<Record<string, unknown> | null>(null);
+
+  const [layout, setLayout] = useState<LayoutDefinition | null>(null);
+  const [variables, setVariables] = useState<Record<string, DagVariable> | null>(null);
+  const [outputValues, setOutputValues] = useState<Record<string, number>>({});
+  const [inputValues, _setInputValues] = useState<Record<string, number | boolean | string>>({});
+
+  useEffect(() => {
+    fetchLayout().then(setLayout).catch(() => {});
+    fetchVariables().then(setVariables).catch(() => {});
+  }, []);
+
+  const handleSelectCharacter = useCallback((name: string, data: Record<string, unknown>) => {
+    setSelectedChar(name);
+    setCharData(data);
+  }, []);
+
+  const handleSelectWeapon = useCallback((name: string, data: Record<string, unknown>) => {
+    setSelectedWeapon(name);
+    setWeaponData(data);
+  }, []);
+
+  /** 从角色/武器 Lv.90 数据中获取属性值 */
+  const getAttr90 = useCallback((data: Record<string, unknown> | null, attr: string): number => {
+    if (!data) return 0;
+    const arr = data[attr];
+    if (Array.isArray(arr)) {
+      const idx = Math.min(89, arr.length - 1);
+      return typeof arr[idx] === "number" ? (arr[idx] as number) : 0;
+    }
+    return typeof arr === "number" ? (arr as number) : 0;
+  }, []);
+
+  const handleEvaluate = useCallback(async () => {
+    const adapter = "终末地伤害计算";
+    const charBaseAtk = getAttr90(charData, "基础攻击力");
+    const weaponBaseAtk = getAttr90(weaponData, "基础攻击力");
+    const charStrength = getAttr90(charData, "力量");
+    const charAgility = getAttr90(charData, "敏捷");
+    const charIntellect = getAttr90(charData, "智识");
+    const charWill = getAttr90(charData, "意志");
+
+    const context: Record<string, Record<string, number | boolean | string>> = {
+      character: {
+        "基础攻击": charBaseAtk,
+        "力量": charStrength,
+        "敏捷": charAgility,
+        "智识": charIntellect,
+        "意志": charWill,
+        "暴击率": 0.05,
+        "暴击伤害": 0.5,
+      },
+      weapon: {
+        "基础攻击": weaponBaseAtk,
+        "攻击力+": 0,
+        "附加攻击力+": 0,
+      },
+      enemy: {
+        "防御": 100,
+      },
+      equipment: {
+        "攻击力平值": 0,
+      },
+      computed: {
+        "主能力平值加算": charStrength,
+        "副能力平值加算": charAgility,
+        "主能力百分比": 0,
+        "副能力百分比": 0,
+        "技能倍率": 1,
+        "伤害加成": 0,
+        "伤害减免": 0,
+        "增幅": 0,
+        "虚弱": 0,
+        "庇护": 0,
+        "脆弱": 0,
+        "易伤": 0,
+        "失衡易伤": 0,
+        "抗性": 0,
+        "非主控减伤": 0,
+        "连击增伤": 0,
+        "特殊乘区": 0,
+        "力量加成值": 0,
+        "敏捷加成值": 0,
+        "智识加成值": 0,
+        "意志加成值": 0,
+      },
+      user_input: {},
+    };
+
+    for (const [path, val] of Object.entries(inputValues)) {
+      const parts = path.split(".");
+      if (parts.length === 2) {
+        const ns = parts[0];
+        const key = parts[1];
+        if (!context[ns]) context[ns] = {};
+        context[ns][key] = val;
+      }
+    }
+
+    try {
+      useComputeStore.setState({ loading: true, error: null });
+      const evalResult = await evaluate(adapter, context);
+      setOutputValues(evalResult.outputs);
+      useComputeStore.setState({ result: evalResult, error: null, loading: false });
+    } catch (e: unknown) {
+      useComputeStore.setState({ error: String(e), loading: false });
+    }
+  }, [charData, weaponData, inputValues, getAttr90]);
 
   return (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Paper sx={{ p: 2 }}>
-          <AdapterSelector />
-          <ParamForm />
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={<PlayArrowIcon />}
-              onClick={runCompute}
-              disabled={!selectedAdapter || loading}
-            >
-              {loading ? "计算中..." : "计算 (Compute)"}
-            </Button>
-          </Box>
-        </Paper>
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        终末地伤害计算器
+      </Typography>
+
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <CharacterSelector
+              selectedChar={selectedChar}
+              selectedWeapon={selectedWeapon}
+              onSelectCharacter={handleSelectCharacter}
+              onSelectWeapon={handleSelectWeapon}
+            />
+          </Paper>
+
+          <AttributeDisplay characterData={charData} weaponData={weaponData} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 7 }}>
+          {layout && variables && (
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                {layout.name}
+              </Typography>
+              <WebComputeSheet
+                layout={layout}
+                variables={variables}
+                onInputChange={() => {}}
+                onEvaluate={handleEvaluate}
+                outputValues={outputValues}
+                loading={loading}
+              />
+            </Paper>
+          )}
+
+          {error && (
+            <Paper sx={{ p: 2, mt: 2 }}>
+              <Typography color="error">{error}</Typography>
+            </Paper>
+          )}
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 8 }}>
-        <ResultPanel />
-      </Grid>
-    </Grid>
+    </Box>
   );
 }
