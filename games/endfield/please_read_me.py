@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.13"
+_VERSION = "3.11.14"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -209,11 +209,20 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 14 处文件
 # BODY:
+# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
+# - 变更 .github/workflows/release.yml
+# - 修改 dag_main.py
+# - 修改 designer_main.py
+# - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/src/calc_framework/ui/theme.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
+# - 修改 framework/tests/adapters/test_card_rpg_adapter.py
 # - 修改 games/endfield/please_read_me.py
-# - 修改 graph_editor_main.py
-# - 修改 main_editor.py
-# - 修改 main_graph_editor.py
-# - 修改 tools/endfield_designer/designer_main.py
+# - 修改 main_build.py
+# - 变更 test_endfield.calcpack
 # --- END UPLOAD_SUMMARY ---

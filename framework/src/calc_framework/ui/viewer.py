@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QAction, QFont
+from PySide6.QtGui import QAction, QActionGroup, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -42,6 +42,7 @@ from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout, Layout
+from calc_framework.ui.theme import ThemeManager
 
 _VARIABLE_FIELD_MAP: dict[str, str] = {
     "基础攻击力": "基础攻击",
@@ -150,13 +151,16 @@ class CalcPackViewer(QMainWindow):
         self._dag_service: DAGService | None = None
         self._layout: Layout | None = None
         self._variables: dict[str, DAGVariable] = {}
-        self._theme: dict[str, Any] = {}
+        self._theme_manager = ThemeManager()
         self._data_files: dict[str, list[dict[str, Any]]] = {}
         self._compute_sheet: ComputeSheet | None = None
         self._entity_selectors: dict[str, QComboBox] = {}
         self._level_spin: QSpinBox | None = None
         self._current_level: int = 90
         self._entity_data: dict[str, dict[str, Any]] = {}
+        self._splitter: QSplitter | None = None
+        self._entity_group: QGroupBox | None = None
+        self._right_panel: QWidget | None = None
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -203,6 +207,7 @@ class CalcPackViewer(QMainWindow):
         splitter.addWidget(right)
 
         splitter.setSizes([220, 580, 200])
+        self._splitter = splitter
         main_layout.addWidget(splitter, stretch=1)
 
         bar = QStatusBar()
@@ -233,6 +238,60 @@ class CalcPackViewer(QMainWindow):
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+
+        theme_menu = mb.addMenu("主题")
+        self._theme_actions: dict[str, QAction] = {}
+        theme_group = QActionGroup(self)
+        theme_group.setExclusive(True)
+        theme_group.triggered.connect(self._on_theme_switched)
+        for key in self._theme_manager.theme_names:
+            display = self._theme_manager.get_theme(key).get("name", key)
+            action = QAction(display, self, checkable=True)
+            action.setData(key)
+            if key == self._theme_manager.current_name:
+                action.setChecked(True)
+            theme_group.addAction(action)
+            theme_menu.addAction(action)
+            self._theme_actions[key] = action
+
+        file_menu.addSeparator()
+        layout_menu = mb.addMenu("布局")
+        toggle_left_action = QAction("切换左侧面板", self)
+        toggle_left_action.setShortcut("Ctrl+B")
+        toggle_left_action.triggered.connect(self._toggle_left_panel)
+        layout_menu.addAction(toggle_left_action)
+        toggle_right_action = QAction("切换右侧面板", self)
+        toggle_right_action.setShortcut("Ctrl+R")
+        toggle_right_action.triggered.connect(self._toggle_right_panel)
+        layout_menu.addAction(toggle_right_action)
+
+    def _on_theme_switched(self, action: QAction) -> None:
+        key = action.data()
+        if key:
+            stylesheet = self._theme_manager.switch(key)
+            self.setStyleSheet(stylesheet)
+            theme = self._theme_manager.get_theme(key)
+            if theme:
+                self._theme_manager.apply_font(theme, self)
+            self._status_label.setText(f"主题切换为: {theme.get('name', key)}")
+
+    def _toggle_left_panel(self) -> None:
+        if self._splitter is None:
+            return
+        sizes = self._splitter.sizes()
+        if sizes[0] > 0:
+            self._splitter.setSizes([0, sizes[0] + sizes[1] + sizes[2], 0])
+        else:
+            self._splitter.setSizes([220, max(400, sizes[1] - 220), max(100, sizes[2])])
+
+    def _toggle_right_panel(self) -> None:
+        if self._splitter is None:
+            return
+        sizes = self._splitter.sizes()
+        if sizes[2] > 0:
+            self._splitter.setSizes([sizes[0], sizes[0] + sizes[1] + sizes[2], 0])
+        else:
+            self._splitter.setSizes([max(100, sizes[0]), max(400, sizes[1] - 200), 200])
 
     def _open_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -269,7 +328,10 @@ class CalcPackViewer(QMainWindow):
             return
         self._layout = load_layout(layout_data)
 
-        self._theme = self._loaded_data.get("ui/theme.json", {})
+        calcpack_theme = self._loaded_data.get("ui/theme.json", {})
+        if calcpack_theme:
+            self._theme_manager.register("calcpack", calcpack_theme)
+            self._theme_manager.switch("calcpack")
 
         self._data_files = {}
         for arcname, data in self._loaded_data.items():
@@ -425,69 +487,28 @@ class CalcPackViewer(QMainWindow):
         )
 
     def _apply_theme(self) -> None:
-        if not self._theme:
-            return
         try:
-            colors = self._theme.get("colors", {})
-            bg = colors.get("background", "#1E1E1E")
-            surface = colors.get("surface", "#2D2D2D")
-            text = colors.get("text", "#F0F0F0")
-            self.setStyleSheet(f"""
-                QMainWindow {{ background-color: {bg}; }}
-                QGroupBox {{
-                    background-color: {surface};
-                    border: 1px solid {colors.get("border", "#3D3D3D")};
-                    border-radius: 6px;
-                    margin-top: 8px;
-                    padding-top: 16px;
-                    font-weight: bold;
-                    color: {text};
-                }}
-                QGroupBox::title {{
-                    subcontrol-origin: margin;
-                    subcontrol-position: top left;
-                    padding: 2px 8px;
-                    color: {text};
-                }}
-                QLabel {{ color: {text}; }}
-                QComboBox, QSpinBox, QDoubleSpinBox {{
-                    background-color: {surface};
-                    color: {text};
-                    border: 1px solid {colors.get("border", "#3D3D3D")};
-                    border-radius: 4px;
-                    padding: 2px 6px;
-                }}
-                QPushButton {{
-                    background-color: {colors.get("primary", "#0078D4")};
-                    color: {text};
-                    border: none;
-                    border-radius: 4px;
-                    padding: 6px 16px;
-                }}
-                QPushButton:hover {{
-                    opacity: 0.9;
-                }}
-                QScrollArea {{ background-color: {bg}; border: none; }}
-                QSlider::groove:horizontal {{
-                    background: {surface};
-                    height: 6px;
-                    border-radius: 3px;
-                }}
-                QSlider::handle:horizontal {{
-                    background: {colors.get("primary", "#0078D4")};
-                    width: 16px;
-                    height: 16px;
-                    margin: -5px 0;
-                    border-radius: 8px;
-                }}
-            """)
-            font_family = self._theme.get("font", {}).get("family", "")
-            font_size = self._theme.get("font", {}).get("size", 0)
-            if font_family:
-                font = QFont(font_family, font_size or 12)
-                self.setFont(font)
+            stylesheet = self._theme_manager.stylesheet()
+            self.setStyleSheet(stylesheet)
+            theme = self._theme_manager.get_theme(self._theme_manager.current_name)
+            if theme:
+                self._theme_manager.apply_font(theme, self)
         except Exception:
             pass
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if self._splitter is None:
+            return
+        width = event.size().width()
+        if width < 800:
+            self._splitter.setSizes([0, width, 0])
+        elif width < 1100:
+            sizes = self._splitter.sizes()
+            if sizes[0] > 180:
+                self._splitter.setSizes([180, width - 360, 180])
+        elif self._splitter.sizes()[0] == 0 and self._splitter.sizes()[2] == 0:
+            self._splitter.setSizes([220, width - 420, 200])
 
 
 def open_calcpack(path: str | Path) -> None:

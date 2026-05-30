@@ -18,8 +18,10 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -120,8 +122,8 @@ def _build_target(
     print(f"  输出: {release_root}")
     print(f"{'=' * 60}")
 
-    work_dir = base_dir / f"build_{target}"
-    spec_path = base_dir / f"{target}.spec"
+    work_dir = tempfile.mkdtemp(prefix=f"build_{target}_")
+    spec_dir = tempfile.mkdtemp(prefix=f"spec_{target}_")
     cmd: list[str] = [
         sys.executable,
         "-m",
@@ -131,7 +133,7 @@ def _build_target(
         f"--name={app_name}",
         f"--distpath={release_root}",
         f"--workpath={work_dir}",
-        f"--specpath={spec_path.parent}",
+        f"--specpath={spec_dir}",
         "--noconfirm",
         "--clean",
     ]
@@ -145,6 +147,10 @@ def _build_target(
     result = _run_with_watchdog(
         cmd, cwd=base_dir, timeout_seconds=timeout, heartbeat_seconds=heartbeat,
     )
+
+    shutil.rmtree(work_dir, ignore_errors=True)
+    shutil.rmtree(spec_dir, ignore_errors=True)
+
     if result.returncode != 0:
         raise RuntimeError(f"PyInstaller 打包 [{target}] 失败 (exit={result.returncode})")
 

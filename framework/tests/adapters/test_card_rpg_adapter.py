@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 _ADAPTER_DIR = Path(__file__).resolve().parents[2] / "adapters" / "card_rpg"
+_ADAPTER_PARENT = _ADAPTER_DIR.parent
 _FRAMEWORK_SRC = Path(__file__).resolve().parents[2] / "src"
 _FRAMEWORK_ROOT = Path(__file__).resolve().parents[2]
 
@@ -19,6 +20,8 @@ if str(_FRAMEWORK_SRC) not in sys.path:
     sys.path.insert(0, str(_FRAMEWORK_SRC))
 if str(_FRAMEWORK_ROOT) not in sys.path:
     sys.path.insert(0, str(_FRAMEWORK_ROOT))
+if str(_ADAPTER_PARENT) not in sys.path:
+    sys.path.insert(0, str(_ADAPTER_PARENT))
 
 from calc_framework.config.adapter import AdapterPackage
 from calc_framework.data.attr_schema import AttributeSchema

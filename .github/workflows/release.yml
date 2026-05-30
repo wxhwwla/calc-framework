@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: games/endfield
+        working-directory: .
     outputs:
       tag_version: ${{ steps.version.outputs.tag_version }}
       code_version: ${{ steps.version.outputs.code_version }}
@@ -25,16 +25,16 @@ jobs:
       - name: Install framework
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ../../framework
+          python -m pip install -e framework
       - name: Install game package
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e games/endfield ".[dev]"
       - name: Check version consistency
         id: version
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
           $tag_version = $tag -replace '^v', ''
-          $code_version = python -c "import please_read_me; print(please_read_me._VERSION)"
+          $code_version = python -c "import sys; sys.path.insert(0,'games/endfield'); import please_read_me; print(please_read_me._VERSION)"
           echo "tag_version=$tag_version" >> $env:GITHUB_OUTPUT
           echo "code_version=$code_version" >> $env:GITHUB_OUTPUT
           if ($tag_version -ne $code_version) {
@@ -42,7 +42,7 @@ jobs:
             exit 1
           }
           Write-Host "Version check passed: v${tag_version}"
-          $exe_version = python -c "import please_read_me; print(please_read_me._EXE_VERSION)"
+          $exe_version = python -c "import sys; sys.path.insert(0,'games/endfield'); import please_read_me; print(please_read_me._EXE_VERSION)"
           Write-Host "EXE version: v${exe_version}"
 
   test:
@@ -50,7 +50,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: games/endfield
+        working-directory: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -59,17 +59,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ../../framework
-          python -m pip install -e ".[dev]"
+          python -m pip install -e framework
+          python -m pip install -e games/endfield ".[dev]"
       - name: Run tests
-        run: python -m pytest tests/ -q --tb=short
+        run: python -m pytest games/endfield/tests/ adapters/endfield/tests/repo/ adapters/endfield/tests/framework/ -q --tb=short
 
   build:
     needs: test
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: games/endfield
+        working-directory: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -78,10 +78,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ../../framework
-          python -m pip install -e ".[dev,build]"
+          python -m pip install -e framework
+          python -m pip install -e games/endfield ".[dev,build]"
       - name: Build release
-        run: python build.py
+        run: python build.py --no-bump
       - name: Package artifact
         shell: pwsh
         run: |
@@ -97,7 +97,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: release-artifact
-          path: games/endfield/dist/终末地伤害计算器_v*.zip
+          path: dist/终末地伤害计算器_v*.zip
 
   publish:
     needs: [build, verify-version]

@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 
 from calc_framework.dag.engine import DAGResult
@@ -32,6 +33,45 @@ from calc_framework.ui.layout import Layout, Section
 from calc_framework.logging import get_logger
 
 logger = get_logger(__name__)
+
+_AVG_ITEM_WIDTH = 280
+
+
+class _ResponsiveGroupBox(QGroupBox):
+    """QGroupBox 子类，根据可用宽度自动重排行内 input 项。"""
+
+    def __init__(
+        self,
+        title: str,
+        items: list[tuple[str, QLabel, QWidget | None, ControlSpec]],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(title, parent)
+        self._items = items
+        self._grid = QGridLayout(self)
+        self._grid.setColumnStretch(1, 1)
+
+    def _on_resized(self) -> None:
+        available = self.width() - 40
+        cols = max(1, available // _AVG_ITEM_WIDTH)
+        cols = cols * 2  # each item takes 2 columns (label + widget)
+
+        while self._grid.count():
+            item = self._grid.takeAt(0)
+            w = item.widget()
+            if w:
+                w.setParent(None)
+
+        for i, (_var_path, label, widget, spec) in enumerate(self._items):
+            row = i // (cols // 2)
+            col_offset = (i % (cols // 2)) * 2
+            self._grid.addWidget(label, row, col_offset)
+            if widget is not None:
+                self._grid.addWidget(widget, row, col_offset + 1)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._on_resized()
 
 
 def _var_to_dict(var: DAGVariable | dict[str, Any]) -> dict[str, Any]:
@@ -193,28 +233,29 @@ class ComputeSheet(QObject):
         root_layout.addStretch()
         return root
 
-    def _build_input_section(self, sec: Section) -> QWidget:
-        group = QGroupBox(sec.title)
-        grid = QGridLayout(group)
-        grid.setColumnStretch(1, 1)
-
-        for i, var_path in enumerate(sec.variables):
+    def _collect_input_items(self, sec: Section) -> list[tuple[str, QLabel, QWidget | None, ControlSpec]]:
+        """收集 section 中的 input 项，用于响应式重排。"""
+        items: list[tuple[str, QLabel, QWidget | None, ControlSpec]] = []
+        for var_path in sec.variables:
             raw_var = self._variables.get(var_path, {})
             var = _var_to_dict(raw_var) if raw_var else {}
             spec = infer_control(var_path, var)
             if spec.widget == "none":
                 continue
-
             label = QLabel(spec.label)
             label.setToolTip(spec.description)
-            grid.addWidget(label, i, 0)
-
             widget = self._create_control(spec)
-            if widget is not None:
-                grid.addWidget(widget, i, 1)
-                self._input_widgets[var_path] = (widget, spec)
+            items.append((var_path, label, widget, spec))
+        return items
 
-        return group
+    def _build_input_section(self, sec: Section) -> QWidget:
+        items = self._collect_input_items(sec)
+        for var_path, _, widget, spec in items:
+            if widget is not None:
+                self._input_widgets[var_path] = (widget, spec)
+        container = _ResponsiveGroupBox(sec.title, items)
+        container._on_resized()
+        return container
 
     def _build_output_section(self, sec: Section) -> QWidget:
         group = QGroupBox(sec.title)
