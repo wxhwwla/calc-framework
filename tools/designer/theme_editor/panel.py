@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from pathlib import Path
 
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 if _project_root not in sys.path:
@@ -249,6 +250,8 @@ class ThemePanel(QWidget):
         if not path:
             return
 
+        asset_files = _collect_asset_files(self._layout_data)
+
         from tools.designer.exporter import export_calcpack
 
         try:
@@ -259,8 +262,28 @@ class ThemePanel(QWidget):
                 layout=self._layout_data,
                 theme=self._build_theme(),
                 data_files=self._data_files,
+                asset_files=asset_files,
             )
             QMessageBox.information(self, "导出成功", f"已写入:\n{result}")
             self.export_requested.emit(result)
         except Exception as e:
             QMessageBox.critical(self, "导出失败", str(e))
+
+
+def _collect_asset_files(layout_data: dict) -> dict[str, str]:
+    """收集 layout 中 donation widget 引用的图片文件。
+
+    Returns:
+        {本地路径: 目标文件名} 映射。
+    """
+    assets: dict[str, str] = {}
+    sections = layout_data.get("sections", []) if isinstance(layout_data, dict) else []
+    for sec in sections:
+        if sec.get("widget_type") == "donation":
+            cfg = sec.get("widget_config", {})
+            raw = (cfg or {}).get("image_path", "")
+            if raw:
+                name = Path(raw).name
+                if name not in assets:
+                    assets[str(Path(raw).resolve())] = name
+    return assets

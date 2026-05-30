@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.12.4"
+_VERSION = "3.12.5"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -216,14 +216,20 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 8 处文件
+# TITLE: 更新 14 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//345/220/210/350/247/204/350/207/252/346/237/245/346/270/205/345/215/225.md"
 # - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
-# - 更新文档 CONTEXT.md
-# - 更新文档 NOTICES.md
+# - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
+# - 修改 games/endfield/gui_design/legal/donation_content.py
+# - 修改 main_build.py
 # - 修改 please_read_me.py
-# - 修改 tools/designer/layout_editor/canvas.py
-# - 修改 tools/endfield_designer/designer_main.py
+# - 修改 release_bundle/release_layout.py
+# - 变更 resources/donation/.gitkeep
+# - 变更 resources/donation/donation_qr.png
+# - 修改 tools/designer/exporter.py
+# - 修改 tools/designer/theme_editor/panel.py
+# - 修改 utils/donation.py
 # --- END UPLOAD_SUMMARY ---

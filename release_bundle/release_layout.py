@@ -57,7 +57,10 @@ def _calculator_readme(exe_version: str, package_version: str) -> str:
 
 【版本】EXE v{exe_version}（源码包 v{package_version}）
 【软件】终末地伤害计算器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
-【数据】character_weapon_equipment/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
+【数据】adapters/endfield/data/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
+
+GUI 框架：PySide6（LGPL-3.0）。仪表盘：matplotlib。
+可选 OCR 截图识装（tools/ocr/）：EasyOCR（Apache 2.0）、ultralytics YOLO（AGPL-3.0）。
 
 完整说明：docs/数据来源与许可.md（源码仓库）或 GUI「数据来源与许可」按钮。
 
@@ -73,7 +76,9 @@ def _designer_readme(exe_version: str, package_version: str) -> str:
 
 【版本】EXE v{exe_version}（源码包 v{package_version}）
 【软件】数据设计器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
-【数据】character_weapon_equipment/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
+【数据】adapters/endfield/data/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
+
+GUI 框架：PySide6（LGPL-3.0）。
 
 本工具用于角色/武器数据的公式反推与数据浏览，不包含伤害计算功能。
 数据与计算器共享同一份 JSON，可放心同时使用。

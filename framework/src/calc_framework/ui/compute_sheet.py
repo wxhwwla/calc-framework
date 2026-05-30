@@ -277,14 +277,14 @@ class ComputeSheet(QObject):
 
     def _build_widget_section(self, sec: Section) -> QWidget:
         if sec.widget_type == "donation":
-            from utils.donation import DonationWidget
+            from utils.donation import DonationWidget, DONATION_IMAGE_PATH
             cfg = sec.widget_config
             group = QGroupBox(sec.title)
             layout = QVBoxLayout(group)
             layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(DonationWidget(
                 text=cfg.get("text", "感谢使用！如果觉得有用，欢迎支持开发者。"),
-                image_path=cfg.get("image_path", ""),
+                image_path=cfg.get("image_path") or DONATION_IMAGE_PATH,
                 parent=group,
             ))
             return group

@@ -140,6 +140,9 @@ def _build_target(
     if extra_args:
         cmd.extend(extra_args)
 
+    donation_data = f"{base_dir / 'resources' / 'donation'};resources/donation"
+    cmd.extend(["--add-data", donation_data])
+
     if target == "calculator":
         cmd.extend([
             "--paths", str(base_dir / "games"),

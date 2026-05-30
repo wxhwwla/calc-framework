@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -106,6 +107,43 @@ def _load_calcpack(path: str | Path) -> dict[str, Any]:
     return result
 
 
+_ASSETS_DIR = "assets/"
+
+
+def _extract_assets_from_calcpack(pack_path: str | Path, target_dir: str | Path) -> dict[str, str]:
+    """从 .calcpack 中提取 assets/ 文件到目标目录。
+
+    Returns:
+        {ZIP 内路径: 解压后完整路径} 的映射。
+    """
+    result: dict[str, str] = {}
+    target = Path(target_dir)
+    with zipfile.ZipFile(str(pack_path), "r") as zf:
+        for name in zf.namelist():
+            if name.startswith(_ASSETS_DIR) and not name.endswith("/"):
+                dest = target / name
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(name) as src, open(dest, "wb") as dst:
+                    dst.write(src.read())
+                result[name] = str(dest)
+    return result
+
+
+def _resolve_asset_paths_in_layout(layout_data: dict[str, Any], asset_map: dict[str, str]) -> dict[str, Any]:
+    """将 layout 中的 assets/ 路径替换为解压后的实际文件路径。"""
+    patched = json.loads(json.dumps(layout_data))
+    sections = patched.get("sections", [])
+    for sec in sections:
+        if sec.get("widget_type") == "donation":
+            cfg = sec.get("widget_config", {})
+            raw = cfg.get("image_path", "")
+            if raw in asset_map:
+                cfg["image_path"] = asset_map[raw]
+            elif raw.startswith(_ASSETS_DIR) and raw in asset_map:
+                cfg["image_path"] = asset_map[raw]
+    return patched
+
+
 def _resolve_field_name(field: str) -> str:
     """将实体数据字段名映射为 DAG context 字段名。
 
@@ -163,6 +201,8 @@ class CalcPackViewer(QMainWindow):
         self._splitter: QSplitter | None = None
         self._entity_group: QGroupBox | None = None
         self._right_panel: QWidget | None = None
+        self._asset_temp_dir: tempfile.TemporaryDirectory | None = None
+        self._calcpack_path: str | None = calcpack_path
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -442,6 +482,16 @@ A: 当前版本通过主题菜单切换预设主题。自定义主题需编辑�
             QMessageBox.critical(self, "加载失败", str(e))
             return
 
+        self._calcpack_path = str(path)
+
+        asset_map: dict[str, str] = {}
+        if self._asset_temp_dir:
+            self._asset_temp_dir.cleanup()
+            self._asset_temp_dir = None
+        temp_dir = tempfile.TemporaryDirectory(prefix="calcpack_assets_")
+        self._asset_temp_dir = temp_dir
+        asset_map = _extract_assets_from_calcpack(path, temp_dir.name)
+
         meta = self._loaded_data.get("meta.json", {})
         self._info_name.setText(meta.get("name", "—"))
         self._info_game.setText(meta.get("game", "—"))
@@ -459,6 +509,8 @@ A: 当前版本通过主题菜单切换预设主题。自定义主题需编辑�
         if not layout_data:
             QMessageBox.critical(self, "加载失败", ".calcpack 缺少 ui/layout.json")
             return
+        if asset_map:
+            layout_data = _resolve_asset_paths_in_layout(layout_data, asset_map)
         self._layout = load_layout(layout_data)
 
         calcpack_theme = self._loaded_data.get("ui/theme.json", {})
@@ -749,6 +801,12 @@ A: 当前版本通过主题菜单切换预设主题。自定义主题需编辑�
             QMessageBox.information(parent, "打包成功", f"插件已打包:\n{result}")
         except Exception as e:
             QMessageBox.critical(parent, "打包失败", f"打包插件时出错:\n{e}")
+
+    def closeEvent(self, event: Any) -> None:
+        if self._asset_temp_dir:
+            self._asset_temp_dir.cleanup()
+            self._asset_temp_dir = None
+        super().closeEvent(event)
 
 
 def open_calcpack(path: str | Path) -> None:
