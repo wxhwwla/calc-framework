@@ -1,0 +1,70 @@
+# Web E2E 测试 — Cypress
+# 启动后端 + 前端 dev server → 运行 Cypress E2E 测试
+
+name: Web E2E
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "web/**"
+      - ".github/workflows/web-e2e.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "web/**"
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "web/frontend/package-lock.json"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e framework
+          python -m pip install -e games/endfield ".[dev]"
+
+      - name: Install frontend dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: TypeScript 编译验证
+        working-directory: web/frontend
+        run: npx tsc --noEmit
+
+      - name: 启动后端 API 服务
+        run: |
+          cd web/backend
+          uvicorn main:app --port 8002 &
+          sleep 5
+          curl -s http://localhost:8002/api/layout -o /dev/null || (echo "Backend failed to start"; exit 1)
+
+      - name: 启动前端 dev server
+        working-directory: web/frontend
+        run: |
+          npx vite --port 5173 &
+          sleep 5
+          curl -s http://localhost:5173 -o /dev/null || (echo "Frontend failed to start"; exit 1)
+
+      - name: 运行 Cypress E2E 测试
+        working-directory: web/frontend
+        run: npx cypress run --e2e --browser=electron
+
+      - name: 上传 Cypress 截图（测试失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: web/frontend/cypress/screenshots/
+          if-no-files-found: ignore

@@ -28,6 +28,8 @@ node_modules/
 # 测试 / 覆盖率
 .pytest_cache/
 pytest-cache-files-*/
+cypress/screenshots/
+cypress/videos/
 .coverage
 htmlcov/
 .tox/
