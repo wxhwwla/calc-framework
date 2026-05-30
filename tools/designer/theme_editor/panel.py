@@ -94,13 +94,24 @@ class ThemePanel(QWidget):
         data_layout = QVBoxLayout(data_group)
         self._data_label = QLabel("未加载数据")
         data_layout.addWidget(self._data_label)
-        load_data_btn = QPushButton("加载数据 JSON")
+
+        self._dag_label = QLabel("未加载 DAG")
+        data_layout.addWidget(self._dag_label)
+
+        self._layout_label = QLabel("未加载 layout")
+        data_layout.addWidget(self._layout_label)
+
+        auto_btn = QPushButton("从其他面板同步数据")
+        auto_btn.clicked.connect(self._sync_from_shared)
+        data_layout.addWidget(auto_btn)
+
+        load_data_btn = QPushButton("手动加载数据 JSON")
         load_data_btn.clicked.connect(self._load_data)
         data_layout.addWidget(load_data_btn)
-        load_dag_btn = QPushButton("加载 DAG JSON")
+        load_dag_btn = QPushButton("手动加载 DAG JSON")
         load_dag_btn.clicked.connect(self._load_dag)
         data_layout.addWidget(load_dag_btn)
-        load_layout_btn = QPushButton("加载 layout.json")
+        load_layout_btn = QPushButton("手动加载 layout.json")
         load_layout_btn.clicked.connect(self._load_layout)
         data_layout.addWidget(load_layout_btn)
         layout.addWidget(data_group)
@@ -119,6 +130,7 @@ class ThemePanel(QWidget):
         try:
             with open(path, encoding="utf-8") as f:
                 self._dag_data = json.load(f)
+            self._dag_label.setText(f"DAG: {os.path.basename(path)} ({len(self._dag_data.get('nodes', {}))} nodes)")
             QMessageBox.information(self, "已加载", f"DAG: {path}")
         except Exception as e:
             QMessageBox.critical(self, "失败", str(e))
@@ -132,6 +144,8 @@ class ThemePanel(QWidget):
         try:
             with open(path, encoding="utf-8") as f:
                 self._layout_data = json.load(f)
+            sections = self._layout_data.get("sections", [])
+            self._layout_label.setText(f"Layout: {os.path.basename(path)} ({len(sections)} sections)")
             QMessageBox.information(self, "已加载", f"Layout: {path}")
         except Exception as e:
             QMessageBox.critical(self, "失败", str(e))
@@ -150,11 +164,48 @@ class ThemePanel(QWidget):
                 self._data_files[name] = data
             else:
                 self._data_files[name] = [data]
-            self._data_label.setText(
-                f"已加载: {', '.join(f'{k}({len(v)}条)' for k, v in self._data_files.items())}"
-            )
+            self._update_data_label()
         except Exception as e:
             QMessageBox.critical(self, "失败", str(e))
+
+    def _update_data_label(self) -> None:
+        self._data_label.setText(
+            f"已加载: {', '.join(f'{k}({len(v)}条)' for k, v in self._data_files.items())}"
+        )
+
+    _shared_data_files: dict[str, list] = {}
+    _shared_dag_data: dict | None = None
+    _shared_layout_data: dict | None = None
+
+    def set_shared_data(
+        self,
+        data_files: dict[str, list],
+        dag_data: dict | None = None,
+        layout_data: dict | None = None,
+    ) -> None:
+        """从其他面板接收共享数据。"""
+        self._shared_data_files = dict(data_files)
+        self._shared_dag_data = dag_data
+        self._shared_layout_data = layout_data
+
+    def _sync_from_shared(self) -> None:
+        """将共享数据同步到加载状态。"""
+        changed = False
+        if self._shared_data_files:
+            self._data_files.update(self._shared_data_files)
+            self._update_data_label()
+            changed = True
+        if self._shared_dag_data and self._dag_data is None:
+            self._dag_data = self._shared_dag_data
+            self._dag_label.setText(f"DAG: 来自适配器 ({len(self._dag_data.get('nodes', {}))} nodes)")
+            changed = True
+        if self._shared_layout_data and self._layout_data is None:
+            self._layout_data = self._shared_layout_data
+            sections = self._layout_data.get("sections", [])
+            self._layout_label.setText(f"Layout: 来自编辑器 ({len(sections)} sections)")
+            changed = True
+        if changed:
+            QMessageBox.information(self, "同步完成", "已从其他面板同步数据")
 
     def _build_theme(self) -> dict:
         return {

@@ -427,3 +427,10 @@ class DataEditorPanel(QWidget):
         for tab_name, tab in self._tabs.items():
             counts.append(f"{tab_name}: {len(tab.entities)}")
         self.setWindowTitle("数据编辑器 — " + " | ".join(counts))
+
+    def get_data_files(self) -> dict[str, list]:
+        result: dict[str, list] = {}
+        for tab_name, tab in self._tabs.items():
+            key = tab._filename.replace("_standard.json", "")
+            result[key] = tab.entities
+        return result

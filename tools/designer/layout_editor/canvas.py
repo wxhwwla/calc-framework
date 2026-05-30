@@ -14,18 +14,18 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from PySide6.QtCore import Qt, QRectF, QPointF, QMimeData, Signal
+from PySide6.QtCore import Qt, QEvent, QMimeData, QPointF, QRectF, Signal
 from PySide6.QtGui import (
-    QBrush, QColor, QDrag, QFont, QLinearGradient, QPainter,
-    QPen, QPixmap,
+    QBrush, QColor, QDrag, QDragEnterEvent, QDropEvent, QFont,
+    QLinearGradient, QPainter, QPen, QPixmap,
 )
 from PySide6.QtWidgets import (
-    QAbstractItemView, QComboBox, QDialog, QDragEnterEvent, QDropEvent,
-    QFileDialog, QFormLayout, QGraphicsItem, QGraphicsRectItem,
-    QGraphicsScene, QGraphicsSceneDragDropEvent, QGraphicsSimpleTextItem,
-    QGraphicsView, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-    QListWidget, QListWidgetItem, QMessageBox, QPushButton,
-    QScrollArea, QSizePolicy, QSpinBox, QSplitter, QVBoxLayout, QWidget,
+    QAbstractItemView, QComboBox, QDialog, QFileDialog, QFormLayout,
+    QGraphicsItem, QGraphicsRectItem, QGraphicsScene,
+    QGraphicsSceneDragDropEvent, QGraphicsSimpleTextItem, QGraphicsView,
+    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+    QListWidgetItem, QMessageBox, QPushButton, QScrollArea,
+    QSizePolicy, QSpinBox, QSplitter, QVBoxLayout, QWidget,
 )
 
 from calc_framework.ui.layout import Layout, Section, load_layout
@@ -264,7 +264,26 @@ class LayoutCanvasPanel(QWidget):
         splitter.addWidget(left)
 
         self._scene = QGraphicsScene()
-        self._view = QGraphicsView(self._scene)
+        self._scene.setSceneRect(0, 0, 3000, 2000)
+
+        class _DropView(QGraphicsView):
+            drop_callback = None
+
+            def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+                if event.mimeData().hasText():
+                    event.acceptProposedAction()
+
+            def dragMoveEvent(self, event: QDragEnterEvent) -> None:
+                if event.mimeData().hasText():
+                    event.acceptProposedAction()
+
+            def dropEvent(self, event: QDropEvent) -> None:
+                if self.drop_callback and event.mimeData().hasText():
+                    self.drop_callback(event.position(), event.mimeData().text())
+                    event.acceptProposedAction()
+
+        self._view = _DropView(self._scene)
+        self._view.drop_callback = self._on_drop_on_canvas
         self._view.setAcceptDrops(True)
         self._view.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
         self._view.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -334,6 +353,34 @@ class LayoutCanvasPanel(QWidget):
         self._section_id_counter = 0
         self._status_label.setText("画布已清空")
         self._emit_layout_changed()
+
+    def _on_drop_on_canvas(self, scene_pos: QPointF, text: str) -> None:
+        var_name = text.split("  [")[0].strip()
+        if not var_name:
+            return
+        scene_pt = self._view.mapToScene(int(scene_pos.x()), int(scene_pos.y()))
+        sec_item = self._find_section_at(scene_pt)
+        if sec_item is None:
+            QMessageBox.information(self, "提示", f"请先将变量拖拽到 Section 区块内。\n先点击左上角「+ 添加 Section」创建区块。")
+            return
+        for existing in sec_item._controls:
+            if existing.var_name == var_name:
+                self._status_label.setText(f"变量已存在: {var_name}")
+                return
+        sec_item.add_control(var_name, var_name)
+        self._status_label.setText(f"已添加变量: {var_name} → {sec_item.section_title}")
+        self._emit_layout_changed()
+
+    def _find_section_at(self, scene_pt: QPointF) -> _SectionItem | None:
+        for item in self._scene.items(scene_pt):
+            if isinstance(item, _SectionItem):
+                return item
+            parent = item.parentItem()
+            while parent:
+                if isinstance(parent, _SectionItem):
+                    return parent
+                parent = parent.parentItem()
+        return None
 
     def _on_selection_changed(self) -> None:
         selected = self._scene.selectedItems()
