@@ -74,7 +74,7 @@
 | **Web 版框架** | `web/frontend/`（React + TypeScript + Vite + MUI v6 + Zustand + React Flow）+ `web/backend/`（FastAPI）。前端接入 DAG 引擎 API，支持适配器选择、参数表单、结果展示、DAG 可视化 |
 | **Upload Script** | `github_upload_module.py`：版本 bump + commit + push（可选 `--minor` / `--no-bump` / `--tag`）。中途终止会残留 `UPLOAD_SUMMARY` 块和 git stash，需手动清理 |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
-| **双目标打包** | `build.py --target {calculator|designer|pack-designer}`：计算器/数据设计器/配置包设计器三个 exe |
+| **三目标打包** | `main_build.py --target {calculator|designer|pack-designer}`：计算器/数据设计器/配置包设计器三个 exe |
 | **终末地数据设计器** | `designer/designer_main.py` — 三个页签：公式反推（InverseTab）、数据编辑（DataEditorTab）、数据浏览（DataBrowserTab）。独立于计算器主 GUI |
 | **DataEditorTab** | `designer/data_editor_tab.py` — 图形化新增/编辑/删除角色、武器、装备，通过 `data.loader` 读写 JSON 并刷新缓存 |
 | **数据来源与许可** | GUI 按钮 + `docs/数据来源与许可.md`；软件 AGPL/商业双许可，数据见 `DATA_LICENSE` |

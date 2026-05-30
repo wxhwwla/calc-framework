@@ -20,6 +20,7 @@
 |------|------|----------|
 | **仓库根** `[根]` | 本目录 | `github_upload_module.py`、`github_download_module.py`、`CONTEXT.md`、许可文件 |
 | **通用框架** `[框架]` | [`framework/`](framework/) | `calc-framework` 独立 pip 包：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器 |
+| **Web 版** `[Web]` | [`web/`](web/) | React + FastAPI 完整 Web 应用（三个 PySide6 GUI 的 Web 版） |
 | **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、审计脚本（`tools/audit/`） |
 | **人类文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构 |
 | **Python 包** `[包]` | `games/endfield/` | `main.py`、`pytest`、`build.py`、包内 `scripts/`（反推、seed） |
@@ -29,7 +30,11 @@
 ```
 [根]/
 ├── framework/                    # [框架] 通用计算框架 calc-framework
-├── games/                         # [包] 游戏适配包
+├── web/                          # [Web] React + FastAPI 前端
+│   ├── backend/                  #   FastAPI 后端（/api/*）
+│   ├── frontend/                 #   React 前端（三个 GUI 的 Web 版）
+│   └── hub/                      #   Calc Hub 静态主页
+├── games/                        # [包] 游戏适配包
 │   └── endfield/                  #   终末地伤害计算器（产品代码与测试）
 ├── docs/                         # 操作指令集、许可、算法说明
 ├── tools/                        # [工具] 仓库级维护（非包内 scripts）
@@ -67,8 +72,30 @@ python github_upload_module.py
 - 角色 / 武器 / **装备** JSON；全量搜索导出至 **`search_output/`**（开发或 exe 同级，非 C 盘临时目录）
 - 公式反推与录入脚本；BWIKI 装备同步
 - GUI「数据来源与许可」：软件 AGPL / 数据许可说明与链接
-- 高级页「工具与分享」（「更多设置」折叠内）：配装预设、操作日志、计算历史、伤害仪表盘（见 [操作指令集 §6.1](docs/操作指令集.md)）
-- BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
+  - 高级页「工具与分享」（「更多设置」折叠内）：配装预设、操作日志、计算历史、伤害仪表盘（见 [操作指令集 §6.1](docs/操作指令集.md)）
+  - BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
+
+## Web 版
+
+三个 PySide6 GUI 的 Web 移植版（React + FastAPI），采用声明式同步策略：
+
+| Web 版 | 对应 PySide6 GUI | 路由 |
+|--------|-----------------|------|
+| 伤害计算器 | `main.py` | `/` |
+| 数据设计器 | `main_designer.py` | `/designer` |
+| 配置包设计器 | `main_pack_designer.py` | `/pack-designer` |
+
+**同步机制**：`layout.json`/`attr_schema.json`/计算引擎/数据文件共享同一份，Web 通过 FastAPI API 调用。
+
+```powershell
+# 启动 Web 后端
+cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload
+
+# 启动 Web 前端（新终端）
+cd web/frontend && npm install && npm run dev
+```
+
+详见 [`docs/操作指令集.md`](docs/操作指令集.md) §1.7 和 [`docs/项目目标.md`](docs/项目目标.md) §P4。
 
 细节与布局说明见 [**详细 README**](games/endfield/README.md)。
 
