@@ -1,0 +1,44 @@
+import { useState } from "react";
+import { Box, Paper, Tabs, Tab, Typography } from "@mui/material";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import PaletteIcon from "@mui/icons-material/Palette";
+import DataEditorTab from "../components/designer/DataEditorTab";
+import EditorPage from "./EditorPage";
+import ThemeExportTab from "../components/pack_designer/ThemeExportTab";
+
+export default function PackDesignerPage() {
+  const [tab, setTab] = useState(0);
+
+  return (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        配置包设计器 (Pack Designer)
+      </Typography>
+
+      <Paper sx={{ mb: 2 }}>
+        <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
+          <Tab icon={<EditNoteIcon />} label="数据录入" />
+          <Tab icon={<AccountTreeIcon />} label="布局编辑" />
+          <Tab icon={<PaletteIcon />} label="主题与导出" />
+        </Tabs>
+      </Paper>
+
+      {tab === 0 && (
+        <Paper sx={{ p: 3 }}>
+          <DataEditorTab />
+        </Paper>
+      )}
+      {tab === 1 && (
+        <Box>
+          <EditorPage />
+        </Box>
+      )}
+      {tab === 2 && (
+        <Paper sx={{ p: 3 }}>
+          <ThemeExportTab />
+        </Paper>
+      )}
+    </Box>
+  );
+}

@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.12.11"
+_VERSION = "3.12.12"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -216,17 +216,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 13 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 修改 please_read_me.py
-# - 修改 web/backend/api/data.py
+# - 修改 web/backend/api/pack.py
+# - 修改 web/backend/api/search.py
+# - 修改 web/backend/main.py
 # - 变更 web/frontend/src/App.tsx
-# - 变更 web/frontend/src/api/designer.ts
-# - 变更 web/frontend/src/components/designer/DataBrowserTab.tsx
-# - 变更 web/frontend/src/components/designer/DataEditorTab.tsx
-# - 变更 web/frontend/src/components/designer/InverseTab.tsx
-# - 变更 web/frontend/src/pages/DesignerPage.tsx
-# - 变更 web/frontend/vite.config.ts
+# - 变更 web/frontend/src/api/pack.ts
+# - 变更 web/frontend/src/api/search.ts
+# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
+# - 变更 web/frontend/src/components/pack_designer/ThemeExportTab.tsx
+# - 变更 web/frontend/src/pages/ComputePage.tsx
+# - 变更 web/frontend/src/pages/PackDesignerPage.tsx
 # --- END UPLOAD_SUMMARY ---

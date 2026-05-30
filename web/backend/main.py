@@ -12,6 +12,8 @@ from api.compute import router as compute_router
 from api.adapters import router as adapters_router
 from api.data import router as data_router
 from api.layout import router as layout_router
+from api.pack import router as pack_router
+from api.search import router as search_router
 
 setup_logging(level="INFO", console=True)
 logger = get_logger(__name__)
@@ -31,6 +33,8 @@ app.include_router(compute_router)
 app.include_router(adapters_router)
 app.include_router(data_router)
 app.include_router(layout_router)
+app.include_router(pack_router)
+app.include_router(search_router)
 
 
 @app.exception_handler(Exception)

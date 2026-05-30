@@ -1,15 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
-import { Box, Paper, Grid2 as Grid, Typography } from "@mui/material";
+import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab } from "@mui/material";
 import CharacterSelector from "../components/calculator/CharacterSelector";
 import AttributeDisplay from "../components/calculator/AttributeDisplay";
 import WebComputeSheet from "../components/WebComputeSheet";
+import SearchPanel from "../components/calculator/SearchPanel";
 import type { LayoutDefinition } from "../components/WebComputeSheet";
 import type { DagVariable } from "../utils/controlInference";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate } from "../api/compute";
+import { fetchWeapons } from "../api/data";
 
 export default function ComputePage() {
+  const [tab, setTab] = useState(0);
   const loading = useComputeStore((s) => s.loading);
   const error = useComputeStore((s) => s.error);
 
@@ -23,9 +26,17 @@ export default function ComputePage() {
   const [outputValues, setOutputValues] = useState<Record<string, number>>({});
   const [inputValues, _setInputValues] = useState<Record<string, number | boolean | string>>({});
 
+  const [allWeapons, setAllWeapons] = useState<any[]>([]);
+  const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
+
   useEffect(() => {
     fetchLayout().then(setLayout).catch(() => {});
     fetchVariables().then(setVariables).catch(() => {});
+    fetchWeapons().then(setAllWeapons).catch(() => {});
+    fetch("/api/search/catalog")
+      .then((r) => r.json())
+      .then(setEquipmentCatalog)
+      .catch(() => {});
   }, []);
 
   const handleSelectCharacter = useCallback((name: string, data: Record<string, unknown>) => {
@@ -38,7 +49,6 @@ export default function ComputePage() {
     setWeaponData(data);
   }, []);
 
-  /** 从角色/武器 Lv.90 数据中获取属性值 */
   const getAttr90 = useCallback((data: Record<string, unknown> | null, attr: string): number => {
     if (!data) return 0;
     const arr = data[attr];
@@ -125,50 +135,82 @@ export default function ComputePage() {
     }
   }, [charData, weaponData, inputValues, getAttr90]);
 
+  const searchParams = {
+    char_data: (charData ?? {}) as Record<string, unknown>,
+    char_level: 90,
+    weapon_level: 90,
+    trust_level: 12,
+    skill_name: "战技",
+    skill_type: "战技",
+    skill_multiplier: 1.0,
+    damage_type: "物理",
+    weapon_scope_label: "同类型",
+    equipment_scope_label: "全部",
+    all_weapons: allWeapons as Record<string, unknown>[],
+    current_weapon: (weaponData ?? {}) as Record<string, unknown>,
+    equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
+    enemy_defense: 100,
+  };
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
         终末地伤害计算器
       </Typography>
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <CharacterSelector
-              selectedChar={selectedChar}
-              selectedWeapon={selectedWeapon}
-              onSelectCharacter={handleSelectCharacter}
-              onSelectWeapon={handleSelectWeapon}
-            />
-          </Paper>
+      <Paper sx={{ mb: 2 }}>
+        <Tabs value={tab} onChange={(_e, v) => setTab(v)}>
+          <Tab label="计算页" />
+          <Tab label="高级页" />
+        </Tabs>
+      </Paper>
 
-          <AttributeDisplay characterData={charData} weaponData={weaponData} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 7 }}>
-          {layout && variables && (
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                {layout.name}
-              </Typography>
-              <WebComputeSheet
-                layout={layout}
-                variables={variables}
-                onInputChange={() => {}}
-                onEvaluate={handleEvaluate}
-                outputValues={outputValues}
-                loading={loading}
+      {tab === 0 && (
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <CharacterSelector
+                selectedChar={selectedChar}
+                selectedWeapon={selectedWeapon}
+                onSelectCharacter={handleSelectCharacter}
+                onSelectWeapon={handleSelectWeapon}
               />
             </Paper>
-          )}
 
-          {error && (
-            <Paper sx={{ p: 2, mt: 2 }}>
-              <Typography color="error">{error}</Typography>
-            </Paper>
-          )}
+            <AttributeDisplay characterData={charData} weaponData={weaponData} />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 7 }}>
+            {layout && variables && (
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  {layout.name}
+                </Typography>
+                <WebComputeSheet
+                  layout={layout}
+                  variables={variables}
+                  onInputChange={() => {}}
+                  onEvaluate={handleEvaluate}
+                  outputValues={outputValues}
+                  loading={loading}
+                />
+              </Paper>
+            )}
+
+            {error && (
+              <Paper sx={{ p: 2, mt: 2 }}>
+                <Typography color="error">{error}</Typography>
+              </Paper>
+            )}
+          </Grid>
         </Grid>
-      </Grid>
+      )}
+
+      {tab === 1 && (
+        <Paper sx={{ p: 3 }}>
+          <SearchPanel currentParams={searchParams as any} />
+        </Paper>
+      )}
     </Box>
   );
 }

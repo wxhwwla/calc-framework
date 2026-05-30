@@ -1,0 +1,232 @@
+import sys
+from pathlib import Path
+from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "framework" / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "adapters"))
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/api/search", tags=["search"])
+
+
+class SearchRequest(BaseModel):
+    char_data: dict[str, Any]
+    char_level: int = 90
+    weapon_level: int = 90
+    trust_level: int = 12
+    skill_name: str
+    skill_type: str
+    skill_multiplier: float
+    damage_type: str
+    weapon_scope_label: str = "同类型"
+    equipment_scope_label: str = "全部"
+    all_weapons: list[dict[str, Any]]
+    current_weapon: dict[str, Any]
+    equipment_catalog: dict[str, list[dict[str, Any]]]
+    fixed_loadout: dict[str, Any] | None = None
+    enemy_defense: float = 100.0
+    top_n: int = 10
+    max_workers: int = 4
+    use_manual_multi_skill_counts: bool = False
+    manual_counts: dict[str, int] | None = None
+    skill_1_level: int = 0
+    skill_2_level: int = 0
+    skill_3_level: int = 0
+    use_expected_crit: bool = False
+    extra_crit_rate: float = 0.0
+    extra_crit_damage: float = 0.0
+
+
+class EstimateRequest(BaseModel):
+    char_data: dict[str, Any]
+    char_level: int = 90
+    weapon_level: int = 90
+    trust_level: int = 12
+    skill_name: str
+    skill_type: str
+    skill_multiplier: float
+    damage_type: str
+    weapon_scope_label: str = "同类型"
+    equipment_scope_label: str = "全部"
+    all_weapons: list[dict[str, Any]]
+    current_weapon: dict[str, Any]
+    equipment_catalog: dict[str, list[dict[str, Any]]]
+    fixed_loadout: dict[str, Any] | None = None
+    enemy_defense: float = 100.0
+    use_manual_multi_skill_counts: bool = False
+    manual_counts: dict[str, int] | None = None
+    skill_1_level: int = 0
+    skill_2_level: int = 0
+    skill_3_level: int = 0
+    use_expected_crit: bool = False
+
+
+class LoadoutResult(BaseModel):
+    weapon_name: str
+    chest: str
+    gloves: str
+    accessory_a: str
+    accessory_b: str
+    final_damage: float
+    segment_breakdown: dict[str, float] | None = None
+
+
+@router.post("/estimate")
+async def estimate_search(req: EstimateRequest):
+    """预估搜索工作量（组合总数 + 预计耗时）。"""
+    try:
+        from calc_framework.config.adapter import AdapterPackage
+
+        from adapters.endfield.calc.loadout.optimizer import optimizer_config_for_character
+        from adapters.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+        from adapters.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs
+        from adapters.endfield.calc.search.plan.estimate import (
+            preview_search_workload,
+            estimate_search_duration,
+        )
+        from adapters.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"导入搜索引擎失败: {e}")
+
+    try:
+        fixed_loadout = FixedLoadoutSelection(**req.fixed_loadout) if req.fixed_loadout else FixedLoadoutSelection()
+
+        inputs = SearchJobInputs(
+            char_data=req.char_data,
+            char_level=req.char_level,
+            weapon_level=req.weapon_level,
+            trust_level=req.trust_level,
+            skill_name=req.skill_name,
+            skill_type=req.skill_type,
+            skill_multiplier=req.skill_multiplier,
+            damage_type=req.damage_type,
+            weapon_scope_label=req.weapon_scope_label,
+            equipment_scope_label=req.equipment_scope_label,
+            all_weapons=req.all_weapons,
+            current_weapon=req.current_weapon,
+            equipment_catalog=req.equipment_catalog,
+            fixed_loadout=fixed_loadout,
+            enemy_defense=req.enemy_defense,
+            use_manual_multi_skill_counts=req.use_manual_multi_skill_counts,
+            skill_1_level=req.skill_1_level,
+            skill_2_level=req.skill_2_level,
+            skill_3_level=req.skill_3_level,
+            manual_counts=req.manual_counts,
+            use_expected_crit=req.use_expected_crit,
+        )
+
+        job, err = prepare_search_job(inputs)
+        if err or job is None:
+            return {"total_combinations": 0, "estimated_seconds": 0, "warning": err or "作业组装失败"}
+
+        from adapters.endfield.calc.search.plan.controller import optimizer_config_for_search_job
+
+        config = optimizer_config_for_search_job(job, top_n=10)
+        preview = preview_search_workload(
+            weapons=list(job.weapon_candidates),
+            equipment_catalog=dict(job.equipment_catalog),
+            config=config,
+        )
+        duration = estimate_search_duration(total_combinations=preview.total_combinations, max_workers=req.max_workers)
+
+        return {
+            "total_combinations": preview.total_combinations,
+            "weapon_count": preview.weapon_count,
+            "loadout_combinations": preview.loadout_combinations,
+            "estimated_seconds": duration.estimated_seconds,
+            "warnings": list(preview.warnings),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"预估失败: {e}")
+
+
+@router.post("/run")
+async def run_search(req: SearchRequest):
+    """执行全量搜索并返回 Top-N 结果。"""
+    try:
+        from adapters.endfield.calc.search.run.runner import SearchRunner
+        from adapters.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs, optimizer_config_for_search_job
+        from adapters.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"导入搜索引擎失败: {e}")
+
+    try:
+        fixed_loadout = FixedLoadoutSelection(**req.fixed_loadout) if req.fixed_loadout else FixedLoadoutSelection()
+
+        inputs = SearchJobInputs(
+            char_data=req.char_data,
+            char_level=req.char_level,
+            weapon_level=req.weapon_level,
+            trust_level=req.trust_level,
+            skill_name=req.skill_name,
+            skill_type=req.skill_type,
+            skill_multiplier=req.skill_multiplier,
+            damage_type=req.damage_type,
+            weapon_scope_label=req.weapon_scope_label,
+            equipment_scope_label=req.equipment_scope_label,
+            all_weapons=req.all_weapons,
+            current_weapon=req.current_weapon,
+            equipment_catalog=req.equipment_catalog,
+            fixed_loadout=fixed_loadout,
+            enemy_defense=req.enemy_defense,
+            use_manual_multi_skill_counts=req.use_manual_multi_skill_counts,
+            skill_1_level=req.skill_1_level,
+            skill_2_level=req.skill_2_level,
+            skill_3_level=req.skill_3_level,
+            manual_counts=req.manual_counts,
+            use_expected_crit=req.use_expected_crit,
+            extra_crit_rate=req.extra_crit_rate,
+            extra_crit_damage=req.extra_crit_damage,
+        )
+
+        job, err = prepare_search_job(inputs)
+        if err or job is None:
+            raise HTTPException(status_code=400, detail=err or "作业组装失败")
+
+        config = optimizer_config_for_search_job(job, top_n=req.top_n)
+
+        result = SearchRunner.run(
+            base_context=job.base_context,
+            weapons=list(job.weapon_candidates),
+            equipment_catalog=dict(job.equipment_catalog),
+            config=config,
+            max_workers=req.max_workers,
+        )
+
+        top_results = []
+        for score in result.top_results:
+            top_results.append(LoadoutResult(
+                weapon_name=score.weapon_name,
+                chest=score.loadout_names.get("chest", ""),
+                gloves=score.loadout_names.get("gloves", ""),
+                accessory_a=score.loadout_names.get("accessory_a", ""),
+                accessory_b=score.loadout_names.get("accessory_b", ""),
+                final_damage=float(score.final_damage),
+                segment_breakdown=dict(score.segment_breakdown) if score.segment_breakdown else None,
+            ))
+
+        return {
+            "top_results": [r.model_dump() for r in top_results],
+            "total_combinations": result.total_combinations,
+            "searched_combinations": result.processed_combinations,
+            "cancelled": result.cancelled,
+            "warnings": list(result.warnings) if hasattr(result, "warnings") else [],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"搜索失败: {e}")
+
+
+@router.get("/catalog")
+async def get_equipment_catalog():
+    """获取装备目录（分部位列表）。"""
+    try:
+        from adapters.endfield.data_loading.equipment_catalog import get_equipment_catalog
+        catalog = get_equipment_catalog()
+        return {
+            key: [{"名称": e.get("名称", ""), "部位": e.get("部位", ""), "所属套组": e.get("所属套组", ""), "稀有度": e.get("稀有度", "")} for e in entries]
+            for key, entries in catalog.items()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取装备目录失败: {e}")
