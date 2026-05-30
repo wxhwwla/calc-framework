@@ -1,0 +1,43 @@
+# Layout 同步一致性验证
+# 当 layout.json / DAG JSON / attr_schema.json 变更时，
+# 验证 Web 端和 PySide6 端能否一致消费 layout 配置。
+
+name: Layout Sync
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "framework/adapters/endfield/ui/layout.json"
+      - "framework/src/calc_framework/configs/endfield_full.dag.json"
+      - "framework/adapters/endfield/attr_schema.json"
+      - "tools/validate_layout_sync.py"
+      - ".github/workflows/layout-sync.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "framework/adapters/endfield/ui/layout.json"
+      - "framework/src/calc_framework/configs/endfield_full.dag.json"
+      - "framework/adapters/endfield/attr_schema.json"
+      - "tools/validate_layout_sync.py"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 运行 layout 结构一致性验证
+        run: python tools/validate_layout_sync.py
+
+      - name: 验证前端 TypeScript 编译
+        working-directory: web/frontend
+        run: |
+          npm ci
+          npx tsc --noEmit
