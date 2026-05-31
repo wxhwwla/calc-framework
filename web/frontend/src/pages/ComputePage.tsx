@@ -11,8 +11,12 @@ import PresetDialog from "../components/calculator/PresetDialog";
 import CritAndAbnormalPanel from "../components/calculator/CritAndAbnormalPanel";
 import PreviewText from "../components/calculator/PreviewText";
 import DamageChart from "../components/calculator/DamageChart";
+import TotalDamagePanel from "../components/calculator/TotalDamagePanel";
 import CalcHistoryDialog from "../components/calculator/CalcHistoryDialog";
 import SearchHistoryDialog from "../components/calculator/SearchHistoryDialog";
+import SkillLevelPanel from "../components/calculator/SkillLevelPanel";
+import WeaponSkillPanel from "../components/calculator/WeaponSkillPanel";
+import CalcModeSelector from "../components/calculator/CalcModeSelector";
 import type { LayoutDefinition } from "../components/WebComputeSheet";
 import type { DagVariable } from "../utils/controlInference";
 import type { EnemyParams } from "../api/search";
@@ -23,7 +27,7 @@ import type { PresetData } from "../components/calculator/PresetDialog";
 import BuildIcon from "@mui/icons-material/Build";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
-import { evaluate } from "../api/compute";
+import { evaluate, fetchSnapshot, type DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
 
 export default function ComputePage() {
@@ -66,6 +70,11 @@ export default function ComputePage() {
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [searchHistoryOpen, setSearchHistoryOpen] = useState(false);
   const [historyEntry, setHistoryEntry] = useState<Record<string, unknown> | null>(null);
+  const [skillLevels, setSkillLevels] = useState<Record<string, number>>({});
+  const [weaponSkillValues, setWeaponSkillValues] = useState<Record<string, number>>({});
+  const [calcMode, setCalcMode] = useState("zone_snapshot");
+  const [damageSnapshot, setDamageSnapshot] = useState<DamageSnapshot | null>(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [allWeapons, setAllWeapons] = useState<any[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
 
@@ -174,6 +183,17 @@ export default function ComputePage() {
       user_input: {},
     };
 
+    context.user_input["calc_mode"] = calcMode;
+
+    for (const [key, val] of Object.entries(skillLevels)) {
+      if (!context.user_input) context.user_input = {};
+      context.user_input[key] = val;
+    }
+    for (const [key, val] of Object.entries(weaponSkillValues)) {
+      if (!context.user_input) context.user_input = {};
+      context.user_input[key] = val;
+    }
+
     for (const [path, val] of Object.entries(inputValues)) {
       const parts = path.split(".");
       if (parts.length === 2) {
@@ -198,10 +218,36 @@ export default function ComputePage() {
       });
 
       useComputeStore.setState({ result: evalResult, error: null, loading: false });
+
+      if (selectedChar && selectedWeapon) {
+        setSnapshotLoading(true);
+        fetchSnapshot({
+          char_name: selectedChar,
+          weapon_name: selectedWeapon,
+          skill_1_level: (skillLevels.skill_1_level as number) ?? 8,
+          skill_2_level: (skillLevels.skill_2_level as number) ?? 8,
+          skill_3_level: (skillLevels.skill_3_level as number) ?? 8,
+          normal_skill_1_level: (weaponSkillValues.normal_skill_1_level as number) ?? 1,
+          normal_skill_2_level: (weaponSkillValues.normal_skill_2_level as number) ?? 1,
+          normal_skill_3_level: (weaponSkillValues.normal_skill_3_level as number) ?? 0,
+          special_skill_1_level: (weaponSkillValues.special_skill_1_level as number) ?? 1,
+          special_skill_1_stack: (weaponSkillValues.special_skill_1_stack as number) ?? 0,
+          special_skill_2_level: (weaponSkillValues.special_skill_2_level as number) ?? 1,
+          special_skill_2_stack: (weaponSkillValues.special_skill_2_stack as number) ?? 0,
+          enemy_defense: enemyParams.enemy_defense,
+          enemy_resistance: enemyParams.enemy_resistance,
+          ignore_resistance: enemyParams.ignore_resistance,
+          imbalance_vulnerability_coeff: enemyParams.imbalance_vulnerability_coeff,
+          is_unbalanced: enemyParams.is_unbalanced,
+        })
+          .then(setDamageSnapshot)
+          .catch(() => {})
+          .finally(() => setSnapshotLoading(false));
+      }
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [charData, weaponData, inputValues, getAttr90]);
+  }, [charData, weaponData, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams, getAttr90]);
 
   const searchParams = {
     char_data: (charData ?? {}) as Record<string, unknown>,
@@ -228,6 +274,9 @@ export default function ComputePage() {
     use_manual_multi_skill_counts: multiSkill.useManualCounts,
     manual_counts: multiSkill.manualCounts,
     use_expected_crit: multiSkill.useExpectedCrit,
+    calc_mode: calcMode,
+    ...skillLevels,
+    ...weaponSkillValues,
   };
 
   return (
@@ -255,9 +304,17 @@ export default function ComputePage() {
               />
             </Paper>
 
+            <SkillLevelPanel charData={charData} onChange={setSkillLevels} />
+
+            <WeaponSkillPanel weaponData={weaponData} onChange={setWeaponSkillValues} />
+
             <AttributeDisplay characterData={charData} weaponData={weaponData} />
 
             <EnemyParamPanel onParamsChange={setEnemyParams} />
+
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <CalcModeSelector value={calcMode} onChange={setCalcMode} />
+            </Paper>
           </Grid>
 
           <Grid size={{ xs: 12, md: 7 }}>
@@ -279,6 +336,10 @@ export default function ComputePage() {
 
             {outputValues && Object.keys(outputValues).length > 0 && (
               <Box sx={{ mt: 2 }}>
+                <TotalDamagePanel
+                  snapshot={damageSnapshot}
+                  loading={snapshotLoading}
+                />
                 <PreviewText
                   outputValues={outputValues}
                   nodeValues={null}

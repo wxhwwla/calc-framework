@@ -623,3 +623,26 @@ pip install python-multipart
 | 2. JS hash 版本 | 浏览器打开页面查看 HTML 中 `<script>` 的 src，对比本地 `dist/index.html` 中是否一致 |
 | 3. 浏览器缓存 | 按 `Ctrl+F5` 强制刷新（不是普通 F5） |
 | 4. 确认 Web App 已 Reload | 去 PythonAnywhere Web 页面点 Reload |
+
+### 6. WSGI 中文 URL 路径乱码（角色/武器选不上）
+
+PythonAnywhere 的 uWSGI 服务器在解码 URL 中的中文字符时，会用 Latin-1（ISO-8859-1）误解码 UTF-8 编码的路径。例如 `%E9%99%88%E5%8D%83%E8%AF%AD`（陈千语）被解码为 `éåè¯­` 而不是 `陈千语`。
+
+**症状**：前端角色/武器选择下拉能看到列表，但选择后无反应（JS 控制台有 404 错误）。
+
+**修复方法**：在 WSGI 文件的 `_handle_api` 函数开头添加一行转码：
+
+```python
+def _handle_api(environ, start_response):
+    path = environ.get("PATH_INFO", "")
+    # 修复中文路径乱码：uWSGI 用 Latin-1 解码了 UTF-8 路径
+    try:
+        path = path.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        pass
+    # ... 后续代码不变
+```
+
+改完后在 PythonAnywhere Web 页面点 **Reload** 即可生效。
+
+> **注意**：此问题只影响 PythonAnywhere 部署环境。本地开发（Vite + FastAPI）不受影响，因为 FastAPI/Starlette 正确处理了 UTF-8 URL 编码。
