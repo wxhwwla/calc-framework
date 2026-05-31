@@ -52,15 +52,10 @@ TARGET_APP_NAMES: dict[BuildTarget, str] = {
 
 
 TARGET_ENTRIES: dict[BuildTarget, str] = {
-
-    "calculator": "main.py",
-
-    "designer": "main_designer.py",
-
-    "pack-designer": "main_pack_designer.py",
-
+    "calculator": "scripts/main.py",
+    "designer": "scripts/main_designer.py",
+    "pack-designer": "scripts/main_pack_designer.py",
     "local-backend": "web/backend/run_packaged_main.py",
-
 }
 
 
@@ -326,7 +321,7 @@ def stage_release_folder(
 
 def _read_release_versions() -> tuple[str, str]:
 
-    from please_read_me import get_exe_version, get_version
+    from scripts.please_read_me import get_exe_version, get_version
 
     return get_exe_version(), get_version()
 

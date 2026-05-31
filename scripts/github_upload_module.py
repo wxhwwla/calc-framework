@@ -1,4 +1,4 @@
-﻿# SPDX-License-Identifier: AGPL-3.0
+# SPDX-License-Identifier: AGPL-3.0
 
 
 #!/usr/bin/env python3
@@ -105,9 +105,13 @@ def _package_path() -> Path:
 
 
 def _import_upload_meta():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _path_setup import ensure_root
+    ensure_root()
 
     import upload_meta  # noqa: E402
-
     return upload_meta
 
 
@@ -214,7 +218,7 @@ def run_git(
 
 def _repo_root() -> str:
 
-    return os.path.dirname(os.path.abspath(__file__))
+    return str(Path(__file__).resolve().parent.parent)
 
 
 

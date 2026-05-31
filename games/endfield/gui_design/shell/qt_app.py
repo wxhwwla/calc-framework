@@ -20,7 +20,7 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from please_read_me import get_exe_version
+from scripts.please_read_me import get_exe_version
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (

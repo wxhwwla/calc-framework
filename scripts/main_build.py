@@ -53,13 +53,13 @@ from pathlib import Path
 
 
 
-_REPO_ROOT = Path(__file__).resolve().parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_SCRIPTS = _REPO_ROOT / "scripts"
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
 
-if str(_REPO_ROOT) not in sys.path:
-
-    sys.path.insert(0, str(_REPO_ROOT))
-
-
+from _path_setup import ensure_root
+ensure_root()
 
 _GAMES = _REPO_ROOT / "games" / "endfield"
 
@@ -378,7 +378,7 @@ def main() -> None:
     parser.add_argument("--no-frontend-build", action="store_true", help="local-backend 时跳过前端构建")
     args = parser.parse_args()
 
-    base_dir = Path(__file__).resolve().parent
+    base_dir = _REPO_ROOT
     dist_dir = base_dir / "dist"
     dist_dir.mkdir(parents=True, exist_ok=True)
 

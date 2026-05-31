@@ -202,7 +202,7 @@ class TestHelpers:
         # Should return the repo root (parent of utils/)
         target = _get_target_dir()
         assert (target / "utils").is_dir()
-        assert (target / "main_launcher.py").exists()
+        assert (target / "scripts" / "main_launcher.py").exists()
 
     def test_generate_replace_script(self) -> None:
         script = _generate_replace_script(

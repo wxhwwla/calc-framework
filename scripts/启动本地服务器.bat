@@ -40,7 +40,7 @@ echo   关闭此窗口即可停止服务器
 echo.
 echo ========================================
 echo.
-call python web/run_local.py
+call python ..\web\run_local.py
 
 if %errorlevel% neq 0 (
     echo.

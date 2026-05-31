@@ -24,7 +24,7 @@ body:
       label: 复现步骤
       description: 按顺序列出操作，他人可按此复现。
       placeholder: |
-        1. 启动 `python main.py`
+        1. 启动 `python scripts/main.py`
         2. 选择角色「…」、武器「…」
         3. 点击「…」
         4. 看到 …
@@ -101,6 +101,6 @@ body:
     attributes:
       label: 补充信息（可选）
       options:
-        - label: 仅开发环境（`python main.py`）可复现
+        - label: 仅开发环境（`python scripts/main.py`）可复现
         - label: 打包 exe 也可复现
         - label: 我已阅读 [`docs/操作指令集.md`](docs/操作指令集.md) 中相关说明

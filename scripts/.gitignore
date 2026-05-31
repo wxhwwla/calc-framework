@@ -1,0 +1,15 @@
+git_key.txt
+git_key.txt
+.git-upload-msg.txt
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.spec
+*.exe
+终末地伤害计算器.exe
+*.log
+debug.log
+skills-lock.json
+.pytest_cache/

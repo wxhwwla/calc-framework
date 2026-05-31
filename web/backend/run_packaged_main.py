@@ -34,9 +34,7 @@ _setup_paths()
 
 import uvicorn
 
-import main
-
-app = main.app
+from web.backend.main import app
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8180"))

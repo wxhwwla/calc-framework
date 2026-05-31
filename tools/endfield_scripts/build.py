@@ -69,7 +69,7 @@ if str(_REPO_BUILD_ROOT) not in sys.path:
 
 
 
-from please_read_me import get_exe_version, get_version
+from scripts.please_read_me import get_exe_version, get_version
 
 from release_bundle.release_layout import (
 

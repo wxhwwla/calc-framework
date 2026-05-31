@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.2"
+_VERSION = "3.15.4"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -427,139 +427,56 @@ def show_help() -> None:
 
 
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _path_setup import ensure_root
+ensure_root()
+
 if __name__ == "__main__":
 
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 128 处文件
+# TITLE: 更新 39 处文件
 # BODY:
-# - 变更 framework/pyproject.toml
-# - 修改 framework/src/calc_framework/__init__.py
-# - 修改 framework/src/calc_framework/config/__init__.py
-# - 修改 framework/src/calc_framework/dag/__init__.py
-# - 修改 framework/src/calc_framework/data/__init__.py
-# - 修改 framework/src/calc_framework/editor/__init__.py
-# - 修改 framework/src/calc_framework/errors.py
-# - 修改 framework/src/calc_framework/graph_editor/__init__.py
-# - 修改 framework/src/calc_framework/inverse/__init__.py
-# - 修改 framework/src/calc_framework/plugin/__init__.py
-# - 修改 framework/src/calc_framework/publish/__init__.py
-# - 修改 framework/src/calc_framework/search/__init__.py
-# - 修改 framework/src/calc_framework/ui/__init__.py
-# - 修改 framework/tests/__init__.py
-# - 修改 framework/tests/config/__init__.py
-# - 修改 framework/tests/conftest.py
-# - 修改 framework/tests/dag/__init__.py
-# - 修改 framework/tests/data/__init__.py
-# - 修改 framework/tests/editor/__init__.py
-# - 修改 framework/tests/graph_editor/__init__.py
-# - 修改 framework/tests/graph_editor/conftest.py
-# - 修改 framework/tests/inverse/__init__.py
-# - 修改 framework/tests/ocr/__init__.py
-# - 修改 framework/tests/plugin/__init__.py
-# - 修改 framework/tests/search/__init__.py
-# - 修改 framework/tests/ui/__init__.py
-# - 修改 framework/tests/utils/__init__.py
-# - 修改 games/__init__.py
-# - 修改 games/endfield/__init__.py
-# - 修改 games/endfield/calc/__init__.py
-# - 修改 games/endfield/calc/core/__init__.py
-# - 修改 games/endfield/calc/damage/__init__.py
-# - 修改 games/endfield/calc/damage/engine/__init__.py
-# - 修改 games/endfield/calc/damage/inverse/__init__.py
-# - 修改 games/endfield/calc/equipment/__init__.py
-# - 修改 games/endfield/calc/loadout/__init__.py
-# - 修改 games/endfield/calc/loadout/optimizer/__init__.py
-# - 修改 games/endfield/calc/manual_buff/__init__.py
-# - 修改 games/endfield/calc/multi_skill/__init__.py
-# - 修改 games/endfield/calc/multi_skill/optimizer/__init__.py
-# - 调整乘区逻辑 games/endfield/calc/multiplicative_zones/__init__.py
-# - 修改 games/endfield/calc/search/__init__.py
-# - 修改 games/endfield/calc/search/evaluate/__init__.py
-# - 修改 games/endfield/calc/search/persist/__init__.py
-# - 修改 games/endfield/calc/search/plan/__init__.py
-# - 修改 games/endfield/calc/search/run/__init__.py
-# - 修改 games/endfield/calc/skills/__init__.py
-# - 修改 games/endfield/calc/skills/special_fields/__init__.py
-# - 修改 games/endfield/data_loading/__init__.py
-# - 修改 games/endfield/gui_design/__init__.py
-# - 修改 games/endfield/gui_design/app/__init__.py
-# - 修改 games/endfield/gui_design/controls/__init__.py
-# - 修改 games/endfield/gui_design/controls/enemy/__init__.py
-# - 修改 games/endfield/gui_design/controls/enhancement/__init__.py
-# - 修改 games/endfield/gui_design/controls/manual_buff/__init__.py
-# - 修改 games/endfield/gui_design/controls/multi_skill/__init__.py
-# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
-# - 修改 games/endfield/gui_design/controls/search/__init__.py
-# - 修改 games/endfield/gui_design/layout/__init__.py
-# - 修改 games/endfield/gui_design/legal/__init__.py
-# - 修改 games/endfield/gui_design/panels/__init__.py
-# - 修改 games/endfield/gui_design/panels/selection/__init__.py
-# - 修改 games/endfield/gui_design/panels/special_ability/__init__.py
-# - 修改 games/endfield/gui_design/presentation/__init__.py
-# - 修改 games/endfield/gui_design/presentation/display/__init__.py
-# - 修改 games/endfield/gui_design/presentation/preview/__init__.py
-# - 修改 games/endfield/gui_design/shared/__init__.py
-# - 修改 games/endfield/gui_design/shell/__init__.py
-# - 变更 games/endfield/pyproject.toml
-# - 修改 games/endfield/tests/conftest.py
-# - 修改 games/endfield/tests/gui_design/controls/search/__init__.py
-# - 修改 games/endfield/tests/gui_design/panels/selection/__init__.py
-# - 修改 github_download_module.py
-# - 修改 please_read_me.py
-# - 修改 release_bundle/__init__.py
-# - 修改 tools/__init__.py
-# - 修改 tools/bwiki_scout/__init__.py
-# - 修改 tools/bwiki_scout/api.py
-# - 修改 tools/bwiki_scout/backfill_weapon_max_stack.py
-# - 修改 tools/bwiki_scout/compare_stats.py
-# - 修改 tools/bwiki_scout/config.py
-# - 修改 tools/bwiki_scout/detail_levels.py
-# - 修改 tools/bwiki_scout/equipment_sync.py
-# - 修改 tools/bwiki_scout/equipment_wiki.py
-# - 修改 tools/bwiki_scout/gallery.py
-# - 修改 tools/bwiki_scout/import_targets.py
-# - 修改 tools/bwiki_scout/json_scan.py
-# - 修改 tools/bwiki_scout/local_schema.py
-# - 修改 tools/bwiki_scout/migrate_weapon_special_json.py
-# - 修改 tools/bwiki_scout/names.py
-# - 修改 tools/bwiki_scout/parse_draft.py
-# - 修改 tools/bwiki_scout/pkg_bootstrap.py
-# - 修改 tools/bwiki_scout/report.py
-# - 修改 tools/bwiki_scout/scout.py
-# - 修改 tools/bwiki_scout/seed_persist.py
-# - 修改 tools/bwiki_scout/skill_tables.py
-# - 修改 tools/bwiki_scout/storage.py
-# - 修改 tools/bwiki_scout/sync_all.py
-# - 修改 tools/bwiki_scout/sync_equipments.py
-# - 修改 tools/bwiki_scout/sync_operators.py
-# - 修改 tools/bwiki_scout/sync_weapons.py
-# - 修改 tools/bwiki_scout/weapon_wiki.py
-# - 修改 tools/bwiki_scout/wiki_sync.py
-# - 修改 tools/check_code_origin.py
-# - 修改 tools/check_layout.py
-# - 修改 tools/check_optional_deps.py
-# - 修改 tools/data_pipeline/__init__.py
-# - 修改 tools/data_pipeline/readers/__init__.py
-# - 修改 tools/data_pipeline/transformers/__init__.py
-# - 修改 tools/data_pipeline/validators/__init__.py
-# - 修改 tools/designer/__init__.py
-# - 修改 tools/designer/data_editor/__init__.py
-# - 修改 tools/designer/layout_editor/__init__.py
-# - 修改 tools/designer/theme_editor/__init__.py
-# - 修改 tools/endfield_designer/__init__.py
-# - 修改 tools/endfield_scripts/__init__.py
-# - 修改 tools/gen_architecture_review_html.py
-# - 修改 tools/migrate_weapon_skills_schema.py
-# - 修改 tools/ocr/__init__.py
-# - 修改 tools/rename_pkg.py
-# - 修改 tools/replace_adapters_imports.py
-# - 修改 tools/replace_docs.py
-# - 修改 tools/replace_paths.py
-# - 修改 utils/__init__.py
-# - 修改 utils/gui/__init__.py
-# - 修改 web/backend/api/history.py
-# - 修改 web/backend/api/ocr.py
-# - 修改 web/backend/hub/__init__.py
+# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "scripts//345/220/257/345/212/250/346/234/254/345/234/260/346/234/215/345/212/241/345/231/250.bat"
+# - 变更 .github/ISSUE_TEMPLATE/bug_report.yml
+# - 变更 .github/workflows/release.yml
+# - 修改 build.py
+# - 修改 devtool.py
+# - 修改 framework/tests/utils/test_updater.py
+# - 修改 games/endfield/gui_design/shell/qt_app.py
+# - 修改 games/endfield/tests/gui_design/legal/test_donation_qt.py
+# - 修改 games/endfield/tests/repo/test_build_watchdog.py
+# - 修改 games/endfield/tests/tools/test_upload_meta.py
+# - 修改 installer/build_installer.py
+# - 修改 main.py
+# - 修改 main_designer.py
+# - 修改 main_launcher.py
+# - 修改 main_pack_designer.py
+# - 修改 release_bundle/release_layout.py
+# - 变更 scripts/.gitignore
+# - 修改 scripts/__init__.py
+# - 修改 scripts/_path_setup.py
+# - 修改 scripts/build.py
+# - 修改 scripts/devtool.py
+# - 修改 scripts/github_download_module.py
+# - 修改 scripts/github_upload_module.py
+# - 变更 scripts/launcher.pyw
+# - 修改 scripts/main.py
+# - 修改 scripts/main_build.py
+# - 修改 scripts/main_designer.py
+# - 修改 scripts/main_launcher.py
+# - 修改 scripts/main_pack_designer.py
+# - 修改 scripts/please_read_me.py
+# - 修改 scripts/upload_meta.py
+# - 修改 scripts/version.py
+# - 修改 tools/endfield_scripts/build.py
+# - 修改 upload_meta.py
+# - 修改 version.py
+# - 修改 web/backend/run_packaged_main.py
 # --- END UPLOAD_SUMMARY ---

@@ -156,7 +156,7 @@ def run_git(
 
 def _repo_root() -> str:
 
-    return os.path.dirname(os.path.abspath(__file__))
+    return str(Path(__file__).resolve().parent.parent)
 
 
 
@@ -481,6 +481,12 @@ def main() -> None:
 
 
 
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _path_setup import ensure_root
+ensure_root()
 
 if __name__ == "__main__":
 

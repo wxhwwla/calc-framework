@@ -1,5 +1,5 @@
 # Release — 终末地伤害计算器打包发布
-# 包路径：games/endfield/，build.py 在根目录，please_read_me.py 在根目录
+# 包路径：games/endfield/，build.py 在 scripts/，please_read_me.py 在 scripts/
 # 触发方式：python github_upload_module.py --tag（本地创建并推送已签名的 tag）
 # Verified 保障：tag 由上传脚本带 -s 签名，推送后 GitHub 应显示 Verified 标记
 
@@ -36,7 +36,7 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $tag_version = $tag -replace '^v', ''
-          $code_version = python -c "import please_read_me; print(please_read_me._EXE_VERSION)"
+          $code_version = python -c "import sys; sys.path.insert(0, 'scripts'); import please_read_me; print(please_read_me._EXE_VERSION)"
           echo "tag_version=$tag_version" >> $env:GITHUB_OUTPUT
           echo "code_version=$code_version" >> $env:GITHUB_OUTPUT
           if ($tag_version -ne $code_version) {
@@ -44,7 +44,7 @@ jobs:
             exit 1
           }
           Write-Host "Version check passed: v${tag_version}"
-          $source_version = python -c "import please_read_me; print(please_read_me._VERSION)"
+          $source_version = python -c "import sys; sys.path.insert(0, 'scripts'); import please_read_me; print(please_read_me._VERSION)"
           Write-Host "Source _VERSION: ${source_version}"
 
   test:
@@ -83,7 +83,7 @@ jobs:
           python -m pip install -e framework
           python -m pip install -e games/endfield ".[dev,build]"
       - name: Build release
-        run: python build.py --no-bump
+        run: python scripts/build.py --no-bump
       - name: Package ZIP artifacts
         shell: pwsh
         run: |
@@ -107,7 +107,7 @@ jobs:
       - name: Build NSIS installer
         shell: pwsh
         run: |
-          python devtool.py installer build --version "${{ needs.verify-version.outputs.tag_version }}"
+          python scripts/devtool.py installer build --version "${{ needs.verify-version.outputs.tag_version }}"
         continue-on-error: true
 
       - name: List dist artifacts
