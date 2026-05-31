@@ -10,7 +10,7 @@ for _p in [str(_FRAMEWORK_SRC), str(_REPO_ROOT)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from main import app
+from .main import app
 
 # PythonAnywhere 要求 ASGI application 名为 application
 application = app

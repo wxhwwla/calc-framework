@@ -14,7 +14,7 @@
 
 | 文件 | sys.path hack | 实际用途 | 分类 |
 |------|---------------|----------|------|
-| `web/backend/main.py` | `framework/src` | `from calc_framework.logging import …` | 入口，需保留 |
+| `web/backend/main.py` | `framework/src` | `from calc_framework.logging import …` | 入口（现通过 `_path_setup.py` 集中处理） |
 | `web/backend/api/compute.py` | `framework/src` | `from calc_framework.config.manager import …` | **冗余**—main.py 已设 |
 | `web/backend/api/adapters.py` | `framework/src` | `from calc_framework.config.manager import …` | **冗余**—main.py 已设 |
 | `web/backend/api/search.py` | `framework/src` + `repo_root` | `from calc_framework.*`、`from calc_engine.*`（lazy import） | **冗余**—main.py 仅设了 framework/src，缺少 repo_root |
@@ -72,7 +72,7 @@
 
 重构后：
   _path_setup.py → 集中设置 framework/src + repo_root
-  main.py        → from ._path_setup import *
+  main.py        → from . import _path_setup  （相对导入，web/backend/ 已成为标准包）
   api/*.py       → 无 sys.path 操作
   build_plugin_catalog.py → 函数内局部 sys.path 操作
 ```
@@ -96,8 +96,11 @@ for _p in [str(_FRAMEWORK_SRC), str(_REPO_ROOT)]:
 
 ### 2. 修改 `web/backend/main.py`
 
-- 在文件头添加 `from _path_setup import *`（注意：由于 `main.py` 和 `_path_setup.py` 在同一目录，使用相对导入或直接导入均可）
+- 创建 `web/backend/__init__.py`（仅 SPDX 注释），使 `web/backend/` 成为标准 Python 包（非命名空间包）
+- 在文件头添加 `from . import _path_setup`（相对导入，因此依赖 `__init__.py`）
 - 移除 `sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "framework" / "src"))`
+
+> **注意**：初始设计使用 `from _path_setup import *`（星号导入），但考虑到包已成为标准包，改用更精确的 `from . import _path_setup`。后者也体现了「显式导入原则」——每个 import 路径**显式可追溯**，不依赖"恰好就在 sys.path 上"的侥幸。
 
 ### 3. 修改 API 模块（5 个文件）
 
@@ -183,6 +186,7 @@ if str(_SRC_DIR) not in sys.path:
 
 - 实施：与候选6（本 ADR）同步
 - 预计测试回退率：0%（纯删除冗余代码，不改变行为）
+- 后续优化（2026-06-01）：创建 `web/backend/__init__.py` 使其成为标准 Python 包，并将 main.py 的导入改为 `from . import _path_setup`（显式相对导入），由此确立了项目的「显式导入原则」
 
 ## 术语表
 

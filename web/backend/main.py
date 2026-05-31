@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0
-import _path_setup  # noqa: F401 -- sets sys.path, no exported symbols
+from . import _path_setup  # sets sys.path for dev mode
 from pathlib import Path
 
 from fastapi import FastAPI, Request

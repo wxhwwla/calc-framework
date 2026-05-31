@@ -21,19 +21,22 @@ def _setup_paths() -> None:
     else:
         _BASE = Path(__file__).resolve().parent.parent.parent
 
-    for _p in [str(_BASE / "framework" / "src"), str(_BASE)]:
-        if _p not in sys.path:
-            sys.path.insert(0, _p)
+    for _p in [
+        str(_BASE / "_internal" / "web" / "backend"),
+        str(_BASE / "framework" / "src"),
+        str(_BASE),
+    ]:
+        if _p not in sys.path and Path(_p).is_dir():
+            sys.path.insert(0, str(_p))
 
 
 _setup_paths()
 
 import uvicorn
 
-import web.backend.main
+import main
 
-
-app = web.backend.main.app
+app = main.app
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8180"))
