@@ -646,3 +646,82 @@ def _handle_api(environ, start_response):
 改完后在 PythonAnywhere Web 页面点 **Reload** 即可生效。
 
 > **注意**：此问题只影响 PythonAnywhere 部署环境。本地开发（Vite + FastAPI）不受影响，因为 FastAPI/Starlette 正确处理了 UTF-8 URL 编码。
+
+---
+
+## 11. 自动化部署脚本
+
+在经历了上述全部踩坑后，我们编写了自动化部署脚本，将手工步骤压缩为一条命令。
+
+### 11.1 脚本文件
+
+| 文件 | 职责 | 运行位置 |
+|------|------|----------|
+| `web/scripts/deploy_pythonanywhere.py` | 本地：构建前端 → 打包 zip → （可选 API 上传 → 触发重载） | 本地 Windows |
+| `web/scripts/deploy_server.sh` | 服务器：git pull → pip install → 解压 dist | PythonAnywhere Bash |
+
+### 11.2 使用方式
+
+#### 方式 A：全自动（配置 API Token 后）
+
+```bash
+# 1. 首次：配置 API Token
+python web/scripts/deploy_pythonanywhere.py --init-config
+# 编辑 ~/.pythonanywhere，填入 api_token
+
+# 2. 一键部署：构建 → zip → 上传 → 部署脚本 → 重载
+python web/scripts/deploy_pythonanywhere.py --all
+```
+
+#### 方式 B：半自动（本地打包 + 手动上传）
+
+```bash
+# 1. 本地：构建 + 打包
+python web/scripts/deploy_pythonanywhere.py
+
+# 2. 手动上传 dist.zip -> PythonAnywhere Files 页面
+#    （脚本会输出 zip 路径和详细操作指南）
+
+# 3. 在 PythonAnywhere Bash 中执行：
+bash web/scripts/deploy_server.sh
+
+# 4. 回到 Web 页面点 Reload
+```
+
+#### 方式 C：仅打包（跳过 npm 构建）
+
+```bash
+python web/scripts/deploy_pythonanywhere.py --zip-only
+```
+
+### 11.3 配置项
+
+配置优先级：命令行参数 > 环境变量 > `~/.pythonanywhere` 配置文件。
+
+`~/.pythonanywhere` 文件格式：
+```ini
+[pythonanywhere]
+username = wxhwwla
+api_token = your-api-token-here
+project = calc-framework
+# domain = wxhwwla.pythonanywhere.com
+```
+
+环境变量：
+| 变量 | 对应配置 |
+|------|----------|
+| `PA_USERNAME` | PythonAnywhere 用户名 |
+| `PA_API_TOKEN` | API Token |
+| `PA_PROJECT` | 项目目录名（默认 calc-framework） |
+| `PA_DOMAIN` | Web App 域名 |
+
+### 11.4 脚本解决了什么问题
+
+| 问题 | 旧方式 | 自动化脚本 |
+|------|--------|-----------|
+| **LZMA 不兼容** | `Compress-Archive` 默认 LZMA，Linux `unzip` 解不了 | Python `zipfile.ZIP_DEFLATED`，100% 兼容 |
+| **dist/dist/ 嵌套** | 解压后发现 `/dist/dist/index.html`，需要手动修复 | zip 时以 dist/ 内容为根，解压即正确 |
+| **忘记步骤** | 4 步命令容易漏或记错顺序 | `deploy_server.sh` 自动执行全部 4 步 |
+| **手工上传** | 每次打开 Files 页面传 zip | 可选 API 直传（`--upload` / `--all`） |
+| **手工 Reload** | 部署完忘了点 Reload | `--reload` / `--all` 自动触发 API 重载 |
+| **Bash 多行粘贴** | 多行命令粘贴会卡死 | 服务器脚本已单行化，每条命令一个 echo |
