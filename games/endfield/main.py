@@ -41,7 +41,7 @@ apply_platform_win32_patch()
 def preload_data():
     """预加载角色/武器 JSON 到 data.loader 缓存（后台线程）。"""
     try:
-        from calc_engine.endfield.data_loading.loader import preload_game_data
+        from games.endfield.data_loading.loader import preload_game_data
 
         preload_game_data()
     except Exception as exc:
@@ -76,7 +76,7 @@ def main() -> None:
         print("正在加载界面…", flush=True)
 
     # 导入 GUI 模块
-    from calc_engine.endfield.data_loading.plugin_registry import load_default_plugins
+    from games.endfield.data_loading.plugin_registry import load_default_plugins
     from gui_design.shell.qt_app import QtDamageApp as DamageCalculatorApp
     from utils.path_utils import get_application_dir
 

@@ -8,14 +8,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_engine.endfield.calc.core.preview_cache import cached_preview, sync_confirm_dependencies
-from calc_engine.endfield.calc.damage.engine import (
+from games.endfield.calc.core.preview_cache import cached_preview, sync_confirm_dependencies
+from games.endfield.calc.damage.engine import (
     ZONE_ORDER,
     DamageContext,
     DamageResult,
     calculate_single_hit_damage,
 )
-from calc_engine.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]

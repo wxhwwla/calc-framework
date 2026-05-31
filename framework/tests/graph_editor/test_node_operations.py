@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""节点拖拽、删除、左侧面板测试。"""
+"""鑺傜偣鎷栨嫿銆佸垹闄ゃ€佸乏渚ч潰鏉挎祴璇曘€?""
 
 
 from calc_framework.graph_editor.schema import GraphNode
@@ -14,7 +14,7 @@ def _find_port(port_list: list[PortItem], direction: PortDirection, index: int =
     for p in port_list:
         if p.direction == direction and p.port_index == index:
             return p
-    raise AssertionError(f"端口未找到 direction={direction} index={index}")
+    raise AssertionError(f"绔彛鏈壘鍒?direction={direction} index={index}")
 
 
 class TestNodeMoveUpdatesWires:
@@ -85,13 +85,13 @@ class TestGridSnapping:
 
         item.setPos(23, 47)
         pos = item.pos()
-        assert pos.x() == 40.0, f"期望 x=40, 实际 x={pos.x()}"
-        assert pos.y() == 40.0, f"期望 y=40, 实际 y={pos.y()}"
+        assert pos.x() == 40.0, f"鏈熸湜 x=40, 瀹為檯 x={pos.x()}"
+        assert pos.y() == 40.0, f"鏈熸湜 y=40, 瀹為檯 y={pos.y()}"
 
         item.setPos(-13, 88)
         pos = item.pos()
-        assert pos.x() == 0.0, f"期望 x=0, 实际 x={pos.x()}"
-        assert pos.y() == 80.0, f"期望 y=80, 实际 y={pos.y()}"
+        assert pos.x() == 0.0, f"鏈熸湜 x=0, 瀹為檯 x={pos.x()}"
+        assert pos.y() == 80.0, f"鏈熸湜 y=80, 瀹為檯 y={pos.y()}"
 
     def test_drop_snaps_to_grid(self, qapp) -> None:
         w = GraphEditorWidget()
@@ -100,5 +100,5 @@ class TestGridSnapping:
         nodes = w.graph_nodes()
         assert len(nodes) == 1
         pos = nodes[0].position
-        assert pos["x"] == -40.0, f"期望 x=-40, 实际 x={pos['x']}"
-        assert pos["y"] == 40.0, f"期望 y=40, 实际 y={pos['y']}"
+        assert pos["x"] == -40.0, f"鏈熸湜 x=-40, 瀹為檯 x={pos['x']}"
+        assert pos["y"] == 40.0, f"鏈熸湜 y=40, 瀹為檯 y={pos['y']}"

@@ -609,7 +609,7 @@ async def inverse_formula(req: InverseRequest):
 
     try:
 
-        from calc_engine.endfield.calc.damage.inverse import (
+        from games.endfield.calc.damage.inverse import (
 
             fit_attribute_formula,
 
@@ -625,7 +625,7 @@ async def inverse_formula(req: InverseRequest):
 
         )
 
-        from calc_engine.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
+        from games.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
 
     except ImportError as e:
 

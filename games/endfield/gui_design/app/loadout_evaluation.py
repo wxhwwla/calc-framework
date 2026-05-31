@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_engine.endfield.calc.core.preview_cache import sync_confirm_dependencies
-from calc_engine.endfield.calc.loadout.optimizer import WeaponCandidate
+from games.endfield.calc.core.preview_cache import sync_confirm_dependencies
+from games.endfield.calc.loadout.optimizer import WeaponCandidate
 from gui_design.presentation.damage_snapshot import (
     DamageSnapshot,
     build_damage_snapshot,

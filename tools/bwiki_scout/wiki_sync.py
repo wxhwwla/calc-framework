@@ -48,8 +48,8 @@ from bwiki_scout.weapon_wiki import (  # noqa: E402
     has_weapon_growth_block,
     needs_weapon_sync_with_wiki,
 )
-from calc_engine.endfield.calc.damage.formula import calculate_growth_curve  # noqa: E402
-from calc_engine.endfield.calc.damage.inverse import fit_attribute_formula  # noqa: E402
+from games.endfield.calc.damage.formula import calculate_growth_curve  # noqa: E402
+from games.endfield.calc.damage.inverse import fit_attribute_formula  # noqa: E402
 
 # seed 字段名 -> 详细页解析后的曲线键
 _ATTR_FIELDS: tuple[tuple[str, str], ...] = (

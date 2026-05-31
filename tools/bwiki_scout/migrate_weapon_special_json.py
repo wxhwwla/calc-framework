@@ -14,7 +14,7 @@ _PKG = _REPO / "games" / "endfield"
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
-from calc_engine.endfield.calc.skills.special_fields import (  # noqa: E402
+from games.endfield.calc.skills.special_fields import (  # noqa: E402
     read_weapon_special_slots,
     write_weapon_special_slots,
 )

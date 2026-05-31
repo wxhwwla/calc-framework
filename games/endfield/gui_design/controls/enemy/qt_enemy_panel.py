@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_engine.endfield.data_loading.enemy_params import (
+from games.endfield.data_loading.enemy_params import (
     DEFAULT_ENEMY_DEFENSE,
     DEFAULT_ENEMY_RESISTANCE,
     DEFAULT_IGNORE_RESISTANCE,

@@ -14,7 +14,7 @@
 - 支持整数和小数百分比格式（如 "8.9%" 或 "89"）
 """
 
-from calc_engine.endfield.calc.damage.inverse import (
+from games.endfield.calc.damage.inverse import (
     fit_attribute_formula,
     fit_skill_formula,
     fit_skill_formula_no_special,

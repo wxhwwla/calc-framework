@@ -4,7 +4,7 @@
 
 | 检查 | 结果 |
 |------|------|
-| `git remote -v` 是否含 Token | 否，当前为 `git@github.com:wxhwwla/endfield_damage_calculator_2.0.git` |
+| `git remote -v` 是否含 Token | 否，当前为 `git@github.com:wxhwwla/calc-framework.git` |
 | 历史提交是否含 `ghp_` / `github_pat_` | 未发现（`git log -S` 无匹配） |
 | 工作区是否存在 `git_key.txt` | 否（且已列入 `.gitignore`） |
 

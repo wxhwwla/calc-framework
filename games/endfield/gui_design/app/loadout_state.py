@@ -11,9 +11,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from calc_engine.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from calc_engine.endfield.calc.search.plan.controller import SearchJobInputs
-from calc_engine.endfield.calc.skills.weapon_selection import WeaponSkillSelection
+from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+from games.endfield.calc.search.plan.controller import SearchJobInputs
+from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
 from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
 
 from .confirm_refresh import (

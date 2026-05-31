@@ -73,7 +73,7 @@ from calc_framework.ui.viewer_pack_utils import (
     resolve_asset_paths_in_layout,
 )
 from calc_framework.ui.viewer_plugin_manager import PluginManagerDialog
-from utils.gui_help_dialog import HelpDialog
+from utils.gui.help_dialog import HelpDialog
 
 class CalcPackViewer(QMainWindow):
 

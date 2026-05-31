@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_engine.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
-from calc_engine.endfield.calc.skills.segments import CHARACTER_SKILL_TYPES
-from calc_engine.endfield.calc.skills.special_fields import (
+from games.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
+from games.endfield.calc.skills.segments import CHARACTER_SKILL_TYPES
+from games.endfield.calc.skills.special_fields import (
     read_weapon_skills_schema,
     special_pick_bonus,
 )

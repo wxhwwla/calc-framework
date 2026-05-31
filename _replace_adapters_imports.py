@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""Replace calc_engine.endfield -> calc_engine.endfield in all .py files outside calc-engine/."""
+"""Replace games.endfield -> games.endfield in all .py files outside calc-engine/."""
 import os
 
 
 REPLACEMENTS = [
-    ("from calc_engine.endfield", "from calc_engine.endfield"),
-    ("import calc_engine.endfield", "import calc_engine.endfield"),
-    ('"calc_engine.endfield.', '"calc_engine.endfield.'),
-    ("'calc_engine.endfield.", "'calc_engine.endfield."),
+    ("from games.endfield", "from games.endfield"),
+    ("import games.endfield", "import games.endfield"),
+    ('"games.endfield.', '"games.endfield.'),
+    ("'games.endfield.", "'games.endfield."),
 ]
 
 EXCLUDE_DIRS = {

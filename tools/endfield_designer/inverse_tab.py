@@ -17,8 +17,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_engine.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
-from calc_engine.endfield.calc.damage.inverse import (
+from games.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
+from games.endfield.calc.damage.inverse import (
     fit_attribute_formula,
     fit_skill_formula,
     fit_skill_formula_no_special,

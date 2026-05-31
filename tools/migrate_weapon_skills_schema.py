@@ -22,7 +22,7 @@ PKG_ROOT = REPO_ROOT / "endfield_damage_calculator"
 if str(PKG_ROOT) not in sys.path:
     sys.path.insert(0, str(PKG_ROOT))
 
-from calc_engine.endfield.calc.skills.special_fields import (  # noqa: E402
+from games.endfield.calc.skills.special_fields import (  # noqa: E402
     migrate_weapon_record_to_skill_schema,
 )
 

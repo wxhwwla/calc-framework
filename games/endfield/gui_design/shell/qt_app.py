@@ -56,7 +56,7 @@ from PySide6.QtWidgets import (
 
 
 
-from calc_engine.endfield.data_loading.loader import get_characters, get_weapons
+from games.endfield.data_loading.loader import get_characters, get_weapons
 
 from gui_design.panels.selection.qt_panel import QtSelectionPanel
 
@@ -502,7 +502,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
         # 装备 catalog + 固定配装槽
 
-        from calc_engine.endfield.data_loading.equipment_catalog import get_equipment_catalog
+        from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
 
 
@@ -534,7 +534,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
         """装备范围下拉变更：重新获取 catalog 并刷新固定配装槽。"""
 
-        from calc_engine.endfield.data_loading.equipment_catalog import get_equipment_catalog
+        from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
 
 

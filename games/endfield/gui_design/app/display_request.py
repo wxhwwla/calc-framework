@@ -7,8 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from calc_engine.endfield.calc.loadout.optimizer import WeaponCandidate
-from calc_engine.endfield.data_loading.game_data_facade import GameDataFacade
+from games.endfield.calc.loadout.optimizer import WeaponCandidate
+from games.endfield.data_loading.game_data_facade import GameDataFacade
 
 from .loadout_state import LoadoutState
 

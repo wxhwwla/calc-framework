@@ -267,7 +267,7 @@ class QtControlDock(BuilderMixin, QWidget):
         catalog: dict[str, list[dict[str, Any]]],
     ) -> None:
         """从装备 catalog 填充四槽装备名称下拉。"""
-        from calc_engine.endfield.data_loading.equipment_filters import equipment_names_from_rows
+        from games.endfield.data_loading.equipment_filters import equipment_names_from_rows
 
         for i, (slot_key, _) in enumerate(_FIXED_SLOT_SPECS):
             cb = self.fixed_loadout_slots[i]
@@ -290,7 +290,7 @@ class QtControlDock(BuilderMixin, QWidget):
         catalog: dict[str, list[dict[str, Any]]],
     ) -> Any:
         """从四槽下拉读取 FixedLoadoutSelection。"""
-        from calc_engine.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 
         def _pick(i: int, catalog_key: str):
             name = self.fixed_loadout_slots[i].currentText()

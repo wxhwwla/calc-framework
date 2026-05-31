@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_engine.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
+from games.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]

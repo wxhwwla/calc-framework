@@ -86,14 +86,14 @@ async def estimate_search(req: EstimateRequest):
     try:
         from calc_framework.config.adapter import AdapterPackage
 
-        from calc_engine.endfield.calc.loadout.optimizer import optimizer_config_for_character
-        from calc_engine.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-        from calc_engine.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs
-        from calc_engine.endfield.calc.search.plan.estimate import (
+        from games.endfield.calc.loadout.optimizer import optimizer_config_for_character
+        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+        from games.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs
+        from games.endfield.calc.search.plan.estimate import (
             preview_search_workload,
             estimate_search_duration,
         )
-        from calc_engine.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
+        from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
     except ImportError as e:
         raise HTTPException(status_code=500, detail=f"导入搜索引擎失败: {e}")
 
@@ -128,7 +128,7 @@ async def estimate_search(req: EstimateRequest):
         if err or job is None:
             return {"total_combinations": 0, "estimated_seconds": 0, "warning": err or "作业组装失败"}
 
-        from calc_engine.endfield.calc.search.plan.controller import optimizer_config_for_search_job
+        from games.endfield.calc.search.plan.controller import optimizer_config_for_search_job
 
         config = optimizer_config_for_search_job(job, top_n=10)
         preview = preview_search_workload(
@@ -153,9 +153,9 @@ async def estimate_search(req: EstimateRequest):
 async def run_search(req: SearchRequest):
     """执行全量搜索并返回 Top-N 结果。"""
     try:
-        from calc_engine.endfield.calc.search.run.runner import SearchRunner
-        from calc_engine.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs, optimizer_config_for_search_job
-        from calc_engine.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+        from games.endfield.calc.search.run.runner import SearchRunner
+        from games.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs, optimizer_config_for_search_job
+        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
     except ImportError as e:
         raise HTTPException(status_code=500, detail=f"导入搜索引擎失败: {e}")
 
@@ -229,7 +229,7 @@ async def run_search(req: SearchRequest):
 async def get_equipment_catalog():
     """获取装备目录（分部位列表）。"""
     try:
-        from calc_engine.endfield.data_loading.equipment_catalog import get_equipment_catalog
+        from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
         catalog = get_equipment_catalog()
         return {
             key: [{"名称": e.get("名称", ""), "部位": e.get("部位", ""), "所属套组": e.get("所属套组", ""), "稀有度": e.get("稀有度", "")} for e in entries]
@@ -242,12 +242,12 @@ async def get_equipment_catalog():
 async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, None]:
     """生成 SSE 事件流：progress → chunks → done。"""
     try:
-        from calc_engine.endfield.calc.search.run.runner import SearchRunner
-        from calc_engine.endfield.calc.search.plan.controller import (
+        from games.endfield.calc.search.run.runner import SearchRunner
+        from games.endfield.calc.search.plan.controller import (
             prepare_search_job, SearchJobInputs,
             optimizer_config_for_search_job,
         )
-        from calc_engine.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
     except ImportError as e:
         yield f"data: {json.dumps({'type': 'error', 'message': f'导入搜索引擎失败: {e}'})}\n\n"
         return

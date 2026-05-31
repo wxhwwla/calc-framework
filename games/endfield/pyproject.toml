@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "endfield_damage_calculator"
+name = "calc-framework-endfield"
 dynamic = ["version"]
 description = "终末地伤害计算小工具"
 authors = [
@@ -62,8 +62,8 @@ include = [
 exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-testpaths = ["../calc_engine/endfield/tests"]
-pythonpath = [".", "../..", "../adapters"]
+testpaths = ["tests"]
+pythonpath = [".", "../.."]
 # 本地日常：pytest -m "not integration and not real_data and not slow"
 # CI 仍跑全量：pytest tests/ -q
 # --cov-fail-under=60 对应长期目标 80%，目前先提至 60

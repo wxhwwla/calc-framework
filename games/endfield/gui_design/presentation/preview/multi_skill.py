@@ -6,29 +6,29 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_engine.endfield.calc.manual_buff.physical import (
+from games.endfield.calc.manual_buff.physical import (
     compose_damage_total,
     evaluate_physical_abnormal_total,
     format_abnormal_breakdown_lines,
 )
-from calc_engine.endfield.calc.manual_buff.spell import (
+from games.endfield.calc.manual_buff.spell import (
     evaluate_spell_abnormal_total,
     format_spell_abnormal_breakdown_lines,
 )
-from calc_engine.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
-from calc_engine.endfield.calc.damage.engine import DamageContext
-from calc_engine.endfield.calc.loadout.optimizer import (
+from games.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
+from games.endfield.calc.damage.engine import DamageContext
+from games.endfield.calc.loadout.optimizer import (
     WeaponCandidate,
 )
-from calc_engine.endfield.calc.multi_skill.optimizer import (
+from games.endfield.calc.multi_skill.optimizer import (
     MultiSkillConfig,
     SkillScenario,
     optimize_multi_skill_loadouts,
 )
-from calc_engine.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from calc_engine.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from calc_engine.endfield.calc.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
-from calc_engine.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
+from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
+from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
+from games.endfield.calc.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
+from games.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 
 
 def build_multi_skill_search_preview_lines(
@@ -238,11 +238,11 @@ def _build_multi_skill_search_preview_lines_impl(
             skill_counts=active_counts,
             crit_mode="expected" if use_expected_crit else "non_crit",
         )
-        from calc_engine.endfield.calc.skills.segments import format_segment_count_label
+        from games.endfield.calc.skills.segments import format_segment_count_label
 
         count_desc = f"手动次数: {format_segment_count_label(active_counts)}"
 
-    from calc_engine.endfield.calc.damage.types import format_damage_type_display
+    from games.endfield.calc.damage.types import format_damage_type_display
 
     segment_type_lines = []
     for scenario in scenarios:

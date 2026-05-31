@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_engine.endfield.data_loading.loader import (
+from games.endfield.data_loading.loader import (
     get_characters,
     get_equipments,
     get_weapons,

@@ -8,13 +8,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from calc_engine.endfield.calc.core.parallel_evaluate import evaluate_parallel
-from calc_engine.endfield.calc.damage.engine import DamageContext
-from calc_engine.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
-from calc_engine.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerTask, WeaponCandidate, evaluate_task
-from calc_engine.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_task
-from calc_engine.endfield.calc.search.evaluate.context import SearchEvalContext
-from calc_engine.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
+from games.endfield.calc.core.parallel_evaluate import evaluate_parallel
+from games.endfield.calc.damage.engine import DamageContext
+from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
+from games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerTask, WeaponCandidate, evaluate_task
+from games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_task
+from games.endfield.calc.search.evaluate.context import SearchEvalContext
+from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
 from gui_design.app.loadout_preset import LoadoutPreset
 
 
@@ -127,7 +127,7 @@ def _build_eval_item(
     if not scenarios:
         raise ValueError("技能等级均为 0 或无有效倍率")
 
-    from calc_engine.endfield.calc.skills.segments import normalize_manual_segment_counts
+    from games.endfield.calc.skills.segments import normalize_manual_segment_counts
 
     counts = normalize_manual_segment_counts(
         {

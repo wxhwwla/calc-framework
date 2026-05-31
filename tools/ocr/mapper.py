@@ -91,7 +91,7 @@ class OcrMapper:
 
     def _load_game_data(self) -> None:
         try:
-            from calc_engine.endfield.data_loading.loader import get_characters, get_weapons
+            from games.endfield.data_loading.loader import get_characters, get_weapons
             chars = get_characters()
             weapons = get_weapons()
             self._char_names = [c.get("名称", "") for c in chars if c.get("名称")]

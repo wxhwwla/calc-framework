@@ -15,8 +15,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from calc_engine.endfield.calc.core.curve_baker import bake_character_curves
-from calc_engine.endfield.data_loading.loader import reload_characters
+from games.endfield.calc.core.curve_baker import bake_character_curves
+from games.endfield.data_loading.loader import reload_characters
 
 
 def add_character(

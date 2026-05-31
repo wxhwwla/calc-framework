@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""包管理器与复合节点功能测试。"""
+"""鍖呯鐞嗗櫒涓庡鍚堣妭鐐瑰姛鑳芥祴璇曘€?""
 
 import json
 from pathlib import Path
@@ -15,12 +15,12 @@ from calc_framework.graph_editor.registry import (
 
 _SAMPLE_GRAPH_JSON = json.dumps({
     "schema_version": "calc-graph-v1",
-    "name": "子图测试",
+    "name": "瀛愬浘娴嬭瘯",
     "nodes": [
-        {"id": "in_a", "type": "user_input", "label": "输入A", "config": {"default": 0}},
-        {"id": "in_b", "type": "user_input", "label": "输入B", "config": {"default": 0}},
-        {"id": "op", "type": "binary", "op": "+", "label": "加法"},
-        {"id": "out", "type": "output", "label": "结果"},
+        {"id": "in_a", "type": "user_input", "label": "杈撳叆A", "config": {"default": 0}},
+        {"id": "in_b", "type": "user_input", "label": "杈撳叆B", "config": {"default": 0}},
+        {"id": "op", "type": "binary", "op": "+", "label": "鍔犳硶"},
+        {"id": "out", "type": "output", "label": "缁撴灉"},
     ],
     "edges": [
         {"from_node": "in_a", "from_port": 0, "to_node": "op", "to_port": 0},
@@ -32,17 +32,17 @@ _SAMPLE_GRAPH_JSON = json.dumps({
 
 _SAMPLE_GRAPH_JSON_INLINE = json.dumps({
     "schema_version": "calc-graph-v1",
-    "name": "子图内联",
+    "name": "瀛愬浘鍐呰仈",
     "nodes": [
-        {"id": "x", "type": "user_input", "label": "值"},
-        {"id": "o", "type": "unary", "op": "abs", "label": "绝对值"},
-        {"id": "ot", "type": "output", "label": "输出"},
+        {"id": "x", "type": "user_input", "label": "鍊?},
+        {"id": "o", "type": "unary", "op": "abs", "label": "缁濆鍊?},
+        {"id": "ot", "type": "output", "label": "杈撳嚭"},
     ],
     "edges": [
         {"from_node": "x", "from_port": 0, "to_node": "o", "to_port": 0},
         {"from_node": "o", "from_port": 0, "to_node": "ot", "to_port": 0},
     ],
-    "layout": {"sections": [{"id": "s1", "title": "结果", "output_nodes": ["ot"], "columns": 1}]},
+    "layout": {"sections": [{"id": "s1", "title": "缁撴灉", "output_nodes": ["ot"], "columns": 1}]},
 })
 
 
@@ -56,8 +56,8 @@ class TestPackageManager:
         assert tdef.display_name == "[adder] adder"
         assert tdef.in_count == 2
         assert tdef.out_count == 1
-        assert tdef.in_labels == ["输入A", "输入B"]
-        assert tdef.out_labels == ["结果"]
+        assert tdef.in_labels == ["杈撳叆A", "杈撳叆B"]
+        assert tdef.out_labels == ["缁撴灉"]
 
     def test_load_json_inline(self, tmp_path) -> None:
         f = tmp_path / "abs_wrapper.json"
@@ -66,8 +66,8 @@ class TestPackageManager:
         tdef = pm.load_json(f)
         assert tdef.in_count == 1
         assert tdef.out_count == 1
-        assert tdef.in_labels == ["值"]
-        assert tdef.out_labels == ["输出"]
+        assert tdef.in_labels == ["鍊?]
+        assert tdef.out_labels == ["杈撳嚭"]
 
     def test_load_zip(self, tmp_path) -> None:
         import zipfile
@@ -114,7 +114,7 @@ class TestCompositeNodeCreation:
             os.unlink(str(fpath))
 
     def test_composite_node_has_correct_ports_via_item(self, qapp) -> None:
-        """验证通过 NodeItem 创建的复合节点端口数正确。"""
+        """楠岃瘉閫氳繃 NodeItem 鍒涘缓鐨勫鍚堣妭鐐圭鍙ｆ暟姝ｇ‘銆?""
         self._clean_registry()
         from calc_framework.graph_editor.registry import get_package_manager as _gpm
         pm = _gpm()
@@ -137,7 +137,7 @@ class TestCompositeNodeCreation:
             outputs = [p for p in ports if p.direction == PortDirection.OUTPUT]
             assert len(inputs) == 1
             assert len(outputs) == 1
-            assert inputs[0].label == "值"
-            assert outputs[0].label == "输出"
+            assert inputs[0].label == "鍊?
+            assert outputs[0].label == "杈撳嚭"
         finally:
             os.unlink(str(fpath))

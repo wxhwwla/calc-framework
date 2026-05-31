@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_engine.endfield.data_loading.loader import get_characters, get_equipments, get_weapons
+from games.endfield.data_loading.loader import get_characters, get_equipments, get_weapons
 from gui_design.app.loadout_preset import (
     LoadoutPreset,
     import_presets_from_json_text,
@@ -306,7 +306,7 @@ class QtDamageDashboardDialog(QDialog):
             layout.addWidget(QLabel("需要 matplotlib"))
             return
 
-        from calc_engine.endfield.calc.skills.segments import segment_display_label
+        from games.endfield.calc.skills.segments import segment_display_label
 
         rotation_damage = dict(snapshot.segment_totals)
         pie_slices = damage_breakdown_from_skill_map(

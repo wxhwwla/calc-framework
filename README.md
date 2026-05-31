@@ -1,6 +1,6 @@
-# 终末地伤害计算小工具
+# Calc Framework — 终末地
 
-> 《明日方舟：终末地》配装与乘区辅助工具（PySide6 / CustomTkinter 双后端 GUI）
+> 通用伤害计算框架 · 《明日方舟：终末地》配装与乘区辅助工具（PySide6 双后端 GUI）
 
 ## 文档分层
 
@@ -107,7 +107,7 @@ cd web/frontend && npm install && npm run dev
 | **模板字段** | 描述、复现步骤、期望行为、OS / Python / 项目版本；Bug 默认标签 `needs-triage` |
 | **命令行** | `gh issue create`（需 `gh auth login`）；见 [`docs/操作指令集.md`](docs/操作指令集.md) §1.3 |
 | **协作约定** | Agent / 维护者见 [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)、[`triage-labels.md`](docs/agents/triage-labels.md) |
-| **测试覆盖率** | [![CI](https://github.com/wxhwwla/endfield_damage_calculator_2.0/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/endfield_damage_calculator_2.0/actions/workflows/ci.yml) + `pytest-cov`（门槛 **57%**→80%，含 GUI 集成测） |
+| **测试覆盖率** | [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml) + `pytest-cov`（门槛 **57%**→80%，含 GUI 集成测） |
 
 ## 许可证与数据来源
 

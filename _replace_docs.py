@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""Replace calc_engine/endfield and calc_engine.endfield in .md docs with calc-engine equivalents."""
+"""Replace calc_engine/endfield and games.endfield in .md docs with calc-engine equivalents."""
 import os
 
 
@@ -19,7 +19,7 @@ def main():
 
             original = content
             content = content.replace("calc_engine/endfield/", "calc-engine/endfield/")
-            content = content.replace("calc_engine.endfield", "calc_engine.endfield")
+            content = content.replace("games.endfield", "games.endfield")
 
             if content != original:
                 with open(fpath, "w", encoding="utf-8") as fh:

@@ -14,8 +14,8 @@ from pathlib import Path
 # 添加项目根目录到路径，确保模块导入正确
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from calc_engine.endfield.calc.damage.formula import calculate_bonus_attribute
-from calc_engine.endfield.calc.damage.formula import (  # pyright: ignore[reportMissingImports]
+from games.endfield.calc.damage.formula import calculate_bonus_attribute
+from games.endfield.calc.damage.formula import (  # pyright: ignore[reportMissingImports]
     calculate_growth_curve as calculate_weapon_attack,
 )
 

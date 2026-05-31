@@ -14,7 +14,7 @@ import shutil
 from pathlib import Path
 from typing import Literal
 
-from calc_engine.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
+from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
 BuildTarget = Literal["calculator", "designer", "pack-designer"]
 

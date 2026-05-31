@@ -18,8 +18,8 @@ if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
 from bwiki_scout.parse_draft import extract_template_params, _parse_int  # noqa: E402
-from calc_engine.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve  # noqa: E402
-from calc_engine.endfield.calc.damage.inverse import fit_attribute_formula, fit_skill_formula_no_special  # noqa: E402
+from games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve  # noqa: E402
+from games.endfield.calc.damage.inverse import fit_attribute_formula, fit_skill_formula_no_special  # noqa: E402
 
 # Wiki 稀有度 → 本地星级
 _RARITY_STAR: dict[str, int] = {
@@ -83,7 +83,7 @@ def _slot3_conditional_attr_key(p: dict[str, str], sub: str) -> str:
 
 def _parse_max_stack_from_text(text: str, *, name: str = "") -> int:
     """从 Wiki 条件描述解析最大叠加层数。"""
-    from calc_engine.endfield.calc.skills.special_fields import (
+    from games.endfield.calc.skills.special_fields import (
         infer_max_stack_from_special,
     )
 
@@ -217,7 +217,7 @@ def baked_rank_curve_matches(
 
 def fit_bonus_params_from_rank_curve(curve9: list[float]) -> dict[str, Any]:
     """9 档潜能曲线 → add_weapon / seed 用参数字典（优先可反推公式，否则保留原九档）。"""
-    from calc_engine.endfield.calc.skills.special_fields.codec import (
+    from games.endfield.calc.skills.special_fields.codec import (
         is_accidental_rank_multiple_curve,
     )
 
@@ -391,7 +391,7 @@ def backfill_weapon_max_stack_from_cache(
 
     from bwiki_scout.seed_persist import load_seed_weapon_specs, write_seed_weapon_specs
     from bwiki_scout.storage import load_page_bundle
-    from calc_engine.endfield.calc.skills.special_fields import (
+    from games.endfield.calc.skills.special_fields import (
         infer_max_stack_from_special,
         read_weapon_special_slots,
         write_weapon_special_slots,
@@ -526,7 +526,7 @@ def needs_weapon_sync_with_wiki(
             if abs(float(la) - float(wa)) > tolerance:
                 return True
 
-    from calc_engine.endfield.calc.skills.special_fields import (
+    from games.endfield.calc.skills.special_fields import (
         read_weapon_special_slots,
     )
 

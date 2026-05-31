@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_engine.endfield.calc.skills.segments import parse_segment_key
+from games.endfield.calc.skills.segments import parse_segment_key
 
 _SECTION_COLOR = "#FF6B6B"
 _TOTAL_COLOR = "#4FC3F7"

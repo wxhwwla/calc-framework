@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_engine.endfield.calc.manual_buff.model import (
+from games.endfield.calc.manual_buff.model import (
     MANUAL_BUFF_ZONE_OPTIONS,
     build_active_keys_from_counts,
     empty_buff_dict,

@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from calc_engine.endfield.calc.skills.special_fields import (
+from games.endfield.calc.skills.special_fields import (
     migrate_legacy_weapon_special_level,
 )
 
