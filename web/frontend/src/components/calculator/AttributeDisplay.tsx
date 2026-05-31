@@ -54,6 +54,13 @@ function renderSkillDamageTypes(charData: Record<string, unknown>) {
   );
 }
 
+function formatCurveRange(curve: unknown): string {
+  if (!Array.isArray(curve) || curve.length === 0) return "";
+  const nums = curve.filter((v): v is number => typeof v === "number");
+  if (nums.length === 0) return "";
+  return `${nums[0]} ~ ${nums[nums.length - 1]}`;
+}
+
 function renderWeaponSkills(weaponData: Record<string, unknown>) {
   const normalSkills = weaponData["normal_skills"];
   const specialSkills = weaponData["special_skills"];
@@ -78,14 +85,21 @@ function renderWeaponSkills(weaponData: Record<string, unknown>) {
           </Typography>
           {section.skills.map((skill: unknown, i: number) => {
             const s = skill as Record<string, unknown>;
+            const effect = String(s["effect"] || "");
+            const name = String(s["name"] || "");
+            const curve = formatCurveRange(s["curve"]);
+            const displayName = name || effect;
             return (
               <Typography
                 key={i}
                 variant="body2"
                 sx={{ fontSize: "0.75rem", lineHeight: 1.6 }}
               >
-                {String(s["名称"] || "?")} Lv.{String(s["等级"] ?? "?")}
-                {s["倍率"] != null ? ` · ${s["倍率"]}%` : ""}
+                {displayName}
+                {curve ? ` (Lv.1-9: ${curve})` : ""}
+                {s["max_stack"] != null && Number(s["max_stack"]) > 1
+                  ? ` · 最多${s["max_stack"]}层`
+                  : ""}
               </Typography>
             );
           })}
@@ -174,6 +188,12 @@ export default function AttributeDisplay({ characterData, weaponData }: Attribut
                   <TableCell sx={{ border: "none", pl: 0 }}>基础攻击 (Lv.90)</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel90(characterData, "基础攻击力")}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ border: "none", pl: 0 }}>信赖 (0-4级)</TableCell>
+                  <TableCell sx={{ border: "none", fontWeight: "bold" }}>
+                    0 (暂未支持编辑)
                   </TableCell>
                 </TableRow>
               </TableBody>

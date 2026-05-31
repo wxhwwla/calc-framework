@@ -11,9 +11,10 @@ echarts.use([PieChart, BarChart, TooltipComponent, GridComponent, CanvasRenderer
 interface DamageChartProps {
   outputValues: Record<string, number> | null;
   nodeValues: Record<string, number | string | null> | null;
+  zoneShare?: Record<string, number>;
 }
 
-export default function DamageChart({ outputValues }: DamageChartProps) {
+export default function DamageChart({ outputValues, zoneShare }: DamageChartProps) {
   const hasPieData = outputValues && Object.keys(outputValues).length > 1;
 
   const pieOption = useMemo(() => {
@@ -44,6 +45,27 @@ export default function DamageChart({ outputValues }: DamageChartProps) {
       ],
     };
   }, [outputValues]);
+
+  const zoneOption = useMemo(() => {
+    if (!zoneShare || Object.keys(zoneShare).length === 0) return null;
+    const data = Object.entries(zoneShare)
+      .filter(([, v]) => v != null && v > 0)
+      .sort(([, a], [, b]) => b - a);
+    if (data.length === 0) return null;
+    return {
+      tooltip: { trigger: "axis", formatter: "{b}: {c}%" },
+      grid: { left: "3%", right: "4%", bottom: "3%", containLabel: true },
+      xAxis: { type: "category", data: data.map(([n]) => n), axisLabel: { fontSize: 9 } },
+      yAxis: { type: "value", name: "%", max: 100 },
+      series: [
+        {
+          type: "bar",
+          data: data.map(([, v]) => Number(v).toFixed(1)),
+          itemStyle: { borderRadius: [4, 4, 0, 0], color: "#4fc3f7" },
+        },
+      ],
+    };
+  }, [zoneShare]);
 
   const barOption = useMemo(() => {
     if (!outputValues || Object.keys(outputValues).length === 0) return null;
@@ -92,8 +114,23 @@ export default function DamageChart({ outputValues }: DamageChartProps) {
         </Box>
       )}
 
+      {zoneOption && (
+        <Box sx={{ height: 220, mt: hasPieData || barOption ? 2 : 0 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
+            乘区贡献占比
+          </Typography>
+          <ReactEChartsCore
+            echarts={echarts}
+            option={zoneOption}
+            style={{ height: "90%" }}
+            notMerge
+            lazyUpdate
+          />
+        </Box>
+      )}
+
       {barOption && (
-        <Box sx={{ height: 220, mt: hasPieData ? 2 : 0 }}>
+        <Box sx={{ height: 220, mt: hasPieData || zoneOption ? 2 : 0 }}>
           <ReactEChartsCore
             echarts={echarts}
             option={barOption}

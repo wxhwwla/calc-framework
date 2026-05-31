@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.14.14"
+_VERSION = "3.14.15"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,11 +432,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 11 处文件
 # BODY:
 # - 修改 please_read_me.py
-# - 修改 web/backend/api/compute.py
-# - 变更 web/frontend/src/components/calculator/BatchCompareDialog.tsx
-# - 变更 web/frontend/src/components/calculator/ManualBuffDialog.tsx
-# - 变更 web/frontend/src/components/calculator/PreviewText.tsx
+# - 修改 web/backend/api/ocr.py
+# - 修改 web/backend/main.py
+# - 变更 web/frontend/src/components/calculator/AttributeDisplay.tsx
+# - 变更 web/frontend/src/components/calculator/DamageChart.tsx
+# - 变更 web/frontend/src/components/calculator/NotificationSnackbar.tsx
+# - 变更 web/frontend/src/components/calculator/OCRUploadDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchBrowserDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchSettingsPanel.tsx
+# - 变更 web/frontend/src/hooks/useUIPreferences.ts
+# - 变更 web/frontend/src/pages/ComputePage.tsx
 # --- END UPLOAD_SUMMARY ---

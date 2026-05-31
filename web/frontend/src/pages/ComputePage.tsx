@@ -348,6 +348,9 @@ export default function ComputePage() {
                   <DamageChart
                     outputValues={outputValues}
                     nodeValues={null}
+                    zoneShare={
+                      damageSnapshot?.zone_share_percent as Record<string, number> | undefined
+                    }
                   />
                 </Box>
               </Box>
