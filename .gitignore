@@ -63,6 +63,9 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
+# 机器学习模型文件（体积大，应自行下载或通过 LFS 管理）
+yolov8n.pt
+
 # 压缩包
 *.zip
 
