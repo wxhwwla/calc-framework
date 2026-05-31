@@ -16,7 +16,7 @@
 # ==================== 版本信息（只在此处修改） ====================
 # _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.12.21"
+_VERSION = "3.12.22"
 _EXE_VERSION = "0.6.0-beta"
 # ==============================================================
 
@@ -216,44 +216,21 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 38 处文件
+# TITLE: 更新 15 处文件
 # BODY:
+# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
 # - 变更 .github/workflows/code-origin-check.yml
-# - 修改 framework/src/calc_framework/graph_editor/file_actions.py
-# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
-# - 修改 framework/src/calc_framework/graph_editor/node_panel.py
-# - 修改 framework/src/calc_framework/graph_editor/package_manager.py
-# - 修改 framework/src/calc_framework/graph_editor/ports.py
-# - 修改 framework/src/calc_framework/graph_editor/prop_panel.py
-# - 修改 framework/src/calc_framework/graph_editor/registry.py
-# - 修改 framework/src/calc_framework/graph_editor/schema.py
-# - 修改 framework/src/calc_framework/graph_editor/wire.py
-# - 修改 framework/src/calc_framework/search/engine.py
-# - 修改 framework/src/calc_framework/search/persist.py
-# - 修改 framework/src/calc_framework/search/session.py
-# - 修改 framework/src/calc_framework/ui/compute_sheet.py
-# - 修改 framework/src/calc_framework/ui/viewer.py
-# - 修改 framework/tests/config/test_file_watcher.py
-# - 修改 framework/tests/dag/test_block_cache.py
-# - 修改 framework/tests/dag/test_end_to_end.py
-# - 修改 framework/tests/dag/test_graph_file_service.py
-# - 修改 framework/tests/graph_editor/test_compiler.py
-# - 修改 framework/tests/graph_editor/test_endfield_zone_package.py
-# - 修改 framework/tests/graph_editor/test_file_actions.py
-# - 修改 framework/tests/graph_editor/test_file_io.py
-# - 修改 framework/tests/graph_editor/test_graph_editor_widget.py
-# - 修改 framework/tests/graph_editor/test_node_operations.py
-# - 修改 framework/tests/graph_editor/test_node_panel.py
-# - 修改 framework/tests/graph_editor/test_package_manager.py
-# - 修改 framework/tests/graph_editor/test_ports_and_wire.py
-# - 修改 framework/tests/graph_editor/test_prop_panel.py
-# - 修改 framework/tests/graph_editor/test_registry.py
-# - 修改 framework/tests/graph_editor/test_serializer.py
-# - 修改 framework/tests/graph_editor/test_wire_creation.py
-# - 修改 framework/tests/inverse/test_advanced_formulas.py
-# - 修改 framework/tests/inverse/test_engine.py
-# - 修改 framework/tests/ocr/test_mapper.py
+# - 变更 .github/workflows/release.yml
+# - 修改 devtool.py
+# - 修改 installer/build_installer.py
+# - 变更 installer/endfield_calculator_setup.nsi
 # - 修改 please_read_me.py
-# - 更新文档 tools/README.md
 # - 修改 tools/check_code_origin.py
+# - 修改 web/backend/api/hub.py
+# - 修改 web/backend/hub/__init__.py
+# - 修改 web/backend/hub/storage.py
+# - 修改 web/backend/main.py
+# - 变更 web/frontend/src/App.tsx
+# - 变更 web/frontend/src/api/hub.ts
+# - 变更 web/frontend/src/pages/MarketplacePage.tsx
 # --- END UPLOAD_SUMMARY ---

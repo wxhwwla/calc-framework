@@ -84,7 +84,7 @@ jobs:
           python -m pip install -e games/endfield ".[dev,build]"
       - name: Build release
         run: python build.py --no-bump
-      - name: Package artifact
+      - name: Package ZIP artifacts
         shell: pwsh
         run: |
           $version = "${{ needs.verify-version.outputs.tag_version }}"
@@ -92,14 +92,36 @@ jobs:
           if (Test-Path "dist/终末地伤害计算器") {
             Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}.zip"
             Write-Host "Created: dist/${name}.zip"
-          } else {
-            Write-Host "dist/ directory contents:"
-            Get-ChildItem dist/ -Recurse | Select-Object FullName
           }
+          if (Test-Path "dist/数据设计器") {
+            $designer_zip = "数据设计器_v${version}.zip"
+            Compress-Archive -Path "dist/数据设计器/*" -DestinationPath "dist/${designer_zip}"
+            Write-Host "Created: dist/${designer_zip}"
+          }
+          if (Test-Path "dist/配置包设计器") {
+            $pack_zip = "配置包设计器_v${version}.zip"
+            Compress-Archive -Path "dist/配置包设计器/*" -DestinationPath "dist/${pack_zip}"
+            Write-Host "Created: dist/${pack_zip}"
+          }
+
+      - name: Build NSIS installer
+        shell: pwsh
+        run: |
+          python devtool.py installer build --version "${{ needs.verify-version.outputs.tag_version }}"
+        continue-on-error: true
+
+      - name: List dist artifacts
+        shell: pwsh
+        run: Get-ChildItem dist/ -Name | Select-Object
+
       - uses: actions/upload-artifact@v4
         with:
           name: release-artifact
-          path: dist/终末地伤害计算器_v*.zip
+          path: |
+            dist/终末地伤害计算器_v*.zip
+            dist/数据设计器_v*.zip
+            dist/配置包设计器_v*.zip
+            dist/GameCalcPlatform_Setup_v*.exe
 
   publish:
     needs: [build, verify-version]
@@ -110,11 +132,19 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: release-artifact
+      - name: List downloaded artifacts
+        shell: bash
+        run: ls -la
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "v${{ needs.verify-version.outputs.tag_version }}"
           tag_name: ${{ github.ref_name }}
-          files: "终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip"
+          files: |
+            终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip
+            数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
+            配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
+            GameCalcPlatform_Setup_v${{ needs.verify-version.outputs.tag_version }}.exe
           generate_release_notes: true
           make_latest: true
+          fail_on_unmatched_files: false

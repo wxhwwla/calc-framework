@@ -291,6 +291,9 @@ class SuspiciousPatternChecker:
         issues: list[Issue] = []
         for path in _iter_py_files(self.root):
             rel = path.relative_to(self.root)
+            # 不检查自身
+            if str(rel) == str(Path("tools") / "check_code_origin.py"):
+                continue
             lines = _read_lines(path)
             if not lines:
                 continue

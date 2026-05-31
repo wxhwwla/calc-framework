@@ -16,11 +16,13 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import BuildIcon from "@mui/icons-material/Build";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import { useNavigate, useLocation } from "react-router-dom";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import ComputePage from "./pages/ComputePage";
 import AdaptersPage from "./pages/AdaptersPage";
 import EditorPage from "./pages/EditorPage";
 import DesignerPage from "./pages/DesignerPage";
 import PackDesignerPage from "./pages/PackDesignerPage";
+import MarketplacePage from "./pages/MarketplacePage";
 
 const drawerWidth = 240;
 
@@ -30,6 +32,7 @@ const navItems = [
   { label: "DAG 编辑器 (Editor)", path: "/editor", icon: <AccountTreeIcon /> },
   { label: "数据设计器 (Designer)", path: "/designer", icon: <BuildIcon /> },
   { label: "配置包设计器 (Pack)", path: "/pack-designer", icon: <Inventory2Icon /> },
+  { label: "Calc Hub 市场", path: "/hub", icon: <StorefrontIcon /> },
 ];
 
 function Shell() {
@@ -75,6 +78,7 @@ function Shell() {
           <Route path="/editor" element={<EditorPage />} />
           <Route path="/designer" element={<DesignerPage />} />
           <Route path="/pack-designer" element={<PackDesignerPage />} />
+          <Route path="/hub" element={<MarketplacePage />} />
           <Route path="*" element={<Navigate to="/compute" replace />} />
         </Routes>
       </Box>

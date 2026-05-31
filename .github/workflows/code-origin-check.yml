@@ -1,9 +1,11 @@
 name: Code Origin Check
 
 on:
-  pull_request:
-    paths: ["**.py"]
   push:
+    branches: [main, master]
+    paths: ["**.py"]
+  pull_request:
+    branches: [main, master]
     paths: ["**.py"]
   workflow_dispatch:
 
@@ -21,12 +23,8 @@ jobs:
           python-version: "3.11"
 
       - name: Run static origin checks (license + suspicious + internal dup)
-        run: |
-          python tools/check_code_origin.py --ci --skip git-diff
-        working-directory: ${{ github.workspace }}
+        run: python tools/check_code_origin.py --ci --skip git-diff
 
       - name: Run git-diff checks for new/modified files
         if: github.event_name == 'pull_request'
-        run: |
-          python tools/check_code_origin.py --ci --skip license-header internal-dup suspicious --since origin/${{ github.base_ref }}
-        working-directory: ${{ github.workspace }}
+        run: python tools/check_code_origin.py --ci --skip license-header internal-dup suspicious --since origin/${{ github.base_ref }}
