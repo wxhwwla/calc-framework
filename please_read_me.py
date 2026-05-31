@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.14.11"
+_VERSION = "3.14.12"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,9 +432,8 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 2 处文件
 # BODY:
+# - 变更 "docs/PythonAnywhere-/351/203/250/347/275/262/346/214/207/345/215/227.md"
 # - 修改 please_read_me.py
-# - 修改 web/backend/api/history.py
-# - 修改 web/backend/api/search.py
 # --- END UPLOAD_SUMMARY ---

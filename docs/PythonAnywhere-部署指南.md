@@ -391,22 +391,40 @@ pip install -r backend/requirements.txt
 ### 更新前端
 
 ```powershell
-# 在本地
+# 在本地（用完整绝对路径，避免目录混淆）
 cd your-project/frontend
 npm install
 npm run build
-Compress-Archive -Path "dist\*" -DestinationPath "dist.zip" -Force
+Compress-Archive -Path "your-project/frontend/dist/*" -DestinationPath "your-project/frontend/dist.zip" -Force
 ```
 
-上传 `dist.zip` 到 PythonAnywhere，然后：
+#### 上传前端 dist.zip
+
+将上一步生成的 `dist.zip` 通过 PythonAnywhere **Files** 页面上传到服务器（如 `/home/yourname/` 目录下），然后：
 
 ```bash
 cd ~/your-project/frontend
 rm -rf dist
-unzip ~/dist.zip -d dist
+mkdir dist
+cd dist
+unzip ~/dist.zip
 rm ~/dist.zip
 # 回到 Web 页面点 Reload
 ```
+
+> ⚠️ **避免 `dist/dist/` 双层嵌套**：如果使用 `unzip ~/dist.zip -d dist`，zip 包内如果包含 `dist/` 文件夹本身（而不是其内容），会产生 `dist/dist/index.html` 的嵌套路径，导致 WSGI 找不到文件、页面返回 404。解决方法之一是用本文推荐的 `mkdir dist && cd dist && unzip ~/dist.zip` 方式，或解压后执行：
+> ```bash
+> cd ~/your-project/frontend/dist && cp -r dist/* . && rm -rf dist
+> ```
+
+#### 验证前端是否更新成功
+
+```bash
+# 检查 JS bundle 大小（新版通常更大，因为包含更多组件）
+ls -lh ~/your-project/frontend/dist/assets/*.js
+```
+
+也可通过浏览器访问 `https://yourname.pythonanywhere.com/` 查看 HTML 中 JS 文件的 hash，与本地 `dist/` 中的文件名对比是否一致（hash 不同表示是新构建）。
 
 ---
 
@@ -536,3 +554,72 @@ A: `frontend/dist/` 目录不存在或文件不完整。检查 `ls ~/your-projec
 
 ### Q: PythonAnywhere 显示 "Your webapp took a long time to reload"
 A: 这是正常提示，实际可能已生效。刷新页面或稍等几秒再试。
+
+---
+
+## 实战避坑记录（2026-05-31 实测）
+
+### 1. Bash 中复制命令的陷阱
+
+PythonAnywhere **Bash 控制台不支持多行粘贴**。粘贴包含多条命令的代码块时，后面的行会被解释为当前交互命令的输入（例如粘贴到 `ssh-keygen` 的路径提示中）。
+
+**正确做法**：每条命令单独复制、粘贴、执行，等提示符返回 `$` 后再执行下一条。
+
+### 2. SSH key 优于 HTTPS
+
+PythonAnywhere 上 `git pull` 用 HTTPS 地址时，需要输入 GitHub 用户名和 Personal Access Token（不是密码），步骤繁琐且容易混淆。推荐改用 SSH：
+
+```bash
+# 在 PythonAnywhere Bash 中生成 SSH key
+ssh-keygen -t ed25519 -C "你的邮箱@github.com"
+# 一路按 Enter 用默认路径和空密码
+
+# 查看公钥
+cat ~/.ssh/id_ed25519.pub
+# 复制输出，添加到 GitHub → Settings → SSH and GPG keys
+
+# 切换远程地址
+cd ~/your-project
+git remote set-url origin git@github.com:你的用户名/你的仓库.git
+
+# 首次连接会确认指纹，输入 yes 即可
+git pull
+```
+
+### 3. `async def` → `def` 兼容问题
+
+PythonAnywhere 免费套餐的 `a2wsgi.ASGIMiddleware` 无法处理 `async def` 端点（uWSGI 没有 event loop，会永久卡住）。
+
+**解决方案**：对不需要 `await` 的简单端点（返回列表、字典、做内存操作等），直接用 `def` 而非 `async def` 声明。例如：
+
+```python
+# 错误的写法（PythonAnywhere 上会卡死）
+@router.get("/enemies")
+async def get_enemy_choices():
+    return [...]
+
+# 正确的写法（同步执行，ASGI 桥接可正常工作）
+@router.get("/enemies")
+def get_enemy_choices():
+    return [...]
+```
+
+### 4. 必须安装 `python-multipart`
+
+FastAPI 的 `Form data` 解析依赖 `python-multipart`，如果后端需要接收表单数据（如文件上传），须在虚拟环境中安装：
+
+```bash
+workon your-virtualenv
+pip install python-multipart
+```
+
+### 5. 前端文件无法更新
+
+如果部署新代码后页面无变化，检查两点：
+
+| 排查步骤 | 方法 |
+|----------|------|
+| 1. `dist/dist/` 嵌套 | `ls ~/your-project/frontend/dist/` 确认直接看到 `index.html` 和 `assets/`，没有嵌套 |
+| 2. JS hash 版本 | 浏览器打开页面查看 HTML 中 `<script>` 的 src，对比本地 `dist/index.html` 中是否一致 |
+| 3. 浏览器缓存 | 按 `Ctrl+F5` 强制刷新（不是普通 F5） |
+| 4. 确认 Web App 已 Reload | 去 PythonAnywhere Web 页面点 Reload |
