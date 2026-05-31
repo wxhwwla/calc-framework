@@ -18,6 +18,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import EstimateIcon from "@mui/icons-material/Calculate";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
 import { estimateSearch, runSearch, runSearchStream, type SearchRequest, type SearchResult, type SearchEstimate, type LoadoutResult, type StreamEvent } from "../../api/search";
 
 interface SearchPanelProps {
@@ -25,6 +26,9 @@ interface SearchPanelProps {
 }
 
 type SearchStatus = "idle" | "estimating" | "ready" | "running" | "done" | "error";
+
+/** 检测是否运行在 PythonAnywhere（不支持全量搜索） */
+const isPythonAnywhere = window.location.hostname.includes("pythonanywhere.com");
 
 export default function SearchPanel({ currentParams }: SearchPanelProps) {
   const [status, setStatus] = useState<SearchStatus>("idle");
@@ -160,6 +164,17 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         全量搜索
       </Typography>
 
+      {isPythonAnywhere && (
+        <Alert severity="warning" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
+          线上环境不支持全量搜索（CPU 时间配额不足 + 无 GPU）。
+          请使用本地后端：
+          <Box component="code" sx={{ display: "block", mt: 0.5, fontSize: "0.85em", bgcolor: "action.hover", p: 1, borderRadius: 1 }}>
+            python web/run_local.py
+          </Box>
+          然后在浏览器访问 <strong>http://localhost:8180</strong>
+        </Alert>
+      )}
+
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
           <TextField
@@ -182,7 +197,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             variant="outlined"
             startIcon={<EstimateIcon />}
             onClick={handleEstimate}
-            disabled={status === "estimating" || status === "running"}
+            disabled={status === "estimating" || status === "running" || isPythonAnywhere}
           >
             预估
           </Button>
@@ -190,7 +205,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             variant="contained"
             startIcon={<SearchIcon />}
             onClick={handleRun}
-            disabled={status === "estimating" || status === "running"}
+            disabled={status === "estimating" || status === "running" || isPythonAnywhere}
             color={status === "ready" ? "success" : "primary"}
           >
             {status === "ready" ? "开始搜索" : "全量搜索"}

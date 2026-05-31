@@ -38,13 +38,19 @@ class SearchWorker(QObject):
         """在 QThread 中执行全量遍历搜索，发射 progress/finished/error 信号。"""
         config = optimizer_config_for_search_job(self._job, top_n=self._top_n)
 
-        def _progress(info: dict) -> None:
-            text = format_search_progress_text(
-                prefix=self._status_prefix,
-                processed=int(info.get("processed", 0)),
-                total=int(info.get("total", 0)),
-                eta_seconds=float(info.get("eta_seconds", 0.0)),
-            )
+        def _progress(info: dict) -> None:
+            processed = int(info.get("processed", 0))
+            total = int(info.get("total", 0))
+            speed = float(info.get("speed_per_sec", 0))
+            eta_seconds = float(info.get("eta_seconds", 0.0))
+            estimated_total = (total / speed) if speed > 0 and total > 0 else 0
+            text = format_search_progress_text(
+                prefix=self._status_prefix,
+                processed=processed,
+                total=total,
+                eta_seconds=eta_seconds,
+                estimated_total_seconds=estimated_total,
+            )
             self.progress.emit(text)
 
         try:

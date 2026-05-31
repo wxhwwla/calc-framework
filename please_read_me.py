@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.14.18"
+_VERSION = "3.14.19"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,8 +432,10 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 4 处文件
 # BODY:
+# - 修改 games/endfield/gui_design/controls/search/qt_actions.py
 # - 修改 please_read_me.py
-# - 变更 web/frontend/src/components/calculator/CharacterSelector.tsx
+# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
+# - 修改 web/run_local.py
 # --- END UPLOAD_SUMMARY ---
