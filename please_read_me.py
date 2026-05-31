@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.14.10"
+_VERSION = "3.14.11"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,27 +432,9 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 21 处文件
+# TITLE: 更新 3 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
 # - 修改 please_read_me.py
 # - 修改 web/backend/api/history.py
 # - 修改 web/backend/api/search.py
-# - 修改 web/backend/main.py
-# - 变更 web/frontend/package-lock.json
-# - 变更 web/frontend/package.json
-# - 变更 web/frontend/src/api/history.ts
-# - 变更 web/frontend/src/api/search.ts
-# - 变更 web/frontend/src/components/calculator/AttributeDisplay.tsx
-# - 变更 web/frontend/src/components/calculator/CalcHistoryDialog.tsx
-# - 变更 web/frontend/src/components/calculator/CritAndAbnormalPanel.tsx
-# - 变更 web/frontend/src/components/calculator/DamageChart.tsx
-# - 变更 web/frontend/src/components/calculator/EnemyParamPanel.tsx
-# - 变更 web/frontend/src/components/calculator/FixedLoadoutPanel.tsx
-# - 变更 web/frontend/src/components/calculator/MultiSkillPanel.tsx
-# - 变更 web/frontend/src/components/calculator/PresetDialog.tsx
-# - 变更 web/frontend/src/components/calculator/PreviewText.tsx
-# - 变更 web/frontend/src/components/calculator/SearchHistoryDialog.tsx
-# - 变更 web/frontend/src/pages/ComputePage.tsx
 # --- END UPLOAD_SUMMARY ---

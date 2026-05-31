@@ -437,7 +437,7 @@ async def run_search(req: SearchRequest):
 
 
 @router.get("/enemies")
-async def get_enemy_choices():
+def get_enemy_choices():
     """获取敌方参数列表（含默认值）。"""
     return [
         {
@@ -762,13 +762,13 @@ _search_history: list[dict] = []
 
 
 @router.get("/history")
-async def list_search_history():
+def list_search_history():
     """获取搜索历史列表。"""
     return list(reversed(_search_history))
 
 
 @router.post("/history")
-async def save_search_history(entry: dict):
+def save_search_history(entry: dict):
     """保存一次搜索记录。"""
     _search_history.append(entry)
     while len(_search_history) > 10:

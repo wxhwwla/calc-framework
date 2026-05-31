@@ -11,12 +11,12 @@ _history: list[dict] = []
 
 
 @router.get("")
-async def list_history():
+def list_history():
     return list(reversed(_history))
 
 
 @router.post("")
-async def save_history(entry: dict):
+def save_history(entry: dict):
     entry["saved_at"] = datetime.now(timezone.utc).isoformat()
     _history.append(entry)
     while len(_history) > MAX_HISTORY:
