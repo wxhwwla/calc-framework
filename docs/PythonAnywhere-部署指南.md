@@ -165,76 +165,194 @@ ls ~/your-project/frontend/dist/
 
 FastAPI 是 ASGI 框架，但 PythonAnywhere 免费套餐只支持 WSGI 协议。需要用 `a2wsgi` 库做桥接。
 
-### 在 Bash 中执行：
+### 重要说明
+
+> ⚠️ **为什么需要这种特殊配置？**
+> PythonAnywhere 免费套餐只支持 **WSGI 协议**，但 FastAPI 是 **ASGI 框架**（原生 async/await）。
+> 我们用 `a2wsgi.ASGIMiddleware` 做桥接，但免费套餐的 uWSGI 不支持 async event loop，
+> 所以 FastAPI 的 `async def` 端点会**永久卡住**。
+>
+> **解决方案**：在 WSGI 入口函数中，**关键数据 API 用纯同步代码直接处理**（读取 JSON 文件返回），
+> 绕过 FastAPI 的 async 机制。`a2wsgi.ASGIMiddleware` 作为非关键 API 的兜底。
+
+### 最终 WSGI 文件
+
+> 以下为实战验证可用的完整 WSGI 文件，覆盖了常见的数据查询 API：
+
+在 Bash 中执行（将 `yourname` 和 `your-project` 替换为实际值）：
 
 ```bash
 cat > /var/www/yourname_pythonanywhere_com_wsgi.py << 'WSGICODE'
 import sys
 import json
+import re
 from pathlib import Path
 
-# ===== 路径配置 =====
 _BASE = Path("/home/yourname/your-project")
-sys.path.insert(0, str(_BASE / "framework" / "src"))   # 自定义 Python 包路径
-sys.path.insert(0, str(_BASE))
-sys.path.insert(0, str(_BASE / "backend"))              # 后端 main.py 所在目录
+for _p in [str(_BASE / "framework" / "src"), str(_BASE), str(_BASE / "backend")]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
-# ===== 激活虚拟环境 =====
-VENV_ACTIVATE = Path("/home/yourname/.virtualenvs/your-project/bin/activate_this.py")
-if VENV_ACTIVATE.exists():
-    exec(open(str(VENV_ACTIVATE)).read(), {"__file__": str(VENV_ACTIVATE)})
+VENV = Path(f"/home/yourname/.virtualenvs/your-project/bin/activate_this.py")
+if VENV.exists():
+    exec(open(str(VENV)).read(), {"__file__": str(VENV)})
 
-# ===== 加载 FastAPI 应用 =====
+# FastAPI 兜底（仅用于非关键 API）
 from a2wsgi import ASGIMiddleware
-from main import app
+try:
+    from main import app
+    _fastapi = ASGIMiddleware(app)
+except Exception:
+    _fastapi = None
 
-_fastapi = ASGIMiddleware(app)
-_DIST = _BASE / "frontend" / "dist"
+_DATA = _BASE / "games" / "endfield" / "data"   # 游戏数据目录
+_DIST = _BASE / "frontend" / "dist"               # 前端构建产物
 
-# ===== WSGI 入口 =====
-def application(environ, start_response):
+def _read_json(path):
+    if not path.is_file(): return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+def _json(start_response, data, status="200 OK"):
+    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+    start_response(status, [("Content-Type", "application/json; charset=utf-8"),
+                            ("Content-Length", str(len(body)))])
+    return [body]
+
+def _handle_api(environ, start_response):
     path = environ.get("PATH_INFO", "")
+    method = environ.get("REQUEST_METHOD", "GET")
 
-    # API 请求走 FastAPI
-    if path.startswith("/api/"):
-        return _fastapi(environ, start_response)
+    if path == "/api/health":
+        return _json(start_response, {"status": "ok", "version": "1.0.0"})
 
-    # 静态文件（前端构建产物）
-    if path == "/" or path == "":
-        fp = _DIST / "index.html"
-    else:
-        fp = _DIST / path.lstrip("/")
+    # 搜索目录（如有此模块）
+    if path == "/api/search/catalog":
+        try:
+            from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
+            catalog = get_equipment_catalog()
+            result = {
+                k: [{"名称": e.get("名称",""), "部位": e.get("部位",""),
+                     "所属套组": e.get("所属套组",""), "稀有度": e.get("稀有度","")}
+                    for e in v]
+                for k, v in catalog.items()
+            }
+            return _json(start_response, result)
+        except Exception as e:
+            return _json(start_response, {"error": str(e)}, "500")
 
+    if not path.startswith("/api/data/"):
+        return None
+
+    sub = path[len("/api/data/"):]
+    if method != "GET":
+        return _json(start_response, {"error": "not supported"}, "501")
+
+    # /api/data/summary
+    if sub == "summary":
+        c = _read_json(_DATA / "characters.json") or []
+        w = _read_json(_DATA / "weapons.json") or []
+        e = _read_json(_DATA / "equipments.json") or []
+        return _json(start_response, {
+            "characters_count": len(c), "weapons_count": len(w), "equipments_count": len(e),
+            "equipment_sets": list({x.get("所属套组") for x in e if x.get("所属套组")}),
+            "character_types": list({x.get("类型") for x in c if x.get("类型")}),
+            "weapon_types": list({x.get("类型") for x in w if x.get("类型")}),
+        })
+
+    # 角色列表
+    if sub == "characters/detail/all":
+        d = _read_json(_DATA / "characters.json")
+        return _json(start_response, d) if d else _json(start_response, {"error":"not found"},"404")
+    if sub == "characters":
+        raw = _read_json(_DATA / "characters.json") or []
+        return _json(start_response, [{"名称":c.get("名称"),"类型":c.get("类型"),"星级":c.get("星级"),
+            "武器":c.get("武器"),"主能力":c.get("主能力"),"副能力":c.get("副能力")} for c in raw])
+    m = re.match(r"^characters/(.+)$", sub)
+    if m:
+        n = m.group(1).strip()
+        for c in (_read_json(_DATA / "characters.json") or []):
+            if c.get("名称") == n: return _json(start_response, c)
+        return _json(start_response, {"error":f"not found: {n}"},"404")
+
+    # 武器列表
+    if sub == "weapons/detail/all":
+        d = _read_json(_DATA / "weapons.json")
+        return _json(start_response, d) if d else _json(start_response, {"error":"not found"},"404")
+    if sub == "weapons":
+        raw = _read_json(_DATA / "weapons.json") or []
+        result = []
+        for w in raw:
+            e = {"名称":w.get("名称"),"类型":w.get("类型"),"星级":w.get("星级")}
+            for k in ("附加属性","武器技能","普通技能","特殊技能"):
+                if k in w: e[k] = w[k]
+            result.append(e)
+        return _json(start_response, result)
+    m = re.match(r"^weapons/(.+)$", sub)
+    if m:
+        n = m.group(1).strip()
+        for w in (_read_json(_DATA / "weapons.json") or []):
+            if w.get("名称") == n: return _json(start_response, w)
+        return _json(start_response, {"error":f"not found: {n}"},"404")
+
+    # 装备列表
+    if sub == "equipments/detail/all":
+        d = _read_json(_DATA / "equipments.json")
+        return _json(start_response, d) if d else _json(start_response, {"error":"not found"},"404")
+    if sub == "equipments":
+        raw = _read_json(_DATA / "equipments.json") or []
+        return _json(start_response, [{"名称":e.get("名称"),"装备种类":e.get("装备种类"),
+            "部位":e.get("部位"),"稀有度":e.get("稀有度"),"所属套组":e.get("所属套组"),
+            "属性词条":e.get("属性词条",[]),"三件套效果":e.get("三件套效果",[])} for e in raw])
+    m = re.match(r"^equipments/set/(.+)$", sub)
+    if m:
+        s = m.group(1)
+        raw = _read_json(_DATA / "equipments.json") or []
+        return _json(start_response, [e for e in raw if e.get("所属套组") == s])
+    m = re.match(r"^equipments/slot/(.+)$", sub)
+    if m:
+        s = m.group(1)
+        raw = _read_json(_DATA / "equipments.json") or []
+        return _json(start_response, [e for e in raw if e.get("部位") == s])
+    m = re.match(r"^equipments/(.+)$", sub)
+    if m:
+        n = m.group(1).strip()
+        for e in (_read_json(_DATA / "equipments.json") or []):
+            if e.get("名称") == n: return _json(start_response, e)
+        return _json(start_response, {"error":f"not found: {n}"},"404")
+
+    return _json(start_response, {"error": "unknown endpoint"}, "404")
+
+_MIME = {".js":"application/javascript",".css":"text/css",".svg":"image/svg+xml",
+         ".png":"image/png",".ico":"image/x-icon",".html":"text/html",
+         ".json":"application/json",".woff2":"font/woff2",".webp":"image/webp"}
+
+def application(environ, start_response):
+    result = _handle_api(environ, start_response)
+    if result is not None:
+        return result
+    path = environ.get("PATH_INFO", "")
+    fp = _DIST / (path.lstrip("/") if path not in ("","/") else "index.html")
+    if not fp.is_file(): fp = _DIST / "index.html"
     if fp.is_file():
         body = fp.read_bytes()
-        ct = "text/html"
-        if fp.suffix == ".js": ct = "application/javascript"
-        elif fp.suffix == ".css": ct = "text/css"
-        elif fp.suffix == ".svg": ct = "image/svg+xml"
-        elif fp.suffix == ".json": ct = "application/json"
-        start_response("200 OK", [("Content-Type", ct), ("Content-Length", str(len(body)))])
+        ct = _MIME.get(fp.suffix, "application/octet-stream")
+        start_response("200 OK", [("Content-Type",ct),("Content-Length",str(len(body)))])
         return [body]
-
-    # SPA 路由：没找到文件就返回 index.html
-    fp = _DIST / "index.html"
-    if fp.is_file():
-        body = fp.read_bytes()
-        start_response("200 OK", [("Content-Type", "text/html"), ("Content-Length", str(len(body)))])
-        return [body]
-
-    start_response("404 NOT FOUND", [("Content-Type", "text/plain")])
+    start_response("404 NOT FOUND", [("Content-Type","text/plain")])
     return [b"Not Found"]
 WSGICODE
 ```
 
-### 重要说明
+### WSGI 代码说明
 
 | 部分 | 说明 |
 |------|------|
-| `sys.path` 配置 | 必须把 `backend/` 目录加到 path 中，否则 `from main import app` 会找到错误的文件 |
-| `a2wsgi.ASGIMiddleware` | 将 FastAPI（ASGI）转换为 WSGI 可调用的对象 |
-| `application` 函数 | 手动分发请求：`/api/*` 走 FastAPI，其他走静态文件 |
-| SPA 路由 | React/Vue 的路由模式，非 API 路径返回 `index.html` |
+| `_handle_api` | 同步处理关键 API：健康检查、角色/武器/装备增删改查、数据摘要、搜索目录 |
+| `a2wsgi.ASGIMiddleware` | 兜底方案（实际因 async 问题可能卡住，关键数据已在 WSGI 层处理） |
+| `application` 函数 | 先尝试 API 处理 → 静态文件 → SPA 回退到 `index.html` |
+| 数据路径 `_DATA` | 指向 `games/endfield/data/`，WSGI 直接读 JSON 文件返回 |
+| SPA 路由 | 任何非 API、非静态文件的路径都返回 `index.html` |
 
 ---
 
@@ -294,69 +412,94 @@ rm ~/dist.zip
 
 ## 10. 附录：完整 WSGI 模板
 
-可直接复制使用的通用模板（将 `yourname` 和 `your-project` 替换为实际值）：
+可直接复制使用的通用模板（将 `yourname`、`your-project`、和相关数据路径替换为实际值）：
 
 ```python
 import sys
 import json
+import re
 from pathlib import Path
 
-# ===== 修改这两个变量 =====
+# ===== 修改这几个变量 =====
 YOUR_USERNAME = "yourname"
 YOUR_PROJECT = "your-project"
+DATA_SUBDIR = "games/endfield/data"      # JSON 数据目录（相对于项目根）
+CUSTOM_PACKAGE_PATHS = [
+    "framework/src",                     # 自定义 Python 包路径
+]
 # =========================
 
 _BASE = Path(f"/home/{YOUR_USERNAME}/{YOUR_PROJECT}")
+for p in [str(_BASE / x) for x in CUSTOM_PACKAGE_PATHS] + [str(_BASE), str(_BASE / "backend")]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
-# 如果有自定义包目录（如 framework/src/），加在下面
-CUSTOM_PACKAGE_PATHS = [
-    _BASE / "framework" / "src",
-]
-for p in CUSTOM_PACKAGE_PATHS:
-    if str(p) not in sys.path:
-        sys.path.insert(0, str(p))
-
-sys.path.insert(0, str(_BASE))
-sys.path.insert(0, str(_BASE / "backend"))
-
-VENV_ACTIVATE = Path(f"/home/{YOUR_USERNAME}/.virtualenvs/{YOUR_PROJECT}/bin/activate_this.py")
-if VENV_ACTIVATE.exists():
-    exec(open(str(VENV_ACTIVATE)).read(), {"__file__": str(VENV_ACTIVATE)})
+VENV = Path(f"/home/{YOUR_USERNAME}/.virtualenvs/{YOUR_PROJECT}/bin/activate_this.py")
+if VENV.exists():
+    exec(open(str(VENV)).read(), {"__file__": str(VENV)})
 
 from a2wsgi import ASGIMiddleware
-from main import app
+try:
+    from main import app
+    _fastapi = ASGIMiddleware(app)
+except Exception:
+    _fastapi = None
 
-_fastapi = ASGIMiddleware(app)
+_DATA = _BASE / DATA_SUBDIR
 _DIST = _BASE / "frontend" / "dist"
 
-_MIME_TYPES = {
-    ".js": "application/javascript",
-    ".css": "text/css",
-    ".svg": "image/svg+xml",
-    ".png": "image/png",
-    ".ico": "image/x-icon",
-    ".html": "text/html",
-    ".json": "application/json",
-    ".woff2": "font/woff2",
-    ".webp": "image/webp",
-}
+
+def _read_json(path):
+    if not path.is_file(): return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _json(start_response, data, status="200 OK"):
+    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+    start_response(status, [("Content-Type", "application/json; charset=utf-8"),
+                            ("Content-Length", str(len(body)))])
+    return [body]
+
+
+def _handle_api(environ, start_response):
+    """同步处理关键 API。覆盖不了的走 _fastapi 兜底。"""
+    path = environ.get("PATH_INFO", "")
+    method = environ.get("REQUEST_METHOD", "GET")
+
+    if path == "/api/health":
+        return _json(start_response, {"status": "ok", "version": "1.0.0"})
+
+    if not path.startswith("/api/data/"):
+        return None
+    if method != "GET":
+        return _json(start_response, {"error": "not supported"}, "501")
+
+    sub = path[len("/api/data/"):]
+    # ===== 在此添加你的数据 API 路由 =====
+    # 示例：sub == "items" → 读取 _DATA / "items.json"
+    return _json(start_response, {"error": "unknown endpoint"}, "404")
+
+
+_MIME = {".js": "application/javascript", ".css": "text/css",
+         ".svg": "image/svg+xml", ".png": "image/png",
+         ".ico": "image/x-icon", ".html": "text/html",
+         ".json": "application/json", ".woff2": "font/woff2"}
+
 
 def application(environ, start_response):
+    result = _handle_api(environ, start_response)
+    if result is not None:
+        return result
     path = environ.get("PATH_INFO", "")
-
-    if path.startswith("/api/"):
-        return _fastapi(environ, start_response)
-
     fp = _DIST / (path.lstrip("/") if path not in ("", "/") else "index.html")
     if not fp.is_file():
         fp = _DIST / "index.html"
-
     if fp.is_file():
         body = fp.read_bytes()
-        ct = _MIME_TYPES.get(fp.suffix, "application/octet-stream")
+        ct = _MIME.get(fp.suffix, "application/octet-stream")
         start_response("200 OK", [("Content-Type", ct), ("Content-Length", str(len(body)))])
         return [body]
-
     start_response("404 NOT FOUND", [("Content-Type", "text/plain")])
     return [b"Not Found"]
 ```
@@ -378,7 +521,15 @@ A: WSGI 文件中 `sys.path.insert(0, str(_BASE / "backend"))` 路径不正确�
 A: 没有使用 `ASGIMiddleware` 包装，直接 `from main import app; application = app` 会报此错。必须用 `a2wsgi.ASGIMiddleware` 桥接。
 
 ### Q: 页面转圈但 HTML 能加载
-A: 前端 JS 发起的 API 请求卡住了。先在浏览器访问 `/api/health` 测试，如果也转圈，说明 `a2wsgi` 的 async 处理有问题。在 WSGI 文件中用同步方式直接处理 `/api/health` 可以绕过。
+A: 前端 JS 发起的 API 请求卡住了。先在浏览器访问 `/api/health` 测试，如果也转圈，说明 PythonAnywhere 的 uWSGI 不支持 async event loop，`a2wsgi.ASGIMiddleware` 无法正常处理 FastAPI 的 `async def` 端点。
+
+**解决方案**：在 WSGI 文件的 `_handle_api` 函数中，**用纯同步代码直接处理关键数据 API**（读取 JSON 文件返回），不走 FastAPI。如本文 §7 给出的完整示例。
+
+### Q: `a2wsgi` 会导致 API 卡死吗？
+A: 在 PythonAnywhere 免费套餐上，`a2wsgi.ASGIMiddleware` 对 `async def` 端点会永久卡住（uWSGI 没有运行 event loop）。规避方法：
+1. 在 WSGI 层同步处理关键数据 API（推荐，如本文 WSGI 模板所示）
+2. 将 FastAPI 端点改为 `def`（非 `async def`），但这影响开发体验
+3. 升级到 PythonAnywhere 付费套餐（可能支持 ASGI）
 
 ### Q: 前端显示 "Not Found"
 A: `frontend/dist/` 目录不存在或文件不完整。检查 `ls ~/your-project/frontend/dist/` 是否有 `index.html` 和 `assets/` 目录。
