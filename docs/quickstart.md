@@ -330,7 +330,7 @@ python main.py
 
 ### 示例 1：终末地适配器（15 乘区）
 
-参考 `framework/adapters/endfield/`：
+参考 `framework/calc_engine/endfield/`：
 
 | 文件 | 用途 |
 |------|------|

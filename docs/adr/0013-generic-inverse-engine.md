@@ -8,7 +8,7 @@
 
 ## 上下文
 
-项目的公式反推引擎（`adapters/endfield/calc/damage/inverse/`）是为终末地专属的 floor 线性公式设计的：`value = base + floor((growth * (lv - 1) + offset) / divisor)`。
+项目的公式反推引擎（`calc_engine/endfield/calc/damage/inverse/`）是为终末地专属的 floor 线性公式设计的：`value = base + floor((growth * (lv - 1) + offset) / divisor)`。
 
 随着框架新增 card_rpg / moba / fps 三个跨品类适配器，需要将反推逻辑**从游戏专属适配器提升为框架级 SPI 服务**，使得：
 1. 任何游戏适配器都能直接使用框架的反推引擎
@@ -71,8 +71,8 @@ calc_framework/inverse/
 
 | 组件 | 影响 |
 |------|------|
-| `adapters/endfield/calc/damage/inverse/` | `fit_core.py` 精简 73%，`_find_best_params` 委托框架 |
-| `adapters/endfield/tests/.../test_inverse_refactored.py` | 12 个测试 0 回归 |
+| `calc_engine/endfield/calc/damage/inverse/` | `fit_core.py` 精简 73%，`_find_best_params` 委托框架 |
+| `calc_engine/endfield/tests/.../test_inverse_refactored.py` | 12 个测试 0 回归 |
 | `adapters/card_rpg/` | 可通过 `InverseEngine` 直接反推，无需自实现 |
 | `framework/tests/inverse/` | 新增 26 个测试 |
 | CLI/GUI 反推工具 | 无变更（底层委托框架） |

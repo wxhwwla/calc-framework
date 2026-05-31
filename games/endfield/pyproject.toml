@@ -62,7 +62,7 @@ include = [
 exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-testpaths = ["../adapters/endfield/tests"]
+testpaths = ["../calc_engine/endfield/tests"]
 pythonpath = [".", "../..", "../adapters"]
 # 本地日常：pytest -m "not integration and not real_data and not slow"
 # CI 仍跑全量：pytest tests/ -q

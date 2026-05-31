@@ -649,7 +649,7 @@ DAG JSON 中通过 `"template": "defense_reduction"` 引用。
 |------|------|------|
 | AttributeDecl | `attr_schema.py` | 单属性声明（name/type/source/default/description） |
 | AttributeSchema | `attr_schema.py` | 多属性集合，支持 from_file/from_dict/resolve/validate |
-| 终末地声明 | `adapters/endfield/attr_schema.json` | 14 个属性（含默认值） |
+| 终末地声明 | `calc_engine/endfield/attr_schema.json` | 14 个属性（含默认值） |
 | 单元测试 | `tests/data/test_attr_schema.py` | 27 个测试 |
 
 **效果**：适配器现在可以用纯 JSON 声明自己的字段结构，框架自动构建 DataContext 并校验。

@@ -33,6 +33,16 @@ Mark ALL diagnostics with a severity label:
 - Match existing code conventions (imports, typing, framework choices)
 - Before adding a new library, check that it's already used in the project
 
+## Parallel Execution
+When a task can be broken into independent subtasks, run them in parallel (single message, multiple tool calls) to minimize wall-clock time. Examples:
+- Running code check + updating docs concurrently
+- Reading multiple files at once for analysis
+- Searching multiple directories/patterns simultaneously
+- Applying edits to multiple independent files in parallel
+- Running independent test suites at the same time
+
+Always batch independent tool calls (Read, Grep, SearchReplace, RunCommand, etc.) into a single message. Do NOT sequentialize operations that have no dependency on each other.
+
 ## Task Completion Protocol
 When ALL tasks are marked done, MUST do these in order:
 

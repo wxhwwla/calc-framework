@@ -537,7 +537,7 @@ class DAGResult:
 ### 6.1 游戏适配包的目录结构
 
 ```yaml
-adapters/
+calc_engine/
   endfield/                         # 终末地适配包
     dag/
       formula.dag.json              # 主公式 DAG 图

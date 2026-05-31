@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """端到端验证：用真实伤害公式验证 GraphCompiler + DAGService 流水线。"""
 
 import tempfile
 from pathlib import Path
 
 from calc_framework.dag.service import DAGService
+from calc_framework.graph_editor.dag_service_factory import (
+    dag_service_from_graph_document,
+    dag_service_from_graph_file,
+)
 from calc_framework.graph_editor.schema import (
     GraphDocument,
     GraphEdge,
@@ -70,7 +75,7 @@ class TestEndToEndAttackChain:
 
     def test_attack_chain_direct(self) -> None:
         doc = self._build_attack_doc(500, 300, 0.15, 50)
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({
             "character": {"基础攻击": 500},
             "weapon": {"基础攻击": 300, "攻击力+": 0.15},
@@ -89,7 +94,7 @@ class TestEndToEndAttackChain:
             fname = Path(f.name)
 
         try:
-            svc = DAGService.from_graph_file(fname)
+            svc = dag_service_from_graph_file(fname)
             res = svc.evaluate({
                 "character": {"基础攻击": 1000},
                 "weapon": {"基础攻击": 200, "攻击力+": 0.20},
@@ -113,7 +118,7 @@ class TestEndToEndAttackChain:
             edges=[GraphEdge(from_node="v", from_port=0, to_node="floor", to_port=0)],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["floor"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({"x": 42.7})
         assert res.outputs["floor"] == 42.0
 
@@ -173,7 +178,7 @@ class TestEndToEndDamageFormula:
             layout=GraphLayout(sections=[SectionDef(id="r", title="最终伤害", output_nodes=["final_dmg"])]),
         )
 
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({
             "computed": {
                 "atk": 1500.0,
@@ -213,7 +218,7 @@ class TestEndToEndEdgeCases:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="平方根", output_nodes=["sqrt_n"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         # -(-4.7) = 4.7 → abs = 4.7 → floor = 4 → ceil = 4 → sqrt = 2
         assert res.outputs["sqrt_n"] == 2.0
@@ -232,7 +237,7 @@ class TestEndToEndEdgeCases:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["mod"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert res.outputs["mod"] == 2.0  # 17 % 5 = 2
 
@@ -252,7 +257,7 @@ class TestEndToEndEdgeCases:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["cond"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert res.outputs["cond"] == 999.0
 
@@ -273,7 +278,7 @@ class TestEndToEndEdgeCases:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="和", output_nodes=["out"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert res.outputs["add"] == 30.0
 
@@ -300,7 +305,7 @@ class TestExtendedOps:
                 SectionDef(id="r2", title="log10", output_nodes=["log10_op"]),
             ]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert abs(res.outputs["ln_op"] - 1.0) < 1e-4
         assert abs(res.outputs["log10_op"] - 2.0) < 1e-9
@@ -328,7 +333,7 @@ class TestExtendedOps:
                 SectionDef(id="r3", title="tan", output_nodes=["tan_op"]),
             ]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert abs(res.outputs["sin_op"]) < 1e-9
         assert abs(res.outputs["cos_op"] - 1.0) < 1e-9
@@ -360,7 +365,7 @@ class TestExtendedOps:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="求和", output_nodes=["add"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         # ln(10) + sin(π/2)*cos(0) = ln(10) + 1*1 = ln(10) + 1
         expected = 1.0 + 1.0  # sin(π/2)=1, cos(0)=1
@@ -389,7 +394,7 @@ class TestExtendedOps:
                 SectionDef(id="r3", title="atan", output_nodes=["atan_op"]),
             ]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert abs(res.outputs["asin_op"]) < 1e-9
         assert abs(res.outputs["acos_op"]) < 1e-9

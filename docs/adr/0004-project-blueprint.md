@@ -83,7 +83,7 @@
 | 2 | 适配包加载器 | `calc_framework/config/adapter.py` — AdapterPackage | ✅ |
 | 2 | 终末地连线 | `EndfieldContextLoader` + `meta.json` + adapter.py 重构 | ✅ |
 | 3 | `calc_framework/ui/` | 声明式 UI 渲染引擎（format/layout/controls/compute_sheet） | ✅ |
-| 3 | 终末地 layout.json | `adapters/endfield/ui/layout.json` | ✅ |
+| 3 | 终末地 layout.json | `calc_engine/endfield/ui/layout.json` | ✅ |
 
 ### 3.2 待完成
 

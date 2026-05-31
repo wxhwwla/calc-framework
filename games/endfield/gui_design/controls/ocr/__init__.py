@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_framework.logging import get_logger
+from games.endfield.framework_bridge import get_logger
 
 _logger = get_logger("gui.ocr")
 

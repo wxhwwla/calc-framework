@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """DAGService 加载 graph.json 格式测试。"""
 
 import tempfile
 from pathlib import Path
 
 from calc_framework.dag.service import DAGService
+from calc_framework.graph_editor.dag_service_factory import (
+    dag_service_from_graph_document,
+    dag_service_from_graph_file,
+)
 from calc_framework.graph_editor.schema import (
     GraphDocument,
     GraphEdge,
@@ -31,7 +36,7 @@ class TestGraphFileToDAGService:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["s"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert res.outputs["s"] == 30.0
 
@@ -56,7 +61,7 @@ class TestGraphFileToDAGService:
             fname = Path(f.name)
 
         try:
-            svc = DAGService.from_graph_file(fname)
+            svc = dag_service_from_graph_file(fname)
             res = svc.evaluate({})
             assert res.outputs["m"] == 42.0
         finally:
@@ -78,7 +83,7 @@ class TestGraphFileToDAGService:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["r"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({"atk": 500.0})
         assert res.outputs["r"] == 1000.0
 
@@ -95,7 +100,7 @@ class TestGraphFileToDAGService:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["out"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         assert res.outputs["val"] == 99.0
 
@@ -110,6 +115,6 @@ class TestGraphFileToDAGService:
             ],
             layout=GraphLayout(sections=[SectionDef(id="r", title="结果", output_nodes=["v"])]),
         )
-        svc = DAGService.from_graph_document(doc)
+        svc = dag_service_from_graph_document(doc)
         assert "atk" in svc.dag.variables
         assert svc.dag.variables["atk"].source == "character"
