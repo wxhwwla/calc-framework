@@ -21,7 +21,7 @@ from calc_framework.config.adapter import AdapterPackage
 from games.endfield.calc.dag_adapter.loader import EndfieldContextLoader
 from games.endfield.calc.zone_snapshot.types import ZoneDisplayLine
 
-_FRAMEWORK_DIR = Path(__file__).resolve().parents[5] / "framework"
+_FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
 _ADAPTER_DIR = _FRAMEWORK_DIR / "adapters" / "endfield"
 

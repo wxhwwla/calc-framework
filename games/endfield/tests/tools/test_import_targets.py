@@ -84,7 +84,7 @@ class TestImportTargets(unittest.TestCase):
 
     def test_wiki_imported_weapon_matches_project_json_shape(self):
         """BWIKI --new 写入后，条目须含 90 级基础攻击与潜能曲线字段。"""
-        path = REPO_ROOT / "adapters" / "endfield" / "data" / "weapons.json"
+        path = REPO_ROOT / "games" / "endfield" / "data" / "weapons.json"
         rows = json.loads(path.read_text(encoding="utf-8"))
         jet = next(r for r in rows if r.get("名称") == "J.E.T.")
         self.assertEqual(jet["类型"], "长柄武器")

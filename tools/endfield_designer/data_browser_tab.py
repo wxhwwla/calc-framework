@@ -68,7 +68,7 @@ class DataBrowserTab(QWidget):
         super().__init__()
         self._big = big_font
         self._small = small_font
-        self._pkg_root = Path(__file__).resolve().parent.parent.parent / "adapters" / "endfield"
+        self._pkg_root = Path(__file__).resolve().parent.parent.parent / "framework" / "adapters" / "endfield"
         self._all_data: list[dict[str, Any]] = []
         self._build_ui()
         self._load_data()
