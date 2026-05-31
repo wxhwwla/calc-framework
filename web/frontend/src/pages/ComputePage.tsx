@@ -1,11 +1,26 @@
 import { useEffect, useState, useCallback } from "react";
-import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab } from "@mui/material";
+import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button } from "@mui/material";
 import CharacterSelector from "../components/calculator/CharacterSelector";
 import AttributeDisplay from "../components/calculator/AttributeDisplay";
 import WebComputeSheet from "../components/WebComputeSheet";
 import SearchPanel from "../components/calculator/SearchPanel";
+import EnemyParamPanel from "../components/calculator/EnemyParamPanel";
+import MultiSkillPanel from "../components/calculator/MultiSkillPanel";
+import FixedLoadoutPanel from "../components/calculator/FixedLoadoutPanel";
+import PresetDialog from "../components/calculator/PresetDialog";
+import CritAndAbnormalPanel from "../components/calculator/CritAndAbnormalPanel";
+import PreviewText from "../components/calculator/PreviewText";
+import DamageChart from "../components/calculator/DamageChart";
+import CalcHistoryDialog from "../components/calculator/CalcHistoryDialog";
+import SearchHistoryDialog from "../components/calculator/SearchHistoryDialog";
 import type { LayoutDefinition } from "../components/WebComputeSheet";
 import type { DagVariable } from "../utils/controlInference";
+import type { EnemyParams } from "../api/search";
+import type { MultiSkillSettings } from "../components/calculator/MultiSkillPanel";
+import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadoutPanel";
+import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
+import type { PresetData } from "../components/calculator/PresetDialog";
+import BuildIcon from "@mui/icons-material/Build";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate } from "../api/compute";
@@ -26,6 +41,31 @@ export default function ComputePage() {
   const [outputValues, setOutputValues] = useState<Record<string, number>>({});
   const [inputValues, _setInputValues] = useState<Record<string, number | boolean | string>>({});
 
+  const [enemyParams, setEnemyParams] = useState<EnemyParams>({
+    enemy_defense: 100,
+    enemy_resistance: 0,
+    ignore_resistance: 0,
+    imbalance_vulnerability_coeff: 1.3,
+    is_unbalanced: false,
+  });
+  const [multiSkill, setMultiSkill] = useState<MultiSkillSettings>({
+    useManualCounts: false,
+    manualCounts: {},
+    damageComponentMode: "skill_and_abnormal",
+    useExpectedCrit: false,
+  });
+  const [fixedLoadout, setFixedLoadout] = useState<FixedLoadoutSelection | null>(null);
+  const [critAbnormal, setCritAbnormal] = useState<CritAndAbnormalSettings>({
+    extraCritRate: 0,
+    extraCritDamage: 0,
+    includeConditionalEquipmentCrit: false,
+    physicalAbnormalCounts: {},
+    spellAbnormalCounts: {},
+  });
+  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [searchHistoryOpen, setSearchHistoryOpen] = useState(false);
+  const [historyEntry, setHistoryEntry] = useState<Record<string, unknown> | null>(null);
   const [allWeapons, setAllWeapons] = useState<any[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
 
@@ -47,6 +87,21 @@ export default function ComputePage() {
   const handleSelectWeapon = useCallback((name: string, data: Record<string, unknown>) => {
     setSelectedWeapon(name);
     setWeaponData(data);
+  }, []);
+
+  const handleImportPreset = useCallback((data: PresetData) => {
+    setSelectedChar(data.char_name);
+    setSelectedWeapon(data.weapon_name);
+    setEnemyParams(data.enemy_params);
+    setMultiSkill({
+      useManualCounts: data.multi_skill.use_manual_multi_skill_counts,
+      manualCounts: data.multi_skill.manual_counts,
+      damageComponentMode: data.multi_skill.damage_component_mode,
+      useExpectedCrit: false,
+    });
+    if (data.fixed_loadout) {
+      setFixedLoadout(data.fixed_loadout as unknown as FixedLoadoutSelection);
+    }
   }, []);
 
   const getAttr90 = useCallback((data: Record<string, unknown> | null, attr: string): number => {
@@ -84,7 +139,11 @@ export default function ComputePage() {
         "附加攻击力+": 0,
       },
       enemy: {
-        "防御": 100,
+        "防御": enemyParams.enemy_defense,
+        "抗性": enemyParams.enemy_resistance,
+        "无视抗性": enemyParams.ignore_resistance,
+        "失衡易伤系数": enemyParams.imbalance_vulnerability_coeff,
+        "失衡": enemyParams.is_unbalanced ? 1 : 0,
       },
       equipment: {
         "攻击力平值": 0,
@@ -129,6 +188,15 @@ export default function ComputePage() {
       useComputeStore.setState({ loading: true, error: null });
       const evalResult = await evaluate(adapter, context);
       setOutputValues(evalResult.outputs);
+
+      setHistoryEntry({
+        char_name: selectedChar,
+        weapon_name: selectedWeapon,
+        context,
+        outputs: evalResult.outputs,
+        node_values: evalResult.node_values,
+      });
+
       useComputeStore.setState({ result: evalResult, error: null, loading: false });
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
@@ -149,7 +217,17 @@ export default function ComputePage() {
     all_weapons: allWeapons as Record<string, unknown>[],
     current_weapon: (weaponData ?? {}) as Record<string, unknown>,
     equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
-    enemy_defense: 100,
+    enemy_defense: enemyParams.enemy_defense,
+    enemy_resistance: enemyParams.enemy_resistance,
+    ignore_resistance: enemyParams.ignore_resistance,
+    imbalance_vulnerability_coeff: enemyParams.imbalance_vulnerability_coeff,
+    is_unbalanced: enemyParams.is_unbalanced,
+    fixed_loadout: fixedLoadout as Record<string, unknown> | null,
+    extra_crit_rate: critAbnormal.extraCritRate,
+    extra_crit_damage: critAbnormal.extraCritDamage,
+    use_manual_multi_skill_counts: multiSkill.useManualCounts,
+    manual_counts: multiSkill.manualCounts,
+    use_expected_crit: multiSkill.useExpectedCrit,
   };
 
   return (
@@ -178,6 +256,8 @@ export default function ComputePage() {
             </Paper>
 
             <AttributeDisplay characterData={charData} weaponData={weaponData} />
+
+            <EnemyParamPanel onParamsChange={setEnemyParams} />
           </Grid>
 
           <Grid size={{ xs: 12, md: 7 }}>
@@ -197,6 +277,21 @@ export default function ComputePage() {
               </Paper>
             )}
 
+            {outputValues && Object.keys(outputValues).length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <PreviewText
+                  outputValues={outputValues}
+                  nodeValues={null}
+                />
+                <Box sx={{ mt: 2 }}>
+                  <DamageChart
+                    outputValues={outputValues}
+                    nodeValues={null}
+                  />
+                </Box>
+              </Box>
+            )}
+
             {error && (
               <Paper sx={{ p: 2, mt: 2 }}>
                 <Typography color="error">{error}</Typography>
@@ -207,10 +302,83 @@ export default function ComputePage() {
       )}
 
       {tab === 1 && (
-        <Paper sx={{ p: 3 }}>
-          <SearchPanel currentParams={searchParams as any} />
-        </Paper>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<BuildIcon />}
+                    onClick={() => setPresetDialogOpen(true)}
+                    fullWidth
+                  >
+                    工具与分享
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setHistoryDialogOpen(true)}
+                  >
+                    历史
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setSearchHistoryOpen(true)}
+                  >
+                    搜索历史
+                  </Button>
+                </Box>
+              </Paper>
+              <FixedLoadoutPanel onChange={setFixedLoadout} />
+              <MultiSkillPanel
+                charData={charData}
+                skillLevels={[1, 1, 1]}
+                onChange={setMultiSkill}
+              />
+              <CritAndAbnormalPanel onChange={setCritAbnormal} />
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12, md: 7 }}>
+            <Paper sx={{ p: 3 }}>
+              <SearchPanel currentParams={searchParams as any} />
+            </Paper>
+          </Grid>
+        </Grid>
       )}
+
+      <PresetDialog
+        open={presetDialogOpen}
+        onClose={() => setPresetDialogOpen(false)}
+        currentState={{
+          charName: selectedChar,
+          weaponName: selectedWeapon,
+          charLevel: 90,
+          weaponLevel: 90,
+          enemyParams,
+          multiSkill,
+          fixedLoadout: fixedLoadout as Record<string, string | null> | null,
+        }}
+        onImport={handleImportPreset}
+      />
+
+      <CalcHistoryDialog
+        open={historyDialogOpen}
+        onClose={() => setHistoryDialogOpen(false)}
+        currentEntry={historyEntry as any}
+        onRestore={(entry) => {
+          setSelectedChar(String(entry.char_name || ""));
+          setSelectedWeapon(String(entry.weapon_name || ""));
+          setHistoryDialogOpen(false);
+        }}
+      />
+
+      <SearchHistoryDialog
+        open={searchHistoryOpen}
+        onClose={() => setSearchHistoryOpen(false)}
+      />
     </Box>
   );
 }

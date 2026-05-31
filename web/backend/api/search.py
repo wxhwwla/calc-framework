@@ -436,6 +436,22 @@ async def run_search(req: SearchRequest):
 
 
 
+@router.get("/enemies")
+async def get_enemy_choices():
+    """获取敌方参数列表（含默认值）。"""
+    return [
+        {
+            "id": "",
+            "name": "默认敌人",
+            "enemy_defense": 100.0,
+            "enemy_resistance": 0.0,
+            "ignore_resistance": 0.0,
+            "imbalance_vulnerability_coeff": 1.3,
+            "is_unbalanced": False,
+        }
+    ]
+
+
 @router.get("/catalog")
 
 async def get_equipment_catalog():
@@ -739,4 +755,23 @@ async def run_search_stream(req: SearchRequest):
         },
 
     )
+
+
+# 搜索历史（内存 Ring Buffer，最近 10 次）
+_search_history: list[dict] = []
+
+
+@router.get("/history")
+async def list_search_history():
+    """获取搜索历史列表。"""
+    return list(reversed(_search_history))
+
+
+@router.post("/history")
+async def save_search_history(entry: dict):
+    """保存一次搜索记录。"""
+    _search_history.append(entry)
+    while len(_search_history) > 10:
+        _search_history.pop(0)
+    return {"message": "ok"}
 

@@ -27,6 +27,7 @@ from api.layout import router as layout_router
 from api.pack import router as pack_router
 
 from api.search import router as search_router
+from api.history import router as history_router
 
 
 
@@ -71,6 +72,7 @@ app.include_router(layout_router)
 app.include_router(pack_router)
 
 app.include_router(search_router)
+app.include_router(history_router)
 
 # 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
 _REPO_ROOT = Path(__file__).resolve().parents[2]

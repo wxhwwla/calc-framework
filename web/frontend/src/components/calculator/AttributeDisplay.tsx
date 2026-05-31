@@ -1,11 +1,16 @@
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableRow, Chip, TableContainer } from "@mui/material";
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableRow, Chip, TableContainer, Divider } from "@mui/material";
 
 interface AttributeDisplayProps {
   characterData: Record<string, unknown> | null;
   weaponData: Record<string, unknown> | null;
 }
 
-/** 从角色/武器的等级数组中取 Lv.90 的值 */
+const SKILL_INFO: { label: string; rateField: string; dmgTypeField: string }[] = [
+  { label: "战技", rateField: "战技倍率", dmgTypeField: "战技段伤害类型" },
+  { label: "连携技", rateField: "连携技倍率", dmgTypeField: "连携技段伤害类型" },
+  { label: "终结技", rateField: "终结技倍率", dmgTypeField: "终结技段伤害类型" },
+];
+
 function getAttrAtLevel90(data: Record<string, unknown> | null, attrName: string): number | string {
   if (!data) return "--";
   const arr = data[attrName];
@@ -16,6 +21,78 @@ function getAttrAtLevel90(data: Record<string, unknown> | null, attrName: string
   }
   const val = data[attrName];
   return val !== undefined ? String(val) : "--";
+}
+
+function renderSkillDamageTypes(charData: Record<string, unknown>) {
+  const rows: { skill: string; segments: string[] }[] = [];
+
+  for (const info of SKILL_INFO) {
+    const dmgTypes = charData[info.dmgTypeField];
+    if (!Array.isArray(dmgTypes) || dmgTypes.length === 0) continue;
+
+    const segments: string[] = dmgTypes.map((t: unknown, i: number) => {
+      const label = typeof t === "string" ? t : "物理";
+      return `第${i + 1}段 · ${label}`;
+    });
+    rows.push({ skill: info.label, segments });
+  }
+
+  if (rows.length === 0) return null;
+
+  return (
+    <Box>
+      <Divider sx={{ my: 1 }} />
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+        技能伤害类型
+      </Typography>
+      {rows.map((row) => (
+        <Typography key={row.skill} variant="body2" sx={{ fontSize: "0.75rem", lineHeight: 1.6 }}>
+          {row.skill}: {row.segments.join(" | ")}
+        </Typography>
+      ))}
+    </Box>
+  );
+}
+
+function renderWeaponSkills(weaponData: Record<string, unknown>) {
+  const normalSkills = weaponData["normal_skills"];
+  const specialSkills = weaponData["special_skills"];
+
+  const sections: { title: string; skills: unknown[] }[] = [];
+  if (Array.isArray(normalSkills) && normalSkills.length > 0) {
+    sections.push({ title: "普通技能", skills: normalSkills });
+  }
+  if (Array.isArray(specialSkills) && specialSkills.length > 0) {
+    sections.push({ title: "特殊能力", skills: specialSkills });
+  }
+
+  if (sections.length === 0) return null;
+
+  return (
+    <Box>
+      <Divider sx={{ my: 1 }} />
+      {sections.map((section) => (
+        <Box key={section.title} sx={{ mb: 1 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+            {section.title}
+          </Typography>
+          {section.skills.map((skill: unknown, i: number) => {
+            const s = skill as Record<string, unknown>;
+            return (
+              <Typography
+                key={i}
+                variant="body2"
+                sx={{ fontSize: "0.75rem", lineHeight: 1.6 }}
+              >
+                {String(s["名称"] || "?")} Lv.{String(s["等级"] ?? "?")}
+                {s["倍率"] != null ? ` · ${s["倍率"]}%` : ""}
+              </Typography>
+            );
+          })}
+        </Box>
+      ))}
+    </Box>
+  );
 }
 
 export default function AttributeDisplay({ characterData, weaponData }: AttributeDisplayProps) {
@@ -102,6 +179,7 @@ export default function AttributeDisplay({ characterData, weaponData }: Attribut
               </TableBody>
             </Table>
           </TableContainer>
+          {renderSkillDamageTypes(characterData)}
         </Paper>
       )}
 
@@ -140,6 +218,7 @@ export default function AttributeDisplay({ characterData, weaponData }: Attribut
               </TableBody>
             </Table>
           </TableContainer>
+          {renderWeaponSkills(weaponData)}
         </Paper>
       )}
     </Box>

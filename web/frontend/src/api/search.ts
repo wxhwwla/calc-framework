@@ -1,5 +1,58 @@
 const BASE = "/api/search";
 
+export interface EnemyInfo {
+  id: string;
+  name: string;
+  enemy_defense: number;
+  enemy_resistance: number;
+  ignore_resistance: number;
+  imbalance_vulnerability_coeff: number;
+  is_unbalanced: boolean;
+}
+
+export interface EnemyParams {
+  enemy_defense: number;
+  enemy_resistance: number;
+  ignore_resistance: number;
+  imbalance_vulnerability_coeff: number;
+  is_unbalanced: boolean;
+}
+
+export interface SearchHistoryEntry {
+  char_name: string;
+  weapon_name: string;
+  skill_name: string;
+  top_n: number;
+  result_count: number;
+  total_combinations: number;
+  searched_combinations: number;
+  elapsed_seconds?: number;
+  top_results?: LoadoutResult[];
+  saved_at: string;
+  [key: string]: unknown;
+}
+
+export async function fetchSearchHistory(): Promise<SearchHistoryEntry[]> {
+  const r = await fetch(`${BASE}/history`);
+  if (!r.ok) throw new Error(`获取搜索历史失败: ${r.statusText}`);
+  return r.json();
+}
+
+export async function saveSearchHistory(entry: SearchHistoryEntry): Promise<void> {
+  const r = await fetch(`${BASE}/history`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  if (!r.ok) throw new Error(`保存搜索历史失败: ${r.statusText}`);
+}
+
+export async function fetchEnemyChoices(): Promise<EnemyInfo[]> {
+  const r = await fetch(`${BASE}/enemies`);
+  if (!r.ok) throw new Error(`获取敌方参数失败: ${r.statusText}`);
+  return r.json();
+}
+
 export interface LoadoutResult {
   weapon_name: string;
   chest: string;
