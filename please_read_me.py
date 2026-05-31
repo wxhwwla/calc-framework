@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.14.6"
+_VERSION = "3.14.7"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,9 +432,10 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 4 处文件
 # BODY:
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 package.json
 # - 修改 please_read_me.py
-# - 修改 web/backend/asgi.py
+# - 变更 zbpack.json
 # --- END UPLOAD_SUMMARY ---
