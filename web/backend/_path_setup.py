@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 """Web backend path setup -- centralized sys.path configuration."""
 import sys
 from pathlib import Path

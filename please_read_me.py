@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.14.3"
+_VERSION = "3.14.4"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,13 +432,8 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 2 处文件
 # BODY:
-# - 修改 games/endfield/calc/dag_adapter/adapter.py
-# - 修改 games/endfield/tests/tools/test_import_targets.py
 # - 修改 please_read_me.py
-# - 修改 tools/bwiki_scout/config.py
-# - 修改 tools/endfield_designer/data_browser_tab.py
-# - 修改 tools/endfield_scripts/add_character.py
-# - 修改 tools/endfield_scripts/add_weapon.py
+# - 修改 web/backend/_path_setup.py
 # --- END UPLOAD_SUMMARY ---
