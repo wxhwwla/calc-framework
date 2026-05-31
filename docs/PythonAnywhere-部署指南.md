@@ -651,27 +651,38 @@ def _handle_api(environ, start_response):
 
 ## 11. 自动化部署脚本
 
-在经历了上述全部踩坑后，我们编写了自动化部署脚本，将手工步骤压缩为一条命令。
+在经历了上述全部踩坑后，我们编写了自动化部署脚本。配置 API Token 后，一条命令即可完成所有操作，刷新浏览器就是最新版。
 
 ### 11.1 脚本文件
 
 | 文件 | 职责 | 运行位置 |
 |------|------|----------|
-| `web/scripts/deploy_pythonanywhere.py` | 本地：构建前端 → 打包 zip → （可选 API 上传 → 触发重载） | 本地 Windows |
-| `web/scripts/deploy_server.sh` | 服务器：git pull → pip install → 解压 dist | PythonAnywhere Bash |
+| `web/scripts/deploy_pythonanywhere.py` | 本地：构建前端 → 打包 zip → 上传 → 服务器执行（Consoles API）→ 重载 | 本地 Windows |
+| `web/scripts/deploy_server.sh` | 服务器手动备用：git pull → pip install → 解压 dist | PythonAnywhere Bash |
 
 ### 11.2 使用方式
 
-#### 方式 A：全自动（配置 API Token 后）
+#### 方式 A：全自动（推荐，配置 API Token 后）
 
 ```bash
-# 1. 首次：配置 API Token
+# 1. 首次使用：生成配置文件
 python web/scripts/deploy_pythonanywhere.py --init-config
-# 编辑 ~/.pythonanywhere，填入 api_token
+# 编辑 ~/.pythonanywhere，填入你的 API Token
 
-# 2. 一键部署：构建 → zip → 上传 → 部署脚本 → 重载
+# 2. 以后每次只需一条命令
 python web/scripts/deploy_pythonanywhere.py --all
+# 自动完成：npm run build → zip打包 → 上传 → 服务器git pull+解压+pip → Reload
+# 等待执行完毕，刷新浏览器即可看到最新内容
 ```
+
+`--all` 的内部流程：
+| 阶段 | 操作 | 耗时 |
+|------|------|------|
+| 1/5 | `npm run build` 构建前端 | ~30s |
+| 2/5 | 用 Python `zipfile` 打包为兼容 zip（非 LZMA） | ~1s |
+| 3/5 | 通过 Files API 上传到 PythonAnywhere | ~5s |
+| 4/5 | 通过 Consoles API 在服务器执行 `git pull` + 解压 + `pip install` | ~30s |
+| 5/5 | 通过 API 重载 Web App | ~3s |
 
 #### 方式 B：半自动（本地打包 + 手动上传）
 

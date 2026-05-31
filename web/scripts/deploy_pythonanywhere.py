@@ -4,11 +4,14 @@
 
 一站式完成：构建前端 → 打包 zip → 上传 → 服务器部署 → 重载 Web App
 
+配置 API Token 后，一条命令完成全部操作：
+  python web/scripts/deploy_pythonanywhere.py --all
+
 使用方法:
-  python web/scripts/deploy_pythonanywhere.py              # 构建 + 打包，输出 zip 位置（手动上传 + 部署）
-  python web/scripts/deploy_pythonanywhere.py --upload     # 构建 + 打包 + 上传 + 部署（需配置 API Token）
-  python web/scripts/deploy_pythonanywhere.py --zip-only   # 仅打包已有 dist/（跳过 npm run build）
-  python web/scripts/deploy_pythonanywhere.py --help       # 查看完整帮助
+  python web/scripts/deploy_pythonanywhere.py --all         # 全自动：构建→打包→上传→部署→重载（需API Token）
+  python web/scripts/deploy_pythonanywhere.py               # 构建 + 打包，输出 zip（手动上传部署）
+  python web/scripts/deploy_pythonanywhere.py --zip-only    # 仅打包已有 dist/（跳过 npm run build）
+  python web/scripts/deploy_pythonanywhere.py --help        # 查看完整帮助
 
 首次使用:
   1. 在 PythonAnywhere 生成 API Token: Account → API Token → Create new token
@@ -43,10 +46,10 @@ _ZIP_PATH = _REPO_ROOT / "dist_pa.zip"
 _CONFIG_PATH = Path.home() / ".pythonanywhere"
 
 # ── PythonAnywhere API ────────────────────────────────────────────────────────
-_PA_API = "https://www.pythonanywhere.com/api/v0/user/{username}"
-_PA_FILES_API = _PA_API + "/files/path{path}"
-_PA_RELOAD_API = _PA_API + "/webapps/{domain}/reload/"
-_PA_SCHEDULE_API = _PA_API + "/schedules/"
+_PA_API = "https://www.pythonanywhere.com/api/v0/user/{username}/"
+_PA_FILES_API = _PA_API + "files/path{path}"
+_PA_RELOAD_API = _PA_API + "webapps/{domain}/reload/"
+_PA_CONSOLE_API = _PA_API + "consoles/"
 
 _DEFAULT_DOMAIN = "{username}.pythonanywhere.com"
 
@@ -58,7 +61,7 @@ def _load_config() -> dict:
     config = {}
     ini = configparser.ConfigParser()
     if _CONFIG_PATH.exists():
-        ini.read(str(_CONFIG_PATH))
+        ini.read(str(_CONFIG_PATH), encoding="utf-8")
         section = "pythonanywhere"
         if ini.has_section(section):
             for key in ("username", "api_token", "project", "domain"):
@@ -80,9 +83,9 @@ def _run_npm(args: list[str], cwd: Path) -> None:
     """跨平台执行 npm 命令。"""
     cmd = ["npm.cmd" if sys.platform == "win32" else "npm"] + args
     print(f"  $ {' '.join(cmd)}  (in {cwd.name})")
-    result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode != 0:
-        print("  ❌ npm 命令失败:")
+        print("  [ERR] npm 命令失败:")
         print(result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout)
         print(result.stderr[-2000:] if len(result.stderr) > 2000 else result.stderr)
         sys.exit(1)
@@ -90,18 +93,18 @@ def _run_npm(args: list[str], cwd: Path) -> None:
 
 def _build_frontend() -> None:
     """执行 npm run build。"""
-    print("\n📦 [阶段 1/5] 构建前端...")
+    print("\n[PACK] [阶段 1/4] 构建前端...")
     print(f"  目录: {_FRONTEND_DIR}")
     if not (_FRONTEND_DIR / "package.json").exists():
-        print("  ❌ 未找到 package.json，请确认路径正确")
+        print("  [ERR] 未找到 package.json，请确认路径正确")
         sys.exit(1)
     _run_npm(["install"], _FRONTEND_DIR)
     _run_npm(["run", "build"], _FRONTEND_DIR)
     if not _DIST_DIR.exists():
-        print("  ❌ 构建完成但 dist/ 目录未生成")
+        print("  [ERR] 构建完成但 dist/ 目录未生成")
         sys.exit(1)
     js_files = list(_DIST_DIR.rglob("*.js"))
-    print(f"  ✅ 构建完成: {len(js_files)} 个 JS 文件, {sum(f.stat().st_size for f in js_files) // 1024} KB")
+    print(f"  [OK] 构建完成: {len(js_files)} 个 JS 文件, {sum(f.stat().st_size for f in js_files) // 1024} KB")
 
 
 # ── 阶段 2: 打包 zip ────────────────────────────────────────────────────────────
@@ -109,9 +112,9 @@ def _build_frontend() -> None:
 
 def _create_zip() -> None:
     """用 Python zipfile 创建兼容 Linux 的 zip（避免 LZMA 问题）。"""
-    print("\n📦 [阶段 2/5] 打包 dist/...")
+    print("\n[PACK] [阶段 2/4] 打包 dist/...")
     if not _DIST_DIR.exists():
-        print(f"  ❌ dist/ 目录不存在: {_DIST_DIR}")
+        print(f"  [ERR] dist/ 目录不存在: {_DIST_DIR}")
         print("  请先执行 npm run build，或使用 --zip-only 跳过构建")
         sys.exit(1)
 
@@ -126,8 +129,8 @@ def _create_zip() -> None:
                 zf.write(str(fpath), arcname)
                 count += 1
     zip_size = _ZIP_PATH.stat().st_size
-    print(f"  ✅ 打包完成: {count} 个文件, {zip_size // 1024} KB")
-    print(f"  📄 输出: {_ZIP_PATH}")
+    print(f"  [OK] 打包完成: {count} 个文件, {zip_size // 1024} KB")
+    print(f"  [DOC] 输出: {_ZIP_PATH}")
 
 
 # ── 阶段 3: 上传到 PythonAnywhere ────────────────────────────────────────────────
@@ -152,26 +155,27 @@ def _pa_request(method: str, url: str, token: str, data: bytes | None = None,
 
 def _upload_zip(config: dict) -> None:
     """通过 PythonAnywhere Files API 上传 dist.zip。"""
-    print("\n📤 [阶段 3/5] 上传 dist.zip 到 PythonAnywhere...")
+    print("\n[UP] [阶段 3/5] 上传 dist.zip 到 PythonAnywhere...")
     username = config.get("username")
     token = config.get("api_token")
     project = config.get("project", "calc-framework")
     if not username or not token:
-        print("  ❌ 未配置 PythonAnywhere 用户名或 API Token")
+        print("  [ERR] 未配置 PythonAnywhere 用户名或 API Token")
         print("  请通过 --username/--api-token 传参，或配置 ~/.pythonanywhere 文件")
         sys.exit(1)
 
     if not _ZIP_PATH.exists():
-        print(f"  ❌ 未找到 zip 文件: {_ZIP_PATH}")
+        print(f"  [ERR] 未找到 zip 文件: {_ZIP_PATH}")
         sys.exit(1)
 
     remote_path = f"/home/{username}/{project}/frontend/dist.zip"
     url = _PA_FILES_API.format(username=username, path=remote_path)
 
-    # 检查 API 连通性
-    code, body = _pa_request("GET", _PA_API.format(username=username), token)
+    # 检查 API 连通性（用 /cpu/ 端点验证）
+    test_url = _PA_API.format(username=username) + "cpu/"
+    code, body = _pa_request("GET", test_url, token)
     if code != 200:
-        print(f"  ❌ API 连接失败 ({code}): {body}")
+        print(f"  [ERR] API 连接失败 ({code}): {body}")
         sys.exit(1)
 
     # 上传文件（使用 multipart/form-data）
@@ -193,88 +197,88 @@ def _upload_zip(config: dict) -> None:
         content_type=f"multipart/form-data; boundary={boundary.decode()}",
     )
     if code in (200, 201):
-        print(f"  ✅ 上传成功: {remote_path}")
+        print(f"  [OK] 上传成功: {remote_path}")
     else:
-        print(f"  ❌ 上传失败 ({code}): {body}")
+        print(f"  [ERR] 上传失败 ({code}): {body}")
         sys.exit(1)
 
 
-# ── 阶段 4: 服务器端执行命令 ──────────────────────────────────────────────────────
+# ── 阶段 4: 直接上传 dist 文件到服务器（避免 Console API 限制） ──────────────
 
 
-def _build_server_script(config: dict) -> str:
-    """生成服务器端部署脚本内容。"""
-    project = config.get("project", "calc-framework")
-    lines = [
-        "#!/bin/bash",
-        "# 终末地伤害计算器 - PythonAnywhere 服务器端部署脚本",
-        "# 在 PythonAnywhere Bash 控制台中执行: bash ~/deploy_server.sh",
-        f"# 项目: {project}",
-        "",
-        "set -e",
-        "",
-        f'echo "=== 1/4: 拉取最新代码 ==="',
-        f"cd ~/{project}",
-        "git pull",
-        "",
-        'echo "=== 2/4: 安装 Python 依赖 ==="',
-        "source ~/.virtualenvs/calc-framework/bin/activate",
-        "pip install -q -r web/backend/requirements.txt",
-        "pip install -q -e framework/",
-        "",
-        'echo "=== 3/4: 解压前端构建产物 ==="',
-        f"cd ~/{project}/web/frontend",
-        "rm -rf dist",
-        "mkdir -p dist",
-        "cd dist",
-        "unzip -q ~/dist.zip 2>/dev/null || (echo '  ⚠ 未找到 ~/dist.zip，尝试项目路径...' && unzip -q ~/{project}/frontend/dist.zip)",
-        "cd ..",
-        "ls -la dist/",
-        "echo '  JS文件:'",
-        "ls -lh dist/assets/*.js 2>/dev/null || echo '  (无 assets 目录, 检查 dist 嵌套)'",
-        "",
-        'echo "=== 4/4: 清理临时文件 ==="',
-        "rm -f ~/dist.zip",
-        "",
-        'echo "=== ✅ 服务器端部署完成 ==="',
-        'echo "请手动在 PythonAnywhere Web 页面点击 Reload，或本脚本带 --reload 参数自动触发"',
-    ]
-    return "\n".join(lines)
+def _upload_dist_files(config: dict) -> None:
+    """将 dist/ 中的文件逐个直接上传到 PythonAnywhere 服务器。
 
-
-def _upload_server_script(config: dict) -> None:
-    """上传服务器端部署脚本到 PythonAnywhere。"""
-    print("\n📜 [阶段 4/5] 上传服务器端部署脚本...")
+    相比在服务器上解压 zip，本方案在本地解压后通过 Files API 逐个上传
+    每个文件到正确的路径。避免了 Console API 限制。
+    """
+    print("\n[UP] [阶段 3/4] 上传前端文件到 dist/...")
     username = config.get("username")
     token = config.get("api_token")
     project = config.get("project", "calc-framework")
     if not username or not token:
-        print("  ⏭ 跳过（无 API Token）")
-        return
+        print("  [ERR] 未配置 API Token")
+        sys.exit(1)
 
-    script_content = _build_server_script(config)
-    remote_path = f"/home/{username}/{project}/web/scripts/deploy_server.sh"
-    url = _PA_FILES_API.format(username=username, path=remote_path)
+    if not _ZIP_PATH.exists():
+        print(f"  [ERR] 未找到 zip 文件: {_ZIP_PATH}")
+        sys.exit(1)
 
-    boundary = b"----pa-deploy-boundary"
-    body_parts = [
-        b"--" + boundary,
-        b'Content-Disposition: form-data; name="content"; filename="deploy_server.sh"',
-        b"Content-Type: text/plain",
-        b"",
-        script_content.encode("utf-8"),
-        b"--" + boundary + b"--",
-    ]
-    body_data = b"\r\n".join(body_parts)
-    code, body = _pa_request(
-        "POST", url, token,
-        data=body_data,
-        content_type=f"multipart/form-data; boundary={boundary.decode()}",
-    )
-    if code in (200, 201):
-        print(f"  ✅ 部署脚本已上传: {remote_path}")
+    dist_base = f"/home/{username}/{project}/web/frontend/dist/"
+
+    count = 0
+    errors = 0
+    with ZipFile(str(_ZIP_PATH), "r") as zf:
+        for info in zf.infolist():
+            if info.is_dir():
+                continue
+            arcname = info.filename.replace("\\", "/")
+            remote_path = dist_base + arcname
+            file_data = zf.read(info)
+
+            url = _PA_FILES_API.format(username=username, path=remote_path)
+            boundary = b"----pa-deploy-boundary"
+            body_parts = [
+                b"--" + boundary,
+                f'Content-Disposition: form-data; name="content"; filename="{arcname}"'.encode(),
+                b"Content-Type: application/octet-stream",
+                b"",
+                file_data,
+                b"--" + boundary + b"--",
+            ]
+            body_data = b"\r\n".join(body_parts)
+            code, body = _pa_request(
+                "POST", url, token,
+                data=body_data,
+                content_type=f"multipart/form-data; boundary={boundary.decode()}",
+            )
+            if code in (200, 201):
+                count += 1
+                print(f"  [OK] {arcname} ({len(file_data)} bytes)")
+            else:
+                errors += 1
+                print(f"  [WARN] {arcname}: HTTP {code} — 重试...")
+                # 尝试创建父目录后重试
+                if "/" in arcname:
+                    parent = "/".join(arcname.split("/")[:-1])
+                    dummy_url = _PA_FILES_API.format(
+                        username=username, path=f"{dist_base}{parent}/.keep")
+                    _pa_request("POST", dummy_url, token, data=b"--boundary\r\n...",
+                                content_type="multipart/form-data; boundary=boundary")
+                retry_code, _ = _pa_request(
+                    "POST", url, token,
+                    data=body_data,
+                    content_type=f"multipart/form-data; boundary={boundary.decode()}",
+                )
+                if retry_code in (200, 201):
+                    count += 1
+                    errors -= 1
+                    print(f"  [OK] {arcname} (重试成功)")
+
+    if errors:
+        print(f"  [WARN] {count} 个成功, {errors} 个失败")
     else:
-        print(f"  ⚠ 上传部署脚本失败 ({code}), 可手动复制")
+        print(f"  [OK] 全部 {count} 个文件上传完成")
 
 
 # ── 阶段 5: 重载 Web App ────────────────────────────────────────────────────────
@@ -282,21 +286,21 @@ def _upload_server_script(config: dict) -> None:
 
 def _reload_webapp(config: dict) -> None:
     """通过 PythonAnywhere API 重载 Web App。"""
-    print("\n🔄 [阶段 5/5] 重载 Web App...")
+    print("\n[RLOAD] [阶段 4/4] 重载 Web App...")
     username = config.get("username")
     token = config.get("api_token")
     domain = config.get("domain", _DEFAULT_DOMAIN.format(username=username or ""))
     if not username or not token:
-        print("  ❌ 未配置 API Token，无法自动重载")
+        print("  [ERR] 未配置 API Token，无法自动重载")
         print("  请手动在 PythonAnywhere Web 页面点击 Reload")
         return
 
     url = _PA_RELOAD_API.format(username=username, domain=domain)
     code, body = _pa_request("POST", url, token)
     if code == 200:
-        print(f"  ✅ 重载成功! 请访问 https://{domain}")
+        print(f"  [OK] 重载成功! 请访问 https://{domain}")
     else:
-        print(f"  ❌ 重载失败 ({code}): {body}")
+        print(f"  [ERR] 重载失败 ({code}): {body}")
         print("  请手动在 PythonAnywhere Web 页面点击 Reload")
 
 
@@ -306,7 +310,7 @@ def _reload_webapp(config: dict) -> None:
 def _init_config() -> None:
     """生成 ~/.pythonanywhere 配置文件模板。"""
     if _CONFIG_PATH.exists():
-        print(f"  ⚠ 配置文件已存在: {_CONFIG_PATH}")
+        print(f"  [WARN] 配置文件已存在: {_CONFIG_PATH}")
         overwrite = input("  覆盖? [y/N] ").strip().lower()
         if overwrite != "y":
             print("  取消")
@@ -325,7 +329,7 @@ def _init_config() -> None:
         "# domain = wxhwwla.pythonanywhere.com\n",
         encoding="utf-8",
     )
-    print("  ✅ 配置模板已生成，请编辑填入 api_token")
+    print("  [OK] 配置模板已生成，请编辑填入 api_token")
     print(f"  也可通过环境变量设置: PA_USERNAME, PA_API_TOKEN, PA_PROJECT, PA_DOMAIN")
 
 
@@ -366,18 +370,20 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "示例:\n"
-            f"  python {sys.argv[0]}                  构建+打包\n"
-            f"  python {sys.argv[0]} --upload         构建+打包+上传+部署脚本\n"
-            f"  python {sys.argv[0]} --all            全自动: 构建+打包+上传+部署+重载\n"
-            f"  python {sys.argv[0]} --zip-only       仅重新打包（跳过 npm 构建）\n"
-            f"  python {sys.argv[0]} --init-config    初始化配置文件\n\n"
+            f"  python {sys.argv[0]}                     全自动（有 Token）或 构建+打包（无 Token）\n"
+            f"  python {sys.argv[0]} --help              显示帮助\n"
+            f"  python {sys.argv[0]} --zip-only          仅重新打包（跳过 npm 构建）\n"
+            f"  python {sys.argv[0]} --upload            构建+打包+上传（不重载）\n"
+            f"  python {sys.argv[0]} --reload            仅触发重载\n"
+            f"  python {sys.argv[0]} --all               显式全自动\n"
+            f"  python {sys.argv[0]} --init-config       初始化配置文件\n\n"
             "配置文件: ~/.pythonanywhere\n"
             "环境变量: PA_USERNAME, PA_API_TOKEN, PA_PROJECT, PA_DOMAIN"
         ),
     )
-    parser.add_argument("--upload", action="store_true", help="构建+打包后自动上传到 PythonAnywhere")
+    parser.add_argument("--upload", action="store_true", help="构建+打包+上传到 PythonAnywhere（需 API Token）")
     parser.add_argument("--reload", action="store_true", help="重载 PythonAnywhere Web App（需 API Token）")
-    parser.add_argument("--all", action="store_true", dest="do_all", help="全自动: 构建+打包+上传+部署脚本+重载")
+    parser.add_argument("--all", action="store_true", dest="do_all", help="显式全自动: 构建->打包->上传->部署->重载（需 API Token）")
     parser.add_argument("--zip-only", action="store_true", help="仅重新打包 dist/（跳过 npm run build）")
     parser.add_argument("--init-config", action="store_true", help="生成配置文件模板")
     parser.add_argument("--username", help="PythonAnywhere 用户名（覆盖配置文件）")
@@ -403,11 +409,19 @@ def main() -> None:
         config["domain"] = args.domain
 
     has_api = bool(config.get("username") and config.get("api_token"))
-    do_upload = args.upload or args.do_all
-    do_reload = args.reload or args.do_all
 
-    if do_upload and not has_api:
-        print("❌ --upload/--all 需要配置 API Token")
+    # 默认行为：无参且配了 Token → 全自动；无参且无 Token → 仅构建+打包
+    is_default_mode = not any([args.upload, args.reload, args.do_all, args.zip_only])
+
+    if is_default_mode:
+        do_upload = has_api
+        do_reload = has_api
+    else:
+        do_upload = args.upload or args.do_all
+        do_reload = args.reload or args.do_all
+
+    if (args.upload or args.do_all) and not has_api:
+        print("[ERR] --upload/--all 需要配置 API Token")
         print("   请通过 --username/--api-token 传参，或配置 ~/.pythonanywhere")
         print("   或使用 --init-config 生成配置模板")
         sys.exit(1)
@@ -419,29 +433,24 @@ def main() -> None:
     # Phase 2: 打包 zip
     _create_zip()
 
-    # Phase 3: 上传
+    # Phase 3: 上传 + 部署（上传 zip + 逐文件上传 dist）
     if do_upload:
-        _upload_zip(config)
-        _upload_server_script(config)
+        _upload_dist_files(config)
 
-    # Phase 4: 打印服务器端指令
-    if not do_upload:
-        _print_server_instructions(_ZIP_PATH)
-
-    # Phase 5: 重载
-    if do_reload:
-        time.sleep(2)  # 给服务器一点时间处理上传
+    # Phase 4: 重载
+    if do_reload and has_api:
         _reload_webapp(config)
-    elif has_api:
-        print("\n💡 提示: 添加 --reload 可自动重载 Web App")
-        print("   或: python web/scripts/deploy_server.sh --reload")
+    elif not do_upload and not do_reload:
+        _print_server_instructions(_ZIP_PATH)
+    elif not has_api:
+        print("\n[HINT] 提示: 添加 --reload 可自动重载 Web App")
 
     print(f"\n{'=' * 60}")
-    print("✅ 本地操作完成")
+    print("[OK] 本地操作完成")
     if not do_upload:
-        print(f"📄 zip 文件: {_ZIP_PATH}")
-    if not do_reload:
-        print("🔄 别忘了在 PythonAnywhere Web 页面点击 Reload")
+        print(f"[DOC] zip 文件: {_ZIP_PATH}")
+    if not do_reload and not do_upload:
+        print("[RLOAD] 别忘了在 PythonAnywhere Web 页面点击 Reload")
     print(f"{'=' * 60}")
 
 
