@@ -1,9 +1,11 @@
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
+  Alert,
   Box,
-  Typography,
-  Paper,
   Button,
+  Chip,
+  LinearProgress,
+  Paper,
   Table,
   TableBody,
   TableCell,
@@ -11,16 +13,14 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Chip,
-  Alert,
-  LinearProgress,
+  Typography,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import EstimateIcon from "@mui/icons-material/Calculate";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
 import DownloadIcon from "@mui/icons-material/Download";
-import { estimateSearch, runSearch, runSearchStream, type SearchRequest, type SearchResult, type SearchEstimate, type LoadoutResult, type StreamEvent } from "../../api/search";
+import EstimateIcon from "@mui/icons-material/Calculate";
+import SearchIcon from "@mui/icons-material/Search";
+import { estimateSearch, runSearch, runSearchStream, type LoadoutResult, type SearchEstimate, type SearchRequest, type SearchResult, type StreamEvent } from "../../api/search";
 
 interface SearchPanelProps {
   currentParams: SearchRequest;
@@ -30,6 +30,10 @@ type SearchStatus = "idle" | "estimating" | "ready" | "running" | "done" | "erro
 
 /** 检测是否运行在 PythonAnywhere（不支持全量搜索） */
 const isPythonAnywhere = window.location.hostname.includes("pythonanywhere.com");
+
+const handleDownloadClient = () => {
+  window.location.href = "/local-backend.zip";
+};
 
 export default function SearchPanel({ currentParams }: SearchPanelProps) {
   const [status, setStatus] = useState<SearchStatus>("idle");
@@ -173,7 +177,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               variant="contained"
               size="small"
               startIcon={<DownloadIcon />}
-              href="/api/download/client"
+              onClick={handleDownloadClient}
               sx={{ mr: 1, textTransform: "none" }}
             >
               下载本地搜索服务器

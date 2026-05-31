@@ -281,20 +281,12 @@ def _upload_dist_files(config: dict) -> None:
         print(f"  [OK] 全部 {count} 个文件上传完成")
 
 
-# ── 本地上传: local-backend zip ──────────────────────────────────────────────
+# ── 上传后端 Python 文件 ─────────────────────────────────────────────────────
 
 
-def _upload_local_backend_zip(config: dict) -> None:
-    """上传本地搜索服务器 zip（如果存在）。"""
-    local_zip = _REPO_ROOT / "dist" / "终末地本地搜索服务器" / "终末地本地搜索服务器.zip"
-    if not local_zip.exists():
-        # 也检查 web/static/ 下的 zip
-        local_zip = _REPO_ROOT / "web" / "static" / "终末地本地搜索服务器.zip"
-    if not local_zip.exists():
-        print("  [SKIP] 未找到本地搜索服务器 zip，跳过上传")
-        return
-
-    print(f"\n[UP-LB] 上传本地搜索服务器 zip...")
+def _upload_backend_files(config: dict) -> None:
+    """上传 web/backend/ 下的 Python 文件到服务器。"""
+    print("\n[UP-BE] 上传后端 Python 文件...")
     username = config.get("username")
     token = config.get("api_token")
     project = config.get("project", "calc-framework")
@@ -302,15 +294,74 @@ def _upload_local_backend_zip(config: dict) -> None:
         print("  [ERR] 未配置 API Token")
         sys.exit(1)
 
-    # 上传到服务器上 web/static/ 目录
-    remote_path = f"/home/{username}/{project}/web/static/终末地本地搜索服务器.zip"
+    backend_dir = _REPO_ROOT / "web" / "backend"
+    remote_base = f"/home/{username}/{project}/web/backend/"
+
+    count = 0
+    errors = 0
+    for py_file in sorted(backend_dir.rglob("*.py")):
+        rel = py_file.relative_to(backend_dir)
+        remote_path = remote_base + str(rel).replace("\\", "/")
+        url = _PA_FILES_API.format(username=username, path=remote_path)
+        file_data = py_file.read_bytes()
+
+        boundary = b"----pa-deploy-boundary"
+        body_parts = [
+            b"--" + boundary,
+            b'Content-Disposition: form-data; name="content"; filename="main.py"',
+            b"Content-Type: application/octet-stream",
+            b"",
+            file_data,
+            b"--" + boundary + b"--",
+        ]
+        body_data = b"\r\n".join(body_parts)
+
+        code, _body = _pa_request(
+            "POST", url, token,
+            data=body_data,
+            content_type=f"multipart/form-data; boundary={boundary.decode()}",
+        )
+        if code in (200, 201):
+            count += 1
+            print(f"  [OK] {rel}")
+        else:
+            errors += 1
+            print(f"  [ERR] {rel}: HTTP {code}")
+
+    if errors:
+        print(f"  [WARN] {count} 个成功, {errors} 个失败")
+    else:
+        print(f"  [OK] 后端 {count} 个文件上传完成")
+
+
+# ── 本地上传: local-backend zip ──────────────────────────────────────────────
+
+
+def _upload_local_backend_zip(config: dict) -> None:
+    """上传本地搜索服务器 zip（如果存在）。"""
+    local_zip = _REPO_ROOT / "dist" / "终末地本地搜索服务器" / "local-backend.zip"
+    if not local_zip.exists():
+        local_zip = _REPO_ROOT / "web" / "static" / "local-backend.zip"
+    if not local_zip.exists():
+        print("  [SKIP] 未找到本地搜索服务器 zip，跳过上传")
+        return
+
+    print("\n[UP-LB] 上传本地搜索服务器 zip...")
+    username = config.get("username")
+    token = config.get("api_token")
+    project = config.get("project", "calc-framework")
+    if not username or not token:
+        print("  [ERR] 未配置 API Token")
+        sys.exit(1)
+
+    remote_path = f"/home/{username}/{project}/web/static/local-backend.zip"
     url = _PA_FILES_API.format(username=username, path=remote_path)
 
     file_content = local_zip.read_bytes()
     boundary = b"----pa-deploy-boundary"
     body_parts = [
         b"--" + boundary,
-        ('Content-Disposition: form-data; name="content"; filename="%s.zip"' % local_zip.stem).encode(),
+        b'Content-Disposition: form-data; name="content"; filename="local-backend.zip"',
         b"Content-Type: application/octet-stream",
         b"",
         file_content,
@@ -325,7 +376,7 @@ def _upload_local_backend_zip(config: dict) -> None:
     )
     if code in (200, 201):
         mb = len(file_content) / 1024 / 1024
-        print(f"  [OK] 上传成功: 终末地本地搜索服务器.zip ({mb:.1f} MB)")
+        print(f"  [OK] 上传成功: local-backend.zip ({mb:.1f} MB)")
     else:
         print(f"  [ERR] 上传失败 ({code}): {body}")
 
@@ -482,9 +533,10 @@ def main() -> None:
     # Phase 2: 打包 zip
     _create_zip()
 
-    # Phase 3: 上传 + 部署（上传 zip + 逐文件上传 dist + 本地后端 zip）
+    # Phase 3: 上传 + 部署（上传 zip + 逐文件上传 dist + 后端代码 + 本地后端 zip）
     if do_upload:
         _upload_dist_files(config)
+        _upload_backend_files(config)
         _upload_local_backend_zip(config)
 
     # Phase 4: 重载

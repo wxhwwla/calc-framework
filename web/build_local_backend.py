@@ -85,7 +85,7 @@ def _run_pyinstaller() -> Path:
 def _create_zip(release_dir: Path) -> Path:
     """将发布目录压缩为 zip。"""
     print("[3/4] 压缩发布包...")
-    zip_path = release_dir / "终末地本地搜索服务器.zip"
+    zip_path = release_dir / "local-backend.zip"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, _dirs, files in os.walk(release_dir):
             for fname in files:
