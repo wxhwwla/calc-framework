@@ -1,6 +1,8 @@
 # Calc Framework — 终末地
 
 > 通用伤害计算框架 · 《明日方舟：终末地》配装与乘区辅助工具（PySide6 双后端 GUI）
+>
+> **Web 端（已部署）**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com) · 部署指南：[docs/PythonAnywhere-部署指南.md](docs/PythonAnywhere-部署指南.md)
 
 ## 文档分层
 
