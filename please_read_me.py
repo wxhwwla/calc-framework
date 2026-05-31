@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.0"
+_VERSION = "3.15.1"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -432,15 +432,29 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 9 处文件
+# TITLE: 更新 23 处文件
 # BODY:
-# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 更新文档 docs/adr/0021-remove-sys-path-hacks.md
+# - 修改 framework/src/calc_framework/dag/templates.py
+# - 修改 framework/src/calc_framework/data/attr_schema.py
+# - 修改 framework/src/calc_framework/data/schema.py
+# - 修改 framework/src/calc_framework/editor/__init__.py
+# - 修改 framework/src/calc_framework/errors.py
+# - 修改 framework/src/calc_framework/graph_editor/schema.py
+# - 修改 framework/src/calc_framework/ui/layout.py
+# - 修改 framework/tests/graph_editor/test_file_actions.py
+# - 修改 games/endfield/calc/damage/engine/__init__.py
+# - 修改 games/endfield/calc/damage/inverse/__init__.py
+# - 修改 games/endfield/calc/loadout/optimizer/__init__.py
+# - 修改 games/endfield/calc/manual_buff/__init__.py
+# - 修改 games/endfield/calc/multi_skill/optimizer/__init__.py
+# - 修改 games/endfield/calc/skills/special_fields/__init__.py
+# - 修改 games/endfield/data_loading/__init__.py
+# - 修改 games/endfield/data_loading/loader.py
+# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
+# - 修改 games/endfield/gui_design/presentation/display/__init__.py
+# - 修改 games/endfield/gui_design/presentation/preview/__init__.py
 # - 修改 please_read_me.py
 # - 修改 web/backend/__init__.py
-# - 修改 web/backend/asgi.py
-# - 修改 web/backend/main.py
-# - 修改 web/backend/run_packaged_main.py
+# - 修改 web/backend/api/adapters.py
+# - 修改 web/backend/api/hub.py
 # --- END UPLOAD_SUMMARY ---

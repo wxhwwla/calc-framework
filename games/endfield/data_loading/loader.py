@@ -83,13 +83,12 @@ from typing import Any
 from calc_framework.logging import get_logger
 from utils.path_utils import get_resource_path
 
+from games.endfield.data_loading import DataLoadingError
+
 logger = get_logger("endfield.data_loader")
 
 
-
-
-
-class DataLoadError(Exception):
+class DataLoadError(DataLoadingError):
 
     """游戏数据 JSON 加载失败异常。
 

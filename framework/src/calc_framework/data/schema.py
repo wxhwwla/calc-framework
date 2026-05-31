@@ -2,12 +2,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """变量 Schema 校验 — 根据 DAG 声明的变量检查 DataContext 的完整性。"""
 
-from typing import Any
-
-from calc_framework.dag.schema import DAGGraph
-
-
-class VariableValidationError(ValueError):
+from typing import Any
+
+from calc_framework.dag.schema import DAGGraph
+from calc_framework.errors import CalcFrameworkError
+
+
+class VariableValidationError(CalcFrameworkError):
     """变量校验失败。"""
 
 

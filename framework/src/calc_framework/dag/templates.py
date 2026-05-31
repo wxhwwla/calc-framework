@@ -22,15 +22,17 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from typing import Any
-
-_TEMPLATES: dict[str, dict[str, Any]] = {}
-
-TEMPLATE_META_FIELDS = frozenset({"parameters", "nodes", "output_node", "description"})
-
-
-class TemplateError(ValueError):
+from copy import deepcopy
+from typing import Any
+
+from calc_framework.errors import CalcFrameworkError
+
+_TEMPLATES: dict[str, dict[str, Any]] = {}
+
+TEMPLATE_META_FIELDS = frozenset({"parameters", "nodes", "output_node", "description"})
+
+
+class TemplateError(CalcFrameworkError):
     """模板相关错误。"""
 
 

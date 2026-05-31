@@ -355,3 +355,9 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     btn_layout.addWidget(close_btn)
 
     layout.addLayout(btn_layout)
+
+
+__all__ = [
+    "open_ocr_detection_dialog",
+    "run_ocr_detection",
+]

@@ -8,14 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphNode,
-    GraphLayout,
-    NodeConfig,
-    SectionDef,
-    validate,
+from calc_framework.graph_editor.schema import (
+    GraphDocument,
+    GraphEdge,
+    GraphNode,
+    GraphLayout,
+    NodeConfig,
+    SectionDef,
+    ValidationError,
+    validate,
 )
 from calc_framework.graph_editor.registry import create_default_node
 from calc_framework.graph_editor.serializer import document_to_dict, document_from_json, document_to_json
@@ -117,7 +118,7 @@ class TestImportGraph:
             "layout": {"sections": []},
         }
         doc = document_from_json(raw)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             validate(doc)
 
     def test_import_file_with_edges(self) -> None:

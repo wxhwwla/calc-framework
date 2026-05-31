@@ -1,5 +1,10 @@
 """数据加载模块"""
 
+
+class DataLoadingError(Exception):
+    """游戏数据加载领域所有异常的基类。"""
+
+
 from .game_data_facade import GameDataFacade
 from .loader import (
     DataLoadError,

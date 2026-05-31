@@ -17,16 +17,18 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
-
-AttrSource = Literal["character", "weapon", "equipment", "enemy", "computed"]
-AttrType = Literal["float", "int", "bool", "str", "percent"]
-
-VALID_SOURCES: set[str] = {"character", "weapon", "equipment", "enemy", "computed"}
-VALID_TYPES: set[str] = {"float", "int", "bool", "str", "percent"}
-
-
-class AttributeSchemaError(ValueError):
+from typing import Any, Literal
+
+from calc_framework.errors import CalcFrameworkError
+
+AttrSource = Literal["character", "weapon", "equipment", "enemy", "computed"]
+AttrType = Literal["float", "int", "bool", "str", "percent"]
+
+VALID_SOURCES: set[str] = {"character", "weapon", "equipment", "enemy", "computed"}
+VALID_TYPES: set[str] = {"float", "int", "bool", "str", "percent"}
+
+
+class AttributeSchemaError(CalcFrameworkError):
     """属性 Schema 相关错误。"""
 
 

@@ -11,3 +11,13 @@ from .types import (
     DamageEffect,
     DamageResult,
 )
+
+__all__ = [
+    "CritMode",
+    "DamageContext",
+    "DamageEffect",
+    "DamageResult",
+    "KNOWN_EFFECT_TYPES",
+    "ZONE_ORDER",
+    "calculate_single_hit_damage",
+]

@@ -77,7 +77,7 @@ async def get_pack_endpoint(pack_id: str):
 
 
 @router.post("/packs", status_code=201)
-async def create_pack_endpoint(pack: PackCreate):
+async def create_pack_endpoint(pack: PackCreateRequest):
     result = create_pack(
         name=pack.name,
         version=pack.version,
@@ -94,7 +94,7 @@ async def create_pack_endpoint(pack: PackCreate):
 
 
 @router.put("/packs/{pack_id}")
-async def update_pack_endpoint(pack_id: str, update: PackUpdate):
+async def update_pack_endpoint(pack_id: str, update: PackUpdateRequest):
     kwargs = {k: v for k, v in update.model_dump().items() if v is not None}
     result = update_pack(pack_id, **kwargs)
     if result is None:
