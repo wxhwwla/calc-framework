@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """等级曲线烘焙：录入与 BWIKI 同步共用的唯一接缝。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.calc.core.data_generator import (
-    generate_character_attributes,
-    generate_weapon_attributes,
-)
-
-
-def bake_character_curves(
+from __future__ import annotationsfrom typing import Anyfrom games.endfield.calc.core.data_generator import (    generate_character_attributes,    generate_weapon_attributes,)def bake_character_curves(
     *,
     strength: dict[str, Any],
     agility: dict[str, Any],

@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """异常计算接入手动 buff 测试。"""
 
-import unittest
-
-from games.endfield.calc.manual_buff.physical import evaluate_physical_abnormal_total
-from games.endfield.calc.manual_buff.spell import evaluate_spell_abnormal_total
-from games.endfield.calc.damage.engine import DamageContext
-
-
-class TestAbnormalManualBuff(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.manual_buff.physical import evaluate_physical_abnormal_totalfrom games.endfield.calc.manual_buff.spell import evaluate_spell_abnormal_totalclass TestAbnormalManualBuff(unittest.TestCase):
     def test_physical_abnormal_per_occurrence_buffs(self):
         base_ctx = DamageContext(
             final_attack=1000.0,

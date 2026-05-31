@@ -1,16 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """CalcWorker 单元测试（直接调用 _run 避免 QThread）。"""
 
-from __future__ import annotations
-
-from unittest.mock import MagicMock
-
-from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.gui_design.shell.qt_worker import CalcWorker
-
-
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from games.endfield.gui_design.shell.qt_worker import CalcWorker
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
+
+
 def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:

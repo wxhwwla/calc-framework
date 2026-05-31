@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import unittest
-
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.gui_design.presentation.search_results_lines import (
-    _format_top_result_line,
-    build_search_results_report_lines,
-    export_paths_to_strings,
-    loadout_scores_from_payload,
-)
-from pathlib import Path
-
-
+from __future__ import annotations
+
+import unittest
+from pathlib import Path
+
+from games.endfield.calc.loadout.optimizer import LoadoutScore
+from games.endfield.gui_design.presentation.search_results_lines import (
+    _format_top_result_line,
+    build_search_results_report_lines,
+    export_paths_to_strings,
+    loadout_scores_from_payload,
+)
+
+
 class TestFormatTopResultLine(unittest.TestCase):
     def test_basic_no_breakdown(self) -> None:
         score = LoadoutScore(

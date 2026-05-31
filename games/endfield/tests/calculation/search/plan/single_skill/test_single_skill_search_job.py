@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单技能搜索作业（无头）测试。"""
 
-import unittest
-
-from games.endfield.calc.search.plan.job import (
-    build_weapon_candidates,
-    prepare_single_skill_search_job,
-)
-
-
-class TestSingleSkillSearchJob(unittest.TestCase):
+import unittestfrom games.endfield.calc.search.plan.job import (    build_weapon_candidates,    prepare_single_skill_search_job,)class TestSingleSkillSearchJob(unittest.TestCase):
     def _char(self):
         return {
             "名称": "测试干员",

@@ -6,24 +6,7 @@
 减少 gui / enhancement_controls 多处刮取 panel 的重复与漂移。
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import Any
-
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.calc.search.plan.controller import SearchJobInputs
-from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
-
-from .confirm_refresh import (
-    build_confirm_refresh_signature,
-    build_display_pending_signature,
-)
-from .loadout_preset import LoadoutPreset
-
-
-def _resolve_selected_skill_for_search(
+from __future__ import annotationsfrom dataclasses import dataclass, fieldfrom typing import Anyfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.calc.search.plan.controller import SearchJobInputsfrom games.endfield.calc.skills.weapon_selection import WeaponSkillSelectionfrom gui_design.presentation.display_lines import resolve_selected_skill_for_damagefrom .confirm_refresh import (    build_confirm_refresh_signature,    build_display_pending_signature,)from .loadout_preset import LoadoutPresetdef _resolve_selected_skill_for_search(
     char_data: dict[str, Any],
     *,
     skill_1_level: int,

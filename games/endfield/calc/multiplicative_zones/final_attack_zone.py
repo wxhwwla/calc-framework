@@ -16,14 +16,7 @@
     - 能力值加成：来自 AbilityBonusZone 的计算结果（包含武器加成）
 """
 
-import warnings
-from typing import Any
-
-from .ability_bonus_calc import calculate_ability_bonus
-from .base_zone import BaseZone
-
-
-class FinalAttackZone(BaseZone):
+import warningsfrom typing import Anyfrom .ability_bonus_calc import calculate_ability_bonusfrom .base_zone import BaseZoneclass FinalAttackZone(BaseZone):
     """
     最终攻击力乘区
 
@@ -243,9 +236,7 @@ def calculate_final_attack_with_details(
                 elif isinstance(bonus_data, (int, float)):
                     attack_bonus_percent += float(bonus_data)
 
-        from games.endfield.calc.skills.special_fields import (
-            add_special_picks_attack_percent,
-        )
+        from games.endfield.calc.skills.special_fields import (            add_special_picks_attack_percent,        )
 
         attack_bonus_percent += add_special_picks_attack_percent(
             weapon,

@@ -2,32 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """按搜索作业选择单技能或多技能加权评估器。"""
 
-from __future__ import annotations
-
-from collections.abc import Callable
-
-from games.endfield.calc.manual_buff.physical import (
-    PhysicalAbnormalProfile,
-    compose_damage_total,
-    evaluate_physical_abnormal_total,
-    extract_equipment_crit_bonus,
-    extract_weapon_crit_bonus,
-)
-from games.endfield.calc.manual_buff.spell import evaluate_spell_abnormal_total
-from games.endfield.calc.damage.engine import CritMode, DamageContext
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerTask,
-    build_runtime_eval_snapshot,
-    evaluate_task,
-)
-from games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_task
-
-from ..plan.job import SingleSkillSearchJob
-from .context import SearchEvalContext
-
-
-def _context_with_expected_crit(
+from __future__ import annotationsfrom collections.abc import Callablefrom games.endfield.calc.damage.engine import CritMode, DamageContextfrom games.endfield.calc.loadout.optimizer import (    LoadoutScore,    OptimizerTask,    build_runtime_eval_snapshot,    evaluate_task,)from games.endfield.calc.manual_buff.physical import (    PhysicalAbnormalProfile,    compose_damage_total,    evaluate_physical_abnormal_total,    extract_equipment_crit_bonus,    extract_weapon_crit_bonus,)from games.endfield.calc.manual_buff.spell import evaluate_spell_abnormal_totalfrom games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_taskfrom ..plan.job import SingleSkillSearchJobfrom .context import SearchEvalContextdef _context_with_expected_crit(
     base: DamageContext,
     *,
     crit_rate: float,

@@ -2,21 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from .name_utils import (
-    _extract_effect_name_from_special_name,
-    _split_special_name,
-    bonus_attribute_keys,
-    bonus_curve_for_key,
-    weapon_special_field_keys,
-)
-from .slots_io import read_weapon_special_slots
-
-
-def read_weapon_skills_schema(weapon: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+from __future__ import annotationsfrom typing import Anyfrom .name_utils import (    _extract_effect_name_from_special_name,    _split_special_name,    bonus_attribute_keys,    bonus_curve_for_key,    weapon_special_field_keys,)from .slots_io import read_weapon_special_slotsdef read_weapon_skills_schema(weapon: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """
     读取武器技能 schema（normal_skills / special_skills）。
 

@@ -1,33 +1,31 @@
 # SPDX-License-Identifier: AGPL-3.0
 """高级页控制栏：搜索列与多技能列构建器（BuilderMixin）。"""
 
-from __future__ import annotations
-
-from PySide6.QtWidgets import QSizePolicy
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
-
-from gui_design.controls.search.search_settings import (
-    build_worker_option_labels,
-)
-from gui_design.shell.qt_control_dock_widgets import (
-    SectionHeader,
-    SmallLabel,
-    HintLabel,
-    build_abnormal_matrix,
-)
-
+from __future__ import annotations
+
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+from gui_design.controls.search.search_settings import (
+    build_worker_option_labels,
+)
+from gui_design.shell.qt_control_dock_widgets import (
+    HintLabel,
+    SectionHeader,
+    SmallLabel,
+    build_abnormal_matrix,
+)
+
 _FIXED_SLOT_SPECS: list[tuple[str, str]] = [
     ("chest", "护甲"), ("gloves", "护手"),
     ("accessory_a", "配件A"), ("accessory_b", "配件B"),

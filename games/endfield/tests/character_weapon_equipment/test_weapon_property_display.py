@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器属性面板数值展示格式。"""
 
-import unittest
-
-from games.endfield.gui_design.presentation.display_lines import format_weapon_bonus_display_value
-
-
-class TestFormatWeaponBonusDisplayValue(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.presentation.display_lines import format_weapon_bonus_display_valueclass TestFormatWeaponBonusDisplayValue(unittest.TestCase):
     def test_first_skill_shows_json_integer_not_float(self):
         self.assertEqual(
             format_weapon_bonus_display_value(60.0, attr_name="智识+", is_first_skill=True),

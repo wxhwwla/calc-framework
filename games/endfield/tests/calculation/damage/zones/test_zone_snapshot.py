@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """乘区快照：确认选择后的展示行测试。"""
 
-import json
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.zone_snapshot import (
-    MultiplicativeZoneSelection,
-    WeaponBonusSelection,
-    compute_multiplicative_zone_snapshot,
-)
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARACTERS_JSON = DATA_DIR / "characters.json"
+import jsonimport unittestfrom pathlib import Pathfrom games.endfield.calc.zone_snapshot import (    MultiplicativeZoneSelection,    WeaponBonusSelection,    compute_multiplicative_zone_snapshot,)from games.endfield.tests.conftest import DATA_DIR_CHARACTERS_JSON = DATA_DIR / "characters.json"
 _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 

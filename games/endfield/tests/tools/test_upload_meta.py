@@ -2,26 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """upload_meta 版本与总结块测试"""
 
-import tempfile
-import unittest
-from pathlib import Path
-
-from upload_meta import (
-    SUMMARY_BEGIN,
-    SUMMARY_END,
-    build_commit_message,
-    bump_minor,
-    bump_patch,
-    classify_changed_paths,
-    read_summary_for_commit,
-    read_version,
-    remove_summary_block,
-    write_summary_block,
-    write_version,
-)
-
-
-class TestUploadMeta(unittest.TestCase):
+import tempfileimport unittestfrom pathlib import Pathfrom upload_meta import (    SUMMARY_BEGIN,    SUMMARY_END,    build_commit_message,    bump_minor,    bump_patch,    classify_changed_paths,    read_summary_for_commit,    read_version,    remove_summary_block,    write_summary_block,    write_version,)class TestUploadMeta(unittest.TestCase):
     def test_bump_patch_and_minor(self):
         self.assertEqual(bump_patch("1.8.1"), "1.8.2")
         self.assertEqual(bump_minor("1.8.1"), "1.9.0")

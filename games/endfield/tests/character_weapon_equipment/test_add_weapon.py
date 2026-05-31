@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """add_weapon 无副作用测试"""
 
-import copy
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from tools.endfield_scripts.add_weapon import add_weapon, remove_weapon
-
-
-class TestAddWeaponNoMutation(unittest.TestCase):
+import copyimport jsonimport tempfileimport unittestfrom pathlib import Pathfrom tools.endfield_scripts.add_weapon import add_weapon, remove_weaponclass TestAddWeaponNoMutation(unittest.TestCase):
     def test_bonus_attrs_not_mutated(self):
         bonus = {
             "意志+": {"base": 12, "growth": 48, "divisor": 5, "offset": 0, "special": [93]},

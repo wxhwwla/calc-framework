@@ -2,20 +2,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """双特殊能力：Wiki 解析与 JSON 字段。"""
 
-import io
-import sys
-import unittest
-from contextlib import redirect_stdout
-
-from games.endfield.tests.conftest import PKG_ROOT, REPO_ROOT, TOOLS_ROOT
-
-for p in (TOOLS_ROOT, PKG_ROOT):
+import ioimport sysimport unittestfrom contextlib import redirect_stdoutfrom games.endfield.tests.conftest import PKG_ROOT, REPO_ROOT, TOOLS_ROOTfor p in (TOOLS_ROOT, PKG_ROOT):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-from bwiki_scout.weapon_wiki import build_weapon_seed_spec_from_wiki  # noqa: E402
-
-_RAW_JIANFENG = REPO_ROOT / "tools/bwiki_scout/output/raw/O.B.J.尖峰"
+from bwiki_scout.weapon_wiki import build_weapon_seed_spec_from_wiki  # noqa: E402_RAW_JIANFENG = REPO_ROOT / "tools/bwiki_scout/output/raw/O.B.J.尖峰"
 _RAW_JET = REPO_ROOT / "tools/bwiki_scout/output/raw/J.E.T"
 
 

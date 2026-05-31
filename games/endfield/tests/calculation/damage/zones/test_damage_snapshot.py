@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """伤害快照（仪表盘数据）测试。"""
 
-import unittest
-
-from games.endfield.gui_design.presentation.damage_snapshot import build_damage_snapshot
-
-
-class TestDamageSnapshot(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.presentation.damage_snapshot import build_damage_snapshotclass TestDamageSnapshot(unittest.TestCase):
     def _char(self):
         return {
             "名称": "测试",

@@ -2,38 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """敌方参数面板 — 插件敌人下拉 + 防御/抗性/失衡参数微调。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
-    QDoubleSpinBox,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
-
-from games.endfield.data_loading.enemy_params import (
-    DEFAULT_ENEMY_DEFENSE,
-    DEFAULT_ENEMY_RESISTANCE,
-    DEFAULT_IGNORE_RESISTANCE,
-    DEFAULT_IMBALANCE_VULNERABILITY,
-    DEFAULT_IS_UNBALANCED,
-    list_plugin_enemy_choices,
-    resolve_enemy_defense,
-    resolve_enemy_resistance,
-    resolve_ignore_resistance,
-    resolve_imbalance_vulnerability,
-    resolve_is_unbalanced,
-)
-
-_LABEL_COLOR = "#CCCCCC"
+from __future__ import annotationsfrom typing import Anyfrom PySide6.QtCore import Signalfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QCheckBox,    QComboBox,    QDoubleSpinBox,    QHBoxLayout,    QLabel,    QPushButton,    QVBoxLayout,    QWidget,)from games.endfield.data_loading.enemy_params import (    DEFAULT_ENEMY_DEFENSE,    DEFAULT_ENEMY_RESISTANCE,    DEFAULT_IGNORE_RESISTANCE,    DEFAULT_IMBALANCE_VULNERABILITY,    DEFAULT_IS_UNBALANCED,    list_plugin_enemy_choices,    resolve_enemy_defense,    resolve_enemy_resistance,    resolve_ignore_resistance,    resolve_imbalance_vulnerability,    resolve_is_unbalanced,)_LABEL_COLOR = "#CCCCCC"
 _HINT_COLOR = "#888888"
 _SECTION_COLOR = "#FF6B6B"
 

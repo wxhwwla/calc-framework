@@ -2,25 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """BWIKI manifest → 同步目标解析测试。"""
 
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from bwiki_scout.detail_levels import operator_detail_title  # noqa: E402
-from bwiki_scout.import_targets import (  # noqa: E402
-    filter_operator_titles,
-    load_manifest_titles,
-    operator_wiki_cache_ready,
-    resolve_operator_sync_names,
-    resolve_weapon_sync_names,
-    weapon_wiki_import_ready,
-)
-from bwiki_scout.storage import save_page_bundle  # noqa: E402
-
-from games.endfield.tests.conftest import REPO_ROOT
-
-_RAW_QIULI = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗"
+import jsonimport tempfileimport unittestfrom pathlib import Pathfrom bwiki_scout.detail_levels import operator_detail_title  # noqa: E402from bwiki_scout.import_targets import (  # noqa: E402    filter_operator_titles,    load_manifest_titles,    operator_wiki_cache_ready,    resolve_operator_sync_names,    resolve_weapon_sync_names,    weapon_wiki_import_ready,)from bwiki_scout.storage import save_page_bundle  # noqa: E402from games.endfield.tests.conftest import REPO_ROOT_RAW_QIULI = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗"
 _RAW_QIULI_DETAIL = REPO_ROOT / "tools/bwiki_scout/output/raw/秋栗_详细数据"
 _RAW_ZHULIN = REPO_ROOT / "tools/bwiki_scout/output/raw/逐鳞3.0"
 

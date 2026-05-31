@@ -23,7 +23,6 @@ from utils.optional_deps import (  # noqa: E402
     GUI_OPTIONAL_DEPS,
     RUNTIME_PIP_PACKAGES,
     is_matplotlib_available,
-    missing_dependencies,
 )
 
 

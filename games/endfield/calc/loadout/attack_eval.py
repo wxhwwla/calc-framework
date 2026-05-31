@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配装最终攻击力求值：GUI 乘区快照与全量搜索共用 seam。"""
 
-from __future__ import annotations
-
-from collections.abc import Mapping, Sequence
-from typing import Any
-
-from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-
-
-def final_attack_details_for_loadout(
+from __future__ import annotationsfrom collections.abc import Mapping, Sequencefrom typing import Anyfrom games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_detailsfrom games.endfield.calc.skills.weapon_selection import WeaponSkillSelectiondef final_attack_details_for_loadout(
     *,
     character: Mapping[str, Any],
     weapon: Mapping[str, Any] | None,

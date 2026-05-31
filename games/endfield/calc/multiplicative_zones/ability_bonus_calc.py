@@ -14,13 +14,7 @@
     - 能力值：根据角色等级从对应的属性列表中获取，加上武器加成
 """
 
-import warnings
-from typing import Any
-
-from games.endfield.calc.damage.formula import trust_add
-
-
-def _get_weapon_bonus(bonus_data, level: int = 1) -> float:
+import warningsfrom typing import Anyfrom games.endfield.calc.damage.formula import trust_adddef _get_weapon_bonus(bonus_data, level: int = 1) -> float:
     """从武器加成数据中提取加成值（支持等级选择）"""
     if isinstance(bonus_data, list):
         level_index = level - 1
@@ -258,10 +252,7 @@ def calculate_ability_bonus(
                 main_pct += bonus_value
                 sub_pct += bonus_value
 
-        from games.endfield.calc.skills.special_fields import (
-            add_special_picks_to_ability_pct,
-            add_special_picks_to_main_sub_bonus,
-        )
+        from games.endfield.calc.skills.special_fields import (            add_special_picks_to_ability_pct,            add_special_picks_to_main_sub_bonus,        )
 
         md, sd = add_special_picks_to_main_sub_bonus(
             weapon,
@@ -310,10 +301,7 @@ def calculate_ability_bonus(
 #!/usr/bin/env python3
 """能力值加成乘区：Zone 类定义。"""
 
-from .base_zone import BaseZone
-
-
-class AbilityBonusZone(BaseZone):
+from .base_zone import BaseZoneclass AbilityBonusZone(BaseZone):
     """
     能力值加成乘区
 

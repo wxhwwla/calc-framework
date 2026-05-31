@@ -6,11 +6,7 @@
 定义所有乘区的基类和相关类型提示。
 """
 
-from abc import ABC, abstractmethod
-from typing import Any
-
-
-class BaseZone(ABC):
+from abc import ABC, abstractmethodfrom typing import Anyclass BaseZone(ABC):
     """
     乘区基类（抽象类）
 

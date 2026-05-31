@@ -4,20 +4,7 @@
 重构后的反向计算公式单元测试
 """
 
-import unittest
-from typing import cast
-
-from games.endfield.calc.damage.inverse import (
-    _find_best_params,
-    _is_decimal_data,
-    _scale_data,
-    fit_attribute_formula,
-    fit_formula,
-    fit_skill_formula_no_special,
-)
-
-
-class TestInverseRefactored(unittest.TestCase):
+import unittestfrom typing import castfrom games.endfield.calc.damage.inverse import (    _find_best_params,    _is_decimal_data,    _scale_data,    fit_attribute_formula,    fit_formula,    fit_skill_formula_no_special,)class TestInverseRefactored(unittest.TestCase):
     """测试重构后的反向计算模块"""
 
     def test_is_decimal_data_integer(self):
@@ -179,10 +166,7 @@ class TestInverseRefactored(unittest.TestCase):
 
     def test_fit_weapon_bonus_matches_seed_params(self):
         """武器附加属性（9级+第9级special）反推结果应能复现 JSON/seed 曲线"""
-        import contextlib
-        import io
-
-        from games.endfield.calc.damage.formula import calculate_bonus_attribute
+        import contextlib        import io        from games.endfield.calc.damage.formula import calculate_bonus_attribute
 
         cases = [
             (

@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """流式遍历任务生成测试。"""
 
-import unittest
-
-from games.endfield.calc.loadout.optimizer import (
-    OptimizerConfig,
-    WeaponCandidate,
-    build_optimizer_search_plan,
-    iter_optimizer_tasks,
-)
-
-
-class TestStreamingOptimizer(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.optimizer import (    OptimizerConfig,    WeaponCandidate,    build_optimizer_search_plan,    iter_optimizer_tasks,)class TestStreamingOptimizer(unittest.TestCase):
     def test_each_weapon_repeats_all_loadout_combinations(self):
         catalog = {
             "chest": [{"名称": "c1", "效果": [1], "三件套效果": []}],

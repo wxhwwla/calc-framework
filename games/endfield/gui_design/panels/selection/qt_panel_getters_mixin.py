@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """选择面板读取接口 Mixin（从 QtSelectionPanel 抽离以控制文件长度）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-
-class PanelGettersMixin:
+from __future__ import annotationsfrom typing import Anyclass PanelGettersMixin:
     """对外读取接口（混合入 QtSelectionPanel）。"""
 
     # ── 对外读取接口 ──────────────────────────────────

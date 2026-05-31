@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from games.endfield.gui_design.shared.calc_mode_labels import (
-    CALC_MODE_LABELS,
-    CALC_MODE_OPTIONS,
-    DEFAULT_CALC_MODE_LABEL,
-    calculation_mode_from_label,
-)
-
-
+from __future__ import annotations
+
+from games.endfield.gui_design.shared.calc_mode_labels import (
+    CALC_MODE_LABELS,
+    CALC_MODE_OPTIONS,
+    DEFAULT_CALC_MODE_LABEL,
+    calculation_mode_from_label,
+)
+
+
 class TestCalculationModeFromLabel:
     def test_empty_string(self) -> None:
         assert calculation_mode_from_label("") == "single_hit"

@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """公式反推页签：从数值数据反向推导成长公式参数。"""
 
-from __future__ import annotations
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
-
-_STYLE = """
+from __future__ import annotationsfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget_STYLE = """
     QTextEdit { background-color: #1E1E1E; color: #D1D1D1;
                 border: 1px solid #464646; border-radius: 4px;
                 font-family: Consolas, monospace; font-size: 12px; }

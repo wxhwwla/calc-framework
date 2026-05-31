@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
 """高级页控制栏：小部件类与异常矩阵构建器。"""
 
-from __future__ import annotations
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QComboBox,
-    QGridLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QWidget,
-)
-
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QComboBox,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QWidget,
+)
+
 _LABEL_COLOR = "#CCCCCC"
 _HINT_COLOR = "#888888"
 _SECTION_COLOR = "#FF6B6B"

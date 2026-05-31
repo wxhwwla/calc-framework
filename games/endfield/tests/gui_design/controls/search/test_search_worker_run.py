@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchWorker.run() 完整路径测试。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-from PySide6.QtCore import QCoreApplication, QObject
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.calc.search.run.cancel import SearchCancelToken
-from games.endfield.gui_design.controls.search.qt_actions import SearchWorker
-
-
+from __future__ import annotations
+
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+from games.endfield.calc.search.run.cancel import SearchCancelToken
+from games.endfield.gui_design.controls.search.qt_actions import SearchWorker
+from PySide6.QtCore import QCoreApplication, QObject
+from PySide6.QtWidgets import QApplication
+
+
 def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:

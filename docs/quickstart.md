@@ -330,7 +330,7 @@ python main.py
 
 ### 示例 1：终末地适配器（15 乘区）
 
-参考 `framework/calc_engine/endfield/`：
+参考 `framework/games/endfield/`：
 
 | 文件 | 用途 |
 |------|------|
@@ -338,10 +338,10 @@ python main.py
 | `../../src/calc_framework/configs/endfield_full.dag.json` | 15 乘区 DAG 定义（5 子图、58 节点、18 输出） |
 | `ui/layout.json` | 乘区展示排版 |
 | `attr_schema.json` | 属性声明（14 个属性） |
-| `calc_engine/endfield/calc/dag_adapter/loader.py` | `EndfieldContextLoader` 实现 |
+| `games/endfield/calc/dag_adapter/loader.py` | `EndfieldContextLoader` 实现 |
 
 ```python
-from calc_engine.endfield.calc.dag_adapter.loader import EndfieldContextLoader
+from games.endfield.calc.dag_adapter.loader import EndfieldContextLoader
 
 loader = EndfieldContextLoader()
 context = loader.build_context(

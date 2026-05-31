@@ -6,13 +6,7 @@
 核心引擎仍读内置 ``characters.json``；插件用于扩展敌方参数等，不替换主数据。
 """
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-from typing import Any
-
-try:
+from __future__ import annotationsimport jsonfrom pathlib import Pathfrom typing import Anytry:
     import yaml  # type: ignore[import-untyped]
 except ImportError:  # pragma: no cover - 可选依赖
     yaml = None  # type: ignore[assignment]

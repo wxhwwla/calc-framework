@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """手动场外 buff 注入单段伤害计算。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import (
-    DamageContext,
-    calculate_single_hit_damage,
-)
-
-
-class TestManualBuffInjection(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import (    DamageContext,    calculate_single_hit_damage,)class TestManualBuffInjection(unittest.TestCase):
     def test_context_field_buff_adds_to_zone(self):
         result = calculate_single_hit_damage(
             DamageContext(

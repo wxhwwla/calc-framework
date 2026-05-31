@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备数据链路与四格装配测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damage
-from games.endfield.calc.equipment.system import (
-    build_four_slot_loadout,
-    build_runtime_equipment_from_wiki_draft,
-    collect_loadout_effects,
-)
-
-
-class TestEquipmentSystem(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damagefrom games.endfield.calc.equipment.system import (    build_four_slot_loadout,    build_runtime_equipment_from_wiki_draft,    collect_loadout_effects,)class TestEquipmentSystem(unittest.TestCase):
     def test_build_runtime_equipment_from_wiki_draft(self):
         draft = {
             "名称": "测试胸甲",

@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """计算结果缓存测试。"""
 
-import unittest
-
-from games.endfield.calc.core.result_cache import (
-    CalculationResultCache,
-    get_global_result_cache,
-    reset_global_result_cache,
-)
-
-
-class TestResultCache(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.result_cache import (    CalculationResultCache,    get_global_result_cache,    reset_global_result_cache,)class TestResultCache(unittest.TestCase):
     def test_hit_when_dependencies_unchanged(self) -> None:
         cache = CalculationResultCache()
         cache.set_dependency("level", 80)

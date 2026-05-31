@@ -2,9 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """计算模式下拉：界面中文文案 ↔ 内部模式标识。"""
 
-from __future__ import annotations
-
-# (界面显示, 内部标识)
+from __future__ import annotations# (界面显示, 内部标识)
 CALC_MODE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("单段伤害计算", "single_hit"),
     ("乘区快照", "zone_snapshot"),

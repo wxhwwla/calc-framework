@@ -2,19 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索编排（search_controller）行为测试。"""
 
-import unittest
-
-from games.endfield.calc.loadout.optimizer import OptimizerConfig
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.calc.search.plan.controller import (
-    SearchJobInputs,
-    optimizer_config_for_search_job,
-    prepare_search_job,
-)
-from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
-
-
-class TestSearchController(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.optimizer import OptimizerConfigfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.calc.search.plan.controller import (    SearchJobInputs,    optimizer_config_for_search_job,    prepare_search_job,)from games.endfield.calc.search.run.single_skill import estimate_single_skill_searchclass TestSearchController(unittest.TestCase):
     def _char(self) -> dict:
         return {
             "名称": "测试干员",

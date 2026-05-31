@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器特殊能力1/2 字段读写与迁移。"""
 
-import unittest
-
-from games.endfield.calc.skills.special_fields import (
-    LEGACY_SPECIAL_KEY,
-    SPECIAL_FIELD_KEYS,
-    bonus_attribute_keys,
-    migrate_weapon_record_to_skill_schema,
-    migrate_weapon_records_to_skill_schema,
-    parse_special_field,
-    read_weapon_skills_schema,
-    read_weapon_special_slots,
-    write_weapon_skills_schema,
-    write_weapon_special_slots,
-)
-
-
-class TestWeaponSpecialFields(unittest.TestCase):
+import unittestfrom games.endfield.calc.skills.special_fields import (    LEGACY_SPECIAL_KEY,    SPECIAL_FIELD_KEYS,    bonus_attribute_keys,    migrate_weapon_record_to_skill_schema,    migrate_weapon_records_to_skill_schema,    parse_special_field,    read_weapon_skills_schema,    read_weapon_special_slots,    write_weapon_skills_schema,    write_weapon_special_slots,)class TestWeaponSpecialFields(unittest.TestCase):
     def test_migrate_weapon_record_to_skill_schema(self):
         weapon = {
             "名称": "测试武器",
@@ -172,9 +156,7 @@ class TestWeaponSpecialFields(unittest.TestCase):
         )
 
     def test_infer_max_stack_from_special_text(self):
-        from games.endfield.calc.skills.special_fields import (
-            infer_max_stack_from_special,
-        )
+        from games.endfield.calc.skills.special_fields import (            infer_max_stack_from_special,        )
 
         self.assertEqual(
             infer_max_stack_from_special(
@@ -213,9 +195,7 @@ class TestWeaponSpecialFields(unittest.TestCase):
         self.assertIn(SPECIAL_FIELD_KEYS[1], weapon)
 
     def test_migrate_legacy_weapon_special_level(self):
-        from games.endfield.calc.skills.special_fields import (
-            migrate_legacy_weapon_special_level,
-        )
+        from games.endfield.calc.skills.special_fields import (            migrate_legacy_weapon_special_level,        )
 
         self.assertEqual(migrate_legacy_weapon_special_level(0), (1, 0))
         self.assertEqual(migrate_legacy_weapon_special_level(8), (8, 1))

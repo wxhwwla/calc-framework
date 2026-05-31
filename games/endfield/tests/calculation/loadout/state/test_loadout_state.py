@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """LoadoutState 接缝测试。"""
 
-import unittest
-
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.calc.skills.weapon_selection import normalize_weapon_specials_tuple
-from games.endfield.gui_design.app.loadout_state import LoadoutState, read_loadout_from_panels
-from games.endfield.tests.conftest import MockSelectionPanel
-
-
-class TestLoadoutState(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.calc.skills.weapon_selection import normalize_weapon_specials_tuplefrom games.endfield.gui_design.app.loadout_state import LoadoutState, read_loadout_from_panelsfrom games.endfield.tests.conftest import MockSelectionPanelclass TestLoadoutState(unittest.TestCase):
     def _char(self) -> dict:
         return {
             "名称": "测试干员",

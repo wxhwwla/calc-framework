@@ -37,21 +37,7 @@
 - OptimizerResult: 搜索结果汇总
 """
 
-from __future__ import annotations
-
-from collections.abc import Iterator
-
-from games.endfield.calc.damage.engine import CritMode, DamageContext
-from games.endfield.calc.equipment.prune import character_ability_attrs
-from games.endfield.calc.loadout.slot_search import (
-    FixedLoadoutSelection,
-)
-
-from .catalog import _iter_loadout_combinations
-from .plan import build_optimizer_search_plan
-from .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidate
-
-OptimizerTask = tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]
+from __future__ import annotationsfrom collections.abc import Iteratorfrom games.endfield.calc.damage.engine import CritMode, DamageContextfrom games.endfield.calc.equipment.prune import character_ability_attrsfrom games.endfield.calc.loadout.slot_search import (    FixedLoadoutSelection,)from .catalog import _iter_loadout_combinationsfrom .plan import build_optimizer_search_planfrom .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidateOptimizerTask = tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]
 """搜索任务类型：(武器候选, (胸甲, 手套, 饰品A, 饰品B))"""
 
 

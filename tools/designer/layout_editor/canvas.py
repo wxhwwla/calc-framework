@@ -15,21 +15,31 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from PySide6.QtCore import Qt, QEvent, QMimeData, QPointF, QRectF, Signal
-from PySide6.QtGui import (
-    QBrush, QColor, QDrag, QDragEnterEvent, QDropEvent, QFont,
-    QLinearGradient, QPainter, QPen, QPixmap,
+from PySide6.QtCore import Qt, QPointF, Signal
+from PySide6.QtGui import (
+
+    QBrush, QColor, QDragEnterEvent, QDropEvent, QFont,
+
+    QLinearGradient, QPainter, QPen, QPixmap,
+
 )
-from PySide6.QtWidgets import (
-    QAbstractItemView, QComboBox, QDialog, QFileDialog, QFormLayout,
-    QGraphicsItem, QGraphicsRectItem, QGraphicsScene,
-    QGraphicsSceneDragDropEvent, QGraphicsSimpleTextItem, QGraphicsView,
-    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget,
-    QListWidgetItem, QMessageBox, QPushButton, QScrollArea,
-    QSizePolicy, QSpinBox, QSplitter, QVBoxLayout, QWidget,
+from PySide6.QtWidgets import (
+
+    QComboBox, QDialog, QFileDialog, QFormLayout,
+
+    QGraphicsItem, QGraphicsRectItem, QGraphicsScene,
+
+    QGraphicsSimpleTextItem, QGraphicsView,
+
+    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+
+    QListWidgetItem, QMessageBox, QPushButton, QScrollArea,
+
+    QSpinBox, QSplitter, QVBoxLayout, QWidget,
+
 )
 
-from calc_framework.ui.layout import Layout, Section, load_layout
+from calc_framework.ui.layout import Section, load_layout
 
 _SECTION_COLOR = QColor("#2D2D2D")
 _SECTION_BORDER = QColor("#555555")
@@ -255,7 +265,7 @@ class DonationConfigDialog(QDialog):
         layout.addRow(btns)
 
     def _browse_image(self) -> None:
-        from PySide6.QtWidgets import QFileDialog
+
         path, _ = QFileDialog.getOpenFileName(
             self, "选择捐赠图片", "", "图片 (*.png *.jpg *.jpeg *.bmp)"
         )
@@ -397,7 +407,7 @@ class LayoutCanvasPanel(QWidget):
         self._scene.selectionChanged.connect(self._on_selection_changed)
 
     def _set_grid_background(self) -> None:
-        from PySide6.QtGui import QPixmap
+
         pix = QPixmap(_GRID_SIZE * 2, _GRID_SIZE * 2)
         pix.fill(QColor("#1E1E1E"))
         from PySide6.QtGui import QPainter as QP
@@ -462,7 +472,7 @@ class LayoutCanvasPanel(QWidget):
         scene_pt = self._view.mapToScene(int(scene_pos.x()), int(scene_pos.y()))
         sec_item = self._find_section_at(scene_pt)
         if sec_item is None:
-            QMessageBox.information(self, "提示", f"请先将变量拖拽到 Section 区块内。\n先点击左上角「+ 添加 Section」创建区块。")
+            QMessageBox.information(self, "提示", "请先将变量拖拽到 Section 区块内。\n先点击左上角「+ 添加 Section」创建区块。")
             return
         for existing in sec_item._controls:
             if existing.var_name == var_name:
@@ -611,7 +621,7 @@ class LayoutCanvasPanel(QWidget):
     def _open_preview(self) -> None:
         from calc_framework.ui.compute_sheet import ComputeSheet
         from calc_framework.ui.layout import load_layout
-        from calc_framework.dag.service import DAGService
+
 
         data = self._build_layout_data()
         if not data["sections"]:

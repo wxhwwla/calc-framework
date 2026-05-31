@@ -4,28 +4,28 @@
 将终末地配装搜索包装为通用搜索引擎，其他游戏可参考此模式实现自己的适配器。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from typing import Any
-
-from calc_framework.search import SearchEngine
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    OptimizerTask,
-    WeaponCandidate,
-    build_optimizer_search_plan,
-    enumerate_optimizer_tasks,
-    evaluate_task,
-)
-
-from .evaluate.context import SearchEvalContext
-from .plan.job import SingleSkillSearchJob
-
-
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+from calc_framework.search import SearchEngine
+
+from games.endfield.calc.damage.engine import DamageContext
+from games.endfield.calc.loadout.optimizer import (
+    LoadoutScore,
+    OptimizerConfig,
+    OptimizerTask,
+    WeaponCandidate,
+    build_optimizer_search_plan,
+    enumerate_optimizer_tasks,
+    evaluate_task,
+)
+
+from .evaluate.context import SearchEvalContext
+from .plan.job import SingleSkillSearchJob
+
+
 class EndfieldSearchEngine(SearchEngine[OptimizerTask, LoadoutScore]):
     """终末地配装搜索适配器。
 

@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配装最终攻击力：GUI 乘区链与搜索链 parity 测试。"""
 
-import unittest
-
-from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
-from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-
-
-class TestLoadoutAttackEval(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadoutfrom games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_detailsfrom games.endfield.calc.skills.weapon_selection import WeaponSkillSelectionclass TestLoadoutAttackEval(unittest.TestCase):
     def _char(self) -> dict:
         return {
             "名称": "测试干员",
@@ -67,8 +60,7 @@ class TestLoadoutAttackEval(unittest.TestCase):
         self.assertAlmostEqual(unified["final_attack"], direct["final_attack"], places=4)
 
     def test_prepare_job_carries_weapon_skill_fields(self) -> None:
-        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-        from games.endfield.calc.search.plan.job import prepare_single_skill_search_job
+        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection        from games.endfield.calc.search.plan.job import prepare_single_skill_search_job
 
         char = self._char()
         weapon = self._weapon()
@@ -99,8 +91,7 @@ class TestLoadoutAttackEval(unittest.TestCase):
         self.assertEqual(job.weapon_special_states, ({"level": 7, "stack": 2},))
 
     def test_build_run_signature_includes_weapon_skill_levels(self) -> None:
-        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-        from games.endfield.calc.search.plan.job import build_run_signature
+        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection        from games.endfield.calc.search.plan.job import build_run_signature
 
         char = self._char()
         base_kwargs = dict(

@@ -2,22 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """法术异常/爆发伤害计算（导电/腐蚀/燃烧/冻结 + 同属性爆发）。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-from games.endfield.calc.manual_buff.spell_params import (
-    SPELL_ABNORMAL_PARAM_ROWS,
-    SPELL_LEVEL_COEFF_DIVISOR,
-    SpellFormulaKind,
-    base_multiplier_for_formula,
-    calc_level_from_ui,
-    preview_level_multipliers,
-)
-from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom dataclasses import dataclassfrom games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damagefrom games.endfield.calc.manual_buff.spell_params import (    SPELL_ABNORMAL_PARAM_ROWS,    SPELL_LEVEL_COEFF_DIVISOR,    SpellFormulaKind,    base_multiplier_for_formula,    calc_level_from_ui,    preview_level_multipliers,)@dataclass(frozen=True)
 class SpellAbnormalDef:
     """法术异常/爆发条目定义。"""
 

@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据来源与许可模块测试。"""
 
-import unittest
-
-from games.endfield.gui_design.legal.attribution_content import (
-    ATTRIBUTION_DIALOG_MINSIZE,
-    ATTRIBUTION_DIALOG_SIZE,
-    SUMMARY_TEXT,
-    attribution_doc_local_path,
-    data_license_local_path,
-    notices_local_path,
-)
-from games.endfield.tests.conftest import REPO_ROOT
-
-
-class TestLegalAttribution(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.legal.attribution_content import (    ATTRIBUTION_DIALOG_MINSIZE,    ATTRIBUTION_DIALOG_SIZE,    SUMMARY_TEXT,    attribution_doc_local_path,    data_license_local_path,    notices_local_path,)from games.endfield.tests.conftest import REPO_ROOTclass TestLegalAttribution(unittest.TestCase):
     def test_dialog_default_size_fits_all_buttons(self):
         w, h = ATTRIBUTION_DIALOG_SIZE
         min_w, min_h = ATTRIBUTION_DIALOG_MINSIZE

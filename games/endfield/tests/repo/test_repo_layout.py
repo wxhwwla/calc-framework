@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """仓库根目录门面分区约定（tools / docs / legacy）。"""
 
-import unittest
-
-from games.endfield.tests.conftest import REPO_ROOT
-
-
-class TestRepoLayout(unittest.TestCase):
+import unittestfrom games.endfield.tests.conftest import REPO_ROOTclass TestRepoLayout(unittest.TestCase):
     def test_bwiki_scout_lives_under_tools(self):
         scout = REPO_ROOT / "tools" / "bwiki_scout" / "scout.py"
         self.assertTrue(scout.is_file(), "BWIKI 侦察应在 tools/bwiki_scout/")

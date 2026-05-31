@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchHistoryDialog Qt 控件测试。"""
 
-from __future__ import annotations
-
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.gui_design.controls.search.qt_search_browser import SearchHistoryDialog, _human_size
-
-
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+from games.endfield.gui_design.controls.search.qt_search_browser import SearchHistoryDialog, _human_size
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
+
+
 def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:

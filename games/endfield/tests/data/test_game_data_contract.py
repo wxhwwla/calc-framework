@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """characters.json / weapons.json 全库结构契约测试"""
 
-import json
-import unittest
-
-from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH
-from utils.path_utils import get_resource_path
-
-CHAR_REQUIRED = {"名称", "类型", "星级"}
+import jsonimport unittestfrom games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATHfrom utils.path_utils import get_resource_pathCHAR_REQUIRED = {"名称", "类型", "星级"}
 WEAPON_REQUIRED = {"名称", "类型", "星级", "基础攻击力"}
 LEVEL_CURVE_LEN = 90
 BONUS_ATTR_LEN = 9
@@ -122,11 +116,7 @@ class TestGameDataContract(unittest.TestCase):
                         f"武器「{name}」附加属性「{key}」长度应为 {BONUS_ATTR_LEN}",
                     )
 
-            from games.endfield.calc.skills.special_fields import (
-                SPECIAL_FIELD_KEYS,
-                read_weapon_special_slots,
-                write_weapon_special_slots,
-            )
+            from games.endfield.calc.skills.special_fields import (                SPECIAL_FIELD_KEYS,                read_weapon_special_slots,                write_weapon_special_slots,            )
 
             slots = read_weapon_special_slots(weapon)
             if weapon.get(SPECIAL_FIELD_KEYS[0]) or weapon.get(SPECIAL_FIELD_KEYS[1]):
@@ -138,10 +128,7 @@ class TestGameDataContract(unittest.TestCase):
 
     def test_weapon_special_curves_not_rank_multiple_mistake(self) -> None:
         """可叠层特殊能力九档须为「每层%」，不得误录为 base×档序。"""
-        from games.endfield.calc.skills.special_fields import (
-            is_accidental_rank_multiple_curve,
-            read_weapon_special_slots,
-        )
+        from games.endfield.calc.skills.special_fields import (            is_accidental_rank_multiple_curve,            read_weapon_special_slots,        )
 
         bad: list[str] = []
         for weapon in self.weapons:

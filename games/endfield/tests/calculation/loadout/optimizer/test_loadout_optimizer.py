@@ -2,22 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单技能最优搜索 V1 测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext, DamageEffect
-from games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draft
-from games.endfield.calc.loadout.optimizer import (
-    OptimizerConfig,
-    WeaponCandidate,
-    build_optimizer_search_plan,
-    search_best_single_skill_loadouts,
-)
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.calc.search.plan.job import SingleSkillSearchJob
-from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
-
-
-class TestLoadoutOptimizer(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContext, DamageEffectfrom games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draftfrom games.endfield.calc.loadout.optimizer import (    OptimizerConfig,    WeaponCandidate,    build_optimizer_search_plan,    search_best_single_skill_loadouts,)from games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.calc.search.plan.job import SingleSkillSearchJobfrom games.endfield.calc.search.run.single_skill import estimate_single_skill_searchclass TestLoadoutOptimizer(unittest.TestCase):
     def _build_equipment_catalog(self):
         return {
             "chest": [

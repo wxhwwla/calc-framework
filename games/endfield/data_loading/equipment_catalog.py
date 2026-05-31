@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """统一装备目录接缝：范围过滤 + 三部位 catalog。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.calc.equipment.system import build_equipment_catalog_from_local_rows
-from games.endfield.data_loading.loader import DataLoadError, get_equipments
-
-# 与 GUI 下拉文案一致
+from __future__ import annotationsfrom typing import Anyfrom games.endfield.calc.equipment.system import build_equipment_catalog_from_local_rowsfrom games.endfield.data_loading.loader import DataLoadError, get_equipments# 与 GUI 下拉文案一致
 EQUIPMENT_SCOPE_ALL = "all"
 EQUIPMENT_SCOPE_SET = "set_only"
 EQUIPMENT_SCOPE_LOOSE = "loose_only"

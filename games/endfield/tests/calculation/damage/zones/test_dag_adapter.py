@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 适配器：将 DAG 引擎接入现有 zone_snapshot 计算链的测试。"""
 
-import json
-import unittest
-from pathlib import Path
-from typing import Any
-
-from games.endfield.calc.zone_snapshot.types import (
-    MultiplicativeZoneSelection,
-    WeaponBonusSelection,
-)
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARACTERS_JSON = DATA_DIR / "characters.json"
+import jsonimport unittestfrom pathlib import Pathfrom typing import Anyfrom games.endfield.calc.zone_snapshot.types import (    MultiplicativeZoneSelection,    WeaponBonusSelection,)from games.endfield.tests.conftest import DATA_DIR_CHARACTERS_JSON = DATA_DIR / "characters.json"
 _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
@@ -64,13 +53,7 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertIn("主能力百分比", ctx["computed"])
 
     def test_evaluate_attack_chain_via_dag_matches_existing_engine(self):
-        from games.endfield.calc.multiplicative_zones.ability_bonus_details import (
-            calculate_ability_bonus_with_details,
-        )
-        from games.endfield.calc.dag_adapter.adapter import evaluate_attack_chain_via_dag
-        from games.endfield.calc.multiplicative_zones.final_attack_zone import (
-            calculate_final_attack_with_details,
-        )
+        from games.endfield.calc.dag_adapter.adapter import evaluate_attack_chain_via_dag        from games.endfield.calc.multiplicative_zones.ability_bonus_details import (            calculate_ability_bonus_with_details,        )        from games.endfield.calc.multiplicative_zones.final_attack_zone import (            calculate_final_attack_with_details,        )
 
         existing_final = calculate_final_attack_with_details(
             self.char, self.weapon,

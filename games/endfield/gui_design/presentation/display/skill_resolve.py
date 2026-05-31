@@ -4,13 +4,7 @@
 属性/乘区/单段伤害的展示文案构建（无 GUI 依赖，便于单测）。
 """
 
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
-
-# 等级相关属性列表（需要根据等级从列表中提取对应值）
+from __future__ import annotationsfrom typing import Anyfrom games.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type# 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
 
 # 角色技能类型与 JSON 字段、选择区滑块等级参数对应（见 skill_segments.CHARACTER_SKILL_TYPES）
@@ -21,10 +15,7 @@ NO_DAMAGE_MULTIPLIER_TEXT = "无伤害倍率"
 WEAPON_INTEGER_BONUS_ATTR_KEY = "源石技艺"
 WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset({"附加攻击力+", "主能力+", "副能力+"})
 
-from .format import SelectedSkillForDamage
-
-
-def resolve_selected_skill_for_damage(
+from .format import SelectedSkillForDamagedef resolve_selected_skill_for_damage(
     char_data: dict[str, Any],
     *,
     skill_1_level: int = 0,

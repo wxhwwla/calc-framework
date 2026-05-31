@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索文案格式化（无 GUI 依赖）测试。"""
 
-import importlib
-import inspect
-import unittest
-
-from utils.search_format import format_duration_human, format_workload_estimate_line
-
-
-class TestSearchFormat(unittest.TestCase):
+import importlibimport inspectimport unittestfrom utils.search_format import format_duration_human, format_workload_estimate_lineclass TestSearchFormat(unittest.TestCase):
     def test_format_duration_human_under_one_minute(self):
         self.assertEqual(format_duration_human(45.0), "约 45 秒")
 

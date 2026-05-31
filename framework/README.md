@@ -182,7 +182,7 @@ my-game-adapter/
 
 ### 终末地（15 乘区）
 
-`framework/calc_engine/endfield/` — 真实游戏完整适配器。
+`framework/games/endfield/` — 真实游戏完整适配器。
 
 ### 卡牌RPG（攻击-防御公式）
 

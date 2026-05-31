@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """法术异常计算测试。"""
 
-import unittest
-
-from games.endfield.calc.manual_buff.spell import (
-    evaluate_spell_abnormal_total,
-    format_spell_abnormal_breakdown_lines,
-    get_spell_abnormal_param_snapshot,
-    normalize_spell_abnormal_counts,
-)
-from games.endfield.calc.manual_buff.spell_params import (
-    SPELL_LEVEL_COEFF_DIVISOR,
-    base_multiplier_for_formula,
-    calc_level_from_ui,
-)
-from games.endfield.calc.damage.engine import DamageContext
-
-
-class TestSpellAbnormal(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.manual_buff.spell import (    evaluate_spell_abnormal_total,    format_spell_abnormal_breakdown_lines,    get_spell_abnormal_param_snapshot,    normalize_spell_abnormal_counts,)from games.endfield.calc.manual_buff.spell_params import (    SPELL_LEVEL_COEFF_DIVISOR,    base_multiplier_for_formula,    calc_level_from_ui,)class TestSpellAbnormal(unittest.TestCase):
     def test_spell_param_snapshot_contains_formulas(self) -> None:
         snapshot = get_spell_abnormal_param_snapshot()
         self.assertIn("灼热异常", snapshot)

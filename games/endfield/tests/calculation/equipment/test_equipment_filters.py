@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备套装筛选（data/equipment_filters）测试。"""
 
-import unittest
-
-from games.endfield.data_loading.equipment_filters import (
-    SET_FILTER_ALL,
-    SET_FILTER_LOOSE,
-    equipment_names_from_rows,
-    filter_rows_by_set_label,
-    list_set_filter_options,
-)
-
-
-class TestEquipmentFilters(unittest.TestCase):
+import unittestfrom games.endfield.data_loading.equipment_filters import (    SET_FILTER_ALL,    SET_FILTER_LOOSE,    equipment_names_from_rows,    filter_rows_by_set_label,    list_set_filter_options,)class TestEquipmentFilters(unittest.TestCase):
     def _rows(self):
         return [
             {"名称": "甲A", "套装": "寒霜"},

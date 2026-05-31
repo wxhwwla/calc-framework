@@ -7,11 +7,7 @@
 
 from __future__ import annotations
 
-
-
 from pathlib import Path
-
-
 
 REPO_URL = "https://github.com/wxhwwla/calc-framework"
 

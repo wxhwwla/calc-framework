@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """display_lines 预览缓存行为测试。"""
 
-import unittest
-
-from games.endfield.calc.core.result_cache import reset_global_result_cache
-from games.endfield.gui_design.presentation.display_lines import build_single_hit_damage_lines
-
-
-class TestPropertyDisplayCache(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.result_cache import reset_global_result_cachefrom games.endfield.gui_design.presentation.display_lines import build_single_hit_damage_linesclass TestPropertyDisplayCache(unittest.TestCase):
     def setUp(self) -> None:
         reset_global_result_cache()
 

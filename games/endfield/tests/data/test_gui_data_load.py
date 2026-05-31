@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GUI 数据加载失败时的用户提示测试"""
 
-import unittest
-from unittest.mock import patch
-
-from games.endfield.data_loading.game_data_facade import GameDataFacade
-from games.endfield.data_loading.loader import DataLoadError, fetch_game_data_for_gui
-
-
-class TestGuiDataLoad(unittest.TestCase):
+import unittestfrom unittest.mock import patchfrom games.endfield.data_loading.game_data_facade import GameDataFacadefrom games.endfield.data_loading.loader import DataLoadError, fetch_game_data_for_guiclass TestGuiDataLoad(unittest.TestCase):
     @patch("games.endfield.data_loading.game_data_facade.get_equipments", return_value=[])
     @patch("games.endfield.data_loading.game_data_facade.get_weapons")
     @patch("games.endfield.data_loading.game_data_facade.get_characters")

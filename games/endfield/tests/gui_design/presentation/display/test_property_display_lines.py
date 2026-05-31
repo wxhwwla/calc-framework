@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """属性列明细文本构建测试。"""
 
-import json
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.skills.special_fields import read_weapon_skills_schema
-from games.endfield.gui_design.presentation.display_lines import (
-    build_character_attribute_lines,
-    build_character_skill_lines,
-    build_weapon_attribute_lines,
-    format_weapon_bonus_display_value,
-)
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARACTERS_JSON = DATA_DIR / "characters.json"
+import jsonimport unittestfrom pathlib import Pathfrom games.endfield.calc.skills.special_fields import read_weapon_skills_schemafrom games.endfield.gui_design.presentation.display_lines import (    build_character_attribute_lines,    build_character_skill_lines,    build_weapon_attribute_lines,    format_weapon_bonus_display_value,)from games.endfield.tests.conftest import DATA_DIR_CHARACTERS_JSON = DATA_DIR / "characters.json"
 _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 

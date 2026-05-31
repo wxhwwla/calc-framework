@@ -2,27 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量遍历结果报告文案（无 CustomTkinter）。"""
 
-from __future__ import annotations
-
-from collections.abc import Sequence
-from pathlib import Path
-from typing import Any
-
-from games.endfield.calc.manual_buff.physical import (
-    abnormal_weighted_total,
-    format_abnormal_breakdown_lines,
-    split_damage_breakdown,
-)
-from games.endfield.calc.manual_buff.spell import (
-    format_spell_abnormal_breakdown_lines,
-    is_spell_abnormal_key,
-    spell_abnormal_weighted_total,
-)
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.calc.skills.segments import format_segment_breakdown_lines
-
-
-def _format_top_result_line(
+from __future__ import annotationsfrom collections.abc import Sequencefrom pathlib import Pathfrom typing import Anyfrom games.endfield.calc.loadout.optimizer import LoadoutScorefrom games.endfield.calc.manual_buff.physical import (    abnormal_weighted_total,    format_abnormal_breakdown_lines,    split_damage_breakdown,)from games.endfield.calc.manual_buff.spell import (    format_spell_abnormal_breakdown_lines,    is_spell_abnormal_key,    spell_abnormal_weighted_total,)from games.endfield.calc.skills.segments import format_segment_breakdown_linesdef _format_top_result_line(
     rank: int,
     score: LoadoutScore,
     *,

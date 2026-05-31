@@ -9,16 +9,7 @@
 3. 百分比数据：移除%→按整数/小数处理
 """
 
-from games.endfield.calc.damage.formula import (
-    calculate_bonus_attribute,
-    calculate_growth_curve,
-    calculate_skill_curve,
-)
-from games.endfield.calc.damage.inverse import fit_skill_formula_no_special
-from scripts.inverse_cli import parse_percent
-
-
-def test_integer_data_direct_calculation():
+from games.endfield.calc.damage.formula import (    calculate_bonus_attribute,    calculate_growth_curve,    calculate_skill_curve,)from games.endfield.calc.damage.inverse import fit_skill_formula_no_specialfrom tools.endfield_scripts.inverse_cli import parse_percentdef test_integer_data_direct_calculation():
     """测试整数数据直接计算"""
     # 整数数据：base=34, growth=31, divisor=9, offset=8
     result = calculate_growth_curve(34, 31, 9, 8, max_level=5)

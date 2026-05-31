@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """手动 buff 数据模型测试。"""
 
-import unittest
-
-from games.endfield.calc.manual_buff.model import (
-    MANUAL_BUFF_ZONE_OPTIONS,
-    build_active_keys_from_counts,
-    empty_buff_dict,
-    get_buffs_for_key,
-    set_buffs_for_key,
-)
-
-
-class TestManualBuffModel(unittest.TestCase):
+import unittestfrom games.endfield.calc.manual_buff.model import (    MANUAL_BUFF_ZONE_OPTIONS,    build_active_keys_from_counts,    empty_buff_dict,    get_buffs_for_key,    set_buffs_for_key,)class TestManualBuffModel(unittest.TestCase):
     def test_zone_options_has_12_entries(self):
         self.assertEqual(len(MANUAL_BUFF_ZONE_OPTIONS), 12)
         labels = {label for label, _ in MANUAL_BUFF_ZONE_OPTIONS}

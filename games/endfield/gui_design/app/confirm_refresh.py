@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认刷新去重：避免最小化/失焦等触发整页重绘。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-
-def normalize_skill_count_text(text: str) -> str:
+from __future__ import annotationsfrom typing import Anydef normalize_skill_count_text(text: str) -> str:
     """将技能次数输入规范为非负整数字符串。"""
     try:
         value = max(0, int(float((text or "").strip())))

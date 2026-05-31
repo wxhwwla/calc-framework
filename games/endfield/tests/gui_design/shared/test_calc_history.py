@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import MagicMock
-
-from games.endfield.gui_design.shared.calc_history import (
-    CalculationHistory,
-    HistoryEntry,
-    get_app_calculation_history,
-)
-
-
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from games.endfield.gui_design.shared.calc_history import (
+    CalculationHistory,
+    HistoryEntry,
+    get_app_calculation_history,
+)
+
+
 class TestCalculationHistory:
     def test_empty_history(self) -> None:
         h = CalculationHistory(max_entries=5)

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """compose_search_estimate_message 全覆盖测试。"""
 
-from __future__ import annotations
-
-from games.endfield.gui_design.controls.search.search_estimate_message import compose_search_estimate_message
-
-
+from __future__ import annotations
+
+from games.endfield.gui_design.controls.search.search_estimate_message import compose_search_estimate_message
+
+
 class TestComposeSearchEstimateMessage:
     def test_no_char(self) -> None:
         msg = compose_search_estimate_message(

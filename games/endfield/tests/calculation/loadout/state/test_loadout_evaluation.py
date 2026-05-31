@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """LoadoutEvaluation 快照测试。"""
 
-import unittest
-from unittest.mock import patch
-
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.gui_design.app.loadout_evaluation import (
-    build_search_preview_lines,
-    build_snapshot_from_loadout,
-)
-from games.endfield.gui_design.app.loadout_state import LoadoutState
-
-
-class TestLoadoutEvaluation(unittest.TestCase):
+import unittestfrom unittest.mock import patchfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.gui_design.app.loadout_evaluation import (    build_search_preview_lines,    build_snapshot_from_loadout,)from games.endfield.gui_design.app.loadout_state import LoadoutStateclass TestLoadoutEvaluation(unittest.TestCase):
     def test_effective_skill_counts_default_manual_off(self) -> None:
         state = LoadoutState(
             char_data={"名称": "A", "战技倍率": [[100]], "连携技倍率": [], "终结技倍率": []},

@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0
 """Replace adapters.endfield -> games.endfield in calc_engine/endfield/ .py files."""
-import os
-
-
+import os
+
+
 def replace_in_file(filepath):
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
     original = content

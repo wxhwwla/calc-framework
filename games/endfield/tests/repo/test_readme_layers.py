@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """仓库 README 双层结构约定。"""
 
-import unittest
-
-from games.endfield.tests.conftest import REPO_ROOT
-
-_ROOT_README = REPO_ROOT / "README.md"
+import unittestfrom games.endfield.tests.conftest import REPO_ROOT_ROOT_README = REPO_ROOT / "README.md"
 _PKG_README = REPO_ROOT / "games" / "endfield" / "README.md"
 
 

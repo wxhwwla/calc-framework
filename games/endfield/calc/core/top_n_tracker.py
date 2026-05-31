@@ -5,8 +5,4 @@
 实际实现在 ``calc_framework.search.TopNTracker``。
 """
 
-from __future__ import annotations
-
-from calc_framework.search import TopNTracker
-
-__all__ = ["TopNTracker"]
+from __future__ import annotationsfrom calc_framework.search import TopNTracker__all__ = ["TopNTracker"]

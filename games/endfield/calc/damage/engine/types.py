@@ -35,12 +35,7 @@
 15. 特殊乘区 = 连乘所有特殊乘区值
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Literal
-
-CritMode = Literal["non_crit", "expected", "always_crit"]
+from __future__ import annotationsfrom dataclasses import dataclassfrom typing import LiteralCritMode = Literal["non_crit", "expected", "always_crit"]
 """暴击模式类型：
 - non_crit: 非暴击模式，暴击区固定为 1.0
 - expected: 期望模式，暴击区 = 1.0 + 暴击率 × 暴击伤害

@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """插件化数据热加载测试。"""
 
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.data_loading.plugin_registry import PluginRegistry
-
-
-class TestPluginRegistry(unittest.TestCase):
+import jsonimport tempfileimport unittestfrom pathlib import Pathfrom games.endfield.data_loading.plugin_registry import PluginRegistryclass TestPluginRegistry(unittest.TestCase):
     def test_loads_json_enemy_from_plugins_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

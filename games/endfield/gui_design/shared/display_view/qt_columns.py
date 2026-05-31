@@ -7,28 +7,7 @@ PySide6 属性三列无闪渲染。
 仅更新单元格文本/颜色，彻底消灭闪烁。
 """
 
-from __future__ import annotations
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont, QFontMetrics
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QTableWidget,
-    QTableWidgetItem,
-    QWidget,
-)
-
-from games.endfield.calc.zone_snapshot.types import ZoneDisplayLine
-from gui_design.app.display_request import DisplayRequest
-from gui_design.presentation.display_lines import (
-    build_character_attribute_lines,
-    build_weapon_attribute_lines,
-    evaluate_display_state,
-)
-
-
-class _ColumnTable(QTableWidget):
+from __future__ import annotationsfrom games.endfield.calc.zone_snapshot.types import ZoneDisplayLinefrom PySide6.QtCore import Qtfrom PySide6.QtGui import QColor, QFont, QFontMetricsfrom PySide6.QtWidgets import (    QFrame,    QHBoxLayout,    QTableWidget,    QTableWidgetItem,    QWidget,)from gui_design.app.display_request import DisplayRequestfrom gui_design.presentation.display_lines import (    build_character_attribute_lines,    build_weapon_attribute_lines,    evaluate_display_state,)class _ColumnTable(QTableWidget):
     """单列只读表格，作为属性列的基础单元。
 
     特征：
@@ -170,12 +149,7 @@ class QtAttributeColumns(QWidget):
 
     def _build_zone_lines(self, request: DisplayRequest) -> list[ZoneDisplayLine]:
         """从 DisplayRequest 构建乘区展示行。"""
-        from games.endfield.calc.core.preview_cache import sync_confirm_dependencies
-        from games.endfield.calc.zone_snapshot import (
-            MultiplicativeZoneSelection,
-            WeaponBonusSelection,
-            compute_multiplicative_zone_snapshot,
-        )
+        from games.endfield.calc.core.preview_cache import sync_confirm_dependencies        from games.endfield.calc.zone_snapshot import (            MultiplicativeZoneSelection,            WeaponBonusSelection,            compute_multiplicative_zone_snapshot,        )
 
         loadout = request.loadout
         skill_specials = loadout.weapon_skill_kwargs()

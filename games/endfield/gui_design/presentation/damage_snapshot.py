@@ -7,24 +7,7 @@
 - 乘区构成：按 15 乘区对数权重估算占比（可视化用）
 """
 
-from __future__ import annotations
-
-import math
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
-from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from games.endfield.calc.skills.segments import (
-    normalize_manual_segment_counts,
-    parse_segment_key,
-    scenario_counts_for_eval,
-    segment_key,
-)
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsimport mathfrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damagefrom games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_detailsfrom games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levelsfrom games.endfield.calc.skills.segments import (    normalize_manual_segment_counts,    parse_segment_key,    scenario_counts_for_eval,    segment_key,)@dataclass(frozen=True)
 class DamageSnapshot:
     """一次确认后可复用的伤害摘要。"""
 

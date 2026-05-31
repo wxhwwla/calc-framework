@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """插件敌人参数解析测试。"""
 
-import json
-import tempfile
-import unittest
-from pathlib import Path
-from unittest.mock import patch
-
-from games.endfield.data_loading.enemy_params import resolve_enemy_defense
-from games.endfield.data_loading.plugin_registry import PluginRegistry
-
-
-class TestEnemyParams(unittest.TestCase):
+import jsonimport tempfileimport unittestfrom pathlib import Pathfrom unittest.mock import patchfrom games.endfield.data_loading.enemy_params import resolve_enemy_defensefrom games.endfield.data_loading.plugin_registry import PluginRegistryclass TestEnemyParams(unittest.TestCase):
     def test_resolve_default_when_missing(self) -> None:
         reg = PluginRegistry()
         with patch("games.endfield.data_loading.enemy_params.get_plugin_registry", return_value=reg):

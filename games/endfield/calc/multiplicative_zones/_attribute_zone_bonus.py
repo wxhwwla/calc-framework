@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器属性平值/百分比加成计算辅助函数（提取自 attribute_zone.py）。"""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
+from __future__ import annotationsfrom typing import TYPE_CHECKING, Anyif TYPE_CHECKING:
     from .attribute_zone import AttributeZoneManager
 
 
@@ -85,10 +81,7 @@ def compute_attr_weapon_bonus(
         value = manager._get_weapon_bonus(weapon[bonus_key], _resolve_level(bonus_key))
         _classify_and_add(bonus_key, value)
 
-    from games.endfield.calc.skills.special_fields import (
-        add_special_picks_to_ability_pct,
-        add_special_picks_to_main_sub_bonus,
-    )
+    from games.endfield.calc.skills.special_fields import (        add_special_picks_to_ability_pct,        add_special_picks_to_main_sub_bonus,    )
 
     md, sd = add_special_picks_to_main_sub_bonus(
         weapon,

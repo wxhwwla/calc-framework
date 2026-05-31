@@ -6,17 +6,7 @@
 次数键格式 ``战技:1``、``连携技:2``；兼容旧预设 ``{"战技": 2}`` → ``{"战技:1": 2}``。
 """
 
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.calc.damage.types import (
-    format_damage_type_display,
-    resolve_segment_damage_type,
-)
-from games.endfield.calc.multi_skill.optimizer import SkillScenario
-
-# 与 display_lines.CHARACTER_SKILL_TYPES 一致：(技能槽名, 倍率字段, 段伤害类型字段)
+from __future__ import annotationsfrom typing import Anyfrom games.endfield.calc.damage.types import (    format_damage_type_display,    resolve_segment_damage_type,)from games.endfield.calc.multi_skill.optimizer import SkillScenario# 与 display_lines.CHARACTER_SKILL_TYPES 一致：(技能槽名, 倍率字段, 段伤害类型字段)
 CHARACTER_SKILL_TYPES: tuple[tuple[str, str, str], ...] = (
     ("战技", "战技倍率", "战技段伤害类型"),
     ("连携技", "连携技倍率", "连携技段伤害类型"),

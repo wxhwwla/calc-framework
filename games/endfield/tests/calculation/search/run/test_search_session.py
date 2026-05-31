@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索会话（内存 / 续跑分支）测试。"""
 
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draft
-from games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidate
-from games.endfield.calc.search.run.cancel import SearchCancelToken
-from games.endfield.calc.search.run.session import run_search_session
-
-
-class TestSearchSession(unittest.TestCase):
+import tempfileimport unittestfrom pathlib import Pathfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draftfrom games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidatefrom games.endfield.calc.search.run.cancel import SearchCancelTokenfrom games.endfield.calc.search.run.session import run_search_sessionclass TestSearchSession(unittest.TestCase):
     def _catalog(self):
         chest = build_runtime_equipment_from_wiki_draft(
             {"名称": "胸甲A", "_wiki_params": {"装备种类": "护甲", "所属套组": "套装A"}}

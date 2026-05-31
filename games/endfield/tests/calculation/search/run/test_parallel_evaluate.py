@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """并行评估多条配装任务测试。"""
 
-import unittest
-
-from games.endfield.calc.core.parallel_evaluate import evaluate_tasks_parallel
-from games.endfield.calc.loadout.optimizer import LoadoutScore, WeaponCandidate
-
-
-def _dummy_task(i: int):
+import unittestfrom games.endfield.calc.core.parallel_evaluate import evaluate_tasks_parallelfrom games.endfield.calc.loadout.optimizer import LoadoutScore, WeaponCandidatedef _dummy_task(i: int):
     slot = {
         "名称": "件",
         "装备种类": "护甲",

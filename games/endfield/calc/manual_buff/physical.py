@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """物理异常（倒地/击飞/碎甲/猛击）加权伤害计算。"""
 
-from __future__ import annotations
-
-import re
-from dataclasses import dataclass
-
-from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
-
-PHYSICAL_ABNORMAL_TYPES: tuple[str, ...] = ("倒地", "击飞", "碎甲", "猛击")
+from __future__ import annotationsimport refrom dataclasses import dataclassfrom games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damagePHYSICAL_ABNORMAL_TYPES: tuple[str, ...] = ("倒地", "击飞", "碎甲", "猛击")
 PHYSICAL_ABNORMAL_LEVELS: tuple[int, ...] = (0, 1, 2, 3, 4)
 
 _BINARY_ABNORMAL_TYPES = frozenset({"倒地", "击飞"})

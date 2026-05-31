@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """最近计算历史（内存环形缓冲，供侧边栏恢复参数）。"""
 
-from __future__ import annotations
-
-from collections import deque
-from dataclasses import dataclass
-from typing import Any
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom collections import dequefrom dataclasses import dataclassfrom typing import Any@dataclass(frozen=True)
 class HistoryEntry:
     """单条历史：展示文案 + 可恢复的预设快照。"""
 

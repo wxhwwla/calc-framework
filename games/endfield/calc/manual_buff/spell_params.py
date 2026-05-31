@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """法术异常参数表（集中维护）。"""
 
-from __future__ import annotations
-
-from typing import Literal, TypedDict
-
-# 公测口径：法术异常/爆发等级系数区
+from __future__ import annotationsfrom typing import Literal, TypedDict# 公测口径：法术异常/爆发等级系数区
 SPELL_LEVEL_COEFF_DIVISOR = 196.0
 
 # 交叉附着触发的四类法术异常（导电/腐蚀/燃烧/冻结）初始伤害倍率

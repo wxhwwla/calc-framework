@@ -4,20 +4,7 @@
 计算模块单元测试
 """
 
-import unittest
-
-from games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve, calculate_skill_curve
-from games.endfield.calc.damage.inverse import (
-    fit_attribute_formula,
-    fit_formula,
-    fit_skill_formula,
-    fit_skill_formula_no_special,
-    remove_duplicates,
-    validate_formula,
-)
-
-
-class TestFormulaCalculations(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve, calculate_skill_curvefrom games.endfield.calc.damage.inverse import (    fit_attribute_formula,    fit_formula,    fit_skill_formula,    fit_skill_formula_no_special,    remove_duplicates,    validate_formula,)class TestFormulaCalculations(unittest.TestCase):
     """测试公式计算函数"""
 
     def test_calculate_growth_curve_integer(self):

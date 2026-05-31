@@ -16,16 +16,7 @@ PySide6 后台 Worker 基础设施。
     worker.cancel()
 """
 
-from __future__ import annotations
-
-import traceback
-from collections.abc import Callable
-from typing import Any
-
-from PySide6.QtCore import QObject, QThread, Signal, Slot
-
-
-class CalcWorker(QObject):
+from __future__ import annotationsimport tracebackfrom collections.abc import Callablefrom typing import Anyfrom PySide6.QtCore import QObject, QThread, Signal, Slotclass CalcWorker(QObject):
     """在子线程中执行 ``fn(*args, **kwargs)``，完成后通过信号返回结果。
 
     用法:

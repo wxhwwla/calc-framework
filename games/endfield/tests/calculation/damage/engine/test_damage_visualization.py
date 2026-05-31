@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """伤害可视化（matplotlib）测试。"""
 
-import unittest
-
-from games.endfield.gui_design.shared.damage_visualization import (
-    damage_breakdown_from_skill_map,
-    is_matplotlib_available,
-)
-
-
-class TestDamageVisualization(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.shared.damage_visualization import (    damage_breakdown_from_skill_map,    is_matplotlib_available,)class TestDamageVisualization(unittest.TestCase):
     def test_breakdown_normalizes_percentages(self) -> None:
         parts = damage_breakdown_from_skill_map({"战技": 200.0, "连携技": 100.0})
         self.assertAlmostEqual(sum(p.value for p in parts), 300.0)

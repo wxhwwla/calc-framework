@@ -12,8 +12,8 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import os
+
+
 import sys
 import zipfile
 from pathlib import Path
@@ -143,23 +143,23 @@ def main() -> None:
         except Exception as e:
             print(f"   ❌ 下载失败: {e}")
             if not args.direct and not args.mirror:
-                print(f"   → 尝试直连...")
+                print("   → 尝试直连...")
                 try:
                     _download_with_progress(model["zip_url"], zip_path)
                 except Exception as e2:
                     print(f"   ❌ 直连也失败: {e2}")
-                    print(f"   💡 试试: python tools/ocr/download_models.py --mirror https://ghproxy.net/")
+                    print("   💡 试试: python tools/ocr/download_models.py --mirror https://ghproxy.net/")
                     continue
             else:
                 continue
 
         # 解压
-        print(f"   📦 解压中...")
+        print("   📦 解压中...")
         try:
             with zipfile.ZipFile(zip_path, "r") as zf:
                 zf.extractall(_EASYOCR_CACHE)
             zip_path.unlink()
-            print(f"   ✅ 解压完成")
+            print("   ✅ 解压完成")
         except Exception as e:
             print(f"   ❌ 解压失败: {e}")
             continue

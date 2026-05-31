@@ -23,12 +23,12 @@ import json
 import sys
 from pathlib import Path
 
-_FRAMEWORK_DIR = Path(__file__).resolve().parents[5] / "framework"
+_FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
 if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
-from calc_framework.dag.schema import (  # noqa: E402
+from calc_framework.dag.schema import (
     BinaryNode,
     CallNode,
     DAGGraph,
@@ -36,13 +36,13 @@ from calc_framework.dag.schema import (  # noqa: E402
     DAGVariable,
     VarNode,
 )
-from calc_framework.dag.serializer import dag_to_dict  # noqa: E402
+from calc_framework.dag.serializer import dag_to_dict
 
 OUTPUT_PATH = _SRC_DIR / "calc_framework" / "configs" / "endfield_full.dag.json"
 
 
 
-from ._subgraph_builders import (  # noqa: E402
+from ._subgraph_builders import (
     _make_ability_bonus_subgraph,
     _make_base_damage_block_subgraph,
     _make_buff_debuff_block_subgraph,

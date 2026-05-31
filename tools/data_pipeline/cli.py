@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import sys
 import os
-from pathlib import Path
+
 from typing import Any, Dict, List
 
 # 确保项目根在 sys.path 中（tools/ 是隐式 namespace package）
@@ -37,7 +37,7 @@ from tools.data_pipeline.readers.csv_reader import read_csv
 from tools.data_pipeline.readers.json_reader import read_json
 from tools.data_pipeline.transformers.from_legacy_endfield import from_characters, from_weapons
 from tools.data_pipeline.transformers.to_standard import to_standard
-from tools.data_pipeline.validators.schema_check import SchemaError, validate_all
+from tools.data_pipeline.validators.schema_check import validate_all
 
 
 def main() -> None:
@@ -132,7 +132,7 @@ def _is_csv(path: str) -> bool:
 
 
 def _run_validation(entities: List[Dict[str, Any]]) -> None:
-    from .validators.schema_check import SchemaError
+
 
     errors = validate_all(entities)
     has_errors = False

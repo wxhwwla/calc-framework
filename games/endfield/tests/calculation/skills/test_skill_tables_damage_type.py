@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """skill_tables 段伤害类型解析测试。"""
 
-import unittest
-
-from bwiki_scout.skill_tables import parse_skill_damage_rows_from_html, skill_tabs_to_seed_skills  # noqa: E402
-
-from games.endfield.calc.damage.types import infer_segment_damage_type  # noqa: E402
-
-
-class TestSkillTablesDamageType(unittest.TestCase):
+import unittestfrom bwiki_scout.skill_tables import parse_skill_damage_rows_from_html, skill_tabs_to_seed_skills  # noqa: E402from games.endfield.calc.damage.types import infer_segment_damage_type  # noqa: E402class TestSkillTablesDamageType(unittest.TestCase):
     def test_infer_from_header_text(self) -> None:
         self.assertEqual(infer_segment_damage_type("灼热伤害倍率"), "法术-灼热")
         self.assertEqual(infer_segment_damage_type("伤害倍率"), "物理")

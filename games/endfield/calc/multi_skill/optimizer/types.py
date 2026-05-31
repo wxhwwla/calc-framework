@@ -22,14 +22,7 @@
 场景键格式："技能类型:段索引"（如 "战技:1"、"普攻:2"）
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-from games.endfield.calc.damage.engine import DamageContext, DamageEffect
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom dataclasses import dataclassfrom games.endfield.calc.damage.engine import DamageContext, DamageEffect@dataclass(frozen=True)
 class SkillScenario:
     """单个技能段场景定义。
 

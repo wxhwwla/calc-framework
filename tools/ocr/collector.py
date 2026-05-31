@@ -17,7 +17,7 @@ import argparse
 import shutil
 import sys
 from pathlib import Path
-from datetime import datetime
+
 
 # 预定义的面板类型分类
 PANEL_CATEGORIES: dict[str, str] = {
@@ -71,8 +71,8 @@ def _collect_images(src: Path, dst_root: Path, extensions: tuple[str, ...] = (".
     keys = list(PANEL_CATEGORIES.keys())
     for i, name in enumerate(keys, 1):
         print(f"  {i}. {name}")
-    print(f"  s. 跳过当前图片")
-    print(f"  q. 退出\n")
+    print("  s. 跳过当前图片")
+    print("  q. 退出\n")
 
     copied = 0
     for img in images:
@@ -82,7 +82,7 @@ def _collect_images(src: Path, dst_root: Path, extensions: tuple[str, ...] = (".
             pil_img = Image.open(img)
             print(f"    尺寸: {pil_img.size[0]}×{pil_img.size[1]}")
         except Exception:
-            print(f"    无法读取")
+            print("    无法读取")
 
         choice = input(f"  分类 (1-{len(keys)}/s/q): ").strip().lower()
         if choice == "q":

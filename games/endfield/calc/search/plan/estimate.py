@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索工作量与耗时预估（不物化全部任务）。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-from games.endfield.calc.loadout.optimizer import (
-    OptimizerConfig,
-    WeaponCandidate,
-    build_optimizer_search_plan,
-    count_loadout_combinations,
-)
-
-# 单组合耗时（含 MVP 续跑批量写库），实测后可调整
+from __future__ import annotationsfrom dataclasses import dataclassfrom games.endfield.calc.loadout.optimizer import (    OptimizerConfig,    WeaponCandidate,    build_optimizer_search_plan,    count_loadout_combinations,)# 单组合耗时（含 MVP 续跑批量写库），实测后可调整
 DEFAULT_SECONDS_PER_COMBO: float = 0.004
 
 

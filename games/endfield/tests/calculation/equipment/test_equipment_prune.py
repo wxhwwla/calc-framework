@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备剪枝优先级测试。"""
 
-import unittest
-
-from games.endfield.calc.equipment.prune import (
-    character_ability_attrs,
-    equipment_prune_sort_key,
-    equipment_skill_affinity_tier,
-    equipment_stat_affinity_tier,
-    sort_equipment_catalog_by_priority,
-)
-
-
-class TestEquipmentPrune(unittest.TestCase):
+import unittestfrom games.endfield.calc.equipment.prune import (    character_ability_attrs,    equipment_prune_sort_key,    equipment_skill_affinity_tier,    equipment_stat_affinity_tier,    sort_equipment_catalog_by_priority,)class TestEquipmentPrune(unittest.TestCase):
     def test_character_ability_attrs_reads_main_and_sub(self):
         main, sub = character_ability_attrs({"主能力": "敏捷", "副能力": "力量"})
         self.assertEqual(main, "敏捷")

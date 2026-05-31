@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from games.endfield.gui_design.layout.gui_layout import (
-    control_dock_layout_needs_update,
-    hint_text_box_height,
-    multi_skill_segment_box_height,
-    search_action_button_texts,
-    should_use_compact_control_dock,
-)
-
-
+from __future__ import annotations
+
+from games.endfield.gui_design.layout.gui_layout import (
+    control_dock_layout_needs_update,
+    hint_text_box_height,
+    multi_skill_segment_box_height,
+    search_action_button_texts,
+    should_use_compact_control_dock,
+)
+
+
 class TestHintTextBoxHeight:
     def test_positive_lines(self) -> None:
         assert hint_text_box_height(3) == 3 * 18 + 10

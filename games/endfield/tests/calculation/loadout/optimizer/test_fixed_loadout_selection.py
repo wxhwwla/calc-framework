@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """固定配装 vs 遍历部位组合数。"""
 
-import unittest
-
-from games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidate, build_optimizer_search_plan
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection, count_loadout_combinations_for_selection
-
-
-class TestFixedLoadoutSelection(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidate, build_optimizer_search_planfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelection, count_loadout_combinations_for_selectionclass TestFixedLoadoutSelection(unittest.TestCase):
     def _catalog(self):
         def mk(name):
             return {

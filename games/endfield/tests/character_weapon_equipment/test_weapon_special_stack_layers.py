@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器特殊能力：技能等级 × 叠加层数。"""
 
-import unittest
-
-from games.endfield.calc.skills.special_fields import (
-    add_special_picks_attack_percent,
-    special_pick_bonus,
-)
-
-
-class TestSpecialPickBonus(unittest.TestCase):
+import unittestfrom games.endfield.calc.skills.special_fields import (    add_special_picks_attack_percent,    special_pick_bonus,)class TestSpecialPickBonus(unittest.TestCase):
     def test_stackable_special_multiplies_tier_value_by_stack_count(self) -> None:
         # 九档为「每层叠加%」；8 档每层 18%，叠 2 层 → 36%
         curve = [7.5, 9.0, 10.5, 12.0, 13.5, 15.0, 16.5, 18.0, 21.0]

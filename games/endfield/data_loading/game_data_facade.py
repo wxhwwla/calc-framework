@@ -7,21 +7,7 @@ GUI / 多方案对比 / 搜索预估共用同一实例，避免 ``get_equipments
 ``get_equipment_catalog()`` 多处懒加载时机不一致。
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.data_loading.equipment_catalog import (
-    catalog_full_search_error,
-    catalog_preview_status_lines,
-    catalog_status_message,
-    get_equipment_catalog,
-)
-from games.endfield.data_loading.loader import DataLoadError, get_characters, get_equipments, get_weapons
-
-
-@dataclass
+from __future__ import annotationsfrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.data_loading.equipment_catalog import (    catalog_full_search_error,    catalog_preview_status_lines,    catalog_status_message,    get_equipment_catalog,)from games.endfield.data_loading.loader import DataLoadError, get_characters, get_equipments, get_weapons@dataclass
 class GameDataFacade:
     """一次加载后的角色/武器/装备快照（装备 catalog 按范围派生）。"""
 

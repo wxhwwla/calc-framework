@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """预览/确认路径共用的结果缓存桥接。"""
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from typing import Any, TypeVar
-
-from games.endfield.calc.core.result_cache import get_global_result_cache
-
-T = TypeVar("T")
+from __future__ import annotationsfrom collections.abc import Callablefrom typing import Any, TypeVarfrom games.endfield.calc.core.result_cache import get_global_result_cacheT = TypeVar("T")
 
 
 def sync_preview_dependencies(**dependencies: Any) -> None:

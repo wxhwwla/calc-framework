@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """add_character 无副作用测试"""
 
-import copy
-import tempfile
-import unittest
-from pathlib import Path
-
-from tools.endfield_scripts.add_character import add_character
-
-
-class TestAddCharacterNoMutation(unittest.TestCase):
+import copyimport tempfileimport unittestfrom pathlib import Pathfrom tools.endfield_scripts.add_character import add_characterclass TestAddCharacterNoMutation(unittest.TestCase):
     def test_skill_params_not_mutated(self):
         sk1 = [
             {"base": 100, "growth": 10, "divisor": 5, "offset": 0, "special": [200, 220, 240]},

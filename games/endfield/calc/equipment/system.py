@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备数据链路与四格装配。"""
 
-from __future__ import annotations
-
-import json
-import re
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
-
-from games.endfield.calc.damage.engine import DamageEffect
-from games.endfield.calc.damage.types import infer_equipment_damage_types
-
-_PERCENT_RE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*%")
+from __future__ import annotationsimport jsonimport refrom dataclasses import dataclassfrom pathlib import Pathfrom typing import Anyfrom games.endfield.calc.damage.engine import DamageEffectfrom games.endfield.calc.damage.types import infer_equipment_damage_types_PERCENT_RE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*%")
 
 # 与 BWIKI「装备种类」一致：护甲 / 护手 / 配件
 EQUIPMENT_KIND_ARMOR = "护甲"
@@ -191,10 +180,7 @@ def build_runtime_equipment_from_wiki_draft(record: dict[str, Any]) -> dict[str,
 
 def build_runtime_equipment_from_local_record(record: dict[str, Any]) -> dict[str, Any]:
     """将本地 equipments.json 记录转为可计算装备。"""
-    from games.endfield.calc.equipment.affix import (
-        parse_equipment_affix_line,
-        parse_equipment_effect_block,
-    )
+    from games.endfield.calc.equipment.affix import (        parse_equipment_affix_line,        parse_equipment_effect_block,    )
 
     name = str(record.get("名称") or "").strip()
     slot = infer_equipment_slot(record)

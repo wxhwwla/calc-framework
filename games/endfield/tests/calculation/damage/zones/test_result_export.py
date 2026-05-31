@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索结果导出测试。"""
 
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.core.result_export import export_search_outputs
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-
-
-class TestResultExport(unittest.TestCase):
+import jsonimport tempfileimport unittestfrom pathlib import Pathfrom games.endfield.calc.core.result_export import export_search_outputsfrom games.endfield.calc.loadout.optimizer import LoadoutScoreclass TestResultExport(unittest.TestCase):
     def test_export_top_json_and_csv_and_all_ndjson(self):
         scores = (
             LoadoutScore(

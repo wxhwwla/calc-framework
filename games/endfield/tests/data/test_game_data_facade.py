@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GameDataFacade 统一数据门面测试。"""
 
-import unittest
-from unittest.mock import patch
-
-from games.endfield.data_loading.game_data_facade import GameDataFacade
-from games.endfield.data_loading.loader import DataLoadError
-
-
-def _equip_row(name: str, slot: str) -> dict:
+import unittestfrom unittest.mock import patchfrom games.endfield.data_loading.game_data_facade import GameDataFacadefrom games.endfield.data_loading.loader import DataLoadErrordef _equip_row(name: str, slot: str) -> dict:
     return {
         "名称": name,
         "部位": slot,

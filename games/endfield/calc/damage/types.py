@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """伤害类型推断与展示（装备词条、技能段共用）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-DEFAULT_DAMAGE_TYPE = "物理"
+from __future__ import annotationsfrom typing import AnyDEFAULT_DAMAGE_TYPE = "物理"
 
 # 装备词条：标签 -> 作用域（可多值）
 EQUIPMENT_DAMAGE_TYPE_TAGS: dict[str, tuple[str, ...]] = {

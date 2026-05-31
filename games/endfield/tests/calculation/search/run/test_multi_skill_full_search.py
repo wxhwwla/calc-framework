@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索多技能加权评分测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import WeaponCandidate, evaluate_task
-from games.endfield.calc.multi_skill.optimizer import SkillScenario, evaluate_multi_skill_task
-from games.endfield.calc.search.evaluate.multi_skill import build_multi_skill_search_eval
-from games.endfield.calc.search.evaluate.task import make_loadout_task_evaluator
-from games.endfield.calc.search.plan.job import prepare_single_skill_search_job
-
-
-class TestMultiSkillFullSearch(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import WeaponCandidate, evaluate_taskfrom games.endfield.calc.multi_skill.optimizer import SkillScenario, evaluate_multi_skill_taskfrom games.endfield.calc.search.evaluate.multi_skill import build_multi_skill_search_evalfrom games.endfield.calc.search.evaluate.task import make_loadout_task_evaluatorfrom games.endfield.calc.search.plan.job import prepare_single_skill_search_jobclass TestMultiSkillFullSearch(unittest.TestCase):
     def _char(self):
         return {
             "名称": "测试",

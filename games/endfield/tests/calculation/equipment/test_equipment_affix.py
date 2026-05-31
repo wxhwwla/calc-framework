@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备属性词条解析测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damage
-from games.endfield.calc.equipment.affix import (
-    parse_equipment_affix_line,
-)
-from games.endfield.calc.equipment.system import (
-    build_runtime_equipment_from_local_record,
-)
-from games.endfield.calc.loadout.optimizer import evaluate_task
-from games.endfield.calc.search.evaluate.context import SearchEvalContext
-
-
-class TestEquipmentAffix(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damagefrom games.endfield.calc.equipment.affix import (    parse_equipment_affix_line,)from games.endfield.calc.equipment.system import (    build_runtime_equipment_from_local_record,)from games.endfield.calc.loadout.optimizer import evaluate_taskfrom games.endfield.calc.search.evaluate.context import SearchEvalContextclass TestEquipmentAffix(unittest.TestCase):
     def test_parse_skill_damage_bonus_scoped(self):
         effs, flats = parse_equipment_affix_line("战技伤害加成41.40%", source="测试")
         self.assertEqual(flats, {})
@@ -114,10 +101,7 @@ class TestEquipmentAffix(unittest.TestCase):
             trust_level=0,
             weapon_data_by_name={"武": weapon},
         )
-        from games.endfield.calc.loadout.optimizer import WeaponCandidate
-        from games.endfield.calc.multiplicative_zones.final_attack_zone import (
-            calculate_final_attack_with_details,
-        )
+        from games.endfield.calc.loadout.optimizer import WeaponCandidate        from games.endfield.calc.multiplicative_zones.final_attack_zone import (            calculate_final_attack_with_details,        )
 
         fa = calculate_final_attack_with_details(character=char, weapon=weapon, char_level=1, weapon_level=1)[
             "final_attack"

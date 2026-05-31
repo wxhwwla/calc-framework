@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """按用户选择的装备件数（1–4）控制遍历格数。"""
 
-import unittest
-
-from games.endfield.calc.loadout.optimizer import (
-    OptimizerConfig,
-    WeaponCandidate,
-    build_optimizer_search_plan,
-    count_loadout_combinations,
-    iter_optimizer_tasks,
-)
-from games.endfield.calc.loadout.slot_search import (
-    FixedLoadoutSelection,
-    selection_from_legacy_slot_count,
-    varying_slot_mask_from_count,
-)
-
-
-class TestLoadoutVaryingSlots(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.optimizer import (    OptimizerConfig,    WeaponCandidate,    build_optimizer_search_plan,    count_loadout_combinations,    iter_optimizer_tasks,)from games.endfield.calc.loadout.slot_search import (    FixedLoadoutSelection,    selection_from_legacy_slot_count,    varying_slot_mask_from_count,)class TestLoadoutVaryingSlots(unittest.TestCase):
     def _catalog(self):
         def mk(name):
             return {

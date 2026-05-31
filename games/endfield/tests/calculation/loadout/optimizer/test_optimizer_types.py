@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import unittest
-
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    OptimizerResult,
-    RuntimeEvalSnapshot,
-    WeaponCandidate,
-)
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-
-
+from __future__ import annotations
+
+import unittest
+
+from games.endfield.calc.loadout.optimizer import (
+    LoadoutScore,
+    OptimizerConfig,
+    OptimizerResult,
+    RuntimeEvalSnapshot,
+    WeaponCandidate,
+)
+from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+
+
 class TestWeaponCandidate(unittest.TestCase):
     def test_defaults(self) -> None:
         w = WeaponCandidate(name="测试剑", final_attack=100.0)

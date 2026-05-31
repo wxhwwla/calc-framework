@@ -13,18 +13,7 @@
 - 支持整数和小数百分比格式
 """
 
-from collections.abc import Sequence
-
-from .attribute import fit_attribute_formula, validate_attribute_formula
-from .skill import (
-    fit_skill_formula,
-    fit_skill_formula_no_special,
-    validate_skill_formula,
-    validate_skill_formula_no_special,
-)
-
-
-def fit_formula(
+from collections.abc import Sequencefrom .attribute import fit_attribute_formula, validate_attribute_formulafrom .skill import (    fit_skill_formula,    fit_skill_formula_no_special,    validate_skill_formula,    validate_skill_formula_no_special,)def fit_formula(
     data: Sequence[int | float],
 ) -> tuple[int | float, int | float, int, int | float, list[int | float] | None]:
     """

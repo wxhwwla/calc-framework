@@ -211,9 +211,7 @@ class DesignerApp(QMainWindow):
 
 
 
-        import subprocess
 
-        import sys
 
         self._bwiki_btn.setEnabled(False)
 

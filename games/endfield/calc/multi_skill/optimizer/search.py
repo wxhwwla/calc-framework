@@ -22,26 +22,7 @@
 场景键格式："技能类型:段索引"（如 "战技:1"、"普攻:2"）
 """
 
-from __future__ import annotations
-
-from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
-from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
-from games.endfield.calc.equipment.prune import character_ability_attrs
-from games.endfield.calc.equipment.system import build_four_slot_loadout, collect_loadout_effects
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    OptimizerTask,
-    WeaponCandidate,
-    enumerate_optimizer_tasks,
-)
-from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from games.endfield.calc.search.evaluate.context import SearchEvalContext
-
-from .types import MultiSkillConfig, MultiSkillResult, MultiSkillScore, SkillScenario, resolve_scenario_damage_type
-
-
-def _resolve_skill_counts(
+from __future__ import annotationsfrom games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damagefrom games.endfield.calc.equipment.affix import aggregate_loadout_modifiersfrom games.endfield.calc.equipment.prune import character_ability_attrsfrom games.endfield.calc.equipment.system import build_four_slot_loadout, collect_loadout_effectsfrom games.endfield.calc.loadout.optimizer import (    LoadoutScore,    OptimizerConfig,    OptimizerTask,    WeaponCandidate,    enumerate_optimizer_tasks,)from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_detailsfrom games.endfield.calc.search.evaluate.context import SearchEvalContextfrom .types import MultiSkillConfig, MultiSkillResult, MultiSkillScore, SkillScenario, resolve_scenario_damage_typedef _resolve_skill_counts(
     scenarios: list[SkillScenario],
     config: MultiSkillConfig,
 ) -> dict[str, int]:

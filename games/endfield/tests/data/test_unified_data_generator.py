@@ -4,16 +4,7 @@
 统一数据生成器单元测试
 """
 
-import unittest
-
-from games.endfield.calc.core.data_generator import (
-    generate_attributes,
-    generate_character_attributes,
-    generate_weapon_attributes,
-)
-
-
-class TestUnifiedDataGenerator(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.data_generator import (    generate_attributes,    generate_character_attributes,    generate_weapon_attributes,)class TestUnifiedDataGenerator(unittest.TestCase):
     """测试统一数据生成器"""
 
     def test_generate_character_attributes_basic(self):

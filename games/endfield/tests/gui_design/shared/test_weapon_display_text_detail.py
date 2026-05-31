@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import patch
-
-from games.endfield.gui_design.shared.weapon_display_text import (
-    extract_effect_display_name,
-    format_weapon_skill_slider_value,
-    format_weapon_skill_title,
-    split_special_skill_display,
-)
-
-
+from __future__ import annotations
+
+from unittest.mock import patch
+
+from games.endfield.gui_design.shared.weapon_display_text import (
+    extract_effect_display_name,
+    format_weapon_skill_slider_value,
+    format_weapon_skill_title,
+    split_special_skill_display,
+)
+
+
 class TestFormatWeaponSkillTitle:
     def test_with_attr_name(self) -> None:
         assert "前缀：智识+" in format_weapon_skill_title("前缀", "智识+")

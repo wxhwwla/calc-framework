@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器特殊能力：等级 0 表示关闭（无 GUI 开关）。"""
 
-import unittest
-
-from games.endfield.calc.multiplicative_zones.ability_bonus_details import (
-    calculate_ability_bonus_with_details,
-)
-from games.endfield.calc.skills.special_fields import read_weapon_special_slots
-
-
-class TestWeaponSpecialLevel(unittest.TestCase):
+import unittestfrom games.endfield.calc.multiplicative_zones.ability_bonus_details import (    calculate_ability_bonus_with_details,)from games.endfield.calc.skills.special_fields import read_weapon_special_slotsclass TestWeaponSpecialLevel(unittest.TestCase):
     def test_parse_weapon_special_field(self):
         with_special = {
             "特殊能力1": [True, "源石技艺强度+", [10, 20, 30]],

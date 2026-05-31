@@ -1,13 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0
 import json
 
-import sys
-
 from pathlib import Path
 
 from typing import Any
-
-
 
 from fastapi import APIRouter, HTTPException
 
@@ -15,21 +11,11 @@ from pydantic import BaseModel
 
 
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-
-_ADAPTERS = str(_REPO_ROOT)
-
-if _ADAPTERS not in sys.path:
-
-    sys.path.insert(0, _ADAPTERS)
-
-
-
 router = APIRouter(prefix="/api/data", tags=["data"])
 
 
 
-DATA_ROOT = Path(__file__).resolve().parents[3] / "calc_engine" / "endfield" / "data"
+DATA_ROOT = Path(__file__).resolve().parents[3] / "games" / "endfield" / "data"
 
 
 

@@ -37,17 +37,7 @@
 - OptimizerResult: 搜索结果汇总
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-
-from games.endfield.calc.damage.engine import CritMode, DamageEffect
-from games.endfield.calc.loadout.slot_search import (
-    FixedLoadoutSelection,
-)
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom dataclasses import dataclass, fieldfrom games.endfield.calc.damage.engine import CritMode, DamageEffectfrom games.endfield.calc.loadout.slot_search import (    FixedLoadoutSelection,)@dataclass(frozen=True)
 class WeaponCandidate:
     """搜索阶段的武器候选。
 

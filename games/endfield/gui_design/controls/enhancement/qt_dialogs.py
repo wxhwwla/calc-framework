@@ -2,44 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """PySide6 增强工具弹窗：计算历史 / 多方案对比 / 伤害仪表盘。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QFileDialog,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
-
-from games.endfield.data_loading.loader import get_characters, get_equipments, get_weapons
-from gui_design.app.loadout_preset import (
-    LoadoutPreset,
-    import_presets_from_json_text,
-)
-from gui_design.controls.search.search_settings import resolve_parallel_workers
-from gui_design.shared.calc_history import CalculationHistory
-from gui_design.shared.damage_visualization import (
-    build_damage_pie_figure,
-    build_improvement_bar_figure,
-    damage_breakdown_from_skill_map,
-    is_matplotlib_available,
-)
-from gui_design.shared.preset_batch_compare import compare_presets_parallel
-from utils.operation_log import LogLevel, get_session_operation_log
-from utils.optional_deps import matplotlib_install_hint
-
-_SMALL_LABEL = "color: #CCCCCC;"
+from __future__ import annotationsfrom pathlib import Pathfrom PySide6.QtCore import Qtfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QDialog,    QDialogButtonBox,    QFileDialog,    QFrame,    QHBoxLayout,    QLabel,    QMessageBox,    QPushButton,    QScrollArea,    QVBoxLayout,    QWidget,)from utils.operation_log import LogLevel, get_session_operation_logfrom utils.optional_deps import matplotlib_install_hintfrom games.endfield.data_loading.loader import get_characters, get_equipments, get_weaponsfrom gui_design.app.loadout_preset import (    LoadoutPreset,    import_presets_from_json_text,)from gui_design.controls.search.search_settings import resolve_parallel_workersfrom gui_design.shared.calc_history import CalculationHistoryfrom gui_design.shared.damage_visualization import (    build_damage_pie_figure,    build_improvement_bar_figure,    damage_breakdown_from_skill_map,    is_matplotlib_available,)from gui_design.shared.preset_batch_compare import compare_presets_parallel_SMALL_LABEL = "color: #CCCCCC;"
 _HINT_COLOR = "color: #888888;"
 _SEC_BTN_STYLE = """
     QPushButton {
@@ -322,8 +285,7 @@ class QtDamageDashboardDialog(QDialog):
         )
 
         try:
-            import matplotlib.pyplot as plt
-            from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+            import matplotlib.pyplot as plt            from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
             canvas_row = QHBoxLayout()
             canvas1 = FigureCanvasQTAgg(fig)

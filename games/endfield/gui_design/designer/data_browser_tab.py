@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据浏览页签：查看角色/武器/装备 JSON 列表。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-)
-
-_JSON_PATHS = {
+from __future__ import annotationsimport jsonfrom pathlib import Pathfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QComboBox,    QHBoxLayout,    QLabel,    QTextEdit,    QVBoxLayout,    QWidget,)_JSON_PATHS = {
     "角色": Path(__file__).resolve().parents[4] / "adapters" / "endfield" / "data" / "character_data" / "characters.json",
     "武器": Path(__file__).resolve().parents[4] / "adapters" / "endfield" / "data" / "weapon_data" / "weapons.json",
     "装备": Path(__file__).resolve().parents[4] / "adapters" / "endfield" / "data" / "equipments.json",

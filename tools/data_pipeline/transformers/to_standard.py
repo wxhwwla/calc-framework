@@ -29,7 +29,7 @@ CSV 宽表模式（skills 列以 ``技能名称1``、``技能名称2`` 等为前
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from ..readers.csv_reader import parse_int_list
 from ..schema import EntitySchema, RawRecord, SkillSchema, SegmentSchema

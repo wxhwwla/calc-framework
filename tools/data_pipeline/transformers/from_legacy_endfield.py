@@ -8,10 +8,10 @@
 
 from __future__ import annotations
 
-import re
+
 from typing import Any, Dict, List, Optional
 
-from ..schema import EntitySchema, SkillSchema, SegmentSchema
+from ..schema import EntitySchema, SegmentSchema
 
 CHARACTER_SKILL_MAP: List[Dict[str, Any]] = [
     {"name": "战技", "multiplier_field": "战技倍率", "type_field": "战技段伤害类型"},

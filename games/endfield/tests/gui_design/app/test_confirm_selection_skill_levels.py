@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认选择时角色属性列应传入技能等级（无 CTk）。"""
 
-import json
-import unittest
-from unittest.mock import MagicMock
-
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.gui_design.app.loadout_state import read_loadout_from_panels
-from games.endfield.gui_design.presentation.display_lines import build_character_attribute_lines
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARACTERS_JSON = DATA_DIR / "characters.json"
+import jsonimport unittestfrom unittest.mock import MagicMockfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.gui_design.app.loadout_state import read_loadout_from_panelsfrom games.endfield.gui_design.presentation.display_lines import build_character_attribute_linesfrom games.endfield.tests.conftest import DATA_DIR_CHARACTERS_JSON = DATA_DIR / "characters.json"
 
 
 def _load_by_name(name: str) -> dict:

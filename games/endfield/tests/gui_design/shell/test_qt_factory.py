@@ -2,31 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """PySide6 widget adapter 别名测试。"""
 
-from __future__ import annotations
-
-import unittest
-
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.gui_design.shell.qt_factory import (
-    CTkButton,
-    CTkCheckBox,
-    CTkComboBox,
-    CTkEntry,
-    CTkFont,
-    CTkFrame,
-    CTkLabel,
-    CTkOptionMenu,
-    CTkScrollableFrame,
-    CTkSlider,
-    CTkSwitch,
-    CTkTabview,
-    CTkTextbox,
-    CTkToplevel,
-)
-
-
-class TestQtFactoryAliases(unittest.TestCase):
+from __future__ import annotationsimport unittestfrom games.endfield.gui_design.shell.qt_factory import (    CTkButton,    CTkCheckBox,    CTkComboBox,    CTkEntry,    CTkFont,    CTkFrame,    CTkLabel,    CTkOptionMenu,    CTkScrollableFrame,    CTkSlider,    CTkSwitch,    CTkTabview,    CTkTextbox,    CTkToplevel,)from PySide6.QtWidgets import QApplicationclass TestQtFactoryAliases(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not QApplication.instance():

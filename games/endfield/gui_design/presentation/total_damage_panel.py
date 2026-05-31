@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-)
-
-from games.endfield.calc.skills.segments import parse_segment_key
-
+from __future__ import annotations
+
+from typing import Any
+
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+
+from games.endfield.calc.skills.segments import parse_segment_key
+
 _SECTION_COLOR = "#FF6B6B"
 _TOTAL_COLOR = "#4FC3F7"
 _SUBTOTAL_COLOR = "#81C784"

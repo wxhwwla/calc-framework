@@ -2,19 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单技能遍历快速预览文案测试。"""
 
-import json
-import os
-import unittest
-from pathlib import Path
-
-import pytest
-
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
-from games.endfield.gui_design.presentation.preview_lines import build_single_skill_search_preview_lines
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARACTERS_JSON = DATA_DIR / "characters.json"
+import jsonimport osimport unittestfrom pathlib import Pathimport pytestfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom games.endfield.data_loading.equipment_catalog import get_equipment_catalogfrom games.endfield.gui_design.presentation.preview_lines import build_single_skill_search_preview_linesfrom games.endfield.tests.conftest import DATA_DIR_CHARACTERS_JSON = DATA_DIR / "characters.json"
 _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 

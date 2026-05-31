@@ -5,11 +5,5 @@
 
 from __future__ import annotations
 
-
-
-from PySide6.QtWidgets import QDialog, QWidget
-
-
-
 from utils.gui.donation import open_donation_dialog  # noqa: F401
 

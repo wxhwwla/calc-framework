@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """能力值加成：带明细的快捷计算。"""
 
-from typing import Any
-
-from games.endfield.calc.damage.formula import trust_add
-
-from .ability_bonus_calc import _get_weapon_bonus, _warn_if_legacy_skill_kwargs_used
-
-
-def calculate_ability_bonus_with_details(
+from typing import Anyfrom games.endfield.calc.damage.formula import trust_addfrom .ability_bonus_calc import _get_weapon_bonus, _warn_if_legacy_skill_kwargs_useddef calculate_ability_bonus_with_details(
     character: dict[str, Any] | None,
     weapon: dict[str, Any] | None = None,
     level: int = 1,
@@ -208,10 +201,7 @@ def calculate_ability_bonus_with_details(
                 main_pct += bonus_value
                 sub_pct += bonus_value
 
-        from games.endfield.calc.skills.special_fields import (
-            add_special_picks_to_ability_pct,
-            add_special_picks_to_main_sub_bonus,
-        )
+        from games.endfield.calc.skills.special_fields import (            add_special_picks_to_ability_pct,            add_special_picks_to_main_sub_bonus,        )
 
         md, sd = add_special_picks_to_main_sub_bonus(
             weapon,

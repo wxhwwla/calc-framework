@@ -1,25 +1,25 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import json
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-from games.endfield.gui_design.shared.ui_preferences import (
-    STARTUP_MODE_ALWAYS_MAIN,
-    STARTUP_MODE_REMEMBER_LAST,
-    _default_preferences,
-    _preferences_path,
-    load_ui_preferences,
-    record_char_advanced_expanded,
-    record_last_page,
-    record_weapon_advanced_expanded,
-    resolve_startup_page,
-    save_ui_preferences,
-)
-
-
+from __future__ import annotations
+
+import json
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
+from games.endfield.gui_design.shared.ui_preferences import (
+    STARTUP_MODE_ALWAYS_MAIN,
+    STARTUP_MODE_REMEMBER_LAST,
+    _default_preferences,
+    _preferences_path,
+    load_ui_preferences,
+    record_char_advanced_expanded,
+    record_last_page,
+    record_weapon_advanced_expanded,
+    resolve_startup_page,
+    save_ui_preferences,
+)
+
+
 class TestPreferencesPath:
     def test_with_base_dir(self) -> None:
         path = _preferences_path(base_dir=Path("/tmp/test"))

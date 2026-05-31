@@ -6,20 +6,9 @@
 legacy 12 元组仅作导入 adapter；新代码应优先使用本 module 的 interface。
 """
 
-from __future__ import annotations
-
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.skills.special_fields import read_weapon_skills_schema
-
-
-def normalize_weapon_specials_tuple(raw: tuple[Any, ...]) -> tuple[Any, ...]:
+from __future__ import annotationsfrom collections.abc import Mapping, Sequencefrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.skills.special_fields import read_weapon_skills_schemadef normalize_weapon_specials_tuple(raw: tuple[Any, ...]) -> tuple[Any, ...]:
     """将旧版 10 元组迁移为 (技能/叠加)×2 + 三附加技能。"""
-    from games.endfield.calc.skills.special_fields import (
-        migrate_legacy_weapon_special_level,
-    )
+    from games.endfield.calc.skills.special_fields import (        migrate_legacy_weapon_special_level,    )
 
     if len(raw) >= 12:
         return tuple(raw[:12])

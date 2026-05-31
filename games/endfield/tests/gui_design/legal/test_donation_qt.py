@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """捐赠对话框测试。"""
 
-from __future__ import annotations
-
-import unittest
-
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.gui_design.legal.donation_qt import open_donation_dialog
-
-
-class TestDonationQt(unittest.TestCase):
+from __future__ import annotationsimport unittestfrom games.endfield.gui_design.legal.donation_qt import open_donation_dialogfrom PySide6.QtWidgets import QApplicationclass TestDonationQt(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not QApplication.instance():

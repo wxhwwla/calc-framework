@@ -6,10 +6,7 @@
 负责管理所有乘区的注册、计算和组合。
 """
 
-from .base_zone import BaseZone
-
-
-class ZoneManager:
+from .base_zone import BaseZoneclass ZoneManager:
     """
     乘区管理器
 

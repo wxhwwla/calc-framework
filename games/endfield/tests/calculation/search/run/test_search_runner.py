@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchRunner 门面测试。"""
 
-import unittest
-from unittest.mock import patch
-
-from games.endfield.calc.search.run.runner import SearchRunner
-
-
-class TestSearchRunner(unittest.TestCase):
+import unittestfrom unittest.mock import patchfrom games.endfield.calc.search.run.runner import SearchRunnerclass TestSearchRunner(unittest.TestCase):
     @patch("games.endfield.calc.search.run.runner.run_search_session")
     def test_run_delegates_to_session(self, mock_run) -> None:
         mock_run.return_value = object()

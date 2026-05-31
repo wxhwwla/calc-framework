@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import MagicMock
-
-from utils.search_format import format_duration_human, format_workload_estimate_line
-
-
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from utils.search_format import format_duration_human, format_workload_estimate_line
+
+
 class TestFormatDurationHuman:
     def test_less_than_one_second(self) -> None:
         assert format_duration_human(0) == "少于 1 秒"

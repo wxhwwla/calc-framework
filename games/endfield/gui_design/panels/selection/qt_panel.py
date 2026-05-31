@@ -6,28 +6,7 @@ PySide6 选择面板：类型/星级/名称/等级四级联动 + 子面板（信
 替代 CTk 版 ``ChooseTypesStarsNamesLevels``（panel.py + cascade.py + state.py + accessors.py 四合一的 mixin）。
 """
 
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QSlider,
-    QVBoxLayout,
-    QWidget,
-)
-
-from .qt_ability_panel import QtSpecialAbilityPanel
-from .qt_subpanels import QtSkillLevelPanel, QtTrustPanel
-from .qt_panel_getters_mixin import PanelGettersMixin
-
-
-def _empty_list_cb() -> QComboBox:
+from __future__ import annotationsfrom typing import Anyfrom PySide6.QtCore import Qtfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QComboBox,    QHBoxLayout,    QLabel,    QPushButton,    QSlider,    QVBoxLayout,    QWidget,)from .qt_ability_panel import QtSpecialAbilityPanelfrom .qt_panel_getters_mixin import PanelGettersMixinfrom .qt_subpanels import QtSkillLevelPanel, QtTrustPaneldef _empty_list_cb() -> QComboBox:
     cb = QComboBox()
     cb.setStyleSheet(_COMBO_STYLE)
     return cb

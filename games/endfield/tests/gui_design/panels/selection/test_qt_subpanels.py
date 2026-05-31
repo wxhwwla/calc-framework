@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """信赖等级 / 技能等级面板测试。"""
 
-from __future__ import annotations
-
-import unittest
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.gui_design.panels.selection.qt_subpanels import QtSkillLevelPanel, QtTrustPanel
-
-
-class TestQtTrustPanel(unittest.TestCase):
+from __future__ import annotationsimport unittestfrom games.endfield.gui_design.panels.selection.qt_subpanels import QtSkillLevelPanel, QtTrustPanelfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import QApplicationclass TestQtTrustPanel(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not QApplication.instance():

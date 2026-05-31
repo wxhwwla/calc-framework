@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认刷新去重逻辑测试。"""
 
-import unittest
-
-from games.endfield.gui_design.app.confirm_refresh import (
-    build_confirm_refresh_signature,
-    skill_count_commit_changed,
-)
-
-
-class TestConfirmRefresh(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.app.confirm_refresh import (    build_confirm_refresh_signature,    skill_count_commit_changed,)class TestConfirmRefresh(unittest.TestCase):
     def test_skill_count_focus_out_without_edit_is_no_op(self):
         normalized, changed = skill_count_commit_changed("2", "2")
         self.assertEqual(normalized, "2")

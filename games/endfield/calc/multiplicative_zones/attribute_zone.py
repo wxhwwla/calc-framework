@@ -16,14 +16,7 @@
     level: 等级（1-90）
 """
 
-import warnings
-from typing import Any
-
-from ._attribute_zone_bonus import compute_attr_weapon_bonus as _compute_attr_weapon_bonus
-from .base_zone import BaseZone
-
-
-class AttributeMultiplierZone(BaseZone):
+import warningsfrom typing import Anyfrom ._attribute_zone_bonus import compute_attr_weapon_bonus as _compute_attr_weapon_bonusfrom .base_zone import BaseZoneclass AttributeMultiplierZone(BaseZone):
     """
     能力乘区基类
 

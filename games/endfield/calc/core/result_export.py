@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索结果导出。"""
 
-from __future__ import annotations
-
-import csv
-import json
-from collections.abc import Iterable
-from pathlib import Path
-
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-
-
-def _sorted_scores(scores: Iterable[LoadoutScore]) -> list[LoadoutScore]:
+from __future__ import annotationsimport csvimport jsonfrom collections.abc import Iterablefrom pathlib import Pathfrom games.endfield.calc.loadout.optimizer import LoadoutScoredef _sorted_scores(scores: Iterable[LoadoutScore]) -> list[LoadoutScore]:
     return sorted(scores, key=lambda s: s.final_damage, reverse=True)
 
 

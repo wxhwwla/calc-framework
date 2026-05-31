@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import patch
-
-from games.endfield.gui_design.shared.weapon_display_text import (
-    split_special_skill_display,
-)
-
+from __future__ import annotations
+
+from unittest.mock import patch
+
+from games.endfield.gui_design.shared.weapon_display_text import (
+    split_special_skill_display,
+)
+
+
 class TestSplitSpecialSkillDisplayRemaining:
     def test_effect_not_found_returns_effect(self) -> None:
         with patch("games.endfield.gui_design.shared.weapon_display_text.extract_effect_display_name", return_value="攻击力+"):

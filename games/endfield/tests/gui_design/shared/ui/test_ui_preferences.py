@@ -2,27 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """ui_preferences 偏好读取与启动页策略测试。"""
 
-from __future__ import annotations
-
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.gui_design.shared.ui_preferences import (
-    PAGE_ADVANCED,
-    PAGE_MAIN,
-    STARTUP_MODE_ALWAYS_MAIN,
-    STARTUP_MODE_REMEMBER_LAST,
-    load_ui_preferences,
-    record_char_advanced_expanded,
-    record_last_page,
-    record_weapon_advanced_expanded,
-    resolve_startup_page,
-    save_ui_preferences,
-)
-
-
-class TestUiPreferences(unittest.TestCase):
+from __future__ import annotationsimport tempfileimport unittestfrom pathlib import Pathfrom games.endfield.gui_design.shared.ui_preferences import (    PAGE_ADVANCED,    PAGE_MAIN,    STARTUP_MODE_ALWAYS_MAIN,    STARTUP_MODE_REMEMBER_LAST,    load_ui_preferences,    record_char_advanced_expanded,    record_last_page,    record_weapon_advanced_expanded,    resolve_startup_page,    save_ui_preferences,)class TestUiPreferences(unittest.TestCase):
     def test_load_defaults_when_missing_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             prefs = load_ui_preferences(base_dir=Path(tmp))

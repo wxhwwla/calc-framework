@@ -7,21 +7,7 @@ PySide6 选择面板子组件：信赖等级 / 技能等级。
 武器特殊能力面板见 ``qt_ability_panel.py``。
 """
 
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QSlider,
-    QVBoxLayout,
-    QWidget,
-)
-
-_SLIDER_STYLE = """
+from __future__ import annotationsfrom typing import Anyfrom PySide6.QtCore import Qtfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QHBoxLayout,    QLabel,    QSlider,    QVBoxLayout,    QWidget,)_SLIDER_STYLE = """
     QSlider::groove:horizontal {
         background: #3A3A3A; height: 6px; border-radius: 3px;
     }

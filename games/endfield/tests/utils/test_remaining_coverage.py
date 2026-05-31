@@ -1,85 +1,34 @@
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
-
-
-import json
-
-import os
-
-import tempfile
-
 import tkinter as tk
-
-from pathlib import Path
-
 from unittest.mock import MagicMock, patch
 
-
-
 from utils.gui.chart_theme import (
-
     ChartTheme,
-
     chart_theme_dark,
-
     configure_matplotlib_gui_style,
-
     style_axes,
-
     style_figure,
-
 )
-
 from utils.gui.fonts import (
-
     configure_matplotlib_font,
-
     matplotlib_sans_serif_families,
-
-    system_font_family,
-
 )
-
 from utils.gui.window import (
-
     _geometry_fill_screen,
-
     _try_zoomed_attribute,
-
     _try_zoomed_state,
-
     apply_startup_maximized,
-
 )
-
 from utils.optional_deps import (
-
-    format_missing_gui_extras,
-
-    format_missing_lines,
-
-    format_missing_runtime_dependencies,
-
-    is_matplotlib_available,
-
-    missing_dependencies,
-
-    missing_runtime_packages,
-
     OptionalDependency,
-
-    ensure_runtime_dependencies,
-
+    format_missing_gui_extras,
+    format_missing_lines,
+    missing_dependencies,
 )
-
 from utils.platform_win32_patch import apply_platform_win32_patch
-
 from utils.search_format import format_duration_human, format_workload_estimate_line
-
-
-
-
 
 # ── gui_window.py ──────────────────────────────────────────────────────────
 

@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """MVP 端到端基线测试。"""
 
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draft
-from games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidate
-from games.endfield.calc.search.run.mvp import run_mvp_search_pipeline
-
-
-class TestMvpPipeline(unittest.TestCase):
+import tempfileimport unittestfrom pathlib import Pathfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draftfrom games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidatefrom games.endfield.calc.search.run.mvp import run_mvp_search_pipelineclass TestMvpPipeline(unittest.TestCase):
     def _catalog(self):
         return {
             "chest": [

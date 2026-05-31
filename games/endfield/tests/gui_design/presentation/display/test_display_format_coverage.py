@@ -1,18 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.gui_design.presentation.display.format import (
-    _get_attribute_value,
-    _skill_segment_display_value,
-    evaluate_display_state,
-    format_skill_multiplier_display_value,
-    format_weapon_bonus_display_value,
-    weapon_bonus_display_uses_percent,
-)
-
-
+from __future__ import annotations
+
+from games.endfield.gui_design.presentation.display.format import (
+    _get_attribute_value,
+    _skill_segment_display_value,
+    evaluate_display_state,
+    format_skill_multiplier_display_value,
+    format_weapon_bonus_display_value,
+    weapon_bonus_display_uses_percent,
+)
+
+
 class TestWeaponBonusDisplayUsesPercent:
     def test_flat_bonus_attr(self) -> None:
         assert weapon_bonus_display_uses_percent("附加攻击力+") is False

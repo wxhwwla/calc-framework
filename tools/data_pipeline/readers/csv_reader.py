@@ -21,10 +21,10 @@ CSV 格式约定（两套模式）：
 from __future__ import annotations
 
 import csv
-import json
-import re
+
+
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from ..schema import RawRecord
 

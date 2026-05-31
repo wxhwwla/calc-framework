@@ -1,26 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
-
-
-from unittest.mock import MagicMock, patch
-
-
+from unittest.mock import patch
 
 from games.endfield.gui_design.controls.search.search_settings import (
-
     build_worker_option_labels,
-
     get_cpu_parallel_info,
-
 )
-
-from utils.gui.window import _geometry_fill_screen
-
 from utils.platform_win32_patch import apply_platform_win32_patch
-
-
-
 
 
 class TestSearchSettingsUnusualCpu:

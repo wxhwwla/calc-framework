@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备列表按套装筛选（GUI 固定配装用）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-SET_FILTER_ALL = "全部"
+from __future__ import annotationsfrom typing import AnySET_FILTER_ALL = "全部"
 SET_FILTER_LOOSE = "仅散件"
 
 

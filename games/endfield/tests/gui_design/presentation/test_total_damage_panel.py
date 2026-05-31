@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """总伤结算面板测试。"""
 
-from __future__ import annotations
-
-import unittest
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.gui_design.presentation.total_damage_panel import TotalDamagePanel
-
-
-class _FakeSnapshot:
+from __future__ import annotationsimport unittestfrom games.endfield.gui_design.presentation.total_damage_panel import TotalDamagePanelfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import QApplicationclass _FakeSnapshot:
     def __init__(self, has_data: bool = True) -> None:
         if has_data:
             self.segment_damage = {"战技:1": 100.0, "连携技:1": 200.0}

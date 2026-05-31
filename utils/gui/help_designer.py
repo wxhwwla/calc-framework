@@ -385,7 +385,7 @@ A: 数据设计器和计算器共享同一份数据文件。保存后重启计�
 
 <p><b>Q: 如何备份数据？</b><br>
 
-A: 数据文件位于 <code>calc_engine/endfield/data/</code> 目录下，可以直接复制备份。</p>
+A: 数据文件位于 <code>games/endfield/data/</code> 目录下，可以直接复制备份。</p>
 
 
 

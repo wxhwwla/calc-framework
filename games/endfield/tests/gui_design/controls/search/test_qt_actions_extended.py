@@ -1,22 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0
 """_build_tree_items 物理/法术异常分支 + SearchWorker/SearchResultsDialog 测试。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-from unittest.mock import MagicMock
-
-from PySide6.QtCore import QCoreApplication
-from PySide6.QtWidgets import QApplication
-
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.gui_design.controls.search.qt_actions import (
-    QtSearchResultsDialog,
-    SearchWorker,
-    _build_tree_items,
-)
-
-
+from __future__ import annotations
+
+from pathlib import Path
+from unittest.mock import MagicMock
+
+from games.endfield.calc.loadout.optimizer import LoadoutScore
+from games.endfield.gui_design.controls.search.qt_actions import (
+    QtSearchResultsDialog,
+    SearchWorker,
+    _build_tree_items,
+)
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
+
+
 def _app() -> QApplication | QCoreApplication:
     inst = QApplication.instance()
     if inst is None:
@@ -161,8 +160,9 @@ class TestQtSearchResultsDialog:
 
 class TestSearchWorkerInit:
     def test_worker_attributes(self) -> None:
-        from games.endfield.calc.search.run.cancel import SearchCancelToken
-        from games.endfield.calc.search.plan.job import SingleSkillSearchJob
+        from games.endfield.calc.search.plan.job import SingleSkillSearchJob
+        from games.endfield.calc.search.run.cancel import SearchCancelToken
+
 
         job = MagicMock(spec=SingleSkillSearchJob)
         cancel = SearchCancelToken()

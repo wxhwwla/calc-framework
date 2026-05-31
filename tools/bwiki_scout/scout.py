@@ -32,13 +32,11 @@ from bwiki_scout.config import (
     LOCAL_CHARACTERS_JSON,
     LOCAL_WEAPONS_JSON,
     OUTPUT_ROOT,
-    RAW_DIR,
-    REPORTS_DIR,
     REQUEST_INTERVAL_SEC,
     USER_AGENT,
 )
 from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists
-from bwiki_scout.json_scan import find_json_hints, scan_pages_for_json
+from bwiki_scout.json_scan import scan_pages_for_json
 from bwiki_scout.local_schema import (
     compare_name_sets,
     load_local_name_sets,

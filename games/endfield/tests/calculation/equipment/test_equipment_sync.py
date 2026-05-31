@@ -2,21 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备草案同步到本地格式测试。"""
 
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.equipment.system import (
-    EQUIPMENT_KIND_ACCESSORY,
-    EQUIPMENT_KIND_ARMOR,
-    EQUIPMENT_KIND_GLOVES,
-    build_equipment_catalog_from_local_rows,
-    infer_equipment_slot,
-)
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_SAMPLE_WIKITEXT = """{{装备
+import jsonimport tempfileimport unittestfrom pathlib import Pathfrom games.endfield.calc.equipment.system import (    EQUIPMENT_KIND_ACCESSORY,    EQUIPMENT_KIND_ARMOR,    EQUIPMENT_KIND_GLOVES,    build_equipment_catalog_from_local_rows,    infer_equipment_slot,)from games.endfield.tests.conftest import DATA_DIR_SAMPLE_WIKITEXT = """{{装备
 |装备名称=50式应龙护手
 |装备种类=护手
 |稀有度=金色
@@ -31,8 +17,7 @@ _SAMPLE_WIKITEXT = """{{装备
 
 class TestEquipmentSync(unittest.TestCase):
     def test_equipment_wiki_parses_kind_and_set_from_template(self):
-        from bwiki_scout.equipment_wiki import equipment_record_from_wiki_params
-        from bwiki_scout.parse_draft import extract_template_params
+        from bwiki_scout.equipment_wiki import equipment_record_from_wiki_params        from bwiki_scout.parse_draft import extract_template_params
 
         params = extract_template_params(_SAMPLE_WIKITEXT)
         row = equipment_record_from_wiki_params(name="50式应龙护手", params=params)

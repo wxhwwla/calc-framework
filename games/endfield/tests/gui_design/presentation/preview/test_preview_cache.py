@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """预览计算缓存接入测试。"""
 
-import unittest
-
-from games.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
-from games.endfield.calc.core.result_cache import reset_global_result_cache
-
-
-class TestPreviewCache(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependenciesfrom games.endfield.calc.core.result_cache import reset_global_result_cacheclass TestPreviewCache(unittest.TestCase):
     def setUp(self) -> None:
         reset_global_result_cache()
 

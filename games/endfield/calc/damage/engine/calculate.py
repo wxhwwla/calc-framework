@@ -35,12 +35,7 @@
 15. 特殊乘区 = 连乘所有特殊乘区值
 """
 
-from __future__ import annotations
-
-from .helpers import _collect_effects, _resolve_crit_zone
-from .types import ZONE_ORDER, CritMode, DamageContext, DamageEffect, DamageResult
-
-_CONTEXT_BUFF_MAP: dict[str, str] = {
+from __future__ import annotationsfrom .helpers import _collect_effects, _resolve_crit_zonefrom .types import ZONE_ORDER, CritMode, DamageContext, DamageEffect, DamageResult_CONTEXT_BUFF_MAP: dict[str, str] = {
     "暴击率": "crit_rate",
     "暴击伤害": "crit_damage",
     "伤害类型加成": "damage_type_bonus",

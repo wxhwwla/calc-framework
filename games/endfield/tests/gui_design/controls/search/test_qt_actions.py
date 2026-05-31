@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import unittest
-
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.gui_design.controls.search.qt_actions import _build_tree_items
-
-
+from __future__ import annotations
+
+import unittest
+
+from games.endfield.calc.loadout.optimizer import LoadoutScore
+from games.endfield.gui_design.controls.search.qt_actions import _build_tree_items
+
+
 class TestBuildTreeItems(unittest.TestCase):
     def test_empty_results_flat_list(self) -> None:
         items = _build_tree_items(

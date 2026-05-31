@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """曲线烘焙与录入脚本共用接缝测试。"""
 
-import unittest
-
-from games.endfield.calc.core.curve_baker import bake_character_curves, bake_weapon_curves
-from games.endfield.calc.damage.formula import calculate_growth_curve
-
-
-class TestCurveBaker(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.curve_baker import bake_character_curves, bake_weapon_curvesfrom games.endfield.calc.damage.formula import calculate_growth_curveclass TestCurveBaker(unittest.TestCase):
     def test_bake_character_curves_matches_growth_formula(self):
         growth = {"base": 10, "growth": 10, "divisor": 5, "offset": 0}
         baked = bake_character_curves(

@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """技能段场景与段级次数测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_task
-from games.endfield.calc.skills.segments import (
-    aggregate_weighted_damage,
-    build_segment_scenarios_from_levels,
-    format_segment_breakdown_lines,
-    normalize_manual_segment_counts,
-)
-
-
-class TestSkillSegments(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_taskfrom games.endfield.calc.skills.segments import (    aggregate_weighted_damage,    build_segment_scenarios_from_levels,    format_segment_breakdown_lines,    normalize_manual_segment_counts,)class TestSkillSegments(unittest.TestCase):
     def _multi_segment_char(self) -> dict:
         return {
             "名称": "多段测试",

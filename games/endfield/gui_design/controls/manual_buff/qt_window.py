@@ -2,36 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """手动场外 buff 编辑窗口（PySide6 版）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QComboBox,
-    QDialog,
-    QDoubleSpinBox,
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
-
-from games.endfield.calc.manual_buff.model import (
-    MANUAL_BUFF_ZONE_OPTIONS,
-    build_active_keys_from_counts,
-    empty_buff_dict,
-    get_buffs_for_key,
-    set_buffs_for_key,
-)
-
-_WINDOW_TITLE = "额外加成微调"
+from __future__ import annotationsfrom typing import Anyfrom PySide6.QtCore import Qtfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QComboBox,    QDialog,    QDoubleSpinBox,    QFrame,    QHBoxLayout,    QLabel,    QListWidget,    QListWidgetItem,    QPushButton,    QScrollArea,    QVBoxLayout,    QWidget,)from games.endfield.calc.manual_buff.model import (    MANUAL_BUFF_ZONE_OPTIONS,    build_active_keys_from_counts,    empty_buff_dict,    get_buffs_for_key,    set_buffs_for_key,)_WINDOW_TITLE = "额外加成微调"
 _WINDOW_WIDTH = 900
 _WINDOW_HEIGHT = 600
 

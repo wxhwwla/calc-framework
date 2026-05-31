@@ -4,13 +4,7 @@
 计算结果缓存：相同 cache_key + 依赖快照命中；依赖变更时自动失效相关条目。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any, TypeVar
-
-T = TypeVar("T")
+from __future__ import annotationsfrom collections.abc import Callablefrom dataclasses import dataclassfrom typing import Any, TypeVarT = TypeVar("T")
 
 
 @dataclass

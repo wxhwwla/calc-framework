@@ -1,25 +1,25 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认计算/求值 ComputeSheet 相关回调(ConfirmMixin,混合入 QtDamageApp)。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QScrollArea
-
-from games.endfield.framework_bridge import ComputeSheet
-from gui_design.app.loadout_evaluation import sync_evaluation_cache, refresh_damage_snapshot
-from gui_design.shared.calc_history import HistoryEntry, get_app_calculation_history
-from PySide6.QtCore import Qt
-
-
+from __future__ import annotations
+
+from typing import Any
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QScrollArea, QVBoxLayout
+
+from games.endfield.framework_bridge import ComputeSheet
+from gui_design.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache
+from gui_design.shared.calc_history import HistoryEntry, get_app_calculation_history
+
+
 class ConfirmMixin:
     """确认计算、ComputeSheet 刷新、总伤面板、快照。"""
 
     def _build_request(self) -> Any:
-        from gui_design.app.display_request import DisplayRequest
-        from gui_design.app.loadout_state import read_loadout_from_panels
+        from gui_design.app.display_request import DisplayRequest
+        from gui_design.app.loadout_state import read_loadout_from_panels
+
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -151,8 +151,9 @@ class ConfirmMixin:
 
     def _update_total_damage_panel(self) -> None:
         """更新总伤面板（从 evaluation cache 读取）。"""
-        from gui_design.app.loadout_evaluation import compute_total_damage
-        from gui_design.presentation.display.character import build_total_damage_report_lines
+        from gui_design.app.loadout_evaluation import compute_total_damage
+        from gui_design.presentation.display.character import build_total_damage_report_lines
+
 
         total = compute_total_damage()
         if total is None:

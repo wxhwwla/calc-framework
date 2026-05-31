@@ -2,25 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """内存 TopN 配装搜索（无 SQLite 续跑）。"""
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from typing import Any
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    WeaponCandidate,
-    enumerate_optimizer_tasks,
-    evaluate_task,
-)
-from games.endfield.calc.search.evaluate.context import SearchEvalContext
-from games.endfield.calc.search.run.cancel import SearchCancelToken
-from games.endfield.calc.search.run.parallel import run_bounded_parallel
-
-
-def run_enumerated_optimizer_parallel(
+from __future__ import annotationsfrom collections.abc import Callablefrom typing import Anyfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import (    LoadoutScore,    OptimizerConfig,    WeaponCandidate,    enumerate_optimizer_tasks,    evaluate_task,)from games.endfield.calc.search.evaluate.context import SearchEvalContextfrom games.endfield.calc.search.run.cancel import SearchCancelTokenfrom games.endfield.calc.search.run.parallel import run_bounded_paralleldef run_enumerated_optimizer_parallel(
     *,
     base_context: DamageContext,
     weapons: list[WeaponCandidate],

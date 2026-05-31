@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索工作量与耗时预估测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidate, enumerate_optimizer_tasks
-from games.endfield.calc.search.plan.estimate import (
-    count_loadout_combinations,
-    estimate_search_duration,
-    format_duration_human,
-    format_workload_estimate_line,
-    preview_search_workload,
-)
-
-
-class TestSearchEstimate(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import OptimizerConfig, WeaponCandidate, enumerate_optimizer_tasksfrom games.endfield.calc.search.plan.estimate import (    count_loadout_combinations,    estimate_search_duration,    format_duration_human,    format_workload_estimate_line,    preview_search_workload,)class TestSearchEstimate(unittest.TestCase):
     def test_count_loadout_combinations_matches_enumerate_on_small_catalog(self):
         catalog = {
             "chest": [{"名称": "c1", "部位": "护甲", "效果": [], "三件套效果": []}],

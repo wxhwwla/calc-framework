@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """统一装备目录接缝测试。"""
 
-import unittest
-
-from games.endfield.data_loading.equipment_catalog import (
-    EQUIPMENT_SCOPE_ALL,
-    EQUIPMENT_SCOPE_LOOSE,
-    EQUIPMENT_SCOPE_SET,
-    catalog_full_search_error,
-    catalog_status_message,
-    equipment_scope_from_label,
-    filter_equipment_rows_by_scope,
-    get_equipment_catalog,
-    is_equipment_catalog_complete,
-    sample_equipment_catalog,
-)
-
-
-class TestEquipmentCatalog(unittest.TestCase):
+import unittestfrom games.endfield.data_loading.equipment_catalog import (    EQUIPMENT_SCOPE_ALL,    EQUIPMENT_SCOPE_LOOSE,    EQUIPMENT_SCOPE_SET,    catalog_full_search_error,    catalog_status_message,    equipment_scope_from_label,    filter_equipment_rows_by_scope,    get_equipment_catalog,    is_equipment_catalog_complete,    sample_equipment_catalog,)class TestEquipmentCatalog(unittest.TestCase):
     def test_scope_from_gui_labels(self):
         self.assertEqual(equipment_scope_from_label("全部装备"), EQUIPMENT_SCOPE_ALL)
         self.assertEqual(equipment_scope_from_label("仅套装装备"), EQUIPMENT_SCOPE_SET)

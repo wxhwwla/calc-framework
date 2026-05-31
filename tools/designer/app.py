@@ -33,7 +33,6 @@ if _project_root not in sys.path:
 
 
 
-from PySide6.QtCore import Qt
 
 from PySide6.QtGui import QAction, QKeySequence
 
@@ -45,15 +44,9 @@ from PySide6.QtWidgets import (
 
     QMainWindow,
 
-    QMessageBox,
-
     QStatusBar,
 
     QTabWidget,
-
-    QVBoxLayout,
-
-    QWidget,
 
 )
 
@@ -445,7 +438,6 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
             try:
 
-                import json
 
                 from calc_framework.dag.serializer import dag_to_dict
 

@@ -8,54 +8,7 @@
 包含固定配装槽、异常矩阵、搜索参数、增强工具按钮。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from typing import Any
-
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QScrollArea,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
-
-from gui_design.controls.enemy import QtEnemyPanel
-from gui_design.shell.qt_control_dock_builders import (
-    BuilderMixin,
-    _BTN_PRIMARY_STYLE,
-    _BTN_SECONDARY_STYLE,
-    _COMBO_STYLE,
-    _ENTRY_STYLE,
-    _FIXED_SLOT_NONE_LABEL,
-    _FIXED_SLOT_SPECS,
-    _PHYSICAL_ABNORMAL_KEYS,
-    _PRIMARY_BTN_HEIGHT,
-    _SECONDARY_BTN_HEIGHT,
-    _SPELL_ABNORMAL_KEYS,
-)
-from gui_design.shell.qt_control_dock_widgets import (
-    SectionHeader,
-    HintLabel,
-    SmallLabel,
-    read_abnormal_edits,
-)
-from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
-from gui_design.controls.search.search_settings import (
-    get_cpu_parallel_info,
-    resolve_parallel_workers,
-    format_parallel_workers_help,
-)
-
-# 固定配装槽位配置：(catalog_key, 界面标签)
+from __future__ import annotationsfrom collections.abc import Callablefrom typing import Anyfrom PySide6.QtCore import Signalfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QCheckBox,    QComboBox,    QHBoxLayout,    QLineEdit,    QPushButton,    QSizePolicy,    QVBoxLayout,    QWidget,)from gui_design.controls.enemy import QtEnemyPanelfrom gui_design.controls.search.search_settings import (    format_parallel_workers_help,    get_cpu_parallel_info,    resolve_parallel_workers,)from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABELfrom gui_design.shell.qt_control_dock_builders import (    _BTN_PRIMARY_STYLE,    _BTN_SECONDARY_STYLE,    _COMBO_STYLE,    _FIXED_SLOT_NONE_LABEL,    _FIXED_SLOT_SPECS,    _PHYSICAL_ABNORMAL_KEYS,    _PRIMARY_BTN_HEIGHT,    _SECONDARY_BTN_HEIGHT,    _SPELL_ABNORMAL_KEYS,    BuilderMixin,)from gui_design.shell.qt_control_dock_widgets import (    SectionHeader,    SmallLabel,    read_abnormal_edits,)# 固定配装槽位配置：(catalog_key, 界面标签)
 
 # ═══════════════════════════════════════════════════════
 #  QtControlDock

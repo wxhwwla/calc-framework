@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """search_controls 纯逻辑与预估文案测试。"""
 
-import unittest
-
-from games.endfield.gui_design.controls.search.search_estimate_message import compose_search_estimate_message
-
-
-class TestSearchControls(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.controls.search.search_estimate_message import compose_search_estimate_messageclass TestSearchControls(unittest.TestCase):
     def test_compose_message_requires_selection(self) -> None:
         text = compose_search_estimate_message(
             has_char=False,

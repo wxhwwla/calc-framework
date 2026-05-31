@@ -2,25 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """BWIKI 侦察模块测试（纯函数与离线 fixture，不访问网络）。"""
 
-import tempfile
-import unittest
-from pathlib import Path
-
-from bwiki_scout.detail_levels import (  # noqa: E402
-    compare_operator_to_local,
-    operator_detail_title,
-    parse_operator_detail_wikitext,
-)
-from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists  # noqa: E402
-from bwiki_scout.json_scan import find_json_hints  # noqa: E402
-from bwiki_scout.local_schema import compare_name_sets, summarize_local_schema  # noqa: E402
-from bwiki_scout.names import normalize_name_for_match  # noqa: E402
-from bwiki_scout.parse_draft import build_draft_record, extract_template_params  # noqa: E402
-from bwiki_scout.scout import run_scout  # noqa: E402
-
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARS = DATA_DIR / "characters.json"
+import tempfileimport unittestfrom pathlib import Pathfrom bwiki_scout.detail_levels import (  # noqa: E402    compare_operator_to_local,    operator_detail_title,    parse_operator_detail_wikitext,)from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists  # noqa: E402from bwiki_scout.json_scan import find_json_hints  # noqa: E402from bwiki_scout.local_schema import compare_name_sets, summarize_local_schema  # noqa: E402from bwiki_scout.names import normalize_name_for_match  # noqa: E402from bwiki_scout.parse_draft import build_draft_record, extract_template_params  # noqa: E402from bwiki_scout.scout import run_scout  # noqa: E402from games.endfield.tests.conftest import DATA_DIR_CHARS = DATA_DIR / "characters.json"
 _WEAPONS = DATA_DIR / "weapons.json"
 
 
@@ -177,10 +159,7 @@ class TestRunScoutOffline(unittest.TestCase):
 
 class TestWeaponWikiRankCurveFit(unittest.TestCase):
     def test_steel_echo_conditional_curve_fits_and_bakes(self) -> None:
-        from bwiki_scout.weapon_wiki import (  # noqa: E402
-            bake_rank_curve_from_params,
-            fit_bonus_params_from_rank_curve,
-        )
+        from bwiki_scout.weapon_wiki import (  # noqa: E402            bake_rank_curve_from_params,            fit_bonus_params_from_rank_curve,        )
 
         wiki = [7.5, 9.0, 10.5, 12.0, 13.5, 15.0, 16.5, 18.0, 21.0]
         params = fit_bonus_params_from_rank_curve(wiki)

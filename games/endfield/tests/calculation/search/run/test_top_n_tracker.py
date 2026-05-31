@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """TopN 追踪器测试。"""
 
-import unittest
-
-from games.endfield.calc.core.top_n_tracker import TopNTracker
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-
-
-class TestTopNTracker(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.top_n_tracker import TopNTrackerfrom games.endfield.calc.loadout.optimizer import LoadoutScoreclass TestTopNTracker(unittest.TestCase):
     def test_keeps_only_highest_damage_scores(self):
         tracker = TopNTracker(top_n=2, key_fn=lambda score: score.final_damage)
         for damage in (10.0, 50.0, 30.0, 40.0):

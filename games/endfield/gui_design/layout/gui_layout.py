@@ -9,9 +9,7 @@
 常量 `MAIN_CONTENT_ROW` / `CONTROL_DOCK_ROW` 分别对应计算页与高级页内的 grid 行号语义。
 """
 
-from __future__ import annotations
-
-# 列 0–1 选择区固定宽；列 2–3 属性均分剩余；列 4 乘区固定宽（文案窄，不宜拉伸）
+from __future__ import annotations# 列 0–1 选择区固定宽；列 2–3 属性均分剩余；列 4 乘区固定宽（文案窄，不宜拉伸）
 APP_COLUMN_WEIGHTS: tuple[int, ...] = (0, 0, 1, 1, 0)
 
 MAIN_CONTENT_ROW = 0

@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """打包/开发模式下游戏数据路径可解析（打包冒烟的轻量替代）。"""
 
-import unittest
-
-from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH, get_characters, get_weapons
-from utils.path_utils import get_resource_path
-
-
-class TestPackDataPaths(unittest.TestCase):
+import unittestfrom games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH, get_characters, get_weaponsfrom utils.path_utils import get_resource_pathclass TestPackDataPaths(unittest.TestCase):
     """确保 PyInstaller 使用的相对路径在开发环境下可解析且非空。"""
 
     def test_character_json_path_exists(self):

@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import MagicMock
-
-from games.endfield.gui_design.shared.preset_batch_compare import (
-    _empty_equipment,
-    _find_by_name,
-    _preset_label,
-    _resolve_equipment,
-)
-
-from games.endfield.gui_design.app.loadout_preset import LoadoutPreset
-
-
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from games.endfield.gui_design.app.loadout_preset import LoadoutPreset
+from games.endfield.gui_design.shared.preset_batch_compare import (
+    _empty_equipment,
+    _find_by_name,
+    _preset_label,
+    _resolve_equipment,
+)
+
+
 class TestFindByName:
     def test_finds_matching(self) -> None:
         rows = [{"名称": "角色A"}, {"名称": "角色B"}]
@@ -86,7 +85,7 @@ class TestPresetLabel:
         preset.weapon_name = "武器B"
         preset.note = ""
         label = _preset_label(preset)
-        assert "角色A / 武器B" == label
+        assert label == "角色A / 武器B"
 
     def test_with_note(self) -> None:
         preset = MagicMock(spec=LoadoutPreset)

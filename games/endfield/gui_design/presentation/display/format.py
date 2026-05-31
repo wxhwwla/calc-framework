@@ -4,13 +4,7 @@
 属性/乘区/单段伤害的展示文案构建（无 GUI 依赖，便于单测）。
 """
 
-from __future__ import annotations
-
-from typing import Any, NamedTuple
-
-from games.endfield.calc.core.config import CHARACTER_NORMAL_ATTRS
-
-# 等级相关属性列表（需要根据等级从列表中提取对应值）
+from __future__ import annotationsfrom typing import Any, NamedTuplefrom games.endfield.calc.core.config import CHARACTER_NORMAL_ATTRS# 等级相关属性列表（需要根据等级从列表中提取对应值）
 LEVEL_ATTRIBUTES = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
 
 # 角色技能类型与 JSON 字段、选择区滑块等级参数对应（见 skill_segments.CHARACTER_SKILL_TYPES）

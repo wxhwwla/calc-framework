@@ -5,29 +5,29 @@
 通过框架 ``SearchSession`` 执行搜索，支持内存 TopN 和 SQLite 续跑。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
-
-from calc_framework.search import SearchConfig, SearchResult, SearchSession
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    OptimizerTask,
-    WeaponCandidate,
-)
-
-from ..adapter import EndfieldSearchEngine
-from ..evaluate.context import SearchEvalContext
-from ..persist.store import SearchRunStore
-from .cancel import SearchCancelToken
-
-
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from calc_framework.search import SearchConfig, SearchResult, SearchSession
+
+from games.endfield.calc.damage.engine import DamageContext
+from games.endfield.calc.loadout.optimizer import (
+    LoadoutScore,
+    OptimizerConfig,
+    OptimizerTask,
+    WeaponCandidate,
+)
+
+from ..adapter import EndfieldSearchEngine
+from ..evaluate.context import SearchEvalContext
+from ..persist.store import SearchRunStore
+from .cancel import SearchCancelToken
+
+
 @dataclass(frozen=True)
 class SearchSessionResult:
     """搜索会话结果。"""

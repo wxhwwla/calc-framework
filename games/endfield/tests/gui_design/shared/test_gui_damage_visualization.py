@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import patch
-
-from games.endfield.gui_design.shared.damage_visualization import (
-    DamageSlice,
-    build_damage_pie_figure,
-    build_improvement_bar_figure,
-    damage_breakdown_from_skill_map,
-    is_matplotlib_available,
-)
-
-
+from __future__ import annotations
+
+from unittest.mock import patch
+
+from games.endfield.gui_design.shared.damage_visualization import (
+    DamageSlice,
+    build_damage_pie_figure,
+    build_improvement_bar_figure,
+    damage_breakdown_from_skill_map,
+    is_matplotlib_available,
+)
+
+
 class TestIsMatplotlibAvailable:
     def test_returns_bool(self) -> None:
         result = is_matplotlib_available()

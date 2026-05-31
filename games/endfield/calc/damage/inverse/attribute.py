@@ -13,12 +13,7 @@
 - 支持整数和小数百分比格式
 """
 
-from collections.abc import Sequence
-
-from .fit_core import _find_best_params, _inv_print, _scale_data
-
-
-def remove_duplicates(data: Sequence[int | float]) -> list[int | float]:
+from collections.abc import Sequencefrom .fit_core import _find_best_params, _inv_print, _scale_datadef remove_duplicates(data: Sequence[int | float]) -> list[int | float]:
     """
     移除重复数据（第20,40,60,80级重复）
     重复位置：索引19-20, 40-41, 61-62, 82-83

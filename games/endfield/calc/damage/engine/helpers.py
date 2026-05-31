@@ -35,14 +35,7 @@
 15. 特殊乘区 = 连乘所有特殊乘区值
 """
 
-from __future__ import annotations
-
-from games.endfield.calc.damage.types import damage_type_matches_context
-
-from .types import KNOWN_EFFECT_TYPES, CritMode, DamageContext, DamageEffect
-
-
-def _clamp(value: float, lower: float, upper: float | None = None) -> float:
+from __future__ import annotationsfrom games.endfield.calc.damage.types import damage_type_matches_contextfrom .types import KNOWN_EFFECT_TYPES, CritMode, DamageContext, DamageEffectdef _clamp(value: float, lower: float, upper: float | None = None) -> float:
     """将值限制在指定范围内。
 
     Args:

@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """伤害类型推断与段级读取测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext, DamageEffect, calculate_single_hit_damage
-from games.endfield.calc.damage.types import (
-    DEFAULT_DAMAGE_TYPE,
-    damage_type_matches_context,
-    format_damage_type_display,
-    format_damage_type_short,
-    infer_segment_damage_type,
-    resolve_segment_damage_type,
-)
-
-
-class TestDamageTypes(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContext, DamageEffect, calculate_single_hit_damagefrom games.endfield.calc.damage.types import (    DEFAULT_DAMAGE_TYPE,    damage_type_matches_context,    format_damage_type_display,    format_damage_type_short,    infer_segment_damage_type,    resolve_segment_damage_type,)class TestDamageTypes(unittest.TestCase):
     def test_infer_segment_from_row_header(self) -> None:
         self.assertEqual(infer_segment_damage_type("灼热伤害倍率"), "法术-灼热")
         self.assertEqual(infer_segment_damage_type("物理伤害倍率"), "物理")

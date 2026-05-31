@@ -2,25 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """高级页控制栏小部件测试。"""
 
-from __future__ import annotations
-
-import unittest
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QLineEdit, QWidget
-
-from games.endfield.gui_design.shell.qt_control_dock_widgets import (
-    ComboRow,
-    HintLabel,
-    SectionHeader,
-    SmallLabel,
-    build_abnormal_matrix,
-    read_abnormal_edits,
-)
-
-
-class TestControlDockWidgets(unittest.TestCase):
+from __future__ import annotationsimport unittestfrom games.endfield.gui_design.shell.qt_control_dock_widgets import (    ComboRow,    HintLabel,    SectionHeader,    SmallLabel,    build_abnormal_matrix,    read_abnormal_edits,)from PySide6.QtGui import QFontfrom PySide6.QtWidgets import QApplication, QWidgetclass TestControlDockWidgets(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         if not QApplication.instance():

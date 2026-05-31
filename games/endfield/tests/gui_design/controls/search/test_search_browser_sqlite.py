@@ -1,20 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
 """list_runs / list_scores SQLite 测试。"""
 
-from __future__ import annotations
-
-import sqlite3
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-from games.endfield.gui_design.controls.search.qt_search_browser import (
-    list_runs,
-    list_scores,
-    scan_search_output,
-)
-
-
+from __future__ import annotations
+
+import sqlite3
+import tempfile
+from pathlib import Path
+
+from games.endfield.gui_design.controls.search.qt_search_browser import (
+    list_runs,
+    list_scores,
+    scan_search_output,
+)
+
+
 def _make_db(path: Path) -> None:
     conn = sqlite3.connect(str(path))
     conn.executescript("""

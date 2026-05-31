@@ -7,16 +7,9 @@
 
 from __future__ import annotations
 
-
-
 from collections.abc import Sequence
-
 from dataclasses import dataclass
-
 from typing import Any
-
-
-
 
 
 @dataclass(frozen=True)
@@ -72,17 +65,11 @@ def build_damage_pie_figure(
     """构建饼图 Figure（调用方负责 plt.close）。"""
 
     from utils.gui.chart_theme import (
-
         chart_theme_dark,
-
         configure_matplotlib_gui_style,
-
         series_color,
-
         style_axes,
-
         style_figure,
-
     )
 
 
@@ -170,17 +157,11 @@ def build_improvement_bar_figure(
     """构建柱状图（默认用于提升率；亦可传入乘区占比等百分比序列）。"""
 
     from utils.gui.chart_theme import (
-
         bar_colors,
-
         chart_theme_dark,
-
         configure_matplotlib_gui_style,
-
         style_axes,
-
         style_figure,
-
     )
 
 

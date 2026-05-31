@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.gui_design.presentation.display.skill_resolve import (
-    resolve_selected_skill_for_damage,
-)
-
-
+from __future__ import annotations
+
+from typing import Any
+
+from games.endfield.gui_design.presentation.display.skill_resolve import (
+    resolve_selected_skill_for_damage,
+)
+
+
 def _make_char_data() -> dict[str, Any]:
     return {
         "战技倍率": [[100, 110, 120]],

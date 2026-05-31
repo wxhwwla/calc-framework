@@ -37,21 +37,7 @@
 - OptimizerResult: 搜索结果汇总
 """
 
-from __future__ import annotations
-
-from collections.abc import Iterator
-
-from games.endfield.calc.loadout.slot_search import (
-    FixedLoadoutSelection,
-    count_loadout_combinations_for_selection,
-    iter_loadout_combinations_for_selection,
-    selection_from_legacy_slot_count,
-)
-
-from .types import OptimizerConfig
-
-
-def _is_equipment_beneficial(item: dict) -> bool:
+from __future__ import annotationsfrom collections.abc import Iteratorfrom games.endfield.calc.loadout.slot_search import (    FixedLoadoutSelection,    count_loadout_combinations_for_selection,    iter_loadout_combinations_for_selection,    selection_from_legacy_slot_count,)from .types import OptimizerConfigdef _is_equipment_beneficial(item: dict) -> bool:
     """判断装备是否有益（值得参与搜索）。
 
     有套装效果、三件套效果，或有属性词条（战技加成、四维等）的装备视为有益。

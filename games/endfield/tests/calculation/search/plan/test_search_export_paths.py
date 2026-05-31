@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索导出目录测试。"""
 
-import tempfile
-import unittest
-from pathlib import Path
-from unittest.mock import patch
-
-from utils.app_paths import (
-    allocate_search_run_directory,
-    default_search_output_root,
-)
-
-
-class TestSearchExportPaths(unittest.TestCase):
+import tempfileimport unittestfrom pathlib import Pathfrom unittest.mock import patchfrom utils.app_paths import (    allocate_search_run_directory,    default_search_output_root,)class TestSearchExportPaths(unittest.TestCase):
     def test_default_root_is_under_given_base_not_system_temp(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp) / "calc-framework-endfield"

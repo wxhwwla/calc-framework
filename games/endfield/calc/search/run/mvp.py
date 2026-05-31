@@ -7,26 +7,7 @@ MVP 端到端搜索流水线。
 GUI「全量遍历」「MVP 导出/续跑」最终都进入 ``run_mvp_search_from_job``。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
-
-from games.endfield.calc.core.result_export import export_search_outputs
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerConfig, WeaponCandidate
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-
-from ..evaluate.context import SearchEvalContext
-from ..evaluate.task import make_loadout_task_evaluator
-from ..plan.job import SingleSkillSearchJob
-from .cancel import SearchCancelToken
-from .runner import SearchRunner
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom collections.abc import Callablefrom dataclasses import dataclassfrom pathlib import Pathfrom typing import Anyfrom games.endfield.calc.core.result_export import export_search_outputsfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerConfig, WeaponCandidatefrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom ..evaluate.context import SearchEvalContextfrom ..evaluate.task import make_loadout_task_evaluatorfrom ..plan.job import SingleSkillSearchJobfrom .cancel import SearchCancelTokenfrom .runner import SearchRunner@dataclass(frozen=True)
 class MvpSearchOutcome:
     """MVP 搜索 + 导出结果。"""
 

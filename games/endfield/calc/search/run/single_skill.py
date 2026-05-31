@@ -7,28 +7,7 @@
 - ``run_exported_single_skill_search``：在 ``export_root`` 下写 ``search_runs.db`` 并调用 ``mvp_pipeline``。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from dataclasses import dataclass
-from pathlib import Path
-
-from games.endfield.calc.loadout.optimizer import OptimizerConfig, optimizer_config_for_character
-from utils.search_format import format_workload_estimate_line
-
-from ..plan.controller import optimizer_config_for_search_job
-from ..plan.estimate import (
-    SearchDurationEstimate,
-    SearchWorkloadPreview,
-    estimate_search_duration,
-    preview_search_workload,
-)
-from ..plan.job import SingleSkillSearchJob
-from .cancel import SearchCancelToken
-from .mvp import MvpSearchOutcome, run_mvp_search_from_job
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom collections.abc import Callablefrom dataclasses import dataclassfrom pathlib import Pathfrom utils.search_format import format_workload_estimate_linefrom games.endfield.calc.loadout.optimizer import OptimizerConfig, optimizer_config_for_characterfrom ..plan.controller import optimizer_config_for_search_jobfrom ..plan.estimate import (    SearchDurationEstimate,    SearchWorkloadPreview,    estimate_search_duration,    preview_search_workload,)from ..plan.job import SingleSkillSearchJobfrom .cancel import SearchCancelTokenfrom .mvp import MvpSearchOutcome, run_mvp_search_from_job@dataclass(frozen=True)
 class SingleSkillSearchEstimate:
     """全量遍历预估摘要。"""
 

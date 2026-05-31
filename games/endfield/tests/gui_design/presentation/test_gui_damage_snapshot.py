@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import unittest
-
-from games.endfield.gui_design.presentation.damage_snapshot import (
-    DamageSnapshot,
-    _zone_share_percent,
-)
-
-
+from __future__ import annotations
+
+import unittest
+
+from games.endfield.gui_design.presentation.damage_snapshot import (
+    DamageSnapshot,
+    _zone_share_percent,
+)
+
+
 class TestDamageSnapshot(unittest.TestCase):
     def test_dataclass_defaults(self) -> None:
         snap = DamageSnapshot(

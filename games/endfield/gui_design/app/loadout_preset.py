@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配装预设 JSON 导入/导出（与 GUI 状态解耦，便于单测）。"""
 
-from __future__ import annotations
-
-import json
-from collections.abc import Sequence
-from dataclasses import dataclass, field
-from typing import Any
-
-from games.endfield.calc.skills.special_fields import (
-    migrate_legacy_weapon_special_level,
-)
-
-PRESET_SCHEMA = "endfield_loadout_preset_v2"
+from __future__ import annotationsimport jsonfrom collections.abc import Sequencefrom dataclasses import dataclass, fieldfrom typing import Anyfrom games.endfield.calc.skills.special_fields import (    migrate_legacy_weapon_special_level,)PRESET_SCHEMA = "endfield_loadout_preset_v2"
 
 
 def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:

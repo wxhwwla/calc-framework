@@ -2,55 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """PySide6 搜索线程与结果弹窗。"""
 
-from __future__ import annotations
-
-from collections.abc import Sequence
-from pathlib import Path
-
-from PySide6.QtCore import QObject, Qt, Signal
-from PySide6.QtGui import QColor, QFont
-from PySide6.QtWidgets import (
-    QDialog,
-    QHBoxLayout,
-    QHeaderView,
-    QPushButton,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
-)
-
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.calc.manual_buff.physical import (
-    format_abnormal_breakdown_lines,
-    split_damage_breakdown,
-)
-from games.endfield.calc.manual_buff.spell import (
-    format_spell_abnormal_breakdown_lines,
-    is_spell_abnormal_key,
-)
-from games.endfield.calc.search.plan.controller import (
-    optimizer_config_for_search_job,
-)
-from games.endfield.calc.search.plan.job import SingleSkillSearchJob
-from games.endfield.calc.search.run.cancel import SearchCancelToken
-from games.endfield.calc.search.run.single_skill import (
-    run_exported_single_skill_search,
-)
-from games.endfield.calc.skills.segments import (
-    aggregate_weighted_damage,
-    format_segment_breakdown_lines,
-)
-from gui_design.controls.search.search_settings import (
-    format_search_progress_text,
-    resolve_parallel_workers,
-    resolve_top_n,
-)
-from gui_design.presentation.search_results_lines import (
-    export_paths_to_strings,
-)
-
-# ═══════════════════════════════════════════════════════
+from __future__ import annotationsfrom collections.abc import Sequencefrom pathlib import Pathfrom PySide6.QtCore import QObject, Qt, Signalfrom PySide6.QtGui import QColor, QFontfrom PySide6.QtWidgets import (    QDialog,    QHBoxLayout,    QHeaderView,    QPushButton,    QTreeWidget,    QTreeWidgetItem,    QVBoxLayout,    QWidget,)from games.endfield.calc.loadout.optimizer import LoadoutScorefrom games.endfield.calc.manual_buff.physical import (    format_abnormal_breakdown_lines,    split_damage_breakdown,)from games.endfield.calc.manual_buff.spell import (    format_spell_abnormal_breakdown_lines,    is_spell_abnormal_key,)from games.endfield.calc.search.plan.controller import (    optimizer_config_for_search_job,)from games.endfield.calc.search.plan.job import SingleSkillSearchJobfrom games.endfield.calc.search.run.cancel import SearchCancelTokenfrom games.endfield.calc.search.run.single_skill import (    run_exported_single_skill_search,)from games.endfield.calc.skills.segments import (    aggregate_weighted_damage,    format_segment_breakdown_lines,)from gui_design.controls.search.search_settings import (    format_search_progress_text,    resolve_parallel_workers,    resolve_top_n,)from gui_design.presentation.search_results_lines import (    export_paths_to_strings,)# ═══════════════════════════════════════════════════════
 #  搜索线程 Worker
 # ═══════════════════════════════════════════════════════
 

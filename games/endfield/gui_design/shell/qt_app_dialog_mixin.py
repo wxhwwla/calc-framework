@@ -5,28 +5,15 @@
 
 from __future__ import annotations
 
-
-
 from pathlib import Path
 
-
-
 from PySide6.QtWidgets import (
-
     QFileDialog,
-
     QMessageBox,
-
 )
 
-
-
 from gui_design.legal.attribution_content import SUMMARY_TEXT
-
 from gui_design.legal.donation_qt import open_donation_dialog
-
-
-
 
 
 class DialogMixin:
@@ -60,7 +47,6 @@ class DialogMixin:
     def _on_export_preset(self) -> None:
 
         from gui_design.app.loadout_preset import export_preset_json
-
         from gui_design.app.loadout_state import read_loadout_from_panels
 
 
@@ -298,7 +284,6 @@ class DialogMixin:
     def _on_damage_dashboard(self) -> None:
 
         from gui_design.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
-
         from gui_design.presentation.damage_snapshot import get_snapshot_from_app
 
 
@@ -324,7 +309,6 @@ class DialogMixin:
     def _on_calc_history(self) -> None:
 
         from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
-
         from gui_design.shared.calc_history import get_app_calculation_history
 
 
@@ -379,9 +363,8 @@ class DialogMixin:
 
     def _on_open_help(self) -> None:
 
-        from utils.gui.help_dialog import HelpDialog
-
         from utils.gui.help_calculator import build_calculator_help
+        from utils.gui.help_dialog import HelpDialog
 
         dialog = HelpDialog(build_calculator_help, self.app, title="终末地伤害计算器 使用说明")
 

@@ -37,18 +37,7 @@
 - OptimizerResult: 搜索结果汇总
 """
 
-from __future__ import annotations
-
-from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
-from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
-from games.endfield.calc.equipment.system import build_four_slot_loadout
-from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
-from games.endfield.calc.search.evaluate.context import SearchEvalContext
-
-from .types import LoadoutScore, RuntimeEvalSnapshot, WeaponCandidate
-
-
-def evaluate_task(
+from __future__ import annotationsfrom games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damagefrom games.endfield.calc.equipment.affix import aggregate_loadout_modifiersfrom games.endfield.calc.equipment.system import build_four_slot_loadoutfrom games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadoutfrom games.endfield.calc.search.evaluate.context import SearchEvalContextfrom .types import LoadoutScore, RuntimeEvalSnapshot, WeaponCandidatedef evaluate_task(
     *,
     base_context: DamageContext,
     crit_mode: CritMode,

@@ -13,45 +13,24 @@ PySide6 GUI，提供公式反推、数据浏览等功能，用于角色/武器�
 
 from __future__ import annotations
 
-
-
 import sys
 
-
-
 from PySide6.QtCore import Qt
-
 from PySide6.QtGui import QFont
-
 from PySide6.QtWidgets import (
-
     QApplication,
-
     QHBoxLayout,
-
     QLabel,
-
     QMainWindow,
-
     QPushButton,
-
     QTabWidget,
-
     QVBoxLayout,
-
     QWidget,
-
 )
 
-
-
 from gui_design.designer.data_browser_tab import DataBrowserTab
-
 from gui_design.designer.data_editor_tab import DataEditorTab
-
 from gui_design.designer.inverse_tab import InverseTab
-
-
 
 APP_NAME = "数据设计器"
 
@@ -165,9 +144,8 @@ class DesignerApp(QMainWindow):
 
     def _open_help(self) -> None:
 
-        from utils.gui.help_dialog import HelpDialog
-
         from utils.gui.help_designer import build_designer_help
+        from utils.gui.help_dialog import HelpDialog
 
         dialog = HelpDialog(build_designer_help, self, title="数据设计器 使用说明")
 

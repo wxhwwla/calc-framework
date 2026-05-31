@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from games.endfield.gui_design.controls.search.search_settings import (
-    CpuParallelInfo,
-    build_worker_option_labels,
-    default_parallel_workers,
-    format_duration_human,
-    format_parallel_workers_help,
-    format_search_progress_text,
-    format_workload_estimate_line,
-    get_cpu_parallel_info,
-    resolve_parallel_workers,
-    resolve_top_n,
-)
-
-
+from __future__ import annotations
+
+from games.endfield.gui_design.controls.search.search_settings import (
+    CpuParallelInfo,
+    build_worker_option_labels,
+    default_parallel_workers,
+    format_duration_human,
+    format_parallel_workers_help,
+    format_search_progress_text,
+    format_workload_estimate_line,
+    get_cpu_parallel_info,
+    resolve_parallel_workers,
+    resolve_top_n,
+)
+
+
 class TestGetCpuParallelInfo:
     def test_with_explicit_count(self) -> None:
         info = get_cpu_parallel_info(cpu_count=8)

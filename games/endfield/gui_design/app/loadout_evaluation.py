@@ -2,26 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """当前配装下的伤害求值（预览/仪表盘共用缓存接缝）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.calc.core.preview_cache import sync_confirm_dependencies
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from gui_design.presentation.damage_snapshot import (
-    DamageSnapshot,
-    build_damage_snapshot,
-    store_snapshot_on_app,
-)
-from gui_design.presentation.preview_lines import (
-    build_multi_skill_search_preview_lines,
-    build_single_skill_search_preview_lines,
-)
-
-from .loadout_state import LoadoutState
-
-
-def sync_evaluation_cache(loadout: LoadoutState) -> None:
+from __future__ import annotationsfrom typing import Anyfrom games.endfield.calc.core.preview_cache import sync_confirm_dependenciesfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom gui_design.presentation.damage_snapshot import (    DamageSnapshot,    build_damage_snapshot,    store_snapshot_on_app,)from gui_design.presentation.preview_lines import (    build_multi_skill_search_preview_lines,    build_single_skill_search_preview_lines,)from .loadout_state import LoadoutStatedef sync_evaluation_cache(loadout: LoadoutState) -> None:
     """与确认刷新一致的 preview_cache 依赖键。"""
     sync_confirm_dependencies(
         char_data=loadout.char_data,

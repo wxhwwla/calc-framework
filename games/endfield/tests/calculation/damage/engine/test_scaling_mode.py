@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """整数 / 小数取整模式：行为规格测试。"""
 
-import contextlib
-import io
-import unittest
-
-from games.endfield.calc.damage.formula import (
-    calculate_bonus_attribute,
-    calculate_skill_curve,
-    has_fractional_part,
-    infer_decimal_mode,
-)
-from games.endfield.calc.damage.inverse import _is_decimal_data, fit_skill_formula_no_special
-
-
-class TestScalingMode(unittest.TestCase):
+import contextlibimport ioimport unittestfrom games.endfield.calc.damage.formula import (    calculate_bonus_attribute,    calculate_skill_curve,    has_fractional_part,    infer_decimal_mode,)from games.endfield.calc.damage.inverse import _is_decimal_data, fit_skill_formula_no_specialclass TestScalingMode(unittest.TestCase):
     """输入为真小数时 ×10 取整；纯整数（含 10.0）时直接 floor。"""
 
     def test_has_fractional_part(self):

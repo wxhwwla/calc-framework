@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """Windows 平台 WMI 补丁测试。"""
 
-from __future__ import annotations
-
-import sys
-import unittest
-from unittest.mock import MagicMock, patch
-
-
-class TestPlatformWin32Patch(unittest.TestCase):
+from __future__ import annotationsimport sysimport unittestfrom unittest.mock import MagicMock, patchclass TestPlatformWin32Patch(unittest.TestCase):
     def test_patch_imports_cleanly(self) -> None:
         if "utils.platform_win32_patch" in sys.modules:
             del sys.modules["utils.platform_win32_patch"]

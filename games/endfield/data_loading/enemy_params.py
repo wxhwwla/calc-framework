@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """插件敌人参数解析（敌方防御/抗性等）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.data_loading.plugin_registry import get_plugin_registry
-
-DEFAULT_ENEMY_DEFENSE = 100.0
+from __future__ import annotationsfrom typing import Anyfrom games.endfield.data_loading.plugin_registry import get_plugin_registryDEFAULT_ENEMY_DEFENSE = 100.0
 DEFAULT_ENEMY_RESISTANCE = 0.0
 DEFAULT_IGNORE_RESISTANCE = 0.0
 DEFAULT_IMBALANCE_VULNERABILITY = 1.3

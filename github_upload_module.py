@@ -51,7 +51,6 @@ import sys
 
 from dataclasses import dataclass
 
-from datetime import datetime
 
 from pathlib import Path
 
@@ -597,7 +596,7 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
 
         if code != 0:
 
-            print(f"[警告] 暂存恢复有冲突（本地文件已被远程版本覆盖），使用本地版本覆盖")
+            print("[警告] 暂存恢复有冲突（本地文件已被远程版本覆盖），使用本地版本覆盖")
 
             run_git(["checkout", "--theirs", "."], check=False)
 

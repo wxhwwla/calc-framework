@@ -6,14 +6,14 @@
 本模块保留原始 API 签名，作为终末地适配器的向后兼容层。
 """
 
-from __future__ import annotations
-
-import os
-from collections.abc import Sequence
-from typing import Any
-
-from calc_framework.inverse.base import FloorFormulaFitter
-
+from __future__ import annotations
+
+import os
+from collections.abc import Sequence
+from typing import Any
+
+from calc_framework.inverse.base import FloorFormulaFitter
+
 _FITTER = FloorFormulaFitter()
 
 

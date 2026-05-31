@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """迁移脚本 tools/migrate_weapon_skills_schema.py 行为测试。"""
 
-from __future__ import annotations
-
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from tools.migrate_weapon_skills_schema import migrate_file
-
-
-class TestMigrateWeaponSkillsSchemaTool(unittest.TestCase):
+from __future__ import annotationsimport jsonimport tempfileimport unittestfrom pathlib import Pathfrom tools.migrate_weapon_skills_schema import migrate_fileclass TestMigrateWeaponSkillsSchemaTool(unittest.TestCase):
     def test_migrate_file_dry_run_reports_changes_without_writing(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "weapons.json"

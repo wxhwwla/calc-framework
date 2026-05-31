@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import sqlite3
-import tempfile
-import unittest
-from pathlib import Path
-
-from games.endfield.gui_design.controls.search.qt_search_browser import (
-    RunInfo,
-    ScoreInfo,
-    format_clipboard_text,
-    format_loadout_line,
-    list_runs,
-    list_scores,
-    scan_search_output,
-)
-
-
+from __future__ import annotations
+
+import sqlite3
+import tempfile
+import unittest
+from pathlib import Path
+
+from games.endfield.gui_design.controls.search.qt_search_browser import (
+    RunInfo,
+    ScoreInfo,
+    format_clipboard_text,
+    format_loadout_line,
+    list_runs,
+    list_scores,
+    scan_search_output,
+)
+
+
 def _make_test_db(path: Path) -> None:
     """创建带测试数据的 SQLite 数据库。"""
     conn = sqlite3.connect(str(path))

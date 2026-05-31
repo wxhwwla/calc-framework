@@ -2,21 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """法术异常参数表测试。"""
 
-import unittest
-
-from games.endfield.calc.manual_buff.spell_params import (
-    SPELL_ABNORMAL_PARAM_ROWS,
-    SPELL_BURN_DURATION_SECONDS,
-    SPELL_BURST_RATIO,
-    SPELL_CROSS_ANOMALY_INITIAL_RATIO,
-    SPELL_LEVEL_COEFF_DIVISOR,
-    base_multiplier_for_formula,
-    calc_level_from_ui,
-    preview_level_multipliers,
-)
-
-
-class TestSpellAbnormalParams(unittest.TestCase):
+import unittestfrom games.endfield.calc.manual_buff.spell_params import (    SPELL_ABNORMAL_PARAM_ROWS,    SPELL_BURN_DURATION_SECONDS,    SPELL_BURST_RATIO,    SPELL_CROSS_ANOMALY_INITIAL_RATIO,    SPELL_LEVEL_COEFF_DIVISOR,    base_multiplier_for_formula,    calc_level_from_ui,    preview_level_multipliers,)class TestSpellAbnormalParams(unittest.TestCase):
     def test_param_rows_are_unique_and_complete(self) -> None:
         keys = [row["key"] for row in SPELL_ABNORMAL_PARAM_ROWS]
         self.assertEqual(len(keys), len(set(keys)))

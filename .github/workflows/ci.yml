@@ -1,5 +1,5 @@
 # 游戏包 CI — 终末地伤害计算器
-# 包路径：calc_engine/endfield/，测试在此目录下
+# 包路径：games/endfield/，测试在此目录下
 
 name: Game CI
 
@@ -8,13 +8,11 @@ on:
     branches: [main, master]
     paths:
       - "games/endfield/**"
-      - "calc_engine/endfield/**"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: [main, master]
     paths:
       - "games/endfield/**"
-      - "calc_engine/endfield/**"
 
 jobs:
   test:
@@ -36,6 +34,6 @@ jobs:
           python -m pip install -e games/endfield ".[dev]"
       - name: Run tests
         run: |
-          python -m pytest calc_engine/endfield/tests/ -q --cov=adapters.endfield.calculation --cov=adapters.endfield.data_loading --cov=adapters.endfield.tests.gui_design --cov-report=term-missing --cov-report=xml
+          python -m pytest games/endfield/tests/ -q --cov=games.endfield --cov-report=term-missing --cov-report=xml
       - name: Coverage summary
         run: python -m coverage report --fail-under=40

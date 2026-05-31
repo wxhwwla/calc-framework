@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """分级操作日志测试。"""
 
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from utils.operation_log import LogLevel, OperationLog, get_session_operation_log, reset_session_operation_log
-
-
-class TestOperationLog(unittest.TestCase):
+import jsonimport tempfileimport unittestfrom pathlib import Pathfrom utils.operation_log import LogLevel, OperationLog, get_session_operation_log, reset_session_operation_logclass TestOperationLog(unittest.TestCase):
     def setUp(self) -> None:
         reset_session_operation_log()
 

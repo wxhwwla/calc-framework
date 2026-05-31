@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """data.loader 严格加载与错误类型测试"""
 
-import unittest
-from unittest.mock import patch
-
-from games.endfield.data_loading import loader
-from games.endfield.data_loading.loader import DataLoadError, load_json_file
-
-
-class TestLoaderErrors(unittest.TestCase):
+import unittestfrom unittest.mock import patchfrom games.endfield.data_loading import loaderfrom games.endfield.data_loading.loader import DataLoadError, load_json_fileclass TestLoaderErrors(unittest.TestCase):
     def tearDown(self):
         loader.reload_characters()
         loader.reload_weapons()

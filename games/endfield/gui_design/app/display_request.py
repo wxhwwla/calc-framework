@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认刷新与右侧乘区展示的统一输入（LoadoutState + catalog + 武器候选）。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from games.endfield.data_loading.game_data_facade import GameDataFacade
-
-from .loadout_state import LoadoutState
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom games.endfield.data_loading.game_data_facade import GameDataFacadefrom .loadout_state import LoadoutState@dataclass(frozen=True)
 class DisplayRequest:
     """一次确认刷新所需的全部非 CTk 输入。"""
 

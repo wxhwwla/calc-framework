@@ -17,7 +17,7 @@ def load_local_name_sets(
     weapons_path: Path,
 ) -> dict[str, set[str]]:
     """返回 operator / weapon 的本地「名称」集合（已规范化键为原名，值存规范化）。"""
-    from bwiki_scout.names import normalize_name_for_match
+
 
     with characters_path.open(encoding="utf-8") as f:
         characters = json.load(f)

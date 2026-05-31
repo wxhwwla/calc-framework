@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, TypedDict
 
 # --- 实体类型常量 ---
 

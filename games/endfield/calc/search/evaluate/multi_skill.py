@@ -2,21 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索用的多技能加权评分配置（与快速预览共用倍率/次数语义）。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.multi_skill.optimizer import SkillScenario
-from games.endfield.calc.skills.segments import (
-    build_segment_scenarios_from_levels,
-    format_segment_count_label,
-    scenario_counts_for_eval,
-    segment_key,
-)
-
-
-def skill_multiplier_from_curve(
+from __future__ import annotationsfrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.multi_skill.optimizer import SkillScenariofrom games.endfield.calc.skills.segments import (    build_segment_scenarios_from_levels,    format_segment_count_label,    scenario_counts_for_eval,    segment_key,)def skill_multiplier_from_curve(
     char_data: dict[str, Any],
     field_name: str,
     level: int,

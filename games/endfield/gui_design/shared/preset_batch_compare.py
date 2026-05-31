@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """多条配装预设并行评估（供 GUI「多方案对比」）。"""
 
-from __future__ import annotations
-
-from collections.abc import Sequence
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.core.parallel_evaluate import evaluate_parallel
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
-from games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerTask, WeaponCandidate, evaluate_task
-from games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_task
-from games.endfield.calc.search.evaluate.context import SearchEvalContext
-from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from gui_design.app.loadout_preset import LoadoutPreset
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom collections.abc import Sequencefrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.core.parallel_evaluate import evaluate_parallelfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadoutfrom games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerTask, WeaponCandidate, evaluate_taskfrom games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_taskfrom games.endfield.calc.search.evaluate.context import SearchEvalContextfrom games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levelsfrom gui_design.app.loadout_preset import LoadoutPreset@dataclass(frozen=True)
 class PresetCompareRow:
     """单条预设的评估结果。"""
 

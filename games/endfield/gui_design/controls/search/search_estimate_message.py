@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索预估文案（无 CustomTkinter，供单测与 search_controls 共用）。"""
 
-from __future__ import annotations
-
-
-def compose_search_estimate_message(
+from __future__ import annotationsdef compose_search_estimate_message(
     *,
     has_char: bool,
     has_weapon: bool,

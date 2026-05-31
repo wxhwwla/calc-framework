@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """PanelGettersMixin 委托方法测试。"""
 
-from __future__ import annotations
-
-from unittest.mock import MagicMock
-
-from games.endfield.gui_design.panels.selection.qt_panel_getters_mixin import PanelGettersMixin
-
-
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from games.endfield.gui_design.panels.selection.qt_panel_getters_mixin import PanelGettersMixin
+
+
 def _make_mixin(
     *,
     has_skill_panel: bool = True,

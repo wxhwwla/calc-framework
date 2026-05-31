@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import patch
-
-from utils.optional_deps import (
-    GUI_OPTIONAL_DEPS,
-    OptionalDependency,
-    ensure_runtime_dependencies,
-    format_missing_gui_extras,
-    format_missing_lines,
-    format_missing_runtime_dependencies,
-    is_matplotlib_available,
-    matplotlib_install_hint,
-    missing_dependencies,
-    missing_runtime_packages,
-)
-
-
+from __future__ import annotations
+
+from unittest.mock import patch
+
+from utils.optional_deps import (
+    GUI_OPTIONAL_DEPS,
+    OptionalDependency,
+    ensure_runtime_dependencies,
+    format_missing_gui_extras,
+    format_missing_lines,
+    format_missing_runtime_dependencies,
+    is_matplotlib_available,
+    matplotlib_install_hint,
+    missing_dependencies,
+    missing_runtime_packages,
+)
+
+
 class TestIsMatplotlibAvailable:
     def test_returns_bool(self) -> None:
         assert isinstance(is_matplotlib_available(), bool)

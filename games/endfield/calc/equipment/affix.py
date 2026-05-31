@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备属性词条解析（面板词条 → 伤害效果 / 平铺属性）。"""
 
-from __future__ import annotations
-
-import re
-from typing import Any
-
-from games.endfield.calc.damage.engine import DamageEffect
-from games.endfield.calc.equipment.system import FourSlotLoadout, _infer_damage_types, _parse_percent_value
-
-_STAT_FLAT_RE = re.compile(r"^(力量|敏捷|智识|意志|攻击力|防御力|生命值)(\d+(?:\.\d+)?)(%?)$")
+from __future__ import annotationsimport refrom typing import Anyfrom games.endfield.calc.damage.engine import DamageEffectfrom games.endfield.calc.equipment.system import FourSlotLoadout, _infer_damage_types, _parse_percent_value_STAT_FLAT_RE = re.compile(r"^(力量|敏捷|智识|意志|攻击力|防御力|生命值)(\d+(?:\.\d+)?)(%?)$")
 _SKILL_BONUS_RE = re.compile(r"^(战技|连携技|终结技)伤害(?:加成)?(\d+(?:\.\d+)?)%?$")
 _DAMAGE_BONUS_RE = re.compile(r"^(物理|灼热|电磁|寒冷|自然|法术|超域)?伤害(?:加成)?(\d+(?:\.\d+)?)%?$")
 

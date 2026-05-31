@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from typing import Any
-
-from games.endfield.gui_design.presentation.display.character import (
-    build_character_attribute_lines,
-    build_character_skill_damage_type_lines,
-    build_weapon_attribute_lines,
-)
-
-
+from __future__ import annotations
+
+from typing import Any
+
+from games.endfield.gui_design.presentation.display.character import (
+    build_character_attribute_lines,
+    build_character_skill_damage_type_lines,
+    build_weapon_attribute_lines,
+)
+
+
 def _make_char_data() -> dict[str, Any]:
     return {
         "力量": [10, 20, 30],

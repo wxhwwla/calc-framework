@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-from unittest.mock import MagicMock, patch
-
-from games.endfield.gui_design.shared.preset_batch_compare import (
-    PresetCompareRow,
-    _empty_equipment,
-    _find_by_name,
-    _preset_label,
-    _resolve_equipment,
-    compare_presets_parallel,
-)
-
-
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from games.endfield.gui_design.shared.preset_batch_compare import (
+    PresetCompareRow,
+    _empty_equipment,
+    _find_by_name,
+    _preset_label,
+    _resolve_equipment,
+    compare_presets_parallel,
+)
+
+
 class TestFindByName:
     def test_found(self) -> None:
         rows = [{"名称": "角色A"}, {"名称": "角色B"}]

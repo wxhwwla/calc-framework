@@ -2,17 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """计算链新命名兼容测试。"""
 
-import unittest
-
-from games.endfield.calc.multiplicative_zones.attribute_zone import (
-    calculate_attribute_zones_with_details,
-)
-from games.endfield.calc.multiplicative_zones.final_attack_zone import (
-    calculate_final_attack_with_details,
-)
-
-
-class TestCalcChainNamingCompat(unittest.TestCase):
+import unittestfrom games.endfield.calc.multiplicative_zones.attribute_zone import (    calculate_attribute_zones_with_details,)from games.endfield.calc.multiplicative_zones.final_attack_zone import (    calculate_final_attack_with_details,)class TestCalcChainNamingCompat(unittest.TestCase):
     def test_attribute_zone_accepts_new_skill_names(self):
         char = {
             "主能力": "力量",

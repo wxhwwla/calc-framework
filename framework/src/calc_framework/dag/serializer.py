@@ -42,38 +42,50 @@ def _variable_to_dict(var: DAGVariable) -> dict[str, Any]:
     return d
 
 
-def _node_to_dict(node: NodeType) -> dict[str, Any]:
-    base: dict[str, Any] = {}
-    if isinstance(node, ConstNode):
-        base = {"type": "const", "value": node.value}
-    elif isinstance(node, VarNode):
-        base = {"type": "var", "path": node.path}
-    elif isinstance(node, UnaryNode):
-        base = {"type": "unary", "op": node.op, "input": node.input}
-    elif isinstance(node, BinaryNode):
-        base = {"type": "binary", "op": node.op, "lhs": node.lhs, "rhs": node.rhs}
-    elif isinstance(node, ConditionNode):
-        base = {"type": "condition", "cond": node.cond, "true_val": node.true_val, "false_val": node.false_val}
-    elif isinstance(node, ExprNode):
-        base = {"type": "expr", "expr": node.expr}
-        if node.inputs:
-            base["inputs"] = dict(node.inputs)
-    elif isinstance(node, UserInputNode):
-        base = {
-            "type": "user_input",
-            "default": node.default,
-            "min": node.min,
-            "max": node.max,
-            "step": node.step,
-        }
-    elif isinstance(node, CallNode):
-        base = {"type": "call", "subgraph": node.subgraph}
-        if node.bindings:
-            base["bindings"] = dict(node.bindings)
-    if node.label:
-        base["label"] = node.label
-    if node.description:
-        base["description"] = node.description
+def _ref_to_json(ref: str | NodeType) -> str | dict[str, Any]:
+    """将节点引用（字符串节点名或内联节点）转为可 JSON 序列化的值。"""
+    if isinstance(ref, str):
+        return ref
+    return _node_to_dict(ref)
+
+
+def _node_to_dict(node: NodeType) -> dict[str, Any]:
+    base: dict[str, Any] = {}
+    if isinstance(node, ConstNode):
+        base = {"type": "const", "value": node.value}
+    elif isinstance(node, VarNode):
+        base = {"type": "var", "path": node.path}
+    elif isinstance(node, UnaryNode):
+        base = {"type": "unary", "op": node.op, "input": _ref_to_json(node.input)}
+    elif isinstance(node, BinaryNode):
+        base = {"type": "binary", "op": node.op, "lhs": _ref_to_json(node.lhs), "rhs": _ref_to_json(node.rhs)}
+    elif isinstance(node, ConditionNode):
+        base = {
+            "type": "condition",
+            "cond": _ref_to_json(node.cond),
+            "true_val": _ref_to_json(node.true_val),
+            "false_val": _ref_to_json(node.false_val),
+        }
+    elif isinstance(node, ExprNode):
+        base = {"type": "expr", "expr": node.expr}
+        if node.inputs:
+            base["inputs"] = dict(node.inputs)
+    elif isinstance(node, UserInputNode):
+        base = {
+            "type": "user_input",
+            "default": node.default,
+            "min": node.min,
+            "max": node.max,
+            "step": node.step,
+        }
+    elif isinstance(node, CallNode):
+        base = {"type": "call", "subgraph": node.subgraph}
+        if node.bindings:
+            base["bindings"] = dict(node.bindings)
+    if node.label:
+        base["label"] = node.label
+    if node.description:
+        base["description"] = node.description
     return base
 
 

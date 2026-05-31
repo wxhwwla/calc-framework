@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认选择状态判定测试。"""
 
-import unittest
-
-from games.endfield.gui_design.presentation.display_lines import evaluate_display_state
-
-
-class TestConfirmSelectionState(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.presentation.display_lines import evaluate_display_stateclass TestConfirmSelectionState(unittest.TestCase):
     def test_both_valid_updates_zone(self):
         state = evaluate_display_state({"名称": "秋栗"}, {"名称": "坚城铸造者"})
         self.assertTrue(state["can_update_zone"])

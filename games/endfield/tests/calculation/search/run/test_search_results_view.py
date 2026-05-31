@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量遍历结果弹窗文案测试。"""
 
-import unittest
-
-from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.gui_design.presentation.search_results_lines import build_search_results_report_lines
-
-
-class TestSearchResultsReportLines(unittest.TestCase):
+import unittestfrom games.endfield.calc.loadout.optimizer import LoadoutScorefrom games.endfield.gui_design.presentation.search_results_lines import build_search_results_report_linesclass TestSearchResultsReportLines(unittest.TestCase):
     def test_report_lists_progress_and_top_loadouts(self):
         lines = build_search_results_report_lines(
             mode_label="单技能全量遍历",

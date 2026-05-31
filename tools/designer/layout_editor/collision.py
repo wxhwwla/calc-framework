@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import List, Tuple
 
-from PySide6.QtCore import QRectF
+
 from PySide6.QtWidgets import QGraphicsItem
 
 

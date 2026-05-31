@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """装备剪枝：按角色主/副能力与目标技能类型排序候选。"""
 
-from __future__ import annotations
-
-import re
-from collections.abc import Iterable
-from typing import Any
-
-from games.endfield.calc.equipment.affix import parse_equipment_affix_line
-
-_STAT_FLAT_IN_AFFIX = re.compile(r"^(力量|敏捷|智识|意志|攻击力)(\d+(?:\.\d+)?)(%?)$")
+from __future__ import annotationsimport refrom collections.abc import Iterablefrom typing import Anyfrom games.endfield.calc.equipment.affix import parse_equipment_affix_line_STAT_FLAT_IN_AFFIX = re.compile(r"^(力量|敏捷|智识|意志|攻击力)(\d+(?:\.\d+)?)(%?)$")
 
 
 def character_ability_attrs(character: dict[str, Any]) -> tuple[str, str]:

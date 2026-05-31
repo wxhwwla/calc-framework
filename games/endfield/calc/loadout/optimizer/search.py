@@ -37,19 +37,7 @@
 - OptimizerResult: 搜索结果汇总
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-
-from games.endfield.calc.core.top_n_tracker import TopNTracker
-from games.endfield.calc.damage.engine import DamageContext
-
-from .evaluate import evaluate_task
-from .tasks import enumerate_optimizer_tasks
-from .types import LoadoutScore, OptimizerConfig, OptimizerResult, WeaponCandidate
-
-
-def _select_top_n(scores: list[LoadoutScore], top_n: int) -> tuple[LoadoutScore, ...]:
+from __future__ import annotationsfrom collections.abc import Callablefrom games.endfield.calc.core.top_n_tracker import TopNTrackerfrom games.endfield.calc.damage.engine import DamageContextfrom .evaluate import evaluate_taskfrom .tasks import enumerate_optimizer_tasksfrom .types import LoadoutScore, OptimizerConfig, OptimizerResult, WeaponCandidatedef _select_top_n(scores: list[LoadoutScore], top_n: int) -> tuple[LoadoutScore, ...]:
     """从评分列表中选择前 N 个最优结果。
 
     Args:

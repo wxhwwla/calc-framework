@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单技能搜索编排（无头）测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.calc.search.plan.job import SingleSkillSearchJob
-from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
-
-
-class TestSingleSkillSearchRunner(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.calc.search.plan.job import SingleSkillSearchJobfrom games.endfield.calc.search.run.single_skill import estimate_single_skill_searchclass TestSingleSkillSearchRunner(unittest.TestCase):
     def _job(self) -> SingleSkillSearchJob:
         catalog = {
             "chest": [{"名称": "甲", "效果": [1], "三件套效果": []}],

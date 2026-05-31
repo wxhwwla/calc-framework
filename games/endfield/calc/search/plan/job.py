@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单技能全量搜索作业（无头组装，供 GUI / 测试复用）。"""
 
-from __future__ import annotations
-
-import hashlib
-from collections.abc import Sequence
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.data_loading.equipment_catalog import catalog_full_search_error
-
-from ..evaluate.multi_skill import MultiSkillSearchEval
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsimport hashlibfrom collections.abc import Sequencefrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadoutfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.data_loading.equipment_catalog import catalog_full_search_errorfrom ..evaluate.multi_skill import MultiSkillSearchEval@dataclass(frozen=True)
 class SingleSkillSearchJob:
     """全量单技能搜索所需上下文。"""
 

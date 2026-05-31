@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """仓库 .gitignore 应覆盖常见本地产物，且不含错误条目。"""
 
-import unittest
-
-from games.endfield.tests.conftest import REPO_ROOT
-
-GITIGNORE = REPO_ROOT / ".gitignore"
+import unittestfrom games.endfield.tests.conftest import REPO_ROOTGITIGNORE = REPO_ROOT / ".gitignore"
 
 # 必须忽略的片段（行为：这些路径不应被误提交）
 REQUIRED_PATTERNS = [

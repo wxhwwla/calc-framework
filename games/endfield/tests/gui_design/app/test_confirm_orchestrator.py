@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """确认编排与 DisplayRequest 接缝测试。"""
 
-import unittest
-from unittest.mock import MagicMock
-
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-from games.endfield.gui_design.app.display_request import build_display_request
-from games.endfield.gui_design.app.loadout_state import LoadoutState
-
-
-class TestConfirmOrchestrator(unittest.TestCase):
+import unittestfrom unittest.mock import MagicMockfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.gui_design.app.display_request import build_display_requestfrom games.endfield.gui_design.app.loadout_state import LoadoutStateclass TestConfirmOrchestrator(unittest.TestCase):
     def _loadout(self) -> LoadoutState:
         return LoadoutState(
             char_data={"名称": "测试"},

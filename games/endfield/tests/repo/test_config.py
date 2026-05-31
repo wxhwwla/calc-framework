@@ -4,23 +4,7 @@
 属性配置模块单元测试
 """
 
-import unittest
-
-from games.endfield.calc.core.config import (
-    CHARACTER_NORMAL_ATTRS,
-    CHARACTER_SKILL_ATTRS,
-    WEAPON_BASE_ATTRS,
-    WEAPON_BONUS_ATTR_SUFFIX,
-    get_attribute_category,
-    get_default_growth_params,
-    is_character_attribute,
-    is_skill_attribute,
-    is_weapon_attribute,
-    validate_growth_params,
-)
-
-
-class TestConfigConstants(unittest.TestCase):
+import unittestfrom games.endfield.calc.core.config import (    CHARACTER_NORMAL_ATTRS,    CHARACTER_SKILL_ATTRS,    WEAPON_BASE_ATTRS,    WEAPON_BONUS_ATTR_SUFFIX,    get_attribute_category,    get_default_growth_params,    is_character_attribute,    is_skill_attribute,    is_weapon_attribute,    validate_growth_params,)class TestConfigConstants(unittest.TestCase):
     """测试配置常量"""
 
     def test_character_normal_attrs(self):

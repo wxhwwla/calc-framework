@@ -1,26 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
-
-
-from unittest.mock import MagicMock, patch
-
-
+from unittest.mock import MagicMock
 
 from utils.gui.window import (
-
     _geometry_fill_screen,
-
     _try_zoomed_attribute,
-
     _try_zoomed_state,
-
     apply_startup_maximized,
-
 )
-
-
-
 
 
 class TestTryZoomedState:

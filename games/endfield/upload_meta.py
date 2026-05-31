@@ -6,12 +6,7 @@
 说明全文见 please_read_me.py 中的 UPLOAD_WORKFLOW。
 """
 
-from __future__ import annotations
-
-import re
-from pathlib import Path
-
-# 写在 please_read_me.py 文件末尾的标记（推送成功后删除整块）
+from __future__ import annotationsimport refrom pathlib import Path# 写在 please_read_me.py 文件末尾的标记（推送成功后删除整块）
 SUMMARY_BEGIN = "# --- UPLOAD_SUMMARY ---"
 SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
 

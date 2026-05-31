@@ -5,16 +5,7 @@
 保留原始增量算法，组件（TopNTracker / SearchCancelToken）来自框架。
 """
 
-from __future__ import annotations
-
-import time
-from collections.abc import Callable, Iterable
-from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
-from typing import TypeVar
-
-from calc_framework.search import SearchCancelToken, TopNTracker
-
-T = TypeVar("T")
+from __future__ import annotationsimport timefrom collections.abc import Callable, Iterablefrom concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, waitfrom typing import TypeVarfrom calc_framework.search import SearchCancelToken, TopNTrackerT = TypeVar("T")
 R = TypeVar("R")
 
 

@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器技能/词条展示文案（无 CustomTkinter）。"""
 
-from __future__ import annotations
-
-import re
-
-_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]+?\+)')
+from __future__ import annotationsimport re_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]+?\+)')
 _SIMPLE_EFFECT_NAME_RE = re.compile(r'^[^\s，。；:：,\.()（）"“”\[\]【】]+?\+$')
 
 

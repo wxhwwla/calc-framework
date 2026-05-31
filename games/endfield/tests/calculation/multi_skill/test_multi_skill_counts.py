@@ -2,19 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """多技能次数加权测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import DamageContext, DamageEffect
-from games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draft
-from games.endfield.calc.loadout.optimizer import WeaponCandidate
-from games.endfield.calc.multi_skill.optimizer import (
-    MultiSkillConfig,
-    SkillScenario,
-    optimize_multi_skill_loadouts,
-)
-
-
-class TestMultiSkillCounts(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import DamageContext, DamageEffectfrom games.endfield.calc.equipment.system import build_runtime_equipment_from_wiki_draftfrom games.endfield.calc.loadout.optimizer import WeaponCandidatefrom games.endfield.calc.multi_skill.optimizer import (    MultiSkillConfig,    SkillScenario,    optimize_multi_skill_loadouts,)class TestMultiSkillCounts(unittest.TestCase):
     def _catalog(self):
         return {
             "chest": [

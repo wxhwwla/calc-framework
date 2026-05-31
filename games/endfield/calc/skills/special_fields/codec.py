@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
-from __future__ import annotations
-
-import re
-from typing import Any
-
-SPECIAL_FIELD_KEYS: tuple[str, ...] = ("特殊能力1", "特殊能力2")
+from __future__ import annotationsimport refrom typing import AnySPECIAL_FIELD_KEYS: tuple[str, ...] = ("特殊能力1", "特殊能力2")
 LEGACY_SPECIAL_KEY = "特殊能力"
 
 _MAX_STACK_PATTERNS: tuple[re.Pattern[str], ...] = (

@@ -37,22 +37,7 @@
 - OptimizerResult: 搜索结果汇总
 """
 
-from __future__ import annotations
-
-from games.endfield.calc.equipment.prune import sort_equipment_catalog_by_priority
-from games.endfield.calc.loadout.slot_search import (
-    count_loadout_combinations_for_selection,
-)
-
-from .catalog import (
-    _apply_equipment_filter,
-    _is_equipment_beneficial,
-    _resolve_config_fixed_loadout,
-)
-from .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidate
-
-
-def build_optimizer_search_plan(
+from __future__ import annotationsfrom games.endfield.calc.equipment.prune import sort_equipment_catalog_by_priorityfrom games.endfield.calc.loadout.slot_search import (    count_loadout_combinations_for_selection,)from .catalog import (    _apply_equipment_filter,    _is_equipment_beneficial,    _resolve_config_fixed_loadout,)from .types import OptimizerConfig, OptimizerSearchPlan, WeaponCandidatedef build_optimizer_search_plan(
     *,
     weapons: list[WeaponCandidate],
     equipment_catalog: dict[str, list[dict]],

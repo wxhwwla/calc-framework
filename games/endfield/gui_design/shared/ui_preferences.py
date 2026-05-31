@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GUI 偏好读取：启动页策略与上次页面。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-from typing import Any
-
-from utils.path_utils import get_application_dir
-
-UI_PREFERENCES_FILE = "ui_preferences.json"
+from __future__ import annotationsimport jsonfrom pathlib import Pathfrom typing import Anyfrom utils.path_utils import get_application_dirUI_PREFERENCES_FILE = "ui_preferences.json"
 PAGE_MAIN = "计算页"
 PAGE_ADVANCED = "高级页"
 STARTUP_MODE_ALWAYS_MAIN = "always_main"

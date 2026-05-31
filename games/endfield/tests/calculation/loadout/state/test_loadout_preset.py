@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配装预设导入导出测试。"""
 
-import json
-import unittest
-
-from games.endfield.gui_design.app.loadout_preset import (
-    PRESET_SCHEMA,
-    LoadoutPreset,
-    export_preset_json,
-    import_preset_json,
-)
-
-
-class TestLoadoutPreset(unittest.TestCase):
+import jsonimport unittestfrom games.endfield.gui_design.app.loadout_preset import (    PRESET_SCHEMA,    LoadoutPreset,    export_preset_json,    import_preset_json,)class TestLoadoutPreset(unittest.TestCase):
     def test_roundtrip_preserves_core_fields(self) -> None:
         preset = LoadoutPreset(
             char_name="测试干员",

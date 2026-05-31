@@ -6,32 +6,7 @@
 在基础 ``runs`` / ``processed`` 表之上增加端特有 ``scores`` 表。
 """
 
-from __future__ import annotations
-
-import time
-from collections.abc import Callable, Iterator
-from dataclasses import dataclass
-from pathlib import Path
-
-from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
-
-from games.endfield.calc.core.top_n_tracker import TopNTracker
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import (
-    LoadoutScore,
-    OptimizerConfig,
-    OptimizerTask,
-    WeaponCandidate,
-    build_optimizer_search_plan,
-    evaluate_task,
-    iter_optimizer_tasks,
-)
-
-from ..evaluate.context import SearchEvalContext
-from ..run.cancel import SearchCancelToken
-from ..run.parallel import run_bounded_parallel
-
-# 续跑进度批量写入条数
+from __future__ import annotationsimport timefrom collections.abc import Callable, Iteratorfrom dataclasses import dataclassfrom pathlib import Pathfrom calc_framework.search.persist import SearchRunStore as BaseSearchRunStorefrom games.endfield.calc.core.top_n_tracker import TopNTrackerfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import (    LoadoutScore,    OptimizerConfig,    OptimizerTask,    WeaponCandidate,    build_optimizer_search_plan,    evaluate_task,    iter_optimizer_tasks,)from ..evaluate.context import SearchEvalContextfrom ..run.cancel import SearchCancelTokenfrom ..run.parallel import run_bounded_parallel# 续跑进度批量写入条数
 PROCESSED_BATCH_SIZE = 500
 
 

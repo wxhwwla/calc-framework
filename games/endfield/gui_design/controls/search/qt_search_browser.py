@@ -2,31 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """历史搜索记录浏览对话框（search_output/ SQLite 快速搜装）。"""
 
-from __future__ import annotations
-
-import sqlite3
-from collections.abc import Sequence
-from dataclasses import dataclass
-from pathlib import Path
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QClipboard, QColor, QFont
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QDialog,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
-    QPushButton,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
-)
-
-from utils.app_paths import default_search_output_root
-
-_DARK_BG = "#1E1E1E"
+from __future__ import annotationsimport sqlite3from collections.abc import Sequencefrom dataclasses import dataclassfrom pathlib import Pathfrom PySide6.QtCore import Qtfrom PySide6.QtGui import QClipboard, QColor, QFontfrom PySide6.QtWidgets import (    QAbstractItemView,    QDialog,    QHBoxLayout,    QHeaderView,    QLabel,    QPushButton,    QTreeWidget,    QTreeWidgetItem,    QVBoxLayout,    QWidget,)from utils.app_paths import default_search_output_root_DARK_BG = "#1E1E1E"
 _DARK_FG = "#D1D1D1"
 _ACCENT = "#2B6CB6"
 _SCORE_FG = QColor("#9BB9E0")

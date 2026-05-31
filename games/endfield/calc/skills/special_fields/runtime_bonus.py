@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from .name_utils import _special_name_matches
-from .slots_io import read_weapon_special_slots
-
-
-def special_pick_bonus(
+from __future__ import annotationsfrom typing import Anyfrom .name_utils import _special_name_matchesfrom .slots_io import read_weapon_special_slotsdef special_pick_bonus(
     curve: list[float],
     max_stack: int,
     *,

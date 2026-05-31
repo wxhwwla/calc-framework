@@ -6,19 +6,7 @@
 统一「组装 job / OptimizerConfig / 预估」接缝，避免 GUI 与 runner 各写一份逻辑。
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Any
-
-from games.endfield.calc.loadout.optimizer import OptimizerConfig, optimizer_config_for_character
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-
-from ..evaluate.multi_skill import build_multi_skill_search_eval
-from .job import SingleSkillSearchJob, prepare_single_skill_search_job
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsfrom dataclasses import dataclassfrom typing import Anyfrom games.endfield.calc.loadout.optimizer import OptimizerConfig, optimizer_config_for_characterfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom ..evaluate.multi_skill import build_multi_skill_search_evalfrom .job import SingleSkillSearchJob, prepare_single_skill_search_job@dataclass(frozen=True)
 class SearchJobInputs:
     """从 GUI 或测试传入的搜索作业输入（不含 Tk）。"""
 

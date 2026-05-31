@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单段伤害预览文案测试。"""
 
-import json
-import unittest
-from pathlib import Path
-
-from games.endfield.calc.damage.engine import ZONE_ORDER
-from games.endfield.gui_design.presentation.display_lines import build_single_hit_damage_lines
-from games.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
-
-_CHARACTERS_JSON = DATA_DIR / "characters.json"
+import jsonimport unittestfrom pathlib import Pathfrom games.endfield.calc.damage.engine import ZONE_ORDERfrom games.endfield.gui_design.presentation.display_lines import build_single_hit_damage_linesfrom games.endfield.tests.conftest import DATA_DIR_CHARACTERS_JSON = DATA_DIR / "characters.json"
 _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 

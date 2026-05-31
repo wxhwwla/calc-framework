@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索 GUI 参数解析测试。"""
 
-import unittest
-
-from games.endfield.gui_design.controls.search.search_settings import (
-    format_parallel_workers_help,
-    format_search_progress_text,
-    get_cpu_parallel_info,
-    resolve_parallel_workers,
-    resolve_top_n,
-)
-
-
-class TestSearchSettings(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.controls.search.search_settings import (    format_parallel_workers_help,    format_search_progress_text,    get_cpu_parallel_info,    resolve_parallel_workers,    resolve_top_n,)class TestSearchSettings(unittest.TestCase):
     def test_resolve_parallel_workers_auto_and_numeric(self):
         self.assertEqual(resolve_parallel_workers("自动 (7 线程)", cpu_count=8), 7)
         self.assertEqual(resolve_parallel_workers("4", cpu_count=8), 4)

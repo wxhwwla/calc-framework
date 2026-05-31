@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """手动场外 buff 数据模型。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-MANUAL_BUFF_ZONE_OPTIONS: tuple[tuple[str, str], ...] = (
+from __future__ import annotationsfrom dataclasses import dataclassMANUAL_BUFF_ZONE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("暴击率", "crit_rate"),
     ("暴击伤害", "crit_damage"),
     ("伤害类型加成", "damage_bonus_type"),

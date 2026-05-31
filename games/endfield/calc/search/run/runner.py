@@ -8,24 +8,7 @@
 ``run_with_engine()`` 使用框架泛型 ``SearchEngine`` 接口（Phase 3 抽象）。
 """
 
-from __future__ import annotations
-
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any
-
-from calc_framework.search import SearchConfig, SearchEngine
-from calc_framework.search.result import SearchResult
-
-from games.endfield.calc.damage.engine import DamageContext
-from games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerConfig, OptimizerTask, WeaponCandidate
-
-from ..evaluate.context import SearchEvalContext
-from .cancel import SearchCancelToken
-from .session import SearchSessionResult, run_search_session
-
-
-class SearchRunner:
+from __future__ import annotationsfrom collections.abc import Callablefrom pathlib import Pathfrom typing import Anyfrom calc_framework.search import SearchConfig, SearchEnginefrom calc_framework.search.result import SearchResultfrom games.endfield.calc.damage.engine import DamageContextfrom games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerConfig, OptimizerTask, WeaponCandidatefrom ..evaluate.context import SearchEvalContextfrom .cancel import SearchCancelTokenfrom .session import SearchSessionResult, run_search_sessionclass SearchRunner:
     """全量/MVP 搜索执行门面（深模块接口）。"""
 
     @staticmethod

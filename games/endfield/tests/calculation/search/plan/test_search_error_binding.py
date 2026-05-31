@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索失败回调须正确绑定异常文案（回归：except 变量被清除）。"""
 
-import unittest
-
-
-class TestSearchErrorBinding(unittest.TestCase):
+import unittestclass TestSearchErrorBinding(unittest.TestCase):
     def test_nested_default_arg_preserves_exception_message(self):
         captured: list[str] = []
 

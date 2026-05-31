@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """build.py 看门狗：心跳与超时终止。"""
 
-from __future__ import annotations
-
-import unittest
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-from main_build import _read_int_env, _run_with_watchdog
-
-
-class TestBuildWatchdog(unittest.TestCase):
+from __future__ import annotationsimport unittestfrom pathlib import Pathfrom unittest.mock import MagicMock, patchfrom main_build import _read_int_env, _run_with_watchdogclass TestBuildWatchdog(unittest.TestCase):
     def test_read_int_env_default(self) -> None:
         self.assertEqual(_read_int_env("ENDFIELD_TEST_UNSET_VAR", 42), 42)
 

@@ -2,22 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """可选依赖探测与提示文案。"""
 
-from __future__ import annotations
-
-import unittest
-
-from utils.optional_deps import (
-    GUI_OPTIONAL_DEPS,
-    format_missing_gui_extras,
-    format_missing_runtime_dependencies,
-    is_matplotlib_available,
-    matplotlib_install_hint,
-    missing_dependencies,
-    missing_runtime_packages,
-)
-
-
-class TestOptionalDeps(unittest.TestCase):
+from __future__ import annotationsimport unittestfrom utils.optional_deps import (    GUI_OPTIONAL_DEPS,    format_missing_gui_extras,    format_missing_runtime_dependencies,    is_matplotlib_available,    matplotlib_install_hint,    missing_dependencies,    missing_runtime_packages,)class TestOptionalDeps(unittest.TestCase):
     def test_matplotlib_hint_non_empty(self) -> None:
         self.assertIn("matplotlib", matplotlib_install_hint())
 

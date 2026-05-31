@@ -6,13 +6,7 @@
 与旧版「遍历件数 1–4」（从护甲起连续开放遍历格）不同；``varying_slot_mask_from_count`` 仅保留给旧测试/迁移。
 """
 
-from __future__ import annotations
-
-from collections.abc import Iterator
-from dataclasses import dataclass
-from itertools import product
-
-SLOT_KEYS = ("chest", "gloves", "accessory_a", "accessory_b")
+from __future__ import annotationsfrom collections.abc import Iteratorfrom dataclasses import dataclassfrom itertools import productSLOT_KEYS = ("chest", "gloves", "accessory_a", "accessory_b")
 
 
 @dataclass(frozen=True)

@@ -2,27 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """发布目录布局：exe 与游戏数据分文件，供打包脚本与 path_utils 共用约定。"""
 
-import json
-import shutil
-import sys
-import tempfile
-import unittest
-from pathlib import Path
-from unittest.mock import patch
-
-from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
-from release_bundle.release_layout import (
-    LICENSE_FILES,
-    RELEASE_DATA_FILES,
-    release_dir_from_dist,
-    stage_release_folder,
-    target_app_name,
-)
-from games.endfield.tests.conftest import PKG_ROOT, REPO_ROOT, GAMES_END
-from utils.path_utils import get_resource_path
-
-
-class TestReleaseLayout(unittest.TestCase):
+import jsonimport shutilimport sysimport tempfileimport unittestfrom pathlib import Pathfrom unittest.mock import patchfrom games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATHfrom games.endfield.tests.conftest import GAMES_END, REPO_ROOTfrom release_bundle.release_layout import (    LICENSE_FILES,    RELEASE_DATA_FILES,    release_dir_from_dist,    stage_release_folder,    target_app_name,)from utils.path_utils import get_resource_pathclass TestReleaseLayout(unittest.TestCase):
     def test_pypi_packaging_not_shadowed_when_project_on_path(self):
         import importlib.util
 

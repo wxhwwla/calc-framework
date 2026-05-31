@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QThread, Qt, Signal
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog,
@@ -176,7 +176,7 @@ class _DetectionDialog(QDialog):
                     ocr = OCRRecognizer()
                     ocr_result = ocr.recognize(r.image_path)
                     if ocr_result.texts:
-                        lines.append(f"  OCR:")
+                        lines.append("  OCR:")
                         for t in ocr_result.texts[:15]:
                             lines.append(f"    [{t.confidence:.2f}] {t.text}")
                 except Exception as e:
@@ -191,7 +191,7 @@ class _DetectionDialog(QDialog):
                 lines.append(f"→ 识别: {_summary_from_preset(self._mapped_preset)}")
                 self._apply_btn.setEnabled(True)
             else:
-                lines.append(f"\n→ 未能识别出角色和武器名称")
+                lines.append("\n→ 未能识别出角色和武器名称")
 
         except ImportError as e:
             lines.append(f"[错误] 导入失败: {e}\n请运行: pip install torchvision easyocr")
@@ -242,10 +242,11 @@ class _DownloadThread(QThread):
 
     def run(self) -> None:
         try:
-            from tools.ocr.download_models import REQUIRED_MODELS
-            from urllib.request import urlopen, Request
-            from pathlib import Path
             import zipfile
+            from pathlib import Path
+            from urllib.request import Request, urlopen
+
+            from tools.ocr.download_models import REQUIRED_MODELS
 
             cache = Path.home() / ".EasyOCR" / "model"
             cache.mkdir(parents=True, exist_ok=True)

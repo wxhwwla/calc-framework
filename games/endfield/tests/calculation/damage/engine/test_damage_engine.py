@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """单段伤害引擎行为测试。"""
 
-import unittest
-
-from games.endfield.calc.damage.engine import (
-    DamageContext,
-    DamageEffect,
-    calculate_single_hit_damage,
-)
-
-
-class TestDamageEngine(unittest.TestCase):
+import unittestfrom games.endfield.calc.damage.engine import (    DamageContext,    DamageEffect,    calculate_single_hit_damage,)class TestDamageEngine(unittest.TestCase):
     def test_single_hit_contains_all_zones_with_non_crit_default(self):
         result = calculate_single_hit_damage(
             DamageContext(

@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """WeaponSkillSelection 接缝测试。"""
 
-import unittest
-
-from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-
-_SAMPLE_WEAPON = {
+import unittestfrom games.endfield.calc.skills.weapon_selection import WeaponSkillSelection_SAMPLE_WEAPON = {
     "名称": "示例武器",
     "normal_skills": [
         {"zone": 1, "effect": "敏捷+", "curve": [1.0] * 9},

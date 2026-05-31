@@ -2,14 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""
 
-from __future__ import annotations
-
-import re
-from typing import Any
-
-from .codec import LEGACY_SPECIAL_KEY, SPECIAL_FIELD_KEYS
-
-_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]+?\+)')
+from __future__ import annotationsimport refrom typing import Anyfrom .codec import LEGACY_SPECIAL_KEY, SPECIAL_FIELD_KEYS_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]+?\+)')
 
 
 def weapon_special_field_keys(weapon: dict[str, Any]) -> frozenset[str]:

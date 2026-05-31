@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据编辑页签：新增/编辑/删除角色、武器、装备。"""
 
-from __future__ import annotations
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
-
-_STYLE = """
+from __future__ import annotationsfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget_STYLE = """
     QTextEdit { background-color: #1E1E1E; color: #D1D1D1;
                 border: 1px solid #464646; border-radius: 4px;
                 font-family: Consolas, monospace; font-size: 12px; }

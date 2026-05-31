@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索相关回调(SearchMixin,混合入 QtDamageApp)。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-from typing import Any
-
-from PySide6.QtCore import QThread
-from PySide6.QtWidgets import QFileDialog, QMessageBox
-
-from gui_design.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
-from gui_design.presentation.search_results_lines import build_search_results_report_lines
-from utils.app_paths import allocate_search_run_directory, default_search_output_root
-
-
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from PySide6.QtCore import QThread
+from PySide6.QtWidgets import QFileDialog, QMessageBox
+from utils.app_paths import allocate_search_run_directory, default_search_output_root
+
+from gui_design.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
+from gui_design.presentation.search_results_lines import build_search_results_report_lines
+
+
 class SearchMixin:
     """全量搜索线程、进度、结果回调。"""
 
@@ -50,8 +50,9 @@ class SearchMixin:
         )
 
     def _on_mvp_search(self) -> None:
-        from games.endfield.calc.search.plan.controller import prepare_search_job
-        from games.endfield.calc.search.run.cancel import SearchCancelToken
+        from games.endfield.calc.search.plan.controller import prepare_search_job
+        from games.endfield.calc.search.run.cancel import SearchCancelToken
+
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
@@ -78,11 +79,13 @@ class SearchMixin:
         self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
 
     def _on_full_search(self) -> None:
-        from games.endfield.calc.search.plan.controller import prepare_search_job
-        from games.endfield.calc.search.run.cancel import SearchCancelToken
-        from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
-        from gui_design.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
-        from utils.app_paths import allocate_search_run_directory
+        from utils.app_paths import allocate_search_run_directory
+
+        from games.endfield.calc.search.plan.controller import prepare_search_job
+        from games.endfield.calc.search.run.cancel import SearchCancelToken
+        from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
+        from gui_design.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
+
 
         inputs = self._build_search_job_inputs()
         if inputs is None:

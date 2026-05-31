@@ -8,44 +8,7 @@ PySide6 后端 widget adapter。
 使双后端代码共用同一套导入路径。迁移完成后可改为直接 ``from PySide6.QtWidgets import ...``。
 """
 
-from __future__ import annotations
-
-from PySide6.QtGui import QFont as QtFont
-from PySide6.QtWidgets import (
-    QCheckBox as QtCheckBox,
-)
-from PySide6.QtWidgets import (
-    QComboBox as QtOptionMenu,
-)
-from PySide6.QtWidgets import (
-    QDialog as QtToplevel,
-)
-from PySide6.QtWidgets import (
-    QLabel as QtLabel,
-)
-from PySide6.QtWidgets import (
-    QLineEdit as QtEntry,
-)
-from PySide6.QtWidgets import (
-    QPushButton as QtButton,
-)
-from PySide6.QtWidgets import (
-    QScrollArea as QtScrollableFrame,
-)
-from PySide6.QtWidgets import (
-    QSlider as QtSlider,
-)
-from PySide6.QtWidgets import (
-    QTabWidget as QtTabview,
-)
-from PySide6.QtWidgets import (
-    QTextEdit as QtTextbox,
-)
-from PySide6.QtWidgets import (
-    QWidget as QtFrame,
-)
-
-# 统一命名（与 ctk_factory 保持一致，让后端无关代码无缝切换）
+from __future__ import annotationsfrom PySide6.QtGui import QFont as QtFontfrom PySide6.QtWidgets import (    QCheckBox as QtCheckBox,)from PySide6.QtWidgets import (    QComboBox as QtOptionMenu,)from PySide6.QtWidgets import (    QDialog as QtToplevel,)from PySide6.QtWidgets import (    QLabel as QtLabel,)from PySide6.QtWidgets import (    QLineEdit as QtEntry,)from PySide6.QtWidgets import (    QPushButton as QtButton,)from PySide6.QtWidgets import (    QScrollArea as QtScrollableFrame,)from PySide6.QtWidgets import (    QSlider as QtSlider,)from PySide6.QtWidgets import (    QTabWidget as QtTabview,)from PySide6.QtWidgets import (    QTextEdit as QtTextbox,)from PySide6.QtWidgets import (    QWidget as QtFrame,)# 统一命名（与 ctk_factory 保持一致，让后端无关代码无缝切换）
 CTkFrame = QtFrame
 CTkLabel = QtLabel
 CTkButton = QtButton

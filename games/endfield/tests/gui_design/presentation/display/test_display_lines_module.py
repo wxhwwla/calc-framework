@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """display_lines 模块：无 PySide6 依赖、技能解析可导入。"""
 
-import unittest
-
-from games.endfield.gui_design.presentation import display_lines
-
-
-class TestDisplayLinesModule(unittest.TestCase):
+import unittestfrom games.endfield.gui_design.presentation import display_linesclass TestDisplayLinesModule(unittest.TestCase):
     def test_module_has_no_customtkinter_import(self) -> None:
         from gui_design.presentation import display_lines as display_lines_impl
 

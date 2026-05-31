@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索相关 GUI 参数解析（可单测）。"""
 
-from __future__ import annotations
-
-import os
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
+from __future__ import annotationsimport osfrom dataclasses import dataclass@dataclass(frozen=True)
 class CpuParallelInfo:
     """本机并行能力摘要（供 GUI 展示）。"""
 
