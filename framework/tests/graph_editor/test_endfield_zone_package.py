@@ -12,14 +12,8 @@ from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
 from calc_framework.graph_editor.package_manager import PackageManager
 from calc_framework.graph_editor.registry import (
     _composite_registry,
-    create_default_node,
     get_package_manager,
     register_composite_type,
-)
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphNode,
-    NodeConfig,
 )
 from calc_framework.graph_editor.serializer import document_from_json
 from calc_framework.dag.engine import evaluate_graph

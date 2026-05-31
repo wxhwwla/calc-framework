@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """节点拖拽、删除、左侧面板测试。"""
 
-import pytest
-from PySide6.QtWidgets import QGraphicsScene
 
 from calc_framework.graph_editor.schema import GraphNode
 from calc_framework.graph_editor.graph_editor_widget import (
     GraphEditorWidget,
-    NodeItem,
 )
 from calc_framework.graph_editor.ports import PortDirection, PortItem
 

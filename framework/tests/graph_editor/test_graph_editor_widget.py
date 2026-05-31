@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """GraphEditorWidget 画布组件测试。"""
 
-import pytest
 from calc_framework.graph_editor.schema import GraphNode, NodeConfig
 from calc_framework.graph_editor.graph_editor_widget import (
     GraphScene,

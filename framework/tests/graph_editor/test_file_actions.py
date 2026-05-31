@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from PySide6.QtWidgets import QGraphicsScene
 
 from calc_framework.graph_editor.schema import (
     GraphDocument,

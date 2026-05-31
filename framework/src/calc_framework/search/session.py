@@ -19,7 +19,7 @@ from typing import Any, Generic, TypeVar
 from calc_framework.search.cancel import SearchCancelToken
 from calc_framework.search.engine import SearchConfig, SearchEngine
 from calc_framework.search.persist import SearchRunStore
-from calc_framework.search.result import ParallelProgress, SearchResult
+from calc_framework.search.result import SearchResult
 
 C = TypeVar("C")
 R = TypeVar("R")

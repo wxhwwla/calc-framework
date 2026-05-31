@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """左侧节点面板测试。"""
 
-import pytest
-from PySide6.QtCore import QPoint, Qt
-from PySide6.QtWidgets import QApplication
 
 from calc_framework.graph_editor.node_panel import NodePanel
-from calc_framework.graph_editor.registry import get_node_type_ids
 
 
 class TestNodePanel:

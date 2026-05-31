@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QWidget,
-    QSizePolicy,
 )
 
 from calc_framework.dag.engine import DAGResult

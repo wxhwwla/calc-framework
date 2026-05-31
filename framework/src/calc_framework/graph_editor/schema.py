@@ -1,6 +1,5 @@
 """可视化公式计算图 — 数据模型定义。"""
 
-from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
 

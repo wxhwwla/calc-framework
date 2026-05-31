@@ -9,6 +9,14 @@
 | `bwiki_scout/` | BWIKI 侦察、对比、同步到本地 JSON/seed | 见下表 |
 | `audit/` | 一次性审计 Issue 脚本 | `.\tools\audit\create_audit_issues.ps1` |
 
+**仓库维护工具**（直接在 `[根]` 执行）：
+
+| 命令 | 用途 | 说明 |
+|------|------|------|
+| `python tools/check_layout.py` | 仓库布局门禁（目录宽度、文件行数） | 见 `check_layout.py` |
+| `python tools/check_code_origin.py` | AI 代码来源/版权检测 | 四种检测器，支持 `--ci` 模式 |
+| `python devtool.py check-origin` | 同上，通过 devtool 入口 | `--ci --skip git-diff` 等参数透明传递 |
+
 **`bwiki_scout/` 常用命令**（均在 `[根]` 执行）：
 
 | 步骤 | 命令 | 说明 |

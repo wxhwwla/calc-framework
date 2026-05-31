@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 """拖拽连线交互测试。"""
 
-import pytest
 from PySide6.QtCore import QPointF, Qt
-from PySide6.QtWidgets import QGraphicsScene
 
 from calc_framework.graph_editor.schema import GraphNode
 from calc_framework.graph_editor.graph_editor_widget import (
     GraphEditorWidget,
-    GraphScene,
-    NodeItem,
 )
 from calc_framework.graph_editor.ports import PortDirection, PortItem
-from calc_framework.graph_editor.wire import WireItem
 
 
 def _find_port(port_list: list[PortItem], direction: PortDirection, index: int = 0) -> PortItem:
@@ -36,7 +31,6 @@ class TestWireCreation:
 
     def test_wire_follows_node_when_moved(self, qapp) -> None:
         """移动节点时连线路径跟随更新。"""
-        from PySide6.QtCore import QPointF
 
         w = GraphEditorWidget()
         w.add_graph_node(GraphNode(id="src", type="const", position={"x": 0, "y": 0}))

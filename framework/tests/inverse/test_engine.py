@@ -21,7 +21,7 @@ _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from calc_framework.inverse.base import FloorFormulaFitter, FitResult
+from calc_framework.inverse.base import FloorFormulaFitter
 from calc_framework.inverse.engine import InverseEngine
 from calc_framework.inverse.registry import FormulaType, Registry, registry
 

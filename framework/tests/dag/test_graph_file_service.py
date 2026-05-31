@@ -4,7 +4,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 from calc_framework.dag.service import DAGService
 from calc_framework.graph_editor.schema import (
     GraphDocument,
@@ -13,7 +12,6 @@ from calc_framework.graph_editor.schema import (
     GraphNode,
     NodeConfig,
     SectionDef,
-    validate,
 )
 from calc_framework.graph_editor.serializer import document_to_json
 

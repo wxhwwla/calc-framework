@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """端到端验证：用真实伤害公式验证 GraphCompiler + DAGService 流水线。"""
 
-import json
 import tempfile
 from pathlib import Path
 

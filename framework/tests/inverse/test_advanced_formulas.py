@@ -9,17 +9,14 @@
 
 from __future__ import annotations
 
-import math
 import sys
 from pathlib import Path
 
-import pytest
 
 _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from calc_framework.inverse.base import FitResult
 from calc_framework.inverse.engine import InverseEngine
 from calc_framework.inverse.registry import registry
 

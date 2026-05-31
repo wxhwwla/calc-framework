@@ -7,7 +7,6 @@ import tempfile
 import time
 from pathlib import Path
 
-import pytest
 
 from calc_framework.config.file_watcher import FileWatcher
 

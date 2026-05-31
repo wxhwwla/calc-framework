@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """属性面板测试。"""
 
-import pytest
-from PySide6.QtWidgets import QDoubleSpinBox, QLineEdit, QSpinBox
+from PySide6.QtWidgets import QDoubleSpinBox
 
 from calc_framework.graph_editor.schema import GraphNode, NodeConfig
 from calc_framework.graph_editor.prop_panel import PropPanel
-from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget, NodeItem
 
 
 class TestPropPanel:

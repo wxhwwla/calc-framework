@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI 生成代码来源/版权检测工具。
+AI-generated code origin & copyright checker.
 
-运行在仓库根目录：
+Run from repo root:
     python tools/check_code_origin.py
 
-运行在 devtool 子命令：
+Run via devtool:
     python devtool.py check-origin
 
-四种检测器：
-1. LicenseHeaderChecker  — 缺失许可证头部
-2. InternalDupChecker   — 内部代码重复（跨文件完全相同的行块）
-3. SuspiciousPatternChecker — 可疑复制痕迹（外部项目版权声明、搬运注释、未改写的 import）
-4. GitDiffChecker       — Git 变更分析（新增文件缺头部、超大 diff）
+Four checkers:
+1. LicenseHeaderChecker  - missing license headers in .py files
+2. InternalDupChecker    - cross-file identical code blocks
+3. SuspiciousPatternChecker - external copyright notices, copy/adapt comments
+4. GitDiffChecker        - Git change analysis (new files without license, large diffs)
 
-CI 用法：--ci 输出 JSON Lines（每行一个 Issue），0 = 通过，非 0 = 有警告/错误。
+CI mode (--ci): outputs JSON Lines, exit code 0 = pass, non-zero = issues found.
 """
 
 from __future__ import annotations
@@ -98,8 +98,8 @@ class Issue:
         }
 
     def __str__(self) -> str:
-        level = {"error": "❌", "warning": "⚠️", "info": "ℹ️"}.get(self.severity, "?")
-        return f"{level} [{self.checker}] {self.file}:{self.line} — {self.message}"
+        level = {"error": "[ERROR]", "warning": "[WARN]", "info": "[INFO]"}.get(self.severity, "[?]")
+        return f"{level} [{self.checker}] {self.file}:{self.line} - {self.message}"
 
 
 # ── 工具 ──────────────────────────────────────────────
@@ -150,8 +150,8 @@ class LicenseHeaderChecker:
                     checker="license-header",
                     file=str(rel),
                     line=1,
-                    message="文件缺少许可证头部声明",
-                    detail="建议添加 SPDX-License-Identifier 或版权声明（例如 '# SPDX-License-Identifier: MIT'）",
+                    message="File missing license header",
+                    detail="Add SPDX-License-Identifier or copyright notice (e.g. '# SPDX-License-Identifier: MIT')",
                 ))
         return issues
 
@@ -253,8 +253,8 @@ class InternalDupChecker:
                         checker="internal-dup",
                         file=str(rel),
                         line=lineno,
-                        message=f"内部代码重复：{len(block)} 行连续相同代码",
-                        detail=f"同时出现在: {', '.join(other_files[:5])}",
+                        message=f"Internal code duplication: {len(block)} consecutive identical lines",
+                        detail=f"Also appears in: {', '.join(other_files[:5])}",
                     ))
 
                 lineno = jump
@@ -319,8 +319,8 @@ class SuspiciousPatternChecker:
                         checker="suspicious-copyright",
                         file=str(rel),
                         line=lineno,
-                        message=f"发现可能的外部版权声明：{stripped[:80]}",
-                        detail=f"匹配关键词: {keyword}",
+                        message=f"Found possible external copyright: {stripped[:80]}",
+                        detail=f"Matched keyword: {keyword}",
                     ))
                     break  # 一行只报一次
         return issues
@@ -340,8 +340,8 @@ class SuspiciousPatternChecker:
                         checker="external-import",
                         file=str(rel),
                         line=lineno,
-                        message=f"引入外部包：{stripped[:80]}",
-                        detail=f"来源: {known_pkg}",
+                        message=f"External package import: {stripped[:80]}",
+                        detail=f"Source: {known_pkg}",
                     ))
                     break
         return issues
@@ -374,7 +374,7 @@ class SuspiciousPatternChecker:
                         checker="suspicious-comment",
                         file=str(rel),
                         line=lineno,
-                        message=f"发现搬运/改编标记：{stripped[:80]}",
+                        message=f"Suspicious copy/adapt comment: {stripped[:80]}",
                     ))
                     break
         return issues
@@ -399,7 +399,7 @@ class GitDiffChecker:
                 checker="git-diff",
                 file="(root)",
                 line=0,
-                message="未检测到 Git 变更（不是 Git 仓库或无历史提交）",
+                message="No Git changes detected (not a repo or no history)",
             )]
 
         issues.extend(self._check_new_files())
@@ -470,8 +470,8 @@ class GitDiffChecker:
                     checker="git-new-file",
                     file=filename,
                     line=1,
-                    message="新增 .py 文件缺少许可证头部",
-                    detail="所有新增源文件应包含 SPDX 许可证标识符或版权声明",
+                    message="New .py file missing license header",
+                    detail="All new source files should contain a SPDX license identifier or copyright notice",
                 ))
         return issues
 
@@ -485,8 +485,8 @@ class GitDiffChecker:
                     checker="git-large-diff",
                     file=path,
                     line=0,
-                    message=f"单次变更新增 {stat['added']} 行（>500），请确认代码来源合规",
-                    detail="大块新增代码应附有来源声明和许可证标识",
+                    message=f"Single change added {stat['added']} lines (>500), verify code origin",
+                    detail="Large code additions should include source declaration and license",
                 ))
             elif stat["added"] > 200:
                 issues.append(Issue(
@@ -494,7 +494,7 @@ class GitDiffChecker:
                     checker="git-large-diff",
                     file=path,
                     line=0,
-                    message=f"单次变更新增 {stat['added']} 行（>200），建议检查代码来源",
+                    message=f"Single change added {stat['added']} lines (>200), recommend checking code origin",
                 ))
         return issues
 
@@ -582,10 +582,10 @@ def main(argv: list[str] | None = None) -> int:
         print(issue)
 
     print()
-    print(f"总计: {len(issues)} 项")
-    print(f"  ❌ Error:   {len(errors)}")
-    print(f"  ⚠️ Warning: {len(warnings)}")
-    print(f"  ℹ️ Info:    {len(infos)}")
+    print(f"Total: {len(issues)} items")
+    print(f"  [ERROR]: {len(errors)}")
+    print(f"  [WARN]:  {len(warnings)}")
+    print(f"  [INFO]:  {len(infos)}")
 
     return 1 if errors or warnings else 0
 

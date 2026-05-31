@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """GraphCompiler 测试：graph_editor 格式 → DAGGraph 格式。"""
 
-import pytest
 from calc_framework.graph_editor.compiler import compile_graph
 from calc_framework.graph_editor.schema import (
     GraphDocument,
@@ -12,15 +11,12 @@ from calc_framework.graph_editor.schema import (
     SectionDef,
 )
 from calc_framework.dag.schema import (
-    DAGGraph,
     BinaryNode as DAGBinaryNode,
     UnaryNode as DAGUnaryNode,
     ConditionNode as DAGConditionNode,
     ConstNode as DAGConstNode,
     VarNode as DAGVarNode,
     UserInputNode as DAGUserInputNode,
-    DAGOutput,
-    DAGVariable,
 )
 from calc_framework.dag.engine import evaluate_graph
 

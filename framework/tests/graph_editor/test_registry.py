@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """节点类型注册表测试。"""
 
-import pytest
 from calc_framework.graph_editor.registry import (
-    NodeTypeDef,
-    Registry,
     get_registry,
     get_node_type_ids,
     get_display_name,

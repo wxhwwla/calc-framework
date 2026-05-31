@@ -2,26 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
 from calc_framework.graph_editor.registry import get_registry
-from calc_framework.graph_editor.schema import GraphNode, NodeConfig
+from calc_framework.graph_editor.schema import GraphNode
 
 
 class PropPanel(QWidget):

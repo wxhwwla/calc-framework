@@ -168,7 +168,7 @@ class NodePanel(QTabWidget):
             if path.suffix.lower() == ".zip":
                 tdefs = pm.load_zip(path)
                 if not tdefs:
-                    QMessageBox.information(self, "导入结果", f"ZIP 文件中未找到有效的 .json 图文件")
+                    QMessageBox.information(self, "导入结果", "ZIP 文件中未找到有效的 .json 图文件")
                     return
                 names = [t.display_name for t in tdefs]
                 for t in tdefs:

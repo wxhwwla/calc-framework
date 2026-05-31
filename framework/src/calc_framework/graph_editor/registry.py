@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import cast
 
 from calc_framework.graph_editor.schema import GraphNode, NodeConfig, NodeType
 from calc_framework.graph_editor.package_manager import CompositeTypeDef, PackageManager

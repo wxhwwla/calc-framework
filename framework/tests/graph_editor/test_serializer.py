@@ -3,7 +3,6 @@
 
 import json
 
-import pytest
 from calc_framework.graph_editor.schema import (
     GraphDocument,
     GraphEdge,

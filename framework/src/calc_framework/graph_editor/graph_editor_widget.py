@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from calc_framework.graph_editor.ports import PortDirection, PortItem
-from calc_framework.graph_editor.schema import GraphEdge, GraphNode, NodeConfig
+from calc_framework.graph_editor.schema import GraphEdge, GraphNode
 from calc_framework.graph_editor.wire import WireItem
 
 _NODE_WIDTH = 160
@@ -558,7 +558,7 @@ class SubGraphDialog(QDialog):
             pass
 
         # 把编辑器放到对话框里
-        from PySide6.QtWidgets import QHBoxLayout, QSplitter
+        from PySide6.QtWidgets import QSplitter
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(self._editor)
         right_panel = QWidget()

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from calc_framework.dag.engine import BlockCache, evaluate_graph
 from calc_framework.dag.serializer import dag_from_dict

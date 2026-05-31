@@ -4,7 +4,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from calc_framework.graph_editor.file_actions import (
     collect_document,
@@ -20,7 +19,6 @@ from calc_framework.graph_editor.schema import (
     GraphLayout,
     GraphNode,
     NodeConfig,
-    SectionDef,
 )
 
 

@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """端口 (PortItem) 与连线 (WireItem) 测试。"""
 
-import math
 
-import pytest
-from PySide6.QtCore import QPointF
 from PySide6.QtWidgets import QGraphicsScene
 
 from calc_framework.graph_editor.ports import PortItem, PortDirection
