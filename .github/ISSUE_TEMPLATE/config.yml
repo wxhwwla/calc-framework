@@ -1,6 +1,6 @@
 blank_issues_enabled: false
 contact_links:
   - name: 操作说明与常见问题
-    url: https://github.com/wxhwwla/endfield_damage_calculator_2.0/blob/main/docs/操作指令集.md
+    url: https://github.com/wxhwwla/calc-framework/blob/main/docs/操作指令集.md
   - name: 会话接续手册（贡献者）
-    url: https://github.com/wxhwwla/endfield_damage_calculator_2.0/blob/main/docs/会话接续手册.md
+    url: https://github.com/wxhwwla/calc-framework/blob/main/docs/会话接续手册.md

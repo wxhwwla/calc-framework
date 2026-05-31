@@ -333,7 +333,7 @@ class TestGuiFonts:
 
     def test_matplotlib_sans_serif_families_tcl_error(self) -> None:
 
-        with patch("utils.gui_fonts.system_font_family", side_effect=tk.TclError("no tk")):
+        with patch("utils.gui.fonts.system_font_family", side_effect=tk.TclError("no tk")):
 
             families = matplotlib_sans_serif_families()
 
@@ -343,7 +343,7 @@ class TestGuiFonts:
 
     def test_matplotlib_sans_serif_families_with_valid_font(self) -> None:
 
-        with patch("utils.gui_fonts.system_font_family", return_value="CustomFont"):
+        with patch("utils.gui.fonts.system_font_family", return_value="CustomFont"):
 
             families = matplotlib_sans_serif_families()
 

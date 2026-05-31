@@ -37,7 +37,7 @@ def mock_release_data() -> dict:
             {
                 "name": "终末地伤害计算器_v0.7.0-beta.zip",
                 "size": 5_242_880,
-                "browser_download_url": "https://github.com/wxhwwla/endfield_damage_calculator_2.0/releases/download/v0.7.0-beta/终末地伤害计算器_v0.7.0-beta.zip",
+                "browser_download_url": "https://github.com/wxhwwla/calc-framework/releases/download/v0.7.0-beta/终末地伤害计算器_v0.7.0-beta.zip",
             }
         ],
     }
@@ -215,5 +215,5 @@ class TestHelpers:
 
     def test_github_constants(self) -> None:
         assert GITHUB_OWNER == "wxhwwla"
-        assert GITHUB_REPO == "endfield_damage_calculator_2.0"
+        assert GITHUB_REPO == "calc-framework"
         assert "releases/latest" in RELEASE_API

@@ -77,14 +77,14 @@ python tools/bwiki_scout/compare_stats.py   # 仅离线重算报告
 
 ```powershell
 python tools/migrate_weapon_skills_schema.py --apply
-python -m pytest endfield_damage_calculator/tests/test_game_data_contract.py -q
+python -m pytest games/endfield/tests/test_game_data_contract.py -q
 ```
 
 **武器限制**：须存在 `基础攻击力`、`满级基础攻击力` 与 `词条1rank1` 等字段；仅模板简介、无 rank 表的武器（如部分 Wiki 简页）会跳过。
 
 ### 命令
 
-**干员** → `characters.json` + `endfield_damage_calculator/scripts/seed_characters.py`：
+**干员** → `characters.json` + `games/endfield/scripts/seed_characters.py`：
 
 ```powershell
 python tools/bwiki_scout/sync_operators.py
@@ -93,7 +93,7 @@ python tools/bwiki_scout/sync_operators.py --apply --only 佩丽卡
 python tools/bwiki_scout/sync_operators.py --new          # 本地尚无、且 raw 齐全的新干员
 ```
 
-**武器** → `weapons.json` + `endfield_damage_calculator/scripts/seed_weapons.py`：
+**武器** → `weapons.json` + `games/endfield/scripts/seed_weapons.py`：
 
 ```powershell
 python tools/bwiki_scout/sync_weapons.py
@@ -105,7 +105,7 @@ python tools/bwiki_scout/sync_weapons.py --new --apply      # 写入 JSON + seed
 
 默认只处理 **已在** `characters.json` / `weapons.json` 中的名称（与 Wiki 对比后更新）。加 `--new` 会从 `manifest.json` 并入本地缺失、且 `output/raw` 缓存可反推的条目（武器须含 `词条1rank1` 等成长块）。
 
-**装备** → `endfield_damage_calculator/character_weapon_equipment/equipment_data/equipments.json`：
+**装备** → `games/endfield/character_weapon_equipment/equipment_data/equipments.json`：
 
 Wiki 模板字段：`装备种类`（**护甲 / 护手 / 配件**）、`所属套组`、`装备套组效果`、`主词条` / `属性词条N`。
 
@@ -146,7 +146,7 @@ python tools/bwiki_scout/sync_all.py --apply --only-operators 秋栗 --only-weap
 ## 测试
 
 ```powershell
-cd endfield_damage_calculator
+cd games/endfield
 python -m pytest tests/test_bwiki_scout.py tests/test_wiki_sync.py -q
 ```
 

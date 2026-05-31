@@ -313,7 +313,7 @@ class SuspiciousPatternChecker:
             for keyword in SUSPICIOUS_COPYRIGHT_KEYWORDS:
                 if keyword.lower() in stripped.lower():
                     # 判断是否为本项目声明的版权
-                    if "endfield_damage_calculator" in stripped.lower():
+                    if "calc-framework" in stripped.lower():
                         continue
                     if "solo" in stripped.lower():
                         continue

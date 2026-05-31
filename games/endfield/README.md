@@ -28,7 +28,7 @@
 ## 📁 项目结构
 
 ```
-endfield_damage_calculator/
+games/endfield/
 ├── main.py                    # 项目入口，启动应用
 ├── pyproject.toml             # 打包配置文件
 ├── please_read_me.py          # 项目说明文档
@@ -183,7 +183,7 @@ python github_upload_module.py --no-bump    # 提交推送但不改 _VERSION
 ### 安装依赖
 
 ```bash
-cd endfield_damage_calculator
+cd games/endfield
 pip install -e ".[dev]"
 ```
 
@@ -192,7 +192,7 @@ pip install -e ".[dev]"
 ### 运行测试
 
 ```bash
-cd endfield_damage_calculator
+cd games/endfield
 python -m pytest tests/ -q
 ```
 
@@ -272,7 +272,7 @@ python build.py
 对比 [终末地 BWIKI](https://wiki.biligame.com/zmd/) 与本地 JSON；侦察默认只写 `tools/bwiki_scout/output/`（已 gitignore）。经 `sync_*.py --apply` 才更新本目录下的 `characters.json` / `weapons.json` 与 `scripts/seed_*.py`。
 
 ```powershell
-cd e:\endfield_damage_calculator   # [根]
+cd e:\calc-framework   # [根]
 python tools/bwiki_scout/scout.py              # 拉取/续跑缓存（含干员 */详细数据）
 python tools/bwiki_scout/compare_stats.py      # 干员数值对比报告（离线）
 python tools/bwiki_scout/sync_operators.py     # 预览：属性 + 技能倍率

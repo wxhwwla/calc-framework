@@ -2,7 +2,7 @@
 
 本文档记录本项目在 ruff 严格检查（`select = ["E", "F", "W", "I", "N", "UP", "SIM", "RUF"]`）下反复出现的规范问题及其标准修复模式。
 
-**配置参考**：`endfield_damage_calculator/pyproject.toml` → `[tool.ruff.lint]`
+**配置参考**：`games/endfield/pyproject.toml` → `[tool.ruff.lint]`
 
 ---
 
@@ -266,7 +266,7 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 
 **根因**：这是 **VS Code 工作区级别的假阳性**，不是真正的构建错误。原因：
 
-1. VS Code 打开的是仓库根目录（`e:\endfield_damage_calculator\`）
+1. VS Code 打开的是仓库根目录（`e:\calc-framework\`）
 2. 根目录没有 `tsconfig.json`（或与 `web/frontend/` 无关），VS Code 的 TS language service 使用推断的配置
 3. 推断配置不知道 `web/frontend/node_modules/` 的存在，因此无法解析 `react`、`@mui/material`、`vite` 等模块
 
@@ -609,6 +609,6 @@ except ImportError:
 |------|--------|------|
 | `debugger_gui.py` | **0** | 已用 §9 模式完全修复 |
 | 框架其他文件 | **0** | 无诊断 |
-| 包端 | **0** | `pyrightconfig.json` 的 `include` 限定到 `endfield_damage_calculator`，不含 `web/` |
+| 包端 | **0** | `pyrightconfig.json` 的 `include` 限定到 `games/endfield`，不含 `web/` |
 | Web 前端 | **0** | `tsc --noEmit` 通过 |
 | **总计** | **0** | ✅ 全零 |

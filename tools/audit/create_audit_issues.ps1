@@ -82,7 +82,7 @@ $n1 = New-Issue -Title "安全：轮换 Git 凭据并清理 remote URL" -BodyFil
 @'
 ## What to build
 
-添加 GitHub Actions，在 push/PR 时对 `endfield_damage_calculator` 运行 `python -m pytest tests/`。
+添加 GitHub Actions，在 push/PR 时对 `games/endfield` 运行 `python -m pytest tests/`。
 
 ## Acceptance criteria
 

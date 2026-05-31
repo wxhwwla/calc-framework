@@ -19,7 +19,7 @@
 | [算法与架构.md](算法与架构.md) | 公式、乘区、模块结构（原根目录 `PROJECT_DOCUMENTATION.md`） |
 | [MVP搜索验收说明.md](MVP搜索验收说明.md) | 全量遍历、并行线程、`search_output/` 导出、GUI/打包验收 |
 
-**JSON 数据契约**（角色/武器/预设字段）：[`CONTEXT.md`](../CONTEXT.md) 术语表 + [`endfield_damage_calculator/README.md`](../endfield_damage_calculator/README.md)「数据格式」节 + `tests/test_game_data_contract.py`。
+**JSON 数据契约**（角色/武器/预设字段）：[`CONTEXT.md`](../CONTEXT.md) 术语表 + [`games/endfield/README.md`](../games/endfield/README.md)「数据格式」节 + `tests/test_game_data_contract.py`。
 | [agents/issue-tracker.md](agents/issue-tracker.md) | GitHub Issue、`gh` CLI、**Web 表单模板**（Bug / 功能建议） |
 | [agents/triage-labels.md](agents/triage-labels.md) | 分拣标签：`needs-triage`、`ready-for-agent` 等 |
 | [agents/domain.md](agents/domain.md) | Issue/文档与 `CONTEXT.md` 术语一致 |

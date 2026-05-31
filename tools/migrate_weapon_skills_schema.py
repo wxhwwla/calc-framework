@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PKG_ROOT = REPO_ROOT / "endfield_damage_calculator"
+PKG_ROOT = REPO_ROOT / "games" / "endfield"
 if str(PKG_ROOT) not in sys.path:
     sys.path.insert(0, str(PKG_ROOT))
 

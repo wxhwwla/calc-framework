@@ -16,7 +16,7 @@ from utils.app_paths import (
 class TestSearchExportPaths(unittest.TestCase):
     def test_default_root_is_under_given_base_not_system_temp(self):
         with tempfile.TemporaryDirectory() as tmp:
-            base = Path(tmp) / "endfield_damage_calculator"
+            base = Path(tmp) / "calc-framework-endfield"
             base.mkdir()
             root = default_search_output_root(base_dir=base)
             self.assertEqual(root, base / "search_output")

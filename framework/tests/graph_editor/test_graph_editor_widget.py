@@ -1,6 +1,6 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""GraphEditorWidget 鐢诲竷缁勪欢娴嬭瘯銆?""
+"""GraphEditorWidget 画布组件测试。"""
 
 from calc_framework.graph_editor.schema import GraphNode, NodeConfig
 from calc_framework.graph_editor.graph_editor_widget import (
@@ -21,13 +21,13 @@ class TestGraphScene:
 
     def test_add_node_item(self, qapp) -> None:
         scene = GraphScene()
-        node = GraphNode(id="n1", type="const", label="娴嬭瘯", config=NodeConfig(value=42))
+        node = GraphNode(id="n1", type="const", label="测试", config=NodeConfig(value=42))
         item = NodeItem(node)
         scene.addItem(item)
         assert len(_node_items(scene)) == 1
 
     def test_node_item_rect_size(self, qapp) -> None:
-        node = GraphNode(id="n1", type="const", label="甯搁噺")
+        node = GraphNode(id="n1", type="const", label="常量")
         item = NodeItem(node)
         rect = item.boundingRect()
         assert rect.width() > 0
@@ -54,7 +54,7 @@ class TestGraphEditorWidget:
 
     def test_add_node_to_widget(self, qapp) -> None:
         widget = GraphEditorWidget()
-        node = GraphNode(id="n1", type="const", label="娴嬭瘯鑺傜偣")
+        node = GraphNode(id="n1", type="const", label="测试节点")
         widget.add_graph_node(node)
         assert len(widget.graph_nodes()) == 1
 

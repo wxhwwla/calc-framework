@@ -1,6 +1,6 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""灞炴€ч潰鏉挎祴璇曘€?""
+"""属性面板测试。"""
 
 from PySide6.QtWidgets import QDoubleSpinBox
 
@@ -19,7 +19,7 @@ class TestPropPanel:
 
     def test_show_const_node(self, qapp) -> None:
         panel = PropPanel()
-        node = GraphNode(id="n1", type="const", label="娴嬭瘯", config=NodeConfig(value=42.0))
+        node = GraphNode(id="n1", type="const", label="测试", config=NodeConfig(value=42.0))
         panel.show_node(node)
         assert panel.current_node_id == "n1"
 
@@ -33,11 +33,11 @@ class TestPropPanel:
 
     def test_var_shows_path_edit(self, qapp) -> None:
         panel = PropPanel()
-        node = GraphNode(id="n1", type="var", label="", config=NodeConfig(path="character.鏀诲嚮"))
+        node = GraphNode(id="n1", type="var", label="", config=NodeConfig(path="character.攻击"))
         panel.show_node(node)
         path_edit = panel._controls.get("path")
         assert path_edit is not None
-        assert "character.鏀诲嚮" in path_edit.text()
+        assert "character.攻击" in path_edit.text()
 
     def test_value_change_updates_node(self, qapp) -> None:
         panel = PropPanel()
@@ -45,7 +45,7 @@ class TestPropPanel:
         panel.show_node(node)
         sb = panel.findChild(QDoubleSpinBox)
         sb.setValue(99.0)
-        # 妯℃嫙缂栬緫缁撴潫
+        # 模拟编辑结束
         sb.editingFinished.emit()
         assert panel.current_node.config.value == 99.0
 
@@ -59,20 +59,20 @@ class TestPropPanel:
 
     def test_unary_shows_op_dropdown(self, qapp) -> None:
         panel = PropPanel()
-        node = GraphNode(id="n1", type="unary", op="ceil", label="鍙栨暣")
+        node = GraphNode(id="n1", type="unary", op="ceil", label="取整")
         panel.show_node(node)
-        # 搴旇鏈夋搷浣滅涓嬫媺
+        # 应该有操作符下拉
         assert panel.current_node is not None
         assert panel.current_node.op == "ceil"
 
     def test_binary_shows_op_dropdown(self, qapp) -> None:
         panel = PropPanel()
-        node = GraphNode(id="n1", type="binary", op="+", label="鍔犳硶")
+        node = GraphNode(id="n1", type="binary", op="+", label="加法")
         panel.show_node(node)
         assert panel.current_node is not None
 
     def test_preview_label_exists(self, qapp) -> None:
-        """棰勮鏍囩榛樿鏄剧ず"鈥?銆?""
+        """预览标签默认显示"—"。"""
         panel = PropPanel()
         assert panel._preview_label is not None
 
@@ -83,5 +83,5 @@ class TestPropPanel:
 
     def test_set_preview_error(self, qapp) -> None:
         panel = PropPanel()
-        panel.set_preview_value("閿欒: 鍙橀噺鏈壘鍒?)
-        assert "閿欒" in panel._preview_label.text()
+        panel.set_preview_value("错误: 变量未找到")
+        assert "错误" in panel._preview_label.text()

@@ -26,7 +26,7 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 GITHUB_OWNER = "wxhwwla"
-GITHUB_REPO = "endfield_damage_calculator_2.0"
+GITHUB_REPO = "calc-framework"
 RELEASE_API = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
 
 _PROGRESS_CALLBACK = Callable[[int, int], None]

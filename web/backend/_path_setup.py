@@ -1,4 +1,4 @@
-﻿"""Web 鍚庣璺緞璁剧疆鈥斺€旈泦涓鐞嗘墍鏈?sys.path 閰嶇疆銆?""
+"""Web backend path setup -- centralized sys.path configuration."""
 import sys
 from pathlib import Path
 

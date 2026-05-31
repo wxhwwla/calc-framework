@@ -26,9 +26,9 @@ from typing import Any, Tuple
 CONFIRM_PHRASE = "覆盖本地"
 _MAX_LISTED_CHANGES = 30
 
-DEFAULT_REMOTE_SSH = "git@github.com:wxhwwla/endfield_damage_calculator_2.0.git"
-AUTH_MODE = "ssh"
-REMOTE_HTTPS = "https://github.com/wxhwwla/endfield_damage_calculator_2.0.git"
+DEFAULT_REMOTE_SSH = "git@github.com:wxhwwla/calc-framework.git"
+AUTH_MODE = "ssh"
+REMOTE_HTTPS = "https://github.com/wxhwwla/calc-framework.git"
 KEY_FILE = "git_key.txt"
 DEFAULT_BRANCH = "main"
 

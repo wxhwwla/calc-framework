@@ -175,7 +175,7 @@ def build_html() -> str:
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>Architecture review — endfield_damage_calculator</title>
+  <title>Architecture review — calc-framework</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
@@ -185,7 +185,7 @@ def build_html() -> str:
 <body class="bg-stone-50 text-slate-900 font-sans">
 <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
 <header class="border-b border-stone-200 pb-8">
-  <p class="text-xs uppercase tracking-wider text-slate-500">2026-05-23 · 第二轮审查 · endfield_damage_calculator</p>
+  <p class="text-xs uppercase tracking-wider text-slate-500">2026-05-23 · 第二轮审查 · calc-framework</p>
   <h1 class="text-3xl font-serif mt-2">架构加深机会（post #1–#6）</h1>
   <p class="text-sm text-slate-600 mt-3">已完成：search_controller · LoadoutState · display_lines/view · search_controls · GameDataFacade。术语见 LANGUAGE.md。</p>
 </header>

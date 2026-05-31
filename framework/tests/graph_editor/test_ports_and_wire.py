@@ -1,6 +1,6 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""绔彛 (PortItem) 涓庤繛绾?(WireItem) 娴嬭瘯銆?""
+"""端口 (PortItem) 与连线 (WireItem) 测试。"""
 
 
 from PySide6.QtWidgets import QGraphicsScene
@@ -13,13 +13,13 @@ from calc_framework.graph_editor.graph_editor_widget import NodeItem
 
 class TestPortItem:
     def test_create_input_port(self, qapp) -> None:
-        port = PortItem(PortDirection.INPUT, 0, "杈撳叆")
+        port = PortItem(PortDirection.INPUT, 0, "输入")
         assert port.direction == PortDirection.INPUT
         assert port.port_index == 0
-        assert port.label == "杈撳叆"
+        assert port.label == "输入"
 
     def test_create_output_port(self, qapp) -> None:
-        port = PortItem(PortDirection.OUTPUT, 0, "杈撳嚭")
+        port = PortItem(PortDirection.OUTPUT, 0, "输出")
         assert port.direction == PortDirection.OUTPUT
 
     def test_port_radius(self, qapp) -> None:

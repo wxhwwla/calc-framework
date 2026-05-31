@@ -127,7 +127,7 @@ python -m pytest tests/test_mvp_pipeline.py tests/test_search_settings.py -q
 ## 6. 打包发布
 
 ```powershell
-cd endfield_damage_calculator\endfield_damage_calculator
+cd games/endfield
 python build.py
 ```
 
