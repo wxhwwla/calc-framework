@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import JSONResponse
 
+from fastapi.staticfiles import StaticFiles
+
 from calc_framework.logging import setup_logging, get_logger
 
 
@@ -70,7 +72,12 @@ app.include_router(pack_router)
 
 app.include_router(search_router)
 
-
+# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
+if _FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
+    logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
 
 
 

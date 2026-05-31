@@ -89,7 +89,7 @@ python github_upload_module.py
 
 ```powershell
 # 启动 Web 后端
-cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload
+cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8002
 
 # 启动 Web 前端（新终端）
 cd web/frontend && npm install && npm run dev
