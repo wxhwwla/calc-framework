@@ -179,9 +179,9 @@
 | **布局编辑器** | `calc_framework.editor.LayoutEditor` — 从 DAG 编排 layout.json 的 API + CLI（`calc-layout`）+ PySide6 GUI |
 | **DataContext** | `TypedDict` 定义的数据上下文 schema：`character` / `weapon` / `equipment` / `enemy` / `computed` / `user_input` 六区 |
 | **DataContextLoader** | ABC 接口：实现 `load()` 方法，从游戏数据构建符合 schema 的变量字典 |
-| **EndfieldContextLoader** | 终末地适配器实现，位于 `games/endfield/calculation/multiplicative_zones/dag/loader.py` |
+| **EndfieldContextLoader** | 终末地适配器实现，位于 `calc_engine/endfield/calc/dag_adapter/loader.py` |
 | **AdapterPackage** | `calc_framework.config.adapter.AdapterPackage` — 从适配器目录加载 DAG + layout + context loader，零自定义缓存 |
-| **DAG 适配器 (adapter.py)** | `games/endfield/.../dag/adapter.py` — 将 DAG 引擎接入 zone_snapshot 计算链的桥接模块 |
+| **DAG 适配器 (adapter.py)** | `calc_engine/endfield/calc/dag_adapter/adapter.py` — 将 DAG 引擎接入 zone_snapshot 计算链的桥接模块 |
 | **控制规格** | `ControlSpec` — 声明输入控件的类型：`QLineEdit` / `QSpinBox` / `QDoubleSpinBox` / `QSlider` / `QCheckBox` / `QComboBox`8，带 min/max/step/choices/default 元数据 |
 | **框架测试** | `[框架]` `python -m pytest tests/ -q` → **374 passed**（含 MOBA 8 + FPS 11 + CardRPG 21 适配器集成测试） |
 | **包端测试** | `[包]` `python -m pytest tests/ -q` → **553 passed / 1 skipped / 9 subtests passed** |

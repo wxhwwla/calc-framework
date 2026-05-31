@@ -72,7 +72,7 @@ def _minimal_context() -> dict[str, dict[str, Any]]:
 class TestEndfieldDAGIntegration:
     @pytest.fixture(scope="class")
     def generated_dag(self):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.config import OUTPUT_PATH, generate
+        from calc_engine.endfield.calc.dag_adapter.config import OUTPUT_PATH, generate
 
         dag = generate()
         assert dag.name == "终末地伤害公式（完整版）"
@@ -81,7 +81,7 @@ class TestEndfieldDAGIntegration:
 
     @pytest.fixture(scope="class")
     def adapter_pkg(self, generated_dag):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.config import save_dag
+        from calc_engine.endfield.calc.dag_adapter.config import save_dag
 
         save_dag(generated_dag)
         assert _EXPECTED_OUTPUT.exists(), f"输出文件不存在: {_EXPECTED_OUTPUT}"
@@ -89,7 +89,7 @@ class TestEndfieldDAGIntegration:
 
     @pytest.fixture(scope="class")
     def context(self):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.loader import EndfieldContextLoader
+        from calc_engine.endfield.calc.dag_adapter.loader import EndfieldContextLoader
 
         char = _load_by_name(PARTICIPANTS_JSON, "秋栗")
         weapon = _load_by_name(WEAPONS_JSON, "逐鳞3.0")

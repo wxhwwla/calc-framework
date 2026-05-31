@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-from calc_engine.endfield.calc.multiplicative_zones.zone_snapshot import (
-    MultiplicativeZoneSelection,
-    WeaponBonusSelection,
+from calc_engine.endfield.calc.zone_snapshot.types import (
+    MultiplicativeZoneSelection,
+    WeaponBonusSelection,
 )
 from calc_engine.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
 
@@ -37,15 +37,15 @@ class TestDAGAdapter(unittest.TestCase):
         self.level = 80
 
     def test_dag_adapter_imports(self):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.adapter import (
-            build_dag_context,
-            evaluate_attack_chain_via_dag,
+        from calc_engine.endfield.calc.dag_adapter.adapter import (
+            build_dag_context,
+            evaluate_attack_chain_via_dag,
         )
         self.assertTrue(callable(build_dag_context))
         self.assertTrue(callable(evaluate_attack_chain_via_dag))
 
     def test_build_dag_context_returns_all_required_keys(self):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.adapter import build_dag_context
+        from calc_engine.endfield.calc.dag_adapter.adapter import build_dag_context
 
         ctx = build_dag_context(
             self.char, self.weapon,
@@ -67,7 +67,7 @@ class TestDAGAdapter(unittest.TestCase):
         from calc_engine.endfield.calc.multiplicative_zones.ability_bonus_details import (
             calculate_ability_bonus_with_details,
         )
-        from calc_engine.endfield.calc.multiplicative_zones.dag.adapter import evaluate_attack_chain_via_dag
+        from calc_engine.endfield.calc.dag_adapter.adapter import evaluate_attack_chain_via_dag
         from calc_engine.endfield.calc.multiplicative_zones.final_attack_zone import (
             calculate_final_attack_with_details,
         )
@@ -97,14 +97,14 @@ class TestDAGAdapter(unittest.TestCase):
         )
 
     def test_dag_adapted_snapshot_matches_existing_snapshot(self):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.adapter import compute_snapshot_with_dag
-
-        selection = MultiplicativeZoneSelection(
-            character=self.char,
-            weapon=self.weapon,
-            char_level=self.level,
-            weapon_level=self.level,
-            bonuses=WeaponBonusSelection(),
+        from calc_engine.endfield.calc.dag_adapter.adapter import compute_snapshot_with_dag
+
+        selection = MultiplicativeZoneSelection(
+            character=self.char,
+            weapon=self.weapon,
+            char_level=self.level,
+            weapon_level=self.level,
+            bonuses=WeaponBonusSelection(),
         )
         dag_lines = compute_snapshot_with_dag(selection)
         texts = [line.text for line in dag_lines]
@@ -125,14 +125,14 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertGreater(dag_val, 0, "最终伤害应为正数")
 
     def test_dag_adapter_with_weapon_bonuses(self):
-        from calc_engine.endfield.calc.multiplicative_zones.dag.adapter import compute_snapshot_with_dag
-
-        selection = MultiplicativeZoneSelection(
-            character=self.char,
-            weapon=self.weapon,
-            char_level=self.level,
-            weapon_level=self.level,
-            bonuses=WeaponBonusSelection(
+        from calc_engine.endfield.calc.dag_adapter.adapter import compute_snapshot_with_dag
+
+        selection = MultiplicativeZoneSelection(
+            character=self.char,
+            weapon=self.weapon,
+            char_level=self.level,
+            weapon_level=self.level,
+            bonuses=WeaponBonusSelection(
                 normal_skill_1_name="智识+",
                 normal_skill_1_level=9,
                 special_skill_1_name="源石技艺强度+",

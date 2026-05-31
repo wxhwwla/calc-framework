@@ -338,10 +338,10 @@ python main.py
 | `../../src/calc_framework/configs/endfield_full.dag.json` | 15 乘区 DAG 定义（5 子图、58 节点、18 输出） |
 | `ui/layout.json` | 乘区展示排版 |
 | `attr_schema.json` | 属性声明（14 个属性） |
-| `endfield_damage_calculator/calculation/multiplicative_zones/dag/loader.py` | `EndfieldContextLoader` 实现 |
+| `calc_engine/endfield/calc/dag_adapter/loader.py` | `EndfieldContextLoader` 实现 |
 
 ```python
-from calculation.multiplicative_zones.dag.loader import EndfieldContextLoader
+from calc_engine.endfield.calc.dag_adapter.loader import EndfieldContextLoader
 
 loader = EndfieldContextLoader()
 context = loader.build_context(

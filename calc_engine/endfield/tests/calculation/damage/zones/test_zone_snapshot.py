@@ -6,10 +6,10 @@ import json
 import unittest
 from pathlib import Path
 
-from calc_engine.endfield.calc.multiplicative_zones.zone_snapshot import (
-    MultiplicativeZoneSelection,
-    WeaponBonusSelection,
-    compute_multiplicative_zone_snapshot,
+from calc_engine.endfield.calc.zone_snapshot import (
+    MultiplicativeZoneSelection,
+    WeaponBonusSelection,
+    compute_multiplicative_zone_snapshot,
 )
 from calc_engine.endfield.tests.conftest import PKG_ROOT, GAMES_END, DATA_DIR
 

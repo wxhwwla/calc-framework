@@ -33,13 +33,6 @@ from .attribute_zone import (
 from .base_zone import BaseZone, DefenseReductionZone
 from .final_attack_zone import FinalAttackZone, calculate_final_attack, calculate_final_attack_with_details
 from .zone_manager import ZoneManager
-from .zone_snapshot import (
-    MultiplicativeZoneSelection,
-    WeaponBonusSelection,
-    ZoneDisplayLine,
-    compute_multiplicative_zone_snapshot,
-)
-
 __all__ = [
     "AbilityBonusZone",
     "AttributeMultiplierZone",
@@ -47,9 +40,6 @@ __all__ = [
     "BaseZone",
     "DefenseReductionZone",
     "FinalAttackZone",
-    "MultiplicativeZoneSelection",
-    "WeaponBonusSelection",
-    "ZoneDisplayLine",
     "ZoneManager",
     "calculate_ability_bonus",
     "calculate_ability_bonus_with_details",
@@ -57,5 +47,4 @@ __all__ = [
     "calculate_attribute_zones_with_details",
     "calculate_final_attack",
     "calculate_final_attack_with_details",
-    "compute_multiplicative_zone_snapshot",
 ]
