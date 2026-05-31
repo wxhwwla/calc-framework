@@ -33,7 +33,7 @@ from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_
 
 
 
-BuildTarget = Literal["calculator", "designer", "pack-designer"]
+BuildTarget = Literal["calculator", "designer", "pack-designer", "local-backend"]
 
 
 
@@ -44,6 +44,8 @@ TARGET_APP_NAMES: dict[BuildTarget, str] = {
     "designer": "数据设计器",
 
     "pack-designer": "配置包设计器",
+
+    "local-backend": "终末地本地搜索服务器",
 
 }
 
@@ -56,6 +58,8 @@ TARGET_ENTRIES: dict[BuildTarget, str] = {
     "designer": "main_designer.py",
 
     "pack-designer": "main_pack_designer.py",
+
+    "local-backend": "web/backend/run_packaged_main.py",
 
 }
 
@@ -209,6 +213,48 @@ def _pack_designer_readme(exe_version: str, package_version: str) -> str:
 
 
 
+def _local_backend_readme(exe_version: str, package_version: str) -> str:
+
+    return f"""终末地本地搜索服务器 — 发布包说明
+
+
+
+【版本】EXE v{exe_version}（源码包 v{package_version}）
+
+【软件】终末地本地搜索服务器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+
+【数据】games/endfield/data/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
+
+
+
+用途：在您本地电脑上运行全量搜索后端，与线上 Web 界面配合使用。
+
+
+
+使用方法：
+
+1. 双击「终末地本地搜索服务器.exe」
+
+2. 浏览器自动打开 http://localhost:8180
+
+3. 在本地页面中使用全量搜索（使用您电脑的 CPU/GPU 计算）
+
+4. 关闭命令行窗口即可停止服务器
+
+
+
+系统要求：Windows 10/11，无需安装 Python 或 Node.js。
+
+
+
+分发时请保持 exe 与本目录内 JSON、许可文件相对位置不变；可单独更新 JSON 而无需重打 exe。
+
+"""
+
+
+
+
+
 def stage_release_folder(
 
     release_root: Path,
@@ -227,32 +273,31 @@ def stage_release_folder(
 
 
 
-    if target != "pack-designer":
-
+    if target == "local-backend":
+        # local-backend 前端 dist 已在 PyInstaller 中通过 --add-data 内嵌
+        # 但仍需要游戏数据 JSON 文件在 exe 旁
         for dest_rel, src_rel in RELEASE_DATA_FILES:
-
             src = project_root / src_rel
-
             if not src.is_file():
-
                 raise FileNotFoundError(f"缺少游戏数据源文件: {src}")
-
             dest = release_root / dest_rel
-
             dest.parent.mkdir(parents=True, exist_ok=True)
-
+            shutil.copy2(src, dest)
+    elif target != "pack-designer":
+        for dest_rel, src_rel in RELEASE_DATA_FILES:
+            src = project_root / src_rel
+            if not src.is_file():
+                raise FileNotFoundError(f"缺少游戏数据源文件: {src}")
+            dest = release_root / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
 
 
 
     for dest_rel, src_rel in LICENSE_FILES:
-
         src = repo_root / src_rel
-
         if not src.is_file():
-
             raise FileNotFoundError(f"缺少许可文件: {src}")
-
         shutil.copy2(src, release_root / dest_rel)
 
 
@@ -260,23 +305,19 @@ def stage_release_folder(
     exe_version, package_version = _read_release_versions()
 
     if target == "calculator":
-
+        readme_fn = _calculator_readme
+    elif target == "designer":
+        readme_fn = _designer_readme
+    elif target == "pack-designer":
+        readme_fn = _pack_designer_readme
+    elif target == "local-backend":
+        readme_fn = _local_backend_readme
+    else:
         readme_fn = _calculator_readme
 
-    elif target == "designer":
-
-        readme_fn = _designer_readme
-
-    else:
-
-        readme_fn = _pack_designer_readme
-
     (release_root / RELEASE_README_NAME).write_text(
-
         readme_fn(exe_version=exe_version, package_version=package_version),
-
         encoding="utf-8",
-
     )
 
 
@@ -296,4 +337,3 @@ def _read_release_versions() -> tuple[str, str]:
 def release_dir_from_dist(dist_dir: Path, *, target: BuildTarget = "calculator") -> Path:
 
     return dist_dir / target_app_name(target)
-

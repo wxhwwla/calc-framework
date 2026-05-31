@@ -19,6 +19,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import EstimateIcon from "@mui/icons-material/Calculate";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
+import DownloadIcon from "@mui/icons-material/Download";
 import { estimateSearch, runSearch, runSearchStream, type SearchRequest, type SearchResult, type SearchEstimate, type LoadoutResult, type StreamEvent } from "../../api/search";
 
 interface SearchPanelProps {
@@ -166,20 +167,18 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
 
       {isPythonAnywhere && (
         <Alert severity="warning" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
-          线上环境不支持全量搜索（CPU 时间配额不足 + 无 GPU）。
-          请使用本地服务器，享受完整计算能力：
-          <Box
-            component="code"
-            sx={{
-              display: "block", mt: 1, p: 1.5,
-              bgcolor: "grey.900", color: "common.white",
-              borderRadius: 1, fontSize: "0.85em",
-              lineHeight: 1.6,
-            }}
-          >
-            方式一：双击 <strong>启动本地服务器.bat</strong>（推荐）
-            <br />
-            方式二：双击 <strong>launcher.pyw</strong>（图形界面）
+          线上环境不支持全量搜索。
+          <Box sx={{ mt: 1 }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<DownloadIcon />}
+              href="/api/download/client"
+              sx={{ mr: 1, textTransform: "none" }}
+            >
+              下载本地搜索服务器
+            </Button>
+            下载后双击 exe 即可在本地使用全量搜索（无需安装 Python/Node.js）
           </Box>
         </Alert>
       )}

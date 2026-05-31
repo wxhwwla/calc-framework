@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 
 from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from fastapi.staticfiles import StaticFiles
 
@@ -125,4 +125,70 @@ async def health():
         "adapters": list(mgr.available_adapters.keys()),
 
     }
+
+
+# ── 客户端下载 ────────────────────────────────────────────────────────────────
+import io as _io
+import zipfile as _zipfile
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+@app.get("/api/download/client")
+async def download_client():
+    """下载本地搜索服务器（PyInstaller 打包，双击即可运行）。"""
+    # 尝试寻找预打包的 zip
+    _DIST = _REPO_ROOT / "dist" / "终末地本地搜索服务器"
+    _PACKED_ZIP = _DIST / "终末地本地搜索服务器.zip"
+    if _PACKED_ZIP.exists():
+        content = _PACKED_ZIP.read_bytes()
+        return StreamingResponse(
+            _io.BytesIO(content),
+            media_type="application/zip",
+            headers={
+                "Content-Disposition":
+                    "attachment; filename=终末地本地搜索服务器.zip",
+                "Content-Length": str(len(content)),
+            },
+        )
+
+    # 尝试 web/static/ 下的 zip（部署时上传）
+    _STATIC_ZIP = _REPO_ROOT / "static" / "终末地本地搜索服务器.zip"
+    if _STATIC_ZIP.exists():
+        content = _STATIC_ZIP.read_bytes()
+        return StreamingResponse(
+            _io.BytesIO(content),
+            media_type="application/zip",
+            headers={
+                "Content-Disposition":
+                    "attachment; filename=终末地本地搜索服务器.zip",
+                "Content-Length": str(len(content)),
+            },
+        )
+
+    # fallback: 返回下载说明（无打包文件时）
+    return _build_fallback_zip()
+
+
+def _build_fallback_zip() -> StreamingResponse:
+    """打包文件不存在时，生成一个含下载说明的 zip。"""
+    buf = _io.BytesIO()
+    with _zipfile.ZipFile(buf, "w", _zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("使用说明.txt",
+            "终末地本地搜索服务器 - 下载说明\n"
+            "==============================\n\n"
+            "预打包的本地搜索服务器尚未上传。\n\n"
+            "如果您是开发者，请在项目根目录运行：\n"
+            "  python web/build_local_backend.py\n\n"
+            "然后将生成的 dist/终末地本地搜索服务器/ 目录上传到服务器。\n"
+        )
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition":
+                "attachment; filename=本地搜索服务器-下载说明.zip",
+        },
+    )
 
