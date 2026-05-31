@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """
 GUI 壳层：主窗口与应用生命周期。
 

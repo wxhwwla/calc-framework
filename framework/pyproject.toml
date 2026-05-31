@@ -48,6 +48,10 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "slow: 耗时 > 5 秒的测试，本地日常跳过",
+    "integration: 依赖外部系统（文件 I/O、DB）的测试",
+]
 
 [tool.coverage.run]
 omit = [

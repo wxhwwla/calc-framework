@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""Replace games.endfield -> games.endfield in all .py files outside calc-engine/."""
+"""Replace games.endfield -> games.endfield in all .py files outside calc-engine/ (moved to tools/)."""
 import os
 
 
@@ -15,7 +16,7 @@ EXCLUDE_DIRS = {
     "node_modules", "dist", "build", "calc-engine", ".github",
 }
 
-EXCLUDE_FILES = {"_replace_adapters_imports.py"}
+EXCLUDE_FILES = {"replace_adapters_imports.py"}
 
 
 def replace_in_file(filepath):
@@ -34,12 +35,11 @@ def replace_in_file(filepath):
 
 
 def main():
-    repo_root = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []
 
     for root, dirs, files in os.walk(repo_root):
-        # Skip excluded dirs
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
 
         for f in files:
@@ -49,7 +49,6 @@ def main():
                 continue
 
             fpath = os.path.join(root, f)
-            # Skip files in calc-engine
             if "calc-engine" in os.path.normpath(fpath).split(os.sep):
                 continue
 

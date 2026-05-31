@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc_engine/endfield and games.endfield in .md docs with calc-engine equivalents."""
 import os
 
 
 def main():
-    repo_root = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []
 

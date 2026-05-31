@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """多技能加权总伤优化。"""
 
 from .search import evaluate_multi_skill_task, optimize_multi_skill_loadouts

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 """计算历史 API（内存 Ring Buffer）。"""
 
 from datetime import datetime, timezone

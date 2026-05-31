@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """手动场外 buff 包。"""
 
 from games.endfield.calc.manual_buff.model import (

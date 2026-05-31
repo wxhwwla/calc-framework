@@ -68,6 +68,11 @@ pythonpath = [".", "../.."]
 # CI 仍跑全量：pytest tests/ -q
 # --cov-fail-under=60 对应长期目标 80%，目前先提至 60
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "slow: 耗时 > 5 秒的测试，本地日常跳过",
+    "integration: 依赖外部系统（文件 I/O、DB）的测试",
+    "real_data: 使用真实游戏 JSON 数据的测试",
+]
 
 [tool.coverage.run]
 source = ["calculation", "data", "gui_design"]

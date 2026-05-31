@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """单技能最优配装搜索。"""
 
 from .catalog import count_loadout_combinations

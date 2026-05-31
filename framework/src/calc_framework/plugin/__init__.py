@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 """插件模块化系统 — 可插拔的游戏机制组件。
 
 插件可以通过 ``PluginRegistry`` 注册，提供 DAG 子图、自定义函数、

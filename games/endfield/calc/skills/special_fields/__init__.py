@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """武器有条件特殊能力字段。"""
 
 from .codec import (

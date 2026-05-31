@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """属性/技能公式反推。"""
 
 from .api import fit_formula, validate_formula

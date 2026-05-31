@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 """GUI 相关的工具函数与组件。
 
 拆分自 ``utils/``，集中管理含 GUI 框架依赖或为 GUI 服务的模块。"""

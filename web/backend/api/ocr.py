@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
 import os

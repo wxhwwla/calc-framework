@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """
 全量遍历搜索子包（plan / run / evaluate / persist）。
 

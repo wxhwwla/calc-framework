@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 """数据加载模块"""
 
 

@@ -1,18 +1,17 @@
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc_engine/endfield/ filesystem paths in non-.md files (excluding adapters/ dir)."""
 import os
 
 
 EXCLUDE_DIRS = {".venv", "__pycache__", ".pytest_cache", ".git", ".trae", "node_modules", "dist", "build"}
-SELF_FILES = {"_replace_adapters_imports.py", "_replace_docs.py", "_replace_paths.py"}
+SELF_FILES = {"replace_adapters_imports.py", "replace_docs.py", "replace_paths.py"}
 
 
 def is_text_file(filepath):
-    """Check if a file is likely text by reading a small chunk."""
     try:
         with open(filepath, "rb") as f:
             chunk = f.read(8192)
-        # If no null bytes and valid UTF-8 decodable, it's text
         chunk.decode("utf-8")
         return b"\x00" not in chunk
     except (UnicodeDecodeError, OSError):
@@ -20,7 +19,7 @@ def is_text_file(filepath):
 
 
 def main():
-    repo_root = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []
 
@@ -31,10 +30,9 @@ def main():
             fpath = os.path.join(root, f)
             rel = os.path.relpath(fpath, repo_root)
 
-            # Skip adapters/ dir (will be deleted), temp scripts
             if rel.split(os.sep)[0] in {"adapters"}:
                 continue
-            if f in SELF_FILES or f == "_replace_imports.py":
+            if f in SELF_FILES or f == "replace_imports.py":
                 continue
             if f.endswith(".md"):
                 continue

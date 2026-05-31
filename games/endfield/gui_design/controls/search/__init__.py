@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
 """全量搜索控件。"""
 
 from .qt_actions import QtSearchResultsDialog, SearchWorker

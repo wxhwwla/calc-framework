@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc-engine/ -> calc_engine/ in all text files (skip temp scripts and calc_engine/ dir itself)."""
 import os
 
 
 EXCLUDE_DIRS = {".venv", "__pycache__", ".pytest_cache", ".git", ".trae", "node_modules", "dist", "build"}
-SELF_FILES = {"_replace_adapters_imports.py", "_replace_docs.py", "_replace_paths.py", "_rename_pkg.py"}
+SELF_FILES = {"replace_adapters_imports.py", "replace_docs.py", "replace_paths.py", "rename_pkg.py"}
 
 
 def is_text_file(filepath):
@@ -18,7 +19,7 @@ def is_text_file(filepath):
 
 
 def main():
-    repo_root = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []
 

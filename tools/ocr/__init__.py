@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
 from .detector import BBox, BatchResult, DetectionResult, YOLOXDetector

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0
 """工具模块
 
 提供通用的工具函数，支持应用程序路径处理等功能。
