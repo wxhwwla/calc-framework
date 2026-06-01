@@ -405,6 +405,11 @@ def _verify_deployment(config: dict) -> None:
         (f"https://{domain}/api/donation/manifest", '"file"'),
         (f"https://{domain}/api/hub/packs?limit=1", '"packs"'),
         (f"https://{domain}/api/pack/theme/default", '"schema_version"'),
+        (f"https://{domain}/api/adapters", '"id"'),
+        (f"https://{domain}/api/adapters/endfield/pack-bundle", '"adapter_id"'),
+        (f"https://{domain}/api/history", "["),
+        (f"https://{domain}/api/download/client", "PK"),  # zip 魔数
+        (f"https://{domain}/compute", "calc-framework"),
     ]
     ok = True
     for url, needle in checks:

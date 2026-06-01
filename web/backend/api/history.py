@@ -11,15 +11,24 @@ MAX_HISTORY = 10
 _history: list[dict] = []
 
 
-@router.get("")
-def list_history():
+def list_history_payload() -> list[dict]:
     return list(reversed(_history))
 
 
-@router.post("")
-def save_history(entry: dict):
+def save_history_payload(entry: dict) -> dict:
+    entry = dict(entry)
     entry["saved_at"] = datetime.now(timezone.utc).isoformat()
     _history.append(entry)
     while len(_history) > MAX_HISTORY:
         _history.pop(0)
     return {"message": "ok", "index": len(_history) - 1}
+
+
+@router.get("")
+def list_history():
+    return list_history_payload()
+
+
+@router.post("")
+def save_history(entry: dict):
+    return save_history_payload(entry)

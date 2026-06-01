@@ -175,43 +175,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 @app.get("/api/download/client")
 def download_client():
     """下载本地搜索服务器（PyInstaller 打包，双击即可运行）。"""
-    # 尝试寻找预打包的 zip（dist/ 或 web/static/）
-    for _dir in [_REPO_ROOT / "dist" / "终末地本地搜索服务器",
-                 _REPO_ROOT / "static"]:
-        _zip = _dir / "local-backend.zip"
-        if _zip.exists():
-            content = _zip.read_bytes()
-            return Response(
-                content=content,
-                media_type="application/zip",
-                headers={
-                    "Content-Disposition":
-                        'attachment; filename="local-backend.zip"',
-                    "Content-Length": str(len(content)),
-                },
-            )
+    from api.download_client import build_client_download
 
-    # fallback: 动态生成包含下载说明的 zip
-    import io as _io
-    import zipfile as _zipfile
-    buf = _io.BytesIO()
-    with _zipfile.ZipFile(buf, "w", _zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("README.txt",
-            "END FIELD DAMAGE CALCULATOR - Local Backend Server\n"
-            "===============================================\n\n"
-            "The pre-packaged local backend is not yet available.\n\n"
-            "For developers, run in the project root:\n"
-            "  python web/build_local_backend.py\n\n"
-            "Then upload the zip to the server.\n"
-        )
-    buf.seek(0)
-    content = buf.getvalue()
+    content, filename, media_type = build_client_download()
     return Response(
         content=content,
-        media_type="application/zip",
+        media_type=media_type,
         headers={
-            "Content-Disposition":
-                'attachment; filename="local-backend-readme.zip"',
+            "Content-Disposition": f'attachment; filename="{filename}"',
             "Content-Length": str(len(content)),
         },
     )

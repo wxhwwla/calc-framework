@@ -7,8 +7,11 @@ import {
 interface OCRUploadDialogProps {
   open: boolean;
   onClose: () => void;
-  onResult: (data: { char_name?: string; weapon_name?: string }) => void;
+  onResult: (data: { char_name?: string; weapon_name?: string; preset?: Record<string, unknown> }) => void;
 }
+
+const isPythonAnywhere = typeof window !== "undefined"
+  && window.location.hostname.includes("pythonanywhere.com");
 
 export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null);
@@ -24,6 +27,9 @@ export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDi
       const formData = new FormData();
       formData.append("file", file);
       const r = await fetch("/api/ocr/detect", { method: "POST", body: formData });
+      if (r.status === 501) {
+        throw new Error("OCR 未部署（线上站不支持；请用桌面版截图识装）");
+      }
       if (!r.ok) throw new Error(await r.text());
       const data = await r.json();
       onResult(data);
@@ -39,6 +45,11 @@ export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDi
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>截图识装 (OCR)</DialogTitle>
       <DialogContent>
+        {isPythonAnywhere && (
+          <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
+            PythonAnywhere 未安装 OCR 依赖；请使用桌面计算器「截图识装」。
+          </Typography>
+        )}
         <Box sx={{ mb: 2 }}>
           <input
             ref={inputRef}

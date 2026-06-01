@@ -656,8 +656,12 @@ export default function ComputePage() {
         open={ocrDialogOpen}
         onClose={() => setOcrDialogOpen(false)}
         onResult={(data) => {
-          if (data.char_name) setSelectedChar(data.char_name);
-          if (data.weapon_name) setSelectedWeapon(data.weapon_name);
+          if (data.preset) {
+            handleImportPreset(data.preset);
+          } else {
+            if (data.char_name) setSelectedChar(data.char_name);
+            if (data.weapon_name) setSelectedWeapon(data.weapon_name);
+          }
           setOcrDialogOpen(false);
         }}
       />

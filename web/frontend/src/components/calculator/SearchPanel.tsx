@@ -32,7 +32,7 @@ type SearchStatus = "idle" | "estimating" | "ready" | "running" | "done" | "erro
 const isPythonAnywhere = window.location.hostname.includes("pythonanywhere.com");
 
 const handleDownloadClient = () => {
-  window.location.href = "/local-backend.zip";
+  window.location.href = "/api/download/client";
 };
 
 export default function SearchPanel({ currentParams }: SearchPanelProps) {

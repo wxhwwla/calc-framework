@@ -29,6 +29,7 @@ _FRAMEWORK_SRC = _BASE / "framework" / "src"
 _BACKEND = _BASE / "web" / "backend"
 _DATA = _BASE / "games" / "endfield" / "data"
 _DIST = _BASE / "web" / "frontend" / "dist"
+_STATIC = _BASE / "web" / "static"
 _DONATION = _BASE / "resources" / "donation"
 
 # 与 utils/donation_assets.py 保持一致（WSGI 不依赖 utils 包，避免 PA 未上传 utils 时 500）
@@ -708,6 +709,48 @@ def _handle_adapters(environ, start_response):
     return _http_error(start_response, "unknown adapters endpoint", 404)
 
 
+def _handle_history_and_download(environ, start_response):
+    """计算历史 + 本地搜索服务器下载（PA 上 FastAPI 不跑，须 WSGI 处理）。"""
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+
+    if path == "/api/history":
+        try:
+            from api.history import list_history_payload, save_history_payload
+        except Exception as e:
+            return _json(start_response, {"error": f"history import failed: {e}"}, "500 Internal Server Error")
+        try:
+            if method == "GET":
+                return _json(start_response, list_history_payload())
+            if method == "POST":
+                raw = _read_body(environ)
+                if not raw:
+                    return _http_error(start_response, "empty body", 400)
+                payload = json.loads(raw.decode("utf-8"))
+                return _json(start_response, save_history_payload(payload))
+        except json.JSONDecodeError:
+            return _http_error(start_response, "invalid JSON", 400)
+        except Exception as e:
+            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _http_error(start_response, "method not allowed", 405)
+
+    if path in ("/api/download/client", "/local-backend.zip") and method == "GET":
+        try:
+            from api.download_client import build_client_download
+
+            body, filename, ctype = build_client_download()
+            return _bytes(
+                start_response,
+                body,
+                ctype,
+                extra_headers=[("Content-Disposition", f'attachment; filename="{filename}"')],
+            )
+        except Exception as e:
+            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return None
+
+
 def _handle_arknights(environ, start_response):
     path = _fix_path(environ.get("PATH_INFO", ""))
     method = environ.get("REQUEST_METHOD", "GET")
@@ -882,6 +925,7 @@ def application(environ, start_response):
         _handle_hub,
         _handle_pack,
         _handle_adapters,
+        _handle_history_and_download,
         _handle_manual_buff,
         _handle_survival,
         _handle_arknights,
