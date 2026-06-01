@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0
+"""明日方舟伤害计算器 — 桌面 GUI 入口。
+
+用法::
+
+    python scripts/main_arknights.py
+
+实际代码位于: games/arknights/gui/ArknightsDamageApp.py
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _path_setup import ensure_root
+ensure_root()
+
+from games.arknights.main import main  # noqa: E402
+
+if __name__ == "__main__":
+    main()
