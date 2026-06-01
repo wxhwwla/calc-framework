@@ -86,7 +86,7 @@ class TestNgaMechanics(unittest.TestCase):
             context=ctx,
             crit_mode="non_crit",
             effects=[],
-            counts={"碎甲:0": 1},
+            counts={"倒地:0": 1},
             char_level=90,
             originium_arts_strength=0.0,
         )
@@ -94,12 +94,82 @@ class TestNgaMechanics(unittest.TestCase):
             context=ctx,
             crit_mode="non_crit",
             effects=[],
-            counts={"碎甲:0": 1},
+            counts={"倒地:0": 1},
             char_level=90,
             originium_arts_strength=100.0,
         )
         self.assertGreater(high, low)
         self.assertAlmostEqual(high / low, 2.0, places=2)
+
+
+    def test_combo_stacks_use_layer_table(self) -> None:
+        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="战技", combo_stacks=4)
+        result = calculate_single_hit_damage(ctx, crit_mode="non_crit")
+        self.assertAlmostEqual(result.zone_values["连击增伤区"], 1.75)
+
+    def test_combo_stacks_ultimate_table(self) -> None:
+        ctx = DamageContext(
+            final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="终结技", combo_stacks=2,
+        )
+        result = calculate_single_hit_damage(ctx, crit_mode="non_crit")
+        self.assertAlmostEqual(result.zone_values["连击增伤区"], 1.30)
+
+    def test_suijia_attached_vulnerability_increases_damage(self) -> None:
+        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=100.0)
+        low, _ = evaluate_physical_abnormal_total(
+            context=ctx, crit_mode="non_crit", effects=[], counts={"碎甲:0": 1}, char_level=90,
+        )
+        high, _ = evaluate_physical_abnormal_total(
+            context=ctx, crit_mode="non_crit", effects=[], counts={"碎甲:3": 1}, char_level=90,
+        )
+        self.assertGreater(high, low)
+
+    def test_conductive_attached_increases_spell_abnormal(self) -> None:
+        from games.endfield.calc.manual_buff.spell import evaluate_spell_abnormal_total
+
+        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=100.0, enemy_resistance=0.0)
+        low, _ = evaluate_spell_abnormal_total(
+            context=ctx, crit_mode="non_crit", effects=[], counts={"电磁异常:0": 1}, char_level=90,
+        )
+        high, _ = evaluate_spell_abnormal_total(
+            context=ctx, crit_mode="non_crit", effects=[], counts={"电磁异常:3": 1}, char_level=90,
+        )
+        self.assertGreater(high, low)
+
+    def test_display_correction_for_attack_flat(self) -> None:
+        from games.endfield.calc.equipment.display_corrections import correct_flat_stat_value
+
+        self.assertAlmostEqual(correct_flat_stat_value("攻击力", 11), 11.7167)
+
+    def test_healing_formula(self) -> None:
+        from games.endfield.calc.damage.healing import HealingContext, calculate_healing, received_heal_efficiency_from_will
+
+        self.assertAlmostEqual(received_heal_efficiency_from_will(350.7), 0.35)
+        out = calculate_healing(
+            HealingContext(
+                base_heal_flat=201.6,
+                stat_per_point=0.47,
+                stat_value=400.0,
+                heal_efficiency=0.20,
+                received_heal_efficiency=0.35,
+                independent_heal_bonus=0.30,
+            )
+        )
+        self.assertGreater(out["治疗量"], 201.6)
+
+    def test_execute_damage_tier_mult(self) -> None:
+        from games.endfield.calc.damage.execute import calculate_execute_damage
+
+        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, is_unbalanced=True)
+        normal, mult_normal = calculate_execute_damage(
+            context=ctx, normal_attack_multiplier=1.0, enemy_tier="普通", crit_mode="non_crit",
+        )
+        elite, mult_elite = calculate_execute_damage(
+            context=ctx, normal_attack_multiplier=1.0, enemy_tier="精英", crit_mode="non_crit",
+        )
+        self.assertAlmostEqual(mult_normal, 1.0)
+        self.assertAlmostEqual(mult_elite, 1.5)
+        self.assertAlmostEqual(elite / normal, 1.5, places=2)
 
 
 if __name__ == "__main__":

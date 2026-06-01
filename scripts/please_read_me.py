@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.16.1"
+_VERSION = "3.16.2"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -441,18 +441,18 @@ if __name__ == "__main__":
 # TITLE: 更新 15 处文件
 # BODY:
 # - 变更 "docs/nga-46094556-/347/273/210/346/234/253/345/234/260/346/234/272/345/210/266/345/257/271/347/205/247/344/270/216/345/276/205/345/212/236.md"
+# - 修改 games/endfield/calc/damage/abnormal_attached.py
+# - 修改 games/endfield/calc/damage/combo_bonus.py
 # - 修改 games/endfield/calc/damage/engine/calculate.py
 # - 修改 games/endfield/calc/damage/engine/types.py
-# - 修改 games/endfield/calc/damage/originium_arts.py
+# - 修改 games/endfield/calc/damage/execute.py
+# - 修改 games/endfield/calc/damage/healing.py
 # - 修改 games/endfield/calc/equipment/affix.py
-# - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
-# - 修改 games/endfield/calc/loadout/optimizer/types.py
-# - 修改 games/endfield/calc/manual_buff/abnormal_common.py
+# - 修改 games/endfield/calc/equipment/display_corrections.py
+# - 修改 games/endfield/calc/manual_buff/model.py
 # - 修改 games/endfield/calc/manual_buff/physical.py
 # - 修改 games/endfield/calc/manual_buff/spell.py
-# - 调整乘区逻辑 games/endfield/calc/multiplicative_zones/ability_bonus_calc.py
-# - 调整乘区逻辑 games/endfield/calc/multiplicative_zones/ability_bonus_details.py
-# - 修改 games/endfield/calc/search/evaluate/task.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_manual_buff_model.py
 # - 修改 games/endfield/tests/calculation/manual_buff/test_nga_mechanics.py
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---

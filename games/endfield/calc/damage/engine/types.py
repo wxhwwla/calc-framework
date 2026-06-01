@@ -133,6 +133,8 @@ class DamageContext:
     imbalance_damage_bonus: float = 0.0
     other_damage_bonus: float = 0.0
     base_damage_bonus: float = 0.0
+    combo_stacks: int = 0
+    """连击层数 1–4；>0 时连击增伤区用层数表，忽略装备连击 flat 加算。"""
 
 
 @dataclass(frozen=True)

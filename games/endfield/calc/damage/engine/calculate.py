@@ -37,6 +37,8 @@
 
 from __future__ import annotations
 
+from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
+
 from .helpers import _collect_effects, _resolve_crit_zone
 from .types import ZONE_ORDER, CritMode, DamageContext, DamageEffect, DamageResult
 
@@ -94,6 +96,7 @@ def _apply_manual_buffs(
             imbalance_damage_bonus=context.imbalance_damage_bonus + overrides.get("imbalance_damage_bonus", 0.0),
             other_damage_bonus=context.other_damage_bonus + overrides.get("other_damage_bonus", 0.0),
             base_damage_bonus=context.base_damage_bonus,
+            combo_stacks=context.combo_stacks,
         )
     return context, extra_effects
 
@@ -188,6 +191,13 @@ def calculate_single_hit_damage(
             special_zone *= value
 
     shelter = 1.0 - max(shelter_values, default=0.0)
+
+    flat_combo_bonus = max(0.0, combo_bonus - 1.0)
+    combo_bonus = combo_zone_multiplier(
+        context.skill_type,
+        int(context.combo_stacks),
+        flat_legacy_bonus=flat_combo_bonus,
+    )
 
     if context.is_true_damage:
         defense_zone = 1.0

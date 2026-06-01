@@ -8,6 +8,7 @@ import re
 from dataclasses import dataclass
 
 from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from games.endfield.calc.damage.abnormal_attached import build_physical_attached_effects
 from games.endfield.calc.manual_buff.abnormal_common import (
     apply_abnormal_post_zones,
     physical_abnormal_base_multiplier,
@@ -204,6 +205,7 @@ def evaluate_physical_abnormal_total(
     char_level: int,
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
     originium_arts_strength: float = 0.0,
+    attached_effect_multiplier: float = 1.0,
 ) -> tuple[float, dict[str, float]]:
     """计算物理异常总伤与单次分项（key 为 '异常:等级'）。
 
@@ -245,13 +247,21 @@ def evaluate_physical_abnormal_total(
                     other_damage_bonus=context.other_damage_bonus,
                 )
 
+            attached = build_physical_attached_effects(
+                abnormal,
+                calc_level,
+                originium_arts_strength=originium_arts_strength,
+                effect_multiplier=attached_effect_multiplier,
+            )
+            hit_effects = list(effects) + attached
+
             segment_total = 0.0
             for occurrence_idx in range(1, count + 1):
                 buff_key = f"{base_key}:{occurrence_idx}"
                 buffs = mb.get(buff_key)
                 result = calculate_single_hit_damage(
                     _make_ctx(),
-                    effects=effects,
+                    effects=hit_effects,
                     crit_mode=crit_mode,
                     manual_buffs=buffs,
                     damage_pipeline="abnormal",

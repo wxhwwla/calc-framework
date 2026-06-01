@@ -104,7 +104,9 @@ def parse_equipment_affix_line(
                 )
             )
         elif not is_percent and name in ("力量", "敏捷", "智识", "意志", "攻击力"):
-            flat_stats[name] = flat_stats.get(name, 0.0) + value
+            from games.endfield.calc.equipment.display_corrections import correct_flat_stat_value
+
+            flat_stats[name] = flat_stats.get(name, 0.0) + correct_flat_stat_value(name, value)
         return effects, flat_stats
 
     # 套装/效果长句中的「物理伤害+20%」等
