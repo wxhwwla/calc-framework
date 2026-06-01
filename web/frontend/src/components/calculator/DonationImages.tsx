@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import {
+  DONATION_API_BASE,
   DONATION_IMAGE_SLOTS,
   donationImageUrl,
 } from "../../constants/donation";
@@ -41,7 +42,28 @@ export default function DonationImages({ maxWidth = 280 }: DonationImagesProps) 
   }, []);
 
   useEffect(() => {
-    DONATION_IMAGE_SLOTS.forEach((_slot, i) => probeSlot(i, 0));
+    let cancelled = false;
+    fetch(`${DONATION_API_BASE}/manifest`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((items: { file: string; label: string }[]) => {
+        if (cancelled) return;
+        if (Array.isArray(items) && items.length > 0) {
+          setSlots(
+            DONATION_IMAGE_SLOTS.map((slot) => {
+              const hit = items.find((it) => it.label === slot.label);
+              return { label: slot.label, file: hit?.file ?? null };
+            }),
+          );
+          return;
+        }
+        DONATION_IMAGE_SLOTS.forEach((_slot, i) => probeSlot(i, 0));
+      })
+      .catch(() => {
+        if (!cancelled) DONATION_IMAGE_SLOTS.forEach((_slot, i) => probeSlot(i, 0));
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [probeSlot]);
 
   const visible = slots.filter((s) => s.file);

@@ -131,8 +131,14 @@ def _handle_donation(environ, start_response):
     if not path.startswith("/api/donation/"):
         return None
     name = path[len("/api/donation/") :].lstrip("/")
-    if not name or name == "manifest":
+    if not name:
         return None
+    if name == "manifest":
+        try:
+            from utils.donation_assets import resolve_donation_images
+        except ImportError:
+            from donation_assets import resolve_donation_images  # type: ignore
+        return _json(start_response, resolve_donation_images())
     try:
         from utils.donation_assets import is_allowed_donation_filename
     except ImportError:

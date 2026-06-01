@@ -15,17 +15,25 @@
 
     python main_build.py --target designer   # 仅打包数据设计器
 
-    python main_build.py --target pack-designer # 仅打包配置包设计器
+    python main_build.py --target pack-designer   # 仅打包配置包设计器
+
+    python main_build.py --target arknights       # 仅打包明日方舟计算器
+
+    python main_build.py --target local-backend   # 仅打包本地搜索服务器（会先构建 Web 前端）
 
 
 
-输出：
+输出（各目标独立目录，可 `--target all` 一次顺序打齐）：
 
-  dist/终末地伤害计算器/  ── 伤害计算器
+  dist/终末地伤害计算器/      ── 伤害计算器
 
-  dist/数据设计器/  ── 数据设计器
+  dist/数据设计器/            ── 数据设计器
 
-  dist/配置包设计器/  ── 配置包设计器
+  dist/配置包设计器/          ── 配置包设计器
+
+  dist/明日方舟伤害计算器/    ── 明日方舟计算器
+
+  dist/终末地本地搜索服务器/  ── Web 全量搜索本地后端
 
 """
 
@@ -72,6 +80,8 @@ if str(_GAMES) not in sys.path:
 from please_read_me import get_exe_version, get_version
 
 from release_bundle.release_layout import (
+
+    ALL_BUILD_TARGETS,
 
     BuildTarget,
 
@@ -282,9 +292,8 @@ def _build_target(
     if extra_args:
         cmd.extend(extra_args)
 
-    if not is_local_backend:
-        donation_data = f"{base_dir / 'resources' / 'donation'};resources/donation"
-        cmd.extend(["--add-data", donation_data])
+    donation_data = f"{base_dir / 'resources' / 'donation'};resources/donation"
+    cmd.extend(["--add-data", donation_data])
 
     if is_local_backend:
         # 控制台模式（服务器需要在终端运行）
@@ -389,7 +398,7 @@ def main() -> None:
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     if args.target == "all":
-        targets: list[BuildTarget] = ["calculator", "designer", "pack-designer"]
+        targets = list(ALL_BUILD_TARGETS)
     else:
         targets: list[BuildTarget] = [args.target]
 

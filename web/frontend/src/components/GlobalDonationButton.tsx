@@ -11,11 +11,12 @@ export default function GlobalDonationButton() {
     <>
       <Button
         color="inherit"
+        startIcon={<VolunteerActivismIcon />}
         onClick={() => setOpen(true)}
-        sx={{ minWidth: 40, ml: 0.5 }}
+        sx={{ ml: 0.5, textTransform: "none" }}
         title="自愿捐赠"
       >
-        <VolunteerActivismIcon />
+        捐赠
       </Button>
       <DonationDialog open={open} onClose={() => setOpen(false)} />
     </>

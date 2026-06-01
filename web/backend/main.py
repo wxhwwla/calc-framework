@@ -3,6 +3,7 @@ try:
     from . import _path_setup  # sets sys.path for dev mode
 except ImportError:
     import _path_setup  # fallback when run as top-level module
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -85,10 +86,27 @@ app.include_router(history_router)
 app.include_router(ocr_router)
 app.include_router(arknights_router)
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+def _resolve_repo_root() -> Path:
+    """开发=仓库根；PyInstaller 本地后端=``_MEIPASS``。"""
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[2]))
+    return Path(__file__).resolve().parents[2]
+
+
+_REPO_ROOT = _resolve_repo_root()
 
 # 捐赠二维码（与 GUI resources/donation/ 同源）
 _DONATION_DIR = _REPO_ROOT / "resources" / "donation"
+
+
+@app.get("/api/donation/manifest")
+async def donation_manifest():
+    """返回当前可用的捐赠图列表（与 utils/donation_assets 一致）。"""
+    from utils.donation_assets import resolve_donation_images
+
+    return resolve_donation_images()
+
+
 if _DONATION_DIR.is_dir():
     app.mount(
         "/api/donation",
@@ -96,6 +114,8 @@ if _DONATION_DIR.is_dir():
         name="donation",
     )
     logger.info("捐赠静态资源已挂载: %s", _DONATION_DIR)
+else:
+    logger.warning("捐赠目录不存在，跳过挂载: %s", _DONATION_DIR)
 
 # 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
 _FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"

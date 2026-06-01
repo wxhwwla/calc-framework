@@ -33,6 +33,15 @@ from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_
 
 BuildTarget = Literal["calculator", "designer", "pack-designer", "local-backend", "arknights"]
 
+# 默认 `--target all` 顺序：先桌面 GUI，再 Web 本地后端
+ALL_BUILD_TARGETS: tuple[BuildTarget, ...] = (
+    "calculator",
+    "designer",
+    "pack-designer",
+    "arknights",
+    "local-backend",
+)
+
 
 TARGET_APP_NAMES: dict[BuildTarget, str] = {
 

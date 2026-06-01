@@ -20,7 +20,7 @@ export default defineConfig({
     port: 4173,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: "http://127.0.0.1:8180",
         changeOrigin: true,
       },
     },
@@ -29,7 +29,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        // 与 web/run_local.py 默认端口一致
+        target: "http://127.0.0.1:8180",
         changeOrigin: true,
       },
     },
