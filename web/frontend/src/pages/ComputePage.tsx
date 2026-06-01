@@ -26,6 +26,13 @@ import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadou
 import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
 import type { PresetData } from "../components/calculator/PresetDialog";
 import BuildIcon from "@mui/icons-material/Build";
+import TuneIcon from "@mui/icons-material/Tune";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import ManualBuffDialog from "../components/calculator/ManualBuffDialog";
+import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
+import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
+import SearchSettingsPanel from "../components/calculator/SearchSettingsPanel";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate, fetchSnapshot, type DamageSnapshot } from "../api/compute";
@@ -100,6 +107,11 @@ export default function ComputePage() {
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [allWeapons, setAllWeapons] = useState<any[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
+  const [manualBuffDialogOpen, setManualBuffDialogOpen] = useState(false);
+  const [batchCompareOpen, setBatchCompareOpen] = useState(false);
+  const [ocrDialogOpen, setOcrDialogOpen] = useState(false);
+  const [buffValues, setBuffValues] = useState<Record<string, number>>({});
+  const [searchSettings, setSearchSettings] = useState({ topN: 10, workers: 4, damageComponent: "skill_and_abnormal" });
 
   useEffect(() => {
     fetchLayout().then(setLayout).catch(() => {});
@@ -456,7 +468,7 @@ export default function ComputePage() {
           <Grid size={{ xs: 12, md: 5 }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
-                <Box sx={{ display: "flex", gap: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Button
                     variant="outlined"
                     size="small"
@@ -466,6 +478,32 @@ export default function ComputePage() {
                   >
                     工具与分享
                   </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<TuneIcon />}
+                    onClick={() => setManualBuffDialogOpen(true)}
+                  >
+                    Buff微调
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<CompareArrowsIcon />}
+                    onClick={() => setBatchCompareOpen(true)}
+                  >
+                    方案对比
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<CameraAltIcon />}
+                    onClick={() => setOcrDialogOpen(true)}
+                  >
+                    截图识装
+                  </Button>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                   <Button
                     variant="outlined"
                     size="small"
@@ -492,6 +530,7 @@ export default function ComputePage() {
             </Box>
           </Grid>
           <Grid size={{ xs: 12, md: 7 }}>
+            <SearchSettingsPanel settings={searchSettings} onChange={setSearchSettings} />
             <Paper sx={{ p: 3 }}>
               <SearchPanel currentParams={searchParams as any} />
             </Paper>
@@ -528,6 +567,28 @@ export default function ComputePage() {
       <SearchHistoryDialog
         open={searchHistoryOpen}
         onClose={() => setSearchHistoryOpen(false)}
+      />
+
+      <ManualBuffDialog
+        open={manualBuffDialogOpen}
+        onClose={() => setManualBuffDialogOpen(false)}
+        values={buffValues}
+        onApply={(v) => { setBuffValues(v); setManualBuffDialogOpen(false); }}
+      />
+
+      <BatchCompareDialog
+        open={batchCompareOpen}
+        onClose={() => setBatchCompareOpen(false)}
+      />
+
+      <OCRUploadDialog
+        open={ocrDialogOpen}
+        onClose={() => setOcrDialogOpen(false)}
+        onResult={(data) => {
+          if (data.char_name) setSelectedChar(data.char_name);
+          if (data.weapon_name) setSelectedWeapon(data.weapon_name);
+          setOcrDialogOpen(false);
+        }}
       />
     </Box>
   );
