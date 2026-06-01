@@ -21,6 +21,11 @@ from games.endfield.calc.character_stats import total_max_hp
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.execute import calculate_execute_damage, execute_sp_restore
 from games.endfield.calc.damage.healing import HealingContext, calculate_healing, received_heal_efficiency_from_will
+from games.endfield.calc.damage.imbalance import (
+    imbalance_cap_for_tier,
+    imbalance_duration_for_tier,
+    imbalance_node_thresholds,
+)
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 
@@ -55,6 +60,16 @@ class QtSurvivalEstimateDialog(QDialog):
         exec_form.addRow("预估处决伤害", self._exec_result)
         exec_form.addRow("恢复技力", self._exec_sp)
         layout.addWidget(exec_box)
+
+        imb_box = QGroupBox("失衡参考（按敌人等阶）")
+        imb_form = QFormLayout(imb_box)
+        self._imb_cap = QLabel("—")
+        self._imb_duration = QLabel("—")
+        self._imb_nodes = QLabel("—")
+        imb_form.addRow("失衡上限", self._imb_cap)
+        imb_form.addRow("失衡持续 (s)", self._imb_duration)
+        imb_form.addRow("节点阈值", self._imb_nodes)
+        layout.addWidget(imb_box)
 
         heal_box = QGroupBox("治疗（三乘区）")
         heal_form = QFormLayout(heal_box)
@@ -110,8 +125,21 @@ class QtSurvivalEstimateDialog(QDialog):
         self._trust_level = trust_level
         self._enemy_tier = enemy_tier
         self._weapon_skill_kwargs = dict(weapon_skill_kwargs or {})
+        self._refresh_imbalance_info()
         self._refresh_execute()
         self._refresh_healing()
+
+    def _refresh_imbalance_info(self) -> None:
+        cap = imbalance_cap_for_tier(self._enemy_tier)
+        duration = imbalance_duration_for_tier(self._enemy_tier)
+        nodes_1 = imbalance_node_thresholds(cap, 1)
+        nodes_2 = imbalance_node_thresholds(cap, 2)
+        self._imb_cap.setText(f"{cap:g}")
+        self._imb_duration.setText(f"{duration:g}")
+        node_text = f"1 节点: {', '.join(f'{v:g}' for v in nodes_1)}"
+        if len(nodes_2) > 1:
+            node_text += f"；2 节点: {', '.join(f'{v:g}' for v in nodes_2)}"
+        self._imb_nodes.setText(node_text)
 
     def _refresh_execute(self) -> None:
         details = calculate_final_attack_with_details(

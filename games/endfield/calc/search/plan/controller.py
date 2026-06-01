@@ -55,6 +55,7 @@ class SearchJobInputs:
     ignore_resistance: float = 0.0
     imbalance_vulnerability_coeff: float = 1.3
     is_unbalanced: bool = False
+    is_true_damage: bool = False
     combo_stacks: int = 0
     attached_effect_multiplier: float = 1.0
     corrosion_duration_seconds: float = 15.0
@@ -111,6 +112,7 @@ def prepare_search_job(
         ignore_resistance=float(inputs.ignore_resistance),
         imbalance_vulnerability_coeff=float(inputs.imbalance_vulnerability_coeff),
         is_unbalanced=bool(inputs.is_unbalanced),
+        is_true_damage=bool(inputs.is_true_damage),
         combo_stacks=int(inputs.combo_stacks),
         attached_effect_multiplier=float(inputs.attached_effect_multiplier),
         corrosion_duration_seconds=float(inputs.corrosion_duration_seconds),

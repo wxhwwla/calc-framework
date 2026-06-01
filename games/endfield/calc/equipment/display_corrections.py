@@ -8,10 +8,13 @@ _FLAT_STAT_CORRECTIONS: dict[tuple[str, int], float] = {
     ("攻击力", 11): 11.7167,
     ("攻击力", 16): 16.1877,
     ("防御力", 21): 21.6,
+    ("防御力", 28): 28.8,
+    ("防御力", 36): 36.5,
 }
 
 _PERCENT_CORRECTIONS: dict[tuple[str, float], float] = {
     ("攻击力", 12.3): 12.25,
+    ("防御力", 12.3): 12.25,
 }
 
 # 源石技艺强度面板显示 → 实战（节选 70 级）
@@ -20,6 +23,7 @@ _ORIGINIUM_DISPLAY_TO_ACTUAL: dict[int, float] = {
     24: 24.5,
     29: 29.4,
     41: 41.4,
+    70: 70.8,
 }
 
 
@@ -32,9 +36,10 @@ def correct_flat_stat_value(stat_name: str, display_value: float) -> float:
     return float(_FLAT_STAT_CORRECTIONS.get(key, display_value))
 
 
-def correct_percent_display(display_percent: float) -> float:
+def correct_percent_display(display_percent: float, *, stat_name: str = "攻击力") -> float:
     """百分比显示校正（输入为百分数，如 12.3 表示 12.3%）。"""
-    return float(_PERCENT_CORRECTIONS.get(("攻击力", round(display_percent, 1)), display_percent))
+    key = (str(stat_name), round(float(display_percent), 1))
+    return float(_PERCENT_CORRECTIONS.get(key, display_percent))
 
 
 def correct_originium_display(display_int: int) -> float:

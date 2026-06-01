@@ -262,6 +262,7 @@ class LoadoutState:
             ignore_resistance=self.ignore_resistance,
             imbalance_vulnerability_coeff=self.imbalance_vulnerability_coeff,
             is_unbalanced=self.is_unbalanced,
+            is_true_damage=self.is_true_damage,
             combo_stacks=self.combo_stacks,
             attached_effect_multiplier=self.attached_effect_multiplier,
             corrosion_duration_seconds=self.corrosion_duration_seconds,
