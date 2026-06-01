@@ -106,6 +106,7 @@ def evaluate_spell_abnormal_total(
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
     originium_arts_strength: float = 0.0,
     attached_effect_multiplier: float = 1.0,
+    corrosion_duration_seconds: float = 15.0,
 ) -> tuple[float, dict[str, float]]:
     """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。
 
@@ -155,6 +156,7 @@ def evaluate_spell_abnormal_total(
                 calc_level,
                 originium_arts_strength=originium_arts_strength,
                 effect_multiplier=attached_effect_multiplier,
+                corrosion_duration_seconds=corrosion_duration_seconds,
             )
             hit_effects = list(effects) + attached
 

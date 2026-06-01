@@ -84,6 +84,7 @@ def build_spell_attached_effects(
     *,
     originium_arts_strength: float = 0.0,
     effect_multiplier: float = 1.0,
+    corrosion_duration_seconds: float | None = None,
 ) -> list:
     from games.endfield.calc.damage.engine import DamageEffect
 
@@ -106,8 +107,15 @@ def build_spell_attached_effects(
             )
         )
     elif abnormal_key == "自然异常":
-        shred = corrosion_initial_resistance_shred(
+        from games.endfield.calc.damage.corrosion import (
+            CORROSION_DURATION_SEC,
+            corrosion_total_resistance_shred,
+        )
+
+        duration = float(corrosion_duration_seconds) if corrosion_duration_seconds is not None else CORROSION_DURATION_SEC
+        shred = corrosion_total_resistance_shred(
             calc_level,
+            elapsed_seconds=duration,
             originium_arts_strength=originium_arts_strength,
             effect_multiplier=effect_multiplier,
         )

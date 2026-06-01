@@ -77,8 +77,8 @@ class TestNgaMechanics(unittest.TestCase):
 
     def test_parse_originium_flat_stat(self) -> None:
         _, flats = parse_equipment_affix_line("源石技艺强度41", source="x")
-        self.assertAlmostEqual(flats[ORIGINIUM_FLAT_STAT_KEY], 41.0)
-        self.assertAlmostEqual(sum_originium_arts_strength(flats), 41.0)
+        self.assertAlmostEqual(flats[ORIGINIUM_FLAT_STAT_KEY], 41.4)
+        self.assertAlmostEqual(sum_originium_arts_strength(flats), 41.4)
 
     def test_physical_abnormal_scales_with_originium(self) -> None:
         ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=100.0)

@@ -153,6 +153,7 @@ def _evaluate_abnormal_damage(
         counts=physical_counts,
         char_level=char_level,
         originium_arts_strength=float(snapshot.originium_arts_strength),
+        attached_effect_multiplier=float(job.attached_effect_multiplier),
     )
     spell_total, spell_breakdown = evaluate_spell_abnormal_total(
         context=DamageContext(
@@ -178,6 +179,8 @@ def _evaluate_abnormal_damage(
         counts=spell_counts,
         char_level=char_level,
         originium_arts_strength=float(snapshot.originium_arts_strength),
+        attached_effect_multiplier=float(job.attached_effect_multiplier),
+        corrosion_duration_seconds=float(job.corrosion_duration_seconds),
     )
     merged = dict(physical_breakdown)
     merged.update(spell_breakdown)

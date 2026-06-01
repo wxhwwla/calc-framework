@@ -180,6 +180,11 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
         self._imbalance_vulnerability_coeff: float = 1.3
 
         self._is_unbalanced: bool = False
+        self._enemy_tier: str = "普通"
+        self._combo_stacks: int = 0
+        self._attached_effect_multiplier: float = 1.0
+        self._corrosion_duration_seconds: float = 15.0
+        self._imbalance_efficiency_bonus: float = 0.0
 
 
 

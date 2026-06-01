@@ -67,10 +67,11 @@ def parse_equipment_affix_line(
     originium_match = _ORIGINIUM_ARTS_RE.search(compact)
     if originium_match:
         from games.endfield.calc.damage.originium_arts import ORIGINIUM_FLAT_STAT_KEY
+        from games.endfield.calc.equipment.display_corrections import correct_originium_display
 
-        flat_stats[ORIGINIUM_FLAT_STAT_KEY] = flat_stats.get(ORIGINIUM_FLAT_STAT_KEY, 0.0) + float(
-            originium_match.group(1)
-        )
+        shown = float(originium_match.group(1))
+        actual = correct_originium_display(int(shown)) if shown == int(shown) else shown
+        flat_stats[ORIGINIUM_FLAT_STAT_KEY] = flat_stats.get(ORIGINIUM_FLAT_STAT_KEY, 0.0) + actual
         return effects, flat_stats
 
     dmg_match = _DAMAGE_BONUS_RE.search(compact)
@@ -95,15 +96,18 @@ def parse_equipment_affix_line(
         value = float(stat_match.group(2))
         is_percent = bool(stat_match.group(3))
         if name == "攻击力" and is_percent:
+            from games.endfield.calc.equipment.display_corrections import correct_percent_display
+
+            pct = correct_percent_display(value)
             effects.append(
                 DamageEffect(
                     effect_type="装备攻击力加成",
-                    value=value / 100.0,
+                    value=pct / 100.0,
                     source=source,
                     raw_text=raw,
                 )
             )
-        elif not is_percent and name in ("力量", "敏捷", "智识", "意志", "攻击力"):
+        elif not is_percent and name in ("力量", "敏捷", "智识", "意志", "攻击力", "防御力"):
             from games.endfield.calc.equipment.display_corrections import correct_flat_stat_value
 
             flat_stats[name] = flat_stats.get(name, 0.0) + correct_flat_stat_value(name, value)

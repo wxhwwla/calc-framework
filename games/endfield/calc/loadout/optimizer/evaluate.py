@@ -94,6 +94,7 @@ def evaluate_task(
         skill_type_bonus=base_context.skill_type_bonus,
         imbalance_damage_bonus=base_context.imbalance_damage_bonus,
         other_damage_bonus=base_context.other_damage_bonus,
+        combo_stacks=base_context.combo_stacks,
     )
     result = calculate_single_hit_damage(ctx, effects=list(snapshot.effects), crit_mode=crit_mode)
     return LoadoutScore(
