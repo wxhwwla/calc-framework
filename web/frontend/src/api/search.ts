@@ -1,5 +1,8 @@
 const BASE = "/api/search";
 
+/** 与桌面 `ENEMY_TIERS` 一致 */
+export const ENEMY_TIERS = ["普通", "进阶", "精英", "头目", "领袖"] as const;
+
 /** 与桌面 `EnemyEvalParams` / 插件默认一致 */
 export const DEFAULT_ENEMY_PARAMS: EnemyParams = {
   enemy_defense: 100,
@@ -142,14 +145,15 @@ export interface SearchRequest {
   physical_abnormal_counts?: Record<string, number> | null;
   spell_abnormal_counts?: Record<string, number> | null;
   damage_component_mode?: string;
-  top_n: number;
-  max_workers: number;
+  top_n?: number;
+  max_workers?: number;
   use_manual_multi_skill_counts?: boolean;
   manual_counts?: Record<string, number> | null;
   skill_1_level?: number;
   skill_2_level?: number;
   skill_3_level?: number;
   use_expected_crit?: boolean;
+  include_conditional_equipment_crit?: boolean;
   extra_crit_rate?: number;
   extra_crit_damage?: number;
 }

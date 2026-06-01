@@ -25,12 +25,20 @@ import { DEFAULT_ENEMY_PARAMS, mergeEnemyParams } from "../api/search";
 import type { MultiSkillSettings } from "../components/calculator/MultiSkillPanel";
 import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadoutPanel";
 import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
-import type { PresetData } from "../components/calculator/PresetDialog";
 import BuildIcon from "@mui/icons-material/Build";
 import TuneIcon from "@mui/icons-material/Tune";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import ManualBuffDialog from "../components/calculator/ManualBuffDialog";
+import SearchPreviewPanel from "../components/calculator/SearchPreviewPanel";
+import SegmentManualBuffDialog, {
+  type ManualBuffStore,
+} from "../components/calculator/SegmentManualBuffDialog";
+import {
+  buildWebLoadoutPayload,
+  buildSearchRequestFromLoadout,
+  fetchLoadoutPreview,
+  fetchLoadoutSnapshot,
+} from "../api/loadout";
 import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
 import SurvivalEstimateDialog from "../components/calculator/SurvivalEstimateDialog";
 import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
@@ -41,7 +49,7 @@ import DonationDialog from "../components/calculator/DonationDialog";
 import { logOperation, exportLogsAsJson } from "../utils/operationLog";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
-import { evaluate, fetchSnapshot, type DamageSnapshot } from "../api/compute";
+import { evaluate, type DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
 
 const WEAPON_SCOPE_OPTIONS = ["当前武器", "同类型同星级", "同类型全部"];
@@ -108,10 +116,13 @@ export default function ComputePage() {
   const [allWeapons, setAllWeapons] = useState<any[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
   const [manualBuffDialogOpen, setManualBuffDialogOpen] = useState(false);
+  const [manualBuffStore, setManualBuffStore] = useState<ManualBuffStore>({});
+  const [previewLines, setPreviewLines] = useState<string[] | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [batchCompareOpen, setBatchCompareOpen] = useState(false);
   const [survivalDialogOpen, setSurvivalDialogOpen] = useState(false);
   const [ocrDialogOpen, setOcrDialogOpen] = useState(false);
-  const [buffValues, setBuffValues] = useState<Record<string, number>>({});
   const [searchSettings, setSearchSettings] = useState({ topN: 10, workers: 4, damageComponent: "skill_and_abnormal" });
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
   const [dataSourceOpen, setDataSourceOpen] = useState(false);
@@ -137,22 +148,119 @@ export default function ComputePage() {
     setWeaponData(data);
   }, []);
 
-  const handleImportPreset = useCallback((data: PresetData) => {
-    setSelectedChar(data.char_name);
-    setSelectedWeapon(data.weapon_name);
-    setCharLevel(data.char_level ?? 90);
-    setWeaponLevel(data.weapon_level ?? 90);
-    setEnemyParams(mergeEnemyParams(data.enemy_params));
+  const handleImportPreset = useCallback((data: Record<string, unknown>) => {
+    const schema = String(data.schema || "");
+    setSelectedChar(String(data.char_name || ""));
+    setSelectedWeapon(String(data.weapon_name || ""));
+    setCharLevel(Number(data.char_level ?? 90));
+    setWeaponLevel(Number(data.weapon_level ?? 90));
+    setTrustLevel(Number(data.trust_level ?? 0));
+
+    if (schema === "endfield_loadout_preset_v2") {
+      const levels = data.skill_levels as number[] | undefined;
+      if (levels && levels.length >= 3) {
+        setSkillLevels({
+          skill_1_level: levels[0],
+          skill_2_level: levels[1],
+          skill_3_level: levels[2],
+        });
+      }
+      setEnemyParams(mergeEnemyParams((data.enemy_params as Partial<EnemyParams>) ?? {}));
+      setMultiSkill({
+        useManualCounts: Boolean(data.use_manual_multi_skill_counts),
+        manualCounts: (data.multi_skill_counts as Record<string, number>) ?? {},
+        damageComponentMode: String(data.damage_component_mode ?? "skill_and_abnormal"),
+        useExpectedCrit: Boolean(data.use_expected_crit),
+      });
+      setCritAbnormal({
+        extraCritRate: Number(data.extra_crit_rate ?? 0),
+        extraCritDamage: Number(data.extra_crit_damage ?? 0),
+        includeConditionalEquipmentCrit: Boolean(data.include_conditional_equipment_crit),
+        physicalAbnormalCounts: (data.physical_abnormal_counts as Record<string, number>) ?? {},
+        spellAbnormalCounts: (data.spell_abnormal_counts as Record<string, number>) ?? {},
+      });
+      setManualBuffStore((data.manual_buffs as ManualBuffStore) ?? {});
+      const fixed = data.fixed_equipment_names as Record<string, string | null> | undefined;
+      if (fixed) {
+        setFixedLoadout({
+          chest: fixed.chest ?? null,
+          gloves: fixed.gloves ?? null,
+          accessory_a: fixed.accessory_a ?? null,
+          accessory_b: fixed.accessory_b ?? null,
+        });
+      }
+      const normal = (data.weapon_normal_levels as number[]) ?? [];
+      const wsv: Record<string, number> = {};
+      normal.forEach((lv, i) => {
+        wsv[`normal_skill_${i + 1}_level`] = lv;
+      });
+      const specials = (data.weapon_special_states as { level: number; stack: number }[]) ?? [];
+      specials.forEach((s, i) => {
+        wsv[`special_skill_${i + 1}_level`] = s.level;
+        wsv[`special_skill_${i + 1}_stack`] = s.stack;
+      });
+      if (Object.keys(wsv).length > 0) setWeaponSkillValues(wsv);
+      if (data.weapon_scope) setWeaponScope(String(data.weapon_scope));
+      if (data.equipment_scope) setEquipmentScope(String(data.equipment_scope));
+      return;
+    }
+
+    const web = data as {
+      enemy_params?: Partial<EnemyParams>;
+      multi_skill?: {
+        use_manual_multi_skill_counts?: boolean;
+        manual_counts?: Record<string, number>;
+        damage_component_mode?: string;
+      };
+      fixed_loadout?: FixedLoadoutSelection | null;
+    };
+    setEnemyParams(mergeEnemyParams(web.enemy_params ?? {}));
     setMultiSkill({
-      useManualCounts: data.multi_skill.use_manual_multi_skill_counts,
-      manualCounts: data.multi_skill.manual_counts,
-      damageComponentMode: data.multi_skill.damage_component_mode,
+      useManualCounts: Boolean(web.multi_skill?.use_manual_multi_skill_counts),
+      manualCounts: web.multi_skill?.manual_counts ?? {},
+      damageComponentMode: web.multi_skill?.damage_component_mode ?? "skill_and_abnormal",
       useExpectedCrit: false,
     });
-    if (data.fixed_loadout) {
-      setFixedLoadout(data.fixed_loadout as unknown as FixedLoadoutSelection);
+    if (web.fixed_loadout) {
+      setFixedLoadout(web.fixed_loadout as unknown as FixedLoadoutSelection);
     }
   }, []);
+
+  const makeLoadoutPayload = useCallback(() => {
+    return buildWebLoadoutPayload({
+      charData,
+      weaponData,
+      charLevel,
+      weaponLevel,
+      trustLevel,
+      skillLevels,
+      weaponSkillValues,
+      weaponScope,
+      equipmentScope,
+      multiSkill,
+      critAbnormal,
+      enemyParams,
+      fixedLoadout,
+      manualBuffStore,
+      equipmentCatalog,
+    });
+  }, [
+    charData,
+    weaponData,
+    charLevel,
+    weaponLevel,
+    trustLevel,
+    skillLevels,
+    weaponSkillValues,
+    weaponScope,
+    equipmentScope,
+    multiSkill,
+    critAbnormal,
+    enemyParams,
+    fixedLoadout,
+    manualBuffStore,
+    equipmentCatalog,
+  ]);
 
   const handleEvaluate = useCallback(async () => {
     const adapter = "终末地伤害计算";
@@ -201,11 +309,11 @@ export default function ComputePage() {
         "庇护": 0,
         "脆弱": 0,
         "易伤": 0,
-        "失衡易伤": 0,
+        "失衡易伤": enemyParams.is_unbalanced ? enemyParams.imbalance_vulnerability_coeff - 1 : 0,
         "抗性": 0,
         "非主控减伤": 0,
-        "连击增伤": 0,
-        "特殊乘区": 0,
+        "连击增伤": enemyParams.combo_stacks > 0 ? 0.05 * enemyParams.combo_stacks : 0,
+        "特殊乘区": enemyParams.is_true_damage ? 1 : 0,
         "力量加成值": 0,
         "敏捷加成值": 0,
         "智识加成值": 0,
@@ -252,72 +360,41 @@ export default function ComputePage() {
       useComputeStore.setState({ result: evalResult, error: null, loading: false });
 
       if (selectedChar && selectedWeapon) {
-        setSnapshotLoading(true);
-        fetchSnapshot({
-          char_name: selectedChar,
-          weapon_name: selectedWeapon,
-          char_level: charLevel,
-          weapon_level: weaponLevel,
-          trust_level: trustLevel,
-          skill_1_level: (skillLevels.skill_1_level as number) ?? 8,
-          skill_2_level: (skillLevels.skill_2_level as number) ?? 8,
-          skill_3_level: (skillLevels.skill_3_level as number) ?? 8,
-          normal_skill_1_level: (weaponSkillValues.normal_skill_1_level as number) ?? 1,
-          normal_skill_2_level: (weaponSkillValues.normal_skill_2_level as number) ?? 1,
-          normal_skill_3_level: (weaponSkillValues.normal_skill_3_level as number) ?? 0,
-          special_skill_1_level: (weaponSkillValues.special_skill_1_level as number) ?? 1,
-          special_skill_1_stack: (weaponSkillValues.special_skill_1_stack as number) ?? 0,
-          special_skill_2_level: (weaponSkillValues.special_skill_2_level as number) ?? 1,
-          special_skill_2_stack: (weaponSkillValues.special_skill_2_stack as number) ?? 0,
-          enemy_defense: enemyParams.enemy_defense,
-          enemy_resistance: enemyParams.enemy_resistance,
-          ignore_resistance: enemyParams.ignore_resistance,
-          imbalance_vulnerability_coeff: enemyParams.imbalance_vulnerability_coeff,
-          is_unbalanced: enemyParams.is_unbalanced,
-          is_true_damage: enemyParams.is_true_damage,
-          combo_stacks: enemyParams.combo_stacks,
-          break_defense_stacks: enemyParams.break_defense_stacks,
-          extra_crit_rate: critAbnormal.extraCritRate,
-          extra_crit_damage: critAbnormal.extraCritDamage,
-          damage_component_mode: multiSkill.damageComponentMode,
-        })
-          .then(setDamageSnapshot)
-          .catch(() => {})
-          .finally(() => setSnapshotLoading(false));
+        const payload = makeLoadoutPayload();
+        if (payload) {
+          setSnapshotLoading(true);
+          setPreviewLoading(true);
+          setPreviewError(null);
+          fetchLoadoutSnapshot(payload)
+            .then(setDamageSnapshot)
+            .catch(() => {})
+            .finally(() => setSnapshotLoading(false));
+          fetchLoadoutPreview(payload)
+            .then(setPreviewLines)
+            .catch((e) => {
+              setPreviewError(String(e));
+              setPreviewLines(null);
+            })
+            .finally(() => setPreviewLoading(false));
+        }
       }
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [charData, weaponData, charLevel, weaponLevel, trustLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams, critAbnormal, multiSkill]);
+  }, [charData, weaponData, charLevel, weaponLevel, trustLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams, critAbnormal, multiSkill, makeLoadoutPayload, selectedChar, selectedWeapon]);
 
-  const searchParams = {
-    char_data: (charData ?? {}) as Record<string, unknown>,
-    char_level: charLevel,
-    weapon_level: weaponLevel,
-    trust_level: trustLevel,
-    skill_name: "战技",
-    skill_type: "战技",
-    skill_multiplier: 1.0,
-    damage_type: "物理",
-    weapon_scope_label: weaponScope,
-    equipment_scope_label: equipmentScope,
-    all_weapons: allWeapons as Record<string, unknown>[],
-    current_weapon: (weaponData ?? {}) as Record<string, unknown>,
-    equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
-    ...enemyParams,
-    fixed_loadout: fixedLoadout as Record<string, unknown> | null,
-    extra_crit_rate: critAbnormal.extraCritRate,
-    extra_crit_damage: critAbnormal.extraCritDamage,
-    use_manual_multi_skill_counts: multiSkill.useManualCounts,
-    manual_counts: multiSkill.manualCounts,
-    use_expected_crit: multiSkill.useExpectedCrit,
-    damage_component_mode: multiSkill.damageComponentMode,
-    physical_abnormal_counts: critAbnormal.physicalAbnormalCounts,
-    spell_abnormal_counts: critAbnormal.spellAbnormalCounts,
-    skill_1_level: (skillLevels.skill_1_level as number) ?? 8,
-    skill_2_level: (skillLevels.skill_2_level as number) ?? 8,
-    skill_3_level: (skillLevels.skill_3_level as number) ?? 8,
-  };
+  const loadoutPayload = makeLoadoutPayload();
+  const searchParams = loadoutPayload
+    ? {
+        ...buildSearchRequestFromLoadout(loadoutPayload, {
+          all_weapons: allWeapons as Record<string, unknown>[],
+          current_weapon: (weaponData ?? {}) as Record<string, unknown>,
+          equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
+        }),
+        top_n: searchSettings.topN,
+        max_workers: searchSettings.workers,
+      }
+    : null;
 
   return (
     <Box>
@@ -452,6 +529,11 @@ export default function ComputePage() {
                   outputValues={outputValues}
                   nodeValues={null}
                 />
+                <SearchPreviewPanel
+                  lines={previewLines}
+                  loading={previewLoading}
+                  error={previewError}
+                />
                 <Box sx={{ mt: 2 }}>
                   <DamageChart
                     outputValues={outputValues}
@@ -577,7 +659,7 @@ export default function ComputePage() {
           <Grid size={{ xs: 12, md: 7 }}>
             <SearchSettingsPanel settings={searchSettings} onChange={setSearchSettings} />
             <Paper sx={{ p: 3 }}>
-              <SearchPanel currentParams={searchParams as any} />
+              <SearchPanel currentParams={(searchParams ?? {}) as any} />
             </Paper>
           </Grid>
         </Grid>
@@ -586,6 +668,7 @@ export default function ComputePage() {
       <PresetDialog
         open={presetDialogOpen}
         onClose={() => setPresetDialogOpen(false)}
+        loadoutPayload={loadoutPayload}
         currentState={{
           charName: selectedChar,
           weaponName: selectedWeapon,
@@ -614,11 +697,17 @@ export default function ComputePage() {
         onClose={() => setSearchHistoryOpen(false)}
       />
 
-      <ManualBuffDialog
+      <SegmentManualBuffDialog
         open={manualBuffDialogOpen}
         onClose={() => setManualBuffDialogOpen(false)}
-        values={buffValues}
-        onApply={(v) => { setBuffValues(v); setManualBuffDialogOpen(false); }}
+        store={manualBuffStore}
+        onApply={(store) => {
+          setManualBuffStore(store);
+          setManualBuffDialogOpen(false);
+        }}
+        manualCounts={multiSkill.manualCounts}
+        physicalAbnormalCounts={critAbnormal.physicalAbnormalCounts}
+        spellAbnormalCounts={critAbnormal.spellAbnormalCounts}
       />
 
       <BatchCompareDialog

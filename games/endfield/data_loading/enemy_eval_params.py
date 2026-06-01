@@ -175,6 +175,9 @@ def build_search_job_inputs_from_request(
         spell_abnormal_counts=getattr(req, "spell_abnormal_counts", None),
         damage_component_mode=str(getattr(req, "damage_component_mode", "skill_and_abnormal")),
         use_expected_crit=bool(getattr(req, "use_expected_crit", False)),
+        include_conditional_equipment_crit=bool(
+            getattr(req, "include_conditional_equipment_crit", False)
+        ),
         extra_crit_rate=float(getattr(req, "extra_crit_rate", 0.0)),
         extra_crit_damage=float(getattr(req, "extra_crit_damage", 0.0)),
         **enemy.search_job_kwargs(),

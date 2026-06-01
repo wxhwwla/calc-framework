@@ -19,6 +19,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   fetchEnemyChoices,
   DEFAULT_ENEMY_PARAMS,
+  ENEMY_TIERS,
   type EnemyInfo,
   type EnemyParams,
 } from "../../api/search";
@@ -215,13 +216,23 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
               onBlur={handleBlur}
               slotProps={{ htmlInput: { min: 0, max: 15, step: 0.1 } }}
             />
-            <TextField
-              size="small"
-              label="敌人等阶"
-              value={params.enemy_tier}
-              onChange={(e) => updateParam("enemy_tier", e.target.value)}
-              onBlur={handleBlur}
-            />
+            <FormControl size="small" fullWidth>
+              <InputLabel>敌人等阶</InputLabel>
+              <Select
+                value={params.enemy_tier}
+                label="敌人等阶"
+                onChange={(e) => {
+                  updateParam("enemy_tier", e.target.value);
+                  setTimeout(handleBlur, 0);
+                }}
+              >
+                {ENEMY_TIERS.map((tier) => (
+                  <MenuItem key={tier} value={tier}>
+                    {tier}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               size="small"
               label="失衡效率加成"

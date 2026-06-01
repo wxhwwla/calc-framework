@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -354,4 +355,79 @@ def compare(req: CompareRequest):
 
     results.sort(key=lambda r: r.get("total", 0), reverse=True)
     return results
+
+
+from web.backend.api.loadout_schemas import WebLoadoutBody
+
+
+class LoadoutPreviewRequest(WebLoadoutBody):
+    pass
+
+
+@router.post("/preview")
+def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
+    from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
+    from games.endfield.gui_design.app.loadout_evaluation import build_search_preview_lines
+    from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
+
+    catalog = req.equipment_catalog or get_equipment_catalog()
+    try:
+        loadout = build_loadout_state_from_web(
+            char_data=req.char_data,
+            weapon_data=req.weapon_data,
+            body=req.to_loadout_dict(),
+        )
+        lines = build_search_preview_lines(loadout, equipment_catalog=catalog)
+        return {"lines": lines}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+class LoadoutSnapshotRequest(WebLoadoutBody):
+    pass
+
+
+@router.post("/snapshot-full")
+def loadout_snapshot(req: LoadoutSnapshotRequest) -> dict[str, Any]:
+    from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
+    from games.endfield.gui_design.app.loadout_evaluation import build_snapshot_from_loadout
+
+    try:
+        loadout = build_loadout_state_from_web(
+            char_data=req.char_data,
+            weapon_data=req.weapon_data,
+            body=req.to_loadout_dict(),
+        )
+        result = build_snapshot_from_loadout(loadout)
+        return dict(
+            segment_damage=result.segment_damage,
+            segment_counts=result.segment_counts,
+            segment_totals=result.segment_totals,
+            skill_type_totals=result.skill_type_totals,
+            weighted_total_damage=result.weighted_total_damage,
+            rotation_share_percent=result.rotation_share_percent,
+            zone_share_percent=result.zone_share_percent,
+            selected_skill_label=result.selected_skill_label,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+class PresetExportRequest(WebLoadoutBody):
+    pass
+
+
+@router.post("/preset-export")
+def preset_export(req: PresetExportRequest) -> dict[str, Any]:
+    from games.endfield.data_loading.web_loadout_bridge import (
+        build_loadout_state_from_web,
+        loadout_state_to_web_preset,
+    )
+
+    loadout = build_loadout_state_from_web(
+        char_data=req.char_data,
+        weapon_data=req.weapon_data,
+        body=req.to_loadout_dict(),
+    )
+    return loadout_state_to_web_preset(loadout)
 

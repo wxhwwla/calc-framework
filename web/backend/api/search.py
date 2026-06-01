@@ -94,6 +94,8 @@ class SearchRequest(BaseModel):
 
     use_expected_crit: bool = False
 
+    include_conditional_equipment_crit: bool = False
+
     extra_crit_rate: float = 0.0
 
     extra_crit_damage: float = 0.0
@@ -169,6 +171,12 @@ class EstimateRequest(BaseModel):
     skill_3_level: int = 0
 
     use_expected_crit: bool = False
+
+    include_conditional_equipment_crit: bool = False
+
+    extra_crit_rate: float = 0.0
+
+    extra_crit_damage: float = 0.0
 
 
 
