@@ -81,7 +81,7 @@ const HELP_SECTIONS: HelpSection[] = [
           </ul>
           <strong>右列（搜索）：</strong>
           <ul>
-            <li>搜索设置 — Top-N 结果数、并行线程数</li>
+            <li>搜索设置 — 结果条数、并行线程数</li>
             <li>全量搜索 — 遍历所有配装组合找出最优解</li>
             <li>支持搜索历史和计算历史回顾</li>
           </ul>
@@ -99,7 +99,7 @@ const HELP_SECTIONS: HelpSection[] = [
           <ul>
             <li>单技能遍历 — 快速预览单技能各装备组合</li>
             <li>多技能遍历 — 按手动次数加权计算多技能总伤</li>
-            <li>全量搜索 Top-N — 遍历所有组合返回最优 N 组</li>
+            <li>全量搜索前 N 条 — 遍历所有组合返回最优 N 组</li>
           </ul>
           <strong>参数设置：</strong>
           <ul>

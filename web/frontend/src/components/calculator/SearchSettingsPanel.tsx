@@ -20,7 +20,7 @@ export default function SearchSettingsPanel({ settings, onChange }: SearchSettin
 
       <Box sx={{ mb: 1.5 }}>
         <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-          Top-N 结果: {settings.topN}
+          前 {settings.topN} 条结果
         </Typography>
         <Slider
           size="small"

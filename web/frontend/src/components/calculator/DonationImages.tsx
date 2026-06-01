@@ -72,8 +72,8 @@ export default function DonationImages({ maxWidth = 280 }: DonationImagesProps) 
     <Box sx={{ py: 1 }}>
       {visible.length === 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
-          暂未配置捐赠二维码（微信 donation_qr.jpg / 爱发电 afdian_qr.png 等，放入
-          resources/donation/）
+          暂未配置捐赠二维码（请将 donation_q.jpg、afdian_qr.png 等放入
+          resources/donation/ 并重新部署）
         </Typography>
       )}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>

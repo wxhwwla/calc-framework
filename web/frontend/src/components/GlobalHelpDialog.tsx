@@ -55,7 +55,7 @@ const HELP_ENTRIES: HelpEntry[] = [
           </ul>
           <p><b>高级页控件：</b></p>
           <ul>
-            <li>全量搜索 — 遍历所有配装组合，Top-N 结果排序</li>
+            <li>全量搜索 — 遍历所有配装组合，按前 N 条结果排序</li>
             <li>固定配装 — 锁定 0-4 件装备，其余遍历</li>
             <li>暴击/异常微调 — 手动覆盖暴击率和异常命中</li>
             <li>手动 Buff — 临时添加增益效果</li>
@@ -163,7 +163,7 @@ const HELP_ENTRIES: HelpEntry[] = [
   },
   {
     id: "hub",
-    title: "⑦ Calc Hub 市场",
+    title: "⑦ 配置包市场",
     content: (
       <Box>
         <Typography variant="body2" component="div">
@@ -191,11 +191,12 @@ export default function GlobalHelpDialog() {
     <>
       <Button
         color="inherit"
+        startIcon={<HelpOutlineIcon />}
         onClick={() => setOpen(true)}
-        sx={{ minWidth: 40 }}
+        sx={{ ml: 0.5, textTransform: "none" }}
         title="使用说明"
       >
-        <HelpOutlineIcon />
+        帮助
       </Button>
       <Dialog
         open={open}

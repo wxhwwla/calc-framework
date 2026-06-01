@@ -293,7 +293,7 @@ export default function WebComputeSheet({
         disabled={loading}
         sx={{ mb: 2 }}
       >
-        {loading ? "计算中..." : "计算 (Evaluate)"}
+        {loading ? "计算中..." : "计算"}
       </Button>
 
       <DonationDialog open={donationOpen} onClose={() => setDonationOpen(false)} />

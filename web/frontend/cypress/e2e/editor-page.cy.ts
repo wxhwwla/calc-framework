@@ -16,7 +16,7 @@ describe("DAG 编辑器 EditorPage", () => {
   });
 
   it("页面标题正确渲染", () => {
-    cy.contains("DAG 可视化编辑器").should("be.visible");
+    cy.contains("DAG 公式图编辑器").should("be.visible");
   });
 
   it("显示节点面板", () => {
@@ -42,7 +42,7 @@ describe("DAG 编辑器 EditorPage", () => {
 
   it("DAG JSON 文本区存在", () => {
     cy.get("textarea").should("be.visible");
-    cy.contains("渲染 (Render)").should("be.visible");
+    cy.contains("渲染").should("be.visible");
     cy.contains("导出 JSON").should("be.visible");
     cy.contains("加载示例").should("be.visible");
   });
@@ -50,7 +50,7 @@ describe("DAG 编辑器 EditorPage", () => {
   it("输入 JSON 后渲染按钮可用", () => {
     cy.get("textarea").first().clear();
     cy.get("textarea").first().type(sampleDagJson, { parseSpecialCharSequences: false });
-    cy.contains("渲染 (Render)").click();
+    cy.contains("渲染").click();
   });
 
   it("清空按钮重置画布", () => {
@@ -63,6 +63,6 @@ describe("DAG 编辑器 EditorPage", () => {
   });
 
   it("通过侧边栏导航可访问", () => {
-    cy.contains("DAG 编辑器 (Editor)").should("be.visible");
+    cy.contains("公式图编辑器").should("be.visible");
   });
 });

@@ -83,7 +83,7 @@ export default function EditorPage() {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        DAG 可视化编辑器
+        DAG 公式图编辑器
       </Typography>
 
       <Grid container spacing={2}>
@@ -153,7 +153,7 @@ export default function EditorPage() {
         />
         <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
           <Button variant="contained" onClick={parseAndRender}>
-            渲染 (Render)
+            渲染
           </Button>
         </Box>
         {error && (

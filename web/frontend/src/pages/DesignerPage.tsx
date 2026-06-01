@@ -13,7 +13,7 @@ export default function DesignerPage() {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        数据设计器 (Data Designer)
+        数据设计器
       </Typography>
 
       <Paper sx={{ mb: 2 }}>

@@ -34,13 +34,13 @@ const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
 const drawerWidth = 240;
 
 const navItems = [
-  { label: "计算 (Compute)", path: "/compute", icon: <CalculateIcon /> },
+  { label: "终末地计算", path: "/compute", icon: <CalculateIcon /> },
   { label: "明日方舟", path: "/arknights", icon: <AutoAwesomeIcon /> },
-  { label: "适配器 (Adapters)", path: "/adapters", icon: <ExtensionIcon /> },
-  { label: "DAG 编辑器 (Editor)", path: "/editor", icon: <AccountTreeIcon /> },
-  { label: "数据设计器 (Designer)", path: "/designer", icon: <BuildIcon /> },
-  { label: "配置包设计器 (Pack)", path: "/pack-designer", icon: <Inventory2Icon /> },
-  { label: "Calc Hub 市场", path: "/hub", icon: <StorefrontIcon /> },
+  { label: "适配器管理", path: "/adapters", icon: <ExtensionIcon /> },
+  { label: "公式图编辑器", path: "/editor", icon: <AccountTreeIcon /> },
+  { label: "数据设计器", path: "/designer", icon: <BuildIcon /> },
+  { label: "配置包设计器", path: "/pack-designer", icon: <Inventory2Icon /> },
+  { label: "配置包市场", path: "/hub", icon: <StorefrontIcon /> },
 ];
 
 function Shell() {
@@ -52,7 +52,7 @@ function Shell() {
       <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
         <Toolbar>
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            Calc Framework Web
+            游戏计算器 · Web 版
           </Typography>
           <GlobalDonationButton />
           <GlobalHelpDialog />

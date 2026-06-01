@@ -145,7 +145,7 @@ export default function MarketplacePage() {
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h5">Calc Hub 在线市场</Typography>
+        <Typography variant="h5">配置包市场</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadPacks}>
             刷新

@@ -7,7 +7,7 @@ describe("配置包设计页 PackDesignerPage", () => {
   });
 
   it("页面标题正确渲染", () => {
-    cy.contains("配置包设计器 (Pack Designer)").should("be.visible");
+    cy.contains("配置包设计器").should("be.visible");
   });
 
   it("显示三个页签", () => {
@@ -23,7 +23,7 @@ describe("配置包设计页 PackDesignerPage", () => {
   it("切换到布局编辑页签显示 DAG 编辑器", () => {
     cy.contains("布局编辑").click();
     cy.contains("布局编辑").should("have.class", "Mui-selected");
-    cy.contains("DAG 可视化编辑器").should("be.visible");
+    cy.contains("DAG 公式图编辑器").should("be.visible");
     cy.contains("节点面板").should("be.visible");
   });
 
@@ -39,6 +39,6 @@ describe("配置包设计页 PackDesignerPage", () => {
   });
 
   it("通过侧边栏导航可访问", () => {
-    cy.contains("配置包设计器 (Pack)").should("be.visible");
+    cy.contains("配置包设计器").should("be.visible");
   });
 });

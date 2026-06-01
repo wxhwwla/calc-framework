@@ -348,14 +348,38 @@ def _upload_donation_assets(config: dict) -> None:
         return
     username = config["username"]
     project = config.get("project", "calc-framework")
+    home = f"/home/{username}/{project}"
     files = [p for p in donation_dir.iterdir() if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")]
     if not files:
         print("\n[UP-DON] 跳过捐赠图片（resources/donation/ 无图片）")
         return
     print(f"\n[UP-DON] 上传 {len(files)} 个捐赠图片...")
     for fp in files:
-        remote = f"/home/{username}/{project}/resources/donation/{fp.name}"
-        _upload_bytes_to_path(config, remote, fp.read_bytes(), fp.name)
+        remote = f"{home}/resources/donation/{fp.name}"
+        if not _upload_bytes_to_path(config, remote, fp.read_bytes(), fp.name):
+            print(f"  [WARN] 捐赠图上传失败: {fp.name}（可稍后在 PA Files 手动上传到 resources/donation/）")
+
+
+def _upload_donation_utils(config: dict) -> None:
+    """上传捐赠路径解析模块（FastAPI 本地后端等依赖）。"""
+    username = config["username"]
+    project = config.get("project", "calc-framework")
+    home = f"/home/{username}/{project}"
+    utils_files = (
+        _REPO_ROOT / "utils" / "__init__.py",
+        _REPO_ROOT / "utils" / "path_utils.py",
+        _REPO_ROOT / "utils" / "donation_assets.py",
+    )
+    print("\n[UP-UTIL] 上传 utils（捐赠解析）...")
+    ok = 0
+    for fp in utils_files:
+        if not fp.is_file():
+            continue
+        remote = f"{home}/utils/{fp.name}"
+        if _upload_bytes_to_path(config, remote, fp.read_bytes(), f"utils/{fp.name}"):
+            ok += 1
+    if ok:
+        print(f"  [OK] utils {ok} 个文件")
 
 
 def _verify_deployment(config: dict) -> None:
@@ -366,6 +390,7 @@ def _verify_deployment(config: dict) -> None:
     checks = [
         (f"https://{domain}/api/health", '"status"'),
         (f"https://{domain}/api/layout", '"sections"'),
+        (f"https://{domain}/api/donation/manifest", '"file"'),
     ]
     ok = True
     for url, needle in checks:
@@ -809,6 +834,7 @@ def main() -> None:
         _upload_backend_files(config)
         _upload_wsgi(config)
         _upload_arknights_runtime(config)
+        _upload_donation_utils(config)
         _upload_donation_assets(config)
         _upload_local_backend_zip(config)
 

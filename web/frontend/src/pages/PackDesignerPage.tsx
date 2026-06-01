@@ -15,7 +15,7 @@ export default function PackDesignerPage() {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        配置包设计器 (Pack Designer)
+        配置包设计器
       </Typography>
 
       <Paper sx={{ mb: 2 }}>

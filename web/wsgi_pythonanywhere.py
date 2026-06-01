@@ -31,6 +31,53 @@ _DATA = _BASE / "games" / "endfield" / "data"
 _DIST = _BASE / "web" / "frontend" / "dist"
 _DONATION = _BASE / "resources" / "donation"
 
+# 与 utils/donation_assets.py 保持一致（WSGI 不依赖 utils 包，避免 PA 未上传 utils 时 500）
+_DONATION_SLOTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "微信赞赏码",
+        (
+            "donation_qr.jpg",
+            "donation_qr.jpeg",
+            "donation_q.jpg",
+            "donation_qr.png",
+            "donation_qr.webp",
+        ),
+    ),
+    (
+        "爱发电",
+        (
+            "afdian_qr.png",
+            "afdian_qr.jpg",
+            "afdian_qr.jpeg",
+            "afdian_qr.webp",
+        ),
+    ),
+)
+
+
+def _is_allowed_donation_filename(name: str) -> bool:
+    if not name or "/" in name or "\\" in name or ".." in name:
+        return False
+    lower = name.lower()
+    if not lower.endswith((".png", ".jpg", ".jpeg", ".webp")):
+        return False
+    stem = Path(lower).stem
+    return stem.startswith("donation") or stem.startswith("afdian")
+
+
+def _donation_manifest() -> list[dict[str, str]]:
+    """扫描 _DONATION 目录，按槽位返回可用图片。"""
+    found: list[dict[str, str]] = []
+    for label, candidates in _DONATION_SLOTS:
+        for name in candidates:
+            fp = _DONATION / name
+            if fp.is_file():
+                found.append(
+                    {"file": name, "label": label, "rel": f"resources/donation/{name}"},
+                )
+                break
+    return found
+
 for _p in (str(_FRAMEWORK_SRC), str(_BASE), str(_BACKEND)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
@@ -134,16 +181,8 @@ def _handle_donation(environ, start_response):
     if not name:
         return None
     if name == "manifest":
-        try:
-            from utils.donation_assets import resolve_donation_images
-        except ImportError:
-            from donation_assets import resolve_donation_images  # type: ignore
-        return _json(start_response, resolve_donation_images())
-    try:
-        from utils.donation_assets import is_allowed_donation_filename
-    except ImportError:
-        from donation_assets import is_allowed_donation_filename  # type: ignore
-    if not is_allowed_donation_filename(name):
+        return _json(start_response, _donation_manifest())
+    if not _is_allowed_donation_filename(name):
         return _http_error(start_response, "not found", 404)
     fp = _DONATION / name
     if not fp.is_file():

@@ -7,7 +7,7 @@ describe("数据设计页 DesignerPage", () => {
   });
 
   it("页面标题正确渲染", () => {
-    cy.contains("数据设计器 (Data Designer)").should("be.visible");
+    cy.contains("数据设计器").should("be.visible");
   });
 
   it("显示三个页签", () => {
@@ -31,6 +31,6 @@ describe("数据设计页 DesignerPage", () => {
   });
 
   it("通过侧边栏导航可访问", () => {
-    cy.contains("数据设计器 (Designer)").should("be.visible");
+    cy.contains("数据设计器").should("be.visible");
   });
 });

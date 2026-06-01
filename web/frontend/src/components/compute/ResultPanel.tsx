@@ -44,7 +44,7 @@ export default function ResultPanel() {
     return (
       <Paper sx={{ p: 2, mt: 2, textAlign: "center" }}>
         <Typography color="text.secondary">
-          选择适配器并输入参数后点击"计算 (Compute)"
+          选择适配器并输入参数后点击「计算」
         </Typography>
       </Paper>
     );

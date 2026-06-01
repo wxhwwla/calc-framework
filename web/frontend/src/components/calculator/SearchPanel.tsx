@@ -191,7 +191,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
           <TextField
             size="small"
-            label="Top-N"
+            label="结果条数"
             type="number"
             value={topN}
             onChange={(e) => setTopN(Math.max(1, parseInt(e.target.value) || 10))}

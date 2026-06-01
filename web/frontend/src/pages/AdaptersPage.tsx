@@ -60,7 +60,7 @@ export default function AdaptersPage() {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        适配器管理 (Adapter Manager)
+        适配器管理
       </Typography>
       <TableContainer component={Paper}>
         <Table size="small">

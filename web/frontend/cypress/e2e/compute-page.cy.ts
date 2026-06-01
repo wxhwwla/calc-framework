@@ -26,13 +26,13 @@ describe("计算页 ComputePage", () => {
     cy.contains("开始搜索").should("be.visible");
   });
 
-  it("高级页有 Top-N 配置和并行线程输入", () => {
+  it("高级页有结果条数和并行线程输入", () => {
     cy.contains("高级页").click();
     cy.get('input[type="number"]').first().should("be.visible");
   });
 
   it("通过侧边栏导航可访问", () => {
-    cy.contains("计算 (Compute)").should("be.visible");
+    cy.contains("终末地计算").should("be.visible");
     cy.get('[class*="Mui-selected"]').contains("计算").should("exist");
   });
 });

@@ -217,7 +217,7 @@ export default function ArknightsComputePage() {
             <Typography variant="subtitle1" gutterBottom>敌人参数</Typography>
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <Box sx={{ minWidth: 180, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">防御力 (DEF)</Typography>
+                <Typography variant="caption" color="text.secondary">防御力</Typography>
                 <Slider size="small" min={0} max={3000} step={10}
                   value={computeParams.enemy_def}
                   onChange={(_e, v) => setParam("enemy_def", v as number)}
@@ -226,7 +226,7 @@ export default function ArknightsComputePage() {
                   onChange={(e) => setParam("enemy_def", Number(e.target.value) || 0)} />
               </Box>
               <Box sx={{ minWidth: 180, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">法术抗性 (RES)</Typography>
+                <Typography variant="caption" color="text.secondary">法术抗性</Typography>
                 <Slider size="small" min={0} max={100} step={1}
                   value={computeParams.enemy_res}
                   onChange={(_e, v) => setParam("enemy_res", v as number)}
