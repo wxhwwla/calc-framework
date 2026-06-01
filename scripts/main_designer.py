@@ -13,8 +13,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root
+from _path_setup import ensure_root, ensure_tools
 ensure_root()
+ensure_tools()
 
 from endfield_designer.designer_main import main
 

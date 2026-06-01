@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.17.0"
+_VERSION = "3.17.1"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,19 +438,13 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 13 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 修改 games/endfield/data_loading/enemy_eval_params.py
-# - 修改 games/endfield/data_loading/web_loadout_bridge.py
-# - 修改 games/endfield/data_loading/web_search_bridge.py
-# - 修改 games/endfield/tests/data_loading/test_web_loadout_bridge.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
+# - 修改 games/endfield/gui_design/shell/qt_app_confirm_mixin.py
+# - 修改 games/endfield/main.py
+# - 修改 scripts/_path_setup.py
+# - 修改 scripts/main_designer.py
+# - 修改 scripts/main_launcher.py
 # - 修改 scripts/please_read_me.py
-# - 修改 web/backend/api/compute.py
-# - 修改 web/backend/api/loadout_schemas.py
-# - 修改 web/backend/api/search.py
-# - 变更 web/frontend/src/api/loadout.ts
-# - 变更 web/frontend/src/api/search.ts
-# - 变更 web/frontend/src/components/calculator/FixedLoadoutPanel.tsx
-# - 变更 web/frontend/src/pages/ComputePage.tsx
-# - 修改 web/wsgi_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

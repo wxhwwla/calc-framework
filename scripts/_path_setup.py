@@ -19,3 +19,24 @@ def ensure_root() -> None:
     root = Path(__file__).resolve().parent.parent
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
+
+
+def ensure_tools() -> None:
+    """将 tools/ 加入 sys.path（endfield_designer 等包）。"""
+    tools = Path(__file__).resolve().parent.parent / "tools"
+    if str(tools) not in sys.path:
+        sys.path.insert(0, str(tools))
+
+
+def ensure_framework_src() -> None:
+    """将 framework/src 加入 sys.path（calc_framework 源码开发模式）。"""
+    src = Path(__file__).resolve().parent.parent / "framework" / "src"
+    if str(src) not in sys.path:
+        sys.path.insert(0, str(src))
+
+
+def ensure_games_endfield() -> None:
+    """将 games/endfield 加入 sys.path（gui_design 等顶层包）。"""
+    pkg = Path(__file__).resolve().parent.parent / "games" / "endfield"
+    if str(pkg) not in sys.path:
+        sys.path.insert(0, str(pkg))

@@ -251,7 +251,7 @@ class CalcPackViewer(QMainWindow):
 
         plugin_action = QAction("插件管理器...", self)
 
-        plugin_action.triggered.connect(self._show_plugin_manager)
+        plugin_action.triggered.connect(self._show_plugin_manager_dialog)
 
         tools_menu.addAction(plugin_action)
 
