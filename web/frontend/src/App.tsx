@@ -21,8 +21,8 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
+import GlobalHelpDialog from "./components/GlobalHelpDialog";
 
-const GlobalHelpDialog = lazy(() => import("./components/GlobalHelpDialog"));
 const ComputePage = lazy(() => import("./pages/ComputePage"));
 const ArknightsComputePage = lazy(() => import("./pages/ArknightsComputePage"));
 const AdaptersPage = lazy(() => import("./pages/AdaptersPage"));
@@ -55,9 +55,7 @@ function Shell() {
             Calc Framework Web
           </Typography>
           <GlobalDonationButton />
-          <Suspense fallback={null}>
-            <GlobalHelpDialog />
-          </Suspense>
+          <GlobalHelpDialog />
         </Toolbar>
       </AppBar>
       <Drawer

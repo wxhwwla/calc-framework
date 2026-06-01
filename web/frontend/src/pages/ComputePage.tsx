@@ -4,9 +4,16 @@ import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import CharacterSelector from "../components/calculator/CharacterSelector";
 import AttributeDisplay from "../components/calculator/AttributeDisplay";
 import WebComputeSheet from "../components/WebComputeSheet";
+import SearchPanel from "../components/calculator/SearchPanel";
 import EnemyParamPanel from "../components/calculator/EnemyParamPanel";
+import MultiSkillPanel from "../components/calculator/MultiSkillPanel";
+import FixedLoadoutPanel from "../components/calculator/FixedLoadoutPanel";
+import PresetDialog from "../components/calculator/PresetDialog";
+import CritAndAbnormalPanel from "../components/calculator/CritAndAbnormalPanel";
 import PreviewText from "../components/calculator/PreviewText";
 import TotalDamagePanel from "../components/calculator/TotalDamagePanel";
+import CalcHistoryDialog from "../components/calculator/CalcHistoryDialog";
+import SearchHistoryDialog from "../components/calculator/SearchHistoryDialog";
 import SkillLevelPanel from "../components/calculator/SkillLevelPanel";
 import WeaponSkillPanel from "../components/calculator/WeaponSkillPanel";
 import CalcModeSelector from "../components/calculator/CalcModeSelector";
@@ -22,8 +29,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import SearchPreviewPanel from "../components/calculator/SearchPreviewPanel";
-import PageFallback from "../components/PageFallback";
-import {
+import SegmentManualBuffDialog, {
   type ManualBuffStore,
 } from "../components/calculator/SegmentManualBuffDialog";
 import {
@@ -33,6 +39,12 @@ import {
   fetchLoadoutSnapshot,
 } from "../api/loadout";
 import SearchSettingsPanel from "../components/calculator/SearchSettingsPanel";
+import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
+import SurvivalEstimateDialog from "../components/calculator/SurvivalEstimateDialog";
+import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
+import HelpDialog from "../components/calculator/HelpDialog";
+import DataSourceDialog from "../components/calculator/DataSourceDialog";
+import DonationDialog from "../components/calculator/DonationDialog";
 import { logOperation, exportLogsAsJson } from "../utils/operationLog";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
@@ -40,24 +52,6 @@ import { evaluate, type DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
 
 const DamageChart = lazy(() => import("../components/calculator/DamageChart"));
-const SearchPanel = lazy(() => import("../components/calculator/SearchPanel"));
-const MultiSkillPanel = lazy(() => import("../components/calculator/MultiSkillPanel"));
-const FixedLoadoutPanel = lazy(() => import("../components/calculator/FixedLoadoutPanel"));
-const CritAndAbnormalPanel = lazy(() => import("../components/calculator/CritAndAbnormalPanel"));
-const PresetDialog = lazy(() => import("../components/calculator/PresetDialog"));
-const CalcHistoryDialog = lazy(() => import("../components/calculator/CalcHistoryDialog"));
-const SearchHistoryDialog = lazy(() => import("../components/calculator/SearchHistoryDialog"));
-const SegmentManualBuffDialog = lazy(
-  () => import("../components/calculator/SegmentManualBuffDialog"),
-);
-const BatchCompareDialog = lazy(() => import("../components/calculator/BatchCompareDialog"));
-const SurvivalEstimateDialog = lazy(
-  () => import("../components/calculator/SurvivalEstimateDialog"),
-);
-const OCRUploadDialog = lazy(() => import("../components/calculator/OCRUploadDialog"));
-const HelpDialog = lazy(() => import("../components/calculator/HelpDialog"));
-const DataSourceDialog = lazy(() => import("../components/calculator/DataSourceDialog"));
-const DonationDialog = lazy(() => import("../components/calculator/DonationDialog"));
 
 const WEAPON_SCOPE_OPTIONS = ["当前武器", "同类型同星级", "同类型全部"];
 const EQUIPMENT_SCOPE_OPTIONS = ["全部装备", "仅套装装备", "仅散件装备"];
@@ -567,8 +561,7 @@ export default function ComputePage() {
       )}
 
       {tab === 1 && (
-        <Suspense fallback={<PageFallback label="加载高级功能…" />}>
-          <Grid container spacing={2}>
+        <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 5 }}>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
@@ -675,108 +668,85 @@ export default function ComputePage() {
             </Paper>
           </Grid>
         </Grid>
-        </Suspense>
       )}
 
-      <Suspense fallback={null}>
-        {presetDialogOpen && (
-          <PresetDialog
-            open={presetDialogOpen}
-            onClose={() => setPresetDialogOpen(false)}
-            loadoutPayload={loadoutPayload}
-            currentState={{
-              charName: selectedChar,
-              weaponName: selectedWeapon,
-              charLevel,
-              weaponLevel,
-              enemyParams,
-              multiSkill,
-              fixedLoadout: fixedLoadout as Record<string, string | null> | null,
-            }}
-            onImport={handleImportPreset}
-          />
-        )}
+      <PresetDialog
+        open={presetDialogOpen}
+        onClose={() => setPresetDialogOpen(false)}
+        loadoutPayload={loadoutPayload}
+        currentState={{
+          charName: selectedChar,
+          weaponName: selectedWeapon,
+          charLevel,
+          weaponLevel,
+          enemyParams,
+          multiSkill,
+          fixedLoadout: fixedLoadout as Record<string, string | null> | null,
+        }}
+        onImport={handleImportPreset}
+      />
 
-        {historyDialogOpen && (
-          <CalcHistoryDialog
-            open={historyDialogOpen}
-            onClose={() => setHistoryDialogOpen(false)}
-            currentEntry={historyEntry as any}
-            onRestore={(entry) => {
-              setSelectedChar(String(entry.char_name || ""));
-              setSelectedWeapon(String(entry.weapon_name || ""));
-              setHistoryDialogOpen(false);
-            }}
-          />
-        )}
+      <CalcHistoryDialog
+        open={historyDialogOpen}
+        onClose={() => setHistoryDialogOpen(false)}
+        currentEntry={historyEntry as any}
+        onRestore={(entry) => {
+          setSelectedChar(String(entry.char_name || ""));
+          setSelectedWeapon(String(entry.weapon_name || ""));
+          setHistoryDialogOpen(false);
+        }}
+      />
 
-        {searchHistoryOpen && (
-          <SearchHistoryDialog
-            open={searchHistoryOpen}
-            onClose={() => setSearchHistoryOpen(false)}
-          />
-        )}
+      <SearchHistoryDialog
+        open={searchHistoryOpen}
+        onClose={() => setSearchHistoryOpen(false)}
+      />
 
-        {manualBuffDialogOpen && (
-          <SegmentManualBuffDialog
-            open={manualBuffDialogOpen}
-            onClose={() => setManualBuffDialogOpen(false)}
-            store={manualBuffStore}
-            onApply={(store) => {
-              setManualBuffStore(store);
-              setManualBuffDialogOpen(false);
-            }}
-            manualCounts={multiSkill.manualCounts}
-            physicalAbnormalCounts={critAbnormal.physicalAbnormalCounts}
-            spellAbnormalCounts={critAbnormal.spellAbnormalCounts}
-          />
-        )}
+      <SegmentManualBuffDialog
+        open={manualBuffDialogOpen}
+        onClose={() => setManualBuffDialogOpen(false)}
+        store={manualBuffStore}
+        onApply={(store) => {
+          setManualBuffStore(store);
+          setManualBuffDialogOpen(false);
+        }}
+        manualCounts={multiSkill.manualCounts}
+        physicalAbnormalCounts={critAbnormal.physicalAbnormalCounts}
+        spellAbnormalCounts={critAbnormal.spellAbnormalCounts}
+      />
 
-        {batchCompareOpen && (
-          <BatchCompareDialog
-            open={batchCompareOpen}
-            onClose={() => setBatchCompareOpen(false)}
-            enemyParams={enemyParams}
-          />
-        )}
+      <BatchCompareDialog
+        open={batchCompareOpen}
+        onClose={() => setBatchCompareOpen(false)}
+        enemyParams={enemyParams}
+      />
 
-        {survivalDialogOpen && (
-          <SurvivalEstimateDialog
-            open={survivalDialogOpen}
-            onClose={() => setSurvivalDialogOpen(false)}
-            charData={charData}
-            weaponData={weaponData}
-            charLevel={charLevel}
-            weaponLevel={weaponLevel}
-            trustLevel={trustLevel}
-            enemyParams={enemyParams}
-          />
-        )}
+      <SurvivalEstimateDialog
+        open={survivalDialogOpen}
+        onClose={() => setSurvivalDialogOpen(false)}
+        charData={charData}
+        weaponData={weaponData}
+        charLevel={charLevel}
+        weaponLevel={weaponLevel}
+        trustLevel={trustLevel}
+        enemyParams={enemyParams}
+      />
 
-        {ocrDialogOpen && (
-          <OCRUploadDialog
-            open={ocrDialogOpen}
-            onClose={() => setOcrDialogOpen(false)}
-            onResult={(data) => {
-              if (data.char_name) setSelectedChar(data.char_name);
-              if (data.weapon_name) setSelectedWeapon(data.weapon_name);
-              setOcrDialogOpen(false);
-            }}
-          />
-        )}
+      <OCRUploadDialog
+        open={ocrDialogOpen}
+        onClose={() => setOcrDialogOpen(false)}
+        onResult={(data) => {
+          if (data.char_name) setSelectedChar(data.char_name);
+          if (data.weapon_name) setSelectedWeapon(data.weapon_name);
+          setOcrDialogOpen(false);
+        }}
+      />
 
-        {helpDialogOpen && (
-          <HelpDialog open={helpDialogOpen} onClose={() => setHelpDialogOpen(false)} />
-        )}
+      <HelpDialog open={helpDialogOpen} onClose={() => setHelpDialogOpen(false)} />
 
-        {dataSourceOpen && (
-          <DataSourceDialog open={dataSourceOpen} onClose={() => setDataSourceOpen(false)} />
-        )}
+      <DataSourceDialog open={dataSourceOpen} onClose={() => setDataSourceOpen(false)} />
 
-        {donationOpen && (
-          <DonationDialog open={donationOpen} onClose={() => setDonationOpen(false)} />
-        )}
-      </Suspense>
+      <DonationDialog open={donationOpen} onClose={() => setDonationOpen(false)} />
     </Box>
   );
 }

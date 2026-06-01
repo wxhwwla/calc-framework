@@ -4,24 +4,24 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
+        // 仅拆出按需加载的重库，避免 react/mui/vendor 循环依赖导致白屏
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
-          if (id.includes("@mui") || id.includes("@emotion")) return "mui";
-          if (id.includes("echarts")) return "echarts";
+          if (id.includes("echarts") || id.includes("zrender")) return "echarts";
           if (id.includes("@xyflow")) return "xyflow";
-          if (
-            id.includes("/react-dom/") ||
-            id.includes("/react-router") ||
-            id.includes("/react/") ||
-            id.includes("/scheduler/")
-          ) {
-            return "react-vendor";
-          }
-          return "vendor";
         },
+      },
+    },
+  },
+  preview: {
+    port: 4173,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
       },
     },
   },
