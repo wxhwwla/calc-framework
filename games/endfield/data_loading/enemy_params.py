@@ -13,6 +13,7 @@ DEFAULT_ENEMY_RESISTANCE = 0.0
 DEFAULT_IGNORE_RESISTANCE = 0.0
 DEFAULT_IMBALANCE_VULNERABILITY = 1.3
 DEFAULT_IS_UNBALANCED = False
+DEFAULT_IS_TRUE_DAMAGE = False
 DEFAULT_ENEMY_TIER = "普通"
 DEFAULT_COMBO_STACKS = 0
 DEFAULT_ATTACHED_EFFECT_MULTIPLIER = 1.0
@@ -113,6 +114,7 @@ def _default_enemy_params() -> dict[str, Any]:
         "ignore_resistance": DEFAULT_IGNORE_RESISTANCE,
         "imbalance_vulnerability_coeff": DEFAULT_IMBALANCE_VULNERABILITY,
         "is_unbalanced": DEFAULT_IS_UNBALANCED,
+        "is_true_damage": DEFAULT_IS_TRUE_DAMAGE,
         "enemy_tier": DEFAULT_ENEMY_TIER,
         "combo_stacks": DEFAULT_COMBO_STACKS,
         "attached_effect_multiplier": DEFAULT_ATTACHED_EFFECT_MULTIPLIER,
@@ -132,6 +134,7 @@ def _enemy_params_from_row(row: dict[str, Any]) -> dict[str, Any]:
                 row.get("imbalance_vulnerability_coeff", base["imbalance_vulnerability_coeff"])
             ),
             "is_unbalanced": bool(row.get("is_unbalanced", base["is_unbalanced"])),
+            "is_true_damage": bool(row.get("is_true_damage", base["is_true_damage"])),
             "enemy_tier": str(row.get("enemy_tier") or row.get("等阶") or base["enemy_tier"]),
             "combo_stacks": int(row.get("combo_stacks", base["combo_stacks"])),
             "attached_effect_multiplier": float(

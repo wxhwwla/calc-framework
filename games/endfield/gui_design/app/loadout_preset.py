@@ -27,6 +27,7 @@ def _parse_enemy_params(raw: Any) -> dict[str, Any]:
         "ignore_resistance",
         "imbalance_vulnerability_coeff",
         "is_unbalanced",
+        "is_true_damage",
         "enemy_tier",
         "combo_stacks",
         "attached_effect_multiplier",

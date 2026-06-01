@@ -68,6 +68,7 @@ class DialogMixin:
             ignore_resistance=self._ignore_resistance,
             imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
             is_unbalanced=self._is_unbalanced,
+            is_true_damage=self._is_true_damage,
         )
         if loadout is None:
             QMessageBox.warning(self.app, "处决/治疗估算", "请先选择角色与武器。")
@@ -130,6 +131,7 @@ class DialogMixin:
             imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
 
             is_unbalanced=self._is_unbalanced,
+            is_true_damage=self._is_true_damage,
 
         )
 

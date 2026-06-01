@@ -23,6 +23,7 @@ def build_calculator_help() -> list[HelpSection]:
         _advanced_tab(),
         _search(),
         _features(),
+        _nga_mechanics(),
         _tips(),
     ]
     docs = load_multi_category(
@@ -686,6 +687,32 @@ def _features() -> HelpSection:
 
 
 
+
+
+def _nga_mechanics() -> HelpSection:
+    return HelpSection(
+        category="机制参考",
+        title="NGA 机制对照",
+        content="""\
+<h2>NGA《终末地数据机制导论》对照</h2>
+
+<p>本计算器按社区机制文实现 15 乘区、物理/法术异常、失衡、处决、治疗等。
+仓库内对照文档：<code>docs/nga-46094556-终末地机制对照与待办.md</code></p>
+
+<h3>异常等级（L0–L4）</h3>
+<p>高级页异常矩阵列 <b>L0–L4</b> 对应计算异常等级 <b>1–5</b>（消耗层数）。
+键格式为 <code>猛击:2</code> 表示 L2 档。</p>
+
+<h3>强制法术异常</h3>
+<p>次数键加前缀 <code>强制:</code>（如 <code>强制:电磁异常:0</code>）表示无初始异常伤害（G11）。</p>
+
+<h3>真实伤害</h3>
+<p>敌方面板勾选「真实伤害」后，防御区恒为 1.0。</p>
+
+<h3>处决 / 治疗</h3>
+<p>高级页「处决/治疗估算」基于当前配装与敌人等阶估算处决伤与三乘区治疗量。</p>
+""",
+    )
 
 
 def _tips() -> HelpSection:

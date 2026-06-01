@@ -69,6 +69,7 @@ def _compute_weighted_with_buffs(
     ignore_resistance: float = 0.0,
     imbalance_vulnerability_coeff: float = 1.3,
     is_unbalanced: bool = False,
+    is_true_damage: bool = False,
     combo_stacks: int = 0,
 ) -> tuple[float, dict[str, float], dict[str, float]]:
     """按次数加总，对每次出现查找 manual_buffs 注入。"""
@@ -98,6 +99,7 @@ def _compute_weighted_with_buffs(
                         ignore_resistance=ignore_resistance,
                         imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
                         is_unbalanced=is_unbalanced,
+                        is_true_damage=is_true_damage,
                         combo_stacks=max(0, min(4, int(combo_stacks))),
                     ),
                     crit_mode="non_crit",
@@ -156,6 +158,7 @@ def build_damage_snapshot(
     ignore_resistance: float = 0.0,
     imbalance_vulnerability_coeff: float = 1.3,
     is_unbalanced: bool = False,
+    is_true_damage: bool = False,
     combo_stacks: int = 0,
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> DamageSnapshot:
@@ -228,6 +231,7 @@ def build_damage_snapshot(
                 ignore_resistance=ignore_resistance,
                 imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
                 is_unbalanced=is_unbalanced,
+                is_true_damage=is_true_damage,
                 combo_stacks=max(0, min(4, int(combo_stacks))),
             ),
             crit_mode="non_crit",
@@ -254,6 +258,7 @@ def build_damage_snapshot(
         ignore_resistance=ignore_resistance,
         imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
         is_unbalanced=is_unbalanced,
+        is_true_damage=is_true_damage,
         combo_stacks=combo_stacks,
     )
 
@@ -280,6 +285,7 @@ def build_damage_snapshot(
                 ignore_resistance=ignore_resistance,
                 imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
                 is_unbalanced=is_unbalanced,
+                is_true_damage=is_true_damage,
             ),
             crit_mode="non_crit",
         )

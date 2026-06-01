@@ -73,6 +73,7 @@ class LoadoutState:
     ignore_resistance: float = 0.0
     imbalance_vulnerability_coeff: float = 1.3
     is_unbalanced: bool = False
+    is_true_damage: bool = False
     enemy_tier: str = "普通"
     combo_stacks: int = 0
     attached_effect_multiplier: float = 1.0
@@ -173,6 +174,7 @@ class LoadoutState:
             ignore_resistance=self.ignore_resistance,
             imbalance_vulnerability_coeff=self.imbalance_vulnerability_coeff,
             is_unbalanced=self.is_unbalanced,
+            is_true_damage=self.is_true_damage,
             enemy_tier=self.enemy_tier,
             combo_stacks=self.combo_stacks,
             attached_effect_multiplier=self.attached_effect_multiplier,
@@ -210,6 +212,7 @@ class LoadoutState:
                 "ignore_resistance": self.ignore_resistance,
                 "imbalance_vulnerability_coeff": self.imbalance_vulnerability_coeff,
                 "is_unbalanced": self.is_unbalanced,
+                "is_true_damage": self.is_true_damage,
                 "enemy_tier": self.enemy_tier,
                 "combo_stacks": self.combo_stacks,
                 "attached_effect_multiplier": self.attached_effect_multiplier,
@@ -301,6 +304,7 @@ def read_loadout_from_panels(
     ignore_resistance: float = 0.0,
     imbalance_vulnerability_coeff: float = 1.3,
     is_unbalanced: bool = False,
+    is_true_damage: bool = False,
     enemy_tier: str = "普通",
     combo_stacks: int = 0,
     attached_effect_multiplier: float = 1.0,
@@ -355,6 +359,7 @@ def read_loadout_from_panels(
         ignore_resistance=float(ignore_resistance),
         imbalance_vulnerability_coeff=float(imbalance_vulnerability_coeff),
         is_unbalanced=bool(is_unbalanced),
+        is_true_damage=bool(is_true_damage),
         enemy_tier=str(enemy_tier),
         combo_stacks=max(0, min(4, int(combo_stacks))),
         attached_effect_multiplier=float(attached_effect_multiplier),
@@ -427,6 +432,7 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Load
         ignore_resistance=float(getattr(app, "_ignore_resistance", 0.0)),
         imbalance_vulnerability_coeff=float(getattr(app, "_imbalance_vulnerability_coeff", 1.3)),
         is_unbalanced=bool(getattr(app, "_is_unbalanced", False)),
+        is_true_damage=bool(getattr(app, "_is_true_damage", False)),
         enemy_tier=str(getattr(app, "_enemy_tier", "普通")),
         combo_stacks=int(getattr(app, "_combo_stacks", 0)),
         attached_effect_multiplier=float(getattr(app, "_attached_effect_multiplier", 1.0)),

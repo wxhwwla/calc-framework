@@ -106,6 +106,7 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         ignore_resistance=loadout.ignore_resistance,
         imbalance_vulnerability_coeff=loadout.imbalance_vulnerability_coeff,
         is_unbalanced=loadout.is_unbalanced,
+        is_true_damage=loadout.is_true_damage,
         combo_stacks=loadout.combo_stacks,
         manual_buffs=loadout.manual_buffs if loadout.manual_buffs else None,
         **skill_kwargs,

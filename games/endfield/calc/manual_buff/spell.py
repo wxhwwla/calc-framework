@@ -96,6 +96,26 @@ def get_spell_abnormal_param_snapshot() -> dict[str, dict[str, object]]:
     }
 
 
+FORCED_SPELL_COUNT_PREFIX = "强制:"
+
+
+def partition_spell_abnormal_counts(
+    counts: dict[str, int] | None,
+) -> tuple[dict[str, int], frozenset[str]]:
+    """拆分普通次数与「强制施加（无初始伤）」键。"""
+    forced_keys: set[str] = set()
+    merged: dict[str, int] = {}
+    for key, value in (counts or {}).items():
+        text = str(key)
+        if text.startswith(FORCED_SPELL_COUNT_PREFIX):
+            real = text[len(FORCED_SPELL_COUNT_PREFIX) :]
+            forced_keys.add(real)
+            merged[real] = max(0, int(value))
+        else:
+            merged[text] = max(0, int(value))
+    return normalize_spell_abnormal_counts(merged), frozenset(forced_keys)
+
+
 def evaluate_spell_abnormal_total(
     *,
     context: DamageContext,
@@ -111,8 +131,9 @@ def evaluate_spell_abnormal_total(
     """计算法术异常总伤与单次分项（key 为 ``异常名:等级``）。
 
     manual_buffs: key 格式为 "异常:等级:次数" 如 "灼热异常:1:1"。
+    强制施加（无初始伤）次数键前缀 ``强制:``，如 ``强制:电磁异常:0``。
     """
-    normalized = normalize_spell_abnormal_counts(counts)
+    normalized, forced_keys = partition_spell_abnormal_counts(counts)
     mb = manual_buffs or {}
     total = 0.0
     breakdown: dict[str, float] = {}
@@ -126,7 +147,12 @@ def evaluate_spell_abnormal_total(
             if count <= 0:
                 continue
             multiplier = _skill_multiplier(defn, ui_level, char_level=char_level)
+            if base_key in forced_keys:
+                multiplier = 0.0
+            elif multiplier <= 0:
+                continue
             if multiplier <= 0:
+                breakdown[base_key] = 0.0
                 continue
 
             def _make_ctx() -> DamageContext:

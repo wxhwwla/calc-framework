@@ -42,6 +42,8 @@ class ConfirmMixin:
             ignore_resistance=self._ignore_resistance,
             imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
             is_unbalanced=self._is_unbalanced,
+            is_true_damage=self._is_true_damage,
+            is_true_damage=self._is_true_damage,
             enemy_tier=self._enemy_tier,
             combo_stacks=self._combo_stacks,
             attached_effect_multiplier=self._attached_effect_multiplier,
@@ -58,6 +60,7 @@ class ConfirmMixin:
         self._ignore_resistance = float(params.get("ignore_resistance", 0.0))
         self._imbalance_vulnerability_coeff = float(params.get("imbalance_vulnerability_coeff", 1.3))
         self._is_unbalanced = bool(params.get("is_unbalanced", False))
+        self._is_true_damage = bool(params.get("is_true_damage", False))
         self._enemy_tier = str(params.get("enemy_tier", "普通"))
         self._combo_stacks = max(0, min(4, int(params.get("combo_stacks", 0))))
         self._attached_effect_multiplier = float(params.get("attached_effect_multiplier", 1.0))
@@ -153,6 +156,8 @@ class ConfirmMixin:
             ignore_resistance=self._ignore_resistance,
             imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
             is_unbalanced=self._is_unbalanced,
+            is_true_damage=self._is_true_damage,
+            is_true_damage=self._is_true_damage,
             enemy_tier=self._enemy_tier,
             combo_stacks=self._combo_stacks,
             attached_effect_multiplier=self._attached_effect_multiplier,

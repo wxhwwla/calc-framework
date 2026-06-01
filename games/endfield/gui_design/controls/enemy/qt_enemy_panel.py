@@ -32,6 +32,7 @@ from games.endfield.data_loading.enemy_params import (
     DEFAULT_IMBALANCE_EFFICIENCY_BONUS,
     DEFAULT_IMBALANCE_VULNERABILITY,
     DEFAULT_IS_UNBALANCED,
+    DEFAULT_IS_TRUE_DAMAGE,
     list_plugin_enemy_choices,
     resolve_enemy_defense,
     resolve_enemy_resistance,
@@ -177,6 +178,12 @@ class QtEnemyPanel(QWidget):
         self._unbalanced_cb.setChecked(DEFAULT_IS_UNBALANCED)
         layout.addWidget(self._unbalanced_cb)
 
+        self._true_damage_cb = QCheckBox("真实伤害（无视防御区）")
+        self._true_damage_cb.setFont(self._font)
+        self._true_damage_cb.setStyleSheet(_CHECKBOX_STYLE)
+        self._true_damage_cb.setChecked(DEFAULT_IS_TRUE_DAMAGE)
+        layout.addWidget(self._true_damage_cb)
+
         layout.addWidget(_Label("敌人等阶", self._font))
         self._tier_combo = QComboBox()
         self._tier_combo.setStyleSheet(_COMBO_STYLE)
@@ -232,6 +239,7 @@ class QtEnemyPanel(QWidget):
         self._ignore_resistance_spin.valueChanged.connect(self._emit_params)
         self._imbalance_spin.valueChanged.connect(self._emit_params)
         self._unbalanced_cb.toggled.connect(self._emit_params)
+        self._true_damage_cb.toggled.connect(self._emit_params)
         self._tier_combo.currentTextChanged.connect(self._emit_params)
         self._combo_spin.valueChanged.connect(self._emit_params)
         self._attached_mult_spin.valueChanged.connect(self._emit_params)
@@ -270,6 +278,7 @@ class QtEnemyPanel(QWidget):
         self._ignore_resistance_spin.setValue(DEFAULT_IGNORE_RESISTANCE)
         self._imbalance_spin.setValue(DEFAULT_IMBALANCE_VULNERABILITY)
         self._unbalanced_cb.setChecked(DEFAULT_IS_UNBALANCED)
+        self._true_damage_cb.setChecked(DEFAULT_IS_TRUE_DAMAGE)
         self._tier_combo.setCurrentText(DEFAULT_ENEMY_TIER)
         self._combo_spin.setValue(DEFAULT_COMBO_STACKS)
         self._attached_mult_spin.setValue(DEFAULT_ATTACHED_EFFECT_MULTIPLIER)
@@ -283,6 +292,7 @@ class QtEnemyPanel(QWidget):
             "ignore_resistance": float(self._ignore_resistance_spin.value()),
             "imbalance_vulnerability_coeff": float(self._imbalance_spin.value()),
             "is_unbalanced": bool(self._unbalanced_cb.isChecked()),
+            "is_true_damage": bool(self._true_damage_cb.isChecked()),
             "enemy_tier": str(self._tier_combo.currentText()),
             "combo_stacks": int(self._combo_spin.value()),
             "attached_effect_multiplier": float(self._attached_mult_spin.value()),
@@ -301,6 +311,8 @@ class QtEnemyPanel(QWidget):
             self._imbalance_spin.setValue(float(params["imbalance_vulnerability_coeff"]))
         if "is_unbalanced" in params:
             self._unbalanced_cb.setChecked(bool(params["is_unbalanced"]))
+        if "is_true_damage" in params:
+            self._true_damage_cb.setChecked(bool(params["is_true_damage"]))
         if "enemy_tier" in params:
             idx = self._tier_combo.findText(str(params["enemy_tier"]))
             if idx >= 0:
