@@ -50,6 +50,8 @@ def _context_with_expected_crit(
         skill_type_bonus=base.skill_type_bonus,
         imbalance_damage_bonus=base.imbalance_damage_bonus,
         other_damage_bonus=base.other_damage_bonus,
+        combo_stacks=base.combo_stacks,
+        break_defense_stacks=base.break_defense_stacks,
     )
 
 

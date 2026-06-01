@@ -24,3 +24,21 @@ def vulnerability_bonus_from_break_defense(
     """破防层数 → 受击易伤加成（小数）。"""
     rate = max(0.0, float(per_stack))
     return rate * clamp_break_defense_stacks(stacks)
+
+
+def damage_effects_from_break_defense(stacks: int) -> tuple:
+    """破防层数 → 易伤区 DamageEffect（供伤害引擎合并）。"""
+    from games.endfield.calc.damage.engine.types import DamageEffect
+
+    bonus = vulnerability_bonus_from_break_defense(stacks)
+    if bonus <= 0.0:
+        return ()
+    layer = clamp_break_defense_stacks(stacks)
+    return (
+        DamageEffect(
+            effect_type="易伤",
+            value=bonus,
+            source="破防",
+            raw_text=f"破防×{layer} 易伤+{bonus * 100:.0f}%",
+        ),
+    )

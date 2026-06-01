@@ -186,6 +186,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
         self._attached_effect_multiplier: float = 1.0
         self._corrosion_duration_seconds: float = 15.0
         self._imbalance_efficiency_bonus: float = 0.0
+        self._break_defense_stacks: int = 0
 
 
 

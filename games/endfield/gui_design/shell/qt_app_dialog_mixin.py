@@ -40,7 +40,11 @@ class DialogMixin:
 
         )
 
-        dialog.exec()
+        if not hasattr(self.app, "_manual_buff_store"):
+            self.app._manual_buff_store = {}
+        dialog.load_store(getattr(self.app, "_manual_buff_store", None))
+        if dialog.exec():
+            self.app._manual_buff_store = dialog.buff_store()
 
     def _on_survival_estimate(self) -> None:
         from gui_design.app.loadout_state import read_loadout_from_panels

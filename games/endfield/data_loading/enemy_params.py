@@ -19,6 +19,7 @@ DEFAULT_COMBO_STACKS = 0
 DEFAULT_ATTACHED_EFFECT_MULTIPLIER = 1.0
 DEFAULT_CORROSION_DURATION_SEC = 15.0
 DEFAULT_IMBALANCE_EFFICIENCY_BONUS = 0.0
+DEFAULT_BREAK_DEFENSE_STACKS = 0
 
 
 def list_plugin_enemy_choices() -> tuple[tuple[str, str], ...]:
@@ -120,6 +121,7 @@ def _default_enemy_params() -> dict[str, Any]:
         "attached_effect_multiplier": DEFAULT_ATTACHED_EFFECT_MULTIPLIER,
         "corrosion_duration_seconds": DEFAULT_CORROSION_DURATION_SEC,
         "imbalance_efficiency_bonus": DEFAULT_IMBALANCE_EFFICIENCY_BONUS,
+        "break_defense_stacks": DEFAULT_BREAK_DEFENSE_STACKS,
     }
 
 
@@ -145,6 +147,9 @@ def _enemy_params_from_row(row: dict[str, Any]) -> dict[str, Any]:
             ),
             "imbalance_efficiency_bonus": float(
                 row.get("imbalance_efficiency_bonus", base["imbalance_efficiency_bonus"])
+            ),
+            "break_defense_stacks": max(
+                0, min(4, int(row.get("break_defense_stacks", base["break_defense_stacks"])))
             ),
         }
     )

@@ -173,6 +173,7 @@ def prepare_single_skill_search_job(
     combo_stacks: int = 0,
     attached_effect_multiplier: float = 1.0,
     corrosion_duration_seconds: float = 15.0,
+    break_defense_stacks: int = 0,
 ) -> tuple[SingleSkillSearchJob | None, str | None]:
     """
     组装搜索作业。
@@ -243,6 +244,7 @@ def prepare_single_skill_search_job(
             is_unbalanced=bool(is_unbalanced),
             is_true_damage=bool(is_true_damage),
             combo_stacks=max(0, min(4, int(combo_stacks))),
+            break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
         ),
         weapon_candidates=tuple(weapon_candidates),
         equipment_catalog=equipment_catalog,

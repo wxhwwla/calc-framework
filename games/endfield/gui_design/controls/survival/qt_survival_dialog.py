@@ -18,6 +18,14 @@ from PySide6.QtWidgets import (
 )
 
 from games.endfield.calc.character_stats import total_max_hp
+from games.endfield.calc.damage.combat_resources import (
+    DODGE_SP_GAIN,
+    SP_NATURAL_REGEN_PER_SEC,
+    ULTIMATE_CHARGE_PER_100_SP,
+    estimate_ultimate_after_actions,
+    sp_after_natural_regen,
+)
+from games.endfield.calc.damage.special_damage import life_steal_heal
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.execute import calculate_execute_damage, execute_sp_restore
 from games.endfield.calc.damage.healing import HealingContext, calculate_healing, received_heal_efficiency_from_will
@@ -71,6 +79,38 @@ class QtSurvivalEstimateDialog(QDialog):
         imb_form.addRow("节点阈值", self._imb_nodes)
         layout.addWidget(imb_box)
 
+        res_box = QGroupBox("技力 / 终结技（NGA 节选估算）")
+        res_form = QFormLayout(res_box)
+        self._sp_seconds = QDoubleSpinBox()
+        self._sp_seconds.setRange(0.0, 60.0)
+        self._sp_seconds.setValue(5.0)
+        self._sp_start = QDoubleSpinBox()
+        self._sp_start.setRange(0.0, 100.0)
+        self._sp_start.setValue(0.0)
+        self._ult_start = QDoubleSpinBox()
+        self._ult_start.setRange(0.0, 100.0)
+        self._ult_start.setValue(0.0)
+        self._sp_result = QLabel("—")
+        self._ult_result = QLabel("—")
+        res_form.addRow("起始技力", self._sp_start)
+        res_form.addRow("自然回能时长 (s)", self._sp_seconds)
+        res_form.addRow("回能后技力", self._sp_result)
+        res_form.addRow("起始终结充能", self._ult_start)
+        res_form.addRow("终结充能（含闪避1次）", self._ult_result)
+        layout.addWidget(res_box)
+
+        steal_box = QGroupBox("生命汲取")
+        steal_form = QFormLayout(steal_box)
+        self._steal_rate = QDoubleSpinBox()
+        self._steal_rate.setRange(0.0, 1.0)
+        self._steal_rate.setDecimals(3)
+        self._steal_rate.setSingleStep(0.01)
+        self._steal_rate.setValue(0.10)
+        self._steal_result = QLabel("—")
+        steal_form.addRow("汲取率", self._steal_rate)
+        steal_form.addRow("预估回复", self._steal_result)
+        layout.addWidget(steal_box)
+
         heal_box = QGroupBox("治疗（三乘区）")
         heal_form = QFormLayout(heal_box)
         self._base_heal = QDoubleSpinBox()
@@ -107,10 +147,14 @@ class QtSurvivalEstimateDialog(QDialog):
             self._will,
             self._heal_eff,
             self._indep_heal,
+            self._sp_seconds,
+            self._sp_start,
+            self._ult_start,
+            self._steal_rate,
         ):
-            spin.valueChanged.connect(self._refresh_healing)
+            spin.valueChanged.connect(self._refresh_all)
         layout.addWidget(
-            QLabel("处决按当前角色/武器面板；治疗参数可手动调整。", self)
+            QLabel("处决按当前角色/武器面板；治疗/技力参数可手动调整。", self)
         )
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
@@ -125,9 +169,28 @@ class QtSurvivalEstimateDialog(QDialog):
         self._trust_level = trust_level
         self._enemy_tier = enemy_tier
         self._weapon_skill_kwargs = dict(weapon_skill_kwargs or {})
+        self._last_execute_damage = 0.0
+        self._refresh_all()
+
+    def _refresh_all(self) -> None:
         self._refresh_imbalance_info()
         self._refresh_execute()
+        self._refresh_resources()
         self._refresh_healing()
+
+    def _refresh_resources(self) -> None:
+        sp = sp_after_natural_regen(float(self._sp_start.value()), float(self._sp_seconds.value()))
+        sp_gain = max(0.0, sp - float(self._sp_start.value()))
+        ult = estimate_ultimate_after_actions(
+            float(self._ult_start.value()),
+            sp_gains=(sp_gain, DODGE_SP_GAIN),
+        )
+        self._sp_result.setText(f"{sp:,.1f}（{SP_NATURAL_REGEN_PER_SEC:g}/s）")
+        self._ult_result.setText(
+            f"{ult:,.1f}（{ULTIMATE_CHARGE_PER_100_SP:g}/100 技力 + 闪避 {DODGE_SP_GAIN:g}）"
+        )
+        heal = life_steal_heal(self._last_execute_damage, life_steal_rate=float(self._steal_rate.value()))
+        self._steal_result.setText(f"{heal:,.1f}")
 
     def _refresh_imbalance_info(self) -> None:
         cap = imbalance_cap_for_tier(self._enemy_tier)
@@ -163,8 +226,10 @@ class QtSurvivalEstimateDialog(QDialog):
             enemy_tier=self._enemy_tier,
         )
         sp = execute_sp_restore(self._enemy_tier)
+        self._last_execute_damage = float(dmg)
         self._exec_result.setText(f"{dmg:,.1f}（承伤×{mult:.2f}）")
         self._exec_sp.setText(str(sp))
+        self._refresh_resources()
 
     def _refresh_healing(self) -> None:
         will = float(self._will.value())

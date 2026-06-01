@@ -33,6 +33,7 @@ def _parse_enemy_params(raw: Any) -> dict[str, Any]:
         "attached_effect_multiplier",
         "corrosion_duration_seconds",
         "imbalance_efficiency_bonus",
+        "break_defense_stacks",
     }
     result: dict[str, Any] = {}
     for key in allowed:

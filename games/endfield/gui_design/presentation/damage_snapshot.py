@@ -71,6 +71,7 @@ def _compute_weighted_with_buffs(
     is_unbalanced: bool = False,
     is_true_damage: bool = False,
     combo_stacks: int = 0,
+    break_defense_stacks: int = 0,
 ) -> tuple[float, dict[str, float], dict[str, float]]:
     """按次数加总，对每次出现查找 manual_buffs 注入。"""
     scenario_by_key = {s.scenario_key: s for s in scenarios}
@@ -101,6 +102,7 @@ def _compute_weighted_with_buffs(
                         is_unbalanced=is_unbalanced,
                         is_true_damage=is_true_damage,
                         combo_stacks=max(0, min(4, int(combo_stacks))),
+                        break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
                     ),
                     crit_mode="non_crit",
                     manual_buffs=buffs,
@@ -160,6 +162,7 @@ def build_damage_snapshot(
     is_unbalanced: bool = False,
     is_true_damage: bool = False,
     combo_stacks: int = 0,
+    break_defense_stacks: int = 0,
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> DamageSnapshot:
     """按当前角色/武器与段级次数计算分项伤害（不含装备词条）。
@@ -233,6 +236,7 @@ def build_damage_snapshot(
                 is_unbalanced=is_unbalanced,
                 is_true_damage=is_true_damage,
                 combo_stacks=max(0, min(4, int(combo_stacks))),
+                break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
             ),
             crit_mode="non_crit",
         )
@@ -260,6 +264,7 @@ def build_damage_snapshot(
         is_unbalanced=is_unbalanced,
         is_true_damage=is_true_damage,
         combo_stacks=combo_stacks,
+        break_defense_stacks=break_defense_stacks,
     )
 
     rotation_share: dict[str, float] = {}
@@ -286,6 +291,7 @@ def build_damage_snapshot(
                 imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
                 is_unbalanced=is_unbalanced,
                 is_true_damage=is_true_damage,
+                break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
             ),
             crit_mode="non_crit",
         )

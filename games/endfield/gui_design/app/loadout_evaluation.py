@@ -108,6 +108,7 @@ def build_snapshot_from_loadout(loadout: LoadoutState) -> DamageSnapshot:
         is_unbalanced=loadout.is_unbalanced,
         is_true_damage=loadout.is_true_damage,
         combo_stacks=loadout.combo_stacks,
+        break_defense_stacks=loadout.break_defense_stacks,
         manual_buffs=loadout.manual_buffs if loadout.manual_buffs else None,
         **skill_kwargs,
     )

@@ -30,6 +30,7 @@ from games.endfield.data_loading.enemy_params import (
     DEFAULT_ENEMY_TIER,
     DEFAULT_IGNORE_RESISTANCE,
     DEFAULT_IMBALANCE_EFFICIENCY_BONUS,
+    DEFAULT_BREAK_DEFENSE_STACKS,
     DEFAULT_IMBALANCE_VULNERABILITY,
     DEFAULT_IS_UNBALANCED,
     DEFAULT_IS_TRUE_DAMAGE,
@@ -222,6 +223,12 @@ class QtEnemyPanel(QWidget):
         self._imbalance_eff_spin.setValue(DEFAULT_IMBALANCE_EFFICIENCY_BONUS)
         layout.addWidget(self._imbalance_eff_spin)
 
+        layout.addWidget(_Label("破防层数 (0–4，≠物理异常)", self._font))
+        self._break_defense_spin = QSpinBox()
+        self._break_defense_spin.setRange(0, 4)
+        self._break_defense_spin.setValue(DEFAULT_BREAK_DEFENSE_STACKS)
+        layout.addWidget(self._break_defense_spin)
+
         # -- 重置按钮 --
         reset_row = QHBoxLayout()
         reset_row.setContentsMargins(0, 4, 0, 0)
@@ -245,6 +252,7 @@ class QtEnemyPanel(QWidget):
         self._attached_mult_spin.valueChanged.connect(self._emit_params)
         self._corrosion_spin.valueChanged.connect(self._emit_params)
         self._imbalance_eff_spin.valueChanged.connect(self._emit_params)
+        self._break_defense_spin.valueChanged.connect(self._emit_params)
         self._reset_btn.clicked.connect(self._reset_to_default)
 
     def _populate_enemy_combo(self) -> None:
@@ -284,6 +292,7 @@ class QtEnemyPanel(QWidget):
         self._attached_mult_spin.setValue(DEFAULT_ATTACHED_EFFECT_MULTIPLIER)
         self._corrosion_spin.setValue(DEFAULT_CORROSION_DURATION_SEC)
         self._imbalance_eff_spin.setValue(DEFAULT_IMBALANCE_EFFICIENCY_BONUS)
+        self._break_defense_spin.setValue(DEFAULT_BREAK_DEFENSE_STACKS)
 
     def get_params(self) -> dict[str, Any]:
         return {
@@ -298,6 +307,7 @@ class QtEnemyPanel(QWidget):
             "attached_effect_multiplier": float(self._attached_mult_spin.value()),
             "corrosion_duration_seconds": float(self._corrosion_spin.value()),
             "imbalance_efficiency_bonus": float(self._imbalance_eff_spin.value()),
+            "break_defense_stacks": int(self._break_defense_spin.value()),
         }
 
     def set_params(self, params: dict[str, Any]) -> None:
@@ -325,6 +335,8 @@ class QtEnemyPanel(QWidget):
             self._corrosion_spin.setValue(float(params["corrosion_duration_seconds"]))
         if "imbalance_efficiency_bonus" in params:
             self._imbalance_eff_spin.setValue(float(params["imbalance_efficiency_bonus"]))
+        if "break_defense_stacks" in params:
+            self._break_defense_spin.setValue(max(0, min(4, int(params["break_defense_stacks"]))))
 
     def current_enemy_id(self) -> str:
         return self._id_by_label.get(self._enemy_combo.currentText(), "")

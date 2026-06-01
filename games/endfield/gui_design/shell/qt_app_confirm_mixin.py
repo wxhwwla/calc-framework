@@ -66,6 +66,7 @@ class ConfirmMixin:
         self._attached_effect_multiplier = float(params.get("attached_effect_multiplier", 1.0))
         self._corrosion_duration_seconds = float(params.get("corrosion_duration_seconds", 15.0))
         self._imbalance_efficiency_bonus = float(params.get("imbalance_efficiency_bonus", 0.0))
+        self._break_defense_stacks = max(0, min(4, int(params.get("break_defense_stacks", 0))))
 
     def _on_enemy_params_changed(self, params: dict) -> None:
         self._apply_enemy_params(params)

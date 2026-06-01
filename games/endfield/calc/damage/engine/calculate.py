@@ -37,6 +37,7 @@
 
 from __future__ import annotations
 
+from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
 from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 
 from .helpers import _collect_effects, _resolve_crit_zone
@@ -97,6 +98,7 @@ def _apply_manual_buffs(
             other_damage_bonus=context.other_damage_bonus + overrides.get("other_damage_bonus", 0.0),
             base_damage_bonus=context.base_damage_bonus,
             combo_stacks=context.combo_stacks,
+            break_defense_stacks=context.break_defense_stacks,
         )
     return context, extra_effects
 
@@ -130,7 +132,11 @@ def calculate_single_hit_damage(
     else:
         extra = []
 
-    all_effects = list(effects or []) + extra
+    all_effects = (
+        list(effects or [])
+        + extra
+        + list(damage_effects_from_break_defense(context.break_defense_stacks))
+    )
     known_effects, unknown_effects, warnings = _collect_effects(context, all_effects)
 
     damage_bonus = (

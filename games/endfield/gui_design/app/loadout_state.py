@@ -79,6 +79,7 @@ class LoadoutState:
     attached_effect_multiplier: float = 1.0
     corrosion_duration_seconds: float = 15.0
     imbalance_efficiency_bonus: float = 0.0
+    break_defense_stacks: int = 0
     weapon_specials: tuple[Any, ...] = ("", 1, "", 1, "", 0, "", 1, 0, "", 1, 0)
     manual_buffs: dict[str, list[dict[str, str | float]]] = field(default_factory=dict)
 
@@ -180,6 +181,7 @@ class LoadoutState:
             attached_effect_multiplier=self.attached_effect_multiplier,
             corrosion_duration_seconds=self.corrosion_duration_seconds,
             imbalance_efficiency_bonus=self.imbalance_efficiency_bonus,
+            break_defense_stacks=self.break_defense_stacks,
         )
 
     def to_loadout_preset(self) -> LoadoutPreset:
@@ -218,6 +220,7 @@ class LoadoutState:
                 "attached_effect_multiplier": self.attached_effect_multiplier,
                 "corrosion_duration_seconds": self.corrosion_duration_seconds,
                 "imbalance_efficiency_bonus": self.imbalance_efficiency_bonus,
+                "break_defense_stacks": self.break_defense_stacks,
             },
         )
 
@@ -266,6 +269,7 @@ class LoadoutState:
             combo_stacks=self.combo_stacks,
             attached_effect_multiplier=self.attached_effect_multiplier,
             corrosion_duration_seconds=self.corrosion_duration_seconds,
+            break_defense_stacks=self.break_defense_stacks,
         )
 
 
@@ -311,6 +315,7 @@ def read_loadout_from_panels(
     attached_effect_multiplier: float = 1.0,
     corrosion_duration_seconds: float = 15.0,
     imbalance_efficiency_bonus: float = 0.0,
+    break_defense_stacks: int = 0,
     manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> LoadoutState | None:
     """从角色/武器面板读取配装快照；无效选择时返回 None。"""
@@ -366,6 +371,7 @@ def read_loadout_from_panels(
         attached_effect_multiplier=float(attached_effect_multiplier),
         corrosion_duration_seconds=float(corrosion_duration_seconds),
         imbalance_efficiency_bonus=float(imbalance_efficiency_bonus),
+        break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
         weapon_specials=_read_weapon_specials_from_panel(weapon_panel),
         manual_buffs=dict(manual_buffs or {}),
     )
@@ -439,5 +445,6 @@ def read_loadout_from_app(app: Any, *, ensure_segment_rows: bool = True) -> Load
         attached_effect_multiplier=float(getattr(app, "_attached_effect_multiplier", 1.0)),
         corrosion_duration_seconds=float(getattr(app, "_corrosion_duration_seconds", 15.0)),
         imbalance_efficiency_bonus=float(getattr(app, "_imbalance_efficiency_bonus", 0.0)),
+        break_defense_stacks=int(getattr(app, "_break_defense_stacks", 0)),
         manual_buffs=getattr(app, "_manual_buff_store", None),
     )
