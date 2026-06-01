@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { mergeEnemyParams, type EnemyParams } from "../../api/search";
 
 interface PresetData {
   schema: string;
@@ -17,13 +18,7 @@ interface PresetData {
   weapon_name: string;
   char_level: number;
   weapon_level: number;
-  enemy_params: {
-    enemy_defense: number;
-    enemy_resistance: number;
-    ignore_resistance: number;
-    imbalance_vulnerability_coeff: number;
-    is_unbalanced: boolean;
-  };
+  enemy_params: Partial<EnemyParams> & Pick<EnemyParams, "enemy_defense">;
   multi_skill: {
     use_manual_multi_skill_counts: boolean;
     manual_counts: Record<string, number>;
@@ -42,7 +37,7 @@ interface PresetDialogProps {
     weaponName: string;
     charLevel: number;
     weaponLevel: number;
-    enemyParams: { enemy_defense: number; enemy_resistance: number; ignore_resistance: number; imbalance_vulnerability_coeff: number; is_unbalanced: boolean };
+    enemyParams: EnemyParams;
     multiSkill: { useManualCounts: boolean; manualCounts: Record<string, number>; damageComponentMode: string };
     fixedLoadout: Record<string, string | null> | null;
   };
@@ -56,7 +51,7 @@ export default function PresetDialog({ open, onClose, currentState, onImport }: 
 
   const handleExport = useCallback(() => {
     const preset: PresetData = {
-      schema: "endfield_web_preset_v1",
+      schema: "endfield_web_preset_v2",
       char_name: currentState.charName,
       weapon_name: currentState.weaponName,
       char_level: currentState.charLevel,
@@ -94,11 +89,15 @@ export default function PresetDialog({ open, onClose, currentState, onImport }: 
       const reader = new FileReader();
       reader.onload = (evt) => {
         try {
-          const data = JSON.parse(evt.target?.result as string) as PresetData;
-          if (!data.schema || !data.char_name) {
+          const raw = JSON.parse(evt.target?.result as string) as PresetData;
+          if (!raw.schema || !raw.char_name) {
             alert("无效的预设文件：缺少必要字段");
             return;
           }
+          const data: PresetData = {
+            ...raw,
+            enemy_params: mergeEnemyParams(raw.enemy_params ?? {}),
+          };
           onImport(data);
           onClose();
         } catch {
@@ -120,18 +119,10 @@ export default function PresetDialog({ open, onClose, currentState, onImport }: 
         </Typography>
 
         <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-          <Button
-            variant="outlined"
-            startIcon={<FileDownloadIcon />}
-            onClick={handleExport}
-          >
+          <Button variant="outlined" startIcon={<FileDownloadIcon />} onClick={handleExport}>
             导出配装
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<FileUploadIcon />}
-            onClick={handleImportClick}
-          >
+          <Button variant="contained" startIcon={<FileUploadIcon />} onClick={handleImportClick}>
             导入配装
           </Button>
         </Box>

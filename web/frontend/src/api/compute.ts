@@ -82,6 +82,10 @@ export async function fetchSnapshot(params: {
   ignore_resistance?: number;
   imbalance_vulnerability_coeff?: number;
   is_unbalanced?: boolean;
+  is_true_damage?: boolean;
+  combo_stacks?: number;
+  break_defense_stacks?: number;
+  damage_component_mode?: string;
   extra_crit_rate?: number;
   extra_crit_damage?: number;
 }): Promise<DamageSnapshot> {

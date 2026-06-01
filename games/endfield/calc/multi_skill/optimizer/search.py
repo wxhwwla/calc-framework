@@ -25,6 +25,10 @@
 from __future__ import annotations
 
 from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
+from games.endfield.calc.damage.physical_abnormal_state import (
+    break_defense_stacks_at_hit,
+    build_rotation_hit_index,
+)
 from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
 from games.endfield.calc.equipment.prune import character_ability_attrs
 from games.endfield.calc.equipment.system import build_four_slot_loadout, collect_loadout_effects
@@ -140,34 +144,46 @@ def optimize_multi_skill_loadouts(
         base_effects = list(weapon.effects) + collect_loadout_effects(loadout)
         breakdown: dict[str, float] = {}
         weighted_total = 0.0
+        preferred_order = [s.scenario_key for s in scenarios]
+        hit_index_map = build_rotation_hit_index(count_map, preferred_order=preferred_order)
         for scenario in scenarios:
-            ctx = DamageContext(
-                final_attack=weapon.final_attack,
-                skill_multiplier=scenario.skill_multiplier,
-                damage_type=resolve_scenario_damage_type(scenario, base_context),
-                skill_type=scenario.resolved_skill_type or base_context.skill_type,
-                is_unbalanced=base_context.is_unbalanced,
-                is_true_damage=base_context.is_true_damage,
-                enemy_defense=base_context.enemy_defense,
-                enemy_resistance=base_context.enemy_resistance,
-                ignore_resistance=base_context.ignore_resistance,
-                imbalance_vulnerability_coeff=base_context.imbalance_vulnerability_coeff,
-                crit_rate=base_context.crit_rate,
-                crit_damage=base_context.crit_damage,
-                damage_type_bonus=base_context.damage_type_bonus,
-                skill_type_bonus=base_context.skill_type_bonus,
-                imbalance_damage_bonus=base_context.imbalance_damage_bonus,
-                other_damage_bonus=base_context.other_damage_bonus,
-                combo_stacks=base_context.combo_stacks,
-                break_defense_stacks=base_context.break_defense_stacks,
-            )
-            dmg = calculate_single_hit_damage(
-                ctx,
-                effects=base_effects + list(scenario.external_effects),
-                crit_mode=config.crit_mode,  # type: ignore[arg-type]
-            ).final_damage
-            breakdown[scenario.scenario_key] = dmg
-            weighted_total += dmg * count_map.get(scenario.scenario_key, 0)
+            key = scenario.scenario_key
+            count = max(0, int(count_map.get(key, 0)))
+            if count <= 0:
+                breakdown[key] = 0.0
+                continue
+            segment_sum = 0.0
+            for occurrence in range(1, count + 1):
+                global_hit = hit_index_map.get((key, occurrence), occurrence)
+                bd_stacks = break_defense_stacks_at_hit(base_context.break_defense_stacks, global_hit)
+                ctx = DamageContext(
+                    final_attack=weapon.final_attack,
+                    skill_multiplier=scenario.skill_multiplier,
+                    damage_type=resolve_scenario_damage_type(scenario, base_context),
+                    skill_type=scenario.resolved_skill_type or base_context.skill_type,
+                    is_unbalanced=base_context.is_unbalanced,
+                    is_true_damage=base_context.is_true_damage,
+                    enemy_defense=base_context.enemy_defense,
+                    enemy_resistance=base_context.enemy_resistance,
+                    ignore_resistance=base_context.ignore_resistance,
+                    imbalance_vulnerability_coeff=base_context.imbalance_vulnerability_coeff,
+                    crit_rate=base_context.crit_rate,
+                    crit_damage=base_context.crit_damage,
+                    damage_type_bonus=base_context.damage_type_bonus,
+                    skill_type_bonus=base_context.skill_type_bonus,
+                    imbalance_damage_bonus=base_context.imbalance_damage_bonus,
+                    other_damage_bonus=base_context.other_damage_bonus,
+                    combo_stacks=base_context.combo_stacks,
+                    break_defense_stacks=bd_stacks,
+                )
+                dmg = calculate_single_hit_damage(
+                    ctx,
+                    effects=base_effects + list(scenario.external_effects),
+                    crit_mode=config.crit_mode,  # type: ignore[arg-type]
+                ).final_damage
+                segment_sum += dmg
+            breakdown[key] = segment_sum / count if count else 0.0
+            weighted_total += segment_sum
         scores.append(
             MultiSkillScore(
                 weapon_name=weapon.name,
@@ -243,6 +259,8 @@ def evaluate_multi_skill_task(
     from games.endfield.calc.skills.segments import normalize_manual_segment_counts
 
     normalized_counts = normalize_manual_segment_counts(skill_counts, list(scenarios))
+    preferred_order = [s.scenario_key for s in scenarios]
+    hit_index_map = build_rotation_hit_index(normalized_counts, preferred_order=preferred_order)
     weighted_total = 0.0
     segment_breakdown: dict[str, float] = {}
     for scenario in scenarios:
@@ -250,33 +268,38 @@ def evaluate_multi_skill_task(
         count = normalized_counts.get(key, 0)
         if count <= 0:
             continue
-        ctx = DamageContext(
-            final_attack=final_attack,
-            skill_multiplier=scenario.skill_multiplier,
-            damage_type=resolve_scenario_damage_type(scenario, shared_context),
-            skill_type=scenario.resolved_skill_type or shared_context.skill_type,
-            is_unbalanced=shared_context.is_unbalanced,
-            is_true_damage=shared_context.is_true_damage,
-            enemy_defense=shared_context.enemy_defense,
-            enemy_resistance=shared_context.enemy_resistance,
-            ignore_resistance=shared_context.ignore_resistance,
-            imbalance_vulnerability_coeff=shared_context.imbalance_vulnerability_coeff,
-            crit_rate=shared_context.crit_rate,
-            crit_damage=shared_context.crit_damage,
-            damage_type_bonus=shared_context.damage_type_bonus,
-            skill_type_bonus=shared_context.skill_type_bonus,
-            imbalance_damage_bonus=shared_context.imbalance_damage_bonus,
-            other_damage_bonus=shared_context.other_damage_bonus,
-            combo_stacks=shared_context.combo_stacks,
-            break_defense_stacks=shared_context.break_defense_stacks,
-        )
-        dmg = calculate_single_hit_damage(
-            ctx,
-            effects=effects + list(scenario.external_effects),
-            crit_mode=crit_mode,
-        ).final_damage
-        segment_breakdown[key] = dmg
-        weighted_total += dmg * count
+        segment_sum = 0.0
+        for occurrence in range(1, count + 1):
+            global_hit = hit_index_map.get((key, occurrence), occurrence)
+            bd_stacks = break_defense_stacks_at_hit(shared_context.break_defense_stacks, global_hit)
+            ctx = DamageContext(
+                final_attack=final_attack,
+                skill_multiplier=scenario.skill_multiplier,
+                damage_type=resolve_scenario_damage_type(scenario, shared_context),
+                skill_type=scenario.resolved_skill_type or shared_context.skill_type,
+                is_unbalanced=shared_context.is_unbalanced,
+                is_true_damage=shared_context.is_true_damage,
+                enemy_defense=shared_context.enemy_defense,
+                enemy_resistance=shared_context.enemy_resistance,
+                ignore_resistance=shared_context.ignore_resistance,
+                imbalance_vulnerability_coeff=shared_context.imbalance_vulnerability_coeff,
+                crit_rate=shared_context.crit_rate,
+                crit_damage=shared_context.crit_damage,
+                damage_type_bonus=shared_context.damage_type_bonus,
+                skill_type_bonus=shared_context.skill_type_bonus,
+                imbalance_damage_bonus=shared_context.imbalance_damage_bonus,
+                other_damage_bonus=shared_context.other_damage_bonus,
+                combo_stacks=shared_context.combo_stacks,
+                break_defense_stacks=bd_stacks,
+            )
+            dmg = calculate_single_hit_damage(
+                ctx,
+                effects=effects + list(scenario.external_effects),
+                crit_mode=crit_mode,
+            ).final_damage
+            segment_sum += dmg
+        segment_breakdown[key] = segment_sum / count if count else 0.0
+        weighted_total += segment_sum
 
     return LoadoutScore(
         weapon_name=weapon.name,

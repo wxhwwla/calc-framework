@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Table, TableBody, TableCell, TableRow, TextField, Typography,
+  MenuItem, Select, FormControl, InputLabel, Box,
 } from "@mui/material";
 
 const BUFF_SLOTS = [
@@ -27,6 +28,17 @@ interface ManualBuffDialogProps {
 
 export default function ManualBuffDialog({ open, onClose, values, onApply }: ManualBuffDialogProps) {
   const [edits, setEdits] = useState<Record<string, string>>({});
+  const [presets, setPresets] = useState<{ name: string; entries: { effect_type: string; value: number }[] }[]>([]);
+  const [selectedPreset, setSelectedPreset] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/manual-buff/consumable-presets")
+        .then((r) => r.json())
+        .then(setPresets)
+        .catch(() => setPresets([]));
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -57,8 +69,44 @@ export default function ManualBuffDialog({ open, onClose, values, onApply }: Man
       <DialogTitle>手动 Buff 微调</DialogTitle>
       <DialogContent>
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
-          修改乘区系数后点击"应用"，系数将在下次计算时生效
+          修改乘区系数后点击"应用"。消耗品预设为参考条目（完整段级写入见桌面版）。
         </Typography>
+        {presets.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <FormControl size="small" fullWidth>
+              <InputLabel>消耗品预设（参考）</InputLabel>
+              <Select
+                value={selectedPreset}
+                label="消耗品预设（参考）"
+                onChange={(e) => {
+                  const name = String(e.target.value);
+                  setSelectedPreset(name);
+                  const preset = presets.find((p) => p.name === name);
+                  if (!preset) return;
+                  const next = { ...edits };
+                  for (const entry of preset.entries) {
+                    if (entry.effect_type === "其他伤害加成") {
+                      next["增伤乘区"] = String(1 + entry.value);
+                    }
+                    if (entry.effect_type === "暴击率") {
+                      next["暴击乘区"] = String(parseFloat(next["暴击乘区"] || "1") + entry.value);
+                    }
+                  }
+                  setEdits(next);
+                }}
+              >
+                <MenuItem value="">
+                  <em>不应用</em>
+                </MenuItem>
+                {presets.map((p) => (
+                  <MenuItem key={p.name} value={p.name}>
+                    {p.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        )}
         <Table size="small">
           <TableBody>
             {BUFF_SLOTS.map((slot) => (

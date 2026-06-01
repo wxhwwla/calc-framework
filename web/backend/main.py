@@ -30,6 +30,8 @@ from api.layout import router as layout_router
 from api.pack import router as pack_router
 
 from api.search import router as search_router
+from api.survival import router as survival_router
+from api.manual_buff import router as manual_buff_router
 from api.history import router as history_router
 from api.ocr import router as ocr_router
 from api.arknights import router as arknights_router
@@ -77,6 +79,8 @@ app.include_router(layout_router)
 app.include_router(pack_router)
 
 app.include_router(search_router)
+app.include_router(survival_router)
+app.include_router(manual_buff_router)
 app.include_router(history_router)
 app.include_router(ocr_router)
 app.include_router(arknights_router)

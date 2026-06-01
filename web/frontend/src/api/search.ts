@@ -1,5 +1,21 @@
 const BASE = "/api/search";
 
+/** 与桌面 `EnemyEvalParams` / 插件默认一致 */
+export const DEFAULT_ENEMY_PARAMS: EnemyParams = {
+  enemy_defense: 100,
+  enemy_resistance: 0,
+  ignore_resistance: 0,
+  imbalance_vulnerability_coeff: 1.3,
+  is_unbalanced: false,
+  is_true_damage: false,
+  combo_stacks: 0,
+  break_defense_stacks: 0,
+  attached_effect_multiplier: 1.0,
+  corrosion_duration_seconds: 15.0,
+  enemy_tier: "普通",
+  imbalance_efficiency_bonus: 0.0,
+};
+
 export interface EnemyInfo {
   id: string;
   name: string;
@@ -8,6 +24,13 @@ export interface EnemyInfo {
   ignore_resistance: number;
   imbalance_vulnerability_coeff: number;
   is_unbalanced: boolean;
+  is_true_damage: boolean;
+  combo_stacks: number;
+  break_defense_stacks: number;
+  attached_effect_multiplier: number;
+  corrosion_duration_seconds: number;
+  enemy_tier: string;
+  imbalance_efficiency_bonus: number;
 }
 
 export interface EnemyParams {
@@ -16,6 +39,18 @@ export interface EnemyParams {
   ignore_resistance: number;
   imbalance_vulnerability_coeff: number;
   is_unbalanced: boolean;
+  is_true_damage: boolean;
+  combo_stacks: number;
+  break_defense_stacks: number;
+  attached_effect_multiplier: number;
+  corrosion_duration_seconds: number;
+  enemy_tier: string;
+  imbalance_efficiency_bonus: number;
+}
+
+/** 预设 v1 仅 5 字段时补全缺省 */
+export function mergeEnemyParams(partial: Partial<EnemyParams>): EnemyParams {
+  return { ...DEFAULT_ENEMY_PARAMS, ...partial };
 }
 
 export interface SearchHistoryEntry {
@@ -95,6 +130,18 @@ export interface SearchRequest {
   equipment_catalog: Record<string, Record<string, unknown>[]>;
   fixed_loadout?: Record<string, unknown> | null;
   enemy_defense: number;
+  enemy_resistance?: number;
+  ignore_resistance?: number;
+  imbalance_vulnerability_coeff?: number;
+  is_unbalanced?: boolean;
+  is_true_damage?: boolean;
+  combo_stacks?: number;
+  break_defense_stacks?: number;
+  attached_effect_multiplier?: number;
+  corrosion_duration_seconds?: number;
+  physical_abnormal_counts?: Record<string, number> | null;
+  spell_abnormal_counts?: Record<string, number> | null;
+  damage_component_mode?: string;
   top_n: number;
   max_workers: number;
   use_manual_multi_skill_counts?: boolean;

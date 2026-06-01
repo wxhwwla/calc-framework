@@ -14,6 +14,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from games.endfield.calc.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
+from games.endfield.calc.damage.physical_abnormal_state import (
+    break_defense_stacks_at_hit,
+    build_rotation_hit_index,
+    is_physical_abnormal_key,
+)
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
 from games.endfield.calc.skills.segments import (
@@ -79,15 +84,19 @@ def _compute_weighted_with_buffs(
     skill_type_totals: dict[str, float] = {name: 0.0 for name in _SKILL_TYPE_ORDER}
     weighted_total = 0.0
     mb = manual_buffs or {}
+    preferred_order = [s.scenario_key for s in scenarios]
+    hit_index_map = build_rotation_hit_index(counts, preferred_order=preferred_order)
 
     for key, seg_count in counts.items():
-        if seg_count <= 0:
+        if seg_count <= 0 or is_physical_abnormal_key(key):
             continue
         scenario = scenario_by_key.get(key)
         segment_total = 0.0
         for occurrence_idx in range(1, seg_count + 1):
             buff_key = f"{key}:{occurrence_idx}"
             buffs = mb.get(buff_key)
+            global_hit = hit_index_map.get((key, occurrence_idx), occurrence_idx)
+            stacks_at_hit = break_defense_stacks_at_hit(break_defense_stacks, global_hit)
             if buffs is not None or scenario is not None:
                 result = calculate_single_hit_damage(
                     DamageContext(
@@ -102,7 +111,7 @@ def _compute_weighted_with_buffs(
                         is_unbalanced=is_unbalanced,
                         is_true_damage=is_true_damage,
                         combo_stacks=max(0, min(4, int(combo_stacks))),
-                        break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
+                        break_defense_stacks=max(0, min(4, int(stacks_at_hit))),
                     ),
                     crit_mode="non_crit",
                     manual_buffs=buffs,

@@ -21,6 +21,7 @@ import CalcModeSelector from "../components/calculator/CalcModeSelector";
 import type { LayoutDefinition } from "../components/WebComputeSheet";
 import type { DagVariable } from "../utils/controlInference";
 import type { EnemyParams } from "../api/search";
+import { DEFAULT_ENEMY_PARAMS, mergeEnemyParams } from "../api/search";
 import type { MultiSkillSettings } from "../components/calculator/MultiSkillPanel";
 import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadoutPanel";
 import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
@@ -31,6 +32,7 @@ import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import ManualBuffDialog from "../components/calculator/ManualBuffDialog";
 import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
+import SurvivalEstimateDialog from "../components/calculator/SurvivalEstimateDialog";
 import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
 import SearchSettingsPanel from "../components/calculator/SearchSettingsPanel";
 import HelpDialog from "../components/calculator/HelpDialog";
@@ -79,13 +81,7 @@ export default function ComputePage() {
   const [outputValues, setOutputValues] = useState<Record<string, number>>({});
   const [inputValues, _setInputValues] = useState<Record<string, number | boolean | string>>({});
 
-  const [enemyParams, setEnemyParams] = useState<EnemyParams>({
-    enemy_defense: 100,
-    enemy_resistance: 0,
-    ignore_resistance: 0,
-    imbalance_vulnerability_coeff: 1.3,
-    is_unbalanced: false,
-  });
+  const [enemyParams, setEnemyParams] = useState<EnemyParams>({ ...DEFAULT_ENEMY_PARAMS });
   const [multiSkill, setMultiSkill] = useState<MultiSkillSettings>({
     useManualCounts: false,
     manualCounts: {},
@@ -113,6 +109,7 @@ export default function ComputePage() {
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
   const [manualBuffDialogOpen, setManualBuffDialogOpen] = useState(false);
   const [batchCompareOpen, setBatchCompareOpen] = useState(false);
+  const [survivalDialogOpen, setSurvivalDialogOpen] = useState(false);
   const [ocrDialogOpen, setOcrDialogOpen] = useState(false);
   const [buffValues, setBuffValues] = useState<Record<string, number>>({});
   const [searchSettings, setSearchSettings] = useState({ topN: 10, workers: 4, damageComponent: "skill_and_abnormal" });
@@ -145,7 +142,7 @@ export default function ComputePage() {
     setSelectedWeapon(data.weapon_name);
     setCharLevel(data.char_level ?? 90);
     setWeaponLevel(data.weapon_level ?? 90);
-    setEnemyParams(data.enemy_params);
+    setEnemyParams(mergeEnemyParams(data.enemy_params));
     setMultiSkill({
       useManualCounts: data.multi_skill.use_manual_multi_skill_counts,
       manualCounts: data.multi_skill.manual_counts,
@@ -277,6 +274,12 @@ export default function ComputePage() {
           ignore_resistance: enemyParams.ignore_resistance,
           imbalance_vulnerability_coeff: enemyParams.imbalance_vulnerability_coeff,
           is_unbalanced: enemyParams.is_unbalanced,
+          is_true_damage: enemyParams.is_true_damage,
+          combo_stacks: enemyParams.combo_stacks,
+          break_defense_stacks: enemyParams.break_defense_stacks,
+          extra_crit_rate: critAbnormal.extraCritRate,
+          extra_crit_damage: critAbnormal.extraCritDamage,
+          damage_component_mode: multiSkill.damageComponentMode,
         })
           .then(setDamageSnapshot)
           .catch(() => {})
@@ -285,7 +288,7 @@ export default function ComputePage() {
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [charData, weaponData, charLevel, weaponLevel, trustLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams]);
+  }, [charData, weaponData, charLevel, weaponLevel, trustLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams, critAbnormal, multiSkill]);
 
   const searchParams = {
     char_data: (charData ?? {}) as Record<string, unknown>,
@@ -301,20 +304,19 @@ export default function ComputePage() {
     all_weapons: allWeapons as Record<string, unknown>[],
     current_weapon: (weaponData ?? {}) as Record<string, unknown>,
     equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
-    enemy_defense: enemyParams.enemy_defense,
-    enemy_resistance: enemyParams.enemy_resistance,
-    ignore_resistance: enemyParams.ignore_resistance,
-    imbalance_vulnerability_coeff: enemyParams.imbalance_vulnerability_coeff,
-    is_unbalanced: enemyParams.is_unbalanced,
+    ...enemyParams,
     fixed_loadout: fixedLoadout as Record<string, unknown> | null,
     extra_crit_rate: critAbnormal.extraCritRate,
     extra_crit_damage: critAbnormal.extraCritDamage,
     use_manual_multi_skill_counts: multiSkill.useManualCounts,
     manual_counts: multiSkill.manualCounts,
     use_expected_crit: multiSkill.useExpectedCrit,
-    calc_mode: calcMode,
-    ...skillLevels,
-    ...weaponSkillValues,
+    damage_component_mode: multiSkill.damageComponentMode,
+    physical_abnormal_counts: critAbnormal.physicalAbnormalCounts,
+    spell_abnormal_counts: critAbnormal.spellAbnormalCounts,
+    skill_1_level: (skillLevels.skill_1_level as number) ?? 8,
+    skill_2_level: (skillLevels.skill_2_level as number) ?? 8,
+    skill_3_level: (skillLevels.skill_3_level as number) ?? 8,
   };
 
   return (
@@ -497,6 +499,13 @@ export default function ComputePage() {
                   <Button
                     variant="outlined"
                     size="small"
+                    onClick={() => setSurvivalDialogOpen(true)}
+                  >
+                    处决/治疗
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
                     startIcon={<CompareArrowsIcon />}
                     onClick={() => setBatchCompareOpen(true)}
                   >
@@ -615,6 +624,18 @@ export default function ComputePage() {
       <BatchCompareDialog
         open={batchCompareOpen}
         onClose={() => setBatchCompareOpen(false)}
+        enemyParams={enemyParams}
+      />
+
+      <SurvivalEstimateDialog
+        open={survivalDialogOpen}
+        onClose={() => setSurvivalDialogOpen(false)}
+        charData={charData}
+        weaponData={weaponData}
+        charLevel={charLevel}
+        weaponLevel={weaponLevel}
+        trustLevel={trustLevel}
+        enemyParams={enemyParams}
       />
 
       <OCRUploadDialog

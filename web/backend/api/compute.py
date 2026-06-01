@@ -115,6 +115,12 @@ class SnapshotRequest(BaseModel):
 
     is_unbalanced: bool = False
 
+    is_true_damage: bool = False
+
+    combo_stacks: int = 0
+
+    break_defense_stacks: int = 0
+
     damage_component_mode: str = "skill_and_abnormal"
 
     extra_crit_rate: float = 0.0
@@ -232,6 +238,12 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
 
             is_unbalanced=req.is_unbalanced,
 
+            is_true_damage=req.is_true_damage,
+
+            combo_stacks=req.combo_stacks,
+
+            break_defense_stacks=req.break_defense_stacks,
+
         )
 
         return dict(
@@ -286,6 +298,9 @@ class CompareEntry(BaseModel):
     ignore_resistance: float = 0.0
     imbalance_vulnerability_coeff: float = 1.3
     is_unbalanced: bool = False
+    is_true_damage: bool = False
+    combo_stacks: int = 0
+    break_defense_stacks: int = 0
 
 
 class CompareRequest(BaseModel):
@@ -329,6 +344,9 @@ def compare(req: CompareRequest):
                 ignore_resistance=entry.ignore_resistance,
                 imbalance_vulnerability_coeff=entry.imbalance_vulnerability_coeff,
                 is_unbalanced=entry.is_unbalanced,
+                is_true_damage=entry.is_true_damage,
+                combo_stacks=entry.combo_stacks,
+                break_defense_stacks=entry.break_defense_stacks,
             )
             results.append({"label": entry.label, "total": sn.weighted_total_damage})
         except Exception as e:

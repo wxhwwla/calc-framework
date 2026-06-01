@@ -5,12 +5,22 @@ import {
   Paper, Typography, LinearProgress, Chip,
 } from "@mui/material";
 
+import type { EnemyParams } from "../../api/search";
+
 const BASE = "/api";
 
 interface CompareEntry {
   label: string;
   char_name: string;
   weapon_name: string;
+  enemy_defense?: number;
+  enemy_resistance?: number;
+  ignore_resistance?: number;
+  imbalance_vulnerability_coeff?: number;
+  is_unbalanced?: boolean;
+  is_true_damage?: boolean;
+  combo_stacks?: number;
+  break_defense_stacks?: number;
 }
 
 interface CompareResult {
@@ -22,9 +32,10 @@ interface CompareResult {
 interface BatchCompareDialogProps {
   open: boolean;
   onClose: () => void;
+  enemyParams: EnemyParams;
 }
 
-export default function BatchCompareDialog({ open, onClose }: BatchCompareDialogProps) {
+export default function BatchCompareDialog({ open, onClose, enemyParams }: BatchCompareDialogProps) {
   const [entries, setEntries] = useState<CompareEntry[]>([
     { label: "方案1", char_name: "", weapon_name: "" },
     { label: "方案2", char_name: "", weapon_name: "" },
@@ -52,10 +63,21 @@ export default function BatchCompareDialog({ open, onClose }: BatchCompareDialog
     setLoading(true);
     setResults(null);
     try {
+      const payload = entries.map((entry) => ({
+        ...entry,
+        enemy_defense: enemyParams.enemy_defense,
+        enemy_resistance: enemyParams.enemy_resistance,
+        ignore_resistance: enemyParams.ignore_resistance,
+        imbalance_vulnerability_coeff: enemyParams.imbalance_vulnerability_coeff,
+        is_unbalanced: enemyParams.is_unbalanced,
+        is_true_damage: enemyParams.is_true_damage,
+        combo_stacks: enemyParams.combo_stacks,
+        break_defense_stacks: enemyParams.break_defense_stacks,
+      }));
       const r = await fetch(`${BASE}/compute/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entries }),
+        body: JSON.stringify({ entries: payload }),
       });
       if (!r.ok) throw new Error(await r.text());
       const data: CompareResult[] = await r.json();
@@ -65,7 +87,7 @@ export default function BatchCompareDialog({ open, onClose }: BatchCompareDialog
     } finally {
       setLoading(false);
     }
-  }, [entries]);
+  }, [entries, enemyParams]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

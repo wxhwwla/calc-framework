@@ -54,6 +54,30 @@ class SearchRequest(BaseModel):
 
     enemy_defense: float = 100.0
 
+    enemy_resistance: float = 0.0
+
+    ignore_resistance: float = 0.0
+
+    imbalance_vulnerability_coeff: float = 1.3
+
+    is_unbalanced: bool = False
+
+    is_true_damage: bool = False
+
+    combo_stacks: int = 0
+
+    break_defense_stacks: int = 0
+
+    attached_effect_multiplier: float = 1.0
+
+    corrosion_duration_seconds: float = 15.0
+
+    physical_abnormal_counts: dict[str, int] | None = None
+
+    spell_abnormal_counts: dict[str, int] | None = None
+
+    damage_component_mode: str = "skill_and_abnormal"
+
     top_n: int = 10
 
     max_workers: int = 4
@@ -110,6 +134,30 @@ class EstimateRequest(BaseModel):
 
     enemy_defense: float = 100.0
 
+    enemy_resistance: float = 0.0
+
+    ignore_resistance: float = 0.0
+
+    imbalance_vulnerability_coeff: float = 1.3
+
+    is_unbalanced: bool = False
+
+    is_true_damage: bool = False
+
+    combo_stacks: int = 0
+
+    break_defense_stacks: int = 0
+
+    attached_effect_multiplier: float = 1.0
+
+    corrosion_duration_seconds: float = 15.0
+
+    physical_abnormal_counts: dict[str, int] | None = None
+
+    spell_abnormal_counts: dict[str, int] | None = None
+
+    damage_component_mode: str = "skill_and_abnormal"
+
     use_manual_multi_skill_counts: bool = False
 
     manual_counts: dict[str, int] | None = None
@@ -162,7 +210,9 @@ async def estimate_search(req: EstimateRequest):
 
         from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 
-        from games.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs
+        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
+
+        from games.endfield.calc.search.plan.controller import prepare_search_job
 
         from games.endfield.calc.search.plan.estimate import (
 
@@ -186,51 +236,7 @@ async def estimate_search(req: EstimateRequest):
 
 
 
-        inputs = SearchJobInputs(
-
-            char_data=req.char_data,
-
-            char_level=req.char_level,
-
-            weapon_level=req.weapon_level,
-
-            trust_level=req.trust_level,
-
-            skill_name=req.skill_name,
-
-            skill_type=req.skill_type,
-
-            skill_multiplier=req.skill_multiplier,
-
-            damage_type=req.damage_type,
-
-            weapon_scope_label=req.weapon_scope_label,
-
-            equipment_scope_label=req.equipment_scope_label,
-
-            all_weapons=req.all_weapons,
-
-            current_weapon=req.current_weapon,
-
-            equipment_catalog=req.equipment_catalog,
-
-            fixed_loadout=fixed_loadout,
-
-            enemy_defense=req.enemy_defense,
-
-            use_manual_multi_skill_counts=req.use_manual_multi_skill_counts,
-
-            skill_1_level=req.skill_1_level,
-
-            skill_2_level=req.skill_2_level,
-
-            skill_3_level=req.skill_3_level,
-
-            manual_counts=req.manual_counts,
-
-            use_expected_crit=req.use_expected_crit,
-
-        )
+        inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
 
 
@@ -294,9 +300,11 @@ async def run_search(req: SearchRequest):
 
         from games.endfield.calc.search.run.runner import SearchRunner
 
-        from games.endfield.calc.search.plan.controller import prepare_search_job, SearchJobInputs, optimizer_config_for_search_job
+        from games.endfield.calc.search.plan.controller import prepare_search_job, optimizer_config_for_search_job
 
         from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+
+        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
 
@@ -310,55 +318,7 @@ async def run_search(req: SearchRequest):
 
 
 
-        inputs = SearchJobInputs(
-
-            char_data=req.char_data,
-
-            char_level=req.char_level,
-
-            weapon_level=req.weapon_level,
-
-            trust_level=req.trust_level,
-
-            skill_name=req.skill_name,
-
-            skill_type=req.skill_type,
-
-            skill_multiplier=req.skill_multiplier,
-
-            damage_type=req.damage_type,
-
-            weapon_scope_label=req.weapon_scope_label,
-
-            equipment_scope_label=req.equipment_scope_label,
-
-            all_weapons=req.all_weapons,
-
-            current_weapon=req.current_weapon,
-
-            equipment_catalog=req.equipment_catalog,
-
-            fixed_loadout=fixed_loadout,
-
-            enemy_defense=req.enemy_defense,
-
-            use_manual_multi_skill_counts=req.use_manual_multi_skill_counts,
-
-            skill_1_level=req.skill_1_level,
-
-            skill_2_level=req.skill_2_level,
-
-            skill_3_level=req.skill_3_level,
-
-            manual_counts=req.manual_counts,
-
-            use_expected_crit=req.use_expected_crit,
-
-            extra_crit_rate=req.extra_crit_rate,
-
-            extra_crit_damage=req.extra_crit_damage,
-
-        )
+        inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
 
 
@@ -438,18 +398,34 @@ async def run_search(req: SearchRequest):
 
 @router.get("/enemies")
 def get_enemy_choices():
-    """获取敌方参数列表（含默认值）。"""
-    return [
-        {
-            "id": "",
-            "name": "默认敌人",
-            "enemy_defense": 100.0,
-            "enemy_resistance": 0.0,
-            "ignore_resistance": 0.0,
-            "imbalance_vulnerability_coeff": 1.3,
-            "is_unbalanced": False,
-        }
-    ]
+    """获取敌方参数列表（含插件敌人与全字段默认）。"""
+    from games.endfield.data_loading.enemy_params import (
+        enemy_damage_context_overrides,
+        list_plugin_enemy_choices,
+    )
+
+    rows: list[dict[str, object]] = []
+    for label, enemy_id in list_plugin_enemy_choices():
+        params = enemy_damage_context_overrides(enemy_id)
+        rows.append(
+            {
+                "id": enemy_id,
+                "name": label.split(" (防", 1)[0] if enemy_id else "默认敌人",
+                "enemy_defense": float(params["enemy_defense"]),
+                "enemy_resistance": float(params["enemy_resistance"]),
+                "ignore_resistance": float(params["ignore_resistance"]),
+                "imbalance_vulnerability_coeff": float(params["imbalance_vulnerability_coeff"]),
+                "is_unbalanced": bool(params["is_unbalanced"]),
+                "is_true_damage": bool(params["is_true_damage"]),
+                "combo_stacks": int(params["combo_stacks"]),
+                "break_defense_stacks": int(params["break_defense_stacks"]),
+                "attached_effect_multiplier": float(params["attached_effect_multiplier"]),
+                "corrosion_duration_seconds": float(params["corrosion_duration_seconds"]),
+                "enemy_tier": str(params["enemy_tier"]),
+                "imbalance_efficiency_bonus": float(params["imbalance_efficiency_bonus"]),
+            }
+        )
+    return rows
 
 
 @router.get("/catalog")
@@ -490,13 +466,15 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
 
         from games.endfield.calc.search.plan.controller import (
 
-            prepare_search_job, SearchJobInputs,
+            prepare_search_job,
 
             optimizer_config_for_search_job,
 
         )
 
         from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+
+        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
 
@@ -510,55 +488,7 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
 
         fixed_loadout = FixedLoadoutSelection(**req.fixed_loadout) if req.fixed_loadout else FixedLoadoutSelection()
 
-        inputs = SearchJobInputs(
-
-            char_data=req.char_data,
-
-            char_level=req.char_level,
-
-            weapon_level=req.weapon_level,
-
-            trust_level=req.trust_level,
-
-            skill_name=req.skill_name,
-
-            skill_type=req.skill_type,
-
-            skill_multiplier=req.skill_multiplier,
-
-            damage_type=req.damage_type,
-
-            weapon_scope_label=req.weapon_scope_label,
-
-            equipment_scope_label=req.equipment_scope_label,
-
-            all_weapons=req.all_weapons,
-
-            current_weapon=req.current_weapon,
-
-            equipment_catalog=req.equipment_catalog,
-
-            fixed_loadout=fixed_loadout,
-
-            enemy_defense=req.enemy_defense,
-
-            use_manual_multi_skill_counts=req.use_manual_multi_skill_counts,
-
-            skill_1_level=req.skill_1_level,
-
-            skill_2_level=req.skill_2_level,
-
-            skill_3_level=req.skill_3_level,
-
-            manual_counts=req.manual_counts,
-
-            use_expected_crit=req.use_expected_crit,
-
-            extra_crit_rate=req.extra_crit_rate,
-
-            extra_crit_damage=req.extra_crit_damage,
-
-        )
+        inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
 
 
