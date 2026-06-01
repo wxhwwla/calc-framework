@@ -83,3 +83,21 @@ def accumulation_multiplier_after_fast_break(
 def imbalance_node_thresholds(cap: float, node_count: int = 1) -> tuple[float, ...]:
     fracs = IMBALANCE_NODE_FRACTIONS.get(max(1, min(int(node_count), 2)), (0.5,))
     return tuple(float(cap) * f for f in fracs)
+
+
+def imbalance_nodes_crossed(
+    previous: float,
+    current: float,
+    cap: float,
+    *,
+    node_count: int = 1,
+) -> tuple[int, ...]:
+    """返回从 previous 到 current 新跨过的失衡节点序号（1-based）。"""
+    thresholds = imbalance_node_thresholds(cap, node_count)
+    prev = float(previous)
+    curr = float(current)
+    crossed: list[int] = []
+    for idx, threshold in enumerate(thresholds, start=1):
+        if prev < threshold <= curr:
+            crossed.append(idx)
+    return tuple(crossed)

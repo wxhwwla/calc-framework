@@ -130,8 +130,9 @@ class DialogMixin:
             text = Path(path).read_text(encoding="utf-8")
 
             preset = import_presets_from_json_text(text)
-
-            self._apply_preset_to_qt_app(preset)
+            if not preset:
+                raise ValueError("预设文件为空")
+            self._apply_preset_to_qt_app(preset[0])
 
             self.status_label.setText("预设已导入")
 
@@ -148,19 +149,12 @@ class DialogMixin:
 
 
         apply_preset_to_panels(
-
             preset=preset,
-
             char_panel=self.char_panel,
-
             weapon_panel=self.weapon_panel,
-
             control_dock=self.control_dock,
-
-            enemy_defense=self._enemy_defense,
-
             equipment_catalog=self._equipment_catalog,
-
+            shell=self,
         )
 
 

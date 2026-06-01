@@ -204,6 +204,18 @@ class LoadoutState:
             extra_crit_rate=self.extra_crit_rate,
             extra_crit_damage=self.extra_crit_damage,
             manual_buffs=dict(self.manual_buffs),
+            enemy_params={
+                "enemy_defense": self.enemy_defense,
+                "enemy_resistance": self.enemy_resistance,
+                "ignore_resistance": self.ignore_resistance,
+                "imbalance_vulnerability_coeff": self.imbalance_vulnerability_coeff,
+                "is_unbalanced": self.is_unbalanced,
+                "enemy_tier": self.enemy_tier,
+                "combo_stacks": self.combo_stacks,
+                "attached_effect_multiplier": self.attached_effect_multiplier,
+                "corrosion_duration_seconds": self.corrosion_duration_seconds,
+                "imbalance_efficiency_bonus": self.imbalance_efficiency_bonus,
+            },
         )
 
     def to_search_job_inputs(

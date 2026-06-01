@@ -101,6 +101,11 @@ def enemy_damage_context_overrides(enemy_id: str) -> dict[str, Any]:
     return _enemy_params_from_row(row)
 
 
+def default_enemy_params() -> dict[str, Any]:
+    """内置默认敌参（与插件缺省一致）。"""
+    return dict(_default_enemy_params())
+
+
 def _default_enemy_params() -> dict[str, Any]:
     return {
         "enemy_defense": DEFAULT_ENEMY_DEFENSE,

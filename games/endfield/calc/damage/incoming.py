@@ -1,9 +1,40 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""敌人对干员造成伤害（NGA PART 02 §2.6 等）。"""
+"""敌人对干员造成伤害（NGA PART 01 §1.12、PART 02 §2.6 等）。"""
 
 from __future__ import annotations
 
 from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
+
+# 干员抗性乘数下限（最多减伤 90%）
+MIN_OPERATOR_RESISTANCE_MULT = 0.1
+
+
+def operator_resistance_multiplier(stat_value: float) -> float:
+    """敌人对干员伤害时的抗性乘数：1 / (0.001×属性整数 + 1)，下限 0.1。"""
+    stat_int = max(0, int(stat_value))
+    return max(MIN_OPERATOR_RESISTANCE_MULT, 1.0 / (0.001 * stat_int + 1.0))
+
+
+def operator_resistance_points(stat_value: float) -> float:
+    """面板抗性点数 = 100 - 100/(0.001×属性整数 + 1)。"""
+    stat_int = max(0, int(stat_value))
+    return 100.0 - 100.0 / (0.001 * stat_int + 1.0)
+
+
+def enemy_incoming_damage_to_operator(
+    raw_damage: float,
+    *,
+    agility: float = 0.0,
+    intellect: float = 0.0,
+    damage_type: str = "物理",
+) -> float:
+    """敌人对干员伤害经敏捷(物理)/智识(法术)抗性后的估算值。"""
+    dtype = str(damage_type or "物理")
+    if dtype.startswith("法术") or dtype in ("灼热", "电磁", "寒冷", "自然", "法术-灼热", "法术-电磁", "法术-寒冷", "法术-自然"):
+        mult = operator_resistance_multiplier(intellect)
+    else:
+        mult = operator_resistance_multiplier(agility)
+    return float(raw_damage) * mult
 
 
 def enemy_burn_tick_damage(
