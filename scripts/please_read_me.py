@@ -436,12 +436,3 @@ ensure_root()
 if __name__ == "__main__":
 
     show_help()
-
-# --- UPLOAD_SUMMARY ---
-# TITLE: 更新 4 处文件
-# BODY:
-# - 修改 scripts/please_read_me.py
-# - 修改 web/backend/main.py
-# - 变更 web/frontend/src/components/calculator/DamageChart.tsx
-# - 变更 web/frontend/vite.config.ts
-# --- END UPLOAD_SUMMARY ---

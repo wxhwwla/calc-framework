@@ -1,0 +1,15 @@
+{
+  "name": "明日方舟伤害计算",
+  "game": "明日方舟",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "attr_schema": "attr_schema.json",
+  "entry_dag": "dag/arknights_full.dag.json",
+  "functions": {
+    "clamp": "functions.py",
+    "min_val": "functions.py",
+    "physical_damage": "functions.py",
+    "magical_damage": "functions.py",
+    "true_damage": "functions.py"
+  }
+}

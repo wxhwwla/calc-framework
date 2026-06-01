@@ -1,0 +1,345 @@
+{
+  "schema_version": "dag-v1",
+  "name": "明日方舟伤害公式",
+  "description": "明日方舟 3 类伤害公式 DAG：物理/法术/真实伤害。含最终攻击力计算、减防减抗、伤害加成。",
+  "variables": {
+    "character.攻击力": {
+      "type": "float",
+      "source": "character",
+      "description": "干员基础攻击力"
+    },
+    "character.防御": {
+      "type": "float",
+      "source": "character",
+      "description": "干员基础防御力"
+    },
+    "character.法术抗性": {
+      "type": "float",
+      "source": "character",
+      "default": 0,
+      "description": "干员基础法术抗性"
+    },
+    "character.信赖攻击": {
+      "type": "float",
+      "source": "character",
+      "default": 0,
+      "description": "信赖加成攻击力"
+    },
+    "character.潜能攻击": {
+      "type": "float",
+      "source": "character",
+      "default": 0,
+      "description": "潜能攻击力加成"
+    },
+    "computed.技能倍率": {
+      "type": "float",
+      "source": "computed",
+      "default": 1.0,
+      "description": "技能攻击力倍率"
+    },
+    "computed.攻击力百分比加成": {
+      "type": "float",
+      "source": "computed",
+      "default": 0,
+      "description": "技能/天赋提供的攻击力百分比加成（小数，如 0.15=15%）"
+    },
+    "computed.伤害加成": {
+      "type": "float",
+      "source": "computed",
+      "default": 0,
+      "description": "技能/天赋/模组伤害加成百分比（小数，如 0.15=15%）"
+    },
+    "computed.物理穿透": {
+      "type": "float",
+      "source": "computed",
+      "default": 0,
+      "description": "固定物理减防值"
+    },
+    "computed.法术穿透": {
+      "type": "float",
+      "source": "computed",
+      "default": 0,
+      "description": "百分比法术减抗（小数，如 0.15=减15%）"
+    },
+    "enemy.防御": {
+      "type": "float",
+      "source": "enemy",
+      "default": 200,
+      "description": "敌方防御力"
+    },
+    "enemy.法术抗性": {
+      "type": "float",
+      "source": "enemy",
+      "default": 50,
+      "description": "敌方法术抗性"
+    }
+  },
+  "subgraphs": {
+    "final_atk_block": {
+      "description": "最终攻击力 = (基础ATK*(1+攻击力百分比/100) + 信赖攻击 + 潜能攻击)",
+      "parameters": {
+        "base_atk": {
+          "type": "float",
+          "source": "character",
+          "description": "干员基础攻击力"
+        },
+        "trust_atk": {
+          "type": "float",
+          "source": "character",
+          "default": 0,
+          "description": "信赖攻击力"
+        },
+        "potential_atk": {
+          "type": "float",
+          "source": "character",
+          "default": 0,
+          "description": "潜能攻击力"
+        },
+        "atk_percent": {
+          "type": "float",
+          "source": "computed",
+          "default": 0,
+          "description": "攻击力百分比加成"
+        }
+      },
+      "nodes": {
+        "const_1": { "type": "const", "value": 1.0 },
+        "const_100": { "type": "const", "value": 100.0 },
+        "n_pct_div": { "type": "binary", "op": "/", "lhs": "atk_percent", "rhs": "const_100" },
+        "n_pct_one": { "type": "binary", "op": "+", "lhs": "const_1", "rhs": "n_pct_div" },
+        "n_base_mul": { "type": "binary", "op": "*", "lhs": "base_atk", "rhs": "n_pct_one", "label": "基础*(1+攻击力%/100)" },
+        "n_trust_pot": { "type": "binary", "op": "+", "lhs": "trust_atk", "rhs": "potential_atk" },
+        "result": { "type": "binary", "op": "+", "lhs": "n_base_mul", "rhs": "n_trust_pot", "label": "最终攻击力" }
+      },
+      "outputs": {
+        "最终攻击力": { "node": "result", "label": "最终攻击力", "is_primary": false }
+      }
+    },
+    "physical_damage_block": {
+      "description": "物理伤害 = max(ATK*倍率 - (DEF-减防), ATK*倍率*5%) * (1+伤害加成)",
+      "parameters": {
+        "final_atk": {
+          "type": "float",
+          "source": "computed",
+          "description": "最终攻击力"
+        },
+        "skill_mult": {
+          "type": "float",
+          "source": "computed",
+          "default": 1.0,
+          "description": "技能倍率"
+        },
+        "enemy_def": {
+          "type": "float",
+          "source": "enemy",
+          "default": 200,
+          "description": "敌方防御"
+        },
+        "def_pen": {
+          "type": "float",
+          "source": "computed",
+          "default": 0,
+          "description": "固定减防"
+        },
+        "dmg_bonus": {
+          "type": "float",
+          "source": "computed",
+          "default": 0,
+          "description": "伤害加成"
+        }
+      },
+      "nodes": {
+        "const_1": { "type": "const", "value": 1.0 },
+        "const_005": { "type": "const", "value": 0.05 },
+        "const_100": { "type": "const", "value": 100.0 },
+        "n_raw_atk": { "type": "binary", "op": "*", "lhs": "final_atk", "rhs": "skill_mult", "label": "ATK*倍率" },
+        "n_min_dmg": { "type": "binary", "op": "*", "lhs": "n_raw_atk", "rhs": "const_005", "label": "保底 = ATK*倍率*5%" },
+        "n_eff_def": { "type": "binary", "op": "-", "lhs": "enemy_def", "rhs": "def_pen", "label": "有效防御" },
+        "n_eff_def_clamped": { "type": "call", "subgraph": "clamp_ge0", "bindings": {"value": "n_eff_def"}, "label": "max(有效防御,0)" },
+        "n_raw_dmg": { "type": "binary", "op": "-", "lhs": "n_raw_atk", "rhs": "n_eff_def_clamped", "label": "ATK*倍率 - 有效防御" },
+        "n_final_before_bonus": {
+          "type": "call", "subgraph": "max_of_two",
+          "bindings": {"a": "n_min_dmg", "b": "n_raw_dmg"},
+          "label": "取 max(保底, 原始)"
+        },
+        "n_bonus_mul": { "type": "binary", "op": "/", "lhs": "dmg_bonus", "rhs": "const_100" },
+        "n_bonus_one": { "type": "binary", "op": "+", "lhs": "const_1", "rhs": "n_bonus_mul" },
+        "result": { "type": "binary", "op": "*", "lhs": "n_final_before_bonus", "rhs": "n_bonus_one", "label": "物理伤害" }
+      },
+      "outputs": {
+        "物理伤害": { "node": "result", "label": "物理伤害", "is_primary": true }
+      }
+    },
+    "magical_damage_block": {
+      "description": "法术伤害 = ATK*倍率 * (1 - max(RES*(1-减抗%), 0)/100) * (1+伤害加成)",
+      "parameters": {
+        "final_atk": {
+          "type": "float",
+          "source": "computed",
+          "description": "最终攻击力"
+        },
+        "skill_mult": {
+          "type": "float",
+          "source": "computed",
+          "default": 1.0,
+          "description": "技能倍率"
+        },
+        "enemy_res": {
+          "type": "float",
+          "source": "enemy",
+          "default": 50,
+          "description": "敌方抗性"
+        },
+        "res_pen": {
+          "type": "float",
+          "source": "computed",
+          "default": 0,
+          "description": "百分比减抗"
+        },
+        "dmg_bonus": {
+          "type": "float",
+          "source": "computed",
+          "default": 0,
+          "description": "伤害加成"
+        }
+      },
+      "nodes": {
+        "const_1": { "type": "const", "value": 1.0 },
+        "const_100": { "type": "const", "value": 100.0 },
+        "n_raw_atk": { "type": "binary", "op": "*", "lhs": "final_atk", "rhs": "skill_mult", "label": "ATK*倍率" },
+        "n_res_one": { "type": "binary", "op": "-", "lhs": "const_1", "rhs": "res_pen", "label": "1 - 减抗%" },
+        "n_eff_res_mul": { "type": "binary", "op": "*", "lhs": "enemy_res", "rhs": "n_res_one", "label": "RES*(1-减抗%)" },
+        "n_eff_res": { "type": "call", "subgraph": "clamp_ge0", "bindings": {"value": "n_eff_res_mul"}, "label": "max(有效RES,0)" },
+        "n_res_div": { "type": "binary", "op": "/", "lhs": "n_eff_res", "rhs": "const_100" },
+        "n_res_mult": { "type": "binary", "op": "-", "lhs": "const_1", "rhs": "n_res_div", "label": "1 - RES/100" },
+        "n_final_before_bonus": { "type": "binary", "op": "*", "lhs": "n_raw_atk", "rhs": "n_res_mult", "label": "ATK*倍率*(1-RES/100)" },
+        "n_bonus_mul": { "type": "binary", "op": "/", "lhs": "dmg_bonus", "rhs": "const_100" },
+        "n_bonus_one": { "type": "binary", "op": "+", "lhs": "const_1", "rhs": "n_bonus_mul" },
+        "result": { "type": "binary", "op": "*", "lhs": "n_final_before_bonus", "rhs": "n_bonus_one", "label": "法术伤害" }
+      },
+      "outputs": {
+        "法术伤害": { "node": "result", "label": "法术伤害", "is_primary": true }
+      }
+    },
+    "true_damage_block": {
+      "description": "真伤 = ATK*倍率 * (1+伤害加成)",
+      "parameters": {
+        "final_atk": {
+          "type": "float",
+          "source": "computed",
+          "description": "最终攻击力"
+        },
+        "skill_mult": {
+          "type": "float",
+          "source": "computed",
+          "default": 1.0,
+          "description": "技能倍率"
+        },
+        "dmg_bonus": {
+          "type": "float",
+          "source": "computed",
+          "default": 0,
+          "description": "伤害加成"
+        }
+      },
+      "nodes": {
+        "const_1": { "type": "const", "value": 1.0 },
+        "const_100": { "type": "const", "value": 100.0 },
+        "n_raw_atk": { "type": "binary", "op": "*", "lhs": "final_atk", "rhs": "skill_mult", "label": "ATK*倍率" },
+        "n_bonus_mul": { "type": "binary", "op": "/", "lhs": "dmg_bonus", "rhs": "const_100" },
+        "n_bonus_one": { "type": "binary", "op": "+", "lhs": "const_1", "rhs": "n_bonus_mul" },
+        "result": { "type": "binary", "op": "*", "lhs": "n_raw_atk", "rhs": "n_bonus_one", "label": "真伤伤害" }
+      },
+      "outputs": {
+        "真伤伤害": { "node": "result", "label": "真伤伤害", "is_primary": true }
+      }
+    },
+    "clamp_ge0": {
+      "description": "将值截断到 >= 0",
+      "parameters": {
+        "value": { "type": "float", "source": "computed", "description": "输入值" }
+      },
+      "nodes": {
+        "const_0": { "type": "const", "value": 0.0 },
+        "result": { "type": "binary", "op": "max", "lhs": "value", "rhs": "const_0", "label": "max(val,0)" }
+      },
+      "outputs": {
+        "clamped": { "node": "result", "label": "截断值", "is_primary": false }
+      }
+    },
+    "max_of_two": {
+      "description": "取两个值的最大值",
+      "parameters": {
+        "a": { "type": "float", "source": "computed", "description": "值a" },
+        "b": { "type": "float", "source": "computed", "description": "值b" }
+      },
+      "nodes": {
+        "result": { "type": "binary", "op": "max", "lhs": "a", "rhs": "b", "label": "max(a,b)" }
+      },
+      "outputs": {
+        "最大值": { "node": "result", "label": "最大值", "is_primary": false }
+      }
+    }
+  },
+  "nodes": {
+    "char_atk": { "type": "var", "path": "character.攻击力", "label": "基础攻击力" },
+    "trust_atk": { "type": "var", "path": "character.信赖攻击", "label": "信赖攻击" },
+    "potential_atk": { "type": "var", "path": "character.潜能攻击", "label": "潜能攻击" },
+    "atk_percent": { "type": "var", "path": "computed.攻击力百分比加成", "label": "攻击力%" },
+    "skill_mult_phys": { "type": "var", "path": "computed.技能倍率", "label": "技能倍率(物理)" },
+    "skill_mult_mag": { "type": "var", "path": "computed.技能倍率", "label": "技能倍率(法术)" },
+    "skill_mult_true": { "type": "var", "path": "computed.技能倍率", "label": "技能倍率(真伤)" },
+    "enemy_def": { "type": "var", "path": "enemy.防御", "label": "敌方防御" },
+    "enemy_res": { "type": "var", "path": "enemy.法术抗性", "label": "敌方抗性" },
+    "def_pen": { "type": "var", "path": "computed.物理穿透", "label": "物理穿透" },
+    "res_pen": { "type": "var", "path": "computed.法术穿透", "label": "法术穿透" },
+    "dmg_bonus": { "type": "var", "path": "computed.伤害加成", "label": "伤害加成" },
+    "block_final_atk": {
+      "type": "call", "subgraph": "final_atk_block",
+      "bindings": {
+        "base_atk": "char_atk",
+        "trust_atk": "trust_atk",
+        "potential_atk": "potential_atk",
+        "atk_percent": "atk_percent"
+      },
+      "label": "最终攻击力块"
+    },
+    "block_physical": {
+      "type": "call", "subgraph": "physical_damage_block",
+      "bindings": {
+        "final_atk": "block_final_atk",
+        "skill_mult": "skill_mult_phys",
+        "enemy_def": "enemy_def",
+        "def_pen": "def_pen",
+        "dmg_bonus": "dmg_bonus"
+      },
+      "label": "物理伤害块"
+    },
+    "block_magical": {
+      "type": "call", "subgraph": "magical_damage_block",
+      "bindings": {
+        "final_atk": "block_final_atk",
+        "skill_mult": "skill_mult_mag",
+        "enemy_res": "enemy_res",
+        "res_pen": "res_pen",
+        "dmg_bonus": "dmg_bonus"
+      },
+      "label": "法术伤害块"
+    },
+    "block_true": {
+      "type": "call", "subgraph": "true_damage_block",
+      "bindings": {
+        "final_atk": "block_final_atk",
+        "skill_mult": "skill_mult_true",
+        "dmg_bonus": "dmg_bonus"
+      },
+      "label": "真伤块"
+    }
+  },
+  "outputs": {
+    "最终攻击力": { "node": "block_final_atk", "label": "最终攻击力", "is_primary": false },
+    "物理伤害": { "node": "block_physical", "label": "物理伤害", "is_primary": true },
+    "法术伤害": { "node": "block_magical", "label": "法术伤害", "is_primary": true },
+    "真伤伤害": { "node": "block_true", "label": "真伤伤害", "is_primary": true }
+  }
+}

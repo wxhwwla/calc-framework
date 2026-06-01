@@ -1,0 +1,32 @@
+{
+  "attributes": [
+    { "name": "攻击力", "type": "float", "source": "character", "description": "干员基础攻击力" },
+    { "name": "防御", "type": "float", "source": "character", "description": "干员基础防御力" },
+    { "name": "生命上限", "type": "float", "source": "character", "description": "干员基础生命上限" },
+    { "name": "法术抗性", "type": "float", "source": "character", "default": 0, "description": "干员基础法术抗性" },
+    { "name": "攻击间隔", "type": "float", "source": "character", "description": "干员攻击间隔（秒）" },
+    { "name": "阻挡数", "type": "int", "source": "character", "description": "干员阻挡数" },
+    { "name": "部署费用", "type": "int", "source": "character", "description": "干员部署费用" },
+    { "name": "信赖攻击", "type": "float", "source": "character", "default": 0, "description": "信赖加成攻击力" },
+    { "name": "信赖防御", "type": "float", "source": "character", "default": 0, "description": "信赖加成防御力" },
+    { "name": "信赖生命", "type": "float", "source": "character", "default": 0, "description": "信赖加成生命上限" },
+    { "name": "信赖法抗", "type": "float", "source": "character", "default": 0, "description": "信赖加法术抗性" },
+    { "name": "潜能攻击", "type": "float", "source": "character", "default": 0, "description": "潜能攻击力加成" },
+    { "name": "潜能部署费用", "type": "int", "source": "character", "default": 0, "description": "潜能部署费用减少" },
+    { "name": "技能倍率", "type": "float", "source": "computed", "default": 1.0, "description": "技能攻击力倍率" },
+    { "name": "技能SP消耗", "type": "int", "source": "computed", "default": 0, "description": "技能所需技力" },
+    { "name": "技能初始SP", "type": "int", "source": "computed", "default": 0, "description": "技能初始技力" },
+    { "name": "技能持续", "type": "float", "source": "computed", "default": 0, "description": "技能持续时间（秒）" },
+    { "name": "攻击力百分比加成", "type": "percent", "source": "computed", "default": 0, "description": "技能/天赋提供的攻击力百分比加成" },
+    { "name": "最终攻击力", "type": "float", "source": "computed", "description": "计算所有加成后的最终攻击力" },
+    { "name": "物理伤害", "type": "float", "source": "computed", "description": "物理伤害结果" },
+    { "name": "法术伤害", "type": "float", "source": "computed", "description": "法术伤害结果" },
+    { "name": "真伤伤害", "type": "float", "source": "computed", "description": "真实伤害结果" },
+    { "name": "伤害加成", "type": "percent", "source": "computed", "default": 0, "description": "技能/天赋/模组提供的伤害加成百分比" },
+    { "name": "物理穿透", "type": "float", "source": "computed", "default": 0, "description": "物理减防值（固定值）" },
+    { "name": "法术穿透", "type": "percent", "source": "computed", "default": 0, "description": "法术减抗百分比" },
+    { "name": "防御", "type": "float", "source": "enemy", "default": 200, "description": "敌方防御力" },
+    { "name": "法术抗性", "type": "float", "source": "enemy", "default": 50, "description": "敌方法术抗性" },
+    { "name": "生命", "type": "float", "source": "enemy", "default": 10000, "description": "敌方生命上限" }
+  ]
+}

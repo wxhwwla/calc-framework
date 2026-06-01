@@ -1,0 +1,35 @@
+<noinclude>{{面包屑}}{{提示|蓝色|宽度=100%|已有特殊干员 {{#expr:{{#ask:[[分类:特殊干员]]
+|link=none
+|order=desc
+|sort=星级
+|headers=hide
+|format=count
+|limit=1000
+}}}} 名，其中集成战略干员{{#expr:{{#ask:[[分类:集成战略干员]]
+|link=none
+|order=desc
+|sort=星级
+|headers=hide
+|format=count
+|limit=1000
+}}}}名，卫戍协议干员{{#expr:{{#ask:[[分类:卫戍协议干员]]
+|link=none
+|order=desc
+|sort=星级
+|headers=hide
+|format=count
+|limit=1000
+}}}}名。<br>更多相关资料和统计请查看干员页面。}}{{提示|红色|宽度=100%|请前往[[干员一览]]|若想了解常规干员}}</noinclude>
+
+<div class="main-line-wrap" style="margin-top:10px; width: 100%;">
+<div class="resp-tabs">
+<div class="resp-tabs-container">
+==集成战略干员==
+{{集成战略干员图鉴一览}}
+
+==卫戍协议干员==
+{{卫戍协议干员图鉴一览}}
+
+</div>
+</div>
+</div>

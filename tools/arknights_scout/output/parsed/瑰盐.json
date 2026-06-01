@@ -1,0 +1,174 @@
+{
+  "名称": "瑰盐",
+  "_entity_type": "character",
+  "星级": 5,
+  "职业": "医疗",
+  "分支": "群愈师",
+  "标签": "远程位、治疗、支援<!-- 包括近战位/远程位，然后抄tag参数，顿号隔开 -->",
+  "特性": "同时恢复三个友方单位的生命",
+  "基础属性": {
+    "hp": 1058,
+    "atk": 195,
+    "def": 96,
+    "res": 0,
+    "deploy_cost": 17
+  },
+  "信赖加成": {
+    "攻击": 30,
+    "生命": 200
+  },
+  "天赋": [
+    {
+      "name": "最好的草药医生",
+      "description": "自身攻击力-5%，但攻击范围内的友方干员受到的治疗效果提升5%",
+      "unlock": "初始携带",
+      "upgrade_name": "最好的草药医生",
+      "upgrade_description": "自身攻击力-5%，但攻击范围内的友方干员受到的治疗效果提升7%{{color|0098DC|（+2%）}}"
+    }
+  ],
+  "技能": [
+    {
+      "name": "上佳的应急药呀",
+      "sp_type": "自动回复",
+      "trigger": "自动触发",
+      "levels": [
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|140%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 11,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|145%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 11,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|150%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 11,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|150%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 10,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|155%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 10,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|160%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 10,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|165%}}的生命<br/>{{color|F49800|可充能1次}}",
+          "sp_cost": 10,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|170%}}的生命<br/>{{color|F49800|可充能2次}}",
+          "sp_cost": 9,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|180%}}的生命<br/>{{color|F49800|可充能2次}}",
+          "sp_cost": 9,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "下次治疗可以恢复相当于攻击力{{color|0098DC|190%}}的生命<br/>{{color|F49800|可充能2次}}",
+          "sp_cost": 8,
+          "init_sp": 0,
+          "duration": "0"
+        }
+      ]
+    },
+    {
+      "name": "绝妙的长效药呀",
+      "sp_type": "自动回复",
+      "trigger": "手动触发",
+      "levels": [
+        {
+          "description": "攻击间隔{{color|0098DC|略微缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|10%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 46,
+          "init_sp": 17,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|略微缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|15%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 45,
+          "init_sp": 17,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|略微缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|20%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 44,
+          "init_sp": 17,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|小幅度缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|20%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 43,
+          "init_sp": 19,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|小幅度缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|25%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 42,
+          "init_sp": 19,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|小幅度缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|30%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 41,
+          "init_sp": 19,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|30%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 40,
+          "init_sp": 21,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|35%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 39,
+          "init_sp": 23,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|40%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 38,
+          "init_sp": 25,
+          "duration": "27"
+        },
+        {
+          "description": "攻击间隔{{color|0098DC|缩短}}，攻击范围内的友方干员受到的物理与法术伤害的{{color|0098DC|50%}}变为持续{{color|0098DC|5}}秒的生命流失",
+          "sp_cost": 36,
+          "init_sp": 27,
+          "duration": "27"
+        }
+      ]
+    }
+  ],
+  "潜能": [
+    "部署费用-1",
+    "再部署时间-10秒",
+    "部署费用-1",
+    "天赋效果增强",
+    "部署费用-1"
+  ],
+  "_source": "arknights_bwiki",
+  "_updated_at": "2026-06-01T09:50:49.288208+00:00"
+}

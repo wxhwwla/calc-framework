@@ -1,0 +1,173 @@
+{
+  "名称": "阿兰娜",
+  "_entity_type": "character",
+  "星级": 5,
+  "职业": "辅助",
+  "分支": "工匠",
+  "标签": "近战位、输出、支援<!-- 包括近战位/远程位，然后抄tag参数，顿号隔开 -->",
+  "特性": "能够阻挡两个敌人，使用<支援装置>协助作战",
+  "基础属性": {
+    "hp": 1595,
+    "atk": 348,
+    "def": 284,
+    "res": 0,
+    "deploy_cost": 14
+  },
+  "信赖加成": {
+    "攻击": 50,
+    "防御": 30
+  },
+  "天赋": [
+    {
+      "name": "临时改装",
+      "description": "携带2个支援装置（最多部署2个），使一名干员攻击敌人时无视其40点防御力（持续30秒），装置效果不叠加",
+      "unlock": "初始携带",
+      "upgrade_name": "临时改装",
+      "upgrade_description": "携带2个支援装置（最多部署2个），使一名干员攻击敌人时无视其50{{color|0098DC|（+10）}}点防御力（持续30秒），装置效果不叠加"
+    }
+  ],
+  "技能": [
+    {
+      "name": "气动增压",
+      "trigger": "被动",
+      "levels": [
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+10}}，且支援装置持续时间{{color|0098DC|+12}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+11}}，且支援装置持续时间{{color|0098DC|+14}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+12}}，且支援装置持续时间{{color|0098DC|+16}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+13}}，且支援装置持续时间{{color|0098DC|+18}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+15}}，且支援装置持续时间{{color|0098DC|+20}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+16}}，且支援装置持续时间{{color|0098DC|+22}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+17}}，且支援装置持续时间{{color|0098DC|+24}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+19}}，且支援装置持续时间{{color|0098DC|+26}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+21}}，且支援装置持续时间{{color|0098DC|+28}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        },
+        {
+          "description": "拥有支援装置的干员攻击速度{{color|0098DC|+23}}，且支援装置持续时间{{color|0098DC|+30}}秒",
+          "sp_cost": 0,
+          "init_sp": 0,
+          "duration": "0"
+        }
+      ]
+    },
+    {
+      "name": "“万斤顶”",
+      "sp_type": "自动回复",
+      "trigger": "手动触发",
+      "levels": [
+        {
+          "description": "自身攻击力{{color|0098DC|+20%}}，攻击速度{{color|0098DC|+20}}，且天赋效果提升至{{color|0098DC|1.4}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 30,
+          "init_sp": 9,
+          "duration": "11"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+22%}}，攻击速度{{color|0098DC|+22}}，且天赋效果提升至{{color|0098DC|1.5}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 30,
+          "init_sp": 9,
+          "duration": "11"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+25%}}，攻击速度{{color|0098DC|+25}}，且天赋效果提升至{{color|0098DC|1.6}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 30,
+          "init_sp": 9,
+          "duration": "11"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+28%}}，攻击速度{{color|0098DC|+28}}，且天赋效果提升至{{color|0098DC|1.8}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 25,
+          "init_sp": 11,
+          "duration": "13"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+32%}}，攻击速度{{color|0098DC|+32}}，且天赋效果提升至{{color|0098DC|2}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 25,
+          "init_sp": 11,
+          "duration": "13"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+35%}}，攻击速度{{color|0098DC|+35}}，且天赋效果提升至{{color|0098DC|2.1}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 22,
+          "init_sp": 13,
+          "duration": "13"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+38%}}，攻击速度{{color|0098DC|+38}}，且天赋效果提升至{{color|0098DC|2.2}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 22,
+          "init_sp": 13,
+          "duration": "15"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+42%}}，攻击速度{{color|0098DC|+42}}，且天赋效果提升至{{color|0098DC|2.3}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 20,
+          "init_sp": 15,
+          "duration": "15"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+45%}}，攻击速度{{color|0098DC|+45}}，且天赋效果提升至{{color|0098DC|2.5}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 20,
+          "init_sp": 15,
+          "duration": "15"
+        },
+        {
+          "description": "自身攻击力{{color|0098DC|+50%}}，攻击速度{{color|0098DC|+50}}，且天赋效果提升至{{color|0098DC|2.7}}倍，技能结束后获得{{color|0098DC|1}}个支援装置",
+          "sp_cost": 20,
+          "init_sp": 15,
+          "duration": "15"
+        }
+      ]
+    }
+  ],
+  "潜能": [
+    "部署费用-1",
+    "再部署时间-4秒",
+    "攻击力+25",
+    "天赋效果增强",
+    "部署费用-1"
+  ],
+  "_source": "arknights_bwiki",
+  "_updated_at": "2026-06-01T09:50:49.887366+00:00"
+}
