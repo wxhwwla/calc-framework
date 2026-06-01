@@ -356,7 +356,6 @@ def _verify_deployment(config: dict) -> None:
     checks = [
         (f"https://{domain}/api/health", '"status"'),
         (f"https://{domain}/api/layout", '"sections"'),
-        (f"https://{domain}/api/arknights/operators", '"operators"'),
     ]
     ok = True
     for url, needle in checks:
@@ -371,6 +370,25 @@ def _verify_deployment(config: dict) -> None:
         except Exception as e:
             print(f"  [FAIL] {url}: {e}")
             ok = False
+
+    ak_url = f"https://{domain}/api/arknights/operators"
+    try:
+        with urlopen(ak_url, timeout=30) as resp:
+            ak_body = resp.read().decode("utf-8", errors="replace")
+        ak_data = json.loads(ak_body)
+        ak_count = int(ak_data.get("count", 0))
+        if ak_count >= 100:
+            print(f"  [OK] {ak_url} (干员 {ak_count} 个)")
+        else:
+            print(f"  [WARN] {ak_url} 仅 {ak_count} 个干员（应有约 400+）")
+            print("  [DOC] zip 已上传但未解压。请在 PA Bash 执行:")
+            project = config.get("project", "calc-framework")
+            print(f"    cd ~/{project}/tools/arknights_scout/output")
+            print("    rm -rf parsed && mkdir -p parsed && unzip -oq arknights_parsed.zip -d parsed")
+            ok = False
+    except Exception as e:
+        print(f"  [FAIL] {ak_url}: {e}")
+        ok = False
     if not ok:
         print("\n  [HINT] 若仍报 missing argument 'send'，请打开 PA Web → WSGI configuration file")
         print("  确认路径为 /var/www/你的用户名_pythonanywhere_com_wsgi.py，且内容为 wsgi_pythonanywhere.py（无 application=app）")
