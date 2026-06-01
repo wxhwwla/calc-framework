@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Box, Paper, Tabs, Tab, Typography } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import PaletteIcon from "@mui/icons-material/Palette";
 import DataEditorTab from "../components/designer/DataEditorTab";
-import EditorPage from "./EditorPage";
 import ThemeExportTab from "../components/pack_designer/ThemeExportTab";
+import PageFallback from "../components/PageFallback";
+
+const EditorPage = lazy(() => import("./EditorPage"));
 
 export default function PackDesignerPage() {
   const [tab, setTab] = useState(0);
@@ -30,9 +32,11 @@ export default function PackDesignerPage() {
         </Paper>
       )}
       {tab === 1 && (
-        <Box>
-          <EditorPage />
-        </Box>
+        <Suspense fallback={<PageFallback label="加载布局编辑器…" />}>
+          <Box>
+            <EditorPage />
+          </Box>
+        </Suspense>
       )}
       {tab === 2 && (
         <Paper sx={{ p: 3 }}>

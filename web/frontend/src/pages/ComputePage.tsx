@@ -1,20 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button, Collapse, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import CharacterSelector from "../components/calculator/CharacterSelector";
 import AttributeDisplay from "../components/calculator/AttributeDisplay";
 import WebComputeSheet from "../components/WebComputeSheet";
-import SearchPanel from "../components/calculator/SearchPanel";
 import EnemyParamPanel from "../components/calculator/EnemyParamPanel";
-import MultiSkillPanel from "../components/calculator/MultiSkillPanel";
-import FixedLoadoutPanel from "../components/calculator/FixedLoadoutPanel";
-import PresetDialog from "../components/calculator/PresetDialog";
-import CritAndAbnormalPanel from "../components/calculator/CritAndAbnormalPanel";
 import PreviewText from "../components/calculator/PreviewText";
-import DamageChart from "../components/calculator/DamageChart";
 import TotalDamagePanel from "../components/calculator/TotalDamagePanel";
-import CalcHistoryDialog from "../components/calculator/CalcHistoryDialog";
-import SearchHistoryDialog from "../components/calculator/SearchHistoryDialog";
 import SkillLevelPanel from "../components/calculator/SkillLevelPanel";
 import WeaponSkillPanel from "../components/calculator/WeaponSkillPanel";
 import CalcModeSelector from "../components/calculator/CalcModeSelector";
@@ -30,7 +22,8 @@ import TuneIcon from "@mui/icons-material/Tune";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import SearchPreviewPanel from "../components/calculator/SearchPreviewPanel";
-import SegmentManualBuffDialog, {
+import PageFallback from "../components/PageFallback";
+import {
   type ManualBuffStore,
 } from "../components/calculator/SegmentManualBuffDialog";
 import {
@@ -39,18 +32,32 @@ import {
   fetchLoadoutPreview,
   fetchLoadoutSnapshot,
 } from "../api/loadout";
-import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
-import SurvivalEstimateDialog from "../components/calculator/SurvivalEstimateDialog";
-import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
 import SearchSettingsPanel from "../components/calculator/SearchSettingsPanel";
-import HelpDialog from "../components/calculator/HelpDialog";
-import DataSourceDialog from "../components/calculator/DataSourceDialog";
-import DonationDialog from "../components/calculator/DonationDialog";
 import { logOperation, exportLogsAsJson } from "../utils/operationLog";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate, type DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
+
+const DamageChart = lazy(() => import("../components/calculator/DamageChart"));
+const SearchPanel = lazy(() => import("../components/calculator/SearchPanel"));
+const MultiSkillPanel = lazy(() => import("../components/calculator/MultiSkillPanel"));
+const FixedLoadoutPanel = lazy(() => import("../components/calculator/FixedLoadoutPanel"));
+const CritAndAbnormalPanel = lazy(() => import("../components/calculator/CritAndAbnormalPanel"));
+const PresetDialog = lazy(() => import("../components/calculator/PresetDialog"));
+const CalcHistoryDialog = lazy(() => import("../components/calculator/CalcHistoryDialog"));
+const SearchHistoryDialog = lazy(() => import("../components/calculator/SearchHistoryDialog"));
+const SegmentManualBuffDialog = lazy(
+  () => import("../components/calculator/SegmentManualBuffDialog"),
+);
+const BatchCompareDialog = lazy(() => import("../components/calculator/BatchCompareDialog"));
+const SurvivalEstimateDialog = lazy(
+  () => import("../components/calculator/SurvivalEstimateDialog"),
+);
+const OCRUploadDialog = lazy(() => import("../components/calculator/OCRUploadDialog"));
+const HelpDialog = lazy(() => import("../components/calculator/HelpDialog"));
+const DataSourceDialog = lazy(() => import("../components/calculator/DataSourceDialog"));
+const DonationDialog = lazy(() => import("../components/calculator/DonationDialog"));
 
 const WEAPON_SCOPE_OPTIONS = ["当前武器", "同类型同星级", "同类型全部"];
 const EQUIPMENT_SCOPE_OPTIONS = ["全部装备", "仅套装装备", "仅散件装备"];
@@ -534,15 +541,19 @@ export default function ComputePage() {
                   loading={previewLoading}
                   error={previewError}
                 />
-                <Box sx={{ mt: 2 }}>
-                  <DamageChart
-                    outputValues={outputValues}
-                    nodeValues={null}
-                    zoneShare={
-                      damageSnapshot?.zone_share_percent as Record<string, number> | undefined
-                    }
-                  />
-                </Box>
+                {Object.keys(outputValues).length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Suspense fallback={null}>
+                      <DamageChart
+                        outputValues={outputValues}
+                        nodeValues={null}
+                        zoneShare={
+                          damageSnapshot?.zone_share_percent as Record<string, number> | undefined
+                        }
+                      />
+                    </Suspense>
+                  </Box>
+                )}
               </Box>
             )}
 
@@ -556,9 +567,10 @@ export default function ComputePage() {
       )}
 
       {tab === 1 && (
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Suspense fallback={<PageFallback label="加载高级功能…" />}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Button
@@ -663,94 +675,108 @@ export default function ComputePage() {
             </Paper>
           </Grid>
         </Grid>
+        </Suspense>
       )}
 
-      <PresetDialog
-        open={presetDialogOpen}
-        onClose={() => setPresetDialogOpen(false)}
-        loadoutPayload={loadoutPayload}
-        currentState={{
-          charName: selectedChar,
-          weaponName: selectedWeapon,
-          charLevel,
-          weaponLevel,
-          enemyParams,
-          multiSkill,
-          fixedLoadout: fixedLoadout as Record<string, string | null> | null,
-        }}
-        onImport={handleImportPreset}
-      />
+      <Suspense fallback={null}>
+        {presetDialogOpen && (
+          <PresetDialog
+            open={presetDialogOpen}
+            onClose={() => setPresetDialogOpen(false)}
+            loadoutPayload={loadoutPayload}
+            currentState={{
+              charName: selectedChar,
+              weaponName: selectedWeapon,
+              charLevel,
+              weaponLevel,
+              enemyParams,
+              multiSkill,
+              fixedLoadout: fixedLoadout as Record<string, string | null> | null,
+            }}
+            onImport={handleImportPreset}
+          />
+        )}
 
-      <CalcHistoryDialog
-        open={historyDialogOpen}
-        onClose={() => setHistoryDialogOpen(false)}
-        currentEntry={historyEntry as any}
-        onRestore={(entry) => {
-          setSelectedChar(String(entry.char_name || ""));
-          setSelectedWeapon(String(entry.weapon_name || ""));
-          setHistoryDialogOpen(false);
-        }}
-      />
+        {historyDialogOpen && (
+          <CalcHistoryDialog
+            open={historyDialogOpen}
+            onClose={() => setHistoryDialogOpen(false)}
+            currentEntry={historyEntry as any}
+            onRestore={(entry) => {
+              setSelectedChar(String(entry.char_name || ""));
+              setSelectedWeapon(String(entry.weapon_name || ""));
+              setHistoryDialogOpen(false);
+            }}
+          />
+        )}
 
-      <SearchHistoryDialog
-        open={searchHistoryOpen}
-        onClose={() => setSearchHistoryOpen(false)}
-      />
+        {searchHistoryOpen && (
+          <SearchHistoryDialog
+            open={searchHistoryOpen}
+            onClose={() => setSearchHistoryOpen(false)}
+          />
+        )}
 
-      <SegmentManualBuffDialog
-        open={manualBuffDialogOpen}
-        onClose={() => setManualBuffDialogOpen(false)}
-        store={manualBuffStore}
-        onApply={(store) => {
-          setManualBuffStore(store);
-          setManualBuffDialogOpen(false);
-        }}
-        manualCounts={multiSkill.manualCounts}
-        physicalAbnormalCounts={critAbnormal.physicalAbnormalCounts}
-        spellAbnormalCounts={critAbnormal.spellAbnormalCounts}
-      />
+        {manualBuffDialogOpen && (
+          <SegmentManualBuffDialog
+            open={manualBuffDialogOpen}
+            onClose={() => setManualBuffDialogOpen(false)}
+            store={manualBuffStore}
+            onApply={(store) => {
+              setManualBuffStore(store);
+              setManualBuffDialogOpen(false);
+            }}
+            manualCounts={multiSkill.manualCounts}
+            physicalAbnormalCounts={critAbnormal.physicalAbnormalCounts}
+            spellAbnormalCounts={critAbnormal.spellAbnormalCounts}
+          />
+        )}
 
-      <BatchCompareDialog
-        open={batchCompareOpen}
-        onClose={() => setBatchCompareOpen(false)}
-        enemyParams={enemyParams}
-      />
+        {batchCompareOpen && (
+          <BatchCompareDialog
+            open={batchCompareOpen}
+            onClose={() => setBatchCompareOpen(false)}
+            enemyParams={enemyParams}
+          />
+        )}
 
-      <SurvivalEstimateDialog
-        open={survivalDialogOpen}
-        onClose={() => setSurvivalDialogOpen(false)}
-        charData={charData}
-        weaponData={weaponData}
-        charLevel={charLevel}
-        weaponLevel={weaponLevel}
-        trustLevel={trustLevel}
-        enemyParams={enemyParams}
-      />
+        {survivalDialogOpen && (
+          <SurvivalEstimateDialog
+            open={survivalDialogOpen}
+            onClose={() => setSurvivalDialogOpen(false)}
+            charData={charData}
+            weaponData={weaponData}
+            charLevel={charLevel}
+            weaponLevel={weaponLevel}
+            trustLevel={trustLevel}
+            enemyParams={enemyParams}
+          />
+        )}
 
-      <OCRUploadDialog
-        open={ocrDialogOpen}
-        onClose={() => setOcrDialogOpen(false)}
-        onResult={(data) => {
-          if (data.char_name) setSelectedChar(data.char_name);
-          if (data.weapon_name) setSelectedWeapon(data.weapon_name);
-          setOcrDialogOpen(false);
-        }}
-      />
+        {ocrDialogOpen && (
+          <OCRUploadDialog
+            open={ocrDialogOpen}
+            onClose={() => setOcrDialogOpen(false)}
+            onResult={(data) => {
+              if (data.char_name) setSelectedChar(data.char_name);
+              if (data.weapon_name) setSelectedWeapon(data.weapon_name);
+              setOcrDialogOpen(false);
+            }}
+          />
+        )}
 
-      <HelpDialog
-        open={helpDialogOpen}
-        onClose={() => setHelpDialogOpen(false)}
-      />
+        {helpDialogOpen && (
+          <HelpDialog open={helpDialogOpen} onClose={() => setHelpDialogOpen(false)} />
+        )}
 
-      <DataSourceDialog
-        open={dataSourceOpen}
-        onClose={() => setDataSourceOpen(false)}
-      />
+        {dataSourceOpen && (
+          <DataSourceDialog open={dataSourceOpen} onClose={() => setDataSourceOpen(false)} />
+        )}
 
-      <DonationDialog
-        open={donationOpen}
-        onClose={() => setDonationOpen(false)}
-      />
+        {donationOpen && (
+          <DonationDialog open={donationOpen} onClose={() => setDonationOpen(false)} />
+        )}
+      </Suspense>
     </Box>
   );
 }

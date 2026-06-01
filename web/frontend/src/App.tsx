@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import {
   AppBar,
@@ -18,15 +19,17 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import { useNavigate, useLocation } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import ComputePage from "./pages/ComputePage";
-import AdaptersPage from "./pages/AdaptersPage";
-import EditorPage from "./pages/EditorPage";
-import DesignerPage from "./pages/DesignerPage";
-import PackDesignerPage from "./pages/PackDesignerPage";
-import MarketplacePage from "./pages/MarketplacePage";
-import ArknightsComputePage from "./pages/ArknightsComputePage";
-import GlobalHelpDialog from "./components/GlobalHelpDialog";
+import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
+
+const GlobalHelpDialog = lazy(() => import("./components/GlobalHelpDialog"));
+const ComputePage = lazy(() => import("./pages/ComputePage"));
+const ArknightsComputePage = lazy(() => import("./pages/ArknightsComputePage"));
+const AdaptersPage = lazy(() => import("./pages/AdaptersPage"));
+const EditorPage = lazy(() => import("./pages/EditorPage"));
+const DesignerPage = lazy(() => import("./pages/DesignerPage"));
+const PackDesignerPage = lazy(() => import("./pages/PackDesignerPage"));
+const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
 
 const drawerWidth = 240;
 
@@ -52,7 +55,9 @@ function Shell() {
             Calc Framework Web
           </Typography>
           <GlobalDonationButton />
-          <GlobalHelpDialog />
+          <Suspense fallback={null}>
+            <GlobalHelpDialog />
+          </Suspense>
         </Toolbar>
       </AppBar>
       <Drawer
@@ -79,16 +84,18 @@ function Shell() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <Routes>
-          <Route path="/compute" element={<ComputePage />} />
-          <Route path="/arknights" element={<ArknightsComputePage />} />
-          <Route path="/adapters" element={<AdaptersPage />} />
-          <Route path="/editor" element={<EditorPage />} />
-          <Route path="/designer" element={<DesignerPage />} />
-          <Route path="/pack-designer" element={<PackDesignerPage />} />
-          <Route path="/hub" element={<MarketplacePage />} />
-          <Route path="*" element={<Navigate to="/compute" replace />} />
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/compute" element={<ComputePage />} />
+            <Route path="/arknights" element={<ArknightsComputePage />} />
+            <Route path="/adapters" element={<AdaptersPage />} />
+            <Route path="/editor" element={<EditorPage />} />
+            <Route path="/designer" element={<DesignerPage />} />
+            <Route path="/pack-designer" element={<PackDesignerPage />} />
+            <Route path="/hub" element={<MarketplacePage />} />
+            <Route path="*" element={<Navigate to="/compute" replace />} />
+          </Routes>
+        </Suspense>
       </Box>
     </Box>
   );

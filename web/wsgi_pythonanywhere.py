@@ -11,6 +11,7 @@ PythonAnywhere WSGI 入口（免费套餐：WSGI + 同步 API，不用裸 FastAP
 """
 from __future__ import annotations
 
+import gzip
 import json
 import re
 import sys
@@ -95,12 +96,29 @@ def _json(start_response, data, status: str = "200 OK"):
     return [body]
 
 
-def _bytes(start_response, body: bytes, content_type: str, status: str = "200 OK"):
-    start_response(
-        status,
-        [("Content-Type", content_type), ("Content-Length", str(len(body)))],
-    )
+def _bytes(start_response, body: bytes, content_type: str, status: str = "200 OK", extra_headers=None):
+    headers = [("Content-Type", content_type), ("Content-Length", str(len(body)))]
+    if extra_headers:
+        headers.extend(extra_headers)
+    start_response(status, headers)
     return [body]
+
+
+def _serve_static_file(environ, start_response, fp: Path):
+    """静态资源；对 js/css 启用 gzip 与长期缓存（Vite 带 hash 文件名）。"""
+    body = fp.read_bytes()
+    suffix = fp.suffix.lower()
+    content_type = _MIME.get(suffix, "application/octet-stream")
+    headers: list[tuple[str, str]] = []
+    if fp.name == "index.html":
+        headers.append(("Cache-Control", "no-cache"))
+    elif suffix in (".js", ".css", ".woff", ".woff2"):
+        headers.append(("Cache-Control", "public, max-age=31536000, immutable"))
+    accept = environ.get("HTTP_ACCEPT_ENCODING", "")
+    if suffix in (".js", ".css", ".html", ".svg") and "gzip" in accept and len(body) > 512:
+        body = gzip.compress(body, compresslevel=6)
+        headers.append(("Content-Encoding", "gzip"))
+    return _bytes(start_response, body, content_type, extra_headers=headers)
 
 
 def _http_error(start_response, detail, code: int = 400):
@@ -368,6 +386,6 @@ def application(environ, start_response):
     if not fp.is_file():
         fp = _DIST / "index.html"
     if fp.is_file():
-        return _bytes(start_response, fp.read_bytes(), _MIME.get(fp.suffix, "application/octet-stream"))
+        return _serve_static_file(environ, start_response, fp)
     start_response("404 NOT FOUND", [("Content-Type", "text/plain")])
     return [b"Not Found"]
