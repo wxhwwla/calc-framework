@@ -118,6 +118,10 @@ _ATTR_FIELDS: tuple[tuple[str, str], ...] = (
 
     ("base_atk", "基础攻击力"),
 
+    ("base_hp", "基础生命值"),
+
+    ("base_defense", "基础防御力"),
+
 )
 
 
@@ -275,8 +279,12 @@ def build_seed_spec_from_wiki(
 
 
     for seed_key, curve_key in _ATTR_FIELDS:
-
-        spec[seed_key] = fit_growth_params_from_curve(curves[curve_key])
+        if curve_key not in curves:
+            continue
+        try:
+            spec[seed_key] = fit_growth_params_from_curve(curves[curve_key])
+        except (ValueError, AssertionError):
+            continue
 
     return spec
 
@@ -290,9 +298,11 @@ def _curves_from_seed_spec(spec: dict[str, Any]) -> dict[str, list[float]]:
 
     for seed_key, _ in _ATTR_FIELDS:
 
-        params = spec[seed_key]
+        params = spec.get(seed_key)
 
-        out[seed_key] = calculate_growth_curve(**params)
+        if params is not None:
+
+            out[seed_key] = calculate_growth_curve(**params)
 
     return out
 
@@ -386,17 +396,24 @@ def needs_sync_with_wiki(
 
         "base_atk": "基础攻击力",
 
+        "base_hp": "基础生命值",
+
+        "base_defense": "基础防御力",
+
     }
 
     levels = local_record.get("等级") or list(range(1, 91))
 
     for seed_key, local_key in local_keys.items():
 
-        local_arr = local_record.get(local_key)
-
         wiki_arr = wiki_curves.get(seed_key)
 
-        if not isinstance(local_arr, list) or not wiki_arr:
+        if wiki_arr is None:
+            continue
+
+        local_arr = local_record.get(local_key)
+
+        if not isinstance(local_arr, list):
 
             return True
 

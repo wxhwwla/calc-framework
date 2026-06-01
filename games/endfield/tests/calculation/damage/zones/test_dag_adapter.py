@@ -44,13 +44,16 @@ class TestDAGAdapter(unittest.TestCase):
         self.assertIn("weapon", ctx)
         self.assertIn("equipment", ctx)
         self.assertIn("computed", ctx)
-        self.assertIn("基础攻击", ctx["character"])
-        self.assertIn("基础攻击", ctx["weapon"])
-        self.assertIn("攻击力+", ctx["weapon"])
-        self.assertIn("附加攻击力+", ctx["weapon"])
-        self.assertIn("攻击力平值", ctx["equipment"])
-        self.assertIn("主能力平值加算", ctx["computed"])
-        self.assertIn("主能力百分比", ctx["computed"])
+        self.assertIn("基础攻击", ctx["character"])
+        self.assertIn("基础攻击", ctx["weapon"])
+        self.assertIn("攻击力+", ctx["weapon"])
+        self.assertIn("附加攻击力+", ctx["weapon"])
+        self.assertIn("攻击力平值", ctx["equipment"])
+        self.assertIn("主能力平值加算", ctx["computed"])
+        self.assertIn("主能力百分比", ctx["computed"])
+        self.assertIn("精炼等级", ctx["weapon"])
+        self.assertIn("武器精炼主能力值加成", ctx["computed"])
+        self.assertIn("武器精炼附加攻击力加成", ctx["computed"])
 
     def test_evaluate_attack_chain_via_dag_matches_existing_engine(self):
         from games.endfield.calc.dag_adapter.adapter import evaluate_attack_chain_via_dag        from games.endfield.calc.multiplicative_zones.ability_bonus_details import (            calculate_ability_bonus_with_details,        )        from games.endfield.calc.multiplicative_zones.final_attack_zone import (            calculate_final_attack_with_details,        )

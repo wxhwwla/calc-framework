@@ -6,8 +6,8 @@
 此模块提供角色和武器属性的统一生成接口，通过模式参数区分不同类型的数据生成逻辑。
 """
 
-from typing import Anyfrom games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve, calculate_skill_curve# 角色普通属性列表
-CHARACTER_NORMAL_ATTRS = ["力量", "敏捷", "智识", "意志", "基础攻击力"]
+from typing import Anyfrom games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve, calculate_skill_curve# 角色普通属性列表
+CHARACTER_NORMAL_ATTRS = ["力量", "敏捷", "智识", "意志", "基础攻击力", "基础生命值", "基础防御力"]
 
 # 角色技能属性列表
 CHARACTER_SKILL_ATTRS = ["战技倍率", "连携技倍率", "终结技倍率"]

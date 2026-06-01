@@ -13,6 +13,46 @@ from calc_framework.data.context import make_context
 from calc_framework.data.loader import DataContextLoader
 
 
+def _get_char_attr_at_level(char: dict[str, Any], key: str, level: int) -> float:
+    """从角色 JSON 读取某属性在指定等级的值，返回 float。"""
+    values = char.get(key)
+    if not isinstance(values, list):
+        return 0.0
+    idx = min(level - 1, len(values) - 1)
+    if idx < 0:
+        return 0.0
+    return float(values[idx])
+
+
+def _get_weapon_refinement_bonus(weapon: dict[str, Any] | None, *, refine_level: int) -> dict[str, float]:
+    """从武器 JSON 读取精炼等级对应的 normal_skills 加成值。
+
+    返回:
+        {"主能力值+": float, "附加攻击力+": float}
+    """
+    result: dict[str, float] = {
+        "主能力值+": 0.0,
+        "附加攻击力+": 0.0,
+    }
+    if not weapon:
+        return result
+    skills = weapon.get("normal_skills", [])
+    if not isinstance(skills, list):
+        return result
+    idx = min(refine_level - 1, 8)
+    if idx < 0:
+        idx = 0
+    for skill in skills:
+        effect = skill.get("effect", "")
+        curve = skill.get("curve", [])
+        if isinstance(curve, list) and len(curve) > idx:
+            if effect == "主能力值+":
+                result["主能力值+"] = float(curve[idx])
+            elif effect == "附加攻击力+":
+                result["附加攻击力+"] = float(curve[idx])
+    return result
+
+
 class EndfieldContextLoader(DataContextLoader):
     """从终末地角色/武器原始数据构建 DataContext。
 
@@ -51,6 +91,9 @@ class EndfieldContextLoader(DataContextLoader):
         main_attr = ability["main_attr"]
         sub_attr = ability["sub_attr"]
 
+        refine_level = weapon.get("精炼等级", 1) if weapon else 1
+        refine_bonus = _get_weapon_refinement_bonus(weapon, refine_level=refine_level)
+
         return make_context(
             character={
                 "基础攻击": final["char_base_attack"],
@@ -62,11 +105,17 @@ class EndfieldContextLoader(DataContextLoader):
                 "暴击伤害": char.get("暴击伤害", char.get("crit_damage", 0.5)),
                 "主能力": main_attr,
                 "副能力": sub_attr,
+                "基础生命值": _get_char_attr_at_level(char, "基础生命值", char_level),
+                "基础防御力": _get_char_attr_at_level(char, "基础防御力", char_level),
             },
             weapon={
                 "基础攻击": final["weapon_base_attack"],
                 "攻击力+": final["attack_bonus_multiplier"] - 1.0,
                 "附加攻击力+": final["additional_attack"],
+                "精炼等级": refine_level,
+                "法术伤害+": 0.0,
+                "攻击力+平值": 0.0,
+                "最大生命值+": 0.0,
             },
             equipment={
                 "攻击力平值": 0.0,
@@ -116,6 +165,8 @@ class EndfieldContextLoader(DataContextLoader):
                 "非主控减伤": 1.0,
                 "连击增伤": 1.0,
                 "特殊乘区": 1.0,
+                "武器精炼主能力值加成": refine_bonus["主能力值+"],
+                "武器精炼附加攻击力加成": refine_bonus["附加攻击力+"],
             },
         )
 

@@ -186,6 +186,23 @@ def compute_snapshot_with_dag(
     final_dmg = zo.get("最终伤害", 0.0)
     lines.append(ZoneDisplayLine(f"最终伤害: {final_dmg:.2f}", "#E74C3C"))
 
+    # 基础生命/防御（如数据可用则展示）
+    char_hp = ctx.get("character", {}).get("基础生命值", 0.0)
+    char_def = ctx.get("character", {}).get("基础防御力", 0.0)
+    if char_hp > 0 or char_def > 0:
+        lines.append(ZoneDisplayLine(f"基础生命值: {char_hp:.1f}", "#8E44AD"))
+        lines.append(ZoneDisplayLine(f"基础防御力: {char_def:.1f}", "#8E44AD"))
+
+    # 武器精炼加成
+    refine_main = zo.get("武器精炼主能力值加成", 0.0)
+    refine_add_atk = zo.get("武器精炼附加攻击力加成", 0.0)
+    if refine_main > 0 or refine_add_atk > 0:
+        refine_lv = ctx.get("weapon", {}).get("精炼等级", 1)
+        lines.append(ZoneDisplayLine(
+            f"武器精炼(Lv{refine_lv}): 主能力值+{refine_main:.1f} 附加攻击力+{refine_add_atk:.1f}",
+            "#2ECC71",
+        ))
+
     return lines
 
 

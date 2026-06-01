@@ -138,6 +138,38 @@ def _make_master_graph() -> DAGGraph:
                 type="float", source="computed",
                 description="意志加成值（武器技能）", default=0.0,
             ),
+            "character.基础生命值": DAGVariable(
+                type="float", source="character",
+                description="角色基础生命值", default=0.0,
+            ),
+            "character.基础防御力": DAGVariable(
+                type="float", source="character",
+                description="角色基础防御力", default=0.0,
+            ),
+            "weapon.精炼等级": DAGVariable(
+                type="int", source="weapon",
+                description="武器精炼等级（1-9）", default=1,
+            ),
+            "computed.武器精炼主能力值加成": DAGVariable(
+                type="float", source="computed",
+                description="武器精炼主能力值+加成", default=0.0,
+            ),
+            "computed.武器精炼附加攻击力加成": DAGVariable(
+                type="float", source="computed",
+                description="武器精炼附加攻击力+加成", default=0.0,
+            ),
+            "weapon.法术伤害+": DAGVariable(
+                type="float", source="weapon",
+                description="武器法术伤害+加成（小数）", default=0.0,
+            ),
+            "weapon.攻击力+平值": DAGVariable(
+                type="float", source="weapon",
+                description="武器攻击力+平值加成", default=0.0,
+            ),
+            "weapon.最大生命值+": DAGVariable(
+                type="float", source="weapon",
+                description="武器最大生命值+加成", default=0.0,
+            ),
         },
         subgraphs={
             "ability_bonus": _make_ability_bonus_subgraph(),
@@ -176,6 +208,17 @@ def _make_master_graph() -> DAGGraph:
             "zone_ncr": VarNode(type="var", path="computed.非主控减伤", label="非主控减伤区"),
             "zone_combo": VarNode(type="var", path="computed.连击增伤", label="连击增伤区"),
             "zone_special": VarNode(type="var", path="computed.特殊乘区", label="特殊乘区"),
+            # 角色基础生命/防御
+            "char_base_hp": VarNode(type="var", path="character.基础生命值", label="基础生命值"),
+            "char_base_def": VarNode(type="var", path="character.基础防御力", label="基础防御力"),
+            # 武器精炼
+            "weapon_refine_lv": VarNode(type="var", path="weapon.精炼等级", label="精炼等级"),
+            "weapon_refine_main_attr": VarNode(type="var", path="computed.武器精炼主能力值加成", label="精炼主能力值+"),
+            "weapon_refine_add_atk": VarNode(type="var", path="computed.武器精炼附加攻击力加成", label="精炼附加攻击+"),
+            # 武器被动效果
+            "weapon_spell_dmg": VarNode(type="var", path="weapon.法术伤害+", label="法术伤害+"),
+            "weapon_atk_flat": VarNode(type="var", path="weapon.攻击力+平值", label="攻击力+平值"),
+            "weapon_max_hp": VarNode(type="var", path="weapon.最大生命值+", label="最大生命值+"),
             # 属性四维
             "char_attr_力量": VarNode(type="var", path="character.力量", label="力量基础"),
             "char_attr_敏捷": VarNode(type="var", path="character.敏捷", label="敏捷基础"),
@@ -307,6 +350,10 @@ def _make_master_graph() -> DAGGraph:
             "敏捷最终值": DAGOutput(node="attr_敏捷_total", label="敏捷最终值"),
             "智识最终值": DAGOutput(node="attr_智识_total", label="智识最终值"),
             "意志最终值": DAGOutput(node="attr_意志_total", label="意志最终值"),
+            "基础生命值": DAGOutput(node="char_base_hp", label="基础生命值"),
+            "基础防御力": DAGOutput(node="char_base_def", label="基础防御力"),
+            "武器精炼主能力值加成": DAGOutput(node="weapon_refine_main_attr", label="武器精炼主能力值加成"),
+            "武器精炼附加攻击力加成": DAGOutput(node="weapon_refine_add_atk", label="武器精炼附加攻击力加成"),
         },
     )
 

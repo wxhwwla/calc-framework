@@ -179,6 +179,54 @@
       "source": "computed",
       "description": "意志加成值（武器技能）",
       "default": 0.0
+    },
+    "character.基础生命值": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础生命值",
+      "default": 0.0
+    },
+    "character.基础防御力": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础防御力",
+      "default": 0.0
+    },
+    "weapon.精炼等级": {
+      "type": "int",
+      "source": "weapon",
+      "description": "武器精炼等级（1-9）",
+      "default": 1
+    },
+    "computed.武器精炼主能力值加成": {
+      "type": "float",
+      "source": "computed",
+      "description": "武器精炼主能力值+加成",
+      "default": 0.0
+    },
+    "computed.武器精炼附加攻击力加成": {
+      "type": "float",
+      "source": "computed",
+      "description": "武器精炼附加攻击力+加成",
+      "default": 0.0
+    },
+    "weapon.法术伤害+": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器法术伤害+加成（小数）",
+      "default": 0.0
+    },
+    "weapon.攻击力+平值": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器攻击力+平值加成",
+      "default": 0.0
+    },
+    "weapon.最大生命值+": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器最大生命值+加成",
+      "default": 0.0
     }
   },
   "subgraphs": {
@@ -846,6 +894,46 @@
       "path": "computed.特殊乘区",
       "label": "特殊乘区"
     },
+    "char_base_hp": {
+      "type": "var",
+      "path": "character.基础生命值",
+      "label": "基础生命值"
+    },
+    "char_base_def": {
+      "type": "var",
+      "path": "character.基础防御力",
+      "label": "基础防御力"
+    },
+    "weapon_refine_lv": {
+      "type": "var",
+      "path": "weapon.精炼等级",
+      "label": "精炼等级"
+    },
+    "weapon_refine_main_attr": {
+      "type": "var",
+      "path": "computed.武器精炼主能力值加成",
+      "label": "精炼主能力值+"
+    },
+    "weapon_refine_add_atk": {
+      "type": "var",
+      "path": "computed.武器精炼附加攻击力加成",
+      "label": "精炼附加攻击+"
+    },
+    "weapon_spell_dmg": {
+      "type": "var",
+      "path": "weapon.法术伤害+",
+      "label": "法术伤害+"
+    },
+    "weapon_atk_flat": {
+      "type": "var",
+      "path": "weapon.攻击力+平值",
+      "label": "攻击力+平值"
+    },
+    "weapon_max_hp": {
+      "type": "var",
+      "path": "weapon.最大生命值+",
+      "label": "最大生命值+"
+    },
     "char_attr_力量": {
       "type": "var",
       "path": "character.力量",
@@ -1117,6 +1205,30 @@
     "意志最终值": {
       "node": "attr_意志_total",
       "label": "意志最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "基础生命值": {
+      "node": "char_base_hp",
+      "label": "基础生命值",
+      "format": "",
+      "is_primary": false
+    },
+    "基础防御力": {
+      "node": "char_base_def",
+      "label": "基础防御力",
+      "format": "",
+      "is_primary": false
+    },
+    "武器精炼主能力值加成": {
+      "node": "weapon_refine_main_attr",
+      "label": "武器精炼主能力值加成",
+      "format": "",
+      "is_primary": false
+    },
+    "武器精炼附加攻击力加成": {
+      "node": "weapon_refine_add_atk",
+      "label": "武器精炼附加攻击力加成",
       "format": "",
       "is_primary": false
     }
