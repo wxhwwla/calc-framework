@@ -33,7 +33,9 @@ from games.endfield.calc.damage.imbalance import (
     imbalance_cap_for_tier,
     imbalance_duration_for_tier,
     imbalance_node_thresholds,
+    scaled_imbalance_gain,
 )
+from games.endfield.calc.damage.incoming import enemy_burn_tick_damage
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 
@@ -50,6 +52,8 @@ class QtSurvivalEstimateDialog(QDialog):
         weapon_level: int,
         trust_level: int,
         enemy_tier: str,
+        imbalance_efficiency_bonus: float = 0.0,
+        enemy_max_hp: float | None = None,
         weapon_skill_kwargs: dict[str, Any] | None = None,
         big_font: QFont | None = None,
     ) -> None:
@@ -77,7 +81,33 @@ class QtSurvivalEstimateDialog(QDialog):
         imb_form.addRow("失衡上限", self._imb_cap)
         imb_form.addRow("失衡持续 (s)", self._imb_duration)
         imb_form.addRow("节点阈值", self._imb_nodes)
+        self._imb_gain_base = QDoubleSpinBox()
+        self._imb_gain_base.setRange(0.0, 999.0)
+        self._imb_gain_base.setValue(10.0)
+        self._imb_gain_eff = QDoubleSpinBox()
+        self._imb_gain_eff.setRange(0.0, 2.0)
+        self._imb_gain_eff.setDecimals(2)
+        self._imb_gain_eff.setValue(0.0)
+        self._imb_gain_result = QLabel("—")
+        imb_form.addRow("单次失衡值", self._imb_gain_base)
+        imb_form.addRow("失衡效率加成", self._imb_gain_eff)
+        imb_form.addRow("有效累积", self._imb_gain_result)
         layout.addWidget(imb_box)
+
+        burn_box = QGroupBox("敌人燃烧承伤 (G12)")
+        burn_form = QFormLayout(burn_box)
+        self._enemy_max_hp = QDoubleSpinBox()
+        self._enemy_max_hp.setRange(0.0, 999999.0)
+        self._enemy_max_hp.setValue(6605.0)
+        self._hot_resist = QDoubleSpinBox()
+        self._hot_resist.setRange(-100.0, 100.0)
+        self._hot_resist.setDecimals(1)
+        self._hot_resist.setSuffix("%")
+        self._burn_tick = QLabel("—")
+        burn_form.addRow("敌人最大生命", self._enemy_max_hp)
+        burn_form.addRow("灼热抗性", self._hot_resist)
+        burn_form.addRow("每秒燃烧伤", self._burn_tick)
+        layout.addWidget(burn_box)
 
         res_box = QGroupBox("技力 / 终结技（NGA 节选估算）")
         res_form = QFormLayout(res_box)
@@ -151,6 +181,10 @@ class QtSurvivalEstimateDialog(QDialog):
             self._sp_start,
             self._ult_start,
             self._steal_rate,
+            self._imb_gain_base,
+            self._imb_gain_eff,
+            self._enemy_max_hp,
+            self._hot_resist,
         ):
             spin.valueChanged.connect(self._refresh_all)
         layout.addWidget(
@@ -168,12 +202,17 @@ class QtSurvivalEstimateDialog(QDialog):
         self._weapon_level = weapon_level
         self._trust_level = trust_level
         self._enemy_tier = enemy_tier
+        self._imbalance_efficiency_bonus = float(imbalance_efficiency_bonus)
+        if enemy_max_hp is not None and float(enemy_max_hp) > 0:
+            self._enemy_max_hp.setValue(float(enemy_max_hp))
+        self._imb_gain_eff.setValue(float(imbalance_efficiency_bonus))
         self._weapon_skill_kwargs = dict(weapon_skill_kwargs or {})
         self._last_execute_damage = 0.0
         self._refresh_all()
 
     def _refresh_all(self) -> None:
         self._refresh_imbalance_info()
+        self._refresh_burn()
         self._refresh_execute()
         self._refresh_resources()
         self._refresh_healing()
@@ -203,6 +242,21 @@ class QtSurvivalEstimateDialog(QDialog):
         if len(nodes_2) > 1:
             node_text += f"；2 节点: {', '.join(f'{v:g}' for v in nodes_2)}"
         self._imb_nodes.setText(node_text)
+        gain = scaled_imbalance_gain(
+            float(self._imb_gain_base.value()),
+            imbalance_efficiency_bonus=float(self._imb_gain_eff.value()),
+        )
+        cap = imbalance_cap_for_tier(self._enemy_tier)
+        pct = min(100.0, gain / cap * 100.0) if cap > 0 else 0.0
+        self._imb_gain_result.setText(f"{gain:g} / {cap:g}（{pct:.1f}%）")
+
+    def _refresh_burn(self) -> None:
+        hp = float(self._enemy_max_hp.value())
+        if hp <= 0:
+            self._burn_tick.setText("—")
+            return
+        tick = enemy_burn_tick_damage(hp, hot_resistance_percent=float(self._hot_resist.value()))
+        self._burn_tick.setText(f"{tick:,.1f}")
 
     def _refresh_execute(self) -> None:
         details = calculate_final_attack_with_details(
@@ -258,6 +312,8 @@ def open_survival_estimate_dialog(
     weapon_level: int,
     trust_level: int,
     enemy_tier: str,
+    imbalance_efficiency_bonus: float = 0.0,
+    enemy_max_hp: float | None = None,
     weapon_skill_kwargs: dict[str, Any] | None = None,
     big_font: QFont | None = None,
 ) -> None:
@@ -274,6 +330,8 @@ def open_survival_estimate_dialog(
         weapon_level=weapon_level,
         trust_level=trust_level,
         enemy_tier=enemy_tier,
+        imbalance_efficiency_bonus=imbalance_efficiency_bonus,
+        enemy_max_hp=enemy_max_hp,
         weapon_skill_kwargs=weapon_skill_kwargs,
         big_font=big_font,
     )

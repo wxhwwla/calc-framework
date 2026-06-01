@@ -106,6 +106,7 @@ def build_display_pending_signature(
     attached_effect_multiplier: float = 1.0,
     corrosion_duration_seconds: float = 15.0,
     imbalance_efficiency_bonus: float = 0.0,
+    break_defense_stacks: int = 0,
 ) -> tuple:
     """
     三列展示 + 快照/历史所用配装签名（不含搜索范围、固定配装等仅影响预估/搜索的字段）。
@@ -139,4 +140,5 @@ def build_display_pending_signature(
         float(attached_effect_multiplier),
         float(corrosion_duration_seconds),
         float(imbalance_efficiency_bonus),
+        max(0, min(4, int(break_defense_stacks))),
     )

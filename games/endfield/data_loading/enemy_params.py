@@ -95,6 +95,21 @@ def resolve_enemy_tier(enemy_id: str, *, default: str = DEFAULT_ENEMY_TIER) -> s
     return str(row.get("enemy_tier") or row.get("等阶") or default)
 
 
+def resolve_enemy_max_hp(enemy_id: str, *, default: float | None = None) -> float | None:
+    """插件可选 enemy_max_hp / 最大生命。"""
+    if not (enemy_id or "").strip():
+        return default
+    row = get_plugin_registry().get_enemy(enemy_id.strip()) or {}
+    raw = row.get("enemy_max_hp", row.get("最大生命"))
+    if raw is None:
+        return default
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0.0 else default
+
+
 def enemy_damage_context_overrides(enemy_id: str) -> dict[str, Any]:
     """返回可并入 DamageContext 的敌方参数字段。"""
     if not (enemy_id or "").strip():

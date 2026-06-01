@@ -77,6 +77,10 @@ class DialogMixin:
         if loadout is None:
             QMessageBox.warning(self.app, "处决/治疗估算", "请先选择角色与武器。")
             return
+        from games.endfield.data_loading.enemy_params import resolve_enemy_max_hp
+
+        dock = self.control_dock
+        enemy_id = dock._enemy_panel.current_enemy_id()
         open_survival_estimate_dialog(
             self.app,
             char_data=loadout.char_data,
@@ -85,6 +89,8 @@ class DialogMixin:
             weapon_level=loadout.weapon_level,
             trust_level=loadout.trust_level,
             enemy_tier=self._enemy_tier,
+            imbalance_efficiency_bonus=self._imbalance_efficiency_bonus,
+            enemy_max_hp=resolve_enemy_max_hp(enemy_id),
             weapon_skill_kwargs=loadout.weapon_skill_kwargs(),
             big_font=self.big_font,
         )
