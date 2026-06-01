@@ -6,7 +6,7 @@
 
 | 术语 | 含义 |
 |------|------|
-| **角色** | `characters.json` 中的一条记录，含类型、星级、等级曲线、四维属性、战技/连携/终结技倍率等 |
+| **角色** | `characters.json` 中的一条记录，含类型、星级、等级曲线、四维属性（力量/敏捷/智识/意志）、基础攻击力、基础生命值、基础防御力、战技/连携/终结技倍率等 |
 | **武器** | `weapons.json` 中的一条记录，含 `基础攻击力` 曲线、`normal_skills`（普通技能词条）与 `special_skills`（特殊技能词条） |
 | **装备** | `equipments.json` 中的一条记录；部位为 **护甲 / 护手 / 配件**（与 Wiki「装备种类」一致，旧称「胸甲」作别名） |
 | **等级曲线** | 与角色/武器等级列表等长的数值数组（通常 90 级），由 JSON 预存，运行时直接读取 |
@@ -21,7 +21,8 @@
 | **乘区** | `calculation/multiplicative_zones/` 中的乘法区链：能力乘区、能力值加成、最终攻击力等 |
 | **15乘区链** | 伤害计算的15个乘法区：能力乘区、能力值加成、武器攻击力、攻击力加成、暴击伤害、伤害加成、物理伤害、元素伤害、防御减伤、抗性减伤、最终减伤、特殊减伤、破韧补正、易伤增伤、治疗加成 |
 | **成长公式** | `value(lv) = base + floor((growth * (lv - 1) + offset) / divisor)`，用于反推与数据生成 |
-| **普通技能** | 武器 `normal_skills[]`：无条件词条，字段 `zone`（1–3）、`effect`（如 `攻击力+`）、`curve[9]`（潜能 1–9 档） |
+| **普通技能** | 武器 `normal_skills[]`：无条件词条，字段 `zone`（1–3）、`effect`（如 `攻击力+`）、`curve[9]`（精炼等级 1–9 档数值） |
+| **精炼等级** | 武器精炼等级，值域 1–9，影响 `normal_skills` 中所有 `curve[9]` 的索引值；也称为品质倍率 |
 | **特殊技能** | 武器 `special_skills[]`：有条件或独立词条，字段 `zone`、`name`（完整展示名）、`condition`、`effect`、`curve[9]`、`max_stack` |
 | **武器技能参数（代码）** | 计算/GUI 优先使用 `normal_skill_*` / `special_skill_*`；旧名 `sa1/sa2/sa3/ws/ws2` 仅兼容，触发 `DeprecationWarning` |
 | **武器技能选用状态** | `calculation/weapon_skill_selection.WeaponSkillSelection`：普通/特殊技能槽位 → 预设 v2 视图与乘区 kwargs；GUI 面板读写见 `gui_design/weapon_skill_selection.py` |

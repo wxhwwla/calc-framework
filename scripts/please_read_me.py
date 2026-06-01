@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.23"
+_VERSION = "3.15.24"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,18 +438,10 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 4 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 framework/src/calc_framework/configs/endfield_full.dag.json
-# - 修改 games/endfield/calc/core/curve_baker.py
-# - 修改 games/endfield/calc/core/data_generator.py
-# - 修改 games/endfield/calc/dag_adapter/adapter.py
-# - 修改 games/endfield/calc/dag_adapter/config.py
-# - 修改 games/endfield/calc/dag_adapter/loader.py
-# - 修改 games/endfield/tests/calculation/damage/zones/test_dag_adapter.py
-# - 修改 games/endfield/tests/framework/test_endfield_dag_integration.py
+# - 变更 "docs//345/210/266/351/200/240/346/270/270/346/210/217/350/256/241/347/256/227/345/231/250/345/256/214/346/225/264/346/265/201/347/250/213.md"
+# - 更新文档 CONTEXT.md
+# - 更新文档 games/endfield/README.md
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/bwiki_scout/wiki_sync.py
-# - 修改 tools/endfield_scripts/add_character.py
 # --- END UPLOAD_SUMMARY ---
