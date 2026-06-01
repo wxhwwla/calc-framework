@@ -388,7 +388,11 @@ def _ensure_hub_storage(config: dict) -> None:
     project = config.get("project", "calc-framework")
     home = f"/home/{username}/{project}"
     keep = b"# hub storage\n"
-    for rel in ("web/backend/data/hub/.keep", "web/backend/data/hub/packs/.keep"):
+    for rel in (
+        "web/backend/data/.keep",
+        "web/backend/data/hub/.keep",
+        "web/backend/data/hub/packs/.keep",
+    ):
         remote = f"{home}/{rel}"
         if _upload_bytes_to_path(config, remote, keep, rel, quiet=True):
             print(f"  [OK] hub 目录: {rel.rsplit('/', 1)[0]}/")
@@ -407,9 +411,10 @@ def _verify_deployment(config: dict) -> None:
         (f"https://{domain}/api/pack/theme/default", '"schema_version"'),
         (f"https://{domain}/api/adapters", '"id"'),
         (f"https://{domain}/api/adapters/endfield/pack-bundle", '"adapter_id"'),
+        (f"https://{domain}/api/data/profiles", '"endfield"'),
         (f"https://{domain}/api/history", "["),
         (f"https://{domain}/api/download/client", "PK"),  # zip 魔数
-        (f"https://{domain}/compute", "calc-framework"),
+        (f"https://{domain}/compute", "Calc Framework"),
     ]
     ok = True
     for url, needle in checks:
@@ -598,7 +603,7 @@ def _upload_dist_files(config: dict) -> None:
 
 
 def _upload_backend_files(config: dict) -> None:
-    """上传 web/backend/ 下的 Python 文件到服务器。"""
+    """上传 web/backend/ 下的 Python 文件到服务器（含 429 重试与限流间隔）。"""
     print("\n[UP-BE] 上传后端 Python 文件...")
     username = config.get("username")
     token = config.get("api_token")
@@ -612,34 +617,25 @@ def _upload_backend_files(config: dict) -> None:
 
     count = 0
     errors = 0
-    for py_file in sorted(backend_dir.rglob("*.py")):
+    py_files = sorted(backend_dir.rglob("*.py"))
+    for i, py_file in enumerate(py_files):
+        if i > 0:
+            time.sleep(_PA_UPLOAD_INTERVAL)
         rel = py_file.relative_to(backend_dir)
         remote_path = remote_base + str(rel).replace("\\", "/")
-        url = _pa_file_url(username, remote_path)
-        file_data = py_file.read_bytes()
-
-        boundary = b"----pa-deploy-boundary"
-        body_parts = [
-            b"--" + boundary,
-            b'Content-Disposition: form-data; name="content"; filename="main.py"',
-            b"Content-Type: application/octet-stream",
-            b"",
-            file_data,
-            b"--" + boundary + b"--",
-        ]
-        body_data = b"\r\n".join(body_parts)
-
-        code, _body = _pa_request(
-            "POST", url, token,
-            data=body_data,
-            content_type=f"multipart/form-data; boundary={boundary.decode()}",
+        ok = _upload_bytes_to_path(
+            config,
+            remote_path,
+            py_file.read_bytes(),
+            str(rel),
+            quiet=True,
         )
-        if code in (200, 201):
+        if ok:
             count += 1
             print(f"  [OK] {rel}")
         else:
             errors += 1
-            print(f"  [ERR] {rel}: HTTP {code}")
+            print(f"  [ERR] {rel}")
 
     if errors:
         print(f"  [WARN] {count} 个成功, {errors} 个失败")
@@ -799,6 +795,7 @@ def main() -> None:
     parser.add_argument("--reload", action="store_true", help="重载 PythonAnywhere Web App（需 API Token）")
     parser.add_argument("--all", action="store_true", dest="do_all", help="显式全自动: 构建->打包->上传->部署->重载（需 API Token）")
     parser.add_argument("--zip-only", action="store_true", help="仅重新打包 dist/（跳过 npm run build）")
+    parser.add_argument("--backend-only", action="store_true", help="仅上传后端 Python + WSGI 并重载（跳过前端构建/上传）")
     parser.add_argument("--init-config", action="store_true", help="生成配置文件模板")
     parser.add_argument("--username", help="PythonAnywhere 用户名（覆盖配置文件）")
     parser.add_argument("--api-token", help="PythonAnywhere API Token（覆盖配置文件）")
@@ -825,38 +822,41 @@ def main() -> None:
     has_api = bool(config.get("username") and config.get("api_token"))
 
     # 默认行为：无参且配了 Token → 全自动；无参且无 Token → 仅构建+打包
-    is_default_mode = not any([args.upload, args.reload, args.do_all, args.zip_only])
+    is_default_mode = not any([args.upload, args.reload, args.do_all, args.zip_only, args.backend_only])
 
     if is_default_mode:
         do_upload = has_api
         do_reload = has_api
     else:
-        do_upload = args.upload or args.do_all
-        do_reload = args.reload or args.do_all
+        do_upload = args.upload or args.do_all or args.backend_only
+        do_reload = args.reload or args.do_all or args.backend_only
 
-    if (args.upload or args.do_all) and not has_api:
+    if (args.upload or args.do_all or args.backend_only) and not has_api:
         print("[ERR] --upload/--all 需要配置 API Token")
         print("   请通过 --username/--api-token 传参，或配置 ~/.pythonanywhere")
         print("   或使用 --init-config 生成配置模板")
         sys.exit(1)
 
     # Phase 1: 构建前端
-    if not args.zip_only:
+    if not args.zip_only and not args.backend_only:
         _build_frontend()
 
     # Phase 2: 打包 zip
-    _create_zip()
+    if not args.backend_only:
+        _create_zip()
 
     # Phase 3: 上传 + 部署（dist + 后端 + WSGI + 捐赠图）
     if do_upload:
-        _upload_dist_files(config)
+        if not args.backend_only:
+            _upload_dist_files(config)
         _upload_backend_files(config)
         _ensure_hub_storage(config)
         _upload_wsgi(config)
-        _upload_arknights_runtime(config)
-        _upload_donation_utils(config)
-        _upload_donation_assets(config)
-        _upload_local_backend_zip(config)
+        if not args.backend_only:
+            _upload_arknights_runtime(config)
+            _upload_donation_utils(config)
+            _upload_donation_assets(config)
+            _upload_local_backend_zip(config)
 
     # Phase 4: 重载 + 验证
     if do_reload and has_api:

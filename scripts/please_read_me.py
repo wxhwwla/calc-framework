@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.17.5"
+_VERSION = "3.17.6"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,13 +438,28 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 22 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 修改 framework/src/calc_framework/ui/launcher/__init__.py
-# - 修改 framework/src/calc_framework/ui/launcher/runtime.py
-# - 修改 framework/src/calc_framework/ui/launcher/window.py
-# - 修改 framework/tests/ui/test_launcher_runtime.py
-# - 修改 scripts/main_launcher.py
 # - 修改 scripts/please_read_me.py
+# - 修改 tools/tests/test_data_profiles.py
+# - 修改 web/backend/api/adapter_assets.py
+# - 修改 web/backend/api/data.py
+# - 修改 web/backend/api/data_mutations.py
+# - 修改 web/backend/api/data_profiles.py
+# - 修改 web/backend/api/history.py
+# - 修改 web/backend/api/persistent_store.py
+# - 修改 web/backend/api/search.py
+# - 变更 web/backend/data/.keep
+# - 变更 web/backend/data/compute_history.json
+# - 变更 web/frontend/src/api/dataProfiles.ts
+# - 变更 web/frontend/src/components/designer/DataEditorTab.tsx
+# - 变更 web/frontend/src/components/designer/ProfileDataBrowser.tsx
+# - 变更 web/frontend/src/components/designer/ProfileDataEditor.tsx
+# - 变更 web/frontend/src/components/pack_designer/PackDataTab.tsx
+# - 变更 web/frontend/src/constants/dataProfileConfig.ts
+# - 变更 web/frontend/src/pages/DesignerPage.tsx
+# - 变更 web/frontend/src/utils/operationLog.ts
+# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 修改 web/wsgi_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

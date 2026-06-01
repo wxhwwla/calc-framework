@@ -41,90 +41,57 @@ def _find_by_name(data: list[dict[str, Any]], name: str) -> int | None:
 
 
 def create_character(data: dict[str, Any]) -> dict[str, str]:
-    raw = _load_json(CHARACTERS_PATH)
-    if _find_by_name(raw, data.get("名称", "")) is not None:
-        raise HTTPException(status_code=409, detail=f"角色 '{data.get('名称')}' 已存在")
-    raw.append(data)
-    _save_json(CHARACTERS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import create_entity_row
+
+    return create_entity_row("endfield", "characters", data)
 
 
 def update_character(name: str, data: dict[str, Any]) -> dict[str, str]:
-    raw = _load_json(CHARACTERS_PATH)
-    idx = _find_by_name(raw, name)
-    if idx is None:
-        raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
-    raw[idx] = data
-    _save_json(CHARACTERS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import update_entity_row
+
+    return update_entity_row("endfield", "characters", name, data)
 
 
 def delete_character(name: str) -> dict[str, str]:
-    raw = _load_json(CHARACTERS_PATH)
-    idx = _find_by_name(raw, name)
-    if idx is None:
-        raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
-    raw.pop(idx)
-    _save_json(CHARACTERS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import delete_entity_row
+
+    return delete_entity_row("endfield", "characters", name)
 
 
 def create_weapon(data: dict[str, Any]) -> dict[str, str]:
-    raw = _load_json(WEAPONS_PATH)
-    if _find_by_name(raw, data.get("名称", "")) is not None:
-        raise HTTPException(status_code=409, detail=f"武器 '{data.get('名称')}' 已存在")
-    raw.append(data)
-    _save_json(WEAPONS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import create_entity_row
+
+    return create_entity_row("endfield", "weapons", data)
 
 
 def update_weapon(name: str, data: dict[str, Any]) -> dict[str, str]:
-    raw = _load_json(WEAPONS_PATH)
-    idx = _find_by_name(raw, name)
-    if idx is None:
-        raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
-    raw[idx] = data
-    _save_json(WEAPONS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import update_entity_row
+
+    return update_entity_row("endfield", "weapons", name, data)
 
 
 def delete_weapon(name: str) -> dict[str, str]:
-    raw = _load_json(WEAPONS_PATH)
-    idx = _find_by_name(raw, name)
-    if idx is None:
-        raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
-    raw.pop(idx)
-    _save_json(WEAPONS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import delete_entity_row
+
+    return delete_entity_row("endfield", "weapons", name)
 
 
 def create_equipment(data: dict[str, Any]) -> dict[str, str]:
-    raw = _load_json(EQUIPMENTS_PATH)
-    if _find_by_name(raw, data.get("名称", "")) is not None:
-        raise HTTPException(status_code=409, detail=f"装备 '{data.get('名称')}' 已存在")
-    raw.append(data)
-    _save_json(EQUIPMENTS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import create_entity_row
+
+    return create_entity_row("endfield", "equipments", data)
 
 
 def update_equipment(name: str, data: dict[str, Any]) -> dict[str, str]:
-    raw = _load_json(EQUIPMENTS_PATH)
-    idx = _find_by_name(raw, name)
-    if idx is None:
-        raise HTTPException(status_code=404, detail=f"装备 '{name}' 未找到")
-    raw[idx] = data
-    _save_json(EQUIPMENTS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import update_entity_row
+
+    return update_entity_row("endfield", "equipments", name, data)
 
 
 def delete_equipment(name: str) -> dict[str, str]:
-    raw = _load_json(EQUIPMENTS_PATH)
-    idx = _find_by_name(raw, name)
-    if idx is None:
-        raise HTTPException(status_code=404, detail=f"装备 '{name}' 未找到")
-    raw.pop(idx)
-    _save_json(EQUIPMENTS_PATH, raw)
-    return {"message": "ok"}
+    from api.data_profiles import delete_entity_row
+
+    return delete_entity_row("endfield", "equipments", name)
 
 
 def inverse_formula_payload(type_: str, values: list[float]) -> dict[str, Any]:

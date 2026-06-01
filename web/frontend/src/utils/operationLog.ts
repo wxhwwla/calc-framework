@@ -4,7 +4,28 @@ interface LogEntry {
   detail: string;
 }
 
-let logs: LogEntry[] = [];
+const STORAGE_KEY = "calc-framework-operation-log";
+
+function loadLogs(): LogEntry[] {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistLogs(entries: LogEntry[]): void {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    // 存储满或隐私模式时静默降级
+  }
+}
+
+let logs: LogEntry[] = loadLogs();
 
 export function logOperation(action: string, detail: string = "") {
   logs.push({
@@ -12,6 +33,7 @@ export function logOperation(action: string, detail: string = "") {
     action,
     detail,
   });
+  persistLogs(logs);
 }
 
 export function getOperationLogs(): LogEntry[] {
@@ -31,4 +53,5 @@ export function exportLogsAsJson(): void {
 
 export function clearLogs(): void {
   logs = [];
+  persistLogs(logs);
 }

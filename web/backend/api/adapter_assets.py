@@ -106,7 +106,7 @@ def data_entity_summary(adapter_id: str) -> list[dict[str, Any]]:
         count = 0
         if ARKNIGHTS_OPERATORS_JSON.is_file():
             count = len(_load_json_list(ARKNIGHTS_OPERATORS_JSON))
-        return [{"key": "operators", "label": "干员", "count": count, "read_only": True}]
+        return [{"key": "operators", "label": "干员", "count": count, "read_only": False}]
 
     return []
 

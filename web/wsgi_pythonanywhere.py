@@ -816,6 +816,13 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
     sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
 
     try:
+        from api.data_profiles import (
+            create_entity_row,
+            delete_entity_row,
+            list_entity_rows,
+            profiles_metadata,
+            update_entity_row,
+        )
         from api.data_mutations import (
             create_character,
             create_equipment,
@@ -835,9 +842,25 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             return _json(start_response, inverse_formula_payload(payload["type"], payload["values"]))
 
         raw = _read_body(environ)
-        if not raw:
+        if method in ("POST", "PUT", "DELETE") and not raw and not sub.startswith("profiles/"):
             return _http_error(start_response, "empty body", 400)
-        payload = json.loads(raw.decode("utf-8"))
+        payload = json.loads(raw.decode("utf-8")) if raw else {}
+
+        if sub.startswith("profiles/"):
+            m = re.match(r"^profiles/([^/]+)/([^/]+)$", sub)
+            if method == "POST" and m:
+                return _json(start_response, create_entity_row(m.group(1), m.group(2), payload))
+            m = re.match(r"^profiles/([^/]+)/([^/]+)/(.+)$", sub)
+            if m and method == "PUT":
+                return _json(
+                    start_response,
+                    update_entity_row(m.group(1), m.group(2), unquote(m.group(3)), payload),
+                )
+            if m and method == "DELETE":
+                return _json(
+                    start_response,
+                    delete_entity_row(m.group(1), m.group(2), unquote(m.group(3))),
+                )
 
         if method == "POST":
             if sub == "characters":
@@ -898,6 +921,23 @@ def _handle_data_api(environ, start_response):
         return _http_error(start_response, "not supported", 501)
 
     sub = path[len("/api/data/") :]
+
+    if sub == "profiles":
+        from api.data_profiles import profiles_metadata
+
+        return _json(start_response, profiles_metadata())
+
+    m = re.match(r"^profiles/([^/]+)/([^/]+)/detail/all$", sub)
+    if m:
+        from api.data_profiles import list_entity_rows
+
+        return _json(start_response, list_entity_rows(m.group(1), m.group(2), full=True))
+
+    m = re.match(r"^profiles/([^/]+)/([^/]+)$", sub)
+    if m:
+        from api.data_profiles import list_entity_rows
+
+        return _json(start_response, list_entity_rows(m.group(1), m.group(2)))
 
     if sub == "summary":
         c = _read_json(_DATA / "characters.json") or []

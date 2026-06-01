@@ -699,21 +699,34 @@ async def run_search_stream(req: SearchRequest):
     )
 
 
-# 搜索历史（内存 Ring Buffer，最近 10 次）
-_search_history: list[dict] = []
+# 搜索历史（文件持久化，最近 10 次）
+from api.persistent_store import load_list, save_list
+
+_SEARCH_STORE_KEY = "search_history"
+_search_history: list[dict] = load_list(_SEARCH_STORE_KEY)
 
 
-@router.get("/history")
 def list_search_history():
     """获取搜索历史列表。"""
     return list(reversed(_search_history))
 
 
-@router.post("/history")
 def save_search_history(entry: dict):
     """保存一次搜索记录。"""
+    global _search_history
     _search_history.append(entry)
     while len(_search_history) > 10:
         _search_history.pop(0)
+    save_list(_SEARCH_STORE_KEY, _search_history)
     return {"message": "ok"}
+
+
+@router.get("/history")
+def list_search_history_route():
+    return list_search_history()
+
+
+@router.post("/history")
+def save_search_history_route(entry: dict):
+    return save_search_history(entry)
 

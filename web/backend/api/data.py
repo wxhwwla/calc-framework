@@ -515,3 +515,48 @@ async def inverse_formula(req: InverseRequest):
 
     return InverseResponse(**result)
 
+
+# ── 多游戏 profile（对齐桌面 data_editor/profiles.py）────────────────
+
+
+@router.get("/profiles", summary="数据录入 profile 列表")
+async def list_data_profiles():
+    from api.data_profiles import profiles_metadata
+
+    return profiles_metadata()
+
+
+@router.get("/profiles/{profile_id}/{entity_key}", summary="按 profile 列出实体")
+async def list_profile_entity(profile_id: str, entity_key: str):
+    from api.data_profiles import list_entity_rows
+
+    return list_entity_rows(profile_id, entity_key)
+
+
+@router.get("/profiles/{profile_id}/{entity_key}/detail/all", summary="完整实体列表")
+async def list_profile_entity_full(profile_id: str, entity_key: str):
+    from api.data_profiles import list_entity_rows
+
+    return list_entity_rows(profile_id, entity_key, full=True)
+
+
+@router.post("/profiles/{profile_id}/{entity_key}", summary="新增实体")
+async def create_profile_entity(profile_id: str, entity_key: str, data: dict[str, Any]):
+    from api.data_profiles import create_entity_row
+
+    return create_entity_row(profile_id, entity_key, data)
+
+
+@router.put("/profiles/{profile_id}/{entity_key}/{name}", summary="更新实体")
+async def update_profile_entity(profile_id: str, entity_key: str, name: str, data: dict[str, Any]):
+    from api.data_profiles import update_entity_row
+
+    return update_entity_row(profile_id, entity_key, name, data)
+
+
+@router.delete("/profiles/{profile_id}/{entity_key}/{name}", summary="删除实体")
+async def delete_profile_entity(profile_id: str, entity_key: str, name: str):
+    from api.data_profiles import delete_entity_row
+
+    return delete_entity_row(profile_id, entity_key, name)
+
