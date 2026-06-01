@@ -152,3 +152,81 @@ Feature / bug fix / code change → default to `design-then-build`:
 2. TDD: red → green → refactor
 3. Low-risk ops (tests, edits, deps installs) → auto-consent
 4. High-risk ops (upload script, git push, destructive) → ask user first
+
+## Full Release Cycle Workflow
+
+When a dev cycle goes from planning to delivery, follow these steps **in order**, confirming each before moving to the next.
+
+### Phase 1: Planning & Goals
+1. **Set goal** — What to do (feature/bug/refactor/docs). Write to `.trae/plans/当前任务计划.md`.
+2. **Confirm scope** — Stick to the plan; no scope creep.
+3. **Pre-read** — Read required docs per the pre-change reading rules.
+
+### Phase 2: Implementation
+4. **Implement** — Per `design-then-build` workflow.
+
+### Phase 3: Documentation Sync
+5. **Update docs** — Per task completion protocol. **Update docs right after code changes, not at the end.**
+
+### Phase 4: Verification
+6. **Run tests** — Full suite pass:
+   ```bash
+   python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q
+   ```
+   - For new modules, write tests >80% line coverage.
+7. **Check deps** — If new pip dependencies added:
+   - Update `pyproject.toml` `[project.dependencies]`
+   - Confirm deps in `setup.cfg` / `requirements*.txt`
+
+### Phase 5: Entry Points
+8. **Verify entry points** — Check all scripts under `scripts/`:
+   - `scripts/main.py` (endfield calculator)
+   - `scripts/main_arknights.py` (arknights)
+   - `scripts/main_designer.py` (data designer)
+   - `scripts/main_build.py` (packaging)
+   - `scripts/启动本地服务器.bat` (Web local)
+   - Confirm new features have corresponding entry points using `_path_setup` pattern.
+
+### Phase 6: Bug Check
+9. **Local bug check**:
+   - **Web**: `cd web/frontend; npx tsc --noEmit` (0 type errors); `npm run lint` (0 lint errors)
+   - **Desktop**: Launch GUI, manually verify core functions
+   - **Package**: If packaging logic changed, run `python scripts/main_build.py --target {target}`
+10. **Check .gitignore** — Ensure no build artifacts are missing from ignore list (`dist/`, `build/`, `*.spec`, `.venv/`, `__pycache__/`, `*.log`).
+
+### Phase 7: Full Update
+11. **Full doc update** — Re-check all affected docs match current code:
+    - `docs/会话接续手册.md` — date, §3 tree, §4 recent work
+    - `docs/操作指令集.md` — new commands/flags
+    - `docs/框架适配新游戏指南.md` — new adapter packages, API changes
+    - `docs/代码结构规范.md` — dir overflow records
+    - `docs/制造游戏计算器完整流程.md` — GUI changes
+    - `README.md` (root + `games/*/`) — features, dir listing
+    - `CONTEXT.md` — new terms
+12. **Package & Web update**:
+    - If releasing local exe: `python scripts/main_build.py --target {target}`
+    - If Web changed: confirm `npm run build` passes, backend deps locked
+13. **Delete plan file** — Remove `.trae/plans/当前任务计划.md`
+
+### Phase 8: Release
+14. **Output summary** — Completed items + pending items + staging area status
+15. **Ask user** — "Push to GitHub? Need anything else?"
+16. **User executes upload** — Default: user runs `python github_upload_module.py` (optional `--minor` / `--no-bump`). Agent **must not** upload proactively.
+
+## Rule Sync
+
+This repo has multiple rule/agent config files:
+
+| File | Purpose | Environment |
+|------|---------|-------------|
+| `.trae/rules/project_rules.md` | Primary rules (most complete) | Trae IDE |
+| `.cursorrules` | Cursor-compatible rules | Cursor IDE |
+| `AGENTS.md` | Project-level agent skills | All |
+
+### Sync Rules
+
+1. **Source of truth**: `.trae/rules/project_rules.md`
+2. **When modifying rules**: Update `project_rules.md` first, **then immediately sync** to `.cursorrules` (same sections, same version).
+3. **What NOT to sync**: Environment-specific rules (sandbox safety is sandbox-only), IDE-specific configuration.
+4. **Check on each update**: After updating `project_rules.md`, check if `.cursorrules` is stale; if so, sync immediately.
+5. **Consequence**: Failure to sync causes inconsistent agent behavior across IDEs.
