@@ -179,7 +179,6 @@ def main() -> None:
     sub.add_parser("plugin", help="插件打包/安装/目录管理", add_help=False)
     sub.add_parser("check-origin", help="AI 代码来源/版权检测", add_help=False)
     sub.add_parser("installer", help="NSIS 安装包构建/检查", add_help=False)
-    sub.add_parser("hub", help="Calc Hub 市场服务", add_help=False)
 
     args, _ = parser.parse_known_args()
     if not args.command:
