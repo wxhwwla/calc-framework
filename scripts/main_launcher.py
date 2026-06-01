@@ -1,24 +1,48 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""启动器 — 根入口。
+"""统一启动器 — 根入口（ADR-0012 Phase 1）。
 
-打开 CalcPackViewer：浏览/验证 `.calcpack` 配置包（任意游戏 adapter）。
-用法:
+默认打开 PySide6 启动器：列出已安装适配器、工具入口、打开 .calcpack。
+若命令行传入 ``*.calcpack`` 路径则直接进入 CalcPackViewer。
+
+用法::
+
   python scripts/main_launcher.py
   python scripts/main_launcher.py path/to/game.calcpack
 
-桌面完整计算器请用 `scripts/main.py`（终末地）或 `scripts/main_arknights.py`（明日方舟）。
+完整桌面计算器也可从启动器内启动，或直接::
+
+  python scripts/main.py          # 终末地
+  python scripts/main_arknights.py  # 明日方舟
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _path_setup import ensure_root, ensure_framework_src
+
 ensure_root()
 ensure_framework_src()
 
-from calc_framework.ui.viewer import main as viewer_main
+
+def _open_calcpack_viewer(path: str) -> None:
+    from calc_framework.ui.viewer import main as viewer_main
+
+    sys.argv = [sys.argv[0], path]
+    viewer_main()
+
+
+def main() -> None:
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    if arg and Path(arg).suffix.lower() == ".calcpack":
+        _open_calcpack_viewer(arg)
+        return
+    from calc_framework.ui.launcher import run_gui_launcher
+
+    run_gui_launcher()
+
 
 if __name__ == "__main__":
-    viewer_main()
+    main()
