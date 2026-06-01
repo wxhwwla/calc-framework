@@ -29,6 +29,7 @@ import argparse
 import configparser
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -134,6 +135,196 @@ def _create_zip() -> None:
 
 
 # ── 阶段 3: 上传到 PythonAnywhere ────────────────────────────────────────────────
+
+
+def _upload_bytes_to_path(
+    config: dict, remote_path: str, file_data: bytes, label: str, *, quiet: bool = False,
+) -> bool:
+    """通过 Files API 上传单个文件。"""
+    username = config.get("username")
+    token = config.get("api_token")
+    if not username or not token:
+        print(f"  [ERR] {label}: 未配置 API Token")
+        return False
+
+    url = _PA_FILES_API.format(username=username, path=remote_path)
+    boundary = b"----pa-deploy-boundary"
+    body_parts = [
+        b"--" + boundary,
+        b'Content-Disposition: form-data; name="content"; filename="upload.bin"',
+        b"Content-Type: application/octet-stream",
+        b"",
+        file_data,
+        b"--" + boundary + b"--",
+    ]
+    body_data = b"\r\n".join(body_parts)
+    code, body = _pa_request(
+        "POST", url, token,
+        data=body_data,
+        content_type=f"multipart/form-data; boundary={boundary.decode()}",
+    )
+    if code in (200, 201):
+        if not quiet:
+            print(f"  [OK] {label} → {remote_path}")
+        return True
+    print(f"  [ERR] {label} HTTP {code}: {body[:300]}")
+    return False
+
+
+def _render_wsgi_content(config: dict) -> str:
+    """按配置生成 WSGI 文件内容（勿使用 application = app）。"""
+    username = config["username"]
+    project = config.get("project", "calc-framework")
+    venv = config.get("venv", project)
+    src_path = _REPO_ROOT / "web" / "wsgi_pythonanywhere.py"
+    if not src_path.is_file():
+        raise FileNotFoundError(f"未找到 WSGI 模板: {src_path}")
+    text = src_path.read_text(encoding="utf-8")
+    text = re.sub(r'^PA_USERNAME = ".*"$', f'PA_USERNAME = "{username}"', text, count=1, flags=re.M)
+    text = re.sub(r'^PA_PROJECT = ".*"$', f'PA_PROJECT = "{project}"', text, count=1, flags=re.M)
+    text = re.sub(r'^PA_VENV = ".*"$', f'PA_VENV = "{venv}"', text, count=1, flags=re.M)
+    return text
+
+
+def _upload_wsgi(config: dict) -> None:
+    """上传 WSGI 到 /var/www/（修复 missing argument 'send'）。"""
+    print("\n[UP-WSGI] 上传 WSGI 入口（替换 application=app）...")
+    username = config["username"]
+    try:
+        content = _render_wsgi_content(config).encode("utf-8")
+    except FileNotFoundError as e:
+        print(f"  [ERR] {e}")
+        sys.exit(1)
+    remote = f"/var/www/{username}_pythonanywhere_com_wsgi.py"
+    if not _upload_bytes_to_path(config, remote, content, "WSGI"):
+        print("  [WARN] WSGI 上传失败。请在 PA Bash 手动执行:")
+        print(f"    cp ~/{config.get('project', 'calc-framework')}/web/wsgi_pythonanywhere.py {remote}")
+        sys.exit(1)
+
+
+def _upload_directory_tree(
+    config: dict,
+    local_root: Path,
+    remote_base: str,
+    *,
+    suffixes: tuple[str, ...] = (".py", ".json"),
+    skip_parts: frozenset[str] = frozenset({"tests", "__pycache__"}),
+    label: str = "",
+) -> tuple[int, int]:
+    """递归上传目录下指定后缀文件。返回 (成功数, 失败数)。"""
+    if not local_root.is_dir():
+        print(f"  [SKIP] {label or local_root.name}: 本地目录不存在 {local_root}")
+        return 0, 0
+
+    remote_base = remote_base.rstrip("/") + "/"
+    ok, err = 0, 0
+    files = sorted(
+        p for p in local_root.rglob("*")
+        if p.is_file() and p.suffix in suffixes and not any(s in skip_parts for s in p.parts)
+    )
+    total = len(files)
+    if label:
+        print(f"  {label}: {total} 个文件 → {remote_base}")
+    for i, fpath in enumerate(files, 1):
+        rel = fpath.relative_to(local_root).as_posix()
+        remote = remote_base + rel
+        if _upload_bytes_to_path(config, remote, fpath.read_bytes(), rel, quiet=True):
+            ok += 1
+        else:
+            err += 1
+            print(f"  [ERR] 失败: {rel}")
+        if total > 20 and i % 50 == 0:
+            print(f"    ... {i}/{total}")
+    print(f"  [{label or 'tree'}] {ok} 成功, {err} 失败")
+    return ok, err
+
+
+def _upload_arknights_runtime(config: dict) -> None:
+    """上传 games.arknights、适配器 DAG 与干员 JSON（PA 上 import 依赖）。"""
+    print("\n[UP-AK] 上传明日方舟运行时...")
+    username = config["username"]
+    project = config.get("project", "calc-framework")
+    home = f"/home/{username}/{project}"
+
+    games_init = _REPO_ROOT / "games" / "__init__.py"
+    if games_init.is_file():
+        _upload_bytes_to_path(
+            config, f"{home}/games/__init__.py", games_init.read_bytes(), "games/__init__.py",
+        )
+
+    _upload_directory_tree(
+        config,
+        _REPO_ROOT / "games" / "arknights",
+        f"{home}/games/arknights",
+        suffixes=(".py",),
+        label="games/arknights",
+    )
+    _upload_directory_tree(
+        config,
+        _REPO_ROOT / "framework" / "adapters" / "arknights",
+        f"{home}/framework/adapters/arknights",
+        suffixes=(".py", ".json"),
+        label="framework/adapters/arknights",
+    )
+
+    parsed = _REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed"
+    if parsed.is_dir():
+        _upload_directory_tree(
+            config,
+            parsed,
+            f"{home}/tools/arknights_scout/output/parsed",
+            suffixes=(".json",),
+            label="arknights 干员数据",
+        )
+    else:
+        print("  [WARN] 未找到 tools/arknights_scout/output/parsed，干员列表将为空")
+
+
+def _upload_donation_assets(config: dict) -> None:
+    """上传捐赠二维码到 resources/donation/。"""
+    donation_dir = _REPO_ROOT / "resources" / "donation"
+    if not donation_dir.is_dir():
+        return
+    username = config["username"]
+    project = config.get("project", "calc-framework")
+    files = [p for p in donation_dir.iterdir() if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")]
+    if not files:
+        print("\n[UP-DON] 跳过捐赠图片（resources/donation/ 无图片）")
+        return
+    print(f"\n[UP-DON] 上传 {len(files)} 个捐赠图片...")
+    for fp in files:
+        remote = f"/home/{username}/{project}/resources/donation/{fp.name}"
+        _upload_bytes_to_path(config, remote, fp.read_bytes(), fp.name)
+
+
+def _verify_deployment(config: dict) -> None:
+    """重载后检查关键 API 是否返回 JSON（非 HTML）。"""
+    domain = config.get("domain") or f"{config['username']}.pythonanywhere.com"
+    print(f"\n[CHK] 验证 https://{domain} ...")
+    time.sleep(4)
+    checks = [
+        (f"https://{domain}/api/health", '"status"'),
+        (f"https://{domain}/api/layout", '"sections"'),
+        (f"https://{domain}/api/arknights/operators", '"operators"'),
+    ]
+    ok = True
+    for url, needle in checks:
+        try:
+            with urlopen(url, timeout=30) as resp:
+                body = resp.read(800).decode("utf-8", errors="replace")
+            if needle in body and not body.lstrip().startswith("<"):
+                print(f"  [OK] {url}")
+            else:
+                print(f"  [FAIL] {url} 返回非预期内容: {body[:120]!r}")
+                ok = False
+        except Exception as e:
+            print(f"  [FAIL] {url}: {e}")
+            ok = False
+    if not ok:
+        print("\n  [HINT] 若仍报 missing argument 'send'，请打开 PA Web → WSGI configuration file")
+        print("  确认路径为 /var/www/你的用户名_pythonanywhere_com_wsgi.py，且内容为 wsgi_pythonanywhere.py（无 application=app）")
+    else:
+        print("  [OK] API 正常，请 Ctrl+F5 刷新 /compute")
 
 
 def _pa_request(method: str, url: str, token: str, data: bytes | None = None,
@@ -451,6 +642,7 @@ def _print_server_instructions(zip_path: Path) -> None:
     print(f"   source ~/.virtualenvs/calc-framework/bin/activate")
     print(f"   pip install -q -r web/backend/requirements.txt")
     print(f"   pip install -q -e framework/")
+    print(f"   （--all 会自动上传 WSGI；或手动 cp web/wsgi_pythonanywhere.py /var/www/用户名_pythonanywhere_com_wsgi.py）")
     print(f"   cd ~/calc-framework/web/frontend")
     print(f"   rm -rf dist")
     print(f"   mkdir -p dist && cd dist")
@@ -533,15 +725,20 @@ def main() -> None:
     # Phase 2: 打包 zip
     _create_zip()
 
-    # Phase 3: 上传 + 部署（上传 zip + 逐文件上传 dist + 后端代码 + 本地后端 zip）
+    # Phase 3: 上传 + 部署（dist + 后端 + WSGI + 捐赠图）
     if do_upload:
         _upload_dist_files(config)
         _upload_backend_files(config)
+        _upload_wsgi(config)
+        _upload_arknights_runtime(config)
+        _upload_donation_assets(config)
         _upload_local_backend_zip(config)
 
-    # Phase 4: 重载
+    # Phase 4: 重载 + 验证
     if do_reload and has_api:
         _reload_webapp(config)
+        if do_upload:
+            _verify_deployment(config)
     elif not do_upload and not do_reload:
         _print_server_instructions(_ZIP_PATH)
     elif not has_api:

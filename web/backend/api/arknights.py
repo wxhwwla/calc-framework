@@ -54,8 +54,7 @@ def _load_operator(name: str) -> dict:
         raise HTTPException(status_code=500, detail=f"干员数据损坏: {name}")
 
 
-@router.get("/operators")
-async def list_operators():
+def list_operators_payload() -> dict:
     if not _DATA_DIR.is_dir():
         raise HTTPException(status_code=500, detail="干员数据目录不存在")
     names = sorted(
@@ -65,10 +64,9 @@ async def list_operators():
     return {"operators": names, "count": len(names)}
 
 
-@router.get("/operators/{name}")
-async def get_operator(name: str):
+def operator_summary_payload(name: str) -> dict:
     data = _load_operator(name)
-    summary = {
+    return {
         "名称": data.get("名称"),
         "星级": data.get("星级"),
         "职业": data.get("职业"),
@@ -80,13 +78,10 @@ async def get_operator(name: str):
         "技能": data.get("技能"),
         "潜能": data.get("潜能"),
     }
-    return summary
 
 
-@router.post("/compute", response_model=ComputeResponse)
-async def compute_damage(req: ComputeRequest):
+def compute_damage_payload(req: ComputeRequest) -> ComputeResponse:
     operator = _load_operator(req.operator_name)
-
     try:
         result = compute_snapshot_with_dag(
             operator,
@@ -100,7 +95,7 @@ async def compute_damage(req: ComputeRequest):
             res_penetration=req.res_penetration,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"计算失败: {e}")
+        raise HTTPException(status_code=400, detail=f"计算失败: {e}") from e
 
     return ComputeResponse(
         operator_name=req.operator_name,
@@ -110,3 +105,18 @@ async def compute_damage(req: ComputeRequest):
         true_damage=result.outputs.get("真伤伤害", 0.0),
         execution_count=len(result.execution_order),
     )
+
+
+@router.get("/operators")
+def list_operators():
+    return list_operators_payload()
+
+
+@router.get("/operators/{name}")
+def get_operator(name: str):
+    return operator_summary_payload(name)
+
+
+@router.post("/compute", response_model=ComputeResponse)
+def compute_damage(req: ComputeRequest):
+    return compute_damage_payload(req)

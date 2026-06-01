@@ -23,6 +23,7 @@ import type { DagVariable, ControlSpec } from "../utils/controlInference";
 import { inferControl, getUserInputVariables } from "../utils/controlInference";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import LazySection from "./LazySection";
+import DonationImages from "./calculator/DonationImages";
 
 /** layout.json Section 类型 */
 export interface LayoutSection {
@@ -250,7 +251,8 @@ export default function WebComputeSheet({
             if (section.widget_type === "donation") {
               return (
                 <Paper key={section.id} sx={{ p: 2, mb: 2, textAlign: "center" }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <DonationImages maxWidth={220} />
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                     {section.widget_config?.text as string || "感谢使用！"}
                   </Typography>
                 </Paper>

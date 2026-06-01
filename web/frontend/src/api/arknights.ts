@@ -46,19 +46,19 @@ export interface ComputeResponse {
   execution_count: number;
 }
 
+import { readApiJson } from "../utils/readApiJson";
+
 const BASE = "/api/arknights";
 
 export async function fetchOperators(): Promise<string[]> {
   const r = await fetch(`${BASE}/operators`);
-  if (!r.ok) throw new Error(`获取干员列表失败: ${r.statusText}`);
-  const data = await r.json();
+  const data = await readApiJson<{ operators: string[] }>(r);
   return data.operators;
 }
 
 export async function fetchOperatorDetail(name: string): Promise<OperatorSummary> {
   const r = await fetch(`${BASE}/operators/${encodeURIComponent(name)}`);
-  if (!r.ok) throw new Error(`获取干员详情失败: ${r.statusText}`);
-  return r.json();
+  return readApiJson<OperatorSummary>(r);
 }
 
 export async function computeDamage(req: ComputeRequest): Promise<ComputeResponse> {
@@ -67,9 +67,5 @@ export async function computeDamage(req: ComputeRequest): Promise<ComputeRespons
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
-  if (!r.ok) {
-    const text = await r.text();
-    throw new Error(`计算失败 (${r.status}): ${text}`);
-  }
-  return r.json();
+  return readApiJson<ComputeResponse>(r);
 }

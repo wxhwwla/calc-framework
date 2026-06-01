@@ -45,40 +45,29 @@ class EvaluateResponse(BaseModel):
 
 
 
-@router.post("/evaluate", response_model=EvaluateResponse)
-
-async def evaluate(req: EvaluateRequest):
-
+def evaluate_payload(req: EvaluateRequest) -> EvaluateResponse:
     try:
-
         pkg = _manager.load(req.adapter)
-
     except KeyError as e:
-
-        raise HTTPException(status_code=404, detail=str(e))
-
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
-
-        raise HTTPException(status_code=500, detail=str(e))
-
-
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     try:
-
         result = pkg.dag_service.evaluate(req.context)
-
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return EvaluateResponse(
-
         outputs=result.outputs,
-
         node_values={k: v for k, v in result.node_values.items()},
-
         execution_order=result.execution_order,
-
     )
+
+
+@router.post("/evaluate", response_model=EvaluateResponse)
+def evaluate(req: EvaluateRequest):
+    return evaluate_payload(req)
 
 
 
@@ -158,10 +147,7 @@ _WEAPONS_PATH = _DATA / "weapons.json"
 
 
 
-@router.post("/snapshot")
-
-def snapshot(req: SnapshotRequest):
-
+def snapshot_payload(req: SnapshotRequest) -> dict:
     from games.endfield.gui_design.presentation.damage_snapshot import build_damage_snapshot
 
     chars = _load_json(_CHARACTERS_PATH)
@@ -271,6 +257,11 @@ def snapshot(req: SnapshotRequest):
     except Exception as e:
 
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/snapshot")
+def snapshot(req: SnapshotRequest):
+    return snapshot_payload(req)
 
 
 class CompareEntry(BaseModel):

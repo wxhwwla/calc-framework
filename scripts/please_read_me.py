@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.28"
+_VERSION = "3.15.29"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,8 +438,26 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 20 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 "docs//346/225/260/346/215/256/346/235/245/346/272/220/344/270/216/350/256/270/345/217/257.md"
+# - 变更 "docs/PythonAnywhere-/351/203/250/347/275/262/346/214/207/345/215/227.md"
+# - 修改 games/endfield/tests/utils/test_donation_paths.py
 # - 修改 scripts/please_read_me.py
+# - 修改 utils/gui/donation.py
+# - 修改 web/backend/api/arknights.py
+# - 修改 web/backend/api/compute.py
+# - 修改 web/backend/api/layout.py
+# - 修改 web/backend/main.py
+# - 变更 web/backend/requirements.txt
+# - 变更 web/frontend/src/api/arknights.ts
+# - 变更 web/frontend/src/components/WebComputeSheet.tsx
+# - 变更 web/frontend/src/components/calculator/DonationDialog.tsx
+# - 变更 web/frontend/src/components/calculator/DonationImages.tsx
+# - 变更 web/frontend/src/constants/donation.ts
+# - 变更 web/frontend/src/utils/readApiJson.ts
+# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 变更 web/scripts/deploy_server.sh
+# - 修改 web/wsgi_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

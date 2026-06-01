@@ -1,25 +1,25 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box } from "@mui/material";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,
+} from "@mui/material";
+import DonationImages from "./DonationImages";
 
 interface DonationDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
+const DONATION_TEXT =
+  "感谢使用！如果觉得有用，欢迎通过微信赞赏或爱发电支持开发者。\n\n" +
+  "捐赠纯属自愿，不构成购买软件的对价，不授予商业使用授权。";
+
 export default function DonationDialog({ open, onClose }: DonationDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>自愿捐赠</DialogTitle>
       <DialogContent dividers>
-        <Typography variant="body2" paragraph>
-          本应用完全免费开源。如果觉得好用，可以自愿支持作者。
-        </Typography>
-        <Box sx={{ textAlign: "center", py: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            暂未配置捐赠方式
-          </Typography>
-        </Box>
-        <Typography variant="caption" color="text.secondary">
-          所有捐赠将用于服务器维护和持续开发。
+        <DonationImages />
+        <Typography variant="body2" sx={{ whiteSpace: "pre-line", mt: 1 }}>
+          {DONATION_TEXT}
         </Typography>
       </DialogContent>
       <DialogActions>

@@ -81,8 +81,19 @@ app.include_router(history_router)
 app.include_router(ocr_router)
 app.include_router(arknights_router)
 
-# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# 捐赠二维码（与 GUI resources/donation/ 同源）
+_DONATION_DIR = _REPO_ROOT / "resources" / "donation"
+if _DONATION_DIR.is_dir():
+    app.mount(
+        "/api/donation",
+        StaticFiles(directory=str(_DONATION_DIR)),
+        name="donation",
+    )
+    logger.info("捐赠静态资源已挂载: %s", _DONATION_DIR)
+
+# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
 _FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
 if _FRONTEND_DIST.is_dir():
     app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")

@@ -536,7 +536,22 @@ A: PythonAnywhere Web 页面 → **Logs** → **Error log**。
 A: WSGI 文件中 `sys.path.insert(0, str(_BASE / "backend"))` 路径不正确，或者 `backend/` 下没有 `main.py`。
 
 ### Q: `TypeError: FastAPI.__call__() missing 1 required positional argument: 'send'`
-A: 没有使用 `ASGIMiddleware` 包装，直接 `from main import app; application = app` 会报此错。必须用 `a2wsgi.ASGIMiddleware` 桥接。
+A: 在 WSGI 文件里写了 `application = app`。**不要**这样写。请改用仓库内现成模板：
+
+```bash
+cp ~/calc-framework/web/wsgi_pythonanywhere.py /var/www/你的用户名_pythonanywhere_com_wsgi.py
+```
+
+然后在 Web 页面 **Reload**。该模板用同步代码处理 `/api/data/*`、`/api/arknights/*`、`/api/donation/*`，并托管 `web/frontend/dist/`。
+
+### Q: `RuntimeError: multipart_incorrect_install_error`
+A: 虚拟环境未安装 `python-multipart`。在 Bash 中：
+
+```bash
+workon calc-framework
+pip install python-multipart
+pip install -r ~/calc-framework/web/backend/requirements.txt
+```
 
 ### Q: 页面转圈但 HTML 能加载
 A: 前端 JS 发起的 API 请求卡住了。先在浏览器访问 `/api/health` 测试，如果也转圈，说明 PythonAnywhere 的 uWSGI 不支持 async event loop，`a2wsgi.ASGIMiddleware` 无法正常处理 FastAPI 的 `async def` 端点。

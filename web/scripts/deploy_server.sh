@@ -62,6 +62,7 @@ if [ "$DO_PIP" = true ]; then
     source ~/.virtualenvs/calc-framework/bin/activate
     pip install -q -r web/backend/requirements.txt
     pip install -q -e framework/
+    pip install -q python-multipart a2wsgi
     echo "  ✅ Python 依赖安装完成"
 else
     echo ""
@@ -126,6 +127,8 @@ echo "✅ 服务器端部署完成！"
 echo "========================================"
 echo ""
 echo "下一步:"
-echo "  请在 PythonAnywhere Web 页面点击 Reload"
+echo "  1) 更新 WSGI（首次或报错 missing 'send' 时必做）:"
+echo "     cp ~/$PROJECT/web/wsgi_pythonanywhere.py /var/www/\${USER}_pythonanywhere_com_wsgi.py"
+echo "  2) 请在 PythonAnywhere Web 页面点击 Reload"
 echo "  或从本地执行: python web/scripts/deploy_pythonanywhere.py --reload"
 echo ""
