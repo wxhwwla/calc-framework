@@ -26,11 +26,12 @@ export interface FixedLoadoutSelection {
 
 interface FixedLoadoutPanelProps {
   onChange?: (selection: FixedLoadoutSelection | null) => void;
+  equipmentScope?: string;
 }
 
 const NO_FIX_LABEL = "（不固定）";
 
-export default function FixedLoadoutPanel({ onChange }: FixedLoadoutPanelProps) {
+export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoadoutPanelProps) {
   const [catalog, setCatalog] = useState<Record<string, { 名称: string }[]>>({});
   const [selection, setSelection] = useState<FixedLoadoutSelection>({
     chest: null,
@@ -41,7 +42,7 @@ export default function FixedLoadoutPanel({ onChange }: FixedLoadoutPanelProps) 
 
   useEffect(() => {
     fetchEquipmentCatalog().then(setCatalog).catch(() => {});
-  }, []);
+  }, [equipmentScope]);
 
   const hasAnyFixed = useMemo(
     () => Object.values(selection).some((v) => v !== null),

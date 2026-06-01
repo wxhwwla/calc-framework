@@ -34,6 +34,9 @@ import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
 import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
 import SearchSettingsPanel from "../components/calculator/SearchSettingsPanel";
 import HelpDialog from "../components/calculator/HelpDialog";
+import DataSourceDialog from "../components/calculator/DataSourceDialog";
+import DonationDialog from "../components/calculator/DonationDialog";
+import { logOperation, exportLogsAsJson } from "../utils/operationLog";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate, fetchSnapshot, type DamageSnapshot } from "../api/compute";
@@ -114,6 +117,8 @@ export default function ComputePage() {
   const [buffValues, setBuffValues] = useState<Record<string, number>>({});
   const [searchSettings, setSearchSettings] = useState({ topN: 10, workers: 4, damageComponent: "skill_and_abnormal" });
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [dataSourceOpen, setDataSourceOpen] = useState(false);
+  const [donationOpen, setDonationOpen] = useState(false);
 
   useEffect(() => {
     fetchLayout().then(setLayout).catch(() => {});
@@ -233,6 +238,7 @@ export default function ComputePage() {
       }
     }
 
+    logOperation("evaluate", `${selectedChar}+${selectedWeapon} Lv.${charLevel}/${weaponLevel}`);
     try {
       useComputeStore.setState({ loading: true, error: null });
       const evalResult = await evaluate(adapter, context);
@@ -505,13 +511,34 @@ export default function ComputePage() {
                     截图识装
                   </Button>
                 </Box>
-                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setHelpDialogOpen(true)}
                   >
                     使用说明
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setDataSourceOpen(true)}
+                  >
+                    数据来源
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setDonationOpen(true)}
+                  >
+                    捐赠
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => { logOperation("export_log"); exportLogsAsJson(); }}
+                  >
+                    导出日志
                   </Button>
                   <Button
                     variant="outlined"
@@ -529,7 +556,7 @@ export default function ComputePage() {
                   </Button>
                 </Box>
               </Paper>
-              <FixedLoadoutPanel onChange={setFixedLoadout} />
+              <FixedLoadoutPanel onChange={setFixedLoadout} equipmentScope={equipmentScope} />
               <MultiSkillPanel
                 charData={charData}
                 skillLevels={[1, 1, 1]}
@@ -603,6 +630,16 @@ export default function ComputePage() {
       <HelpDialog
         open={helpDialogOpen}
         onClose={() => setHelpDialogOpen(false)}
+      />
+
+      <DataSourceDialog
+        open={dataSourceOpen}
+        onClose={() => setDataSourceOpen(false)}
+      />
+
+      <DonationDialog
+        open={donationOpen}
+        onClose={() => setDonationOpen(false)}
       />
     </Box>
   );
