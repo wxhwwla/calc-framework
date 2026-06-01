@@ -16,7 +16,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import parse_qs, unquote
 
 # ── 按账号修改 ─────────────────────────────────────────────────────────────
 PA_USERNAME = "wxhwwla"
@@ -192,8 +192,33 @@ def _handle_donation(environ, start_response):
     return _bytes(start_response, fp.read_bytes(), mime)
 
 
+def _parse_qs(environ) -> dict[str, str]:
+    parsed = parse_qs(environ.get("QUERY_STRING", ""))
+    return {k: (v[0] if v else "") for k, v in parsed.items()}
+
+
+def _post_json_handler(start_response, payload: dict, handler):
+    """调用 FastAPI 路由函数；async 路由用 asyncio.run。"""
+    import asyncio
+    import inspect
+
+    from fastapi import HTTPException
+
+    try:
+        result = handler(payload)
+        if inspect.isawaitable(result):
+            result = asyncio.run(result)
+        if hasattr(result, "model_dump"):
+            return _json(start_response, result.model_dump())
+        return _json(start_response, result)
+    except HTTPException as exc:
+        return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+
 def _handle_layout_compute(environ, start_response):
-    """计算页依赖的 layout / evaluate / snapshot API。"""
+    """计算页依赖的 layout / evaluate / loadout API。"""
     path = _fix_path(environ.get("PATH_INFO", ""))
     method = environ.get("REQUEST_METHOD", "GET")
 
@@ -201,7 +226,21 @@ def _handle_layout_compute(environ, start_response):
         from fastapi import HTTPException
 
         from api.layout import get_layout_payload, get_variables_payload
-        from api.compute import EvaluateRequest, SnapshotRequest, evaluate_payload, snapshot_payload
+        from api.compute import (
+            CompareRequest,
+            EvaluateRequest,
+            LoadoutPreviewRequest,
+            LoadoutSnapshotRequest,
+            PresetExportRequest,
+            SnapshotRequest,
+            compare,
+            evaluate_loadout,
+            evaluate_payload,
+            loadout_preview,
+            loadout_snapshot,
+            preset_export,
+            snapshot_payload,
+        )
     except Exception as e:
         return _json(start_response, {"error": f"layout/compute import failed: {e}"}, "500 Internal Server Error")
 
@@ -212,20 +251,34 @@ def _handle_layout_compute(environ, start_response):
         if path == "/api/layout/variables" and method == "GET":
             return _json(start_response, get_variables_payload())
 
-        if path == "/api/compute/evaluate" and method == "POST":
+        if method == "POST":
             raw = _read_body(environ)
             if not raw:
                 return _http_error(start_response, "empty body", 400)
             payload = json.loads(raw.decode("utf-8"))
-            result = evaluate_payload(EvaluateRequest(**payload))
-            return _json(start_response, result.model_dump())
 
-        if path == "/api/compute/snapshot" and method == "POST":
-            raw = _read_body(environ)
-            if not raw:
-                return _http_error(start_response, "empty body", 400)
-            payload = json.loads(raw.decode("utf-8"))
-            return _json(start_response, snapshot_payload(SnapshotRequest(**payload)))
+            if path == "/api/compute/evaluate":
+                result = evaluate_payload(EvaluateRequest(**payload))
+                return _json(start_response, result.model_dump())
+
+            if path == "/api/compute/evaluate-loadout":
+                result = evaluate_loadout(LoadoutPreviewRequest(**payload))
+                return _json(start_response, result.model_dump())
+
+            if path == "/api/compute/preview":
+                return _json(start_response, loadout_preview(LoadoutPreviewRequest(**payload)))
+
+            if path == "/api/compute/snapshot-full":
+                return _json(start_response, loadout_snapshot(LoadoutSnapshotRequest(**payload)))
+
+            if path == "/api/compute/snapshot":
+                return _json(start_response, snapshot_payload(SnapshotRequest(**payload)))
+
+            if path == "/api/compute/compare":
+                return _json(start_response, compare(CompareRequest(**payload)))
+
+            if path == "/api/compute/preset-export":
+                return _json(start_response, preset_export(PresetExportRequest(**payload)))
     except HTTPException as exc:
         return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
     except json.JSONDecodeError:
@@ -234,6 +287,146 @@ def _handle_layout_compute(environ, start_response):
         return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
 
     return None
+
+
+def _handle_search_api(environ, start_response):
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/search"):
+        return None
+
+    try:
+        from api.search import (
+            EstimateRequest,
+            SearchRequest,
+            estimate_search,
+            get_enemy_choices,
+            list_search_history,
+            run_search,
+            save_search_history,
+        )
+    except Exception as e:
+        return _json(start_response, {"error": f"search import failed: {e}"}, "500 Internal Server Error")
+
+    try:
+        if path == "/api/search/catalog" and method == "GET":
+            scope = _parse_qs(environ).get("scope", "全部装备")
+            from games.endfield.data_loading.equipment_catalog import get_equipment_catalog as load_catalog
+
+            catalog = load_catalog(scope_label=scope)
+            result = {
+                k: [
+                    {
+                        "名称": e.get("名称", ""),
+                        "部位": e.get("部位", ""),
+                        "所属套组": e.get("所属套组", ""),
+                        "稀有度": e.get("稀有度", ""),
+                    }
+                    for e in v
+                ]
+                for k, v in catalog.items()
+            }
+            return _json(start_response, result)
+
+        if path == "/api/search/enemies" and method == "GET":
+            return _json(start_response, get_enemy_choices())
+
+        if path == "/api/search/history" and method == "GET":
+            return _json(start_response, list_search_history())
+
+        if path == "/api/search/history" and method == "POST":
+            raw = _read_body(environ)
+            payload = json.loads(raw.decode("utf-8")) if raw else {}
+            return _json(start_response, save_search_history(payload))
+
+        if method == "POST":
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+
+            if path == "/api/search/estimate":
+                return _post_json_handler(start_response, payload, lambda p: estimate_search(EstimateRequest(**p)))
+
+            if path == "/api/search/run":
+                return _post_json_handler(start_response, payload, lambda p: run_search(SearchRequest(**p)))
+    except json.JSONDecodeError:
+        return _http_error(start_response, "invalid JSON", 400)
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return _http_error(start_response, "unknown search endpoint", 404)
+
+
+def _handle_manual_buff(environ, start_response):
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/manual-buff"):
+        return None
+
+    try:
+        from api.manual_buff import (
+            ActiveKeysRequest,
+            ApplyConsumableRequest,
+            abnormal_matrix_specs,
+            active_keys,
+            apply_consumable,
+            list_consumable_presets,
+            list_zone_options,
+        )
+    except Exception as e:
+        return _json(start_response, {"error": f"manual-buff import failed: {e}"}, "500 Internal Server Error")
+
+    try:
+        if path == "/api/manual-buff/zone-options" and method == "GET":
+            return _json(start_response, list_zone_options())
+
+        if path == "/api/manual-buff/abnormal-matrix-specs" and method == "GET":
+            return _json(start_response, abnormal_matrix_specs())
+
+        if path == "/api/manual-buff/consumable-presets" and method == "GET":
+            return _json(start_response, list_consumable_presets())
+
+        if method == "POST":
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+
+            if path == "/api/manual-buff/active-keys":
+                return _json(start_response, active_keys(ActiveKeysRequest(**payload)))
+
+            if path == "/api/manual-buff/apply-consumable":
+                return _json(start_response, apply_consumable(ApplyConsumableRequest(**payload)))
+    except json.JSONDecodeError:
+        return _http_error(start_response, "invalid JSON", 400)
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return _http_error(start_response, "unknown manual-buff endpoint", 404)
+
+
+def _handle_survival(environ, start_response):
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if path != "/api/survival/estimate" or method != "POST":
+        return None
+
+    try:
+        from api.survival import SurvivalEstimateRequest, survival_estimate
+    except Exception as e:
+        return _json(start_response, {"error": f"survival import failed: {e}"}, "500 Internal Server Error")
+
+    try:
+        raw = _read_body(environ)
+        if not raw:
+            return _http_error(start_response, "empty body", 400)
+        payload = json.loads(raw.decode("utf-8"))
+        return _json(start_response, survival_estimate(SurvivalEstimateRequest(**payload)))
+    except json.JSONDecodeError:
+        return _http_error(start_response, "invalid JSON", 400)
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
 
 
 def _handle_arknights(environ, start_response):
@@ -288,25 +481,7 @@ def _handle_data_api(environ, start_response):
         return _json(start_response, {"status": "ok", "version": "1.0.0"})
 
     if path == "/api/search/catalog":
-        try:
-            from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
-
-            catalog = get_equipment_catalog()
-            result = {
-                k: [
-                    {
-                        "名称": e.get("名称", ""),
-                        "部位": e.get("部位", ""),
-                        "所属套组": e.get("所属套组", ""),
-                        "稀有度": e.get("稀有度", ""),
-                    }
-                    for e in v
-                ]
-                for k, v in catalog.items()
-            }
-            return _json(start_response, result)
-        except Exception as e:
-            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _handle_search_api(environ, start_response)
 
     if not path.startswith("/api/data/"):
         return None
@@ -421,7 +596,15 @@ def _handle_data_api(environ, start_response):
 
 
 def application(environ, start_response):
-    for handler in (_handle_donation, _handle_layout_compute, _handle_arknights, _handle_data_api):
+    for handler in (
+        _handle_donation,
+        _handle_layout_compute,
+        _handle_search_api,
+        _handle_manual_buff,
+        _handle_survival,
+        _handle_arknights,
+        _handle_data_api,
+    ):
         result = handler(environ, start_response)
         if result is not None:
             return result

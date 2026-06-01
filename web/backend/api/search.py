@@ -19,7 +19,16 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 
+def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
+    """归一化技能字段 + 固定配装 dict（与 GUI 一致）。"""
+    from games.endfield.data_loading.web_search_bridge import (
+        enrich_search_request_fields,
+        resolve_search_fixed_loadout,
+    )
 
+    enriched = req.model_copy(update=enrich_search_request_fields(req))
+    fixed = resolve_search_fixed_loadout(enriched)
+    return enriched, fixed
 
 
 class SearchRequest(BaseModel):
@@ -30,7 +39,7 @@ class SearchRequest(BaseModel):
 
     weapon_level: int = 90
 
-    trust_level: int = 12
+    trust_level: int = 0
 
     skill_name: str
 
@@ -51,6 +60,10 @@ class SearchRequest(BaseModel):
     equipment_catalog: dict[str, list[dict[str, Any]]]
 
     fixed_loadout: dict[str, Any] | None = None
+
+    fixed_equipment_names: dict[str, str | None] = {}
+
+    weapon_skill_values: dict[str, Any] = {}
 
     enemy_defense: float = 100.0
 
@@ -112,7 +125,7 @@ class EstimateRequest(BaseModel):
 
     weapon_level: int = 90
 
-    trust_level: int = 12
+    trust_level: int = 0
 
     skill_name: str
 
@@ -133,6 +146,10 @@ class EstimateRequest(BaseModel):
     equipment_catalog: dict[str, list[dict[str, Any]]]
 
     fixed_loadout: dict[str, Any] | None = None
+
+    fixed_equipment_names: dict[str, str | None] = {}
+
+    weapon_skill_values: dict[str, Any] = {}
 
     enemy_defense: float = 100.0
 
@@ -216,8 +233,6 @@ async def estimate_search(req: EstimateRequest):
 
         from games.endfield.calc.loadout.optimizer import optimizer_config_for_character
 
-        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
         from games.endfield.calc.search.plan.controller import prepare_search_job
@@ -240,9 +255,7 @@ async def estimate_search(req: EstimateRequest):
 
     try:
 
-        fixed_loadout = FixedLoadoutSelection(**req.fixed_loadout) if req.fixed_loadout else FixedLoadoutSelection()
-
-
+        req, fixed_loadout = _prepare_search_req(req)
 
         inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
@@ -310,8 +323,6 @@ async def run_search(req: SearchRequest):
 
         from games.endfield.calc.search.plan.controller import prepare_search_job, optimizer_config_for_search_job
 
-        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
@@ -322,9 +333,7 @@ async def run_search(req: SearchRequest):
 
     try:
 
-        fixed_loadout = FixedLoadoutSelection(**req.fixed_loadout) if req.fixed_loadout else FixedLoadoutSelection()
-
-
+        req, fixed_loadout = _prepare_search_req(req)
 
         inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
@@ -438,15 +447,15 @@ def get_enemy_choices():
 
 @router.get("/catalog")
 
-async def get_equipment_catalog():
+async def get_equipment_catalog(scope: str = "全部装备"):
 
-    """获取装备目录（分部位列表）。"""
+    """获取装备目录（分部位列表；scope 与 GUI 装备范围文案一致）。"""
 
     try:
 
         from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
-        catalog = get_equipment_catalog()
+        catalog = get_equipment_catalog(scope_label=scope)
 
         return {
 
@@ -480,8 +489,6 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
 
         )
 
-        from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
-
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
@@ -494,7 +501,7 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
 
     try:
 
-        fixed_loadout = FixedLoadoutSelection(**req.fixed_loadout) if req.fixed_loadout else FixedLoadoutSelection()
+        req, fixed_loadout = _prepare_search_req(req)
 
         inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 

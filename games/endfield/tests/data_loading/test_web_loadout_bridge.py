@@ -8,10 +8,21 @@ import unittest
 from games.endfield.data_loading.web_loadout_bridge import (
     build_loadout_state_from_web,
     loadout_state_to_web_preset,
+    resolve_fixed_loadout_selection,
+    resolve_search_skill_fields,
 )
 
 
 class TestWebLoadoutBridge(unittest.TestCase):
+    _CATALOG = {
+        "chest": [{"名称": "测试护甲", "部位": "护甲"}],
+        "gloves": [{"名称": "测试护手", "部位": "护手"}],
+        "accessories": [
+            {"名称": "配件甲", "部位": "配件"},
+            {"名称": "配件乙", "部位": "配件"},
+        ],
+    }
+
     def test_roundtrip_preset_fields(self) -> None:
         char = {"名称": "测试角色", "战技倍率": [[1.0]], "连携技倍率": [], "终结技倍率": []}
         weapon = {"名称": "测试武器"}
@@ -51,6 +62,56 @@ class TestWebLoadoutBridge(unittest.TestCase):
             body={"skill_levels": [10, 9, 8]},
         )
         self.assertEqual(state.skill_levels, (10, 9, 8))
+
+    def test_resolve_fixed_loadout_from_names(self) -> None:
+        fixed = resolve_fixed_loadout_selection(
+            fixed_equipment_names={
+                "chest": "测试护甲",
+                "gloves": "测试护手",
+                "accessory_a": "配件甲",
+                "accessory_b": "配件乙",
+            },
+            equipment_catalog=self._CATALOG,
+        )
+        self.assertEqual(fixed.chest["名称"], "测试护甲")
+        self.assertEqual(fixed.gloves["名称"], "测试护手")
+        self.assertEqual(fixed.accessory_a["名称"], "配件甲")
+        self.assertEqual(fixed.accessory_b["名称"], "配件乙")
+
+    def test_build_loadout_with_fixed_equipment_names(self) -> None:
+        char = {
+            "名称": "A",
+            "战技倍率": [[100.0]],
+            "连携技倍率": [],
+            "终结技倍率": [],
+        }
+        weapon = {"名称": "W"}
+        body = {
+            "fixed_equipment_names": {"chest": "测试护甲"},
+            "equipment_catalog": self._CATALOG,
+        }
+        state = build_loadout_state_from_web(char_data=char, weapon_data=weapon, body=body)
+        self.assertIsNotNone(state.fixed_loadout.chest)
+        self.assertEqual(state.fixed_loadout.chest["名称"], "测试护甲")
+
+    def test_resolve_search_skill_fields(self) -> None:
+        char = {
+            "名称": "A",
+            "战技倍率": [[150.0]],
+            "连携技倍率": [[200.0]],
+            "终结技倍率": [[300.0]],
+        }
+        name, skill_type, mult, dmg = resolve_search_skill_fields(
+            char,
+            skill_1_level=8,
+            skill_2_level=0,
+            skill_3_level=0,
+        )
+        self.assertEqual(skill_type, "战技")
+        self.assertIsInstance(name, str)
+        self.assertGreater(len(name), 0)
+        self.assertIsInstance(mult, float)
+        self.assertIsInstance(dmg, str)
 
 
 if __name__ == "__main__":

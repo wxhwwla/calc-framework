@@ -49,6 +49,8 @@ class WebLoadoutBody(BaseModel):
     fixed_equipment_names: dict[str, str | None] = Field(default_factory=dict)
     manual_buffs: dict[str, list[dict[str, str | float]]] = Field(default_factory=dict)
     equipment_catalog: dict[str, list[dict[str, Any]]] | None = None
+    calculation_mode: str | None = None
+    calc_mode: str | None = None
 
     def to_loadout_dict(self) -> dict[str, Any]:
         data = self.model_dump()

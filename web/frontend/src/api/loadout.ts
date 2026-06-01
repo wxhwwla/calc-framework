@@ -2,6 +2,7 @@ import type { EnemyParams, SearchRequest } from "./search";
 import type { MultiSkillSettings } from "../components/calculator/MultiSkillPanel";
 import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
 import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadoutPanel";
+import type { EvaluateResult } from "./compute";
 
 export interface WebLoadoutPayload {
   char_data: Record<string, unknown>;
@@ -25,10 +26,11 @@ export interface WebLoadoutPayload {
   extra_crit_rate: number;
   extra_crit_damage: number;
   enemy_params: EnemyParams;
-  fixed_loadout: Record<string, unknown> | null;
   fixed_equipment_names: Record<string, string | null>;
   manual_buffs: Record<string, { effect_type: string; value: number }[]>;
   equipment_catalog?: Record<string, Record<string, unknown>[]>;
+  calculation_mode?: string;
+  calc_mode?: string;
 }
 
 export interface BuildLoadoutContext {
@@ -41,6 +43,7 @@ export interface BuildLoadoutContext {
   weaponSkillValues: Record<string, number>;
   weaponScope: string;
   equipmentScope: string;
+  calcMode: string;
   multiSkill: MultiSkillSettings;
   critAbnormal: CritAndAbnormalSettings;
   enemyParams: EnemyParams;
@@ -49,8 +52,19 @@ export interface BuildLoadoutContext {
   equipmentCatalog?: Record<string, unknown[]>;
 }
 
+function resolveCalculationMode(calcMode: string, multiSkill: MultiSkillSettings): string {
+  if (calcMode === "single_skill_search" || calcMode === "multi_skill_search") {
+    return calcMode;
+  }
+  if (multiSkill.useManualCounts) {
+    return "multi_skill_search";
+  }
+  return "single_skill_search";
+}
+
 export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayload | null {
   if (!ctx.charData || !ctx.weaponData) return null;
+  const calculationMode = resolveCalculationMode(ctx.calcMode, ctx.multiSkill);
   return {
     char_data: ctx.charData,
     weapon_data: ctx.weaponData,
@@ -73,7 +87,6 @@ export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayl
     extra_crit_rate: ctx.critAbnormal.extraCritRate,
     extra_crit_damage: ctx.critAbnormal.extraCritDamage,
     enemy_params: ctx.enemyParams,
-    fixed_loadout: ctx.fixedLoadout as unknown as Record<string, unknown> | null,
     fixed_equipment_names: {
       chest: ctx.fixedLoadout?.chest ?? null,
       gloves: ctx.fixedLoadout?.gloves ?? null,
@@ -82,7 +95,19 @@ export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayl
     },
     manual_buffs: ctx.manualBuffStore,
     equipment_catalog: ctx.equipmentCatalog as Record<string, Record<string, unknown>[]> | undefined,
+    calculation_mode: calculationMode,
+    calc_mode: ctx.calcMode,
   };
+}
+
+export async function evaluateLoadout(payload: WebLoadoutPayload): Promise<EvaluateResult> {
+  const r = await fetch("/api/compute/evaluate-loadout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
 }
 
 export async function fetchLoadoutPreview(payload: WebLoadoutPayload): Promise<string[]> {
@@ -106,7 +131,7 @@ export async function fetchLoadoutSnapshot(payload: WebLoadoutPayload) {
   return r.json();
 }
 
-/** 将配装 payload 展平为搜索 API 请求体（敌参嵌套 → 顶层字段） */
+/** 将配装 payload 展平为搜索 API 请求体（技能/固定配装由服务端归一化） */
 export function buildSearchRequestFromLoadout(
   payload: WebLoadoutPayload,
   extras: {
@@ -130,7 +155,8 @@ export function buildSearchRequestFromLoadout(
     all_weapons: extras.all_weapons,
     current_weapon: extras.current_weapon,
     equipment_catalog: extras.equipment_catalog,
-    fixed_loadout: payload.fixed_loadout,
+    fixed_equipment_names: payload.fixed_equipment_names,
+    weapon_skill_values: payload.weapon_skill_values,
     enemy_defense: ep.enemy_defense,
     enemy_resistance: ep.enemy_resistance,
     ignore_resistance: ep.ignore_resistance,

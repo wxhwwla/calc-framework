@@ -101,6 +101,93 @@ def _enemy_fields(body: dict[str, Any]) -> dict[str, Any]:
     return enemy
 
 
+def _find_equipment_row(
+    name: str | None,
+    catalog_key: str,
+    catalog: dict[str, list[dict[str, Any]]],
+) -> dict | None:
+    """按名称在 catalog 中查找装备行（与 GUI read_fixed_loadout_selection 一致）。"""
+    if not name:
+        return None
+    for row in catalog.get(catalog_key) or []:
+        if str(row.get("名称") or "") == str(name):
+            return row
+    return None
+
+
+def resolve_fixed_loadout_selection(
+    *,
+    fixed_equipment_names: dict[str, Any] | None,
+    equipment_catalog: dict[str, list[dict[str, Any]]],
+    fixed_loadout_raw: dict[str, Any] | None = None,
+) -> FixedLoadoutSelection:
+    """Web 固定配装名 → ``FixedLoadoutSelection``（dict 行，供搜索/预览共用）。"""
+    names: dict[str, Any] = dict(fixed_equipment_names or {})
+    raw = fixed_loadout_raw if isinstance(fixed_loadout_raw, dict) else {}
+
+    def _slot_value(slot_key: str, catalog_key: str) -> dict | None:
+        if slot_key in names and names[slot_key]:
+            return _find_equipment_row(str(names[slot_key]), catalog_key, equipment_catalog)
+        item = raw.get(slot_key)
+        if isinstance(item, dict):
+            return item
+        if isinstance(item, str) and item:
+            return _find_equipment_row(item, catalog_key, equipment_catalog)
+        return None
+
+    return FixedLoadoutSelection(
+        chest=_slot_value("chest", "chest"),
+        gloves=_slot_value("gloves", "gloves"),
+        accessory_a=_slot_value("accessory_a", "accessories"),
+        accessory_b=_slot_value("accessory_b", "accessories"),
+    )
+
+
+def _calculation_mode_from_body(body: dict[str, Any]) -> str:
+    """Web 计算模式 → LoadoutState.calculation_mode。"""
+    explicit = str(body.get("calculation_mode") or body.get("calc_mode") or "").strip()
+    if explicit in ("single_skill_search", "multi_skill_search"):
+        return explicit
+    if bool(body.get("use_manual_multi_skill_counts", False)):
+        return "multi_skill_search"
+    return "single_skill_search"
+
+
+def weapon_preset_from_web_values(
+    weapon_skill_values: dict[str, Any] | None,
+) -> tuple[list[int], list[dict[str, int]]]:
+    """weapon_skill_values → weapon_normal_levels / weapon_special_states。"""
+    wsv = weapon_skill_values or {}
+    normal = [max(0, int(wsv.get(f"normal_skill_{i}_level", 0))) for i in range(1, 4)]
+    special: list[dict[str, int]] = []
+    for i in range(1, 3):
+        level = max(0, int(wsv.get(f"special_skill_{i}_level", 0)))
+        if level > 0:
+            special.append(
+                {
+                    "level": level,
+                    "stack": max(0, int(wsv.get(f"special_skill_{i}_stack", 0))),
+                }
+            )
+    return normal, special
+
+
+def resolve_search_skill_fields(
+    char_data: dict[str, Any],
+    *,
+    skill_1_level: int,
+    skill_2_level: int,
+    skill_3_level: int,
+) -> tuple[str, str, float, str]:
+    """与 GUI ``_resolve_selected_skill_for_search`` 相同语义。"""
+    return _resolve_selected_skill_for_search(
+        char_data,
+        skill_1_level=skill_1_level,
+        skill_2_level=skill_2_level,
+        skill_3_level=skill_3_level,
+    )
+
+
 def build_loadout_state_from_web(
     *,
     char_data: dict[str, Any],
@@ -124,17 +211,17 @@ def build_loadout_state_from_web(
         skill_3_level=skill_levels[2],
     )
     enemy = _enemy_fields(body)
-    fixed_raw = body.get("fixed_loadout") or {}
-    fixed_loadout = (
-        FixedLoadoutSelection(**fixed_raw)
-        if isinstance(fixed_raw, dict) and fixed_raw
-        else FixedLoadoutSelection()
-    )
+    catalog = body.get("equipment_catalog") if isinstance(body.get("equipment_catalog"), dict) else {}
     fixed_names = body.get("fixed_equipment_names") or {}
     if not isinstance(fixed_names, dict):
         fixed_names = {}
+    fixed_loadout = resolve_fixed_loadout_selection(
+        fixed_equipment_names=fixed_names,
+        equipment_catalog=catalog,
+        fixed_loadout_raw=body.get("fixed_loadout") if isinstance(body.get("fixed_loadout"), dict) else None,
+    )
     use_manual = bool(body.get("use_manual_multi_skill_counts", False))
-    calculation_mode = "multi_skill_search" if use_manual else "single_skill_search"
+    calculation_mode = _calculation_mode_from_body(body)
     weapon_sel = _weapon_selection_from_web(weapon_data, body.get("weapon_skill_values"))
 
     return LoadoutState(
@@ -184,6 +271,44 @@ def build_loadout_state_from_web(
         weapon_specials=_legacy_weapon_specials(weapon_sel),
         manual_buffs=_parse_manual_buffs(body.get("manual_buffs")),
     )
+
+
+def build_adapter_context_from_loadout(
+    loadout: Any,
+    *,
+    layout_calc_mode: str = "zone_snapshot",
+) -> dict[str, Any]:
+    """LoadoutState → DAG adapter context（ComputeSheet 求值）。"""
+    from games.endfield.calc.dag_adapter.adapter import build_dag_context
+
+    bonuses = {
+        **loadout.weapon_skill_kwargs(),
+        "enemy_defense": loadout.enemy_defense,
+        "enemy_resistance": loadout.enemy_resistance,
+        "ignore_resistance": loadout.ignore_resistance,
+        "imbalance_vulnerability_coeff": loadout.imbalance_vulnerability_coeff,
+        "is_unbalanced": loadout.is_unbalanced,
+        "is_true_damage": loadout.is_true_damage,
+        "combo_stacks": loadout.combo_stacks,
+        "break_defense_stacks": loadout.break_defense_stacks,
+        "attached_effect_multiplier": loadout.attached_effect_multiplier,
+        "corrosion_duration_seconds": loadout.corrosion_duration_seconds,
+    }
+    ctx = build_dag_context(
+        loadout.char_data,
+        loadout.weapon_data,
+        char_level=loadout.char_level,
+        weapon_level=loadout.weapon_level,
+        trust_level=loadout.trust_level,
+        bonuses_kwargs=bonuses,
+    )
+    s1, s2, s3 = loadout.skill_levels
+    ui = ctx.setdefault("user_input", {})
+    ui["skill_1_level"] = s1
+    ui["skill_2_level"] = s2
+    ui["skill_3_level"] = s3
+    ui["calc_mode"] = layout_calc_mode
+    return ctx
 
 
 def loadout_state_to_web_preset(state: LoadoutState) -> dict[str, Any]:

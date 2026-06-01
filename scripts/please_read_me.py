@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.16.17"
+_VERSION = "3.17.0"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,30 +438,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 24 处文件
+# TITLE: 更新 13 处文件
 # BODY:
+# - 修改 games/endfield/data_loading/enemy_eval_params.py
+# - 修改 games/endfield/data_loading/web_loadout_bridge.py
+# - 修改 games/endfield/data_loading/web_search_bridge.py
+# - 修改 games/endfield/tests/data_loading/test_web_loadout_bridge.py
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/designer/layout_editor/canvas.py
-# - 修改 tools/designer/theme_editor/panel.py
-# - 变更 web/frontend/cypress/e2e/compute-page.cy.ts
-# - 变更 web/frontend/cypress/e2e/designer-page.cy.ts
-# - 变更 web/frontend/cypress/e2e/editor-page.cy.ts
-# - 变更 web/frontend/cypress/e2e/pack-designer-page.cy.ts
-# - 变更 web/frontend/index.html
-# - 变更 web/frontend/src/App.tsx
-# - 变更 web/frontend/src/components/GlobalHelpDialog.tsx
-# - 变更 web/frontend/src/components/WebComputeSheet.tsx
-# - 变更 web/frontend/src/components/calculator/DonationImages.tsx
-# - 变更 web/frontend/src/components/calculator/HelpDialog.tsx
-# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
-# - 变更 web/frontend/src/components/calculator/SearchSettingsPanel.tsx
-# - 变更 web/frontend/src/components/compute/ResultPanel.tsx
-# - 变更 web/frontend/src/pages/AdaptersPage.tsx
-# - 变更 web/frontend/src/pages/ArknightsComputePage.tsx
-# - 变更 web/frontend/src/pages/DesignerPage.tsx
-# - 变更 web/frontend/src/pages/EditorPage.tsx
-# - 变更 web/frontend/src/pages/MarketplacePage.tsx
-# - 变更 web/frontend/src/pages/PackDesignerPage.tsx
-# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 修改 web/backend/api/compute.py
+# - 修改 web/backend/api/loadout_schemas.py
+# - 修改 web/backend/api/search.py
+# - 变更 web/frontend/src/api/loadout.ts
+# - 变更 web/frontend/src/api/search.ts
+# - 变更 web/frontend/src/components/calculator/FixedLoadoutPanel.tsx
+# - 变更 web/frontend/src/pages/ComputePage.tsx
 # - 修改 web/wsgi_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

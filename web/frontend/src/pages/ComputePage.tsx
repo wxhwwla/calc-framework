@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button, Collapse, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import CharacterSelector from "../components/calculator/CharacterSelector";
@@ -32,9 +32,11 @@ import SearchPreviewPanel from "../components/calculator/SearchPreviewPanel";
 import SegmentManualBuffDialog, {
   type ManualBuffStore,
 } from "../components/calculator/SegmentManualBuffDialog";
+import { fetchEquipmentCatalog } from "../api/search";
 import {
   buildWebLoadoutPayload,
   buildSearchRequestFromLoadout,
+  evaluateLoadout,
   fetchLoadoutPreview,
   fetchLoadoutSnapshot,
 } from "../api/loadout";
@@ -48,23 +50,13 @@ import DonationDialog from "../components/calculator/DonationDialog";
 import { logOperation, exportLogsAsJson } from "../utils/operationLog";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
-import { evaluate, type DamageSnapshot } from "../api/compute";
+import type { DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
 
 const DamageChart = lazy(() => import("../components/calculator/DamageChart"));
 
 const WEAPON_SCOPE_OPTIONS = ["当前武器", "同类型同星级", "同类型全部"];
 const EQUIPMENT_SCOPE_OPTIONS = ["全部装备", "仅套装装备", "仅散件装备"];
-
-function getAttrAtLevel(data: Record<string, unknown> | null, attr: string, level: number): number {
-  if (!data) return 0;
-  const arr = data[attr];
-  if (Array.isArray(arr)) {
-    const idx = Math.min(level - 1, arr.length - 1);
-    return typeof arr[idx] === "number" ? (arr[idx] as number) : 0;
-  }
-  return typeof arr === "number" ? (arr as number) : 0;
-}
 
 export default function ComputePage() {
   const [tab, setTab] = useState(0);
@@ -88,7 +80,6 @@ export default function ComputePage() {
   const [layout, setLayout] = useState<LayoutDefinition | null>(null);
   const [variables, setVariables] = useState<Record<string, DagVariable> | null>(null);
   const [outputValues, setOutputValues] = useState<Record<string, number>>({});
-  const [inputValues, _setInputValues] = useState<Record<string, number | boolean | string>>({});
 
   const [enemyParams, setEnemyParams] = useState<EnemyParams>({ ...DEFAULT_ENEMY_PARAMS });
   const [multiSkill, setMultiSkill] = useState<MultiSkillSettings>({
@@ -133,11 +124,17 @@ export default function ComputePage() {
     fetchLayout().then(setLayout).catch(() => {});
     fetchVariables().then(setVariables).catch(() => {});
     fetchWeapons().then(setAllWeapons).catch(() => {});
-    fetch("/api/search/catalog")
-      .then((r) => r.json())
-      .then(setEquipmentCatalog)
-      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchEquipmentCatalog(equipmentScope).then(setEquipmentCatalog).catch(() => {});
+  }, [equipmentScope]);
+
+  const skillLevelsTuple = useMemo((): [number, number, number] => [
+    (skillLevels.skill_1_level as number) ?? 8,
+    (skillLevels.skill_2_level as number) ?? 8,
+    (skillLevels.skill_3_level as number) ?? 8,
+  ], [skillLevels]);
 
   const handleSelectCharacter = useCallback((name: string, data: Record<string, unknown>) => {
     setSelectedChar(name);
@@ -238,6 +235,7 @@ export default function ComputePage() {
       weaponSkillValues,
       weaponScope,
       equipmentScope,
+      calcMode,
       multiSkill,
       critAbnormal,
       enemyParams,
@@ -255,6 +253,7 @@ export default function ComputePage() {
     weaponSkillValues,
     weaponScope,
     equipmentScope,
+    calcMode,
     multiSkill,
     critAbnormal,
     enemyParams,
@@ -264,125 +263,46 @@ export default function ComputePage() {
   ]);
 
   const handleEvaluate = useCallback(async () => {
-    const adapter = "终末地伤害计算";
-    const charBaseAtk = getAttrAtLevel(charData, "基础攻击力", charLevel);
-    const weaponBaseAtk = getAttrAtLevel(weaponData, "基础攻击力", weaponLevel);
-    const charStrength = getAttrAtLevel(charData, "力量", charLevel);
-    const charAgility = getAttrAtLevel(charData, "敏捷", charLevel);
-    const charIntellect = getAttrAtLevel(charData, "智识", charLevel);
-    const charWill = getAttrAtLevel(charData, "意志", charLevel);
-
-    const context: Record<string, Record<string, number | boolean | string>> = {
-      character: {
-        "基础攻击": charBaseAtk,
-        "力量": charStrength,
-        "敏捷": charAgility,
-        "智识": charIntellect,
-        "意志": charWill,
-        "暴击率": 0.05,
-        "暴击伤害": 0.5,
-      },
-      weapon: {
-        "基础攻击": weaponBaseAtk,
-        "攻击力+": 0,
-        "附加攻击力+": 0,
-      },
-      enemy: {
-        "防御": enemyParams.enemy_defense,
-        "抗性": enemyParams.enemy_resistance,
-        "无视抗性": enemyParams.ignore_resistance,
-        "失衡易伤系数": enemyParams.imbalance_vulnerability_coeff,
-        "失衡": enemyParams.is_unbalanced ? 1 : 0,
-      },
-      equipment: {
-        "攻击力平值": 0,
-      },
-      computed: {
-        "主能力平值加算": charStrength,
-        "副能力平值加算": charAgility,
-        "主能力百分比": 0,
-        "副能力百分比": 0,
-        "技能倍率": 1,
-        "伤害加成": 0,
-        "伤害减免": 0,
-        "增幅": 0,
-        "虚弱": 0,
-        "庇护": 0,
-        "脆弱": 0,
-        "易伤": 0,
-        "失衡易伤": enemyParams.is_unbalanced ? enemyParams.imbalance_vulnerability_coeff - 1 : 0,
-        "抗性": 0,
-        "非主控减伤": 0,
-        "连击增伤": enemyParams.combo_stacks > 0 ? 0.05 * enemyParams.combo_stacks : 0,
-        "特殊乘区": enemyParams.is_true_damage ? 1 : 0,
-        "力量加成值": 0,
-        "敏捷加成值": 0,
-        "智识加成值": 0,
-        "意志加成值": 0,
-      },
-      user_input: {},
-    };
-
-    context.user_input["calc_mode"] = calcMode;
-
-    for (const [key, val] of Object.entries(skillLevels)) {
-      if (!context.user_input) context.user_input = {};
-      context.user_input[key] = val;
-    }
-    for (const [key, val] of Object.entries(weaponSkillValues)) {
-      if (!context.user_input) context.user_input = {};
-      context.user_input[key] = val;
-    }
-
-    for (const [path, val] of Object.entries(inputValues)) {
-      const parts = path.split(".");
-      if (parts.length === 2) {
-        const ns = parts[0];
-        const key = parts[1];
-        if (!context[ns]) context[ns] = {};
-        context[ns][key] = val;
-      }
+    const payload = makeLoadoutPayload();
+    if (!payload) {
+      useComputeStore.setState({ error: "请先选择角色与武器", loading: false });
+      return;
     }
 
     logOperation("evaluate", `${selectedChar}+${selectedWeapon} Lv.${charLevel}/${weaponLevel}`);
     try {
       useComputeStore.setState({ loading: true, error: null });
-      const evalResult = await evaluate(adapter, context);
+      const evalResult = await evaluateLoadout(payload);
       setOutputValues(evalResult.outputs);
 
       setHistoryEntry({
         char_name: selectedChar,
         weapon_name: selectedWeapon,
-        context,
+        loadout: payload,
         outputs: evalResult.outputs,
         node_values: evalResult.node_values,
       });
 
       useComputeStore.setState({ result: evalResult, error: null, loading: false });
 
-      if (selectedChar && selectedWeapon) {
-        const payload = makeLoadoutPayload();
-        if (payload) {
-          setSnapshotLoading(true);
-          setPreviewLoading(true);
-          setPreviewError(null);
-          fetchLoadoutSnapshot(payload)
-            .then(setDamageSnapshot)
-            .catch(() => {})
-            .finally(() => setSnapshotLoading(false));
-          fetchLoadoutPreview(payload)
-            .then(setPreviewLines)
-            .catch((e) => {
-              setPreviewError(String(e));
-              setPreviewLines(null);
-            })
-            .finally(() => setPreviewLoading(false));
-        }
-      }
+      setSnapshotLoading(true);
+      setPreviewLoading(true);
+      setPreviewError(null);
+      fetchLoadoutSnapshot(payload)
+        .then(setDamageSnapshot)
+        .catch(() => {})
+        .finally(() => setSnapshotLoading(false));
+      fetchLoadoutPreview(payload)
+        .then(setPreviewLines)
+        .catch((e) => {
+          setPreviewError(String(e));
+          setPreviewLines(null);
+        })
+        .finally(() => setPreviewLoading(false));
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [charData, weaponData, charLevel, weaponLevel, trustLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams, critAbnormal, multiSkill, makeLoadoutPayload, selectedChar, selectedWeapon]);
+  }, [makeLoadoutPayload, selectedChar, selectedWeapon, charLevel, weaponLevel]);
 
   const loadoutPayload = makeLoadoutPayload();
   const searchParams = loadoutPayload
@@ -655,7 +575,7 @@ export default function ComputePage() {
               <FixedLoadoutPanel onChange={setFixedLoadout} equipmentScope={equipmentScope} />
               <MultiSkillPanel
                 charData={charData}
-                skillLevels={[1, 1, 1]}
+                skillLevels={skillLevelsTuple}
                 onChange={setMultiSkill}
               />
               <CritAndAbnormalPanel onChange={setCritAbnormal} />

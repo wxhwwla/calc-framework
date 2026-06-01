@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from calc_framework.config.manager import AdapterManager
+from web.backend.api.loadout_schemas import WebLoadoutBody
 
 
 
@@ -71,7 +72,48 @@ def evaluate(req: EvaluateRequest):
     return evaluate_payload(req)
 
 
+class LoadoutPreviewRequest(WebLoadoutBody):
+    pass
 
+
+class LoadoutSnapshotRequest(WebLoadoutBody):
+    pass
+
+
+class PresetExportRequest(WebLoadoutBody):
+    pass
+
+
+@router.post("/evaluate-loadout", response_model=EvaluateResponse)
+def evaluate_loadout(req: LoadoutPreviewRequest):
+    """经 LoadoutState 构建 context 后求值（与桌面确认路径对齐）。"""
+    from games.endfield.data_loading.web_loadout_bridge import (
+        build_adapter_context_from_loadout,
+        build_loadout_state_from_web,
+    )
+
+    body = req.to_loadout_dict()
+    layout_mode = str(body.get("calc_mode") or body.get("calculation_mode") or "zone_snapshot")
+    if layout_mode.endswith("_search"):
+        layout_mode = "zone_snapshot"
+    try:
+        loadout = build_loadout_state_from_web(
+            char_data=req.char_data,
+            weapon_data=req.weapon_data,
+            body=body,
+        )
+        ctx = build_adapter_context_from_loadout(loadout, layout_calc_mode=layout_mode)
+        pkg = _manager.load("终末地伤害计算")
+        result = pkg.dag_service.evaluate(ctx)
+        return EvaluateResponse(
+            outputs=result.outputs,
+            node_values={k: v for k, v in result.node_values.items()},
+            execution_order=result.execution_order,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 class SnapshotRequest(BaseModel):
@@ -310,7 +352,10 @@ class CompareRequest(BaseModel):
 
 @router.post("/compare")
 def compare(req: CompareRequest):
-    from games.endfield.gui_design.presentation.damage_snapshot import build_damage_snapshot
+    from games.endfield.data_loading.web_loadout_bridge import (
+        build_loadout_state_from_web,
+    )
+    from games.endfield.gui_design.app.loadout_evaluation import build_snapshot_from_loadout
 
     chars = _load_json(_CHARACTERS_PATH)
     weapons = _load_json(_WEAPONS_PATH)
@@ -324,44 +369,43 @@ def compare(req: CompareRequest):
             continue
 
         try:
-            sn = build_damage_snapshot(
+            body = entry.model_dump()
+            body.update(
+                {
+                    "enemy_defense": entry.enemy_defense,
+                    "enemy_resistance": entry.enemy_resistance,
+                    "ignore_resistance": entry.ignore_resistance,
+                    "imbalance_vulnerability_coeff": entry.imbalance_vulnerability_coeff,
+                    "is_unbalanced": entry.is_unbalanced,
+                    "is_true_damage": entry.is_true_damage,
+                    "combo_stacks": entry.combo_stacks,
+                    "break_defense_stacks": entry.break_defense_stacks,
+                    "skill_1_level": entry.skill_1_level,
+                    "skill_2_level": entry.skill_2_level,
+                    "skill_3_level": entry.skill_3_level,
+                    "weapon_skill_values": {
+                        "normal_skill_1_level": entry.normal_skill_1_level,
+                        "normal_skill_2_level": entry.normal_skill_2_level,
+                        "normal_skill_3_level": entry.normal_skill_3_level,
+                        "special_skill_1_level": entry.special_skill_1_level,
+                        "special_skill_1_stack": entry.special_skill_1_stack,
+                        "special_skill_2_level": entry.special_skill_2_level,
+                        "special_skill_2_stack": entry.special_skill_2_stack,
+                    },
+                }
+            )
+            loadout = build_loadout_state_from_web(
                 char_data=char_data,
                 weapon_data=weapon_data,
-                char_level=entry.char_level,
-                weapon_level=entry.weapon_level,
-                trust_level=entry.trust_level,
-                skill_levels=(entry.skill_1_level, entry.skill_2_level, entry.skill_3_level),
-                skill_counts={},
-                use_manual_counts=False,
-                normal_skill_1_level=entry.normal_skill_1_level,
-                normal_skill_2_level=entry.normal_skill_2_level,
-                normal_skill_3_level=entry.normal_skill_3_level,
-                special_skill_1_level=entry.special_skill_1_level,
-                special_skill_1_stack=entry.special_skill_1_stack,
-                special_skill_2_level=entry.special_skill_2_level,
-                special_skill_2_stack=entry.special_skill_2_stack,
-                enemy_defense=entry.enemy_defense,
-                enemy_resistance=entry.enemy_resistance,
-                ignore_resistance=entry.ignore_resistance,
-                imbalance_vulnerability_coeff=entry.imbalance_vulnerability_coeff,
-                is_unbalanced=entry.is_unbalanced,
-                is_true_damage=entry.is_true_damage,
-                combo_stacks=entry.combo_stacks,
-                break_defense_stacks=entry.break_defense_stacks,
+                body=body,
             )
+            sn = build_snapshot_from_loadout(loadout)
             results.append({"label": entry.label, "total": sn.weighted_total_damage})
         except Exception as e:
             results.append({"label": entry.label, "error": str(e), "total": 0})
 
     results.sort(key=lambda r: r.get("total", 0), reverse=True)
     return results
-
-
-from web.backend.api.loadout_schemas import WebLoadoutBody
-
-
-class LoadoutPreviewRequest(WebLoadoutBody):
-    pass
 
 
 @router.post("/preview")
@@ -381,10 +425,6 @@ def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
         return {"lines": lines}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-class LoadoutSnapshotRequest(WebLoadoutBody):
-    pass
 
 
 @router.post("/snapshot-full")
@@ -411,10 +451,6 @@ def loadout_snapshot(req: LoadoutSnapshotRequest) -> dict[str, Any]:
         )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-class PresetExportRequest(WebLoadoutBody):
-    pass
 
 
 @router.post("/preset-export")

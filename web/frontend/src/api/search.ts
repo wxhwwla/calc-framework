@@ -132,6 +132,8 @@ export interface SearchRequest {
   current_weapon: Record<string, unknown>;
   equipment_catalog: Record<string, Record<string, unknown>[]>;
   fixed_loadout?: Record<string, unknown> | null;
+  fixed_equipment_names?: Record<string, string | null>;
+  weapon_skill_values?: Record<string, number>;
   enemy_defense: number;
   enemy_resistance?: number;
   ignore_resistance?: number;
@@ -186,8 +188,10 @@ export async function runSearch(params: SearchRequest): Promise<SearchResult> {
   return r.json();
 }
 
-export async function fetchEquipmentCatalog(): Promise<Record<string, { 名称: string; 部位: string; 所属套组: string; 稀有度: string }[]>> {
-  const r = await fetch(`${BASE}/catalog`);
+export async function fetchEquipmentCatalog(
+  scope = "全部装备",
+): Promise<Record<string, { 名称: string; 部位: string; 所属套组: string; 稀有度: string }[]>> {
+  const r = await fetch(`${BASE}/catalog?scope=${encodeURIComponent(scope)}`);
   if (!r.ok) throw new Error(`获取装备目录失败: ${r.statusText}`);
   return r.json();
 }

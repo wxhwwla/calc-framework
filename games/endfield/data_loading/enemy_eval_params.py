@@ -149,6 +149,13 @@ def build_search_job_inputs_from_request(
     from games.endfield.calc.search.plan.controller import SearchJobInputs
 
     enemy = EnemyEvalParams.from_request(req)
+    wsv = getattr(req, "weapon_skill_values", None) or {}
+    normal_levels = getattr(req, "weapon_normal_levels", None)
+    special_states = getattr(req, "weapon_special_states", None)
+    if normal_levels is None and isinstance(wsv, dict) and wsv:
+        from games.endfield.data_loading.web_loadout_bridge import weapon_preset_from_web_values
+
+        normal_levels, special_states = weapon_preset_from_web_values(wsv)
     return SearchJobInputs(
         char_data=req.char_data,
         char_level=int(req.char_level),
@@ -180,5 +187,7 @@ def build_search_job_inputs_from_request(
         ),
         extra_crit_rate=float(getattr(req, "extra_crit_rate", 0.0)),
         extra_crit_damage=float(getattr(req, "extra_crit_damage", 0.0)),
+        weapon_normal_levels=normal_levels,
+        weapon_special_states=special_states,
         **enemy.search_job_kwargs(),
     )

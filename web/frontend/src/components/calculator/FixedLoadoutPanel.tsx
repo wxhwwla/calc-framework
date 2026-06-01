@@ -31,6 +31,12 @@ interface FixedLoadoutPanelProps {
 
 const NO_FIX_LABEL = "（不固定）";
 
+/** 与 GUI qt_control_dock.populate_fixed_loadout_slots 一致：配件 A/B 共用 accessories 列表 */
+function catalogKeyForSlot(slotKey: string): string {
+  if (slotKey === "accessory_a" || slotKey === "accessory_b") return "accessories";
+  return slotKey;
+}
+
 export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoadoutPanelProps) {
   const [catalog, setCatalog] = useState<Record<string, { 名称: string }[]>>({});
   const [selection, setSelection] = useState<FixedLoadoutSelection>({
@@ -41,7 +47,7 @@ export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoa
   });
 
   useEffect(() => {
-    fetchEquipmentCatalog().then(setCatalog).catch(() => {});
+    fetchEquipmentCatalog(equipmentScope ?? "全部装备").then(setCatalog).catch(() => {});
   }, [equipmentScope]);
 
   const hasAnyFixed = useMemo(
@@ -88,7 +94,7 @@ export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoa
               <MenuItem value="">
                 <em>{NO_FIX_LABEL}</em>
               </MenuItem>
-              {(catalog[slot.key] || []).map((eq) => (
+              {(catalog[catalogKeyForSlot(slot.key)] || []).map((eq) => (
                 <MenuItem key={eq.名称} value={eq.名称}>
                   {eq.名称}
                 </MenuItem>
