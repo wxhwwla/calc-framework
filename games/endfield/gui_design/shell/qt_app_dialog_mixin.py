@@ -42,7 +42,47 @@ class DialogMixin:
 
         dialog.exec()
 
+    def _on_survival_estimate(self) -> None:
+        from gui_design.app.loadout_state import read_loadout_from_panels
+        from gui_design.controls.survival import open_survival_estimate_dialog
 
+        dock = self.control_dock
+        loadout = read_loadout_from_panels(
+            self.char_panel,
+            self.weapon_panel,
+            calculation_mode=self._current_calc_mode,
+            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
+            equipment_scope_label=dock.equipment_scope_combo.currentText(),
+            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
+            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
+            manual_counts=dock.read_skill_counts(),
+            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
+            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
+            damage_component_mode=dock.read_damage_component_mode(),
+            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
+            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
+            extra_crit_rate=dock.read_extra_crit_rate(),
+            extra_crit_damage=dock.read_extra_crit_damage(),
+            enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
+            ignore_resistance=self._ignore_resistance,
+            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
+            is_unbalanced=self._is_unbalanced,
+        )
+        if loadout is None:
+            QMessageBox.warning(self.app, "处决/治疗估算", "请先选择角色与武器。")
+            return
+        open_survival_estimate_dialog(
+            self.app,
+            char_data=loadout.char_data,
+            weapon_data=loadout.weapon_data,
+            char_level=loadout.char_level,
+            weapon_level=loadout.weapon_level,
+            trust_level=loadout.trust_level,
+            enemy_tier=self._enemy_tier,
+            weapon_skill_kwargs=loadout.weapon_skill_kwargs(),
+            big_font=self.big_font,
+        )
 
     def _on_export_preset(self) -> None:
 

@@ -361,5 +361,18 @@ def apply_preset_to_panels(
     if enemy_panel is not None and hasattr(enemy_panel, "set_params"):
         enemy_panel.set_params(preset.merged_enemy_params())
 
+    from games.endfield.calc.manual_buff.abnormal_matrix import apply_abnormal_matrix_counts
+
+    apply_abnormal_matrix_counts(
+        control_dock._physical_abnormal_edits,
+        getattr(control_dock, "_physical_abnormal_specs", ()),
+        preset.physical_abnormal_counts,
+    )
+    apply_abnormal_matrix_counts(
+        control_dock._spell_abnormal_edits,
+        getattr(control_dock, "_spell_abnormal_specs", ()),
+        preset.spell_abnormal_counts,
+    )
+
     if shell is not None and preset.manual_buffs:
         shell._manual_buff_store = {k: [dict(e) for e in v] for k, v in preset.manual_buffs.items()}

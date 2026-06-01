@@ -499,6 +499,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
         # 手动 Buff 按钮
 
         dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
+        dock._survival_btn.clicked.connect(self._on_survival_estimate)
 
 
 
