@@ -115,6 +115,18 @@ ls -la dist/
 echo "  JS 文件:"
 ls -lh dist/assets/*.js 2>/dev/null || echo "  (无 assets 目录)"
 
+# 3b/4: 解压明日方舟干员数据（若存在 zip）
+AK_ZIP=~/$PROJECT/tools/arknights_scout/arknights_parsed.zip
+if [ -f "$AK_ZIP" ]; then
+    echo ""
+    echo "=== 解压明日方舟干员 JSON ==="
+    cd ~/$PROJECT/tools/arknights_scout/output
+    rm -rf parsed
+    mkdir -p parsed
+    unzip -oq "$AK_ZIP" -d parsed
+    echo "  ✅ 干员数据: $(ls parsed/*.json 2>/dev/null | wc -l) 个文件"
+fi
+
 # 4/4: 清理临时文件
 echo ""
 echo "=== 4/4: 清理临时文件 ==="

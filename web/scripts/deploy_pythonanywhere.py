@@ -34,8 +34,9 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote
+from urllib.request import Request, urlopen
 from zipfile import ZipFile, ZIP_DEFLATED
 
 # ── 路径 ──────────────────────────────────────────────────────────────────────
@@ -44,6 +45,8 @@ _FRONTEND_DIR = _REPO_ROOT / "web" / "frontend"
 _DIST_DIR = _FRONTEND_DIR / "dist"
 _SCRIPTS_DIR = _REPO_ROOT / "web" / "scripts"
 _ZIP_PATH = _REPO_ROOT / "dist_pa.zip"
+_ARKNIGHTS_PARSED_ZIP = _REPO_ROOT / "dist_arknights_parsed.zip"
+_PA_UPLOAD_INTERVAL = 0.45  # Files API 限流，逐文件上传时的间隔（秒）
 _CONFIG_PATH = Path.home() / ".pythonanywhere"
 
 # ── PythonAnywhere API ────────────────────────────────────────────────────────
@@ -137,17 +140,31 @@ def _create_zip() -> None:
 # ── 阶段 3: 上传到 PythonAnywhere ────────────────────────────────────────────────
 
 
+def _pa_file_url(username: str, remote_path: str) -> str:
+    """Files API 路径须 URL 编码（干员 JSON 等中文文件名）。"""
+    path = remote_path.replace("\\", "/")
+    if not path.startswith("/"):
+        path = "/" + path
+    return _PA_FILES_API.format(username=username, path=quote(path, safe="/"))
+
+
 def _upload_bytes_to_path(
-    config: dict, remote_path: str, file_data: bytes, label: str, *, quiet: bool = False,
+    config: dict,
+    remote_path: str,
+    file_data: bytes,
+    label: str,
+    *,
+    quiet: bool = False,
+    max_retries: int = 6,
 ) -> bool:
-    """通过 Files API 上传单个文件。"""
+    """通过 Files API 上传单个文件（含 429 重试）。"""
     username = config.get("username")
     token = config.get("api_token")
     if not username or not token:
         print(f"  [ERR] {label}: 未配置 API Token")
         return False
 
-    url = _PA_FILES_API.format(username=username, path=remote_path)
+    url = _pa_file_url(username, remote_path)
     boundary = b"----pa-deploy-boundary"
     body_parts = [
         b"--" + boundary,
@@ -158,16 +175,24 @@ def _upload_bytes_to_path(
         b"--" + boundary + b"--",
     ]
     body_data = b"\r\n".join(body_parts)
-    code, body = _pa_request(
-        "POST", url, token,
-        data=body_data,
-        content_type=f"multipart/form-data; boundary={boundary.decode()}",
-    )
-    if code in (200, 201):
-        if not quiet:
-            print(f"  [OK] {label} → {remote_path}")
-        return True
-    print(f"  [ERR] {label} HTTP {code}: {body[:300]}")
+
+    for attempt in range(max_retries):
+        code, body = _pa_request(
+            "POST", url, token,
+            data=body_data,
+            content_type=f"multipart/form-data; boundary={boundary.decode()}",
+        )
+        if code in (200, 201):
+            if not quiet:
+                print(f"  [OK] {label} → {remote_path}")
+            return True
+        if code == 429 and attempt + 1 < max_retries:
+            wait = 2 + attempt
+            print(f"  [WAIT] {label} 限流 (429)，{wait}s 后重试 ({attempt + 1}/{max_retries})...")
+            time.sleep(wait)
+            continue
+        print(f"  [ERR] {label} HTTP {code}: {body[:300]}")
+        return False
     return False
 
 
@@ -228,15 +253,51 @@ def _upload_directory_tree(
     for i, fpath in enumerate(files, 1):
         rel = fpath.relative_to(local_root).as_posix()
         remote = remote_base + rel
-        if _upload_bytes_to_path(config, remote, fpath.read_bytes(), rel, quiet=True):
-            ok += 1
-        else:
+        try:
+            if _upload_bytes_to_path(config, remote, fpath.read_bytes(), rel, quiet=True):
+                ok += 1
+            else:
+                err += 1
+                print(f"  [ERR] 失败: {rel}")
+        except Exception as e:
             err += 1
-            print(f"  [ERR] 失败: {rel}")
+            print(f"  [ERR] 失败: {rel}: {e}")
+        if total > 1:
+            time.sleep(_PA_UPLOAD_INTERVAL)
         if total > 20 and i % 50 == 0:
             print(f"    ... {i}/{total}")
     print(f"  [{label or 'tree'}] {ok} 成功, {err} 失败")
     return ok, err
+
+
+def _upload_arknights_parsed_zip(config: dict, home: str) -> None:
+    """干员 JSON 打成 zip 一次上传（避免 422 次 API + 中文路径编码问题）。"""
+    parsed = _REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed"
+    if not parsed.is_dir():
+        print("  [WARN] 未找到 tools/arknights_scout/output/parsed，干员列表将为空")
+        return
+
+    json_files = sorted(parsed.glob("*.json"))
+    if not json_files:
+        print("  [WARN] parsed/ 下无 JSON 文件")
+        return
+
+    print(f"  打包 {len(json_files)} 个干员 JSON → {_ARKNIGHTS_PARSED_ZIP.name} ...")
+    if _ARKNIGHTS_PARSED_ZIP.exists():
+        _ARKNIGHTS_PARSED_ZIP.unlink()
+    with ZipFile(str(_ARKNIGHTS_PARSED_ZIP), "w", ZIP_DEFLATED) as zf:
+        for fp in json_files:
+            zf.write(str(fp), fp.name)
+
+    remote_zip = f"{home}/tools/arknights_scout/arknights_parsed.zip"
+    if not _upload_bytes_to_path(config, remote_zip, _ARKNIGHTS_PARSED_ZIP.read_bytes(), "arknights_parsed.zip"):
+        print("  [ERR] 干员数据 zip 上传失败")
+        return
+
+    project = config.get("project", "calc-framework")
+    print("  [DOC] 在 PA Bash 解压干员数据（更新干员库时执行一次）:")
+    print(f"    cd ~/{project}/tools/arknights_scout/output")
+    print("    rm -rf parsed && mkdir -p parsed && unzip -oq arknights_parsed.zip -d parsed")
 
 
 def _upload_arknights_runtime(config: dict) -> None:
@@ -267,17 +328,7 @@ def _upload_arknights_runtime(config: dict) -> None:
         label="framework/adapters/arknights",
     )
 
-    parsed = _REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed"
-    if parsed.is_dir():
-        _upload_directory_tree(
-            config,
-            parsed,
-            f"{home}/tools/arknights_scout/output/parsed",
-            suffixes=(".json",),
-            label="arknights 干员数据",
-        )
-    else:
-        print("  [WARN] 未找到 tools/arknights_scout/output/parsed，干员列表将为空")
+    _upload_arknights_parsed_zip(config, home)
 
 
 def _upload_donation_assets(config: dict) -> None:
@@ -360,7 +411,7 @@ def _upload_zip(config: dict) -> None:
         sys.exit(1)
 
     remote_path = f"/home/{username}/{project}/frontend/dist.zip"
-    url = _PA_FILES_API.format(username=username, path=remote_path)
+    url = _pa_file_url(username, remote_path)
 
     # 检查 API 连通性（用 /cpu/ 端点验证）
     test_url = _PA_API.format(username=username) + "cpu/"
@@ -427,7 +478,7 @@ def _upload_dist_files(config: dict) -> None:
             remote_path = dist_base + arcname
             file_data = zf.read(info)
 
-            url = _PA_FILES_API.format(username=username, path=remote_path)
+            url = _pa_file_url(username, remote_path)
             boundary = b"----pa-deploy-boundary"
             body_parts = [
                 b"--" + boundary,
@@ -452,8 +503,7 @@ def _upload_dist_files(config: dict) -> None:
                 # 尝试创建父目录后重试
                 if "/" in arcname:
                     parent = "/".join(arcname.split("/")[:-1])
-                    dummy_url = _PA_FILES_API.format(
-                        username=username, path=f"{dist_base}{parent}/.keep")
+                    dummy_url = _pa_file_url(username, f"{dist_base}{parent}/.keep")
                     _pa_request("POST", dummy_url, token, data=b"--boundary\r\n...",
                                 content_type="multipart/form-data; boundary=boundary")
                 retry_code, _ = _pa_request(
@@ -493,7 +543,7 @@ def _upload_backend_files(config: dict) -> None:
     for py_file in sorted(backend_dir.rglob("*.py")):
         rel = py_file.relative_to(backend_dir)
         remote_path = remote_base + str(rel).replace("\\", "/")
-        url = _PA_FILES_API.format(username=username, path=remote_path)
+        url = _pa_file_url(username, remote_path)
         file_data = py_file.read_bytes()
 
         boundary = b"----pa-deploy-boundary"
@@ -546,7 +596,7 @@ def _upload_local_backend_zip(config: dict) -> None:
         sys.exit(1)
 
     remote_path = f"/home/{username}/{project}/web/static/local-backend.zip"
-    url = _PA_FILES_API.format(username=username, path=remote_path)
+    url = _pa_file_url(username, remote_path)
 
     file_content = local_zip.read_bytes()
     boundary = b"----pa-deploy-boundary"
