@@ -83,10 +83,29 @@ def compute_snapshot_with_dag(
 
 
 def _resolve_skill_mult(operator: dict[str, Any], level: int) -> float:
-    """从技能数据中提取指定等级的倍率。
+    """从技能数据中提取指定等级的伤害倍率（effective_multiplier）。
 
-    当前简化实现：仅返回 1.0（普攻倍率）。
-    技能倍率暂未从 wikitext 中提取——倍率信息嵌在描述文本中，
-    需要后续实现 NLP 解析（如"攻击力+30%"→ 1.3）。
+    使用 skill_parser 解析 BWIKI 描述文本。
+    能处理：攻击力+XX% / 攻击力提升至XX% / 相当于攻击力XX% / 攻击力XX%的 等模式。
     """
-    return 1.0
+    return get_parsed_skill_info(operator, level).effective_multiplier
+
+
+def get_parsed_skill_info(operator: dict[str, Any], level: int = 7, skill_index: int = 0) -> Any:
+    """获取完整的技能解析信息（倍率/连发数/条件/治疗等）。
+
+    Args:
+        operator: 干员数据字典
+        level: 技能等级
+        skill_index: 技能索引（0=技能1, 1=技能2, 2=技能3）或 -1=普攻
+
+    Returns:
+        ParsedSkillInfo 完整解析结果
+    """
+    from games.arknights.calc.skill_parser import parse_skill, parse_auto_attack
+    if skill_index < 0:
+        return parse_auto_attack()
+    skills = operator.get("技能", [])
+    if skill_index >= len(skills):
+        return parse_auto_attack()
+    return parse_skill(skills[skill_index], level)

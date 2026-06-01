@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """明日方舟 Desktop GUI 伤害计算器。
 
-基于 PySide6 的独立桌面应用，直接调用本地 DAG 引擎计算。
+基于 PySide6，直接调用本地 DAG 引擎 + skill_parser。
 """
 
 from __future__ import annotations
@@ -13,7 +13,9 @@ from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
+    QFrame,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -23,6 +25,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSlider,
+    QSpinBox,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -30,323 +33,364 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info, compute_snapshot_with_dag
+from games.arknights.calc.skill_parser import ParsedSkillInfo
+
+
 _DATA_DIR = Path(__file__).resolve().parents[2] / ".." / ".." / "tools" / "arknights_scout" / "output" / "parsed"
+
+_OPERATORS_CACHE: dict[str, dict[str, Any]] | None = None
+_OPERATOR_NAMES: list[str] = []
 
 
 def _load_operators() -> dict[str, dict[str, Any]]:
-    """加载所有干员 JSON 数据。"""
+    global _OPERATORS_CACHE, _OPERATOR_NAMES
+    if _OPERATORS_CACHE is not None:
+        return _OPERATORS_CACHE
     result: dict[str, dict[str, Any]] = {}
-    if not _DATA_DIR.is_dir():
-        return result
-    for f in sorted(_DATA_DIR.glob("*.json")):
-        try:
-            data = json.loads(f.read_text(encoding="utf-8"))
-            name = data.get("名称", f.stem)
-            result[name] = data
-        except (json.JSONDecodeError, OSError):
-            pass
+    if _DATA_DIR.is_dir():
+        for f in sorted(_DATA_DIR.glob("*.json")):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                name = data.get("名称", f.stem)
+                result[name] = data
+            except (json.JSONDecodeError, OSError):
+                pass
+    _OPERATORS_CACHE = result
+    _OPERATOR_NAMES = sorted(result.keys())
     return result
 
 
-_OPERATORS_CACHE: dict[str, dict[str, Any]] | None = None
-
-
-def _get_operators() -> dict[str, dict[str, Any]]:
-    global _OPERATORS_CACHE
-    if _OPERATORS_CACHE is None:
-        _OPERATORS_CACHE = _load_operators()
-    return _OPERATORS_CACHE
-
-
-DARK_STYLESHEET = """
-QMainWindow { background-color: #1A1A1A; }
-QWidget { background-color: #1A1A1A; color: #D1D1D1; }
+DARK_QSS = """
+QMainWindow, QWidget { background-color: #1A1A1A; color: #D1D1D1; }
 QLabel { color: #D1D1D1; }
 QGroupBox {
-    border: 1px solid #464646;
-    border-radius: 8px;
-    margin-top: 12px;
-    padding-top: 16px;
-    font-size: 13px;
-    font-weight: bold;
-    color: #E0E0E0;
+    border: 1px solid #464646; border-radius: 8px; margin-top: 12px;
+    padding-top: 16px; font-size: 13px; font-weight: bold; color: #E0E0E0;
 }
-QGroupBox::title {
-    subcontrol-origin: margin;
-    left: 12px;
-    padding: 0 6px;
+QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 6px; }
+QComboBox, QLineEdit, QSpinBox {
+    background-color: #2B2B2B; color: #D1D1D1; border: 1px solid #464646;
+    border-radius: 4px; padding: 4px 8px; min-height: 24px;
 }
-QComboBox {
-    background-color: #2B2B2B;
-    color: #D1D1D1;
-    border: 1px solid #464646;
-    border-radius: 4px;
-    padding: 4px 8px;
-    min-height: 24px;
-}
-QComboBox:hover { border: 1px solid #2B6CB6; }
+QComboBox:hover, QLineEdit:focus, QSpinBox:focus { border: 1px solid #2B6CB6; }
 QComboBox QAbstractItemView {
-    background-color: #2B2B2B;
-    color: #D1D1D1;
+    background-color: #2B2B2B; color: #D1D1D1;
     selection-background-color: #2B6CB6;
 }
-QLineEdit {
-    background-color: #2B2B2B;
-    color: #D1D1D1;
-    border: 1px solid #464646;
-    border-radius: 4px;
-    padding: 4px 8px;
-}
-QLineEdit:focus { border: 1px solid #2B6CB6; }
 QPushButton {
-    background-color: #2B6CB6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 24px;
-    font-size: 14px;
-    font-weight: bold;
-    min-height: 20px;
+    background-color: #2B6CB6; color: white; border: none; border-radius: 6px;
+    padding: 8px 24px; font-size: 14px; font-weight: bold; min-height: 20px;
 }
 QPushButton:hover { background-color: #3182CE; }
 QPushButton:pressed { background-color: #1A4A8A; }
 QPushButton:disabled { background-color: #4A4A4A; color: #888888; }
-QSlider::groove:horizontal {
-    height: 6px;
-    background: #3C3C3C;
-    border-radius: 3px;
-}
+QSlider::groove:horizontal { height: 6px; background: #3C3C3C; border-radius: 3px; }
 QSlider::handle:horizontal {
-    background: #2B6CB6;
-    width: 16px;
-    height: 16px;
-    margin: -5px 0;
-    border-radius: 8px;
+    background: #2B6CB6; width: 16px; height: 16px;
+    margin: -5px 0; border-radius: 8px;
 }
 QSlider::sub-page:horizontal { background: #2B6CB6; border-radius: 3px; }
 QTableWidget {
-    background-color: #1E1E1E;
-    color: #D1D1D1;
-    border: 1px solid #464646;
-    border-radius: 4px;
-    gridline-color: #333333;
+    background-color: #1E1E1E; color: #D1D1D1; border: 1px solid #464646;
+    border-radius: 4px; gridline-color: #333333;
 }
 QTableWidget::item { padding: 4px 8px; }
-QHeaderView::section {
-    background-color: #2B2B2B;
-    color: #D1D1D1;
-    border: 1px solid #464646;
-    padding: 4px;
-}
-QScrollArea { border: none; }
-QSplitter::handle {
-    background-color: #464646;
-    width: 2px;
-}
+QHeaderView::section { background-color: #2B2B2B; color: #D1D1D1; border: 1px solid #464646; padding: 4px; }
+QScrollArea, QSplitter::handle { border: none; background-color: #464646; }
+QCheckBox { color: #D1D1D1; }
 """
 
 
 class ArknightsDamageApp(QMainWindow):
-    """明日方舟桌面伤害计算器主窗口。"""
+    """明日方舟桌面伤害计算器 — 完整版。"""
 
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("明日方舟 伤害计算器")
-        self.setMinimumSize(1024, 680)
-        self.resize(1280, 760)
+        self.setMinimumSize(1200, 720)
+        self.resize(1366, 768)
 
-        self._operators_cache = _get_operators()
-        self._operator_names = sorted(self._operators_cache.keys()) if self._operators_cache else []
+        _load_operators()
         self._current_operator: dict[str, Any] | None = None
+        self._skill_count: int = 0
 
         self._setup_ui()
 
+    # ═══════════════════════════════════════════
+    #  UI 构建
+    # ═══════════════════════════════════════════
+
     def _setup_ui(self) -> None:
-        central = QWidget()
-        self.setCentralWidget(central)
-        main_layout = QHBoxLayout(central)
-        main_layout.setContentsMargins(12, 12, 12, 12)
-        main_layout.setSpacing(12)
+        cw = QWidget()
+        self.setCentralWidget(cw)
+        lo = QHBoxLayout(cw)
+        lo.setContentsMargins(12, 12, 12, 12)
+        lo.setSpacing(12)
 
-        splitter = QSplitter(Qt.Horizontal)
-        main_layout.addWidget(splitter)
+        sp = QSplitter(Qt.Horizontal)
+        lo.addWidget(sp)
+        sp.addWidget(self._build_left())
+        sp.addWidget(self._build_right())
+        sp.setSizes([440, 920])
 
-        left_widget = self._build_left_panel()
-        right_widget = self._build_right_panel()
-        splitter.addWidget(left_widget)
-        splitter.addWidget(right_widget)
-        splitter.setSizes([400, 880])
+    # ── 左栏 ──
 
-    def _build_left_panel(self) -> QWidget:
-        wrapper = QWidget()
-        layout = QVBoxLayout(wrapper)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+    def _build_left(self) -> QWidget:
+        w = QWidget()
+        lo = QVBoxLayout(w)
+        lo.setContentsMargins(0, 0, 0, 0)
+        lo.setSpacing(8)
 
-        select_group = QGroupBox("选择干员")
-        select_layout = QVBoxLayout(select_group)
+        # 干员选择
+        g_op = QGroupBox("干员")
+        gl = QVBoxLayout(g_op)
+        self._op_combo = QComboBox()
+        self._op_combo.setEditable(True)
+        self._op_combo.setPlaceholderText("搜索干员...")
+        self._op_combo.addItems(_OPERATOR_NAMES)
+        self._op_combo.currentTextChanged.connect(self._on_op_selected)
+        gl.addWidget(self._op_combo)
 
-        self._operator_combo = QComboBox()
-        self._operator_combo.setEditable(True)
-        self._operator_combo.setPlaceholderText("搜索或选择干员...")
-        self._operator_combo.addItems(self._operator_names)
-        self._operator_combo.currentTextChanged.connect(self._on_operator_selected)
-        select_layout.addWidget(self._operator_combo)
+        self._op_count_label = QLabel(f"共 {len(_OPERATOR_NAMES)} 个干员")
+        self._op_count_label.setStyleSheet("color: #666; font-size: 11px;")
+        gl.addWidget(self._op_count_label)
+        lo.addWidget(g_op)
 
-        self._skill_level_slider = QSlider(Qt.Horizontal)
-        self._skill_level_slider.setRange(1, 10)
-        self._skill_level_slider.setValue(7)
-        self._skill_level_slider.setTickPosition(QSlider.TicksBelow)
-        self._skill_level_slider.setTickInterval(1)
+        # 技能选择
+        g_sk = QGroupBox("技能")
+        sl = QVBoxLayout(g_sk)
+        self._skill_combo = QComboBox()
+        self._skill_combo.addItems(["普攻", "技能1", "技能2", "技能3"])
+        self._skill_combo.currentIndexChanged.connect(self._on_skill_changed)
+        sl.addWidget(self._skill_combo)
+        lo.addWidget(g_sk)
 
-        skill_layout = QHBoxLayout()
-        skill_layout.addWidget(QLabel("技能等级:"))
-        self._skill_level_label = QLabel("Lv.7")
-        self._skill_level_label.setStyleSheet("color: #2B6CB6; font-weight: bold;")
-        skill_layout.addWidget(self._skill_level_label)
-        skill_layout.addStretch()
-        select_layout.addLayout(skill_layout)
-        select_layout.addWidget(self._skill_level_slider)
-        self._skill_level_slider.valueChanged.connect(self._on_skill_level_changed)
+        # 技能信息
+        self._skill_info_box = QGroupBox("技能信息")
+        sil = QVBoxLayout(self._skill_info_box)
+        self._skill_name_label = QLabel("")
+        self._skill_name_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #2B6CB6;")
+        sil.addWidget(self._skill_name_label)
+        self._skill_meta_label = QLabel("")
+        self._skill_meta_label.setStyleSheet("color: #888; font-size: 12px;")
+        sil.addWidget(self._skill_meta_label)
+        self._skill_desc_label = QLabel("")
+        self._skill_desc_label.setWordWrap(True)
+        self._skill_desc_label.setStyleSheet("color: #B0B0B0; font-size: 11px; padding: 4px 0;")
+        sil.addWidget(self._skill_desc_label)
+        self._skill_heal_label = QLabel("")
+        self._skill_heal_label.setStyleSheet("color: #68D391; font-weight: bold; font-size: 12px;")
+        sil.addWidget(self._skill_heal_label)
+        self._skill_info_box.hide()
+        lo.addWidget(self._skill_info_box)
 
+        # 干员详情
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        self._detail_widget = QWidget()
-        self._detail_layout = QVBoxLayout(self._detail_widget)
-        self._detail_layout.setContentsMargins(0, 0, 0, 0)
+        self._detail_w = QWidget()
+        self._detail_lo = QVBoxLayout(self._detail_w)
+        self._detail_lo.setContentsMargins(0, 0, 0, 0)
 
-        self._detail_name_label = QLabel("")
-        self._detail_name_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #E0E0E0;")
-        self._detail_layout.addWidget(self._detail_name_label)
+        self._det_name = QLabel("")
+        self._det_name.setStyleSheet("font-size: 18px; font-weight: bold; color: #E0E0E0;")
+        self._detail_lo.addWidget(self._det_name)
 
-        self._detail_info_label = QLabel("")
-        self._detail_info_label.setStyleSheet("color: #888888; font-size: 12px;")
-        self._detail_layout.addWidget(self._detail_info_label)
+        self._det_info = QLabel("")
+        self._det_info.setStyleSheet("color: #888; font-size: 12px;")
+        self._detail_lo.addWidget(self._det_info)
 
-        self._detail_trait_label = QLabel("")
-        self._detail_trait_label.setWordWrap(True)
-        self._detail_trait_label.setStyleSheet("color: #B0B0B0; font-style: italic; padding: 4px 0;")
-        self._detail_layout.addWidget(self._detail_trait_label)
+        self._det_trait = QLabel("")
+        self._det_trait.setWordWrap(True)
+        self._det_trait.setStyleSheet("color: #B0B0B0; font-style: italic; padding: 4px 0;")
+        self._detail_lo.addWidget(self._det_trait)
 
-        self._stats_table = QTableWidget()
-        self._stats_table.setColumnCount(2)
-        self._stats_table.setHorizontalHeaderLabels(["属性", "数值"])
-        self._stats_table.horizontalHeader().setStretchLastSection(True)
-        self._stats_table.setMaximumHeight(250)
-        self._stats_table.verticalHeader().setVisible(False)
-        self._detail_layout.addWidget(self._stats_table)
+        self._det_stat_tbl = QTableWidget()
+        self._det_stat_tbl.setColumnCount(2)
+        self._det_stat_tbl.setHorizontalHeaderLabels(["属性", "数值"])
+        self._det_stat_tbl.horizontalHeader().setStretchLastSection(True)
+        self._det_stat_tbl.setMaximumHeight(250)
+        self._det_stat_tbl.verticalHeader().setVisible(False)
+        self._detail_lo.addWidget(self._det_stat_tbl)
 
-        self._trust_label = QLabel("")
-        self._trust_label.setWordWrap(True)
-        self._trust_label.setStyleSheet("color: #68D391; font-size: 12px;")
-        self._detail_layout.addWidget(self._trust_label)
+        self._det_trust = QLabel("")
+        self._det_trust.setWordWrap(True)
+        self._det_trust.setStyleSheet("color: #68D391; font-size: 12px;")
+        self._detail_lo.addWidget(self._det_trust)
 
-        self._talent_label = QLabel("")
-        self._talent_label.setWordWrap(True)
-        self._talent_label.setStyleSheet("color: #B794F4; font-size: 12px;")
-        self._detail_layout.addWidget(self._talent_label)
+        self._det_talent = QLabel("")
+        self._det_talent.setWordWrap(True)
+        self._det_talent.setStyleSheet("color: #B794F4; font-size: 12px;")
+        self._detail_lo.addWidget(self._det_talent)
 
-        self._detail_layout.addStretch()
-        scroll.setWidget(self._detail_widget)
+        self._detail_lo.addStretch()
+        scroll.setWidget(self._detail_w)
+        lo.addWidget(scroll)
 
-        layout.addWidget(select_group)
-        layout.addWidget(scroll)
+        return w
 
-        status_label = QLabel(f"已加载 {len(self._operator_names)} 个干员")
-        status_label.setStyleSheet("color: #666666; font-size: 11px;")
-        layout.addWidget(status_label)
+    # ── 右栏 ──
 
-        return wrapper
+    def _build_right(self) -> QWidget:
+        w = QWidget()
+        lo = QVBoxLayout(w)
+        lo.setContentsMargins(0, 0, 0, 0)
+        lo.setSpacing(8)
 
-    def _build_right_panel(self) -> QWidget:
-        wrapper = QWidget()
-        layout = QVBoxLayout(wrapper)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        scr = QScrollArea()
+        scr.setWidgetResizable(True)
+        sw = QWidget()
+        sl = QVBoxLayout(sw)
+        sl.setSpacing(10)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setSpacing(10)
+        # 技能参数
+        g_sp = QGroupBox("技能参数")
+        spg = QGridLayout(g_sp)
+        spg.addWidget(QLabel("技能等级:"), 0, 0)
+        self._lvl_slider = QSlider(Qt.Horizontal)
+        self._lvl_slider.setRange(1, 10)
+        self._lvl_slider.setValue(7)
+        self._lvl_slider.setTickPosition(QSlider.TicksBelow)
+        self._lvl_slider.setTickInterval(1)
+        self._lvl_slider.valueChanged.connect(self._on_level_changed)
+        spg.addWidget(self._lvl_slider, 0, 1)
+        self._lvl_label = QLabel("Lv.7")
+        self._lvl_label.setStyleSheet("color: #2B6CB6; font-weight: bold;")
+        spg.addWidget(self._lvl_label, 0, 2)
 
-        enemy_group = QGroupBox("敌人参数")
-        enemy_grid = QGridLayout(enemy_group)
+        spg.addWidget(QLabel("连发数:"), 1, 0)
+        self._hit_spin = QSpinBox()
+        self._hit_spin.setRange(1, 99)
+        self._hit_spin.setValue(1)
+        spg.addWidget(self._hit_spin, 1, 1)
 
-        enemy_grid.addWidget(QLabel("防御力 (DEF):"), 0, 0)
+        spg.addWidget(QLabel("技能倍率:"), 2, 0)
+        self._mult_input = QLineEdit("1.0")
+        spg.addWidget(self._mult_input, 2, 1)
+        self._mult_auto_label = QLabel("")
+        self._mult_auto_label.setStyleSheet("color: #888; font-size: 11px;")
+        spg.addWidget(self._mult_auto_label, 2, 2)
+
+        self._cond_check = QCheckBox("仅攻击到一人时（激活条件倍率）")
+        self._cond_check.setVisible(False)
+        spg.addWidget(self._cond_check, 3, 0, 1, 3)
+        sl.addWidget(g_sp)
+
+        # 敌人参数
+        g_en = QGroupBox("敌人参数")
+        eng = QGridLayout(g_en)
+        eng.addWidget(QLabel("防御力 (DEF):"), 0, 0)
         self._def_input = QLineEdit("200")
-        enemy_grid.addWidget(self._def_input, 0, 1)
-
-        enemy_grid.addWidget(QLabel("法术抗性 (RES):"), 1, 0)
-        self._res_input = QLineEdit("50")
-        enemy_grid.addWidget(self._res_input, 1, 1)
-
         self._def_slider = QSlider(Qt.Horizontal)
         self._def_slider.setRange(0, 3000)
         self._def_slider.setValue(200)
         self._def_slider.valueChanged.connect(lambda v: self._def_input.setText(str(v)))
         self._def_input.textChanged.connect(lambda t: self._sync_slider(self._def_slider, t))
-        enemy_grid.addWidget(self._def_slider, 0, 2)
+        eng.addWidget(self._def_input, 0, 1)
+        eng.addWidget(self._def_slider, 0, 2)
 
+        eng.addWidget(QLabel("法术抗性 (RES):"), 1, 0)
+        self._res_input = QLineEdit("50")
         self._res_slider = QSlider(Qt.Horizontal)
         self._res_slider.setRange(0, 100)
         self._res_slider.setValue(50)
         self._res_slider.valueChanged.connect(lambda v: self._res_input.setText(str(v)))
         self._res_input.textChanged.connect(lambda t: self._sync_slider(self._res_slider, t))
-        enemy_grid.addWidget(self._res_slider, 1, 2)
+        eng.addWidget(self._res_input, 1, 1)
+        eng.addWidget(self._res_slider, 1, 2)
+        sl.addWidget(g_en)
 
-        scroll_layout.addWidget(enemy_group)
-
-        bonus_group = QGroupBox("额外加成")
-        bonus_grid = QGridLayout(bonus_group)
-
-        bonus_grid.addWidget(QLabel("攻击力%加成:"), 0, 0)
-        self._atk_pct_input = QLineEdit("0")
-        self._atk_pct_slider = QSlider(Qt.Horizontal)
-        self._atk_pct_slider.setRange(-100, 200)
-        self._atk_pct_slider.setValue(0)
-        self._atk_pct_slider.valueChanged.connect(lambda v: self._atk_pct_input.setText(str(v)))
-        self._atk_pct_input.textChanged.connect(lambda t: self._sync_slider(self._atk_pct_slider, t))
-        bonus_grid.addWidget(self._atk_pct_input, 0, 1)
-        bonus_grid.addWidget(self._atk_pct_slider, 0, 2)
-
-        bonus_grid.addWidget(QLabel("伤害倍率加成%:"), 1, 0)
+        # 额外加成
+        g_bn = QGroupBox("额外加成")
+        bng = QGridLayout(g_bn)
+        bng.addWidget(QLabel("攻击力%加成:"), 0, 0)
+        self._atk_bonus_input = QLineEdit("0")
+        bng.addWidget(self._atk_bonus_input, 0, 1)
+        bng.addWidget(QLabel("伤害倍率加成%:"), 1, 0)
         self._dmg_bonus_input = QLineEdit("0")
-        bonus_grid.addWidget(self._dmg_bonus_input, 1, 1)
-
-        bonus_grid.addWidget(QLabel("防御穿透%:"), 2, 0)
+        bng.addWidget(self._dmg_bonus_input, 1, 1)
+        bng.addWidget(QLabel("防御穿透%:"), 2, 0)
         self._def_pen_input = QLineEdit("0")
-        bonus_grid.addWidget(self._def_pen_input, 2, 1)
-
-        bonus_grid.addWidget(QLabel("法抗穿透%:"), 3, 0)
+        bng.addWidget(self._def_pen_input, 2, 1)
+        bng.addWidget(QLabel("法抗穿透%:"), 3, 0)
         self._res_pen_input = QLineEdit("0")
-        bonus_grid.addWidget(self._res_pen_input, 3, 1)
+        bng.addWidget(self._res_pen_input, 3, 1)
+        bng.setColumnStretch(1, 1)
+        sl.addWidget(g_bn)
 
-        bonus_grid.setColumnStretch(2, 1)
-        scroll_layout.addWidget(bonus_group)
+        sl.addStretch()
+        scr.setWidget(sw)
+        lo.addWidget(scr)
 
-        scroll_layout.addStretch()
-        scroll.setWidget(scroll_widget)
-        layout.addWidget(scroll)
+        # 计算按钮
+        self._calc_btn = QPushButton("开始计算")
+        self._calc_btn.clicked.connect(self._on_compute)
+        lo.addWidget(self._calc_btn)
 
-        self._compute_btn = QPushButton("开始计算")
-        self._compute_btn.clicked.connect(self._on_compute)
-        layout.addWidget(self._compute_btn)
-
-        self._result_label = QLabel("选择干员并点击「开始计算」")
+        # 结果标签
+        self._result_label = QLabel("选择干员和技能，然后点击「开始计算」")
         self._result_label.setAlignment(Qt.AlignCenter)
-        self._result_label.setStyleSheet("color: #888888; font-size: 12px; padding: 8px;")
-        layout.addWidget(self._result_label)
+        self._result_label.setStyleSheet("color: #888; font-size: 12px; padding: 8px;")
+        lo.addWidget(self._result_label)
 
+        # 结果卡片行
+        card_row = QHBoxLayout()
+        self._result_cards: dict[str, QLabel] = {}
+        for label, key in [("最终攻击力", "atk"), ("物理伤害", "phys"), ("法术伤害", "magic"), ("真实伤害", "true")]:
+            c = QFrame()
+            c.setFrameShape(QFrame.StyledPanel)
+            c.setStyleSheet("QFrame { background-color: #222; border: 1px solid #464646; border-radius: 8px; padding: 8px; }")
+            cl = QVBoxLayout(c)
+            cl.setContentsMargins(8, 4, 8, 4)
+            cl.setSpacing(2)
+            tl = QLabel(label)
+            tl.setAlignment(Qt.AlignCenter)
+            tl.setStyleSheet("color: #888; font-size: 11px; border: none;")
+            cl.addWidget(tl)
+            vl = QLabel("—")
+            vl.setAlignment(Qt.AlignCenter)
+            vl.setStyleSheet("font-size: 18px; font-weight: bold; border: none;")
+            cl.addWidget(vl)
+            card_row.addWidget(c)
+            self._result_cards[key] = vl
+        lo.addLayout(card_row)
+
+        # 结果明细表（乘区 breakdown）
         self._result_table = QTableWidget()
         self._result_table.setColumnCount(2)
-        self._result_table.setHorizontalHeaderLabels(["指标", "数值"])
+        self._result_table.setHorizontalHeaderLabels(["乘区/指标", "数值"])
         self._result_table.horizontalHeader().setStretchLastSection(True)
-        self._result_table.setMaximumHeight(300)
+        self._result_table.setMaximumHeight(280)
         self._result_table.verticalHeader().setVisible(False)
-        layout.addWidget(self._result_table)
+        lo.addWidget(self._result_table)
 
-        return wrapper
+        # 异常/元素伤害面板（类似终末地的异常矩阵）
+        anom_box = QGroupBox("异常/元素伤害")
+        anom_lo = QVBoxLayout(anom_box)
+        self._anom_tbl = QTableWidget()
+        self._anom_tbl.setColumnCount(3)
+        self._anom_tbl.setHorizontalHeaderLabels(["伤害类型", "倍率", "额外伤害"])
+        self._anom_tbl.horizontalHeader().setStretchLastSection(True)
+        self._anom_tbl.setMaximumHeight(150)
+        self._anom_tbl.verticalHeader().setVisible(False)
+        # 填入预设行
+        anom_data = [
+            ("灼燃损伤", "1.0x", "0"),
+            ("凋亡损伤", "1.0x", "0"),
+        ]
+        self._anom_tbl.setRowCount(len(anom_data))
+        for i, (t, m, d) in enumerate(anom_data):
+            self._anom_tbl.setItem(i, 0, QTableWidgetItem(t))
+            self._anom_tbl.setItem(i, 1, QTableWidgetItem(m))
+            self._anom_tbl.setItem(i, 2, QTableWidgetItem(d))
+        anom_lo.addWidget(self._anom_tbl)
+        lo.addWidget(anom_box)
+
+        return w
+
+    # ═══════════════════════════════════════════
+    #  信号处理
+    # ═══════════════════════════════════════════
 
     def _sync_slider(self, slider: QSlider, text: str) -> None:
         try:
@@ -358,69 +402,112 @@ class ArknightsDamageApp(QMainWindow):
         except (ValueError, TypeError):
             pass
 
-    def _on_skill_level_changed(self, value: int) -> None:
-        label = f"Lv.{value}" if value <= 7 else f"专精{value - 7}"
-        self._skill_level_label.setText(label)
-
-    def _on_operator_selected(self, name: str) -> None:
-        if not name or name not in self._operators_cache:
+    def _on_op_selected(self, name: str) -> None:
+        if not name or name not in _OPERATORS_CACHE:
             return
-        self._current_operator = self._operators_cache[name]
-        self._update_detail_panel()
+        self._current_operator = _OPERATORS_CACHE[name]
+        self._skill_count = len(self._current_operator.get("技能", []))
+        # 更新技能下拉
+        self._skill_combo.blockSignals(True)
+        self._skill_combo.clear()
+        self._skill_combo.addItem("普攻")
+        for i in range(min(self._skill_count, 3)):
+            self._skill_combo.addItem(f"技能{i+1}")
+        for i in range(self._skill_count, 3):
+            self._skill_combo.addItem(f"技能{i+1}（无数据）")
+        self._skill_combo.blockSignals(False)
+        self._update_detail()
+        self._on_skill_changed(1)  # default to skill 1
 
-    def _update_detail_panel(self) -> None:
+    def _on_skill_changed(self, idx: int) -> None:
+        if not self._current_operator:
+            return
+        si = idx - 1  # 0=普攻(-1), 1=技能1(0), 2=技能2(1), 3=技能3(2)
+        level = self._lvl_slider.value()
+        info = get_parsed_skill_info(self._current_operator, level, si)
+        self._apply_skill_info(info)
+
+    def _on_level_changed(self, value: int) -> None:
+        label = f"Lv.{value}" if value <= 7 else f"专精{value - 7}"
+        self._lvl_label.setText(label)
+        self._on_skill_changed(self._skill_combo.currentIndex())
+
+    def _apply_skill_info(self, info: ParsedSkillInfo) -> None:
+        # 技能信息
+        self._skill_info_box.show()
+        self._skill_name_label.setText(info.name)
+        self._skill_meta_label.setText(f"SP={info.sp_cost}  初始={info.init_sp}  持续={info.duration}秒")
+        self._skill_desc_label.setText(info.description[:200] if info.description else "无描述")
+
+        self._cond_check.setChecked(False)
+
+        # 治疗标记
+        if info.is_healing:
+            self._skill_heal_label.setText("⚕ 治疗技能 — 结果数值为治疗量")
+            self._cond_check.setVisible(False)
+        else:
+            self._skill_heal_label.setText("")
+            self._cond_check.setVisible(info.has_conditional)
+            if info.has_conditional:
+                self._cond_check.setText(f"仅攻击到一人时（倍率 {info.conditional_mult:.2f}x）")
+
+        # 自动倍率
+        eff_mult = info.effective_multiplier
+        auto_text = f"自动检测: {eff_mult:.2f}x"
+        if info.atk_buff_hint > 0:
+            auto_text += f"（含 ATK+{info.atk_buff_hint*100:.0f}% 加成）"
+        self._mult_auto_label.setText(auto_text)
+        self._mult_input.setText(f"{eff_mult:.2f}")
+
+        # 连发数
+        self._hit_spin.setValue(info.hit_count)
+
+    def _update_detail(self) -> None:
         op = self._current_operator
         if not op:
             return
-
-        name = op.get("名称", "未知")
+        name = op.get("名称", "?")
         star = op.get("星级", 0)
         cls = op.get("职业", "")
         branch = op.get("分支", "")
         trait = op.get("特性", "")
-        stars_display = "★" * star
-        self._detail_name_label.setText(f"{name}  {stars_display}")
-        self._detail_info_label.setText(f"{cls} · {branch}")
-        self._detail_trait_label.setText(trait)
+        self._det_name.setText(f"{name}  {'★' * star}")
+        self._det_info.setText(f"{cls} · {branch}")
+        self._det_trait.setText(trait)
 
         base = op.get("基础属性", {})
-        stat_labels = {
-            "生命": "生命上限", "攻击": "攻击力", "防御": "防御力",
-            "法术抗性": "法术抗性", "部署费用": "部署费用",
-            "再部署": "再部署时间", "阻挡数": "阻挡数", "攻击间隔": "攻击间隔",
-        }
-        self._stats_table.setRowCount(len(base))
-        for i, (key, val) in enumerate(base.items()):
-            label = stat_labels.get(key, key)
-            self._stats_table.setItem(i, 0, QTableWidgetItem(label))
-            val_str = str(val) if not isinstance(val, float) else f"{val:.1f}"
-            self._stats_table.setItem(i, 1, QTableWidgetItem(val_str))
-        self._stats_table.resizeColumnsToContents()
+        labels = {"生命": "生命上限", "攻击": "攻击力", "防御": "防御力",
+                  "法术抗性": "法术抗性", "部署费用": "部署费用",
+                  "再部署": "再部署时间", "阻挡数": "阻挡数", "攻击间隔": "攻击间隔"}
+        self._det_stat_tbl.setRowCount(len(base))
+        for i, (k, v) in enumerate(base.items()):
+            self._det_stat_tbl.setItem(i, 0, QTableWidgetItem(labels.get(k, k)))
+            self._det_stat_tbl.setItem(i, 1, QTableWidgetItem(
+                f"{v:.1f}" if isinstance(v, float) else str(v)))
+        self._det_stat_tbl.resizeColumnsToContents()
 
         trust = op.get("信赖加成", {})
         if trust and any(v != 0 for v in trust.values()):
-            parts = []
-            for k, v in trust.items():
-                lbl = stat_labels.get(k, k)
-                sign = "+" if v >= 0 else ""
-                if isinstance(v, float):
-                    parts.append(f"{lbl} {sign}{v:.1f}")
-                else:
-                    parts.append(f"{lbl} {sign}{v}")
-            self._trust_label.setText(f"信赖加成（200%）：{'  '.join(parts)}")
-            self._trust_label.show()
+            parts = "  ".join(
+                f"{labels.get(k, k)} {'+' if v >= 0 else ''}{v}"
+                for k, v in trust.items() if v != 0
+            )
+            self._det_trust.setText(f"信赖加成（200%）：{parts}")
+            self._det_trust.show()
         else:
-            self._trust_label.hide()
+            self._det_trust.hide()
 
         talents = op.get("天赋", [])
         if talents:
-            lines = []
-            for t in talents:
-                lines.append(f"{t.get('name', '')}（{t.get('unlock', '')}）：{t.get('description', '')}")
-            self._talent_label.setText("天赋：\n" + "\n".join(lines))
-            self._talent_label.show()
+            lines = [f"{t.get('name','')}（{t.get('unlock','')}）：{t.get('description','')}" for t in talents]
+            self._det_talent.setText("天赋：\n" + "\n".join(lines))
+            self._det_talent.show()
         else:
-            self._talent_label.hide()
+            self._det_talent.hide()
+
+    # ═══════════════════════════════════════════
+    #  计算
+    # ═══════════════════════════════════════════
 
     def _on_compute(self) -> None:
         if not self._current_operator:
@@ -428,26 +515,39 @@ class ArknightsDamageApp(QMainWindow):
             return
 
         try:
-            from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag
+            level = self._lvl_slider.value()
+            si = self._skill_combo.currentIndex() - 1
+            skill_info = get_parsed_skill_info(self._current_operator, level, si)
 
-            skill_level = self._skill_level_slider.value()
+            # 技能倍率：手动输入优先
+            try:
+                skill_mult = float(self._mult_input.text() or "1.0")
+            except ValueError:
+                skill_mult = skill_info.effective_multiplier
+
+            # 条件触发
+            if self._cond_check.isChecked() and skill_info.has_conditional:
+                skill_mult = skill_info.conditional_mult
+
+            hit_count = self._hit_spin.value()
+
             enemy_def = float(self._def_input.text() or "0")
             enemy_res = float(self._res_input.text() or "0")
-            atk_pct = float(self._atk_pct_input.text() or "0")
-            dmg_bonus = float(self._dmg_bonus_input.text() or "0")
+            atk_bonus = float(self._atk_bonus_input.text() or "0") / 100.0 + skill_info.atk_buff_hint
+            dmg_bonus = float(self._dmg_bonus_input.text() or "0") / 100.0
             def_pen = float(self._def_pen_input.text() or "0")
-            res_pen = float(self._res_pen_input.text() or "0")
+            res_pen = float(self._res_pen_input.text() or "0") / 100.0
 
             result = compute_snapshot_with_dag(
                 operator=self._current_operator,
-                skill_level=skill_level,
-                skill_multiplier=1.0,
+                skill_level=level,
+                skill_multiplier=skill_mult,
                 enemy_def=enemy_def,
                 enemy_res=enemy_res,
-                atk_percent_bonus=atk_pct / 100.0,
-                dmg_bonus=dmg_bonus / 100.0,
+                atk_percent_bonus=atk_bonus,
+                dmg_bonus=dmg_bonus,
                 def_penetration=def_pen,
-                res_penetration=res_pen / 100.0,
+                res_penetration=res_pen,
             )
 
             outputs = result.outputs
@@ -456,24 +556,51 @@ class ArknightsDamageApp(QMainWindow):
             magic = outputs.get("法术伤害", 0)
             true_dmg = outputs.get("真实伤害", 0)
 
-            rows = [
-                ("最终攻击力", f"{final_atk:.2f}"),
-                ("物理伤害", f"{phys:.2f}"),
-                ("法术伤害", f"{magic:.2f}"),
-                ("真实伤害", f"{true_dmg:.2f}"),
+            # 更新结果卡片
+            self._result_cards["atk"].setText(f"{final_atk:.1f}")
+            self._result_cards["phys"].setText(f"{phys:.1f}")
+            self._result_cards["phys"].setStyleSheet("font-size: 18px; font-weight: bold; color: #DAA520; border: none;")
+            self._result_cards["magic"].setText(f"{magic:.1f}")
+            self._result_cards["magic"].setStyleSheet("font-size: 18px; font-weight: bold; color: #2B6CB6; border: none;")
+            self._result_cards["true"].setText(f"{true_dmg:.1f}")
+            self._result_cards["true"].setStyleSheet("font-size: 18px; font-weight: bold; color: #68D391; border: none;")
+
+            # 乘区明细表
+            op = self._current_operator
+            base_atk = float(op.get("基础属性", {}).get("攻击", 0))
+            trust_atk = float(op.get("信赖加成", {}).get("攻击", 0) if op.get("信赖加成") else 0)
+            zone_rows = [
+                ("基础攻击力", f"{base_atk:.1f}"),
+                ("信赖加成", f"+{trust_atk:.1f}" if trust_atk > 0 else "0"),
+                (f"ATK%加成（{(atk_bonus*100):.0f}%）", f"+{base_atk * atk_bonus:.1f}"),
+                ("最终攻击力", f"{final_atk:.1f}"),
+                ("技能倍率", f"x{skill_mult:.2f}"),
+                ("连发数", f"x{hit_count}"),
+                ("总伤害倍率", f"x{skill_mult * hit_count:.2f}"),
+                ("", ""),
+                ("防御力", f"{enemy_def:.0f}"),
+                ("法术抗性", f"{enemy_res:.0f}%"),
+                ("", ""),
+                ("物理伤害（单发）", f"{phys:.1f}" if hit_count <= 1 else f"{(phys/hit_count if hit_count else 0):.1f}"),
+                # "法术伤害（单发）" 类似
             ]
-            self._result_table.setRowCount(len(rows))
-            for i, (k, v) in enumerate(rows):
+            if hit_count > 1:
+                zone_rows.append(("物理伤害（合计）", f"{phys * hit_count:.1f}"))
+                zone_rows.append(("法术伤害（合计）", f"{magic * hit_count:.1f}"))
+                zone_rows.append(("真实伤害（合计）", f"{true_dmg * hit_count:.1f}"))
+
+            self._result_table.setRowCount(len(zone_rows))
+            for i, (k, v) in enumerate(zone_rows):
                 self._result_table.setItem(i, 0, QTableWidgetItem(k))
-                item = QTableWidgetItem(v)
-                if i == 1:
-                    item.setForeground(Qt.darkYellow)
-                elif i == 2:
-                    item.setForeground(Qt.blue)
-                self._result_table.setItem(i, 1, item)
+                self._result_table.setItem(i, 1, QTableWidgetItem(v))
             self._result_table.resizeColumnsToContents()
 
-            self._result_label.setText(f"计算结果 — {self._current_operator.get('名称', '')}")
+            op_name = op.get("名称", "")
+            label = f"计算结果 — {op_name}"
+            label += f"（{skill_info.name}，总伤害倍率 {skill_mult * hit_count:.2f}x）"
+            if skill_info.is_healing:
+                label += " ⚕ 治疗技能"
+            self._result_label.setText(label)
             self._result_label.setStyleSheet("color: #68D391; font-size: 14px; font-weight: bold; padding: 8px;")
 
         except Exception as e:
@@ -487,7 +614,6 @@ class ArknightsDamageApp(QMainWindow):
 
 
 def main() -> None:
-    """明日方舟桌面 GUI 入口。"""
     import sys as _sys
     from pathlib import Path as _Path
 
@@ -495,10 +621,12 @@ def main() -> None:
     _FW_SRC = _REPO_ROOT / "framework" / "src"
     if str(_FW_SRC) not in _sys.path:
         _sys.path.insert(0, str(_FW_SRC))
+    if str(_REPO_ROOT) not in _sys.path:
+        _sys.path.insert(0, str(_REPO_ROOT))
 
     app = QApplication(_sys.argv)
     app.setStyle("Fusion")
-    app.setStyleSheet(DARK_STYLESHEET)
+    app.setStyleSheet(DARK_QSS)
 
     window = ArknightsDamageApp()
     window.run()
