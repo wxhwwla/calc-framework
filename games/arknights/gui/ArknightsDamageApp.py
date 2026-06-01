@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -32,6 +33,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from utils.gui.help_dialog import HelpDialog
+from utils.gui.help_loader import load_multi_category
 
 from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info, compute_snapshot_with_dag
 from games.arknights.calc.skill_parser import ParsedSkillInfo
@@ -115,7 +119,23 @@ class ArknightsDamageApp(QMainWindow):
         self._current_operator: dict[str, Any] | None = None
         self._skill_count: int = 0
 
+        self._setup_menu()
         self._setup_ui()
+
+    # ── 菜单 ──
+
+    def _open_help(self) -> None:
+        sections = load_multi_category({"完整说明书": ["GUI ⑪：明日方舟计算器", "数据结构与文件格式"]})
+        dlg = HelpDialog(build_tree=lambda: sections, parent=self, title="明日方舟计算器 — 使用说明")
+        dlg.exec()
+
+    def _setup_menu(self) -> None:
+        mb = self.menuBar()
+        help_menu = mb.addMenu("帮助(&H)")
+        help_action = QAction("使用说明(&U)", self)
+        help_action.setShortcut(QKeySequence("F1"))
+        help_action.triggered.connect(self._open_help)
+        help_menu.addAction(help_action)
 
     # ═══════════════════════════════════════════
     #  UI 构建

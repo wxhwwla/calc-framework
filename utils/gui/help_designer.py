@@ -9,27 +9,28 @@ from __future__ import annotations
 
 from utils.gui.help_dialog import HelpSection
 
-
-
+from utils.gui.help_loader import load_multi_category
 
 
 def build_designer_help() -> list[HelpSection]:
 
-    return [
-
+    result = [
         _overview(),
-
         _inverse_tab(),
-
         _data_editor_tab(),
-
         _data_browser_tab(),
-
         _tools(),
-
         _tips(),
-
     ]
+    docs = load_multi_category(
+        {
+            "完整说明书": [
+                "GUI ②：终末地数据设计器",
+            ],
+        }
+    )
+    result.extend(docs)
+    return result
 
 
 

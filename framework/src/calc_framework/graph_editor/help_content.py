@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """帮助文档内容 — 集中管理所有使用说明文本。"""
 
-from dataclasses import dataclass, field
-
-
+from dataclasses import dataclass, field
+
+from utils.gui.help_loader import load_multi_category
+
+
 @dataclass
 class HelpSection:
     """帮助文档中的一个分类。"""
@@ -13,20 +15,22 @@ class HelpSection:
     sub_sections: list["HelpSection"] = field(default_factory=list)
 
 
-def build_help_tree() -> list[HelpSection]:
-    """构建完整的帮助文档树。"""
-    return [
-        _overview(),
-        _interface(),
-        _node_types(),
-        _operations(),
-        _file_ops(),
-        _preview(),
-        _shortcuts(),
-        _config(),
-        _compilation(),
-        _format(),
-    ]
+def build_help_tree() -> list[HelpSection]:
+    """构建完整的帮助文档树。"""
+    docs = load_multi_category({"完整说明书": ["GUI ①：DAG 图编辑器"]})
+    result = [
+        _overview(),
+        _interface(),
+        _node_types(),
+        _operations(),
+        _file_ops(),
+        _preview(),
+        _shortcuts(),
+        _config(),
+        _compilation(),
+        _format(),
+    ]
+    return result + docs
 
 
 def _overview() -> HelpSection:

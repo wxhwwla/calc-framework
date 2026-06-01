@@ -9,27 +9,32 @@ from __future__ import annotations
 
 from utils.gui.help_dialog import HelpSection
 
+from utils.gui.help_loader import load_multi_category
+
 
 
 
 
 def build_calculator_help() -> list[HelpSection]:
 
-    return [
-
+    result = [
         _overview(),
-
         _main_tab(),
-
         _advanced_tab(),
-
         _search(),
-
         _features(),
-
         _tips(),
-
     ]
+    docs = load_multi_category(
+        {
+            "完整说明书": [
+                "GUI ⑤：终末地伤害计算器",
+                "数据结构与文件格式",
+            ],
+        }
+    )
+    result.extend(docs)
+    return result
 
 
 

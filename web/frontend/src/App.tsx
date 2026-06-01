@@ -25,6 +25,7 @@ import DesignerPage from "./pages/DesignerPage";
 import PackDesignerPage from "./pages/PackDesignerPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import ArknightsComputePage from "./pages/ArknightsComputePage";
+import GlobalHelpDialog from "./components/GlobalHelpDialog";
 
 const drawerWidth = 240;
 
@@ -46,9 +47,10 @@ function Shell() {
     <Box sx={{ display: "flex" }}>
       <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Typography variant="h6" noWrap>
+          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             Calc Framework Web
           </Typography>
+          <GlobalHelpDialog />
         </Toolbar>
       </AppBar>
       <Drawer

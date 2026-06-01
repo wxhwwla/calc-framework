@@ -3,10 +3,12 @@
 
 from calc_framework.ui.help_dialog import HelpSection
 
+from utils.gui.help_loader import load_multi_category
+
 
 def build_viewer_help() -> list[HelpSection]:
     """构造 CalcPackViewer 的使用说明帮助内容。"""
-    return [
+    result = [
         HelpSection(
             category="入门",
             title="概述",
@@ -118,3 +120,12 @@ A: 当前版本通过主题菜单切换预设主题。自定义主题需编辑�
 """,
         ),
     ]
+    docs = load_multi_category(
+        {
+            "完整说明书": [
+                "GUI ④：CalcPackViewer 通用查看器",
+                "数据结构与文件格式",
+            ],
+        }
+    )
+    return result + docs

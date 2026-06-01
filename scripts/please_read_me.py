@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.20"
+_VERSION = "3.15.21"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,9 +438,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 11 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//345/210/266/351/200/240/346/270/270/346/210/217/350/256/241/347/256/227/345/231/250/345/256/214/346/225/264/346/265/201/347/250/213.md"
+# - 修改 framework/src/calc_framework/graph_editor/help_content.py
+# - 修改 framework/src/calc_framework/ui/viewer_help_content.py
+# - 修改 games/arknights/gui/ArknightsDamageApp.py
 # - 修改 scripts/please_read_me.py
+# - 修改 tools/designer/app.py
+# - 修改 utils/gui/help_calculator.py
+# - 修改 utils/gui/help_designer.py
+# - 修改 utils/gui/help_loader.py
+# - 变更 web/frontend/src/App.tsx
+# - 变更 web/frontend/src/components/GlobalHelpDialog.tsx
 # --- END UPLOAD_SUMMARY ---
