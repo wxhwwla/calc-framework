@@ -350,6 +350,16 @@ def _handle_search_api(environ, start_response):
 
             if path == "/api/search/run":
                 return _post_json_handler(start_response, payload, lambda p: run_search(SearchRequest(**p)))
+
+            if path == "/api/search/run_stream":
+                return _json(
+                    start_response,
+                    {
+                        "error": "run_stream not supported on PythonAnywhere; use local backend or POST /api/search/run",
+                        "code": "pa_stream_unsupported",
+                    },
+                    "501 Not Implemented",
+                )
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
@@ -427,6 +437,275 @@ def _handle_survival(environ, start_response):
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
         return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+
+def _parse_multipart_file(environ) -> tuple[str, bytes]:
+    """从 multipart/form-data 读取上传文件（字段名 file）。"""
+    import cgi
+
+    content_type = environ.get("CONTENT_TYPE", "")
+    if "multipart/form-data" not in content_type:
+        return "upload.calcpack", b""
+    form = cgi.FieldStorage(
+        fp=environ["wsgi.input"],
+        environ=environ,
+        keep_blank_values=True,
+    )
+    if "file" not in form:
+        return "upload.calcpack", b""
+    item = form["file"]
+    if isinstance(item, list):
+        item = item[0]
+    filename = getattr(item, "filename", None) or "upload.calcpack"
+    file_obj = getattr(item, "file", None)
+    return filename, file_obj.read() if file_obj else b""
+
+
+def _handle_hub(environ, start_response):
+    """配置包市场 API（SQLite + 文件存储，PA 可写目录）。"""
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/hub"):
+        return None
+
+    try:
+        from hub.storage import (
+            create_pack,
+            get_pack,
+            get_pack_file_path,
+            increment_download,
+            list_packs,
+            rate_pack,
+            save_pack_file,
+            update_pack,
+            validate_calcpack_archive,
+        )
+    except Exception as e:
+        return _json(start_response, {"error": f"hub import failed: {e}"}, "500 Internal Server Error")
+
+    try:
+        if path == "/api/hub/stats" and method == "GET":
+            _packs, total = list_packs(limit=0)
+            return _json(start_response, {"total_packs": total})
+
+        if path == "/api/hub/packs" and method == "GET":
+            qs = _parse_qs(environ)
+            packs, total = list_packs(
+                search=qs.get("search", ""),
+                tag=qs.get("tag", ""),
+                sort=qs.get("sort", "updated_at"),
+                order=qs.get("order", "desc"),
+                offset=int(qs.get("offset", "0") or 0),
+                limit=int(qs.get("limit", "20") or 20),
+            )
+            return _json(
+                start_response,
+                {
+                    "packs": packs,
+                    "total": total,
+                    "offset": int(qs.get("offset", "0") or 0),
+                    "limit": int(qs.get("limit", "20") or 20),
+                },
+            )
+
+        if path == "/api/hub/packs" and method == "POST":
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+            result = create_pack(
+                name=str(payload.get("name", "")).strip(),
+                version=str(payload.get("version", "")).strip(),
+                description=str(payload.get("description", "")),
+                author=str(payload.get("author", "")),
+                tags=list(payload.get("tags") or []),
+            )
+            return _json(
+                start_response,
+                {
+                    "id": result.id,
+                    "name": result.name,
+                    "version": result.version,
+                    "message": "上传成功",
+                },
+                "201 Created",
+            )
+
+        m = re.match(r"^/api/hub/packs/([^/]+)$", path)
+        if m and method == "GET":
+            pack = get_pack(m.group(1))
+            if pack is None:
+                return _http_error(start_response, "包不存在", 404)
+            return _json(start_response, pack)
+
+        m = re.match(r"^/api/hub/packs/([^/]+)/upload$", path)
+        if m and method == "POST":
+            pack_id = m.group(1)
+            if get_pack(pack_id) is None:
+                return _http_error(start_response, "包不存在", 404)
+            filename, content = _parse_multipart_file(environ)
+            if not content:
+                return _http_error(start_response, "未收到文件", 400)
+            ok, err, meta = validate_calcpack_archive(content)
+            if not ok:
+                return _http_error(start_response, f"配置包无效: {err}", 400)
+            saved = save_pack_file(pack_id, content, filename)
+            pack = get_pack(pack_id) or {}
+            game = str(meta.get("game") or "").strip()
+            tags = list(pack.get("tags") or [])
+            if game and game not in tags:
+                tags.append(game)
+            update_pack(pack_id, file_size=saved.stat().st_size, tags=tags)
+            return _json(start_response, {"filename": filename, "size": saved.stat().st_size, "game": game})
+
+        m = re.match(r"^/api/hub/packs/([^/]+)/download/(.+)$", path)
+        if m and method == "GET":
+            pack_id = m.group(1)
+            filename = unquote(m.group(2))
+            if get_pack(pack_id) is None:
+                return _http_error(start_response, "包不存在", 404)
+            file_path = get_pack_file_path(pack_id, filename)
+            if file_path is None:
+                return _http_error(start_response, "文件不存在", 404)
+            increment_download(pack_id)
+            body = file_path.read_bytes()
+            headers = [
+                ("Content-Type", "application/octet-stream"),
+                ("Content-Disposition", f'attachment; filename="{filename}"'),
+                ("Content-Length", str(len(body))),
+            ]
+            start_response("200 OK", headers)
+            return [body]
+
+        m = re.match(r"^/api/hub/packs/([^/]+)/rate$", path)
+        if m and method == "POST":
+            pack_id = m.group(1)
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+            result = rate_pack(
+                pack_id,
+                score=int(payload.get("score", 0)),
+                comment=str(payload.get("comment", "")),
+            )
+            if result is None:
+                return _http_error(start_response, "包不存在", 404)
+            return _json(
+                start_response,
+                {"rating": result["rating"], "rating_count": result["rating_count"]},
+            )
+    except json.JSONDecodeError:
+        return _http_error(start_response, "invalid JSON", 400)
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return _http_error(start_response, "unknown hub endpoint", 404)
+
+
+def _handle_pack(environ, start_response):
+    """Web 配置包设计器：主题默认值 + .calcpack 导出。"""
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/pack"):
+        return None
+
+    try:
+        from api.pack import (
+            DEFAULT_THEME,
+            ExportRequest,
+            export_calcpack_bytes,
+            export_preview,
+        )
+    except Exception as e:
+        return _json(start_response, {"error": f"pack import failed: {e}"}, "500 Internal Server Error")
+
+    try:
+        if path == "/api/pack/theme/default" and method == "GET":
+            return _json(start_response, DEFAULT_THEME)
+
+        if method == "POST":
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+            req = ExportRequest(**payload)
+
+            if path == "/api/pack/export/preview":
+                return _json(start_response, export_preview(req))
+
+            if path == "/api/pack/export":
+                body, filename = export_calcpack_bytes(req)
+                headers = [
+                    ("Content-Type", "application/zip"),
+                    ("Content-Disposition", f'attachment; filename="{filename}"'),
+                    ("Content-Length", str(len(body))),
+                ]
+                start_response("200 OK", headers)
+                return [body]
+    except json.JSONDecodeError:
+        return _http_error(start_response, "invalid JSON", 400)
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return _http_error(start_response, "unknown pack endpoint", 404)
+
+
+def _handle_adapters(environ, start_response):
+    """适配器列表与 meta.json（Web 配置包设计器导出模板）。"""
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/adapters"):
+        return None
+
+    adapter_root = _BASE / "framework" / "adapters"
+    try:
+        if path == "/api/adapters" and method == "GET":
+            results = []
+            for apath in adapter_root.iterdir():
+                meta_file = apath / "meta.json"
+                if not meta_file.is_file():
+                    continue
+                meta = json.loads(meta_file.read_text(encoding="utf-8"))
+                results.append({
+                    "id": apath.name,
+                    "name": meta.get("name", apath.name),
+                    "game": meta.get("game", ""),
+                    "version": meta.get("version", ""),
+                    "description": meta.get("description", ""),
+                })
+            return _json(start_response, results)
+
+        m = re.match(r"^/api/adapters/([^/]+)/meta$", path)
+        if m and method == "GET":
+            meta_file = adapter_root / m.group(1) / "meta.json"
+            if not meta_file.is_file():
+                return _http_error(start_response, f"adapter not found: {m.group(1)}", 404)
+            meta = json.loads(meta_file.read_text(encoding="utf-8"))
+            return _json(start_response, {"id": m.group(1), "meta": meta})
+
+        m = re.match(r"^/api/adapters/([^/]+)/(layout|dag|data-summary|pack-bundle)$", path)
+        if m and method == "GET":
+            from api.adapter_assets import (
+                data_entity_summary,
+                get_adapter_dag,
+                get_adapter_layout,
+                get_pack_export_bundle,
+            )
+            aid = m.group(1)
+            action = m.group(2)
+            if action == "layout":
+                return _json(start_response, get_adapter_layout(aid))
+            if action == "dag":
+                return _json(start_response, get_adapter_dag(aid))
+            if action == "data-summary":
+                return _json(start_response, {"entities": data_entity_summary(aid)})
+            if action == "pack-bundle":
+                return _json(start_response, get_pack_export_bundle(aid))
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return _http_error(start_response, "unknown adapters endpoint", 404)
 
 
 def _handle_arknights(environ, start_response):
@@ -600,6 +879,9 @@ def application(environ, start_response):
         _handle_donation,
         _handle_layout_compute,
         _handle_search_api,
+        _handle_hub,
+        _handle_pack,
+        _handle_adapters,
         _handle_manual_buff,
         _handle_survival,
         _handle_arknights,

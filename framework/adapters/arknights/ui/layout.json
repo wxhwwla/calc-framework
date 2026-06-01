@@ -1,0 +1,53 @@
+{
+  "schema_version": "ui-v1",
+  "name": "明日方舟伤害计算",
+  "description": "干员技能伤害（物理 / 法术 / 真伤）ComputeSheet 排版",
+  "sections": [
+    {
+      "id": "operator",
+      "type": "inputs",
+      "title": "干员参数",
+      "columns": 2,
+      "variables": [
+        "character.攻击力",
+        "character.信赖攻击",
+        "character.潜能攻击",
+        "computed.技能倍率",
+        "computed.攻击力百分比加成",
+        "computed.伤害加成",
+        "computed.物理穿透",
+        "computed.法术穿透"
+      ]
+    },
+    {
+      "id": "enemy",
+      "type": "inputs",
+      "title": "敌方参数",
+      "columns": 2,
+      "variables": [
+        "enemy.防御",
+        "enemy.法术抗性"
+      ]
+    },
+    {
+      "id": "attack",
+      "type": "outputs",
+      "title": "攻击力",
+      "columns": 1,
+      "outputs": [
+        "最终攻击力"
+      ]
+    },
+    {
+      "id": "damage",
+      "type": "outputs",
+      "title": "伤害结果",
+      "columns": 3,
+      "outputs": [
+        "物理伤害",
+        "法术伤害",
+        "真伤伤害"
+      ]
+    }
+  ]
+}

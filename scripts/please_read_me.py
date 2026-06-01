@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.17.1"
+_VERSION = "3.17.2"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,13 +438,47 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 41 处文件
 # BODY:
-# - 修改 framework/src/calc_framework/ui/viewer.py
-# - 修改 games/endfield/gui_design/shell/qt_app_confirm_mixin.py
-# - 修改 games/endfield/main.py
-# - 修改 scripts/_path_setup.py
-# - 修改 scripts/main_designer.py
-# - 修改 scripts/main_launcher.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 更新文档 docs/adr/0006-calcpack-and-designer.md
+# - 变更 framework/adapters/arknights/meta.json
+# - 变更 framework/adapters/arknights/ui/layout.json
 # - 修改 scripts/please_read_me.py
+# - 修改 tools/designer/app.py
+# - 修改 tools/designer/data_editor/panel.py
+# - 修改 tools/designer/data_editor/profiles.py
+# - 修改 tools/designer/theme_editor/panel.py
+# - 修改 tools/export_sample_calcpacks.py
+# - 修改 tools/tests/test_adapter_assets.py
+# - 修改 tools/tests/test_data_editor_profiles.py
+# - 修改 web/backend/api/adapter_assets.py
+# - 修改 web/backend/api/adapters.py
+# - 修改 web/backend/api/hub.py
+# - 修改 web/backend/api/pack.py
+# - 修改 web/backend/api/search.py
+# - 修改 web/backend/hub/storage.py
+# - 变更 web/frontend/index.html
+# - 变更 web/frontend/src/App.tsx
+# - 变更 web/frontend/src/api/adapterPack.ts
+# - 变更 web/frontend/src/api/adapters.ts
+# - 变更 web/frontend/src/components/GlobalAttributionButton.tsx
+# - 变更 web/frontend/src/components/GlobalHelpDialog.tsx
+# - 变更 web/frontend/src/components/SiteFooter.tsx
+# - 变更 web/frontend/src/components/calculator/DataSourceDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
+# - 变更 web/frontend/src/components/pack_designer/PackDataTab.tsx
+# - 变更 web/frontend/src/components/pack_designer/PackLayoutTab.tsx
+# - 变更 web/frontend/src/components/pack_designer/ThemeExportTab.tsx
+# - 变更 web/frontend/src/constants/attribution.ts
+# - 变更 web/frontend/src/pages/PackDesignerPage.tsx
+# - 变更 web/frontend/src/store/packDesignerStore.ts
+# - 变更 web/hub/catalog.json
+# - 变更 web/hub/index.html
+# - 变更 web/hub/samples/card_rpg_sample.calcpack
+# - 变更 web/hub/samples/fps_sample.calcpack
+# - 变更 web/hub/samples/moba_sample.calcpack
+# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 修改 web/wsgi_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

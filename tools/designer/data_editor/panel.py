@@ -3,7 +3,7 @@
 
 
 
-数据源：framework/games/endfield/data/ 下的标准格式 JSON。
+数据源随「数据模板」切换：终末地 adapter/data；明日方舟 BWIKI 解析 operators.json。
 
 """
 
@@ -37,6 +37,8 @@ from PySide6.QtWidgets import (
 
     QAbstractItemView,
 
+    QComboBox,
+
     QFileDialog,
 
     QHBoxLayout,
@@ -69,19 +71,15 @@ from PySide6.QtWidgets import (
 
 
 
-_STANDARD_DATA_DIR = Path(_project_root) / "framework" / "adapters" / "endfield" / "data"
+from tools.designer.data_editor.profiles import (
 
+    ADAPTER_NAME_TO_PROFILE,
 
+    PROFILES,
 
-_ENTITY_TABS: list[tuple[str, str, list[str]]] = [
+    data_dir_for_profile,
 
-    ("角色", "characters_standard.json", ["名称", "类型", "星级", "武器", "主能力", "副能力"]),
-
-    ("武器", "weapons_standard.json", ["名称", "类型", "星级"]),
-
-    ("装备", "equipments_standard.json", ["名称", "装备种类", "部位", "稀有度", "所属套组"]),
-
-]
+)
 
 
 
@@ -427,9 +425,11 @@ class DataEditorPanel(QWidget):
 
         self._dag_pkg: object | None = None
 
+        self._profile_id = "endfield"
+
         self._build_ui()
 
-        self._auto_load()
+        self._rebuild_tabs()
 
         self._init_dag()
 
@@ -442,6 +442,20 @@ class DataEditorPanel(QWidget):
 
 
         toolbar = QHBoxLayout()
+
+
+
+        toolbar.addWidget(QLabel("数据模板:"))
+
+        self._profile_combo = QComboBox()
+
+        for pid, prof in PROFILES.items():
+
+            self._profile_combo.addItem(prof.label, pid)
+
+        self._profile_combo.currentIndexChanged.connect(self._on_profile_combo_changed)
+
+        toolbar.addWidget(self._profile_combo)
 
 
 
@@ -497,15 +511,97 @@ class DataEditorPanel(QWidget):
 
         self._tab_widget.currentChanged.connect(self._on_tab_changed)
 
-        for tab_name, filename, columns in _ENTITY_TABS:
+        layout.addWidget(self._tab_widget, stretch=1)
 
-            tab = _EntityTab(tab_name, filename, columns, _STANDARD_DATA_DIR)
+
+
+    def _on_profile_combo_changed(self, index: int) -> None:
+
+        pid = self._profile_combo.itemData(index)
+
+        if pid:
+
+            self.set_profile(str(pid))
+
+
+
+    def set_profile(self, profile_id: str) -> None:
+
+        if profile_id not in PROFILES:
+
+            profile_id = "endfield"
+
+        if profile_id == self._profile_id and self._tabs:
+
+            return
+
+        self._profile_id = profile_id
+
+        keys = list(PROFILES.keys())
+
+        combo_idx = keys.index(profile_id)
+
+        if self._profile_combo.currentIndex() != combo_idx:
+
+            self._profile_combo.blockSignals(True)
+
+            self._profile_combo.setCurrentIndex(combo_idx)
+
+            self._profile_combo.blockSignals(False)
+
+        self._rebuild_tabs()
+
+        self._init_dag()
+
+
+
+    def sync_profile_from_adapter(self, adapter_name: str) -> None:
+
+        pid = ADAPTER_NAME_TO_PROFILE.get(adapter_name)
+
+        if pid:
+
+            self.set_profile(pid)
+
+
+
+    def get_profile_id(self) -> str:
+
+        return self._profile_id
+
+
+
+    def _rebuild_tabs(self) -> None:
+
+        profile = PROFILES[self._profile_id]
+
+        data_dir = data_dir_for_profile(profile)
+
+        self._tab_widget.clear()
+
+        self._tabs.clear()
+
+        for tab_name, filename, columns in profile.entity_tabs:
+
+            tab = _EntityTab(tab_name, filename, columns, data_dir)
 
             self._tabs[tab_name] = tab
 
             self._tab_widget.addTab(tab, tab_name)
 
-        layout.addWidget(self._tab_widget, stretch=1)
+        self._auto_load()
+
+        self._update_status()
+
+        if self._tab_widget.count() > 0:
+
+            self._on_tab_changed(0)
+
+
+
+    def _data_dir(self) -> Path:
+
+        return data_dir_for_profile(PROFILES[self._profile_id])
 
 
 
@@ -513,7 +609,11 @@ class DataEditorPanel(QWidget):
 
         tab_name = self._tab_widget.tabText(index) if index >= 0 else ""
 
-        self._dag_verify_btn.setEnabled(tab_name == "角色")
+        self._dag_verify_btn.setEnabled(
+
+            tab_name == "角色" and self._profile_id == "endfield",
+
+        )
 
 
 
@@ -523,7 +623,7 @@ class DataEditorPanel(QWidget):
 
             from calc_framework.config.adapter import AdapterPackage
 
-            adapter_path = Path(_project_root) / "framework" / "adapters" / "endfield"
+            adapter_path = PROFILES[self._profile_id].adapter_dir
 
             if adapter_path.is_dir():
 
@@ -703,7 +803,7 @@ class DataEditorPanel(QWidget):
 
         for tab_name, tab in self._tabs.items():
 
-            filepath = _STANDARD_DATA_DIR / tab._filename
+            filepath = self._data_dir() / tab._filename
 
             if filepath.exists():
 
@@ -737,7 +837,7 @@ class DataEditorPanel(QWidget):
 
             return
 
-        filepath = _STANDARD_DATA_DIR / tab._filename
+        filepath = self._data_dir() / tab._filename
 
         try:
 
@@ -861,7 +961,9 @@ class DataEditorPanel(QWidget):
 
         for tab_name, tab in self._tabs.items():
 
-            key = tab._filename.replace("_standard.json", "")
+            stem = Path(tab._filename).stem
+
+            key = stem.removesuffix("_standard") if stem.endswith("_standard") else stem
 
             result[key] = tab.entities
 

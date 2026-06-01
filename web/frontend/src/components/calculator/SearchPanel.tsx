@@ -170,8 +170,8 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
       </Typography>
 
       {isPythonAnywhere && (
-        <Alert severity="warning" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
-          线上环境不支持全量搜索。
+        <Alert severity="info" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
+          线上环境仅支持<strong>组合规模预估</strong>；全量搜索与流式搜索请下载本地服务器。
           <Box sx={{ mt: 1 }}>
             <Button
               variant="contained"
@@ -182,7 +182,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             >
               下载本地搜索服务器
             </Button>
-            下载后双击 exe 即可在本地使用全量搜索（无需安装 Python/Node.js）
+            解压后双击 exe，在 localhost 使用完整搜索
           </Box>
         </Alert>
       )}
@@ -209,7 +209,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             variant="outlined"
             startIcon={<EstimateIcon />}
             onClick={handleEstimate}
-            disabled={status === "estimating" || status === "running" || isPythonAnywhere}
+            disabled={status === "estimating" || status === "running"}
           >
             预估
           </Button>
@@ -237,14 +237,16 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               重置
             </Button>
           )}
-          <Chip
-            label={useStreaming ? "流式模式" : "批量模式"}
-            size="small"
-            color={useStreaming ? "info" : "default"}
-            variant="outlined"
-            onClick={() => setUseStreaming(!useStreaming)}
-            sx={{ cursor: "pointer" }}
-          />
+          {!isPythonAnywhere && (
+            <Chip
+              label={useStreaming ? "流式模式" : "批量模式"}
+              size="small"
+              color={useStreaming ? "info" : "default"}
+              variant="outlined"
+              onClick={() => setUseStreaming(!useStreaming)}
+              sx={{ cursor: "pointer" }}
+            />
+          )}
         </Box>
 
         <Box

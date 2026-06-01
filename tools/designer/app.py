@@ -277,7 +277,15 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
     def _on_tab_changed(self, index: int) -> None:
 
-        if index == 1:
+        if index == 0:
+
+            adapter_name = self._layout_panel.get_adapter_name()
+
+            if adapter_name:
+
+                self._data_panel.sync_profile_from_adapter(adapter_name)
+
+        elif index == 1:
 
             self._layout_panel.populate_adapters(self._adapter_mgr.names)
 
@@ -353,6 +361,14 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
             layout_data=layout_data,
 
         )
+
+        adapter_name = self._layout_panel.get_adapter_name()
+        if adapter_name:
+            try:
+                pkg = self._adapter_mgr.load(adapter_name)
+                self._theme_panel.set_adapter_meta(pkg.meta)
+            except Exception:
+                self._theme_panel.set_adapter_meta({})
 
         self._theme_panel._sync_from_shared()
 

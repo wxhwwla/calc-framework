@@ -211,3 +211,15 @@ tools/designer/               # 开发者工具，与 data_pipeline 同层级
 | 签名/校验 | 是否加入 SHA256 manifest 防止篡改，待分发需求明确 |
 | 增量更新 | 能否只替换包内单文件，待多版本场景出现 |
 | 市场/索引 | 中心化的 `.calcpack` 索引，待 Phase 4 |
+
+---
+
+## 6. 多游戏双轨说明（2026-06-02）
+
+| 游戏 | 桌面入口 | `.calcpack` / CalcPackViewer |
+|------|----------|------------------------------|
+| 终末地 | `scripts/main.py`（完整 GUI） | 设计器导出 + Hub 上传 |
+| 明日方舟 | `scripts/main_arknights.py`（独立 PySide6 计算器） | `framework/adapters/arknights/` 含 layout，可用 Viewer；**桌面暂不走 calcpack 启动** |
+| fps / moba / card_rpg | 无独立桌面 exe | 仅 adapter + 示例 `.calcpack`（`web/hub/samples/`） |
+
+配置包设计器「数据录入」按适配器分轨：终末地角色/武器/装备；明日方舟干员（`tools/arknights_scout/output/parsed/operators.json`）。

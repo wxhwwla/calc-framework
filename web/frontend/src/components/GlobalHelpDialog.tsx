@@ -179,6 +179,23 @@ const HELP_ENTRIES: HelpEntry[] = [
       </Box>
     ),
   },
+  {
+    id: "license",
+    title: "⑧ 开源与许可",
+    content: (
+      <Box>
+        <Typography variant="body2" component="div">
+          <p>
+            源代码：<a href="https://github.com/wxhwwla/calc-framework" target="_blank" rel="noopener">
+              github.com/wxhwwla/calc-framework
+            </a>（AGPL-3.0）
+          </p>
+          <p>顶栏「开源/许可」或页脚链接可查看完整 DATA_LICENSE、BWIKI 署名与免责声明。</p>
+          <p>商用闭源须联系 wxhwwla@gmail.com 获取书面商业许可；商业许可不包含游戏 JSON 数据。</p>
+        </Typography>
+      </Box>
+    ),
+  },
 ];
 
 export default function GlobalHelpDialog() {

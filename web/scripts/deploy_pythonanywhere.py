@@ -382,6 +382,18 @@ def _upload_donation_utils(config: dict) -> None:
         print(f"  [OK] utils {ok} 个文件")
 
 
+def _ensure_hub_storage(config: dict) -> None:
+    """确保 PA 上 hub 数据目录可写（首次上传前创建）。"""
+    username = config["username"]
+    project = config.get("project", "calc-framework")
+    home = f"/home/{username}/{project}"
+    keep = b"# hub storage\n"
+    for rel in ("web/backend/data/hub/.keep", "web/backend/data/hub/packs/.keep"):
+        remote = f"{home}/{rel}"
+        if _upload_bytes_to_path(config, remote, keep, rel, quiet=True):
+            print(f"  [OK] hub 目录: {rel.rsplit('/', 1)[0]}/")
+
+
 def _verify_deployment(config: dict) -> None:
     """重载后检查关键 API 是否返回 JSON（非 HTML）。"""
     domain = config.get("domain") or f"{config['username']}.pythonanywhere.com"
@@ -391,6 +403,8 @@ def _verify_deployment(config: dict) -> None:
         (f"https://{domain}/api/health", '"status"'),
         (f"https://{domain}/api/layout", '"sections"'),
         (f"https://{domain}/api/donation/manifest", '"file"'),
+        (f"https://{domain}/api/hub/packs?limit=1", '"packs"'),
+        (f"https://{domain}/api/pack/theme/default", '"schema_version"'),
     ]
     ok = True
     for url, needle in checks:
@@ -832,6 +846,7 @@ def main() -> None:
     if do_upload:
         _upload_dist_files(config)
         _upload_backend_files(config)
+        _ensure_hub_storage(config)
         _upload_wsgi(config)
         _upload_arknights_runtime(config)
         _upload_donation_utils(config)

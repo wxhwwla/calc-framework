@@ -11,6 +11,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 if _project_root not in sys.path:
@@ -43,6 +44,7 @@ class ThemePanel(QWidget):
         self._dag_data: dict | None = None
         self._layout_data: dict | None = None
         self._data_files: dict[str, list] = {}
+        self._adapter_meta: dict[str, Any] = {}
         self._build_ui()
 
     def _default_theme(self) -> dict:
@@ -189,6 +191,10 @@ class ThemePanel(QWidget):
         self._shared_dag_data = dag_data
         self._shared_layout_data = layout_data
 
+    def set_adapter_meta(self, meta: dict[str, Any] | None) -> None:
+        """布局页所选适配器的 meta.json。"""
+        self._adapter_meta = dict(meta or {})
+
     def _sync_from_shared(self) -> None:
         """将共享数据同步到加载状态。"""
         changed = False
@@ -224,18 +230,19 @@ class ThemePanel(QWidget):
         }
 
     def _read_meta(self) -> dict:
-        return {
-            "name": "自定义计算配置",
-            "game": "自定义",
-            "version": "1.0.0",
-            "schema_version": "dag-v1",
-            "author": "",
-            "description": "由配置包设计器导出",
-            "entry_dag": "dag/formula.dag.json",
-            "ui_layout": "ui/layout.json",
-            "ui_theme": "ui/theme.json",
-            "entry_data": [f"data/{k}.json" for k in self._data_files],
-        }
+        meta = dict(self._adapter_meta)
+        meta.setdefault("name", "自定义计算配置")
+        meta.setdefault("game", "自定义")
+        meta.setdefault("version", "1.0.0")
+        meta.setdefault("schema_version", "dag-v1")
+        meta.setdefault("author", "")
+        meta.setdefault("description", "由配置包设计器导出")
+        meta.setdefault("entry_dag", "dag/formula.dag.json")
+        meta.setdefault("ui_layout", "ui/layout.json")
+        meta.setdefault("ui_theme", "ui/theme.json")
+        if self._data_files:
+            meta["entry_data"] = [f"data/{k}.json" for k in self._data_files]
+        return meta
 
     def _export(self) -> None:
         if not self._dag_data:

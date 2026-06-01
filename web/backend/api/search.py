@@ -19,18 +19,6 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 
-def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
-    """归一化技能字段 + 固定配装 dict（与 GUI 一致）。"""
-    from games.endfield.data_loading.web_search_bridge import (
-        enrich_search_request_fields,
-        resolve_search_fixed_loadout,
-    )
-
-    enriched = req.model_copy(update=enrich_search_request_fields(req))
-    fixed = resolve_search_fixed_loadout(enriched)
-    return enriched, fixed
-
-
 class SearchRequest(BaseModel):
 
     char_data: dict[str, Any]
@@ -196,7 +184,16 @@ class EstimateRequest(BaseModel):
     extra_crit_damage: float = 0.0
 
 
+def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
+    """归一化技能字段 + 固定配装 dict（与 GUI 一致）。"""
+    from games.endfield.data_loading.web_search_bridge import (
+        enrich_search_request_fields,
+        resolve_search_fixed_loadout,
+    )
 
+    enriched = req.model_copy(update=enrich_search_request_fields(req))
+    fixed = resolve_search_fixed_loadout(enriched)
+    return enriched, fixed
 
 
 class LoadoutResult(BaseModel):

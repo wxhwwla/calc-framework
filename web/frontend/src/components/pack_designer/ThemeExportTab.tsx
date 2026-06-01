@@ -18,9 +18,15 @@ import {
   Chip,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import { fetchCharacters, fetchWeapons, fetchEquipments } from "../../api/data";
-import { fetchLayout, fetchDag } from "../../api/layout";
 import { fetchDefaultTheme, previewExport, downloadCalcpack, type ThemeConfig } from "../../api/pack";
+import { fetchAdapterMeta } from "../../api/adapters";
+import {
+  fetchAdapterDag,
+  fetchAdapterLayout,
+  fetchAdapterDataSummary,
+  fetchAdapterPackBundle,
+} from "../../api/adapterPack";
+import { usePackDesignerStore } from "../../store/packDesignerStore";
 
 const COLOR_KEYS: (keyof ThemeConfig["colors"])[] = [
   "primary", "background", "surface", "text",
@@ -28,14 +34,15 @@ const COLOR_KEYS: (keyof ThemeConfig["colors"])[] = [
 ];
 
 export default function ThemeExportTab() {
+  const adapterId = usePackDesignerStore((s) => s.adapterId);
   const [theme, setTheme] = useState<ThemeConfig | null>(null);
   const [fontFamily, setFontFamily] = useState("Microsoft YaHei");
   const [fontSize, setFontSize] = useState(12);
   const [colors, setColors] = useState<Record<string, string>>({});
   const [packName, setPackName] = useState("自定义计算配置");
   const [dataInfo, setDataInfo] = useState<Record<string, number>>({});
-  const [dagInfo, setDagInfo] = useState<string>("未加载");
-  const [layoutInfo, setLayoutInfo] = useState<string>("未加载");
+  const [dagInfo, setDagInfo] = useState("未加载");
+  const [layoutInfo, setLayoutInfo] = useState("未加载");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -48,59 +55,57 @@ export default function ThemeExportTab() {
     }).catch(() => {});
   }, []);
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    fetchAdapterMeta(adapterId)
+      .then((m) => setPackName(String(m.name ?? "自定义计算配置")))
+      .catch(() => {});
+  }, [adapterId]);
+
+  const refreshStatus = useCallback(async () => {
     try {
-      const chars = await fetchCharacters();
-      const weapons = await fetchWeapons();
-      const equips = await fetchEquipments();
-      setDataInfo({ characters: chars.length, weapons: weapons.length, equipments: equips.length });
+      const [summary, dag, layout] = await Promise.all([
+        fetchAdapterDataSummary(adapterId),
+        fetchAdapterDag(adapterId),
+        fetchAdapterLayout(adapterId),
+      ]);
+      const info: Record<string, number> = {};
+      for (const e of summary) info[e.key] = e.count;
+      setDataInfo(info);
+      setDagInfo(`${Object.keys(dag.nodes ?? {}).length} 个节点`);
+      setLayoutInfo(`${(layout.sections as unknown[])?.length ?? 0} 个区块`);
     } catch {
       setDataInfo({});
-    }
-  }, []);
-
-  const loadDag = useCallback(async () => {
-    try {
-      const dag = await fetchDag();
-      const nodeCount = Object.keys(dag.nodes ?? {}).length;
-      setDagInfo(`${nodeCount} 个节点`);
-    } catch {
       setDagInfo("未加载");
-    }
-  }, []);
-
-  const loadLayout = useCallback(async () => {
-    try {
-      const layout = await fetchLayout();
-      const sectionCount = (layout.sections ?? []).length;
-      setLayoutInfo(`${sectionCount} 个区块`);
-    } catch {
       setLayoutInfo("未加载");
     }
-  }, []);
+  }, [adapterId]);
 
   useEffect(() => {
-    loadData();
-    loadDag();
-    loadLayout();
-  }, [loadData, loadDag, loadLayout]);
+    refreshStatus();
+  }, [refreshStatus]);
 
   const setColor = useCallback((key: string, value: string) => {
     setColors((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const buildExportMeta = useCallback(async (dataKeys: string[]) => {
+    const base = await fetchAdapterMeta(adapterId);
+    const meta: Record<string, unknown> = { ...base };
+    meta.name = packName;
+    meta.entry_dag = "dag/formula.dag.json";
+    meta.ui_layout = "ui/layout.json";
+    meta.ui_theme = "ui/theme.json";
+    if (dataKeys.length > 0) {
+      meta.entry_data = dataKeys.map((k) => `data/${k}.json`);
+    }
+    return meta;
+  }, [adapterId, packName]);
+
   const handleExport = useCallback(async () => {
     setError(null);
     setSuccess(null);
     try {
-      const [chars, weapons, equips, dag, layout] = await Promise.all([
-        fetchCharacters().catch(() => []),
-        fetchWeapons().catch(() => []),
-        fetchEquipments().catch(() => []),
-        fetchDag().catch(() => ({ nodes: {} })),
-        fetchLayout().catch(() => ({ sections: [] })),
-      ] as const);
-
+      const bundle = await fetchAdapterPackBundle(adapterId);
       const themePayload = theme ? {
         schema_version: theme.schema_version,
         name: theme.name,
@@ -109,72 +114,60 @@ export default function ThemeExportTab() {
         spacing: { padding: 8, gap: 4 },
       } : undefined;
 
-      const meta = {
-        name: packName,
-        game: "自定义",
-        version: "1.0.0",
-        schema_version: "dag-v1",
-        author: "",
-        description: "由配置包设计器导出",
-        entry_dag: "dag/formula.dag.json",
-        ui_layout: "ui/layout.json",
-        ui_theme: "ui/theme.json",
-        entry_data: ["data/characters.json", "data/weapons.json", "data/equipments.json"],
-      };
+      const dataFiles = bundle.data_files;
+      const meta = await buildExportMeta(
+        Object.keys(dataFiles).filter((k) => dataFiles[k]?.length > 0),
+      );
+      meta.name = packName;
 
       await downloadCalcpack({
         meta,
-        dag: dag as Record<string, unknown>,
-        layout: layout as Record<string, unknown>,
+        dag: bundle.dag,
+        layout: bundle.layout,
         theme: themePayload,
-        data_files: {
-          characters: chars as unknown as Record<string, unknown>[],
-          weapons: weapons as unknown as Record<string, unknown>[],
-          equipments: equips as unknown as Record<string, unknown>[],
-        },
+        data_files: dataFiles,
         filename: `${packName}.calcpack`,
       });
 
-      setSuccess(`已导出 ${packName}.calcpack`);
+      setSuccess(`已导出 ${packName}.calcpack（${adapterId}）`);
     } catch (e: unknown) {
       setError(String(e));
     }
-  }, [theme, fontFamily, fontSize, colors, packName]);
+  }, [adapterId, theme, fontFamily, fontSize, colors, packName, buildExportMeta]);
 
   const handlePreview = useCallback(async () => {
     setError(null);
     setSuccess(null);
     try {
-      const [dag, layout] = await Promise.all([
-        fetchDag().catch(() => ({ nodes: {} })),
-        fetchLayout().catch(() => ({ sections: [] })),
-      ]);
+      const bundle = await fetchAdapterPackBundle(adapterId);
+      const meta = await buildExportMeta(Object.keys(bundle.data_summary));
 
       const preview = await previewExport({
-        meta: { name: packName },
-        dag: dag as Record<string, unknown>,
-        layout: layout as Record<string, unknown>,
-        data_files: {
-          characters: [],
-          weapons: [],
-          equipments: [],
-        },
+        meta,
+        dag: bundle.dag,
+        layout: bundle.layout,
+        data_files: Object.fromEntries(
+          Object.keys(bundle.data_summary).map((k) => [k, []]),
+        ),
       });
 
       setSuccess(
-        `预览: DAG ${preview.dag_nodes} 节点, ` +
+        `预览 (${adapterId}): DAG ${preview.dag_nodes} 节点, ` +
         `Layout ${preview.layout_sections} 区块, ` +
-        `数据文件: ${JSON.stringify(preview.data_files)}`
+        `数据: ${JSON.stringify(preview.data_files)}`,
       );
     } catch (e: unknown) {
       setError(String(e));
     }
-  }, [packName]);
+  }, [adapterId, buildExportMeta]);
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
         主题与导出
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        导出内容随页顶所选适配器加载（DAG / layout / 数据分轨）。
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -183,12 +176,16 @@ export default function ThemeExportTab() {
           <Table size="small">
             <TableBody>
               <TableRow>
+                <TableCell sx={{ border: "none", pl: 0 }}>适配器</TableCell>
+                <TableCell sx={{ border: "none" }}>{adapterId}</TableCell>
+              </TableRow>
+              <TableRow>
                 <TableCell sx={{ border: "none", pl: 0 }}>数据文件</TableCell>
                 <TableCell sx={{ border: "none" }}>
                   {Object.entries(dataInfo).map(([k, v]) => (
                     <Chip key={k} label={`${k}: ${v}条`} size="small" sx={{ mr: 0.5 }} />
                   ))}
-                  {Object.keys(dataInfo).length === 0 && "未加载"}
+                  {Object.keys(dataInfo).length === 0 && "无（仅公式+布局）"}
                 </TableCell>
               </TableRow>
               <TableRow>

@@ -22,6 +22,8 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
+import GlobalAttributionButton from "./components/GlobalAttributionButton";
+import SiteFooter from "./components/SiteFooter";
 
 const ComputePage = lazy(() => import("./pages/ComputePage"));
 const ArknightsComputePage = lazy(() => import("./pages/ArknightsComputePage"));
@@ -54,6 +56,7 @@ function Shell() {
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             游戏计算器 · Web 版
           </Typography>
+          <GlobalAttributionButton />
           <GlobalDonationButton />
           <GlobalHelpDialog />
         </Toolbar>
@@ -94,6 +97,7 @@ function Shell() {
             <Route path="*" element={<Navigate to="/compute" replace />} />
           </Routes>
         </Suspense>
+        <SiteFooter />
       </Box>
     </Box>
   );

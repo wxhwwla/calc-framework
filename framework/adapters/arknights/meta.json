@@ -5,6 +5,7 @@
   "schema_version": "dag-v1",
   "attr_schema": "attr_schema.json",
   "entry_dag": "dag/arknights_full.dag.json",
+  "ui_layout": "ui/layout.json",
   "functions": {
     "clamp": "functions.py",
     "min_val": "functions.py",

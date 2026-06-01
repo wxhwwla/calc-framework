@@ -88,65 +88,40 @@ async def get_default_theme():
 
 
 
+def export_calcpack_bytes(req: ExportRequest) -> tuple[bytes, str]:
+    """生成 .calcpack 字节内容与文件名（WSGI 同步路由用）。"""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        _write_json_in_zip(zf, "meta.json", req.meta)
+        _write_json_in_zip(zf, "dag/formula.dag.json", req.dag)
+        _write_json_in_zip(zf, "ui/layout.json", req.layout)
+        if req.theme:
+            _write_json_in_zip(zf, "ui/theme.json", req.theme)
+        if req.data_files:
+            for key, records in req.data_files.items():
+                _write_json_in_zip(zf, f"data/{key}.json", records)
+    filename = req.filename if req.filename.endswith(".calcpack") else f"{req.filename}.calcpack"
+    return buf.getvalue(), filename
+
+
 @router.post("/export")
-
 async def export_calcpack(req: ExportRequest):
-
     try:
-
-        buf = io.BytesIO()
-
-        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-
-            _write_json_in_zip(zf, "meta.json", req.meta)
-
-            _write_json_in_zip(zf, "dag/formula.dag.json", req.dag)
-
-            _write_json_in_zip(zf, "ui/layout.json", req.layout)
-
-            if req.theme:
-
-                _write_json_in_zip(zf, "ui/theme.json", req.theme)
-
-            if req.data_files:
-
-                for key, records in req.data_files.items():
-
-                    _write_json_in_zip(zf, f"data/{key}.json", records)
-
-        buf.seek(0)
-
-
-
-        filename = req.filename
-
-        if not filename.endswith(".calcpack"):
-
-            filename += ".calcpack"
-
-
-
+        body, filename = export_calcpack_bytes(req)
         return StreamingResponse(
-
-            iter([buf.getvalue()]),
-
+            iter([body]),
             media_type="application/zip",
-
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-
         )
-
     except Exception as e:
-
-        raise HTTPException(status_code=500, detail=f"导出失败: {e}")
+        raise HTTPException(status_code=500, detail=f"导出失败: {e}") from e
 
 
 
 
 
 @router.post("/export/preview")
-
-async def export_preview(req: ExportRequest):
+def export_preview(req: ExportRequest):
 
     """返回导出包的 JSON 内容预览（不返回文件下载）。"""
 
