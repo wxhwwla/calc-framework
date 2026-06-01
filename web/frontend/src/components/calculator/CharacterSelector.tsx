@@ -9,7 +9,7 @@ import {
   Chip,
   Slider,
 } from "@mui/material";
-import { fetchCharacters, fetchWeapons } from "../../api/data";
+import { fetchCharacters, fetchWeapons, fetchCharacter, fetchWeapon } from "../../api/data";
 import type { CharacterSummary, WeaponSummary } from "../../api/data";
 
 interface CharacterSelectorProps {
@@ -170,7 +170,6 @@ export default function CharacterSelector({
       data = charDataCache[name];
     } else {
       try {
-        const { fetchCharacter } = await import("../../api/data");
         data = await fetchCharacter(name);
         setCharDataCache((prev) => ({ ...prev, [name]: data }));
       } catch {
@@ -196,7 +195,6 @@ export default function CharacterSelector({
       return;
     }
     try {
-      const { fetchWeapon } = await import("../../api/data");
       const data = await fetchWeapon(name);
       setWeaponDataCache((prev) => ({ ...prev, [name]: data }));
       onSelectWeapon(name, data);

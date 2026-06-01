@@ -386,21 +386,16 @@ def setup_git_repo() -> str:
 
         print("[信息] 使用 SSH 推送（不在 URL 中携带 Token）")
 
-        code, out, err = run_git(
-
-            ["-T", "git@github.com"],
-
+        # 用 ls-remote 实测 SSH（比 git -T 在 Windows 上更可靠）
+        probe_code, _, probe_err = run_git(
+            ["ls-remote", remote, "HEAD"],
             check=False,
-
             capture_output=True,
-
-            timeout=20,
-
+            timeout=30,
         )
-
-        if code != 1 or "successfully authenticated" not in (out + err).lower():
-
-            print("[警告] SSH 连通性未确认，若推送失败请检查 ~/.ssh 与 GitHub SSH keys")
+        if probe_code != 0:
+            hint = (probe_err or "").strip() or f"exit {probe_code}"
+            print(f"[警告] SSH 连通性未确认（{hint}），若推送失败请检查 ~/.ssh 与 GitHub SSH keys")
 
 
 

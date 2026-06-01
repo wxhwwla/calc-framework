@@ -93,6 +93,11 @@ def _run_npm(args: list[str], cwd: Path) -> None:
         print(result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout)
         print(result.stderr[-2000:] if len(result.stderr) > 2000 else result.stderr)
         sys.exit(1)
+    # 仅回显错误级日志，过滤 Vite 体积提示等噪声
+    for line in (result.stdout + result.stderr).splitlines():
+        lower = line.lower()
+        if "error" in lower and "warning" not in lower:
+            print(f"  {line}")
 
 
 def _build_frontend() -> None:
@@ -293,6 +298,11 @@ def _upload_arknights_parsed_zip(config: dict, home: str) -> None:
     if not _upload_bytes_to_path(config, remote_zip, _ARKNIGHTS_PARSED_ZIP.read_bytes(), "arknights_parsed.zip"):
         print("  [ERR] 干员数据 zip 上传失败")
         return
+
+    # 与线上一致路径，便于本地/PA 在未解压时从 zip 读取
+    canonical = _REPO_ROOT / "tools" / "arknights_scout" / "arknights_parsed.zip"
+    canonical.parent.mkdir(parents=True, exist_ok=True)
+    canonical.write_bytes(_ARKNIGHTS_PARSED_ZIP.read_bytes())
 
     project = config.get("project", "calc-framework")
     print("  [DOC] 在 PA Bash 解压干员数据（更新干员库时执行一次）:")
