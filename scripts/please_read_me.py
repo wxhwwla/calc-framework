@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.19"
+_VERSION = "3.15.20"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,14 +438,9 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 8 处文件
+# TITLE: 更新 3 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 .github/workflows/ci.yml
-# - 修改 games/arknights/calc/skill_parser.py
-# - 修改 games/arknights/tests/test_adapter.py
-# - 修改 games/arknights/tests/test_e2e.py
-# - 修改 games/arknights/tests/test_loader.py
-# - 修改 games/arknights/tests/test_skill_parser.py
+# - 变更 "docs//345/210/266/351/200/240/346/270/270/346/210/217/350/256/241/347/256/227/345/231/250/345/256/214/346/225/264/346/265/201/347/250/213.md"
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
