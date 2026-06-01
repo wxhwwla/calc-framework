@@ -49,10 +49,11 @@ function LevelSlider({
         size="small"
         min={LEVEL_MIN}
         max={LEVEL_MAX}
+        step={1}
         value={value}
         onChange={(_e, v) => onChange(v as number)}
+        valueLabelDisplay="auto"
         marks={LEVEL_MARKS}
-        sx={{ mx: 1, width: "auto" }}
       />
       <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
         {[80, 90].map((lv) => (
