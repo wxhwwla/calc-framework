@@ -61,9 +61,15 @@ class TestEnhancementDialogsImport(unittest.TestCase):
             dialog.deleteLater()
 
     def test_compare_presets_dialog_creation(self) -> None:
-        with patch(
-            "games.endfield.gui_design.controls.enhancement.qt_dialogs.get_characters",
-            return_value=[],
+        with (
+            patch(
+                "games.endfield.gui_design.controls.enhancement.qt_dialogs.get_characters",
+                return_value=[],
+            ),
+            patch(
+                "games.endfield.gui_design.controls.enhancement.qt_dialogs.QFileDialog.getOpenFileNames",
+                return_value=([], ""),
+            ),
         ):
             from games.endfield.gui_design.controls.enhancement.qt_dialogs import (
                 QtComparePresetsDialog,
@@ -79,6 +85,7 @@ class TestEnhancementDialogsImport(unittest.TestCase):
                 build_preset_fn=build_preset_fn,
             )
             self.assertIsNotNone(dialog)
+            self.assertTrue(dialog._no_data)
             dialog.deleteLater()
 
 
