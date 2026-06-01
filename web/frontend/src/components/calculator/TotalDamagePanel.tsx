@@ -1,9 +1,17 @@
-import { Box, Paper, Typography, LinearProgress, Chip, Divider } from "@mui/material";
+import { Box, Paper, Typography, Divider } from "@mui/material";
 import type { DamageSnapshot } from "../../api/compute";
 
 interface TotalDamagePanelProps {
   snapshot: DamageSnapshot | null;
   loading: boolean;
+}
+
+const SKILL_TYPE_ORDER = ["战技", "连携技", "终结技"];
+
+function parseSegmentKey(key: string): { skillType: string; segNum: number } {
+  const parts = key.split(":");
+  const segNum = parts.length > 1 ? parseInt(parts[1], 10) || 0 : 0;
+  return { skillType: parts[0], segNum };
 }
 
 export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanelProps) {
@@ -13,7 +21,6 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           伤害快照
         </Typography>
-        <LinearProgress />
       </Paper>
     );
   }
@@ -21,7 +28,15 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
   if (!snapshot) return null;
 
   const segmentKeys = Object.keys(snapshot.segment_totals);
-  const typeTotals = Object.entries(snapshot.skill_type_totals);
+
+  const grouped = new Map<string, string[]>();
+  for (const key of segmentKeys) {
+    const { skillType } = parseSegmentKey(key);
+    if (!grouped.has(skillType)) grouped.set(skillType, []);
+    grouped.get(skillType)!.push(key);
+  }
+
+  const orderedTypes = SKILL_TYPE_ORDER.filter((t) => grouped.has(t));
 
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
@@ -33,7 +48,7 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
         <Typography variant="caption" color="text.secondary">
           加权总伤
         </Typography>
-        <Typography variant="h5" fontWeight="bold">
+        <Typography variant="h5" fontWeight="bold" color="primary">
           {snapshot.weighted_total_damage.toLocaleString(undefined, {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
@@ -41,53 +56,44 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
         </Typography>
       </Box>
 
-      {typeTotals.length > 0 && (
-        <Box sx={{ mb: 1 }}>
-          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-            技能类型汇总
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            {typeTotals.map(([st, total]) => (
-              <Chip
-                key={st}
-                label={`${st}: ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                size="small"
-                variant="outlined"
-              />
-            ))}
+      {orderedTypes.map((skillType) => {
+        const keys = grouped.get(skillType)!;
+        const typeTotal = snapshot.skill_type_totals[skillType] ?? 0;
+        return (
+          <Box key={skillType} sx={{ mb: 1.5 }}>
+            <Typography
+              variant="body2"
+              fontWeight="bold"
+              color="warning.main"
+              sx={{ mb: 0.5 }}
+            >
+              {skillType} ({typeTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })})
+            </Typography>
+            {keys.map((key) => {
+              const { segNum } = parseSegmentKey(key);
+              const single = snapshot.segment_damage[key] ?? 0;
+              const count = snapshot.segment_counts[key] ?? 0;
+              const st = snapshot.segment_totals[key] ?? 0;
+              const pct = snapshot.rotation_share_percent[key] ?? 0;
+              return (
+                <Typography
+                  key={key}
+                  variant="caption"
+                  sx={{ display: "block", ml: 2, lineHeight: 1.8, color: "text.secondary" }}
+                >
+                  第{segNum}段: {single.toFixed(1)} x {count} = {st.toFixed(1)} ({pct.toFixed(1)}%)
+                </Typography>
+              );
+            })}
+            <Typography
+              variant="caption"
+              sx={{ display: "block", ml: 2, color: "success.main", fontWeight: "bold" }}
+            >
+              小计: {typeTotal.toFixed(1)}
+            </Typography>
           </Box>
-        </Box>
-      )}
-
-      {snapshot.weighted_total_damage > 0 && (
-        <Box sx={{ mb: 1 }}>
-          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-            段级占比
-          </Typography>
-          {segmentKeys.map((key) => {
-            const pct = snapshot.rotation_share_percent[key] ?? 0;
-            const total = snapshot.segment_totals[key] ?? 0;
-            const count = snapshot.segment_counts[key] ?? 0;
-            return (
-              <Box key={key} sx={{ mb: 0.5 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="caption">
-                    {key} ×{count}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {total.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({pct.toFixed(1)}%)
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min(pct, 100)}
-                  sx={{ height: 6, borderRadius: 1 }}
-                />
-              </Box>
-            );
-          })}
-        </Box>
-      )}
+        );
+      })}
 
       <Divider sx={{ my: 1 }} />
 

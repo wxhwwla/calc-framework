@@ -247,6 +247,38 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
           />
         </Box>
 
+        <Box
+          sx={{
+            display: "flex", gap: 1, alignItems: "center", mb: 1.5,
+            p: 1, bgcolor: "action.hover", borderRadius: 1,
+          }}
+        >
+          <Chip
+            label={
+              status === "idle" ? "空闲" :
+              status === "estimating" ? "预估中" :
+              status === "ready" ? "已就绪" :
+              status === "running" ? "搜集中" :
+              status === "done" ? "已完成" : "错误"
+            }
+            size="small"
+            color={
+              status === "idle" ? "default" :
+              status === "running" ? "info" :
+              status === "done" ? "success" : "warning"
+            }
+          />
+          <Chip label={`${maxWorkers} 线程`} size="small" variant="outlined" />
+          {status === "running" && streamProgress && (
+            <Chip
+              label={`${streamProgress.processed.toLocaleString()} / ${streamProgress.total.toLocaleString()}`}
+              size="small"
+              color="info"
+              variant="outlined"
+            />
+          )}
+        </Box>
+
         {status === "estimating" && (
           <Box sx={{ mb: 1 }}>
             <Typography variant="body2" color="text.secondary">正在预估搜索规模…</Typography>
@@ -259,9 +291,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             <Typography variant="body2" color="text.secondary">
               预估: <strong>{estimate.total_combinations.toLocaleString()}</strong> 种组合
               ({estimate.weapon_count} 武器 × {estimate.loadout_combinations.toLocaleString()} 配装)
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              预计耗时: <strong>{formatDuration(estimate.estimated_seconds)}</strong>
+              &nbsp;预计 {formatDuration(estimate.estimated_seconds)}
               {estimate.warnings.length > 0 && (
                 <Chip label={estimate.warnings[0]} size="small" color="warning" sx={{ ml: 1 }} />
               )}

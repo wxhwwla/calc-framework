@@ -4,6 +4,7 @@ import {
   Typography,
   Paper,
   TextField,
+  Button,
   FormControlLabel,
   Checkbox,
   Collapse,
@@ -12,7 +13,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 const PHYSICAL_TYPES = ["侵蚀", "灼烧", "冻伤", "战栗"];
-const SPELL_TYPES = ["侵蚀", "灼烧"];
+const SPELL_TYPES = ["侵蚀(法术)", "灼烧(法术)"];
 
 export interface CritAndAbnormalSettings {
   extraCritRate: number;
@@ -71,6 +72,12 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
     },
     [spellCounts, notify],
   );
+
+  const handleClearAll = useCallback(() => {
+    setPhysCounts({});
+    setSpellCounts({});
+    notify({ physicalAbnormalCounts: {}, spellAbnormalCounts: {} });
+  }, [notify]);
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
@@ -132,6 +139,15 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
 
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>法术异常矩阵</Typography>
           <AbnormalGrid types={SPELL_TYPES} maxLevel={4} onCountChange={handleSpellCount} />
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            sx={{ mt: 1.5, fontSize: "0.75rem" }}
+            onClick={handleClearAll}
+          >
+            清空全部异常次数
+          </Button>
         </Box>
       </Collapse>
     </Paper>
