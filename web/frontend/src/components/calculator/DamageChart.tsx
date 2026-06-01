@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography, useTheme } from "@mui/material";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { PieChart, BarChart } from "echarts/charts";
@@ -15,6 +15,8 @@ interface DamageChartProps {
 }
 
 export default function DamageChart({ outputValues, zoneShare }: DamageChartProps) {
+  const theme = useTheme();
+  const textColor = theme.palette.text.primary;
   const hasPieData = outputValues && Object.keys(outputValues).length > 1;
 
   const pieOption = useMemo(() => {
@@ -37,7 +39,7 @@ export default function DamageChart({ outputValues, zoneShare }: DamageChartProp
           radius: ["30%", "60%"],
           center: ["50%", "50%"],
           data,
-          label: { formatter: "{b}\n{d}%", fontSize: 11 },
+          label: { formatter: "{b}\n{d}%", fontSize: 11, textBorderWidth: 0, color: textColor },
           emphasis: {
             itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: "rgba(0, 0, 0, 0.5)" },
           },

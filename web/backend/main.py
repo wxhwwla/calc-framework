@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0
-from . import _path_setup  # sets sys.path for dev mode
+try:
+    from . import _path_setup  # sets sys.path for dev mode
+except ImportError:
+    import _path_setup  # fallback when run as top-level module
 from pathlib import Path
 
 from fastapi import FastAPI, Request
