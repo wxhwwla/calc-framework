@@ -1,10 +1,13 @@
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableRow, Chip, TableContainer, Divider } from "@mui/material";
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableRow, Chip, TableContainer, Divider, Slider } from "@mui/material";
 
 interface AttributeDisplayProps {
   characterData: Record<string, unknown> | null;
   weaponData: Record<string, unknown> | null;
   charLevel: number;
   weaponLevel: number;
+  trustLevel: number;
+  onTrustLevelChange: (level: number) => void;
+  skillLevels: Record<string, number>;
 }
 
 const SKILL_INFO: { label: string; rateField: string; dmgTypeField: string }[] = [
@@ -25,18 +28,38 @@ function getAttrAtLevel(data: Record<string, unknown> | null, attrName: string, 
   return val !== undefined ? String(val) : "--";
 }
 
-function renderSkillDamageTypes(charData: Record<string, unknown>) {
+function getSkillRateAtLevel(charData: Record<string, unknown>, rateField: string, skillLevel: number, segmentIndex: number = 0): string | null {
+  const arr = charData[rateField];
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  const segIdx = Math.min(segmentIndex, arr.length - 1);
+  const segment = arr[segIdx];
+  if (!Array.isArray(segment) || segment.length === 0) return null;
+  const lvlIdx = Math.min(skillLevel - 1, segment.length - 1);
+  const val = segment[lvlIdx];
+  if (val == null) return null;
+  const num = Number(val);
+  return Number.isInteger(num) ? `${num}%` : `${num.toFixed(1)}%`;
+}
+
+function renderSkillRateDetails(charData: Record<string, unknown>, skillLevels: Record<string, number>) {
   const rows: { skill: string; segments: string[] }[] = [];
 
   for (const info of SKILL_INFO) {
-    const dmgTypes = charData[info.dmgTypeField];
-    if (!Array.isArray(dmgTypes) || dmgTypes.length === 0) continue;
+    const rateField = info.rateField;
+    const segments = charData[rateField];
+    if (!Array.isArray(segments) || segments.length === 0) continue;
 
-    const segments: string[] = dmgTypes.map((t: unknown, i: number) => {
-      const label = typeof t === "string" ? t : "物理";
-      return `第${i + 1}段 · ${label}`;
-    });
-    rows.push({ skill: info.label, segments });
+    const key = info.label === "战技" ? "skill_1_level" : info.label === "连携技" ? "skill_2_level" : "skill_3_level";
+    const skillLevel = (skillLevels[key] as number) || 8;
+
+    const detailLines: string[] = [];
+    for (let i = 0; i < segments.length; i++) {
+      const dmgTypes = charData[info.dmgTypeField];
+      const dmgType = Array.isArray(dmgTypes) && i < dmgTypes.length ? String(dmgTypes[i] || "物理") : "物理";
+      const rate = getSkillRateAtLevel(charData, rateField, skillLevel, i);
+      detailLines.push(`第${i + 1}段: ${rate || "--"} · ${dmgType}`);
+    }
+    rows.push({ skill: `${info.label} Lv.${skillLevel}`, segments: detailLines });
   }
 
   if (rows.length === 0) return null;
@@ -45,7 +68,7 @@ function renderSkillDamageTypes(charData: Record<string, unknown>) {
     <Box>
       <Divider sx={{ my: 1 }} />
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        技能伤害类型
+        技能倍率明细
       </Typography>
       {rows.map((row) => (
         <Typography key={row.skill} variant="body2" sx={{ fontSize: "0.75rem", lineHeight: 1.6 }}>
@@ -111,7 +134,7 @@ function renderWeaponSkills(weaponData: Record<string, unknown>) {
   );
 }
 
-export default function AttributeDisplay({ characterData, weaponData, charLevel, weaponLevel }: AttributeDisplayProps) {
+export default function AttributeDisplay({ characterData, weaponData, charLevel, weaponLevel, trustLevel, onTrustLevelChange, skillLevels }: AttributeDisplayProps) {
   if (!characterData && !weaponData) {
     return (
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -193,15 +216,36 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>信赖 (0-4级)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>信赖</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    0 (暂未支持编辑)
+                    {trustLevel}
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
-          {renderSkillDamageTypes(characterData)}
+
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+              信赖等级
+            </Typography>
+            <Slider
+              size="small"
+              min={0}
+              max={4}
+              step={1}
+              value={trustLevel}
+              onChange={(_e, v) => onTrustLevelChange(v as number)}
+              marks={[
+                { value: 0, label: "0" },
+                { value: 2, label: "2" },
+                { value: 4, label: "4" },
+              ]}
+              valueLabelDisplay="auto"
+            />
+          </Box>
+
+          {renderSkillRateDetails(characterData, skillLevels)}
         </Paper>
       )}
 

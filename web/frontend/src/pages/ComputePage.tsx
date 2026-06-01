@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button } from "@mui/material";
+import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button, Collapse, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import CharacterSelector from "../components/calculator/CharacterSelector";
 import AttributeDisplay from "../components/calculator/AttributeDisplay";
 import WebComputeSheet from "../components/WebComputeSheet";
@@ -30,6 +31,9 @@ import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate, fetchSnapshot, type DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
 
+const WEAPON_SCOPE_OPTIONS = ["当前武器", "同类型同星级", "同类型全部"];
+const EQUIPMENT_SCOPE_OPTIONS = ["全部装备", "仅套装装备", "仅散件装备"];
+
 function getAttrAtLevel(data: Record<string, unknown> | null, attr: string, level: number): number {
   if (!data) return 0;
   const arr = data[attr];
@@ -51,6 +55,13 @@ export default function ComputePage() {
   const [weaponData, setWeaponData] = useState<Record<string, unknown> | null>(null);
   const [charLevel, setCharLevel] = useState(90);
   const [weaponLevel, setWeaponLevel] = useState(90);
+  const [trustLevel, setTrustLevel] = useState(0);
+
+  const [weaponScope, setWeaponScope] = useState("同类型全部");
+  const [equipmentScope, setEquipmentScope] = useState("全部装备");
+
+  const [charAdvancedExpanded, setCharAdvancedExpanded] = useState(true);
+  const [weaponAdvancedExpanded, setWeaponAdvancedExpanded] = useState(true);
 
   const [layout, setLayout] = useState<LayoutDefinition | null>(null);
   const [variables, setVariables] = useState<Record<string, DagVariable> | null>(null);
@@ -230,6 +241,7 @@ export default function ComputePage() {
           weapon_name: selectedWeapon,
           char_level: charLevel,
           weapon_level: weaponLevel,
+          trust_level: trustLevel,
           skill_1_level: (skillLevels.skill_1_level as number) ?? 8,
           skill_2_level: (skillLevels.skill_2_level as number) ?? 8,
           skill_3_level: (skillLevels.skill_3_level as number) ?? 8,
@@ -253,19 +265,19 @@ export default function ComputePage() {
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [charData, weaponData, charLevel, weaponLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams]);
+  }, [charData, weaponData, charLevel, weaponLevel, trustLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams]);
 
   const searchParams = {
     char_data: (charData ?? {}) as Record<string, unknown>,
     char_level: charLevel,
     weapon_level: weaponLevel,
-    trust_level: 12,
+    trust_level: trustLevel,
     skill_name: "战技",
     skill_type: "战技",
     skill_multiplier: 1.0,
     damage_type: "物理",
-    weapon_scope_label: "同类型",
-    equipment_scope_label: "全部",
+    weapon_scope_label: weaponScope,
+    equipment_scope_label: equipmentScope,
     all_weapons: allWeapons as Record<string, unknown>[],
     current_weapon: (weaponData ?? {}) as Record<string, unknown>,
     equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
@@ -314,21 +326,80 @@ export default function ComputePage() {
               />
             </Paper>
 
-            <SkillLevelPanel charData={charData} onChange={setSkillLevels} />
+            <Box
+              sx={{ display: "flex", alignItems: "center", cursor: "pointer", mb: 0.5 }}
+              onClick={() => setCharAdvancedExpanded(!charAdvancedExpanded)}
+            >
+              <Typography variant="subtitle2" sx={{ flex: 1 }}>
+                技能等级
+              </Typography>
+              <IconButton size="small">
+                {charAdvancedExpanded ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </Box>
+            <Collapse in={charAdvancedExpanded}>
+              <SkillLevelPanel charData={charData} onChange={setSkillLevels} />
+            </Collapse>
 
-            <WeaponSkillPanel weaponData={weaponData} onChange={setWeaponSkillValues} />
+            <Box
+              sx={{ display: "flex", alignItems: "center", cursor: "pointer", mb: 0.5, mt: 1 }}
+              onClick={() => setWeaponAdvancedExpanded(!weaponAdvancedExpanded)}
+            >
+              <Typography variant="subtitle2" sx={{ flex: 1 }}>
+                武器技能
+              </Typography>
+              <IconButton size="small">
+                {weaponAdvancedExpanded ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </Box>
+            <Collapse in={weaponAdvancedExpanded}>
+              <WeaponSkillPanel weaponData={weaponData} onChange={setWeaponSkillValues} />
+            </Collapse>
 
             <AttributeDisplay
               characterData={charData}
               weaponData={weaponData}
               charLevel={charLevel}
               weaponLevel={weaponLevel}
+              trustLevel={trustLevel}
+              onTrustLevelChange={setTrustLevel}
+              skillLevels={skillLevels}
             />
 
             <EnemyParamPanel onParamsChange={setEnemyParams} />
 
             <Paper sx={{ p: 2, mb: 2 }}>
               <CalcModeSelector value={calcMode} onChange={setCalcMode} />
+            </Paper>
+
+            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                搜索范围
+              </Typography>
+              <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+                <InputLabel>武器候选范围</InputLabel>
+                <Select
+                  value={weaponScope}
+                  label="武器候选范围"
+                  onChange={(e) => setWeaponScope(e.target.value)}
+                >
+                  {WEAPON_SCOPE_OPTIONS.map((o) => (
+                    <MenuItem key={o} value={o}>{o}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size="small">
+                <InputLabel>装备范围</InputLabel>
+                <Select
+                  value={equipmentScope}
+                  label="装备范围"
+                  onChange={(e) => setEquipmentScope(e.target.value)}
+                >
+                  {EQUIPMENT_SCOPE_OPTIONS.map((o) => (
+                    <MenuItem key={o} value={o}>{o}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Paper>
           </Grid>
 
