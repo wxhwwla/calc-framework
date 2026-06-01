@@ -30,6 +30,16 @@ import { fetchLayout, fetchVariables } from "../api/layout";
 import { evaluate, fetchSnapshot, type DamageSnapshot } from "../api/compute";
 import { fetchWeapons } from "../api/data";
 
+function getAttrAtLevel(data: Record<string, unknown> | null, attr: string, level: number): number {
+  if (!data) return 0;
+  const arr = data[attr];
+  if (Array.isArray(arr)) {
+    const idx = Math.min(level - 1, arr.length - 1);
+    return typeof arr[idx] === "number" ? (arr[idx] as number) : 0;
+  }
+  return typeof arr === "number" ? (arr as number) : 0;
+}
+
 export default function ComputePage() {
   const [tab, setTab] = useState(0);
   const loading = useComputeStore((s) => s.loading);
@@ -39,6 +49,8 @@ export default function ComputePage() {
   const [selectedWeapon, setSelectedWeapon] = useState("");
   const [charData, setCharData] = useState<Record<string, unknown> | null>(null);
   const [weaponData, setWeaponData] = useState<Record<string, unknown> | null>(null);
+  const [charLevel, setCharLevel] = useState(90);
+  const [weaponLevel, setWeaponLevel] = useState(90);
 
   const [layout, setLayout] = useState<LayoutDefinition | null>(null);
   const [variables, setVariables] = useState<Record<string, DagVariable> | null>(null);
@@ -101,6 +113,8 @@ export default function ComputePage() {
   const handleImportPreset = useCallback((data: PresetData) => {
     setSelectedChar(data.char_name);
     setSelectedWeapon(data.weapon_name);
+    setCharLevel(data.char_level ?? 90);
+    setWeaponLevel(data.weapon_level ?? 90);
     setEnemyParams(data.enemy_params);
     setMultiSkill({
       useManualCounts: data.multi_skill.use_manual_multi_skill_counts,
@@ -113,24 +127,14 @@ export default function ComputePage() {
     }
   }, []);
 
-  const getAttr90 = useCallback((data: Record<string, unknown> | null, attr: string): number => {
-    if (!data) return 0;
-    const arr = data[attr];
-    if (Array.isArray(arr)) {
-      const idx = Math.min(89, arr.length - 1);
-      return typeof arr[idx] === "number" ? (arr[idx] as number) : 0;
-    }
-    return typeof arr === "number" ? (arr as number) : 0;
-  }, []);
-
   const handleEvaluate = useCallback(async () => {
     const adapter = "终末地伤害计算";
-    const charBaseAtk = getAttr90(charData, "基础攻击力");
-    const weaponBaseAtk = getAttr90(weaponData, "基础攻击力");
-    const charStrength = getAttr90(charData, "力量");
-    const charAgility = getAttr90(charData, "敏捷");
-    const charIntellect = getAttr90(charData, "智识");
-    const charWill = getAttr90(charData, "意志");
+    const charBaseAtk = getAttrAtLevel(charData, "基础攻击力", charLevel);
+    const weaponBaseAtk = getAttrAtLevel(weaponData, "基础攻击力", weaponLevel);
+    const charStrength = getAttrAtLevel(charData, "力量", charLevel);
+    const charAgility = getAttrAtLevel(charData, "敏捷", charLevel);
+    const charIntellect = getAttrAtLevel(charData, "智识", charLevel);
+    const charWill = getAttrAtLevel(charData, "意志", charLevel);
 
     const context: Record<string, Record<string, number | boolean | string>> = {
       character: {
@@ -224,6 +228,8 @@ export default function ComputePage() {
         fetchSnapshot({
           char_name: selectedChar,
           weapon_name: selectedWeapon,
+          char_level: charLevel,
+          weapon_level: weaponLevel,
           skill_1_level: (skillLevels.skill_1_level as number) ?? 8,
           skill_2_level: (skillLevels.skill_2_level as number) ?? 8,
           skill_3_level: (skillLevels.skill_3_level as number) ?? 8,
@@ -247,12 +253,12 @@ export default function ComputePage() {
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [charData, weaponData, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams, getAttr90]);
+  }, [charData, weaponData, charLevel, weaponLevel, inputValues, skillLevels, weaponSkillValues, calcMode, enemyParams]);
 
   const searchParams = {
     char_data: (charData ?? {}) as Record<string, unknown>,
-    char_level: 90,
-    weapon_level: 90,
+    char_level: charLevel,
+    weapon_level: weaponLevel,
     trust_level: 12,
     skill_name: "战技",
     skill_type: "战技",
@@ -301,6 +307,10 @@ export default function ComputePage() {
                 selectedWeapon={selectedWeapon}
                 onSelectCharacter={handleSelectCharacter}
                 onSelectWeapon={handleSelectWeapon}
+                charLevel={charLevel}
+                weaponLevel={weaponLevel}
+                onCharLevelChange={setCharLevel}
+                onWeaponLevelChange={setWeaponLevel}
               />
             </Paper>
 
@@ -308,7 +318,12 @@ export default function ComputePage() {
 
             <WeaponSkillPanel weaponData={weaponData} onChange={setWeaponSkillValues} />
 
-            <AttributeDisplay characterData={charData} weaponData={weaponData} />
+            <AttributeDisplay
+              characterData={charData}
+              weaponData={weaponData}
+              charLevel={charLevel}
+              weaponLevel={weaponLevel}
+            />
 
             <EnemyParamPanel onParamsChange={setEnemyParams} />
 
@@ -419,8 +434,8 @@ export default function ComputePage() {
         currentState={{
           charName: selectedChar,
           weaponName: selectedWeapon,
-          charLevel: 90,
-          weaponLevel: 90,
+          charLevel,
+          weaponLevel,
           enemyParams,
           multiSkill,
           fixedLoadout: fixedLoadout as Record<string, string | null> | null,

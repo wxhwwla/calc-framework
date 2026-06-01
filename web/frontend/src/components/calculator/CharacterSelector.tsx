@@ -7,6 +7,7 @@ import {
   Box,
   Typography,
   Chip,
+  Slider,
 } from "@mui/material";
 import { fetchCharacters, fetchWeapons } from "../../api/data";
 import type { CharacterSummary, WeaponSummary } from "../../api/data";
@@ -16,6 +17,72 @@ interface CharacterSelectorProps {
   onSelectWeapon: (name: string, fullData: Record<string, unknown>) => void;
   selectedChar: string;
   selectedWeapon: string;
+  charLevel: number;
+  weaponLevel: number;
+  onCharLevelChange: (level: number) => void;
+  onWeaponLevelChange: (level: number) => void;
+}
+
+const LEVEL_MIN = 1;
+const LEVEL_MAX = 90;
+const LEVEL_MARKS = [
+  { value: 1, label: "1" },
+  { value: 80, label: "80" },
+  { value: 90, label: "90" },
+];
+
+function LevelSlider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <Box sx={{ mb: 1.5 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+        {label}：Lv.{value}
+      </Typography>
+      <Slider
+        size="small"
+        min={LEVEL_MIN}
+        max={LEVEL_MAX}
+        value={value}
+        onChange={(_e, v) => onChange(v as number)}
+        marks={LEVEL_MARKS}
+        sx={{ mx: 1, width: "auto" }}
+      />
+      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+        {[80, 90].map((lv) => (
+          <Chip
+            key={lv}
+            label={`等级${lv}`}
+            size="small"
+            variant={value === lv ? "filled" : "outlined"}
+            color={value === lv ? "primary" : "default"}
+            onClick={() => onChange(lv)}
+            sx={{ height: 22, cursor: "pointer" }}
+          />
+        ))}
+        <Chip
+          label="满级"
+          size="small"
+          variant="outlined"
+          onClick={() => onChange(LEVEL_MAX)}
+          sx={{ height: 22, cursor: "pointer" }}
+        />
+        <Chip
+          label="归零"
+          size="small"
+          variant="outlined"
+          onClick={() => onChange(LEVEL_MIN)}
+          sx={{ height: 22, cursor: "pointer" }}
+        />
+      </Box>
+    </Box>
+  );
 }
 
 export default function CharacterSelector({
@@ -23,6 +90,10 @@ export default function CharacterSelector({
   onSelectWeapon,
   selectedChar,
   selectedWeapon,
+  charLevel,
+  weaponLevel,
+  onCharLevelChange,
+  onWeaponLevelChange,
 }: CharacterSelectorProps) {
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
   const [weapons, setWeapons] = useState<WeaponSummary[]>([]);
@@ -193,6 +264,12 @@ export default function CharacterSelector({
         </Select>
       </FormControl>
 
+      <LevelSlider
+        label="角色等级"
+        value={charLevel}
+        onChange={onCharLevelChange}
+      />
+
       {/* ── 武器区域 ── */}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         武器
@@ -223,7 +300,7 @@ export default function CharacterSelector({
         </FormControl>
       </Box>
 
-      <FormControl fullWidth size="small">
+      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
         <InputLabel>名称</InputLabel>
         <Select
           value={selectedWeapon}
@@ -241,6 +318,12 @@ export default function CharacterSelector({
           ))}
         </Select>
       </FormControl>
+
+      <LevelSlider
+        label="武器等级"
+        value={weaponLevel}
+        onChange={onWeaponLevelChange}
+      />
     </Box>
   );
 }

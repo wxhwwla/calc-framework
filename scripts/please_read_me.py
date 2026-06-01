@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.7"
+_VERSION = "3.15.8"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,34 +438,11 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 28 处文件
+# TITLE: 更新 5 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 %temp%/pyparsing_fix/pyparsing-3.0.8-py3-none-any.whl
-# - 更新文档 docs/agents/encoding-corruption-handling.md
-# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
-# - 修改 games/endfield/calc/dag_adapter/_subgraph_builders.py
-# - 修改 games/endfield/calc/damage/engine/__init__.py
-# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
-# - 修改 games/endfield/gui_design/designer/data_browser_tab.py
-# - 修改 games/endfield/gui_design/shell/qt_app.py
-# - 修改 games/endfield/gui_design/shell/qt_app_dialog_mixin.py
-# - 修改 games/endfield/gui_design/shell/qt_app_search_mixin.py
-# - 修改 games/endfield/gui_design/shell/qt_control_dock.py
-# - 修改 games/endfield/gui_design/shell/qt_control_dock_builders.py
-# - 修改 games/endfield/please_read_me.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_search_browser.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_search_browser_dialog.py
-# - 修改 games/endfield/tests/gui_design/controls/search/test_search_settings.py
-# - 修改 games/endfield/tests/gui_design/legal/test_donation_qt.py
-# - 修改 games/endfield/tests/gui_design/presentation/test_search_results_lines.py
-# - 修改 games/endfield/tests/gui_design/shared/test_weapon_display_remaining.py
-# - 修改 games/endfield/tests/gui_design/shared/test_weapon_display_text_detail.py
-# - 修改 games/endfield/tests/gui_design/shared/ui/test_ui_preferences_detail.py
-# - 修改 games/endfield/tests/utils/test_platform_win32_patch.py
-# - 修改 games/endfield/tests/utils/test_utils_optional_deps.py
-# - 修改 scripts/github_download_module.py
-# - 修改 scripts/main_launcher.py
 # - 修改 scripts/please_read_me.py
+# - 变更 web/frontend/src/components/calculator/AttributeDisplay.tsx
+# - 变更 web/frontend/src/components/calculator/CharacterSelector.tsx
+# - 变更 web/frontend/src/pages/ComputePage.tsx
 # --- END UPLOAD_SUMMARY ---

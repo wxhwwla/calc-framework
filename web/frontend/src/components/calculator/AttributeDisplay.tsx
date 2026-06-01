@@ -3,6 +3,8 @@ import { Box, Paper, Typography, Table, TableBody, TableCell, TableRow, Chip, Ta
 interface AttributeDisplayProps {
   characterData: Record<string, unknown> | null;
   weaponData: Record<string, unknown> | null;
+  charLevel: number;
+  weaponLevel: number;
 }
 
 const SKILL_INFO: { label: string; rateField: string; dmgTypeField: string }[] = [
@@ -11,11 +13,11 @@ const SKILL_INFO: { label: string; rateField: string; dmgTypeField: string }[] =
   { label: "终结技", rateField: "终结技倍率", dmgTypeField: "终结技段伤害类型" },
 ];
 
-function getAttrAtLevel90(data: Record<string, unknown> | null, attrName: string): number | string {
+function getAttrAtLevel(data: Record<string, unknown> | null, attrName: string, level: number): number | string {
   if (!data) return "--";
   const arr = data[attrName];
   if (Array.isArray(arr)) {
-    const idx = Math.min(89, arr.length - 1);
+    const idx = Math.min(level - 1, arr.length - 1);
     const val = arr[idx];
     return typeof val === "number" ? val : String(val);
   }
@@ -109,7 +111,7 @@ function renderWeaponSkills(weaponData: Record<string, unknown>) {
   );
 }
 
-export default function AttributeDisplay({ characterData, weaponData }: AttributeDisplayProps) {
+export default function AttributeDisplay({ characterData, weaponData, charLevel, weaponLevel }: AttributeDisplayProps) {
   if (!characterData && !weaponData) {
     return (
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -161,33 +163,33 @@ export default function AttributeDisplay({ characterData, weaponData }: Attribut
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>力量 (Lv.90)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{`力量 (Lv.${charLevel})`}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    {getAttrAtLevel90(characterData, "力量")}
+                    {getAttrAtLevel(characterData, "力量", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>敏捷 (Lv.90)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{`敏捷 (Lv.${charLevel})`}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    {getAttrAtLevel90(characterData, "敏捷")}
+                    {getAttrAtLevel(characterData, "敏捷", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>智识 (Lv.90)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{`智识 (Lv.${charLevel})`}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    {getAttrAtLevel90(characterData, "智识")}
+                    {getAttrAtLevel(characterData, "智识", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>意志 (Lv.90)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{`意志 (Lv.${charLevel})`}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    {getAttrAtLevel90(characterData, "意志")}
+                    {getAttrAtLevel(characterData, "意志", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>基础攻击 (Lv.90)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{`基础攻击 (Lv.${charLevel})`}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    {getAttrAtLevel90(characterData, "基础攻击力")}
+                    {getAttrAtLevel(characterData, "基础攻击力", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -230,9 +232,9 @@ export default function AttributeDisplay({ characterData, weaponData }: Attribut
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>基础攻击 (Lv.90)</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{`基础攻击 (Lv.${weaponLevel})`}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
-                    {getAttrAtLevel90(weaponData, "基础攻击力")}
+                    {getAttrAtLevel(weaponData, "基础攻击力", weaponLevel)}
                   </TableCell>
                 </TableRow>
               </TableBody>
