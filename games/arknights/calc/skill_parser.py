@@ -52,7 +52,7 @@ class ParsedSkillInfo:
 def _strip_wiki_markup(text: str) -> str:
     text = re.sub(r"\{\{蓝色\|([^}]+)\}\}", r"\1", text)
     text = re.sub(r"\{\{color\|[^|]+\|([^}]+)\}\}", r"\1", text)
-    text = re.sub(r"<BR\s*/?>", " ", text)
+    text = re.sub(r"<BR\s*/?>", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", "", text)
     return text.strip()
 

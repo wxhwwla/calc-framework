@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """端到端集成测试 — 使用真实解析 JSON 数据验证 DAG 计算正确性。
 
-手动验证值：
+手动验证值（skill_parser 已启用，自动解析技能倍率）：
 
-  W（★6 狙击，物理）：
+  W（★6 狙击，技能1「红桃K」Lv.7）：
     ATK = 568 + 100(信赖) + 35(潜能) = 703
-    物理 = max(703-200, 703*0.05) = max(503, 35.15) = 503.0
+    红桃K 倍率 = 3.1x（Lv.7 时相当于攻击力310%）
+    物理 = max(703*3.1 - 200, 703*3.1*0.05) = max(1979.3, 108.97) = 1979.3
 
-  阿米娅（★5 术师，法术）：
+  阿米娅（★5 术师，技能1「战术咏唱·γ型」Lv.7）：
     ATK = 390 + 70(信赖) + 30(潜能) = 490
+    战术咏唱·γ型 = 攻速技能，倍率=1.0
     法术 = 490 * (1-50/100) = 245.0
 """
 
@@ -37,7 +39,7 @@ class TestWithRealData:
         op = _load("W", parsed_dir)
         result = compute_snapshot_with_dag(op)
         assert result.outputs["最终攻击力"] == 703.0
-        assert result.outputs["物理伤害"] == 503.0
+        assert result.outputs["物理伤害"] == pytest.approx(1979.3, abs=0.1)
 
     @pytest.mark.integration
     @pytest.mark.real_data

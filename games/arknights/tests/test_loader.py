@@ -50,6 +50,11 @@ class TestParsePotentialAtk:
         pots = ["生命上限+200", "部署费用-1", "攻击力+30", "天赋效果增强"]
         assert _parse_potential_atk(pots) == 30.0
 
+    def test_invalid_number_skipped(self) -> None:
+        """攻击力+后跟非数值字符串 → 跳过（触发 ValueError）"""
+        pots = ["攻击力+abc", "攻击力+30"]
+        assert _parse_potential_atk(pots) == 30.0
+
 
 class TestArknightsContextLoader:
     def test_build_context_has_correct_keys(self, amiya_operator: dict) -> None:
