@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """CalcPackViewer 帮助内容。"""
 
-from calc_framework.ui.help_dialog import HelpSection
+from utils.gui.help_dialog import HelpSection
 
 from utils.gui.help_loader import load_multi_category
 
