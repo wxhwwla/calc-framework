@@ -30,6 +30,7 @@ from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.execute import calculate_execute_damage, execute_sp_restore
 from games.endfield.calc.damage.healing import HealingContext, calculate_healing, received_heal_efficiency_from_will
 from games.endfield.calc.damage.imbalance import (
+    accumulation_multiplier_after_fast_break,
     imbalance_cap_for_tier,
     imbalance_duration_for_tier,
     imbalance_node_thresholds,
@@ -89,9 +90,11 @@ class QtSurvivalEstimateDialog(QDialog):
         self._imb_gain_eff.setDecimals(2)
         self._imb_gain_eff.setValue(0.0)
         self._imb_gain_result = QLabel("—")
+        self._fast_break_mult = QLabel("—")
         imb_form.addRow("单次失衡值", self._imb_gain_base)
         imb_form.addRow("失衡效率加成", self._imb_gain_eff)
         imb_form.addRow("有效累积", self._imb_gain_result)
+        imb_form.addRow("快速打进惩罚倍率", self._fast_break_mult)
         layout.addWidget(imb_box)
 
         burn_box = QGroupBox("敌人燃烧承伤 (G12)")
@@ -249,6 +252,13 @@ class QtSurvivalEstimateDialog(QDialog):
         cap = imbalance_cap_for_tier(self._enemy_tier)
         pct = min(100.0, gain / cap * 100.0) if cap > 0 else 0.0
         self._imb_gain_result.setText(f"{gain:g} / {cap:g}（{pct:.1f}%）")
+        mult = accumulation_multiplier_after_fast_break(
+            tier=self._enemy_tier,
+            seconds_since_combat_start=2.0,
+            seconds_since_last_imbalance_end=0.5,
+            was_fast_break=True,
+        )
+        self._fast_break_mult.setText(f"×{mult:g}（快速打进后窗口内）")
 
     def _refresh_burn(self) -> None:
         hp = float(self._enemy_max_hp.value())

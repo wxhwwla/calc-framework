@@ -51,3 +51,14 @@ def break_defense_after_rotation_hits(
         consuming_hits=total_hits,
         layers_per_hit=layers_per_skill_hit,
     )
+
+
+def format_break_defense_rotation_note(
+    initial_stacks: int,
+    skill_counts: dict[str, int],
+) -> str | None:
+    """轮转后破防剩余层数说明；无破防时返回 None。"""
+    if int(initial_stacks) <= 0:
+        return None
+    remaining = break_defense_after_rotation_hits(initial_stacks, skill_counts)
+    return f"破防层数: 初始 {initial_stacks} → 轮转后约 {remaining}（按技能段次数消耗，不含物理异常）"

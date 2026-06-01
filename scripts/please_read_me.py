@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.16.9"
+_VERSION = "3.16.10"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,18 +438,15 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 9 处文件
 # BODY:
 # - 变更 "docs/nga-46094556-/347/273/210/346/234/253/345/234/260/346/234/272/345/210/266/345/257/271/347/205/247/344/270/216/345/276/205/345/212/236.md"
-# - 修改 games/endfield/calc/damage/enemy_growth.py
 # - 修改 games/endfield/calc/damage/physical_abnormal_state.py
-# - 修改 games/endfield/calc/multi_skill/optimizer/search.py
-# - 修改 games/endfield/calc/search/evaluate/task.py
-# - 修改 games/endfield/data_loading/enemy_params.py
-# - 修改 games/endfield/gui_design/app/confirm_refresh.py
+# - 修改 games/endfield/data_loading/enemy_eval_params.py
+# - 修改 games/endfield/gui_design/app/loadout_evaluation.py
 # - 修改 games/endfield/gui_design/controls/survival/qt_survival_dialog.py
-# - 修改 games/endfield/gui_design/shell/qt_app_dialog_mixin.py
-# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch9.py
+# - 修改 games/endfield/gui_design/presentation/preview/multi_skill.py
+# - 修改 games/endfield/gui_design/presentation/preview/single_skill.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch10.py
 # - 修改 scripts/please_read_me.py
-# - 修改 utils/gui/help_calculator.py
 # --- END UPLOAD_SUMMARY ---
