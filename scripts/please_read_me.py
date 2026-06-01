@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.15.32"
+_VERSION = "3.16.0"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,13 +438,16 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 10 处文件
 # BODY:
-# - 修改 scripts/github_upload_module.py
+# - 修改 games/arknights/gui/ArknightsDamageApp.py
+# - 修改 games/arknights/operator_catalog.py
+# - 修改 games/arknights/tests/test_operator_catalog.py
 # - 修改 scripts/please_read_me.py
 # - 修改 web/backend/api/arknights.py
 # - 修改 web/backend/tests/test_arknights_data_fallback.py
-# - 变更 web/frontend/src/components/calculator/CharacterSelector.tsx
-# - 变更 web/frontend/vite.config.ts
-# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 变更 web/frontend/src/api/arknights.ts
+# - 变更 web/frontend/src/components/arknights/OperatorSelector.tsx
+# - 变更 web/frontend/src/pages/ArknightsComputePage.tsx
+# - 变更 web/frontend/src/store/arknightsStore.ts
 # --- END UPLOAD_SUMMARY ---

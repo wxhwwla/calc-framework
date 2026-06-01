@@ -1,3 +1,4 @@
+import { useMemo, useState, useEffect } from "react";
 import {
   Autocomplete,
   TextField,
@@ -5,10 +6,19 @@ import {
   Typography,
   Chip,
   Slider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
 } from "@mui/material";
+import type { OperatorIndexEntry } from "../../api/arknights";
+
+const STAR_OPTIONS = [6, 5, 4, 3, 2, 1] as const;
+const ALL_STARS = new Set<number>(STAR_OPTIONS);
 
 interface OperatorSelectorProps {
-  operators: string[];
+  operatorIndex: OperatorIndexEntry[];
   selectedOperator: string | null;
   onSelect: (name: string) => void;
   skillLevel: number;
@@ -17,8 +27,12 @@ interface OperatorSelectorProps {
   onSkillMultiplierChange: (mult: number) => void;
 }
 
+function starLabel(star: number): string {
+  return `${"★".repeat(star)}${"☆".repeat(Math.max(0, 6 - star))}`;
+}
+
 export default function OperatorSelector({
-  operators,
+  operatorIndex,
   selectedOperator,
   onSelect,
   skillLevel,
@@ -26,17 +40,169 @@ export default function OperatorSelector({
   skillMultiplier,
   onSkillMultiplierChange,
 }: OperatorSelectorProps) {
+  const [starFilter, setStarFilter] = useState<Set<number>>(() => new Set(ALL_STARS));
+  const [professionFilter, setProfessionFilter] = useState("");
+  const [branchFilter, setBranchFilter] = useState("");
+
+  const professions = useMemo(() => {
+    const set = new Set<string>();
+    for (const op of operatorIndex) {
+      if (op.职业) set.add(op.职业);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "zh"));
+  }, [operatorIndex]);
+
+  const branches = useMemo(() => {
+    const set = new Set<string>();
+    for (const op of operatorIndex) {
+      if (professionFilter && op.职业 !== professionFilter) continue;
+      if (op.分支) set.add(op.分支);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "zh"));
+  }, [operatorIndex, professionFilter]);
+
+  const allStarsOn = starFilter.size === STAR_OPTIONS.length;
+
+  const filteredIndex = useMemo(() => {
+    return operatorIndex.filter((op) => {
+      if (!allStarsOn && !starFilter.has(op.星级)) return false;
+      if (professionFilter && op.职业 !== professionFilter) return false;
+      if (branchFilter && op.分支 !== branchFilter) return false;
+      return true;
+    });
+  }, [operatorIndex, starFilter, professionFilter, branchFilter, allStarsOn]);
+
+  const filteredNames = useMemo(
+    () => filteredIndex.map((op) => op.名称),
+    [filteredIndex],
+  );
+
+  const indexByName = useMemo(() => {
+    const m = new Map<string, OperatorIndexEntry>();
+    for (const op of operatorIndex) m.set(op.名称, op);
+    return m;
+  }, [operatorIndex]);
+
+  useEffect(() => {
+    if (branchFilter && !branches.includes(branchFilter)) {
+      setBranchFilter("");
+    }
+  }, [branches, branchFilter]);
+
+  useEffect(() => {
+    if (selectedOperator && !filteredNames.includes(selectedOperator)) {
+      onSelect("");
+    }
+  }, [filteredNames, selectedOperator, onSelect]);
+
+  const toggleStar = (star: number) => {
+    setStarFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(star)) next.delete(star);
+      else next.add(star);
+      return next;
+    });
+  };
+
   return (
     <Box>
+      <Typography variant="subtitle2" gutterBottom color="text.secondary">
+        筛选干员
+      </Typography>
+
+      <Stack spacing={1.5} sx={{ mb: 2 }}>
+        <Box>
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+            星级
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+            <Chip
+              label="全部"
+              size="small"
+              variant={allStarsOn ? "filled" : "outlined"}
+              color={allStarsOn ? "primary" : "default"}
+              onClick={() => setStarFilter(new Set(ALL_STARS))}
+              sx={{ height: 26 }}
+            />
+            {STAR_OPTIONS.map((star) => (
+              <Chip
+                key={star}
+                label={starLabel(star)}
+                size="small"
+                variant={starFilter.has(star) ? "filled" : "outlined"}
+                color={starFilter.has(star) ? "primary" : "default"}
+                onClick={() => toggleStar(star)}
+                sx={{ height: 26 }}
+              />
+            ))}
+          </Box>
+        </Box>
+
+        <FormControl fullWidth size="small">
+          <InputLabel>主职业</InputLabel>
+          <Select
+            value={professionFilter}
+            label="主职业"
+            onChange={(e) => {
+              setProfessionFilter(e.target.value);
+              setBranchFilter("");
+            }}
+          >
+            <MenuItem value="">全部</MenuItem>
+            {professions.map((p) => (
+              <MenuItem key={p} value={p}>{p}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth size="small">
+          <InputLabel>副职业（分支）</InputLabel>
+          <Select
+            value={branchFilter}
+            label="副职业（分支）"
+            onChange={(e) => setBranchFilter(e.target.value)}
+            disabled={branches.length === 0}
+          >
+            <MenuItem value="">全部</MenuItem>
+            {branches.map((b) => (
+              <MenuItem key={b} value={b}>{b}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Typography variant="caption" color="text.secondary">
+          共 {filteredIndex.length} / {operatorIndex.length} 名干员
+        </Typography>
+      </Stack>
+
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
         选择干员
       </Typography>
       <Autocomplete
-        options={operators}
-        value={selectedOperator ?? null}
+        options={filteredNames}
+        value={selectedOperator && filteredNames.includes(selectedOperator) ? selectedOperator : null}
         onChange={(_e, v) => { if (v) onSelect(v); }}
+        noOptionsText={filteredIndex.length === 0 ? "无匹配干员，请放宽筛选" : "无结果"}
+        renderOption={(props, name) => {
+          const op = indexByName.get(name);
+          const { key, ...rest } = props;
+          return (
+            <li key={key} {...rest}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                <Typography variant="body2" sx={{ flex: 1 }}>{name}</Typography>
+                {op && (
+                  <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
+                    <Chip label={`${op.星级}★`} size="small" sx={{ height: 20, fontSize: 11 }} />
+                    <Chip label={op.职业} size="small" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
+                    <Chip label={op.分支} size="small" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
+                  </Box>
+                )}
+              </Box>
+            </li>
+          );
+        }}
         renderInput={(params) => (
-          <TextField {...params} size="small" placeholder="搜索干员..." />
+          <TextField {...params} size="small" placeholder="搜索干员名称..." />
         )}
         sx={{ mb: 2 }}
       />

@@ -35,6 +35,18 @@ class TestArknightsDataFallback(unittest.TestCase):
         names = _resolve_operator_names()
         self.assertGreaterEqual(len(names), 100)
 
+    def test_list_payload_includes_index(self) -> None:
+        from api.arknights import list_operators_payload
+
+        payload = list_operators_payload()
+        self.assertIn("index", payload)
+        self.assertGreaterEqual(payload["count"], 100)
+        if payload["index"]:
+            row = payload["index"][0]
+            self.assertIn("星级", row)
+            self.assertIn("职业", row)
+            self.assertIn("分支", row)
+
     def test_resolve_falls_back_to_zip_when_parsed_sparse(self) -> None:
         if _arknights_zip_path() is None:
             self.skipTest("无 arknights_parsed.zip")

@@ -1,3 +1,17 @@
+/** 干员列表筛选用（与 BWIKI 星级 / 职业 / 分支一致） */
+export interface OperatorIndexEntry {
+  名称: string;
+  星级: number;
+  职业: string;
+  分支: string;
+}
+
+export interface OperatorCatalog {
+  operators: string[];
+  index: OperatorIndexEntry[];
+  count: number;
+}
+
 export interface OperatorSummary {
   名称: string;
   星级: number;
@@ -50,10 +64,17 @@ import { readApiJson } from "../utils/readApiJson";
 
 const BASE = "/api/arknights";
 
-export async function fetchOperators(): Promise<string[]> {
+export async function fetchOperatorCatalog(): Promise<OperatorCatalog> {
   const r = await fetch(`${BASE}/operators`);
-  const data = await readApiJson<{ operators: string[] }>(r);
-  return data.operators;
+  const data = await readApiJson<OperatorCatalog>(r);
+  if (data.index?.length) {
+    return data;
+  }
+  return {
+    operators: data.operators,
+    count: data.count ?? data.operators.length,
+    index: data.operators.map((名称) => ({ 名称, 星级: 0, 职业: "", 分支: "" })),
+  };
 }
 
 export async function fetchOperatorDetail(name: string): Promise<OperatorSummary> {

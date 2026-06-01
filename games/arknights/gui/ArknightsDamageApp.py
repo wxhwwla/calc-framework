@@ -6,8 +6,6 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
@@ -39,30 +37,14 @@ from utils.gui.help_loader import load_multi_category
 
 from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info, compute_snapshot_with_dag
 from games.arknights.calc.skill_parser import ParsedSkillInfo
-
-
-_DATA_DIR = Path(__file__).resolve().parents[2] / ".." / ".." / "tools" / "arknights_scout" / "output" / "parsed"
-
-_OPERATORS_CACHE: dict[str, dict[str, Any]] | None = None
-_OPERATOR_NAMES: list[str] = []
-
-
-def _load_operators() -> dict[str, dict[str, Any]]:
-    global _OPERATORS_CACHE, _OPERATOR_NAMES
-    if _OPERATORS_CACHE is not None:
-        return _OPERATORS_CACHE
-    result: dict[str, dict[str, Any]] = {}
-    if _DATA_DIR.is_dir():
-        for f in sorted(_DATA_DIR.glob("*.json")):
-            try:
-                data = json.loads(f.read_text(encoding="utf-8"))
-                name = data.get("名称", f.stem)
-                result[name] = data
-            except (json.JSONDecodeError, OSError):
-                pass
-    _OPERATORS_CACHE = result
-    _OPERATOR_NAMES = sorted(result.keys())
-    return result
+from games.arknights.operator_catalog import (
+    STAR_TIERS,
+    build_operator_index,
+    filter_operator_index,
+    list_branches,
+    list_professions,
+    load_operators_map,
+)
 
 
 DARK_QSS = """
@@ -115,7 +97,8 @@ class ArknightsDamageApp(QMainWindow):
         self.setMinimumSize(1200, 720)
         self.resize(1366, 768)
 
-        _load_operators()
+        self._operators_map = load_operators_map()
+        self._operator_index = build_operator_index(self._operators_map)
         self._current_operator: dict[str, Any] | None = None
         self._skill_count: int = 0
 
@@ -162,20 +145,54 @@ class ArknightsDamageApp(QMainWindow):
         lo.setContentsMargins(0, 0, 0, 0)
         lo.setSpacing(8)
 
+        # 筛选（星级 / 主职业 / 分支）
+        g_filter = QGroupBox("筛选")
+        fl = QVBoxLayout(g_filter)
+        stars_row = QHBoxLayout()
+        self._star_checks: dict[int, QCheckBox] = {}
+        for star in STAR_TIERS:
+            cb = QCheckBox(f"{star}★")
+            cb.setChecked(True)
+            cb.toggled.connect(self._on_filter_changed)
+            self._star_checks[star] = cb
+            stars_row.addWidget(cb)
+        fl.addLayout(stars_row)
+
+        prof_row = QHBoxLayout()
+        prof_row.addWidget(QLabel("主职业"))
+        self._prof_combo = QComboBox()
+        self._prof_combo.addItem("全部", "")
+        for p in list_professions(self._operator_index):
+            self._prof_combo.addItem(p, p)
+        self._prof_combo.currentIndexChanged.connect(self._on_profession_changed)
+        prof_row.addWidget(self._prof_combo, 1)
+        fl.addLayout(prof_row)
+
+        branch_row = QHBoxLayout()
+        branch_row.addWidget(QLabel("分支"))
+        self._branch_combo = QComboBox()
+        self._branch_combo.addItem("全部", "")
+        self._branch_combo.currentIndexChanged.connect(self._on_filter_changed)
+        branch_row.addWidget(self._branch_combo, 1)
+        fl.addLayout(branch_row)
+        lo.addWidget(g_filter)
+
         # 干员选择
         g_op = QGroupBox("干员")
         gl = QVBoxLayout(g_op)
         self._op_combo = QComboBox()
         self._op_combo.setEditable(True)
         self._op_combo.setPlaceholderText("搜索干员...")
-        self._op_combo.addItems(_OPERATOR_NAMES)
         self._op_combo.currentTextChanged.connect(self._on_op_selected)
         gl.addWidget(self._op_combo)
 
-        self._op_count_label = QLabel(f"共 {len(_OPERATOR_NAMES)} 个干员")
+        total = len(self._operator_index)
+        self._op_count_label = QLabel(f"显示 {total} / {total} 个干员")
         self._op_count_label.setStyleSheet("color: #666; font-size: 11px;")
         gl.addWidget(self._op_count_label)
         lo.addWidget(g_op)
+        self._refresh_branch_combo()
+        self._refresh_operator_combo()
 
         # 技能选择
         g_sk = QGroupBox("技能")
@@ -422,10 +439,51 @@ class ArknightsDamageApp(QMainWindow):
         except (ValueError, TypeError):
             pass
 
+    def _active_stars(self) -> set[int]:
+        return {s for s, cb in self._star_checks.items() if cb.isChecked()}
+
+    def _refresh_branch_combo(self) -> None:
+        profession = self._prof_combo.currentData() or ""
+        self._branch_combo.blockSignals(True)
+        current = self._branch_combo.currentData() or ""
+        self._branch_combo.clear()
+        self._branch_combo.addItem("全部", "")
+        for b in list_branches(self._operator_index, profession):
+            self._branch_combo.addItem(b, b)
+        idx = self._branch_combo.findData(current)
+        if idx >= 0:
+            self._branch_combo.setCurrentIndex(idx)
+        self._branch_combo.blockSignals(False)
+
+    def _refresh_operator_combo(self) -> None:
+        filtered = filter_operator_index(
+            self._operator_index,
+            active_stars=self._active_stars(),
+            profession=self._prof_combo.currentData() or "",
+            branch=self._branch_combo.currentData() or "",
+        )
+        names = [op["名称"] for op in filtered]
+        current = self._op_combo.currentText()
+        self._op_combo.blockSignals(True)
+        self._op_combo.clear()
+        self._op_combo.addItems(names)
+        if current in names:
+            self._op_combo.setCurrentText(current)
+        self._op_combo.blockSignals(False)
+        total = len(self._operator_index)
+        self._op_count_label.setText(f"显示 {len(names)} / {total} 个干员")
+
+    def _on_profession_changed(self) -> None:
+        self._refresh_branch_combo()
+        self._on_filter_changed()
+
+    def _on_filter_changed(self) -> None:
+        self._refresh_operator_combo()
+
     def _on_op_selected(self, name: str) -> None:
-        if not name or name not in _OPERATORS_CACHE:
+        if not name or name not in self._operators_map:
             return
-        self._current_operator = _OPERATORS_CACHE[name]
+        self._current_operator = self._operators_map[name]
         self._skill_count = len(self._current_operator.get("技能", []))
         # 更新技能下拉
         self._skill_combo.blockSignals(True)

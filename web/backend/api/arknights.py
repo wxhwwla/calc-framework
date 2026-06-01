@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import json
-import zipfile
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -13,28 +11,51 @@ from pydantic import BaseModel
 from calc_framework.config.manager import AdapterManager
 
 from games.arknights.calc.dag_adapter import compute_snapshot_with_dag
+from games.arknights.operator_catalog import (
+    build_operator_index,
+    load_operators_map,
+)
 
 router = APIRouter(prefix="/api/arknights", tags=["arknights"])
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_DATA_DIR = _REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed"
-_AKNIGHTS_ZIP_CANDIDATES = (
-    _REPO_ROOT / "tools" / "arknights_scout" / "arknights_parsed.zip",
-    _REPO_ROOT / "dist_arknights_parsed.zip",
-)
 _ADAPTER_DIR = _REPO_ROOT / "framework" / "adapters"
-_SKIP_STEMS = frozenset({"_sync_summary", "operators"})
-# parsed/ 不完整时改读 zip（PA 上常见：只解压了少量英文名 JSON）
-_MIN_PARSED_COUNT = 100
 
 ADAPTER_MANAGER = AdapterManager(_ADAPTER_DIR)
 
+_OPERATORS_MAP: dict | None = None
+_OPERATOR_INDEX_CACHE: list[dict] | None = None
 
-def _arknights_zip_path() -> Path | None:
-    for path in _AKNIGHTS_ZIP_CANDIDATES:
-        if path.is_file():
-            return path
-    return None
+
+def _operators_map() -> dict:
+    global _OPERATORS_MAP
+    if _OPERATORS_MAP is None:
+        _OPERATORS_MAP = load_operators_map()
+        if not _OPERATORS_MAP:
+            raise HTTPException(
+                status_code=500,
+                detail="干员数据不存在：请放置 parsed/*.json 或 arknights_parsed.zip",
+            )
+    return _OPERATORS_MAP
+
+
+def _load_operator(name: str) -> dict:
+    safe = name.strip()
+    m = _operators_map()
+    if safe in m:
+        return m[safe]
+    for data in m.values():
+        if str(data.get("名称")) == safe:
+            return data
+    raise HTTPException(status_code=404, detail=f"干员不存在: {name}")
+
+
+def _build_operator_index() -> list[dict]:
+    global _OPERATOR_INDEX_CACHE
+    if _OPERATOR_INDEX_CACHE is not None:
+        return _OPERATOR_INDEX_CACHE
+    _OPERATOR_INDEX_CACHE = build_operator_index(_operators_map())
+    return _OPERATOR_INDEX_CACHE
 
 
 class ComputeRequest(BaseModel):
@@ -58,70 +79,10 @@ class ComputeResponse(BaseModel):
     execution_count: int
 
 
-def _names_from_parsed_dir() -> list[str]:
-    if not _DATA_DIR.is_dir():
-        return []
-    return sorted(
-        p.stem for p in _DATA_DIR.iterdir()
-        if p.suffix == ".json" and p.stem not in _SKIP_STEMS
-    )
-
-
-def _names_from_zip() -> list[str]:
-    zip_path = _arknights_zip_path()
-    if zip_path is None:
-        return []
-    with zipfile.ZipFile(zip_path) as zf:
-        return sorted(
-            Path(name).stem
-            for name in zf.namelist()
-            if name.endswith(".json") and Path(name).stem not in _SKIP_STEMS
-        )
-
-
-def _resolve_operator_names() -> list[str]:
-    dir_names = _names_from_parsed_dir()
-    if len(dir_names) >= _MIN_PARSED_COUNT:
-        return dir_names
-    zip_names = _names_from_zip()
-    if len(zip_names) > len(dir_names):
-        return zip_names
-    if dir_names:
-        return dir_names
-    if zip_names:
-        return zip_names
-    raise HTTPException(
-        status_code=500,
-        detail="干员数据不存在：请放置 parsed/*.json 或 arknights_parsed.zip",
-    )
-
-
-def _read_operator_json_bytes(raw: bytes, name: str) -> dict:
-    try:
-        return json.loads(raw.decode("utf-8"))
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail=f"干员数据损坏: {name}") from None
-
-
-def _load_operator(name: str) -> dict:
-    safe_name = name.strip()
-    path = _DATA_DIR / f"{safe_name}.json"
-    if path.is_file():
-        return _read_operator_json_bytes(path.read_bytes(), safe_name)
-
-    arc = f"{safe_name}.json"
-    zip_path = _arknights_zip_path()
-    if zip_path is not None:
-        with zipfile.ZipFile(zip_path) as zf:
-            if arc in zf.namelist():
-                return _read_operator_json_bytes(zf.read(arc), safe_name)
-
-    raise HTTPException(status_code=404, detail=f"干员不存在: {name}")
-
-
 def list_operators_payload() -> dict:
-    names = _resolve_operator_names()
-    return {"operators": names, "count": len(names)}
+    index = _build_operator_index()
+    names = [row["名称"] for row in index]
+    return {"operators": names, "index": index, "count": len(names)}
 
 
 def operator_summary_payload(name: str) -> dict:

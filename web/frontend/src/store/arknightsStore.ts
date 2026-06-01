@@ -1,8 +1,11 @@
 import { create } from "zustand";
-import type { ComputeRequest, ComputeResponse, OperatorSummary } from "../api/arknights";
-import { fetchOperators, fetchOperatorDetail, computeDamage } from "../api/arknights";
+import type {
+  ComputeRequest, ComputeResponse, OperatorIndexEntry, OperatorSummary,
+} from "../api/arknights";
+import { fetchOperatorCatalog, fetchOperatorDetail, computeDamage } from "../api/arknights";
 
 interface ArknightsState {
+  operatorIndex: OperatorIndexEntry[];
   operators: string[];
   operatorLoading: boolean;
   selectedOperator: string | null;
@@ -33,6 +36,7 @@ const defaultParams: ComputeRequest = {
 };
 
 export const useArknightsStore = create<ArknightsState>((set, get) => ({
+  operatorIndex: [],
   operators: [],
   operatorLoading: false,
   selectedOperator: null,
@@ -47,14 +51,28 @@ export const useArknightsStore = create<ArknightsState>((set, get) => ({
   loadOperators: async () => {
     set({ operatorLoading: true });
     try {
-      const operators = await fetchOperators();
-      set({ operators, operatorLoading: false });
+      const catalog = await fetchOperatorCatalog();
+      set({
+        operatorIndex: catalog.index,
+        operators: catalog.operators,
+        operatorLoading: false,
+      });
     } catch (e: unknown) {
       set({ error: String(e), operatorLoading: false });
     }
   },
 
   selectOperator: async (name: string) => {
+    if (!name) {
+      set({
+        selectedOperator: null,
+        operatorDetail: null,
+        detailLoading: false,
+        computeResult: null,
+        computeParams: { ...get().computeParams, operator_name: "" },
+      });
+      return;
+    }
     set({ selectedOperator: name, detailLoading: true, computeResult: null, error: null });
     try {
       const detail = await fetchOperatorDetail(name);

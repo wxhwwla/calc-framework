@@ -18,7 +18,7 @@ const SKILL_NAMES = ["普攻", "技能1", "技能2", "技能3"];
 
 export default function ArknightsComputePage() {
   const {
-    operators, operatorLoading, selectedOperator, operatorDetail, detailLoading,
+    operatorIndex, operatorLoading, selectedOperator, operatorDetail, detailLoading,
     computeParams, computeResult, computeLoading, error,
     loadOperators, selectOperator, setParam, runCompute,
   } = useArknightsStore();
@@ -84,7 +84,7 @@ export default function ArknightsComputePage() {
               <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress size={24} /></Box>
             ) : (
               <OperatorSelector
-                operators={operators}
+                operatorIndex={operatorIndex}
                 selectedOperator={selectedOperator}
                 onSelect={selectOperator}
                 skillLevel={computeParams.skill_level}
