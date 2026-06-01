@@ -313,6 +313,10 @@ class CalcPackViewer(QMainWindow):
 
         help_menu.addAction(help_action)
 
+        from utils.gui.donation import append_donation_help_menu_action
+
+        append_donation_help_menu_action(help_menu, self)
+
     def _show_help(self) -> None:
 
         dialog = HelpDialog(build_viewer_help, self, title="CalcPackViewer 使用说明")

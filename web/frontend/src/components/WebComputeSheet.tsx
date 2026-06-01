@@ -23,7 +23,8 @@ import type { DagVariable, ControlSpec } from "../utils/controlInference";
 import { inferControl, getUserInputVariables } from "../utils/controlInference";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import LazySection from "./LazySection";
-import DonationImages from "./calculator/DonationImages";
+import DonationDialog from "./calculator/DonationDialog";
+import { DONATION_TEXT } from "../constants/donation";
 
 /** layout.json Section 类型 */
 export interface LayoutSection {
@@ -158,6 +159,7 @@ export default function WebComputeSheet({
     }
     return init;
   });
+  const [donationOpen, setDonationOpen] = useState(false);
 
   const handleChange = useCallback(
     (path: string, value: number | boolean | string) => {
@@ -251,10 +253,12 @@ export default function WebComputeSheet({
             if (section.widget_type === "donation") {
               return (
                 <Paper key={section.id} sx={{ p: 2, mb: 2, textAlign: "center" }}>
-                  <DonationImages maxWidth={220} />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {section.widget_config?.text as string || "感谢使用！"}
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {(section.widget_config?.text as string) || DONATION_TEXT.split("\n\n")[0]}
                   </Typography>
+                  <Button variant="outlined" color="secondary" onClick={() => setDonationOpen(true)}>
+                    自愿捐赠
+                  </Button>
                 </Paper>
               );
             }
@@ -291,6 +295,8 @@ export default function WebComputeSheet({
       >
         {loading ? "计算中..." : "计算 (Evaluate)"}
       </Button>
+
+      <DonationDialog open={donationOpen} onClose={() => setDonationOpen(false)} />
     </Box>
   );
 }

@@ -132,6 +132,30 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(self.help_btn)
 
+        self.donation_btn = QPushButton("🤝 自愿捐赠")
+
+        self.donation_btn.setFont(self.small_font)
+
+        self.donation_btn.setStyleSheet("""
+
+            QPushButton {
+
+                background-color: transparent; color: #D1D1D1;
+
+                border: 1px solid #464646; border-radius: 4px;
+
+                padding: 4px 12px; min-height: 24px;
+
+            }
+
+            QPushButton:hover { border-color: #c0392b; color: #e74c3c; }
+
+        """)
+
+        self.donation_btn.clicked.connect(self._open_donation)
+
+        bottom_bar.addWidget(self.donation_btn)
+
 
 
         layout.addLayout(bottom_bar)
@@ -150,6 +174,12 @@ class DesignerApp(QMainWindow):
         dialog = HelpDialog(build_designer_help, self, title="数据设计器 使用说明")
 
         dialog.exec()
+
+    def _open_donation(self) -> None:
+
+        from utils.gui.donation import open_donation_dialog
+
+        open_donation_dialog(self)
 
 
 

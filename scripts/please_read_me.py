@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.16.12"
+_VERSION = "3.16.13"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,24 +438,26 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 18 处文件
+# TITLE: 更新 20 处文件
 # BODY:
-# - 修改 games/endfield/data_loading/enemy_eval_params.py
-# - 修改 games/endfield/data_loading/web_loadout_bridge.py
-# - 修改 games/endfield/tests/data_loading/test_web_loadout_bridge.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/launcher.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
+# - 修改 games/arknights/gui/ArknightsDamageApp.py
+# - 修改 games/endfield/gui_design/designer/designer_main.py
+# - 修改 games/endfield/gui_design/shell/qt_control_dock.py
+# - 修改 games/endfield/tests/utils/test_donation_paths.py
+# - 变更 resources/donation/.gitkeep
+# - 变更 resources/donation/afdian_qr.png
+# - 变更 resources/donation/donation_q.jpg
 # - 修改 scripts/please_read_me.py
-# - 修改 web/backend/api/compute.py
-# - 修改 web/backend/api/loadout_schemas.py
-# - 修改 web/backend/api/manual_buff.py
-# - 修改 web/backend/api/search.py
-# - 变更 web/frontend/src/api/loadout.ts
-# - 变更 web/frontend/src/api/search.ts
-# - 变更 web/frontend/src/components/calculator/CritAndAbnormalPanel.tsx
-# - 变更 web/frontend/src/components/calculator/EnemyParamPanel.tsx
-# - 变更 web/frontend/src/components/calculator/ManualBuffDialog.tsx
-# - 变更 web/frontend/src/components/calculator/PresetDialog.tsx
-# - 变更 web/frontend/src/components/calculator/SearchPreviewPanel.tsx
-# - 变更 web/frontend/src/components/calculator/SegmentManualBuffDialog.tsx
-# - 变更 web/frontend/src/components/calculator/SurvivalEstimateDialog.tsx
-# - 变更 web/frontend/src/pages/ComputePage.tsx
+# - 修改 utils/donation_assets.py
+# - 修改 utils/gui/donation.py
+# - 变更 web/frontend/src/App.tsx
+# - 变更 web/frontend/src/components/GlobalDonationButton.tsx
+# - 变更 web/frontend/src/components/WebComputeSheet.tsx
+# - 变更 web/frontend/src/components/calculator/DonationDialog.tsx
+# - 变更 web/frontend/src/components/calculator/DonationImages.tsx
+# - 变更 web/frontend/src/constants/donation.ts
+# - 修改 web/wsgi_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

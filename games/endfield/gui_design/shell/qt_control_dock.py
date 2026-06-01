@@ -158,6 +158,10 @@ class QtControlDock(BuilderMixin, QWidget):
         self.donation_btn = self._make_btn("🤝 自愿捐赠", _SECONDARY_BTN_HEIGHT)
         if self._on_donation:
             self.donation_btn.clicked.connect(self._on_donation)
+        else:
+            from utils.gui.donation import open_donation_dialog
+
+            self.donation_btn.clicked.connect(lambda: open_donation_dialog(self))
         lay.addWidget(self.donation_btn)
 
         self.help_btn = self._make_btn("📖 使用说明", _SECONDARY_BTN_HEIGHT)

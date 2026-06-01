@@ -1,1 +1,4 @@
-
+# 捐赠二维码（勿提交真实收款码到公开仓库时可仅保留占位说明）
+# - donation_qr.jpg / donation_q.jpg  微信赞赏码（jpg/png 均可）
+# - afdian_qr.png                       爱发电
+# GUI / Web 均在「自愿捐赠」同一弹窗中展示存在的图片。

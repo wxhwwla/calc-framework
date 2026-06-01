@@ -26,6 +26,7 @@ import PackDesignerPage from "./pages/PackDesignerPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import ArknightsComputePage from "./pages/ArknightsComputePage";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
+import GlobalDonationButton from "./components/GlobalDonationButton";
 
 const drawerWidth = 240;
 
@@ -50,6 +51,7 @@ function Shell() {
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             Calc Framework Web
           </Typography>
+          <GlobalDonationButton />
           <GlobalHelpDialog />
         </Toolbar>
       </AppBar>

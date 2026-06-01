@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from utils.gui.donation import open_donation_dialog, append_donation_help_menu_action
 from utils.gui.help_dialog import HelpDialog
 from utils.gui.help_loader import load_multi_category
 
@@ -119,6 +120,10 @@ class ArknightsDamageApp(QMainWindow):
         help_action.setShortcut(QKeySequence("F1"))
         help_action.triggered.connect(self._open_help)
         help_menu.addAction(help_action)
+        append_donation_help_menu_action(help_menu, self)
+
+    def _open_donation(self) -> None:
+        open_donation_dialog(self)
 
     # ═══════════════════════════════════════════
     #  UI 构建
@@ -363,6 +368,15 @@ class ArknightsDamageApp(QMainWindow):
         self._calc_btn = QPushButton("开始计算")
         self._calc_btn.clicked.connect(self._on_compute)
         lo.addWidget(self._calc_btn)
+
+        donation_btn = QPushButton("🤝 自愿捐赠")
+        donation_btn.setStyleSheet(
+            "QPushButton { background-color: transparent; color: #D1D1D1; "
+            "border: 1px solid #464646; border-radius: 6px; padding: 6px 12px; }"
+            "QPushButton:hover { border-color: #c0392b; color: #e74c3c; }"
+        )
+        donation_btn.clicked.connect(self._open_donation)
+        lo.addWidget(donation_btn)
 
         # 结果标签
         self._result_label = QLabel("选择干员和技能，然后点击「开始计算」")

@@ -41,13 +41,14 @@ if _VENV_ACTIVATE.is_file():
 # 勿使用 application = app（会报 missing argument 'send'）
 # 关键 API 在下方同步处理；其余功能在 PA 免费版上可能不可用。
 
-_DONATION_FILES = frozenset({"donation_qr.png", "afdian_qr.png"})
-
 _MIME = {
     ".js": "application/javascript",
     ".css": "text/css",
     ".svg": "image/svg+xml",
     ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
     ".ico": "image/x-icon",
     ".html": "text/html",
     ".json": "application/json",
@@ -112,12 +113,20 @@ def _handle_donation(environ, start_response):
     if not path.startswith("/api/donation/"):
         return None
     name = path[len("/api/donation/") :].lstrip("/")
-    if name not in _DONATION_FILES:
+    if not name or name == "manifest":
+        return None
+    try:
+        from utils.donation_assets import is_allowed_donation_filename
+    except ImportError:
+        from donation_assets import is_allowed_donation_filename  # type: ignore
+    if not is_allowed_donation_filename(name):
         return _http_error(start_response, "not found", 404)
     fp = _DONATION / name
     if not fp.is_file():
         return _http_error(start_response, "not found", 404)
-    return _bytes(start_response, fp.read_bytes(), "image/png")
+    ext = fp.suffix.lower()
+    mime = _MIME.get(ext, "application/octet-stream")
+    return _bytes(start_response, fp.read_bytes(), mime)
 
 
 def _handle_layout_compute(environ, start_response):
