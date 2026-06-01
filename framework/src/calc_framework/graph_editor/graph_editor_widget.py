@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0
 """可视化公式编辑画布 — PySide6 QGraphicsView 实现。"""
 
-from __future__ import annotations
-
+from __future__ import annotations
+
+import json
 from typing import Any
 
 from PySide6.QtCore import QPoint, QPointF, Qt, Signal

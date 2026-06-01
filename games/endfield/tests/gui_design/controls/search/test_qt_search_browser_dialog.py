@@ -53,10 +53,11 @@ class TestSearchHistoryDialog:
                 from gui_design.controls.search.qt_search_browser import ScoreInfo
                 return [ScoreInfo("测试剑", 5000.0, "甲", "手", "A", "B")]
 
-            with (
-                patch("games.endfield.gui_design.controls.search.qt_search_browser.scan_search_output", side_effect=fake_scan),
-                patch("games.endfield.gui_design.controls.search.qt_search_browser.list_runs", side_effect=fake_list_runs),
-                patch("games.endfield.gui_design.controls.search.qt_search_browser.list_scores", side_effect=fake_list_scores),
+            _MOD = "games.endfield.gui_design.controls.search.qt_search_browser"
+            with (
+                patch(f"{_MOD}.scan_search_output", side_effect=fake_scan),
+                patch(f"{_MOD}.list_runs", side_effect=fake_list_runs),
+                patch(f"{_MOD}.list_scores", side_effect=fake_list_scores),
             ):
                 dialog = SearchHistoryDialog(big_font=MagicMock(), small_font=MagicMock())
                 assert dialog._tree.topLevelItemCount() >= 1

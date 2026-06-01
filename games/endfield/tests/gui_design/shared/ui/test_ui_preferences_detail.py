@@ -35,7 +35,12 @@ class TestDefaultPreferences:
 class TestSaveLoadRoundTrip:
     def test_save_then_load(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            pref = {"startup_page_mode": STARTUP_MODE_REMEMBER_LAST, "last_page": "高级页", "char_advanced_expanded": False, "weapon_advanced_expanded": True}
+            pref = {
+                "startup_page_mode": STARTUP_MODE_REMEMBER_LAST,
+                "last_page": "高级页",
+                "char_advanced_expanded": False,
+                "weapon_advanced_expanded": True,
+            }
             save_ui_preferences(pref, base_dir=Path(tmp))
             loaded = load_ui_preferences(base_dir=Path(tmp))
             assert loaded["startup_page_mode"] == STARTUP_MODE_REMEMBER_LAST

@@ -20,7 +20,6 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from scripts.please_read_me import get_exe_version
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
@@ -35,6 +34,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from scripts.please_read_me import get_exe_version
 
 from games.endfield.data_loading.loader import get_characters, get_weapons
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json

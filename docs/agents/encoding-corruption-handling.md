@@ -12,10 +12,16 @@
 
 ### 典型症状
 
+**Python 源码（`.py`/`.pyw`）**：
 1. Python 语法错误：字符串或注释中出现 `\ufffd` 导致未闭合引号
-2. 文件内容出现 `。?"` 或 `属�?` 等乱码
-3. `python -m pytest` 收集阶段报 `SyntaxError`
-4. `git show <commit>:<file>` 输出的 bytes 中包含 `\xef\xbf\xbd`（UTF-8 编码的 U+FFFD）
+2. `python -m pytest` 收集阶段报 `SyntaxError`
+3. `git show <commit>:<file>` 输出的 bytes 中包含 `\xef\xbf\xbd`（UTF-8 编码的 U+FFFD）
+
+**其他文本文件（`.json`/`.md`/`.yml`/`.ts`/`.tsx`/`.html` 等）**：
+4. 文件内容出现 `。?"` 或 `属�?` 等乱码
+5. `json.JSONDecodeError` 或 `tomllib.TOMLDecodeError`（JSON/TOML 配置文件）
+6. TypeScript 编译报 `SyntaxError`（含中文字符的行）
+7. CI 配置（`.yml`）解析失败
 
 ### 根源
 
@@ -44,19 +50,48 @@ Windows 控制台/终端默认编码为 GBK（代码页 936）。当某个脚本
 ### 3.1 诊断
 
 ```powershell
-# 检查 HEAD 中是否已有损坏
+# 检查 HEAD 中是否已有损坏（所有文本文件类型）
 python -c "
 import subprocess
 UFFFD = b'\xef\xbf\xbd'
+TEXT_EXTS = ('.py','.pyw','.json','.md','.html','.xml','.yml','.yaml',
+             '.ts','.tsx','.js','.css','.sh','.bat','.ps1','.toml',
+             '.spec','.nsi','.gitignore','.cfg','.conf','.ini','.txt',
+             '.mdc','.cursorrules')
 r = subprocess.run(['git','diff-tree','--no-commit-id','-r','HEAD'], capture_output=True)
 for line in r.stdout.decode().splitlines():
     parts = line.split()
-    if len(parts)>=5 and parts[-1].endswith('.py'):
+    if len(parts)>=5 and parts[-1].endswith(TEXT_EXTS):
         src = parts[-2]
         blob = parts[-1]
         r2 = subprocess.run(['git','cat-file','-p',blob], capture_output=True)
         if UFFFD in r2.stdout:
             print(f'CORRUPT: {src}')
+"
+```
+
+也可运行全量 UTF-8 离线扫描（扫描工作区而非仅 HEAD）：
+```powershell
+# 扫描所有文本文件是否为有效 UTF-8（排除 dist/node_modules/.venv/.git）
+python -c "
+import glob, os
+SKIP_DIRS = {'dist','node_modules','.venv','.git','__pycache__'}
+EXTS = ('*.py','*.pyw','*.json','*.md','*.html','*.xml','*.yml','*.yaml',
+        '*.ts','*.tsx','*.js','*.css','*.sh','*.bat','*.ps1','*.toml',
+        '*.spec','*.nsi','*.gitignore','*.cfg','*.conf','*.ini','*.txt',
+        '*.mdc','*.cursorrules')
+fail = []
+for ext in EXTS:
+    for f in glob.glob(f'**/{ext}', recursive=True):
+        parts = os.path.normpath(f).split(os.sep)
+        if not any(s in parts for s in SKIP_DIRS) and os.path.getsize(f):
+            try:
+                with open(f,'r',encoding='utf-8') as fh:
+                    fh.read()
+            except UnicodeDecodeError:
+                fail.append(f)
+[print(f'CORRUPT: {f}') for f in sorted(fail)]
+if not fail: print('所有文本文件 UTF-8 解码通过')
 "
 ```
 
@@ -132,13 +167,46 @@ v3.6.2 是一次**代码结构规范化重构**，解决 `check_layout` 的 6 �
 ### Agent 操作规范
 
 1. **写文件统一用 Python**，不要通过 PowerShell `>` 重定向包含中文的文件
-2. 写入时显式指定 UTF-8：
+2. 写入时显式指定 UTF-8（**适用于所有文本文件类型**，不仅是 `.py`）：
    ```python
    with open(path, 'w', encoding='utf-8') as f:
        f.write(content)
    ```
 3. 从 Git 读取文件内容时用 Python `subprocess` + `capture_output=True`（返回 bytes），不要用 shell 重定向
-4. 提交前跑 `check_layout` 和 `pytest`
+4. 提交前跑 Unicode 编码扫描：
+    ```powershell
+    # 全量检查所有文本文件 UTF-8 解码 + Python AST 解析 + JSON 解析
+    python -c "
+    import glob, os, ast, json
+    SKIP = {'dist','node_modules','.venv','.git','__pycache__'}
+   EXTS = {'*.py','*.pyw','*.json','*.md','*.html','*.xml','*.yml','*.yaml',
+           '*.ts','*.tsx','*.js','*.css','*.sh','*.bat','*.ps1','*.toml',
+           '*.spec','*.nsi','*.gitignore','*.cfg','*.conf','*.ini','*.txt',
+           '*.mdc','*.cursorrules'}
+   fail = False
+   for e in EXTS:
+       for f in glob.glob(f'**/{e}', recursive=True):
+           p = os.path.normpath(f).split(os.sep)
+           if any(s in p for s in SKIP) or not os.path.getsize(f):
+               continue
+           try:
+               src = open(f,'r',encoding='utf-8').read()
+           except UnicodeDecodeError:
+               print(f'DECODE_FAIL: {f}'); fail = True; continue
+           if f.endswith('.py') or f.endswith('.pyw'):
+               try:
+                   ast.parse(src)
+               except SyntaxError as e:
+                   print(f'SYNTAX_ERROR: {f}: {e}'); fail = True
+           elif f.endswith('.json'):
+               try:
+                   json.loads(src)
+               except json.JSONDecodeError as e:
+                   print(f'JSON_ERROR: {f}: {e}'); fail = True
+   if not fail: print('所有文本文件检查通过')
+   "
+   ```
+5. 也可运行 `check_layout` 和 `pytest` 验证
 
 ### 环境
 
@@ -150,8 +218,90 @@ $env:PYTHONIOENCODING = "utf-8"
 
 ---
 
+## 6. venv/site-packages 编码损坏
+
+### 6.1 场景
+
+`pip install` 后，**venv 内**的 `site-packages` 出现 `SyntaxError`，如：
+
+```
+File ".venv\Lib\site-packages\pyparsing\unicode.py", line 272
+    婕㈠瓧 = Kanji
+    ^
+SyntaxError: invalid character '㈠' (U+3220)
+```
+
+或 pip 自身报 `SyntaxError: unterminated string literal`。
+
+### 6.2 根源
+
+- 中华区 Windows 系统区域设置为 **cp936（GBK）**
+- 当终端/进程的默认编码为 GBK 时，pip 安装含 Unicode 字符（如 emoji、CJK 标识符）的包时有概率写入损坏文件
+- 常见于：Python < 3.12 且无 `PYTHONUTF8=1`，或在 `chcp 936` 终端中执行 `pip install`
+- 本项目当前 venv（Python 3.13）已默认 UTF-8，但历史 venv 可能在旧版本 Python 或编码未设置时创建
+
+### 6.3 诊断
+
+```powershell
+# 检查 venv 的 Python 默认编码
+.venv\Scripts\python.exe -c "import sys; print('fs enc:', sys.getfilesystemencoding(), '| def enc:', sys.getdefaultencoding())"
+
+# 检查 site-packages 中是否有编码损坏的文件
+python -c "
+import os, glob
+for f in glob.glob('.venv/Lib/site-packages/**/*.py', recursive=True):
+    try:
+        with open(f, 'r', encoding='utf-8') as fh:
+            fh.read()
+    except UnicodeDecodeError:
+        print(f'CORRUPT: {f}')
+"
+```
+
+### 6.4 修复
+
+修复方法（从系统 Python 复制正确的包文件覆盖 venv 版本）：
+
+```powershell
+# 示例：修复 pyparsing（已有正确的包在系统 Python 中）
+$sys = "E:\python\Lib\site-packages\pyparsing"
+$venv = ".venv\Lib\site-packages\pyparsing"
+Copy-Item "$sys\*" $venv -Recurse -Force
+```
+
+**如果损坏范围大（多个包）**，直接重建 venv 更干净：
+
+```powershell
+deactivate
+rm -r .venv
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e ".[dev,build]"
+```
+
+### 6.5 预防
+
+创建/重建 venv 前确保编码正确：
+
+```powershell
+# Python < 3.12 必须设置
+$env:PYTHONUTF8 = "1"
+
+# 统一终端编码
+chcp 65001
+
+# 验证
+python -c "import sys; assert sys.getfilesystemencoding()=='utf-8'"
+
+# 然后再创建 venv
+python -m venv .venv
+```
+
+---
+
 ## 相关文档
 
 - [代码结构规范](../代码结构规范.md)
 - [ADR-0001：代码目录与文件规模约束](../adr/0001-code-layout-constraints.md)
 - [会话接续手册](../会话接续手册.md) - §3 记录每次版本变更摘要
+- [操作指令集](../操作指令集.md) - venv 创建流程

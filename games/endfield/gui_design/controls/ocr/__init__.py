@@ -171,7 +171,8 @@ class _DetectionDialog(QDialog):
                 lines.append(f"── {Path(r.image_path).name} ──")
                 if r.detections:
                     for d in r.detections[:10]:
-                        lines.append(f"  [{d.confidence:.2f}] {d.class_name} ({d.x1:.0f},{d.y1:.0f},{d.x2:.0f},{d.y2:.0f})")
+                        coord = f"({d.x1:.0f},{d.y1:.0f},{d.x2:.0f},{d.y2:.0f})"
+                        lines.append(f"  [{d.confidence:.2f}] {d.class_name} {coord}")
                 try:
                     from tools.ocr.recognizer import OCRRecognizer
                     ocr = OCRRecognizer()
@@ -218,7 +219,8 @@ class _DetectionDialog(QDialog):
         self._download_btn.setText("下载中...")
         self._download_progress.setVisible(True)
         self._download_progress.setValue(0)
-        self._result_text.setPlainText("正在下载 EasyOCR 模型...\n\n这可能需要几分钟，请耐心等待。\n模型将下载到用户目录的 .EasyOCR/model/ 下。")
+        msg = "正在下载 EasyOCR 模型...\n\n这可能需要几分钟，请耐心等待。\n模型将下载到用户目录的 .EasyOCR/model/ 下。"
+        self._result_text.setPlainText(msg)
         self._thread = _DownloadThread()
         self._thread.finished.connect(self._on_download_finished)
         self._thread.progress.connect(self._download_progress.setValue)

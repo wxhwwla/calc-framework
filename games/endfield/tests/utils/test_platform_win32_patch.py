@@ -246,8 +246,6 @@ from __future__ import annotationsimport sysimport unittestfrom unittest.moc
         import platform
         import utils.platform_win32_patch as pwp
 
-        orig_win32_ver = platform.win32_ver
-
         with (
             patch.object(pwp, "sys") as mock_sys,
             patch("winreg.OpenKeyEx", side_effect=OSError),

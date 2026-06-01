@@ -40,7 +40,7 @@ class TestDefaultParallelWorkers:
 class TestBuildWorkerOptionLabels:
     def test_contains_auto(self) -> None:
         labels = build_worker_option_labels(cpu_count=8)
-        auto_labels = [l for l in labels if "自动" in l]
+        auto_labels = [lb for lb in labels if "自动" in lb]
         assert len(auto_labels) == 1
 
     def test_with_small_cpu(self) -> None:

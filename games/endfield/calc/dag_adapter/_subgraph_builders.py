@@ -13,9 +13,9 @@ DAG 引擎 + 序列化器 + 校验器均不支持内嵌节点（str | NodeType �
 
 from __future__ import annotations
 
-from calc_framework.dag.schema import DAGOutput, DAGSubgraph, DAGVariable
 from calc_framework.dag.schema import BinaryNode as B
 from calc_framework.dag.schema import ConstNode as C
+from calc_framework.dag.schema import DAGOutput, DAGSubgraph, DAGVariable
 
 
 def _make_ability_bonus_subgraph() -> DAGSubgraph:

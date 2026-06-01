@@ -124,7 +124,9 @@ class BuilderMixin:
 
         self.mvp_search_btn = self._make_btn("最优搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
         lay.addWidget(self.mvp_search_btn)
-        self.full_search_btn = self._make_btn("全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
+        self.full_search_btn = self._make_btn(
+            "全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE,
+        )
         lay.addWidget(self.full_search_btn)
         self.search_cancel_btn = self._make_btn("取消搜索", _SECONDARY_BTN_HEIGHT)
         self.search_cancel_btn.setEnabled(False)

@@ -157,7 +157,8 @@ class SearchMixin:
             spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
         )
         suffix = "（已取消）" if outcome.cancelled else "：完成"
-        status = f"{'全量遍历' if '全量' in mode_label else 'MVP搜索状态'}{suffix}（{outcome.processed_combinations}/{outcome.total_combinations}）"
+        mode = "全量遍历" if "全量" in mode_label else "MVP搜索状态"
+        status = f"{mode}{suffix}（{outcome.processed_combinations}/{outcome.total_combinations}）"
         self.control_dock.mvp_status_label.setText(status)
         self._set_search_btns_enabled(True)
         dialog = QtSearchResultsDialog(

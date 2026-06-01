@@ -10,7 +10,8 @@ from games.endfield.gui_design.shared.weapon_display_text import (
 
 class TestSplitSpecialSkillDisplayRemaining:
     def test_effect_not_found_returns_effect(self) -> None:
-        with patch("games.endfield.gui_design.shared.weapon_display_text.extract_effect_display_name", return_value="攻击力+"):
+        _MOD = "games.endfield.gui_design.shared.weapon_display_text"
+        with patch(f"{_MOD}.extract_effect_display_name", return_value="攻击力+"):
             result = split_special_skill_display("一些描述攻击力+")
             assert result[1] == "攻击力+"
 

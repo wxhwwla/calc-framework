@@ -482,7 +482,6 @@ def main() -> None:
 
 
 
-import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _path_setup import ensure_root

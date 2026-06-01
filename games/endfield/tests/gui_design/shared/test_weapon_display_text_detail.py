@@ -102,7 +102,8 @@ class TestSplitSpecialSkillDisplay:
 
     def test_effect_not_in_name(self) -> None:
         name = "描述文字 攻击力+"
-        with patch("games.endfield.gui_design.shared.weapon_display_text.extract_effect_display_name", return_value="防御力+"):
+        _MOD = "games.endfield.gui_design.shared.weapon_display_text"
+        with patch(f"{_MOD}.extract_effect_display_name", return_value="防御力+"):
             result = split_special_skill_display(name)
             assert result == ("", "防御力+")
 

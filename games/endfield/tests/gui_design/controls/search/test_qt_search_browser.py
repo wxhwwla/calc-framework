@@ -164,7 +164,10 @@ class TestScoreInfo(unittest.TestCase):
 
 class TestRunInfo(unittest.TestCase):
     def test_dataclass(self) -> None:
-        ri = RunInfo(signature="sig", total_combinations=100, processed_combinations=50, status="completed", db_path="/p")
+        ri = RunInfo(
+            signature="sig", total_combinations=100,
+            processed_combinations=50, status="completed", db_path="/p",
+        )
         self.assertEqual(ri.signature, "sig")
         self.assertEqual(ri.status, "completed")
 

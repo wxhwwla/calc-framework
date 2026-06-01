@@ -67,7 +67,9 @@ class TestMissingDependencies:
         assert dep not in missing
 
     def test_unavailable_dep_in_missing(self) -> None:
-        dep = OptionalDependency(feature="nonexistent", module="_nonexistent_module_xyz_", pip_hint="pip install nothing")
+        dep = OptionalDependency(
+            feature="nonexistent", module="_nonexistent_module_xyz_", pip_hint="pip install nothing",
+        )
         missing = missing_dependencies([dep])
         assert dep in missing
 

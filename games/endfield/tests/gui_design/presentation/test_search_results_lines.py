@@ -47,7 +47,7 @@ class TestFormatTopResultLine(unittest.TestCase):
             weapon_name="剑", final_damage=100.0, loadout_names={}
         )
         lines = _format_top_result_line(1, score)
-        self.assertTrue(any("剑" in l for l in lines))
+        self.assertTrue(any("剑" in ln for ln in lines))
 
     def test_abnormal_breakdown(self) -> None:
         score = LoadoutScore(
@@ -76,7 +76,7 @@ class TestBuildSearchResultsReportLines(unittest.TestCase):
             total_combinations=100,
             top_results=[],
         )
-        self.assertTrue(any("无可用前列" in l for l in lines))
+        self.assertTrue(any("无可用前列" in ln for ln in lines))
 
     def test_cancelled_flag(self) -> None:
         score = LoadoutScore(weapon_name="剑", final_damage=100.0, loadout_names={})

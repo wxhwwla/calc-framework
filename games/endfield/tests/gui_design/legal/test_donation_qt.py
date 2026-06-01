@@ -7,9 +7,8 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
-from PySide6.QtWidgets import QApplication, QDialog
-
 from games.endfield.gui_design.legal.donation_qt import open_donation_dialog
+from PySide6.QtWidgets import QApplication, QDialog
 
 
 class TestDonationQt(unittest.TestCase):
