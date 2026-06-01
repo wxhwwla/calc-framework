@@ -1,6 +1,6 @@
 # Calc Framework — 终末地
 
-> 通用伤害计算框架 · 《明日方舟：终末地》配装与乘区辅助工具（PySide6 双后端 GUI）
+> 通用伤害计算框架 · 支持《明日方舟：终末地》与《明日方舟》（Arknights）
 >
 > **Web 端（已部署）**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com) · 部署指南：[docs/PythonAnywhere-部署指南.md](docs/PythonAnywhere-部署指南.md)
 
@@ -37,7 +37,8 @@
 │   ├── frontend/                 #   React 前端（三个 GUI 的 Web 版）
 │   └── hub/                      #   Calc Hub 静态主页
 ├── games/                        # [包] 游戏适配包
-│   └── endfield/                  #   终末地伤害计算器（产品代码与测试）
+│   ├── endfield/                  #   终末地伤害计算器（产品代码与测试）
+│   └── arknights/                 #   明日方舟伤害计算适配包（DAG + API + 测试）
 ├── docs/                         # 操作指令集、许可、算法说明
 ├── tools/                        # [工具] 仓库级维护（非包内 scripts）
 ├── legacy/                       # 遗留脚本，不参与日常流程
@@ -69,6 +70,8 @@ python github_upload_module.py
 
 ## 功能概览
 
+### 终末地伤害计算器
+
 - 角色 / 武器 / 装备选择；**高级页**含全量遍历、**固定配装 0–4**、多技能次数；全量可按单技能或**手动次数加权总伤**排序（实验）
 - 确认选择后刷新右侧乘区（能力、攻击力等）
 - 角色 / 武器 / **装备** JSON；全量搜索导出至 **`search_output/`**（开发或 exe 同级，非 C 盘临时目录）
@@ -76,6 +79,20 @@ python github_upload_module.py
 - GUI「数据来源与许可」：软件 AGPL / 数据许可说明与链接
   - 高级页「工具与分享」（「更多设置」折叠内）：配装预设、操作日志、计算历史、伤害仪表盘（见 [操作指令集 §6.1](docs/操作指令集.md)）
   - BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
+
+### 明日方舟（Arknights）伤害计算
+
+支持原始《明日方舟》（非终末地）的伤害计算，通过框架适配器系统实现：
+
+- **数据爬取**：`tools/arknights_scout/` — BWIKI 爬虫，全量解析 420+ 干员（星级/职业/基础属性/技能/天赋/潜能/模组）
+- **游戏适配包**：`framework/adapters/arknights/` — 28 属性 + 5 自定义函数 + 51 节点 DAG 计算图
+- **伤害公式**：物理（`max(ATK×倍率-DEF, ATK×倍率×5%)×(1+伤害加成)`）、法术（`ATK×倍率×(1-RES/100)×(1+伤害加成)`）、真实伤害
+- **Web API**：`/api/arknights/` — 3 个端点（干员列表/详情/计算）
+- **测试覆盖**：37 个 pytest（含真实数据集成测试）
+
+### 计算框架（通用）
+
+- **跨品类适配**：通过 `framework/adapters/` 下的命名空间包自动发现，已支持 endfield（终末地）、arknights（明日方舟）、card_rpg/fps/moba（验证用玩具适配器）
 
 ## Web 版
 

@@ -17,17 +17,20 @@ import BuildIcon from "@mui/icons-material/Build";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import { useNavigate, useLocation } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ComputePage from "./pages/ComputePage";
 import AdaptersPage from "./pages/AdaptersPage";
 import EditorPage from "./pages/EditorPage";
 import DesignerPage from "./pages/DesignerPage";
 import PackDesignerPage from "./pages/PackDesignerPage";
 import MarketplacePage from "./pages/MarketplacePage";
+import ArknightsComputePage from "./pages/ArknightsComputePage";
 
 const drawerWidth = 240;
 
 const navItems = [
   { label: "计算 (Compute)", path: "/compute", icon: <CalculateIcon /> },
+  { label: "明日方舟", path: "/arknights", icon: <AutoAwesomeIcon /> },
   { label: "适配器 (Adapters)", path: "/adapters", icon: <ExtensionIcon /> },
   { label: "DAG 编辑器 (Editor)", path: "/editor", icon: <AccountTreeIcon /> },
   { label: "数据设计器 (Designer)", path: "/designer", icon: <BuildIcon /> },
@@ -74,6 +77,7 @@ function Shell() {
         <Toolbar />
         <Routes>
           <Route path="/compute" element={<ComputePage />} />
+          <Route path="/arknights" element={<ArknightsComputePage />} />
           <Route path="/adapters" element={<AdaptersPage />} />
           <Route path="/editor" element={<EditorPage />} />
           <Route path="/designer" element={<DesignerPage />} />

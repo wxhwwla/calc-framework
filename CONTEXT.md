@@ -90,6 +90,12 @@
 | **许可结构** | 软件 AGPL-3.0/商业双许可（`LICENSE`）+ 数据单独许可（`DATA_LICENSE`）；发布包须同时附带 |
 | **PySide6 LGPL** | 打包 exe 以动态链接方式使用 Qt，符合 LGPL 要求；须保留 PySide6 版权声明 |
 | **OCR 依赖** | `tools/ocr/` 可选依赖 EasyOCR（Apache 2.0）+ TorchVision（BSD-3-Clause，替代原 AGPL-3.0 ultralytics） |
+| **Arknights 侦察** | `tools/arknights_scout/`：BWIKI 明日方舟爬虫，拉取全量干员数据至 `output/raw/`（html+wikitext+meta），解析输出至 `output/parsed/`（JSON） |
+| **Arknights 适配包** | `framework/adapters/arknights/`：元数据 28 属性 + 5 函数 + 51 节点 DAG 计算图 |
+| **方舟 DAG 公式** | 物理 = `max(ATK×倍率-DEF, ATK×倍率×5%)×(1+伤害加成%)`；法术 = `ATK×倍率×(1-RES/100)×(1+伤害加成%)`；真伤 = `ATK×倍率×(1+伤害加成%)` |
+| **方舟游戏包** | `games/arknights/`：`calc/dag_adapter/`（ArknightsContextLoader + compute_snapshot_with_dag + SnapshotResult） |
+| **方舟 Web API** | `web/backend/api/arknights.py`：3 个端点 `GET /operators` / `GET /operators/{name}` / `POST /compute` |
+| **方舟测试** | `games/arknights/tests/`：37 个 pytest（loader 单元 + DAG 端到端 + 真实数据集成） |
 
 ## 标准数据录入（四层数据契约）
 
