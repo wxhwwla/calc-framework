@@ -28,13 +28,10 @@ from pathlib import Path
 from typing import Literal
 
 
-
 from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
 
-
-BuildTarget = Literal["calculator", "designer", "pack-designer", "local-backend"]
-
+BuildTarget = Literal["calculator", "designer", "pack-designer", "local-backend", "arknights"]
 
 
 TARGET_APP_NAMES: dict[BuildTarget, str] = {
@@ -47,6 +44,8 @@ TARGET_APP_NAMES: dict[BuildTarget, str] = {
 
     "local-backend": "终末地本地搜索服务器",
 
+    "arknights": "明日方舟伤害计算器",
+
 }
 
 
@@ -56,6 +55,7 @@ TARGET_ENTRIES: dict[BuildTarget, str] = {
     "designer": "scripts/main_designer.py",
     "pack-designer": "scripts/main_pack_designer.py",
     "local-backend": "web/backend/run_packaged_main.py",
+    "arknights": "scripts/main_arknights.py",
 }
 
 
@@ -69,6 +69,9 @@ RELEASE_DATA_FILES: tuple[tuple[str, str], ...] = (
     (EQUIPMENTS_JSON_PATH, EQUIPMENTS_JSON_PATH),
 
 )
+
+
+ARKNIGHTS_DATA_REL = "tools/arknights_scout/output/parsed"
 
 
 
@@ -248,6 +251,24 @@ def _local_backend_readme(exe_version: str, package_version: str) -> str:
 
 
 
+def _arknights_readme(exe_version: str, package_version: str) -> str:
+
+    return f"""明日方舟伤害计算器 — 发布包说明
+
+【版本】EXE v{exe_version}（源码包 v{package_version}）
+
+【软件】明日方舟伤害计算器.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+
+【数据】tools/arknights_scout/output/parsed/ 下干员 JSON — 见 DATA_LICENSE
+
+技能倍率数据来源于 BWIKI 描述文本的自动解析，仅供参考。
+
+GUI 框架：PySide6（LGPL-3.0）。
+
+分发时请保持 exe 与本目录内 parsed/ 目录、许可文件相对位置不变。
+
+"""
+
 
 
 def stage_release_folder(
@@ -278,6 +299,15 @@ def stage_release_folder(
             dest = release_root / dest_rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
+    elif target == "arknights":
+        parsed_src = project_root / ARKNIGHTS_DATA_REL
+        if not parsed_src.is_dir():
+            raise FileNotFoundError(f"缺少明日方舟干员数据目录: {parsed_src}")
+        parsed_dst = release_root / ARKNIGHTS_DATA_REL
+        parsed_dst.mkdir(parents=True, exist_ok=True)
+        for f in parsed_src.iterdir():
+            if f.suffix == ".json":
+                shutil.copy2(f, parsed_dst)
     elif target != "pack-designer":
         for dest_rel, src_rel in RELEASE_DATA_FILES:
             src = project_root / src_rel
@@ -307,6 +337,8 @@ def stage_release_folder(
         readme_fn = _pack_designer_readme
     elif target == "local-backend":
         readme_fn = _local_backend_readme
+    elif target == "arknights":
+        readme_fn = _arknights_readme
     else:
         readme_fn = _calculator_readme
 

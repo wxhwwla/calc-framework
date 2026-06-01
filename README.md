@@ -62,6 +62,11 @@ python main.py
 ```
 
 ```powershell
+# 明日方舟桌面 GUI
+python scripts/main_arknights.py
+```
+
+```powershell
 # [根] 推送 GitHub（版本号由脚本维护，见包内 please_read_me.py）
 python github_upload_module.py
 ```

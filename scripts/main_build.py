@@ -307,6 +307,12 @@ def _build_target(
         cmd.extend(["--paths", str(base_dir / "tools")])
     elif target == "pack-designer":
         cmd.extend(["--paths", str(base_dir / "tools")])
+    elif target == "arknights":
+        cmd.extend([
+            "--paths", str(base_dir / "games"),
+            "--paths", str(base_dir / "games" / "arknights"),
+            "--add-data", f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+        ])
 
     cmd.append(entry)
 
@@ -371,9 +377,9 @@ def main() -> None:
 
 
 
-    parser = argparse.ArgumentParser(description="终末地伤害计算器 — 打包脚本")
+    parser = argparse.ArgumentParser(description="终末地/明日方舟 — 打包脚本")
 
-    parser.add_argument("--target", choices=["calculator", "designer", "pack-designer", "local-backend", "all"], default="all")
+    parser.add_argument("--target", choices=["calculator", "designer", "pack-designer", "local-backend", "arknights", "all"], default="all")
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
     parser.add_argument("--no-frontend-build", action="store_true", help="local-backend 时跳过前端构建")
     args = parser.parse_args()
