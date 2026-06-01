@@ -44,6 +44,7 @@ import SearchSettingsPanel from "../components/calculator/SearchSettingsPanel";
 import BatchCompareDialog from "../components/calculator/BatchCompareDialog";
 import SurvivalEstimateDialog from "../components/calculator/SurvivalEstimateDialog";
 import OCRUploadDialog from "../components/calculator/OCRUploadDialog";
+import DamageDashboardDialog from "../components/calculator/DamageDashboardDialog";
 import HelpDialog from "../components/calculator/HelpDialog";
 import DataSourceDialog from "../components/calculator/DataSourceDialog";
 import DonationDialog from "../components/calculator/DonationDialog";
@@ -115,6 +116,7 @@ export default function ComputePage() {
   const [batchCompareOpen, setBatchCompareOpen] = useState(false);
   const [survivalDialogOpen, setSurvivalDialogOpen] = useState(false);
   const [ocrDialogOpen, setOcrDialogOpen] = useState(false);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [searchSettings, setSearchSettings] = useState({ topN: 10, workers: 4, damageComponent: "skill_and_abnormal" });
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
   const [dataSourceOpen, setDataSourceOpen] = useState(false);
@@ -521,6 +523,13 @@ export default function ComputePage() {
                   <Button
                     variant="outlined"
                     size="small"
+                    onClick={() => setDashboardOpen(true)}
+                  >
+                    伤害仪表盘
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
                     startIcon={<CameraAltIcon />}
                     onClick={() => setOcrDialogOpen(true)}
                   >
@@ -664,6 +673,12 @@ export default function ComputePage() {
           }
           setOcrDialogOpen(false);
         }}
+      />
+
+      <DamageDashboardDialog
+        open={dashboardOpen}
+        onClose={() => setDashboardOpen(false)}
+        snapshot={damageSnapshot}
       />
 
       <HelpDialog open={helpDialogOpen} onClose={() => setHelpDialogOpen(false)} />

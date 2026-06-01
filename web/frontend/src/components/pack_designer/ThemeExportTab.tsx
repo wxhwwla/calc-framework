@@ -35,6 +35,7 @@ const COLOR_KEYS: (keyof ThemeConfig["colors"])[] = [
 
 export default function ThemeExportTab() {
   const adapterId = usePackDesignerStore((s) => s.adapterId);
+  const layoutDraft = usePackDesignerStore((s) => s.layoutDraft);
   const [theme, setTheme] = useState<ThemeConfig | null>(null);
   const [fontFamily, setFontFamily] = useState("Microsoft YaHei");
   const [fontSize, setFontSize] = useState(12);
@@ -106,6 +107,7 @@ export default function ThemeExportTab() {
     setSuccess(null);
     try {
       const bundle = await fetchAdapterPackBundle(adapterId);
+      const layout = layoutDraft ?? bundle.layout;
       const themePayload = theme ? {
         schema_version: theme.schema_version,
         name: theme.name,
@@ -123,7 +125,7 @@ export default function ThemeExportTab() {
       await downloadCalcpack({
         meta,
         dag: bundle.dag,
-        layout: bundle.layout,
+        layout: layout as Record<string, unknown>,
         theme: themePayload,
         data_files: dataFiles,
         filename: `${packName}.calcpack`,
@@ -133,19 +135,20 @@ export default function ThemeExportTab() {
     } catch (e: unknown) {
       setError(String(e));
     }
-  }, [adapterId, theme, fontFamily, fontSize, colors, packName, buildExportMeta]);
+  }, [adapterId, layoutDraft, theme, fontFamily, fontSize, colors, packName, buildExportMeta]);
 
   const handlePreview = useCallback(async () => {
     setError(null);
     setSuccess(null);
     try {
       const bundle = await fetchAdapterPackBundle(adapterId);
+      const layout = layoutDraft ?? bundle.layout;
       const meta = await buildExportMeta(Object.keys(bundle.data_summary));
 
       const preview = await previewExport({
         meta,
         dag: bundle.dag,
-        layout: bundle.layout,
+        layout: layout as Record<string, unknown>,
         data_files: Object.fromEntries(
           Object.keys(bundle.data_summary).map((k) => [k, []]),
         ),
@@ -159,7 +162,7 @@ export default function ThemeExportTab() {
     } catch (e: unknown) {
       setError(String(e));
     }
-  }, [adapterId, buildExportMeta]);
+  }, [adapterId, layoutDraft, buildExportMeta]);
 
   return (
     <Box>

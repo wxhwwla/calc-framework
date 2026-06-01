@@ -226,7 +226,7 @@ def _handle_layout_compute(environ, start_response):
     try:
         from fastapi import HTTPException
 
-        from api.layout import get_layout_payload, get_variables_payload
+        from api.layout import get_dag_payload, get_layout_payload, get_variables_payload
         from api.compute import (
             CompareRequest,
             EvaluateRequest,
@@ -251,6 +251,9 @@ def _handle_layout_compute(environ, start_response):
 
         if path == "/api/layout/variables" and method == "GET":
             return _json(start_response, get_variables_payload())
+
+        if path == "/api/layout/dag" and method == "GET":
+            return _json(start_response, get_dag_payload())
 
         if method == "POST":
             raw = _read_body(environ)
@@ -795,6 +798,85 @@ def _handle_arknights(environ, start_response):
     return _http_error(start_response, "unknown arknights endpoint", 404)
 
 
+def _wsgi_http_error(start_response, exc) -> list:
+    from fastapi import HTTPException
+
+    if isinstance(exc, HTTPException):
+        return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
+    return _json(start_response, {"error": str(exc)}, "500 Internal Server Error")
+
+
+def _handle_data_write(environ, start_response, path: str, method: str) -> list | None:
+    """POST/PUT/DELETE /api/data/* 与公式反推（PA WSGI）。"""
+    if not path.startswith("/api/data"):
+        return None
+    if method == "GET":
+        return None
+
+    sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
+
+    try:
+        from api.data_mutations import (
+            create_character,
+            create_equipment,
+            create_weapon,
+            delete_character,
+            delete_equipment,
+            delete_weapon,
+            inverse_formula_payload,
+            update_character,
+            update_equipment,
+            update_weapon,
+        )
+
+        if path == "/api/data/inverse" and method == "POST":
+            raw = _read_body(environ)
+            payload = json.loads(raw.decode("utf-8"))
+            return _json(start_response, inverse_formula_payload(payload["type"], payload["values"]))
+
+        raw = _read_body(environ)
+        if not raw:
+            return _http_error(start_response, "empty body", 400)
+        payload = json.loads(raw.decode("utf-8"))
+
+        if method == "POST":
+            if sub == "characters":
+                return _json(start_response, create_character(payload))
+            if sub == "weapons":
+                return _json(start_response, create_weapon(payload))
+            if sub == "equipments":
+                return _json(start_response, create_equipment(payload))
+
+        if method == "PUT":
+            m = re.match(r"^characters/(.+)$", sub)
+            if m:
+                return _json(start_response, update_character(unquote(m.group(1)), payload))
+            m = re.match(r"^weapons/(.+)$", sub)
+            if m:
+                return _json(start_response, update_weapon(unquote(m.group(1)), payload))
+            m = re.match(r"^equipments/(.+)$", sub)
+            if m:
+                return _json(start_response, update_equipment(unquote(m.group(1)), payload))
+
+        if method == "DELETE":
+            m = re.match(r"^characters/(.+)$", sub)
+            if m:
+                return _json(start_response, delete_character(unquote(m.group(1))))
+            m = re.match(r"^weapons/(.+)$", sub)
+            if m:
+                return _json(start_response, delete_weapon(unquote(m.group(1))))
+            m = re.match(r"^equipments/(.+)$", sub)
+            if m:
+                return _json(start_response, delete_equipment(unquote(m.group(1))))
+
+    except json.JSONDecodeError:
+        return _http_error(start_response, "invalid JSON", 400)
+    except Exception as e:
+        return _wsgi_http_error(start_response, e)
+
+    return _http_error(start_response, "unknown data write endpoint", 404)
+
+
 def _handle_data_api(environ, start_response):
     path = _fix_path(environ.get("PATH_INFO", ""))
     method = environ.get("REQUEST_METHOD", "GET")
@@ -807,6 +889,11 @@ def _handle_data_api(environ, start_response):
 
     if not path.startswith("/api/data/"):
         return None
+
+    write_result = _handle_data_write(environ, start_response, path, method)
+    if write_result is not None:
+        return write_result
+
     if method != "GET":
         return _http_error(start_response, "not supported", 501)
 

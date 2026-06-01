@@ -5,14 +5,17 @@ interface PackDesignerState {
   adapters: AdapterInfo[];
   adapterId: string;
   adaptersLoaded: boolean;
+  layoutDraft: Record<string, unknown> | null;
   loadAdapters: () => Promise<void>;
   setAdapterId: (id: string) => void;
+  setLayoutDraft: (layout: Record<string, unknown> | null) => void;
 }
 
 export const usePackDesignerStore = create<PackDesignerState>((set, get) => ({
   adapters: [],
   adapterId: "endfield",
   adaptersLoaded: false,
+  layoutDraft: null,
   loadAdapters: async () => {
     if (get().adaptersLoaded) return;
     try {
@@ -28,5 +31,6 @@ export const usePackDesignerStore = create<PackDesignerState>((set, get) => ({
       set({ adaptersLoaded: true });
     }
   },
-  setAdapterId: (id) => set({ adapterId: id }),
+  setAdapterId: (id) => set({ adapterId: id, layoutDraft: null }),
+  setLayoutDraft: (layout) => set({ layoutDraft: layout }),
 }));

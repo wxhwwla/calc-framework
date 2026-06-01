@@ -43,6 +43,7 @@ def resolve_dag_path(adapter_id: str) -> Path:
     meta = load_adapter_meta(adapter_id)
     entry = meta.get("entry_dag", "dag/formula.dag.json")
     candidates = [
+        (adapter_dir / entry).resolve(),
         adapter_dir / entry,
         adapter_dir / "dag" / "formula.dag.json",
         adapter_dir / "dag" / f"{adapter_id}_full.dag.json",

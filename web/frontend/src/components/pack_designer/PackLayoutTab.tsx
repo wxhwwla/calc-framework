@@ -1,67 +1,92 @@
 import { useEffect, useState, useCallback } from "react";
 import {
-  Alert,
-  Box,
-  Chip,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
+  Alert, Box, Button, Chip, Paper, TextField,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography,
 } from "@mui/material";
 import { fetchAdapterLayout } from "../../api/adapterPack";
 import { usePackDesignerStore } from "../../store/packDesignerStore";
 import type { LayoutSection } from "../../api/layout";
 
-/** 配置包设计器 — 布局预览（按所选适配器加载 ui/layout.json） */
+/** 配置包设计器 — 布局编辑（JSON，导出时使用草稿） */
 export default function PackLayoutTab() {
   const adapterId = usePackDesignerStore((s) => s.adapterId);
   const adapters = usePackDesignerStore((s) => s.adapters);
+  const layoutDraft = usePackDesignerStore((s) => s.layoutDraft);
+  const setLayoutDraft = usePackDesignerStore((s) => s.setLayoutDraft);
   const [sections, setSections] = useState<LayoutSection[]>([]);
   const [layoutName, setLayoutName] = useState("");
+  const [jsonText, setJsonText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const adapterLabel = adapters.find((a) => a.id === adapterId)?.name ?? adapterId;
+
+  const applyLayout = useCallback((layout: Record<string, unknown>) => {
+    setLayoutName(String(layout.name ?? adapterId));
+    setSections((layout.sections as LayoutSection[]) ?? []);
+    setJsonText(JSON.stringify(layout, null, 2));
+    setLayoutDraft(layout);
+  }, [adapterId, setLayoutDraft]);
 
   const reload = useCallback(async () => {
     setError(null);
     try {
       const layout = await fetchAdapterLayout(adapterId);
-      setLayoutName(String(layout.name ?? adapterId));
-      setSections((layout.sections as LayoutSection[]) ?? []);
+      applyLayout(layout);
     } catch (e: unknown) {
       setSections([]);
       setError(String(e));
     }
-  }, [adapterId]);
+  }, [adapterId, applyLayout]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
+  const handleApplyJson = () => {
+    try {
+      const parsed = JSON.parse(jsonText) as Record<string, unknown>;
+      applyLayout(parsed);
+      setError(null);
+    } catch (e: unknown) {
+      setError(`JSON 无效: ${e}`);
+    }
+  };
+
+  const handleReset = () => {
+    setLayoutDraft(null);
+    reload();
+  };
+
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        加载适配器 <strong>{adapterLabel}</strong> 的 layout.json（与桌面布局页「选择适配器」一致）。
-        可视化拖拽编辑请用桌面配置包设计器。
+        适配器 <strong>{adapterLabel}</strong> · 可编辑 layout JSON（导出页使用此处草稿；拖拽请用桌面设计器）。
+        {layoutDraft && <Chip size="small" label="已修改草稿" color="warning" sx={{ ml: 1 }} />}
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="subtitle2" gutterBottom>
           {layoutName || "—"} · {sections.length} 个区块
         </Typography>
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
           {sections.map((s) => (
             <Chip key={s.id} size="small" label={`${s.title || s.id} (${s.type})`} />
           ))}
-          {sections.length === 0 && !error && (
-            <Typography variant="caption" color="text.secondary">无 sections</Typography>
-          )}
+        </Box>
+        <TextField
+          fullWidth
+          multiline
+          minRows={12}
+          maxRows={24}
+          value={jsonText}
+          onChange={(e) => setJsonText(e.target.value)}
+          sx={{ fontFamily: "monospace", fontSize: 12, mb: 1 }}
+        />
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button size="small" variant="contained" onClick={handleApplyJson}>应用 JSON</Button>
+          <Button size="small" variant="outlined" onClick={handleReset}>重新加载</Button>
         </Box>
       </Paper>
 

@@ -53,7 +53,7 @@ export default function PackDesignerPage() {
       <Paper sx={{ mb: 2 }}>
         <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
           <Tab icon={<EditNoteIcon />} label="数据录入" />
-          <Tab icon={<ViewQuiltIcon />} label="布局预览" />
+          <Tab icon={<ViewQuiltIcon />} label="布局编辑" />
           <Tab icon={<PaletteIcon />} label="主题与导出" />
         </Tabs>
       </Paper>

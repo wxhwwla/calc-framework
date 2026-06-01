@@ -183,17 +183,9 @@ async def list_characters_full():
 
 async def create_character(data: dict[str, Any]):
 
-    raw = _load_json(CHARACTERS_PATH)
+    from api.data_mutations import create_character as _create
 
-    if _find_by_name(raw, data.get("名称", "")) is not None:
-
-        raise HTTPException(status_code=409, detail=f"角色 '{data.get('名称')}' 已存在")
-
-    raw.append(data)
-
-    _save_json(CHARACTERS_PATH, raw)
-
-    return {"message": "ok"}
+    return _create(data)
 
 
 
@@ -203,19 +195,9 @@ async def create_character(data: dict[str, Any]):
 
 async def update_character(name: str, data: dict[str, Any]):
 
-    raw = _load_json(CHARACTERS_PATH)
+    from api.data_mutations import update_character as _update
 
-    idx = _find_by_name(raw, name)
-
-    if idx is None:
-
-        raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
-
-    raw[idx] = data
-
-    _save_json(CHARACTERS_PATH, raw)
-
-    return {"message": "ok"}
+    return _update(name, data)
 
 
 
@@ -225,19 +207,9 @@ async def update_character(name: str, data: dict[str, Any]):
 
 async def delete_character(name: str):
 
-    raw = _load_json(CHARACTERS_PATH)
+    from api.data_mutations import delete_character as _delete
 
-    idx = _find_by_name(raw, name)
-
-    if idx is None:
-
-        raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
-
-    raw.pop(idx)
-
-    _save_json(CHARACTERS_PATH, raw)
-
-    return {"message": "ok"}
+    return _delete(name)
 
 
 
@@ -317,17 +289,9 @@ async def list_weapons_full():
 
 async def create_weapon(data: dict[str, Any]):
 
-    raw = _load_json(WEAPONS_PATH)
+    from api.data_mutations import create_weapon as _create
 
-    if _find_by_name(raw, data.get("名称", "")) is not None:
-
-        raise HTTPException(status_code=409, detail=f"武器 '{data.get('名称')}' 已存在")
-
-    raw.append(data)
-
-    _save_json(WEAPONS_PATH, raw)
-
-    return {"message": "ok"}
+    return _create(data)
 
 
 
@@ -337,19 +301,9 @@ async def create_weapon(data: dict[str, Any]):
 
 async def update_weapon(name: str, data: dict[str, Any]):
 
-    raw = _load_json(WEAPONS_PATH)
+    from api.data_mutations import update_weapon as _update
 
-    idx = _find_by_name(raw, name)
-
-    if idx is None:
-
-        raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
-
-    raw[idx] = data
-
-    _save_json(WEAPONS_PATH, raw)
-
-    return {"message": "ok"}
+    return _update(name, data)
 
 
 
@@ -359,19 +313,9 @@ async def update_weapon(name: str, data: dict[str, Any]):
 
 async def delete_weapon(name: str):
 
-    raw = _load_json(WEAPONS_PATH)
+    from api.data_mutations import delete_weapon as _delete
 
-    idx = _find_by_name(raw, name)
-
-    if idx is None:
-
-        raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
-
-    raw.pop(idx)
-
-    _save_json(WEAPONS_PATH, raw)
-
-    return {"message": "ok"}
+    return _delete(name)
 
 
 
@@ -451,17 +395,9 @@ async def list_equipments_full():
 
 async def create_equipment(data: dict[str, Any]):
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    from api.data_mutations import create_equipment as _create
 
-    if _find_by_name(raw, data.get("名称", "")) is not None:
-
-        raise HTTPException(status_code=409, detail=f"装备 '{data.get('名称')}' 已存在")
-
-    raw.append(data)
-
-    _save_json(EQUIPMENTS_PATH, raw)
-
-    return {"message": "ok"}
+    return _create(data)
 
 
 
@@ -471,19 +407,9 @@ async def create_equipment(data: dict[str, Any]):
 
 async def update_equipment(name: str, data: dict[str, Any]):
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    from api.data_mutations import update_equipment as _update
 
-    idx = _find_by_name(raw, name)
-
-    if idx is None:
-
-        raise HTTPException(status_code=404, detail=f"装备 '{name}' 未找到")
-
-    raw[idx] = data
-
-    _save_json(EQUIPMENTS_PATH, raw)
-
-    return {"message": "ok"}
+    return _update(name, data)
 
 
 
@@ -493,19 +419,9 @@ async def update_equipment(name: str, data: dict[str, Any]):
 
 async def delete_equipment(name: str):
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    from api.data_mutations import delete_equipment as _delete
 
-    idx = _find_by_name(raw, name)
-
-    if idx is None:
-
-        raise HTTPException(status_code=404, detail=f"装备 '{name}' 未找到")
-
-    raw.pop(idx)
-
-    _save_json(EQUIPMENTS_PATH, raw)
-
-    return {"message": "ok"}
+    return _delete(name)
 
 
 
@@ -593,93 +509,9 @@ async def data_summary():
 
 async def inverse_formula(req: InverseRequest):
 
-    try:
+    from api.data_mutations import inverse_formula_payload
 
-        from games.endfield.calc.damage.inverse import (
+    result = inverse_formula_payload(req.type, req.values)
 
-            fit_attribute_formula,
-
-            fit_skill_formula,
-
-            fit_skill_formula_no_special,
-
-            remove_duplicates,
-
-            validate_attribute_formula,
-
-            validate_skill_formula,
-
-        )
-
-        from games.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
-
-    except ImportError as e:
-
-        raise HTTPException(status_code=500, detail=f"逆推引擎导入失败: {e}")
-
-
-
-    data = req.values
-
-    mode = req.type
-
-
-
-    try:
-
-        if mode == "attribute":
-
-            if len(data) == 94:
-
-                data = remove_duplicates(data)
-
-            if len(data) != 90:
-
-                raise HTTPException(status_code=400, detail=f"属性数据需要90个值，当前{len(data)}个")
-
-            base, growth, divisor, offset = fit_attribute_formula(data)
-
-            formula = f"base + floor(({growth} * (lv - 1) + {offset}) / {divisor})"
-
-            valid = validate_attribute_formula(base, growth, divisor, offset, data)
-
-            curve = calculate_growth_curve(base, growth, divisor, offset)
-
-            details = f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}\n已验证: {'✓' if valid else '✗'}\n生成曲线（前10级）: {', '.join(map(str, curve[:10]))}…"
-
-            return InverseResponse(base=float(base), growth=float(growth), divisor=int(divisor), offset=float(offset), special=None, formula=formula, valid=valid, details=details)
-
-        elif mode == "skill":
-
-            if len(data) == 12:
-
-                base, growth, divisor, offset, special = fit_skill_formula(data)
-
-            elif len(data) == 9:
-
-                base, growth, divisor, offset, special = fit_skill_formula_no_special(data)
-
-            else:
-
-                raise HTTPException(status_code=400, detail=f"技能数据需要9或12个值，当前{len(data)}个")
-
-            formula = f"base + floor(({growth} * (lv - 1) + {offset}) / {divisor})"
-
-            valid = validate_skill_formula(base, growth, divisor, offset, special, data)
-
-            details = f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}, special={special}\n已验证: {'✓' if valid else '✗'}"
-
-            return InverseResponse(base=float(base), growth=float(growth), divisor=int(divisor), offset=float(offset), special=special, formula=formula, valid=valid, details=details)
-
-        else:
-
-            raise HTTPException(status_code=400, detail=f"不支持的逆推类型: {mode}")
-
-    except HTTPException:
-
-        raise
-
-    except Exception as e:
-
-        raise HTTPException(status_code=500, detail=f"逆推计算失败: {e}")
+    return InverseResponse(**result)
 

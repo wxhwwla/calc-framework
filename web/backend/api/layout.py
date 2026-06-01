@@ -3,12 +3,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+
+from api.adapter_assets import get_adapter_dag, get_adapter_layout
 
 router = APIRouter(prefix="/api/layout", tags=["layout"])
 
-ADAPTER_ROOT = Path(__file__).resolve().parents[3] / "framework" / "adapters" / "endfield"
+DEFAULT_ADAPTER = "endfield"
+ADAPTER_ROOT = Path(__file__).resolve().parents[3] / "framework" / "adapters" / DEFAULT_ADAPTER
 
 _VALID_SECTION_TYPES = frozenset({"inputs", "outputs", "widget"})
 
@@ -24,48 +27,47 @@ def _load_json(path: Path) -> dict:
         raise HTTPException(status_code=500, detail=f"JSON 解析失败: {path.name}: {e}")
 
 
-_DAG_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
-)
+def get_layout_payload(adapter_id: str = DEFAULT_ADAPTER) -> dict:
+    """返回适配器 layout.json（WSGI / FastAPI 共用）。"""
+    if adapter_id == DEFAULT_ADAPTER:
+        try:
+            return get_adapter_layout(adapter_id)
+        except HTTPException:
+            pass
+    return get_adapter_layout(adapter_id)
 
 
-def get_layout_payload() -> dict:
-    """返回终末地适配器 layout.json（WSGI / FastAPI 共用）。"""
-    return _load_json(ADAPTER_ROOT / "ui" / "layout.json")
-
-
-def get_variables_payload() -> dict:
+def get_variables_payload(adapter_id: str = DEFAULT_ADAPTER) -> dict:
     """返回 DAG variables 定义（WSGI / FastAPI 共用）。"""
-    dag = _load_json(_DAG_PATH)
+    dag = get_adapter_dag(adapter_id)
     return dag.get("variables", {})
 
 
-@router.get("", summary="获取当前适配器 layout.json")
-def get_layout():
-    return get_layout_payload()
+def get_dag_payload(adapter_id: str = DEFAULT_ADAPTER) -> dict:
+    return get_adapter_dag(adapter_id)
+
+
+@router.get("", summary="获取适配器 layout.json")
+def get_layout(adapter: str = Query(DEFAULT_ADAPTER, description="适配器目录名")):
+    return get_layout_payload(adapter)
 
 
 @router.get("/variables", summary="获取 DAG variables 定义")
-def get_variables():
-    return get_variables_payload()
+def get_variables(adapter: str = Query(DEFAULT_ADAPTER)):
+    return get_variables_payload(adapter)
 
 
 @router.get("/schema", summary="获取 attr_schema.json")
-async def get_attr_schema():
-    """返回适配器的 attr_schema.json（属性字段声明）。"""
+async def get_attr_schema(adapter: str = Query(DEFAULT_ADAPTER)):
     schema_path = ADAPTER_ROOT / "attr_schema.json"
+    if adapter != DEFAULT_ADAPTER:
+        schema_path = Path(__file__).resolve().parents[3] / "framework" / "adapters" / adapter / "attr_schema.json"
     return _load_json(schema_path)
 
 
 @router.get("/dag", summary="获取完整 DAG JSON")
-async def get_dag():
-    """返回终末地 15 乘区完整 DAG JSON。"""
-    dag_path = (
-        Path(__file__).resolve().parents[3]
-        / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
-    )
-    return _load_json(dag_path)
+async def get_dag(adapter: str = Query(DEFAULT_ADAPTER)):
+    return get_dag_payload(adapter)
 
 
 class ValidationIssue(BaseModel):
@@ -119,7 +121,10 @@ def _validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: d
         seen_ids.add(sid)
 
         if stype not in _VALID_SECTION_TYPES:
-            issues.append(ValidationIssue(severity="error", section_id=sid, field="type", message=f"无效 section type: {stype!r}，必须是 {_VALID_SECTION_TYPES}"))
+            issues.append(ValidationIssue(
+                severity="error", section_id=sid, field="type",
+                message=f"无效 section type: {stype!r}，必须是 {_VALID_SECTION_TYPES}",
+            ))
 
         if not title:
             issues.append(ValidationIssue(severity="warning", section_id=sid, field="title", message="缺少 title"))
@@ -141,7 +146,10 @@ def _validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: d
                     short_name = v.split(".", 1)[1] if "." in v else v
                     if short_name in attr_names:
                         continue
-                    issues.append(ValidationIssue(severity="error", section_id=sid, field="variables", message=f"变量 {v!r} 既不在 DAG variables 中，也不在 attr_schema 或 user_input 中"))
+                    issues.append(ValidationIssue(
+                        severity="error", section_id=sid, field="variables",
+                        message=f"变量 {v!r} 既不在 DAG variables 中，也不在 attr_schema 或 user_input 中",
+                    ))
 
         if stype == "outputs":
             outputs = section.get("outputs", [])
@@ -164,11 +172,17 @@ def _validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: d
 
     if used_vars < total_vars:
         uncovered = set(dag_variables.keys()) - referenced_vars
-        issues.append(ValidationIssue(severity="info", message=f"layout 未覆盖 {len(uncovered)}/{total_vars} 个 DAG variables: {', '.join(sorted(uncovered)[:10])}"))
+        issues.append(ValidationIssue(
+            severity="info",
+            message=f"layout 未覆盖 {len(uncovered)}/{total_vars} 个 DAG variables: {', '.join(sorted(uncovered)[:10])}",
+        ))
 
     if used_outputs < total_outputs:
         uncovered = set(dag_outputs.keys()) - referenced_outputs
-        issues.append(ValidationIssue(severity="info", message=f"layout 未覆盖 {len(uncovered)}/{total_outputs} 个 DAG outputs: {', '.join(sorted(uncovered)[:10])}"))
+        issues.append(ValidationIssue(
+            severity="info",
+            message=f"layout 未覆盖 {len(uncovered)}/{total_outputs} 个 DAG outputs: {', '.join(sorted(uncovered)[:10])}",
+        ))
 
     has_error = any(i.severity == "error" for i in issues)
 
@@ -189,23 +203,9 @@ def _validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: d
 
 
 @router.post("/validate", summary="校验 layout.json 结构一致性")
-async def validate_layout():
-    """加载 layout.json 与 DAG，校验结构完整性。
-
-    检查项：
-    - 所有 section 是否包含 id/type/title
-    - section type 是否合法
-    - input section 引用的变量是否存在于 DAG variables
-    - output section 引用的输出是否存在于 DAG outputs
-    - 覆盖度统计
-    """
-    layout_path = ADAPTER_ROOT / "ui" / "layout.json"
-    dag_path = (
-        Path(__file__).resolve().parents[3]
-        / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
-    )
-    schema_path = ADAPTER_ROOT / "attr_schema.json"
-    layout = _load_json(layout_path)
-    dag = _load_json(dag_path)
+async def validate_layout(adapter: str = Query(DEFAULT_ADAPTER)):
+    layout = get_layout_payload(adapter)
+    dag = get_dag_payload(adapter)
+    schema_path = Path(__file__).resolve().parents[3] / "framework" / "adapters" / adapter / "attr_schema.json"
     attr_schema = _load_json(schema_path) if schema_path.exists() else None
     return _validate_layout(layout, dag, attr_schema)
