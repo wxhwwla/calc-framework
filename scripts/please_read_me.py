@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.20"
+_VERSION = "3.18.21"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,22 +406,17 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 16 处文件
+# TITLE: 更新 11 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/241/206/346/236/266/345/257/271/351/275/220/345/210/206/346/236/220.md"
-# - 修改 framework/adapters/endfield/functions.py
-# - 变更 framework/adapters/endfield/meta.json
-# - 修改 games/arknights/framework_bridge.py
-# - 修改 games/endfield/calc/dag_adapter/__init__.py
 # - 修改 games/endfield/calc/dag_adapter/search_evaluate.py
-# - 修改 games/endfield/calc/damage/execute.py
-# - 修改 games/endfield/calc/damage/incoming.py
+# - 修改 games/endfield/calc/damage/engine/__init__.py
+# - 修改 games/endfield/calc/loadout/optimizer/catalog.py
 # - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
-# - 修改 games/endfield/calc/manual_buff/physical.py
-# - 修改 games/endfield/calc/manual_buff/spell.py
-# - 修改 games/endfield/calc/multi_skill/optimizer/search.py
-# - 修改 games/endfield/gui/presentation/damage_snapshot.py
-# - 修改 games/endfield/gui/presentation/display/single_hit.py
-# - 修改 scripts/please_read_me.py
+# - 修改 games/endfield/calc/loadout/optimizer/plan.py
+# - 修改 games/endfield/calc/loadout/optimizer/search.py
+# - 修改 games/endfield/calc/loadout/optimizer/tasks.py
+# - 修改 games/endfield/calc/loadout/optimizer/types.py
+# - 修改 web/backend/api/search.py
+# - 修改 web/backend/bridge.py
+# - 修改 web/backend/main.py
 # --- END UPLOAD_SUMMARY ---

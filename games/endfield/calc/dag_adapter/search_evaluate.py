@@ -3,7 +3,7 @@
 """DAG 桥接函数：搜索评估用 DAG 引擎替代本地引擎计算伤害。
 
 迁移目标：
-- ``evaluate_task()`` 原本调用 ``calculate_single_hit_damage``（本地引擎）
+- ``evaluate_task()`` 原本调用 ``evaluate_search_damage``（DAG 桥接函数）
 - 本桥接函数处理同样的 effect 列表，调用 ``compute_15_zone_damage``（DAG 注册函数）
 - 消除双计算路径，统一走 DAG 框架
 """
@@ -125,7 +125,7 @@ def evaluate_search_damage(
 ) -> DamageEvalResult:
     """用 DAG 注册函数替代本地引擎计算单段伤害。
 
-    此函数复制了 ``calculate_single_hit_damage`` 的效果处理逻辑
+    此函数复制了本地引擎的效果处理逻辑
     （_collect_effects → 乘区累加 → combo_bonus → defense → resistance），
     最终调用 ``compute_15_zone_detail``（框架适配器注册的 DAG 函数）
     获取各乘区明细，连乘得到最终伤害。

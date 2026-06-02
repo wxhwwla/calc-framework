@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from calc_framework.logging import setup_logging, get_logger
+from web.backend.bridge import setup_logging, get_logger
 
 from api.adapters import router as adapters_router
 from api.arknights import router as arknights_router
@@ -140,7 +140,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 async def health():
 
-    from calc_framework.config.manager import AdapterManager
+    from web.backend.bridge import AdapterManager
 
 
     ADAPTER_ROOT = Path(__file__).resolve().parents[2] / "framework" / "adapters"

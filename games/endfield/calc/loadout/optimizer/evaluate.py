@@ -20,7 +20,7 @@
 │ 3. 评估任务 (evaluate_task)                                         │
 │    ├── build_runtime_eval_snapshot: 解析配装 → 效果 + 平铺属性        │
 │    ├── calculate_final_attack_with_details: 计算最终攻击力            │
-│    ├── calculate_single_hit_damage: 计算单段伤害                      │
+│    ├── evaluate_search_damage: 计算单段伤害 (DAG 桥接)            │
 │    └── 返回 LoadoutScore                                            │
 ├─────────────────────────────────────────────────────────────────────┤
 │ 4. 收集结果 (TopNTracker)                                           │
@@ -64,7 +64,7 @@ def evaluate_task(
     2. 调用 DAG 桥接函数计算单段伤害
     3. 返回配装评分
 
-    使用 ``evaluate_search_damage``（DAG 注册函数）替代原本的本地引擎
+    使用 ``evaluate_search_damage``（DAG 桥接函数）替代原本的本地引擎
     ``calculate_single_hit_damage``，统一走 DAG 框架。
 
     Args:

@@ -20,5 +20,4 @@ __all__ = [
     "DamageContext",
     "DamageEffect",
     "DamageResult",
-    "calculate_single_hit_damage",
 ]
