@@ -5,7 +5,7 @@
 
 项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
 ├── main.py                    # 本文件：启动 GUI（PySide6 版）
-├── gui_design/shell/qt_app.py # 主窗口（双页签：计算页 / 高级页）
+├── gui/shell/qt_app.py # 主窗口（双页签：计算页 / 高级页）
 ├── data/loader.py             # 角色、武器、装备 JSON 统一加载
 ├── data/game_data_facade.py   # 应用级数据门面（GUI / 对比 / 搜索）
 ├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线
@@ -22,13 +22,20 @@
 注意：GUI 后端为 PySide6。CustomTkinter 版已于 2026-05 移除。
 """
 
-import sysimport threadingimport timefrom pathlib import Path# 确保 repo 根在 sys.path 上（共享 utils/、release_bundle/ 等）
+import sys
+import threading
+import time
+from pathlib import Path
+
+# 确保 repo 根在 sys.path 上（共享 utils/、release_bundle/ 等）
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 # Windows：在 platform.release() 等调用前规避 WMI 卡死（PyInstaller 兼容）
-from utils.platform_win32_patch import apply_platform_win32_patchapply_platform_win32_patch()
+from utils.platform_win32_patch import apply_platform_win32_patch
+
+apply_platform_win32_patch()
 
 
 def preload_data():
@@ -69,7 +76,10 @@ def main() -> None:
         print("正在加载界面…", flush=True)
 
     # 导入 GUI 模块
-    from utils.path_utils import get_application_dir    from games.endfield.data_loading.plugin_registry import load_default_plugins    from gui_design.shell.qt_app import QtDamageApp as DamageCalculatorApp
+    from utils.path_utils import get_application_dir
+
+    from games.endfield.data_loading.plugin_registry import load_default_plugins
+    from gui.shell.qt_app import QtDamageApp as DamageCalculatorApp
 
     if not getattr(sys, "frozen", False):
         print("正在创建主窗口…", flush=True)

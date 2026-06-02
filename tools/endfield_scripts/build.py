@@ -311,9 +311,9 @@ def build_release(target: BuildTarget) -> Path:
 
             "scripts",
 
-            "gui_design.designer",
+            "gui.designer",
 
-            "gui_design.legal",
+            "gui.legal",
 
             "add_character",
 
@@ -343,7 +343,7 @@ def build_release(target: BuildTarget) -> Path:
 
             "scripts",
 
-            "gui_design",
+            "gui",
 
             "search_output",
 
@@ -365,7 +365,7 @@ def build_release(target: BuildTarget) -> Path:
 
             "scripts",
 
-            "gui_design",
+            "gui",
 
             "games/endfield/data",
 

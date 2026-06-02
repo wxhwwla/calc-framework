@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import unittest
 
-from games.endfield.gui_design.layout.gui_layout import (
+from games.endfield.gui.layout.gui_layout import (
     CONTROL_DOCK_COMPACT_BREAKPOINT,
     HINT_BOX_VERTICAL_PADDING,
     HINT_LINE_HEIGHT,

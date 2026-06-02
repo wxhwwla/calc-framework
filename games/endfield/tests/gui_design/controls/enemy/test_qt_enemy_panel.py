@@ -14,7 +14,7 @@ from games.endfield.data_loading.enemy_params import (
     DEFAULT_IMBALANCE_VULNERABILITY,
     DEFAULT_IS_UNBALANCED,
 )
-from games.endfield.gui_design.controls.enemy.qt_enemy_panel import QtEnemyPanel
+from games.endfield.gui.controls.enemy.qt_enemy_panel import QtEnemyPanel
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
@@ -78,10 +78,10 @@ class TestQtEnemyPanel(unittest.TestCase):
         eid = self.panel.current_enemy_id()
         self.assertIsInstance(eid, str)
 
-    @patch("games.endfield.gui_design.controls.enemy.qt_enemy_panel.resolve_enemy_defense", return_value=300.0)
-    @patch("games.endfield.gui_design.controls.enemy.qt_enemy_panel.resolve_enemy_resistance", return_value=20.0)
+    @patch("games.endfield.gui.controls.enemy.qt_enemy_panel.resolve_enemy_defense", return_value=300.0)
+    @patch("games.endfield.gui.controls.enemy.qt_enemy_panel.resolve_enemy_resistance", return_value=20.0)
     def test_enemy_combo_change_updates_params(self, mock_res, mock_def) -> None:
-        from games.endfield.gui_design.controls.enemy.qt_enemy_panel import list_plugin_enemy_choices
+        from games.endfield.gui.controls.enemy.qt_enemy_panel import list_plugin_enemy_choices
         choices = list_plugin_enemy_choices()
         if choices:
             self.panel._on_enemy_combo_changed(choices[0][0])

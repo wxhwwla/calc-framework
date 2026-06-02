@@ -13,7 +13,7 @@ from games.endfield.calc.equipment.display_corrections import (
     correct_originium_display,
     correct_percent_display,
 )
-from games.endfield.gui_design.app.loadout_state import LoadoutState
+from games.endfield.gui.app.loadout_state import LoadoutState
 from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.calc.search.plan.controller import prepare_search_job
 

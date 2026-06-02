@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from games.endfield.gui_design.controls.search.search_settings import (
+from games.endfield.gui.controls.search.search_settings import (
     build_worker_option_labels,
     get_cpu_parallel_info,
 )

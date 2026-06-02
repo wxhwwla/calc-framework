@@ -9,16 +9,16 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QScrollArea, QVBoxLayout
 
 from games.endfield.framework_bridge import ComputeSheet
-from gui_design.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache
-from gui_design.shared.calc_history import HistoryEntry, get_app_calculation_history
+from gui.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache
+from gui.shared.calc_history import HistoryEntry, get_app_calculation_history
 
 
 class ConfirmMixin:
     """确认计算、ComputeSheet 刷新、总伤面板、快照。"""
 
     def _build_request(self) -> Any:
-        from gui_design.app.display_request import DisplayRequest
-        from gui_design.app.loadout_state import read_loadout_from_panels
+        from gui.app.display_request import DisplayRequest
+        from gui.app.loadout_state import read_loadout_from_panels
 
 
         dock = self.control_dock
@@ -116,7 +116,7 @@ class ConfirmMixin:
         sync_evaluation_cache(request)
 
     def _refresh_compute_sheet(self) -> None:
-        from gui_design.shell.qt_app import _ensure_adapter
+        from gui.shell.qt_app import _ensure_adapter
 
         _pkg, layout = _ensure_adapter()
         compute_sheet = ComputeSheet(layout)
@@ -134,7 +134,7 @@ class ConfirmMixin:
             self._compute_sheet_widget.setLayout(layout_outer)
 
     def _populate_sheet(self, sheet: ComputeSheet) -> None:
-        from gui_design.app.loadout_state import read_loadout_from_panels
+        from gui.app.loadout_state import read_loadout_from_panels
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -170,8 +170,8 @@ class ConfirmMixin:
 
     def _update_total_damage_panel(self) -> None:
         """更新总伤面板（从 evaluation cache 读取）。"""
-        from gui_design.app.loadout_evaluation import compute_total_damage
-        from gui_design.presentation.display.character import build_total_damage_report_lines
+        from gui.app.loadout_evaluation import compute_total_damage
+        from gui.presentation.display.character import build_total_damage_report_lines
 
 
         total = compute_total_damage()

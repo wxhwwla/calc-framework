@@ -80,7 +80,7 @@ PROJECT_STRUCTURE = """
     ├── README.md                  # 开发与测试说明（首选文档）
     ├── scripts/                   # 命令行与维护脚本（反推 GUI、录入种子等）
     ├── tests/                     # pytest 单元测试（不含可交互 GUI）
-    ├── gui_design/                # GUI（五列 + 底栏）
+    ├── gui/                       # GUI（五列 + 底栏）
     │   ├── gui.py / confirm_orchestrator.py / search_controls.py
     │   ├── display_lines.py / display_view.py / display_request.py
     │   ├── loadout_state.py / loadout_evaluation.py / preview_lines.py
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 # - 修改 framework/src/calc_framework/ui/viewer.py
 # - 修改 framework/tests/inverse/__init__.py
 # - 修改 framework/tests/inverse/test_engine.py
-# - 修改 games/endfield/gui_design/controls/ocr/__init__.py
+# - 修改 games/endfield/gui/controls/ocr/__init__.py
 # - 修改 games/endfield/please_read_me.py
 # - 修改 tools/endfield_designer/designer_main.py
 # - 修改 tools/endfield_designer/seed_tab.py

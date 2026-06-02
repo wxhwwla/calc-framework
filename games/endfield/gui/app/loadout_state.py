@@ -14,7 +14,7 @@ from typing import Any
 from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.calc.search.plan.controller import SearchJobInputs
 from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
+from gui.presentation.display_lines import resolve_selected_skill_for_damage
 
 from .confirm_refresh import (
     build_confirm_refresh_signature,

@@ -48,7 +48,7 @@ docs/game-template/
 └── README.md           # 使用说明
 ```
 
-#### 步骤 2：终末地目录结构对齐
+#### 步骤 2：终末地目录结构对齐 ✅ 已完成（2026-06-02）
 
 改动集中在 `games/endfield/` 顶层：
 
@@ -58,7 +58,7 @@ games/endfield/        games/endfield/
 ├── calc/              ├── calc/                  ← 不变
 ├── data/              ├── data/                  ← 不变
 ├── data_loading/      ├── data_loading/          ← 不变
-├── gui_design/        ├── gui/                   ← 重命名
+├── gui_design/        ├── gui/                   ← 重命名 ✅
 ├── tests/             ├── tests/                 ← 不变
 ├── framework_bridge   ├── framework_bridge.py    ← 不变
 ├── main.py            ├── main.py                ← 不变
@@ -69,17 +69,18 @@ games/endfield/        games/endfield/
 ```
 
 关键变化：
-- `gui_design/` → `gui/`（子目录保持不变）
-- 顶层散落的文件归类到合适子目录
-- `_replace_imports.py` 等遗留文件移入 `_legacy/`
+- `gui_design/` → `gui/`（子目录保持不变）✅ 已执行
+- 更新了 150+ 个外部文件中的导入路径
+- 更新了所有文档（会话接续手册、代码结构规范、操作指令集、README、CONTEXT）
+- 1056 个测试全部通过
 
 #### 步骤 3：更新框架适配器路径引用
 
 `framework/adapters/endfield/` 中如果有引用旧路径的需要更新。
 
-#### 步骤 4：测试验证
+#### 步骤 4：测试验证 ✅ 已完成
 
-所有测试通过后，game-template 可用于创建第三个游戏包。
+所有测试通过（1056 passed, 1 skipped, 9 subtests passed）。game-template 可用于创建第三个游戏包。
 
 ---
 

@@ -38,13 +38,13 @@ from scripts.please_read_me import get_exe_version
 
 from games.endfield.data_loading.loader import get_characters, get_weapons
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
-from gui_design.panels.selection.qt_panel import QtSelectionPanel
-from gui_design.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
-from gui_design.shared.display_view.qt_columns import QtAttributeColumns
-from gui_design.shell.qt_app_confirm_mixin import ConfirmMixin
-from gui_design.shell.qt_app_dialog_mixin import DialogMixin
-from gui_design.shell.qt_app_search_mixin import SearchMixin
-from gui_design.shell.qt_control_dock import QtControlDock
+from gui.panels.selection.qt_panel import QtSelectionPanel
+from gui.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
+from gui.shared.display_view.qt_columns import QtAttributeColumns
+from gui.shell.qt_app_confirm_mixin import ConfirmMixin
+from gui.shell.qt_app_dialog_mixin import DialogMixin
+from gui.shell.qt_app_search_mixin import SearchMixin
+from gui.shell.qt_control_dock import QtControlDock
 
 _qt_logger = get_logger("gui.qt_app")
 
@@ -334,7 +334,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
 
 
-        from gui_design.presentation.total_damage_panel import TotalDamagePanel
+        from gui.presentation.total_damage_panel import TotalDamagePanel
 
 
 
@@ -543,7 +543,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
         """加载 UI 偏好（上次页签），恢复启动页。"""
 
-        from gui_design.shared.ui_preferences import (
+        from gui.shared.ui_preferences import (
             load_ui_preferences,
             resolve_startup_page,
         )
@@ -568,7 +568,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
         """关闭窗口：保存 UI 偏好（当前页签），接受关闭事件。"""
 
-        from gui_design.shared.ui_preferences import (
+        from gui.shared.ui_preferences import (
             record_last_page,
             save_ui_preferences,
         )
@@ -819,7 +819,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
         """将请求配装的求值结果写入缓存，避免重复计算。"""
 
-        from gui_design.app.loadout_evaluation import sync_evaluation_cache
+        from gui.app.loadout_evaluation import sync_evaluation_cache
 
 
 
@@ -835,7 +835,7 @@ class QtDamageApp(SearchMixin, ConfirmMixin, DialogMixin):
 
         """从 app._last_damage_snapshot 刷新总伤面板。"""
 
-        from gui_design.presentation.damage_snapshot import get_snapshot_from_app
+        from gui.presentation.damage_snapshot import get_snapshot_from_app
 
 
 

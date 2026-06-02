@@ -16,10 +16,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui_design.controls.search.search_settings import (
+from gui.controls.search.search_settings import (
     build_worker_option_labels,
 )
-from gui_design.shell.qt_control_dock_widgets import (
+from gui.shell.qt_control_dock_widgets import (
     HintLabel,
     SectionHeader,
     SmallLabel,

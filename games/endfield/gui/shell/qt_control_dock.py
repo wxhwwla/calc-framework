@@ -26,14 +26,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui_design.controls.enemy import QtEnemyPanel
-from gui_design.controls.search.search_settings import (
+from gui.controls.enemy import QtEnemyPanel
+from gui.controls.search.search_settings import (
     format_parallel_workers_help,
     get_cpu_parallel_info,
     resolve_parallel_workers,
 )
-from gui_design.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
-from gui_design.shell.qt_control_dock_builders import (
+from gui.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
+from gui.shell.qt_control_dock_builders import (
     _BTN_PRIMARY_STYLE,
     _BTN_SECONDARY_STYLE,
     _COMBO_STYLE,
@@ -44,7 +44,7 @@ from gui_design.shell.qt_control_dock_builders import (
     BuilderMixin,
 )
 from games.endfield.calc.manual_buff.abnormal_matrix import read_abnormal_matrix_counts
-from gui_design.shell.qt_control_dock_widgets import (
+from gui.shell.qt_control_dock_widgets import (
     SectionHeader,
     SmallLabel,
 )

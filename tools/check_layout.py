@@ -72,7 +72,7 @@ def check_directory_width(*, max_items: int = 10) -> list[str]:
 
     scan_roots = [
 
-        PKG / "gui_design",
+        PKG / "gui",
 
         PKG / "calculation",
 

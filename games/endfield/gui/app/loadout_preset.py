@@ -293,7 +293,7 @@ def apply_preset_to_panels(
     shell: Any | None = None,
 ) -> None:
     """将 LoadoutPreset 写入 Qt 角色/武器/控制栏面板（导入预设与历史恢复共用）。"""
-    from gui_design.shared.calc_mode_labels import calculation_mode_label
+    from gui.shared.calc_mode_labels import calculation_mode_label
 
     if preset.char_name:
         char_panel.select_by_name(preset.char_name)
@@ -334,7 +334,7 @@ def apply_preset_to_panels(
         if name:
             cb.setCurrentText(str(name))
         else:
-            from gui_design.shell.qt_control_dock_builders import _FIXED_SLOT_NONE_LABEL
+            from gui.shell.qt_control_dock_builders import _FIXED_SLOT_NONE_LABEL
 
             cb.setCurrentText(_FIXED_SLOT_NONE_LABEL)
 

@@ -28,9 +28,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui_design.designer.data_browser_tab import DataBrowserTab
-from gui_design.designer.data_editor_tab import DataEditorTab
-from gui_design.designer.inverse_tab import InverseTab
+from gui.designer.data_browser_tab import DataBrowserTab
+from gui.designer.data_editor_tab import DataEditorTab
+from gui.designer.inverse_tab import InverseTab
 
 APP_NAME = "数据设计器"
 

@@ -12,15 +12,15 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from gui_design.legal.attribution_content import SUMMARY_TEXT
-from gui_design.legal.donation_qt import open_donation_dialog
+from gui.legal.attribution_content import SUMMARY_TEXT
+from gui.legal.donation_qt import open_donation_dialog
 
 
 class DialogMixin:
 
     def _on_manual_buff(self) -> None:
 
-        from gui_design.controls.manual_buff.qt_window import QtManualBuffDialog
+        from gui.controls.manual_buff.qt_window import QtManualBuffDialog
 
 
 
@@ -47,8 +47,8 @@ class DialogMixin:
             self.app._manual_buff_store = dialog.buff_store()
 
     def _on_survival_estimate(self) -> None:
-        from gui_design.app.loadout_state import read_loadout_from_panels
-        from gui_design.controls.survival import open_survival_estimate_dialog
+        from gui.app.loadout_state import read_loadout_from_panels
+        from gui.controls.survival import open_survival_estimate_dialog
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -97,8 +97,8 @@ class DialogMixin:
 
     def _on_export_preset(self) -> None:
 
-        from gui_design.app.loadout_preset import export_preset_json
-        from gui_design.app.loadout_state import read_loadout_from_panels
+        from gui.app.loadout_preset import export_preset_json
+        from gui.app.loadout_state import read_loadout_from_panels
 
 
 
@@ -167,7 +167,7 @@ class DialogMixin:
 
     def _on_import_preset(self) -> None:
 
-        from gui_design.app.loadout_preset import import_presets_from_json_text
+        from gui.app.loadout_preset import import_presets_from_json_text
 
 
 
@@ -196,7 +196,7 @@ class DialogMixin:
 
     def _apply_preset_to_qt_app(self, preset) -> None:
 
-        from gui_design.app.loadout_preset import apply_preset_to_panels
+        from gui.app.loadout_preset import apply_preset_to_panels
 
 
 
@@ -213,7 +213,7 @@ class DialogMixin:
 
     def _on_compare_presets(self) -> None:
 
-        from gui_design.controls.enhancement.qt_dialogs import QtCompareDialog
+        from gui.controls.enhancement.qt_dialogs import QtCompareDialog
 
 
 
@@ -329,8 +329,8 @@ class DialogMixin:
 
     def _on_damage_dashboard(self) -> None:
 
-        from gui_design.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
-        from gui_design.presentation.damage_snapshot import get_snapshot_from_app
+        from gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
+        from gui.presentation.damage_snapshot import get_snapshot_from_app
 
 
 
@@ -354,8 +354,8 @@ class DialogMixin:
 
     def _on_calc_history(self) -> None:
 
-        from gui_design.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
-        from gui_design.shared.calc_history import get_app_calculation_history
+        from gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        from gui.shared.calc_history import get_app_calculation_history
 
 
 
@@ -424,7 +424,7 @@ class DialogMixin:
 
         try:
 
-            from gui_design.controls.ocr import open_ocr_detection_dialog
+            from gui.controls.ocr import open_ocr_detection_dialog
 
 
 
@@ -479,7 +479,7 @@ class DialogMixin:
 
         """打开搜索历史浏览对话框。"""
 
-        from gui_design.controls.search.qt_search_browser import SearchHistoryDialog
+        from gui.controls.search.qt_search_browser import SearchHistoryDialog
 
 
 

@@ -12,7 +12,7 @@ from games.endfield.calc.damage.physical_abnormal_state import (
     is_physical_abnormal_key,
 )
 from games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damage
-from games.endfield.gui_design.app.confirm_refresh import build_display_pending_signature
+from games.endfield.gui.app.confirm_refresh import build_display_pending_signature
 
 
 class TestNgaBatch9(unittest.TestCase):

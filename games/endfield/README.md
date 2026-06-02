@@ -68,7 +68,7 @@ games/endfield/
 │   ├── data_editor_tab.py     # 数据编辑页签（新增/编辑/删除角色、武器、装备）
 │   ├── data_browser_tab.py    # 数据浏览页签（查看 JSON 列表）
 │   └── inverse_tab.py         # 公式反推页签
-├── gui_design/                # GUI 界面模块（PySide6）
+├── gui/                # GUI 界面模块（PySide6）
 │   ├── shell/                 # 主窗口与控制栏
 │   │   ├── qt_app.py          # 主应用（双页签：计算页 + 高级页）
 │   │   └── qt_control_dock.py # 高级页三列控制栏

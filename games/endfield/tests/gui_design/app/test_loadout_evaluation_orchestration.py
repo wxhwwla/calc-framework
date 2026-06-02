@@ -45,9 +45,9 @@ class TestSyncEvaluationCache(unittest.TestCase):
         self.loadout.manual_buffs = None
         self.loadout.weapon_skill_kwargs.return_value = {}
 
-    @patch("games.endfield.gui_design.app.loadout_evaluation.sync_confirm_dependencies")
+    @patch("games.endfield.gui.app.loadout_evaluation.sync_confirm_dependencies")
     def test_sync_evaluation_cache(self, mock_sync) -> None:
-        from games.endfield.gui_design.app.loadout_evaluation import sync_evaluation_cache
+        from games.endfield.gui.app.loadout_evaluation import sync_evaluation_cache
 
         sync_evaluation_cache(self.loadout)
 
@@ -73,14 +73,14 @@ class TestSyncEvaluationCache(unittest.TestCase):
             enemy_defense=self.loadout.enemy_defense,
         )
 
-    @patch("games.endfield.gui_design.app.loadout_evaluation.sync_confirm_dependencies")
+    @patch("games.endfield.gui.app.loadout_evaluation.sync_confirm_dependencies")
     def test_build_search_preview_lines_multi_skill(self, mock_sync) -> None:
         self.loadout.calculation_mode = "multi_skill_search"
 
-        from games.endfield.gui_design.app.loadout_evaluation import build_search_preview_lines
+        from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
 
         with patch(
-            "games.endfield.gui_design.app.loadout_evaluation.build_multi_skill_search_preview_lines",
+            "games.endfield.gui.app.loadout_evaluation.build_multi_skill_search_preview_lines",
             return_value=["line1"],
         ) as mock_multi:
             result = build_search_preview_lines(self.loadout, equipment_catalog={})
@@ -88,12 +88,12 @@ class TestSyncEvaluationCache(unittest.TestCase):
         mock_multi.assert_called_once()
         self.assertEqual(result, ["line1"])
 
-    @patch("games.endfield.gui_design.app.loadout_evaluation.sync_confirm_dependencies")
+    @patch("games.endfield.gui.app.loadout_evaluation.sync_confirm_dependencies")
     def test_build_search_preview_lines_single_skill(self, mock_sync) -> None:
-        from games.endfield.gui_design.app.loadout_evaluation import build_search_preview_lines
+        from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
 
         with patch(
-            "games.endfield.gui_design.app.loadout_evaluation.build_single_skill_search_preview_lines",
+            "games.endfield.gui.app.loadout_evaluation.build_single_skill_search_preview_lines",
             return_value=["preview"],
         ) as mock_single:
             result = build_search_preview_lines(self.loadout, equipment_catalog={})
@@ -101,21 +101,21 @@ class TestSyncEvaluationCache(unittest.TestCase):
         mock_single.assert_called_once()
         self.assertEqual(result, ["preview"])
 
-    @patch("games.endfield.gui_design.app.loadout_evaluation.sync_confirm_dependencies")
+    @patch("games.endfield.gui.app.loadout_evaluation.sync_confirm_dependencies")
     def test_build_search_preview_lines_unknown_mode(self, mock_sync) -> None:
         self.loadout.calculation_mode = "unknown"
 
-        from games.endfield.gui_design.app.loadout_evaluation import build_search_preview_lines
+        from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
 
         result = build_search_preview_lines(self.loadout, equipment_catalog={})
         self.assertEqual(result, [])
 
-    @patch("games.endfield.gui_design.app.loadout_evaluation.sync_confirm_dependencies")
+    @patch("games.endfield.gui.app.loadout_evaluation.sync_confirm_dependencies")
     def test_build_snapshot_from_loadout(self, mock_sync) -> None:
-        from games.endfield.gui_design.app.loadout_evaluation import build_snapshot_from_loadout
+        from games.endfield.gui.app.loadout_evaluation import build_snapshot_from_loadout
 
         with patch(
-            "games.endfield.gui_design.app.loadout_evaluation.build_damage_snapshot",
+            "games.endfield.gui.app.loadout_evaluation.build_damage_snapshot",
             return_value={"snapshot": "data"},
         ) as mock_snap:
             result = build_snapshot_from_loadout(self.loadout)
@@ -123,18 +123,18 @@ class TestSyncEvaluationCache(unittest.TestCase):
         mock_snap.assert_called_once()
         self.assertEqual(result, {"snapshot": "data"})
 
-    @patch("games.endfield.gui_design.app.loadout_evaluation.sync_confirm_dependencies")
+    @patch("games.endfield.gui.app.loadout_evaluation.sync_confirm_dependencies")
     def test_refresh_damage_snapshot_with_loadout(self, mock_sync) -> None:
-        from games.endfield.gui_design.app.loadout_evaluation import refresh_damage_snapshot
+        from games.endfield.gui.app.loadout_evaluation import refresh_damage_snapshot
 
         mock_app = MagicMock()
 
         with patch(
-            "games.endfield.gui_design.app.loadout_evaluation.build_snapshot_from_loadout",
+            "games.endfield.gui.app.loadout_evaluation.build_snapshot_from_loadout",
             return_value={"snapshot": "fresh"},
         ) as mock_build:
             with patch(
-                "games.endfield.gui_design.app.loadout_evaluation.store_snapshot_on_app",
+                "games.endfield.gui.app.loadout_evaluation.store_snapshot_on_app",
             ) as mock_store:
                 refresh_damage_snapshot(mock_app, loadout=self.loadout)
 

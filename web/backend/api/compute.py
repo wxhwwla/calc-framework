@@ -197,7 +197,7 @@ _WEAPONS_PATH = _DATA / "weapons.json"
 
 
 def snapshot_payload(req: SnapshotRequest) -> dict:
-    from games.endfield.gui_design.presentation.damage_snapshot import build_damage_snapshot
+    from games.endfield.gui.presentation.damage_snapshot import build_damage_snapshot
 
     chars = _load_json(_CHARACTERS_PATH)
 
@@ -355,7 +355,7 @@ def compare(req: CompareRequest):
     from games.endfield.data_loading.web_loadout_bridge import (
         build_loadout_state_from_web,
     )
-    from games.endfield.gui_design.app.loadout_evaluation import build_snapshot_from_loadout
+    from games.endfield.gui.app.loadout_evaluation import build_snapshot_from_loadout
 
     chars = _load_json(_CHARACTERS_PATH)
     weapons = _load_json(_WEAPONS_PATH)
@@ -411,7 +411,7 @@ def compare(req: CompareRequest):
 @router.post("/preview")
 def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
     from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
-    from games.endfield.gui_design.app.loadout_evaluation import build_search_preview_lines
+    from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
     from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
     catalog = req.equipment_catalog or get_equipment_catalog()
@@ -430,7 +430,7 @@ def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
 @router.post("/snapshot-full")
 def loadout_snapshot(req: LoadoutSnapshotRequest) -> dict[str, Any]:
     from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
-    from games.endfield.gui_design.app.loadout_evaluation import build_snapshot_from_loadout
+    from games.endfield.gui.app.loadout_evaluation import build_snapshot_from_loadout
 
     try:
         loadout = build_loadout_state_from_web(

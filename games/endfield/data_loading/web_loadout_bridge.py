@@ -8,7 +8,7 @@ from typing import Any
 from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
 from games.endfield.data_loading.enemy_params import default_enemy_params
-from games.endfield.gui_design.app.loadout_state import LoadoutState, _resolve_selected_skill_for_search
+from games.endfield.gui.app.loadout_state import LoadoutState, _resolve_selected_skill_for_search
 
 
 def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:

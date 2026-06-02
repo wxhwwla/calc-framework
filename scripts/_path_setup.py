@@ -36,7 +36,7 @@ def ensure_framework_src() -> None:
 
 
 def ensure_games_endfield() -> None:
-    """将 games/endfield 加入 sys.path（gui_design 等顶层包）。"""
+    """将 games/endfield 加入 sys.path（gui 等顶层包）。"""
     pkg = Path(__file__).resolve().parent.parent / "games" / "endfield"
     if str(pkg) not in sys.path:
         sys.path.insert(0, str(pkg))

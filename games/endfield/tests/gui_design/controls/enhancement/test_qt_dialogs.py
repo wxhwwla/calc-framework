@@ -20,10 +20,10 @@ class TestEnhancementDialogsImport(unittest.TestCase):
 
     def test_module_importable(self) -> None:
         with patch(
-            "games.endfield.gui_design.controls.enhancement.qt_dialogs.get_characters",
+            "games.endfield.gui.controls.enhancement.qt_dialogs.get_characters",
             return_value=[],
         ):
-            from games.endfield.gui_design.controls.enhancement.qt_dialogs import (
+            from games.endfield.gui.controls.enhancement.qt_dialogs import (
                 QtCalcHistoryDialog,
                 QtComparePresetsDialog,
                 QtDamageDashboardDialog,
@@ -42,13 +42,13 @@ class TestEnhancementDialogsImport(unittest.TestCase):
 
     def test_qt_calc_history_dialog_creation(self) -> None:
         with patch(
-            "games.endfield.gui_design.controls.enhancement.qt_dialogs.get_characters",
+            "games.endfield.gui.controls.enhancement.qt_dialogs.get_characters",
             return_value=[],
         ):
-            from games.endfield.gui_design.controls.enhancement.qt_dialogs import (
+            from games.endfield.gui.controls.enhancement.qt_dialogs import (
                 QtCalcHistoryDialog,
             )
-            from games.endfield.gui_design.shared.calc_history import CalculationHistory
+            from games.endfield.gui.shared.calc_history import CalculationHistory
 
             history = CalculationHistory()
             dialog = QtCalcHistoryDialog(
@@ -63,15 +63,15 @@ class TestEnhancementDialogsImport(unittest.TestCase):
     def test_compare_presets_dialog_creation(self) -> None:
         with (
             patch(
-                "games.endfield.gui_design.controls.enhancement.qt_dialogs.get_characters",
+                "games.endfield.gui.controls.enhancement.qt_dialogs.get_characters",
                 return_value=[],
             ),
             patch(
-                "games.endfield.gui_design.controls.enhancement.qt_dialogs.QFileDialog.getOpenFileNames",
+                "games.endfield.gui.controls.enhancement.qt_dialogs.QFileDialog.getOpenFileNames",
                 return_value=([], ""),
             ),
         ):
-            from games.endfield.gui_design.controls.enhancement.qt_dialogs import (
+            from games.endfield.gui.controls.enhancement.qt_dialogs import (
                 QtComparePresetsDialog,
             )
 

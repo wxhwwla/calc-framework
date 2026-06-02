@@ -17,7 +17,7 @@ async def detect(file: UploadFile = File(...)):
             tmp_path = tmp.name
 
         try:
-            from games.endfield.gui_design.controls.ocr.ocr_detect import ocr_detect_from_file
+            from games.endfield.gui.controls.ocr.ocr_detect import ocr_detect_from_file
             result = ocr_detect_from_file(tmp_path)
             return result
         except ImportError:

@@ -201,7 +201,7 @@ def _build_single_skill_search_preview_lines_impl(
     resolved_enemy = _resolve_enemy_eval(enemy_defense, enemy_eval)
     crit_rate = 0.05 + float(extra_crit_rate)
     crit_damage = 0.5 + float(extra_crit_damage)
-    from gui_design.presentation.display_lines import resolve_selected_skill_for_damage
+    from gui.presentation.display_lines import resolve_selected_skill_for_damage
 
     skill = resolve_selected_skill_for_damage(
         char_data,
