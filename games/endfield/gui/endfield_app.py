@@ -375,6 +375,8 @@ class EndfieldApp(QMainWindow):
 
         dock.equipment_scope_combo.currentTextChanged.connect(self._on_equipment_scope_changed)
 
+        dock._enemy_panel.setVisible(False)
+
         dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
         dock._survival_btn.clicked.connect(self._on_survival_estimate)
 
@@ -535,25 +537,22 @@ class EndfieldApp(QMainWindow):
             user_context_overrides=user_context_overrides,
         )
         self._populate_sheet(compute_sheet)
+        compute_sheet.evaluated.connect(self._on_compute_sheet_evaluated)
         compute_sheet.evaluate()
-        html = compute_sheet.render_html()
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        label = QLabel(html)
-        label.setTextFormat(Qt.TextFormat.RichText)
-        label.setWordWrap(True)
-        scroll.setWidget(label)
-        layout_outer = QVBoxLayout()
-        layout_outer.addWidget(scroll)
+
         if self._compute_sheet_widget is not None:
-            if self._compute_sheet_widget.layout() is not None:
-                old_layout = self._compute_sheet_widget.layout()
+            old_layout = self._compute_sheet_widget.layout()
+            if old_layout is not None:
                 while old_layout.count():
                     item = old_layout.takeAt(0)
                     if item.widget():
                         item.widget().deleteLater()
                 old_layout.deleteLater()
-            self._compute_sheet_widget.setLayout(layout_outer)
+            new_layout = QVBoxLayout()
+            new_layout.setContentsMargins(0, 0, 0, 0)
+            new_layout.addWidget(compute_sheet.widget, stretch=1)
+            new_layout.addWidget(self._total_damage_panel)
+            self._compute_sheet_widget.setLayout(new_layout)
 
     def _populate_sheet(self, sheet: ComputeSheet) -> None:
         dock = self.control_dock
@@ -587,6 +586,9 @@ class EndfieldApp(QMainWindow):
             return
         for key, value in loadout.to_compute_sheet_inputs().items():
             sheet.set(key, value)
+
+    def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
+        self._update_total_damage_panel()
 
     def _update_total_damage_panel(self) -> None:
         snapshot = get_snapshot_from_app(self)
