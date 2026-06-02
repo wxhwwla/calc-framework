@@ -21,6 +21,22 @@ DEFAULT_CORROSION_DURATION_SEC = 15.0
 DEFAULT_IMBALANCE_EFFICIENCY_BONUS = 0.0
 DEFAULT_BREAK_DEFENSE_STACKS = 0
 
+# 敌方参数字段键列表（共享数据源，供其他模块引用）
+ENEMY_PARAM_FIELDS: list[str] = [
+    "enemy_defense",
+    "enemy_resistance",
+    "ignore_resistance",
+    "imbalance_vulnerability_coeff",
+    "is_unbalanced",
+    "is_true_damage",
+    "enemy_tier",
+    "combo_stacks",
+    "attached_effect_multiplier",
+    "corrosion_duration_seconds",
+    "imbalance_efficiency_bonus",
+    "break_defense_stacks",
+]
+
 
 def list_plugin_enemy_choices() -> tuple[tuple[str, str], ...]:
     """

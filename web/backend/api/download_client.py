@@ -42,3 +42,5 @@ def build_client_download() -> tuple[bytes, str, str]:
         )
     body = buf.getvalue()
     return body, "local-backend-readme.zip", "application/zip"
+
+__all__: list[str] = []

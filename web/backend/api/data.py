@@ -2,14 +2,13 @@
 """游戏数据查询 API — 角色/武器/装备的 CRUD 路由 + 摘要统计 + 公式反推 + 多游戏 profile。"""
 
 import json
-
 from pathlib import Path
-
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-
 from pydantic import BaseModel
+
+from ._json_utils import ENDFIELD_DATA_ROOT, load_json
 
 
 
@@ -17,7 +16,7 @@ router = APIRouter(prefix="/api/data", tags=["data"])
 
 
 
-DATA_ROOT = Path(__file__).resolve().parents[3] / "games" / "endfield" / "data"
+DATA_ROOT = ENDFIELD_DATA_ROOT
 
 
 
@@ -26,32 +25,6 @@ CHARACTERS_PATH = DATA_ROOT / "characters.json"
 WEAPONS_PATH = DATA_ROOT / "weapons.json"
 
 EQUIPMENTS_PATH = DATA_ROOT / "equipments.json"
-
-
-
-
-
-def _load_json(path: Path) -> list[dict[str, Any]]:
-
-    if not path.exists():
-
-        raise HTTPException(status_code=404, detail=f"数据文件不存在: {path.name}")
-
-    try:
-
-        with open(path, encoding="utf-8") as f:
-
-            data = json.load(f)
-
-        if not isinstance(data, list):
-
-            raise HTTPException(status_code=500, detail=f"数据格式错误: {path.name} 根节点不是数组")
-
-        return data
-
-    except json.JSONDecodeError as e:
-
-        raise HTTPException(status_code=500, detail=f"JSON 解析失败: {path.name}: {e}")
 
 
 
@@ -123,7 +96,7 @@ class InverseResponse(BaseModel):
 
 async def list_characters():
 
-    raw = _load_json(CHARACTERS_PATH)
+    raw = load_json(CHARACTERS_PATH)
 
     result = []
 
@@ -157,7 +130,7 @@ async def get_character(name: str):
 
     name = name.strip()
 
-    raw = _load_json(CHARACTERS_PATH)
+    raw = load_json(CHARACTERS_PATH)
 
     for c in raw:
 
@@ -175,7 +148,7 @@ async def get_character(name: str):
 
 async def list_characters_full():
 
-    return _load_json(CHARACTERS_PATH)
+    return load_json(CHARACTERS_PATH)
 
 
 
@@ -227,7 +200,7 @@ async def delete_character(name: str):
 
 async def list_weapons():
 
-    raw = _load_json(WEAPONS_PATH)
+    raw = load_json(WEAPONS_PATH)
 
     result = []
 
@@ -263,7 +236,7 @@ async def get_weapon(name: str):
 
     name = name.strip()
 
-    raw = _load_json(WEAPONS_PATH)
+    raw = load_json(WEAPONS_PATH)
 
     for w in raw:
 
@@ -281,7 +254,7 @@ async def get_weapon(name: str):
 
 async def list_weapons_full():
 
-    return _load_json(WEAPONS_PATH)
+    return load_json(WEAPONS_PATH)
 
 
 
@@ -333,7 +306,7 @@ async def delete_weapon(name: str):
 
 async def list_equipments():
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    raw = load_json(EQUIPMENTS_PATH)
 
     result = []
 
@@ -369,7 +342,7 @@ async def get_equipment(name: str):
 
     name = name.strip()
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    raw = load_json(EQUIPMENTS_PATH)
 
     for e in raw:
 
@@ -387,7 +360,7 @@ async def get_equipment(name: str):
 
 async def list_equipments_full():
 
-    return _load_json(EQUIPMENTS_PATH)
+    return load_json(EQUIPMENTS_PATH)
 
 
 
@@ -439,7 +412,7 @@ async def delete_equipment(name: str):
 
 async def get_equipment_by_set(set_name: str):
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    raw = load_json(EQUIPMENTS_PATH)
 
     result = [e for e in raw if e.get("所属套组") == set_name or e.get("套装") == set_name]
 
@@ -457,7 +430,7 @@ async def get_equipment_by_set(set_name: str):
 
 async def get_equipment_by_slot(slot: str):
 
-    raw = _load_json(EQUIPMENTS_PATH)
+    raw = load_json(EQUIPMENTS_PATH)
 
     return [e for e in raw if e.get("部位") == slot]
 
@@ -475,11 +448,11 @@ async def get_equipment_by_slot(slot: str):
 
 async def data_summary():
 
-    chars = _load_json(CHARACTERS_PATH)
+    chars = load_json(CHARACTERS_PATH)
 
-    weps = _load_json(WEAPONS_PATH)
+    weps = load_json(WEAPONS_PATH)
 
-    equips = _load_json(EQUIPMENTS_PATH)
+    equips = load_json(EQUIPMENTS_PATH)
 
     return {
 
@@ -562,3 +535,4 @@ async def delete_profile_entity(profile_id: str, entity_key: str, name: str):
 
     return delete_entity_row(profile_id, entity_key, name)
 
+__all__: list[str] = []

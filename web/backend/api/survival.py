@@ -62,3 +62,5 @@ def survival_estimate(req: SurvivalEstimateRequest) -> dict[str, Any]:
         )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+__all__: list[str] = []

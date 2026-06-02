@@ -7,8 +7,8 @@
 
 from typing import Any
 
-from calc_framework.dag.schema import DAGGraph
-from calc_framework.errors import CalcFrameworkError
+from ..dag.schema import DAGGraph
+from ..errors import CalcFrameworkError
 
 
 class VariableValidationError(CalcFrameworkError):

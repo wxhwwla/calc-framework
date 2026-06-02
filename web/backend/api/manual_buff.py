@@ -105,3 +105,5 @@ def apply_consumable(req: ApplyConsumableRequest) -> dict[str, Any]:
         merge=req.merge,
     )
     return {"store": store, "keys_written": count}
+
+__all__: list[str] = []

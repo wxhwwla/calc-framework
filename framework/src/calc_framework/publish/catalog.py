@@ -9,8 +9,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from calc_framework.config.manager import discover_adapters
-from calc_framework.logging import get_logger
+from ..config.manager import discover_adapters
+from ..logging import get_logger
 
 logger = get_logger(__name__)
 

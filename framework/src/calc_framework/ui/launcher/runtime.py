@@ -10,7 +10,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from calc_framework.config.manager import _get_adapters_dir
+from ...config.manager import _get_adapters_dir
 
 # 完整桌面计算器入口（按 adapters/ 子目录 id）
 _FULL_APP_SCRIPTS: dict[str, str] = {

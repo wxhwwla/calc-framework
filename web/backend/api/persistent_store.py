@@ -33,3 +33,5 @@ def save_list(name: str, items: list[dict[str, Any]]) -> None:
     path = _path(name)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
+
+__all__: list[str] = []

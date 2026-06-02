@@ -13,10 +13,10 @@ import os
 from pathlib import Path
 from typing import Any
 
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.service import DAGService
-from calc_framework.data.attr_schema import AttributeSchema
-from calc_framework.logging import get_logger
+from ..dag.serializer import dag_from_dict
+from ..dag.service import DAGService
+from ..data.attr_schema import AttributeSchema
+from ..logging import get_logger
 
 logger = get_logger(__name__)
 

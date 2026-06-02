@@ -29,13 +29,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_framework.dag.engine import DAGResult
-from calc_framework.dag.schema import DAGVariable
-from calc_framework.dag.service import DAGService
-from calc_framework.logging import get_logger
-from calc_framework.ui.controls import ControlSpec, infer_control
-from calc_framework.ui.format import format_node_value
-from calc_framework.ui.layout import Layout, Section
+from ..dag.engine import DAGResult
+from ..dag.schema import DAGVariable
+from ..dag.service import DAGService
+from ..logging import get_logger
+from .controls import ControlSpec, infer_control
+from .format import format_node_value
+from .layout import Layout, Section
 
 logger = get_logger(__name__)
 

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """布局/属性/DAG JSON 读取与校验 API — 供前端渲染计算面板。"""
 
-import json
 from pathlib import Path
 from typing import Any
 
@@ -10,24 +9,14 @@ from pydantic import BaseModel
 
 from api.adapter_assets import get_adapter_dag, get_adapter_layout
 
+from ._json_utils import ADAPTER_ROOT, load_json
+
 router = APIRouter(prefix="/api/layout", tags=["layout"])
 
 DEFAULT_ADAPTER = "endfield"
-ADAPTER_ROOT = Path(__file__).resolve().parents[3] / "framework" / "adapters" / DEFAULT_ADAPTER
+_LOCAL_ADAPTER_ROOT = ADAPTER_ROOT / DEFAULT_ADAPTER
 
 _VALID_SECTION_TYPES = frozenset({"inputs", "outputs", "widget"})
-
-
-def _load_json(path: Path) -> dict:
-    """加载并解析 JSON 文件。"""
-    if not path.exists():
-        raise HTTPException(status_code=404, detail=f"文件不存在: {path.name}")
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"JSON 解析失败: {path.name}: {e}")
 
 
 def get_layout_payload(adapter_id: str = DEFAULT_ADAPTER) -> dict:
@@ -62,10 +51,10 @@ def get_variables(adapter: str = Query(DEFAULT_ADAPTER)):
 
 @router.get("/schema", summary="获取 attr_schema.json")
 async def get_attr_schema(adapter: str = Query(DEFAULT_ADAPTER)):
-    schema_path = ADAPTER_ROOT / "attr_schema.json"
+    schema_path = _LOCAL_ADAPTER_ROOT / "attr_schema.json"
     if adapter != DEFAULT_ADAPTER:
         schema_path = Path(__file__).resolve().parents[3] / "framework" / "adapters" / adapter / "attr_schema.json"
-    return _load_json(schema_path)
+    return load_json(schema_path)
 
 
 @router.get("/dag", summary="获取完整 DAG JSON")
@@ -210,5 +199,7 @@ async def validate_layout(adapter: str = Query(DEFAULT_ADAPTER)):
     layout = get_layout_payload(adapter)
     dag = get_dag_payload(adapter)
     schema_path = Path(__file__).resolve().parents[3] / "framework" / "adapters" / adapter / "attr_schema.json"
-    attr_schema = _load_json(schema_path) if schema_path.exists() else None
+    attr_schema = load_json(schema_path) if schema_path.exists() else None
     return _validate_layout(layout, dag, attr_schema)
+
+__all__: list[str] = []

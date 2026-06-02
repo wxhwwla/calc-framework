@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_framework.plugin.base import BasePlugin, PluginMeta
-from calc_framework.plugin.registry import get_registry
+from .base import BasePlugin, PluginMeta
+from .registry import get_registry
 
 
 class CritPlugin(BasePlugin):

@@ -41,3 +41,5 @@ def list_history():
 def save_history(entry: dict):
     """保存一条计算历史记录。"""
     return save_history_payload(entry)
+
+__all__: list[str] = []

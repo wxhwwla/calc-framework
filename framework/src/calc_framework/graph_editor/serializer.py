@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from typing import Any, cast
 
-from calc_framework.graph_editor.schema import (
+from .schema import (
     GraphDocument,
     GraphEdge,
     GraphLayout,

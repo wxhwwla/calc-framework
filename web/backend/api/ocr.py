@@ -32,3 +32,5 @@ async def detect(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+__all__: list[str] = []

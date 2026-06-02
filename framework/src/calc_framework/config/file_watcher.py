@@ -7,7 +7,7 @@
 
 
 
-    from calc_framework.config.file_watcher import FileWatcher
+    from .file_watcher import FileWatcher
 
 
 
@@ -35,7 +35,7 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
-from calc_framework.logging import get_logger
+from ..logging import get_logger
 
 logger = get_logger(__name__)
 

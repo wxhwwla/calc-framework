@@ -17,9 +17,10 @@ from api.adapter_assets import (
     get_pack_export_bundle,
 )
 
+from ._json_utils import ADAPTER_ROOT
+
 router = APIRouter(prefix="/api/adapters", tags=["adapters"])
 
-ADAPTER_ROOT = Path(__file__).resolve().parents[3] / "framework" / "adapters"
 _manager = AdapterManager(ADAPTER_ROOT)
 
 
@@ -120,3 +121,5 @@ async def get_schema(name: str):
     return AdapterSchemaResponse(
         attributes=[AdapterAttrResponse(**a.to_dict()) for a in pkg.attr_schema.attributes]
     )
+
+__all__: list[str] = []

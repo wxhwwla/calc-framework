@@ -9,36 +9,25 @@ import sys
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-
 from fastapi.middleware.cors import CORSMiddleware
-
 from fastapi.responses import JSONResponse, Response, StreamingResponse
-
 from fastapi.staticfiles import StaticFiles
 
 from calc_framework.logging import setup_logging, get_logger
 
-
-
-from api.compute import router as compute_router
-
 from api.adapters import router as adapters_router
-
+from api.arknights import router as arknights_router
+from api.compute import router as compute_router
+from api.contribute import router as contribute_router
 from api.data import router as data_router
-
+from api.history import router as history_router
 from api.hub import router as hub_router
-
 from api.layout import router as layout_router
-
+from api.manual_buff import router as manual_buff_router
+from api.ocr import router as ocr_router
 from api.pack import router as pack_router
-
 from api.search import router as search_router
 from api.survival import router as survival_router
-from api.manual_buff import router as manual_buff_router
-from api.history import router as history_router
-from api.ocr import router as ocr_router
-from api.arknights import router as arknights_router
-from api.contribute import router as contribute_router
 
 
 

@@ -7,7 +7,7 @@ from typing import Any
 
 from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-from games.endfield.data_loading.enemy_params import default_enemy_params
+from games.endfield.data_loading.enemy_params import ENEMY_PARAM_FIELDS, default_enemy_params
 from games.endfield.gui.app.loadout_state import LoadoutState, _resolve_selected_skill_for_search
 
 
@@ -85,20 +85,7 @@ def _enemy_fields(body: dict[str, Any]) -> dict[str, Any]:
     nested = body.get("enemy_params")
     if isinstance(nested, dict):
         enemy.update({k: nested[k] for k in nested if k in enemy or k in nested})
-    for key in (
-        "enemy_defense",
-        "enemy_resistance",
-        "ignore_resistance",
-        "imbalance_vulnerability_coeff",
-        "is_unbalanced",
-        "is_true_damage",
-        "enemy_tier",
-        "combo_stacks",
-        "attached_effect_multiplier",
-        "corrosion_duration_seconds",
-        "imbalance_efficiency_bonus",
-        "break_defense_stacks",
-    ):
+    for key in ENEMY_PARAM_FIELDS:
         if key in body:
             enemy[key] = body[key]
     return enemy

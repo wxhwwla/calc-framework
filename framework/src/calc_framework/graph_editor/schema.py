@@ -6,7 +6,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from calc_framework.errors import CalcFrameworkError
+from ..errors import CalcFrameworkError
 
 # ── 支持的所有节点类型 ──────────────────────────
 

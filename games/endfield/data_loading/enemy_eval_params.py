@@ -6,42 +6,55 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .enemy_params import (
+    DEFAULT_ATTACHED_EFFECT_MULTIPLIER,
+    DEFAULT_BREAK_DEFENSE_STACKS,
+    DEFAULT_COMBO_STACKS,
+    DEFAULT_CORROSION_DURATION_SEC,
+    DEFAULT_ENEMY_DEFENSE,
+    DEFAULT_ENEMY_RESISTANCE,
+    DEFAULT_IGNORE_RESISTANCE,
+    DEFAULT_IMBALANCE_VULNERABILITY,
+    DEFAULT_IS_TRUE_DAMAGE,
+    DEFAULT_IS_UNBALANCED,
+)
+
 
 @dataclass(frozen=True)
 class EnemyEvalParams:
     """敌方面板/LoadoutState 中与伤害计算相关的字段。"""
 
-    enemy_defense: float = 100.0
-    enemy_resistance: float = 0.0
-    ignore_resistance: float = 0.0
-    imbalance_vulnerability_coeff: float = 1.3
-    is_unbalanced: bool = False
-    is_true_damage: bool = False
-    combo_stacks: int = 0
-    break_defense_stacks: int = 0
-    attached_effect_multiplier: float = 1.0
-    corrosion_duration_seconds: float = 15.0
+    enemy_defense: float = DEFAULT_ENEMY_DEFENSE
+    enemy_resistance: float = DEFAULT_ENEMY_RESISTANCE
+    ignore_resistance: float = DEFAULT_IGNORE_RESISTANCE
+    imbalance_vulnerability_coeff: float = DEFAULT_IMBALANCE_VULNERABILITY
+    is_unbalanced: bool = DEFAULT_IS_UNBALANCED
+    is_true_damage: bool = DEFAULT_IS_TRUE_DAMAGE
+    combo_stacks: int = DEFAULT_COMBO_STACKS
+    break_defense_stacks: int = DEFAULT_BREAK_DEFENSE_STACKS
+    attached_effect_multiplier: float = DEFAULT_ATTACHED_EFFECT_MULTIPLIER
+    corrosion_duration_seconds: float = DEFAULT_CORROSION_DURATION_SEC
 
     @classmethod
     def from_loadout(cls, loadout: Any) -> EnemyEvalParams:
         return cls(
-            enemy_defense=float(getattr(loadout, "enemy_defense", 100.0)),
-            enemy_resistance=float(getattr(loadout, "enemy_resistance", 0.0)),
-            ignore_resistance=float(getattr(loadout, "ignore_resistance", 0.0)),
+            enemy_defense=float(getattr(loadout, "enemy_defense", DEFAULT_ENEMY_DEFENSE)),
+            enemy_resistance=float(getattr(loadout, "enemy_resistance", DEFAULT_ENEMY_RESISTANCE)),
+            ignore_resistance=float(getattr(loadout, "ignore_resistance", DEFAULT_IGNORE_RESISTANCE)),
             imbalance_vulnerability_coeff=float(
-                getattr(loadout, "imbalance_vulnerability_coeff", 1.3)
+                getattr(loadout, "imbalance_vulnerability_coeff", DEFAULT_IMBALANCE_VULNERABILITY)
             ),
-            is_unbalanced=bool(getattr(loadout, "is_unbalanced", False)),
-            is_true_damage=bool(getattr(loadout, "is_true_damage", False)),
-            combo_stacks=max(0, min(4, int(getattr(loadout, "combo_stacks", 0)))),
+            is_unbalanced=bool(getattr(loadout, "is_unbalanced", DEFAULT_IS_UNBALANCED)),
+            is_true_damage=bool(getattr(loadout, "is_true_damage", DEFAULT_IS_TRUE_DAMAGE)),
+            combo_stacks=max(0, min(4, int(getattr(loadout, "combo_stacks", DEFAULT_COMBO_STACKS)))),
             break_defense_stacks=max(
-                0, min(4, int(getattr(loadout, "break_defense_stacks", 0)))
+                0, min(4, int(getattr(loadout, "break_defense_stacks", DEFAULT_BREAK_DEFENSE_STACKS)))
             ),
             attached_effect_multiplier=float(
-                getattr(loadout, "attached_effect_multiplier", 1.0)
+                getattr(loadout, "attached_effect_multiplier", DEFAULT_ATTACHED_EFFECT_MULTIPLIER)
             ),
             corrosion_duration_seconds=float(
-                getattr(loadout, "corrosion_duration_seconds", 15.0)
+                getattr(loadout, "corrosion_duration_seconds", DEFAULT_CORROSION_DURATION_SEC)
             ),
         )
         """from loadout。"""
@@ -50,23 +63,23 @@ class EnemyEvalParams:
     def from_request(cls, req: Any) -> EnemyEvalParams:
         """Web/API 请求体或任意带敌参属性的对象。"""
         return cls(
-            enemy_defense=float(getattr(req, "enemy_defense", 100.0)),
-            enemy_resistance=float(getattr(req, "enemy_resistance", 0.0)),
-            ignore_resistance=float(getattr(req, "ignore_resistance", 0.0)),
+            enemy_defense=float(getattr(req, "enemy_defense", DEFAULT_ENEMY_DEFENSE)),
+            enemy_resistance=float(getattr(req, "enemy_resistance", DEFAULT_ENEMY_RESISTANCE)),
+            ignore_resistance=float(getattr(req, "ignore_resistance", DEFAULT_IGNORE_RESISTANCE)),
             imbalance_vulnerability_coeff=float(
-                getattr(req, "imbalance_vulnerability_coeff", 1.3)
+                getattr(req, "imbalance_vulnerability_coeff", DEFAULT_IMBALANCE_VULNERABILITY)
             ),
-            is_unbalanced=bool(getattr(req, "is_unbalanced", False)),
-            is_true_damage=bool(getattr(req, "is_true_damage", False)),
-            combo_stacks=max(0, min(4, int(getattr(req, "combo_stacks", 0)))),
+            is_unbalanced=bool(getattr(req, "is_unbalanced", DEFAULT_IS_UNBALANCED)),
+            is_true_damage=bool(getattr(req, "is_true_damage", DEFAULT_IS_TRUE_DAMAGE)),
+            combo_stacks=max(0, min(4, int(getattr(req, "combo_stacks", DEFAULT_COMBO_STACKS)))),
             break_defense_stacks=max(
-                0, min(4, int(getattr(req, "break_defense_stacks", 0)))
+                0, min(4, int(getattr(req, "break_defense_stacks", DEFAULT_BREAK_DEFENSE_STACKS)))
             ),
             attached_effect_multiplier=float(
-                getattr(req, "attached_effect_multiplier", 1.0)
+                getattr(req, "attached_effect_multiplier", DEFAULT_ATTACHED_EFFECT_MULTIPLIER)
             ),
             corrosion_duration_seconds=float(
-                getattr(req, "corrosion_duration_seconds", 15.0)
+                getattr(req, "corrosion_duration_seconds", DEFAULT_CORROSION_DURATION_SEC)
             ),
         )
 

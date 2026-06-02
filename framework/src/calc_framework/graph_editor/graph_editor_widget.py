@@ -24,9 +24,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from calc_framework.graph_editor.ports import PortDirection, PortItem
-from calc_framework.graph_editor.schema import GraphEdge, GraphNode
-from calc_framework.graph_editor.wire import WireItem
+from .ports import PortDirection, PortItem
+from .schema import GraphEdge, GraphNode
+from .wire import WireItem
 
 _NODE_WIDTH = 160
 
@@ -750,7 +750,7 @@ class GraphEditorWidget(QWidget):
 
     def _on_drop_node(self, type_id: str, scene_x: float, scene_y: float) -> None:
 
-        from calc_framework.graph_editor.registry import create_default_node
+        from .registry import create_default_node
 
         node = create_default_node(type_id)
 
@@ -1060,9 +1060,9 @@ class SubGraphDialog(QDialog):
 
 
 
-        from calc_framework.graph_editor.file_actions import load_document
-        from calc_framework.graph_editor.prop_panel import PropPanel
-        from calc_framework.graph_editor.serializer import document_from_json
+        from .file_actions import load_document
+        from .prop_panel import PropPanel
+        from .serializer import document_from_json
 
 
 
@@ -1074,7 +1074,7 @@ class SubGraphDialog(QDialog):
 
         # 子图的 GraphEditorWidget
 
-        from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
+        from .graph_editor_widget import GraphEditorWidget
 
         self._editor = GraphEditorWidget()
 
@@ -1177,8 +1177,8 @@ class SubGraphDialog(QDialog):
 
         """获取编辑后的子图 JSON。"""
 
-        from calc_framework.graph_editor.file_actions import collect_document
-        from calc_framework.graph_editor.serializer import document_to_json
+        from .file_actions import collect_document
+        from .serializer import document_to_json
 
         doc = collect_document(self._editor)
 

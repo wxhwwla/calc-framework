@@ -10,10 +10,10 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from calc_framework.graph_editor.schema import (
+from .schema import (
     GraphDocument,
 )
-from calc_framework.graph_editor.serializer import document_from_json
+from .serializer import document_from_json
 
 
 @dataclass

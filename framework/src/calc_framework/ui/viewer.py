@@ -38,14 +38,14 @@ from PySide6.QtWidgets import (
 )
 from utils.gui.help_dialog import HelpDialog
 
-from calc_framework.dag.schema import DAGVariable
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.service import DAGService
-from calc_framework.ui.compute_sheet import ComputeSheet
-from calc_framework.ui.layout import Layout, load_layout
-from calc_framework.ui.theme import ThemeManager
-from calc_framework.ui.viewer_help_content import build_viewer_help
-from calc_framework.ui.viewer_pack_utils import (
+from ..dag.schema import DAGVariable
+from ..dag.serializer import dag_from_dict
+from ..dag.service import DAGService
+from .compute_sheet import ComputeSheet
+from .layout import Layout, load_layout
+from .theme import ThemeManager
+from .viewer_help_content import build_viewer_help
+from .viewer_pack_utils import (
     _FALLBACK_DEFAULTS,
     _SOURCE_TO_DATA_FILE,
     build_context_from_entity,
@@ -53,7 +53,7 @@ from calc_framework.ui.viewer_pack_utils import (
     load_calcpack,
     resolve_asset_paths_in_layout,
 )
-from calc_framework.ui.viewer_plugin_manager import PluginManagerDialog
+from .viewer_plugin_manager import PluginManagerDialog
 
 
 class CalcPackViewer(QMainWindow):

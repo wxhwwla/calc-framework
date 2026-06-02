@@ -16,9 +16,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from calc_framework.dag.schema import DAGGraph, DAGSubgraph
-from calc_framework.dag.serializer import load_dag
-from calc_framework.ui.layout import Layout, Section, load_layout
+from ..dag.schema import DAGGraph, DAGSubgraph
+from ..dag.serializer import load_dag
+from ..ui.layout import Layout, Section, load_layout
 
 
 @dataclass

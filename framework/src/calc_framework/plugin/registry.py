@@ -7,10 +7,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from calc_framework.dag.service import DAGService
-from calc_framework.dag.templates import register_template
-from calc_framework.logging import get_logger
-from calc_framework.plugin.base import BasePlugin, PluginMeta
+from ..dag.service import DAGService
+from ..dag.templates import register_template
+from ..logging import get_logger
+from .base import BasePlugin, PluginMeta
 
 logger = get_logger(__name__)
 

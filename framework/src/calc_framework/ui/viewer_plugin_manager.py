@@ -30,7 +30,7 @@ class PluginManagerDialog(QDialog):
 
     def _build_ui(self) -> None:
         """_build_ui。"""
-        from calc_framework.plugin.registry import get_registry, list_plugins
+        from ..plugin.registry import get_registry, list_plugins
 
         plugins = list_plugins()
         reg = get_registry()

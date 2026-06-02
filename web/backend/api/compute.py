@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 计算引擎 API — 快照/配装/对比/预设导出。"""
 
+import json
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-
 from pydantic import BaseModel
 
 from calc_framework.config.manager import AdapterManager
+
+from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 from web.backend.api.loadout_schemas import WebLoadoutBody
 
 
@@ -17,13 +19,9 @@ router = APIRouter(prefix="/api/compute", tags=["compute"])
 
 
 
-ADAPTER_ROOT = Path(__file__).resolve().parents[3] / "framework" / "adapters"
-
 _manager = AdapterManager(ADAPTER_ROOT)
 
-_DATA = Path(__file__).resolve().parents[3] / "games" / "endfield" / "data"
-
-
+_DATA = ENDFIELD_DATA_ROOT
 
 
 
@@ -35,8 +33,6 @@ class EvaluateRequest(BaseModel):
 
 
 
-
-
 class EvaluateResponse(BaseModel):
 
     outputs: dict[str, float]
@@ -44,8 +40,6 @@ class EvaluateResponse(BaseModel):
     node_values: dict[str, float | str | None]
 
     execution_order: list[str]
-
-
 
 
 
@@ -176,23 +170,6 @@ class SnapshotRequest(BaseModel):
 
 
 
-
-def _load_json(path: Path):
-
-    import json
-
-    try:
-
-        with open(path, encoding="utf-8") as f:
-
-            return json.load(f)
-
-    except FileNotFoundError:
-
-        return []
-
-
-
 _CHARACTERS_PATH = _DATA / "characters.json"
 
 _WEAPONS_PATH = _DATA / "weapons.json"
@@ -202,7 +179,7 @@ _WEAPONS_PATH = _DATA / "weapons.json"
 def snapshot_payload(req: SnapshotRequest) -> dict:
     from games.endfield.gui.presentation.damage_snapshot import build_damage_snapshot
 
-    chars = _load_json(_CHARACTERS_PATH)
+    chars = load_json(_CHARACTERS_PATH) or []
 
     char_data = next((c for c in chars if c.get("名称") == req.char_name), None)
 
@@ -210,7 +187,7 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
 
         raise HTTPException(status_code=404, detail=f"角色不存在: {req.char_name}")
 
-    weapons = _load_json(_WEAPONS_PATH)
+    weapons = load_json(_WEAPONS_PATH) or []
 
     weapon_data = next((w for w in weapons if w.get("名称") == req.weapon_name), None)
 
@@ -361,8 +338,8 @@ def compare(req: CompareRequest):
     )
     from games.endfield.gui.app.loadout_evaluation import build_snapshot_from_loadout
 
-    chars = _load_json(_CHARACTERS_PATH)
-    weapons = _load_json(_WEAPONS_PATH)
+    chars = load_json(_CHARACTERS_PATH) or []
+    weapons = load_json(_WEAPONS_PATH) or []
 
     results: list[dict] = []
     for entry in req.entries:
@@ -465,7 +442,6 @@ def preset_export(req: PresetExportRequest) -> dict[str, Any]:
         build_loadout_state_from_web,
         loadout_state_to_web_preset,
     )
-
     loadout = build_loadout_state_from_web(
         char_data=req.char_data,
         weapon_data=req.weapon_data,
@@ -473,3 +449,4 @@ def preset_export(req: PresetExportRequest) -> dict[str, Any]:
     )
     return loadout_state_to_web_preset(loadout)
 
+__all__: list[str] = []

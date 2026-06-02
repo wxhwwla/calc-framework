@@ -7,7 +7,7 @@
 
 
 
-    from calc_framework.search.persist import SearchRunStore
+    from .persist import SearchRunStore
 
 
 
@@ -32,7 +32,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from calc_framework.logging import get_logger
+from ..logging import get_logger
 
 logger = get_logger(__name__)
 

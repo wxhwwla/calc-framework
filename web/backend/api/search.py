@@ -696,3 +696,5 @@ def save_search_history_route(entry: dict):
     """保存一次搜索记录。"""
     return save_search_history(entry)
 
+__all__: list[str] = []
+

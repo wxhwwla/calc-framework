@@ -4,9 +4,9 @@
 from pathlib import Path
 from typing import Any
 
-from calc_framework.dag.service import DAGService
-from calc_framework.graph_editor.compiler import compile_graph
-from calc_framework.graph_editor.serializer import document_from_json
+from ..dag.service import DAGService
+from .compiler import compile_graph
+from .serializer import document_from_json
 
 
 def dag_service_from_graph_document(doc: Any) -> DAGService:

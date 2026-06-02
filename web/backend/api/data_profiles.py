@@ -165,3 +165,5 @@ def delete_entity_row(profile_id: str, entity_key: str, name: str) -> dict[str, 
     raw.pop(idx)
     _save_entity_list(ent, raw)
     return {"message": "ok"}
+
+__all__: list[str] = []

@@ -9,9 +9,14 @@ from typing import Any
 
 from fastapi import HTTPException
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-ADAPTER_ROOT = REPO_ROOT / "framework" / "adapters"
-ENDFIELD_GAME_DATA = REPO_ROOT / "games" / "endfield" / "data"
+from ._json_utils import (
+    ADAPTER_ROOT,
+    ENDFIELD_DATA_ROOT,
+    REPO_ROOT,
+    load_json,
+)
+
+ENDFIELD_GAME_DATA = ENDFIELD_DATA_ROOT
 ARKNIGHTS_OPERATORS_JSON = (
     REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
 )
@@ -84,7 +89,9 @@ def get_adapter_dag(adapter_id: str) -> dict[str, Any]:
 
 def _load_json_list(path: Path) -> list[dict[str, Any]]:
     """加载 JSON 文件并验证根节点为数组。"""
-    data = _read_json(path)
+    data = load_json(path)
+    if data is None:
+        return []
     if not isinstance(data, list):
         raise HTTPException(status_code=500, detail=f"{path.name} root must be array")
     return data
@@ -151,3 +158,5 @@ def get_pack_export_bundle(adapter_id: str) -> dict[str, Any]:
         "data_files": data_files,
         "data_summary": {k: len(v) for k, v in data_files.items()},
     }
+
+__all__: list[str] = []

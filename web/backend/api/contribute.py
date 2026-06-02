@@ -155,3 +155,5 @@ async def submit_contribute(payload: dict[str, Any]):
         message="提交成功",
         filename=filename,
     )
+
+__all__: list[str] = []

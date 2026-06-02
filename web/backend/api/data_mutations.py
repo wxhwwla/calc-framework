@@ -9,23 +9,12 @@ from typing import Any
 
 from fastapi import HTTPException
 
-DATA_ROOT = Path(__file__).resolve().parents[3] / "games" / "endfield" / "data"
+from ._json_utils import ENDFIELD_DATA_ROOT, load_json
+
+DATA_ROOT = ENDFIELD_DATA_ROOT
 CHARACTERS_PATH = DATA_ROOT / "characters.json"
 WEAPONS_PATH = DATA_ROOT / "weapons.json"
 EQUIPMENTS_PATH = DATA_ROOT / "equipments.json"
-
-
-def _load_json(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        raise HTTPException(status_code=404, detail=f"数据文件不存在: {path.name}")
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, list):
-            raise HTTPException(status_code=500, detail=f"数据格式错误: {path.name} 根节点不是数组")
-        return data
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"JSON 解析失败: {path.name}: {e}")
 
 
 def _save_json(path: Path, data: list[dict[str, Any]]) -> None:
@@ -164,3 +153,5 @@ def inverse_formula_payload(type_: str, values: list[float]) -> dict[str, Any]:
         }
 
     raise HTTPException(status_code=400, detail=f"不支持的逆推类型: {type_}")
+
+__all__: list[str] = []

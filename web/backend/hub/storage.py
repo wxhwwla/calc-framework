@@ -299,3 +299,18 @@ def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
             except (json.JSONDecodeError, TypeError):
                 d[key] = []
     return d
+
+
+__all__ = [
+    "HubPack",
+    "create_pack",
+    "delete_pack",
+    "get_pack",
+    "get_pack_file_path",
+    "increment_download",
+    "list_packs",
+    "rate_pack",
+    "save_pack_file",
+    "update_pack",
+    "validate_calcpack_archive",
+]

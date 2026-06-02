@@ -164,3 +164,5 @@ async def hub_stats():
         "total_packs": total,
         "db_path": str(Path(__file__).resolve().parent.parent / "data" / "hub" / "catalog.db"),
     }
+
+__all__: list[str] = []

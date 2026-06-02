@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from calc_framework.graph_editor.help_content import HelpSection, build_help_tree
+from .help_content import HelpSection, build_help_tree
 
 
 class HelpDialog(QDialog):

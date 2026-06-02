@@ -9,7 +9,7 @@ from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsPathItem
 
-from calc_framework.graph_editor.ports import PortItem
+from .ports import PortItem
 
 _WIRE_COLOR = QColor("#888888")
 

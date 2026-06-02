@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from calc_framework.config.adapter import AdapterPackage
+from .adapter import AdapterPackage
 
 
 def _default_adapters_dir() -> Path:

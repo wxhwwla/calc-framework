@@ -62,3 +62,5 @@ class WebLoadoutBody(BaseModel):
         enemy = data.pop("enemy_params", {})
         data.update(enemy)
         return data
+
+__all__: list[str] = []
