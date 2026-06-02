@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.4"
+_VERSION = "3.19.5"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -408,8 +408,8 @@ if __name__ == "__main__":
 # --- UPLOAD_SUMMARY ---
 # TITLE: 更新 4 处文件
 # BODY:
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 修改 scripts/please_read_me.py
-# - 变更 web/frontend/src/components/calculator/EnemyParamPanel.tsx
-# - 变更 web/frontend/src/components/calculator/MultiSkillPanel.tsx
-# - 变更 web/frontend/src/components/calculator/SegmentManualBuffDialog.tsx
+# - 变更 web/frontend/src/components/GlobalHelpDialog.tsx
+# - 变更 web/frontend/src/components/calculator/HelpDialog.tsx
 # --- END UPLOAD_SUMMARY ---

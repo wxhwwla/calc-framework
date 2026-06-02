@@ -239,8 +239,8 @@ export default function GlobalHelpDialog() {
             详见 docs/制造游戏计算器完整流程.md
           </Typography>
         </DialogTitle>
-        <DialogContent dividers sx={{ display: "flex", gap: 2, minHeight: 400 }}>
-          <List sx={{ width: 220, flexShrink: 0 }}>
+        <DialogContent dividers sx={{ display: "flex", gap: 2, minHeight: 400, flexDirection: { xs: "column", sm: "row" } }}>
+          <List sx={{ width: { xs: "100%", sm: 220 }, flexShrink: 0 }}>
             {HELP_ENTRIES.map((entry) => (
               <ListItemButton
                 key={entry.id}

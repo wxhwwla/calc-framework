@@ -164,8 +164,8 @@ export default function HelpDialog({ open, onClose }: HelpDialogProps) {
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>使用说明</DialogTitle>
       <DialogContent dividers>
-        <Box sx={{ display: "flex", gap: 2, minHeight: 360 }}>
-          <List dense sx={{ width: 180, flexShrink: 0, borderRight: 1, borderColor: "divider", pt: 0 }}>
+        <Box sx={{ display: "flex", gap: 2, minHeight: 360, flexDirection: { xs: "column", sm: "row" } }}>
+          <List dense sx={{ width: { xs: "100%", sm: 180 }, flexShrink: 0, borderRight: { xs: 0, sm: 1 }, borderColor: "divider", pt: 0 }}>
             {HELP_SECTIONS.map((section) => (
               <ListItemButton
                 key={section.id}
