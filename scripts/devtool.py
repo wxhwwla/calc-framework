@@ -24,6 +24,8 @@
     python devtool.py installer check         # 检查安装包构建环境
     python devtool.py hub start               # 启动 Calc Hub 在线市场服务
     python devtool.py hub status              # 查看 Hub 市场状态
+    python devtool.py scaffold <game>         # 新游戏适配脚手架（从模板生成）
+    python devtool.py scaffold <game> --force # 覆盖已存在的游戏目录
 """
 from __future__ import annotations
 
@@ -130,6 +132,14 @@ def _cmd_installer(args: argparse.Namespace) -> int:
     return installer_main() if installer_main is not None else 0
 
 
+def _cmd_scaffold(args: argparse.Namespace) -> int:
+    _add_path()
+    from tools.scaffold import main
+
+    argv = _sub_args()
+    return main(argv)
+
+
 def _cmd_hub(args: argparse.Namespace) -> int:
     passthrough = _sub_args()
     if not passthrough:
@@ -179,6 +189,7 @@ def main() -> None:
     sub.add_parser("plugin", help="插件打包/安装/目录管理", add_help=False)
     sub.add_parser("check-origin", help="AI 代码来源/版权检测", add_help=False)
     sub.add_parser("installer", help="NSIS 安装包构建/检查", add_help=False)
+    sub.add_parser("scaffold", help="新游戏适配脚手架", add_help=False)
 
     args, _ = parser.parse_known_args()
     if not args.command:
@@ -195,6 +206,7 @@ def main() -> None:
         "plugin": _cmd_plugin,
         "check-origin": _cmd_check_origin,
         "installer": _cmd_installer,
+        "scaffold": _cmd_scaffold,
     }
     result = funcs[args.command](args)
     if isinstance(result, int):

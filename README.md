@@ -133,6 +133,20 @@ cd web/frontend && npm install && npm run dev
 | **协作约定** | Agent / 维护者见 [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)、[`triage-labels.md`](docs/agents/triage-labels.md) |
 | **测试覆盖率** | [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml) + `pytest-cov`（门槛 **57%**→80%，含 GUI 集成测） |
 
+## 社区与交流
+
+| 方式 | 说明 |
+|------|------|
+| **[GitHub Issues]** | Bug 报告 / 功能建议（推荐，可追踪） |
+| **[GitHub Discussions]** | 技术讨论 / 问题求助 |
+| **QQ 群** | `000000000`（建设中） |
+| **Discord** | 邀请链接建设中 |
+
+欢迎 Star 和 Fork！如果你觉得这个工具有用，请给仓库点个 ⭐。
+
+[GitHub Issues]: https://github.com/wxhwwla/calc-framework/issues
+[GitHub Discussions]: https://github.com/wxhwwla/calc-framework/discussions
+
 ## 许可证与数据来源
 
 | 内容 | 说明 |

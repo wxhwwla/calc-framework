@@ -43,3 +43,15 @@ body:
         - 阻塞我使用本工具
     validations:
       required: false
+
+  - type: dropdown
+    id: interested
+    attributes:
+      label: 你是否愿意参与实现？（可选）
+      description: 帮助维护者判断是否需要标记 `help-wanted` 或 `good-first-issue` 招募其他贡献者。
+      options:
+        - 我希望别人来实现
+        - 我想尝试自己实现（欢迎指导）
+        - 我已经有实现方案
+    validations:
+      required: false
