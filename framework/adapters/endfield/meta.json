@@ -3,7 +3,7 @@
   "game": "明日方舟：终末地",
   "version": "3.0.0",
   "schema_version": "dag-v1",
-  "entry_dag": "../../src/calc_framework/configs/endfield_full.dag.json",
+  "entry_dag": "dag/endfield_full.dag.json",
   "functions": {
     "clamp": "functions.py",
     "lerp": "functions.py",

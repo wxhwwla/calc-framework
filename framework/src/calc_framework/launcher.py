@@ -125,7 +125,23 @@ def _launch_ui(adapter_name: str, pkg: Any) -> None:
     header = QLabel(f"<h2>{adapter_name}</h2>")
     layout.addWidget(header)
 
-    sheet = ComputeSheet(pkg.dag_service)
+    # 从适配包的 layout.json 加载布局
+    ui_layout_rel = pkg.meta.get("ui_layout", "")
+    if ui_layout_rel:
+        layout_path = pkg._adapter_dir / ui_layout_rel
+    else:
+        # 向后兼容：尝试默认路径
+        layout_path = pkg._adapter_dir / "ui" / "layout.json"
+
+    if layout_path.is_file():
+        from calc_framework.ui.layout import load_layout_json
+        ui_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
+    else:
+        from calc_framework.ui.layout import Layout
+        ui_layout = Layout(schema_version="ui-v1", name="default", sections=[])
+
+    variables = pkg.dag_service.dag.variables if hasattr(pkg.dag_service.dag, "variables") else {}
+    sheet = ComputeSheet(pkg.dag_service, ui_layout, variables)
     layout.addWidget(sheet)
 
     status = QStatusBar()

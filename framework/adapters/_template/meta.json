@@ -1,0 +1,12 @@
+{
+    "name": "游戏名称",
+    "description": "游戏简介",
+    "schema_version": "dag-v1",
+    "version": "0.1.0",
+    "entry_dag": "dag/your_game.dag.json",
+    "ui_layout": "ui/layout.json",
+    "attr_schema": "attr_schema.json",
+    "functions": {
+        "your_function": "functions.py"
+    }
+}

@@ -43,7 +43,7 @@ for p in [d for d in (Path.cwd(), _CUR_FILE.parents[3], _CUR_FILE.parents[2].par
     sys.path.insert(0, str(p))
 
 from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
-from games.arknights.data_loading.loader import load_operators_map, filter_operator_index
+from games.arknights.operator_catalog import load_operators_map, filter_operator_index
 from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
 from games.endfield.gui.legal.donation_qt import open_donation_dialog
 

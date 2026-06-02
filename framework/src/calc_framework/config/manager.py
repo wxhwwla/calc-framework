@@ -71,13 +71,11 @@ def discover_adapters(adapters_dir: Path | None = None) -> dict[str, Path]:
 
 
     adapters: dict[str, Path] = {}
-
     for entry in sorted(base.iterdir()):
-
         if not entry.is_dir():
-
             continue
-
+        if entry.name.startswith("_"):
+            continue
         meta_path = entry / "meta.json"
 
         if not meta_path.is_file():

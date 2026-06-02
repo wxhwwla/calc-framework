@@ -1,0 +1,23 @@
+{
+    "schema_version": "1.0",
+    "fields": [
+        {
+            "name": "attack",
+            "type": "float",
+            "source": "character",
+            "description": "基础攻击力"
+        },
+        {
+            "name": "defense",
+            "type": "float",
+            "source": "character",
+            "description": "基础防御力"
+        },
+        {
+            "name": "hp",
+            "type": "float",
+            "source": "character",
+            "description": "生命值"
+        }
+    ]
+}
