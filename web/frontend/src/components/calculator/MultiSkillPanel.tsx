@@ -182,7 +182,7 @@ export default function MultiSkillPanel({
             >
               <Typography
                 variant="body2"
-                sx={{ minWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                sx={{ minWidth: { xs: 140, sm: 200 }, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
               >
                 {spec.label}
               </Typography>

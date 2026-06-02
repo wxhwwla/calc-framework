@@ -126,8 +126,8 @@ export default function SegmentManualBuffDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>额外加成微调（段级）</DialogTitle>
-      <DialogContent sx={{ display: "flex", gap: 2, minHeight: 360 }}>
-        <Box sx={{ width: 220, borderRight: 1, borderColor: "divider", pr: 1 }}>
+      <DialogContent sx={{ display: "flex", gap: 2, minHeight: 360, flexWrap: "wrap" }}>
+        <Box sx={{ width: { xs: "100%", sm: 220 }, borderRight: { xs: 0, sm: 1 }, borderColor: "divider", pr: 1 }}>
           <Typography variant="caption" color="text.secondary">
             段/异常次数键
           </Typography>

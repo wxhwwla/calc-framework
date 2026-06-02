@@ -130,9 +130,10 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             </Select>
           </FormControl>
 
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
             <TextField
               size="small"
+              fullWidth
               label="防御力"
               type="number"
               value={params.enemy_defense}
@@ -142,6 +143,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="抗性 (%)"
               type="number"
               value={params.enemy_resistance}
@@ -151,6 +153,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="无视抗性 (%)"
               type="number"
               value={params.ignore_resistance}
@@ -160,6 +163,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="失衡易伤系数"
               type="number"
               value={params.imbalance_vulnerability_coeff}
@@ -171,6 +175,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="连击层数 (0–4)"
               type="number"
               value={params.combo_stacks}
@@ -182,6 +187,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="破防层数 (0–4)"
               type="number"
               value={params.break_defense_stacks}
@@ -196,6 +202,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="附带效果倍率"
               type="number"
               value={params.attached_effect_multiplier}
@@ -207,6 +214,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             />
             <TextField
               size="small"
+              fullWidth
               label="腐蚀计时 (秒)"
               type="number"
               value={params.corrosion_duration_seconds}
@@ -235,6 +243,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             </FormControl>
             <TextField
               size="small"
+              fullWidth
               label="失衡效率加成"
               type="number"
               value={params.imbalance_efficiency_bonus}

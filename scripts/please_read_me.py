@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.3"
+_VERSION = "3.19.4"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,17 +406,10 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 4 处文件
 # BODY:
 # - 修改 scripts/please_read_me.py
-# - 变更 web/frontend/src/components/GlobalAttributionButton.tsx
-# - 变更 web/frontend/src/components/GlobalDonationButton.tsx
-# - 变更 web/frontend/src/components/GlobalHelpDialog.tsx
-# - 变更 web/frontend/src/components/calculator/AttributeDisplay.tsx
-# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
-# - 变更 web/frontend/src/components/dag/DagEditorCanvas.tsx
-# - 变更 web/frontend/src/components/dag/NodeEditDialog.tsx
-# - 变更 web/frontend/src/pages/EditorPage.tsx
-# - 变更 web/frontend/src/pages/MarketplacePage.tsx
-# - 变更 web/frontend/src/pages/PackDesignerPage.tsx
+# - 变更 web/frontend/src/components/calculator/EnemyParamPanel.tsx
+# - 变更 web/frontend/src/components/calculator/MultiSkillPanel.tsx
+# - 变更 web/frontend/src/components/calculator/SegmentManualBuffDialog.tsx
 # --- END UPLOAD_SUMMARY ---
