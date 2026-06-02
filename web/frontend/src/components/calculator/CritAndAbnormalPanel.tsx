@@ -13,6 +13,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TableContainer,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -100,40 +101,42 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         {title}
       </Typography>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>类型</TableCell>
-            {specs[0]?.ui_levels.map((lv) => (
-              <TableCell key={lv} align="center">
-                L{lv}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {specs.map((row) => (
-            <TableRow key={row.abnormal_key}>
-              <TableCell>{row.label}</TableCell>
-              {row.ui_levels.map((lv) => (
-                <TableCell key={lv} align="center" sx={{ p: 0.5 }}>
-                  <TextField
-                    size="small"
-                    type="number"
-                    value={(
-                      (kind === "physical" ? physCounts : spellCounts)[`${row.abnormal_key}:${lv}`] ?? 0
-                    ).toString()}
-                    onChange={(e) =>
-                      setMatrixCount(kind, row.abnormal_key, lv, parseInt(e.target.value, 10) || 0)
-                    }
-                    slotProps={{ htmlInput: { min: 0, style: { width: 48, textAlign: "center" } } }}
-                  />
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>类型</TableCell>
+              {specs[0]?.ui_levels.map((lv) => (
+                <TableCell key={lv} align="center">
+                  L{lv}
                 </TableCell>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {specs.map((row) => (
+              <TableRow key={row.abnormal_key}>
+                <TableCell>{row.label}</TableCell>
+                {row.ui_levels.map((lv) => (
+                  <TableCell key={lv} align="center" sx={{ p: 0.5 }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={(
+                        (kind === "physical" ? physCounts : spellCounts)[`${row.abnormal_key}:${lv}`] ?? 0
+                      ).toString()}
+                      onChange={(e) =>
+                        setMatrixCount(kind, row.abnormal_key, lv, parseInt(e.target.value, 10) || 0)
+                      }
+                      slotProps={{ htmlInput: { min: 0, style: { width: 48, textAlign: "center" } } }}
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 

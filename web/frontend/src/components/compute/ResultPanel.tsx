@@ -8,6 +8,7 @@ import {
   Skeleton,
   Box,
   Alert,
+  TableContainer,
 } from "@mui/material";
 import { useComputeStore } from "../../store/computeStore";
 
@@ -57,18 +58,20 @@ export default function ResultPanel() {
       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
         结算结果
       </Typography>
-      <Table size="small">
-        <TableBody>
-          {entries.map(([key, value]) => (
-            <TableRow key={key}>
-              <TableCell sx={{ border: "none", pl: 0 }}>{key}</TableCell>
-              <TableCell sx={{ border: "none", textAlign: "right", fontWeight: "bold" }}>
-                {typeof value === "number" ? value.toFixed(4) : String(value)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table size="small">
+          <TableBody>
+            {entries.map(([key, value]) => (
+              <TableRow key={key}>
+                <TableCell sx={{ border: "none", pl: 0 }}>{key}</TableCell>
+                <TableCell sx={{ border: "none", textAlign: "right", fontWeight: "bold" }}>
+                  {typeof value === "number" ? value.toFixed(4) : String(value)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Paper>
   );
 }

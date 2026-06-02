@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.1"
+_VERSION = "3.19.2"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,73 +406,23 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 67 处文件
+# TITLE: 更新 17 处文件
 # BODY:
-# - 变更 _ruff_report.txt
-# - 修改 framework/adapters/endfield/functions.py
-# - 修改 framework/adapters/moba/functions.py
-# - 修改 framework/src/calc_framework/config/manager.py
-# - 修改 framework/src/calc_framework/config/watcher.py
-# - 修改 framework/src/calc_framework/dag/__init__.py
-# - 修改 framework/src/calc_framework/dag/graph_types.py
-# - 修改 framework/src/calc_framework/dag/node_types.py
-# - 修改 framework/src/calc_framework/dag/sandbox.py
-# - 修改 framework/src/calc_framework/dag/templates.py
-# - 修改 framework/src/calc_framework/editor/editor.py
-# - 修改 framework/src/calc_framework/graph_editor/compiler.py
-# - 修改 framework/src/calc_framework/graph_editor/help_content.py
-# - 修改 framework/src/calc_framework/graph_editor/help_dialog.py
-# - 修改 framework/src/calc_framework/graph_editor/items.py
-# - 修改 framework/src/calc_framework/graph_editor/node_panel.py
-# - 修改 framework/src/calc_framework/graph_editor/ports.py
-# - 修改 framework/src/calc_framework/graph_editor/scene.py
-# - 修改 framework/src/calc_framework/graph_editor/view.py
-# - 修改 framework/src/calc_framework/inverse/exponential_fitter.py
-# - 修改 framework/src/calc_framework/inverse/piecewise_fitter.py
-# - 修改 framework/src/calc_framework/inverse/threshold_fitter.py
-# - 修改 framework/src/calc_framework/launcher.py
-# - 修改 framework/src/calc_framework/publish/catalog.py
-# - 修改 framework/src/calc_framework/search/engine.py
-# - 修改 framework/src/calc_framework/ui/launcher/runtime.py
-# - 修改 framework/src/calc_framework/ui/sheet_widgets.py
-# - 修改 framework/src/calc_framework/ui/theme.py
-# - 修改 framework/src/calc_framework/ui/viewer_events.py
-# - 修改 framework/src/calc_framework/ui/viewer_pack_utils.py
-# - 修改 framework/src/calc_framework/ui/viewer_plugin_manager.py
-# - 修改 framework/src/calc_framework/ui/viewer_render.py
-# - 修改 framework/tests/adapters/test_moba_fps.py
-# - 修改 framework/tests/benchmark/test_dag_benchmark.py
-# - 修改 framework/tests/config/test_dag_review.py
-# - 修改 framework/tests/dag/test_end_to_end.py
-# - 修改 framework/tests/dag/test_engine_logging.py
-# - 修改 framework/tests/graph_editor/test_endfield_zone_package.py
-# - 修改 framework/tests/graph_editor/test_node_panel.py
-# - 修改 framework/tests/graph_editor/test_schema.py
-# - 修改 framework/tests/inverse/test_advanced_formulas.py
-# - 修改 games/arknights/calc/dag_adapter/loader.py
-# - 修改 games/arknights/gui/ArknightsApp.py
-# - 修改 games/endfield/calc/damage/abnormal_attached.py
-# - 修改 games/endfield/calc/damage/incoming.py
-# - 修改 games/endfield/calc/skills/segments.py
-# - 修改 games/endfield/gui/app/loadout_state.py
-# - 修改 games/endfield/gui/endfield_actions.py
-# - 修改 games/endfield/gui/presentation/total_damage_panel.py
-# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_mechanics.py
-# - 变更 ruff_after.txt
-# - 变更 ruff_errors.txt
-# - 变更 ruff_remaining.txt
-# - 修改 scripts/build.py
-# - 修改 scripts/deploy_pythonanywhere.py
-# - 修改 scripts/github_download_module.py
-# - 修改 scripts/main.py
-# - 修改 scripts/main_build.py
-# - 修改 scripts/main_designer.py
-# - 修改 scripts/main_pack_designer.py
 # - 修改 scripts/please_read_me.py
-# - 修改 scripts/version.py
-# - 修改 web/backend/api/search.py
-# - 修改 web/backend/asgi.py
-# - 修改 web/backend/run_packaged_main.py
-# - 修改 web/backend/tests/test_arknights_data_fallback.py
-# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 变更 web/frontend/src/App.tsx
+# - 变更 web/frontend/src/components/arknights/ArknightsAttributeDisplay.tsx
+# - 变更 web/frontend/src/components/calculator/BatchCompareDialog.tsx
+# - 变更 web/frontend/src/components/calculator/CritAndAbnormalPanel.tsx
+# - 变更 web/frontend/src/components/calculator/PreviewText.tsx
+# - 变更 web/frontend/src/components/calculator/SearchBrowserDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchHistoryDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
+# - 变更 web/frontend/src/components/compute/ResultPanel.tsx
+# - 变更 web/frontend/src/components/designer/DataBrowserTab.tsx
+# - 变更 web/frontend/src/components/designer/ProfileDataBrowser.tsx
+# - 变更 web/frontend/src/components/designer/ProfileDataEditor.tsx
+# - 变更 web/frontend/src/pages/AdaptersPage.tsx
+# - 变更 web/frontend/src/pages/ArknightsComputePage.tsx
+# - 变更 web/frontend/src/pages/EditorPage.tsx
+# - 变更 web/frontend/src/pages/MarketplacePage.tsx
 # --- END UPLOAD_SUMMARY ---

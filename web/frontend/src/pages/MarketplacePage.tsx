@@ -156,7 +156,7 @@ export default function MarketplacePage() {
         </Box>
       </Box>
 
-      <Paper sx={{ p: 2, mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
+      <Paper sx={{ p: 2, mb: 2, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
         <TextField
           size="small"
           label="搜索"
@@ -178,7 +178,7 @@ export default function MarketplacePage() {
         </FormControl>
       </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
         <Table size="small">
           <TableHead>
             <TableRow>

@@ -161,7 +161,7 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
         </Alert>
       )}
 
-      <TableContainer sx={{ maxHeight: 450 }}>
+      <TableContainer sx={{ maxHeight: 450, overflowX: 'auto' }}>
         <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>

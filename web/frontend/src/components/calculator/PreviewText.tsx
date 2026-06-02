@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableRow, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+import { Box, Typography, Paper, Table, TableBody, TableCell, TableRow, Accordion, AccordionSummary, AccordionDetails, TableContainer } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface PreviewTextProps {
@@ -92,20 +92,22 @@ export default function PreviewText({ outputValues, nodeValues }: PreviewTextPro
       </Typography>
 
       {outputValues && Object.keys(outputValues).length > 0 && (
-        <Table size="small">
-          <TableBody>
-            {Object.entries(outputValues).map(([key, val]) => (
-              <TableRow key={key}>
-                <TableCell sx={{ border: "none", pl: 0, fontWeight: "bold" }}>
-                  {key}
-                </TableCell>
-                <TableCell sx={{ border: "none", textAlign: "right", fontWeight: "bold", fontSize: "1.1rem" }}>
-                  {formatValue(val)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table size="small">
+            <TableBody>
+              {Object.entries(outputValues).map(([key, val]) => (
+                <TableRow key={key}>
+                  <TableCell sx={{ border: "none", pl: 0, fontWeight: "bold" }}>
+                    {key}
+                  </TableCell>
+                  <TableCell sx={{ border: "none", textAlign: "right", fontWeight: "bold", fontSize: "1.1rem" }}>
+                    {formatValue(val)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
       {allGroups.length > 0 && (
@@ -119,20 +121,22 @@ export default function PreviewText({ outputValues, nodeValues }: PreviewTextPro
                 <Typography variant="body2">{group}</Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ py: 0 }}>
-                <Table size="small">
-                  <TableBody>
-                    {grouped[group].map((row) => (
-                      <TableRow key={row.label}>
-                        <TableCell sx={{ border: "none", pl: 1, fontSize: "0.8rem", color: "text.secondary" }}>
-                          {row.label}
-                        </TableCell>
-                        <TableCell sx={{ border: "none", textAlign: "right", fontSize: "0.8rem" }}>
-                          {row.value}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table size="small">
+                    <TableBody>
+                      {grouped[group].map((row) => (
+                        <TableRow key={row.label}>
+                          <TableCell sx={{ border: "none", pl: 1, fontSize: "0.8rem", color: "text.secondary" }}>
+                            {row.label}
+                          </TableCell>
+                          <TableCell sx={{ border: "none", textAlign: "right", fontSize: "0.8rem" }}>
+                            {row.value}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </AccordionDetails>
             </Accordion>
           ))}

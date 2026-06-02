@@ -377,7 +377,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             </Typography>
           </Box>
 
-          <TableContainer sx={{ maxHeight: 400 }}>
+          <TableContainer sx={{ maxHeight: 400, overflowX: 'auto' }}>
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>

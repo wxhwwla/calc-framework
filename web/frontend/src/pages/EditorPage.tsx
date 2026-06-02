@@ -87,7 +87,7 @@ export default function EditorPage() {
       </Typography>
 
       <Grid container spacing={2}>
-        <Grid size={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <NodePalette />
           <Paper sx={{ p: 1.5, mt: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
@@ -114,7 +114,7 @@ export default function EditorPage() {
       </Grid>
 
       <Paper sx={{ p: 2, mt: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
           <TextField
             label="DAG 名称"
             value={dagName}

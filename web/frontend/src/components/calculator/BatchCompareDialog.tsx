@@ -93,7 +93,7 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>多方案对比</DialogTitle>
       <DialogContent>
-        <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+        <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, overflowX: 'auto' }}>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -147,7 +147,7 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
         {loading && <LinearProgress sx={{ mb: 2 }} />}
 
         {results && results.length > 0 && (
-          <TableContainer component={Paper} variant="outlined">
+          <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>

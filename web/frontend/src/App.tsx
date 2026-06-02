@@ -1,16 +1,20 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import {
   AppBar,
   Box,
   Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Toolbar,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
@@ -51,11 +55,45 @@ const navItems = [
 function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const drawerContent = (
+    <>
+      <Toolbar />
+      <List>
+        {navItems.map((item) => (
+          <ListItemButton
+            key={item.path}
+            selected={location.pathname === item.path}
+            onClick={() => {
+              navigate(item.path);
+              if (isMobile) setMobileOpen(false);
+            }}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItemButton>
+        ))}
+      </List>
+    </>
+  );
 
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
         <Toolbar>
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              sx={{ mr: 1 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             游戏计算器 · Web 版
           </Typography>
@@ -64,29 +102,43 @@ function Shell() {
           <GlobalHelpDialog />
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
+
+      {/* 手机端：temporary Drawer */}
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+          }}
+        >
+          {drawerContent}
+        </Drawer>
+      ) : (
+        /* 桌面端：permanent Drawer */
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+          }}
+        >
+          {drawerContent}
+        </Drawer>
+      )}
+
+      <Box
+        component="main"
         sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+          flexGrow: 1,
+          p: { xs: 1.5, md: 3 },
+          minWidth: 0,
+          overflowX: "hidden",
         }}
       >
-        <Toolbar />
-        <List>
-          {navItems.map((item) => (
-            <ListItemButton
-              key={item.path}
-              selected={location.pathname === item.path}
-              onClick={() => navigate(item.path)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          ))}
-        </List>
-      </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         <Suspense fallback={<PageFallback />}>
           <Routes>

@@ -62,7 +62,7 @@ export default function AdaptersPage() {
       <Typography variant="h5" gutterBottom>
         适配器管理
       </Typography>
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
         <Table size="small">
           <TableHead>
             <TableRow>

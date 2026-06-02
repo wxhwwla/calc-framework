@@ -75,7 +75,7 @@ export default function ProfileDataBrowser({ profileId }: Props) {
         </Typography>
       </Box>
 
-      <TableContainer sx={{ maxHeight: 500 }}>
+      <TableContainer sx={{ maxHeight: 500, overflowX: 'auto' }}>
         <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>

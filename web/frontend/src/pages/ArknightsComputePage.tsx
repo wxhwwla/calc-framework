@@ -3,7 +3,7 @@ import {
   Box, Typography, Paper, Grid, TextField, Button, CircularProgress,
   Alert, Card, CardContent, Slider, Divider, Chip, Select, MenuItem,
   FormControl, InputLabel, Checkbox, FormControlLabel,
-  Table, TableBody, TableCell, TableRow,
+  Table, TableBody, TableCell, TableRow, TableContainer,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { useArknightsStore } from "../store/arknightsStore";
@@ -303,50 +303,54 @@ export default function ArknightsComputePage() {
                   {parsedSkill.isHealing && <Chip label="⚕ 治疗" size="small" color="success" sx={{ ml: 1 }} />}
                 </Typography>
                 <Divider sx={{ mb: 1 }} />
-                <Table size="small" sx={{ maxWidth: 500 }}>
-                  <TableBody>
-                    {[
-                      ["基础攻击力", String(Math.round((operatorDetail as any)?.基础属性?.攻击 ?? 0))],
-                      ["信赖加成", `+${Math.round((operatorDetail as any)?.信赖加成?.攻击 ?? 0)}`],
-                      ["最终攻击力", String(Math.round(computeResult.final_atk))],
-                      ["技能倍率", `x${effectiveMult.toFixed(2)}`],
-                      ["连发数", `x${hitCount}`],
-                      ["总伤害倍率", `x${totalDamageMult.toFixed(2)}`],
-                      ["敌军防御力", String(computeParams.enemy_def)],
-                      ["敌军法抗", `${computeParams.enemy_res}%`],
-                      ...(hitCount > 1 ? [
-                        [hitCount > 1 ? `物理伤害(合)` : "物理伤害", String(Math.round(computeResult.physical_damage))],
-                        [hitCount > 1 ? `法术伤害(合)` : "法术伤害", String(Math.round(computeResult.magical_damage))],
-                        [hitCount > 1 ? `真实伤害(合)` : "真实伤害", String(Math.round(computeResult.true_damage))],
-                      ] as [string, string][] : []),
-                    ].map(([k, v]) => (
-                      <TableRow key={k} sx={{ "&:last-child td": { borderBottom: 0 } }}>
-                        <TableCell sx={{ pl: 0, py: 0.25 }}><Typography variant="body2" color="text.secondary">{k}</Typography></TableCell>
-                        <TableCell sx={{ pr: 0, py: 0.25 }} align="right"><Typography variant="body2">{v}</Typography></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table size="small" sx={{ maxWidth: 500 }}>
+                    <TableBody>
+                      {[
+                        ["基础攻击力", String(Math.round((operatorDetail as any)?.基础属性?.攻击 ?? 0))],
+                        ["信赖加成", `+${Math.round((operatorDetail as any)?.信赖加成?.攻击 ?? 0)}`],
+                        ["最终攻击力", String(Math.round(computeResult.final_atk))],
+                        ["技能倍率", `x${effectiveMult.toFixed(2)}`],
+                        ["连发数", `x${hitCount}`],
+                        ["总伤害倍率", `x${totalDamageMult.toFixed(2)}`],
+                        ["敌军防御力", String(computeParams.enemy_def)],
+                        ["敌军法抗", `${computeParams.enemy_res}%`],
+                        ...(hitCount > 1 ? [
+                          [hitCount > 1 ? `物理伤害(合)` : "物理伤害", String(Math.round(computeResult.physical_damage))],
+                          [hitCount > 1 ? `法术伤害(合)` : "法术伤害", String(Math.round(computeResult.magical_damage))],
+                          [hitCount > 1 ? `真实伤害(合)` : "真实伤害", String(Math.round(computeResult.true_damage))],
+                        ] as [string, string][] : []),
+                      ].map(([k, v]) => (
+                        <TableRow key={k} sx={{ "&:last-child td": { borderBottom: 0 } }}>
+                          <TableCell sx={{ pl: 0, py: 0.25 }}><Typography variant="body2" color="text.secondary">{k}</Typography></TableCell>
+                          <TableCell sx={{ pr: 0, py: 0.25 }} align="right"><Typography variant="body2">{v}</Typography></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </Paper>
 
               {/* 异常/元素面板 */}
               <Paper sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>异常/元素伤害</Typography>
                 <Divider sx={{ mb: 1 }} />
-                <Table size="small" sx={{ maxWidth: 500 }}>
-                  <TableBody>
-                    {[
-                      ["灼燃损伤", "1.0x", "0"],
-                      ["凋亡损伤", "1.0x", "0"],
-                    ].map(([type, mult, extra]) => (
-                      <TableRow key={type}>
-                        <TableCell sx={{ pl: 0, py: 0.25 }}><Typography variant="body2" color="text.secondary">{type}</Typography></TableCell>
-                        <TableCell sx={{ py: 0.25 }}><Typography variant="body2">{mult}</Typography></TableCell>
-                        <TableCell sx={{ pr: 0, py: 0.25 }} align="right"><Typography variant="body2">{extra}</Typography></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table size="small" sx={{ maxWidth: 500 }}>
+                    <TableBody>
+                      {[
+                        ["灼燃损伤", "1.0x", "0"],
+                        ["凋亡损伤", "1.0x", "0"],
+                      ].map(([type, mult, extra]) => (
+                        <TableRow key={type}>
+                          <TableCell sx={{ pl: 0, py: 0.25 }}><Typography variant="body2" color="text.secondary">{type}</Typography></TableCell>
+                          <TableCell sx={{ py: 0.25 }}><Typography variant="body2">{mult}</Typography></TableCell>
+                          <TableCell sx={{ pr: 0, py: 0.25 }} align="right"><Typography variant="body2">{extra}</Typography></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </Paper>
             </>
           )}

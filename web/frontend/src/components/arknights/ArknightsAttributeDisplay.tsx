@@ -7,6 +7,7 @@ import {
   TableCell,
   TableRow,
   Tooltip,
+  TableContainer,
 } from "@mui/material";
 import type { OperatorSummary } from "../../api/arknights";
 
@@ -55,24 +56,26 @@ export default function ArknightsAttributeDisplay({ operator }: Props) {
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
         基础属性（满级）
       </Typography>
-      <Table size="small" sx={{ mb: 1 }}>
-        <TableBody>
-          {Object.entries(baseStats).map(([key, val]) => (
-            <TableRow key={key} sx={{ "&:last-child td": { borderBottom: 0 } }}>
-              <TableCell sx={{ pl: 0, py: 0.25 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {STAT_LABELS[key] || key}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ pr: 0, py: 0.25 }} align="right">
-                <Typography variant="body2">
-                  {typeof val === "number" ? val.toLocaleString() : String(val)}
-                </Typography>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table size="small" sx={{ mb: 1 }}>
+          <TableBody>
+            {Object.entries(baseStats).map(([key, val]) => (
+              <TableRow key={key} sx={{ "&:last-child td": { borderBottom: 0 } }}>
+                <TableCell sx={{ pl: 0, py: 0.25 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {STAT_LABELS[key] || key}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ pr: 0, py: 0.25 }} align="right">
+                  <Typography variant="body2">
+                    {typeof val === "number" ? val.toLocaleString() : String(val)}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {operator.信赖加成 && Object.keys(operator.信赖加成).length > 0 && (
         <>

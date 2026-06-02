@@ -75,7 +75,7 @@ export default function SearchHistoryDialog({ open, onClose }: SearchHistoryDial
                 </Box>
 
                 {expandedEntry === idx && entry.top_results && entry.top_results.length > 0 && (
-                  <TableContainer sx={{ mt: 1 }}>
+                  <TableContainer sx={{ mt: 1, overflowX: 'auto' }}>
                     <Table size="small">
                       <TableHead>
                         <TableRow>
