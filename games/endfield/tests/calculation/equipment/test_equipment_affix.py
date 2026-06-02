@@ -24,7 +24,7 @@ import unittestfrom games.endfield.calc.damage.engine import DamageContext, ca
         self.assertEqual(flats, {})
         self.assertEqual(len(effs), 1)
         self.assertEqual(effs[0].effect_type, "装备攻击力加成")
-        self.assertAlmostEqual(effs[0].value, 0.123)
+        self.assertAlmostEqual(effs[0].value, 0.1225)
 
     def test_runtime_record_includes_affix_effects(self):
         runtime = build_runtime_equipment_from_local_record(

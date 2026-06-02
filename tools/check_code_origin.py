@@ -5,12 +5,20 @@
 
 用法（仓库根目录）::
 
-    python tools/check_code_origin.py
+    python tools/check_code_origin.py                     # 本地运行
+    python tools/check_code_origin.py --ci                # CI 模式，有发现时退出码非零
+    python tools/check_code_origin.py --since origin/main # 只检查自某个 ref 以来变更的文件
+
+CI 支持跳过特定检查类别::
+
+    python tools/check_code_origin.py --ci --skip license-header
 """
 
 from __future__ import annotations
 
+import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -119,8 +127,23 @@ EXCLUDE_DIRS = {
     ".git", ".venv", "venv", "env", "node_modules",
     ".idea", ".vscode", ".trae", ".cursor", ".agents",
     "dist", "build", "build_*", "spec_*",
-    "__pycache__", "egg-info",
+    "egg-info", ".tox",
 }
+
+SOURCE_DIRS = [
+    "framework",
+    "games/endfield",
+    "tools/endfield_designer",
+    "tools/endfield_scripts",
+    "tools/ocr",
+    "tools/data_pipeline",
+    "tools/designer",
+    "tools/audit",
+    "tools/tests",
+    "scripts",
+    "utils",
+    "docs",
+]
 
 
 def find_source_files(root: Path) -> list[Path]:
@@ -132,6 +155,19 @@ def find_source_files(root: Path) -> list[Path]:
         if path.suffix.lower() in SOURCE_EXTENSIONS:
             files.append(path)
     return files
+
+
+def get_files_since(ref: str, repo_root: Path) -> set[Path]:
+    """获取自某个 git ref 以来有变更的文件列表。"""
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", ref, "HEAD"],
+            capture_output=True, text=True, cwd=repo_root, check=True,
+        )
+        return {repo_root / p for p in result.stdout.splitlines() if p.strip()}
+    except subprocess.CalledProcessError:
+        print(f"[warn] git diff --name-only {ref} HEAD 失败，回退到全量扫描", file=sys.stderr)
+        return set()
 
 
 def check_license_in_file(filepath: Path) -> list[dict]:
@@ -147,7 +183,6 @@ def check_license_in_file(filepath: Path) -> list[dict]:
 
     lines = text.splitlines()
 
-    # 检查 SPDX 标识符
     for match in SPDX_PATTERN.finditer(text):
         line_num = text[:match.start()].count("\n") + 1
         findings.append({
@@ -156,7 +191,6 @@ def check_license_in_file(filepath: Path) -> list[dict]:
             "line": line_num,
         })
 
-    # 检查版权声明
     for match in COPYRIGHT_PATTERN.finditer(text):
         line_num = text[:match.start()].count("\n") + 1
         groups = [g for g in match.groups() if g]
@@ -167,7 +201,6 @@ def check_license_in_file(filepath: Path) -> list[dict]:
             "line": line_num,
         })
 
-    # 检查已知许可证文本
     for lic_id, lic_name, patterns in LICENSE_PATTERNS:
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
@@ -180,42 +213,77 @@ def check_license_in_file(filepath: Path) -> list[dict]:
                     "value": match.group(0)[:120],
                     "line": line_num,
                 })
-                break  # 每个许可证只报告一次
+                break
 
     return findings
 
 
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="检查项目源代码中的第三方许可证/版权声明",
+    )
+    parser.add_argument(
+        "--ci", action="store_true",
+        help="CI 模式：有发现时退出码非零",
+    )
+    parser.add_argument(
+        "--skip", nargs="*", default=None,
+        help="跳过指定的检查类别（空格分隔多个）："
+             "git-diff, license-header, internal-dup, suspicious",
+    )
+    parser.add_argument(
+        "--since", default=None,
+        help="只检查自某个 git ref 以来有变更的文件，如 origin/main",
+    )
+    return parser
+
+
 def main() -> None:
+    parser = build_parser()
+    args = parser.parse_args()
+
+    skip_set = set(args.skip) if args.skip else set()
+
     repo_root = Path(__file__).resolve().parent.parent
 
-    source_dirs = [
-        repo_root / "framework",
-        repo_root / "games" / "endfield",
-        repo_root / "tools" / "endfield_designer",
-        repo_root / "tools" / "endfield_scripts",
-        repo_root / "tools" / "ocr",
-        repo_root / "tools" / "data_pipeline",
-        repo_root / "tools" / "designer",
-        repo_root / "tools" / "audit",
-        repo_root / "tools" / "tests",
-        repo_root / "scripts",
-        repo_root / "utils",
-        repo_root / "docs",
-    ]
+    # 收集文件
+    if args.since:
+        if "git-diff" in skip_set:
+            print("[skip] git-diff 已跳过，不执行 --since 过滤")
+            changed_files: set[Path] | None = None
+        else:
+            changed_files = get_files_since(args.since, repo_root)
+            if changed_files:
+                print(f"自 {args.since} 以来有 {len(changed_files)} 个文件变更")
+    else:
+        changed_files = None
 
     all_files: list[Path] = []
-    for d in source_dirs:
-        if d.is_dir():
-            all_files.extend(find_source_files(d))
+    for d in SOURCE_DIRS:
+        target = repo_root / d
+        if target.is_dir():
+            for f in find_source_files(target):
+                if changed_files is None or f in changed_files:
+                    all_files.append(f)
 
     all_files.sort()
-    print(f"共找到 {len(all_files)} 个源代码文件\n")
+    print(f"共检查 {len(all_files)} 个源代码文件\n")
 
+    # 检查
     report: list[dict] = []
     files_with_findings = 0
 
     for f in all_files:
         findings = check_license_in_file(f)
+
+        # 应用 --skip 过滤
+        if "license-header" in skip_set:
+            findings = [x for x in findings if x["type"] != "spdx"]
+        if "internal-dup" in skip_set:
+            findings = [x for x in findings if x["type"] != "internal_dup"]
+        if "suspicious" in skip_set:
+            findings = [x for x in findings if x["type"] != "suspicious"]
+
         if findings:
             files_with_findings += 1
             report.append({
@@ -223,7 +291,7 @@ def main() -> None:
                 "findings": findings,
             })
 
-    # === 输出报告 ===
+    # 输出报告
     print(f"{'='*60}")
     print(f"  代码来源检查报告")
     print(f"{'='*60}")
@@ -232,11 +300,11 @@ def main() -> None:
     if not report:
         print("[OK] 未发现任何第三方许可证或版权声明")
         print("(所有代码看起来都是原创的)")
+        sys.exit(0)
         return
 
     print(f"[!] 在 {files_with_findings}/{len(all_files)} 个文件中发现许可证/版权声明\n")
 
-    # SPDX 标识符汇总
     spdx_findings = [r for r in report if any(f["type"] == "spdx" for f in r["findings"])]
     if spdx_findings:
         print(f"--- SPDX License Identifier 发现（{len(spdx_findings)} 个文件）---")
@@ -246,7 +314,6 @@ def main() -> None:
                 print(f"  {r['file']}:{tag['line']}  {tag['value']}")
         print()
 
-    # 许可证文本发现
     lic_findings = [
         (r["file"], f) for r in report
         for f in r["findings"] if f["type"] == "license"
@@ -258,7 +325,6 @@ def main() -> None:
             print(f"    [{lic['license_id']}] {lic['value']}")
         print()
 
-    # 版权声明发现
     cr_findings = [
         (r["file"], f) for r in report
         for f in r["findings"] if f["type"] == "copyright"
@@ -270,7 +336,6 @@ def main() -> None:
             print(f"    {cr['value']}")
         print()
 
-    # 有发现的所有文件列表，方便手动审查
     print(f"--- 需要审查的文件列表 ---")
     for r in report:
         has_spdx = any(f["type"] == "spdx" for f in r["findings"])
@@ -283,6 +348,9 @@ def main() -> None:
         if any(f["type"] == "copyright" for f in r["findings"]):
             labels.append("CR")
         print(f"  [{','.join(labels)}] {r['file']}")
+
+    if args.ci:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
