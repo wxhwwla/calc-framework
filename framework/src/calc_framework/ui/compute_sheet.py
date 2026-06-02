@@ -201,6 +201,8 @@ class ComputeSheet(QObject):
 
         self._user_context_overrides = user_context_overrides or {}
 
+        self._context_overrides: dict[str, Any] = {}
+
         self._widget: QWidget | None = None
 
         self._output_labels: dict[str, QLabel] = {}
@@ -293,6 +295,16 @@ class ComputeSheet(QObject):
 
 
 
+        for path, value in self._context_overrides.items():
+
+            parts = path.split(".", 1)
+
+            if len(parts) == 2:
+
+                context.setdefault(parts[0], {})[parts[1]] = value
+
+
+
         result = self._dag_service.evaluate(context)
 
         self._update_outputs(result)
@@ -318,6 +330,50 @@ class ComputeSheet(QObject):
                 result[path] = self._read_input(path)
 
         return result
+
+
+
+    def set(self, key: str, value: Any) -> None:
+
+        """向 DAG context 设置一个变量值。"""
+
+        self._context_overrides[key] = value
+
+
+
+    def render_html(self) -> str:
+
+        """将当前输出面板渲染为 HTML 表格。"""
+
+        parts: list[str] = ['<table style="width:100%;border-collapse:collapse;">']
+
+        for sec in self._layout.sections:
+
+            if sec.type != "outputs":
+
+                continue
+
+            parts.append(f'<tr style="background:#2B6CB6;color:white;">'
+
+                         f'<td colspan="2" style="padding:4px 8px;font-weight:bold;">'
+
+                         f'{sec.title}</td></tr>')
+
+            for out_name in sec.outputs:
+
+                label = self._output_labels.get(out_name)
+
+                val = label.text() if label else "--"
+
+                parts.append(f'<tr>' + (f'<td style="padding:2px 8px;">{out_name}</td>'
+
+                                         f'<td style="padding:2px 8px;text-align:right;">{val}</td>'
+
+                                         f'</tr>'))
+
+        parts.append('</table>')
+
+        return "\n".join(parts)
 
 
 

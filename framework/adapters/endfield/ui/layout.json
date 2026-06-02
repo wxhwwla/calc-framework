@@ -1,18 +1,61 @@
 {
   "schema_version": "ui-v1",
   "name": "终末地计算表",
-  "description": "终末地 15 乘区公式的 ComputeSheet 排版",
+  "description": "终末地 15 乘区公式的 ComputeSheet 排版 — 含敌人参数输入面板",
   "sections": [
     {
-      "id": "enemy_and_extra",
+      "id": "enemy_defense",
       "type": "inputs",
-      "title": "敌人参数与额外加成",
+      "title": "敌方防御",
       "columns": 2,
       "variables": [
         "user_input.敌人防御",
+        "user_input.敌人等阶"
+      ]
+    },
+    {
+      "id": "enemy_resistance",
+      "type": "inputs",
+      "title": "敌方抗性",
+      "columns": 2,
+      "variables": [
+        "user_input.敌人抗性",
+        "user_input.无视抗性"
+      ]
+    },
+    {
+      "id": "enemy_imbalance",
+      "type": "inputs",
+      "title": "失衡",
+      "columns": 2,
+      "variables": [
+        "user_input.失衡易伤系数",
+        "user_input.是否失衡",
+        "user_input.是否真实伤害",
+        "user_input.连击层数"
+      ]
+    },
+    {
+      "id": "enemy_extra",
+      "type": "inputs",
+      "title": "额外加成",
+      "columns": 2,
+      "variables": [
         "user_input.额外暴击率",
         "user_input.额外暴击伤害",
         "user_input.额外伤害加成"
+      ]
+    },
+    {
+      "id": "extra_damage_gear",
+      "type": "inputs",
+      "title": "进阶参数",
+      "columns": 2,
+      "variables": [
+        "user_input.附带效果倍率",
+        "user_input.破防层数",
+        "user_input.失衡效率加成",
+        "user_input.腐蚀计时(秒)"
       ]
     },
     {

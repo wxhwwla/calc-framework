@@ -73,7 +73,7 @@ def qapp():
 class TestEndfieldComputeSheet:
     def test_layout_loads(self, endfield_layout):
         assert endfield_layout.name == "终末地计算表"
-        assert len(endfield_layout.sections) == 9
+        assert len(endfield_layout.sections) == 13
 
     def test_compute_sheet_builds(self, endfield_dag_service, endfield_layout, base_context, qapp):
         sheet = ComputeSheet(

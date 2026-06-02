@@ -79,7 +79,7 @@ def main() -> None:
     from utils.path_utils import get_application_dir
 
     from games.endfield.data_loading.plugin_registry import load_default_plugins
-    from gui.shell.qt_app import QtDamageApp as DamageCalculatorApp
+    from gui.endfield_app import EndfieldApp as DamageCalculatorApp
 
     if not getattr(sys, "frozen", False):
         print("正在创建主窗口…", flush=True)

@@ -272,6 +272,31 @@ class LoadoutState:
             break_defense_stacks=self.break_defense_stacks,
         )
 
+    def to_compute_sheet_inputs(self) -> dict[str, Any]:
+        """转换为 DAG context 键值对，供 ComputeSheet.set() 逐项设置。"""
+        char = self.char_data
+        weapon = self.weapon_data
+        return {
+            "character.基础攻击": char.get("攻击力", 0),
+            "character.暴击率": char.get("基础暴击率", 0.05),
+            "character.暴击伤害": char.get("基础暴伤", char.get("基础暴击伤害", 0.5)),
+            "character.力量": char.get("力量", 0),
+            "character.敏捷": char.get("敏捷", 0),
+            "character.智识": char.get("智识", 0),
+            "character.意志": char.get("意志", 0),
+            "character.基础生命值": char.get("生命值", char.get("基础生命值", 0)),
+            "character.基础防御力": char.get("防御力", char.get("基础防御力", 0)),
+            "weapon.基础攻击": weapon.get("攻击力", 0),
+            "weapon.攻击力+": weapon.get("攻击力+", 0),
+            "weapon.附加攻击力+": weapon.get("附加攻击力+", 0),
+            "weapon.精炼等级": weapon.get("精炼等级", 1),
+            "weapon.法术伤害+": weapon.get("法术伤害+", 0),
+            "weapon.攻击力+平值": weapon.get("攻击力+平值", 0),
+            "weapon.最大生命值+": weapon.get("最大生命值+", 0),
+            "enemy.防御": self.enemy_defense,
+            "computed.技能倍率": self.skill_multiplier,
+        }
+
 
 def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None]:
     def _name(item: dict | None) -> str | None:
