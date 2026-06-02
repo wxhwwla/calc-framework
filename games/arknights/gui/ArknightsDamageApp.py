@@ -94,6 +94,7 @@ class ArknightsDamageApp(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
+        """初始化实例。"""
         self.setWindowTitle("明日方舟 伤害计算器")
         self.setMinimumSize(1200, 720)
         self.resize(1366, 768)
@@ -105,15 +106,19 @@ class ArknightsDamageApp(QMainWindow):
 
         self._setup_menu()
         self._setup_ui()
+        """初始化实例。"""
+        """初始化实例。"""
 
     # ── 菜单 ──
 
     def _open_help(self) -> None:
+        """打开使用说明帮助对话框。"""
         sections = load_multi_category({"完整说明书": ["GUI ⑪：明日方舟计算器", "数据结构与文件格式"]})
         dlg = HelpDialog(build_tree=lambda: sections, parent=self, title="明日方舟计算器 — 使用说明")
         dlg.exec()
 
     def _setup_menu(self) -> None:
+        """构建应用菜单栏（帮助菜单）。"""
         mb = self.menuBar()
         help_menu = mb.addMenu("帮助(&H)")
         help_action = QAction("使用说明(&U)", self)
@@ -123,6 +128,7 @@ class ArknightsDamageApp(QMainWindow):
         append_donation_help_menu_action(help_menu, self)
 
     def _open_donation(self) -> None:
+        """打开捐赠对话框。"""
         open_donation_dialog(self)
 
     # ═══════════════════════════════════════════
@@ -130,6 +136,7 @@ class ArknightsDamageApp(QMainWindow):
     # ═══════════════════════════════════════════
 
     def _setup_ui(self) -> None:
+        """构建主界面布局（左右分栏）。"""
         cw = QWidget()
         self.setCentralWidget(cw)
         lo = QHBoxLayout(cw)
@@ -145,6 +152,7 @@ class ArknightsDamageApp(QMainWindow):
     # ── 左栏 ──
 
     def _build_left(self) -> QWidget:
+        """构建左侧面板（筛选、干员选择、技能选择、干员详情）。"""
         w = QWidget()
         lo = QVBoxLayout(w)
         lo.setContentsMargins(0, 0, 0, 0)
@@ -274,6 +282,7 @@ class ArknightsDamageApp(QMainWindow):
     # ── 右栏 ──
 
     def _build_right(self) -> QWidget:
+        """构建右侧面板（技能参数、敌人参数、额外加成、结果展示）。"""
         w = QWidget()
         lo = QVBoxLayout(w)
         lo.setContentsMargins(0, 0, 0, 0)
@@ -444,6 +453,7 @@ class ArknightsDamageApp(QMainWindow):
     # ═══════════════════════════════════════════
 
     def _sync_slider(self, slider: QSlider, text: str) -> None:
+        """同步输入框数值到滑块（带信号阻塞防循环）。"""
         try:
             v = int(float(text))
             if slider.minimum() <= v <= slider.maximum():
@@ -454,9 +464,11 @@ class ArknightsDamageApp(QMainWindow):
             pass
 
     def _active_stars(self) -> set[int]:
+        """获取当前勾选的所有星级。"""
         return {s for s, cb in self._star_checks.items() if cb.isChecked()}
 
     def _refresh_branch_combo(self) -> None:
+        """根据当前职业刷新分支下拉选项。"""
         profession = self._prof_combo.currentData() or ""
         self._branch_combo.blockSignals(True)
         current = self._branch_combo.currentData() or ""
@@ -470,6 +482,7 @@ class ArknightsDamageApp(QMainWindow):
         self._branch_combo.blockSignals(False)
 
     def _refresh_operator_combo(self) -> None:
+        """根据当前筛选条件刷新干员下拉列表。"""
         filtered = filter_operator_index(
             self._operator_index,
             active_stars=self._active_stars(),
@@ -488,13 +501,16 @@ class ArknightsDamageApp(QMainWindow):
         self._op_count_label.setText(f"显示 {len(names)} / {total} 个干员")
 
     def _on_profession_changed(self) -> None:
+        """职业选择变化时刷新分支和干员列表。"""
         self._refresh_branch_combo()
         self._on_filter_changed()
 
     def _on_filter_changed(self) -> None:
+        """筛选条件变化时刷新干员列表。"""
         self._refresh_operator_combo()
 
     def _on_op_selected(self, name: str) -> None:
+        """选中干员时更新详情和技能信息。"""
         if not name or name not in self._operators_map:
             return
         self._current_operator = self._operators_map[name]
@@ -512,6 +528,7 @@ class ArknightsDamageApp(QMainWindow):
         self._on_skill_changed(1)  # default to skill 1
 
     def _on_skill_changed(self, idx: int) -> None:
+        """技能选择变化时更新技能信息。"""
         if not self._current_operator:
             return
         si = idx - 1  # 0=普攻(-1), 1=技能1(0), 2=技能2(1), 3=技能3(2)
@@ -520,11 +537,13 @@ class ArknightsDamageApp(QMainWindow):
         self._apply_skill_info(info)
 
     def _on_level_changed(self, value: int) -> None:
+        """技能等级滑块变化时更新标签和技能信息。"""
         label = f"Lv.{value}" if value <= 7 else f"专精{value - 7}"
         self._lvl_label.setText(label)
         self._on_skill_changed(self._skill_combo.currentIndex())
 
     def _apply_skill_info(self, info: ParsedSkillInfo) -> None:
+        """将技能解析信息应用到 UI 控件。"""
         # 技能信息
         self._skill_info_box.show()
         self._skill_name_label.setText(info.name)
@@ -555,6 +574,7 @@ class ArknightsDamageApp(QMainWindow):
         self._hit_spin.setValue(info.hit_count)
 
     def _update_detail(self) -> None:
+        """更新右侧干员详情面板（名称/属性/信赖/天赋）。"""
         op = self._current_operator
         if not op:
             return
@@ -602,6 +622,7 @@ class ArknightsDamageApp(QMainWindow):
     # ═══════════════════════════════════════════
 
     def _on_compute(self) -> None:
+        """执行伤害计算并更新所有结果展示面板。"""
         if not self._current_operator:
             self._result_label.setText("请先选择一个干员")
             return
@@ -702,10 +723,12 @@ class ArknightsDamageApp(QMainWindow):
             traceback.print_exc()
 
     def run(self) -> None:
+        """显示主窗口。"""
         self.show()
 
 
 def main() -> None:
+    """启动明日方舟桌面伤害计算器（独立入口）。"""
     import sys as _sys
     from pathlib import Path as _Path
 

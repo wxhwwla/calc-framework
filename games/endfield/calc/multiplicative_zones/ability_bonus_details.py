@@ -2,7 +2,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """能力值加成：带明细的快捷计算。"""
 
-from typing import Anyfrom games.endfield.calc.damage.formula import trust_addfrom .ability_bonus_calc import _get_weapon_bonus, _warn_if_legacy_skill_kwargs_useddef calculate_ability_bonus_with_details(
+from typing import Any
+
+from games.endfield.calc.damage.formula import trust_add
+
+from .ability_bonus_calc import _get_weapon_bonus, _warn_if_legacy_skill_kwargs_used
+
+
+def calculate_ability_bonus_with_details(
     character: dict[str, Any] | None,
     weapon: dict[str, Any] | None = None,
     level: int = 1,
@@ -134,9 +141,11 @@ from typing import Anyfrom games.endfield.calc.damage.formula import trust_add
             elif attr_name == sa3_name:
                 return sa3_level
             return 1
+            """resolve level。"""
 
         def _should_skip(attr_name: str) -> bool:
             return attr_name == sa3_name and sa3_name and sa3_level == 0
+            """should skip。"""
 
         def _classify(attr_name: str) -> str:
             if attr_name == "主能力值+":
@@ -154,6 +163,7 @@ from typing import Anyfrom games.endfield.calc.damage.formula import trust_add
             if attr_name == "全能力+":
                 return "both_pct"
             return ""
+            """classify。"""
 
         # 1. 从 normal_skills 列表中获取加成
         for skill in weapon.get("normal_skills", []):
@@ -201,7 +211,10 @@ from typing import Anyfrom games.endfield.calc.damage.formula import trust_add
                 main_pct += bonus_value
                 sub_pct += bonus_value
 
-        from games.endfield.calc.skills.special_fields import (            add_special_picks_to_ability_pct,            add_special_picks_to_main_sub_bonus,        )
+        from games.endfield.calc.skills.special_fields import (
+            add_special_picks_to_ability_pct,
+            add_special_picks_to_main_sub_bonus,
+        )
 
         md, sd = add_special_picks_to_main_sub_bonus(
             weapon,

@@ -86,6 +86,7 @@ _SEED_PATH = (
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI → 本地武器 JSON/seed 同步")
 
     parser.add_argument(

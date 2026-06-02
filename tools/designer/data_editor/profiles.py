@@ -11,6 +11,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 @dataclass(frozen=True)
 class DataProfile:
+    """DataProfile 类。"""
     id: str
     label: str
     adapter_dir: Path

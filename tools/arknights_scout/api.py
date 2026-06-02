@@ -40,10 +40,19 @@ class MediaWikiClient:
         ignore_error_codes: frozenset[str] | None = None,
         **params: Any,
     ) -> dict[str, Any]:
+        """query 实现。"""
         payload = {"format": "json", **params}
         return self._get(payload, ignore_error_codes=ignore_error_codes)
 
     def fetch_parsed_gallery_html(self, page_title: str) -> str:
+        """ fetch_parsed_gallery_html 实现。
+
+        Args:
+            page_title: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         data = self.query(
             action="parse",
             page=page_title,
@@ -56,6 +65,14 @@ class MediaWikiClient:
         return data.get("parse", {}).get("text", {}).get("*", "") or ""
 
     def fetch_category_members(self, category_title: str, *, limit: int = 500) -> list[str]:
+        """ fetch_category_members 实现。
+
+        Args:
+            category_title: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         members: list[str] = []
         continue_token: str | None = None
         while True:
@@ -81,6 +98,14 @@ class MediaWikiClient:
         return members[:limit]
 
     def fetch_pages_content(self, titles: list[str]) -> dict[str, dict[str, Any]]:
+        """ fetch_pages_content 实现。
+
+        Args:
+            titles: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if not titles:
             return {}
         result: dict[str, dict[str, Any]] = {}
@@ -123,6 +148,7 @@ class MediaWikiClient:
         return result
 
     def search_json_file_candidates(self, *, limit: int = 20) -> list[str]:
+        """search_json_file_candidates 实现。"""
         data = self.query(
             action="query",
             list="search",
@@ -134,6 +160,7 @@ class MediaWikiClient:
         return [hit.get("title", "") for hit in hits if hit.get("title")]
 
     def _request_headers(self) -> dict[str, str]:
+        """_request_headers 实现。"""
         return {
             "User-Agent": self.user_agent,
             "Accept": "application/json,text/plain,*/*",
@@ -147,6 +174,7 @@ class MediaWikiClient:
         *,
         ignore_error_codes: frozenset[str] | None = None,
     ) -> dict[str, Any]:
+        """_get 实现。"""
         self._throttle()
         query = urllib.parse.urlencode(params)
         url = f"{self.api_url}?{query}"
@@ -184,6 +212,7 @@ class MediaWikiClient:
         return data
 
     def _throttle(self) -> None:
+        """_throttle 实现。"""
         now = time.monotonic()
         elapsed = now - self._last_request_at
         if elapsed < self.request_interval_sec:

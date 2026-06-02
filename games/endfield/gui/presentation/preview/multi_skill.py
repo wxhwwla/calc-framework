@@ -40,6 +40,7 @@ def _resolve_enemy_eval(
     if enemy_eval is not None:
         return enemy_eval
     return EnemyEvalParams.from_defense_only(enemy_defense)
+    """resolve enemy eval。"""
 
 
 def build_multi_skill_search_preview_lines(
@@ -153,6 +154,7 @@ def build_multi_skill_search_preview_lines(
             extra_crit_damage=extra_crit_damage,
             enemy_eval=resolved_enemy,
         )
+        """compute。"""
 
     lines, _ = cached_preview("multi_skill_search_preview", _compute)
     return lines
@@ -371,3 +373,4 @@ def _build_multi_skill_search_preview_lines_impl(
     if not result.top_results:
         lines.append("无可用结果，请检查装备数据。")
     return lines
+    """build multi skill search preview lines impl。"""

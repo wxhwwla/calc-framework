@@ -212,6 +212,7 @@ class QtSurvivalEstimateDialog(QDialog):
         self._weapon_skill_kwargs = dict(weapon_skill_kwargs or {})
         self._last_execute_damage = 0.0
         self._refresh_all()
+        """初始化实例。"""
 
     def _refresh_all(self) -> None:
         self._refresh_imbalance_info()
@@ -219,6 +220,7 @@ class QtSurvivalEstimateDialog(QDialog):
         self._refresh_execute()
         self._refresh_resources()
         self._refresh_healing()
+        """refresh all。"""
 
     def _refresh_resources(self) -> None:
         sp = sp_after_natural_regen(float(self._sp_start.value()), float(self._sp_seconds.value()))
@@ -233,6 +235,7 @@ class QtSurvivalEstimateDialog(QDialog):
         )
         heal = life_steal_heal(self._last_execute_damage, life_steal_rate=float(self._steal_rate.value()))
         self._steal_result.setText(f"{heal:,.1f}")
+        """refresh resources。"""
 
     def _refresh_imbalance_info(self) -> None:
         cap = imbalance_cap_for_tier(self._enemy_tier)
@@ -259,6 +262,7 @@ class QtSurvivalEstimateDialog(QDialog):
             was_fast_break=True,
         )
         self._fast_break_mult.setText(f"×{mult:g}（快速打进后窗口内）")
+        """refresh imbalance info。"""
 
     def _refresh_burn(self) -> None:
         hp = float(self._enemy_max_hp.value())
@@ -267,6 +271,7 @@ class QtSurvivalEstimateDialog(QDialog):
             return
         tick = enemy_burn_tick_damage(hp, hot_resistance_percent=float(self._hot_resist.value()))
         self._burn_tick.setText(f"{tick:,.1f}")
+        """refresh burn。"""
 
     def _refresh_execute(self) -> None:
         details = calculate_final_attack_with_details(
@@ -294,6 +299,7 @@ class QtSurvivalEstimateDialog(QDialog):
         self._exec_result.setText(f"{dmg:,.1f}（承伤×{mult:.2f}）")
         self._exec_sp.setText(str(sp))
         self._refresh_resources()
+        """refresh execute。"""
 
     def _refresh_healing(self) -> None:
         will = float(self._will.value())
@@ -311,6 +317,7 @@ class QtSurvivalEstimateDialog(QDialog):
             )
         )
         self._heal_result.setText(f"{out['治疗量']:,.1f}")
+        """refresh healing。"""
 
 
 def open_survival_estimate_dialog(
@@ -346,3 +353,4 @@ def open_survival_estimate_dialog(
         big_font=big_font,
     )
     dialog.exec()
+    """open survival estimate dialog。"""

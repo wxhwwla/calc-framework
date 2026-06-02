@@ -18,6 +18,7 @@ from typing import Any
 
 def _write(path: Path, text: str) -> None:
 
+    """_write 实现。"""
     path.parent.mkdir(parents=True, exist_ok=True)
 
     path.write_text(text, encoding="utf-8")
@@ -40,6 +41,14 @@ def write_summary_report(
 
 ) -> Path:
 
+    """ write_summary_report 实现。
+
+    Args:
+        reports_dir: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     lines = [
 
         "# BWIKI 侦察摘要",
@@ -110,6 +119,15 @@ def write_schema_diff_report(
 
 ) -> Path:
 
+    """ write_schema_diff_report 实现。
+
+    Args:
+        reports_dir: 参数描述。
+        local_schema: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     lines = [
 
         "# 字段结构对照（Wiki vs 本地）",
@@ -176,6 +194,15 @@ def write_names_diff_report(
 
 ) -> Path:
 
+    """ write_names_diff_report 实现。
+
+    Args:
+        reports_dir: 参数描述。
+        name_diff: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     lines = ["# 名称对齐", ""]
 
     for kind, block in name_diff.items():
@@ -248,6 +275,15 @@ def write_sample_bundle(
 
 ) -> None:
 
+    """ write_sample_bundle 实现。
+
+    Args:
+        reports_dir: 参数描述。
+        kind: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     import json
 
 

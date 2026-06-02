@@ -8,6 +8,8 @@ from web.backend.api.search import get_enemy_choices
 
 
 class TestWebEnemyChoices(unittest.TestCase):
+    """GET /api/search/enemies 端点测试。"""
+
     def test_default_enemy_has_full_eval_fields(self) -> None:
         rows = get_enemy_choices()
         self.assertGreaterEqual(len(rows), 1)

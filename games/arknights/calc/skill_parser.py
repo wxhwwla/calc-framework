@@ -55,6 +55,7 @@ def _strip_wiki_markup(text: str) -> str:
     text = re.sub(r"<BR\s*/?>", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", "", text)
     return text.strip()
+    """strip wiki markup。"""
 
 
 def parse_skill(skill_data: dict[str, Any], level: int = 7) -> ParsedSkillInfo:
@@ -191,10 +192,12 @@ def _extract_hit_count(info: ParsedSkillInfo, desc: str) -> None:
         if m:
             info.hit_count = int(m.group(1))
             return
+    """extract hit count。"""
 
 
 def _compute_total(info: ParsedSkillInfo) -> None:
     info.total_mult = info.effective_multiplier * info.hit_count
+    """compute total。"""
 
 
 def parse_auto_attack() -> ParsedSkillInfo:

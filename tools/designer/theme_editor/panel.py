@@ -48,6 +48,7 @@ class ThemePanel(QWidget):
         self._build_ui()
 
     def _default_theme(self) -> dict:
+        """_default_theme 实现。"""
         return {
             "schema_version": "theme-v1",
             "name": "默认深色",
@@ -67,6 +68,7 @@ class ThemePanel(QWidget):
         }
 
     def _build_ui(self) -> None:
+        """_build_ui 实现。"""
         layout = QVBoxLayout(self)
 
         scroll = QScrollArea()
@@ -125,6 +127,7 @@ class ThemePanel(QWidget):
         layout.addWidget(export_btn)
 
     def _load_dag(self) -> None:
+        """_load_dag 实现。"""
         path, _ = QFileDialog.getOpenFileName(
             self, "选择 DAG JSON", "", "JSON Files (*.json)"
         )
@@ -139,6 +142,7 @@ class ThemePanel(QWidget):
             QMessageBox.critical(self, "失败", str(e))
 
     def _load_layout(self) -> None:
+        """_load_layout 实现。"""
         path, _ = QFileDialog.getOpenFileName(
             self, "选择 layout.json", "", "JSON Files (*.json)"
         )
@@ -154,6 +158,7 @@ class ThemePanel(QWidget):
             QMessageBox.critical(self, "失败", str(e))
 
     def _load_data(self) -> None:
+        """_load_data 实现。"""
         path, _ = QFileDialog.getOpenFileName(
             self, "选择数据 JSON", "", "JSON Files (*.json)"
         )
@@ -172,6 +177,7 @@ class ThemePanel(QWidget):
             QMessageBox.critical(self, "失败", str(e))
 
     def _update_data_label(self) -> None:
+        """_update_data_label 实现。"""
         self._data_label.setText(
             f"已加载: {', '.join(f'{k}({len(v)}条)' for k, v in self._data_files.items())}"
         )
@@ -217,6 +223,7 @@ class ThemePanel(QWidget):
             QMessageBox.information(self, "同步完成", "已从其他面板同步数据")
 
     def _build_theme(self) -> dict:
+        """_build_theme 实现。"""
         return {
             "schema_version": "theme-v1",
             "name": "自定义主题",
@@ -230,6 +237,7 @@ class ThemePanel(QWidget):
         }
 
     def _read_meta(self) -> dict:
+        """_read_meta 实现。"""
         meta = dict(self._adapter_meta)
         meta.setdefault("name", "自定义计算配置")
         meta.setdefault("game", "自定义")
@@ -245,6 +253,7 @@ class ThemePanel(QWidget):
         return meta
 
     def _export(self) -> None:
+        """_export 实现。"""
         if not self._dag_data:
             QMessageBox.warning(self, "缺少 DAG", "请先加载 DAG JSON")
             return

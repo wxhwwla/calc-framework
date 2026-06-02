@@ -108,7 +108,7 @@ DEFAULT_HEARTBEAT_SECONDS = 15
 
 
 def _read_int_env(name: str, default: int) -> int:
-
+    """读取整数环境变量，无效或为空时返回默认值。"""
     raw = os.getenv(name, "").strip()
 
     if not raw:
@@ -130,7 +130,7 @@ def _read_int_env(name: str, default: int) -> int:
 
 
 def _terminate_process_tree(proc: subprocess.Popen[bytes]) -> None:
-
+    """终止进程树（跨平台）。"""
     if proc.poll() is not None:
 
         return
@@ -170,19 +170,13 @@ def _terminate_process_tree(proc: subprocess.Popen[bytes]) -> None:
 
 
 def _run_with_watchdog(
-
     cmd: list[str],
-
     *,
-
     cwd: Path,
-
     timeout_seconds: int,
-
     heartbeat_seconds: int,
-
 ) -> subprocess.CompletedProcess[bytes]:
-
+    """在子进程中运行命令并监控超时。"""
     proc = subprocess.Popen(cmd, cwd=str(cwd))
 
     deadline = time.monotonic() + timeout_seconds
@@ -226,19 +220,13 @@ def _run_with_watchdog(
 
 
 def _build_target(
-
     target: BuildTarget,
-
     base_dir: Path,
-
     dist_dir: Path,
-
     *,
-
     extra_args: list[str] | None = None,
-
 ) -> Path:
-
+    """使用 PyInstaller 打包单个构建目标。"""
     app_name = target_app_name(target)
 
     release_root = release_dir_from_dist(dist_dir, target=target)
@@ -382,6 +370,7 @@ def _ensure_frontend_built(base_dir: Path) -> None:
 
 
 def main() -> None:
+    """CLI 入口。解析参数并执行对应目标的打包。"""
     apply_platform_win32_patch()
 
 

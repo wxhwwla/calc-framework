@@ -32,6 +32,7 @@ class AdapterEntry:
 
     @property
     def has_full_app(self) -> bool:
+        """has_full_app。"""
         return self.adapter_id in _FULL_APP_SCRIPTS
 
 

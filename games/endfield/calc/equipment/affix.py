@@ -188,6 +188,7 @@ def aggregate_loadout_modifiers(
                 effects.append(eff)
         for key, val in (item.get("flat_stats") or {}).items():
             flat_stats[key] = flat_stats.get(key, 0.0) + float(val)
+        """absorb item。"""
 
     for item in items:
         _absorb_item(item)

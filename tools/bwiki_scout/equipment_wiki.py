@@ -72,6 +72,7 @@ def normalize_equipment_kind(raw: str | None) -> str:
 
 def _parse_int(text: str | None) -> int:
 
+    """_parse_int 实现。"""
     if not text:
 
         return 0
@@ -86,6 +87,7 @@ def _parse_int(text: str | None) -> int:
 
 def _collect_numbered_texts(params: dict[str, Any], prefix: str) -> list[str]:
 
+    """_collect_numbered_texts 实现。"""
     texts: list[str] = []
 
     for idx in range(1, 10):

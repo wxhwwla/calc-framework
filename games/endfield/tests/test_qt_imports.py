@@ -11,7 +11,7 @@ def test_qt_app_import() -> None:
 
     """验证 qt_app 模块可导入。"""
 
-    from gui.shell import _BACKEND
+    from games.endfield.gui.shell import _BACKEND
 
 
 
@@ -25,7 +25,7 @@ def test_qt_backend_detection() -> None:
 
     """验证后端始终为 qt。"""
 
-    from gui.shell import is_qt
+    from games.endfield.gui.shell import is_qt
 
 
 

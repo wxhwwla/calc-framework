@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""OCR 图片识别 API — 上传截图后调用 OCR 引擎检测。"""
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
 import os
@@ -9,6 +11,7 @@ router = APIRouter(prefix="/api/ocr", tags=["ocr"])
 
 @router.post("/detect")
 async def detect(file: UploadFile = File(...)):
+    """OCR 截图检测 — 上传图片并返回识别结果。"""
     suffix = Path(file.filename or "image.png").suffix or ".png"
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:

@@ -356,6 +356,7 @@ def _make_master_graph() -> DAGGraph:
             "武器精炼附加攻击力加成": DAGOutput(node="weapon_refine_add_atk", label="武器精炼附加攻击力加成"),
         },
     )
+    """make master graph。"""
 
 
 def generate() -> DAGGraph:

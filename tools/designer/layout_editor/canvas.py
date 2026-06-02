@@ -72,6 +72,7 @@ class _ControlItem(QGraphicsRectItem):
 
     @property
     def var_name(self) -> str:
+        """var_name 实现。"""
         return self._var_name
 
 
@@ -115,6 +116,15 @@ class _SectionItem(QGraphicsRectItem):
         type_tag.setPos(_SECTION_WIDTH - 60, 6)
 
     def add_control(self, var_name: str, label: str) -> _ControlItem:
+        """ add_control 实现。
+
+        Args:
+            var_name: 参数描述。
+            label: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         ctrl = _ControlItem(var_name, label, self)
         y = _SECTION_HEADER_H + _CONTROL_MARGIN + len(self._controls) * (_CONTROL_H + 4)
         ctrl.setPos(_CONTROL_MARGIN, y)
@@ -123,6 +133,14 @@ class _SectionItem(QGraphicsRectItem):
         return ctrl
 
     def remove_control(self, var_name: str) -> bool:
+        """ remove_control 实现。
+
+        Args:
+            var_name: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         for ctrl in self._controls[:]:
             if ctrl.var_name == var_name:
                 self._controls.remove(ctrl)
@@ -133,11 +151,13 @@ class _SectionItem(QGraphicsRectItem):
         return False
 
     def _reposition_controls(self) -> None:
+        """_reposition_controls 实现。"""
         for i, ctrl in enumerate(self._controls):
             y = _SECTION_HEADER_H + _CONTROL_MARGIN + i * (_CONTROL_H + 4)
             ctrl.setPos(_CONTROL_MARGIN, y)
 
     def _resize_to_fit(self) -> None:
+        """_resize_to_fit 实现。"""
         total = _SECTION_HEADER_H + _CONTROL_MARGIN
         if self._controls:
             total += len(self._controls) * (_CONTROL_H + 4) + _CONTROL_MARGIN
@@ -147,17 +167,21 @@ class _SectionItem(QGraphicsRectItem):
 
     @property
     def section_id(self) -> str:
+        """section_id 实现。"""
         return self._section_id
 
     @property
     def section_type(self) -> str:
+        """section_type 实现。"""
         return self._section_type
 
     @property
     def section_title(self) -> str:
+        """section_title 实现。"""
         return self._title
 
     def to_section(self) -> Section:
+        """to_section 实现。"""
         if self._section_type == "widget":
             return Section(
                 id=self._section_id, title=self._title,
@@ -213,12 +237,14 @@ class SectionEditDialog(QDialog):
         self._on_type_changed(section_type)
 
     def _on_type_changed(self, sec_type: str) -> None:
+        """_on_type_changed 实现。"""
         is_widget = sec_type == "widget"
         self._widget_type_combo.setVisible(is_widget)
         self._widget_type_label.setVisible(is_widget)
         self._cols_spin.setVisible(not is_widget)
 
     def _accept(self) -> None:
+        """_accept 实现。"""
         self._result = {
             "title": self._title_edit.text() or "新 Section",
             "type": self._type_combo.currentText(),
@@ -229,6 +255,7 @@ class SectionEditDialog(QDialog):
 
     @property
     def section_result(self) -> dict | None:
+        """section_result 实现。"""
         return self._result
 
 
@@ -266,6 +293,7 @@ class DonationConfigDialog(QDialog):
 
     def _browse_image(self) -> None:
 
+        """_browse_image 实现。"""
         path, _ = QFileDialog.getOpenFileName(
             self, "选择捐赠图片", "", "图片 (*.png *.jpg *.jpeg *.bmp)"
         )
@@ -273,6 +301,7 @@ class DonationConfigDialog(QDialog):
             self._path_edit.setText(path)
 
     def _accept(self) -> None:
+        """_accept 实现。"""
         self._result = {
             "text": self._text_edit.text().strip(),
             "image_path": self._path_edit.text().strip(),
@@ -281,6 +310,7 @@ class DonationConfigDialog(QDialog):
 
     @property
     def config_result(self) -> dict | None:
+        """config_result 实现。"""
         return self._result
 
 
@@ -298,6 +328,7 @@ class LayoutCanvasPanel(QWidget):
         self._build_ui()
 
     def _build_ui(self) -> None:
+        """_build_ui 实现。"""
         layout = QVBoxLayout(self)
 
         toolbar = QHBoxLayout()
@@ -362,17 +393,42 @@ class LayoutCanvasPanel(QWidget):
         self._scene.setSceneRect(0, 0, 3000, 2000)
 
         class _DropView(QGraphicsView):
+            """_DropView 类。"""
             drop_callback = None
 
             def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+                """ dragEnterEvent 实现。
+
+                Args:
+                    event: 参数描述。
+
+                Returns:
+                    返回值描述。
+                """
                 if event.mimeData().hasText():
                     event.acceptProposedAction()
 
             def dragMoveEvent(self, event: QDragEnterEvent) -> None:
+                """ dragMoveEvent 实现。
+
+                Args:
+                    event: 参数描述。
+
+                Returns:
+                    返回值描述。
+                """
                 if event.mimeData().hasText():
                     event.acceptProposedAction()
 
             def dropEvent(self, event: QDropEvent) -> None:
+                """ dropEvent 实现。
+
+                Args:
+                    event: 参数描述。
+
+                Returns:
+                    返回值描述。
+                """
                 if self.drop_callback and event.mimeData().hasText():
                     self.drop_callback(event.position(), event.mimeData().text())
                     event.acceptProposedAction()
@@ -408,6 +464,7 @@ class LayoutCanvasPanel(QWidget):
 
     def _set_grid_background(self) -> None:
 
+        """_set_grid_background 实现。"""
         pix = QPixmap(_GRID_SIZE * 2, _GRID_SIZE * 2)
         pix.fill(QColor("#1E1E1E"))
         from PySide6.QtGui import QPainter as QP
@@ -421,6 +478,7 @@ class LayoutCanvasPanel(QWidget):
         self._view.setBackgroundBrush(QBrush(pix))
 
     def _add_section(self) -> None:
+        """_add_section 实现。"""
         dialog = SectionEditDialog(parent=self)
         if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.section_result:
             return
@@ -436,6 +494,7 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _add_donation_section(self) -> None:
+        """_add_donation_section 实现。"""
         dialog = DonationConfigDialog(parent=self)
         if dialog.exec() != QDialog.DialogCode.Accepted or not dialog.config_result:
             return
@@ -452,6 +511,7 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _delete_selected(self) -> None:
+        """_delete_selected 实现。"""
         for item in self._scene.selectedItems():
             if isinstance(item, _SectionItem):
                 self._scene.removeItem(item)
@@ -459,6 +519,7 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _clear_canvas(self) -> None:
+        """_clear_canvas 实现。"""
         self._scene.clear()
         self._set_grid_background()
         self._section_id_counter = 0
@@ -466,6 +527,7 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _on_drop_on_canvas(self, scene_pos: QPointF, text: str) -> None:
+        """_on_drop_on_canvas 实现。"""
         var_name = text.split("  [")[0].strip()
         if not var_name:
             return
@@ -483,6 +545,7 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _find_section_at(self, scene_pt: QPointF) -> _SectionItem | None:
+        """_find_section_at 实现。"""
         for item in self._scene.items(scene_pt):
             if isinstance(item, _SectionItem):
                 return item
@@ -494,6 +557,7 @@ class LayoutCanvasPanel(QWidget):
         return None
 
     def _on_selection_changed(self) -> None:
+        """_on_selection_changed 实现。"""
         selected = self._scene.selectedItems()
         if not selected:
             self._prop_title.setText("（未选中）")
@@ -510,6 +574,14 @@ class LayoutCanvasPanel(QWidget):
             self._prop_title.setText(type(item).__name__)
 
     def populate_adapters(self, names: list[str]) -> None:
+        """ populate_adapters 实现。
+
+        Args:
+            names: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         self._adapter_selector.blockSignals(True)
         current = self._adapter_selector.currentText()
         self._adapter_selector.clear()
@@ -522,6 +594,7 @@ class LayoutCanvasPanel(QWidget):
         self._adapter_selector.blockSignals(False)
 
     def _on_adapter_selected(self, index: int) -> None:
+        """_on_adapter_selected 实现。"""
         if index <= 0:
             return
         name = self._adapter_selector.currentText()
@@ -556,6 +629,7 @@ class LayoutCanvasPanel(QWidget):
             QMessageBox.warning(self, "加载失败", str(exc))
 
     def _load_layout_to_canvas(self, data: dict) -> None:
+        """_load_layout_to_canvas 实现。"""
         self._scene.clear()
         self._set_grid_background()
         try:
@@ -577,10 +651,12 @@ class LayoutCanvasPanel(QWidget):
                 sec_item.add_control(out_name, out_name)
 
     def _emit_layout_changed(self) -> None:
+        """_emit_layout_changed 实现。"""
         data = self._build_layout_data()
         self.layout_changed.emit(data)
 
     def _build_layout_data(self) -> dict:
+        """_build_layout_data 实现。"""
         sections = []
         for item in self._scene.items():
             if isinstance(item, _SectionItem):
@@ -603,6 +679,7 @@ class LayoutCanvasPanel(QWidget):
         }
 
     def _save_layout(self) -> None:
+        """_save_layout 实现。"""
         if not self._adapter_name or self._adapter_selector.currentIndex() <= 0:
             QMessageBox.information(self, "提示", "请先选择适配器")
             return
@@ -619,6 +696,7 @@ class LayoutCanvasPanel(QWidget):
         self._emit_layout_changed()
 
     def _open_preview(self) -> None:
+        """_open_preview 实现。"""
         from calc_framework.ui.compute_sheet import ComputeSheet
         from calc_framework.ui.layout import load_layout
 
@@ -661,12 +739,15 @@ class LayoutCanvasPanel(QWidget):
         dialog.exec()
 
     def get_layout_data(self) -> dict | None:
+        """get_layout_data 实现。"""
         if not self._adapter_selector.currentIndex():
             return None
         return self._build_layout_data()
 
     def get_dag_service(self):
+        """get_dag_service 实现。"""
         return self._dag_service
 
     def get_adapter_name(self) -> str:
+        """get_adapter_name 实现。"""
         return self._adapter_name

@@ -28,9 +28,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.designer.data_browser_tab import DataBrowserTab
-from gui.designer.data_editor_tab import DataEditorTab
-from gui.designer.inverse_tab import InverseTab
+from games.endfield.gui.designer.data_browser_tab import DataBrowserTab
+from games.endfield.gui.designer.data_editor_tab import DataEditorTab
+from games.endfield.gui.designer.inverse_tab import InverseTab
 
 APP_NAME = "数据设计器"
 
@@ -163,6 +163,7 @@ class DesignerApp(QMainWindow):
 
 
         self._apply_dark_style()
+        """初始化实例。"""
 
 
 
@@ -174,12 +175,14 @@ class DesignerApp(QMainWindow):
         dialog = HelpDialog(build_designer_help, self, title="数据设计器 使用说明")
 
         dialog.exec()
+        """open help。"""
 
     def _open_donation(self) -> None:
 
         from utils.gui.donation import open_donation_dialog
 
         open_donation_dialog(self)
+        """open donation。"""
 
 
 
@@ -194,6 +197,8 @@ class DesignerApp(QMainWindow):
             QLabel { color: #D1D1D1; }
 
         """)
+        """apply dark style。"""
+    """DesignerApp。"""
 
 
 
@@ -210,6 +215,7 @@ def main() -> None:
     window.show()
 
     sys.exit(app.exec())
+    """main。"""
 
 
 

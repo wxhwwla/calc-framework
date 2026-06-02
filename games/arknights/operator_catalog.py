@@ -20,6 +20,7 @@ STAR_TIERS = (6, 5, 4, 3, 2, 1)
 
 
 def find_zip_path(candidates: tuple[Path, ...] = DEFAULT_ZIP_CANDIDATES) -> Path | None:
+    """查找可用的压缩数据文件路径。"""
     for path in candidates:
         if path.is_file():
             return path
@@ -27,6 +28,7 @@ def find_zip_path(candidates: tuple[Path, ...] = DEFAULT_ZIP_CANDIDATES) -> Path
 
 
 def index_entry(data: dict[str, Any], fallback_name: str) -> dict[str, Any]:
+    """从干员数据中提取索引条目。"""
     return {
         "名称": str(data.get("名称") or fallback_name),
         "星级": int(data.get("星级") or 0),
@@ -36,6 +38,7 @@ def index_entry(data: dict[str, Any], fallback_name: str) -> dict[str, Any]:
 
 
 def build_operator_index(operators: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    """构建干员索引列表，按星级/职业/分支/名称排序。"""
     index = [index_entry(data, name) for name, data in operators.items()]
     index.sort(key=lambda x: (-x["星级"], x["职业"], x["分支"], x["名称"]))
     return index
@@ -63,10 +66,12 @@ def filter_operator_index(
 
 
 def list_professions(index: list[dict[str, Any]]) -> list[str]:
+    """列出索引中所有职业。"""
     return sorted({op["职业"] for op in index if op["职业"]}, key=lambda s: s)
 
 
 def list_branches(index: list[dict[str, Any]], profession: str = "") -> list[str]:
+    """列出索引中所有分支（可选按职业筛选）。"""
     branches: set[str] = set()
     for op in index:
         if profession and op["职业"] != profession:
@@ -77,6 +82,7 @@ def list_branches(index: list[dict[str, Any]], profession: str = "") -> list[str
 
 
 def _read_json_file(path: Path) -> dict[str, Any] | None:
+    """读取并解析 JSON 文件，失败时返回 None。"""
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):

@@ -81,10 +81,12 @@ class DataDiffResult:
 
     @property
     def has_changes(self) -> bool:
+        """has_changes 实现。"""
         return bool(self.added or self.removed or self.modified)
 
     @property
     def summary(self) -> str:
+        """summary 实现。"""
         parts = []
         if self.added:
             parts.append(f"+{len(self.added)} 新增")
@@ -386,10 +388,12 @@ def render_text(result: DataDiffResult) -> str:
 
 
 def _section_header(title: str) -> str:
+    """_section_header 实现。"""
     return f"━━━ {title} ━━━"
 
 
 def _render_entity_detail(lines: List[str], diff: EntityDiff, indent: str = "    ") -> None:
+    """_render_entity_detail 实现。"""
     for fc in diff.field_changes:
         lines.append(f"{indent}  • {fc.field}: {fc.old_value} → {fc.new_value}")
 
@@ -431,6 +435,7 @@ def render_json(result: DataDiffResult) -> Dict[str, Any]:
 
 
 def _entity_to_json(diff: EntityDiff) -> Dict[str, Any]:
+    """_entity_to_json 实现。"""
     return {
         "name": diff.name,
         "field_changes": [
@@ -518,6 +523,7 @@ def render_html(result: DataDiffResult) -> str:
 
 
 def _render_entities_html(result: DataDiffResult) -> str:
+    """_render_entities_html 实现。"""
     parts = []
 
     if result.removed:
@@ -590,6 +596,7 @@ def _render_entities_html(result: DataDiffResult) -> str:
 
 
 def _escape_html(text: str) -> str:
+    """_escape_html 实现。"""
     return (
         text.replace("&", "&amp;")
         .replace("<", "&lt;")
@@ -674,6 +681,7 @@ def diff_main(args: List[str]) -> int:
 
 
 def _diff_help() -> str:
+    """_diff_help 实现。"""
     return """数据差异比较工具 — 对比两个标准 EntitySchema 文件
 
 用法:

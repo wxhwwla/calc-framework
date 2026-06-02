@@ -25,6 +25,7 @@ def _adapter_path(adapter_id: str) -> Path:
 
 
 def _read_json(path: Path) -> Any:
+    """读取并解析 JSON 文件。"""
     if not path.is_file():
         raise HTTPException(status_code=404, detail=f"file not found: {path.name}")
     try:
@@ -82,6 +83,7 @@ def get_adapter_dag(adapter_id: str) -> dict[str, Any]:
 
 
 def _load_json_list(path: Path) -> list[dict[str, Any]]:
+    """加载 JSON 文件并验证根节点为数组。"""
     data = _read_json(path)
     if not isinstance(data, list):
         raise HTTPException(status_code=500, detail=f"{path.name} root must be array")
@@ -132,6 +134,7 @@ def get_data_files_for_export(adapter_id: str) -> dict[str, list[dict[str, Any]]
 
 
 def get_pack_export_bundle(adapter_id: str) -> dict[str, Any]:
+    """获取适配器完整打包导出内容（meta + layout + DAG + data_files）。"""
     meta = load_adapter_meta(adapter_id)
     meta = dict(meta)
     meta["entry_dag"] = "dag/formula.dag.json"

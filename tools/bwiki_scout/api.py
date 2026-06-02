@@ -86,6 +86,7 @@ class MediaWikiClient:
 
     ) -> dict[str, Any]:
 
+        """query 实现。"""
         payload = {"format": "json", **params}
 
         return self._get(payload, ignore_error_codes=ignore_error_codes)
@@ -94,6 +95,14 @@ class MediaWikiClient:
 
     def fetch_parsed_gallery_html(self, page_title: str) -> str:
 
+        """ fetch_parsed_gallery_html 实现。
+
+        Args:
+            page_title: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         data = self.query(
 
             action="parse",
@@ -117,6 +126,15 @@ class MediaWikiClient:
 
 
     def fetch_category_members(self, category_title: str, *, limit: int = 500) -> list[str]:
+        """获取分类下的所有页面标题列表。
+
+        Args:
+            category_title: 分类标题（如 "Category:干员"）
+            limit: 最大返回条数
+
+        Returns:
+            页面标题列表
+        """
 
         members: list[str] = []
 
@@ -280,6 +298,7 @@ class MediaWikiClient:
 
         # BWIKI WAF 会拦截仅带 User-Agent 的请求（HTTP 567）
 
+        """_request_headers 实现。"""
         return {
 
             "User-Agent": self.user_agent,
@@ -306,6 +325,7 @@ class MediaWikiClient:
 
     ) -> dict[str, Any]:
 
+        """_get 实现。"""
         self._throttle()
 
         query = urllib.parse.urlencode(params)
@@ -380,6 +400,7 @@ class MediaWikiClient:
 
     def _throttle(self) -> None:
 
+        """_throttle 实现。"""
         now = time.monotonic()
 
         elapsed = now - self._last_request_at

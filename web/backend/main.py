@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""Web 后端入口 — FastAPI 应用实例 + 路由注册 + 全局中间件/异常处理器 / 静态文件挂载。"""
+
 try:
     from . import _path_setup  # sets sys.path for dev mode
 except ImportError:
@@ -103,7 +105,7 @@ _DONATION_DIR = _REPO_ROOT / "resources" / "donation"
 
 @app.get("/api/donation/manifest")
 async def donation_manifest():
-    """返回当前可用的捐赠图列表（与 utils/donation_assets 一致）。"""
+    """返回当前可用的捐赠二维码图片列表。"""
     from utils.donation_assets import resolve_donation_images
 
     return resolve_donation_images()

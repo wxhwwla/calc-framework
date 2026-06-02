@@ -42,16 +42,19 @@ class ValidationResult:
 
     @property
     def passed(self) -> bool:
+        """passed 实现。"""
         if self.parse_error:
             return False
         return all(not e.errors for e in self.entities)
 
     @property
     def total_entities(self) -> int:
+        """total_entities 实现。"""
         return len(self.entities)
 
     @property
     def total_errors(self) -> int:
+        """total_errors 实现。"""
         return sum(len(e.errors) for e in self.entities)
 
 

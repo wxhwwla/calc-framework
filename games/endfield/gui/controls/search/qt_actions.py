@@ -44,12 +44,12 @@ from games.endfield.calc.skills.segments import (
     aggregate_weighted_damage,
     format_segment_breakdown_lines,
 )
-from gui.controls.search.search_settings import (
+from games.endfield.gui.controls.search.search_settings import (
     format_search_progress_text,
     resolve_parallel_workers,
     resolve_top_n,
 )
-from gui.presentation.search_results_lines import (
+from games.endfield.gui.presentation.search_results_lines import (
     export_paths_to_strings,
 )
 
@@ -114,6 +114,7 @@ class SearchWorker(QObject):
         self._status_prefix = status_prefix
 
         self._cancel_token = cancel_token
+        """初始化实例。"""
 
 
 
@@ -139,6 +140,7 @@ class SearchWorker(QObject):
                 estimated_total_seconds=estimated_total,
             )
             self.progress.emit(text)
+            """progress。"""
 
 
 
@@ -597,4 +599,5 @@ class QtSearchResultsDialog(QDialog):
         btn_row.addWidget(close_btn)
 
         layout.addLayout(btn_row)
+        """初始化实例。"""
 

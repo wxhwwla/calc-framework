@@ -182,6 +182,7 @@ def build_draft_record(
 
 def _parse_int(text: str | None) -> int | None:
 
+    """_parse_int 实现。"""
     if not text:
 
         return None
@@ -308,6 +309,7 @@ def run_parse_draft(
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI 解析草案（阶段 B）")
 
     parser.add_argument("--input", type=Path, default=OUTPUT_ROOT)

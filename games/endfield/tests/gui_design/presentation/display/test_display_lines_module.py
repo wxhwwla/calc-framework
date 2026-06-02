@@ -14,7 +14,7 @@ class TestDisplayLinesModule(unittest.TestCase):
 
     def test_module_has_no_customtkinter_import(self) -> None:
 
-        from gui.presentation import display_lines as display_lines_impl
+        from games.endfield.gui.presentation import display_lines as display_lines_impl
 
 
 

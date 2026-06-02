@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""ocr 包 — OCR 识别工具集，支持文本检测、识别与游戏术语映射。"""
+
 from __future__ import annotations
 
 from .detector import BBox, BatchResult, DetectionResult, YOLOXDetector

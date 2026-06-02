@@ -16,6 +16,7 @@ from pathlib import Path
 
 
 def _setup_paths() -> None:
+    """配置 PyInstaller 打包环境下的 Python 模块搜索路径。"""
     if getattr(sys, "frozen", False):
         _BASE = Path(sys._MEIPASS)
     else:

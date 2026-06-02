@@ -99,6 +99,8 @@ class _Label(QLabel):
         super().__init__(text)
         self.setFont(font)
         self.setStyleSheet(f"color: {_LABEL_COLOR};")
+        """初始化实例。"""
+    """Label。"""
 
 
 class QtEnemyPanel(QWidget):
@@ -121,6 +123,7 @@ class QtEnemyPanel(QWidget):
         self._build_ui()
         self._connect_signals()
         self._populate_enemy_combo()
+        """初始化实例。"""
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -238,6 +241,7 @@ class QtEnemyPanel(QWidget):
         reset_row.addStretch()
         reset_row.addWidget(self._reset_btn)
         layout.addLayout(reset_row)
+        """build ui。"""
 
     def _connect_signals(self) -> None:
         self._enemy_combo.currentTextChanged.connect(self._on_enemy_combo_changed)
@@ -254,6 +258,7 @@ class QtEnemyPanel(QWidget):
         self._imbalance_eff_spin.valueChanged.connect(self._emit_params)
         self._break_defense_spin.valueChanged.connect(self._emit_params)
         self._reset_btn.clicked.connect(self._reset_to_default)
+        """connect signals。"""
 
     def _populate_enemy_combo(self) -> None:
         choices = list_plugin_enemy_choices()
@@ -263,6 +268,7 @@ class QtEnemyPanel(QWidget):
             self._id_by_label[label] = eid
         self._enemy_combo.clear()
         self._enemy_combo.addItems(labels)
+        """populate enemy combo。"""
 
     def _on_enemy_combo_changed(self, text: str) -> None:
         eid = self._id_by_label.get(text, "")
@@ -276,9 +282,11 @@ class QtEnemyPanel(QWidget):
         if idx >= 0:
             self._tier_combo.setCurrentIndex(idx)
         self._emit_params()
+        """on enemy combo changed。"""
 
     def _emit_params(self) -> None:
         self.enemy_params_changed.emit(self.get_params())
+        """emit params。"""
 
     def _reset_to_default(self) -> None:
         self._defense_spin.setValue(DEFAULT_ENEMY_DEFENSE)
@@ -293,6 +301,7 @@ class QtEnemyPanel(QWidget):
         self._corrosion_spin.setValue(DEFAULT_CORROSION_DURATION_SEC)
         self._imbalance_eff_spin.setValue(DEFAULT_IMBALANCE_EFFICIENCY_BONUS)
         self._break_defense_spin.setValue(DEFAULT_BREAK_DEFENSE_STACKS)
+        """reset to default。"""
 
     def get_params(self) -> dict[str, Any]:
         return {
@@ -309,6 +318,7 @@ class QtEnemyPanel(QWidget):
             "imbalance_efficiency_bonus": float(self._imbalance_eff_spin.value()),
             "break_defense_stacks": int(self._break_defense_spin.value()),
         }
+        """获取params。"""
 
     def set_params(self, params: dict[str, Any]) -> None:
         if "enemy_defense" in params:
@@ -337,10 +347,13 @@ class QtEnemyPanel(QWidget):
             self._imbalance_eff_spin.setValue(float(params["imbalance_efficiency_bonus"]))
         if "break_defense_stacks" in params:
             self._break_defense_spin.setValue(max(0, min(4, int(params["break_defense_stacks"]))))
+        """设置params。"""
 
     def current_enemy_id(self) -> str:
         return self._id_by_label.get(self._enemy_combo.currentText(), "")
+        """current enemy id。"""
 
     def set_enemy_combo_index(self, index: int) -> None:
         if 0 <= index < self._enemy_combo.count():
             self._enemy_combo.setCurrentIndex(index)
+        """设置enemy combo index。"""

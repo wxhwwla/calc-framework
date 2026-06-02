@@ -48,7 +48,7 @@ _NSI_SCRIPT = _INSTALLER_DIR / "endfield_calculator_setup.nsi"
 
 
 def _get_version() -> str:
-
+    """从 please_read_me.py 读取 EXE 版本号。"""
     sys.path.insert(0, str(_PROJECT_ROOT))
 
     try:
@@ -304,7 +304,7 @@ def check_environment() -> int:
 
 
 def _add_path() -> None:
-
+    """将项目根目录加入 sys.path。"""
     if str(_PROJECT_ROOT) not in sys.path:
 
         sys.path.insert(0, str(_PROJECT_ROOT))
@@ -314,9 +314,8 @@ def _add_path() -> None:
 
 
 def main() -> int:
-
+    """CLI 入口。解析参数并执行安装包构建或环境检查。"""
     parser = argparse.ArgumentParser(description="NSIS 安装包构建器")
-
     parser.add_argument(
 
         "--dist-dir",

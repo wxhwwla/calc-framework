@@ -77,7 +77,7 @@ _TOKEN_IN_REMOTE = re.compile(
 
 
 def _decode_output(output: Any) -> str:
-
+    """将命令输出解码为字符串。"""
     if output is None:
 
         return ""
@@ -97,21 +97,14 @@ def _decode_output(output: Any) -> str:
 
 
 def run_git(
-
     args: list[str],
-
     *,
-
     check: bool = True,
-
     capture_output: bool = False,
-
     timeout: int | None = None,
-
 ) -> Tuple[int, str, str]:
-
+    """执行 git 命令并返回 (returncode, stdout, stderr)。"""
     try:
-
         if capture_output:
 
             proc = subprocess.run(
@@ -155,14 +148,12 @@ def run_git(
 
 
 def _repo_root() -> str:
-
+    """返回仓库根目录的字符串路径。"""
     return str(Path(__file__).resolve().parent.parent)
 
 
-
-
-
 def _origin_remote_url() -> str | None:
+    """从 git 配置读取 origin 远程 URL。"""
 
     if not os.path.isdir(os.path.join(_repo_root(), ".git")):
 
@@ -191,9 +182,8 @@ def _origin_remote_url() -> str | None:
 
 
 def _remote_url() -> str:
-
+    """根据 AUTH_MODE 确定 remote 地址（SSH 或 HTTPS+Token）。"""
     if AUTH_MODE == "ssh":
-
         origin = _origin_remote_url()
 
         if origin and not _TOKEN_IN_REMOTE.search(origin):
@@ -225,9 +215,8 @@ def _remote_url() -> str:
 
 
 def setup_git_repo() -> None:
-
+    """初始化/检查 git 仓库，配置 remote 和分支。"""
     os.chdir(_repo_root())
-
     remote = _remote_url()
 
 
@@ -275,7 +264,7 @@ def setup_git_repo() -> None:
 
 
 def _porcelain_status() -> str:
-
+    """运行 git status --porcelain 并返回输出。"""
     _, status, _ = run_git(["status", "--porcelain"], capture_output=True)
 
     return status
@@ -285,9 +274,8 @@ def _porcelain_status() -> str:
 
 
 def _print_pending_changes(porcelain: str) -> None:
-
+    """打印工作区中未提交的变更列表。"""
     lines = [ln for ln in porcelain.splitlines() if ln.strip()]
-
     if not lines:
 
         print("[信息] 工作区无已跟踪文件的修改（仍将执行 clean -fd 删除未跟踪文件）")
@@ -381,9 +369,8 @@ def require_user_confirm(*, skip: bool = False) -> bool:
 
 
 def force_pull() -> bool:
-
+    """执行 git fetch + reset --hard + clean -fd 与远程对齐。"""
     os.chdir(_repo_root())
-
     print("[信息] 强制与 origin/main 对齐（本地未提交更改将丢失）")
 
 
@@ -427,9 +414,8 @@ def force_pull() -> bool:
 
 
 def main() -> None:
-
+    """CLI 入口。执行完整的拉取覆盖流程。"""
     parser = argparse.ArgumentParser(
-
         description="从 GitHub 拉取并覆盖本地（危险操作，须确认）",
 
     )

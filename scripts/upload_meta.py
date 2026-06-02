@@ -52,7 +52,7 @@ _EXE_VERSION_PATTERN = re.compile(
 
 
 def please_read_me_path(repo_root: Path | None = None) -> Path:
-
+    """返回 please_read_me.py 的路径。"""
     root = repo_root or Path(__file__).resolve().parent
 
     return root / "please_read_me.py"
@@ -62,7 +62,7 @@ def please_read_me_path(repo_root: Path | None = None) -> Path:
 
 
 def parse_semver(version: str) -> tuple[int, int, int]:
-
+    """解析语义化版本字符串为三元组。"""
     parts = version.strip().split(".")
 
     if len(parts) != 3 or not all(p.isdigit() for p in parts):
@@ -76,15 +76,12 @@ def parse_semver(version: str) -> tuple[int, int, int]:
 
 
 def format_semver(major: int, minor: int, patch: int) -> str:
-
+    """将整数三元组格式化为语义化版本字符串。"""
     return f"{major}.{minor}.{patch}"
 
 
-
-
-
 def read_version(path: Path) -> str:
-
+    """从 please_read_me.py 读取 _VERSION。"""
     text = path.read_text(encoding="utf-8")
 
     match = _VERSION_PATTERN.search(text)
@@ -100,7 +97,7 @@ def read_version(path: Path) -> str:
 
 
 def read_exe_version(path: Path) -> str:
-
+    """从 please_read_me.py 读取 _EXE_VERSION。"""
     text = path.read_text(encoding="utf-8")
 
     match = _EXE_VERSION_PATTERN.search(text)
@@ -116,7 +113,7 @@ def read_exe_version(path: Path) -> str:
 
 
 def write_version(path: Path, new_version: str) -> None:
-
+    """将新版本号写入 please_read_me.py 的 _VERSION。"""
     text = path.read_text(encoding="utf-8")
 
     if not _VERSION_PATTERN.search(text):
@@ -140,26 +137,19 @@ def write_version(path: Path, new_version: str) -> None:
 
 
 def bump_patch(version: str) -> str:
-
+    """版本号第三位 +1。"""
     major, minor, patch = parse_semver(version)
-
     return format_semver(major, minor, patch + 1)
 
 
-
-
-
 def bump_minor(version: str) -> str:
-
+    """版本号第二位 +1，第三位置零。"""
     major, minor, _patch = parse_semver(version)
-
     return format_semver(major, minor + 1, 0)
 
 
-
-
-
 def strip_summary_block(text: str) -> str:
+    """从文本中移除 UPLOAD_SUMMARY 标记块。"""
 
     begin = text.rfind(SUMMARY_BEGIN)
 
@@ -182,9 +172,8 @@ def strip_summary_block(text: str) -> str:
 
 
 def write_summary_block(path: Path, title: str, bullets: list[str]) -> None:
-
+    """将上传总结写入 please_read_me.py 底部。"""
     text = strip_summary_block(path.read_text(encoding="utf-8"))
-
     lines = [
 
         "",
@@ -212,7 +201,7 @@ def write_summary_block(path: Path, title: str, bullets: list[str]) -> None:
 
 
 def remove_summary_block(path: Path) -> None:
-
+    """从 please_read_me.py 中移除 UPLOAD_SUMMARY 标记块。"""
     text = path.read_text(encoding="utf-8")
 
     path.write_text(strip_summary_block(text), encoding="utf-8")
@@ -222,7 +211,7 @@ def remove_summary_block(path: Path) -> None:
 
 
 def read_summary_for_commit(path: Path) -> tuple[str, list[str]]:
-
+    """从 please_read_me.py 解析 UPLOAD_SUMMARY 块的内容。"""
     text = path.read_text(encoding="utf-8")
 
     begin = text.rfind(SUMMARY_BEGIN)
@@ -268,9 +257,8 @@ def read_summary_for_commit(path: Path) -> tuple[str, list[str]]:
 
 
 def build_commit_message(version: str, title: str, bullets: list[str]) -> str:
-
+    """构建 git commit 消息字符串。"""
     first = f"v{version}: {title}"
-
     if not bullets:
 
         return first
@@ -282,9 +270,8 @@ def build_commit_message(version: str, title: str, bullets: list[str]) -> str:
 
 
 def classify_changed_paths(paths: list[str], package_dir_name: str = "games/endfield") -> bool:
-
+    """判断变更路径列表中是否包含业务代码改动（非 please_read_me）。"""
     prefix = f"{package_dir_name}/"
-
     readme_names = {
 
         f"{prefix}please_read_me.py",
@@ -316,9 +303,8 @@ def classify_changed_paths(paths: list[str], package_dir_name: str = "games/endf
 
 
 def summarize_changes(paths: list[str]) -> tuple[str, list[str]]:
-
+    """生成变更摘要信息（标题 + 更改列表）。"""
     unique = sorted({p.replace("\\", "/") for p in paths if p.strip()})
-
     if not unique:
 
         return "维护性更新", ["无文件列表（请检查 git status）"]

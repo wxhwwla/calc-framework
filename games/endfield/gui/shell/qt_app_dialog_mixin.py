@@ -12,15 +12,15 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from gui.legal.attribution_content import SUMMARY_TEXT
-from gui.legal.donation_qt import open_donation_dialog
+from games.endfield.gui.legal.attribution_content import SUMMARY_TEXT
+from games.endfield.gui.legal.donation_qt import open_donation_dialog
 
 
 class DialogMixin:
 
     def _on_manual_buff(self) -> None:
 
-        from gui.controls.manual_buff.qt_window import QtManualBuffDialog
+        from games.endfield.gui.controls.manual_buff.qt_window import QtManualBuffDialog
 
 
 
@@ -29,6 +29,7 @@ class DialogMixin:
             dock = self.control_dock
 
             return dock.read_skill_counts(), dock.read_physical_abnormal_counts(), dock.read_spell_abnormal_counts()
+            """read counts。"""
 
 
 
@@ -45,10 +46,11 @@ class DialogMixin:
         dialog.load_store(getattr(self.app, "_manual_buff_store", None))
         if dialog.exec():
             self.app._manual_buff_store = dialog.buff_store()
+        """on manual buff。"""
 
     def _on_survival_estimate(self) -> None:
-        from gui.app.loadout_state import read_loadout_from_panels
-        from gui.controls.survival import open_survival_estimate_dialog
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.controls.survival import open_survival_estimate_dialog
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -94,11 +96,12 @@ class DialogMixin:
             weapon_skill_kwargs=loadout.weapon_skill_kwargs(),
             big_font=self.big_font,
         )
+        """on survival estimate。"""
 
     def _on_export_preset(self) -> None:
 
-        from gui.app.loadout_preset import export_preset_json
-        from gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.app.loadout_preset import export_preset_json
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 
 
 
@@ -162,12 +165,13 @@ class DialogMixin:
         Path(path).write_text(export_preset_json(preset), encoding="utf-8")
 
         self.status_label.setText("预设已导出")
+        """on export preset。"""
 
 
 
     def _on_import_preset(self) -> None:
 
-        from gui.app.loadout_preset import import_presets_from_json_text
+        from games.endfield.gui.app.loadout_preset import import_presets_from_json_text
 
 
 
@@ -191,12 +195,13 @@ class DialogMixin:
         except Exception as exc:
 
             QMessageBox.warning(self.app, "导入预设失败", str(exc))
+        """on import preset。"""
 
 
 
     def _apply_preset_to_qt_app(self, preset) -> None:
 
-        from gui.app.loadout_preset import apply_preset_to_panels
+        from games.endfield.gui.app.loadout_preset import apply_preset_to_panels
 
 
 
@@ -208,12 +213,13 @@ class DialogMixin:
             equipment_catalog=self._equipment_catalog,
             shell=self,
         )
+        """apply preset to qt app。"""
 
 
 
     def _on_compare_presets(self) -> None:
 
-        from gui.controls.enhancement.qt_dialogs import QtCompareDialog
+        from games.endfield.gui.controls.enhancement.qt_dialogs import QtCompareDialog
 
 
 
@@ -226,18 +232,21 @@ class DialogMixin:
         )
 
         dialog.exec()
+        """on compare presets。"""
 
 
 
     def _on_attribution(self) -> None:
 
         QMessageBox.about(self.app, "数据来源与声明", SUMMARY_TEXT)
+        """on attribution。"""
 
 
 
     def _on_donation(self) -> None:
 
         open_donation_dialog(self.app)
+        """on donation。"""
 
 
 
@@ -276,6 +285,7 @@ class DialogMixin:
         self._connect_more_settings_btns()
 
         self._connect_search_estimate_triggers()
+        """connect signals。"""
 
 
 
@@ -306,6 +316,7 @@ class DialogMixin:
         if hasattr(dock, "_export_log_btn") and dock._export_log_btn:
 
             dock._export_log_btn.clicked.connect(self._on_export_log)
+        """connect more settings btns。"""
 
 
 
@@ -320,6 +331,7 @@ class DialogMixin:
         dock.search_workers_combo.currentTextChanged.connect(self._refresh_search_estimate)
 
         dock.search_top_n_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        """connect search estimate triggers。"""
 
 
 
@@ -329,8 +341,8 @@ class DialogMixin:
 
     def _on_damage_dashboard(self) -> None:
 
-        from gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
-        from gui.presentation.damage_snapshot import get_snapshot_from_app
+        from games.endfield.gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
+        from games.endfield.gui.presentation.damage_snapshot import get_snapshot_from_app
 
 
 
@@ -349,13 +361,14 @@ class DialogMixin:
         )
 
         dialog.exec()
+        """on damage dashboard。"""
 
 
 
     def _on_calc_history(self) -> None:
 
-        from gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
-        from gui.shared.calc_history import get_app_calculation_history
+        from games.endfield.gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        from games.endfield.gui.shared.calc_history import get_app_calculation_history
 
 
 
@@ -376,6 +389,7 @@ class DialogMixin:
         )
 
         dialog.exec()
+        """on calc history。"""
 
 
 
@@ -404,6 +418,7 @@ class DialogMixin:
         except Exception as exc:
 
             QMessageBox.warning(self.app, "导出失败", str(exc))
+        """on export log。"""
 
 
 
@@ -415,6 +430,7 @@ class DialogMixin:
         dialog = HelpDialog(build_calculator_help, self.app, title="终末地伤害计算器 使用说明")
 
         dialog.exec()
+        """on open help。"""
 
 
 
@@ -424,7 +440,7 @@ class DialogMixin:
 
         try:
 
-            from gui.controls.ocr import open_ocr_detection_dialog
+            from games.endfield.gui.controls.ocr import open_ocr_detection_dialog
 
 
 
@@ -463,6 +479,7 @@ class DialogMixin:
 
 
                     self._on_confirm()
+                """apply ocr。"""
 
 
 
@@ -479,7 +496,7 @@ class DialogMixin:
 
         """打开搜索历史浏览对话框。"""
 
-        from gui.controls.search.qt_search_browser import SearchHistoryDialog
+        from games.endfield.gui.controls.search.qt_search_browser import SearchHistoryDialog
 
 
 
@@ -494,4 +511,5 @@ class DialogMixin:
         )
 
         dialog.exec()
+    """DialogMixin。"""
 

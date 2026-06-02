@@ -102,6 +102,7 @@ def operator_summary_payload(name: str) -> dict:
 
 
 def compute_damage_payload(req: ComputeRequest) -> ComputeResponse:
+    """执行 DAG 快照计算并返回各项伤害。"""
     operator = _load_operator(req.operator_name)
     try:
         result = compute_snapshot_with_dag(
@@ -130,14 +131,17 @@ def compute_damage_payload(req: ComputeRequest) -> ComputeResponse:
 
 @router.get("/operators")
 def list_operators():
+    """获取所有明日方舟干员列表。"""
     return list_operators_payload()
 
 
 @router.get("/operators/{name}")
 def get_operator(name: str):
+    """获取指定干员的详细属性。"""
     return operator_summary_payload(name)
 
 
 @router.post("/compute", response_model=ComputeResponse)
 def compute_damage(req: ComputeRequest):
+    """计算指定干员的技能伤害。"""
     return compute_damage_payload(req)

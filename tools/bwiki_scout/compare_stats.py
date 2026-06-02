@@ -48,6 +48,7 @@ from bwiki_scout.report import write_stats_diff_report
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI 干员逐级数值对比（离线）")
 
     parser.add_argument(

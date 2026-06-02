@@ -106,12 +106,14 @@ class _SkillTableParser(HTMLParser):
 
     def _in_skill_block(self) -> bool:
 
+        """_in_skill_block 实现。"""
         return any("skill" in (c or "").split() for c in self._div_classes)
 
 
 
     def _in_tab_content(self) -> bool:
 
+        """_in_tab_content 实现。"""
         return self._in_skill_block() and any(
 
             "tab-content" in (c or "").split() for c in self._div_classes
@@ -122,6 +124,15 @@ class _SkillTableParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
 
+        """ handle_starttag 实现。
+
+        Args:
+            tag: 参数描述。
+            attrs: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         attrs_dict = dict(attrs)
 
         cls = attrs_dict.get("class") or ""
@@ -156,6 +167,14 @@ class _SkillTableParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
 
+        """ handle_endtag 实现。
+
+        Args:
+            tag: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if tag == "th":
 
             self._in_th = False
@@ -196,6 +215,14 @@ class _SkillTableParser(HTMLParser):
 
     def handle_data(self, data: str) -> None:
 
+        """ handle_data 实现。
+
+        Args:
+            data: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         text = data.strip()
 
         if not text or not self._in_tr:
@@ -220,6 +247,7 @@ class _SkillTableParser(HTMLParser):
 
 def _parse_percent_cell(text: str) -> float:
 
+    """_parse_percent_cell 实现。"""
     m = _PERCENT_RE.search(text.replace(",", ""))
 
     if not m:
@@ -234,6 +262,7 @@ def _parse_percent_cell(text: str) -> float:
 
 def _cell_looks_numeric(text: str) -> bool:
 
+    """_cell_looks_numeric 实现。"""
     return bool(_PERCENT_RE.search(text.replace(",", "")))
 
 
@@ -242,6 +271,7 @@ def _cell_looks_numeric(text: str) -> bool:
 
 def _finalize_damage_row(header: str, cells: list[str]) -> ParsedSkillDamageRow | None:
 
+    """_finalize_damage_row 实现。"""
     numeric: list[float] = []
 
     extra_text: list[str] = []
@@ -270,6 +300,7 @@ def _finalize_damage_row(header: str, cells: list[str]) -> ParsedSkillDamageRow 
 
 def _is_damage_multiplier_row(header: str) -> bool:
 
+    """_is_damage_multiplier_row 实现。"""
     if "倍率" not in header or "伤害" not in header:
 
         return False

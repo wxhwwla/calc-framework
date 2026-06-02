@@ -50,10 +50,12 @@ DEFAULT_IMBALANCE_EFFICIENCY_BONUS = 0.0  # 点剑套装 +20%
 
 def imbalance_cap_for_tier(tier: str) -> float:
     return float(IMBALANCE_CAP_TYPICAL.get(str(tier).strip() or "普通", 75.0))
+    """imbalance cap for tier。"""
 
 
 def imbalance_duration_for_tier(tier: str) -> float:
     return float(IMBALANCE_DURATION_SEC.get(str(tier).strip() or "普通", 6.0))
+    """imbalance duration for tier。"""
 
 
 def scaled_imbalance_gain(base_value: float, *, imbalance_efficiency_bonus: float = 0.0) -> float:
@@ -83,6 +85,7 @@ def accumulation_multiplier_after_fast_break(
 def imbalance_node_thresholds(cap: float, node_count: int = 1) -> tuple[float, ...]:
     fracs = IMBALANCE_NODE_FRACTIONS.get(max(1, min(int(node_count), 2)), (0.5,))
     return tuple(float(cap) * f for f in fracs)
+    """imbalance node thresholds。"""
 
 
 def imbalance_nodes_crossed(

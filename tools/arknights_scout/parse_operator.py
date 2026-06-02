@@ -61,6 +61,14 @@ def parse_template_kv(text: str) -> dict[str, str]:
 
 
 def parse_rarity(rarity_str: str) -> int:
+    """ parse_rarity 实现。
+
+    Args:
+        rarity_str: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     try:
         return int(rarity_str)
     except (ValueError, TypeError):
@@ -68,6 +76,14 @@ def parse_rarity(rarity_str: str) -> int:
 
 
 def parse_trust_bonus(kv: dict[str, str]) -> dict[str, int]:
+    """ parse_trust_bonus 实现。
+
+    Args:
+        kv: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     result: dict[str, int] = {}
     for field, label in [("信赖攻击", "攻击"), ("信赖防御", "防御"), ("信赖生命", "生命"), ("信赖法抗", "法抗")]:
         raw = kv.get(field, "").strip()
@@ -82,6 +98,14 @@ def parse_trust_bonus(kv: dict[str, str]) -> dict[str, int]:
 
 
 def parse_talents(kv: dict[str, str]) -> list[dict[str, str]]:
+    """ parse_talents 实现。
+
+    Args:
+        kv: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     talents: list[dict[str, str]] = []
     for i in range(1, 4):
         name = kv.get(f"天赋{i}", "").strip()
@@ -104,6 +128,7 @@ def parse_talents(kv: dict[str, str]) -> list[dict[str, str]]:
 
 
 def _parse_level_range(values: list[str]) -> list[dict[str, Any]]:
+    """_parse_level_range 实现。"""
     levels: list[dict[str, Any]] = []
     for raw in values:
         if not raw or raw == "-":
@@ -118,6 +143,14 @@ def _parse_level_range(values: list[str]) -> list[dict[str, Any]]:
 
 
 def parse_skills(kv: dict[str, str]) -> list[dict[str, Any]]:
+    """ parse_skills 实现。
+
+    Args:
+        kv: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     skills: list[dict[str, Any]] = []
     for i in range(1, 4):
         name = kv.get(f"技能{i}", "").strip()
@@ -182,6 +215,15 @@ def parse_skills(kv: dict[str, str]) -> list[dict[str, Any]]:
 
 
 def parse_base_stats(kv: dict[str, str], rarity: int) -> dict[str, Any]:
+    """ parse_base_stats 实现。
+
+    Args:
+        kv: 参数描述。
+        rarity: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     stats: dict[str, Any] = {}
     for field, key in [("初始生命max", "hp"), ("初始攻击max", "atk"), ("初始防御max", "def"), ("初始法抗max", "res")]:
         raw = kv.get(field, "").strip()
@@ -216,6 +258,14 @@ def parse_base_stats(kv: dict[str, str], rarity: int) -> dict[str, Any]:
 
 
 def parse_potentials(kv: dict[str, str]) -> list[str]:
+    """ parse_potentials 实现。
+
+    Args:
+        kv: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     potentials: list[str] = []
     for i in range(2, 7):
         desc = kv.get(f"潜能{i}", "").strip()
@@ -225,6 +275,14 @@ def parse_potentials(kv: dict[str, str]) -> list[str]:
 
 
 def parse_modules(kv: dict[str, str]) -> list[dict[str, str]]:
+    """ parse_modules 实现。
+
+    Args:
+        kv: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     modules: list[dict[str, str]] = []
     base_name = kv.get("模组名", "").strip()
     if not base_name:

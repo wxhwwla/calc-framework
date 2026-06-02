@@ -28,10 +28,12 @@ EXECUTE_SP_RESTORE: dict[str, int] = {
 
 def execute_damage_multiplier(enemy_tier: str) -> float:
     return float(EXECUTE_DAMAGE_MULT.get(str(enemy_tier).strip(), 1.0))
+    """execute damage multiplier。"""
 
 
 def execute_sp_restore(enemy_tier: str) -> int:
     return int(EXECUTE_SP_RESTORE.get(str(enemy_tier).strip(), 25))
+    """execute sp restore。"""
 
 
 def calculate_execute_damage(

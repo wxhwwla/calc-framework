@@ -31,106 +31,51 @@
 games/endfield/
 ├── main.py                    # 项目入口，启动应用
 ├── pyproject.toml             # 打包配置文件
-├── please_read_me.py          # 项目说明文档
-├── build.py                   # 打包脚本
-├── calculation/               # 计算逻辑模块
-│   ├── __init__.py
-│   ├── config.py              # 集中属性配置
-│   ├── data_generator.py      # 统一数据生成器
-│   ├── formula.py             # 正向计算公式
-│   ├── inverse.py             # 反向拟合算法
-│   └── multiplicative_zones/  # 乘区计算子模块
-│       ├── base_zone.py       # 乘区基类
-│       ├── attribute_zone.py  # 能力乘区
-│       ├── defense_zone.py    # 防御减伤区
-│       ├── ability_bonus_zone.py  # 能力值加成区
-│       ├── final_attack_zone.py   # 最终攻击力区
-│       ├── dag/               # DAG 引擎适配器（桥接 calc-framework）
-│       └── zone_manager.py    # 乘区管理器
-├── character_weapon_equipment/# 数据文件目录
-│   ├── DATA_README.md         # 数据许可说明（见仓库根 DATA_LICENSE）
-│   ├── character_data/        # 角色数据
-│   │   ├── characters.json    # 角色JSON数据
-│   │   ├── character_data.py  # 角色数据管理
-│   │   ├── add_character.py   # 添加角色脚本
-│   │   └── formula.py         # 角色公式（保留兼容）
-│   ├── weapon_data/           # 武器数据
-│   │   ├── weapons.json
-│   │   ├── add_weapon.py
-│   │   └── formula.py         # 保留兼容
-│   └── equipment_data/
-│       └── equipments.json    # 装备（全量搜索）
-├── data/                      # 统一数据加载层
-│   └── loader.py              # get_characters / get_weapons / get_equipments
-├── calculation/               # 伤害引擎、装备、搜索、MVP 流水线（见 docs/MVP搜索验收说明.md）
-├── designer/                  # 终末地数据设计器
-│   ├── designer_main.py       # 设计器主入口（公式反推 + 数据编辑 + 数据浏览）
-│   ├── data_editor_tab.py     # 数据编辑页签（新增/编辑/删除角色、武器、装备）
-│   ├── data_browser_tab.py    # 数据浏览页签（查看 JSON 列表）
-│   └── inverse_tab.py         # 公式反推页签
-├── gui/                # GUI 界面模块（PySide6）
-│   ├── shell/                 # 主窗口与控制栏
-│   │   ├── qt_app.py          # 主应用（双页签：计算页 + 高级页）
-│   │   └── qt_control_dock.py # 高级页三列控制栏
-│   ├── panels/                # 选择面板
-│   │   └── selection/
-│   │       ├── qt_panel.py    # 四级联动选择面板（类型/星级/名称/等级）
-│   │       ├── qt_subpanels.py # 技能等级面板
-│   │       └── qt_ability_panel.py  # 能力值面板
-│   ├── shared/                # 共享模块
-│   │   ├── display_view/
-│   │   │   └── qt_columns.py  # QtAttributeColumns 属性列展示
-│   │   ├── calc_history.py    # 计算历史管理
-│   │   ├── calc_mode_labels.py # 计算模式标签映射
-│   │   ├── damage_visualization.py # matplotlib 伤害仪表盘
-│   │   ├── preset_batch_compare.py # 多方案对比
-│   │   └── ui_preferences.py  # 启动页策略、ui_preferences.json
-│   ├── app/                   # 应用逻辑层
-│   │   ├── confirm_refresh.py # 确认刷新去重与签名
-│   │   ├── display_request.py # 确认刷新统一输入
-│   │   ├── loadout_evaluation.py # 预览/仪表盘求值
-│   │   ├── loadout_preset.py  # 配装预设 JSON 导入导出
-│   │   └── loadout_state.py   # 从面板刮取配装状态
-│   ├── backends/              # Qt 后端工具
-│   │   ├── qt_factory.py      # Qt 控件工厂
-│   │   └── qt_worker.py       # 搜索线程
-│   ├── controls/              # 控件目录
-│   │   ├── enhancement/       # 高级控制对话框
-│   │   ├── manual_buff/       # 场外 Buff 窗口
-│   │   ├── multi_skill/       # 多技能次数
-│   │   └── search/            # 搜索操作
-│   ├── presentation/          # 展示层
-│   │   ├── display/           # 属性列文本格式
-│   │   ├── preview/           # 技能预览
-│   │   ├── damage_snapshot.py # 确认后伤害快照
-│   │   ├── display_lines.py   # 属性列格式化文案
-│   │   ├── preview_lines.py   # 单/多技能快速预览（带缓存）
-│   │   └── search_results_lines.py # 搜索结果格式化
-│   ├── search_ui/             # 搜索 UI
-│   │   ├── search_settings.py # 并行线程/TopN 配置
-│   │   ├── search_export_paths.py # search_output/ 导出路径
-│   │   └── search_estimate_message.py # 搜索预估文案
-│   └── layout/
-│       └── gui_layout.py      # grid 常量、窄屏重排、按钮尺寸
-├── legal/                     # 许可与数据来源（GUI 对话框）
-│   └── attribution.py
-├── scripts/                   # 包内维护脚本（非 pytest；≠ 仓库 tools/）
-│   ├── inverse_cli.py         # 反推公式 CLI
-│   ├── inverse_formula_gui.py # 反推公式 GUI（维护用）
-│   ├── seed_weapons.py        # 武器录入示例
-│   └── seed_characters.py     # 角色录入示例
+├── _path_setup.py             # 路径设置（统一 sys.path 管理）
+├── please_read_me.py          # 项目说明文档（版本信息）
+├── calc/                      # 计算引擎
+│   ├── core/                  # 核心计算（配置、公式、数据生成）
+│   ├── dag_adapter/           # DAG 引擎适配器（桥接 calc-framework）
+│   ├── damage/                # 伤害计算引擎 & 反推
+│   │   ├── engine/            # 正向伤害计算
+│   │   └── inverse/           # 反向公式拟合
+│   ├── equipment/             # 装备计算
+│   ├── loadout/               # 配装计算 & 优化器
+│   ├── manual_buff/           # 场外 Buff 计算
+│   ├── multi_skill/           # 多技能加权计算 & 优化器
+│   ├── multiplicative_zones/  # 15 乘区实现
+│   ├── search/                # 全量搜索 & MVP 搜索
+│   ├── skills/                # 技能数据模型 & 特殊字段
+│   ├── survival/              # 生存能力计算
+│   └── zone_snapshot/         # 乘区快照
+├── data/                      # 游戏数据（JSON）
+│   ├── characters.json        # 角色数据
+│   ├── weapons.json           # 武器数据
+│   ├── equipments.json        # 装备数据
+│   ├── data_version.json      # 数据版本号
+│   └── ...                    # 其他数据文件
+├── data_loading/              # 数据加载层
+├── gui/                       # PySide6 GUI 界面
+│   ├── app/                   # 应用逻辑（配装状态、预设、求值）
+│   ├── controls/              # 控件（敌人、增强、Buff、多技能、搜索、OCR、生存）
+│   ├── designer/              # 数据设计器（公式反推 + 数据编辑 + 数据浏览）
+│   ├── layout/                # 布局常量
+│   ├── legal/                 # 许可与数据来源对话框
+│   ├── panels/                # 选择面板（类型/星级/名称/等级/能力值）
+│   ├── presentation/          # 展示层（属性列、技能预览、搜索结果）
+│   ├── shared/                # 共享模块（属性列、计算历史、配装对比）
+│   └── shell/                 # 主窗口 & 控制栏
+├── scripts/                   # 包内维护脚本（逆推 CLI/GUI、种子数据录入）
 ├── tests/                     # pytest 单元测试
-│   ├── test_calculation.py
-│   ├── test_game_data_contract.py
-│   └── ...
-├── release_bundle/            # 发布布局（勿命名 packaging）
-│   └── release_layout.py
-├── search_output/             # 全量/MVP 搜索导出（gitignore，运行后生成）
-└── utils/
-    ├── path_utils.py          # get_application_dir / get_resource_path
-    ├── gui_fonts.py           # 系统 UI 字体 + matplotlib 中文
-    ├── gui_chart_theme.py     # 仪表盘图表与 CTk 深色主题同步
-    └── platform_win32_patch.py # Windows WMI 规避（启动/打包）
+│   ├── calculation/           # 计算引擎测试
+│   ├── data/                  # 数据契约测试
+│   ├── data_loading/          # 数据加载测试
+│   ├── gui_design/            # GUI 组件测试
+│   ├── repo/                  # 仓库级测试
+│   ├── tools/                 # 工具模块测试
+│   └── utils/                 # 工具函数测试
+├── utils/                     # 工具函数
+└── release_bundle/            # 发布布局配置
 ```
 
 ### 仓库根目录（与本包并列）

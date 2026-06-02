@@ -17,6 +17,7 @@ STAGING_DIR = Path(__file__).resolve().parent / ".staging"
 
 
 def _ensure_staging_dir() -> Path:
+    """确保暂存目录存在并返回路径。"""
     STAGING_DIR.mkdir(parents=True, exist_ok=True)
     return STAGING_DIR
 

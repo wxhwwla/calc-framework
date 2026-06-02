@@ -61,18 +61,14 @@ DEFAULT_THEME = {
 
 
 class ExportRequest(BaseModel):
+    """配置包导出请求体。"""
 
-    meta: dict[str, Any]
-
-    dag: dict[str, Any]
-
-    layout: dict[str, Any]
-
-    theme: dict[str, Any] | None = None
-
-    data_files: dict[str, list[dict[str, Any]]] | None = None
-
-    filename: str = "config.calcpack"
+    meta: dict[str, Any] = Field(description="包元数据")
+    dag: dict[str, Any] = Field(description="DAG 定义")
+    layout: dict[str, Any] = Field(description="UI 布局")
+    theme: dict[str, Any] | None = Field(default=None, description="主题配置")
+    data_files: dict[str, list[dict[str, Any]]] | None = Field(default=None, description="附加数据文件")
+    filename: str = Field(default="config.calcpack", description="导出文件名")
 
 
 
@@ -81,7 +77,7 @@ class ExportRequest(BaseModel):
 @router.get("/theme/default")
 
 async def get_default_theme():
-
+    """获取默认主题配置。"""
     return DEFAULT_THEME
 
 
@@ -106,6 +102,7 @@ def export_calcpack_bytes(req: ExportRequest) -> tuple[bytes, str]:
 
 @router.post("/export")
 async def export_calcpack(req: ExportRequest):
+    """导出 .calcpack 配置包文件（ZIP 格式下载）。"""
     try:
         body, filename = export_calcpack_bytes(req)
         return StreamingResponse(

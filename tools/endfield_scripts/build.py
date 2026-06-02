@@ -99,6 +99,7 @@ DEFAULT_HEARTBEAT_SECONDS = 15
 
 def _read_int_env(name: str, default: int) -> int:
 
+    """_read_int_env 实现。"""
     raw = os.getenv(name, "").strip()
 
     if not raw:
@@ -121,6 +122,7 @@ def _read_int_env(name: str, default: int) -> int:
 
 def _terminate_process_tree(proc: subprocess.Popen[bytes]) -> None:
 
+    """_terminate_process_tree 实现。"""
     if proc.poll() is not None:
 
         return
@@ -173,6 +175,7 @@ def _run_with_watchdog(
 
 ) -> None:
 
+    """_run_with_watchdog 实现。"""
     proc = subprocess.Popen(args, cwd=cwd)
 
     start = time.monotonic()
@@ -221,6 +224,14 @@ def _run_with_watchdog(
 
 def check_build_dependencies(target: BuildTarget) -> bool:
 
+    """ check_build_dependencies 实现。
+
+    Args:
+        target: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     import importlib.util
 
     from importlib.metadata import PackageNotFoundError, version
@@ -287,6 +298,14 @@ def check_build_dependencies(target: BuildTarget) -> bool:
 
 def build_release(target: BuildTarget) -> Path:
 
+    """ build_release 实现。
+
+    Args:
+        target: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     project_root = Path(__file__).resolve().parent.parent
 
     repo_root = project_root.parent.parent
@@ -481,6 +500,7 @@ def build_release(target: BuildTarget) -> Path:
 
 def main() -> None:
 
+    """CLI 入口。"""
     apply_platform_win32_patch()
 
 

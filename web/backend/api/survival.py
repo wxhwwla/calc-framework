@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""生存能力预估 API。"""
+
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -8,29 +10,32 @@ router = APIRouter(prefix="/api/survival", tags=["survival"])
 
 
 class SurvivalEstimateRequest(BaseModel):
-    char_data: dict[str, Any]
-    weapon_data: dict[str, Any]
-    char_level: int = 90
-    weapon_level: int = 90
-    trust_level: int = 0
-    enemy_tier: str = "普通"
-    imbalance_efficiency_bonus: float = 0.0
-    enemy_max_hp: float | None = None
-    enemy_id: str = ""
-    base_heal_flat: float = 201.6
-    stat_per_point: float = 0.47
-    heal_efficiency: float = 0.20
-    independent_heal_bonus: float = 0.30
-    imbalance_gain_base: float = 10.0
-    hot_resistance_percent: float = 0.0
-    sp_start: float = 0.0
-    sp_seconds: float = Field(5.0, ge=0.0)
-    ult_start: float = 0.0
-    life_steal_rate: float = Field(0.10, ge=0.0, le=1.0)
+    """生存能力预估请求体。"""
+
+    char_data: dict[str, Any] = Field(description="角色数据")
+    weapon_data: dict[str, Any] = Field(description="武器数据")
+    char_level: int = Field(default=90, description="角色等级")
+    weapon_level: int = Field(default=90, description="武器等级")
+    trust_level: int = Field(default=0, description="信赖等级")
+    enemy_tier: str = Field(default="普通", description="敌方等级")
+    imbalance_efficiency_bonus: float = Field(default=0.0, description="失衡效率加成")
+    enemy_max_hp: float | None = Field(default=None, description="敌人最大 HP")
+    enemy_id: str = Field(default="", description="敌人 ID")
+    base_heal_flat: float = Field(default=201.6, description="基础治疗量")
+    stat_per_point: float = Field(default=0.47, description="每点属性治疗成长")
+    heal_efficiency: float = Field(default=0.20, description="治疗效率")
+    independent_heal_bonus: float = Field(default=0.30, description="独立治疗加成")
+    imbalance_gain_base: float = Field(default=10.0, description="失衡收益基数")
+    hot_resistance_percent: float = Field(default=0.0, description="HOT 抗性百分比")
+    sp_start: float = Field(default=0.0, description="初始 SP")
+    sp_seconds: float = Field(default=5.0, ge=0.0, description="SP 回复秒数")
+    ult_start: float = Field(default=0.0, description="初始大招能量")
+    life_steal_rate: float = Field(default=0.10, ge=0.0, le=1.0, description="生命窃取率")
 
 
 @router.post("/estimate")
 def survival_estimate(req: SurvivalEstimateRequest) -> dict[str, Any]:
+    """执行生存能力预估计算。"""
     from games.endfield.calc.survival.estimate import build_survival_estimate
 
     try:

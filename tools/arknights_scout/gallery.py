@@ -20,12 +20,22 @@ _SKIP_PREFIXES = (
 
 
 class _GalleryLinkParser(HTMLParser):
+    """_GalleryLinkParser 类。"""
     def __init__(self, site_prefix: str) -> None:
         super().__init__()
         self._site_prefix = site_prefix.rstrip("/")
         self.titles: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """ handle_starttag 实现。
+
+        Args:
+            tag: 参数描述。
+            attrs: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if tag.lower() != "a":
             return
         href = ""
@@ -41,6 +51,7 @@ class _GalleryLinkParser(HTMLParser):
 
 
 def _href_to_title(href: str, site_prefix: str) -> str:
+    """_href_to_title 实现。"""
     if href.startswith("/"):
         path = href
     else:
@@ -54,6 +65,7 @@ def _href_to_title(href: str, site_prefix: str) -> str:
 
 
 def _is_entry_title(title: str) -> bool:
+    """_is_entry_title 实现。"""
     lower = title.lower()
     for skip in _SKIP_PREFIXES:
         if lower.startswith(skip.lower()) or title == skip:
@@ -64,6 +76,14 @@ def _is_entry_title(title: str) -> bool:
 
 
 def extract_gallery_entry_titles(html: str, *, site_path: str = "/arknights") -> list[str]:
+    """ extract_gallery_entry_titles 实现。
+
+    Args:
+        html: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     parser = _GalleryLinkParser(site_path)
     parser.feed(html or "")
     seen: set[str] = set()
@@ -77,6 +97,7 @@ def extract_gallery_entry_titles(html: str, *, site_path: str = "/arknights") ->
 
 
 def merge_title_lists(*lists: Iterable[str]) -> list[str]:
+    """merge_title_lists 实现。"""
     seen: set[str] = set()
     merged: list[str] = []
     for items in lists:

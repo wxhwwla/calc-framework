@@ -27,7 +27,7 @@ _PKG = _REPO_ROOT / "games" / "endfield"
 
 
 def ensure_package_path() -> Path:
-
+    """将 games/endfield 包加入 sys.path 并返回包路径。"""
     if str(_PKG) not in sys.path:
 
         sys.path.insert(0, str(_PKG))

@@ -11,11 +11,13 @@ _STORE_DIR = Path(__file__).resolve().parents[1] / "data"
 
 
 def _path(name: str) -> Path:
+    """获取持久化 JSON 文件的路径。"""
     _STORE_DIR.mkdir(parents=True, exist_ok=True)
     return _STORE_DIR / f"{name}.json"
 
 
 def load_list(name: str) -> list[dict[str, Any]]:
+    """从 JSON 文件加载持久化的列表（文件不存在或损坏时返回空列表）。"""
     path = _path(name)
     if not path.is_file():
         return []

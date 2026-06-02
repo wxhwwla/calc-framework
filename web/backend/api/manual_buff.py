@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""手动 Buff / 异常状态矩阵 / 消耗品预设 API。"""
+
 from typing import Any
 
 from fastapi import APIRouter
@@ -43,6 +45,7 @@ def abnormal_matrix_specs() -> dict[str, Any]:
 
 @router.get("/consumable-presets")
 def list_consumable_presets() -> list[dict[str, object]]:
+    """获取消耗品预设列表（名称 + 效果条目）。"""
     from games.endfield.calc.manual_buff.consumable_presets import (
         CONSUMABLE_PRESETS,
         list_consumable_preset_names,
@@ -62,13 +65,16 @@ def list_consumable_presets() -> list[dict[str, object]]:
 
 
 class ActiveKeysRequest(BaseModel):
-    manual_counts: dict[str, int] = Field(default_factory=dict)
-    physical_abnormal_counts: dict[str, int] = Field(default_factory=dict)
-    spell_abnormal_counts: dict[str, int] = Field(default_factory=dict)
+    """活跃 Buff key 计算请求体。"""
+
+    manual_counts: dict[str, int] = Field(default_factory=dict, description="手动技能计数")
+    physical_abnormal_counts: dict[str, int] = Field(default_factory=dict, description="物理异常层数")
+    spell_abnormal_counts: dict[str, int] = Field(default_factory=dict, description="法术异常层数")
 
 
 @router.post("/active-keys")
 def active_keys(req: ActiveKeysRequest) -> dict[str, list[str]]:
+    """基于计数返回活跃的 Buff key 列表。"""
     from games.endfield.calc.manual_buff.model import build_active_keys_from_counts
 
     keys = build_active_keys_from_counts(

@@ -24,6 +24,7 @@ def abnormal_levels_for(abnormal: str) -> tuple[int, ...]:
     if abnormal in _BINARY_ABNORMAL_TYPES:
         return (0, 1)
     return (0, 1, 2, 3, 4)
+    """abnormal levels for。"""
 
 
 _CRIT_RATE_RE = re.compile(r"暴击率\+?\s*([+-]?\d+(?:\.\d+)?)\s*%")
@@ -54,6 +55,7 @@ def _normalized_component_mode(mode: str) -> str:
     if text in ("技能+异常", "技能＋异常"):
         return "skill_and_abnormal"
     return "skill_and_abnormal"
+    """normalized component mode。"""
 
 
 def normalize_abnormal_counts(counts: dict[str, int] | None) -> dict[str, int]:
@@ -64,6 +66,7 @@ def normalize_abnormal_counts(counts: dict[str, int] | None) -> dict[str, int]:
             raw = 0 if counts is None else int(counts.get(key, 0))
             normalized[key] = max(0, raw)
     return normalized
+    """normalize abnormal counts。"""
 
 
 def is_physical_abnormal_key(key: str) -> bool:
@@ -133,15 +136,18 @@ def format_abnormal_breakdown_lines(
 
 def _physical_level_coeff(char_level: int) -> float:
     return 1.0 + (max(1, int(char_level)) - 1.0) / 392.0
+    """physical level coeff。"""
 
 
 def _effect_text(effect: DamageEffect) -> str:
     text = str(effect.raw_text or effect.effect_type or "").strip()
     return text
+    """effect text。"""
 
 
 def _is_conditional_crit_text(text: str) -> bool:
     return any(token in text for token in _CONDITIONAL_HINTS)
+    """is conditional crit text。"""
 
 
 def _extract_percent(text: str, pattern: re.Pattern[str]) -> float:
@@ -152,6 +158,7 @@ def _extract_percent(text: str, pattern: re.Pattern[str]) -> float:
         return float(match.group(1)) / 100.0
     except (TypeError, ValueError):
         return 0.0
+    """extract percent。"""
 
 
 def extract_equipment_crit_bonus(
@@ -192,6 +199,7 @@ def extract_weapon_crit_bonus(weapon_data: dict | None, *, weapon_level: int) ->
             return float(raw) / 100.0
         except (TypeError, ValueError):
             return 0.0
+        """read percent。"""
 
     return _read_percent("暴击率+"), _read_percent("暴击伤害+")
 
@@ -247,6 +255,7 @@ def evaluate_physical_abnormal_total(
                     imbalance_damage_bonus=context.imbalance_damage_bonus,
                     other_damage_bonus=context.other_damage_bonus,
                 )
+                """make ctx。"""
 
             attached = build_physical_attached_effects(
                 abnormal,

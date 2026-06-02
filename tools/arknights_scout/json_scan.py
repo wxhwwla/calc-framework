@@ -10,6 +10,14 @@ _JSON_BLOCK_RE = re.compile(r"\{\s*\"[^}]+\}", re.DOTALL)
 
 
 def scan_pages_for_json(pages: dict[str, dict[str, Any]]) -> dict[str, list[str]]:
+    """ scan_pages_for_json 实现。
+
+    Args:
+        pages: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     result: dict[str, list[str]] = {}
     for title, bundle in pages.items():
         text = bundle.get("wikitext") or ""

@@ -23,6 +23,7 @@ CONSUMABLE_PRESETS: tuple[tuple[str, tuple[dict[str, str | float], ...]], ...] =
 
 def list_consumable_preset_names() -> tuple[str, ...]:
     return tuple(name for name, _ in CONSUMABLE_PRESETS)
+    """列出consumable preset names。"""
 
 
 def consumable_preset_buffs(name: str) -> list[dict[str, str | float]]:

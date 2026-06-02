@@ -46,6 +46,7 @@ def _flatten_seed_list(raw: list[Any]) -> list[dict[str, Any]]:
 
 def _load_seed_list(seed_path: Path, marker: str) -> list[dict[str, Any]]:
 
+    """_load_seed_list 实现。"""
     text = seed_path.read_text(encoding="utf-8")
 
     match = re.search(
@@ -70,6 +71,7 @@ def _load_seed_list(seed_path: Path, marker: str) -> list[dict[str, Any]]:
 
 def _write_seed_list(seed_path: Path, marker: str, specs: list[dict[str, Any]]) -> None:
 
+    """_write_seed_list 实现。"""
     text = seed_path.read_text(encoding="utf-8")
 
     formatted = pprint.pformat(specs, width=100, sort_dicts=False)
@@ -100,6 +102,14 @@ def _write_seed_list(seed_path: Path, marker: str, specs: list[dict[str, Any]]) 
 
 def load_seed_character_specs(seed_path: Path) -> list[dict[str, Any]]:
 
+    """ load_seed_character_specs 实现。
+
+    Args:
+        seed_path: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     return _load_seed_list(seed_path, "_SEED_CHARACTERS")
 
 
@@ -108,6 +118,15 @@ def load_seed_character_specs(seed_path: Path) -> list[dict[str, Any]]:
 
 def write_seed_character_specs(seed_path: Path, specs: list[dict[str, Any]]) -> None:
 
+    """ write_seed_character_specs 实现。
+
+    Args:
+        seed_path: 参数描述。
+        specs: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     _write_seed_list(seed_path, "_SEED_CHARACTERS", specs)
 
 
@@ -116,6 +135,14 @@ def write_seed_character_specs(seed_path: Path, specs: list[dict[str, Any]]) -> 
 
 def load_seed_weapon_specs(seed_path: Path) -> list[dict[str, Any]]:
 
+    """ load_seed_weapon_specs 实现。
+
+    Args:
+        seed_path: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     return _load_seed_list(seed_path, "_SEED_WEAPONS")
 
 
@@ -124,6 +151,15 @@ def load_seed_weapon_specs(seed_path: Path) -> list[dict[str, Any]]:
 
 def write_seed_weapon_specs(seed_path: Path, specs: list[dict[str, Any]]) -> None:
 
+    """ write_seed_weapon_specs 实现。
+
+    Args:
+        seed_path: 参数描述。
+        specs: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     _write_seed_list(seed_path, "_SEED_WEAPONS", specs)
 
 

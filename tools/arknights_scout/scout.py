@@ -47,6 +47,16 @@ def collect_titles_for_kind(
     gallery_page: str,
     category_title: str,
 ) -> tuple[list[str], list[str], list[str]]:
+    """ collect_titles_for_kind 实现。
+
+    Args:
+        client: 参数描述。
+        gallery_page: 参数描述。
+        category_title: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     html = client.fetch_parsed_gallery_html(gallery_page)
     from_gallery = extract_gallery_entry_titles(html)
     from_category: list[str] = []
@@ -65,6 +75,7 @@ def run_scout(
     per_kind_limit: int | None = None,
     only_kind: str | None = None,
 ) -> dict[str, Any]:
+    """run_scout 实现。"""
     output_root.mkdir(parents=True, exist_ok=True)
     raw_dir = output_root / "raw"
     reports_dir = output_root / "reports"
@@ -167,6 +178,7 @@ def run_scout(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="Arknights BWIKI 数据侦察（阶段 C）")
     parser.add_argument("--limit", type=int, default=None, help="每类最多拉取条目数（调试用）")
     parser.add_argument("--output", type=Path, default=OUTPUT_ROOT, help="输出目录")

@@ -330,3 +330,4 @@ def store_snapshot_on_app(app: Any, snapshot: DamageSnapshot) -> None:
 
 def get_snapshot_from_app(app: Any) -> DamageSnapshot | None:
     return getattr(app, "_last_damage_snapshot", None)
+    """获取snapshot from app。"""

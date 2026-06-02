@@ -76,7 +76,7 @@ class TestSearchSettings(unittest.TestCase):
 
     def test_format_search_progress_text_shows_total_and_remaining(self):
 
-        from gui.controls.search.search_settings import format_search_progress_text
+        from games.endfield.gui.controls.search.search_settings import format_search_progress_text
 
 
 

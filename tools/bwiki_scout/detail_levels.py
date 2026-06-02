@@ -110,6 +110,7 @@ def operator_detail_titles(operator_names: list[str]) -> list[str]:
 
 def _parse_number(text: str) -> float | None:
 
+    """_parse_number 实现。"""
     text = text.strip().replace("×", "").strip()
 
     if not text:

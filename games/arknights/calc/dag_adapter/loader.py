@@ -28,6 +28,15 @@ class ArknightsContextLoader(DataContextLoader):
     """
 
     def build_context(self, **kwargs: Any) -> dict[str, Any]:
+        """从干员数据构建 DAG 计算上下文。
+
+        参数:
+            **kwargs: 包含 operator, skill_level, enemy_def,
+                      enemy_res, atk_percent_bonus 等键。
+
+        返回:
+            符合框架 DataContext 格式的字典。
+        """
         operator: dict[str, Any] = kwargs["operator"]
         skill_level: int = kwargs.get("skill_level", 7)
         enemy_def: float = kwargs.get("enemy_def", 200.0)

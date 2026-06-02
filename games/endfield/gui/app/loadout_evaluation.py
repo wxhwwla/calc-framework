@@ -9,12 +9,12 @@ from typing import Any
 from games.endfield.calc.core.preview_cache import sync_confirm_dependencies
 from games.endfield.calc.loadout.optimizer import WeaponCandidate
 from games.endfield.data_loading.enemy_eval_params import EnemyEvalParams
-from gui.presentation.damage_snapshot import (
+from games.endfield.gui.presentation.damage_snapshot import (
     DamageSnapshot,
     build_damage_snapshot,
     store_snapshot_on_app,
 )
-from gui.presentation.preview_lines import (
+from games.endfield.gui.presentation.preview_lines import (
     build_multi_skill_search_preview_lines,
     build_single_skill_search_preview_lines,
 )
@@ -143,7 +143,7 @@ def refresh_damage_snapshot(
     loadout: LoadoutState | None = None,
 ) -> None:
     """确认后刷新伤害快照（从 LoadoutState 重建并存储）。"""
-    from gui.app.loadout_state import read_loadout_from_app
+    from games.endfield.gui.app.loadout_state import read_loadout_from_app
 
     if loadout is None:
         loadout = read_loadout_from_app(app)

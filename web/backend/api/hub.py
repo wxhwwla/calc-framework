@@ -104,12 +104,14 @@ async def update_pack_endpoint(pack_id: str, update: PackUpdate):
 
 @router.delete("/packs/{pack_id}", status_code=204)
 async def delete_pack_endpoint(pack_id: str):
+    """删除配置包（含元数据、评分记录和文件）。"""
     if not delete_pack(pack_id):
         raise HTTPException(status_code=404, detail="包不存在")
 
 
 @router.post("/packs/{pack_id}/upload")
 async def upload_pack_file(pack_id: str, file: UploadFile):
+    """上传 .calcpack 文件并关联到指定配置包。"""
     from hub.storage import validate_calcpack_archive
 
     pack = get_pack(pack_id)
@@ -156,6 +158,7 @@ async def rate_pack_endpoint(pack_id: str, rate: RateRequest):
 
 @router.get("/stats")
 async def hub_stats():
+    """获取 Calc Hub 统计信息（总包数、数据库路径）。"""
     packs, total = list_packs(limit=0)
     return {
         "total_packs": total,

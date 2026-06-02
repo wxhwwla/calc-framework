@@ -39,6 +39,8 @@ class SectionHeader(QLabel):
         super().__init__(text)
         self.setFont(font)
         self.setStyleSheet(f"color: {_SECTION_COLOR}; padding: 4px 0;")
+        """初始化实例。"""
+    """SectionHeader。"""
 
 
 class HintLabel(QLabel):
@@ -47,6 +49,8 @@ class HintLabel(QLabel):
         self.setFont(font)
         self.setStyleSheet(f"color: {_HINT_COLOR};")
         self.setWordWrap(True)
+        """初始化实例。"""
+    """HintLabel。"""
 
 
 class SmallLabel(QLabel):
@@ -54,6 +58,8 @@ class SmallLabel(QLabel):
         super().__init__(text)
         self.setFont(font)
         self.setStyleSheet(f"color: {_LABEL_COLOR};")
+        """初始化实例。"""
+    """SmallLabel。"""
 
 
 class ComboRow(QWidget):
@@ -68,9 +74,12 @@ class ComboRow(QWidget):
         self.combo.setCurrentText(current)
         self.combo.setStyleSheet(_COMBO_STYLE)
         layout.addWidget(self.combo, stretch=1)
+        """初始化实例。"""
 
     def current(self) -> str:
         return self.combo.currentText()
+        """current。"""
+    """ComboRow。"""
 
 
 def build_abnormal_matrix(
@@ -104,6 +113,7 @@ def build_abnormal_matrix(
             row_edits.append(edit)
         edits_by_row[row_name] = row_edits
     return w, edits_by_row
+    """build abnormal matrix。"""
 
 
 def build_manual_abnormal_matrix(
@@ -165,3 +175,4 @@ def read_abnormal_edits(
         if i < len(keys):
             result[keys[i]] = total
     return result
+    """read abnormal edits。"""

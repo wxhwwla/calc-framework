@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""游戏数据查询 API — 角色/武器/装备的 CRUD 路由 + 摘要统计 + 公式反推 + 多游戏 profile。"""
+
 import json
 
 from pathlib import Path

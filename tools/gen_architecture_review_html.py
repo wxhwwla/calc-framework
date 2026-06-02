@@ -266,6 +266,7 @@ BADGE = {
 
 def _card(c: dict) -> str:
 
+    """_card 实现。"""
     mermaid_block = ""
 
     if c.get("mermaid"):
@@ -341,6 +342,7 @@ def _card(c: dict) -> str:
 
 
 def build_html() -> str:
+    """生成架构审查的 HTML 页面内容。"""
 
     cards = "".join(_card(c) for c in CANDIDATES)
 
@@ -401,7 +403,7 @@ def build_html() -> str:
 
 
 def main() -> None:
-
+    """CLI 入口：生成架构审查 HTML 文件并在浏览器中打开。"""
     path = Path(tempfile.gettempdir()) / f"architecture-review-{int(time.time())}.html"
 
     path.write_text(build_html(), encoding="utf-8")

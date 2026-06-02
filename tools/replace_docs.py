@@ -5,6 +5,11 @@ import os
 
 
 def main():
+    """替换 .md 文档中的 calc_engine/endfield/ 为 calc-engine/endfield/。
+
+    Returns:
+        被修改的文件路径列表
+    """
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []

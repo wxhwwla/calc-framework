@@ -46,6 +46,7 @@ from bwiki_scout.equipment_sync import sync_equipments_from_parsed
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI parsed 装备草案 -> 本地装备 JSON")
 
     parser.add_argument("--input", type=Path, default=OUTPUT_ROOT, help="scout 输出目录")

@@ -87,6 +87,7 @@ from tools.designer.data_editor.profiles import (
 
 class _EntityTab(QWidget):
 
+    """_EntityTab 类。"""
     def __init__(
 
         self,
@@ -121,6 +122,7 @@ class _EntityTab(QWidget):
 
     def _build_ui(self) -> None:
 
+        """_build_ui 实现。"""
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(0, 0, 0, 0)
@@ -203,6 +205,14 @@ class _EntityTab(QWidget):
 
     def load_data(self, data: list[dict]) -> None:
 
+        """ load_data 实现。
+
+        Args:
+            data: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         self._entities = data
 
         self._refresh_table()
@@ -211,6 +221,14 @@ class _EntityTab(QWidget):
 
     def load_from_file(self, path: str | Path) -> bool:
 
+        """ load_from_file 实现。
+
+        Args:
+            path: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         try:
 
             with open(path, encoding="utf-8") as f:
@@ -235,6 +253,7 @@ class _EntityTab(QWidget):
 
     def _refresh_table(self) -> None:
 
+        """_refresh_table 实现。"""
         self._table.setRowCount(0)
 
         self._table.setColumnCount(len(self._columns))
@@ -275,6 +294,7 @@ class _EntityTab(QWidget):
 
     def _on_select(self, current: QTableWidgetItem | None, _previous: QTableWidgetItem | None) -> None:
 
+        """_on_select 实现。"""
         if current is None:
 
             self._detail_text.clear()
@@ -297,6 +317,7 @@ class _EntityTab(QWidget):
 
     def _show_detail(self, entity: dict) -> None:
 
+        """_show_detail 实现。"""
         lines: list[str] = []
 
         for key, val in entity.items():
@@ -389,6 +410,7 @@ class _EntityTab(QWidget):
 
     def entities(self) -> list[dict]:
 
+        """entities 实现。"""
         return self._entities
 
 
@@ -397,6 +419,7 @@ class _EntityTab(QWidget):
 
     def selected_entity(self) -> dict | None:
 
+        """selected_entity 实现。"""
         current = self._table.currentItem()
 
         if current is None:
@@ -417,6 +440,7 @@ class _EntityTab(QWidget):
 
 class DataEditorPanel(QWidget):
 
+    """DataEditorPanel 类。"""
     def __init__(self, parent: QWidget | None = None):
 
         super().__init__(parent)
@@ -437,6 +461,7 @@ class DataEditorPanel(QWidget):
 
     def _build_ui(self) -> None:
 
+        """_build_ui 实现。"""
         layout = QVBoxLayout(self)
 
 
@@ -517,6 +542,7 @@ class DataEditorPanel(QWidget):
 
     def _on_profile_combo_changed(self, index: int) -> None:
 
+        """_on_profile_combo_changed 实现。"""
         pid = self._profile_combo.itemData(index)
 
         if pid:
@@ -527,6 +553,14 @@ class DataEditorPanel(QWidget):
 
     def set_profile(self, profile_id: str) -> None:
 
+        """ set_profile 实现。
+
+        Args:
+            profile_id: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if profile_id not in PROFILES:
 
             profile_id = "endfield"
@@ -557,6 +591,14 @@ class DataEditorPanel(QWidget):
 
     def sync_profile_from_adapter(self, adapter_name: str) -> None:
 
+        """ sync_profile_from_adapter 实现。
+
+        Args:
+            adapter_name: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         pid = ADAPTER_NAME_TO_PROFILE.get(adapter_name)
 
         if pid:
@@ -567,12 +609,14 @@ class DataEditorPanel(QWidget):
 
     def get_profile_id(self) -> str:
 
+        """get_profile_id 实现。"""
         return self._profile_id
 
 
 
     def _rebuild_tabs(self) -> None:
 
+        """_rebuild_tabs 实现。"""
         profile = PROFILES[self._profile_id]
 
         data_dir = data_dir_for_profile(profile)
@@ -601,12 +645,14 @@ class DataEditorPanel(QWidget):
 
     def _data_dir(self) -> Path:
 
+        """_data_dir 实现。"""
         return data_dir_for_profile(PROFILES[self._profile_id])
 
 
 
     def _on_tab_changed(self, index: int) -> None:
 
+        """_on_tab_changed 实现。"""
         tab_name = self._tab_widget.tabText(index) if index >= 0 else ""
 
         self._dag_verify_btn.setEnabled(
@@ -619,6 +665,7 @@ class DataEditorPanel(QWidget):
 
     def _init_dag(self) -> None:
 
+        """_init_dag 实现。"""
         try:
 
             from calc_framework.config.adapter import AdapterPackage
@@ -637,6 +684,7 @@ class DataEditorPanel(QWidget):
 
     def _dag_verify(self) -> None:
 
+        """_dag_verify 实现。"""
         if self._dag_pkg is None:
 
             QMessageBox.warning(self, "DAG 未加载", "终末地适配器未加载，请检查 framework/games/endfield/")
@@ -801,6 +849,7 @@ class DataEditorPanel(QWidget):
 
     def _auto_load(self) -> None:
 
+        """_auto_load 实现。"""
         for tab_name, tab in self._tabs.items():
 
             filepath = self._data_dir() / tab._filename
@@ -815,6 +864,7 @@ class DataEditorPanel(QWidget):
 
     def _reload_all(self) -> None:
 
+        """_reload_all 实现。"""
         self._auto_load()
 
         QMessageBox.information(self, "重载完成", "已重新加载所有数据")
@@ -823,6 +873,7 @@ class DataEditorPanel(QWidget):
 
     def _save_current(self) -> None:
 
+        """_save_current 实现。"""
         idx = self._tab_widget.currentIndex()
 
         if idx < 0:
@@ -857,6 +908,7 @@ class DataEditorPanel(QWidget):
 
     def _validate_current(self) -> None:
 
+        """_validate_current 实现。"""
         from tools.data_pipeline.validators.schema_check import validate_all
 
 
@@ -909,6 +961,7 @@ class DataEditorPanel(QWidget):
 
     def _import_json(self) -> None:
 
+        """_import_json 实现。"""
         path, _ = QFileDialog.getOpenFileName(
 
             self, "导入 JSON", "", "JSON Files (*.json);;All Files (*)"
@@ -945,6 +998,7 @@ class DataEditorPanel(QWidget):
 
     def _update_status(self) -> None:
 
+        """_update_status 实现。"""
         counts = []
 
         for tab_name, tab in self._tabs.items():
@@ -957,6 +1011,7 @@ class DataEditorPanel(QWidget):
 
     def get_data_files(self) -> dict[str, list]:
 
+        """get_data_files 实现。"""
         result: dict[str, list] = {}
 
         for tab_name, tab in self._tabs.items():

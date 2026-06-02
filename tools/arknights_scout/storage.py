@@ -8,11 +8,29 @@ from typing import Any
 
 
 def safe_dirname(title: str) -> str:
+    """ safe_dirname 实现。
+
+    Args:
+        title: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     cleaned = re.sub(r'[<>:"/\\|?*]', "_", title)
     return cleaned or "untitled"
 
 
 def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
+    """ save_page_bundle 实现。
+
+    Args:
+        raw_dir: 参数描述。
+        title: 参数描述。
+        bundle: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     page_dir = raw_dir / safe_dirname(title)
     page_dir.mkdir(parents=True, exist_ok=True)
     meta_path = page_dir / "meta.json"
@@ -28,6 +46,15 @@ def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
 
 
 def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
+    """ load_page_bundle 实现。
+
+    Args:
+        raw_dir: 参数描述。
+        title: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     page_dir = raw_dir / safe_dirname(title)
     wikitext_path = page_dir / "wikitext.txt"
     if not wikitext_path.is_file():
@@ -51,6 +78,15 @@ def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
 
 
 def write_manifest(output_root: Path, manifest: dict[str, Any]) -> Path:
+    """ write_manifest 实现。
+
+    Args:
+        output_root: 参数描述。
+        manifest: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     path = output_root / "manifest.json"
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return path

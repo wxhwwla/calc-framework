@@ -38,20 +38,24 @@ class TestResult:
 
     @property
     def passed(self) -> bool:
+        """passed 实现。"""
         if self.load_error:
             return False
         return all(item.passed for item in self.items)
 
     @property
     def total(self) -> int:
+        """total 实现。"""
         return len(self.items)
 
     @property
     def passed_count(self) -> int:
+        """passed_count 实现。"""
         return sum(1 for item in self.items if item.passed)
 
     @property
     def failed_count(self) -> int:
+        """failed_count 实现。"""
         return sum(1 for item in self.items if not item.passed)
 
 
@@ -104,6 +108,7 @@ class Tester:
     def _test_entity_name(
         self, entity: Dict[str, Any], name: str, result: TestResult,
     ) -> None:
+        """_test_entity_name 实现。"""
         item = TestResultItem(
             entity_name=name,
             test_name="实体名称",
@@ -115,6 +120,7 @@ class Tester:
     def _test_skills(
         self, entity: Dict[str, Any], name: str, result: TestResult,
     ) -> None:
+        """_test_skills 实现。"""
         skills = entity.get("技能", [])
 
         if not skills:
@@ -143,6 +149,7 @@ class Tester:
         self, skill: Dict[str, Any], entity_name: str,
         skill_name: str, index: int, result: TestResult,
     ) -> None:
+        """_test_skill_detail 实现。"""
         label = skill.get("标签", "")
         if label not in ("主动", "被动"):
             result.items.append(TestResultItem(
@@ -178,6 +185,7 @@ class Tester:
         self, seg: Dict[str, Any], entity_name: str,
         skill_name: str, seg_index: int, result: TestResult,
     ) -> None:
+        """_test_segment 实现。"""
         rates = seg.get("倍率", [])
         if not rates:
             result.items.append(TestResultItem(
@@ -219,6 +227,7 @@ class Tester:
     def _test_entity_type(
         self, entity: Dict[str, Any], name: str, result: TestResult,
     ) -> None:
+        """_test_entity_type 实现。"""
         etype = entity.get("_entity_type")
         valid_types = {"character", "weapon", "equipment", "mount", "other"}
         if etype is not None and etype not in valid_types:
@@ -238,6 +247,7 @@ class Tester:
 
     @staticmethod
     def _load_json(path: str | Path) -> List[Dict[str, Any]]:
+        """_load_json 实现。"""
         path = Path(path)
         if not path.exists():
             raise ValueError(f"文件不存在: {path}")

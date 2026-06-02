@@ -8,7 +8,15 @@ EXCLUDE_DIRS = {".venv", "__pycache__", ".pytest_cache", ".git", ".trae", "node_
 SELF_FILES = {"replace_adapters_imports.py", "replace_docs.py", "replace_paths.py"}
 
 
-def is_text_file(filepath):
+def is_text_file(filepath: str) -> bool:
+    """判断文件是否为文本文件（非二进制）。
+
+    Args:
+        filepath: 文件路径
+
+    Returns:
+        文本文件返回 True，二进制文件返回 False
+    """
     try:
         with open(filepath, "rb") as f:
             chunk = f.read(8192)
@@ -19,6 +27,7 @@ def is_text_file(filepath):
 
 
 def main():
+    """CLI 入口。"""
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []

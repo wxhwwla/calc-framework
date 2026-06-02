@@ -41,6 +41,7 @@ def _repo_root() -> Path:
 
 
 def data_version_path() -> Path:
+    """data_version_path 实现。"""
     return _repo_root() / DATA_VERSION_RELPATH
 
 
@@ -73,6 +74,16 @@ def parse_semver(version: str) -> tuple[int, int, int]:
 
 
 def format_semver(major: int, minor: int, patch: int) -> str:
+    """ format_semver 实现。
+
+    Args:
+        major: 参数描述。
+        minor: 参数描述。
+        patch: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     return f"{major}.{minor}.{patch}"
 
 
@@ -137,19 +148,18 @@ def determine_bump_type(sync_results: list[dict[str, Any]]) -> str | None:
 
 def bump_data_version(
     sync_results: list[dict[str, Any]],
-    *,
     data_version_file: Path | None = None,
     force_version: str | None = None,
 ) -> str | None:
-    """根据同步结果自动 bump 数据版本。
+    """根据同步结果自动提升数据版本号。
 
-    Args:
-        sync_results: sync_all.py 返回的同步结果列表
-        data_version_file: 数据版本文件路径（可选，默认自动发现）
-        force_version: 强制设为指定版本（跳过自动检测）
+    参数:
+        sync_results: sync_all 各部分的同步结果列表
+        data_version_file: 数据版本文件路径，默认使用 data_version_path()
+        force_version: 强制指定版本号，跳过自动 bump 判断
 
-    Returns:
-        新的版本号字符串，或 None（无变更）
+    返回:
+        新的版本号字符串，无变更时返回 None
     """
     path = data_version_file or data_version_path()
     state = read_data_version(path)
@@ -257,6 +267,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _print_help() -> None:
+    """_print_help 实现。"""
     print("""数据版本管理
 
 用法:

@@ -40,6 +40,7 @@ class DiffSummary:
 
     @property
     def has_changes(self) -> bool:
+        """has_changes 实现。"""
         return self.added > 0 or self.removed > 0 or self.modified > 0
 
 
@@ -54,6 +55,7 @@ class Report:
 
     @property
     def summary(self) -> str:
+        """summary 实现。"""
         parts = []
         parts.append(f"✅ 校验通过" if self.validation.passed
                       else f"❌ 校验失败 ({self.validation.total_errors} 个错误)")
@@ -165,6 +167,7 @@ class Reporter:
     def _render_validation_section(
         lines: List[str], vr: ValidationResult,
     ) -> None:
+        """_render_validation_section 实现。"""
         lines.append("## 一、Schema 校验")
         lines.append("")
 
@@ -192,6 +195,7 @@ class Reporter:
     def _render_test_section(
         lines: List[str], tr: TestResult,
     ) -> None:
+        """_render_test_section 实现。"""
         lines.append("## 二、健全性测试")
         lines.append("")
 
@@ -225,6 +229,7 @@ class Reporter:
     def _render_diff_section(
         lines: List[str], diff: DiffSummary,
     ) -> None:
+        """_render_diff_section 实现。"""
         lines.append("## 三、差异摘要")
         lines.append("")
 
@@ -252,6 +257,7 @@ class Reporter:
         reference_data: List[Dict[str, Any]],
         reference_label: str,
     ) -> DiffSummary:
+        """_compute_diff 实现。"""
         result = compare_entities(reference_data, data)
         detail = _render_diff_text(result)
 

@@ -29,6 +29,8 @@ from api.arknights import (  # noqa: E402
 
 
 class TestArknightsDataFallback(unittest.TestCase):
+    """明日方舟干员数据源（目录 / zip）回退逻辑测试。"""
+
     def test_resolve_prefers_full_parsed_dir(self) -> None:
         if not _DATA_DIR.is_dir():
             self.skipTest("无 parsed 目录")

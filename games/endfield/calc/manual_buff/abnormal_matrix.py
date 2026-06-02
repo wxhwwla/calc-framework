@@ -41,6 +41,7 @@ def physical_abnormal_matrix_specs() -> tuple[AbnormalMatrixRowSpec, ...]:
         )
         for name in PHYSICAL_ABNORMAL_TYPES
     )
+    """physical abnormal matrix specs。"""
 
 
 def spell_abnormal_matrix_specs() -> tuple[AbnormalMatrixRowSpec, ...]:
@@ -52,10 +53,12 @@ def spell_abnormal_matrix_specs() -> tuple[AbnormalMatrixRowSpec, ...]:
         )
         for row in SPELL_ABNORMAL_PARAM_ROWS
     )
+    """spell abnormal matrix specs。"""
 
 
 def matrix_column_labels(*, max_ui_level: int = 4) -> tuple[str, ...]:
     return tuple(ui_level_column_label(i) for i in range(max_ui_level + 1))
+    """matrix column labels。"""
 
 
 def read_abnormal_matrix_counts(

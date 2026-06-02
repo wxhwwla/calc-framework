@@ -111,6 +111,7 @@ class DataLoadError(DataLoadingError):
         self.reason = reason
 
         super().__init__(f"无法加载 {filepath}: {reason}")
+        """初始化实例。"""
 
 
 

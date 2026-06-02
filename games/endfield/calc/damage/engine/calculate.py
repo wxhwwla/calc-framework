@@ -101,6 +101,7 @@ def _apply_manual_buffs(
             break_defense_stacks=context.break_defense_stacks,
         )
     return context, extra_effects
+    """apply manual buffs。"""
 
 
 def calculate_single_hit_damage(

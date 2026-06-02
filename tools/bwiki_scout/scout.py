@@ -152,6 +152,16 @@ def collect_titles_for_kind(
 
 ) -> tuple[list[str], list[str], list[str]]:
 
+    """ collect_titles_for_kind 实现。
+
+    Args:
+        client: 参数描述。
+        gallery_page: 参数描述。
+        category_title: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     html = client.fetch_parsed_gallery_html(gallery_page)
 
     from_gallery = extract_gallery_entry_titles(html)
@@ -516,6 +526,7 @@ def run_scout(
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI 终末地数据侦察（阶段 C）")
 
     parser.add_argument(

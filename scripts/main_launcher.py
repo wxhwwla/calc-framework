@@ -28,6 +28,7 @@ ensure_framework_src()
 
 
 def _open_calcpack_viewer(path: str) -> None:
+    """打开 CalcPack 文件查看器。"""
     from calc_framework.ui.viewer import main as viewer_main
 
     sys.argv = [sys.argv[0], path]
@@ -35,6 +36,7 @@ def _open_calcpack_viewer(path: str) -> None:
 
 
 def main() -> None:
+    """CLI 入口。打开启动器或直接进入 CalcPackViewer。"""
     arg = sys.argv[1] if len(sys.argv) > 1 else None
     if arg and Path(arg).suffix.lower() == ".calcpack":
         _open_calcpack_viewer(arg)

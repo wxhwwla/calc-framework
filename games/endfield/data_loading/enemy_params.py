@@ -93,6 +93,7 @@ def resolve_enemy_tier(enemy_id: str, *, default: str = DEFAULT_ENEMY_TIER) -> s
         return default
     row = get_plugin_registry().get_enemy(enemy_id.strip()) or {}
     return str(row.get("enemy_tier") or row.get("等阶") or default)
+    """resolve enemy tier。"""
 
 
 def resolve_enemy_max_hp(enemy_id: str, *, default: float | None = None) -> float | None:
@@ -138,6 +139,7 @@ def _default_enemy_params() -> dict[str, Any]:
         "imbalance_efficiency_bonus": DEFAULT_IMBALANCE_EFFICIENCY_BONUS,
         "break_defense_stacks": DEFAULT_BREAK_DEFENSE_STACKS,
     }
+    """default enemy params。"""
 
 
 def _enemy_params_from_row(row: dict[str, Any]) -> dict[str, Any]:
@@ -169,3 +171,4 @@ def _enemy_params_from_row(row: dict[str, Any]) -> dict[str, Any]:
         }
     )
     return base
+    """enemy params from row。"""

@@ -15,10 +15,12 @@ _history: list[dict] = load_list(_STORE_KEY)
 
 
 def list_history_payload() -> list[dict]:
+    """获取历史记录列表（倒序，最新在前）。"""
     return list(reversed(_history))
 
 
 def save_history_payload(entry: dict) -> dict:
+    """保存一条计算历史记录（超出上限时丢弃最旧记录）。"""
     global _history
     entry = dict(entry)
     entry["saved_at"] = datetime.now(timezone.utc).isoformat()
@@ -31,9 +33,11 @@ def save_history_payload(entry: dict) -> dict:
 
 @router.get("")
 def list_history():
+    """获取计算历史列表（最近 10 条，倒序）。"""
     return list_history_payload()
 
 
 @router.post("")
 def save_history(entry: dict):
+    """保存一条计算历史记录。"""
     return save_history_payload(entry)

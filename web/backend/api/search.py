@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""配装搜索 API — 工作量预估/全量搜索/SSE 流式搜索/敌人数值/装备目录/搜索历史。"""
+
 import json
 
 import asyncio
@@ -20,86 +22,48 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 
 class SearchRequest(BaseModel):
+    """全量搜索请求体。"""
 
-    char_data: dict[str, Any]
-
-    char_level: int = 90
-
-    weapon_level: int = 90
-
-    trust_level: int = 0
-
-    skill_name: str
-
-    skill_type: str
-
-    skill_multiplier: float
-
-    damage_type: str
-
-    weapon_scope_label: str = "同类型"
-
-    equipment_scope_label: str = "全部"
-
-    all_weapons: list[dict[str, Any]]
-
-    current_weapon: dict[str, Any]
-
-    equipment_catalog: dict[str, list[dict[str, Any]]]
-
-    fixed_loadout: dict[str, Any] | None = None
-
-    fixed_equipment_names: dict[str, str | None] = {}
-
-    weapon_skill_values: dict[str, Any] = {}
-
-    enemy_defense: float = 100.0
-
-    enemy_resistance: float = 0.0
-
-    ignore_resistance: float = 0.0
-
-    imbalance_vulnerability_coeff: float = 1.3
-
-    is_unbalanced: bool = False
-
-    is_true_damage: bool = False
-
-    combo_stacks: int = 0
-
-    break_defense_stacks: int = 0
-
-    attached_effect_multiplier: float = 1.0
-
-    corrosion_duration_seconds: float = 15.0
-
-    physical_abnormal_counts: dict[str, int] | None = None
-
-    spell_abnormal_counts: dict[str, int] | None = None
-
-    damage_component_mode: str = "skill_and_abnormal"
-
-    top_n: int = 10
-
-    max_workers: int = 4
-
-    use_manual_multi_skill_counts: bool = False
-
-    manual_counts: dict[str, int] | None = None
-
-    skill_1_level: int = 0
-
-    skill_2_level: int = 0
-
-    skill_3_level: int = 0
-
-    use_expected_crit: bool = False
-
-    include_conditional_equipment_crit: bool = False
-
-    extra_crit_rate: float = 0.0
-
-    extra_crit_damage: float = 0.0
+    char_data: dict[str, Any] = Field(description="角色数据")
+    char_level: int = Field(default=90, description="角色等级")
+    weapon_level: int = Field(default=90, description="武器等级")
+    trust_level: int = Field(default=0, description="信赖等级")
+    skill_name: str = Field(description="技能名称")
+    skill_type: str = Field(description="技能类型（战技/连携技/终结技）")
+    skill_multiplier: float = Field(description="技能倍率")
+    damage_type: str = Field(description="伤害类型")
+    weapon_scope_label: str = Field(default="同类型", description="武器搜索范围标签")
+    equipment_scope_label: str = Field(default="全部", description="装备搜索范围标签")
+    all_weapons: list[dict[str, Any]] = Field(description="全部武器候选列表")
+    current_weapon: dict[str, Any] = Field(description="当前选定武器")
+    equipment_catalog: dict[str, list[dict[str, Any]]] = Field(description="装备目录")
+    fixed_loadout: dict[str, Any] | None = Field(default=None, description="固定配装字段")
+    fixed_equipment_names: dict[str, str | None] = Field(default_factory=dict, description="固定装备名称")
+    weapon_skill_values: dict[str, Any] = Field(default_factory=dict, description="武器技能值")
+    enemy_defense: float = Field(default=100.0, description="敌方防御力")
+    enemy_resistance: float = Field(default=0.0, description="敌方抗性")
+    ignore_resistance: float = Field(default=0.0, description="忽略抗性")
+    imbalance_vulnerability_coeff: float = Field(default=1.3, description="失衡易伤系数")
+    is_unbalanced: bool = Field(default=False, description="是否失衡")
+    is_true_damage: bool = Field(default=False, description="是否真实伤害")
+    combo_stacks: int = Field(default=0, description="连击层数")
+    break_defense_stacks: int = Field(default=0, description="破防层数")
+    attached_effect_multiplier: float = Field(default=1.0, description="附着效果倍率")
+    corrosion_duration_seconds: float = Field(default=15.0, description="侵蚀持续时间（秒）")
+    physical_abnormal_counts: dict[str, int] | None = Field(default=None, description="物理异常状态层数")
+    spell_abnormal_counts: dict[str, int] | None = Field(default=None, description="法术异常状态层数")
+    damage_component_mode: str = Field(default="skill_and_abnormal", description="伤害组件模式")
+    top_n: int = Field(default=10, description="返回前 N 个结果")
+    max_workers: int = Field(default=4, description="并行线程数")
+    use_manual_multi_skill_counts: bool = Field(default=False, description="是否手动指定多段技能计数")
+    manual_counts: dict[str, int] | None = Field(default=None, description="手动技能计数")
+    skill_1_level: int = Field(default=0, description="技能 1 等级")
+    skill_2_level: int = Field(default=0, description="技能 2 等级")
+    skill_3_level: int = Field(default=0, description="技能 3 等级")
+    use_expected_crit: bool = Field(default=False, description="是否使用期望暴击")
+    include_conditional_equipment_crit: bool = Field(default=False, description="是否计入条件触发暴击")
+    extra_crit_rate: float = Field(default=0.0, description="额外暴击率")
+    extra_crit_damage: float = Field(default=0.0, description="额外暴击伤害")
 
 
 
@@ -185,7 +149,7 @@ class EstimateRequest(BaseModel):
 
 
 def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
-    """归一化技能字段 + 固定配装 dict（与 GUI 一致）。"""
+    """归一化技能字段与固定配装字典（与 GUI 桌面端保持一致）。"""
     from games.endfield.data_loading.web_search_bridge import (
         enrich_search_request_fields,
         resolve_search_fixed_loadout,
@@ -412,7 +376,7 @@ async def run_search(req: SearchRequest):
 
 @router.get("/enemies")
 def get_enemy_choices():
-    """获取敌方参数列表（含插件敌人与全字段默认）。"""
+    """获取敌方参数列表（含插件敌人与全字段默认值）。"""
     from games.endfield.data_loading.enemy_params import (
         enemy_damage_context_overrides,
         list_plugin_enemy_choices,
@@ -472,7 +436,7 @@ async def get_equipment_catalog(scope: str = "全部装备"):
 
 async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, None]:
 
-    """生成 SSE 事件流：progress → chunks → done。"""
+    """生成 SSE 事件流：start → heartbeat → summary → chunk(s) → stream_end。"""
 
     try:
 
@@ -723,10 +687,12 @@ def save_search_history(entry: dict):
 
 @router.get("/history")
 def list_search_history_route():
+    """获取搜索历史列表。"""
     return list_search_history()
 
 
 @router.post("/history")
 def save_search_history_route(entry: dict):
+    """保存一次搜索记录。"""
     return save_search_history(entry)
 

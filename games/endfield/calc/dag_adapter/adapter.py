@@ -294,6 +294,7 @@ def _generate_dag_json() -> None:
 
     g = generate()
     save_dag(g)
+    """generate dag json。"""
 
 
 def _write_default_meta() -> None:
@@ -309,3 +310,4 @@ def _write_default_meta() -> None:
         }, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    """write default meta。"""

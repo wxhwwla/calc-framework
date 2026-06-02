@@ -76,6 +76,7 @@ _FLOAT_RE = re.compile(r"[\d.]+")
 
 def _parse_float(text: str | None) -> float | None:
 
+    """_parse_float 实现。"""
     if not text:
 
         return None
@@ -184,6 +185,7 @@ def _parse_max_stack_from_text(text: str, *, name: str = "") -> int:
 
 def _fit_conditional_special(rank_curves: dict[str, list[float]], p: dict[str, str], sub: str) -> dict[str, Any] | None:
 
+    """_fit_conditional_special 实现。"""
     gkey = f"3_{sub}"
 
     if gkey not in rank_curves:
@@ -278,6 +280,7 @@ def split_slot3_weapon_effects(
 
 def _parse_rank_value(raw: str) -> float:
 
+    """_parse_rank_value 实现。"""
     text = (raw or "").strip().replace("％", "%")
 
     if text.endswith("%"):
@@ -656,6 +659,7 @@ def build_weapon_seed_spec_from_wiki(
 
 def _bonus_curves_from_seed_spec(spec: dict[str, Any]) -> dict[str, list[float]]:
 
+    """_bonus_curves_from_seed_spec 实现。"""
     out: dict[str, list[float]] = {}
 
     for attr, params in (spec.get("bonus_attrs") or {}).items():

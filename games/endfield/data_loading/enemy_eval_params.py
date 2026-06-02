@@ -44,6 +44,7 @@ class EnemyEvalParams:
                 getattr(loadout, "corrosion_duration_seconds", 15.0)
             ),
         )
+        """from loadout。"""
 
     @classmethod
     def from_request(cls, req: Any) -> EnemyEvalParams:

@@ -29,7 +29,7 @@ class TestDamageVisualization(unittest.TestCase):
 
     def test_builds_pie_figure_without_display(self) -> None:
 
-        from gui.shared.damage_visualization import build_damage_pie_figure
+        from games.endfield.gui.shared.damage_visualization import build_damage_pie_figure
 
 
 

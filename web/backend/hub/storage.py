@@ -17,6 +17,8 @@ from uuid import uuid4
 
 @dataclass
 class HubPack:
+    """Calc Hub 配置包元数据。"""
+
     id: str
     name: str
     version: str
@@ -38,6 +40,7 @@ _DB_PATH = _HUB_DIR / "catalog.db"
 
 
 def _ensure_db() -> sqlite3.Connection:
+    """获取 SQLite 连接，确保数据库和表已创建。"""
     _PACKS_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(_DB_PATH))
     conn.row_factory = sqlite3.Row
@@ -128,6 +131,19 @@ def create_pack(
     tags: list[str] | None = None,
     file_size: int = 0,
 ) -> HubPack:
+    """创建新配置包元数据记录。
+
+    参数:
+        name: 包名。
+        version: 版本号。
+        description: 描述。
+        author: 作者。
+        tags: 标签列表。
+        file_size: 包文件大小（字节）。
+
+    返回:
+        创建的 HubPack 实例。
+    """
     conn = _ensure_db()
     now = datetime.now(timezone.utc).isoformat()
     pack_id = uuid4().hex[:12]
@@ -174,6 +190,16 @@ def update_pack(pack_id: str, **kwargs: Any) -> dict[str, Any] | None:
 
 
 def rate_pack(pack_id: str, score: int, comment: str = "") -> dict[str, Any] | None:
+    """为配置包评分，自动更新平均分和评分次数。
+
+    参数:
+        pack_id: 包 ID。
+        score: 评分（1~5）。
+        comment: 评论文本。
+
+    返回:
+        更新后的包字典。
+    """
     conn = _ensure_db()
     now = datetime.now(timezone.utc).isoformat()
     conn.execute(
@@ -221,6 +247,11 @@ def delete_pack(pack_id: str) -> bool:
 
 
 def save_pack_file(pack_id: str, content: bytes, filename: str) -> Path:
+    """将配置包文件保存到磁盘。
+
+    返回:
+        保存后的文件路径。
+    """
     pack_dir = _PACKS_DIR / pack_id
     pack_dir.mkdir(parents=True, exist_ok=True)
     file_path = pack_dir / filename
@@ -259,6 +290,7 @@ def validate_calcpack_archive(content: bytes) -> tuple[bool, str, dict[str, Any]
 
 
 def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    """将 SQLite Row 转为普通字典，自动反序列化 JSON 字段。"""
     d = dict(row)
     for key in ("tags", "screenshot_urls"):
         if isinstance(d.get(key), str):

@@ -54,6 +54,7 @@ _SKIP_PREFIXES = (
 
 class _GalleryLinkParser(HTMLParser):
 
+    """_GalleryLinkParser 类。"""
     def __init__(self, site_prefix: str) -> None:
 
         super().__init__()
@@ -66,6 +67,15 @@ class _GalleryLinkParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
 
+        """ handle_starttag 实现。
+
+        Args:
+            tag: 参数描述。
+            attrs: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if tag.lower() != "a":
 
             return
@@ -96,6 +106,7 @@ class _GalleryLinkParser(HTMLParser):
 
 def _href_to_title(href: str, site_prefix: str) -> str:
 
+    """_href_to_title 实现。"""
     if href.startswith("/"):
 
         path = href
@@ -122,6 +133,7 @@ def _href_to_title(href: str, site_prefix: str) -> str:
 
 def _is_entry_title(title: str) -> bool:
 
+    """_is_entry_title 实现。"""
     lower = title.lower()
 
     for skip in _SKIP_PREFIXES:

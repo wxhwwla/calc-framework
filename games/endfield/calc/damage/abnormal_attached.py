@@ -12,6 +12,7 @@ CORROSION_INITIAL_RES_SHRED: tuple[float, ...] = (3.6, 4.8, 6.0, 7.2)
 
 def _level_index(calc_level: int) -> int:
     return min(max(1, int(calc_level)), 4) - 1
+    """level index。"""
 
 
 def conductive_spell_vulnerability(
@@ -75,6 +76,7 @@ def build_physical_attached_effects(
             raw_text=f"物理易伤+{vuln * 100:.1f}%",
         )
     ]
+    """build physical attached effects。"""
 
 
 def build_spell_attached_effects(
@@ -128,3 +130,4 @@ def build_spell_attached_effects(
             )
         )
     return out
+    """build spell attached effects。"""

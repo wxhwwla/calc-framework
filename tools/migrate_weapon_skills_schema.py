@@ -57,7 +57,17 @@ from games.endfield.calc.skills.special_fields import (  # noqa: E402
 
 
 def _load_weapons(path: Path) -> list[dict]:
+    """加载武器 JSON 文件并验证为数组格式。
 
+    Args:
+        path: weapons.json 文件路径
+
+    Returns:
+        武器数据列表
+
+    Raises:
+        ValueError: JSON 根节点不是数组
+    """
     with path.open(encoding="utf-8") as f:
 
         data = json.load(f)
@@ -73,17 +83,21 @@ def _load_weapons(path: Path) -> list[dict]:
 
 
 def migrate_file(
-
     *,
-
     weapons_json: Path,
-
     only_names: set[str] | None = None,
-
     dry_run: bool = True,
-
 ) -> dict[str, object]:
+    """迁移 weapons.json 中的字段到新武器技能 schema。
 
+    Args:
+        weapons_json: weapons.json 文件路径
+        only_names: 仅迁移指定武器名称集合
+        dry_run: True 时仅预览不写入
+
+    Returns:
+        包含 dry_run、changed_count、changed_names 的字典
+    """
     weapons = _load_weapons(weapons_json)
 
     changed_names: list[str] = []
@@ -125,7 +139,14 @@ def migrate_file(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI 入口：解析参数并执行武器 schema 迁移。
 
+    Args:
+        argv: 命令行参数列表
+
+    Returns:
+        退出码
+    """
     parser = argparse.ArgumentParser(description="迁移 weapons.json 到新技能 schema")
 
     parser.add_argument(

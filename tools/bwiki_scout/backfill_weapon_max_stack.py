@@ -71,6 +71,7 @@ _SEED_PATH = (
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI → 武器 max_stack 回填")
 
     parser.add_argument(

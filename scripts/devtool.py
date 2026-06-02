@@ -39,12 +39,14 @@ ensure_root()
 
 
 def _add_path() -> None:
+    """将项目根目录加入 sys.path。"""
     _REPO = Path(__file__).resolve().parent.parent
     if str(_REPO) not in sys.path:
         sys.path.insert(0, str(_REPO))
 
 
 def _sub_args() -> list[str]:
+    """提取子命令的剩余参数（去除已解析的 flags）。"""
     rest = sys.argv[1:]
     for i, a in enumerate(rest):
         if not a.startswith("-"):
@@ -53,12 +55,14 @@ def _sub_args() -> list[str]:
 
 
 def _cmd_check_deps(args: argparse.Namespace) -> int:
+    """执行依赖自检。"""
     _add_path()
     from tools.check_optional_deps import main
     return main()
 
 
 def _cmd_check_layout(args: argparse.Namespace) -> int:
+    """执行代码布局门禁检查。"""
     _add_path()
     from tools.check_layout import main
     sys.argv = [sys.argv[0]] + _sub_args()
@@ -66,6 +70,7 @@ def _cmd_check_layout(args: argparse.Namespace) -> int:
 
 
 def _cmd_sync_bwiki(args: argparse.Namespace) -> int:
+    """同步 BWIKI 数据。"""
     _add_path()
     from tools.bwiki_scout.sync_all import main
     sys.argv = [sys.argv[0]] + _sub_args()
@@ -73,6 +78,7 @@ def _cmd_sync_bwiki(args: argparse.Namespace) -> int:
 
 
 def _cmd_launcher(args: argparse.Namespace) -> None:
+    """启动框架游戏选择器。"""
     _FRAMEWORK_SRC = Path(__file__).resolve().parent.parent / "framework" / "src"
     if str(_FRAMEWORK_SRC) not in sys.path:
         sys.path.insert(0, str(_FRAMEWORK_SRC))
@@ -83,6 +89,7 @@ def _cmd_launcher(args: argparse.Namespace) -> None:
 
 
 def _cmd_framework(args: argparse.Namespace) -> int:
+    """构建或发布 framework PyPI 包。"""
     from tools.framework_publish import main as fw_main
     passthrough = _sub_args()
     sys.argv = [sys.argv[0], *passthrough] if passthrough else [sys.argv[0], "--help"]
@@ -91,6 +98,7 @@ def _cmd_framework(args: argparse.Namespace) -> int:
 
 
 def _cmd_plugin(args: argparse.Namespace) -> int:
+    """插件打包、安装或目录重建。"""
     passthrough = _sub_args()
     if not passthrough:
         print("用法: python devtool.py plugin <build|install|rebuild-catalog> [...]")
@@ -115,6 +123,7 @@ def _cmd_plugin(args: argparse.Namespace) -> int:
 
 
 def _cmd_check_origin(args: argparse.Namespace) -> int:
+    """执行 AI 代码来源与版权检测。"""
     _add_path()
     from tools.check_code_origin import main
     sys.argv = [sys.argv[0]] + _sub_args()
@@ -122,6 +131,7 @@ def _cmd_check_origin(args: argparse.Namespace) -> int:
 
 
 def _cmd_installer(args: argparse.Namespace) -> int:
+    """构建或检查 NSIS 安装包。"""
     passthrough = _sub_args()
     if not passthrough:
         print("用法: python devtool.py installer <build|check> [...]")
@@ -133,6 +143,7 @@ def _cmd_installer(args: argparse.Namespace) -> int:
 
 
 def _cmd_scaffold(args: argparse.Namespace) -> int:
+    """从模板生成新游戏适配脚手架。"""
     _add_path()
     from tools.scaffold import main
 
@@ -141,6 +152,7 @@ def _cmd_scaffold(args: argparse.Namespace) -> int:
 
 
 def _cmd_hub(args: argparse.Namespace) -> int:
+    """启动或查询 Calc Hub 市场服务。"""
     passthrough = _sub_args()
     if not passthrough:
         print("用法: python devtool.py hub <start|status> [...]")
@@ -173,6 +185,7 @@ def _cmd_hub(args: argparse.Namespace) -> int:
 
 
 def main() -> None:
+    """CLI 入口。解析子命令并分派到对应处理函数。"""
     parser = argparse.ArgumentParser(
         description="终末地计算器 — 开发者工具箱",
         formatter_class=argparse.RawDescriptionHelpFormatter,

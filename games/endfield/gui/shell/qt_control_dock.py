@@ -26,14 +26,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.controls.enemy import QtEnemyPanel
-from gui.controls.search.search_settings import (
+from games.endfield.gui.controls.enemy import QtEnemyPanel
+from games.endfield.gui.controls.search.search_settings import (
     format_parallel_workers_help,
     get_cpu_parallel_info,
     resolve_parallel_workers,
 )
-from gui.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
-from gui.shell.qt_control_dock_builders import (
+from games.endfield.gui.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
+from games.endfield.gui.shell.qt_control_dock_builders import (
     _BTN_PRIMARY_STYLE,
     _BTN_SECONDARY_STYLE,
     _COMBO_STYLE,
@@ -44,7 +44,7 @@ from gui.shell.qt_control_dock_builders import (
     BuilderMixin,
 )
 from games.endfield.calc.manual_buff.abnormal_matrix import read_abnormal_matrix_counts
-from gui.shell.qt_control_dock_widgets import (
+from games.endfield.gui.shell.qt_control_dock_widgets import (
     SectionHeader,
     SmallLabel,
 )
@@ -109,6 +109,7 @@ class QtControlDock(BuilderMixin, QWidget):
         self.extra_crit_damage_edit: QLineEdit
 
         self._build_ui()
+        """初始化实例。"""
 
     def _make_btn(self, text: str, height: int, *, primary: bool = False, style: str | None = None) -> QPushButton:
         """创建一个统一样式的 QPushButton。"""
@@ -206,6 +207,7 @@ class QtControlDock(BuilderMixin, QWidget):
             b = self._make_btn(text, _SECONDARY_BTN_HEIGHT)
             ms_lay.addWidget(b)
             return b
+            """make tool btn。"""
 
         self._export_btn = _make_tool_btn("导出配装 (.json)")
         self._import_btn = _make_tool_btn("导入配装 (.json)")
@@ -298,6 +300,7 @@ class QtControlDock(BuilderMixin, QWidget):
                 if str(row.get("名称") or "") == name:
                     return row
             return None
+            """pick。"""
 
         return FixedLoadoutSelection(
             chest=_pick(0, "chest"),

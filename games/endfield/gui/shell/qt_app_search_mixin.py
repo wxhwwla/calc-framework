@@ -12,8 +12,8 @@ from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
-from gui.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
-from gui.presentation.search_results_lines import build_search_results_report_lines
+from games.endfield.gui.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
+from games.endfield.gui.presentation.search_results_lines import build_search_results_report_lines
 
 
 class SearchMixin:
@@ -24,7 +24,7 @@ class SearchMixin:
 
     def _build_search_job_inputs(self) -> Any:
 
-        from gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 
 
 
@@ -83,6 +83,7 @@ class SearchMixin:
             equipment_catalog=dict(self._equipment_catalog),
 
         )
+        """build search job inputs。"""
 
 
 
@@ -138,6 +139,7 @@ class SearchMixin:
         )
 
         self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
+        """on mvp search。"""
 
 
 
@@ -148,7 +150,7 @@ class SearchMixin:
         from games.endfield.calc.search.plan.controller import prepare_search_job
         from games.endfield.calc.search.run.cancel import SearchCancelToken
         from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
-        from gui.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
+        from games.endfield.gui.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
 
 
 
@@ -221,6 +223,7 @@ class SearchMixin:
         )
 
         self._start_search_thread(worker, "全量遍历：计算中，请稍候。")
+        """on full search。"""
 
 
 
@@ -249,12 +252,14 @@ class SearchMixin:
         self.control_dock.mvp_status_label.setVisible(True)
 
         self.control_dock.mvp_status_label.setText(status_running)
+        """start search thread。"""
 
 
 
     def _on_search_progress(self, text: str) -> None:
 
         self.control_dock.mvp_status_label.setText(text)
+        """on search progress。"""
 
 
 
@@ -318,6 +323,7 @@ class SearchMixin:
         )
 
         dialog.exec()
+        """on search finished。"""
 
 
 
@@ -336,6 +342,7 @@ class SearchMixin:
         self._set_search_btns_enabled(True)
 
         QMessageBox.critical(self.app, "搜索失败", error_msg)
+        """on search error。"""
 
 
 
@@ -346,6 +353,7 @@ class SearchMixin:
             self._search_cancel_token.cancel()
 
             self.control_dock.mvp_status_label.setText("搜索状态：正在取消。")
+        """on cancel search。"""
 
 
 
@@ -362,4 +370,5 @@ class SearchMixin:
         dock.search_top_n_combo.setEnabled(enabled)
 
         dock.search_cancel_btn.setEnabled(not enabled)
+        """set search btns enabled。"""
 

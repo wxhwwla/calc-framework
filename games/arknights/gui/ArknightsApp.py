@@ -56,6 +56,7 @@ _adapter_layout = None
 
 
 def _ensure_adapter():
+    """获取或初始化 DAG 适配器包和布局（惰性加载）。"""
     global _adapter_pkg, _adapter_layout
     if _adapter_pkg is None:
         _adapter_pkg = AdapterPackage(str(_FRAMEWORK_ADAPTER))
@@ -73,6 +74,7 @@ class ArknightsApp(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
+        """初始化实例。"""
 
         self._qapp: QApplication = QApplication(sys.argv)
         self._qapp.setStyle("Fusion")
@@ -119,8 +121,11 @@ class ArknightsApp(QMainWindow):
         self._zone_labels: dict[str, QLabel] = {}
         self._donation_btn = QPushButton("☕ 打赏支持")
         self._donation_btn.clicked.connect(lambda: open_donation_dialog(self))
+        """初始化实例。"""
+        """初始化实例。"""
 
     def _build_operator_panel(self) -> QWidget:
+        """构建左侧干员选择面板，含筛选/搜索/技能选择。"""
         panel = QWidget()
         layout = QVBoxLayout(panel)
         layout.setSpacing(8)
@@ -221,6 +226,7 @@ class ArknightsApp(QMainWindow):
         return panel
 
     def _filter_and_populate(self) -> None:
+        """按星级/职业/分支/搜索词筛选干员并更新下拉列表。"""
         selected_stars = [i + 1 for i, cb in enumerate(self._star_checkboxes) if cb.isChecked()]
         prof = self._profession_combo.currentText()
         branch = self._branch_combo.currentText()
@@ -245,9 +251,11 @@ class ArknightsApp(QMainWindow):
         self._on_operator_selected()
 
     def _on_filter_changed(self) -> None:
+        """筛选条件变化时重新筛选并更新下拉。"""
         self._filter_and_populate()
 
     def _on_operator_selected(self) -> None:
+        """当前选中的干员变化时更新详情和技能信息。"""
         idx = self._operator_combo.currentIndex()
         if idx < 0 or idx >= len(self._filtered_operators):
             self._operator_data = None
@@ -266,6 +274,7 @@ class ArknightsApp(QMainWindow):
         self._on_skill_changed()
 
     def _on_skill_changed(self) -> None:
+        """技能或技能等级变化时更新技能信息并触发计算。"""
         if self._operator_data is None:
             self._skill_info_box.setText("选择干员后显示技能信息")
             self._compute_result()
@@ -285,6 +294,7 @@ class ArknightsApp(QMainWindow):
         self._compute_result()
 
     def _compute_result(self) -> None:
+        """用 DAG 引擎执行伤害计算并更新结果。"""
         if self._operator_data is None:
             return
         skill_idx = self._skill_combo.currentIndex()
@@ -299,6 +309,7 @@ class ArknightsApp(QMainWindow):
             _logger.warning("计算失败: %s", exc)
 
     def _on_compute_result(self, result: Any) -> None:
+        """接收到 DAG 计算结果后渲染 ComputeSheet 和结果表格。"""
         pkg, layout = _ensure_adapter()
         dag_service = pkg.dag_service
 
@@ -369,6 +380,7 @@ class ArknightsApp(QMainWindow):
         cw.setLayout(new_layout)
 
     def _build_result_text(self, result: Any) -> str:
+        """将计算结果格式化为 HTML 表格字符串。"""
         outputs = result.outputs if hasattr(result, "outputs") else {}
         lines = ['<hr><table style="width:100%;border-collapse:collapse;">']
         lines.append('<tr style="background:#2B6CB6;color:white;">'
@@ -384,9 +396,11 @@ class ArknightsApp(QMainWindow):
         return "\n".join(lines)
 
     def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
+        """ComputeSheet 求值完成回调（预留）。"""
         pass
 
     def _apply_dark_style(self) -> None:
+        """应用深色主题样式表。"""
         self._qapp.setStyleSheet("""
             QMainWindow { background-color: #1A1A1A; }
             QWidget { background-color: #1A1A1A; }
@@ -394,10 +408,12 @@ class ArknightsApp(QMainWindow):
         """)
 
     def run(self) -> None:
+        """启动应用主循环。"""
         self.closeEvent = self._on_close
         self.showMaximized()
         sys.exit(self._qapp.exec())
 
     def _on_close(self, event: Any = None) -> None:
+        """窗口关闭事件处理。"""
         if event is not None:
             event.accept()

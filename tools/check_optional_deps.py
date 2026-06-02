@@ -56,6 +56,7 @@ from utils.optional_deps import (  # noqa: E402
 
 def _print_group(title: str, deps: tuple) -> int:
 
+    """_print_group 实现。"""
     print(title)
 
     missing = 0
@@ -83,7 +84,7 @@ def _print_group(title: str, deps: tuple) -> int:
 
 
 def _print_runtime() -> int:
-
+    """打印运行时依赖的状态并返回缺失数。"""
     print("运行时（pyproject dependencies）")
 
     missing = 0
@@ -111,7 +112,11 @@ def _print_runtime() -> int:
 
 
 def main() -> int:
+    """CLI 入口：检查所有可选依赖和运行时依赖的安装状态。
 
+    Returns:
+        退出码（0 全部已安装，1 有缺失）
+    """
     print("终末地伤害计算器 — 依赖检查\n")
 
     n = 0

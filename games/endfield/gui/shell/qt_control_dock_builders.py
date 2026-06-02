@@ -16,10 +16,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.controls.search.search_settings import (
+from games.endfield.gui.controls.search.search_settings import (
     build_worker_option_labels,
 )
-from gui.shell.qt_control_dock_widgets import (
+from games.endfield.gui.shell.qt_control_dock_widgets import (
     HintLabel,
     SectionHeader,
     SmallLabel,
@@ -166,6 +166,7 @@ class BuilderMixin:
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
         return col
+        """build col search。"""
 
     def _build_col_multi(self) -> QWidget:
         col = QWidget()
@@ -266,6 +267,7 @@ class BuilderMixin:
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
         return col
+        """build col multi。"""
 
     def _build_segment_rows_fallback(self) -> None:
         """初始占位：3 个基础段次数输入。"""
@@ -327,6 +329,7 @@ class BuilderMixin:
             w.setLayout(row)
             self._segment_rows_lay.addWidget(w)
             self._segment_count_edits_dict[key] = edit
+    """BuilderMixin。"""
 
     # ── 搜索参数读取 ──────────────────────────
 

@@ -82,7 +82,7 @@ class TestSearchHistoryDialog:
 
             def fake_list_runs(p: Path) -> list:
 
-                from gui.controls.search.qt_search_browser import RunInfo
+                from games.endfield.gui.controls.search.qt_search_browser import RunInfo
 
                 return [RunInfo("sig-001", 1000, 500, "completed", str(p))]
 
@@ -90,7 +90,7 @@ class TestSearchHistoryDialog:
 
             def fake_list_scores(p: Path, sig: str) -> list:
 
-                from gui.controls.search.qt_search_browser import ScoreInfo
+                from games.endfield.gui.controls.search.qt_search_browser import ScoreInfo
 
                 return [ScoreInfo("测试剑", 5000.0, "甲", "手", "A", "B")]
 

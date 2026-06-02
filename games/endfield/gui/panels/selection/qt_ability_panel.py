@@ -6,7 +6,22 @@ PySide6 武器特殊能力面板（独立子面板）。
 替代 CTk 版 ``SpecialAbilityPanel``（build_mixin + handlers_mixin + refresh_mixin + panel）。
 """
 
-from __future__ import annotationsfrom typing import Anyfrom PySide6.QtCore import Qtfrom PySide6.QtGui import QFontfrom PySide6.QtWidgets import (    QFrame,    QHBoxLayout,    QLabel,    QSlider,    QVBoxLayout,    QWidget,)_SLIDER_STYLE = """
+from __future__ import annotations
+
+from typing import Any
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
+
+_SLIDER_STYLE = """
     QSlider::groove:horizontal {
         background: #3A3A3A; height: 6px; border-radius: 3px;
     }
@@ -28,6 +43,7 @@ def _make_slider(vmin: int, vmax: int, val: int) -> QSlider:
     s.setValue(val)
     s.setStyleSheet(_SLIDER_STYLE)
     return s
+    """make slider。"""
 
 
 def _make_val_lbl(text: str, font: QFont) -> QLabel:
@@ -37,6 +53,7 @@ def _make_val_lbl(text: str, font: QFont) -> QLabel:
     lbl.setFixedWidth(30)
     lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
     return lbl
+    """make val lbl。"""
 
 
 # ═══════════════════════════════════════════════════════
@@ -78,6 +95,7 @@ class QtSpecialAbilityPanel(QWidget):
             self._special_rows.append(rd)
 
         self._all_hidden()
+        """初始化实例。"""
 
     # ── 构建辅助 ──────────────────────────────────
 
@@ -106,6 +124,7 @@ class QtSpecialAbilityPanel(QWidget):
             "slider": slider,
             "row_w": row_w,
         }
+        """create skill row。"""
 
     def _create_special_row(self, layout: QVBoxLayout, title: str, font: QFont) -> dict:
         name_lbl = QLabel(title)
@@ -150,6 +169,7 @@ class QtSpecialAbilityPanel(QWidget):
             "stk_slider": stk_slider,
             "row_w": row_w,
         }
+        """create special row。"""
 
     def _all_hidden(self) -> None:
         for rd in self._normal_rows:
@@ -159,6 +179,7 @@ class QtSpecialAbilityPanel(QWidget):
             rd["name_lbl"].setVisible(False)
             rd["row_w"].setVisible(False)
         self.setVisible(False)
+        """all hidden。"""
 
     # ── 刷新 ──────────────────────────────────
 
@@ -202,6 +223,7 @@ class QtSpecialAbilityPanel(QWidget):
                 rd["row_w"].setVisible(False)
 
         self.setVisible(True)
+        """刷新界面状态。"""
 
     @staticmethod
     def _extract_bonus_attributes(weapon_data: dict[str, Any]) -> list[str]:
@@ -229,6 +251,7 @@ class QtSpecialAbilityPanel(QWidget):
             if key.endswith("+") and isinstance(weapon_data.get(key), list):
                 out.append(key)
         return out[:3]
+        """extract bonus attributes。"""
 
     @staticmethod
     def _read_special_slots(weapon_data: dict[str, Any]) -> list[tuple]:
@@ -260,6 +283,7 @@ class QtSpecialAbilityPanel(QWidget):
             else:
                 result.append((False, "", 1, 1))
         return result
+        """read special slots。"""
 
     # ── 对外读取 ──────────────────────────────────
 
@@ -269,6 +293,7 @@ class QtSpecialAbilityPanel(QWidget):
             txt = self._normal_rows[0]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
         return ""
+        """current special ability 1 name。"""
 
     @property
     def current_special_ability_2_name(self) -> str:
@@ -276,6 +301,7 @@ class QtSpecialAbilityPanel(QWidget):
             txt = self._normal_rows[1]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
         return ""
+        """current special ability 2 name。"""
 
     @property
     def current_special_ability_3_name(self) -> str:
@@ -283,6 +309,7 @@ class QtSpecialAbilityPanel(QWidget):
             txt = self._normal_rows[2]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
         return ""
+        """current special ability 3 name。"""
 
     def get_normal_skill_level(self, idx: int) -> int:
         if idx < 0 or idx > 2:
@@ -291,6 +318,7 @@ class QtSpecialAbilityPanel(QWidget):
         if not rd["row_w"].isHidden():
             return rd["slider"].value()
         return 0
+        """获取normal skill level。"""
 
     def get_special_skill_level(self, idx: int) -> int:
         if idx < 0 or idx > 1:
@@ -299,6 +327,7 @@ class QtSpecialAbilityPanel(QWidget):
         if not rd["row_w"].isHidden():
             return rd["lvl_slider"].value()
         return 1
+        """获取special skill level。"""
 
     def get_special_skill_stack(self, idx: int) -> int:
         if idx < 0 or idx > 1:
@@ -307,6 +336,7 @@ class QtSpecialAbilityPanel(QWidget):
         if not rd["row_w"].isHidden() and not rd["stk_slider"].isHidden():
             return rd["stk_slider"].value()
         return 0
+        """获取special skill stack。"""
 
     @property
     def current_weapon_special_name(self) -> str:
@@ -314,6 +344,7 @@ class QtSpecialAbilityPanel(QWidget):
         if not rd["row_w"].isHidden():
             return rd["name_lbl"].text()
         return ""
+        """current weapon special name。"""
 
     @property
     def current_weapon_special_2_name(self) -> str:
@@ -321,6 +352,7 @@ class QtSpecialAbilityPanel(QWidget):
         if not rd["row_w"].isHidden():
             return rd["name_lbl"].text()
         return ""
+        """current weapon special 2 name。"""
 
     def apply_skill_preset(self, level: int) -> None:
         clamped = max(1, min(level, 9))
@@ -332,6 +364,7 @@ class QtSpecialAbilityPanel(QWidget):
             if rd["row_w"].isVisible():
                 rd["lvl_slider"].setValue(clamped)
                 rd["lvl_val_lbl"].setText(str(clamped))
+        """应用skill preset。"""
 
     def apply_weapon_skill_state(
         self,

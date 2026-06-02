@@ -35,6 +35,7 @@ def is_matplotlib_available() -> bool:
 
 
     return _probe()
+    """判断是否为matplotlib available。"""
 
 
 

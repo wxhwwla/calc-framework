@@ -73,6 +73,7 @@ from tools.designer.theme_editor.panel import ThemePanel
 
 class DesignerWindow(QMainWindow):
 
+    """DesignerWindow 类。"""
     def __init__(self):
 
         super().__init__()
@@ -139,6 +140,7 @@ class DesignerWindow(QMainWindow):
 
     def _setup_menu(self) -> None:
 
+        """_setup_menu 实现。"""
         menubar = self.menuBar()
 
         help_menu = menubar.addMenu("帮助(&H)")
@@ -164,6 +166,7 @@ class DesignerWindow(QMainWindow):
     def _show_help(self) -> None:
 
 
+        """_show_help 实现。"""
         dialog = HelpDialog(self._build_designer_help, self, title="配置包设计器 使用说明")
 
         dialog.exec()
@@ -173,6 +176,7 @@ class DesignerWindow(QMainWindow):
     @staticmethod
 
     def _build_designer_help() -> list[HelpSection]:
+        """_build_designer_help 实现。"""
         docs = load_multi_category(
             {
                 "完整说明书": [
@@ -277,6 +281,7 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
     def _on_tab_changed(self, index: int) -> None:
 
+        """_on_tab_changed 实现。"""
         if index == 0:
 
             adapter_name = self._layout_panel.get_adapter_name()
@@ -299,6 +304,7 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
     def _on_layout_changed(self, layout_data: dict | None) -> None:
 
+        """_on_layout_changed 实现。"""
         if layout_data:
 
             self._status_label.setText("布局已更新 — 导出页签可同步最新数据")
@@ -376,6 +382,7 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
     def _update_status(self) -> None:
 
+        """_update_status 实现。"""
         tab_name = self._tabs.tabText(self._tabs.currentIndex())
 
         self._status_label.setText(f"当前页签: {tab_name}")
@@ -384,6 +391,7 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
     def _on_export(self, path: str) -> None:
 
+        """_on_export 实现。"""
         self._status_label.setText(f"已导出 → {path}")
 
 
@@ -392,6 +400,7 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
 
 def main() -> None:
 
+    """CLI 入口。"""
     app = QApplication(sys.argv)
 
     app.setApplicationName("配置包设计器")

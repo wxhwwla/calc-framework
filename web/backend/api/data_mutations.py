@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""游戏 JSON 数据读写（FastAPI 与 WSGI 共用）。"""
+"""游戏 JSON 数据 CURD 操作 — 角色/武器/装备增删改 + 公式反推（FastAPI 与 WSGI 共用）。"""
 
 from __future__ import annotations
 
@@ -47,12 +47,14 @@ def create_character(data: dict[str, Any]) -> dict[str, str]:
 
 
 def update_character(name: str, data: dict[str, Any]) -> dict[str, str]:
+    """更新指定角色数据。"""
     from api.data_profiles import update_entity_row
 
     return update_entity_row("endfield", "characters", name, data)
 
 
 def delete_character(name: str) -> dict[str, str]:
+    """删除指定角色数据。"""
     from api.data_profiles import delete_entity_row
 
     return delete_entity_row("endfield", "characters", name)
@@ -77,12 +79,14 @@ def delete_weapon(name: str) -> dict[str, str]:
 
 
 def create_equipment(data: dict[str, Any]) -> dict[str, str]:
+    """新增装备数据记录。"""
     from api.data_profiles import create_entity_row
 
     return create_entity_row("endfield", "equipments", data)
 
 
 def update_equipment(name: str, data: dict[str, Any]) -> dict[str, str]:
+    """更新指定装备数据。"""
     from api.data_profiles import update_entity_row
 
     return update_entity_row("endfield", "equipments", name, data)
@@ -95,6 +99,7 @@ def delete_equipment(name: str) -> dict[str, str]:
 
 
 def inverse_formula_payload(type_: str, values: list[float]) -> dict[str, Any]:
+    """执行公式反推（属性或技能）。"""
     try:
         from games.endfield.calc.damage.inverse import (
             fit_attribute_formula,

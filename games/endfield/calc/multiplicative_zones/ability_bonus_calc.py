@@ -191,9 +191,11 @@ def calculate_ability_bonus(
             elif effect == sa3_name:
                 return sa3_level
             return 1
+            """resolve level。"""
 
         def _should_skip(effect: str) -> bool:
             return effect == sa3_name and sa3_level == 0
+            """should skip。"""
 
         def _classify(effect: str) -> str:
             if effect == "主能力值+":
@@ -211,6 +213,7 @@ def calculate_ability_bonus(
             if effect == "全能力+":
                 return "both_pct"
             return ""
+            """classify。"""
 
         # 1. 从 normal_skills 列表中获取加成
         for skill in weapon.get("normal_skills", []):
@@ -323,6 +326,7 @@ class AbilityBonusZone(BaseZone):
 
     def __init__(self):
         super().__init__(name="能力值加成", description="主能力×0.005 + 副能力×0.002")
+        """初始化实例。"""
 
     def calculate(self) -> float:
         """

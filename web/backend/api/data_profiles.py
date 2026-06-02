@@ -112,6 +112,7 @@ def _save_entity_list(ent: EntityDef, data: list[dict[str, Any]]) -> None:
 
 
 def _find_by_name(data: list[dict[str, Any]], name: str) -> int | None:
+    """在数据数组中查找名称为 name 的项，返回索引（未找到时返回 None）。"""
     for i, item in enumerate(data):
         if item.get("名称") == name:
             return i
@@ -119,6 +120,7 @@ def _find_by_name(data: list[dict[str, Any]], name: str) -> int | None:
 
 
 def list_entity_rows(profile_id: str, entity_key: str, *, full: bool = False) -> list[dict[str, Any]]:
+    """列出指定实体数据（full=True 返回全部字段，否则仅返回 columns）。"""
     ent = get_entity(profile_id, entity_key)
     raw = _load_entity_list(ent)
     if full:

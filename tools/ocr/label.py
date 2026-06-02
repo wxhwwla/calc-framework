@@ -83,6 +83,7 @@ CLASS_COLORS = [
 
 def _parse_args() -> argparse.Namespace:
 
+    """_parse_args 实现。"""
     parser = argparse.ArgumentParser(description="终末地截图标注工具")
 
     parser.add_argument("--input", "-i", default=None, help="截图文件夹路径")
@@ -145,6 +146,14 @@ class Canvas(QLabel):
 
     def load_image(self, path: Path) -> None:
 
+        """ load_image 实现。
+
+        Args:
+            path: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         self._pixmap = QPixmap(str(path))
 
         if self._pixmap.isNull():
@@ -165,6 +174,7 @@ class Canvas(QLabel):
 
     def _fit_image(self) -> None:
 
+        """_fit_image 实现。"""
         if self._pixmap is None:
 
             return
@@ -187,6 +197,14 @@ class Canvas(QLabel):
 
     def resizeEvent(self, event) -> None:
 
+        """ resizeEvent 实现。
+
+        Args:
+            event: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         super().resizeEvent(event)
 
         if self._pixmap:
@@ -199,24 +217,42 @@ class Canvas(QLabel):
 
     def set_current_class(self, cls_id: int) -> None:
 
+        """ set_current_class 实现。
+
+        Args:
+            cls_id: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         self._current_class = cls_id
 
 
 
     def _img_to_canvas(self, x: float, y: float) -> tuple[float, float]:
 
+        """_img_to_canvas 实现。"""
         return (x * self._scale + self._offset_x, y * self._scale + self._offset_y)
 
 
 
     def _canvas_to_img(self, x: float, y: float) -> tuple[float, float]:
 
+        """_canvas_to_img 实现。"""
         return ((x - self._offset_x) / self._scale, (y - self._offset_y) / self._scale)
 
 
 
     def mousePressEvent(self, event: QMouseEvent | None) -> None:
 
+        """ mousePressEvent 实现。
+
+        Args:
+            event: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if event is None or self._pixmap is None:
 
             return
@@ -257,6 +293,14 @@ class Canvas(QLabel):
 
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:
 
+        """ mouseMoveEvent 实现。
+
+        Args:
+            event: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if event is None or not self._drawing or self._draw_start is None:
 
             return
@@ -273,6 +317,14 @@ class Canvas(QLabel):
 
     def mouseReleaseEvent(self, event: QMouseEvent | None) -> None:
 
+        """ mouseReleaseEvent 实现。
+
+        Args:
+            event: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if event is None or not self._drawing or self._draw_start is None or self._draw_end is None:
 
             return
@@ -317,6 +369,7 @@ class Canvas(QLabel):
 
     def _hit_test(self, img_x: float, img_y: float) -> int | None:
 
+        """_hit_test 实现。"""
         for i, box in enumerate(reversed(self._boxes)):
 
             if box.x1 <= img_x <= box.x2 and box.y1 <= img_y <= box.y2:
@@ -329,6 +382,7 @@ class Canvas(QLabel):
 
     def _load_existing_labels(self, image_path: Path) -> None:
 
+        """_load_existing_labels 实现。"""
         label_path = image_path.with_suffix(".txt")
 
         if not label_path.exists():
@@ -381,6 +435,14 @@ class Canvas(QLabel):
 
     def paintEvent(self, event) -> None:
 
+        """ paintEvent 实现。
+
+        Args:
+            event: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         super().paintEvent(event)
 
         if self._pixmap is None:
@@ -475,6 +537,14 @@ class Canvas(QLabel):
 
     def save_labels(self, image_path: Path) -> None:
 
+        """ save_labels 实现。
+
+        Args:
+            image_path: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if not self._pixmap or not self._boxes:
 
             return
@@ -505,6 +575,7 @@ class Canvas(QLabel):
 
     def remove_selected(self) -> None:
 
+        """remove_selected 实现。"""
         if self._selected_idx is not None:
 
             self._boxes.pop(self._selected_idx)
@@ -517,6 +588,7 @@ class Canvas(QLabel):
 
     def clear_all(self) -> None:
 
+        """clear_all 实现。"""
         self._boxes.clear()
 
         self._selected_idx = None
@@ -529,6 +601,7 @@ class Canvas(QLabel):
 
     def box_count(self) -> int:
 
+        """box_count 实现。"""
         return len(self._boxes)
 
 
@@ -589,6 +662,7 @@ class LabelTool(QWidget):
 
     def _build_ui(self) -> None:
 
+        """_build_ui 实现。"""
         layout = QHBoxLayout(self)
 
         layout.setContentsMargins(8, 8, 8, 8)
@@ -777,6 +851,7 @@ class LabelTool(QWidget):
 
     def _btn_style(self, primary: bool = False) -> str:
 
+        """_btn_style 实现。"""
         if primary:
 
             return """
@@ -815,6 +890,7 @@ class LabelTool(QWidget):
 
     def _combo_style(self) -> str:
 
+        """_combo_style 实现。"""
         return """
 
             QComboBox {
@@ -843,6 +919,7 @@ class LabelTool(QWidget):
 
     def _open_folder(self) -> None:
 
+        """_open_folder 实现。"""
         folder = QFileDialog.getExistingDirectory(
 
             self, "选择截图文件夹", "",
@@ -863,6 +940,7 @@ class LabelTool(QWidget):
 
     def _load_input_dir(self) -> None:
 
+        """_load_input_dir 实现。"""
         if not self._input_dir:
 
             return
@@ -899,6 +977,7 @@ class LabelTool(QWidget):
 
     def _on_image_selected(self, row: int) -> None:
 
+        """_on_image_selected 实现。"""
         if row < 0 or row >= len(self._image_files):
 
             return
@@ -915,6 +994,7 @@ class LabelTool(QWidget):
 
     def _prev_image(self) -> None:
 
+        """_prev_image 实现。"""
         if self._current_idx > 0:
 
             self._save_labels()
@@ -925,6 +1005,7 @@ class LabelTool(QWidget):
 
     def _next_image(self) -> None:
 
+        """_next_image 实现。"""
         if self._current_idx < len(self._image_files) - 1:
 
             self._save_labels()
@@ -935,6 +1016,7 @@ class LabelTool(QWidget):
 
     def _save_labels(self) -> None:
 
+        """_save_labels 实现。"""
         if self._current_image_path and self._canvas.box_count > 0:
 
             self._canvas.save_labels(self._current_image_path)
@@ -945,6 +1027,7 @@ class LabelTool(QWidget):
 
     def _update_status(self) -> None:
 
+        """_update_status 实现。"""
         total = len(self._image_files)
 
         idx = self._current_idx + 1
@@ -963,6 +1046,7 @@ class LabelTool(QWidget):
 
     def _export_dataset(self) -> None:
 
+        """_export_dataset 实现。"""
         if not self._input_dir:
 
             QMessageBox.warning(self, "提示", "请先打开截图文件夹")
@@ -1041,6 +1125,14 @@ class LabelTool(QWidget):
 
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
 
+        """ keyPressEvent 实现。
+
+        Args:
+            event: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         if event is None:
 
             return
@@ -1071,6 +1163,7 @@ class LabelTool(QWidget):
 
 def main() -> None:
 
+    """CLI 入口。"""
     args = _parse_args()
 
 

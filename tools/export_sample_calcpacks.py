@@ -20,10 +20,12 @@ SAMPLE_IDS = ("fps", "moba", "card_rpg")
 
 
 def _load_json(path: Path) -> dict | list:
+    """_load_json 实现。"""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _resolve_dag_path(adapter_dir: Path, meta: dict) -> Path:
+    """_resolve_dag_path 实现。"""
     entry = meta.get("entry_dag", "dag/formula.dag.json")
     candidates = [
         adapter_dir / entry,
@@ -37,6 +39,14 @@ def _resolve_dag_path(adapter_dir: Path, meta: dict) -> Path:
 
 
 def export_one(adapter_id: str) -> Path:
+    """ export_one 实现。
+
+    Args:
+        adapter_id: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     adapter_dir = ADAPTER_ROOT / adapter_id
     meta = _load_json(adapter_dir / "meta.json")
     meta = dict(meta)
@@ -61,6 +71,7 @@ def export_one(adapter_id: str) -> Path:
 
 
 def main() -> int:
+    """CLI 入口：导出所有示例 .calcpack 文件。"""
     written: list[str] = []
     for aid in SAMPLE_IDS:
         path = export_one(aid)

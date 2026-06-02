@@ -23,6 +23,15 @@ def sync_operators(
     *,
     names: list[str] | None = None,
 ) -> dict[str, Any]:
+    """ sync_operators 实现。
+
+    Args:
+        raw_dir: 参数描述。
+        output_dir: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
 
     all_operators: list[dict[str, Any]] = []
@@ -88,6 +97,7 @@ def sync_operators(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI 入口。"""
     import argparse
 
     parser = argparse.ArgumentParser(description="同步干员 wikitext → 结构化 JSON")

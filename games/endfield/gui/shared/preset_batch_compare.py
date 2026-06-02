@@ -18,7 +18,7 @@ from games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerTask, W
 from games.endfield.calc.multi_skill.optimizer import evaluate_multi_skill_task
 from games.endfield.calc.search.evaluate.context import SearchEvalContext
 from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
-from gui.app.loadout_preset import LoadoutPreset
+from games.endfield.gui.app.loadout_preset import LoadoutPreset
 
 
 @dataclass(frozen=True)
@@ -56,6 +56,7 @@ def _find_by_name(rows: Sequence[dict[str, Any]], name: str) -> dict[str, Any] |
             return row
 
     return None
+    """find by name。"""
 
 
 
@@ -80,6 +81,7 @@ def _empty_equipment(*, slot_kind: str) -> dict[str, Any]:
         "属性词条": [],
 
     }
+    """empty equipment。"""
 
 
 
@@ -108,6 +110,7 @@ def _resolve_equipment(
         raise ValueError(f"未找到装备: {name}")
 
     return row
+    """resolve equipment。"""
 
 
 
@@ -122,6 +125,7 @@ def _preset_label(preset: LoadoutPreset) -> str:
         return f"{base}（{preset.note.strip()}）"
 
     return base
+    """preset label。"""
 
 
 
@@ -302,6 +306,7 @@ def _build_eval_item(
 
 
     return _preset_label(preset), task, search_eval, base_context, use_multi, scenarios, active_counts
+    """build eval item。"""
 
 
 
@@ -366,6 +371,7 @@ def _evaluate_item(
     except Exception as exc:
 
         return PresetCompareRow(label=label, final_damage=0.0, loadout_summary="", error=str(exc))
+    """evaluate item。"""
 
 
 

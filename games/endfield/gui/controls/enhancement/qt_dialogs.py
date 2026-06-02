@@ -28,19 +28,19 @@ from utils.operation_log import LogLevel, get_session_operation_log
 from utils.optional_deps import matplotlib_install_hint
 
 from games.endfield.data_loading.loader import get_characters, get_equipments, get_weapons
-from gui.app.loadout_preset import (
+from games.endfield.gui.app.loadout_preset import (
     LoadoutPreset,
     import_presets_from_json_text,
 )
-from gui.controls.search.search_settings import resolve_parallel_workers
-from gui.shared.calc_history import CalculationHistory
-from gui.shared.damage_visualization import (
+from games.endfield.gui.controls.search.search_settings import resolve_parallel_workers
+from games.endfield.gui.shared.calc_history import CalculationHistory
+from games.endfield.gui.shared.damage_visualization import (
     build_damage_pie_figure,
     build_improvement_bar_figure,
     damage_breakdown_from_skill_map,
     is_matplotlib_available,
 )
-from gui.shared.preset_batch_compare import compare_presets_parallel
+from games.endfield.gui.shared.preset_batch_compare import compare_presets_parallel
 
 _SMALL_LABEL = "color: #CCCCCC;"
 
@@ -223,6 +223,7 @@ class QtCalcHistoryDialog(QDialog):
         btn_box.rejected.connect(self.reject)
 
         layout.addWidget(btn_box)
+        """初始化实例。"""
 
 
 
@@ -483,6 +484,7 @@ class QtComparePresetsDialog(QDialog):
         btn_box.rejected.connect(self.reject)
 
         layout.addWidget(btn_box)
+        """初始化实例。"""
 
 
 
@@ -634,6 +636,7 @@ class QtDamageDashboardDialog(QDialog):
                 plt.close(bar_fig)
 
                 self.accept()
+                """on close。"""
 
 
 
@@ -652,4 +655,5 @@ class QtDamageDashboardDialog(QDialog):
             QMessageBox.critical(self, "图表失败", str(exc))
 
             layout.addWidget(QLabel(f"图表渲染失败: {exc}"))
+        """初始化实例。"""
 

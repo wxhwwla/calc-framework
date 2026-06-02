@@ -9,16 +9,16 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QScrollArea, QVBoxLayout
 
 from games.endfield.framework_bridge import ComputeSheet
-from gui.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache
-from gui.shared.calc_history import HistoryEntry, get_app_calculation_history
+from games.endfield.gui.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache
+from games.endfield.gui.shared.calc_history import HistoryEntry, get_app_calculation_history
 
 
 class ConfirmMixin:
     """确认计算、ComputeSheet 刷新、总伤面板、快照。"""
 
     def _build_request(self) -> Any:
-        from gui.app.display_request import DisplayRequest
-        from gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.app.display_request import DisplayRequest
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 
 
         dock = self.control_dock
@@ -52,6 +52,7 @@ class ConfirmMixin:
         if loadout is None:
             return None
         return DisplayRequest(loadout=loadout, equipment_catalog={}, preview_weapon_candidates=())
+        """build request。"""
 
     def _apply_enemy_params(self, params: dict) -> None:
         self._enemy_defense = float(params.get("enemy_defense", 100.0))
@@ -66,9 +67,11 @@ class ConfirmMixin:
         self._corrosion_duration_seconds = float(params.get("corrosion_duration_seconds", 15.0))
         self._imbalance_efficiency_bonus = float(params.get("imbalance_efficiency_bonus", 0.0))
         self._break_defense_stacks = max(0, min(4, int(params.get("break_defense_stacks", 0))))
+        """apply enemy params。"""
 
     def _on_enemy_params_changed(self, params: dict) -> None:
         self._apply_enemy_params(params)
+        """on enemy params changed。"""
 
     def _on_confirm(self) -> None:
         if getattr(self, "_confirm_in_progress", False):
@@ -111,12 +114,14 @@ class ConfirmMixin:
         self.confirm_btn.setText("确认选择")
         self.confirm_btn.setStyleSheet(self._confirm_btn_default_style)
         self._refresh_search_estimate()
+        """on confirm。"""
 
     def _sync_evaluation(self, request: Any) -> None:
         sync_evaluation_cache(request)
+        """sync evaluation。"""
 
     def _refresh_compute_sheet(self) -> None:
-        from gui.shell.qt_app import _ensure_adapter
+        from games.endfield.gui.shell.qt_app import _ensure_adapter
 
         _pkg, layout = _ensure_adapter()
         compute_sheet = ComputeSheet(layout)
@@ -132,9 +137,10 @@ class ConfirmMixin:
         layout_outer.addWidget(scroll)
         if hasattr(self, "_compute_sheet_widget") and self._compute_sheet_widget is not None:
             self._compute_sheet_widget.setLayout(layout_outer)
+        """refresh compute sheet。"""
 
     def _populate_sheet(self, sheet: ComputeSheet) -> None:
-        from gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -167,11 +173,12 @@ class ConfirmMixin:
             return
         for key, value in loadout.to_compute_sheet_inputs().items():
             sheet.set(key, value)
+        """populate sheet。"""
 
     def _update_total_damage_panel(self) -> None:
         """更新总伤面板（从 evaluation cache 读取）。"""
-        from gui.app.loadout_evaluation import compute_total_damage
-        from gui.presentation.display.character import build_total_damage_report_lines
+        from games.endfield.gui.app.loadout_evaluation import compute_total_damage
+        from games.endfield.gui.presentation.display.character import build_total_damage_report_lines
 
 
         total = compute_total_damage()
@@ -198,3 +205,4 @@ class ConfirmMixin:
                 dock.estimate_output_label.setText(f"{secs:.0f}s")
         else:
             dock.estimate_output_label.setText("N/A")
+        """refresh search estimate。"""

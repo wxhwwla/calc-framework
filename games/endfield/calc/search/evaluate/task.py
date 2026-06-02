@@ -53,6 +53,7 @@ def _context_with_expected_crit(
         combo_stacks=base.combo_stacks,
         break_defense_stacks=base.break_defense_stacks,
     )
+    """context with expected crit。"""
 
 
 def _build_profile(job: SingleSkillSearchJob, search_eval: SearchEvalContext | None) -> PhysicalAbnormalProfile:
@@ -75,6 +76,7 @@ def _build_profile(job: SingleSkillSearchJob, search_eval: SearchEvalContext | N
         extra_crit_damage=float(search_eval.extra_crit_damage or job.extra_crit_damage),
         counts=dict(search_eval.physical_abnormal_counts or job.physical_abnormal_counts or {}),
     )
+    """build profile。"""
 
 
 def _expected_crit_context(
@@ -102,6 +104,7 @@ def _expected_crit_context(
     rate += er
     dmg += ed
     return max(0.0, rate), max(0.0, dmg)
+    """expected crit context。"""
 
 
 def _evaluate_abnormal_damage(
@@ -191,6 +194,7 @@ def _evaluate_abnormal_damage(
     merged = dict(physical_breakdown)
     merged.update(spell_breakdown)
     return physical_total + spell_total, merged
+    """evaluate abnormal damage。"""
 
 
 def make_loadout_task_evaluator(
@@ -247,6 +251,7 @@ def make_loadout_task_evaluator(
                 loadout_names=base_score.loadout_names,
                 segment_breakdown=breakdown or None,
             )
+            """eval single。"""
 
         return _eval_single
     scenarios = multi.scenarios
@@ -295,5 +300,6 @@ def make_loadout_task_evaluator(
             loadout_names=base_score.loadout_names,
             segment_breakdown=merged or None,
         )
+        """eval multi。"""
 
     return _eval_multi

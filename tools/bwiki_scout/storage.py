@@ -22,6 +22,14 @@ from typing import Any
 
 def safe_dirname(title: str) -> str:
 
+    """ safe_dirname 实现。
+
+    Args:
+        title: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     cleaned = re.sub(r'[<>:"/\\|?*]', "_", title)
 
     return cleaned or "untitled"
@@ -112,6 +120,15 @@ def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
 
 def write_manifest(output_root: Path, manifest: dict[str, Any]) -> Path:
 
+    """ write_manifest 实现。
+
+    Args:
+        output_root: 参数描述。
+        manifest: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     path = output_root / "manifest.json"
 
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

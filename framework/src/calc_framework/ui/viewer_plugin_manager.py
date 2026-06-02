@@ -29,6 +29,7 @@ class PluginManagerDialog(QDialog):
         self._build_ui()
 
     def _build_ui(self) -> None:
+        """_build_ui。"""
         from calc_framework.plugin.registry import get_registry, list_plugins
 
         plugins = list_plugins()
@@ -131,6 +132,7 @@ class PluginManagerDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "打包失败", f"打包插件时出错:\n{e}")
 
+        """_refresh。"""
     def _refresh(self) -> None:
         self.accept()
         dialog = PluginManagerDialog(self.parent(), self._status_callback)

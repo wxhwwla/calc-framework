@@ -103,6 +103,7 @@ def ordered_rotation_keys(
         except ValueError:
             order = 99
         return (order, seg_idx, key)
+        """sort key。"""
 
     if preferred_order:
         keys = [k for k in preferred_order if k in active]

@@ -37,6 +37,7 @@ VALID_WIDGET_TYPES = ("donation",)
 
 class Section:
 
+    """Section。"""
     id: str
 
     title: str
@@ -60,6 +61,7 @@ class Section:
 @dataclass
 
 class Layout:
+    """Layout。"""
 
     schema_version: str
 
@@ -115,6 +117,7 @@ def load_layout_json(json_str: str) -> Layout:
 
 
 
+    """_validate。"""
 def _validate(data: dict[str, Any]) -> None:
 
     if data.get("schema_version") != "ui-v1":
@@ -198,6 +201,7 @@ def _validate(data: dict[str, Any]) -> None:
 
 
 
+    """_build_sections。"""
 
 def _build_sections(raw: list[dict[str, Any]]) -> list[Section]:
 

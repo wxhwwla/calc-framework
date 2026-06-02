@@ -56,6 +56,7 @@ def normalize_spell_abnormal_counts(counts: dict[str, int] | None) -> dict[str, 
             raw = 0 if counts is None else int(counts.get(key, 0))
             normalized[key] = max(0, raw)
     return normalized
+    """normalize spell abnormal counts。"""
 
 
 def is_spell_abnormal_key(key: str) -> bool:
@@ -69,6 +70,7 @@ def is_spell_abnormal_key(key: str) -> bool:
     except (TypeError, ValueError):
         return False
     return lv in SPELL_ABNORMAL_LEVELS
+    """判断是否为spell abnormal key。"""
 
 
 def _spell_level_coeff(char_level: int) -> float:
@@ -80,6 +82,7 @@ def _skill_multiplier(defn: SpellAbnormalDef, ui_level: int, *, char_level: int)
     calc_level = calc_level_from_ui(ui_level)
     base = base_multiplier_for_formula(defn.formula, calc_level=calc_level)
     return base * _spell_level_coeff(char_level)
+    """skill multiplier。"""
 
 
 def get_spell_abnormal_param_snapshot() -> dict[str, dict[str, object]]:
@@ -174,6 +177,7 @@ def evaluate_spell_abnormal_total(
                     imbalance_damage_bonus=context.imbalance_damage_bonus,
                     other_damage_bonus=context.other_damage_bonus,
                 )
+                """make ctx。"""
 
             calc_level = calc_level_from_ui(ui_level)
             attached = build_spell_attached_effects(
@@ -230,6 +234,7 @@ def format_spell_abnormal_breakdown_lines(
                 label = "爆发"
             lines.append(f"{indent}{abnormal}({label}) Lv{level}: 单次 {single:.1f} ×{count} = {total:.1f}")
     return lines
+    """format spell abnormal breakdown lines。"""
 
 
 def spell_abnormal_weighted_total(

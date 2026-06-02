@@ -28,8 +28,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.app.display_request import DisplayRequest
-from gui.presentation.display_lines import (
+from games.endfield.gui.app.display_request import DisplayRequest
+from games.endfield.gui.presentation.display_lines import (
     build_character_attribute_lines,
     build_weapon_attribute_lines,
     evaluate_display_state,
@@ -79,6 +79,7 @@ class _ColumnTable(QTableWidget):
         self.verticalHeader().setDefaultSectionSize(24)
 
         self.setWordWrap(True)
+        """初始化实例。"""
 
 
 
@@ -229,6 +230,7 @@ class QtAttributeColumns(QWidget):
 
 
         self._show_empty()
+        """初始化实例。"""
 
 
 
@@ -435,7 +437,7 @@ class QtAttributeColumns(QWidget):
 
         if mode == "single_hit":
 
-            from gui.presentation.display_lines import build_single_hit_damage_lines
+            from games.endfield.gui.presentation.display_lines import build_single_hit_damage_lines
 
 
 
@@ -473,7 +475,7 @@ class QtAttributeColumns(QWidget):
 
         if mode in ("single_skill_search", "multi_skill_search"):
 
-            from gui.app.loadout_evaluation import build_search_preview_lines
+            from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
 
 
 
@@ -506,6 +508,7 @@ class QtAttributeColumns(QWidget):
         self._weapon_table.set_lines(["请选择有效武器"], "#888888")
 
         self._zone_table.set_lines(["请选择有效角色和武器"], "#888888")
+        """show empty。"""
 
 
 

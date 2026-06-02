@@ -34,7 +34,9 @@ _BACKEND: Literal["qt"] = "qt"
 
 def current_backend() -> Literal["qt"]:
     return _BACKEND
+    """current backend。"""
 
 
 def is_qt() -> bool:
     return True
+    """判断是否为qt。"""

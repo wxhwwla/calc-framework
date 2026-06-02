@@ -308,6 +308,7 @@ def build_seed_spec_from_wiki(
 
 def _curves_from_seed_spec(spec: dict[str, Any]) -> dict[str, list[float]]:
 
+    """_curves_from_seed_spec 实现。"""
     out: dict[str, list[float]] = {}
 
     for seed_key, _ in _ATTR_FIELDS:

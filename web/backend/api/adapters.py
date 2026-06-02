@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""适配器元数据 API — 列表/元信息/layout/DAG/数据摘要/打包导出。"""
+
 import json
 from pathlib import Path
 
@@ -22,28 +24,36 @@ _manager = AdapterManager(ADAPTER_ROOT)
 
 
 class AdapterInfoResponse(BaseModel):
-    id: str
-    name: str
-    game: str
-    version: str
-    description: str
+    """适配器摘要信息。"""
+
+    id: str = Field(description="适配器目录名")
+    name: str = Field(description="适配器显示名")
+    game: str = Field(description="关联游戏")
+    version: str = Field(description="版本号")
+    description: str = Field(description="描述")
 
 
 class AdapterMetaResponse(BaseModel):
-    id: str
-    meta: dict
+    """适配器完整元数据。"""
+
+    id: str = Field(description="适配器目录名")
+    meta: dict = Field(description="meta.json 完整内容")
 
 
 class AdapterAttrResponse(BaseModel):
-    name: str
-    type: str
-    source: str
-    default: float | bool | None = None
-    description: str = ""
+    """属性定义。"""
+
+    name: str = Field(description="属性名")
+    type: str = Field(description="属性类型（float/bool/select 等）")
+    source: str = Field(description="数据来源键")
+    default: float | bool | None = Field(default=None, description="默认值")
+    description: str = Field(default="", description="描述")
 
 
 class AdapterSchemaResponse(BaseModel):
-    attributes: list[AdapterAttrResponse]
+    """属性 schema 列表。"""
+
+    attributes: list[AdapterAttrResponse] = Field(description="属性定义列表")
 
 
 @router.get("", response_model=list[AdapterInfoResponse])
@@ -87,11 +97,13 @@ async def get_adapter_dag_route(adapter_id: str):
 
 @router.get("/{adapter_id}/data-summary")
 async def get_adapter_data_summary(adapter_id: str):
+    """获取适配器关联的游戏数据实体摘要（类型 / 条数 / 只读）。"""
     return {"entities": data_entity_summary(adapter_id)}
 
 
 @router.get("/{adapter_id}/pack-bundle")
 async def get_adapter_pack_bundle(adapter_id: str):
+    """获取适配器的完整打包导出内容（meta + layout + DAG + data_files）。"""
     return get_pack_export_bundle(adapter_id)
 
 

@@ -49,6 +49,7 @@ def _make_ability_bonus_subgraph() -> DAGSubgraph:
             "能力值加成": DAGOutput(node="result", label="能力值加成"),
         },
     )
+    """make ability bonus subgraph。"""
 
 
 def _make_final_attack_subgraph() -> DAGSubgraph:
@@ -80,6 +81,7 @@ def _make_final_attack_subgraph() -> DAGSubgraph:
             "最终攻击力": DAGOutput(node="result", label="最终攻击力"),
         },
     )
+    """make final attack subgraph。"""
 
 
 def _make_single_hit_damage_subgraph() -> DAGSubgraph:
@@ -97,6 +99,7 @@ def _make_single_hit_damage_subgraph() -> DAGSubgraph:
             "单段伤害": DAGOutput(node="result", label="单段伤害"),
         },
     )
+    """make single hit damage subgraph。"""
 
 
 def _make_crit_zone_subgraph() -> DAGSubgraph:
@@ -117,6 +120,7 @@ def _make_crit_zone_subgraph() -> DAGSubgraph:
             "暴击区": DAGOutput(node="result", label="暴击区"),
         },
     )
+    """make crit zone subgraph。"""
 
 
 def _make_base_damage_block_subgraph() -> DAGSubgraph:
@@ -137,6 +141,7 @@ def _make_base_damage_block_subgraph() -> DAGSubgraph:
             "暴击后伤害": DAGOutput(node="result", label="暴击后伤害"),
         },
     )
+    """make base damage block subgraph。"""
 
 
 def _make_buff_debuff_block_subgraph() -> DAGSubgraph:
@@ -166,6 +171,7 @@ def _make_buff_debuff_block_subgraph() -> DAGSubgraph:
             "增益减益后伤害": DAGOutput(node="result", label="增益减益后伤害"),
         },
     )
+    """make buff debuff block subgraph。"""
 
 
 def _make_environment_block_subgraph() -> DAGSubgraph:
@@ -199,3 +205,4 @@ def _make_environment_block_subgraph() -> DAGSubgraph:
             "防御区": DAGOutput(node="defense_reduction", label="防御区"),
         },
     )
+    """make environment block subgraph。"""

@@ -227,6 +227,7 @@ def _format_multiplier_percent(pct: float) -> str:
     if pct == int(pct):
         return f"{int(pct)}%"
     return f"{format(pct, 'g')}%"
+    """format multiplier percent。"""
 
 
 def segment_display_label(

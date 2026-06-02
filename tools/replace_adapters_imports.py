@@ -19,7 +19,15 @@ EXCLUDE_DIRS = {
 EXCLUDE_FILES = {"replace_adapters_imports.py"}
 
 
-def replace_in_file(filepath):
+def replace_in_file(filepath: str) -> bool:
+    """替换单个文件中的模块导入路径。
+
+    Args:
+        filepath: 文件路径
+
+    Returns:
+        文件被修改返回 True，否则 False
+    """
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -35,6 +43,7 @@ def replace_in_file(filepath):
 
 
 def main():
+    """CLI 入口。"""
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     count = 0
     modified_files = []

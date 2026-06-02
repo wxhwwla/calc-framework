@@ -68,6 +68,7 @@ def main() -> None:
 
 
 def _parse_file_arg(args: List[str], index: int) -> Optional[str]:
+    """_parse_file_arg 实现。"""
     if index < len(args):
         return args[index]
     return None
@@ -250,6 +251,7 @@ def _cmd_diff(args: List[str]) -> int:
 
 
 def _show_help() -> None:
+    """_show_help 实现。"""
     print(__doc__)
 
 

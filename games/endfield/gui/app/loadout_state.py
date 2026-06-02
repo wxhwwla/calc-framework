@@ -14,7 +14,7 @@ from typing import Any
 from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.calc.search.plan.controller import SearchJobInputs
 from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
-from gui.presentation.display_lines import resolve_selected_skill_for_damage
+from games.endfield.gui.presentation.display_lines import resolve_selected_skill_for_damage
 
 from .confirm_refresh import (
     build_confirm_refresh_signature,
@@ -223,6 +223,7 @@ class LoadoutState:
                 "break_defense_stacks": self.break_defense_stacks,
             },
         )
+        """to loadout preset。"""
 
     def to_search_job_inputs(
         self,
@@ -271,6 +272,7 @@ class LoadoutState:
             corrosion_duration_seconds=self.corrosion_duration_seconds,
             break_defense_stacks=self.break_defense_stacks,
         )
+        """to search job inputs。"""
 
     def to_compute_sheet_inputs(self) -> dict[str, Any]:
         """转换为 DAG context 键值对，供 ComputeSheet.set() 逐项设置。"""
@@ -303,6 +305,7 @@ def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None
         if not item:
             return None
         return str(item.get("名称") or "") or None
+        """name。"""
 
     return {
         "chest": _name(fixed.chest),
@@ -310,6 +313,7 @@ def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None
         "accessory_a": _name(fixed.accessory_a),
         "accessory_b": _name(fixed.accessory_b),
     }
+    """fixed equipment names。"""
 
 
 def read_loadout_from_panels(

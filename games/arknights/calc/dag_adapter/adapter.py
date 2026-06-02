@@ -23,6 +23,7 @@ _dag_pkg: AdapterPackage | None = None
 
 
 def _ensure_dag() -> AdapterPackage:
+    """获取或初始化 DAG 适配器包（惰性加载单例）。"""
     global _dag_pkg
     if _dag_pkg is None:
         _dag_pkg = AdapterPackage(_ADAPTER_DIR)

@@ -20,6 +20,7 @@ from typing import Any
 
 def _keys_of_record(record: dict[str, Any]) -> list[str]:
 
+    """_keys_of_record 实现。"""
     return sorted(record.keys())
 
 
@@ -51,6 +52,14 @@ def load_local_name_sets(
 
     def names_from(rows: list[dict[str, Any]]) -> set[str]:
 
+        """ names_from 实现。
+
+        Args:
+            rows: 参数描述。
+
+        Returns:
+            返回值描述。
+        """
         return {str(row["名称"]) for row in rows if row.get("名称")}
 
 

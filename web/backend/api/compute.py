@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""DAG 计算引擎 API — 快照/配装/对比/预设导出。"""
+
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +50,7 @@ class EvaluateResponse(BaseModel):
 
 
 def evaluate_payload(req: EvaluateRequest) -> EvaluateResponse:
+    """加载适配器并执行 DAG 求值。"""
     try:
         pkg = _manager.load(req.adapter)
     except KeyError as e:
@@ -316,6 +319,7 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
 
 @router.post("/snapshot")
 def snapshot(req: SnapshotRequest):
+    """旧版快照计算（直接参数，不走 loadout）。"""
     return snapshot_payload(req)
 
 
@@ -410,6 +414,7 @@ def compare(req: CompareRequest):
 
 @router.post("/preview")
 def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
+    """返回配装搜索前预览行（描述当前选定装备范围的文字）。"""
     from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
     from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
     from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
@@ -455,6 +460,7 @@ def loadout_snapshot(req: LoadoutSnapshotRequest) -> dict[str, Any]:
 
 @router.post("/preset-export")
 def preset_export(req: PresetExportRequest) -> dict[str, Any]:
+    """将当前配装导出为可保存的预设 JSON。"""
     from games.endfield.data_loading.web_loadout_bridge import (
         build_loadout_state_from_web,
         loadout_state_to_web_preset,

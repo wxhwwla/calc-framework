@@ -42,26 +42,26 @@ from PySide6.QtWidgets import (
 
 from games.endfield.data_loading.loader import get_characters, get_weapons
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
-from gui.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache as _sync_eval_cache
-from gui.app.loadout_state import read_loadout_from_panels
-from gui.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
-from gui.controls.search.qt_search_browser import SearchHistoryDialog
-from gui.legal.attribution_content import SUMMARY_TEXT
-from gui.legal.donation_qt import open_donation_dialog
-from gui.presentation.damage_snapshot import get_snapshot_from_app
-from gui.presentation.search_results_lines import build_search_results_report_lines
-from gui.presentation.total_damage_panel import TotalDamagePanel
-from gui.shared.calc_history import HistoryEntry, get_app_calculation_history
-from gui.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
-from gui.shared.display_view.qt_columns import QtAttributeColumns
-from gui.shared.ui_preferences import (
+from games.endfield.gui.app.loadout_evaluation import refresh_damage_snapshot, sync_evaluation_cache as _sync_eval_cache
+from games.endfield.gui.app.loadout_state import read_loadout_from_panels
+from games.endfield.gui.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
+from games.endfield.gui.controls.search.qt_search_browser import SearchHistoryDialog
+from games.endfield.gui.legal.attribution_content import SUMMARY_TEXT
+from games.endfield.gui.legal.donation_qt import open_donation_dialog
+from games.endfield.gui.presentation.damage_snapshot import get_snapshot_from_app
+from games.endfield.gui.presentation.search_results_lines import build_search_results_report_lines
+from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
+from games.endfield.gui.shared.calc_history import HistoryEntry, get_app_calculation_history
+from games.endfield.gui.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
+from games.endfield.gui.shared.display_view.qt_columns import QtAttributeColumns
+from games.endfield.gui.shared.ui_preferences import (
     load_ui_preferences,
     record_last_page,
     resolve_startup_page,
     save_ui_preferences,
 )
-from gui.panels.selection.qt_panel import QtSelectionPanel
-from gui.shell.qt_control_dock import QtControlDock
+from games.endfield.gui.panels.selection.qt_panel import QtSelectionPanel
+from games.endfield.gui.shell.qt_control_dock import QtControlDock
 from scripts.please_read_me import get_exe_version
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
@@ -80,6 +80,7 @@ def _ensure_adapter():
         layout_path = _FRAMEWORK_ADAPTER / "ui" / "layout.json"
         _adapter_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
     return _adapter_pkg, _adapter_layout
+    """ensure adapter。"""
 
 
 class EndfieldApp(QMainWindow):
@@ -156,6 +157,7 @@ class EndfieldApp(QMainWindow):
         self._init_control_dock()
         self._connect_signals()
         self._on_char_name_change()
+        """初始化实例。"""
 
     def _build_calc_page(self) -> None:
         calc_page = QWidget()
@@ -214,6 +216,7 @@ class EndfieldApp(QMainWindow):
         content_split.setSizes([400, 400])
 
         self.tabs.addTab(calc_page, "计算页")
+        """build calc page。"""
 
     def _build_adv_page(self) -> None:
         self.control_dock: QtControlDock = QtControlDock(
@@ -242,17 +245,20 @@ class EndfieldApp(QMainWindow):
         adv_layout.addWidget(self.status_label)
 
         self.tabs.addTab(adv_page, "高级页")
+        """build adv page。"""
 
     def run(self) -> None:
         self._load_preferences()
         self.closeEvent = self._on_close
         self.showMaximized()
         sys.exit(self._qapp.exec())
+        """执行主流程。"""
 
     def _load_preferences(self) -> None:
         self._ui_preferences = load_ui_preferences()
         page = resolve_startup_page(self._ui_preferences)
         self.tabs.setCurrentIndex(1 if page == "高级页" else 0)
+        """load preferences。"""
 
     def _on_close(self, event: Any = None) -> None:
         try:
@@ -263,6 +269,7 @@ class EndfieldApp(QMainWindow):
             pass
         if event is not None:
             event.accept()
+        """on close。"""
 
     def _apply_dark_style(self) -> None:
         self._qapp.setStyleSheet("""
@@ -270,6 +277,7 @@ class EndfieldApp(QMainWindow):
             QWidget { background-color: #1A1A1A; }
             QLabel { color: #D1D1D1; }
         """)
+        """apply dark style。"""
 
     def _style_tabs(self) -> None:
         self.tabs.setStyleSheet("""
@@ -298,6 +306,7 @@ class EndfieldApp(QMainWindow):
                 background-color: #333333;
             }
         """)
+        """style tabs。"""
 
     def _setup_app_menu(self) -> None:
         menubar = self.menuBar()
@@ -306,9 +315,11 @@ class EndfieldApp(QMainWindow):
         help_action.setShortcut(QKeySequence("F1"))
         help_action.triggered.connect(self._on_open_help)
         help_menu.addAction(help_action)
+        """setup app menu。"""
 
     def _show_main_page(self) -> None:
         self.tabs.setCurrentIndex(0)
+        """show main page。"""
 
     def _on_char_name_change(self) -> None:
         char_data = self.char_panel.get_selected_data()
@@ -328,6 +339,7 @@ class EndfieldApp(QMainWindow):
             return
         self.weapon_panel.update_data_list(filtered)
         self._rebuild_segment_rows()
+        """on char name change。"""
 
     def _rebuild_segment_rows(self) -> None:
         char_data = self.char_panel.get_selected_data()
@@ -338,10 +350,12 @@ class EndfieldApp(QMainWindow):
         s2 = self.char_panel.get_skill_2_level()
         s3 = self.char_panel.get_skill_3_level()
         self.control_dock.rebuild_segment_rows(char_data, s1, s2, s3)
+        """rebuild segment rows。"""
 
     def _on_calc_mode_changed(self, label: str) -> None:
         self._current_calc_mode = calculation_mode_from_label(label)
         self._on_loadout_changed()
+        """on calc mode changed。"""
 
     def _on_loadout_changed(self) -> None:
         self.status_label.setText("待确认")
@@ -355,6 +369,7 @@ class EndfieldApp(QMainWindow):
         """)
         self._rebuild_segment_rows()
         self._total_damage_panel.hide_damage()
+        """on loadout changed。"""
 
     def _init_control_dock(self) -> None:
         dock = self.control_dock
@@ -379,6 +394,7 @@ class EndfieldApp(QMainWindow):
 
         dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
         dock._survival_btn.clicked.connect(self._on_survival_estimate)
+        """init control dock。"""
 
     def _on_equipment_scope_changed(self, scope_label: str) -> None:
         from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
@@ -386,10 +402,12 @@ class EndfieldApp(QMainWindow):
         self._equipment_catalog = get_equipment_catalog(scope_label=scope_label)
         self.control_dock.populate_fixed_loadout_slots(self._equipment_catalog)
         self._on_loadout_changed()
+        """on equipment scope changed。"""
 
     @property
     def confirm_btn(self):
         return self.control_dock.confirm_btn
+        """confirm btn。"""
 
     # ── 敌方参数 ──────────────────────────────────
 
@@ -406,14 +424,16 @@ class EndfieldApp(QMainWindow):
         self._corrosion_duration_seconds = float(params.get("corrosion_duration_seconds", 15.0))
         self._imbalance_efficiency_bonus = float(params.get("imbalance_efficiency_bonus", 0.0))
         self._break_defense_stacks = max(0, min(4, int(params.get("break_defense_stacks", 0))))
+        """apply enemy params。"""
 
     def _on_enemy_params_changed(self, params: dict) -> None:
         self._apply_enemy_params(params)
+        """on enemy params changed。"""
 
     # ── 确认计算 / ComputeSheet ──────────────────
 
     def _build_request(self) -> Any:
-        from gui.app.display_request import DisplayRequest
+        from games.endfield.gui.app.display_request import DisplayRequest
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -446,6 +466,7 @@ class EndfieldApp(QMainWindow):
         if loadout is None:
             return None
         return DisplayRequest(loadout=loadout, equipment_catalog={}, preview_weapon_candidates=())
+        """build request。"""
 
     def _on_confirm(self) -> None:
         if getattr(self, "_confirm_in_progress", False):
@@ -488,12 +509,14 @@ class EndfieldApp(QMainWindow):
         self.confirm_btn.setText("确认选择")
         self.confirm_btn.setStyleSheet(self._confirm_btn_default_style)
         self._refresh_search_estimate()
+        """on confirm。"""
 
     def _sync_evaluation(self, request: Any) -> None:
         try:
             _sync_eval_cache(request.loadout)
         except Exception as exc:
             _logger.warning("求值缓存同步失败: %s", exc)
+        """sync evaluation。"""
 
     def _refresh_compute_sheet(self) -> None:
         pkg, layout = _ensure_adapter()
@@ -553,6 +576,7 @@ class EndfieldApp(QMainWindow):
             new_layout.addWidget(compute_sheet.widget, stretch=1)
             new_layout.addWidget(self._total_damage_panel)
             self._compute_sheet_widget.setLayout(new_layout)
+        """refresh compute sheet。"""
 
     def _populate_sheet(self, sheet: ComputeSheet) -> None:
         dock = self.control_dock
@@ -586,13 +610,16 @@ class EndfieldApp(QMainWindow):
             return
         for key, value in loadout.to_compute_sheet_inputs().items():
             sheet.set(key, value)
+        """populate sheet。"""
 
     def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
         self._update_total_damage_panel()
+        """on compute sheet evaluated。"""
 
     def _update_total_damage_panel(self) -> None:
         snapshot = get_snapshot_from_app(self)
         self._total_damage_panel.update_from_snapshot(snapshot)
+        """update total damage panel。"""
 
     def _refresh_search_estimate(self) -> None:
         dock = self.control_dock
@@ -610,6 +637,7 @@ class EndfieldApp(QMainWindow):
                 dock.estimate_output_label.setText(f"{secs:.0f}s")
         else:
             dock.estimate_output_label.setText("N/A")
+        """refresh search estimate。"""
 
     # ── 全量搜索 ──────────────────────────────────
 
@@ -642,6 +670,7 @@ class EndfieldApp(QMainWindow):
             all_weapons=list(self.all_weapons),
             equipment_catalog=dict(self._equipment_catalog),
         )
+        """build search job inputs。"""
 
     def _on_mvp_search(self) -> None:
         from games.endfield.calc.search.plan.controller import prepare_search_job
@@ -670,12 +699,13 @@ class EndfieldApp(QMainWindow):
             status_prefix="最优搜索状态", cancel_token=cancel_token,
         )
         self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
+        """on mvp search。"""
 
     def _on_full_search(self) -> None:
         from games.endfield.calc.search.plan.controller import prepare_search_job
         from games.endfield.calc.search.run.cancel import SearchCancelToken
         from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
-        from gui.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
+        from games.endfield.gui.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
@@ -712,6 +742,7 @@ class EndfieldApp(QMainWindow):
             status_prefix="全量遍历", cancel_token=cancel_token,
         )
         self._start_search_thread(worker, "全量遍历：计算中，请稍候。")
+        """on full search。"""
 
     def _start_search_thread(self, worker: Any, status_running: str) -> None:
         self._search_thread = QThread()
@@ -726,9 +757,11 @@ class EndfieldApp(QMainWindow):
         self.control_dock.search_cancel_btn.setEnabled(True)
         self.control_dock.mvp_status_label.setVisible(True)
         self.control_dock.mvp_status_label.setText(status_running)
+        """start search thread。"""
 
     def _on_search_progress(self, text: str) -> None:
         self.control_dock.mvp_status_label.setText(text)
+        """on search progress。"""
 
     def _on_search_finished(self, mode_label: str, job: Any, outcome: Any, export_paths: dict) -> None:
         self._search_cancel_token = None
@@ -761,6 +794,7 @@ class EndfieldApp(QMainWindow):
             spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
         )
         dialog.exec()
+        """on search finished。"""
 
     def _on_search_error(self, error_msg: str) -> None:
         self._search_cancel_token = None
@@ -770,11 +804,13 @@ class EndfieldApp(QMainWindow):
         self.control_dock.mvp_status_label.setText(f"搜索失败：{error_msg}")
         self._set_search_btns_enabled(True)
         QMessageBox.critical(self, "搜索失败", error_msg)
+        """on search error。"""
 
     def _on_cancel_search(self) -> None:
         if self._search_cancel_token is not None:
             self._search_cancel_token.cancel()
             self.control_dock.mvp_status_label.setText("搜索状态：正在取消。")
+        """on cancel search。"""
 
     def _set_search_btns_enabled(self, enabled: bool) -> None:
         dock = self.control_dock
@@ -783,15 +819,17 @@ class EndfieldApp(QMainWindow):
         dock.search_workers_combo.setEnabled(enabled)
         dock.search_top_n_combo.setEnabled(enabled)
         dock.search_cancel_btn.setEnabled(not enabled)
+        """set search btns enabled。"""
 
     # ── 对话框 / 工具 / 信号 ─────────────────────
 
     def _on_manual_buff(self) -> None:
-        from gui.controls.manual_buff.qt_window import QtManualBuffDialog
+        from games.endfield.gui.controls.manual_buff.qt_window import QtManualBuffDialog
 
         def _read_counts():
             dock = self.control_dock
             return dock.read_skill_counts(), dock.read_physical_abnormal_counts(), dock.read_spell_abnormal_counts()
+            """read counts。"""
 
         dialog = QtManualBuffDialog(
             self, big_font=self.big_font, small_font=self.small_font,
@@ -802,10 +840,11 @@ class EndfieldApp(QMainWindow):
         dialog.load_store(getattr(self, "_manual_buff_store", None))
         if dialog.exec():
             self._manual_buff_store = dialog.buff_store()
+        """on manual buff。"""
 
     def _on_survival_estimate(self) -> None:
-        from gui.app.loadout_state import read_loadout_from_panels
-        from gui.controls.survival import open_survival_estimate_dialog
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.controls.survival import open_survival_estimate_dialog
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -850,10 +889,11 @@ class EndfieldApp(QMainWindow):
             weapon_skill_kwargs=loadout.weapon_skill_kwargs(),
             big_font=self.big_font,
         )
+        """on survival estimate。"""
 
     def _on_export_preset(self) -> None:
-        from gui.app.loadout_preset import export_preset_json
-        from gui.app.loadout_state import read_loadout_from_panels
+        from games.endfield.gui.app.loadout_preset import export_preset_json
+        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -886,9 +926,10 @@ class EndfieldApp(QMainWindow):
             return
         Path(path).write_text(export_preset_json(preset), encoding="utf-8")
         self.status_label.setText("预设已导出")
+        """on export preset。"""
 
     def _on_import_preset(self) -> None:
-        from gui.app.loadout_preset import import_presets_from_json_text
+        from games.endfield.gui.app.loadout_preset import import_presets_from_json_text
 
         path, _ = QFileDialog.getOpenFileName(self, "导入配装预设", "", "JSON (*.json)")
         if not path:
@@ -902,9 +943,10 @@ class EndfieldApp(QMainWindow):
             self.status_label.setText("预设已导入")
         except Exception as exc:
             QMessageBox.warning(self, "导入预设失败", str(exc))
+        """on import preset。"""
 
     def _apply_preset_to_qt_app(self, preset) -> None:
-        from gui.app.loadout_preset import apply_preset_to_panels
+        from games.endfield.gui.app.loadout_preset import apply_preset_to_panels
 
         apply_preset_to_panels(
             preset=preset,
@@ -914,33 +956,38 @@ class EndfieldApp(QMainWindow):
             equipment_catalog=self._equipment_catalog,
             shell=self,
         )
+        """apply preset to qt app。"""
 
     def _on_compare_presets(self) -> None:
-        from gui.controls.enhancement.qt_dialogs import QtCompareDialog
+        from games.endfield.gui.controls.enhancement.qt_dialogs import QtCompareDialog
 
         dialog = QtCompareDialog(
             parent=self, big_font=self.big_font, small_font=self.small_font,
             char_panel=self.char_panel, weapon_panel=self.weapon_panel,
         )
         dialog.exec()
+        """on compare presets。"""
 
     def _on_attribution(self) -> None:
         QMessageBox.about(self, "数据来源与声明", SUMMARY_TEXT)
+        """on attribution。"""
 
     def _on_donation(self) -> None:
         open_donation_dialog(self)
+        """on donation。"""
 
     def _on_damage_dashboard(self) -> None:
-        from gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
+        from games.endfield.gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
 
         snapshot = get_snapshot_from_app(self)
         dialog = QtDamageDashboardDialog(
             self, big_font=self.big_font, small_font=self.small_font, snapshot=snapshot,
         )
         dialog.exec()
+        """on damage dashboard。"""
 
     def _on_calc_history(self) -> None:
-        from gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
+        from games.endfield.gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
 
         history = get_app_calculation_history(self)
         dialog = QtCalcHistoryDialog(
@@ -948,6 +995,7 @@ class EndfieldApp(QMainWindow):
             history=history, apply_fn=self._apply_preset_to_qt_app,
         )
         dialog.exec()
+        """on calc history。"""
 
     def _on_export_log(self) -> None:
         from utils.operation_log import get_session_operation_log
@@ -960,6 +1008,7 @@ class EndfieldApp(QMainWindow):
             self.status_label.setText("操作日志已导出")
         except Exception as exc:
             QMessageBox.warning(self, "导出失败", str(exc))
+        """on export log。"""
 
     def _on_open_help(self) -> None:
         from utils.gui.help_calculator import build_calculator_help
@@ -967,10 +1016,11 @@ class EndfieldApp(QMainWindow):
 
         dialog = HelpDialog(build_calculator_help, self, title="终末地伤害计算器 使用说明")
         dialog.exec()
+        """on open help。"""
 
     def _on_ocr_detect(self) -> None:
         try:
-            from gui.controls.ocr import open_ocr_detection_dialog
+            from games.endfield.gui.controls.ocr import open_ocr_detection_dialog
 
             def _apply_ocr(preset_dict: dict) -> None:
                 char_name = preset_dict.get("char_name", "")
@@ -988,15 +1038,18 @@ class EndfieldApp(QMainWindow):
                     if trust_level and self.char_panel.trust_panel:
                         self.char_panel.trust_panel.set_level(min(trust_level, 4))
                     self._on_confirm()
+                """apply ocr。"""
 
             open_ocr_detection_dialog(self, on_apply=_apply_ocr)
         except Exception as exc:
             msg = f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install torchvision easyocr"
             QMessageBox.warning(self, "截图识装", msg)
+        """on ocr detect。"""
 
     def _on_search_history(self) -> None:
         dialog = SearchHistoryDialog(self, big_font=self.big_font, small_font=self.small_font)
         dialog.exec()
+        """on search history。"""
 
     # ── 信号连接 ──────────────────────────────
 
@@ -1017,6 +1070,7 @@ class EndfieldApp(QMainWindow):
 
         self._connect_more_settings_btns()
         self._connect_search_estimate_triggers()
+        """connect signals。"""
 
     def _connect_more_settings_btns(self) -> None:
         dock = self.control_dock
@@ -1032,6 +1086,7 @@ class EndfieldApp(QMainWindow):
             dock._history_btn.clicked.connect(self._on_calc_history)
         if hasattr(dock, "_export_log_btn") and dock._export_log_btn:
             dock._export_log_btn.clicked.connect(self._on_export_log)
+        """connect more settings btns。"""
 
     def _connect_search_estimate_triggers(self) -> None:
         dock = self.control_dock
@@ -1039,3 +1094,4 @@ class EndfieldApp(QMainWindow):
         dock.equipment_scope_combo.currentTextChanged.connect(self._refresh_search_estimate)
         dock.search_workers_combo.currentTextChanged.connect(self._refresh_search_estimate)
         dock.search_top_n_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        """connect search estimate triggers。"""

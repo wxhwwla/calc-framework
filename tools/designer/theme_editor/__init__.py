@@ -1,1 +1,2 @@
 # SPDX-License-Identifier: AGPL-3.0
+"""designer.theme_editor 包 — 主题编辑面板。"""

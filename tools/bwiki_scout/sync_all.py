@@ -98,6 +98,7 @@ _SEED_WEAPON_PATH = (
 
 def _print_part(title: str, result: dict) -> None:
 
+    """_print_part 实现。"""
     mode = "预览" if result.get("dry_run", True) else "已写入"
 
     print(f"\n[{title}][{mode}]")
@@ -138,6 +139,7 @@ def _print_part(title: str, result: dict) -> None:
 
 def main(argv: list[str] | None = None) -> int:
 
+    """CLI 入口。"""
     parser = argparse.ArgumentParser(description="BWIKI 一键同步（干员/武器/装备）")
 
     parser.add_argument("--input", type=Path, default=OUTPUT_ROOT, help="scout 输出目录")

@@ -149,6 +149,7 @@ class _DetectionDialog(QDialog):
 
         # 开始检测
         self._run_detection()
+        """初始化实例。"""
 
     def _run_detection(self) -> None:
         """后台运行目标检测 + OCR + 映射。"""
@@ -236,6 +237,7 @@ class _DetectionDialog(QDialog):
         else:
             QMessageBox.critical(self, "下载失败",
                                  "模型下载失败。\n\n请尝试在终端手动运行:\n  python tools/ocr/download_models.py")
+        """on download finished。"""
 
 
 class _DownloadThread(QThread):
@@ -282,6 +284,7 @@ class _DownloadThread(QThread):
             self.finished.emit(True)
         except Exception:
             self.finished.emit(False)
+        """执行主流程。"""
 
 
 def _build_ui(dialog: _DetectionDialog) -> None:

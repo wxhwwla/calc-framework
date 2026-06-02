@@ -152,6 +152,7 @@ def analyze_report(data: dict) -> None:
 
 
 def main() -> None:
+    """CLI 入口：逐个目录扫描、合并结果并输出摘要报告。"""
     repo_root = Path(__file__).resolve().parent.parent
     report_path = repo_root / "scan_report.json"
 

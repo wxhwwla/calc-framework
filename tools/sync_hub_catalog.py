@@ -16,6 +16,15 @@ SAMPLE_IDS = frozenset({"fps", "moba", "card_rpg"})
 
 
 def build_adapter_entry(adapter_id: str, meta: dict) -> dict:
+    """ build_adapter_entry 实现。
+
+    Args:
+        adapter_id: 参数描述。
+        meta: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     entry = {
         "name": meta.get("name", adapter_id),
         "id": adapter_id,
@@ -36,6 +45,7 @@ def build_adapter_entry(adapter_id: str, meta: dict) -> dict:
 
 
 def sync_catalog() -> dict:
+    """从 framework/adapters 同步所有适配器到 web/hub/catalog.json。"""
     adapters: list[dict] = []
     for path in sorted(ADAPTER_ROOT.iterdir()):
         if not path.is_dir():
@@ -57,6 +67,7 @@ def sync_catalog() -> dict:
 
 
 def main() -> int:
+    """CLI 入口：同步适配器目录并写入 catalog.json。"""
     catalog = sync_catalog()
     print(f"Wrote {len(catalog['adapters'])} adapters to {CATALOG_PATH}")
     return 0

@@ -219,6 +219,7 @@ def check_license_in_file(filepath: Path) -> list[dict]:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """build_parser 实现。"""
     parser = argparse.ArgumentParser(
         description="检查项目源代码中的第三方许可证/版权声明",
     )
@@ -239,6 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """CLI 入口：解析参数、扫描文件并输出代码来源检查报告。"""
     parser = build_parser()
     args = parser.parse_args()
 

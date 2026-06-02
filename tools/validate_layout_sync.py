@@ -31,15 +31,38 @@ LAYOUT_PATH = ADAPTER_ROOT / "ui" / "layout.json"
 ATTR_SCHEMA_PATH = ADAPTER_ROOT / "attr_schema.json"
 
 
-def load_json(path: Path) -> dict:
-    if not path.exists():
-        print(f"[ERROR] 文件不存在: {path}")
-        sys.exit(1)
-    with open(path, encoding="utf-8") as f:
+def load_json(path: Path) -> dict:
+    """加载 JSON 文件，文件不存在时直接退出。
+
+    Args:
+        path: JSON 文件路径
+
+    Returns:
+        解析后的字典
+
+    Raises:
+        SystemExit: 文件不存在
+    """
+    if not path.exists():
+        print(f"[ERROR] 文件不存在: {path}")
+        sys.exit(1)
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: dict[str, Any] | None = None) -> dict[str, Any]:
+def validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: dict[str, Any] | None = None) -> dict[str, Any]:
+    """校验 layout.json 与 DAG JSON 的一致性。
+
+    检查 sections 结构完整性、变量引用有效性、output 引用有效性。
+
+    Args:
+        layout: layout.json 内容字典
+        dag: DAG JSON 内容字典
+        attr_schema: 可选的 attr_schema.json 内容
+
+    Returns:
+        包含 valid 布尔值、issues 问题列表和 stats 统计信息的字典
+    """
     issues: list[dict[str, Any]] = []
     sections = layout.get("sections", [])
     dag_variables = dag.get("variables", {})
@@ -145,7 +168,8 @@ def validate_layout(layout: dict[str, Any], dag: dict[str, Any], attr_schema: di
     }
 
 
-def main() -> None:
+def main() -> None:
+    """CLI 入口：加载配置文件并执行 layout 一致性验证。"""
     use_json = "--json" in sys.argv
     exit_zero = "--exit-zero" in sys.argv
 

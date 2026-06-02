@@ -41,6 +41,7 @@ def _format_key_label(key: str) -> str:
     if len(parts) == 2:
         return f"{parts[0]} 第{parts[1]}次"
     return key
+    """format key label。"""
 
 
 class QtManualBuffDialog(QDialog):
@@ -155,6 +156,7 @@ class QtManualBuffDialog(QDialog):
         main.addWidget(right, stretch=1)
 
         self._refresh_key_list()
+        """初始化实例。"""
 
     def load_store(self, store: dict[str, list[dict[str, str | float]]] | None) -> None:
         """从外部快照恢复 buff 存储。"""
@@ -185,6 +187,7 @@ class QtManualBuffDialog(QDialog):
         if count <= 0:
             return
         self._refresh_key_list()
+        """apply consumable preset。"""
 
     def _refresh_key_list(self) -> None:
         self._key_list.blockSignals(True)
@@ -212,6 +215,7 @@ class QtManualBuffDialog(QDialog):
             self._key_list.addItem(item)
             item.setData(Qt.ItemDataRole.UserRole, key)
         self._key_list.blockSignals(False)
+        """refresh key list。"""
 
     def _on_key_selected(self, current: QListWidgetItem | None, _previous: Any) -> None:
         for i in range(self._edit_lay.count()):
@@ -230,6 +234,7 @@ class QtManualBuffDialog(QDialog):
 
         self._right_header.setText(f"{_format_key_label(key)} 的乘区微调")
         self._render_editor(key)
+        """on key selected。"""
 
     def _render_editor(self, key: str) -> None:
         entries = get_buffs_for_key(self._store, key)
@@ -313,12 +318,14 @@ class QtManualBuffDialog(QDialog):
                 spin.valueChanged.connect(lambda: _commit())
 
                 self._edit_lay.insertWidget(self._edit_lay.count() - 1, row)
+            """render rows。"""
 
         def _remove_row(idx: int) -> None:
             if 0 <= idx < len(row_data):
                 row_data.pop(idx)
             _render_rows()
             _commit()
+            """remove row。"""
 
         def _commit() -> None:
             result: list[dict[str, str | float]] = []
@@ -340,6 +347,7 @@ class QtManualBuffDialog(QDialog):
 
             set_buffs_for_key(self._store, key, result)
             self._refresh_key_list()
+            """commit。"""
 
         _render_rows()
 
@@ -351,3 +359,4 @@ class QtManualBuffDialog(QDialog):
             QPushButton:hover { background: #40916c; }
         """)
         self._edit_lay.addWidget(add_btn)
+        """render editor。"""

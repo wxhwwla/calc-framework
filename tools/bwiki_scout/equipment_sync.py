@@ -27,8 +27,14 @@ from bwiki_scout.equipment_wiki import equipment_record_from_draft
 
 
 def convert_equipment_draft_record(record: dict[str, Any]) -> dict[str, Any]:
+    """将 parsed/equipment.json 条目映射为本地装备格式。
 
-    """将 parsed/equipment.json 条目映射为本地装备格式（字段与 Wiki 对齐）。"""
+    Args:
+        record: parsed 草案中的装备记录
+
+    Returns:
+        映射后的本地装备格式记录
+    """
 
     return equipment_record_from_draft(record)
 
@@ -37,18 +43,21 @@ def convert_equipment_draft_record(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def sync_equipments_from_parsed(
-
     *,
-
     parsed_equipment_json: Path,
-
     local_equipments_json: Path,
-
     dry_run: bool = True,
-
 ) -> dict[str, Any]:
+    """同步装备数据：从 parsed 草案写入本地标准 JSON。
 
-    """同步装备：parsed 草案 -> 本地标准 JSON。"""
+    Args:
+        parsed_equipment_json: parsed 草案 JSON 路径
+        local_equipments_json: 目标本地 equipments.json 路径
+        dry_run: True 时仅预览不写入
+
+    Returns:
+        包含 dry_run、count、sample_names 等信息的字典
+    """
 
     rows = json.loads(parsed_equipment_json.read_text(encoding="utf-8"))
 

@@ -11,6 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def find_local_backend_zip() -> Path | None:
+    """在已知目录中查找预编译的本地后端 zip 文件。"""
     for directory in (
         REPO_ROOT / "dist" / "终末地本地搜索服务器",
         REPO_ROOT / "web" / "static",

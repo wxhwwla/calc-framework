@@ -79,6 +79,7 @@ APP_VERSION = "1.0.0"
 
 class DesignerApp(QMainWindow):
 
+    """DesignerApp 类。"""
     def __init__(self) -> None:
 
         super().__init__()
@@ -243,6 +244,7 @@ class DesignerApp(QMainWindow):
 
     def _apply_dark_style(self) -> None:
 
+        """_apply_dark_style 实现。"""
         self.setStyleSheet("""
 
             QMainWindow { background-color: #1A1A1A; }
@@ -307,6 +309,7 @@ class DesignerApp(QMainWindow):
 
 def main() -> None:
 
+    """CLI 入口。"""
     app = QApplication(sys.argv)
 
     app.setStyle("Fusion")

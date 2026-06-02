@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """手动场外 buff 数据模型。"""
 
-from __future__ import annotationsfrom dataclasses import dataclassMANUAL_BUFF_ZONE_OPTIONS: tuple[tuple[str, str], ...] = (
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+MANUAL_BUFF_ZONE_OPTIONS: tuple[tuple[str, str], ...] = (
     ("暴击率", "crit_rate"),
     ("暴击伤害", "crit_damage"),
     ("伤害类型加成", "damage_bonus_type"),
@@ -24,10 +28,12 @@ from __future__ import annotationsfrom dataclasses import dataclassMANUAL_BU
 class ManualBuffEntry:
     effect_type: str
     value: float
+    """ManualBuffEntry。"""
 
 
 def empty_buff_dict() -> dict[str, list[dict[str, str | float]]]:
     return {}
+    """empty buff dict。"""
 
 
 def get_buffs_for_key(
@@ -35,6 +41,7 @@ def get_buffs_for_key(
     key: str,
 ) -> list[dict[str, str | float]]:
     return list(store.get(key, []))
+    """获取buffs for key。"""
 
 
 def set_buffs_for_key(
@@ -46,6 +53,7 @@ def set_buffs_for_key(
         store[key] = [dict(e) for e in entries]
     else:
         store.pop(key, None)
+    """设置buffs for key。"""
 
 
 def build_active_keys_from_counts(
@@ -64,6 +72,7 @@ def build_active_keys_from_counts(
             return 99
         kind, _rest = key.split(":", 1)
         return segment_order.get(kind, 99)
+        """segment rank。"""
 
     sorted_skills = sorted(skill_counts.items(), key=lambda kv: _segment_rank(kv[0]))
     for segment_key, count in sorted_skills:

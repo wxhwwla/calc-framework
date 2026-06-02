@@ -22,10 +22,12 @@ _TEMPLATE_PASCAL = re.compile(r"TEMPLATE")
 
 
 def _repo_root() -> Path:
+    """_repo_root 实现。"""
     return Path(__file__).resolve().parent.parent
 
 
 def _find_template_root() -> Path:
+    """_find_template_root 实现。"""
     return _repo_root() / "docs" / "game-template"
 
 
@@ -125,12 +127,31 @@ def _copy_template_tree(
 
 
 def _replace_in_name(name: str, game_snake: str) -> str:
-    """在文件名中替换 _template 占位符。"""
+    """将文件名中的 _template 占位符替换为游戏名称。
+
+    Args:
+        name: 原始文件名
+        game_snake: 游戏名称 snake_case
+
+    Returns:
+        替换后的文件名
+    """
     return name.replace(_TEMPLATE_DIR_NAME, game_snake)
 
 
 def _replace_in_content(content: str, game_snake: str, game_pascal: str) -> str:
-    """在文件内容中替换模板占位符。"""
+    """将文件内容中的模板占位符替换为游戏名称。
+
+    替换 _template（snake_case）、TEMPLATE（PascalCase）和 DISPLAY_NAME 占位符。
+
+    Args:
+        content: 文件内容
+        game_snake: 游戏名称 snake_case
+        game_pascal: 游戏名称 PascalCase
+
+    Returns:
+        替换后的文件内容
+    """
     content = _TEMPLATE_SNAKE.sub(game_snake, content)
     content = _TEMPLATE_PASCAL.sub(game_pascal, content)
     content = content.replace("DISPLAY_NAME", game_pascal)

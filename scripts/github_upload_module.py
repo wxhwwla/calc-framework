@@ -97,7 +97,7 @@ _TOKEN_IN_REMOTE = re.compile(
 
 
 def _package_path() -> Path:
-
+    """返回游戏包目录路径。"""
     return Path(_repo_root()) / TARGET_DIR
 
 
@@ -105,6 +105,7 @@ def _package_path() -> Path:
 
 
 def _import_upload_meta():
+    """动态导入 upload_meta 模块。"""
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -119,7 +120,7 @@ def _import_upload_meta():
 
 
 def _decode_output(output: Any) -> str:
-
+    """将命令输出解码为字符串。"""
     if output is None:
 
         return ""
@@ -143,21 +144,14 @@ def _decode_output(output: Any) -> str:
 
 
 def run_git(
-
     args: list[str],
-
     *,
-
     check: bool = True,
-
     capture_output: bool = False,
-
     timeout: int | None = 30,
-
 ) -> Tuple[int, str, str]:
-
+    """执行 git 命令并返回 (returncode, stdout, stderr)。"""
     try:
-
         if capture_output:
 
             proc = subprocess.run(
@@ -217,14 +211,12 @@ def run_git(
 
 
 def _repo_root() -> str:
-
+    """返回仓库根目录的字符串路径。"""
     return str(Path(__file__).resolve().parent.parent)
 
 
-
-
-
 def _origin_remote_url() -> str | None:
+    """从 git 配置读取 origin 远程 URL。"""
 
     if not os.path.isdir(os.path.join(_repo_root(), ".git")):
 
@@ -253,9 +245,8 @@ def _origin_remote_url() -> str | None:
 
 
 def _remote_url() -> str:
-
+    """根据 AUTH_MODE 确定 remote 地址（SSH 或 HTTPS+Token）。"""
     if AUTH_MODE == "ssh":
-
         origin = _origin_remote_url()
 
         if origin and not _TOKEN_IN_REMOTE.search(origin):
@@ -295,9 +286,8 @@ def _remote_url() -> str:
 
 
 def _warn_if_remote_has_embedded_token(stdout: str) -> None:
-
+    """检查 remote URL 中是否嵌入了 Token。"""
     if _TOKEN_IN_REMOTE.search(stdout):
-
         print("[警告] 检测到 origin 含嵌入 Token 的 HTTPS 地址，将改为 SSH/新地址")
 
 
@@ -305,9 +295,8 @@ def _warn_if_remote_has_embedded_token(stdout: str) -> None:
 
 
 def _ensure_gitignore(repo_dir: str) -> None:
-
+    """确保 .gitignore 包含必要的忽略条目。"""
     path = os.path.join(repo_dir, ".gitignore")
-
     wanted = [
 
         KEY_FILE,
@@ -371,7 +360,7 @@ def _ensure_gitignore(repo_dir: str) -> None:
 
 
 def setup_git_repo() -> str:
-
+    """初始化/检查 git 仓库，配置 remote 和分支。"""
     script_dir = _repo_root()
 
     os.chdir(script_dir)
@@ -468,9 +457,8 @@ def setup_git_repo() -> str:
 
 
 def sync_with_remote(*, skip_pull: bool = False) -> bool:
-
+    """拉取远程更新并与本地同步。"""
     if skip_pull or SKIP_PULL:
-
         print("[信息] 已跳过拉取" + ("（--skip-pull）" if skip_pull else "（SKIP_PULL=True）"))
 
         return True
@@ -610,9 +598,8 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
 
 
 def _porcelain_paths(porcelain: str) -> List[str]:
-
+    """从 git status --porcelain 输出中提取文件路径列表。"""
     paths: List[str] = []
-
     for line in porcelain.splitlines():
 
         if len(line) < 4:
@@ -636,11 +623,9 @@ def _porcelain_paths(porcelain: str) -> List[str]:
 
 
 def _collect_change_paths() -> List[str]:
-
+    """收集所有已变更文件的路径。"""
     _, porcelain, _ = run_git(["status", "--porcelain"], capture_output=True)
-
     paths = _porcelain_paths(porcelain)
-
     _, diff_unstaged, _ = run_git(["diff", "--name-only"], check=False, capture_output=True)
 
     _, diff_staged, _ = run_git(["diff", "--cached", "--name-only"], check=False, capture_output=True)
@@ -680,7 +665,7 @@ class SigningConfig:
 
 
 def _is_truthy_git_config(value: str | None) -> bool:
-
+    """判断 git config 值是否等同于 true。"""
     if not value:
 
         return False
@@ -712,13 +697,10 @@ def _git_config_get(key: str) -> str | None:
 
 
 def resolve_signing_config(
-
     getter: Callable[[str], str | None] | None = None,
-
 ) -> SigningConfig:
-
+    """解析本机 Git 提交签名配置。"""
     read = getter or _git_config_get
-
     return SigningConfig(
 
         gpgsign=read("commit.gpgsign"),
@@ -784,7 +766,7 @@ def tag_extra_args(cfg: SigningConfig) -> list[str]:
 
 
 def is_signing_configured(cfg: SigningConfig) -> bool:
-
+    """判断签名配置是否就绪。"""
     return bool(commit_extra_args(cfg)) or _is_truthy_git_config(cfg.gpgsign)
 
 
@@ -792,7 +774,7 @@ def is_signing_configured(cfg: SigningConfig) -> bool:
 
 
 def signing_status_message(cfg: SigningConfig) -> str:
-
+    """生成签名状态提示消息。"""
     if is_signing_configured(cfg):
 
         fmt = (cfg.gpg_format or "openpgp").strip().lower()
@@ -828,9 +810,8 @@ def signing_status_message(cfg: SigningConfig) -> str:
 
 
 def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> Optional[str]:
-
+    """交互询问或根据 flags 确定版本升级类型。"""
     if no_bump:
-
         return None
 
     if minor_flag:
@@ -856,11 +837,9 @@ def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> Optional[str]:
 
 
 def _commit_with_message(message: str) -> None:
-
+    """使用指定消息执行 git commit。"""
     cfg = resolve_signing_config()
-
     extra = commit_extra_args(cfg)
-
     msg_path = os.path.join(_repo_root(), ".git-upload-msg.txt")
 
     with open(msg_path, "w", encoding="utf-8") as f:
@@ -884,9 +863,8 @@ def _commit_with_message(message: str) -> None:
 
 
 def _push_to_remote() -> bool:
-
+    """将当前分支推送到 origin。"""
     push_args = ["push", "origin", DEFAULT_BRANCH]
-
     if FORCE_PUSH:
 
         push_args.append("--force-with-lease")
@@ -926,9 +904,8 @@ def _push_to_remote() -> bool:
 
 
 def _push_tag(version: str) -> bool:
-
+    """创建并推送 git 标签。"""
     tag = f"v{version}"
-
     _, existing_tags, _ = run_git(["tag", "-l", tag], capture_output=True)
 
     if tag in existing_tags.strip().split("\n"):
@@ -962,9 +939,8 @@ def _push_tag(version: str) -> bool:
 
 
 def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: bool = False) -> None:
-
+    """执行 git 提交与推送流程（含版本管理和总结块管理）。"""
     os.chdir(_repo_root())
-
     target_path = os.path.join(".", TARGET_DIR)
 
     if not os.path.isdir(target_path):
@@ -1152,7 +1128,7 @@ def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: boo
 
 
 def parse_args() -> argparse.Namespace:
-
+    """解析命令行参数。"""
     parser = argparse.ArgumentParser(
 
         description="推送本仓库到 GitHub（SSH），并按规则更新 _VERSION。",
@@ -1216,7 +1192,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-
+    """CLI 入口。执行完整的 Git 提交与推送流程。"""
     global FORCE_PUSH
 
     args = parse_args()

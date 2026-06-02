@@ -52,6 +52,7 @@ _WEAPONS = (
 
 def main() -> int:
 
+    """CLI 入口。"""
     rows = json.loads(_WEAPONS.read_text(encoding="utf-8"))
 
     for weapon in rows:

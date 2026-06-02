@@ -40,6 +40,7 @@ def _parse_enemy_params(raw: Any) -> dict[str, Any]:
         if key in raw:
             result[key] = raw[key]
     return result
+    """parse enemy params。"""
 
 
 def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:
@@ -62,6 +63,7 @@ def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:
         if parsed:
             result[str(key)] = parsed
     return result
+    """parse manual buffs。"""
 
 
 LEGACY_PRESET_SCHEMA = "endfield_loadout_preset_v1"
@@ -140,6 +142,7 @@ class LoadoutPreset:
             "ui_state": dict(self.ui_state or {}),
             "note": self.note,
         }
+        """转换为字典格式。"""
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> LoadoutPreset:
@@ -242,10 +245,12 @@ class LoadoutPreset:
             },
             note=str(data.get("note", "")),
         )
+        """从字典格式恢复。"""
 
 
 def export_preset_json(preset: LoadoutPreset, *, indent: int = 2) -> str:
     return json.dumps(preset.to_dict(), ensure_ascii=False, indent=indent)
+    """export preset json。"""
 
 
 def import_preset_json(text: str) -> LoadoutPreset:
@@ -253,6 +258,7 @@ def import_preset_json(text: str) -> LoadoutPreset:
     if not isinstance(data, dict):
         raise ValueError("预设必须是 JSON 对象")
     return LoadoutPreset.from_dict(data)
+    """import preset json。"""
 
 
 def import_presets_from_json_text(text: str) -> list[LoadoutPreset]:
@@ -274,6 +280,7 @@ def export_preset_batch_json(presets: Sequence[LoadoutPreset], *, indent: int = 
         "presets": [p.to_dict() for p in presets],
     }
     return json.dumps(payload, ensure_ascii=False, indent=indent)
+    """export preset batch json。"""
 
 
 _DAMAGE_COMPONENT_LABELS: dict[str, str] = {
@@ -293,7 +300,7 @@ def apply_preset_to_panels(
     shell: Any | None = None,
 ) -> None:
     """将 LoadoutPreset 写入 Qt 角色/武器/控制栏面板（导入预设与历史恢复共用）。"""
-    from gui.shared.calc_mode_labels import calculation_mode_label
+    from games.endfield.gui.shared.calc_mode_labels import calculation_mode_label
 
     if preset.char_name:
         char_panel.select_by_name(preset.char_name)
@@ -334,7 +341,7 @@ def apply_preset_to_panels(
         if name:
             cb.setCurrentText(str(name))
         else:
-            from gui.shell.qt_control_dock_builders import _FIXED_SLOT_NONE_LABEL
+            from games.endfield.gui.shell.qt_control_dock_builders import _FIXED_SLOT_NONE_LABEL
 
             cb.setCurrentText(_FIXED_SLOT_NONE_LABEL)
 

@@ -6,6 +6,14 @@ from typing import Any
 
 
 def load_local_name_sets(characters_json: Path, *extra: Path) -> dict[str, set[str]]:
+    """ load_local_name_sets 实现。
+
+    Args:
+        characters_json: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     result: dict[str, set[str]] = {"operator": set()}
     if characters_json.is_file():
         import json
@@ -18,6 +26,14 @@ def load_local_name_sets(characters_json: Path, *extra: Path) -> dict[str, set[s
 
 
 def summarize_local_schema(characters_json: Path, *extra: Path) -> list[dict[str, Any]]:
+    """ summarize_local_schema 实现。
+
+    Args:
+        characters_json: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     if not characters_json.is_file():
         return []
     import json
@@ -34,6 +50,15 @@ def compare_name_sets(
     *,
     normalize,
 ) -> dict[str, Any]:
+    """ compare_name_sets 实现。
+
+    Args:
+        wiki_set: 参数描述。
+        local_set: 参数描述。
+
+    Returns:
+        返回值描述。
+    """
     wiki_norm = {normalize(n): n for n in wiki_set}
     local_norm = {normalize(n): n for n in local_set}
     wiki_only = wiki_norm.keys() - local_norm.keys()
