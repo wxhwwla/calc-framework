@@ -8,15 +8,21 @@ import {
   MenuItem,
   Paper,
   Select,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import DeveloperModeIcon from "@mui/icons-material/DeveloperMode";
 import ProfileDataEditor from "../components/designer/ProfileDataEditor";
+import SimpleDataForm from "../components/contribute/SimpleDataForm";
 import { DATA_PROFILES } from "../constants/dataProfileConfig";
 
 const DEFAULT_PROFILE = "endfield";
 
 export default function DataContributePage() {
+  const [tab, setTab] = useState(0);
   const [profileId, setProfileId] = useState(DEFAULT_PROFILE);
   const profile = DATA_PROFILES.find((p) => p.id === profileId);
 
@@ -54,13 +60,23 @@ export default function DataContributePage() {
         </Box>
       </Paper>
 
-      {profile ? (
-        <Paper sx={{ p: 3 }}>
-          <ProfileDataEditor profileId={profileId} compact />
-        </Paper>
-      ) : (
-        <Alert severity="warning">未找到该游戏的数据配置</Alert>
-      )}
+      <Paper sx={{ mb: 2 }}>
+        <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
+          <Tab icon={<EditNoteIcon />} label="简易录入" />
+          <Tab icon={<DeveloperModeIcon />} label="专业编辑" />
+        </Tabs>
+      </Paper>
+
+      <Paper sx={{ p: 3 }}>
+        {tab === 0 && <SimpleDataForm />}
+        {tab === 1 && (
+          profile ? (
+            <ProfileDataEditor profileId={profileId} compact />
+          ) : (
+            <Alert severity="warning">未找到该游戏的数据配置</Alert>
+          )
+        )}
+      </Paper>
     </Box>
   );
 }

@@ -118,6 +118,12 @@
 | **伤害类型默认链** | 适配器级默认 → 技能级 `技能类型` → 段级 `伤害类型`；空则继承上层 |
 | **迁移器 from_legacy_endfield** | `tools/data_pipeline/transformers/from_legacy_endfield.py`：将旧 `characters.json`/`weapons.json` 自动转换为标准 EntitySchema |
 | **校验器 — schema_check** | `tools/data_pipeline/validators/schema_check.py`：检查必填字段、标签合法性、段完整性 |
+| **数据沙箱** | `tools/data_sandbox/`：隔离环境中测试自定义游戏数据，不修改真实文件的 CLI 工具集 |
+| **Sandbox Validator** | `tools/data_sandbox/validator.py`：使用 `schema_check` 校验 EntitySchema 格式，返回 `ValidationResult` |
+| **Sandbox Tester** | `tools/data_sandbox/tester.py`：对实体数据执行健全性测试（命名/技能/倍率），返回 `TestResult` |
+| **Sandbox Reporter** | `tools/data_sandbox/reporter.py`：整合校验+测试+差异，生成 Markdown 报告 |
+| **Sandbox Diff** | `tools/data_sandbox/sandbox.py` 的 `diff` 子命令：基于 `data_pipeline.diff` 对比自定义与参考数据 |
+| **Sandbox CLI** | `python -m tools.data_sandbox.sandbox` 四个子命令：`validate` / `test` / `report` / `diff` |
 
 ## 配置包与开发者工具
 

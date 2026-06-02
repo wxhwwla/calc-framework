@@ -315,5 +315,163 @@ class TestIncrementalSync(unittest.TestCase):
         self.assertIsNone(get_entity_hash(state, "角色A"))
 
 
+class TestDataVersionBump(unittest.TestCase):
+    """自动 version bump 测试。"""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.version_path = self.tmp / "data_version.json"
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    # ── semver 解析/格式化 ──
+
+    def test_parse_semver_standard(self):
+        from bwiki_scout.bump_data_version import parse_semver
+        self.assertEqual(parse_semver("1.2.3"), (1, 2, 3))
+
+    def test_parse_semver_partial(self):
+        from bwiki_scout.bump_data_version import parse_semver
+        self.assertEqual(parse_semver("2"), (2, 0, 0))
+        self.assertEqual(parse_semver("2.1"), (2, 1, 0))
+
+    def test_format_semver(self):
+        from bwiki_scout.bump_data_version import format_semver
+        self.assertEqual(format_semver(3, 5, 1), "3.5.1")
+        self.assertEqual(format_semver(0, 0, 0), "0.0.0")
+
+    # ── bump 函数 ──
+
+    def test_bump_patch(self):
+        from bwiki_scout.bump_data_version import bump_patch
+        self.assertEqual(bump_patch("1.2.3"), "1.2.4")
+        self.assertEqual(bump_patch("0.0.0"), "0.0.1")
+
+    def test_bump_minor(self):
+        from bwiki_scout.bump_data_version import bump_minor
+        self.assertEqual(bump_minor("1.2.3"), "1.3.0")
+        self.assertEqual(bump_minor("0.0.0"), "0.1.0")
+
+    def test_bump_minor_resets_patch(self):
+        from bwiki_scout.bump_data_version import bump_minor
+        self.assertEqual(bump_minor("5.9.99"), "5.10.0")
+
+    # ── 读/写版本文件 ──
+
+    def test_read_data_version_no_file(self):
+        from bwiki_scout.bump_data_version import read_data_version
+        state = read_data_version(self.version_path)
+        self.assertEqual(state, {"version": "1.0.0"})
+
+    def test_write_and_read_data_version(self):
+        from bwiki_scout.bump_data_version import (
+            read_data_version,
+            write_data_version,
+        )
+        state = {"version": "2.3.1"}
+        write_data_version(state, self.version_path)
+        self.assertTrue(self.version_path.is_file())
+        loaded = read_data_version(self.version_path)
+        self.assertEqual(loaded, state)
+
+    # ── 变更检测 ──
+
+    def test_has_data_changes_dry_run(self):
+        from bwiki_scout.bump_data_version import has_data_changes
+        results = [{"dry_run": True, "updated_count": 5}]
+        self.assertFalse(has_data_changes(results))
+
+    def test_has_data_changes_with_updated(self):
+        from bwiki_scout.bump_data_version import has_data_changes
+        results = [{"dry_run": False, "updated_count": 3, "added": [], "planned": ["A"]}]
+        self.assertTrue(has_data_changes(results))
+
+    def test_has_data_changes_with_added(self):
+        from bwiki_scout.bump_data_version import has_data_changes
+        results = [{"dry_run": False, "updated_count": 0, "added": ["新干员"], "planned": ["新干员"]}]
+        self.assertTrue(has_data_changes(results))
+
+    def test_has_data_changes_no_changes(self):
+        from bwiki_scout.bump_data_version import has_data_changes
+        results = [{"dry_run": False, "updated_count": 0, "added": [], "planned": []}]
+        self.assertFalse(has_data_changes(results))
+
+    def test_count_new_entities(self):
+        from bwiki_scout.bump_data_version import count_new_entities
+        results = [
+            {"added": ["A", "B"]},
+            {"added": ["C"]},
+            {"added": []},
+        ]
+        self.assertEqual(count_new_entities(results), 3)
+
+    def test_has_updated_values(self):
+        from bwiki_scout.bump_data_version import has_updated_values
+        results = [{"dry_run": False, "updated_count": 2}]
+        self.assertTrue(has_updated_values(results))
+
+    # ── bump 类型判断 ──
+
+    def test_determine_bump_type_none(self):
+        from bwiki_scout.bump_data_version import determine_bump_type
+        self.assertIsNone(determine_bump_type([{"dry_run": False, "updated_count": 0, "added": []}]))
+
+    def test_determine_bump_type_minor(self):
+        from bwiki_scout.bump_data_version import determine_bump_type
+        self.assertEqual(
+            determine_bump_type([{"dry_run": False, "updated_count": 0, "added": ["新干员"], "planned": ["新干员"]}]),
+            "minor",
+        )
+
+    def test_determine_bump_type_patch(self):
+        from bwiki_scout.bump_data_version import determine_bump_type
+        self.assertEqual(
+            determine_bump_type([{"dry_run": False, "updated_count": 3, "added": [], "planned": ["A"]}]),
+            "patch",
+        )
+
+    def test_determine_bump_type_dry_run_ignored(self):
+        from bwiki_scout.bump_data_version import determine_bump_type
+        self.assertIsNone(determine_bump_type([{"dry_run": True, "updated_count": 5, "added": []}]))
+
+    # ── bump_data_version 集成 ──
+
+    def test_bump_data_version_patch(self):
+        from bwiki_scout.bump_data_version import bump_data_version
+        results = [{"dry_run": False, "updated_count": 2, "added": [], "planned": ["A"]}]
+        new_ver = bump_data_version(results, data_version_file=self.version_path)
+        self.assertEqual(new_ver, "1.0.1")
+
+    def test_bump_data_version_minor(self):
+        from bwiki_scout.bump_data_version import bump_data_version
+        results = [{"dry_run": False, "updated_count": 0, "added": ["新角色"], "planned": ["新角色"]}]
+        new_ver = bump_data_version(results, data_version_file=self.version_path)
+        self.assertEqual(new_ver, "1.1.0")
+
+    def test_bump_data_version_no_change(self):
+        from bwiki_scout.bump_data_version import bump_data_version
+        results = [{"dry_run": False, "updated_count": 0, "added": [], "planned": []}]
+        new_ver = bump_data_version(results, data_version_file=self.version_path)
+        self.assertIsNone(new_ver)
+
+    def test_bump_data_version_force(self):
+        from bwiki_scout.bump_data_version import bump_data_version
+        results = []
+        new_ver = bump_data_version(results, data_version_file=self.version_path, force_version="2.0.0")
+        self.assertEqual(new_ver, "2.0.0")
+
+    def test_bump_data_version_multiple_patches(self):
+        from bwiki_scout.bump_data_version import bump_data_version
+        r = [{"dry_run": False, "updated_count": 1, "added": [], "planned": ["A"]}]
+        v1 = bump_data_version(r, data_version_file=self.version_path)
+        self.assertEqual(v1, "1.0.1")
+        v2 = bump_data_version(r, data_version_file=self.version_path)
+        self.assertEqual(v2, "1.0.2")
+        v3 = bump_data_version(r, data_version_file=self.version_path)
+        self.assertEqual(v3, "1.0.3")
+
+
 if __name__ == "__main__":
     unittest.main()

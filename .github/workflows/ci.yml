@@ -9,12 +9,14 @@ on:
     paths:
       - "games/endfield/**"
       - "games/arknights/**"
+      - "tools/**"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: [main, master]
     paths:
       - "games/endfield/**"
       - "games/arknights/**"
+      - "tools/**"
 
 jobs:
   test:
@@ -42,5 +44,8 @@ jobs:
       - name: Run arknights tests
         run: |
           python -m pytest games/arknights/tests/ -q --cov=games.arknights --cov-report=term-missing --cov-report=xml
+      - name: Run tools tests
+        run: |
+          python -m pytest tools/tests/ -q --cov=tools --cov-report=term-missing --cov-report=xml
       - name: Coverage summary
         run: python -m coverage report --fail-under=60

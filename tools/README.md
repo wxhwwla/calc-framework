@@ -6,6 +6,7 @@
 
 | 子目录 | 用途 | 典型命令 |
 |--------|------|----------|
+| `data_sandbox/` | 数据沙箱 — 隔离测试自定义游戏数据 | 见下表 |
 | `bwiki_scout/` | BWIKI 侦察、对比、同步到本地 JSON/seed | 见下表 |
 | `audit/` | 一次性审计 Issue 脚本 | `.\tools\audit\create_audit_issues.ps1` |
 
@@ -17,8 +18,20 @@
 | `python tools/run_scancode.py` | 权威许可证/版权扫描（逐个目录，16 进程） | 输出 `scan_report.json` |
 | `python tools/check_code_origin.py` | 轻量 AI 代码来源/版权检测 | 1 秒出结果，50 MB 内存 |
 | `python devtool.py check-origin` | 同上，通过 devtool 入口 | `--ci --skip git-diff` 等参数透明传递 |
+| `python -m tools.data_sandbox.sandbox --help` | 数据沙箱 CLI — 隔离测试自定义游戏数据 | 见下表 |
 
 > **两套扫描工具的关系**：`check_code_origin.py` 做快速检查（SPDX/版权头），`run_scancode.py` 做权威审查（1000+ 许可证数据库）。日常用前者，发布前用后者。
+
+**`data_sandbox/` 常用命令**（均在 `[根]` 执行）：
+
+| 命令 | 说明 |
+|------|------|
+| `python -m tools.data_sandbox.sandbox validate <file>` | 校验 JSON 文件格式是否符合 EntitySchema |
+| `python -m tools.data_sandbox.sandbox test <file>` | 运行基本健全性测试（命名/技能/倍率） |
+| `python -m tools.data_sandbox.sandbox report <file> [-o output.md]` | 生成完整 Markdown 报告（校验+测试+差异） |
+| `python -m tools.data_sandbox.sandbox diff <file> <reference>` | 对比自定义数据与本地参考数据 |
+
+> 所有操作在隔离环境中执行，**不会修改任何真实数据文件**。
 
 **`bwiki_scout/` 常用命令**（均在 `[根]` 执行）：
 

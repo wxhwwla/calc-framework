@@ -5,9 +5,11 @@
 用法::
 
     python -m tools.bwiki_scout                    # 预览（默认）
-    python -m tools.bwiki_scout --apply            # 写入本地 JSON/seed
+    python -m tools.bwiki_scout --apply            # 写入本地 JSON/seed
     python -m tools.bwiki_scout --apply --new      # 同时导入本地尚无条目
-    python -m tools.bwiki_scout --apply --full     # 全量同步
+    python -m tools.bwiki_scout --apply --full     # 全量同步
+    python -m tools.bwiki_scout --apply --bump-version   # 写入 + 自动标记数据版本
+    python -m tools.bwiki_scout --apply --bump-version --verify  # 写入 + bump + 验证
     python -m tools.bwiki_scout --only-operators 陈千语
 """
 

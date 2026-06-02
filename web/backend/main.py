@@ -36,6 +36,7 @@ from api.manual_buff import router as manual_buff_router
 from api.history import router as history_router
 from api.ocr import router as ocr_router
 from api.arknights import router as arknights_router
+from api.contribute import router as contribute_router
 
 
 
@@ -85,6 +86,7 @@ app.include_router(manual_buff_router)
 app.include_router(history_router)
 app.include_router(ocr_router)
 app.include_router(arknights_router)
+app.include_router(contribute_router)
 
 def _resolve_repo_root() -> Path:
     """开发=仓库根；PyInstaller 本地后端=``_MEIPASS``。"""

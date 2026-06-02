@@ -52,6 +52,8 @@ from bwiki_scout.equipment_sync import sync_equipments_from_parsed  # noqa: E402
 
 from bwiki_scout.parse_draft import run_parse_draft  # noqa: E402
 
+from bwiki_scout.bump_data_version import bump_data_version, read_data_version  # noqa: E402
+
 from bwiki_scout.wiki_sync import (  # noqa: E402
 
     sync_operators_from_cache,
@@ -174,6 +176,26 @@ def main(argv: list[str] | None = None) -> int:
 
     )
 
+    parser.add_argument(
+
+        "--bump-version",
+
+        action="store_true",
+
+        help="数据写入后自动更新 data_version.json 版本号",
+
+    )
+
+    parser.add_argument(
+
+        "--verify",
+
+        action="store_true",
+
+        help="数据写入后运行数据验证测试",
+
+    )
+
     args = parser.parse_args(argv)
 
 
@@ -251,6 +273,29 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     _print_part("装备", equip_result)
+
+    sync_results = [op_result, weapon_result, equip_result]
+
+    if not dry_run and args.bump_version:
+        new_ver = bump_data_version(sync_results)
+        if new_ver:
+            print(f"\n📦 数据版本：{read_data_version()['version']} → {new_ver}")
+        else:
+            current = read_data_version()["version"]
+            print(f"\n📦 数据版本：{current}（无变更，未 bump）")
+
+    if not dry_run and args.verify:
+        from bwiki_scout.bump_data_version import run_verify_tests
+        print("\n正在验证数据...")
+        verify_result = run_verify_tests()
+        if verify_result["passed"]:
+            print("✅ 数据验证通过")
+        else:
+            print("❌ 数据验证失败:")
+            if verify_result["stdout"]:
+                print(verify_result["stdout"][:300])
+            if verify_result["stderr"]:
+                print(verify_result["stderr"][:300])
 
     return 0
 

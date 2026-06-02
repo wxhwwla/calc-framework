@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.7"
+_VERSION = "3.18.8"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,15 +438,28 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 9 处文件
+# TITLE: 更新 22 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
+# - 变更 .github/workflows/ci.yml
+# - 更新文档 CONTEXT.md
+# - 变更 games/endfield/data/data_version.json
 # - 修改 games/endfield/tests/tools/test_bwiki_scout.py
-# - 修改 scripts/please_read_me.py
+# - 更新文档 tools/README.md
 # - 修改 tools/bwiki_scout/__main__.py
-# - 修改 tools/bwiki_scout/incremental_sync.py
+# - 修改 tools/bwiki_scout/bump_data_version.py
 # - 修改 tools/bwiki_scout/sync_all.py
-# - 修改 tools/bwiki_scout/wiki_sync.py
+# - 修改 tools/data_sandbox/__init__.py
+# - 修改 tools/data_sandbox/reporter.py
+# - 修改 tools/data_sandbox/sandbox.py
+# - 修改 tools/data_sandbox/tester.py
+# - 修改 tools/data_sandbox/validator.py
+# - 修改 tools/tests/test_data_sandbox.py
+# - 修改 web/backend/api/contribute.py
+# - 修改 web/backend/main.py
+# - 变更 web/frontend/src/api/contribute.ts
+# - 变更 web/frontend/src/components/contribute/SimpleDataForm.tsx
+# - 变更 web/frontend/src/pages/DataContributePage.tsx
 # --- END UPLOAD_SUMMARY ---
