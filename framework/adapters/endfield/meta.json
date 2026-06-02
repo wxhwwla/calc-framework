@@ -7,6 +7,23 @@
   "functions": {
     "clamp": "functions.py",
     "lerp": "functions.py",
-    "percent_of": "functions.py"
+    "percent_of": "functions.py",
+    "weighted_sum": "functions.py",
+    "base_damage_zone": "functions.py",
+    "crit_zone": "functions.py",
+    "damage_bonus_zone": "functions.py",
+    "damage_reduction_zone": "functions.py",
+    "amplification_zone": "functions.py",
+    "weakness_zone": "functions.py",
+    "shelter_zone": "functions.py",
+    "fragile_zone": "functions.py",
+    "vulnerability_zone": "functions.py",
+    "defense_zone": "functions.py",
+    "imbalance_zone": "functions.py",
+    "resistance_zone": "functions.py",
+    "non_control_reduction_zone": "functions.py",
+    "combo_bonus_zone": "functions.py",
+    "special_zone": "functions.py",
+    "compute_15_zone_damage": "functions.py"
   }
 }

@@ -81,6 +81,58 @@ def evaluate_attack_chain_via_dag(
     }
 
 
+def compute_full_damage_via_dag(
+    char: dict[str, Any],
+    weapon: dict[str, Any] | None,
+    *,
+    char_level: int,
+    weapon_level: int,
+    trust_level: int = 0,
+    bonuses_kwargs: dict[str, Any] | None = None,
+    zone_kwargs: dict[str, Any] | None = None,
+) -> float:
+    """用 DAG 引擎计算完整 15 乘区最终伤害。
+
+    接受可选的 zone_kwargs 用于覆盖 12 个效果乘区（伤害加成、增幅等），
+    否则使用上下文中的默认值（1.0）。
+
+    返回:
+        最终伤害值（float）
+    """
+    from framework.adapters.endfield.functions import compute_15_zone_damage
+
+    pkg = _ensure_dag()
+    bk = bonuses_kwargs or {}
+    ctx = build_dag_context(
+        char, weapon,
+        char_level=char_level, weapon_level=weapon_level,
+        trust_level=trust_level, bonuses_kwargs=bk,
+    )
+    result = pkg.dag_service.evaluate(ctx)
+    zo = result.outputs
+
+    final_atk = zo.get("最终攻击力", 0.0)
+    skill_mult = ctx.get("computed", {}).get("技能倍率", 1.0)
+    crit_rate = ctx.get("computed", {}).get("暴击率", 0.05)
+    crit_damage = ctx.get("computed", {}).get("暴击伤害", 0.5)
+    enemy_defense = ctx.get("enemy", {}).get("防御", 100.0)
+    is_true_damage = ctx.get("computed", {}).get("真实伤害", False)
+
+    args: dict[str, Any] = {
+        "final_attack": float(final_atk),
+        "skill_multiplier": float(skill_mult),
+        "crit_rate": float(crit_rate),
+        "crit_damage": float(crit_damage),
+        "crit_mode": "non_crit",
+        "enemy_defense": float(enemy_defense),
+        "is_true_damage": bool(is_true_damage),
+    }
+    if zone_kwargs:
+        args.update(zone_kwargs)
+
+    return compute_15_zone_damage(**args)
+
+
 def compute_snapshot_with_dag(
     selection: Any,
 ) -> list[ZoneDisplayLine]:
@@ -182,8 +234,14 @@ def compute_snapshot_with_dag(
         )
     )
 
-    # 最终伤害 — DAG 计算（15 乘区连乘）
-    final_dmg = zo.get("最终伤害", 0.0)
+    # 最终伤害 — DAG 公式计算（15 乘区连乘）
+    final_dmg = compute_full_damage_via_dag(
+        char, weapon,
+        char_level=selection.char_level,
+        weapon_level=selection.weapon_level,
+        trust_level=selection.trust_level,
+        bonuses_kwargs=kwargs,
+    )
     lines.append(ZoneDisplayLine(f"最终伤害: {final_dmg:.2f}", "#E74C3C"))
 
     # 基础生命/防御（如数据可用则展示）
