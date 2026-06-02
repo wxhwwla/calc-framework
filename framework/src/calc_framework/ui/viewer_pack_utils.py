@@ -121,7 +121,7 @@ def build_context_from_entity(
     level 为 1-indexed（1 = 最低等级）。
     """
     ctx: dict[str, float] = {}
-    IGNORED_KEYS = {"名称", "技能", "_entity_type", "类型", "星级", "武器",
+    IGNORED_KEYS = {"名称", "技能", "_entity_type", "类型", "星级", "武器",  # noqa: N806
                     "主能力", "副能力", "装备种类", "部位", "稀有度",
                     "所属套组", "套装", "属性词条", "效果", "三件套效果", "_source",
                     "等级", "潜能", "信赖", "信赖加成"}

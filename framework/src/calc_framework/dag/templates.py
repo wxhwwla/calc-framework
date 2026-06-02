@@ -149,9 +149,8 @@ def expand_template_refs(raw: dict[str, Any]) -> dict[str, Any]:
                 new_nodes[nid]["label"] = label
             for tnid in tpl["nodes"]:
                 prefixed = prefix + tnid
-                if prefixed in new_nodes:
-                    if not new_nodes[prefixed].get("label"):
-                        new_nodes[prefixed]["label"] = f"{label}.{tnid}"
+                if prefixed in new_nodes and not new_nodes[prefixed].get("label"):
+                    new_nodes[prefixed]["label"] = f"{label}.{tnid}"
 
     raw["nodes"] = new_nodes
     return raw

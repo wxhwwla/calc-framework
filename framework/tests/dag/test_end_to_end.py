@@ -367,7 +367,6 @@ class TestExtendedOps:
         svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
         # ln(10) + sin(π/2)*cos(0) = ln(10) + 1*1 = ln(10) + 1
-        expected = 1.0 + 1.0  # sin(π/2)=1, cos(0)=1
         assert abs(res.outputs["add"] - (math.log(10) + 1.0)) < 1e-9
 
     def test_asin_acos_atan(self) -> None:

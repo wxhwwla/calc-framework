@@ -83,7 +83,7 @@ class CalcPackViewerEventMixin:
             f"已求值 — {', '.join(selected) if selected else '自定义输入'} Lv.{lv}"
         )
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
         if self._splitter is None:
             return
@@ -97,7 +97,7 @@ class CalcPackViewerEventMixin:
         elif self._splitter.sizes()[0] == 0 and self._splitter.sizes()[2] == 0:
             self._splitter.setSizes([220, width - 420, 200])
 
-    def closeEvent(self, event: Any) -> None:
+    def closeEvent(self, event: Any) -> None:  # noqa: N802
         if self._asset_temp_dir:
             self._asset_temp_dir.cleanup()
             self._asset_temp_dir = None

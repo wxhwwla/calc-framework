@@ -87,7 +87,7 @@ class ThresholdFormulaFitter(FormulaFitter):
                     data, num_levels, threshold, base, pre_growth, post_growth)
                 if linear_result is not None and linear_result.is_exact:
                     return linear_result
-                if linear_result is not None and (best_result is None or linear_result.max_error < best_result.max_error):
+                if linear_result is not None and (best_result is None or linear_result.max_error < best_result.max_error):  # noqa: E501
                     best_result = linear_result
 
         return best_result or FitResult(max_error=999999.0)

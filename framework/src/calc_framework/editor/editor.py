@@ -118,11 +118,9 @@ def discover_input_variables(dag: DAGGraph) -> list[str]:
 
         for var_id, var_def in subgraph.parameters.items():
 
-            if var_def.source != "computed":
+            if var_def.source != "computed" and var_id not in vars_list:
 
-                if var_id not in vars_list:
-
-                    vars_list.append(var_id)
+                vars_list.append(var_id)
 
     return sorted(vars_list)
 

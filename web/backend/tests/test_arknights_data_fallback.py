@@ -20,7 +20,7 @@ from api.arknights import (  # noqa: E402
     ComputeRequest,
 )
 
-import unittest
+import unittest  # noqa: E402
 
 
 class TestArknightsDataFallback(unittest.TestCase):

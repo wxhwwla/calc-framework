@@ -129,7 +129,6 @@ class PiecewiseFormulaFitter(FormulaFitter):
     ) -> FitResult:
         """尝试所有可能的断点位置，选择最好拟合。"""
         best_result: FitResult | None = None
-        best_breakpoint: int | None = None
 
         for bp in range(min_segment_size + 1, num_levels - min_segment_size):
             # 段 1：level 1..bp
@@ -186,7 +185,6 @@ class PiecewiseFormulaFitter(FormulaFitter):
                     max_error=max_error,
                     is_exact=max_error < 0.001,
                 )
-                best_breakpoint = bp
 
         return best_result or FitResult(max_error=999999.0)
 

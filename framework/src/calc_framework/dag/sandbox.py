@@ -13,16 +13,16 @@ from calc_framework.logging import get_logger
 
 from .errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
 from .sandbox_config import (
+    _GLOBAL_FUNCTIONS,
     _SAFE_BIN_OPS,
     _SAFE_BUILTINS,
     _SAFE_NODE_TYPES,
     _SAFE_UNARY_OPS,
-    _GLOBAL_FUNCTIONS,
     _all_allowed_names,
-    clear_functions,
-    list_functions,
-    register_function,
-    unregister_function,
+    clear_functions,  # noqa: F401  # re-exported via __init__.py
+    list_functions,  # noqa: F401  # re-exported via __init__.py
+    register_function,  # noqa: F401  # re-exported via __init__.py
+    unregister_function,  # noqa: F401  # re-exported via __init__.py
 )
 
 logger = get_logger(__name__)

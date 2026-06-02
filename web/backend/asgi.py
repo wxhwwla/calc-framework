@@ -4,7 +4,7 @@ from ._path_setup import setup_paths
 
 setup_paths()
 
-from .main import app
+from .main import app  # noqa: E402
 
 # PythonAnywhere 要求 ASGI application 名为 application
 application = app

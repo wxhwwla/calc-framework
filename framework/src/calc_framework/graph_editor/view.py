@@ -50,7 +50,7 @@ class GraphView(QGraphicsView):
 
 
 
-    def wheelEvent(self, event) -> None:
+    def wheelEvent(self, event) -> None:  # noqa: N802
 
         if self._panning:
 
@@ -70,7 +70,7 @@ class GraphView(QGraphicsView):
 
 
 
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event) -> None:  # noqa: N802
 
         if event.button() == Qt.MouseButton.MiddleButton:
 
@@ -92,7 +92,7 @@ class GraphView(QGraphicsView):
 
 
 
-    def mouseMoveEvent(self, event) -> None:
+    def mouseMoveEvent(self, event) -> None:  # noqa: N802
 
         if self._panning:
 
@@ -110,7 +110,7 @@ class GraphView(QGraphicsView):
 
 
 
-    def mouseReleaseEvent(self, event) -> None:
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
 
         if event.button() == Qt.MouseButton.MiddleButton:
 
@@ -126,7 +126,7 @@ class GraphView(QGraphicsView):
 
 
 
-    def dragEnterEvent(self, event) -> None:
+    def dragEnterEvent(self, event) -> None:  # noqa: N802
 
         if event.mimeData().hasText():
 
@@ -134,13 +134,13 @@ class GraphView(QGraphicsView):
 
 
 
-    def dragMoveEvent(self, event) -> None:
+    def dragMoveEvent(self, event) -> None:  # noqa: N802
 
         event.acceptProposedAction()
 
 
 
-    def dropEvent(self, event) -> None:
+    def dropEvent(self, event) -> None:  # noqa: N802
 
         type_id = event.mimeData().text()
 

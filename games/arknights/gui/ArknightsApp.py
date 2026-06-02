@@ -39,10 +39,10 @@ for p in [d for d in (Path.cwd(), _CUR_FILE.parents[3], _CUR_FILE.parents[2].par
           if str(d) not in sys.path]:
     sys.path.insert(0, str(p))
 
-from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
-from games.arknights.operator_catalog import load_operators_map, filter_operator_index
-from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
-from games.endfield.gui.legal.donation_qt import open_donation_dialog
+from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info  # noqa: E402
+from games.arknights.operator_catalog import load_operators_map, filter_operator_index  # noqa: E402
+from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json  # noqa: E402
+from games.endfield.gui.legal.donation_qt import open_donation_dialog  # noqa: E402
 
 _logger = get_logger("gui.arknights_app")
 
@@ -294,7 +294,7 @@ class ArknightsApp(QMainWindow):
         """用 DAG 引擎执行伤害计算并更新结果。"""
         if self._operator_data is None:
             return
-        skill_idx = self._skill_combo.currentIndex()
+        self._skill_combo.currentIndex()
         level = self._skill_level_slider.value()
         try:
             result = compute_snapshot_with_dag(

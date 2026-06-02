@@ -74,7 +74,7 @@ class TestEndfieldZonePackage:
 
     def test_evaluate_chain_with_defaults(self, qapp) -> None:
         """编译链图并使用默认值求值。
-        
+
         默认输入:
           const(1.0) = 1.0
           基础伤害区: 1000(最终攻击力) × 1.0(技能倍率) = 1000
@@ -84,7 +84,7 @@ class TestEndfieldZonePackage:
           失衡易伤区: 1.0
           抗性区: 1 - (20(抗性)-0(无视))/100 = 0.8
           非主控减伤区~特殊乘区: 1.0
-        
+
         最终: 1.0 × 1000 × 0.975 × (100/300) × 0.8 = 260.0
         """
         self._load_package()
@@ -106,7 +106,7 @@ class TestEndfieldZonePackage:
 
     def test_evaluate_with_custom_inputs(self, qapp) -> None:
         """验证可通过默认值路径获得不同的输出。
-        
+
         顶层链图的 user_input 节点有各自的默认值，
         evaluate_graph 的 context 不会影响 user_input 节点。
         此测试仅验证求值路径完整。

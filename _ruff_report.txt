@@ -1,0 +1,1436 @@
+﻿E501 Line too long (121 > 120)
+   --> framework\adapters\endfield\functions.py:278:116
+    |
+276 |         "鍩虹浼ゅ鍖?: base_damage_zone(final_attack, skill_multiplier, base_damage_bonus),
+277 |         "鏆村嚮鍖?: crit_zone(crit_rate, crit_damage, crit_mode),
+278 |         "浼ゅ鍔犳垚鍖?: damage_bonus_zone(damage_type_bonus, skill_type_bonus, imbalance_damage_bonus, other_damage_bonus),
+    |                                                                                                                         ^
+279 |         "浼ゅ鍑忓厤鍖?: damage_reduction_zone(damage_reduction),
+280 |         "澧炲箙鍖?: amplification_zone(amplification),
+    |
+
+W293 Blank line contains whitespace
+  --> framework\adapters\moba\functions.py:22:1
+   |
+20 |     """MOBA 鎶ょ敳鍑忎激鍏紡锛堝惈绌跨敳锛夈€?21 |
+22 |     
+   | ^^^^
+23 |
+24 |     鏈夋晥鎶ょ敳 = 鎶ょ敳 脳 (1 - 鐧惧垎姣旂┛閫? - 鍥哄畾绌跨敳
+   |
+help: Remove whitespace from blank line
+
+SIM105 Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
+   --> framework\src\calc_framework\config\manager.py:218:13
+    |
+216 |               meta: dict[str, Any] = {}
+217 |
+218 | /             try:
+219 | |
+220 | |                 meta = json.loads(meta_path.read_text(encoding="utf-8"))
+221 | |
+222 | |             except Exception:
+223 | |
+224 | |                 pass
+    | |____________________^
+225 |
+226 |               results.append({
+    |
+help: Replace `try`-`except`-`pass` with `with contextlib.suppress(Exception): ...`
+
+SIM105 Use `contextlib.suppress(OSError)` instead of `try`-`except`-`pass`
+   --> framework\src\calc_framework\config\watcher.py:136:13
+    |
+134 |                   continue
+135 |
+136 | /             try:
+137 | |
+138 | |                 snap[str(entry.relative_to(base_path))] = entry.stat().st_mtime
+139 | |
+140 | |             except OSError:
+141 | |
+142 | |                 pass
+    | |____________________^
+143 |
+144 |           return snap
+    |
+help: Replace `try`-`except`-`pass` with `with contextlib.suppress(OSError): ...`
+
+SIM110 Use `return any(previous.get(fpath, 0) != mtime for fpath, mtime in current.items())` instead of `for` loop
+   --> framework\src\calc_framework\config\watcher.py:160:9
+    |
+158 |               return True
+159 |
+160 | /         for fpath, mtime in current.items():
+161 | |
+162 | |             if previous.get(fpath, 0) != mtime:
+163 | |
+164 | |                 return True
+165 | |
+166 | |         return False
+    | |____________________^
+    |
+help: Replace with `return any(previous.get(fpath, 0) != mtime for fpath, mtime in current.items())`
+
+RUF022 `__all__` is not sorted
+  --> framework\src\calc_framework\dag\__init__.py:55:11
+   |
+53 |   )
+54 |
+55 |   __all__ = [
+   |  ___________^
+56 | |     # Core types
+57 | |     "DAGGraph",
+58 | |     "DAGVariable",
+59 | |     "DAGOutput",
+60 | |     "DAGSubgraph",
+61 | |     # Nodes
+62 | |     "BinaryNode",
+63 | |     "CallNode",
+64 | |     "ConditionNode",
+65 | |     "ConstNode",
+66 | |     "ExprNode",
+67 | |     "UnaryNode",
+68 | |     "UserInputNode",
+69 | |     "VarNode",
+70 | |     # Engine
+71 | |     "DAGService",
+72 | |     "DAGResult",
+73 | |     "DAGState",
+74 | |     "topological_sort",
+75 | |     "validate_graph",
+76 | |     "expand_subgraphs",
+77 | |     # Serialization
+78 | |     "dag_to_dict",
+79 | |     "dag_from_dict",
+80 | |     "load_dag",
+81 | |     "save_dag",
+82 | |     # Sandbox
+83 | |     "register_function",
+84 | |     "list_functions",
+85 | |     "parse_expr",
+86 | |     "validate_expr",
+87 | |     "evaluate",
+88 | |     # Templates
+89 | |     "register_template",
+90 | |     "list_templates",
+91 | |     "expand_template_refs",
+92 | |     # Errors
+93 | |     "DAGError",
+94 | |     "DAGCompileError",
+95 | |     "DAGSecurityError",
+96 | |     "DAGRuntimeError",
+97 | |     "DAGCycleError",
+98 | | ]
+   | |_^
+   |
+help: Apply an isort-style sorting to `__all__`
+
+E501 Line too long (133 > 120)
+   --> framework\src\calc_framework\dag\graph_types.py:234:121
+    |
+232 |         if fv is None or (isinstance(fv, str) and not fv):
+233 |             raise DAGCompileError("condition 鑺傜偣缂哄皯 false_val")
+234 |         return ConditionNode(cond=_parse_ref(cond), true_val=_parse_ref(tv), false_val=_parse_ref(fv), label=label, description=desc)
+    |                                                                                                                         ^^^^^^^^^^^^^
+    |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+   --> framework\src\calc_framework\dag\graph_types.py:520:9
+    |
+518 |       for nid, node in nodes.items():
+519 |
+520 | /         if isinstance(node, VarNode):
+521 | |
+522 | |             if node.path not in variables:
+    | |__________________________________________^
+523 |
+524 |                   raise DAGCompileError(f"var 鑺傜偣 {nid} 寮曠敤浜嗘湭澹版槑鐨勫彉閲? {node.path}")
+    |
+help: Combine `if` statements using `and`
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+   --> framework\src\calc_framework\dag\graph_types.py:526:9
+    |
+524 |                   raise DAGCompileError(f"var 鑺傜偣 {nid} 寮曠敤浜嗘湭澹版槑鐨勫彉閲? {node.path}")
+525 |
+526 | /         if isinstance(node, CallNode):
+527 | |
+528 | |             if node.subgraph not in subgraphs:
+    | |______________________________________________^
+529 |
+530 |                   raise DAGCompileError(f"call 鑺傜偣 {nid} 寮曠敤浜嗕笉瀛樺湪鐨勫瓙鍥? {node.subgraph}")
+    |
+help: Combine `if` statements using `and`
+
+SIM108 Use ternary operator `base = ref_node.split(".")[0] if "." in ref_node else ref_node` instead of `if`-`else`-block
+   --> framework\src\calc_framework\dag\graph_types.py:552:13
+    |
+550 |               ref_node = out.node
+551 |
+552 | /             if "." in ref_node:
+553 | |
+554 | |                 base = ref_node.split(".")[0]
+555 | |
+556 | |             else:
+557 | |
+558 | |                 base = ref_node
+    | |_______________________________^
+559 |
+560 |               if base not in nodes:
+    |
+help: Replace `if`-`else`-block with `base = ref_node.split(".")[0] if "." in ref_node else ref_node`
+
+E501 Line too long (129 > 120)
+  --> framework\src\calc_framework\dag\node_types.py:13:121
+   |
+11 | from typing import Literal
+12 |
+13 | _VALID_UNARY_OPS = frozenset({"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"})
+   |                                                                                                                         ^^^^^^^^^
+14 |
+15 | _VALID_BINARY_OPS = frozenset({"+", "-", "*", "/", "^", "min", "max", "mod"})
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> framework\src\calc_framework\dag\sandbox.py:7:1
+   |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import ast
+10 | | from typing import Any
+11 | |
+12 | | from calc_framework.logging import get_logger
+13 | |
+14 | | from .errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
+15 | | from .sandbox_config import (
+16 | |     _SAFE_BIN_OPS,
+17 | |     _SAFE_BUILTINS,
+18 | |     _SAFE_NODE_TYPES,
+19 | |     _SAFE_UNARY_OPS,
+20 | |     _GLOBAL_FUNCTIONS,
+21 | |     _all_allowed_names,
+22 | |     clear_functions,
+23 | |     list_functions,
+24 | |     register_function,
+25 | |     unregister_function,
+26 | | )
+   | |_^
+27 |
+28 |   logger = get_logger(__name__)
+   |
+help: Organize imports
+
+F401 [*] `.sandbox_config.clear_functions` imported but unused
+  --> framework\src\calc_framework\dag\sandbox.py:22:5
+   |
+20 |     _GLOBAL_FUNCTIONS,
+21 |     _all_allowed_names,
+22 |     clear_functions,
+   |     ^^^^^^^^^^^^^^^
+23 |     list_functions,
+24 |     register_function,
+   |
+help: Remove unused import
+
+F401 [*] `.sandbox_config.list_functions` imported but unused
+  --> framework\src\calc_framework\dag\sandbox.py:23:5
+   |
+21 |     _all_allowed_names,
+22 |     clear_functions,
+23 |     list_functions,
+   |     ^^^^^^^^^^^^^^
+24 |     register_function,
+25 |     unregister_function,
+   |
+help: Remove unused import
+
+F401 [*] `.sandbox_config.register_function` imported but unused
+  --> framework\src\calc_framework\dag\sandbox.py:24:5
+   |
+22 |     clear_functions,
+23 |     list_functions,
+24 |     register_function,
+   |     ^^^^^^^^^^^^^^^^^
+25 |     unregister_function,
+26 | )
+   |
+help: Remove unused import
+
+F401 [*] `.sandbox_config.unregister_function` imported but unused
+  --> framework\src\calc_framework\dag\sandbox.py:25:5
+   |
+23 |     list_functions,
+24 |     register_function,
+25 |     unregister_function,
+   |     ^^^^^^^^^^^^^^^^^^^
+26 | )
+   |
+help: Remove unused import
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+   --> framework\src\calc_framework\dag\templates.py:289:17
+    |
+287 |                   prefixed = prefix + tnid
+288 |
+289 | /                 if prefixed in new_nodes:
+290 | |
+291 | |                     if not new_nodes[prefixed].get("label"):
+    | |____________________________________________________________^
+292 |
+293 |                           new_nodes[prefixed]["label"] = f"{label}.{tnid}"
+    |
+help: Combine `if` statements using `and`
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+   --> framework\src\calc_framework\editor\editor.py:121:13
+    |
+119 |           for var_id, var_def in subgraph.parameters.items():
+120 |
+121 | /             if var_def.source != "computed":
+122 | |
+123 | |                 if var_id not in vars_list:
+    | |___________________________________________^
+124 |
+125 |                       vars_list.append(var_id)
+    |
+help: Combine `if` statements using `and`
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+   --> framework\src\calc_framework\graph_editor\compiler.py:161:9
+    |
+159 |       for node in doc.nodes:
+160 |
+161 | /         if node.type == "var" and node.config.path:
+162 | |
+163 | |             if node.config.path not in variables:
+    | |_________________________________________________^
+164 |
+165 |                   variables[node.config.path] = DAGVariable(type="float", source="computed")
+    |
+help: Combine `if` statements using `and`
+
+E501 Line too long (156 > 120)
+  --> framework\src\calc_framework\graph_editor\help_content.py:54:71
+   |
+52 | 鈥?53 | 鈥?54 | 鈥︿负 JSON 鏍煎紡渚涘叾浠栧伐鍏蜂娇鐢ㄣ€?/p>
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+55 | 鈥?56 | 鈥?   |
+
+RUF005 Consider `[section, *section.sub_sections]` instead of concatenation
+   --> framework\src\calc_framework\graph_editor\help_dialog.py:282:25
+    |
+280 |             # 娣诲姞瀛愯妭
+281 |
+282 |             all_items = [section] + section.sub_sections
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+283 |
+284 |             for sub in all_items:
+    |
+help: Replace with `[section, *section.sub_sections]`
+
+N802 Function name `mouseDoubleClickEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\items.py:115:9
+    |
+115 |     def mouseDoubleClickEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^^^^^^^^
+116 |
+117 |         if self._node_type == "composite" and self._on_double_click:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `itemChange` should be lowercase
+   --> framework\src\calc_framework\graph_editor\items.py:129:9
+    |
+129 |     def itemChange(self, change, value):
+    |         ^^^^^^^^^^
+130 |
+131 |         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mousePressEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\node_panel.py:137:9
+    |
+137 |     def mousePressEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^^
+138 |
+139 |         if event.button() == Qt.MouseButton.LeftButton:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+SIM108 Use ternary operator `x = -_PORT_RADIUS if self._direction == PortDirection.INPUT else node_rect.width() + _PORT_RADIUS` instead of `if`-`else`-block
+   --> framework\src\calc_framework\graph_editor\ports.py:127:9
+    |
+127 | /         if self._direction == PortDirection.INPUT:
+128 | |
+129 | |             x = -_PORT_RADIUS
+130 | |
+131 | |         else:
+132 | |
+133 | |             x = node_rect.width() + _PORT_RADIUS
+    | |________________________________________________^
+    |
+help: Replace `if`-`else`-block with `x = -_PORT_RADIUS if self._direction == PortDirection.INPUT else node_rect.width() + _PORT_RADIUS`
+
+N802 Function name `mousePressEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\ports.py:149:9
+    |
+149 |     def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
+    |         ^^^^^^^^^^^^^^^
+150 |
+151 |         if event is not None:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mouseReleaseEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\ports.py:157:9
+    |
+157 |     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
+    |         ^^^^^^^^^^^^^^^^^
+158 |
+159 |         if event is not None:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `drawBackground` should be lowercase
+  --> framework\src\calc_framework\graph_editor\scene.py:54:9
+   |
+54 |     def drawBackground(self, painter: QPainter, rect: Any) -> None:
+   |         ^^^^^^^^^^^^^^
+55 |
+56 |         super().drawBackground(painter, rect)
+   |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mousePressEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\scene.py:98:9
+    |
+ 98 |     def mousePressEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^^
+ 99 |
+100 |         if event.button() != Qt.MouseButton.LeftButton:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mouseMoveEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\scene.py:132:9
+    |
+132 |     def mouseMoveEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^
+133 |
+134 |         if self._wire_start_port and self._ghost_wire:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mouseReleaseEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\scene.py:146:9
+    |
+146 |     def mouseReleaseEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^^^^
+147 |
+148 |         if self._wire_start_port and self._ghost_wire:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+   --> framework\src\calc_framework\graph_editor\scene.py:160:13
+    |
+158 |               port = self._port_at(event.scenePos())
+159 |
+160 | /             if port is not None and port.direction == PortDirection.INPUT:
+161 | |
+162 | |                 if port.parentItem() is not source_port.parentItem():
+    | |_____________________________________________________________________^
+163 |
+164 |                       target_port = port
+    |
+help: Combine `if` statements using `and`
+
+N802 Function name `wheelEvent` should be lowercase
+  --> framework\src\calc_framework\graph_editor\view.py:53:9
+   |
+53 |     def wheelEvent(self, event) -> None:
+   |         ^^^^^^^^^^
+54 |
+55 |         if self._panning:
+   |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mousePressEvent` should be lowercase
+  --> framework\src\calc_framework\graph_editor\view.py:73:9
+   |
+73 |     def mousePressEvent(self, event) -> None:
+   |         ^^^^^^^^^^^^^^^
+74 |
+75 |         if event.button() == Qt.MouseButton.MiddleButton:
+   |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mouseMoveEvent` should be lowercase
+  --> framework\src\calc_framework\graph_editor\view.py:95:9
+   |
+95 |     def mouseMoveEvent(self, event) -> None:
+   |         ^^^^^^^^^^^^^^
+96 |
+97 |         if self._panning:
+   |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `mouseReleaseEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\view.py:113:9
+    |
+113 |     def mouseReleaseEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^^^^
+114 |
+115 |         if event.button() == Qt.MouseButton.MiddleButton:
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `dragEnterEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\view.py:129:9
+    |
+129 |     def dragEnterEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^^
+130 |
+131 |         if event.mimeData().hasText():
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `dragMoveEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\view.py:137:9
+    |
+137 |     def dragMoveEvent(self, event) -> None:
+    |         ^^^^^^^^^^^^^
+138 |
+139 |         event.acceptProposedAction()
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `dropEvent` should be lowercase
+   --> framework\src\calc_framework\graph_editor\view.py:143:9
+    |
+143 |     def dropEvent(self, event) -> None:
+    |         ^^^^^^^^^
+144 |
+145 |         type_id = event.mimeData().text()
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+F841 Local variable `min_y` is assigned to but never used
+   --> framework\src\calc_framework\inverse\exponential_fitter.py:155:17
+    |
+153 |             try:
+154 |                 # 灏濊瘯灏忓亸绉诲井璋?155 |                 min_y = min(y for y in ys if y > 0)
+    |                 ^^^^^
+156 |                 ys = [max(y, 1e-10) for y in ys]
+157 |                 if any(y <= 0 for y in ys):
+    |
+help: Remove assignment to unused variable `min_y`
+
+F841 Local variable `best_breakpoint` is assigned to but never used
+   --> framework\src\calc_framework\inverse\piecewise_fitter.py:189:17
+    |
+187 |                     is_exact=max_error < 0.001,
+188 |                 )
+189 |                 best_breakpoint = bp
+    |                 ^^^^^^^^^^^^^^^
+190 |
+191 |         return best_result or FitResult(max_error=999999.0)
+    |
+help: Remove assignment to unused variable `best_breakpoint`
+
+E501 Line too long (122 > 120)
+  --> framework\src\calc_framework\inverse\threshold_fitter.py:90:121
+   |
+88 |                 if linear_result is not None and linear_result.is_exact:
+89 |                     return linear_result
+90 |                 if linear_result is not None and (best_result is None or linear_result.max_error < best_result.max_error):
+   |                                                                                                                         ^^
+91 |                     best_result = linear_result
+   |
+
+SIM108 Use ternary operator `layout_path = pkg._adapter_dir / ui_layout_rel if ui_layout_rel else pkg._adapter_dir / "ui" / "layout.json"` instead of `if`-`else`-block
+   --> framework\src\calc_framework\launcher.py:130:5
+    |
+128 |       # 浠庨€傞厤鍖呯殑 layout.json 鍔犺浇甯冨眬
+129 |       ui_layout_rel = pkg.meta.get("ui_layout", "")
+130 | /     if ui_layout_rel:
+131 | |         layout_path = pkg._adapter_dir / ui_layout_rel
+132 | |     else:
+133 | |         # 鍚戝悗鍏煎锛氬皾璇曢粯璁よ矾寰?134 | |         layout_path = pkg._adapter_dir / "ui" / "layout.json"
+    | |_____________________________________________________________^
+135 |
+136 |       if layout_path.is_file():
+    |
+help: Replace `if`-`else`-block with `layout_path = pkg._adapter_dir / ui_layout_rel if ui_layout_rel else pkg._adapter_dir / "ui" / "layout.json"`
+
+SIM105 Use `contextlib.suppress(Exception)` instead of `try`-`except`-`pass`
+   --> framework\src\calc_framework\publish\catalog.py:138:9
+    |
+136 |           meta: dict[str, Any] = {}
+137 |
+138 | /         try:
+139 | |
+140 | |             meta = json.loads(meta_path.read_text(encoding="utf-8"))
+141 | |
+142 | |         except Exception:
+143 | |
+144 | |             pass
+    | |________________^
+145 |
+146 |           cards.append(_build_card(name, meta))
+    |
+help: Replace `try`-`except`-`pass` with `with contextlib.suppress(Exception): ...`
+
+F841 Local variable `total_with_skipped` is assigned to but never used
+   --> framework\src\calc_framework\search\engine.py:336:17
+    |
+334 |             if progress_callback is not None:
+335 |
+336 |                 total_with_skipped = processed_count + skipped
+    |                 ^^^^^^^^^^^^^^^^^^
+337 |
+338 |                 progress_callback(p)
+    |
+help: Remove assignment to unused variable `total_with_skipped`
+
+F841 Local variable `base` is assigned to but never used
+   --> framework\src\calc_framework\ui\launcher\runtime.py:115:5
+    |
+113 | def argv_for_calcpack(path: Path, root: Path | None = None) -> list[str]:
+114 |     """鎵撳紑 .calcpack 鏂囦欢銆?""
+115 |     base = root or repo_root()
+    |     ^^^^
+116 |     return [sys.executable, "-m", "calc_framework.ui.viewer", str(path.resolve())]
+    |
+help: Remove assignment to unused variable `base`
+
+F821 Undefined name `QLabel`
+  --> framework\src\calc_framework\ui\sheet_widgets.py:32:32
+   |
+30 |         self,
+31 |         title: str,
+32 |         items: list[tuple[str, QLabel, QWidget | None, ControlSpec]],
+   |                                ^^^^^^
+33 |         parent: QWidget | None = None,
+34 |     ) -> None:
+   |
+
+N802 Function name `resizeEvent` should be lowercase
+  --> framework\src\calc_framework\ui\sheet_widgets.py:58:9
+   |
+56 |                 self._grid.addWidget(widget, row, col_offset + 1)
+57 |
+58 |     def resizeEvent(self, event) -> None:
+   |         ^^^^^^^^^^^
+59 |         super().resizeEvent(event)
+60 |         self._on_resized()
+   |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+F841 Local variable `success` is assigned to but never used
+  --> framework\src\calc_framework\ui\theme.py:44:5
+   |
+42 |     primary_hover = colors.get("primary_hover", "#1E8EE8")
+43 |
+44 |     success = colors.get("success", "#4CAF50")
+   |     ^^^^^^^
+45 |
+46 |     warning = colors.get("warning", "#FF9800")
+   |
+help: Remove assignment to unused variable `success`
+
+F841 Local variable `warning` is assigned to but never used
+  --> framework\src\calc_framework\ui\theme.py:46:5
+   |
+44 |     success = colors.get("success", "#4CAF50")
+45 |
+46 |     warning = colors.get("warning", "#FF9800")
+   |     ^^^^^^^
+47 |
+48 |     error = colors.get("error", "#F44336")
+   |
+help: Remove assignment to unused variable `warning`
+
+F841 Local variable `error` is assigned to but never used
+  --> framework\src\calc_framework\ui\theme.py:48:5
+   |
+46 |     warning = colors.get("warning", "#FF9800")
+47 |
+48 |     error = colors.get("error", "#F44336")
+   |     ^^^^^
+49 |
+50 |     input_bg = colors.get("input_bg", "#3C3C3C")
+   |
+help: Remove assignment to unused variable `error`
+
+N802 Function name `resizeEvent` should be lowercase
+  --> framework\src\calc_framework\ui\viewer_events.py:86:9
+   |
+84 |         )
+85 |
+86 |     def resizeEvent(self, event) -> None:
+   |         ^^^^^^^^^^^
+87 |         super().resizeEvent(event)
+88 |         if self._splitter is None:
+   |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N802 Function name `closeEvent` should be lowercase
+   --> framework\src\calc_framework\ui\viewer_events.py:100:9
+    |
+ 98 |             self._splitter.setSizes([220, width - 420, 200])
+ 99 |
+100 |     def closeEvent(self, event: Any) -> None:
+    |         ^^^^^^^^^^
+101 |         if self._asset_temp_dir:
+102 |             self._asset_temp_dir.cleanup()
+    |
+help: Consider adding `@typing.override` if this method overrides a method from a superclass
+
+N806 Variable `IGNORED_KEYS` in function should be lowercase
+   --> framework\src\calc_framework\ui\viewer_pack_utils.py:124:5
+    |
+122 |     """
+123 |     ctx: dict[str, float] = {}
+124 |     IGNORED_KEYS = {"鍚嶇О", "鎶€鑳?, "_entity_type", "绫诲瀷", "鏄熺骇", "姝﹀櫒",
+    |     ^^^^^^^^^^^^
+125 |                     "涓昏兘鍔?, "鍓兘鍔?, "瑁呭绉嶇被", "閮ㄤ綅", "绋€鏈夊害",
+126 |                     "鎵€灞炲缁?, "濂楄", "灞炴€ц瘝鏉?, "鏁堟灉", "涓変欢濂楁晥鏋?, "_source",
+    |
+
+E501 Line too long (146 > 120)
+  --> framework\src\calc_framework\ui\viewer_plugin_manager.py:73:87
+   |
+72 | 鈥?73 | 鈥﹁涓€涓彃浠讹紝鎴栥€屾墦鍖呮彃浠剁洰褰曘€嶅皢婧愮爜鐩綍鎵撳寘涓?.calcplugin銆?))
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+74 | 鈥?75 | 鈥?   |
+
+SIM110 Use `return any(sec.type == "inputs" and path in sec.variables for sec in self._layout.sections)` instead of `for` loop
+   --> framework\src\calc_framework\ui\viewer_render.py:196:9
+    |
+194 |           if not self._layout:
+195 |               return False
+196 | /         for sec in self._layout.sections:
+197 | |             if sec.type == "inputs" and path in sec.variables:
+198 | |                 return True
+199 | |         return False
+    | |____________________^
+200 |
+201 |       def _build_current_context(self) -> dict[str, Any]:
+    |
+help: Replace with `return any(sec.type == "inputs" and path in sec.variables for sec in self._layout.sections)`
+
+E501 Line too long (146 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:134:121
+    |
+132 | 鈥?"cooldown_reduction": 0},
+133 | 鈥?134 | 鈥?, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+135 | 鈥?136 | 鈥?    |
+
+E501 Line too long (147 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:158:121
+    |
+156 | 鈥?"cooldown_reduction": 0},
+157 | 鈥?158 | 鈥?ap_ratio": 0.6, "is_physical": False, "is_crit": False, "skill_cooldown": 10},
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+159 | 鈥?160 | 鈥?    |
+
+E501 Line too long (145 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:180:121
+    |
+178 | 鈥ldown_reduction": 0},
+179 | 鈥?180 | 鈥?, "ap_ratio": 0, "is_physical": True, "is_crit": True, "skill_cooldown": 10},
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+181 | 鈥?182 | 鈥?    |
+
+E501 Line too long (144 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:200:121
+    |
+198 | 鈥?: 0},
+199 | 鈥?200 | 鈥? "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+201 | 鈥?202 | 鈥?    |
+
+E501 Line too long (144 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:218:121
+    |
+216 | 鈥ooldown_reduction": 0},
+217 | 鈥?218 | 鈥? "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+219 | 鈥?220 | 鈥?    |
+
+E501 Line too long (146 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:266:121
+    |
+264 | 鈥?"cooldown_reduction": 0},
+265 | 鈥?266 | 鈥?, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+267 | 鈥?268 | 鈥?    |
+
+E501 Line too long (157 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:308:121
+    |
+306 | 鈥?307 | 鈥?308 | 鈥?50, "min_damage_ratio": 0.5, "fire_rate": 600, "mag_size": 30, "reload_time": 2.5},
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+309 | 鈥?310 | 鈥ult": 1.0},
+    |
+
+E501 Line too long (131 > 120)
+   --> framework\tests\adapters\test_moba_fps.py:358:121
+    |
+356 |     def test_mid_range_linear_decay(self, fps_svc):
+357 |
+358 |         ctx = self._ctx(**{"weapon.decay_start": 10, "weapon.decay_end": 30, "weapon.min_damage_ratio": 0.4, "enemy.distance": 20})
+    |                                                                                                                         ^^^^^^^^^^^
+359 |
+360 |         r = fps_svc.evaluate(ctx)
+    |
+
+E501 Line too long (134 > 120)
+  --> framework\tests\benchmark\test_dag_benchmark.py:88:121
+   |
+87 |         from calc_framework.dag.serializer import dag_from_dict
+88 |         dag_path = Path(__file__).resolve().parents[3] / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
+   |                                                                                                                         ^^^^^^^^^^^^^^
+89 |         dag_dict = json.loads(dag_path.read_text(encoding="utf-8"))
+90 |         g = dag_from_dict(dag_dict)
+   |
+
+E501 Line too long (216 > 120)
+   --> framework\tests\config\test_dag_review.py:163:121
+    |
+161 | 鈥?162 | 鈥?163 | 鈥", "imbalance", "combo", "special", "amplif", "weakness", "shelter", "fragile", "vulnerability", "non_control"])]
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+164 | 鈥?165 | 鈥?    |
+
+F841 Local variable `expected` is assigned to but never used
+   --> framework\tests\dag\test_end_to_end.py:370:9
+    |
+368 |         res = svc.evaluate({})
+369 |         # ln(10) + sin(蟺/2)*cos(0) = ln(10) + 1*1 = ln(10) + 1
+370 |         expected = 1.0 + 1.0  # sin(蟺/2)=1, cos(0)=1
+    |         ^^^^^^^^
+371 |         assert abs(res.outputs["add"] - (math.log(10) + 1.0)) < 1e-9
+    |
+help: Remove assignment to unused variable `expected`
+
+F841 Local variable `combined` is assigned to but never used
+  --> framework\tests\dag\test_engine_logging.py:57:9
+   |
+55 |         topological_sort(g)
+56 |
+57 |         combined = "\n".join(caplog.messages)
+   |         ^^^^^^^^
+58 |
+59 |         assert any("鑺傜偣" in m for m in caplog.messages)
+   |
+help: Remove assignment to unused variable `combined`
+
+W293 Blank line contains whitespace
+   --> framework\tests\graph_editor\test_endfield_zone_package.py:170:1
+    |
+168 |         """缂栬瘧閾惧浘骞朵娇鐢ㄩ粯璁ゅ€兼眰鍊笺€?169 |
+170 |         
+    | ^^^^^^^^
+171 |
+172 |         榛樿杈撳叆:
+    |
+help: Remove whitespace from blank line
+
+W293 Blank line contains whitespace
+   --> framework\tests\graph_editor\test_endfield_zone_package.py:190:1
+    |
+188 |           闈炰富鎺у噺浼ゅ尯~鐗规畩涔樺尯: 1.0
+189 |
+190 |         
+    | ^^^^^^^^
+191 |
+192 |         鏈€缁? 1.0 脳 1000 脳 0.975 脳 (100/300) 脳 0.8 = 260.0
+    |
+help: Remove whitespace from blank line
+
+W293 Blank line contains whitespace
+   --> framework\tests\graph_editor\test_endfield_zone_package.py:234:1
+    |
+232 |         """楠岃瘉鍙€氳繃榛樿鍊艰矾寰勮幏寰椾笉鍚岀殑杈撳嚭銆?233 |
+234 |         
+    | ^^^^^^^^
+235 |
+236 |         椤跺眰閾惧浘鐨?user_input 鑺傜偣鏈夊悇鑷殑榛樿鍊硷紝
+    |
+help: Remove whitespace from blank line
+
+F841 Local variable `w` is assigned to but never used
+  --> framework\tests\graph_editor\test_node_panel.py:31:13
+   |
+29 |         for i in range(panel.count()):
+30 |
+31 |             w = panel.widget(i)
+   |             ^
+32 |
+33 |             label_texts.append(panel.tabText(i))
+   |
+help: Remove assignment to unused variable `w`
+
+F841 Local variable `found_labels` is assigned to but never used
+  --> framework\tests\graph_editor\test_node_panel.py:45:9
+   |
+43 |         # 閬嶅巻鎵€鏈夋爣绛鹃〉锛岃嚦灏戣兘鎵惧埌甯歌绫诲瀷
+44 |
+45 |         found_labels = set()
+   |         ^^^^^^^^^^^^
+46 |
+47 |         for i in range(panel.count()):
+   |
+help: Remove assignment to unused variable `found_labels`
+
+E501 Line too long (123 > 120)
+   --> framework\tests\graph_editor\test_schema.py:165:119
+    |
+163 |             nodes=[GraphNode(id="o1", type="output")],
+164 |
+165 |             layout=type("Layout", (), {"sections": [SectionDef(id="s1", title="缁撴灉", output_nodes=["o1"], columns=1)]})(),
+    |                                                                                                                         ^^^
+166 |
+167 |         )
+    |
+
+F841 Local variable `offset` is assigned to but never used
+  --> framework\tests\inverse\test_advanced_formulas.py:54:23
+   |
+52 |         """绾寚鏁板闀匡紙growth=1.05, base=100, offset=0锛夈€?""
+53 |
+54 |         base, growth, offset = 100.0, 1.05, 0.0
+   |                       ^^^^^^
+55 |
+56 |         data = [round(base * (growth ** (lv - 1)), 1) for lv in range(1, 21)]
+   |
+help: Remove assignment to unused variable `offset`
+
+F841 Local variable `skill_level` is assigned to but never used
+  --> games\arknights\calc\dag_adapter\loader.py:41:9
+   |
+39 |         """
+40 |         operator: dict[str, Any] = kwargs["operator"]
+41 |         skill_level: int = kwargs.get("skill_level", 7)
+   |         ^^^^^^^^^^^
+42 |         enemy_def: float = kwargs.get("enemy_def", 200.0)
+43 |         enemy_res: float = kwargs.get("enemy_res", 50.0)
+   |
+help: Remove assignment to unused variable `skill_level`
+
+F841 Local variable `base_hp` is assigned to but never used
+  --> games\arknights\calc\dag_adapter\loader.py:56:9
+   |
+54 |         base_atk = _get_num(base_stats, "atk")
+55 |         base_def = _get_num(base_stats, "def")
+56 |         base_hp = _get_num(base_stats, "hp")
+   |         ^^^^^^^
+57 |         base_res = _get_num(base_stats, "res", 0.0)
+58 |         trust_atk = _get_num(trust_bonus, "鏀诲嚮", 0.0)
+   |
+help: Remove assignment to unused variable `base_hp`
+
+F841 Local variable `trust_def` is assigned to but never used
+  --> games\arknights\calc\dag_adapter\loader.py:59:9
+   |
+57 |         base_res = _get_num(base_stats, "res", 0.0)
+58 |         trust_atk = _get_num(trust_bonus, "鏀诲嚮", 0.0)
+59 |         trust_def = _get_num(trust_bonus, "闃插尽", 0.0)
+   |         ^^^^^^^^^
+60 |         trust_hp = _get_num(trust_bonus, "鐢熷懡", 0.0)
+61 |         pot_atk = _parse_potential_atk(potentials)
+   |
+help: Remove assignment to unused variable `trust_def`
+
+F841 Local variable `trust_hp` is assigned to but never used
+  --> games\arknights\calc\dag_adapter\loader.py:60:9
+   |
+58 |         trust_atk = _get_num(trust_bonus, "鏀诲嚮", 0.0)
+59 |         trust_def = _get_num(trust_bonus, "闃插尽", 0.0)
+60 |         trust_hp = _get_num(trust_bonus, "鐢熷懡", 0.0)
+   |         ^^^^^^^^
+61 |         pot_atk = _parse_potential_atk(potentials)
+   |
+help: Remove assignment to unused variable `trust_hp`
+
+E402 Module level import not at top of file
+  --> games\arknights\gui\ArknightsApp.py:42:1
+   |
+40 |     sys.path.insert(0, str(p))
+41 |
+42 | from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+43 | from games.arknights.operator_catalog import load_operators_map, filter_operator_index
+44 | from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+   |
+
+E402 Module level import not at top of file
+  --> games\arknights\gui\ArknightsApp.py:43:1
+   |
+42 | from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
+43 | from games.arknights.operator_catalog import load_operators_map, filter_operator_index
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+44 | from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+45 | from games.endfield.gui.legal.donation_qt import open_donation_dialog
+   |
+
+E402 Module level import not at top of file
+  --> games\arknights\gui\ArknightsApp.py:44:1
+   |
+42 | from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
+43 | from games.arknights.operator_catalog import load_operators_map, filter_operator_index
+44 | from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+45 | from games.endfield.gui.legal.donation_qt import open_donation_dialog
+   |
+
+E402 Module level import not at top of file
+  --> games\arknights\gui\ArknightsApp.py:45:1
+   |
+43 | from games.arknights.operator_catalog import load_operators_map, filter_operator_index
+44 | from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+45 | from games.endfield.gui.legal.donation_qt import open_donation_dialog
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+46 |
+47 | _logger = get_logger("gui.arknights_app")
+   |
+
+F841 Local variable `skill_idx` is assigned to but never used
+   --> games\arknights\gui\ArknightsApp.py:297:9
+    |
+295 |         if self._operator_data is None:
+296 |             return
+297 |         skill_idx = self._skill_combo.currentIndex()
+    |         ^^^^^^^^^
+298 |         level = self._skill_level_slider.value()
+299 |         try:
+    |
+help: Remove assignment to unused variable `skill_idx`
+
+E501 Line too long (122 > 120)
+   --> games\endfield\calc\damage\abnormal_attached.py:117:121
+    |
+115 |         )
+116 |
+117 |         duration = float(corrosion_duration_seconds) if corrosion_duration_seconds is not None else CORROSION_DURATION_SEC
+    |                                                                                                                         ^^
+118 |         shred = corrosion_total_resistance_shred(
+119 |             calc_level,
+    |
+
+E501 Line too long (129 > 120)
+  --> games\endfield\calc\damage\incoming.py:34:98
+   |
+32 |     """鏁屼汉瀵瑰共鍛樹激瀹崇粡鏁忔嵎(鐗╃悊)/鏅鸿瘑(娉曟湳)鎶楁€у悗鐨勪及绠楀€笺€?""
+33 |     dtype = str(damage_type or "鐗╃悊")
+34 |     if dtype.startswith("娉曟湳") or dtype in ("鐏肩儹", "鐢电", "瀵掑喎", "鑷劧", "娉曟湳-鐏肩儹", "娉曟湳-鐢电", "娉曟湳-瀵掑喎", "娉曟湳-鑷劧"):
+   |                                                                                                                          ^^^^^^^^
+35 |         mult = operator_resistance_multiplier(intellect)
+36 |     else:
+   |
+
+RUF059 Unpacked variable `display_mult` is never used
+   --> games\endfield\calc\skills\segments.py:124:13
+    |
+122 |             continue
+123 |         for segment_index in range(1, len(segments) + 1):
+124 |             display_mult, combat_mult = segment_multipliers_at_level(
+    |             ^^^^^^^^^^^^
+125 |                 char_data,
+126 |                 field_name,
+    |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+   --> games\endfield\gui\app\loadout_state.py:286:35
+    |
+285 | # 鈹€鈹€ Re-exports from loadout_serialize (API 鍏煎) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+286 | from .loadout_serialize import (  # noqa: E402  # isort: skip
+    |                                   ^^^^^^^^^^^^
+287 |     _resolve_selected_skill_for_search,
+288 |     read_loadout_from_app,
+    |
+help: Remove unused `noqa` directive
+
+F401 [*] `.loadout_serialize._resolve_selected_skill_for_search` imported but unused
+   --> games\endfield\gui\app\loadout_state.py:287:5
+    |
+285 | # 鈹€鈹€ Re-exports from loadout_serialize (API 鍏煎) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+286 | from .loadout_serialize import (  # noqa: E402  # isort: skip
+287 |     _resolve_selected_skill_for_search,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+288 |     read_loadout_from_app,
+289 |     read_loadout_from_panels,
+    |
+help: Remove unused import
+
+F401 [*] `.loadout_serialize.read_loadout_from_app` imported but unused
+   --> games\endfield\gui\app\loadout_state.py:288:5
+    |
+286 | from .loadout_serialize import (  # noqa: E402  # isort: skip
+287 |     _resolve_selected_skill_for_search,
+288 |     read_loadout_from_app,
+    |     ^^^^^^^^^^^^^^^^^^^^^
+289 |     read_loadout_from_panels,
+290 | )
+    |
+help: Remove unused import
+
+F401 [*] `.loadout_serialize.read_loadout_from_panels` imported but unused
+   --> games\endfield\gui\app\loadout_state.py:289:5
+    |
+287 |     _resolve_selected_skill_for_search,
+288 |     read_loadout_from_app,
+289 |     read_loadout_from_panels,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+290 | )
+    |
+help: Remove unused import
+
+E501 Line too long (133 > 120)
+   --> games\endfield\gui\endfield_actions.py:174:117
+    |
+172 | 鈥?173 | 鈥?174 | 鈥?: "float", "default": 100.0, "min": 0, "max": 99999, "step": 10.0},
+    |                                                         ^^^^^^^^^^^^^
+175 | 鈥?: "str", "default": "鏅€?},
+176 | 鈥?: "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+    |
+
+E501 Line too long (131 > 120)
+   --> games\endfield\gui\endfield_actions.py:176:117
+    |
+174 | 鈥?    "user_input.鏁屼汉闃插尽": {"source": "user_input", "type": "float", "default": 100.0, "min": 0, "max": 99999, "step": 10.0},
+175 | 鈥?    "user_input.鏁屼汉绛夐樁": {"source": "user_input", "type": "str", "default": "鏅€?},
+176 | 鈥?    "user_input.鏁屼汉鎶楁€?: {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+    |                                                                                                                   ^^^^^^^^^^^
+177 | 鈥?    "user_input.鏃犺鎶楁€?: {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+178 | 鈥?    "user_input.澶辫　鏄撲激绯绘暟": {"source": "user_input", "type": "float", "default": 1.3, "min": 0.1, "max": 10.0, "step": 0.05},
+    |
+
+E501 Line too long (131 > 120)
+   --> games\endfield\gui\endfield_actions.py:177:117
+    |
+175 | 鈥?    "user_input.鏁屼汉绛夐樁": {"source": "user_input", "type": "str", "default": "鏅€?},
+176 | 鈥?    "user_input.鏁屼汉鎶楁€?: {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+177 | 鈥?    "user_input.鏃犺鎶楁€?: {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+    |                                                                                                                   ^^^^^^^^^^^
+178 | 鈥?    "user_input.澶辫　鏄撲激绯绘暟": {"source": "user_input", "type": "float", "default": 1.3, "min": 0.1, "max": 10.0, "step": 0.05},
+179 | 鈥?    "user_input.鏄惁澶辫　": {"source": "user_input", "type": "bool", "default": False},
+    |
+
+E501 Line too long (136 > 120)
+   --> games\endfield\gui\endfield_actions.py:178:115
+    |
+176 | 鈥? "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+177 | 鈥? "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
+178 | 鈥": "float", "default": 1.3, "min": 0.1, "max": 10.0, "step": 0.05},
+    |                                                      ^^^^^^^^^^^^^^^^
+179 | 鈥? "bool", "default": False},
+180 | 鈥": "bool", "default": False},
+    |
+
+E501 Line too long (131 > 120)
+   --> games\endfield\gui\endfield_actions.py:182:116
+    |
+180 | 鈥?    "user_input.鏄惁鐪熷疄浼ゅ": {"source": "user_input", "type": "bool", "default": False},
+181 | 鈥?    "user_input.杩炲嚮灞傛暟": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
+182 | 鈥?    "user_input.棰濆鏆村嚮鐜?: {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},
+    |                                                                                                                   ^^^^^^^^^^^
+183 | 鈥?    "user_input.棰濆鏆村嚮浼ゅ": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+184 | 鈥?    "user_input.棰濆浼ゅ鍔犳垚": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+    |
+
+E501 Line too long (133 > 120)
+   --> games\endfield\gui\endfield_actions.py:183:115
+    |
+181 | 鈥?    "user_input.杩炲嚮灞傛暟": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
+182 | 鈥?    "user_input.棰濆鏆村嚮鐜?: {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},
+183 | 鈥?    "user_input.棰濆鏆村嚮浼ゅ": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+    |                                                                                                                   ^^^^^^^^^^^^^
+184 | 鈥?    "user_input.棰濆浼ゅ鍔犳垚": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+185 | 鈥?    "user_input.闄勫甫鏁堟灉鍊嶇巼": {"source": "user_input", "type": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},
+    |
+
+E501 Line too long (133 > 120)
+   --> games\endfield\gui\endfield_actions.py:184:115
+    |
+182 | 鈥?    "user_input.棰濆鏆村嚮鐜?: {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},
+183 | 鈥?    "user_input.棰濆鏆村嚮浼ゅ": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+184 | 鈥?    "user_input.棰濆浼ゅ鍔犳垚": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+    |                                                                                                                   ^^^^^^^^^^^^^
+185 | 鈥?    "user_input.闄勫甫鏁堟灉鍊嶇巼": {"source": "user_input", "type": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},
+186 | 鈥?    "user_input.鐮撮槻灞傛暟": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
+    |
+
+E501 Line too long (135 > 120)
+   --> games\endfield\gui\endfield_actions.py:185:115
+    |
+183 | 鈥": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+184 | 鈥": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
+185 | 鈥": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},
+    |                                                      ^^^^^^^^^^^^^^^
+186 | 鈥? "int", "default": 0, "min": 0, "max": 4, "step": 1},
+187 | 鈥": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.05},
+    |
+
+E501 Line too long (133 > 120)
+   --> games\endfield\gui\endfield_actions.py:187:115
+    |
+185 | 鈥e": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},
+186 | 鈥?: "int", "default": 0, "min": 0, "max": 4, "step": 1},
+187 | 鈥e": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.05},
+    |                                                       ^^^^^^^^^^^^^
+188 | 鈥pe": "float", "default": 15.0, "min": 0.0, "max": 15.0, "step": 0.5},
+189 | 鈥?    |
+
+E501 Line too long (136 > 120)
+   --> games\endfield\gui\endfield_actions.py:188:116
+    |
+186 | 鈥? "int", "default": 0, "min": 0, "max": 4, "step": 1},
+187 | 鈥": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.05},
+188 | 鈥e": "float", "default": 15.0, "min": 0.0, "max": 15.0, "step": 0.5},
+    |                                                       ^^^^^^^^^^^^^^^^
+189 | 鈥?190 | 鈥?    |
+
+N806 Variable `_SKILL_TYPE_ORDER` in function should be lowercase
+   --> games\endfield\gui\presentation\total_damage_panel.py:209:9
+    |
+209 |         _SKILL_TYPE_ORDER = ("鎴樻妧", "杩炴惡鎶€", "缁堢粨鎶€")
+    |         ^^^^^^^^^^^^^^^^^
+210 |
+211 |         segments_by_type: dict[str, list[tuple[str, float, int, float, float]]] = {}
+    |
+
+E501 Line too long (124 > 120)
+   --> games\endfield\tests\calculation\manual_buff\test_nga_mechanics.py:105:119
+    |
+104 |     def test_combo_stacks_use_layer_table(self) -> None:
+105 |         ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="鎴樻妧", combo_stacks=4)
+    |                                                                                                                         ^^^^
+106 |         result = calculate_single_hit_damage(ctx, crit_mode="non_crit")
+107 |         self.assertAlmostEqual(result.zone_values["杩炲嚮澧炰激鍖?], 1.75)
+    |
+
+E402 Module level import not at top of file
+  --> scripts\build.py:21:1
+   |
+19 |     sys.path.insert(0, str(_REPO))
+20 |
+21 | from main_build import main
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 |
+23 | if __name__ == "__main__":
+   |
+
+E402 Module level import not at top of file
+  --> scripts\deploy_pythonanywhere.py:14:1
+   |
+12 | ensure_root()
+13 |
+14 | from web.scripts.deploy_pythonanywhere import main
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+15 |
+16 | if __name__ == "__main__":
+   |
+
+E402 Module level import not at top of file
+   --> scripts\github_download_module.py:471:1
+    |
+471 | from pathlib import Path
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+472 | sys.path.insert(0, str(Path(__file__).resolve().parent))
+473 | from _path_setup import ensure_root
+    |
+
+E402 Module level import not at top of file
+   --> scripts\github_download_module.py:473:1
+    |
+471 | from pathlib import Path
+472 | sys.path.insert(0, str(Path(__file__).resolve().parent))
+473 | from _path_setup import ensure_root
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+474 | ensure_root()
+    |
+
+E402 Module level import not at top of file
+  --> scripts\main.py:19:1
+   |
+17 | ensure_root()
+18 |
+19 | from games.endfield.main import main
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+20 |
+21 | if __name__ == "__main__":
+   |
+
+E402 Module level import not at top of file
+  --> scripts\main_build.py:69:1
+   |
+67 |     sys.path.insert(0, str(_SCRIPTS))
+68 |
+69 | from _path_setup import ensure_root
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+70 | ensure_root()
+   |
+
+E402 Module level import not at top of file
+  --> scripts\main_build.py:80:1
+   |
+80 | from please_read_me import get_exe_version, get_version
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+81 |
+82 | from release_bundle.release_layout import (
+   |
+
+E402 Module level import not at top of file
+  --> scripts\main_build.py:82:1
+   |
+80 |   from please_read_me import get_exe_version, get_version
+81 |
+82 | / from release_bundle.release_layout import (
+83 | |
+84 | |     ALL_BUILD_TARGETS,
+85 | |
+86 | |     BuildTarget,
+87 | |
+88 | |     release_dir_from_dist,
+89 | |
+90 | |     stage_release_folder,
+91 | |
+92 | |     target_app_name,
+93 | |
+94 | |     target_entry,
+95 | |
+96 | | )
+   | |_^
+97 |
+98 |   from utils.platform_win32_patch import apply_platform_win32_patch
+   |
+
+E402 Module level import not at top of file
+  --> scripts\main_build.py:98:1
+   |
+96 | )
+97 |
+98 | from utils.platform_win32_patch import apply_platform_win32_patch
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E402 Module level import not at top of file
+  --> scripts\main_designer.py:20:1
+   |
+18 | ensure_tools()
+19 |
+20 | from endfield_designer.designer_main import main
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 |
+22 | if __name__ == "__main__":
+   |
+
+E402 Module level import not at top of file
+  --> scripts\main_pack_designer.py:19:1
+   |
+17 | ensure_root()
+18 |
+19 | from tools.designer.app import main
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+20 |
+21 | if __name__ == "__main__":
+   |
+
+E402 Module level import not at top of file
+   --> scripts\please_read_me.py:398:1
+    |
+398 | import sys
+    | ^^^^^^^^^^
+399 | from pathlib import Path
+400 | sys.path.insert(0, str(Path(__file__).resolve().parent))
+    |
+
+E402 Module level import not at top of file
+   --> scripts\please_read_me.py:399:1
+    |
+398 | import sys
+399 | from pathlib import Path
+    | ^^^^^^^^^^^^^^^^^^^^^^^^
+400 | sys.path.insert(0, str(Path(__file__).resolve().parent))
+401 | from _path_setup import ensure_root
+    |
+
+E402 Module level import not at top of file
+   --> scripts\please_read_me.py:401:1
+    |
+399 | from pathlib import Path
+400 | sys.path.insert(0, str(Path(__file__).resolve().parent))
+401 | from _path_setup import ensure_root
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+402 | ensure_root()
+    |
+
+E402 Module level import not at top of file
+  --> scripts\version.py:14:1
+   |
+12 | ensure_root()
+13 |
+14 | from games.endfield.please_read_me import _VERSION, _EXE_VERSION  # noqa: F401
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E402 Module level import not at top of file
+   --> web\backend\api\search.py:659:1
+    |
+658 | # 鎼滅储鍘嗗彶锛堟枃浠舵寔涔呭寲锛屾渶杩?10 娆★級
+659 | from api.persistent_store import load_list, save_list
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+660 |
+661 | _SEARCH_STORE_KEY = "search_history"
+    |
+
+E402 Module level import not at top of file
+ --> web\backend\asgi.py:7:1
+  |
+5 | setup_paths()
+6 |
+7 | from .main import app
+  | ^^^^^^^^^^^^^^^^^^^^^
+8 |
+9 | # PythonAnywhere 瑕佹眰 ASGI application 鍚嶄负 application
+  |
+
+E402 Module level import not at top of file
+  --> web\backend\run_packaged_main.py:36:1
+   |
+34 | _setup_paths()
+35 |
+36 | import uvicorn
+   | ^^^^^^^^^^^^^^
+37 |
+38 | from web.backend.main import app
+   |
+
+E402 Module level import not at top of file
+  --> web\backend\run_packaged_main.py:38:1
+   |
+36 | import uvicorn
+37 |
+38 | from web.backend.main import app
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+39 |
+40 | if __name__ == "__main__":
+   |
+
+E402 Module level import not at top of file
+  --> web\backend\tests\test_arknights_data_fallback.py:23:1
+   |
+21 | )
+22 |
+23 | import unittest
+   | ^^^^^^^^^^^^^^^
+   |
+
+Found 123 errors.
+[*] 9 fixable with the `--fix` option (36 hidden fixes can be enabled with the `--unsafe-fixes` option).

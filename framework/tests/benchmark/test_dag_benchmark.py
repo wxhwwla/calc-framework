@@ -85,7 +85,7 @@ class TestEndfieldBenchmark:
         from pathlib import Path
 
         from calc_framework.dag.serializer import dag_from_dict
-        dag_path = Path(__file__).resolve().parents[3] / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
+        dag_path = Path(__file__).resolve().parents[3] / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"  # noqa: E501
         dag_dict = json.loads(dag_path.read_text(encoding="utf-8"))
         g = dag_from_dict(dag_dict)
         ctx = {

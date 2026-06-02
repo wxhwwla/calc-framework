@@ -38,7 +38,7 @@ class ArknightsContextLoader(DataContextLoader):
             符合框架 DataContext 格式的字典。
         """
         operator: dict[str, Any] = kwargs["operator"]
-        skill_level: int = kwargs.get("skill_level", 7)
+        kwargs.get("skill_level", 7)
         enemy_def: float = kwargs.get("enemy_def", 200.0)
         enemy_res: float = kwargs.get("enemy_res", 50.0)
         atk_pct: float = kwargs.get("atk_percent_bonus", 0.0)
@@ -53,11 +53,11 @@ class ArknightsContextLoader(DataContextLoader):
 
         base_atk = _get_num(base_stats, "atk")
         base_def = _get_num(base_stats, "def")
-        base_hp = _get_num(base_stats, "hp")
+        _get_num(base_stats, "hp")
         base_res = _get_num(base_stats, "res", 0.0)
         trust_atk = _get_num(trust_bonus, "攻击", 0.0)
-        trust_def = _get_num(trust_bonus, "防御", 0.0)
-        trust_hp = _get_num(trust_bonus, "生命", 0.0)
+        _get_num(trust_bonus, "防御", 0.0)
+        _get_num(trust_bonus, "生命", 0.0)
         pot_atk = _parse_potential_atk(potentials)
 
         return make_context(

@@ -71,7 +71,7 @@ class TestMobaAdapter:
         """物理 AD 技能。"""
         ctx = {
             "character": {"attack_damage": 100, "ability_power": 0, "cooldown_reduction": 0},
-            "user_input": {"skill_base_damage": 200, "ad_ratio": 0.8, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+            "user_input": {"skill_base_damage": 200, "ad_ratio": 0.8, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},  # noqa: E501
             "enemy": {"armor": 50, "magic_resist": 30},
         }
         r = moba_svc.evaluate(ctx)
@@ -83,7 +83,7 @@ class TestMobaAdapter:
         """魔法 AP 技能。"""
         ctx = {
             "character": {"attack_damage": 60, "ability_power": 200, "cooldown_reduction": 0},
-            "user_input": {"skill_base_damage": 150, "ad_ratio": 0, "ap_ratio": 0.6, "is_physical": False, "is_crit": False, "skill_cooldown": 10},
+            "user_input": {"skill_base_damage": 150, "ad_ratio": 0, "ap_ratio": 0.6, "is_physical": False, "is_crit": False, "skill_cooldown": 10},  # noqa: E501
             "enemy": {"armor": 50, "magic_resist": 40},
         }
         r = moba_svc.evaluate(ctx)
@@ -94,7 +94,7 @@ class TestMobaAdapter:
     def test_crit_physical(self, moba_svc):
         ctx = {
             "character": {"attack_damage": 80, "crit_dmg": 2.0, "cooldown_reduction": 0},
-            "user_input": {"skill_base_damage": 100, "ad_ratio": 1.0, "ap_ratio": 0, "is_physical": True, "is_crit": True, "skill_cooldown": 10},
+            "user_input": {"skill_base_damage": 100, "ad_ratio": 1.0, "ap_ratio": 0, "is_physical": True, "is_crit": True, "skill_cooldown": 10},  # noqa: E501
             "enemy": {"armor": 30, "magic_resist": 30},
         }
         r = moba_svc.evaluate(ctx)
@@ -104,7 +104,7 @@ class TestMobaAdapter:
     def test_no_crit(self, moba_svc):
         ctx = {
             "character": {"attack_damage": 80, "cooldown_reduction": 0},
-            "user_input": {"skill_base_damage": 100, "ad_ratio": 0, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+            "user_input": {"skill_base_damage": 100, "ad_ratio": 0, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},  # noqa: E501
             "enemy": {"armor": 0, "magic_resist": 0},
         }
         r = moba_svc.evaluate(ctx)
@@ -113,7 +113,7 @@ class TestMobaAdapter:
     def test_armor_penetration(self, moba_svc):
         ctx = {
             "character": {"lethality": 30, "armor_pen_pct": 0.3, "cooldown_reduction": 0},
-            "user_input": {"skill_base_damage": 100, "ad_ratio": 0, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+            "user_input": {"skill_base_damage": 100, "ad_ratio": 0, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},  # noqa: E501
             "enemy": {"armor": 100, "magic_resist": 30},
         }
         effective = max(0, (100 - 30) * (1 - 0.3))
@@ -137,7 +137,7 @@ class TestMobaAdapter:
         pkg = mgr.load("MOBA 英雄伤害计算")
         ctx = {
             "character": {"attack_damage": 120, "ability_power": 0, "cooldown_reduction": 0},
-            "user_input": {"skill_base_damage": 250, "ad_ratio": 1.2, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},
+            "user_input": {"skill_base_damage": 250, "ad_ratio": 1.2, "ap_ratio": 0, "is_physical": True, "is_crit": False, "skill_cooldown": 10},  # noqa: E501
             "enemy": {"armor": 80, "magic_resist": 30},
         }
         r = pkg.dag_service.evaluate(ctx)
@@ -160,7 +160,7 @@ class TestFpsAdapter:
 
     def _ctx(self, **overrides):
         base = {
-            "weapon": {"base_damage": 30, "decay_start": 15, "decay_end": 50, "min_damage_ratio": 0.5, "fire_rate": 600, "mag_size": 30, "reload_time": 2.5},
+            "weapon": {"base_damage": 30, "decay_start": 15, "decay_end": 50, "min_damage_ratio": 0.5, "fire_rate": 600, "mag_size": 30, "reload_time": 2.5},  # noqa: E501
             "enemy": {"distance": 5, "armor": 0, "head_mult": 2.0, "body_mult": 1.0},
             "user_input": {"is_head": False, "is_limb": False, "wall_pen_count": 0},
         }
@@ -185,7 +185,7 @@ class TestFpsAdapter:
         assert r.outputs["单发伤害"] == pytest.approx(15.0, rel=0.01)
 
     def test_mid_range_linear_decay(self, fps_svc):
-        ctx = self._ctx(**{"weapon.decay_start": 10, "weapon.decay_end": 30, "weapon.min_damage_ratio": 0.4, "enemy.distance": 20})
+        ctx = self._ctx(**{"weapon.decay_start": 10, "weapon.decay_end": 30, "weapon.min_damage_ratio": 0.4, "enemy.distance": 20})  # noqa: E501
         r = fps_svc.evaluate(ctx)
         expected = 1 - (1 - 0.4) * 0.5
         assert r.outputs["距离衰减系数"] == pytest.approx(expected, rel=0.01)

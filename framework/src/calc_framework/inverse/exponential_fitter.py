@@ -152,7 +152,7 @@ class ExponentialFormulaFitter(FormulaFitter):
         if any(y <= 0 for y in ys):
             try:
                 # 尝试小偏移微调
-                min_y = min(y for y in ys if y > 0)
+                min(y for y in ys if y > 0)
                 ys = [max(y, 1e-10) for y in ys]
                 if any(y <= 0 for y in ys):
                     return None

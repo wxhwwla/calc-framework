@@ -112,7 +112,7 @@ class NodeItem(QGraphicsRectItem):
 
 
 
-    def mouseDoubleClickEvent(self, event) -> None:
+    def mouseDoubleClickEvent(self, event) -> None:  # noqa: N802
 
         if self._node_type == "composite" and self._on_double_click:
 
@@ -126,7 +126,7 @@ class NodeItem(QGraphicsRectItem):
 
 
 
-    def itemChange(self, change, value):
+    def itemChange(self, change, value):  # noqa: N802
 
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
 

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
+    QLabel,
     QSlider,
     QSpinBox,
     QWidget,
@@ -55,7 +56,7 @@ class _ResponsiveGroupBox(QGroupBox):
             if widget is not None:
                 self._grid.addWidget(widget, row, col_offset + 1)
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
         self._on_resized()
 

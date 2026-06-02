@@ -656,7 +656,7 @@ async def run_search_stream(req: SearchRequest):
 
 
 # 搜索历史（文件持久化，最近 10 次）
-from api.persistent_store import load_list, save_list
+from api.persistent_store import load_list, save_list  # noqa: E402
 
 _SEARCH_STORE_KEY = "search_history"
 _search_history: list[dict] = load_list(_SEARCH_STORE_KEY)

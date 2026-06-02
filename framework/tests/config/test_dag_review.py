@@ -82,7 +82,7 @@ def review() -> list[str]:
 
     # 检查 variables 中的乘区相关变量
     variables = raw.get("variables", {})
-    zone_vars = [k for k in variables if any(z in k for z in ["defense", "resistance", "crit_", "damage", "imbalance", "combo", "special", "amplif", "weakness", "shelter", "fragile", "vulnerability", "non_control"])]
+    zone_vars = [k for k in variables if any(z in k for z in ["defense", "resistance", "crit_", "damage", "imbalance", "combo", "special", "amplif", "weakness", "shelter", "fragile", "vulnerability", "non_control"])]  # noqa: E501
     findings.append(f"   乘区相关变量数: {len(zone_vars)}")
 
     # 检查子图中是否有 single_hit_damage

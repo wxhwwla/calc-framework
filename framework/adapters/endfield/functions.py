@@ -275,7 +275,7 @@ def compute_15_zone_detail(
     return {
         "基础伤害区": base_damage_zone(final_attack, skill_multiplier, base_damage_bonus),
         "暴击区": crit_zone(crit_rate, crit_damage, crit_mode),
-        "伤害加成区": damage_bonus_zone(damage_type_bonus, skill_type_bonus, imbalance_damage_bonus, other_damage_bonus),
+        "伤害加成区": damage_bonus_zone(damage_type_bonus, skill_type_bonus, imbalance_damage_bonus, other_damage_bonus),  # noqa: E501
         "伤害减免区": damage_reduction_zone(damage_reduction),
         "增幅区": amplification_zone(amplification),
         "虚弱区": weakness_zone(weakness),

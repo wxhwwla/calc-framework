@@ -70,7 +70,7 @@ class PluginManagerDialog(QDialog):
         layout.addLayout(toolbar)
 
         if not plugins:
-            layout.addWidget(QLabel("暂无已注册的插件。\n点击「导入 .calcplugin」安装一个插件，或「打包插件目录」将源码目录打包为 .calcplugin。"))
+            layout.addWidget(QLabel("暂无已注册的插件。\n点击「导入 .calcplugin」安装一个插件，或「打包插件目录」将源码目录打包为 .calcplugin。"))  # noqa: E501
         else:
             for name in plugins:
                 plugin = reg.get(name)

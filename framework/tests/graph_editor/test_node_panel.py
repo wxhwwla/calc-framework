@@ -12,14 +12,14 @@ from calc_framework.graph_editor.node_panel import NodePanelclass TestNodePan
         panel = NodePanel()
         label_texts = []
         for i in range(panel.count()):
-            w = panel.widget(i)
+            panel.widget(i)
             label_texts.append(panel.tabText(i))
         assert "基础" in label_texts or any("基础" in panel.tabText(i) for i in range(panel.count()))
 
     def test_panel_lists_node_types(self, qapp) -> None:
         panel = NodePanel()
         # 遍历所有标签页，至少能找到常见类型
-        found_labels = set()
+
         for i in range(panel.count()):
             tab = panel.widget(i)
             if hasattr(tab, "itemAt") or hasattr(tab, "findChildren"):

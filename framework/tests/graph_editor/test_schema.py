@@ -74,7 +74,7 @@ class TestGraphDocument:
         doc = GraphDocument(
             name="带排版",
             nodes=[GraphNode(id="o1", type="output")],
-            layout=type("Layout", (), {"sections": [SectionDef(id="s1", title="结果", output_nodes=["o1"], columns=1)]})(),
+            layout=type("Layout", (), {"sections": [SectionDef(id="s1", title="结果", output_nodes=["o1"], columns=1)]})(),  # noqa: E501
         )
         assert doc.layout.sections[0].title == "结果"
         assert doc.layout.sections[0].output_nodes == ["o1"]

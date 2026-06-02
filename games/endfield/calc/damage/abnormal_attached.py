@@ -114,7 +114,7 @@ def build_spell_attached_effects(
             corrosion_total_resistance_shred,
         )
 
-        duration = float(corrosion_duration_seconds) if corrosion_duration_seconds is not None else CORROSION_DURATION_SEC
+        duration = float(corrosion_duration_seconds) if corrosion_duration_seconds is not None else CORROSION_DURATION_SEC  # noqa: E501
         shred = corrosion_total_resistance_shred(
             calc_level,
             elapsed_seconds=duration,

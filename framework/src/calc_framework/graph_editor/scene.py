@@ -51,7 +51,7 @@ class GraphScene(QGraphicsScene):
 
 
 
-    def drawBackground(self, painter: QPainter, rect: Any) -> None:
+    def drawBackground(self, painter: QPainter, rect: Any) -> None:  # noqa: N802
 
         super().drawBackground(painter, rect)
 
@@ -95,7 +95,7 @@ class GraphScene(QGraphicsScene):
 
 
 
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event) -> None:  # noqa: N802
 
         if event.button() != Qt.MouseButton.LeftButton:
 
@@ -129,7 +129,7 @@ class GraphScene(QGraphicsScene):
 
 
 
-    def mouseMoveEvent(self, event) -> None:
+    def mouseMoveEvent(self, event) -> None:  # noqa: N802
 
         if self._wire_start_port and self._ghost_wire:
 
@@ -143,7 +143,7 @@ class GraphScene(QGraphicsScene):
 
 
 
-    def mouseReleaseEvent(self, event) -> None:
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
 
         if self._wire_start_port and self._ghost_wire:
 
@@ -157,9 +157,7 @@ class GraphScene(QGraphicsScene):
 
             port = self._port_at(event.scenePos())
 
-            if port is not None and port.direction == PortDirection.INPUT:
-
-                if port.parentItem() is not source_port.parentItem():
+            if port is not None and port.direction == PortDirection.INPUT and port.parentItem() is not source_port.parentItem():  # noqa: E501
 
                     target_port = port
 

@@ -158,11 +158,9 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
 
     for node in doc.nodes:
 
-        if node.type == "var" and node.config.path:
+        if node.type == "var" and node.config.path and node.config.path not in variables:
 
-            if node.config.path not in variables:
-
-                variables[node.config.path] = DAGVariable(type="float", source="computed")
+            variables[node.config.path] = DAGVariable(type="float", source="computed")
 
 
 

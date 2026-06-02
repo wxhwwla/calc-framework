@@ -206,7 +206,7 @@ class TotalDamagePanel(QWidget):
 
 
 
-        _SKILL_TYPE_ORDER = ("战技", "连携技", "终结技")
+        _SKILL_TYPE_ORDER = ("战技", "连携技", "终结技")  # noqa: N806
 
         segments_by_type: dict[str, list[tuple[str, float, int, float, float]]] = {}
 

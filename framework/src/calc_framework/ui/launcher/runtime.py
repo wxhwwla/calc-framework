@@ -112,7 +112,7 @@ def argv_for_tool(tool_id: str, root: Path | None = None) -> list[str]:
 
 def argv_for_calcpack(path: Path, root: Path | None = None) -> list[str]:
     """打开 .calcpack 文件。"""
-    base = root or repo_root()
+    root or repo_root()
     return [sys.executable, "-m", "calc_framework.ui.viewer", str(path.resolve())]
 
 

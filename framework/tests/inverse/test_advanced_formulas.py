@@ -29,7 +29,7 @@ class TestExponentialFormulaFitter:
 
     def test_pure_exponential_integer(self):
         """纯指数增长（growth=1.05, base=100, offset=0）。"""
-        base, growth, offset = 100.0, 1.05, 0.0
+        base, growth, _offset = 100.0, 1.05, 0.0
         data = [round(base * (growth ** (lv - 1)), 1) for lv in range(1, 21)]
         result = registry.get("exponential").fitter.fit(data)
         assert result.max_error < 0.1, f"误差太大: {result.max_error}"

@@ -333,7 +333,7 @@ class SearchEngine(ABC, Generic[C, R]):
 
             if progress_callback is not None:
 
-                total_with_skipped = processed_count + skipped
+                processed_count + skipped
 
                 progress_callback(p)
 

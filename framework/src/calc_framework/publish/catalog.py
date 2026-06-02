@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
 from typing import Any
@@ -135,13 +136,10 @@ def build_catalog(output_dir: str | Path | None = None) -> str:
 
         meta: dict[str, Any] = {}
 
-        try:
+        with contextlib.suppress(Exception):
 
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
 
-        except Exception:
-
-            pass
 
         cards.append(_build_card(name, meta))
 

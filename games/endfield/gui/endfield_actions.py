@@ -171,21 +171,21 @@ class ActionsMixin:
 
         variables = dict(dag_service.dag.variables)
         user_vars: dict[str, Any] = {
-            "user_input.敌人防御": {"source": "user_input", "type": "float", "default": 100.0, "min": 0, "max": 99999, "step": 10.0},
+            "user_input.敌人防御": {"source": "user_input", "type": "float", "default": 100.0, "min": 0, "max": 99999, "step": 10.0},  # noqa: E501
             "user_input.敌人等阶": {"source": "user_input", "type": "str", "default": "普通"},
-            "user_input.敌人抗性": {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
-            "user_input.无视抗性": {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},
-            "user_input.失衡易伤系数": {"source": "user_input", "type": "float", "default": 1.3, "min": 0.1, "max": 10.0, "step": 0.05},
+            "user_input.敌人抗性": {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},  # noqa: E501
+            "user_input.无视抗性": {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},  # noqa: E501
+            "user_input.失衡易伤系数": {"source": "user_input", "type": "float", "default": 1.3, "min": 0.1, "max": 10.0, "step": 0.05},  # noqa: E501
             "user_input.是否失衡": {"source": "user_input", "type": "bool", "default": False},
             "user_input.是否真实伤害": {"source": "user_input", "type": "bool", "default": False},
             "user_input.连击层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.额外暴击率": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},
-            "user_input.额外暴击伤害": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
-            "user_input.额外伤害加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
-            "user_input.附带效果倍率": {"source": "user_input", "type": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},
+            "user_input.额外暴击率": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},  # noqa: E501
+            "user_input.额外暴击伤害": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},  # noqa: E501
+            "user_input.额外伤害加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},  # noqa: E501
+            "user_input.附带效果倍率": {"source": "user_input", "type": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},  # noqa: E501
             "user_input.破防层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.失衡效率加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.05},
-            "user_input.腐蚀计时(秒)": {"source": "user_input", "type": "float", "default": 15.0, "min": 0.0, "max": 15.0, "step": 0.5},
+            "user_input.失衡效率加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.05},  # noqa: E501
+            "user_input.腐蚀计时(秒)": {"source": "user_input", "type": "float", "default": 15.0, "min": 0.0, "max": 15.0, "step": 0.5},  # noqa: E501
         }
         variables.update(user_vars)
 

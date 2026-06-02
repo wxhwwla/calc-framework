@@ -134,7 +134,7 @@ class _DraggableListItem(QWidget):
 
 
 
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event) -> None:  # noqa: N802
 
         if event.button() == Qt.MouseButton.LeftButton:
 

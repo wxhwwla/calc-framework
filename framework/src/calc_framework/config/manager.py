@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -215,13 +216,10 @@ class AdapterManager:
 
             meta: dict[str, Any] = {}
 
-            try:
+            with contextlib.suppress(Exception):
 
                 meta = json.loads(meta_path.read_text(encoding="utf-8"))
 
-            except Exception:
-
-                pass
 
             results.append({
 

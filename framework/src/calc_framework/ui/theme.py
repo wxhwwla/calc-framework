@@ -41,11 +41,11 @@ def _build_stylesheet(theme: dict[str, Any]) -> str:
 
     primary_hover = colors.get("primary_hover", "#1E8EE8")
 
-    success = colors.get("success", "#4CAF50")
+    colors.get("success", "#4CAF50")
 
-    warning = colors.get("warning", "#FF9800")
+    colors.get("warning", "#FF9800")
 
-    error = colors.get("error", "#F44336")
+    colors.get("error", "#F44336")
 
     input_bg = colors.get("input_bg", "#3C3C3C")
 

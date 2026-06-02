@@ -127,11 +127,7 @@ def _launch_ui(adapter_name: str, pkg: Any) -> None:
 
     # 从适配包的 layout.json 加载布局
     ui_layout_rel = pkg.meta.get("ui_layout", "")
-    if ui_layout_rel:
-        layout_path = pkg._adapter_dir / ui_layout_rel
-    else:
-        # 向后兼容：尝试默认路径
-        layout_path = pkg._adapter_dir / "ui" / "layout.json"
+    layout_path = pkg._adapter_dir / ui_layout_rel if ui_layout_rel else pkg._adapter_dir / "ui" / "layout.json"
 
     if layout_path.is_file():
         from calc_framework.ui.layout import load_layout_json

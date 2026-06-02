@@ -31,7 +31,7 @@ class TestTopologicalSortLogging:
         caplog.set_level(10)  # DEBUG
         g = _make_simple_graph()
         topological_sort(g)
-        combined = "\n".join(caplog.messages)
+        "\n".join(caplog.messages)
         assert any("节点" in m for m in caplog.messages)
 
     def test_debug_logs_full_order(self, caplog: pytest.LogCaptureFixture) -> None:

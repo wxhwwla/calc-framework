@@ -66,7 +66,7 @@ _SCRIPTS = _REPO_ROOT / "scripts"
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from _path_setup import ensure_root
+from _path_setup import ensure_root  # noqa: E402
 ensure_root()
 
 _GAMES = _REPO_ROOT / "games" / "endfield"
@@ -77,9 +77,9 @@ if str(_GAMES) not in sys.path:
 
 
 
-from please_read_me import get_exe_version, get_version
+from please_read_me import get_exe_version, get_version  # noqa: E402
 
-from release_bundle.release_layout import (
+from release_bundle.release_layout import (  # noqa: E402
 
     ALL_BUILD_TARGETS,
 
@@ -95,7 +95,7 @@ from release_bundle.release_layout import (
 
 )
 
-from utils.platform_win32_patch import apply_platform_win32_patch
+from utils.platform_win32_patch import apply_platform_win32_patch  # noqa: E402
 
 
 

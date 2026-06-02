@@ -403,25 +403,25 @@ def _verify_deployment(config: dict) -> None:
     domain = config.get("domain") or f"{config['username']}.pythonanywhere.com"
     print(f"\n[CHK] 验证 https://{domain} ...")
     time.sleep(4)
-    checks = [
-        (f"https://{domain}/api/health", '"status"'),
-        (f"https://{domain}/api/layout", '"sections"'),
-        (f"https://{domain}/api/donation/manifest", '"file"'),
-        (f"https://{domain}/api/hub/packs?limit=1", '"packs"'),
-        (f"https://{domain}/api/pack/theme/default", '"schema_version"'),
-        (f"https://{domain}/api/adapters", '"id"'),
-        (f"https://{domain}/api/adapters/endfield/pack-bundle", '"adapter_id"'),
-        (f"https://{domain}/api/data/profiles", '"endfield"'),
-        (f"https://{domain}/api/history", "["),
-        (f"https://{domain}/api/download/client", "PK"),  # zip 魔数
-        (f"https://{domain}/compute", "Calc Framework"),
+    checks: list[tuple[str, str, bool]] = [
+        (f"https://{domain}/api/health", '"status"', True),
+        (f"https://{domain}/api/layout", '"sections"', True),
+        (f"https://{domain}/api/donation/manifest", '"file"', True),
+        (f"https://{domain}/api/hub/packs?limit=1", '"packs"', True),
+        (f"https://{domain}/api/pack/theme/default", '"schema_version"', True),
+        (f"https://{domain}/api/adapters", '"id"', True),
+        (f"https://{domain}/api/adapters/endfield/pack-bundle", '"adapter_id"', True),
+        (f"https://{domain}/api/data/profiles", '"endfield"', True),
+        (f"https://{domain}/api/history", "[", True),
+        (f"https://{domain}/api/download/client", "PK", True),  # zip 魔数
+        (f"https://{domain}/compute", "Calc Framework", False),  # SPA 路由，允许 HTML
     ]
     ok = True
-    for url, needle in checks:
+    for url, needle, require_non_html in checks:
         try:
             with urlopen(url, timeout=30) as resp:
                 body = resp.read(800).decode("utf-8", errors="replace")
-            if needle in body and not body.lstrip().startswith("<"):
+            if needle in body and (not require_non_html or not body.lstrip().startswith("<")):
                 print(f"  [OK] {url}")
             else:
                 print(f"  [FAIL] {url} 返回非预期内容: {body[:120]!r}")

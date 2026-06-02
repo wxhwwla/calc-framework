@@ -193,10 +193,7 @@ class CalcPackViewerRenderMixin:
     def _is_var_in_input_sections(self, path: str) -> bool:
         if not self._layout:
             return False
-        for sec in self._layout.sections:
-            if sec.type == "inputs" and path in sec.variables:
-                return True
-        return False
+        return any(sec.type == "inputs" and path in sec.variables for sec in self._layout.sections)
 
     def _build_current_context(self) -> dict[str, Any]:
         """根据当前选中的实体和等级构建 DAG context，缺失变量使用 0.0。"""

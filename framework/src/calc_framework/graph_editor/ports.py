@@ -124,13 +124,7 @@ class PortItem(QGraphicsEllipseItem):
 
 
 
-        if self._direction == PortDirection.INPUT:
-
-            x = -_PORT_RADIUS
-
-        else:
-
-            x = node_rect.width() + _PORT_RADIUS
+        x = -_PORT_RADIUS if self._direction == PortDirection.INPUT else node_rect.width() + _PORT_RADIUS
 
 
 
@@ -146,7 +140,7 @@ class PortItem(QGraphicsEllipseItem):
 
 
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:  # noqa: N802
 
         if event is not None:
 
@@ -154,7 +148,7 @@ class PortItem(QGraphicsEllipseItem):
 
 
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:  # noqa: N802
 
         if event is not None:
 

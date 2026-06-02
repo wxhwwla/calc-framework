@@ -102,7 +102,7 @@ class TestNgaMechanics(unittest.TestCase):
 
 
     def test_combo_stacks_use_layer_table(self) -> None:
-        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="战技", combo_stacks=4)
+        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="战技", combo_stacks=4)  # noqa: E501
         result = calculate_single_hit_damage(ctx, crit_mode="non_crit")
         self.assertAlmostEqual(result.zone_values["连击增伤区"], 1.75)
 

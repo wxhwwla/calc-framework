@@ -279,7 +279,7 @@ class HelpDialog(QDialog):
 
             # 添加子节
 
-            all_items = [section] + section.sub_sections
+            all_items = [section, *section.sub_sections]
 
             for sub in all_items:
 

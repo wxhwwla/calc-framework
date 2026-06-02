@@ -468,9 +468,9 @@ def main() -> None:
 
 
 
-from pathlib import Path
+from pathlib import Path  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root
+from _path_setup import ensure_root  # noqa: E402
 ensure_root()
 
 if __name__ == "__main__":

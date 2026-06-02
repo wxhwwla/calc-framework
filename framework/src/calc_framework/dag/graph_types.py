@@ -231,7 +231,7 @@ def _parse_node(raw: dict[str, Any]) -> NodeType:
         fv = raw.get("false_val")
         if fv is None or (isinstance(fv, str) and not fv):
             raise DAGCompileError("condition 节点缺少 false_val")
-        return ConditionNode(cond=_parse_ref(cond), true_val=_parse_ref(tv), false_val=_parse_ref(fv), label=label, description=desc)
+        return ConditionNode(cond=_parse_ref(cond), true_val=_parse_ref(tv), false_val=_parse_ref(fv), label=label, description=desc)  # noqa: E501
 
 
 
@@ -517,17 +517,13 @@ def validate_graph(raw: dict[str, Any]) -> DAGGraph:
 
     for nid, node in nodes.items():
 
-        if isinstance(node, VarNode):
+        if isinstance(node, VarNode) and node.path not in variables:
 
-            if node.path not in variables:
+            raise DAGCompileError(f"var 节点 {nid} 引用了未声明的变量: {node.path}")
 
-                raise DAGCompileError(f"var 节点 {nid} 引用了未声明的变量: {node.path}")
+        if isinstance(node, CallNode) and node.subgraph not in subgraphs:
 
-        if isinstance(node, CallNode):
-
-            if node.subgraph not in subgraphs:
-
-                raise DAGCompileError(f"call 节点 {nid} 引用了不存在的子图: {node.subgraph}")
+            raise DAGCompileError(f"call 节点 {nid} 引用了不存在的子图: {node.subgraph}")
 
 
 
@@ -549,13 +545,7 @@ def validate_graph(raw: dict[str, Any]) -> DAGGraph:
 
             ref_node = out.node
 
-            if "." in ref_node:
-
-                base = ref_node.split(".")[0]
-
-            else:
-
-                base = ref_node
+            base = ref_node.split(".")[0] if "." in ref_node else ref_node
 
             if base not in nodes:
 

@@ -17,7 +17,7 @@ from _path_setup import ensure_root, ensure_tools
 ensure_root()
 ensure_tools()
 
-from endfield_designer.designer_main import main
+from endfield_designer.designer_main import main  # noqa: E402
 
 if __name__ == "__main__":
     main()

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import threading
 from collections.abc import Callable
 from pathlib import Path
@@ -133,13 +134,10 @@ class AdapterWatcher:
 
                 continue
 
-            try:
+            with contextlib.suppress(OSError):
 
                 snap[str(entry.relative_to(base_path))] = entry.stat().st_mtime
 
-            except OSError:
-
-                pass
 
         return snap
 
@@ -157,13 +155,7 @@ class AdapterWatcher:
 
             return True
 
-        for fpath, mtime in current.items():
-
-            if previous.get(fpath, 0) != mtime:
-
-                return True
-
-        return False
+        return any(previous.get(fpath, 0) != mtime for fpath, mtime in current.items())
 
 
 

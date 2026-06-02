@@ -121,7 +121,7 @@ def build_segment_scenarios_from_levels(
         if not isinstance(segments, list) or not segments:
             continue
         for segment_index in range(1, len(segments) + 1):
-            display_mult, combat_mult = segment_multipliers_at_level(
+            _display_mult, combat_mult = segment_multipliers_at_level(
                 char_data,
                 field_name,
                 skill_level=skill_level,
