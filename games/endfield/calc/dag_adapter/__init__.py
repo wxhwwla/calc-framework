@@ -13,9 +13,11 @@ from games.endfield.calc.dag_adapter.adapter import (
     compute_snapshot_with_dag,
     evaluate_attack_chain_via_dag,
 )
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 
 __all__ = [
     "build_dag_context",
     "compute_snapshot_with_dag",
     "evaluate_attack_chain_via_dag",
+    "evaluate_search_damage",
 ]

@@ -24,6 +24,8 @@
     "non_control_reduction_zone": "functions.py",
     "combo_bonus_zone": "functions.py",
     "special_zone": "functions.py",
-    "compute_15_zone_damage": "functions.py"
+    "compute_15_zone_damage": "functions.py",
+    "manual_buff_zone": "functions.py",
+    "execution_damage": "functions.py"
   }
 }

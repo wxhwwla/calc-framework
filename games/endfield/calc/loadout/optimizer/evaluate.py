@@ -39,8 +39,9 @@
 
 from __future__ import annotations
 
-from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
+from games.endfield.calc.damage.engine import CritMode, DamageContext
 from games.endfield.calc.damage.originium_arts import sum_originium_arts_strength
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
 from games.endfield.calc.equipment.system import build_four_slot_loadout
 from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
@@ -60,9 +61,11 @@ def evaluate_task(
 
     执行流程：
     1. 解析任务 → 构建运行时快照（含最终攻击力和效果）
-    2. 构建伤害上下文
-    3. 调用伤害引擎计算单段伤害
-    4. 返回配装评分
+    2. 调用 DAG 桥接函数计算单段伤害
+    3. 返回配装评分
+
+    使用 ``evaluate_search_damage``（DAG 注册函数）替代原本的本地引擎
+    ``calculate_single_hit_damage``，统一走 DAG 框架。
 
     Args:
         base_context: 基础伤害上下文（技能倍率、敌方属性等）
@@ -77,7 +80,7 @@ def evaluate_task(
         task=task,
         search_eval=search_eval,
     )
-    ctx = DamageContext(
+    final_damage = evaluate_search_damage(
         final_attack=snapshot.final_attack,
         skill_multiplier=base_context.skill_multiplier,
         damage_type=base_context.damage_type,
@@ -96,11 +99,12 @@ def evaluate_task(
         other_damage_bonus=base_context.other_damage_bonus,
         combo_stacks=base_context.combo_stacks,
         break_defense_stacks=base_context.break_defense_stacks,
+        effects=list(snapshot.effects),
+        crit_mode=crit_mode,
     )
-    result = calculate_single_hit_damage(ctx, effects=list(snapshot.effects), crit_mode=crit_mode)
     return LoadoutScore(
         weapon_name=snapshot.weapon_name,
-        final_damage=result.final_damage,
+        final_damage=final_damage,
         loadout_names=dict(snapshot.loadout_names),
     )
 

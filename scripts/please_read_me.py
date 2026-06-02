@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.17"
+_VERSION = "3.18.18"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,18 +406,12 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 6 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 修改 framework/src/calc_framework/inverse/exponential_fitter.py
-# - 修改 framework/src/calc_framework/inverse/piecewise_fitter.py
-# - 修改 framework/src/calc_framework/inverse/strategies.py
-# - 修改 framework/src/calc_framework/inverse/threshold_fitter.py
-# - 修改 games/endfield/gui/app/loadout_serialize.py
-# - 修改 games/endfield/gui/app/loadout_state.py
-# - 修改 games/endfield/gui/endfield_actions.py
-# - 修改 games/endfield/gui/endfield_app.py
-# - 修改 games/endfield/gui/endfield_search.py
-# - 修改 games/endfield/gui/endfield_shell.py
-# - 修改 scripts/please_read_me.py
+# - 修改 framework/adapters/endfield/functions.py
+# - 变更 framework/adapters/endfield/meta.json
+# - 修改 games/endfield/calc/dag_adapter/__init__.py
+# - 修改 games/endfield/calc/dag_adapter/search_evaluate.py
+# - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
 # --- END UPLOAD_SUMMARY ---

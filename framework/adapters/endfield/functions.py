@@ -155,6 +155,89 @@ def special_zone(special: float = 1.0) -> float:
     return special
 
 
+def manual_buff_zone(
+    *,
+    damage_type_bonus: float = 0.0,
+    skill_type_bonus: float = 0.0,
+    imbalance_damage_bonus: float = 0.0,
+    other_damage_bonus: float = 0.0,
+    damage_reduction: float = 0.0,
+    amplification: float = 0.0,
+    weakness: float = 0.0,
+    shelter: float = 0.0,
+    fragile: float = 0.0,
+    vulnerability: float = 0.0,
+    defense_change: float = 0.0,
+    imbalance_coeff: float | None = None,
+    is_unbalanced: bool = False,
+    is_true_damage: bool = False,
+    enemy_defense: float = 100.0,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    resistance_change: float = 0.0,
+    non_control_reduction: float = 0.0,
+    combo_bonus: float = 0.0,
+    special: float = 1.0,
+) -> dict[str, float]:
+    """手动 buff/效果乘区处理：累加各种效果到对应的乘区值。
+
+    与 games/endfield/calc/damage/engine/calculate.calculate_single_hit_damage()
+    中 ``_collect_effects`` → 乘区分配的处理逻辑一致。
+
+    返回:
+        {乘区名: 乘数} 字典，可直接作为 ``compute_15_zone_damage`` 的输入
+    """
+    db = 1.0 + damage_type_bonus + skill_type_bonus + imbalance_damage_bonus + other_damage_bonus
+
+    dr = 1.0 - damage_reduction
+    amp = 1.0 + amplification
+    wk = 1.0 - weakness
+    sh = 1.0 - shelter
+    fr = 1.0 + fragile
+    vu = 1.0 + vulnerability
+
+    if is_true_damage:
+        dff = 1.0
+    else:
+        effective_def = max(0.0, enemy_defense + defense_change)
+        dff = 100.0 / (effective_def + 100.0)
+
+    imb = imbalance_coeff if (imbalance_coeff is not None and is_unbalanced) else 1.0
+    res = 1.0 - (enemy_resistance + resistance_change) / 100.0 + ignore_resistance / 100.0
+    ncr = 1.0 - non_control_reduction
+    com = 1.0 + combo_bonus
+    sp = special
+
+    return {
+        "damage_bonus": db,
+        "damage_reduction": dr,
+        "amplification": amp,
+        "weakness": wk,
+        "shelter": sh,
+        "fragile": fr,
+        "vulnerability": vu,
+        "defense_zone": dff,
+        "imbalance_zone": imb,
+        "resistance_zone": res,
+        "non_control_reduction": ncr,
+        "combo_bonus": com,
+        "special_zone": sp,
+    }
+
+
+def execution_damage(
+    final_damage: float,
+    enemy_tier: str = "普通",
+) -> float:
+    """处决伤害: 常规伤害 × 处决承伤系数。
+
+    enemy_tier 可选值: 普通/进阶/精英/头目/领袖
+    """
+    mults = {"普通": 1.0, "进阶": 1.25, "精英": 1.5, "头目": 1.5, "领袖": 1.75}
+    mult = mults.get(str(enemy_tier).strip(), 1.0)
+    return final_damage * mult
+
+
 def compute_15_zone_damage(
     *,
     final_attack: float,
