@@ -1,0 +1,12 @@
+{
+  "name": "{Game} 伤害计算",
+  "game": "{Game}",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "attr_schema": "attr_schema.json",
+  "entry_dag": "{game}_full.dag.json",
+  "ui_layout": "ui/layout.json",
+  "functions": {
+    "clamp": "functions.py"
+  }
+}

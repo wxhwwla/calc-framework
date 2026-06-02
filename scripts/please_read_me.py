@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.17.11"
+_VERSION = "3.17.12"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,10 +438,26 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 4 处文件
+# TITLE: 更新 20 处文件
 # BODY:
-# - 修改 games/endfield/calc/manual_buff/physical.py
-# - 修改 games/endfield/tests/calculation/equipment/test_equipment_affix.py
+# - 更新文档 CONTEXT.md
+# - 更新文档 docs/adr/0023-standardized-game-package-architecture.md
+# - 更新文档 docs/game-template/README.md
+# - 变更 docs/game-template/framework/adapters/_template/attr_schema.json
+# - 修改 docs/game-template/framework/adapters/_template/functions.py
+# - 变更 docs/game-template/framework/adapters/_template/meta.json
+# - 修改 docs/game-template/games/_template/__init__.py
+# - 修改 docs/game-template/games/_template/_package_meta.py
+# - 修改 docs/game-template/games/_template/calc/dag_adapter/__init__.py
+# - 修改 docs/game-template/games/_template/calc/dag_adapter/adapter.py
+# - 修改 docs/game-template/games/_template/calc/dag_adapter/loader.py
+# - 修改 docs/game-template/games/_template/framework_bridge.py
+# - 修改 docs/game-template/games/_template/gui/__init__.py
+# - 修改 docs/game-template/games/_template/gui/_template_App.py
+# - 修改 docs/game-template/games/_template/tests/__init__.py
+# - 修改 docs/game-template/games/_template/tests/conftest.py
+# - 修改 docs/game-template/games/_template/tests/test_adapter.py
+# - 修改 docs/game-template/games/_template/tests/test_dag_compute.py
+# - 更新文档 docs/plans/game-architecture-migration-plan.md
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/check_code_origin.py
 # --- END UPLOAD_SUMMARY ---
