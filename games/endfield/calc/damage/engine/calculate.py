@@ -40,7 +40,7 @@ from __future__ import annotations
 from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
 from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 
-from .helpers import _collect_effects, _resolve_crit_zone
+from .helpers import _clamp, _collect_effects, _resolve_crit_zone
 from .types import ZONE_ORDER, CritMode, DamageContext, DamageEffect, DamageResult
 
 DamagePipeline = str
@@ -246,9 +246,35 @@ def calculate_single_hit_damage(
     }
     ordered_zone_values = {name: zone_values[name] for name in ZONE_ORDER}
 
-    final_damage = 1.0
-    for value in ordered_zone_values.values():
-        final_damage *= float(value)
+    # 通过 DAG 公式函数 compute_15_zone_damage 计算最终伤害
+    # 消除双计算路径：此函数逐步替换本地手动连乘
+    from framework.adapters.endfield.functions import compute_15_zone_damage
+
+    final_damage = compute_15_zone_damage(
+        final_attack=float(context.final_attack),
+        skill_multiplier=float(context.skill_multiplier),
+        base_damage_bonus=float(context.base_damage_bonus),
+        crit_rate=_clamp(float(context.crit_rate), 0.0, 1.0),
+        crit_damage=float(context.crit_damage),
+        crit_mode=crit_mode,
+        damage_type_bonus=damage_bonus - 1.0,
+        damage_reduction=1.0 - damage_reduction,
+        amplification=amplification - 1.0,
+        weakness=1.0 - weakness,
+        shelter=1.0 - shelter,
+        fragile=fragile - 1.0,
+        vulnerability=vulnerability - 1.0,
+        enemy_defense=float(context.enemy_defense),
+        defense_change=defense_change,
+        is_true_damage=bool(context.is_true_damage),
+        imbalance_coeff=imbalance_coeff,
+        is_unbalanced=bool(context.is_unbalanced),
+        enemy_resistance=resistance,
+        ignore_resistance=ignore_res,
+        non_control_reduction=1.0 - non_control_reduction,
+        combo_bonus=max(0.0, combo_bonus - 1.0),
+        special=special_zone,
+    )
 
     return DamageResult(
         final_damage=final_damage,

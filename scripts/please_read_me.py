@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.2"
+_VERSION = "3.18.3"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,11 +438,8 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 更新 2 处文件
 # BODY:
-# - 修改 framework/adapters/endfield/functions.py
-# - 变更 framework/adapters/endfield/meta.json
-# - 修改 games/endfield/calc/dag_adapter/adapter.py
-# - 修改 games/endfield/tests/framework/test_formula_consistency.py
+# - 修改 games/endfield/calc/damage/engine/calculate.py
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
