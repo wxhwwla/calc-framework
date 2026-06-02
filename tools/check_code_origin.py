@@ -1,1195 +1,289 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: AGPL-3.0
+"""检查项目源代码中是否包含第三方许可证/版权声明。
 
-# -*- coding: utf-8 -*-
+用于快速判断 AI 生成的代码是否含有来自其他开源项目的版权内容。
 
-# SPDX-License-Identifier: AGPL-3.0
-"""
-
-AI-generated code origin & copyright checker.
-
-
-
-Run from repo root:
+用法（仓库根目录）::
 
     python tools/check_code_origin.py
-
-
-
-Run via devtool:
-
-    python devtool.py check-origin
-
-
-
-Four checkers:
-
-1. LicenseHeaderChecker  - missing license headers in .py files
-
-2. InternalDupChecker    - cross-file identical code blocks
-
-3. SuspiciousPatternChecker - external copyright notices, copy/adapt comments
-
-4. GitDiffChecker        - Git change analysis (new files without license, large diffs)
-
-
-
-CI mode (--ci): outputs JSON Lines, exit code 0 = pass, non-zero = issues found.
-
 """
-
-
 
 from __future__ import annotations
 
-
-
-import argparse
-
-import json
-
 import re
-
-import subprocess
-
 import sys
-
-from collections import defaultdict
-
-from dataclasses import dataclass
-
 from pathlib import Path
 
-from typing import Any
 
-
-
-REPO = Path(__file__).resolve().parents[1]
-
-
-
-# ── 跳过规则 ──────────────────────────────────────────
-
-
-
-SKIP_DIRS = frozenset({
-
-    ".git", "__pycache__", ".pytest_cache", ".venv", "build",
-
-    "dist", ".egg-info", "node_modules", "venv", ".trae",
-
-})
-
-SKIP_FILE_SUFFIXES = (".pyc", ".pyo", ".so", ".pyd", ".gitkeep")
-
-SKIP_FILE_NAMES = frozenset({"__init__.py", "conftest.py", "setup.py"})
-
-
-
-# 已知的外部项目版权声明关键词
-
-SUSPICIOUS_COPYRIGHT_KEYWORDS = [
-
-    "Copyright (c)", "Copyright (C)", "All rights reserved",
-
-    "This file is part of", "This program is free software",
-
-    "General Public License", "GNU General Public License",
-
-    "from the authors of", "Code originally from",
-
-    "Copied from", "Adapted from",
-
-    # 非本项目声明的具体许可证
-
-    "Apache License, Version 2.0",
-
-    "Licensed under the Apache License",
-
-    "MIT License", "BSD License",
-
-    "SPDX-License-Identifier",
-
+# 常见开源许可证的标识符和关键词
+LICENSE_PATTERNS: list[tuple[str, str, list[str]]] = [
+    ("MIT", "MIT License", [
+        r"MIT License",
+        r"Permission is hereby granted, free of charge, to any person",
+        r"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY",
+    ]),
+    ("Apache-2.0", "Apache License 2.0", [
+        r"Apache License[,\s]+Version 2\.0",
+        r"Licensed under the Apache License, Version 2\.0",
+        r'http://www\.apache\.org/licenses/LICENSE-2\.0',
+    ]),
+    ("GPL-2.0", "GNU General Public License v2.0", [
+        r"GNU General Public License[,\s]+version 2",
+        r"GNU GENERAL PUBLIC LICENSE[,\s]+Version 2",
+    ]),
+    ("GPL-3.0", "GNU General Public License v3.0", [
+        r"GNU General Public License[,\s]+version 3",
+        r"GNU GENERAL PUBLIC LICENSE[,\s]+Version 3",
+    ]),
+    ("LGPL", "GNU Lesser General Public License", [
+        r"GNU Lesser General Public License",
+        r"GNU LIBRARY GENERAL PUBLIC LICENSE",
+    ]),
+    ("BSD", "BSD License", [
+        r"Redistributions of source code must retain the above copyright",
+        r"Redistributions in binary form must reproduce",
+        r"BSD [23]-Clause",
+        r"BSD 2-Clause",
+        r"BSD 3-Clause",
+    ]),
+    ("MPL-2.0", "Mozilla Public License 2.0", [
+        r"Mozilla Public License[,\s]+Version 2\.0",
+        r"Mozilla Public License[,\s]version 2\.0",
+    ]),
+    ("Unlicense", "The Unlicense", [
+        r"This is free and unencumbered software released into the public domain",
+        r"Unlicense",
+    ]),
+    ("CC0", "CC0 1.0 Universal", [
+        r"CC0 1\.0 Universal",
+        r"Creative Commons Zero",
+    ]),
+    ("CC-BY", "Creative Commons Attribution", [
+        r"Creative Commons Attribution",
+        r"CC BY",
+    ]),
+    ("ISC", "ISC License", [
+        r"ISC License",
+        r"Permission to use, copy, modify, and/or distribute this software",
+    ]),
+    ("Zlib", "zlib/libpng License", [
+        r"zlib License",
+        r"This software is provided 'as-is', without any express or implied",
+    ]),
+    ("Python-2.0", "Python Software Foundation License", [
+        r"Python Software Foundation License",
+        r"PSF LICENSE AGREEMENT FOR PYTHON",
+    ]),
+    ("JetBrains", "JetBrains License", [
+        r"JetBrains",
+    ]),
 ]
 
-
-
-# 已知外部项目的 import 指纹（当这些 import 出现在非 `adapters/` 时可能可疑）
-
-KNOWN_EXTERNAL_IMPORTS = [
-
-    "torch", "tensorflow", "transformers", "openai",
-
-    "fastapi", "flask", "django", "numpy",
-
-    "pandas", "scipy", "matplotlib", "selenium",
-
-    "requests", "httpx", "aiohttp",
-
-]
-
-
-
-# 本项目的许可证头部模板
-
-ACCEPTED_LICENSE_HEADERS = [
-
-    # SPDX 标准头部
-
-    re.compile(r"# SPDX-License-Identifier:\s*MIT"),
-
-    re.compile(r"# SPDX-License-Identifier:\s*Apache-2\.0"),
-
-    re.compile(r"# SPDX-License-Identifier:\s*GPL-3\.0-or-later"),
-
-    re.compile(r"# SPDX-License-Identifier:\s*AGPL-3\.0"),
-
-    re.compile(r"# SPDX-License-Identifier:\s*BSD-3-Clause"),
-
-    # 常规版权头部
-
-    re.compile(r"# Copyright\s+\d{4}[\s,\d]*\s+.*"),
-
-    re.compile(r"# All rights reserved"),
-
-]
-
-
-
-# ── Issue 数据模型 ─────────────────────────────────────
-
-
-
-
-
-@dataclass
-
-class Issue:
-
-    severity: str  # "error" | "warning" | "info"
-
-    checker: str
-
-    file: str
-
-    line: int
-
-    message: str
-
-    detail: str = ""
-
-
-
-    def to_dict(self) -> dict[str, Any]:
-
-        return {
-
-            "severity": self.severity,
-
-            "checker": self.checker,
-
-            "file": self.file,
-
-            "line": self.line,
-
-            "message": self.message,
-
-            "detail": self.detail,
-
-        }
-
-
-
-    def __str__(self) -> str:
-
-        level = {"error": "[ERROR]", "warning": "[WARN]", "info": "[INFO]"}.get(self.severity, "[?]")
-
-        return f"{level} [{self.checker}] {self.file}:{self.line} - {self.message}"
-
-
-
-
-
-# ── 工具 ──────────────────────────────────────────────
-
-
-
-
-
-def _iter_py_files(root: Path | None = None) -> list[Path]:
-
-    """递归收集所有 .py 文件（跳过 SKIP_DIRS）。"""
-
-    if root is None:
-
-        root = REPO
-
-    files: list[Path] = []
-
-    for path in root.rglob("*.py"):
-
-        if any(part in SKIP_DIRS for part in path.parts):
-
+SPDX_PATTERN = re.compile(r"SPDX-License-Identifier:\s*(\S+)", re.IGNORECASE)
+COPYRIGHT_PATTERN = re.compile(
+    r"(?i)"
+    r"(?:copyright\s+(?:©\s*)?(?:\d{4}[-\d{,4}]*(?:,\s*\d{4})*)?\s*(?:by\s+)?"
+    r"(.{1,120}?))"
+    r"|(?:©\s*(?:\d{4}[-\d{,4}]*(?:,\s*\d{4})*)?\s*(.{1,120}?))"
+    r"|(?:All rights reserved)"
+)
+
+# 文件扩展名白名单（只检查源代码）
+SOURCE_EXTENSIONS = {
+    ".py", ".pyx",
+    ".js", ".mjs", ".cjs",
+    ".ts", ".tsx",
+    ".json",
+    ".yaml", ".yml",
+    ".toml",
+    ".cfg", ".ini", ".conf",
+    ".md", ".rst",
+    ".txt",
+    ".css", ".scss",
+    ".html", ".htm",
+    ".xml", ".xsl",
+    ".svg",
+    ".cmake",
+    ".bat", ".cmd",
+    ".ps1",
+    ".sh",
+    ".desktop",
+    ".editorconfig",
+    ".gitattributes",
+    ".dockerfile",
+}
+
+# 排除的目录
+EXCLUDE_DIRS = {
+    "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache",
+    ".git", ".venv", "venv", "env", "node_modules",
+    ".idea", ".vscode", ".trae", ".cursor", ".agents",
+    "dist", "build", "build_*", "spec_*",
+    "__pycache__", "egg-info",
+}
+
+
+def find_source_files(root: Path) -> list[Path]:
+    """递归查找所有源代码文件。"""
+    files = []
+    for path in root.rglob("*"):
+        if any(part in EXCLUDE_DIRS for part in path.parts):
             continue
-
-        if path.name in SKIP_FILE_NAMES:
-
-            continue
-
-        files.append(path)
-
+        if path.suffix.lower() in SOURCE_EXTENSIONS:
+            files.append(path)
     return files
 
 
-
-
-
-def _read_lines(path: Path) -> list[str]:
-
+def check_license_in_file(filepath: Path) -> list[dict]:
+    """检查单个文件中是否包含许可证或版权声明。"""
+    findings: list[dict] = []
     try:
-
-        return path.read_text(encoding="utf-8").splitlines(keepends=True)
-
-    except (OSError, UnicodeDecodeError):
-
-        return []
-
-
-
-
-
-# ── 检测器 1: LicenseHeaderChecker ───────────────────
-
-
-
-
-
-class LicenseHeaderChecker:
-
-    """检查 .py 文件是否包含有效的许可证头部。"""
-
-
-
-    def __init__(self, root: Path | None = None):
-
-        self.root = root or REPO
-
-
-
-    def run(self) -> list[Issue]:
-
-        issues: list[Issue] = []
-
-        for path in _iter_py_files(self.root):
-
-            if self._is_generated(path):
-
-                continue
-
-            lines = _read_lines(path)
-
-            if not lines:
-
-                continue
-
-            if not self._has_license_header(lines):
-
-                rel = path.relative_to(self.root)
-
-                issues.append(Issue(
-
-                    severity="warning",
-
-                    checker="license-header",
-
-                    file=str(rel),
-
-                    line=1,
-
-                    message="File missing license header",
-
-                    detail="Add SPDX-License-Identifier or copyright notice (e.g. '# SPDX-License-Identifier: AGPL-3.0')",
-
-                ))
-
-        return issues
-
-
-
-    @staticmethod
-
-    def _is_generated(path: Path) -> bool:
-
-        """判断是否为自动生成的文件。"""
-
-        name = path.name
-
-        if name.startswith("_version") or name == "version.py":
-
-            return True
-
-        return False
-
-
-
-    @staticmethod
-
-    def _has_license_header(lines: list[str]) -> bool:
-
-        """检查文件开头 15 行内是否有许可证头部。"""
-
-        for line in lines[:15]:
-
-            stripped = line.strip()
-
-            for pattern in ACCEPTED_LICENSE_HEADERS:
-
-                if pattern.search(stripped):
-
-                    return True
-
-        return False
-
-
-
-
-
-# ── 检测器 2: InternalDupChecker ─────────────────────
-
-
-
-
-
-class InternalDupChecker:
-
-    """检测内部代码重复：跨文件完全相同的行块。"""
-
-
-
-    MIN_DUP_LINES = 6  # ≥6 行连续完全相同才报告
-
-    MAX_DUP_REPORT = 3  # 每个重复块最多报 3 个位置
-
-
-
-    def __init__(self, root: Path | None = None):
-
-        self.root = root or REPO
-
-
-
-    def run(self) -> list[Issue]:
-
-        issues: list[Issue] = []
-
-        files = _iter_py_files(self.root)
-
-
-
-        # 构建行指纹索引：指纹 → [(file, lineno, line_text)]
-
-        index: dict[int, list[tuple[Path, int, str]]] = defaultdict(list)
-
-        for path in files:
-
-            rel = path.relative_to(self.root)
-
-            lines = _read_lines(path)
-
-            for lineno, raw in enumerate(lines, 1):
-
-                fingerprint = self._line_fingerprint(raw)
-
-                if fingerprint:
-
-                    index[fingerprint].append((path, lineno, raw.strip()))
-
-
-
-        # 找出跨文件的行指纹匹配（同一指纹出现在 ≥2 个文件中）
-
-        dup_candidates: defaultdict[int, list[tuple[Path, int, str]]] = defaultdict(list)
-
-        for fp, locations in index.items():
-
-            seen_files: set[Path] = {loc[0] for loc in locations}
-
-            if len(seen_files) >= 2:
-
-                dup_candidates[fp] = locations
-
-
-
-        # 查找连续重复块
-
-        visited: set[tuple[Path, int]] = set()
-
-        for path in files:
-
-            lines = _read_lines(path)
-
-            lineno = 1
-
-            while lineno <= len(lines):
-
-                if (path, lineno) in visited:
-
-                    lineno += 1
-
-                    continue
-
-                # 尝试扩展匹配块
-
-                block: list[str] = []
-
-                match_locations: list[tuple[Path, int, str]] = []
-
-                jump = lineno
-
-                while jump <= len(lines):
-
-                    fp = self._line_fingerprint(lines[jump - 1])
-
-                    if not fp:
-
-                        break
-
-                    if fp in dup_candidates:
-
-                        locs = [loc for loc in dup_candidates[fp]
-
-                                if loc[0] != path]
-
-                        if locs:
-
-                            block.append(lines[jump - 1].strip())
-
-                            for loc in locs:
-
-                                if loc not in match_locations:
-
-                                    match_locations.append(loc)
-
-                            visited.add((path, jump))
-
-                            jump += 1
-
-                            continue
-
-                    break
-
-
-
-                if len(block) >= self.MIN_DUP_LINES:
-
-                    # 去重匹配位置
-
-                    seen_files_for_block: set[Path] = set()
-
-                    for loc in match_locations:
-
-                        seen_files_for_block.add(loc[0])
-
-                    other_files = [str(loc[0].relative_to(self.root))
-
-                                   for loc in match_locations[:self.MAX_DUP_REPORT]
-
-                                   if loc[0].relative_to(self.root)]
-
-                    other_files = list(dict.fromkeys(other_files))  # 去重保持顺序
-
-
-
-                    rel = path.relative_to(self.root)
-
-                    issues.append(Issue(
-
-                        severity="warning" if len(block) >= 10 else "info",
-
-                        checker="internal-dup",
-
-                        file=str(rel),
-
-                        line=lineno,
-
-                        message=f"Internal code duplication: {len(block)} consecutive identical lines",
-
-                        detail=f"Also appears in: {', '.join(other_files[:5])}",
-
-                    ))
-
-
-
-                lineno = jump
-
-
-
-        return issues
-
-
-
-    @staticmethod
-
-    def _line_fingerprint(line: str) -> int:
-
-        """计算行指纹（忽略缩进空白）。"""
-
-        stripped = line.strip()
-
-        # 跳过注释/空行/import/from
-
-        if not stripped or stripped.startswith("#") or stripped.startswith("import "):
-
-            return 0
-
-        if stripped.startswith("from ") and "import" in stripped:
-
-            return 0
-
-        # 跳过只有装饰器和 def 的行
-
-        if stripped.startswith("@") or stripped.startswith("def ") or stripped.startswith("class "):
-
-            return 0
-
-        if stripped in ("'''", '"""', "pass", "..."):
-
-            return 0
-
-        return hash(stripped)
-
-
-
-
-
-# ── 检测器 3: SuspiciousPatternChecker ──────────────
-
-
-
-
-
-class SuspiciousPatternChecker:
-
-    """检测外部版权痕迹、搬运注释、未改写的 import。"""
-
-
-
-    def __init__(self, root: Path | None = None):
-
-        self.root = root or REPO
-
-
-
-    def run(self) -> list[Issue]:
-
-        issues: list[Issue] = []
-
-        for path in _iter_py_files(self.root):
-
-            rel = path.relative_to(self.root)
-
-            # 不检查自身
-
-            if str(rel) == str(Path("tools") / "check_code_origin.py"):
-
-                continue
-
-            lines = _read_lines(path)
-
-            if not lines:
-
-                continue
-
-            issues.extend(self._check_copyright(rel, lines))
-
-            issues.extend(self._check_external_imports(rel, lines))
-
-            issues.extend(self._check_suspicious_comments(rel, lines))
-
-        return issues
-
-
-
-    @staticmethod
-
-    def _check_copyright(rel: Path, lines: list[str]) -> list[Issue]:
-
-        """检查是否有本项目之外的版权声明。"""
-
-        issues: list[Issue] = []
-
-        for lineno, raw in enumerate(lines, 1):
-
-            stripped = raw.strip()
-
-            for keyword in SUSPICIOUS_COPYRIGHT_KEYWORDS:
-
-                if keyword.lower() in stripped.lower():
-
-                    # 判断是否为本项目声明的版权
-
-                    if "calc-framework" in stripped.lower():
-                        continue
-                    if "solo" in stripped.lower():
-                        continue
-                    if keyword == "Copyright (c)" and "2026" in stripped:
-                        continue  # 本项目年份
-                    if keyword == "SPDX-License-Identifier":
-                        continue  # 本项目使用的 SPDX 标准头部
-
-                    issues.append(Issue(
-
-                        severity="warning",
-
-                        checker="suspicious-copyright",
-
-                        file=str(rel),
-
-                        line=lineno,
-
-                        message=f"Found possible external copyright: {stripped[:80]}",
-
-                        detail=f"Matched keyword: {keyword}",
-
-                    ))
-
-                    break  # 一行只报一次
-
-        return issues
-
-
-
-    @staticmethod
-
-    def _check_external_imports(rel: Path, lines: list[str]) -> list[Issue]:
-
-        """检查非标准库的 import 是否可疑。"""
-
-        issues: list[Issue] = []
-
-        for lineno, raw in enumerate(lines, 1):
-
-            stripped = raw.strip()
-
-            for known_pkg in KNOWN_EXTERNAL_IMPORTS:
-
-                if known_pkg in stripped and (
-
-                    stripped.startswith("import ") or stripped.startswith("from ")
-
-                ):
-
-                    issues.append(Issue(
-
-                        severity="info",
-
-                        checker="external-import",
-
-                        file=str(rel),
-
-                        line=lineno,
-
-                        message=f"External package import: {stripped[:80]}",
-
-                        detail=f"Source: {known_pkg}",
-
-                    ))
-
-                    break
-
-        return issues
-
-
-
-    @staticmethod
-
-    def _check_suspicious_comments(rel: Path, lines: list[str]) -> list[Issue]:
-
-        """检查搬运/改编标记注释。"""
-
-        issues: list[Issue] = []
-
-        patterns = [
-
-            r"(?:Copied|Copied?)\s+(?:from|off)",
-
-            r"Adapted\s+(?:from|off)",
-
-            r"Taken\s+(?:from|off)",
-
-            r"Originally\s+(?:written|created|from)",
-
-            r"Port(?:ed)?\s+(?:from|to)",
-
-            r"Translate(?:d)?\s+from",
-
-            r"Source:\s*https?://",
-
-            r"See\s+https?://",
-
-            r"Reference:\s*https?://",
-
-        ]
-
-        compiled = [re.compile(p, re.IGNORECASE) for p in patterns]
-
-
-
-        for lineno, raw in enumerate(lines, 1):
-
-            stripped = raw.strip()
-
-            if not stripped.startswith("#"):
-
-                continue
-
-            for pat in compiled:
-
-                if pat.search(stripped):
-
-                    issues.append(Issue(
-
-                        severity="info",
-
-                        checker="suspicious-comment",
-
-                        file=str(rel),
-
-                        line=lineno,
-
-                        message=f"Suspicious copy/adapt comment: {stripped[:80]}",
-
-                    ))
-
-                    break
-
-        return issues
-
-
-
-
-
-# ── 检测器 4: GitDiffChecker ─────────────────────────
-
-
-
-
-
-class GitDiffChecker:
-
-    """分析 Git 变更中的版权风险。"""
-
-
-
-    def __init__(self, root: Path | None = None, *, since: str | None = None):
-
-        self.root = root or REPO
-
-        self.since = since  # git diff 基准，例如 "HEAD~1" 或 "origin/main"
-
-
-
-    def run(self) -> list[Issue]:
-
-        issues: list[Issue] = []
-
-        diff_stat = self._get_diff_stat()
-
-        if not diff_stat:
-
-            return [Issue(
-
-                severity="info",
-
-                checker="git-diff",
-
-                file="(root)",
-
-                line=0,
-
-                message="No Git changes detected (not a repo or no history)",
-
-            )]
-
-
-
-        issues.extend(self._check_new_files())
-
-        issues.extend(self._check_large_diffs(diff_stat))
-
-        return issues
-
-
-
-    def _get_diff_stat(self) -> dict[str, dict[str, int]]:
-
-        """返回 {filepath: {'added': N, 'deleted': M}}。"""
-
-        since = self.since or self._default_since()
-
+        text = filepath.read_text(encoding="utf-8", errors="replace")
+    except Exception:
         try:
-
-            result = subprocess.run(
-
-                ["git", "diff", "--numstat", since],
-
-                capture_output=True, text=True, cwd=self.root,
-
-                timeout=30,
-
-            )
-
-        except (subprocess.SubprocessError, FileNotFoundError):
-
-            return {}
-
-
-
-        stats: dict[str, dict[str, int]] = {}
-
-        for line in result.stdout.splitlines():
-
-            parts = line.split("\t")
-
-            if len(parts) >= 3:
-
-                added_str, deleted_str, path = parts[0], parts[1], parts[2]
-
-                try:
-
-                    added = int(added_str) if added_str != "-" else 0
-
-                    deleted = int(deleted_str) if deleted_str != "-" else 0
-
-                except ValueError:
-
-                    continue
-
-                stats[path] = {"added": added, "deleted": deleted}
-
-        return stats
-
-
-
-    def _default_since(self) -> str:
-
-        """默认基准：HEAD~1 或初始提交。"""
-
-        try:
-
-            subprocess.run(
-
-                ["git", "rev-parse", "HEAD~1"],
-
-                capture_output=True, cwd=self.root, timeout=10,
-
-                check=True,
-
-            )
-
-            return "HEAD~1"
-
-        except subprocess.SubprocessError:
-
-            return "--root"
-
-
-
-    def _check_new_files(self) -> list[Issue]:
-
-        """检查文件是否缺少必要的版权头部。"""
-
-        issues: list[Issue] = []
-
-        try:
-
-            result = subprocess.run(
-
-                ["git", "diff", "--name-only", "--diff-filter=A",
-
-                 self.since or self._default_since()],
-
-                capture_output=True, text=True, cwd=self.root, timeout=30,
-
-            )
-
-        except subprocess.SubprocessError:
-
-            return issues
-
-
-
-        checker = LicenseHeaderChecker(self.root)
-
-        for filename in result.stdout.splitlines():
-
-            if not filename.endswith(".py"):
-
-                continue
-
-            path = self.root / filename
-
-            if not path.exists():
-
-                continue
-
-            rel = Path(filename)
-
-            lines = _read_lines(path)
-
-            if lines and not checker._has_license_header(lines):
-
-                issues.append(Issue(
-
-                    severity="error",
-
-                    checker="git-new-file",
-
-                    file=filename,
-
-                    line=1,
-
-                    message="New .py file missing license header",
-
-                    detail="All new source files should contain a SPDX license identifier or copyright notice",
-
-                ))
-
-        return issues
-
-
-
-    def _check_large_diffs(self, stats: dict[str, dict[str, int]]) -> list[Issue]:
-
-        """报告超大 diff（可能为批量搬运）。"""
-
-        issues: list[Issue] = []
-
-        for path, stat in stats.items():
-
-            if stat["added"] > 500:
-
-                issues.append(Issue(
-
-                    severity="warning",
-
-                    checker="git-large-diff",
-
-                    file=path,
-
-                    line=0,
-
-                    message=f"Single change added {stat['added']} lines (>500), verify code origin",
-
-                    detail="Large code additions should include source declaration and license",
-
-                ))
-
-            elif stat["added"] > 200:
-
-                issues.append(Issue(
-
-                    severity="info",
-
-                    checker="git-large-diff",
-
-                    file=path,
-
-                    line=0,
-
-                    message=f"Single change added {stat['added']} lines (>200), recommend checking code origin",
-
-                ))
-
-        return issues
-
-
-
-
-
-# ── 运行器 ─────────────────────────────────────────────
-
-
-
-
-
-def run_all(
-
-    root: Path | None = None,
-
-    *,
-
-    ci: bool = False,
-
-    since: str | None = None,
-
-    skip_checks: list[str] | None = None,
-
-) -> list[Issue]:
-
-    all_issues: list[Issue] = []
-
-
-
-    checkers: dict[str, Any] = {
-
-        "license-header": LicenseHeaderChecker(root),
-
-        "internal-dup": InternalDupChecker(root),
-
-        "suspicious": SuspiciousPatternChecker(root),
-
-        "git-diff": GitDiffChecker(root, since=since),
-
-    }
-
-
-
-    skip = set(skip_checks or [])
-
-
-
-    for name, checker in checkers.items():
-
-        if name in skip:
-
-            continue
-
-        try:
-
-            all_issues.extend(checker.run())
-
-        except Exception as exc:
-
-            all_issues.append(Issue(
-
-                severity="error",
-
-                checker=name,
-
-                file="(internal)",
-
-                line=0,
-
-                message=f"检测器异常: {exc}",
-
-            ))
-
-
-
-    return all_issues
-
-
-
-
-
-def main(argv: list[str] | None = None) -> int:
-
-    parser = argparse.ArgumentParser(
-
-        description="AI 生成代码来源/版权检测工具",
-
-    )
-
-    parser.add_argument(
-
-        "--ci", action="store_true",
-
-        help="CI 模式：输出 JSON Lines, 仅 exit code 区分通过/不通过",
-
-    )
-
-    parser.add_argument(
-
-        "--since", default=None,
-
-        help="Git diff 基准（默认 HEAD~1）",
-
-    )
-
-    parser.add_argument(
-
-        "--skip", nargs="*", default=[],
-
-        help="跳过的检测器（license-header / internal-dup / suspicious / git-diff）",
-
-    )
-
-    parser.add_argument(
-
-        "--root", default=None,
-
-        help="仓库根目录（默认自动检测）",
-
-    )
-
-
-
-    args = parser.parse_args(argv)
-
-    root = Path(args.root).resolve() if args.root else REPO
-
-
-
-    issues = run_all(
-
-        root=root,
-
-        ci=args.ci,
-
-        since=args.since,
-
-        skip_checks=args.skip or None,
-
-    )
-
-
-
-    errors = [i for i in issues if i.severity == "error"]
-
-    warnings = [i for i in issues if i.severity == "warning"]
-
-    infos = [i for i in issues if i.severity == "info"]
-
-
-
-    if args.ci:
-
-        for issue in issues:
-
-            print(json.dumps(issue.to_dict(), ensure_ascii=False))
-
-        return 1 if errors or warnings else 0
-
-
-
-    # 非 CI 模式：人类友好输出
-
-    for issue in issues:
-
-        print(issue)
-
-
-
+            text = filepath.read_text(encoding="latin-1", errors="replace")
+        except Exception:
+            return [{"type": "error", "detail": "无法读取文件"}]
+
+    lines = text.splitlines()
+
+    # 检查 SPDX 标识符
+    for match in SPDX_PATTERN.finditer(text):
+        line_num = text[:match.start()].count("\n") + 1
+        findings.append({
+            "type": "spdx",
+            "value": match.group(1),
+            "line": line_num,
+        })
+
+    # 检查版权声明
+    for match in COPYRIGHT_PATTERN.finditer(text):
+        line_num = text[:match.start()].count("\n") + 1
+        groups = [g for g in match.groups() if g]
+        copyright_text = groups[0] if groups else match.group(0)
+        findings.append({
+            "type": "copyright",
+            "value": copyright_text.strip()[:120],
+            "line": line_num,
+        })
+
+    # 检查已知许可证文本
+    for lic_id, lic_name, patterns in LICENSE_PATTERNS:
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+            if match:
+                line_num = text[:match.start()].count("\n") + 1
+                findings.append({
+                    "type": "license",
+                    "license_id": lic_id,
+                    "license_name": lic_name,
+                    "value": match.group(0)[:120],
+                    "line": line_num,
+                })
+                break  # 每个许可证只报告一次
+
+    return findings
+
+
+def main() -> None:
+    repo_root = Path(__file__).resolve().parent.parent
+
+    source_dirs = [
+        repo_root / "framework",
+        repo_root / "games" / "endfield",
+        repo_root / "tools" / "endfield_designer",
+        repo_root / "tools" / "endfield_scripts",
+        repo_root / "tools" / "ocr",
+        repo_root / "tools" / "data_pipeline",
+        repo_root / "tools" / "designer",
+        repo_root / "tools" / "audit",
+        repo_root / "tools" / "tests",
+        repo_root / "scripts",
+        repo_root / "utils",
+        repo_root / "docs",
+    ]
+
+    all_files: list[Path] = []
+    for d in source_dirs:
+        if d.is_dir():
+            all_files.extend(find_source_files(d))
+
+    all_files.sort()
+    print(f"共找到 {len(all_files)} 个源代码文件\n")
+
+    report: list[dict] = []
+    files_with_findings = 0
+
+    for f in all_files:
+        findings = check_license_in_file(f)
+        if findings:
+            files_with_findings += 1
+            report.append({
+                "file": str(f.relative_to(repo_root)),
+                "findings": findings,
+            })
+
+    # === 输出报告 ===
+    print(f"{'='*60}")
+    print(f"  代码来源检查报告")
+    print(f"{'='*60}")
     print()
 
-    print(f"Total: {len(issues)} items")
+    if not report:
+        print("[OK] 未发现任何第三方许可证或版权声明")
+        print("(所有代码看起来都是原创的)")
+        return
 
-    print(f"  [ERROR]: {len(errors)}")
+    print(f"[!] 在 {files_with_findings}/{len(all_files)} 个文件中发现许可证/版权声明\n")
 
-    print(f"  [WARN]:  {len(warnings)}")
+    # SPDX 标识符汇总
+    spdx_findings = [r for r in report if any(f["type"] == "spdx" for f in r["findings"])]
+    if spdx_findings:
+        print(f"--- SPDX License Identifier 发现（{len(spdx_findings)} 个文件）---")
+        for r in spdx_findings:
+            spdx_tags = [f for f in r["findings"] if f["type"] == "spdx"]
+            for tag in spdx_tags:
+                print(f"  {r['file']}:{tag['line']}  {tag['value']}")
+        print()
 
-    print(f"  [INFO]:  {len(infos)}")
+    # 许可证文本发现
+    lic_findings = [
+        (r["file"], f) for r in report
+        for f in r["findings"] if f["type"] == "license"
+    ]
+    if lic_findings:
+        print(f"--- 许可证文本发现（{len(lic_findings)} 处）---")
+        for filepath, lic in lic_findings:
+            print(f"  {filepath}:{lic['line']}")
+            print(f"    [{lic['license_id']}] {lic['value']}")
+        print()
 
+    # 版权声明发现
+    cr_findings = [
+        (r["file"], f) for r in report
+        for f in r["findings"] if f["type"] == "copyright"
+    ]
+    if cr_findings:
+        print(f"--- 版权声明发现（{len(cr_findings)} 处）---")
+        for filepath, cr in cr_findings:
+            print(f"  {filepath}:{cr['line']}")
+            print(f"    {cr['value']}")
+        print()
 
-
-    return 1 if errors or warnings else 0
-
-
-
+    # 有发现的所有文件列表，方便手动审查
+    print(f"--- 需要审查的文件列表 ---")
+    for r in report:
+        has_spdx = any(f["type"] == "spdx" for f in r["findings"])
+        has_lic = any(f["type"] == "license" for f in r["findings"])
+        labels = []
+        if has_spdx:
+            labels.append("SPDX")
+        if has_lic:
+            labels.append("LIC")
+        if any(f["type"] == "copyright" for f in r["findings"]):
+            labels.append("CR")
+        print(f"  [{','.join(labels)}] {r['file']}")
 
 
 if __name__ == "__main__":
-
-    sys.exit(main())
-
+    main()

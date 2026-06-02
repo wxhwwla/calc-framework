@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.17.8"
+_VERSION = "3.17.9"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,8 +438,11 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 5 处文件
 # BODY:
+# - 变更 scan_report.json
+# - 修改 scripts/please_read_me.py
 # - 修改 tools/_analyze_report.py
+# - 修改 tools/check_code_origin.py
 # - 修改 tools/run_scancode.py
 # --- END UPLOAD_SUMMARY ---
