@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.13"
+_VERSION = "3.18.14"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,17 +406,11 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 5 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/241/206/346/236/266/345/257/271/351/275/220/345/210/206/346/236/220.md"
-# - 变更 framework/adapters/_template/attr_schema.json
-# - 修改 framework/adapters/_template/functions.py
-# - 变更 framework/adapters/_template/meta.json
-# - 变更 framework/adapters/endfield/dag/endfield_full.dag.json
-# - 变更 framework/adapters/endfield/meta.json
-# - 修改 framework/src/calc_framework/config/manager.py
-# - 修改 framework/src/calc_framework/launcher.py
-# - 修改 games/arknights/gui/ArknightsApp.py
+# - 修改 docs/game-template/games/_template/framework_bridge.py
+# - 修改 docs/game-template/games/_template/gui/_template_App.py
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
