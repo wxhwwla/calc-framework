@@ -23,8 +23,8 @@ from games.endfield.calc.manual_buff.spell import (
     format_spell_abnormal_breakdown_lines,
 )
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
-from games.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 from games.endfield.data_loading.enemy_eval_params import EnemyEvalParams
+from games.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 
 
 def _resolve_enemy_eval(

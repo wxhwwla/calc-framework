@@ -7,8 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
-from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect
 from games.endfield.calc.damage.abnormal_attached import build_spell_attached_effects
+from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect
 from games.endfield.calc.manual_buff.abnormal_common import apply_abnormal_post_zones
 from games.endfield.calc.manual_buff.spell_params import (
     SPELL_ABNORMAL_PARAM_ROWS,

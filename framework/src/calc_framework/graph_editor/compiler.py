@@ -9,8 +9,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ..dag.service import DAGService
-
 from ..dag.schema import (
     BinaryNode,
     CallNode,
@@ -24,6 +22,7 @@ from ..dag.schema import (
     UserInputNode,
     VarNode,
 )
+from ..dag.service import DAGService
 from .schema import (
     GraphDocument,
     GraphNode,

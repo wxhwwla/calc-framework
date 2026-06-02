@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..theme import ThemeManager
 from .runtime import (
     AdapterEntry,
     argv_for_adapter,
@@ -34,7 +35,6 @@ from .runtime import (
     repo_root,
     spawn_detached,
 )
-from ..theme import ThemeManager
 
 _HUB_URL = "https://wxhwwla.pythonanywhere.com/hub"
 _GITHUB_URL = "https://github.com/wxhwwla/calc-framework"

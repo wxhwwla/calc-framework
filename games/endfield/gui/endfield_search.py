@@ -11,14 +11,14 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QThread
-from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
+from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
 from games.endfield.framework_bridge import get_logger
 from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 from games.endfield.gui.controls.search.qt_actions import QtSearchResultsDialog, SearchWorker
 from games.endfield.gui.controls.search.qt_search_browser import SearchHistoryDialog
 from games.endfield.gui.presentation.search_results_lines import build_search_results_report_lines
-from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
 _logger = get_logger("gui.endfield_search")
 

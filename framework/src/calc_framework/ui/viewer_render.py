@@ -9,12 +9,9 @@ from typing import Any
 
 from PySide6.QtWidgets import (
     QComboBox,
-    QFormLayout,
-    QGroupBox,
     QLabel,
     QMessageBox,
     QSpinBox,
-    QVBoxLayout,
 )
 
 from ..dag.schema import DAGVariable

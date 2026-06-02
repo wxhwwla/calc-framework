@@ -13,7 +13,6 @@ from api.adapter_assets import (
     data_entity_summary,
     get_adapter_dag,
     get_adapter_layout,
-    get_data_files_for_export,
     get_pack_export_bundle,
 )
 

@@ -11,23 +11,21 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .errors import DAGCompileError
-from .node_types import (  # noqa: PLC0414 — re-export symbols for _parse_node
-    ConstNode,
-    VarNode,
-    UnaryNode,
-    BinaryNode,
-    ConditionNode,
-    ExprNode,
-    UserInputNode,
-    CallNode,
-    NodeType,
-    _VALID_UNARY_OPS,
+from .node_types import (
     _VALID_BINARY_OPS,
     _VALID_NODE_TYPES,
+    _VALID_UNARY_OPS,
+    BinaryNode,
+    CallNode,
+    ConditionNode,
+    ConstNode,
+    ExprNode,
+    NodeType,
+    UnaryNode,
+    UserInputNode,
+    VarNode,
     _collect_node_refs,
 )
-
-
 
 _VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
 

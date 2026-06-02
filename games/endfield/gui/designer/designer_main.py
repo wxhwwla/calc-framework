@@ -15,6 +15,9 @@ from __future__ import annotations
 
 import sys
 
+from games.endfield.gui.designer.data_browser_tab import DataBrowserTab
+from games.endfield.gui.designer.data_editor_tab import DataEditorTab
+from games.endfield.gui.designer.inverse_tab import InverseTab
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -27,10 +30,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from games.endfield.gui.designer.data_browser_tab import DataBrowserTab
-from games.endfield.gui.designer.data_editor_tab import DataEditorTab
-from games.endfield.gui.designer.inverse_tab import InverseTab
 
 APP_NAME = "数据设计器"
 

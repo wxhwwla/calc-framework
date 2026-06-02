@@ -8,6 +8,7 @@ from typing import Any
 
 from games.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
 from games.endfield.calc.damage.engine import DamageContext
+from games.endfield.calc.damage.physical_abnormal_state import format_break_defense_rotation_note
 from games.endfield.calc.loadout.optimizer import (
     WeaponCandidate,
 )
@@ -28,9 +29,8 @@ from games.endfield.calc.multi_skill.optimizer import (
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 from games.endfield.calc.search.evaluate.multi_skill import build_skill_scenarios_from_levels
 from games.endfield.calc.skills.segments import format_segment_breakdown_lines, normalize_manual_segment_counts
-from games.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 from games.endfield.data_loading.enemy_eval_params import EnemyEvalParams
-from games.endfield.calc.damage.physical_abnormal_state import format_break_defense_rotation_note
+from games.endfield.data_loading.equipment_catalog import catalog_preview_status_lines, sample_equipment_catalog
 
 
 def _resolve_enemy_eval(

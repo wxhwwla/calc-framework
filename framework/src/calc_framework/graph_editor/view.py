@@ -10,7 +10,6 @@ from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QWidget
 
 
-
 class GraphView(QGraphicsView):
 
     """自定义视图：鼠标中键平移、滚轮缩放、接收节点面板拖放。"""

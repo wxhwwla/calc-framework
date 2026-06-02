@@ -11,11 +11,9 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-
 from framework.adapters.endfield.functions import (
     compute_15_zone_damage,
 )
-
 from games.endfield.calc.damage.engine.calculate import (
     calculate_single_hit_damage,
 )

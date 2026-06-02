@@ -12,12 +12,12 @@ from games.endfield.calc.damage.combat_resources import (
     ultimate_charge_from_sp_gain,
 )
 from games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damage
+from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.calc.manual_buff.consumable_presets import (
     apply_consumable_preset_to_store,
     consumable_preset_buffs,
 )
 from games.endfield.calc.search.plan.controller import SearchJobInputs, prepare_search_job
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 
 
 class TestNgaBatch8(unittest.TestCase):

@@ -16,12 +16,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .items import NodeItem, _find_parent_node_id, _GRID_SIZE, _NODE_HEIGHT, _NODE_WIDTH
+from .items import _GRID_SIZE, _NODE_HEIGHT, _NODE_WIDTH, NodeItem, _find_parent_node_id
 from .scene import GraphScene, _node_item_from_id
-from .view import GraphView
 from .schema import GraphEdge, GraphNode
+from .view import GraphView
 from .wire import WireItem
-
 
 
 class GraphEditorWidget(QWidget):

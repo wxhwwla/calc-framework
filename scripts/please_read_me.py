@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.22"
+_VERSION = "3.19.0"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,12 +406,65 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 6 处文件
+# TITLE: 更新 59 处文件
 # BODY:
-# - 修改 games/endfield/calc/dag_adapter/search_evaluate.py
-# - 修改 games/endfield/gui/presentation/damage_snapshot.py
+# - 修改 framework/adapters/card_rpg/loader.py
+# - 修改 framework/adapters/fps/loader.py
+# - 修改 framework/adapters/moba/loader.py
+# - 修改 framework/src/calc_framework/config/watcher.py
+# - 修改 framework/src/calc_framework/dag/block_cache.py
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/dag/graph_types.py
+# - 修改 framework/src/calc_framework/dag/node_types.py
+# - 修改 framework/src/calc_framework/dag/schema.py
+# - 修改 framework/src/calc_framework/editor/gui.py
+# - 修改 framework/src/calc_framework/graph_editor/compiler.py
+# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
+# - 修改 framework/src/calc_framework/graph_editor/scene.py
+# - 修改 framework/src/calc_framework/graph_editor/view.py
+# - 修改 framework/src/calc_framework/ui/__init__.py
+# - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/src/calc_framework/ui/launcher/window.py
+# - 修改 framework/src/calc_framework/ui/sheet_evaluator.py
+# - 修改 framework/src/calc_framework/ui/theme.py
+# - 修改 framework/src/calc_framework/ui/viewer_events.py
+# - 修改 framework/src/calc_framework/ui/viewer_render.py
+# - 修改 games/arknights/calc/dag_adapter/types.py
+# - 修改 games/arknights/gui/ArknightsApp.py
+# - 修改 games/endfield/calc/dag_adapter/__init__.py
+# - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
+# - 修改 games/endfield/calc/manual_buff/physical.py
+# - 修改 games/endfield/calc/manual_buff/spell.py
+# - 修改 games/endfield/calc/search/persist/store.py
+# - 修改 games/endfield/data_loading/web_loadout_bridge.py
+# - 修改 games/endfield/gui/controls/enemy/qt_enemy_panel.py
+# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
+# - 修改 games/endfield/gui/controls/survival/qt_survival_dialog.py
+# - 修改 games/endfield/gui/designer/designer_main.py
+# - 修改 games/endfield/gui/endfield_actions.py
+# - 修改 games/endfield/gui/endfield_app.py
+# - 修改 games/endfield/gui/endfield_search.py
+# - 修改 games/endfield/gui/endfield_shell.py
+# - 修改 games/endfield/gui/presentation/preview/multi_skill.py
+# - 修改 games/endfield/gui/presentation/preview/single_skill.py
+# - 修改 games/endfield/gui/shared/display_view/qt_columns.py
+# - 修改 games/endfield/gui/shell/qt_control_dock.py
+# - 修改 games/endfield/gui/shell/qt_control_dock_builders.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_abnormal_matrix.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch10.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch3.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch7.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch8.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_batch9.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_nga_mechanics.py
+# - 修改 games/endfield/tests/framework/test_formula_consistency.py
+# - 修改 games/endfield/tests/gui_design/app/test_loadout_evaluation_orchestration.py
+# - 修改 games/endfield/tests/gui_design/controls/enhancement/test_qt_dialogs.py
+# - 修改 games/endfield/tests/tools/test_bwiki_scout.py
 # - 修改 scripts/please_read_me.py
 # - 修改 web/backend/api/adapters.py
-# - 修改 web/backend/api/pack.py
-# - 修改 web/backend/main.py
+# - 修改 web/backend/api/compute.py
+# - 修改 web/backend/api/data_mutations.py
+# - 修改 web/backend/api/search.py
+# - 修改 web/backend/tests/test_arknights_data_fallback.py
 # --- END UPLOAD_SUMMARY ---

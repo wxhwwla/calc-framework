@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QSplitter,
-    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -24,11 +23,11 @@ from PySide6.QtWidgets import (
 from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 from games.endfield.data_loading.loader import get_characters, get_weapons
 from games.endfield.framework_bridge import ComputeSheet
+from games.endfield.gui.panels.selection.qt_panel import QtSelectionPanel
+from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
 from games.endfield.gui.shared.calc_mode_labels import calculation_mode_from_label
 from games.endfield.gui.shared.display_view.qt_columns import QtAttributeColumns
-from games.endfield.gui.panels.selection.qt_panel import QtSelectionPanel
 from games.endfield.gui.shell.qt_control_dock import QtControlDock
-from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
 
 
 class ShellMixin:

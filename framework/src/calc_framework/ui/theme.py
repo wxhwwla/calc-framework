@@ -21,9 +21,6 @@ from PySide6.QtWidgets import QWidget
 from .theme_presets import _BUILTIN_THEMES
 
 
-
-
-
 def _build_stylesheet(theme: dict[str, Any]) -> str:
 
     """从主题字典生成 Qt 样式表。"""

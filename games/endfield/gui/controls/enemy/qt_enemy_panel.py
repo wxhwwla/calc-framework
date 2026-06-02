@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from games.endfield.calc.damage.imbalance import ENEMY_TIERS
 from games.endfield.data_loading.enemy_params import (
     DEFAULT_ATTACHED_EFFECT_MULTIPLIER,
+    DEFAULT_BREAK_DEFENSE_STACKS,
     DEFAULT_COMBO_STACKS,
     DEFAULT_CORROSION_DURATION_SEC,
     DEFAULT_ENEMY_DEFENSE,
@@ -30,10 +31,9 @@ from games.endfield.data_loading.enemy_params import (
     DEFAULT_ENEMY_TIER,
     DEFAULT_IGNORE_RESISTANCE,
     DEFAULT_IMBALANCE_EFFICIENCY_BONUS,
-    DEFAULT_BREAK_DEFENSE_STACKS,
     DEFAULT_IMBALANCE_VULNERABILITY,
-    DEFAULT_IS_UNBALANCED,
     DEFAULT_IS_TRUE_DAMAGE,
+    DEFAULT_IS_UNBALANCED,
     list_plugin_enemy_choices,
     resolve_enemy_defense,
     resolve_enemy_resistance,

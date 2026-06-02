@@ -39,9 +39,9 @@
 
 from __future__ import annotations
 
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 from games.endfield.calc.damage.engine import CritMode, DamageContext
 from games.endfield.calc.damage.originium_arts import sum_originium_arts_strength
-from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
 from games.endfield.calc.equipment.system import build_four_slot_loadout
 from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout

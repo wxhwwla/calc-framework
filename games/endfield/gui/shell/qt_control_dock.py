@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from games.endfield.calc.manual_buff.abnormal_matrix import read_abnormal_matrix_counts
 from games.endfield.gui.controls.enemy import QtEnemyPanel
 from games.endfield.gui.controls.search.search_settings import (
     format_parallel_workers_help,
@@ -43,7 +44,6 @@ from games.endfield.gui.shell.qt_control_dock_builders import (
     _SECONDARY_BTN_HEIGHT,
     BuilderMixin,
 )
-from games.endfield.calc.manual_buff.abnormal_matrix import read_abnormal_matrix_counts
 from games.endfield.gui.shell.qt_control_dock_widgets import (
     SectionHeader,
     SmallLabel,

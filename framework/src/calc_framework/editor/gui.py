@@ -40,8 +40,8 @@ from PySide6.QtWidgets import (
 from ..dag.schema import DAGGraph
 from ..dag.serializer import load_dag
 from ..dag.service import DAGService
-from . import LayoutEditor
 from ..ui.compute_sheet import ComputeSheet
+from . import LayoutEditor
 
 
 class _SectionWidget(QGroupBox):

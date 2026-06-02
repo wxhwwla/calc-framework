@@ -36,8 +36,7 @@ from games.endfield.calc.loadout.optimizer import (
 from ..evaluate.context import SearchEvalContext
 from ..run.cancel import SearchCancelToken
 from ..run.parallel import run_bounded_parallel
-
-from .schema import PendingTaskStream, ResumeExecutionResult, SCORES_CREATE_TABLE_SQL
+from .schema import SCORES_CREATE_TABLE_SQL, PendingTaskStream, ResumeExecutionResult
 
 # 续跑进度批量写入条数
 

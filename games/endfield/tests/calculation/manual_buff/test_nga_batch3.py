@@ -8,13 +8,13 @@ import unittest
 
 from games.endfield.calc.character_stats import total_max_hp
 from games.endfield.calc.damage.corrosion import corrosion_total_resistance_shred
+from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.imbalance import (
     imbalance_cap_for_tier,
     scaled_imbalance_gain,
 )
 from games.endfield.calc.damage.incoming import enemy_burn_tick_damage
 from games.endfield.calc.manual_buff.spell import evaluate_spell_abnormal_total
-from games.endfield.calc.damage.engine import DamageContext
 
 
 class TestNgaBatch3(unittest.TestCase):

@@ -16,6 +16,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from games.endfield.calc.manual_buff.abnormal_matrix import (
+    ABNORMAL_MATRIX_HINT,
+    matrix_column_labels,
+    physical_abnormal_matrix_specs,
+    spell_abnormal_matrix_specs,
+)
 from games.endfield.gui.controls.search.search_settings import (
     build_worker_option_labels,
 )
@@ -24,12 +30,6 @@ from games.endfield.gui.shell.qt_control_dock_widgets import (
     SectionHeader,
     SmallLabel,
     build_manual_abnormal_matrix,
-)
-from games.endfield.calc.manual_buff.abnormal_matrix import (
-    ABNORMAL_MATRIX_HINT,
-    matrix_column_labels,
-    physical_abnormal_matrix_specs,
-    spell_abnormal_matrix_specs,
 )
 
 _FIXED_SLOT_SPECS: list[tuple[str, str]] = [

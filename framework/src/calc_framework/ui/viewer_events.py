@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QFileDialog, QSplitter
+from PySide6.QtWidgets import QFileDialog
 from utils.gui.help_dialog import HelpDialog
 
 from .viewer_help_content import build_viewer_help

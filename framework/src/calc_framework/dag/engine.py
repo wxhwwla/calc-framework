@@ -17,7 +17,6 @@ from calc_framework.logging import get_logger
 
 from .block_cache import (
     BlockCache,
-    BlockCacheEntry,
     _build_block_membership,
     _compute_block_inputs,
     _get_primary_output_node,

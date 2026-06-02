@@ -188,12 +188,6 @@ async def estimate_search(req: EstimateRequest):
 
     try:
 
-        from calc_framework.config.adapter import AdapterPackage
-
-
-
-        from games.endfield.calc.loadout.optimizer import optimizer_config_for_character
-
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
         from games.endfield.calc.search.plan.controller import prepare_search_job
@@ -205,8 +199,6 @@ async def estimate_search(req: EstimateRequest):
             estimate_search_duration,
 
         )
-
-        from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
 
     except ImportError as e:
 

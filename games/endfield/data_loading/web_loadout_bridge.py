@@ -117,7 +117,7 @@ def resolve_fixed_loadout_selection(
     raw = fixed_loadout_raw if isinstance(fixed_loadout_raw, dict) else {}
 
     def _slot_value(slot_key: str, catalog_key: str) -> dict | None:
-        if slot_key in names and names[slot_key]:
+        if names.get(slot_key):
             return _find_equipment_row(str(names[slot_key]), catalog_key, equipment_catalog)
         item = raw.get(slot_key)
         if isinstance(item, dict):

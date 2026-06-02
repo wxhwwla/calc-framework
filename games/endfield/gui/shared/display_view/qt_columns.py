@@ -18,6 +18,12 @@ PySide6 属性三列无闪渲染。
 from __future__ import annotations
 
 from games.endfield.calc.zone_snapshot.types import ZoneDisplayLine
+from games.endfield.gui.app.display_request import DisplayRequest
+from games.endfield.gui.presentation.display_lines import (
+    build_character_attribute_lines,
+    build_weapon_attribute_lines,
+    evaluate_display_state,
+)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics
 from PySide6.QtWidgets import (
@@ -26,13 +32,6 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QWidget,
-)
-
-from games.endfield.gui.app.display_request import DisplayRequest
-from games.endfield.gui.presentation.display_lines import (
-    build_character_attribute_lines,
-    build_weapon_attribute_lines,
-    evaluate_display_state,
 )
 
 

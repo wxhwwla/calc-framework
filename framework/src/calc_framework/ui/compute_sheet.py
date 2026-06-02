@@ -26,10 +26,10 @@ from ..dag.service import DAGService
 from ..logging import get_logger
 from .controls import ControlSpec, infer_control
 from .layout import Layout, Section
-from .sheet_evaluator import build_context, read_input as _do_read_input
+from .sheet_evaluator import build_context, var_to_dict
+from .sheet_evaluator import read_input as _do_read_input
 from .sheet_evaluator import render_html as _do_render_html
 from .sheet_evaluator import update_outputs as _do_update_outputs
-from .sheet_evaluator import var_to_dict
 from .sheet_widgets import _ResponsiveGroupBox, create_control
 
 logger = get_logger(__name__)

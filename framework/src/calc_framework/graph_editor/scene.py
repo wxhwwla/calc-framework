@@ -11,7 +11,7 @@ from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsScene
 
-from .items import NodeItem, _find_parent_node_id, _GRID_SIZE
+from .items import _GRID_SIZE, NodeItem, _find_parent_node_id
 from .ports import PortDirection, PortItem
 from .wire import WireItem
 

@@ -5,13 +5,13 @@
 import unittest
 
 from games.endfield.calc.damage.enemy_growth import enemy_growth_note, resolve_enemy_max_hp
+from games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damage
 from games.endfield.calc.damage.incoming import enemy_burn_tick_damage
 from games.endfield.calc.damage.physical_abnormal_state import (
     break_defense_after_rotation_hits,
     consume_break_defense_stacks,
     is_physical_abnormal_key,
 )
-from games.endfield.calc.damage.engine import DamageContext, calculate_single_hit_damage
 from games.endfield.gui.app.confirm_refresh import build_display_pending_signature
 
 

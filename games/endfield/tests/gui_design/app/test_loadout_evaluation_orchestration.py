@@ -7,7 +7,6 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock, patch
 
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 

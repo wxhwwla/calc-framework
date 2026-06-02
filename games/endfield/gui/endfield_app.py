@@ -21,7 +21,6 @@ if str(_FRAMEWORK_SRC) not in sys.path:
 
 from typing import Any
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -30,8 +29,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from scripts.please_read_me import get_exe_version
 
 from games.endfield.framework_bridge import get_logger
+from games.endfield.gui.endfield_actions import ActionsMixin
+from games.endfield.gui.endfield_search import ActionsSearchMixin
+from games.endfield.gui.endfield_shell import ShellMixin
 from games.endfield.gui.shared.calc_mode_labels import DEFAULT_CALC_MODE_LABEL, calculation_mode_from_label
 from games.endfield.gui.shared.ui_preferences import (
     load_ui_preferences,
@@ -39,10 +42,6 @@ from games.endfield.gui.shared.ui_preferences import (
     resolve_startup_page,
     save_ui_preferences,
 )
-from games.endfield.gui.endfield_shell import ShellMixin
-from games.endfield.gui.endfield_actions import ActionsMixin
-from games.endfield.gui.endfield_search import ActionsSearchMixin
-from scripts.please_read_me import get_exe_version
 
 _logger = get_logger("gui.endfield_app")
 

@@ -25,7 +25,6 @@ from games.endfield.calc.damage.combat_resources import (
     estimate_ultimate_after_actions,
     sp_after_natural_regen,
 )
-from games.endfield.calc.damage.special_damage import life_steal_heal
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.execute import calculate_execute_damage, execute_sp_restore
 from games.endfield.calc.damage.healing import HealingContext, calculate_healing, received_heal_efficiency_from_will
@@ -37,6 +36,7 @@ from games.endfield.calc.damage.imbalance import (
     scaled_imbalance_gain,
 )
 from games.endfield.calc.damage.incoming import enemy_burn_tick_damage
+from games.endfield.calc.damage.special_damage import life_steal_heal
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 

@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """卡牌RPG DataContext 加载器 — 实现框架的 DataContextLoader 接口。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from calc_framework.data.attr_schema import AttributeSchema
-from calc_framework.data.context import make_context
-from calc_framework.data.loader import DataContextLoader
-
-
-class CardRPGLoader(DataContextLoader):
+from __future__ import annotationsfrom typing import Anyfrom calc_framework.data.attr_schema import AttributeSchemafrom calc_framework.data.context import make_contextfrom calc_framework.data.loader import DataContextLoaderclass CardRPGLoader(DataContextLoader):
     """从卡牌RPG原始数据构建 DataContext。
 
     用法::

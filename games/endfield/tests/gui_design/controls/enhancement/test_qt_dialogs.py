@@ -24,13 +24,12 @@ class TestEnhancementDialogsImport(unittest.TestCase):
             return_value=[],
         ):
             from games.endfield.gui.controls.enhancement.qt_dialogs import (
+                _HINT_COLOR,
+                _SEC_BTN_STYLE,
+                _SMALL_LABEL,
                 QtCalcHistoryDialog,
                 QtComparePresetsDialog,
                 QtDamageDashboardDialog,
-                _HINT_COLOR,
-                _PRIMARY_BTN_STYLE,
-                _SEC_BTN_STYLE,
-                _SMALL_LABEL,
             )
 
             self.assertIsNotNone(QtCalcHistoryDialog)

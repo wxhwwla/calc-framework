@@ -8,9 +8,9 @@ import unittest
 
 from games.endfield.calc.manual_buff.abnormal_matrix import (
     apply_abnormal_matrix_counts,
+    physical_abnormal_matrix_specs,
     read_abnormal_matrix_counts,
     ui_level_column_label,
-    physical_abnormal_matrix_specs,
 )
 
 

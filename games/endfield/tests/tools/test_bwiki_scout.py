@@ -236,7 +236,7 @@ class TestIncrementalSync(unittest.TestCase):
     # ── 记录与检测 ──
 
     def test_record_entity_sync(self):
-        from bwiki_scout.incremental_sync import load_sync_state, record_entity_sync, save_sync_state
+        from bwiki_scout.incremental_sync import load_sync_state, record_entity_sync
         state = load_sync_state(self.tmp)
         bundle = self._make_bundle("测试内容", "<p>测试</p>")
         record_entity_sync(state, "角色A", bundle)

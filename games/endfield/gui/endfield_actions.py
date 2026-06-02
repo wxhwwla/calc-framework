@@ -14,16 +14,16 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QMessageBox,
     QVBoxLayout,
-    QWidget,
 )
 
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
 from games.endfield.gui.app.loadout_evaluation import (
     refresh_damage_snapshot,
+)
+from games.endfield.gui.app.loadout_evaluation import (
     sync_evaluation_cache as _sync_eval_cache,
 )
 from games.endfield.gui.app.loadout_state import read_loadout_from_panels
-from games.endfield.gui.endfield_search import ActionsSearchMixin
 from games.endfield.gui.legal.attribution_content import SUMMARY_TEXT
 from games.endfield.gui.legal.donation_qt import open_donation_dialog
 from games.endfield.gui.presentation.damage_snapshot import get_snapshot_from_app

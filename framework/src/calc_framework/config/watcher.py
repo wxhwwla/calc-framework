@@ -9,9 +9,9 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
+from ..logging import get_logger
 from .adapter import AdapterPackage
 from .manager import AdapterManager
-from ..logging import get_logger
 
 logger = get_logger(__name__)
 

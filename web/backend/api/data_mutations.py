@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from ._json_utils import ENDFIELD_DATA_ROOT, load_json
+from ._json_utils import ENDFIELD_DATA_ROOT
 
 DATA_ROOT = ENDFIELD_DATA_ROOT
 CHARACTERS_PATH = DATA_ROOT / "characters.json"

@@ -6,9 +6,9 @@ import unittest
 
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.physical_abnormal_state import format_break_defense_rotation_note
+from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 from games.endfield.data_loading.enemy_eval_params import EnemyEvalParams
 from games.endfield.gui.app.loadout_state import LoadoutState
-from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 
 
 class TestNgaBatch10(unittest.TestCase):

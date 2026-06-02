@@ -9,7 +9,6 @@ import unittest
 from games.endfield.calc.damage.engine import DamageContext, DamageEffect, calculate_single_hit_damage
 from games.endfield.calc.damage.originium_arts import (
     ORIGINIUM_FLAT_STAT_KEY,
-    enhance_attached_effect,
     strength_zone_multiplier,
     sum_originium_arts_strength,
 )
@@ -142,7 +141,11 @@ class TestNgaMechanics(unittest.TestCase):
         self.assertAlmostEqual(correct_flat_stat_value("攻击力", 11), 11.7167)
 
     def test_healing_formula(self) -> None:
-        from games.endfield.calc.damage.healing import HealingContext, calculate_healing, received_heal_efficiency_from_will
+        from games.endfield.calc.damage.healing import (
+            HealingContext,
+            calculate_healing,
+            received_heal_efficiency_from_will,
+        )
 
         self.assertAlmostEqual(received_heal_efficiency_from_will(350.7), 0.35)
         out = calculate_healing(
