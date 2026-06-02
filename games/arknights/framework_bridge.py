@@ -6,7 +6,7 @@
 """
 
 from calc_framework.config.adapter import AdapterPackage
-from calc_framework.logging import get_logger
+from calc_framework.logging import get_logger, setup_logging
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import load_layout_json
 
@@ -15,4 +15,5 @@ __all__ = [
     "ComputeSheet",
     "get_logger",
     "load_layout_json",
+    "setup_logging",
 ]

@@ -3,9 +3,8 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-
-from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect
 
 # 敌人等阶 → 处决承伤系数
 EXECUTE_DAMAGE_MULT: dict[str, float] = {
@@ -49,17 +48,29 @@ def calculate_execute_damage(
 
     返回 (最终伤害, 处决承伤系数)。
     """
-    ctx = replace(
-        context,
+    mult = execute_damage_multiplier(enemy_tier)
+    base = evaluate_search_damage(
+        final_attack=context.final_attack,
         skill_multiplier=float(normal_attack_multiplier),
+        damage_type=context.damage_type,
         skill_type="普通攻击",
         is_unbalanced=True,
-    )
-    base = calculate_single_hit_damage(
-        ctx,
+        is_true_damage=context.is_true_damage,
+        enemy_defense=context.enemy_defense,
+        enemy_resistance=context.enemy_resistance,
+        ignore_resistance=context.ignore_resistance,
+        imbalance_vulnerability_coeff=context.imbalance_vulnerability_coeff,
+        crit_rate=context.crit_rate,
+        crit_damage=context.crit_damage,
+        damage_type_bonus=context.damage_type_bonus,
+        skill_type_bonus=context.skill_type_bonus,
+        imbalance_damage_bonus=context.imbalance_damage_bonus,
+        other_damage_bonus=context.other_damage_bonus,
+        combo_stacks=context.combo_stacks,
+        break_defense_stacks=context.break_defense_stacks,
+        base_damage_bonus=context.base_damage_bonus,
         effects=effects,
         crit_mode=crit_mode,
         manual_buffs=manual_buffs,
     )
-    mult = execute_damage_multiplier(enemy_tier)
     return float(base.final_damage) * mult, mult

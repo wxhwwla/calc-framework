@@ -14,12 +14,8 @@ from __future__ import annotations
 from typing import Any
 
 from games.endfield.calc.core.preview_cache import cached_preview, sync_confirm_dependencies
-from games.endfield.calc.damage.engine import (
-    ZONE_ORDER,
-    DamageContext,
-    DamageResult,
-    calculate_single_hit_damage,
-)
+from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult, evaluate_search_damage
+from games.endfield.calc.damage.engine import ZONE_ORDER
 from games.endfield.calc.multiplicative_zones.final_attack_zone import calculate_final_attack_with_details
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
@@ -50,7 +46,7 @@ from .skill_resolve import resolve_selected_skill_for_damage
 
 def format_fifteen_zone_damage_lines(
 
-    result: DamageResult,
+    result: DamageEvalResult,
 
     *,
 
@@ -441,21 +437,17 @@ def _build_single_hit_damage_lines_impl(
 
     )
 
-    result = calculate_single_hit_damage(
+    result = evaluate_search_damage(
 
-        DamageContext(
+        final_attack=float(final["final_attack"]),
 
-            final_attack=float(final["final_attack"]),
+        skill_multiplier=skill.multiplier,
 
-            skill_multiplier=skill.multiplier,
+        damage_type=skill.damage_type,
 
-            damage_type=skill.damage_type,
+        skill_type=skill.skill_type,
 
-            skill_type=skill.skill_type,
-
-            enemy_defense=enemy_defense,
-
-        ),
+        enemy_defense=enemy_defense,
 
         crit_mode="non_crit",
 

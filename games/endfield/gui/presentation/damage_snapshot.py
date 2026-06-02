@@ -13,7 +13,8 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from games.endfield.calc.damage.engine import ZONE_ORDER, DamageContext, calculate_single_hit_damage
+from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult, evaluate_search_damage
+from games.endfield.calc.damage.engine import ZONE_ORDER
 from games.endfield.calc.damage.physical_abnormal_state import (
     break_defense_stacks_at_hit,
     build_rotation_hit_index,
@@ -98,25 +99,23 @@ def _compute_weighted_with_buffs(
             global_hit = hit_index_map.get((key, occurrence_idx), occurrence_idx)
             stacks_at_hit = break_defense_stacks_at_hit(break_defense_stacks, global_hit)
             if buffs is not None or scenario is not None:
-                result = calculate_single_hit_damage(
-                    DamageContext(
-                        final_attack=final_attack,
-                        skill_multiplier=scenario.skill_multiplier if scenario else 1.0,
-                        damage_type=scenario.damage_type or "物理" if scenario else "物理",
-                        skill_type=scenario.resolved_skill_type if scenario else "战技",
-                        enemy_defense=enemy_defense,
-                        enemy_resistance=enemy_resistance,
-                        ignore_resistance=ignore_resistance,
-                        imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
-                        is_unbalanced=is_unbalanced,
-                        is_true_damage=is_true_damage,
-                        combo_stacks=max(0, min(4, int(combo_stacks))),
-                        break_defense_stacks=max(0, min(4, int(stacks_at_hit))),
-                    ),
+                result = evaluate_search_damage(
+                    final_attack=final_attack,
+                    skill_multiplier=scenario.skill_multiplier if scenario else 1.0,
+                    damage_type=scenario.damage_type or "物理" if scenario else "物理",
+                    skill_type=scenario.resolved_skill_type if scenario else "战技",
+                    enemy_defense=enemy_defense,
+                    enemy_resistance=enemy_resistance,
+                    ignore_resistance=ignore_resistance,
+                    imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+                    is_unbalanced=is_unbalanced,
+                    is_true_damage=is_true_damage,
+                    combo_stacks=max(0, min(4, int(combo_stacks))),
+                    break_defense_stacks=max(0, min(4, int(stacks_at_hit))),
                     crit_mode="non_crit",
                     manual_buffs=buffs,
                 )
-                single_hit = float(result.final_damage)
+                single_hit = result.final_damage
             else:
                 single_hit = float(segment_damage.get(key, 0.0))
             segment_total += single_hit
@@ -232,24 +231,21 @@ def build_damage_snapshot(
 
     segment_damage: dict[str, float] = {}
     for scenario in scenarios_list:
-        result = calculate_single_hit_damage(
-            DamageContext(
-                final_attack=final_attack,
-                skill_multiplier=scenario.skill_multiplier,
-                damage_type=scenario.damage_type or "物理",
-                skill_type=scenario.resolved_skill_type,
-                enemy_defense=enemy_defense,
-                enemy_resistance=enemy_resistance,
-                ignore_resistance=ignore_resistance,
-                imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
-                is_unbalanced=is_unbalanced,
-                is_true_damage=is_true_damage,
-                combo_stacks=max(0, min(4, int(combo_stacks))),
-                break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
-            ),
+        segment_damage[scenario.scenario_key] = evaluate_search_damage(
+            final_attack=final_attack,
+            skill_multiplier=scenario.skill_multiplier,
+            damage_type=scenario.damage_type or "物理",
+            skill_type=scenario.resolved_skill_type,
+            enemy_defense=enemy_defense,
+            enemy_resistance=enemy_resistance,
+            ignore_resistance=ignore_resistance,
+            imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+            is_unbalanced=is_unbalanced,
+            is_true_damage=is_true_damage,
+            combo_stacks=max(0, min(4, int(combo_stacks))),
+            break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
             crit_mode="non_crit",
-        )
-        segment_damage[scenario.scenario_key] = float(result.final_damage)
+        ).final_damage
 
     if use_manual_counts:
         counts = normalize_manual_segment_counts(skill_counts, scenarios_list)
@@ -288,20 +284,18 @@ def build_damage_snapshot(
         scenarios_list[0] if scenarios_list else None,
     )
     if primary is not None:
-        zone_result = calculate_single_hit_damage(
-            DamageContext(
-                final_attack=final_attack,
-                skill_multiplier=primary.skill_multiplier,
-                damage_type=primary.damage_type or "物理",
-                skill_type=primary.resolved_skill_type,
-                enemy_defense=enemy_defense,
-                enemy_resistance=enemy_resistance,
-                ignore_resistance=ignore_resistance,
-                imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
-                is_unbalanced=is_unbalanced,
-                is_true_damage=is_true_damage,
-                break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
-            ),
+        zone_result = evaluate_search_damage(
+            final_attack=final_attack,
+            skill_multiplier=primary.skill_multiplier,
+            damage_type=primary.damage_type or "物理",
+            skill_type=primary.resolved_skill_type,
+            enemy_defense=enemy_defense,
+            enemy_resistance=enemy_resistance,
+            ignore_resistance=ignore_resistance,
+            imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+            is_unbalanced=is_unbalanced,
+            is_true_damage=is_true_damage,
+            break_defense_stacks=max(0, min(4, int(break_defense_stacks))),
             crit_mode="non_crit",
         )
         zone_percent = _zone_share_percent(zone_result.zone_values)

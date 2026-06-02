@@ -24,7 +24,8 @@
 
 from __future__ import annotations
 
-from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+from games.endfield.calc.damage.engine import CritMode, DamageContext
 from games.endfield.calc.damage.physical_abnormal_state import (
     break_defense_stacks_at_hit,
     build_rotation_hit_index,
@@ -156,7 +157,7 @@ def optimize_multi_skill_loadouts(
             for occurrence in range(1, count + 1):
                 global_hit = hit_index_map.get((key, occurrence), occurrence)
                 bd_stacks = break_defense_stacks_at_hit(base_context.break_defense_stacks, global_hit)
-                ctx = DamageContext(
+                dmg = evaluate_search_damage(
                     final_attack=weapon.final_attack,
                     skill_multiplier=scenario.skill_multiplier,
                     damage_type=resolve_scenario_damage_type(scenario, base_context),
@@ -175,13 +176,10 @@ def optimize_multi_skill_loadouts(
                     other_damage_bonus=base_context.other_damage_bonus,
                     combo_stacks=base_context.combo_stacks,
                     break_defense_stacks=bd_stacks,
-                )
-                dmg = calculate_single_hit_damage(
-                    ctx,
                     effects=base_effects + list(scenario.external_effects),
-                    crit_mode=config.crit_mode,  # type: ignore[arg-type]
-                ).final_damage
-                segment_sum += dmg
+                    crit_mode=config.crit_mode,
+                )
+                segment_sum += dmg.final_damage
             breakdown[key] = segment_sum / count if count else 0.0
             weighted_total += segment_sum
         scores.append(
@@ -272,7 +270,7 @@ def evaluate_multi_skill_task(
         for occurrence in range(1, count + 1):
             global_hit = hit_index_map.get((key, occurrence), occurrence)
             bd_stacks = break_defense_stacks_at_hit(shared_context.break_defense_stacks, global_hit)
-            ctx = DamageContext(
+            dmg = evaluate_search_damage(
                 final_attack=final_attack,
                 skill_multiplier=scenario.skill_multiplier,
                 damage_type=resolve_scenario_damage_type(scenario, shared_context),
@@ -291,13 +289,10 @@ def evaluate_multi_skill_task(
                 other_damage_bonus=shared_context.other_damage_bonus,
                 combo_stacks=shared_context.combo_stacks,
                 break_defense_stacks=bd_stacks,
-            )
-            dmg = calculate_single_hit_damage(
-                ctx,
                 effects=effects + list(scenario.external_effects),
                 crit_mode=crit_mode,
-            ).final_damage
-            segment_sum += dmg
+            )
+            segment_sum += dmg.final_damage
         segment_breakdown[key] = segment_sum / count if count else 0.0
         weighted_total += segment_sum
 

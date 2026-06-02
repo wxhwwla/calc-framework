@@ -10,7 +10,9 @@
 
 from __future__ import annotations
 
-from framework.adapters.endfield.functions import compute_15_zone_damage
+from dataclasses import dataclass
+
+from framework.adapters.endfield.functions import compute_15_zone_detail
 
 from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
@@ -18,8 +20,26 @@ from games.endfield.calc.damage.engine.helpers import _clamp, _collect_effects
 from games.endfield.calc.damage.engine.types import CritMode, DamageContext, DamageEffect
 
 __all__ = [
+    "DamageEvalResult",
     "evaluate_search_damage",
 ]
+
+
+@dataclass(frozen=True)
+class DamageEvalResult:
+    """DAG 桥接函数的计算结果，替代本地引擎的 DamageResult。
+
+    Attributes:
+        final_damage: 最终伤害值
+        zone_values: 各乘区数值，键名与 ZONE_ORDER 一致
+        warnings: 计算警告
+        unknown_effects: 未识别效果
+    """
+
+    final_damage: float
+    zone_values: dict[str, float]
+    warnings: tuple[str, ...] = ()
+    unknown_effects: tuple[dict[str, str], ...] = ()
 
 # 手动 buff 中直加类型 → DamageContext 字段名映射
 _CONTEXT_BUFF_MAP: dict[str, str] = {
@@ -83,18 +103,18 @@ def evaluate_search_damage(
     skill_multiplier: float,
     damage_type: str,
     skill_type: str,
-    is_unbalanced: bool,
-    is_true_damage: bool,
-    enemy_defense: float,
-    enemy_resistance: float,
-    ignore_resistance: float,
-    imbalance_vulnerability_coeff: float,
-    crit_rate: float,
-    crit_damage: float,
-    damage_type_bonus: float,
-    skill_type_bonus: float,
-    imbalance_damage_bonus: float,
-    other_damage_bonus: float,
+    is_unbalanced: bool = False,
+    is_true_damage: bool = False,
+    enemy_defense: float = 100.0,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    imbalance_vulnerability_coeff: float = 1.3,
+    crit_rate: float = 0.05,
+    crit_damage: float = 0.5,
+    damage_type_bonus: float = 0.0,
+    skill_type_bonus: float = 0.0,
+    imbalance_damage_bonus: float = 0.0,
+    other_damage_bonus: float = 0.0,
     combo_stacks: int = 0,
     break_defense_stacks: int = 0,
     base_damage_bonus: float = 0.0,
@@ -102,17 +122,18 @@ def evaluate_search_damage(
     crit_mode: CritMode = "non_crit",
     manual_buffs: list[dict[str, str | float]] | None = None,
     damage_pipeline: str = "normal",
-) -> float:
+) -> DamageEvalResult:
     """用 DAG 注册函数替代本地引擎计算单段伤害。
 
     此函数复制了 ``calculate_single_hit_damage`` 的效果处理逻辑
     （_collect_effects → 乘区累加 → combo_bonus → defense → resistance），
-    最终调用 ``compute_15_zone_damage``（框架适配器注册的 DAG 函数）。
+    最终调用 ``compute_15_zone_detail``（框架适配器注册的 DAG 函数）
+    获取各乘区明细，连乘得到最终伤害。
 
     参数与 ``DamageContext`` 字段一一对应，方便调用方直接映射。
 
     Returns:
-        最终伤害值（float）
+        DamageEvalResult，包含 final_damage 和 zone_values
     """
     # 处理 manual_buffs → 字段覆盖 + 额外效果
     if manual_buffs:
@@ -243,8 +264,8 @@ def evaluate_search_damage(
     imb_coeff = imbalance_coeff_override if imbalance_coeff_override is not None else imbalance_vulnerability_coeff
     imbalance_zone_val = imb_coeff if is_unbalanced else 1.0
 
-    # 调用 DAG 注册函数 compute_15_zone_damage
-    return compute_15_zone_damage(
+    # 调用 DAG 注册函数 compute_15_zone_detail 获取各乘区值
+    zones = compute_15_zone_detail(
         final_attack=final_attack,
         skill_multiplier=skill_multiplier,
         base_damage_bonus=base_damage_bonus,
@@ -268,4 +289,13 @@ def evaluate_search_damage(
         non_control_reduction=1.0 - non_control_reduction,
         combo_bonus=max(0.0, combo_bonus - 1.0),
         special=special_zone,
+    )
+    final_damage = 1.0
+    for v in zones.values():
+        final_damage *= v
+    return DamageEvalResult(
+        final_damage=final_damage,
+        zone_values=zones,
+        warnings=tuple(str(w) for w in _warnings),
+        unknown_effects=tuple({"effect_type": str(u[0]), "source": str(u[1])} for u in _unknown),
     )

@@ -101,7 +101,7 @@ def evaluate_task(
         break_defense_stacks=base_context.break_defense_stacks,
         effects=list(snapshot.effects),
         crit_mode=crit_mode,
-    )
+    ).final_damage
     return LoadoutScore(
         weapon_name=snapshot.weapon_name,
         final_damage=final_damage,

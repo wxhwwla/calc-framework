@@ -238,6 +238,59 @@ def execution_damage(
     return final_damage * mult
 
 
+def compute_15_zone_detail(
+    *,
+    final_attack: float,
+    skill_multiplier: float = 1.0,
+    base_damage_bonus: float = 0.0,
+    crit_rate: float = 0.05,
+    crit_damage: float = 0.5,
+    crit_mode: str = "non_crit",
+    damage_type_bonus: float = 0.0,
+    skill_type_bonus: float = 0.0,
+    imbalance_damage_bonus: float = 0.0,
+    other_damage_bonus: float = 0.0,
+    damage_reduction: float = 0.0,
+    amplification: float = 0.0,
+    weakness: float = 0.0,
+    shelter: float = 0.0,
+    fragile: float = 0.0,
+    vulnerability: float = 0.0,
+    enemy_defense: float = 100.0,
+    defense_change: float = 0.0,
+    is_true_damage: bool = False,
+    imbalance_coeff: float = 1.3,
+    is_unbalanced: bool = False,
+    enemy_resistance: float = 0.0,
+    ignore_resistance: float = 0.0,
+    non_control_reduction: float = 0.0,
+    combo_bonus: float = 0.0,
+    special: float = 1.0,
+) -> dict[str, float]:
+    """15 乘区各乘区值明细，按 ZONE_ORDER 顺序返回。
+
+    返回:
+        {乘区名: 乘数值} 字典，键与 games/endfield/calc/damage/engine/types.ZONE_ORDER 一致
+    """
+    return {
+        "基础伤害区": base_damage_zone(final_attack, skill_multiplier, base_damage_bonus),
+        "暴击区": crit_zone(crit_rate, crit_damage, crit_mode),
+        "伤害加成区": damage_bonus_zone(damage_type_bonus, skill_type_bonus, imbalance_damage_bonus, other_damage_bonus),
+        "伤害减免区": damage_reduction_zone(damage_reduction),
+        "增幅区": amplification_zone(amplification),
+        "虚弱区": weakness_zone(weakness),
+        "庇护区": shelter_zone(shelter),
+        "脆弱区": fragile_zone(fragile),
+        "易伤区": vulnerability_zone(vulnerability),
+        "防御区": defense_zone(enemy_defense, defense_change, is_true_damage),
+        "失衡易伤区": imbalance_zone(imbalance_coeff, is_unbalanced),
+        "抗性区": resistance_zone(enemy_resistance, ignore_resistance),
+        "非主控减伤区": non_control_reduction_zone(non_control_reduction),
+        "连击增伤区": combo_bonus_zone(combo_bonus),
+        "特殊乘区": special_zone(special),
+    }
+
+
 def compute_15_zone_damage(
     *,
     final_attack: float,

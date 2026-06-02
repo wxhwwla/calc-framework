@@ -197,7 +197,7 @@ def evaluate_spell_abnormal_total(
                     damage_pipeline="abnormal",
                 )
                 segment_total += apply_abnormal_post_zones(
-                    dmg,
+                    dmg.final_damage,
                     originium_arts_strength=originium_arts_strength,
                 )
             breakdown[base_key] = segment_total / float(count)

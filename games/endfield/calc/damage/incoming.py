@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-from games.endfield.calc.damage.engine import CritMode, DamageContext, calculate_single_hit_damage
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+from games.endfield.calc.damage.engine import CritMode
 
 # 干员抗性乘数下限（最多减伤 90%）
 MIN_OPERATOR_RESISTANCE_MULT = 0.1
@@ -45,15 +46,23 @@ def enemy_burn_tick_damage(
     crit_mode: CritMode = "non_crit",
 ) -> float:
     """敌人燃烧：每秒 最大生命×2% 的灼热伤害（无视防御）。"""
-    ctx = DamageContext(
+    return evaluate_search_damage(
         final_attack=float(max_hp),
         skill_multiplier=0.02,
         damage_type="法术-灼热",
         skill_type="异常",
+        is_unbalanced=False,
+        is_true_damage=False,
         enemy_defense=0.0,
         enemy_resistance=float(hot_resistance_percent),
         ignore_resistance=float(ignore_resistance_percent),
-    )
-    return float(
-        calculate_single_hit_damage(ctx, crit_mode=crit_mode, damage_pipeline="abnormal").final_damage
-    )
+        imbalance_vulnerability_coeff=0.0,
+        crit_rate=0.05,
+        crit_damage=0.5,
+        damage_type_bonus=0.0,
+        skill_type_bonus=0.0,
+        imbalance_damage_bonus=0.0,
+        other_damage_bonus=0.0,
+        damage_pipeline="abnormal",
+        crit_mode=crit_mode,
+    ).final_damage
