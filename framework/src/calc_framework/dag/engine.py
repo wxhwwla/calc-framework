@@ -10,13 +10,21 @@ from __future__ import annotations
 import math
 import operator as op
 import time
-from collections import Counter, deque
 from dataclasses import dataclass, field
 from typing import Any
 
 from calc_framework.logging import get_logger
 
-from .errors import DAGCycleError, DAGRuntimeError
+from .block_cache import (
+    BlockCache,
+    BlockCacheEntry,
+    _build_block_membership,
+    _compute_block_inputs,
+    _get_primary_output_node,
+    _resolve_block_outputs,
+)
+from .errors import DAGRuntimeError
+from .graph import _node_dependencies, _node_display, _resolve_path, topological_sort
 from .sandbox import evaluate as sandbox_evaluate
 from .sandbox import parse_expr
 from .schema import (
@@ -113,150 +121,6 @@ class DAGResult:
     node_values: dict[str, float] = field(default_factory=dict)
 
     execution_order: list[str] = field(default_factory=list)
-
-
-
-
-
-def topological_sort(graph: DAGGraph) -> list[str]:
-
-    """对图中的节点做拓扑排序，返回执行顺序。
-
-
-
-    Raises:
-
-        DAGCycleError: 存在循环依赖
-
-    """
-
-    in_degree: dict[str, int] = {nid: 0 for nid in graph.nodes}
-
-    adj: dict[str, list[str]] = {nid: [] for nid in graph.nodes}
-
-
-
-    for nid, node in graph.nodes.items():
-
-        refs = _node_dependencies(node)
-
-        for ref in refs:
-
-            if ref in adj:
-
-                adj[ref].append(nid)
-
-                in_degree[nid] += 1
-
-
-
-    orig_in_degree = dict(in_degree)
-
-    queue: deque[str] = deque(nid for nid, deg in in_degree.items() if deg == 0)
-
-    order: list[str] = []
-
-
-
-    while queue:
-
-        nid = queue.popleft()
-
-        order.append(nid)
-
-        for downstream in adj[nid]:
-
-            in_degree[downstream] -= 1
-
-            if in_degree[downstream] == 0:
-
-                queue.append(downstream)
-
-
-
-    if len(order) != len(graph.nodes):
-
-        remaining = [nid for nid, deg in in_degree.items() if deg > 0]
-
-        logger.error("检测到循环依赖: %s", remaining)
-
-        raise DAGCycleError(f"循环依赖: {remaining}")
-
-
-
-    degree_dist = Counter(orig_in_degree.values())
-
-    dist_desc = ", ".join(f"入度={k} × {v}" for k, v in sorted(degree_dist.items()))
-
-    logger.info("拓扑排序: %d 个节点 (%s)", len(order), dist_desc)
-
-    logger.debug("执行顺序: %s", order)
-
-    return order
-
-
-
-
-
-def _node_dependencies(node: NodeType) -> list[str]:
-
-    """返回节点的直接依赖节点 ID 列表。"""
-
-    if isinstance(node, UnaryNode):
-
-        return [node.input]
-
-    if isinstance(node, BinaryNode):
-
-        return [node.lhs, node.rhs]
-
-    if isinstance(node, ConditionNode):
-
-        return [node.cond, node.true_val, node.false_val]
-
-    if isinstance(node, ExprNode):
-
-        return list(node.inputs.values())
-
-    return []
-
-
-
-
-
-def _node_display(node: NodeType) -> str:
-
-    """返回节点的可读描述（用于日志）。"""
-
-    if isinstance(node, ConstNode):
-
-        return f"Const({node.value})"
-
-    if isinstance(node, VarNode):
-
-        return f"Var({node.path})"
-
-    if isinstance(node, UserInputNode):
-
-        return f"UserInput(default={node.default})"
-
-    if isinstance(node, UnaryNode):
-
-        return f"Unary({node.op}, input={node.input})"
-
-    if isinstance(node, BinaryNode):
-
-        return f"Binary({node.op}, lhs={node.lhs}, rhs={node.rhs})"
-
-    if isinstance(node, ConditionNode):
-
-        return f"Condition(cond={node.cond})"
-
-    if isinstance(node, ExprNode):
-
-        return f"Expr({node.expr}, inputs={dict(node.inputs)})"
-
-    return type(node).__name__
 
 
 
@@ -360,287 +224,6 @@ def _eval_single_node(node: NodeType, values: dict[str, float], context: dict[st
 
 
 
-def _resolve_path(context: dict[str, Any], path: str) -> Any:
-
-    """按点分隔路径在上下文中取值。"""
-
-    parts = path.split(".")
-
-    cursor: Any = context
-
-    for part in parts:
-
-        if isinstance(cursor, dict):
-
-            cursor = cursor.get(part)
-
-        else:
-
-            return None
-
-        if cursor is None:
-
-            return None
-
-    return cursor
-
-
-
-
-
-# ── Block-level caching ─────────────────────────────────
-
-
-
-
-
-@dataclass
-
-class BlockCacheEntry:
-
-    """单块的缓存条目。"""
-
-    input_hash: int
-
-    outputs: dict[str, float]
-
-
-
-
-
-class BlockCache:
-
-    """块级缓存 — 跟踪每个块的输入签名和输出值。
-
-
-
-    当块的输入值未变化时，跳过块内求值，直接使用缓存输出。
-
-    """
-
-
-
-    def __init__(self) -> None:
-
-        self._blocks: dict[str, BlockCacheEntry] = {}
-
-
-
-    def get(self, block_id: str, bound_inputs: dict[str, float]) -> dict[str, float] | None:
-
-        sig = _compute_input_hash(bound_inputs)
-
-        entry = self._blocks.get(block_id)
-
-        if entry is not None and entry.input_hash == sig:
-
-            return dict(entry.outputs)
-
-        return None
-
-
-
-    def put(self, block_id: str, bound_inputs: dict[str, float], outputs: dict[str, float]) -> None:
-
-        self._blocks[block_id] = BlockCacheEntry(
-
-            input_hash=_compute_input_hash(bound_inputs),
-
-            outputs=dict(outputs),
-
-        )
-
-
-
-    def invalidate(self, block_id: str) -> None:
-
-        self._blocks.pop(block_id, None)
-
-
-
-    def invalidate_all(self) -> None:
-
-        self._blocks.clear()
-
-
-
-
-
-def _compute_input_hash(inputs: dict[str, float]) -> int:
-
-    """计算输入字典的哈希值。"""
-    return hash(tuple(sorted(inputs.items())))
-
-
-
-
-
-def _compute_block_inputs(
-
-    graph: DAGGraph,
-
-    context: dict[str, Any],
-
-) -> dict[str, dict[str, float]]:
-
-    """预计算各块调用节点的输入值（用于缓存键）。
-
-
-
-    解析可直接从 context 或 const 节点获取的输入；
-
-    块到块依赖使用源块 ID 的哈希作为代理。
-
-    """
-
-    result: dict[str, dict[str, float]] = {}
-
-    for nid, node in graph.nodes.items():
-
-        if not isinstance(node, CallNode):
-
-            continue
-
-        inputs: dict[str, float] = {}
-
-        for param_name, source_nid in node.bindings.items():
-
-            source_node = graph.nodes.get(source_nid)
-
-            if isinstance(source_node, ConstNode):
-
-                inputs[param_name] = source_node.value
-
-            elif isinstance(source_node, VarNode):
-
-                val = _resolve_path(context, source_node.path)
-
-                if val is not None:
-
-                    inputs[param_name] = float(val)
-
-            elif isinstance(source_node, CallNode):
-
-                inputs[param_name] = hash(source_nid)
-
-        if inputs:
-
-            result[nid] = inputs
-
-    return result
-
-
-
-
-
-def _build_block_membership(expanded: DAGGraph, graph: DAGGraph) -> dict[str, set[str]]:
-
-    """构建块 ID → 展开后节点 ID 集合的映射。"""
-
-    result: dict[str, set[str]] = {}
-
-    for nid, node in graph.nodes.items():
-
-        if not isinstance(node, CallNode):
-
-            continue
-
-        prefix = f"{nid}."
-
-        members = {eid for eid in expanded.nodes if eid.startswith(prefix)}
-
-        result[nid] = members
-
-    return result
-
-
-
-
-
-def _resolve_block_outputs(
-
-    graph: DAGGraph,
-
-    expanded: DAGGraph,
-
-    block_id: str,
-
-    values: dict[str, float],
-
-) -> dict[str, float]:
-
-    """从求值结果中提取块的输出值。"""
-
-    node = graph.nodes.get(block_id)
-
-    if not isinstance(node, CallNode):
-
-        return {}
-
-    sub = graph.subgraphs.get(node.subgraph)
-
-    if sub is None:
-
-        return {}
-
-    outputs: dict[str, float] = {}
-
-    for oid, odef in sub.outputs.items():
-
-        expanded_id = f"{block_id}.{odef.node}"
-
-        if expanded_id in values:
-
-            outputs[oid] = values[expanded_id]
-
-        # Also check ref_map resolution (primary output)
-
-    if not outputs:
-
-        # Fallback: primary output
-
-        primary = _get_primary_output_node(expanded, node, block_id)
-
-        if primary and primary in values:
-
-            outputs["result"] = values[primary]
-
-    return outputs
-
-
-
-
-
-def _get_primary_output_node(expanded: DAGGraph, call_node: CallNode, call_id: str) -> str | None:
-
-    """获取块的主输出在展开图中的节点 ID。"""
-
-    sub = expanded.subgraphs.get(call_node.subgraph)
-
-    if sub is None:
-
-        return None
-
-    for oid, odef in sub.outputs.items():
-
-        if odef.is_primary:
-
-            return f"{call_id}.{odef.node}"
-
-    # Fallback: first output
-
-    if sub.outputs:
-
-        first_oid = next(iter(sub.outputs))
-
-        return f"{call_id}.{sub.outputs[first_oid].node}"
-
-    return None
-
-
-
-
-
 def evaluate_graph(
 
     graph: DAGGraph,
@@ -655,11 +238,7 @@ def evaluate_graph(
 
     """展开子图、拓扑排序、求值所有节点，返回结果。
 
-
-
     支持增量求值（通过 ``dag_state`` 参数保留跨调用状态）：
-
-
 
     - 首次调用传入 ``dag_state=DAGState()``，引擎自动填充状态。
 
@@ -667,15 +246,9 @@ def evaluate_graph(
 
     - 上下文未变化时完全跳过求值（返回缓存结果）。
 
-
-
     支持惰性求值（通过 ``graph`` 的 outputs 定义）：
 
-
-
     - 只求值对输出有贡献的节点，跳过"死节点"。
-
-
 
     数据上下文按变量声明的 source 分区，例如:
 
@@ -1058,4 +631,3 @@ def _apply_defaults(graph: DAGGraph, context: dict[str, Any]) -> dict[str, Any]:
 
 
     return result
-
