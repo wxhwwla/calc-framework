@@ -16,11 +16,10 @@
     result = MySearch().run(SearchConfig(top_n=20))
 """
 
-from calc_framework.search.cancel import SearchCancelToken
 from calc_framework.search.engine import SearchConfig, SearchEngine
 from calc_framework.search.parallel import ParallelProgress, run_parallel
 from calc_framework.search.persist import SearchRunStore
-from calc_framework.search.result import SearchResult
+from calc_framework.search.result import SearchCancelToken, SearchResult
 from calc_framework.search.session import SearchSession
 from calc_framework.search.tracker import TopNTracker
 

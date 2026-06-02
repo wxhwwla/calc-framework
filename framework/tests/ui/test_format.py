@@ -2,7 +2,7 @@
 """节点值格式化 — 单元测试。"""
 
 
-from calc_framework.ui.format import format_node_value
+from calc_framework.ui.controls import format_node_value
 
 
 class TestFormatNodeValue:

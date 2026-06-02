@@ -5,7 +5,7 @@
 import tempfile
 from pathlib import Path
 
-from calc_framework.graph_editor.dag_service_factory import (
+from calc_framework.graph_editor.compiler import (
     dag_service_from_graph_document,
     dag_service_from_graph_file,
 )

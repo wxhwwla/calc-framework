@@ -10,8 +10,8 @@
     )
 """
 
-from calc_framework.graph_editor.compiler import compile_graph
-from calc_framework.graph_editor.dag_service_factory import (
+from calc_framework.graph_editor.compiler import (
+    compile_graph,
     dag_service_from_graph_document,
     dag_service_from_graph_file,
 )

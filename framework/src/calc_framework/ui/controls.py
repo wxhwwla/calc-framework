@@ -117,22 +117,25 @@ def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
 
 
     return ControlSpec(
-
         label=label,
-
         widget=widget,
-
         default=default,
-
         min_val=min_val,
-
         max_val=max_val,
-
         step=step,
-
         options=options if options else [],
-
         description=description,
-
     )
+
+
+# from format.py
+def format_node_value(value: Any, format_spec: str | None = None) -> str:
+    if value is None:
+        return "N/A"
+    if not format_spec:
+        return str(value)
+    try:
+        return f"{value:{format_spec}}"
+    except (ValueError, TypeError):
+        return str(value)
 

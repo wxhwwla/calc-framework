@@ -34,7 +34,7 @@ from ..dag.schema import DAGVariable
 from ..dag.service import DAGService
 from ..logging import get_logger
 from .controls import ControlSpec, infer_control
-from .format import format_node_value
+from .controls import format_node_value
 from .layout import Layout, Section
 
 logger = get_logger(__name__)

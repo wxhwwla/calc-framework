@@ -41,9 +41,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from .cancel import SearchCancelToken
 from .parallel import run_parallel
-from .result import SearchResult
+from .result import SearchCancelToken, SearchResult
 from .tracker import TopNTracker
 
 if TYPE_CHECKING:

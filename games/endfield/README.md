@@ -194,7 +194,7 @@ python build.py
 
 ### GUI 布局
 
-主窗口为 **双页签**（`shell/qt_app.py` + `shell/qt_control_dock.py`）：
+主窗口为 **双页签**（`gui/endfield_app.py` + `shell/qt_control_dock.py`）：
 
 | 页签 | 布局 | 说明 |
 |------|------|------|

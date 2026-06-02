@@ -10,8 +10,7 @@ from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from typing import TypeVar
 
-from .cancel import SearchCancelToken
-from .result import ParallelProgress
+from .result import ParallelProgress, SearchCancelToken
 from .tracker import TopNTracker
 
 T = TypeVar("T")

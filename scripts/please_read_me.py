@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.11"
+_VERSION = "3.18.12"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -406,92 +406,36 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 86 处文件
+# TITLE: 更新 30 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 更新文档 README.md
-# - 修改 framework/src/calc_framework/config/adapter.py
-# - 修改 framework/src/calc_framework/config/file_watcher.py
-# - 修改 framework/src/calc_framework/config/manager.py
-# - 修改 framework/src/calc_framework/config/watcher.py
-# - 修改 framework/src/calc_framework/data/attr_schema.py
-# - 修改 framework/src/calc_framework/data/schema.py
-# - 修改 framework/src/calc_framework/editor/__main__.py
-# - 修改 framework/src/calc_framework/editor/editor.py
-# - 修改 framework/src/calc_framework/editor/gui.py
-# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/__init__.py
 # - 修改 framework/src/calc_framework/graph_editor/compiler.py
 # - 修改 framework/src/calc_framework/graph_editor/dag_service_factory.py
-# - 修改 framework/src/calc_framework/graph_editor/file_actions.py
-# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
-# - 修改 framework/src/calc_framework/graph_editor/help_dialog.py
-# - 修改 framework/src/calc_framework/graph_editor/node_panel.py
-# - 修改 framework/src/calc_framework/graph_editor/package_manager.py
-# - 修改 framework/src/calc_framework/graph_editor/prop_panel.py
-# - 修改 framework/src/calc_framework/graph_editor/registry.py
-# - 修改 framework/src/calc_framework/graph_editor/schema.py
-# - 修改 framework/src/calc_framework/graph_editor/serializer.py
-# - 修改 framework/src/calc_framework/graph_editor/wire.py
-# - 修改 framework/src/calc_framework/plugin/builtin.py
-# - 修改 framework/src/calc_framework/plugin/registry.py
-# - 修改 framework/src/calc_framework/publish/catalog.py
+# - 修改 framework/src/calc_framework/launcher.py
+# - 修改 framework/src/calc_framework/search/__init__.py
+# - 修改 framework/src/calc_framework/search/cancel.py
 # - 修改 framework/src/calc_framework/search/engine.py
 # - 修改 framework/src/calc_framework/search/parallel.py
-# - 修改 framework/src/calc_framework/search/persist.py
+# - 修改 framework/src/calc_framework/search/result.py
 # - 修改 framework/src/calc_framework/search/session.py
-# - 修改 framework/src/calc_framework/ui/__main__.py
+# - 修改 framework/src/calc_framework/ui/__init__.py
 # - 修改 framework/src/calc_framework/ui/compute_sheet.py
-# - 修改 framework/src/calc_framework/ui/launcher/runtime.py
-# - 修改 framework/src/calc_framework/ui/launcher/window.py
-# - 修改 framework/src/calc_framework/ui/layout.py
-# - 修改 framework/src/calc_framework/ui/viewer.py
-# - 修改 framework/src/calc_framework/ui/viewer_plugin_manager.py
-# - 修改 games/endfield/__init__.py
-# - 修改 games/endfield/calc/core/__init__.py
-# - 修改 games/endfield/calc/damage/__init__.py
-# - 修改 games/endfield/calc/equipment/__init__.py
-# - 修改 games/endfield/calc/loadout/__init__.py
-# - 修改 games/endfield/calc/multi_skill/__init__.py
-# - 修改 games/endfield/calc/search/evaluate/__init__.py
-# - 修改 games/endfield/calc/search/persist/__init__.py
-# - 修改 games/endfield/calc/search/plan/__init__.py
-# - 修改 games/endfield/calc/search/run/__init__.py
-# - 修改 games/endfield/calc/skills/__init__.py
-# - 修改 games/endfield/data_loading/enemy_eval_params.py
-# - 修改 games/endfield/data_loading/enemy_params.py
-# - 修改 games/endfield/data_loading/web_loadout_bridge.py
-# - 修改 games/endfield/gui/__init__.py
-# - 修改 games/endfield/gui/controls/ocr/__init__.py
-# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
-# - 修改 games/endfield/gui/layout/__init__.py
-# - 修改 games/endfield/gui/legal/__init__.py
-# - 修改 games/endfield/gui/shared/__init__.py
-# - 修改 tools/endfield_scripts/build.py
-# - 修改 tools/endfield_scripts/editor_app.py
-# - 修改 tools/endfield_scripts/inverse_formula_gui.py
-# - 修改 web/backend/_path_setup.py
-# - 修改 web/backend/api/_json_utils.py
-# - 修改 web/backend/api/adapter_assets.py
-# - 修改 web/backend/api/adapters.py
-# - 修改 web/backend/api/arknights.py
-# - 修改 web/backend/api/compute.py
-# - 修改 web/backend/api/contribute.py
-# - 修改 web/backend/api/data.py
-# - 修改 web/backend/api/data_mutations.py
-# - 修改 web/backend/api/data_profiles.py
-# - 修改 web/backend/api/download_client.py
-# - 修改 web/backend/api/history.py
-# - 修改 web/backend/api/hub.py
-# - 修改 web/backend/api/layout.py
-# - 修改 web/backend/api/loadout_schemas.py
-# - 修改 web/backend/api/manual_buff.py
-# - 修改 web/backend/api/ocr.py
-# - 修改 web/backend/api/pack.py
-# - 修改 web/backend/api/persistent_store.py
-# - 修改 web/backend/api/search.py
-# - 修改 web/backend/api/survival.py
-# - 修改 web/backend/asgi.py
-# - 修改 web/backend/hub/__init__.py
-# - 修改 web/backend/hub/storage.py
-# - 修改 web/backend/main.py
+# - 修改 framework/src/calc_framework/ui/controls.py
+# - 修改 framework/src/calc_framework/ui/format.py
+# - 修改 framework/tests/dag/test_end_to_end.py
+# - 修改 framework/tests/dag/test_graph_file_service.py
+# - 修改 framework/tests/ui/test_format.py
+# - 更新文档 games/endfield/README.md
+# - 修改 games/endfield/calc/search/persist/schema.py
+# - 修改 games/endfield/calc/search/persist/store.py
+# - 修改 games/endfield/data_loading/__init__.py
+# - 修改 games/endfield/data_loading/loader.py
+# - 修改 games/endfield/data_loading/loader_crud.py
+# - 修改 games/endfield/gui/shell/qt_app.py
+# - 修改 games/endfield/gui/shell/qt_app_confirm_mixin.py
+# - 修改 games/endfield/gui/shell/qt_app_dialog_mixin.py
+# - 修改 games/endfield/gui/shell/qt_app_search_mixin.py
+# - 修改 games/endfield/main.py
+# - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---

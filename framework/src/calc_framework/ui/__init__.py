@@ -12,7 +12,7 @@
 
 from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.controls import ControlSpec, infer_control
-from calc_framework.ui.format import format_node_value
+from calc_framework.ui.controls import format_node_value
 from calc_framework.ui.layout import Layout, Section, load_layout, load_layout_json
 from calc_framework.ui.theme import ThemeManager
 from calc_framework.ui.viewer import CalcPackViewer

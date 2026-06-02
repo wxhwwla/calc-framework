@@ -24,11 +24,56 @@ class SearchResult(Generic[T]):
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
-class ParallelProgress:
-    """并行执行的进度信息。"""
-
-    processed: int = 0
-    total: int = 0
-    elapsed: float = 0.0
-    estimated_remaining: float = 0.0
+@dataclass
+class ParallelProgress:
+    """并行执行的进度信息。"""
+
+    processed: int = 0
+    total: int = 0
+    elapsed: float = 0.0
+    estimated_remaining: float = 0.0
+
+
+# from cancel.py
+@dataclass
+class SearchCancelToken:
+    """搜索取消令牌，可检查是否已取消或超量。
+
+    用法::
+
+        cancel = SearchCancelToken(cancel_after=5000)
+
+        for i, item in enumerate(items):
+
+            if cancel.should_cancel(i):
+
+                break
+
+            process(item)
+
+
+
+        # 主动取消
+
+        cancel.cancel()
+
+    """
+
+    cancel_after: int | None = None
+    _cancelled: bool = False
+
+    def cancel(self) -> None:
+        self._cancelled = True
+
+    @property
+    def is_cancelled(self) -> bool:
+        """is_cancelled。"""
+        return self._cancelled
+
+    def should_cancel(self, processed_count: int) -> bool:
+        if self._cancelled:
+            return True
+        if self.cancel_after is not None and processed_count >= self.cancel_after:
+            self._cancelled = True
+            return True
+        return False

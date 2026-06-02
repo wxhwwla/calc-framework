@@ -9,11 +9,13 @@ class DataLoadingError(Exception):
 from .game_data_facade import GameDataFacade
 from .loader import (
     DataLoadError,
-    check_and_save_characters,
-    check_and_save_weapons,
     get_characters,
     get_weapons,
     preload_game_data,
+)
+from .loader_crud import (
+    check_and_save_characters,
+    check_and_save_weapons,
     save_characters,
     save_weapons,
 )

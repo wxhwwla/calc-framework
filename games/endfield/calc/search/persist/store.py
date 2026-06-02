@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
 from pathlib import Path
 
 from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
@@ -38,34 +37,11 @@ from ..evaluate.context import SearchEvalContext
 from ..run.cancel import SearchCancelToken
 from ..run.parallel import run_bounded_parallel
 
+from .schema import PendingTaskStream, ResumeExecutionResult, SCORES_CREATE_TABLE_SQL
+
 # 续跑进度批量写入条数
 
 PROCESSED_BATCH_SIZE = 500
-
-
-
-
-
-@dataclass(frozen=True)
-
-class ResumeExecutionResult:
-
-    """续跑执行结果。"""
-
-
-
-    top_results: tuple[LoadoutScore, ...]
-
-    total_combinations: int
-
-    processed_combinations: int
-
-    processed_this_run: int
-
-    skipped_preprocessed: int
-
-    cancelled: bool
-
 
 
 
@@ -86,31 +62,7 @@ class SearchRunStore(BaseSearchRunStore):
 
     def _schema_sql(self) -> str:
 
-        return super()._schema_sql() + """
-
-        CREATE TABLE IF NOT EXISTS scores (
-
-            signature TEXT NOT NULL,
-
-            combo_key TEXT NOT NULL,
-
-            weapon_name TEXT NOT NULL,
-
-            final_damage REAL NOT NULL,
-
-            chest TEXT NOT NULL,
-
-            gloves TEXT NOT NULL,
-
-            accessory_a TEXT NOT NULL,
-
-            accessory_b TEXT NOT NULL,
-
-            PRIMARY KEY (signature, combo_key)
-
-        );
-
-        """
+        return super()._schema_sql() + SCORES_CREATE_TABLE_SQL
         """schema sql。"""
 
 
@@ -279,21 +231,6 @@ class SearchRunStore(BaseSearchRunStore):
 
         )
         """load top scores。"""
-
-
-
-
-
-@dataclass
-
-class PendingTaskStream:
-
-    """待处理任务流（附带跳过计数）。"""
-
-
-
-    skipped_preprocessed: int = 0
-
 
 
 

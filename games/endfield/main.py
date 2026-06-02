@@ -5,7 +5,7 @@
 
 项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
 ├── main.py                    # 本文件：启动 GUI（PySide6 版）
-├── gui/shell/qt_app.py # 主窗口（双页签：计算页 / 高级页）
+├── gui/endfield_app.py  # 主窗口（双页签：计算页 / 高级页）
 ├── data/loader.py             # 角色、武器、装备 JSON 统一加载
 ├── data/game_data_facade.py   # 应用级数据门面（GUI / 对比 / 搜索）
 ├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线

@@ -31,10 +31,9 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-from .cancel import SearchCancelToken
 from .engine import SearchConfig, SearchEngine
 from .persist import SearchRunStore
-from .result import SearchResult
+from .result import SearchCancelToken, SearchResult
 
 C = TypeVar("C")
 

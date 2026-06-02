@@ -6,7 +6,10 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
+
+from ..dag.service import DAGService
 
 from ..dag.schema import (
     BinaryNode,
@@ -375,4 +378,19 @@ def _compile_single_node(node: GraphNode, port_inputs: dict[tuple[str, int], str
 
 
     raise ValueError(f"未知节点类型: {node.type}")
+
+
+# from dag_service_factory.py
+def dag_service_from_graph_document(doc: Any) -> DAGService:
+    """从 graph_editor 的 GraphDocument 编译并创建 DAGService。"""
+    dag = compile_graph(doc)
+    return DAGService(dag)
+
+
+def dag_service_from_graph_file(path: str | Path) -> DAGService:
+    """从 graph_editor 格式的 graph.json 文件加载并创建 DAGService。"""
+    import json
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    doc = document_from_json(data)
+    return dag_service_from_graph_document(doc)
 
