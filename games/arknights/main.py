@@ -21,8 +21,9 @@ def main() -> None:
     if str(_REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(_REPO_ROOT))
 
-    from games.arknights.gui.ArknightsDamageApp import main as gui_main
-    gui_main()
+    from games.arknights.gui.ArknightsApp import ArknightsApp
+    app = ArknightsApp()
+    app.run()
 
 
 if __name__ == "__main__":

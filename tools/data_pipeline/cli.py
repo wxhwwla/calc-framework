@@ -33,25 +33,29 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from tools.data_pipeline.readers.csv_reader import read_csv
-from tools.data_pipeline.readers.json_reader import read_json
-from tools.data_pipeline.transformers.from_legacy_endfield import from_characters, from_weapons
-from tools.data_pipeline.transformers.to_standard import to_standard
-from tools.data_pipeline.validators.schema_check import validate_all
-
-
-def main() -> None:
-    args = _parse_args()
-
-    if args.get("schema_help"):
-        _show_schema_help()
-        return
-
-    path = args["path"]
-    output = args.get("output")
-    do_validate = args.get("validate", False)
-    migrate_chars = args.get("migrate_characters", False)
-    migrate_weaps = args.get("migrate_weapons", False)
+from tools.data_pipeline.diff import diff_main
+from tools.data_pipeline.readers.csv_reader import read_csv
+from tools.data_pipeline.readers.json_reader import read_json
+from tools.data_pipeline.transformers.from_legacy_endfield import from_characters, from_weapons
+from tools.data_pipeline.transformers.to_standard import to_standard
+from tools.data_pipeline.validators.schema_check import validate_all
+
+
+def main() -> None:
+    args = _parse_args()
+
+    if args.get("diff_mode"):
+        sys.exit(diff_main(args["diff_args"]))
+
+    if args.get("schema_help"):
+        _show_schema_help()
+        return
+
+    path = args["path"]
+    output = args.get("output")
+    do_validate = args.get("validate", False)
+    migrate_chars = args.get("migrate_characters", False)
+    migrate_weaps = args.get("migrate_weapons", False)
     stacked = args.get("stacked_skills", False)
 
     # --- 读取 ---
@@ -88,42 +92,47 @@ def main() -> None:
         print(json.dumps(entities, ensure_ascii=False, indent=2))
 
 
-def _parse_args() -> Dict[str, Any]:
-    args = sys.argv[1:]
-    result: Dict[str, Any] = {}
-
-    if "--schema-help" in args:
-        result["schema_help"] = True
-        return result
-
-    if not args:
-        print(__doc__, file=sys.stderr)
-        sys.exit(1)
-
-    result["path"] = args[0]
-
-    i = 1
-    while i < len(args):
-        arg = args[i]
-        if arg == "-o" and i + 1 < len(args):
-            result["output"] = args[i + 1]
-            i += 2
-        elif arg == "--validate":
-            result["validate"] = True
-            i += 1
-        elif arg == "--migrate-characters":
-            result["migrate_characters"] = True
-            i += 1
-        elif arg == "--migrate-weapons":
-            result["migrate_weapons"] = True
-            i += 1
-        elif arg == "--stacked-skills":
-            result["stacked_skills"] = True
-            i += 1
-        else:
-            print(f"未知参数: {arg}", file=sys.stderr)
-            sys.exit(1)
-
+def _parse_args() -> Dict[str, Any]:
+    args = sys.argv[1:]
+    result: Dict[str, Any] = {}
+
+    if not args:
+        print(__doc__, file=sys.stderr)
+        sys.exit(1)
+
+    if args[0] == "diff":
+        result["diff_mode"] = True
+        result["diff_args"] = args[1:]
+        return result
+
+    if "--schema-help" in args:
+        result["schema_help"] = True
+        return result
+
+    result["path"] = args[0]
+
+    i = 1
+    while i < len(args):
+        arg = args[i]
+        if arg == "-o" and i + 1 < len(args):
+            result["output"] = args[i + 1]
+            i += 2
+        elif arg == "--validate":
+            result["validate"] = True
+            i += 1
+        elif arg == "--migrate-characters":
+            result["migrate_characters"] = True
+            i += 1
+        elif arg == "--migrate-weapons":
+            result["migrate_weapons"] = True
+            i += 1
+        elif arg == "--stacked-skills":
+            result["stacked_skills"] = True
+            i += 1
+        else:
+            print(f"未知参数: {arg}", file=sys.stderr)
+            sys.exit(1)
+
     return result
 
 
