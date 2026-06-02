@@ -60,6 +60,8 @@ omit = [
     "*/graph_editor/__main__.py",
     "*/graph_editor/help_content.py",
     "*/graph_editor/help_dialog.py",
+    "*/graph_editor/help_menu.py",
+    "*/graph_editor/help_nodes.py",
     "*/launcher.py",
     "*/ui/__main__.py",
     "*/ui/theme.py",

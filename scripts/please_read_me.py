@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.15"
+_VERSION = "3.18.16"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -409,18 +409,18 @@ if __name__ == "__main__":
 # TITLE: 更新 15 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 修改 framework/src/calc_framework/dag/block_cache.py
-# - 修改 framework/src/calc_framework/dag/engine.py
-# - 修改 framework/src/calc_framework/dag/graph.py
-# - 修改 framework/src/calc_framework/dag/graph_types.py
-# - 修改 framework/src/calc_framework/dag/node_types.py
-# - 修改 framework/src/calc_framework/dag/schema.py
-# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
-# - 修改 framework/src/calc_framework/graph_editor/items.py
-# - 修改 framework/src/calc_framework/graph_editor/scene.py
-# - 修改 framework/src/calc_framework/graph_editor/view.py
-# - 修改 framework/src/calc_framework/ui/viewer.py
-# - 修改 framework/src/calc_framework/ui/viewer_events.py
-# - 修改 framework/src/calc_framework/ui/viewer_render.py
+# - 变更 framework/pyproject.toml
+# - 修改 framework/src/calc_framework/dag/sandbox.py
+# - 修改 framework/src/calc_framework/dag/sandbox_config.py
+# - 修改 framework/src/calc_framework/graph_editor/help_content.py
+# - 修改 framework/src/calc_framework/graph_editor/help_menu.py
+# - 修改 framework/src/calc_framework/graph_editor/help_nodes.py
+# - 修改 framework/src/calc_framework/inverse/advanced.py
+# - 修改 framework/src/calc_framework/inverse/strategies.py
+# - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/src/calc_framework/ui/sheet_evaluator.py
+# - 修改 framework/src/calc_framework/ui/sheet_widgets.py
+# - 修改 framework/src/calc_framework/ui/theme.py
+# - 修改 framework/src/calc_framework/ui/theme_presets.py
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
