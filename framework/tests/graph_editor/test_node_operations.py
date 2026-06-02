@@ -68,23 +68,25 @@ class TestDeleteNode:
 
 
 class TestGridSnapping:
-    def test_node_snaps_to_grid_when_moved(self, qapp) -> None:
-        w = GraphEditorWidget()
-        w.add_graph_node(GraphNode(id="n", type="const", position={"x": 0, "y": 0}))
-        w.show()
-
-        item = w.find_node_item("n")
-        assert item is not None
-
-        item.setPos(23, 47)
-        pos = item.pos()
-        assert pos.x() == 40.0, f"期望 x=40, 实际 x={pos.x()}"
-        assert pos.y() == 40.0, f"期望 y=40, 实际 y={pos.y()}"
-
-        item.setPos(-13, 88)
-        pos = item.pos()
-        assert pos.x() == 0.0, f"期望 x=0, 实际 x={pos.x()}"
-        assert pos.y() == 80.0, f"期望 y=80, 实际 y={pos.y()}"
+    def test_node_snaps_to_grid_when_moved(self, qapp) -> None:
+        w = GraphEditorWidget()
+        w.add_graph_node(GraphNode(id="n", type="const", position={"x": 0, "y": 0}))
+        w.show()
+        try:
+            item = w.find_node_item("n")
+            assert item is not None
+
+            item.setPos(23, 47)
+            pos = item.pos()
+            assert pos.x() == 40.0, f"期望 x=40, 实际 x={pos.x()}"
+            assert pos.y() == 40.0, f"期望 y=40, 实际 y={pos.y()}"
+
+            item.setPos(-13, 88)
+            pos = item.pos()
+            assert pos.x() == 0.0, f"期望 x=0, 实际 x={pos.x()}"
+            assert pos.y() == 80.0, f"期望 y=80, 实际 y={pos.y()}"
+        finally:
+            w.close()
 
     def test_drop_snaps_to_grid(self, qapp) -> None:
         w = GraphEditorWidget()

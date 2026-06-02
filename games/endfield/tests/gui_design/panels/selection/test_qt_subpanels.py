@@ -29,9 +29,11 @@ class TestQtTrustPanel(unittest.TestCase):
 
 
     def setUp(self) -> None:
-
         self.panel = QtTrustPanel(self._font)
 
+    def tearDown(self) -> None:
+        self.panel.close()
+        self.panel.deleteLater()
 
 
     def test_initial_trust_level_zero(self) -> None:
@@ -107,9 +109,11 @@ class TestQtSkillLevelPanel(unittest.TestCase):
 
 
     def setUp(self) -> None:
-
         self.panel = QtSkillLevelPanel(self._font)
 
+    def tearDown(self) -> None:
+        self.panel.close()
+        self.panel.deleteLater()
 
 
     def test_initial_levels_all_one(self) -> None:
