@@ -14,8 +14,11 @@
 | 命令 | 用途 | 说明 |
 |------|------|------|
 | `python tools/check_layout.py` | 仓库布局门禁（目录宽度、文件行数） | 见 `check_layout.py` |
-| `python tools/check_code_origin.py` | AI 代码来源/版权检测 | 四种检测器，支持 `--ci` 模式 |
+| `python tools/run_scancode.py` | 权威许可证/版权扫描（逐个目录，16 进程） | 输出 `scan_report.json` |
+| `python tools/check_code_origin.py` | 轻量 AI 代码来源/版权检测 | 1 秒出结果，50 MB 内存 |
 | `python devtool.py check-origin` | 同上，通过 devtool 入口 | `--ci --skip git-diff` 等参数透明传递 |
+
+> **两套扫描工具的关系**：`check_code_origin.py` 做快速检查（SPDX/版权头），`run_scancode.py` 做权威审查（1000+ 许可证数据库）。日常用前者，发布前用后者。
 
 **`bwiki_scout/` 常用命令**（均在 `[根]` 执行）：
 

@@ -146,6 +146,12 @@ Before modifying `.github/workflows/*.yml`, read ALL existing workflow files to 
 - **Do not** run `github_download_module.py` unless user explicitly wants to discard local work
 - Script requires typing `覆盖本地` to confirm (runs `reset --hard` + `git clean -fd`)
 
+## License & Code Origin Scan
+Two complementary tools in `tools/`:
+- `run_scancode.py` — Authoritative license/copyright scan (per-directory, `--processes 16`)
+- `check_code_origin.py` — Lightweight SPDX/copyright header check (1s, 50 MB RAM)
+See `tools/README.md` and `.trae/rules/project_rules.md` § license-scan for details.
+
 ## Default Dev Workflow
 Feature / bug fix / code change → default to `design-then-build`:
 1. Interview user to clarify design (grill-me style)
