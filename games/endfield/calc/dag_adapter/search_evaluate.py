@@ -21,6 +21,61 @@ __all__ = [
     "evaluate_search_damage",
 ]
 
+# 手动 buff 中直加类型 → DamageContext 字段名映射
+_CONTEXT_BUFF_MAP: dict[str, str] = {
+    "暴击率": "crit_rate",
+    "暴击伤害": "crit_damage",
+    "伤害类型加成": "damage_type_bonus",
+    "技能类型加成": "skill_type_bonus",
+    "失衡伤害加成": "imbalance_damage_bonus",
+    "其他伤害加成": "other_damage_bonus",
+}
+
+
+def _apply_manual_buffs_to_kwargs(
+    *,
+    manual_buffs: list[dict[str, str | float]] | None,
+    # 以下为需要覆盖的关键字段
+    crit_rate: float = 0.05,
+    crit_damage: float = 0.5,
+    damage_type_bonus: float = 0.0,
+    skill_type_bonus: float = 0.0,
+    imbalance_damage_bonus: float = 0.0,
+    other_damage_bonus: float = 0.0,
+) -> tuple[dict[str, float], list[DamageEffect]]:
+    """处理 manual_buffs，返回 (字段覆盖字典, 额外效果列表)。
+
+    与 calculate.py 中 _apply_manual_buffs 逻辑一致。
+    """
+    overrides: dict[str, float] = {}
+    extra_effects: list[DamageEffect] = []
+    for entry in manual_buffs or []:
+        et = str(entry.get("effect_type", "")).strip()
+        v = float(entry.get("value", 0.0))
+        if not et:
+            continue
+        ctx_field = _CONTEXT_BUFF_MAP.get(et)
+        if ctx_field:
+            overrides[ctx_field] = overrides.get(ctx_field, 0.0) + v
+        else:
+            extra_effects.append(
+                DamageEffect(
+                    effect_type=et,
+                    value=v,
+                    source="手动buff",
+                    raw_text=f"{et}+{v * 100:.0f}%",
+                )
+            )
+    result = {
+        "crit_rate": crit_rate + overrides.get("crit_rate", 0.0),
+        "crit_damage": crit_damage + overrides.get("crit_damage", 0.0),
+        "damage_type_bonus": damage_type_bonus + overrides.get("damage_type_bonus", 0.0),
+        "skill_type_bonus": skill_type_bonus + overrides.get("skill_type_bonus", 0.0),
+        "imbalance_damage_bonus": imbalance_damage_bonus + overrides.get("imbalance_damage_bonus", 0.0),
+        "other_damage_bonus": other_damage_bonus + overrides.get("other_damage_bonus", 0.0),
+    }
+    return result, extra_effects
+
 
 def evaluate_search_damage(
     *,
@@ -45,6 +100,8 @@ def evaluate_search_damage(
     base_damage_bonus: float = 0.0,
     effects: list[DamageEffect] | None = None,
     crit_mode: CritMode = "non_crit",
+    manual_buffs: list[dict[str, str | float]] | None = None,
+    damage_pipeline: str = "normal",
 ) -> float:
     """用 DAG 注册函数替代本地引擎计算单段伤害。
 
@@ -57,7 +114,31 @@ def evaluate_search_damage(
     Returns:
         最终伤害值（float）
     """
-    all_effects = list(effects or []) + list(damage_effects_from_break_defense(break_defense_stacks))
+    # 处理 manual_buffs → 字段覆盖 + 额外效果
+    if manual_buffs:
+        overrides, extra_effects = _apply_manual_buffs_to_kwargs(
+            manual_buffs=manual_buffs,
+            crit_rate=crit_rate,
+            crit_damage=crit_damage,
+            damage_type_bonus=damage_type_bonus,
+            skill_type_bonus=skill_type_bonus,
+            imbalance_damage_bonus=imbalance_damage_bonus,
+            other_damage_bonus=other_damage_bonus,
+        )
+        crit_rate = overrides["crit_rate"]
+        crit_damage = overrides["crit_damage"]
+        damage_type_bonus = overrides["damage_type_bonus"]
+        skill_type_bonus = overrides["skill_type_bonus"]
+        imbalance_damage_bonus = overrides["imbalance_damage_bonus"]
+        other_damage_bonus = overrides["other_damage_bonus"]
+    else:
+        extra_effects = []
+
+    all_effects = (
+        list(effects or [])
+        + extra_effects
+        + list(damage_effects_from_break_defense(break_defense_stacks))
+    )
 
     # 用轻量上下文对象做效果过滤（只需 damage_type / skill_type / is_unbalanced）
     _ctx = DamageContext(
@@ -133,11 +214,18 @@ def evaluate_search_damage(
 
     shelter = 1.0 - max(shelter_values, default=0.0)
 
-    # 连击增伤 — 委托 combo_zone_multiplier
-    combo_bonus = combo_zone_multiplier(
-        skill_type, combo_stacks,
-        flat_legacy_bonus=max(0.0, combo_bonus_flat),
-    )
+    # 连击增伤 — 委托 combo_zone_multiplier（异常 pipeline 跳过）
+    if damage_pipeline == "abnormal":
+        combo_bonus = 1.0
+    else:
+        combo_bonus = combo_zone_multiplier(
+            skill_type, combo_stacks,
+            flat_legacy_bonus=max(0.0, combo_bonus_flat),
+        )
+
+    # 非主控减伤（异常 pipeline 跳过）
+    if damage_pipeline == "abnormal":
+        non_control_reduction = 1.0
 
     # 防御区
     if is_true_damage:

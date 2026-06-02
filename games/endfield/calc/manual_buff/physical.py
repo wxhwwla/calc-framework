@@ -7,7 +7,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect
 from games.endfield.calc.damage.abnormal_attached import build_physical_attached_effects
 from games.endfield.calc.manual_buff.abnormal_common import (
     apply_abnormal_post_zones,
@@ -236,8 +237,19 @@ def evaluate_physical_abnormal_total(
             if multiplier <= 0:
                 continue
 
-            def _make_ctx() -> DamageContext:
-                return DamageContext(
+            attached = build_physical_attached_effects(
+                abnormal,
+                calc_level,
+                originium_arts_strength=originium_arts_strength,
+                effect_multiplier=attached_effect_multiplier,
+            )
+            hit_effects = list(effects) + attached
+
+            segment_total = 0.0
+            for occurrence_idx in range(1, count + 1):
+                buff_key = f"{base_key}:{occurrence_idx}"
+                buffs = mb.get(buff_key)
+                dmg = evaluate_search_damage(
                     final_attack=float(context.final_attack),
                     skill_multiplier=multiplier,
                     damage_type="物理",
@@ -254,30 +266,13 @@ def evaluate_physical_abnormal_total(
                     skill_type_bonus=0.0,
                     imbalance_damage_bonus=context.imbalance_damage_bonus,
                     other_damage_bonus=context.other_damage_bonus,
-                )
-                """make ctx。"""
-
-            attached = build_physical_attached_effects(
-                abnormal,
-                calc_level,
-                originium_arts_strength=originium_arts_strength,
-                effect_multiplier=attached_effect_multiplier,
-            )
-            hit_effects = list(effects) + attached
-
-            segment_total = 0.0
-            for occurrence_idx in range(1, count + 1):
-                buff_key = f"{base_key}:{occurrence_idx}"
-                buffs = mb.get(buff_key)
-                result = calculate_single_hit_damage(
-                    _make_ctx(),
                     effects=hit_effects,
                     crit_mode=crit_mode,
                     manual_buffs=buffs,
                     damage_pipeline="abnormal",
                 )
                 segment_total += apply_abnormal_post_zones(
-                    float(result.final_damage),
+                    dmg,
                     originium_arts_strength=originium_arts_strength,
                 )
             breakdown[base_key] = segment_total / float(count)

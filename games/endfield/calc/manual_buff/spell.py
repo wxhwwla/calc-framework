@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect, calculate_single_hit_damage
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+from games.endfield.calc.damage.engine import CritMode, DamageContext, DamageEffect
 from games.endfield.calc.damage.abnormal_attached import build_spell_attached_effects
 from games.endfield.calc.manual_buff.abnormal_common import apply_abnormal_post_zones
 from games.endfield.calc.manual_buff.spell_params import (
@@ -158,8 +159,22 @@ def evaluate_spell_abnormal_total(
                 breakdown[base_key] = 0.0
                 continue
 
-            def _make_ctx() -> DamageContext:
-                return DamageContext(
+            calc_level = calc_level_from_ui(ui_level)
+            attached = build_spell_attached_effects(
+                defn.key,
+                defn.formula,
+                calc_level,
+                originium_arts_strength=originium_arts_strength,
+                effect_multiplier=attached_effect_multiplier,
+                corrosion_duration_seconds=corrosion_duration_seconds,
+            )
+            hit_effects = list(effects) + attached
+
+            segment_total = 0.0
+            for occurrence_idx in range(1, count + 1):
+                buff_key = f"{base_key}:{occurrence_idx}"
+                buffs = mb.get(buff_key)
+                dmg = evaluate_search_damage(
                     final_attack=float(context.final_attack),
                     skill_multiplier=multiplier,
                     damage_type=defn.damage_type,
@@ -176,33 +191,13 @@ def evaluate_spell_abnormal_total(
                     skill_type_bonus=0.0,
                     imbalance_damage_bonus=context.imbalance_damage_bonus,
                     other_damage_bonus=context.other_damage_bonus,
-                )
-                """make ctx。"""
-
-            calc_level = calc_level_from_ui(ui_level)
-            attached = build_spell_attached_effects(
-                defn.key,
-                defn.formula,
-                calc_level,
-                originium_arts_strength=originium_arts_strength,
-                effect_multiplier=attached_effect_multiplier,
-                corrosion_duration_seconds=corrosion_duration_seconds,
-            )
-            hit_effects = list(effects) + attached
-
-            segment_total = 0.0
-            for occurrence_idx in range(1, count + 1):
-                buff_key = f"{base_key}:{occurrence_idx}"
-                buffs = mb.get(buff_key)
-                result = calculate_single_hit_damage(
-                    _make_ctx(),
                     effects=hit_effects,
                     crit_mode=crit_mode,
                     manual_buffs=buffs,
                     damage_pipeline="abnormal",
                 )
                 segment_total += apply_abnormal_post_zones(
-                    float(result.final_damage),
+                    dmg,
                     originium_arts_strength=originium_arts_strength,
                 )
             breakdown[base_key] = segment_total / float(count)
