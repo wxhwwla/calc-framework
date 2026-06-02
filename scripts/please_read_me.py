@@ -35,7 +35,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.18.6"
+_VERSION = "3.18.7"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -438,18 +438,15 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 9 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
-# - 变更 framework/adapters/arknights/ui/layout.json
-# - 修改 games/arknights/framework_bridge.py
-# - 修改 games/arknights/gui/ArknightsApp.py
-# - 修改 games/arknights/main.py
+# - 修改 games/endfield/tests/tools/test_bwiki_scout.py
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/data_pipeline/__init__.py
-# - 修改 tools/data_pipeline/cli.py
-# - 修改 tools/data_pipeline/diff.py
-# - 修改 tools/tests/test_data_diff.py
+# - 修改 tools/bwiki_scout/__main__.py
+# - 修改 tools/bwiki_scout/incremental_sync.py
+# - 修改 tools/bwiki_scout/sync_all.py
+# - 修改 tools/bwiki_scout/wiki_sync.py
 # --- END UPLOAD_SUMMARY ---

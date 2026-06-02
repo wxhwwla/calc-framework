@@ -88,6 +88,20 @@ from bwiki_scout.import_targets import (  # noqa: E402
 
 )
 
+from bwiki_scout.incremental_sync import (  # noqa: E402
+
+    cleanup_stale_entities,
+
+    get_stale_entities_from_cache,
+
+    load_sync_state,
+
+    record_entity_sync_batch,
+
+    save_sync_state,
+
+)
+
 from bwiki_scout.weapon_wiki import (  # noqa: E402
 
     build_weapon_seed_spec_from_wiki,
@@ -479,6 +493,8 @@ def sync_operators_from_cache(
 
     include_new: bool = False,
 
+    incremental: bool = True,
+
     dry_run: bool = True,
 
 ) -> dict[str, Any]:
@@ -487,11 +503,11 @@ def sync_operators_from_cache(
 
     从 output/raw 同步干员；返回摘要。
 
-
-
     dry_run=True 时不写文件，只报告将更新谁。
 
     include_new=True 时，将 manifest 中缓存齐全、本地尚无的干员一并写入。
+
+    incremental=True 时，只处理缓存内容（wikitext/html）相比上次同步有变化的条目。
 
     """
 
@@ -524,6 +540,32 @@ def sync_operators_from_cache(
         include_new=include_new,
 
     )
+
+    if incremental and not names:
+
+        stale = get_stale_entities_from_cache(
+
+            raw_dir,
+
+            manifest_ops,
+
+            "operator",
+
+            local_names=set(local_by_name.keys()),
+
+            output_root=output_root,
+
+            include_new=include_new,
+
+        )
+
+        skipped_by_incremental = [n for n in target_names if n not in stale]
+
+        target_names = stale
+
+    else:
+
+        skipped_by_incremental = []
 
     updates: dict[str, dict[str, Any]] = {}
 
@@ -615,6 +657,24 @@ def sync_operators_from_cache(
 
         write_seed_character_specs(seed_path, merged)
 
+        sync_state = load_sync_state(output_root)
+
+        bundles: dict[str, dict[str, Any]] = {}
+
+        for name in planned:
+
+            bundle = load_page_bundle(raw_dir, name)
+
+            if bundle:
+
+                bundles[name] = bundle
+
+        record_entity_sync_batch(sync_state, bundles)
+
+        cleanup_stale_entities(sync_state, set(local_by_name.keys()) | set(planned))
+
+        save_sync_state(output_root, sync_state)
+
 
 
     return {
@@ -625,13 +685,17 @@ def sync_operators_from_cache(
 
         "updated": updated,
 
-        "skipped": skipped,
+        "skipped": skipped + skipped_by_incremental,
+
+        "skipped_by_incremental": skipped_by_incremental,
 
         "updated_count": len(updates) if not dry_run else 0,
 
         "dry_run": dry_run,
 
         "include_new": include_new,
+
+        "incremental": incremental,
 
     }
 
@@ -653,6 +717,8 @@ def sync_weapons_from_cache(
 
     include_new: bool = False,
 
+    incremental: bool = True,
+
     dry_run: bool = True,
 
 ) -> dict[str, Any]:
@@ -661,9 +727,9 @@ def sync_weapons_from_cache(
 
     从 output/raw 同步武器；仅处理 Wiki 含完整成长块的条目。
 
-
-
     include_new=True 时，将 manifest 中可反推、本地尚无的武器写入 JSON/seed。
+
+    incremental=True 时，只处理缓存内容相比上次同步有变化的条目。
 
     """
 
@@ -696,6 +762,32 @@ def sync_weapons_from_cache(
         include_new=include_new,
 
     )
+
+    if incremental and not names:
+
+        stale = get_stale_entities_from_cache(
+
+            raw_dir,
+
+            manifest_weps,
+
+            "weapon",
+
+            local_names=set(local_by_name.keys()),
+
+            output_root=output_root,
+
+            include_new=include_new,
+
+        )
+
+        skipped_by_incremental = [n for n in target_names if n not in stale]
+
+        target_names = stale
+
+    else:
+
+        skipped_by_incremental = []
 
     updates: dict[str, dict[str, Any]] = {}
 
@@ -785,6 +877,24 @@ def sync_weapons_from_cache(
 
         write_seed_weapon_specs(seed_path, merged)
 
+        sync_state = load_sync_state(output_root)
+
+        bundles: dict[str, dict[str, Any]] = {}
+
+        for name in planned:
+
+            bundle = load_page_bundle(raw_dir, name)
+
+            if bundle:
+
+                bundles[name] = bundle
+
+        record_entity_sync_batch(sync_state, bundles)
+
+        cleanup_stale_entities(sync_state, set(local_by_name.keys()) | set(planned))
+
+        save_sync_state(output_root, sync_state)
+
 
 
     return {
@@ -795,13 +905,17 @@ def sync_weapons_from_cache(
 
         "updated": updated,
 
-        "skipped": skipped,
+        "skipped": skipped + skipped_by_incremental,
+
+        "skipped_by_incremental": skipped_by_incremental,
 
         "updated_count": len(updates) if not dry_run else 0,
 
         "dry_run": dry_run,
 
         "include_new": include_new,
+
+        "incremental": incremental,
 
     }
 

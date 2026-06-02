@@ -100,13 +100,17 @@ def _print_part(title: str, result: dict) -> None:
 
     print(f"\n[{title}][{mode}]")
 
+    skipped_inc = result.get("skipped_by_incremental", [])
+
+    inc_info = f"，增量跳过 {len(skipped_inc)} 条" if skipped_inc else ""
+
     if "planned" in result:
 
         print(
 
             f"计划 {len(result['planned'])} 条（更新 {len(result.get('updated', []))}，"
 
-            f"新增 {len(result.get('added', []))}）"
+            f"新增 {len(result.get('added', []))}）{inc_info}"
 
         )
 
@@ -160,11 +164,23 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.add_argument("--only-weapons", nargs="*", help="仅处理指定武器名称")
 
+    parser.add_argument(
+
+        "--full",
+
+        action="store_true",
+
+        help="全量同步（默认增量模式，--full 时重新处理所有条目）",
+
+    )
+
     args = parser.parse_args(argv)
 
 
 
     dry_run = not args.apply
+
+    incremental = not args.full
 
 
 
@@ -179,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
         names=args.only_operators,
 
         include_new=args.new,
+
+        incremental=incremental,
 
         dry_run=dry_run,
 
@@ -199,6 +217,8 @@ def main(argv: list[str] | None = None) -> int:
         names=args.only_weapons,
 
         include_new=args.new,
+
+        incremental=incremental,
 
         dry_run=dry_run,
 

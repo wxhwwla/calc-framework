@@ -6,7 +6,8 @@
 
     python -m tools.bwiki_scout                    # 预览（默认）
     python -m tools.bwiki_scout --apply            # 写入本地 JSON/seed
-    python -m tools.bwiki_scout --apply --new      # 同时导入本地尚无条目
+    python -m tools.bwiki_scout --apply --new      # 同时导入本地尚无条目
+    python -m tools.bwiki_scout --apply --full     # 全量同步
     python -m tools.bwiki_scout --only-operators 陈千语
 """
 

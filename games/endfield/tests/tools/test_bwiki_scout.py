@@ -177,5 +177,143 @@ class TestWeaponWikiRankCurveFit(unittest.TestCase):
         self.assertNotIn("base", params)
 
 
-if __name__ == "__main__":
+class TestIncrementalSync(unittest.TestCase):
+    """增量同步状态管理测试。"""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.state_path = self.tmp / "sync_state.json"
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _make_bundle(self, wikitext: str = "", html: str = "") -> dict:
+        return {"wikitext": wikitext, "html": html}
+
+    # ── 哈希运算 ──
+
+    def test_content_hash_deterministic(self):
+        from bwiki_scout.incremental_sync import _content_hash
+        h1 = _content_hash("hello")
+        h2 = _content_hash("hello")
+        self.assertEqual(h1, h2)
+
+    def test_content_hash_different_input(self):
+        from bwiki_scout.incremental_sync import _content_hash
+        self.assertNotEqual(_content_hash("aaa"), _content_hash("bbb"))
+
+    def test_bundle_hash_combines_wikitext_and_html(self):
+        from bwiki_scout.incremental_sync import _bundle_hash
+        h1 = _bundle_hash(self._make_bundle("a", "b"))
+        h2 = _bundle_hash(self._make_bundle("a", "c"))
+        h3 = _bundle_hash(self._make_bundle("b", "b"))
+        self.assertEqual(h1, _bundle_hash(self._make_bundle("a", "b")))
+        self.assertNotEqual(h1, h2)
+        self.assertNotEqual(h1, h3)
+
+    def test_bundle_hash_no_wikitext(self):
+        from bwiki_scout.incremental_sync import _bundle_hash
+        h = _bundle_hash({})
+        self.assertIsInstance(h, str)
+        self.assertEqual(len(h), 64)
+
+    # ── 状态加载/保存 ──
+
+    def test_load_sync_state_no_file(self):
+        from bwiki_scout.incremental_sync import load_sync_state
+        state = load_sync_state(self.tmp)
+        self.assertEqual(state, {"version": 1, "entities": {}})
+
+    def test_save_and_load_round_trip(self):
+        from bwiki_scout.incremental_sync import load_sync_state, save_sync_state
+        state = {"version": 1, "entities": {"测试A": "abc123"}}
+        save_sync_state(self.tmp, state)
+        loaded = load_sync_state(self.tmp)
+        self.assertEqual(loaded, state)
+        self.assertTrue(self.state_path.is_file())
+
+    # ── 记录与检测 ──
+
+    def test_record_entity_sync(self):
+        from bwiki_scout.incremental_sync import load_sync_state, record_entity_sync, save_sync_state
+        state = load_sync_state(self.tmp)
+        bundle = self._make_bundle("测试内容", "<p>测试</p>")
+        record_entity_sync(state, "角色A", bundle)
+        self.assertIn("角色A", state["entities"])
+        self.assertEqual(len(state["entities"]["角色A"]), 64)
+
+    def test_content_changed_new_entity_returns_true(self):
+        from bwiki_scout.incremental_sync import content_changed
+        state = {"version": 1, "entities": {}}
+        bundle = self._make_bundle("内容", "<p>内容</p>")
+        self.assertTrue(content_changed(state, "新角色", bundle))
+
+    def test_content_changed_same_content_returns_false(self):
+        from bwiki_scout.incremental_sync import (
+            content_changed,
+            record_entity_sync,
+        )
+        state = {"version": 1, "entities": {}}
+        bundle = self._make_bundle("相同内容", "<p>相同</p>")
+        record_entity_sync(state, "角色A", bundle)
+        self.assertFalse(content_changed(state, "角色A", bundle))
+
+    def test_content_changed_different_content_returns_true(self):
+        from bwiki_scout.incremental_sync import (
+            content_changed,
+            record_entity_sync,
+        )
+        state = {"version": 1, "entities": {}}
+        bundle1 = self._make_bundle("旧内容", "<p>旧</p>")
+        record_entity_sync(state, "角色A", bundle1)
+        bundle2 = self._make_bundle("新内容", "<p>新</p>")
+        self.assertTrue(content_changed(state, "角色A", bundle2))
+
+    # ── 清理 ──
+
+    def test_remove_entity(self):
+        from bwiki_scout.incremental_sync import remove_entity
+        state = {"version": 1, "entities": {"角色A": "abc", "角色B": "def"}}
+        remove_entity(state, "角色A")
+        self.assertNotIn("角色A", state["entities"])
+        self.assertIn("角色B", state["entities"])
+
+    def test_remove_entity_nonexistent(self):
+        from bwiki_scout.incremental_sync import remove_entity
+        state = {"version": 1, "entities": {"角色A": "abc"}}
+        remove_entity(state, "不存在")  # should not raise
+        self.assertIn("角色A", state["entities"])
+
+    def test_cleanup_stale_entities(self):
+        from bwiki_scout.incremental_sync import cleanup_stale_entities
+        state = {"version": 1, "entities": {"角色A": "abc", "角色B": "def", "角色C": "ghi"}}
+        known = {"角色A", "角色C"}
+        count = cleanup_stale_entities(state, known)
+        self.assertEqual(count, 1)
+        self.assertIn("角色A", state["entities"])
+        self.assertNotIn("角色B", state["entities"])
+        self.assertIn("角色C", state["entities"])
+
+    def test_cleanup_stale_no_action(self):
+        from bwiki_scout.incremental_sync import cleanup_stale_entities
+        state = {"version": 1, "entities": {"角色A": "abc"}}
+        count = cleanup_stale_entities(state, {"角色A", "角色B"})
+        self.assertEqual(count, 0)
+        self.assertIn("角色A", state["entities"])
+
+    # ── get_entity_hash ──
+
+    def test_get_entity_hash_known(self):
+        from bwiki_scout.incremental_sync import get_entity_hash
+        state = {"version": 1, "entities": {"角色A": "abc123"}}
+        self.assertEqual(get_entity_hash(state, "角色A"), "abc123")
+
+    def test_get_entity_hash_unknown(self):
+        from bwiki_scout.incremental_sync import get_entity_hash
+        state = {"version": 1, "entities": {}}
+        self.assertIsNone(get_entity_hash(state, "角色A"))
+
+
+if __name__ == "__main__":
     unittest.main()
