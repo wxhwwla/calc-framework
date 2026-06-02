@@ -13,7 +13,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult, evaluate_search_damage
+from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 from games.endfield.calc.damage.engine import ZONE_ORDER
 from games.endfield.calc.damage.physical_abnormal_state import (
     break_defense_stacks_at_hit,

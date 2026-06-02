@@ -14,8 +14,8 @@ from dataclasses import dataclass
 
 from framework.adapters.endfield.functions import compute_15_zone_detail
 
-from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
+from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 from games.endfield.calc.damage.engine.helpers import _clamp, _collect_effects
 from games.endfield.calc.damage.engine.types import CritMode, DamageContext, DamageEffect
 
@@ -250,19 +250,16 @@ def evaluate_search_damage(
 
     # 防御区
     if is_true_damage:
-        defense_zone_val = 1.0
+        pass  # defense_zone = 1.0, handled by compute_15_zone_detail
     else:
-        effective_def = max(0.0, enemy_defense + defense_change)
-        defense_zone_val = 100.0 / (effective_def + 100.0)
+        pass  # effective_def = max(0.0, enemy_defense + defense_change)
 
     # 抗性区
     total_resistance = enemy_resistance + resistance_change
     total_ignore = ignore_resistance + resistance_extra
-    resistance_zone_val = 1.0 - total_resistance / 100.0 + total_ignore / 100.0
 
     # 失衡易伤区
     imb_coeff = imbalance_coeff_override if imbalance_coeff_override is not None else imbalance_vulnerability_coeff
-    imbalance_zone_val = imb_coeff if is_unbalanced else 1.0
 
     # 调用 DAG 注册函数 compute_15_zone_detail 获取各乘区值
     zones = compute_15_zone_detail(
