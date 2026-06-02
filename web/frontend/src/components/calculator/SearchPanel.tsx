@@ -195,7 +195,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             type="number"
             value={topN}
             onChange={(e) => setTopN(Math.max(1, parseInt(e.target.value) || 10))}
-            sx={{ width: 100 }}
+            sx={{ width: { xs: 80, sm: 100 } }}
           />
           <TextField
             size="small"
@@ -203,7 +203,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             type="number"
             value={maxWorkers}
             onChange={(e) => setMaxWorkers(Math.max(1, parseInt(e.target.value) || 4))}
-            sx={{ width: 100 }}
+            sx={{ width: { xs: 80, sm: 100 } }}
           />
           <Button
             variant="outlined"

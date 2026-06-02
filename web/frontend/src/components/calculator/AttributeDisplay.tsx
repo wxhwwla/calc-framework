@@ -146,7 +146,7 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
   }
 
   return (
-    <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+    <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
       {characterData && (
         <Paper sx={{ p: 2, flex: 1 }}>
           <Typography variant="subtitle2" gutterBottom color="text.secondary">

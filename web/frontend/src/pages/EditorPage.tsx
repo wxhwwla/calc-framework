@@ -108,7 +108,7 @@ export default function EditorPage() {
           </Paper>
         </Grid>
 
-        <Grid size={9}>
+        <Grid size={{ xs: 12, md: 9 }}>
           <DagEditorCanvas onNodeDoubleClick={handleDoubleClick} />
         </Grid>
       </Grid>

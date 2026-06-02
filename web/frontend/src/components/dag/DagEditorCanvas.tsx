@@ -119,7 +119,7 @@ const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) 
   return (
     <Box
       ref={reactFlowWrapper}
-      sx={{ height: 560, border: "1px solid #333", borderRadius: 1, position: "relative" }}
+      sx={{ height: { xs: 360, md: 560 }, border: "1px solid #333", borderRadius: 1, position: "relative" }}
     >
       <ReactFlowProvider>
         <ReactFlow

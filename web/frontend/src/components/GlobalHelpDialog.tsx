@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, Button,
-  List, ListItemButton, ListItemText, Box, Typography,
+  Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton,
+  List, ListItemButton, ListItemText, Box, Typography, useMediaQuery, useTheme,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
@@ -201,20 +201,32 @@ const HELP_ENTRIES: HelpEntry[] = [
 export default function GlobalHelpDialog() {
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState(HELP_ENTRIES[0].id);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const activeEntry = HELP_ENTRIES.find((e) => e.id === activeId) ?? HELP_ENTRIES[0];
 
   return (
     <>
-      <Button
-        color="inherit"
-        startIcon={<HelpOutlineIcon />}
-        onClick={() => setOpen(true)}
-        sx={{ ml: 0.5, textTransform: "none" }}
-        title="使用说明"
-      >
-        帮助
-      </Button>
+      {isMobile ? (
+        <IconButton
+          color="inherit"
+          onClick={() => setOpen(true)}
+          title="使用说明"
+        >
+          <HelpOutlineIcon />
+        </IconButton>
+      ) : (
+        <Button
+          color="inherit"
+          startIcon={<HelpOutlineIcon />}
+          onClick={() => setOpen(true)}
+          sx={{ ml: 0.5, textTransform: "none" }}
+          title="使用说明"
+        >
+          帮助
+        </Button>
+      )}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

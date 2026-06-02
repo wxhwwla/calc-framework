@@ -34,7 +34,7 @@ export default function PackDesignerPage() {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, flexWrap: "wrap", gap: 2 }}>
         <Typography variant="h5">配置包设计器</Typography>
-        <FormControl size="small" sx={{ minWidth: 260 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: 160, sm: 260 } }}>
           <InputLabel>适配器</InputLabel>
           <Select
             value={adapterId}

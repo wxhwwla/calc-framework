@@ -127,7 +127,7 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
           )}
 
           {data.nodeType === "user_input" && (
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
               <TextField label="默认值" type="number" value={form.default ?? 0} onChange={(e) => setForm({ ...form, default: parseFloat(e.target.value) || 0 })} size="small" />
               <TextField label="最小值" type="number" value={form.min ?? 0} onChange={(e) => setForm({ ...form, min: parseFloat(e.target.value) || 0 })} size="small" />
               <TextField label="最大值" type="number" value={form.max ?? 100} onChange={(e) => setForm({ ...form, max: parseFloat(e.target.value) || 100 })} size="small" />

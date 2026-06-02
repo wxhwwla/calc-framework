@@ -279,7 +279,7 @@ export default function MarketplacePage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={ratePackId !== null} onClose={() => setRatePackId(null)}>
+      <Dialog open={ratePackId !== null} onClose={() => setRatePackId(null)} fullWidth maxWidth="xs">
         <DialogTitle>评分</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1, minWidth: 300 }}>
