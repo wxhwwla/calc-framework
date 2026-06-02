@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0
 """Top-N 结果追踪器 — 保留评分最高的 N 条记录。"""
 
-from __future__ import annotations
-
-import heapq
-from collections.abc import Callable
-from typing import Generic, TypeVar
-
+from __future__ import annotations
+
+import heapq
+from collections.abc import Callable
+from typing import Generic, TypeVar
+
 T = TypeVar("T")
 
 

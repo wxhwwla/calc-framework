@@ -11,59 +11,31 @@
 
 from __future__ import annotations
 
-
-
 from typing import Any
 
-
-
 from PySide6.QtCore import QObject, Qt, Signal
-
 from PySide6.QtWidgets import (
-
     QCheckBox,
-
     QComboBox,
-
     QDoubleSpinBox,
-
     QGridLayout,
-
     QGroupBox,
-
     QLabel,
-
     QLineEdit,
-
     QPushButton,
-
     QSlider,
-
     QSpinBox,
-
     QVBoxLayout,
-
     QWidget,
-
 )
 
-
-
 from calc_framework.dag.engine import DAGResult
-
 from calc_framework.dag.schema import DAGVariable
-
 from calc_framework.dag.service import DAGService
-
-from calc_framework.ui.controls import ControlSpec, infer_control
-
-from calc_framework.ui.format import format_node_value
-
-from calc_framework.ui.layout import Layout, Section
-
 from calc_framework.logging import get_logger
-
-
+from calc_framework.ui.controls import ControlSpec, infer_control
+from calc_framework.ui.format import format_node_value
+from calc_framework.ui.layout import Layout, Section
 
 logger = get_logger(__name__)
 
@@ -555,7 +527,7 @@ class ComputeSheet(QObject):
 
         if sec.widget_type == "donation":
 
-            from utils.gui.donation import DonationWidget, DONATION_IMAGE_PATH
+            from utils.gui.donation import DONATION_IMAGE_PATH, DonationWidget
 
             cfg = sec.widget_config
 

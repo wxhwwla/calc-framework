@@ -1,29 +1,28 @@
 # SPDX-License-Identifier: AGPL-3.0
 """自动更新模块测试。"""
 
-from __future__ import annotations
-
-import json
-import zipfile
-from io import BytesIO
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
-
-from utils.updater import (
-    GITHUB_OWNER,
-    GITHUB_REPO,
-    RELEASE_API,
-    UpdateInfo,
-    _generate_replace_script,
-    _get_target_dir,
-    check_update,
-    download_update,
-    extract_and_replace,
-    verify_zip,
-)
-
+from __future__ import annotations
+
+import json
+import zipfile
+from io import BytesIO
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+from utils.updater import (
+    GITHUB_OWNER,
+    GITHUB_REPO,
+    RELEASE_API,
+    UpdateInfo,
+    _generate_replace_script,
+    _get_target_dir,
+    check_update,
+    download_update,
+    extract_and_replace,
+    verify_zip,
+)
+
 # ── Test fixtures ──────────────────────────────────
 
 

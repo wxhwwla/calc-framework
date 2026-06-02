@@ -97,9 +97,7 @@ def resolve_asset_paths_in_layout(layout_data: dict[str, Any], asset_map: dict[s
         if sec.get("widget_type") == "donation":
             cfg = sec.get("widget_config", {})
             raw = cfg.get("image_path", "")
-            if raw in asset_map:
-                cfg["image_path"] = asset_map[raw]
-            elif raw.startswith(_ASSETS_DIR) and raw in asset_map:
+            if raw in asset_map or (raw.startswith(_ASSETS_DIR) and raw in asset_map):
                 cfg["image_path"] = asset_map[raw]
     return patched
 

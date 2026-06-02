@@ -4,32 +4,7 @@
 
 模板引用（``"template"`` 字段）在加载时自动展开。"""
 
-from __future__ import annotations
-
-import json
-from dataclasses import asdict
-from pathlib import Path
-from typing import Any
-
-from .schema import (
-    BinaryNode,
-    CallNode,
-    ConditionNode,
-    ConstNode,
-    DAGGraph,
-    DAGSubgraph,
-    DAGVariable,
-    ExprNode,
-    NodeType,
-    UnaryNode,
-    UserInputNode,
-    VarNode,
-    validate_graph,
-)
-from .templates import expand_template_refs
-
-
-def _variable_to_dict(var: DAGVariable) -> dict[str, Any]:
+from __future__ import annotationsimport jsonfrom dataclasses import asdictfrom pathlib import Pathfrom typing import Anyfrom .schema import (    BinaryNode,    CallNode,    ConditionNode,    ConstNode,    DAGGraph,    DAGSubgraph,    DAGVariable,    ExprNode,    NodeType,    UnaryNode,    UserInputNode,    VarNode,    validate_graph,)from .templates import expand_template_refsdef _variable_to_dict(var: DAGVariable) -> dict[str, Any]:
     d: dict[str, Any] = {"type": var.type, "source": var.source}
     if var.description:
         d["description"] = var.description

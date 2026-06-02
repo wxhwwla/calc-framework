@@ -9,15 +9,15 @@
 - ``validate()`` — 验证参数拟合质量
 """
 
-from __future__ import annotations
-
-import math
-from abc import ABC, abstractmethod
-from collections.abc import Sequence
-from dataclasses import dataclass, field
-from typing import Any
-
-
+from __future__ import annotations
+
+import math
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from typing import Any
+
+
 @dataclass
 class FitResult:
     """拟合结果。"""

@@ -2,22 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """属性 Schema 单元测试。"""
 
-from __future__ import annotations
-
-import json
-import tempfile
-from pathlib import Path
-
-import pytest
-
-from calc_framework.data.attr_schema import (
-    AttributeDecl,
-    AttributeSchema,
-    AttributeSchemaError,
-)
-
-
-class TestAttributeDecl:
+from __future__ import annotationsimport jsonimport tempfilefrom pathlib import Pathimport pytestfrom calc_framework.data.attr_schema import (    AttributeDecl,    AttributeSchema,    AttributeSchemaError,)class TestAttributeDecl:
     def test_create_minimal(self):
         decl = AttributeDecl(name="攻击力", type="float", source="character")
         assert decl.name == "攻击力"

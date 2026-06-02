@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: AGPL-3.0
 """graph.json 序列化/反序列化。"""
 
-from __future__ import annotations
-
-import json
-from typing import Any, cast
-
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphLayout,
-    GraphNode,
-    NodeConfig,
-    NodeType,
-    SectionDef,
-)
-
-
+from __future__ import annotations
+
+import json
+from typing import Any, cast
+
+from calc_framework.graph_editor.schema import (
+    GraphDocument,
+    GraphEdge,
+    GraphLayout,
+    GraphNode,
+    NodeConfig,
+    NodeType,
+    SectionDef,
+)
+
+
 def document_to_dict(doc: GraphDocument) -> dict[str, Any]:
     """将 GraphDocument 导出为字典（即 JSON 对象）。"""
     return {

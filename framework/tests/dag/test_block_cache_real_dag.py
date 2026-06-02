@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """块级缓存端到端测试 — 使用真实 endfield_full.dag.json。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-
-from calc_framework.dag.engine import BlockCache, evaluate_graph
-from calc_framework.dag.serializer import load_dag
-
+from __future__ import annotations
+
+from pathlib import Path
+
+from calc_framework.dag.engine import BlockCache, evaluate_graph
+from calc_framework.dag.serializer import load_dag
+
 _DAG_PATH = Path(__file__).parents[2] / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
 
 _BASE_CTX = {

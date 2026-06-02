@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """tools.ocr.recognizer 数据类单元测试（不启动 EasyOCR）。"""
 
-from __future__ import annotations
-
-import json
-
-from tools.ocr.recognizer import GAME_TERMS, OCRResult, OCRText
-
-
+from __future__ import annotations
+
+import json
+
+from tools.ocr.recognizer import GAME_TERMS, OCRResult, OCRText
+
+
 class TestOCRText:
     def test_defaults(self) -> None:
         t = OCRText(text="攻击力", confidence=0.95)

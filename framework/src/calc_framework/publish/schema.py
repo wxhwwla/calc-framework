@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0
 """适配包 JSON Schema 定义和校验。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-from typing import Any
-
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
 ADAPTER_PACKAGE_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft-07/schema#",
     "$id": "https://calc-framework.github.io/schemas/adapter-package.json",

@@ -6,15 +6,15 @@
 ``describe`` / ``fit`` / ``compute`` / ``validate`` SPI。
 """
 
-from __future__ import annotations
-
-import math
-from collections.abc import Sequence
-from typing import Any
-
-from .base import FitResult, FormulaFitter
-
-
+from __future__ import annotations
+
+import math
+from collections.abc import Sequence
+from typing import Any
+
+from .base import FitResult, FormulaFitter
+
+
 class ExponentialFormulaFitter(FormulaFitter):
     """指数公式拟合器。
 

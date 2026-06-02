@@ -2,22 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG schema 定义与校验单元测试。"""
 
-import pytest
-from calc_framework.dag.errors import DAGCompileError
-from calc_framework.dag.schema import (
-    BinaryNode,
-    CallNode,
-    ConditionNode,
-    ConstNode,
-    DAGVariable,
-    ExprNode,
-    UnaryNode,
-    UserInputNode,
-    VarNode,
-    validate_graph,
-)
-
-_MINIMAL_GRAPH: dict = {
+import pytestfrom calc_framework.dag.errors import DAGCompileErrorfrom calc_framework.dag.schema import (    BinaryNode,    CallNode,    ConditionNode,    ConstNode,    DAGVariable,    ExprNode,    UnaryNode,    UserInputNode,    VarNode,    validate_graph,)_MINIMAL_GRAPH: dict = {
     "schema_version": "dag-v1",
     "name": "最小测试图",
     "variables": {

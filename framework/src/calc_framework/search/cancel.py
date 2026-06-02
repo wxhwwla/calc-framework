@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """搜索取消令牌 — 支持超时取消和主动取消。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
 @dataclass
 class SearchCancelToken:
     """搜索取消令牌，可检查是否已取消或超量。

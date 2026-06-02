@@ -4,12 +4,12 @@
 纯逻辑模块，无 GUI 依赖。
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import Any
-
-
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+
 @dataclass
 class ControlSpec:
     label: str

@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """端口定义 — 节点的输入/输出连接点。"""
 
-from __future__ import annotations
-
-from enum import Enum, auto
-
-from PySide6.QtCore import QPointF
-from PySide6.QtGui import QBrush, QColor, QPen
-from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsItem, QGraphicsSceneMouseEvent
-
+from __future__ import annotations
+
+from enum import Enum, auto
+
+from PySide6.QtCore import QPointF
+from PySide6.QtGui import QBrush, QColor, QPen
+from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsItem, QGraphicsSceneMouseEvent
+
 _PORT_RADIUS = 6
 _PORT_COLOR_INPUT = QColor("#4ECDC4")
 _PORT_COLOR_OUTPUT = QColor("#FF6B6B")

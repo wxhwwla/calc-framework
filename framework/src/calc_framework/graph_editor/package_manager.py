@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
 """包管理器 — 加载 JSON/ZIP 包，注册复合节点类型。"""
 
-from __future__ import annotations
-
-import json
-import zipfile
-from dataclasses import dataclass, field
-from pathlib import Path
-
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-)
-from calc_framework.graph_editor.serializer import document_from_json
-
-
+from __future__ import annotations
+
+import json
+import zipfile
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from calc_framework.graph_editor.schema import (
+    GraphDocument,
+)
+from calc_framework.graph_editor.serializer import document_from_json
+
+
 @dataclass
 class CompositePortDef:
     """复合节点的一个端口定义。"""

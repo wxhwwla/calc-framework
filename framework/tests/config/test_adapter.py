@@ -1,17 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
 """适配包加载器 — 单元测试。"""
 
-import json
-from pathlib import Path
-
-import pytest
-from calc_framework.config.adapter import (
-    AdapterNotFoundError,
-    AdapterPackage,
-    InvalidMetaError,
-)
-
-
+import json
+from pathlib import Path
+
+import pytest
+
+from calc_framework.config.adapter import (
+    AdapterNotFoundError,
+    AdapterPackage,
+    InvalidMetaError,
+)
+
+
 def _write_meta(adapter_dir: Path, meta: dict) -> Path:
     meta_path = adapter_dir / "meta.json"
     meta_path.write_text(json.dumps(meta), encoding="utf-8")

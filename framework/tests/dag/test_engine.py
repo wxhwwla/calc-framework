@@ -2,12 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 求值引擎单元测试。"""
 
-import pytest
-from calc_framework.dag.engine import evaluate_graph, topological_sort
-from calc_framework.dag.errors import DAGCycleError, DAGRuntimeError
-from calc_framework.dag.serializer import dag_from_dict
-
-_SIMPLE_LINEAR: dict = {
+import pytestfrom calc_framework.dag.engine import evaluate_graph, topological_sortfrom calc_framework.dag.errors import DAGCycleError, DAGRuntimeErrorfrom calc_framework.dag.serializer import dag_from_dict_SIMPLE_LINEAR: dict = {
     "schema_version": "dag-v1",
     "name": "线性图",
     "variables": {"a": {"type": "float", "source": "computed"}},
@@ -203,7 +198,7 @@ class TestEvaluateGraph:
             evaluate_graph(g, {"x": 1.0})
 
     def test_unknown_binary_op(self) -> None:
-        from calc_framework.dag.schema import DAGGraph, DAGOutput, DAGVariable, BinaryNode, ConstNode, VarNode
+        from calc_framework.dag.schema import BinaryNode, ConstNode, DAGGraph, DAGOutput, DAGVariable, VarNode
         g = DAGGraph(
             name="unknown_binary",
             variables={"x": DAGVariable(type="float", source="computed")},

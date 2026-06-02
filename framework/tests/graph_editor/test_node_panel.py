@@ -3,10 +3,7 @@
 """左侧节点面板测试。"""
 
 
-from calc_framework.graph_editor.node_panel import NodePanel
-
-
-class TestNodePanel:
+from calc_framework.graph_editor.node_panel import NodePanelclass TestNodePanel:
     def test_create_panel(self, qapp) -> None:
         panel = NodePanel()
         assert panel is not None

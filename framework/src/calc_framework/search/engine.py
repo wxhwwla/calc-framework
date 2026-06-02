@@ -17,17 +17,17 @@
     result = engine.run(SearchConfig(top_n=20))
 """
 
-from __future__ import annotations
-
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
-
-from calc_framework.search.cancel import SearchCancelToken
-from calc_framework.search.parallel import run_parallel
-from calc_framework.search.result import SearchResult
-from calc_framework.search.tracker import TopNTracker
-
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
+from calc_framework.search.cancel import SearchCancelToken
+from calc_framework.search.parallel import run_parallel
+from calc_framework.search.result import SearchResult
+from calc_framework.search.tracker import TopNTracker
+
 if TYPE_CHECKING:
     from calc_framework.search.persist import SearchRunStore
 

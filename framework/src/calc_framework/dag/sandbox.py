@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """AST 沙箱：解析表达式字符串并在白名单约束下安全求值。"""
 
-from __future__ import annotations
-
-import ast
-import math
-from typing import Any
-
-from .errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
-from calc_framework.logging import get_logger
-
-logger = get_logger(__name__)
+from __future__ import annotationsimport astimport mathfrom typing import Anyfrom calc_framework.logging import get_loggerfrom .errors import DAGCompileError, DAGRuntimeError, DAGSecurityErrorlogger = get_logger(__name__)
 
 
 def _integral_simpson(fn_name: str, a: float, b: float, n: float = 100.0) -> float:

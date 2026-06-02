@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """通用搜索结果类型。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
-
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Generic, TypeVar
+
 T = TypeVar("T")
 
 

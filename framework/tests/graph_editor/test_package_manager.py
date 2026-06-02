@@ -2,18 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """包管理器与复合节点功能测试。"""
 
-import json
-from pathlib import Path
-
-
-from calc_framework.graph_editor.package_manager import PackageManager
-from calc_framework.graph_editor.registry import (
-    _composite_registry,
-    create_default_node,
-    register_composite_type,
-)
-
-_SAMPLE_GRAPH_JSON = json.dumps({
+import jsonfrom pathlib import Pathfrom calc_framework.graph_editor.package_manager import PackageManagerfrom calc_framework.graph_editor.registry import (    _composite_registry,    create_default_node,    register_composite_type,)_SAMPLE_GRAPH_JSON = json.dumps({
     "schema_version": "calc-graph-v1",
     "name": "子图测试",
     "nodes": [
@@ -97,8 +86,7 @@ class TestCompositeNodeCreation:
         self._clean_registry()
         from calc_framework.graph_editor.registry import get_package_manager as _gpm
         pm = _gpm()
-        import tempfile
-        import os
+        import os        import tempfile
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
             f.write(_SAMPLE_GRAPH_JSON)
             fpath = Path(f.name)
@@ -118,8 +106,7 @@ class TestCompositeNodeCreation:
         self._clean_registry()
         from calc_framework.graph_editor.registry import get_package_manager as _gpm
         pm = _gpm()
-        import tempfile
-        import os
+        import os        import tempfile
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
             f.write(_SAMPLE_GRAPH_JSON_INLINE)
             fpath = Path(f.name)

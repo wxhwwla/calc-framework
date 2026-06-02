@@ -2,23 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """graph.json 序列化/反序列化测试。"""
 
-import json
-
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphNode,
-    NodeConfig,
-    SectionDef,
-)
-from calc_framework.graph_editor.serializer import (
-    document_from_json,
-    document_to_dict,
-    document_to_json,
-)
-
-
-class TestSerializeMinimal:
+import jsonfrom calc_framework.graph_editor.schema import (    GraphDocument,    GraphEdge,    GraphNode,    NodeConfig,    SectionDef,)from calc_framework.graph_editor.serializer import (    document_from_json,    document_to_dict,    document_to_json,)class TestSerializeMinimal:
     def test_empty_document_roundtrip(self) -> None:
         doc = GraphDocument(name="空图")
         data = document_to_dict(doc)

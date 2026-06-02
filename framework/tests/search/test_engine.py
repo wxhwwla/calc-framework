@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchEngine + SearchConfig 测试。"""
 
-from __future__ import annotations
-
-from calc_framework.search import SearchCancelToken, SearchConfig, SearchEngine
-from calc_framework.search.result import SearchResult
-
-
+from __future__ import annotations
+
+from calc_framework.search import SearchCancelToken, SearchConfig, SearchEngine
+from calc_framework.search.result import SearchResult
+
+
 class _SquareEngine(SearchEngine[int, int]):
     """测试用搜索引擎：对数字求平方、按平方值排序。"""
 

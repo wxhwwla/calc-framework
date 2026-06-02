@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DataContext 类型定义与工厂函数 — 单元测试。"""
 
-from calc_framework.data.context import DataContext, make_context
-
-
+from calc_framework.data.context import DataContext, make_context
+
+
 class TestMakeContext:
     def test_returns_dict(self):
         ctx = make_context()

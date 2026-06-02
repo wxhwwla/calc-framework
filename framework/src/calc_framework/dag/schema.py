@@ -7,17 +7,10 @@
 
 from __future__ import annotations
 
-
-
 from dataclasses import dataclass, field
-
 from typing import Any, Literal
 
-
-
 from .errors import DAGCompileError
-
-
 
 _VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
 

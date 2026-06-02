@@ -5,13 +5,13 @@
 提供运行时切换能力。
 """
 
-from __future__ import annotations
-
-from typing import Any
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget
-
+from __future__ import annotations
+
+from typing import Any
+
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QWidget
+
 # ── 内置主题定义 ────────────────────────────────────────────────────
 
 _BUILTIN_THEMES: dict[str, dict[str, Any]] = {

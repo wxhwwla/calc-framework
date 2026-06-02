@@ -2,27 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GraphCompiler 测试：graph_editor 格式 → DAGGraph 格式。"""
 
-from calc_framework.graph_editor.compiler import compile_graph
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphLayout,
-    GraphNode,
-    NodeConfig,
-    SectionDef,
-)
-from calc_framework.dag.schema import (
-    BinaryNode as DAGBinaryNode,
-    UnaryNode as DAGUnaryNode,
-    ConditionNode as DAGConditionNode,
-    ConstNode as DAGConstNode,
-    VarNode as DAGVarNode,
-    UserInputNode as DAGUserInputNode,
-)
-from calc_framework.dag.engine import evaluate_graph
-
-
-class TestCompileSimple:
+from calc_framework.dag.engine import evaluate_graphfrom calc_framework.dag.schema import (    BinaryNode as DAGBinaryNode,)from calc_framework.dag.schema import (    ConditionNode as DAGConditionNode,)from calc_framework.dag.schema import (    ConstNode as DAGConstNode,)from calc_framework.dag.schema import (    UnaryNode as DAGUnaryNode,)from calc_framework.dag.schema import (    UserInputNode as DAGUserInputNode,)from calc_framework.dag.schema import (    VarNode as DAGVarNode,)from calc_framework.graph_editor.compiler import compile_graphfrom calc_framework.graph_editor.schema import (    GraphDocument,    GraphEdge,    GraphLayout,    GraphNode,    NodeConfig,    SectionDef,)class TestCompileSimple:
     def test_compile_const_node(self) -> None:
         doc = GraphDocument(
             name="常量测试",

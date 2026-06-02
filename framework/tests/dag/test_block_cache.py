@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """块级缓存单元测试。"""
 
-from __future__ import annotations
-
-
-from calc_framework.dag.engine import BlockCache, evaluate_graph
-from calc_framework.dag.serializer import dag_from_dict
-
+from __future__ import annotations
+
+from calc_framework.dag.engine import BlockCache, evaluate_graph
+from calc_framework.dag.serializer import dag_from_dict
+
 _BLOCK_DAG = {
     "schema_version": "dag-v1",
     "name": "块测试图",

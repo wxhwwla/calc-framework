@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """子图展开单元测试。"""
 
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.subgraph import expand_subgraphs
-
-_SIMPLE_SUBGRAPH: dict = {
+from calc_framework.dag.serializer import dag_from_dictfrom calc_framework.dag.subgraph import expand_subgraphs_SIMPLE_SUBGRAPH: dict = {
     "schema_version": "dag-v1",
     "name": "子图展开测试",
     "subgraphs": {

@@ -2,26 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """终末地 15 乘区 ZIP 包的端到端加载/编译测试。"""
 
-import json
-import zipfile
-from pathlib import Path
-
-import pytest
-
-from calc_framework.graph_editor.file_actions import load_document
-from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
-from calc_framework.graph_editor.package_manager import PackageManager
-from calc_framework.graph_editor.registry import (
-    _composite_registry,
-    get_package_manager,
-    register_composite_type,
-)
-from calc_framework.graph_editor.serializer import document_from_json
-from calc_framework.dag.engine import evaluate_graph
-from calc_framework.graph_editor.compiler import compile_graph
-
-
-_ZIP_PATH = Path(__file__).resolve().parents[3] / "output" / "终末地乘区包.zip"
+import jsonimport zipfilefrom pathlib import Pathimport pytestfrom calc_framework.dag.engine import evaluate_graphfrom calc_framework.graph_editor.compiler import compile_graphfrom calc_framework.graph_editor.file_actions import load_documentfrom calc_framework.graph_editor.graph_editor_widget import GraphEditorWidgetfrom calc_framework.graph_editor.package_manager import PackageManagerfrom calc_framework.graph_editor.registry import (    _composite_registry,    get_package_manager,    register_composite_type,)from calc_framework.graph_editor.serializer import document_from_json_ZIP_PATH = Path(__file__).resolve().parents[3] / "output" / "终末地乘区包.zip"
 
 
 class TestEndfieldZonePackage:

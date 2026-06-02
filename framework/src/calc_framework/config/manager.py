@@ -6,16 +6,16 @@
 2. 相对于框架安装目录的 ``../adapters/``
 """
 
-from __future__ import annotations
-
-import json
-import os
-from pathlib import Path
-from typing import Any
-
-from calc_framework.config.adapter import AdapterPackage
-
-
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+from calc_framework.config.adapter import AdapterPackage
+
+
 def _default_adapters_dir() -> Path:
     """默认适配器路径：相对于框架包所在树的 ``adapters/``。"""
     return Path(__file__).resolve().parents[3] / "adapters"

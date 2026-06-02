@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """属性面板测试。"""
 
-from PySide6.QtWidgets import QDoubleSpinBox
-
-from calc_framework.graph_editor.schema import GraphNode, NodeConfig
-from calc_framework.graph_editor.prop_panel import PropPanel
-
-
-class TestPropPanel:
+from PySide6.QtWidgets import QDoubleSpinBoxfrom calc_framework.graph_editor.prop_panel import PropPanelfrom calc_framework.graph_editor.schema import GraphNode, NodeConfigclass TestPropPanel:
     def test_create_panel(self, qapp) -> None:
         panel = PropPanel()
         assert panel is not None

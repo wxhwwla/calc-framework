@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """TopNTracker 单元测试。"""
 
-from __future__ import annotations
-
-
-from calc_framework.search import TopNTracker
-
-
+from __future__ import annotations
+
+from calc_framework.search import TopNTracker
+
+
 class TestTopNTracker:
     def test_offer_and_results(self):
         tracker = TopNTracker(3, key_fn=lambda x: x)

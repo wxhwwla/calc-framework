@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import json
-
-import pytest
-from calc_framework.dag.schema import (
-    DAGGraph,
-    DAGOutput,
-    DAGVariable,
-    ExprNode,
-)
-
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from calc_framework.dag.schema import (
+    DAGGraph,
+    DAGOutput,
+    DAGVariable,
+    ExprNode,
+)
+
 SIMPLE_DAG = DAGGraph(
     name="simple",
     variables={
@@ -24,9 +25,10 @@ SIMPLE_DAG = DAGGraph(
 
 @pytest.fixture(scope="module")
 def qapp():
-    import sys
-
-    from PySide6.QtWidgets import QApplication
+    import sys
+
+    from PySide6.QtWidgets import QApplication
+
 
     app = QApplication.instance()
     if app is None:

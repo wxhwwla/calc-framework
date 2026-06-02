@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """适配包热加载监视器 — 文件变化时自动重载。"""
 
-from __future__ import annotations
-
-import threading
-from pathlib import Path
-from typing import Callable
-
-from calc_framework.config.adapter import AdapterPackage
-from calc_framework.config.manager import AdapterManager
-from calc_framework.logging import get_logger
-
+from __future__ import annotations
+
+import threading
+from collections.abc import Callable
+from pathlib import Path
+
+from calc_framework.config.adapter import AdapterPackage
+from calc_framework.config.manager import AdapterManager
+from calc_framework.logging import get_logger
+
 logger = get_logger(__name__)
 
 _RELOADABLE_EXTENSIONS = frozenset({".json", ".py"})

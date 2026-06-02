@@ -9,24 +9,23 @@
 - 边界条件：空数据、单点、重复值、大数值
 """
 
-from __future__ import annotations
-
-import math
-import sys
-from pathlib import Path
-
-import pytest
-
+from __future__ import annotations
+
+import math
+import sys
+from pathlib import Path
+
+import pytest
+
 # path setup
 _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from calc_framework.inverse.base import FloorFormulaFitter
-from calc_framework.inverse.engine import InverseEngine
-from calc_framework.inverse.registry import FormulaType, Registry, registry
-
-
+from calc_framework.inverse.base import FloorFormulaFitter
+from calc_framework.inverse.engine import InverseEngine
+from calc_framework.inverse.registry import FormulaType, Registry, registry
+
 # =========================================================================
 # FloorFormulaFitter — 基础拟合功能
 # =========================================================================

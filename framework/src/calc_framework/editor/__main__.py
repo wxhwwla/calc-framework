@@ -8,16 +8,16 @@
     calc-layout --dag path/to/dag.json
 """
 
-from __future__ import annotations
-
-import argparse
-import sys
-from pathlib import Path
-
-from calc_framework.dag.serializer import load_dag
-from calc_framework.editor import LayoutEditor
-
-
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from calc_framework.dag.serializer import load_dag
+from calc_framework.editor import LayoutEditor
+
+
 def _interactive(editor: LayoutEditor) -> None:
     print(f"已加载 DAG: {editor.dag.name or '(未命名)'}")
     print(f"  可用输入变量 ({len(editor.available_input_vars)}):")

@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchEngine 额外路径测试 — 持久化、进度回调、自定义键。"""
 
-from __future__ import annotations
-
-import tempfile
-from pathlib import Path
-
-from calc_framework.search import SearchCancelToken, SearchConfig, SearchEngine
-from calc_framework.search.persist import SearchRunStore
-from calc_framework.search.result import ParallelProgress, SearchResult
-
-
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+
+from calc_framework.search import SearchCancelToken, SearchConfig, SearchEngine
+from calc_framework.search.persist import SearchRunStore
+from calc_framework.search.result import ParallelProgress, SearchResult
+
+
 class _SquareEngine(SearchEngine[int, int]):
     def __init__(self, numbers: list[int]) -> None:
         self._numbers = numbers

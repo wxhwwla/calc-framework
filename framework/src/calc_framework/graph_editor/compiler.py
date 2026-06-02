@@ -1,31 +1,31 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GraphCompiler — 将 graph_editor 的 GraphDocument 编译为 DAGGraph。"""
 
-from __future__ import annotations
-
-import json
-from typing import Any
-
-from calc_framework.dag.schema import (
-    DAGGraph,
-    DAGOutput,
-    DAGSubgraph,
-    DAGVariable,
-    BinaryNode,
-    CallNode,
-    ConditionNode,
-    ConstNode,
-    UnaryNode,
-    UserInputNode,
-    VarNode,
-)
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphNode,
-)
-from calc_framework.graph_editor.serializer import document_from_json
-
-
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from calc_framework.dag.schema import (
+    BinaryNode,
+    CallNode,
+    ConditionNode,
+    ConstNode,
+    DAGGraph,
+    DAGOutput,
+    DAGSubgraph,
+    DAGVariable,
+    UnaryNode,
+    UserInputNode,
+    VarNode,
+)
+from calc_framework.graph_editor.schema import (
+    GraphDocument,
+    GraphNode,
+)
+from calc_framework.graph_editor.serializer import document_from_json
+
+
 def compile_graph(doc: GraphDocument) -> DAGGraph:
     """将可视化编辑器格式编译为 DAG 引擎格式。"""
     # ── 1. 构建端口→节点映射 ──

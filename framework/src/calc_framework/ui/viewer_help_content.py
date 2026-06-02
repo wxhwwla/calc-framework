@@ -2,7 +2,6 @@
 """CalcPackViewer 帮助内容。"""
 
 from utils.gui.help_dialog import HelpSection
-
 from utils.gui.help_loader import load_multi_category
 
 

@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DataContextLoader 抽象基类 — 单元测试。"""
 
-from abc import ABC
-
-import pytest
-from calc_framework.data.context import make_context
-from calc_framework.data.loader import DataContextLoader
-
-
+from abc import ABC
+
+import pytest
+
+from calc_framework.data.context import make_context
+from calc_framework.data.loader import DataContextLoader
+
+
 class _MockLoader(DataContextLoader):
     def build_context(self, **kwargs):
         return make_context(

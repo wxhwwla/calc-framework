@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchCancelToken 和 SearchResult 单元测试。"""
 
-from __future__ import annotations
-
-from calc_framework.search import SearchCancelToken, SearchResult
-
-
+from __future__ import annotations
+
+from calc_framework.search import SearchCancelToken, SearchResult
+
+
 class TestSearchCancelToken:
     def test_not_cancelled_by_default(self):
         token = SearchCancelToken()

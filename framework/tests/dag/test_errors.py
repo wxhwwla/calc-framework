@@ -3,16 +3,7 @@
 """DAG 异常类单元测试。"""
 
 
-from calc_framework.dag.errors import (
-    DAGCompileError,
-    DAGCycleError,
-    DAGError,
-    DAGRuntimeError,
-    DAGSecurityError,
-)
-
-
-class TestDAGErrors:
+from calc_framework.dag.errors import (    DAGCompileError,    DAGCycleError,    DAGError,    DAGRuntimeError,    DAGSecurityError,)class TestDAGErrors:
     """验证所有 DAG 异常类的继承关系与构造行为。"""
 
     def test_dag_error_is_base_exception(self) -> None:

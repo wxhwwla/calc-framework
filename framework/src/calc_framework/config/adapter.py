@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """适配包加载器 — 从适配包目录读取 meta.json 并组装 DAG 服务。"""
 
-from __future__ import annotations
-
-import importlib.util
-import json
-import os
-from pathlib import Path
-from typing import Any
-
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.service import DAGService
-from calc_framework.data.attr_schema import AttributeSchema
-from calc_framework.logging import get_logger
-
-logger = get_logger(__name__)
+from __future__ import annotationsimport importlib.utilimport jsonimport osfrom pathlib import Pathfrom typing import Anyfrom calc_framework.dag.serializer import dag_from_dictfrom calc_framework.dag.service import DAGServicefrom calc_framework.data.attr_schema import AttributeSchemafrom calc_framework.logging import get_loggerlogger = get_logger(__name__)
 
 _SUPPORTED_SCHEMA_VERSIONS = frozenset({"dag-v1"})
 

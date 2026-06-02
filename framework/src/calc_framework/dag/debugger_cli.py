@@ -22,17 +22,17 @@
     q       退出
 """
 
-from __future__ import annotations
-
-import argparse
-import shlex
-import sys
-from pathlib import Path
-from typing import NoReturn
-
-from calc_framework.dag.sandbox import register_function
-from calc_framework.logging import get_logger
-
+from __future__ import annotations
+
+import argparse
+import shlex
+import sys
+from pathlib import Path
+from typing import NoReturn
+
+from calc_framework.dag.sandbox import register_function
+from calc_framework.logging import get_logger
+
 logger = get_logger(__name__)
 
 # ── Color helpers ─────────────────────────────────────
@@ -99,8 +99,9 @@ class DebuggerCLI:
 
     def run(self, dag_path: str, context: dict | None = None) -> None:
         """启动 CLI 调试会话。"""
-        from calc_framework.dag.debugger import StepDebugger
-        from calc_framework.dag.serializer import load_dag
+        from calc_framework.dag.debugger import StepDebugger
+        from calc_framework.dag.serializer import load_dag
+
 
         dag_file = Path(dag_path)
         if not dag_file.is_file():

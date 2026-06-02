@@ -1,24 +1,44 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
+
 # SPDX-License-Identifier: AGPL-3.0
-"""
-通用角色添加脚本
-
-用法:
-    python -m character_weapon_equipment.character_data.add_character  # 查看说明
-    python scripts/seed_characters.py  # 批量录入角色配置
-"""
-
-from __future__ import annotations
-
-import copy
-import json
-from pathlib import Path
-from typing import Any
-
-from games.endfield.calc.core.curve_baker import bake_character_curves
-from games.endfield.data_loading.loader import reload_characters
-
-
+"""
+
+通用角色添加脚本
+
+
+
+用法:
+
+    python -m character_weapon_equipment.character_data.add_character  # 查看说明
+
+    python scripts/seed_characters.py  # 批量录入角色配置
+
+"""
+
+
+
+from __future__ import annotations
+
+
+
+import copy
+
+import json
+
+from pathlib import Path
+
+from typing import Any
+
+
+
+from games.endfield.calc.core.curve_baker import bake_character_curves
+
+from games.endfield.data_loading.loader import reload_characters
+
+
+
+
+
 def add_character(
     name: str,
     char_type: str,
@@ -69,33 +89,63 @@ def add_character(
             base_hp=copy.deepcopy(base_hp) if base_hp else None,
             base_defense=copy.deepcopy(base_defense) if base_defense else None,
         ),
-    }
-
-    if json_path is None:
-        json_path = Path(__file__).resolve().parent.parent.parent / "games" / "endfield" / "data" / "characters.json"
-
-    with open(json_path, encoding="utf-8") as f:
-        characters = json.load(f)
-
-    if any(c["名称"] == name for c in characters):
-        print(f"Warning: 角色「{name}」已存在，覆盖数据。")
-        characters = [c for c in characters if c["名称"] != name]
-
-    characters.append(character)
-
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(characters, f, ensure_ascii=False, indent=2)
-
-    reload_characters()
-
-    print(f"OK: 角色「{name}」已添加！")
-    print(f"   类型: {char_type}  星级: {star}星  武器: {weapon}")
-    print(f"   主/副能力: {primary} / {secondary}")
-    print(f"   基础攻击力: {character['基础攻击力'][0]} - {character['基础攻击力'][-1]}")
-    print(f"   当前角色总数: {len(characters)}")
-    return character
-
-
-if __name__ == "__main__":
-    print("角色录入库函数: add_character(...)")
-    print("批量配置请运行: python scripts/seed_characters.py")
+    }
+
+
+
+    if json_path is None:
+
+        json_path = Path(__file__).resolve().parent.parent.parent / "games" / "endfield" / "data" / "characters.json"
+
+
+
+    with open(json_path, encoding="utf-8") as f:
+
+        characters = json.load(f)
+
+
+
+    if any(c["名称"] == name for c in characters):
+
+        print(f"Warning: 角色「{name}」已存在，覆盖数据。")
+
+        characters = [c for c in characters if c["名称"] != name]
+
+
+
+    characters.append(character)
+
+
+
+    with open(json_path, "w", encoding="utf-8") as f:
+
+        json.dump(characters, f, ensure_ascii=False, indent=2)
+
+
+
+    reload_characters()
+
+
+
+    print(f"OK: 角色「{name}」已添加！")
+
+    print(f"   类型: {char_type}  星级: {star}星  武器: {weapon}")
+
+    print(f"   主/副能力: {primary} / {secondary}")
+
+    print(f"   基础攻击力: {character['基础攻击力'][0]} - {character['基础攻击力'][-1]}")
+
+    print(f"   当前角色总数: {len(characters)}")
+
+    return character
+
+
+
+
+
+if __name__ == "__main__":
+
+    print("角色录入库函数: add_character(...)")
+
+    print("批量配置请运行: python scripts/seed_characters.py")
+

@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 分步调试器 — 单元测试。"""
 
-from __future__ import annotations
-
-import pytest
-from calc_framework.dag.debugger import StepDebugger, StepStatus
-from calc_framework.dag.serializer import dag_from_dict
-
+from __future__ import annotations
+
+import pytest
+
+from calc_framework.dag.debugger import StepDebugger, StepStatus
+from calc_framework.dag.serializer import dag_from_dict
+
 _LINEAR_GRAPH = {
     "schema_version": "dag-v1",
     "name": "线性图",

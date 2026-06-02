@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0
-import json
-from pathlib import Path
-
-from calc_framework.config.adapter import AdapterPackage
-
-
+import json
+from pathlib import Path
+
+from calc_framework.config.adapter import AdapterPackage
+
+
 def _write_meta(adapter_dir: Path, meta: dict) -> Path:
     meta_path = adapter_dir / "meta.json"
     meta_path.write_text(json.dumps(meta), encoding="utf-8")

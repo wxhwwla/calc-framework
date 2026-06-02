@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """发布/分享模块测试。"""
 
-from __future__ import annotations
-
-import json
-import tempfile
-from pathlib import Path
-
-
-from calc_framework.publish.catalog import build_catalog
-from calc_framework.publish.schema import validate_against_schema, validate_package
-
-
+from __future__ import annotations
+
+import json
+import tempfile
+from pathlib import Path
+
+from calc_framework.publish.catalog import build_catalog
+from calc_framework.publish.schema import validate_against_schema, validate_package
+
+
 class TestValidateSchema:
     def test_valid_meta_passes(self):
         data = {

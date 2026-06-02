@@ -14,54 +14,35 @@
 from __future__ import annotations
 
 import tempfile
-
 from pathlib import Path
-
 from typing import Any
 
 from PySide6.QtCore import Qt, QTimer
-
 from PySide6.QtGui import QAction, QActionGroup
-
 from PySide6.QtWidgets import (
-
     QApplication,
-
     QComboBox,
-
     QFileDialog,
-
     QFormLayout,
-
     QGroupBox,
-
     QLabel,
-
     QMainWindow,
-
     QMessageBox,
-
     QProgressBar,
-
     QScrollArea,
-
     QSpinBox,
-
     QSplitter,
-
     QStatusBar,
-
     QVBoxLayout,
-
     QWidget,
-
 )
+from utils.gui.help_dialog import HelpDialog
 
 from calc_framework.dag.schema import DAGVariable
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
-from calc_framework.ui.layout import load_layout, Layout
+from calc_framework.ui.layout import Layout, load_layout
 from calc_framework.ui.theme import ThemeManager
 from calc_framework.ui.viewer_help_content import build_viewer_help
 from calc_framework.ui.viewer_pack_utils import (
@@ -73,7 +54,7 @@ from calc_framework.ui.viewer_pack_utils import (
     resolve_asset_paths_in_layout,
 )
 from calc_framework.ui.viewer_plugin_manager import PluginManagerDialog
-from utils.gui.help_dialog import HelpDialog
+
 
 class CalcPackViewer(QMainWindow):
 

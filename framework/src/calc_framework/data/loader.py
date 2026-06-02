@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据加载器抽象基类 — 适配器需实现的接口。"""
 
-from abc import ABC, abstractmethod
-from typing import Any
-
-
-class DataContextLoader(ABC):
+from abc import ABC, abstractmethodfrom typing import Anyclass DataContextLoader(ABC):
     """数据上下文加载器抽象基类。
 
     各游戏适配器需继承此类，实现 ``build_context`` 方法。

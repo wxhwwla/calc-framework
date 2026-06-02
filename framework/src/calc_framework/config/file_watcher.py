@@ -14,14 +14,14 @@
     watcher.stop()
 """
 
-from __future__ import annotations
-
-import threading
-from pathlib import Path
-from typing import Callable
-
-from calc_framework.logging import get_logger
-
+from __future__ import annotations
+
+import threading
+from collections.abc import Callable
+from pathlib import Path
+
+from calc_framework.logging import get_logger
+
 logger = get_logger(__name__)
 
 

@@ -2,19 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GraphNode / GraphEdge / GraphDocument 数据模型测试。"""
 
-import pytest
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphNode,
-    NodeConfig,
-    SectionDef,
-    validate,
-    ValidationError,
-)
-
-
-class TestGraphNode:
+import pytestfrom calc_framework.graph_editor.schema import (    GraphDocument,    GraphEdge,    GraphNode,    NodeConfig,    SectionDef,    ValidationError,    validate,)class TestGraphNode:
     def test_create_const_node(self) -> None:
         node = GraphNode(id="n1", type="const", label="测试常量", config=NodeConfig(value=42.0))
         assert node.id == "n1"

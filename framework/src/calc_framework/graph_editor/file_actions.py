@@ -1,21 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0
 """文件操作 — 从编辑器中收集/加载状态，保存/打开 graph.json 文件。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
-from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphLayout,
-    SectionDef,
-    validate,
-)
-from calc_framework.graph_editor.serializer import document_from_json, document_to_json
-
-
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
+from calc_framework.graph_editor.schema import (
+    GraphDocument,
+    GraphLayout,
+    SectionDef,
+    validate,
+)
+from calc_framework.graph_editor.serializer import document_from_json, document_to_json
+
+
 def collect_document(widget: GraphEditorWidget) -> GraphDocument:
     """从编辑器状态收集 GraphDocument。"""
     nodes = widget.graph_nodes()

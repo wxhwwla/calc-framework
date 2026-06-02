@@ -428,8 +428,8 @@ class TestSandboxFunctions:
 
     def test_integral_registered_function(self) -> None:
         """通过 register_function 注册平方函数，积分 ∫₀¹ x² dx = 1/3"""
-        from calc_framework.dag.sandbox import register_function, clear_functions
         from calc_framework.dag.engine import evaluate_graph
+        from calc_framework.dag.sandbox import clear_functions, register_function
         from calc_framework.dag.schema import validate_graph
 
         clear_functions()

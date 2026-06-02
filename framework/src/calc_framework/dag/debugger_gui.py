@@ -9,27 +9,29 @@
     widget.show()
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from calc_framework.logging import get_logger
-
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from calc_framework.logging import get_logger
+
 if TYPE_CHECKING:
     from calc_framework.dag.schema import DAGGraph
 
 logger = get_logger(__name__)
 
 try:
-    from PySide6 import QtGui as _QtGui
-    from PySide6 import QtWidgets as _QtWidgets
+    from PySide6 import QtGui as _QtGui
+    from PySide6 import QtWidgets as _QtWidgets
+
     _HAS_PYSIDE = True
 except ImportError:
     _HAS_PYSIDE = False
 
 
 if _HAS_PYSIDE:
-    from calc_framework.dag.debugger import StepStatus, StepDebugger
+    from calc_framework.dag.debugger import StepDebugger, StepStatus
+
 
     class _NodeItem:
         def __init__(self, node_id: str, node_type: str, label: str = "") -> None:

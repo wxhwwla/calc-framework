@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """SearchRunStore 单元测试。"""
 
-from __future__ import annotations
-
-import tempfile
-import unittest
-from pathlib import Path
-
-from calc_framework.search.persist import SearchRunStore
-
-
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from calc_framework.search.persist import SearchRunStore
+
+
 class TestSearchRunStore(unittest.TestCase):
     def setUp(self) -> None:
         self._tmpdir = tempfile.mkdtemp()

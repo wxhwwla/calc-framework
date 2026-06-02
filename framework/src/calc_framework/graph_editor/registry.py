@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """节点类型注册表 — 管理所有可用的节点定义。"""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from typing import cast
-
-from calc_framework.graph_editor.schema import GraphNode, NodeConfig, NodeType
-from calc_framework.graph_editor.package_manager import CompositeTypeDef, PackageManager
-
-
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import cast
+
+from calc_framework.graph_editor.package_manager import CompositeTypeDef, PackageManager
+from calc_framework.graph_editor.schema import GraphNode, NodeConfig, NodeType
+
+
 @dataclass
 class NodeTypeDef:
     """注册表中的一条节点类型定义。"""

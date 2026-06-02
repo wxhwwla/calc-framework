@@ -4,16 +4,7 @@
 # 上述 E402 是必需的：framework 未安装为 pip 包，需 sys.path.insert 后才能 import
 """卡牌RPG 适配器集成测试 — 验证框架能无缝加载和执行跨品类游戏。"""
 
-from __future__ import annotations
-
-import importlib.util
-import json
-import sys
-from pathlib import Path
-
-import pytest
-
-_ADAPTER_DIR = Path(__file__).resolve().parents[2] / "adapters" / "card_rpg"
+from __future__ import annotationsimport importlib.utilimport jsonimport sysfrom pathlib import Pathimport pytest_ADAPTER_DIR = Path(__file__).resolve().parents[2] / "adapters" / "card_rpg"
 _ADAPTER_PARENT = _ADAPTER_DIR.parent
 _FRAMEWORK_SRC = Path(__file__).resolve().parents[2] / "src"
 _FRAMEWORK_ROOT = Path(__file__).resolve().parents[2]
@@ -25,11 +16,7 @@ if str(_FRAMEWORK_ROOT) not in sys.path:
 if str(_ADAPTER_PARENT) not in sys.path:
     sys.path.insert(0, str(_ADAPTER_PARENT))
 
-from calc_framework.config.adapter import AdapterPackage
-from calc_framework.data.attr_schema import AttributeSchema
-
-
-def _load_card_rpg_loader():
+from calc_framework.config.adapter import AdapterPackagefrom calc_framework.data.attr_schema import AttributeSchemadef _load_card_rpg_loader():
     """用 importlib 直接文件加载，避开 adapters 命名空间冲突。"""
     loader_path = _ADAPTER_DIR / "loader.py"
     spec = importlib.util.spec_from_file_location("card_rpg_loader", loader_path)
@@ -241,7 +228,7 @@ class TestDAGJsonContract:
 
     def test_variables_have_required_fields(self):
         dag_path = _ADAPTER_DIR / "card_rpg.dag.json"
-        with open(dag_path, "r", encoding="utf-8") as f:
+        with open(dag_path, encoding="utf-8") as f:
             data = json.load(f)
         assert "schema_version" in data
         assert data["schema_version"] == "dag-v1"
@@ -258,7 +245,7 @@ class TestDAGJsonContract:
 
     def test_outputs_refer_to_existing_nodes(self):
         dag_path = _ADAPTER_DIR / "card_rpg.dag.json"
-        with open(dag_path, "r", encoding="utf-8") as f:
+        with open(dag_path, encoding="utf-8") as f:
             data = json.load(f)
         all_nodes = set(data["nodes"].keys())
         for out_name, out_def in data["outputs"].items():
@@ -268,6 +255,6 @@ class TestDAGJsonContract:
 
     def test_subgraphs_are_empty(self):
         dag_path = _ADAPTER_DIR / "card_rpg.dag.json"
-        with open(dag_path, "r", encoding="utf-8") as f:
+        with open(dag_path, encoding="utf-8") as f:
             data = json.load(f)
         assert data.get("subgraphs", {}) == {}

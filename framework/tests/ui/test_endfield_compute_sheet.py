@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """终末地 ComputeSheet 端到端集成测试。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-
-import pytest
-from calc_framework.dag.service import DAGService
-from calc_framework.ui.compute_sheet import ComputeSheet
-from calc_framework.ui.layout import load_layout_json
-
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from calc_framework.dag.service import DAGService
+from calc_framework.ui.compute_sheet import ComputeSheet
+from calc_framework.ui.layout import load_layout_json
+
 _FRAMEWORK_DIR = Path(__file__).resolve().parents[2]
 _DAG_PATH = _FRAMEWORK_DIR / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
 _LAYOUT_PATH = _FRAMEWORK_DIR / "adapters" / "endfield" / "ui" / "layout.json"
@@ -58,9 +59,10 @@ def base_context():
 
 @pytest.fixture(scope="module")
 def qapp():
-    import sys
-
-    from PySide6.QtWidgets import QApplication
+    import sys
+
+    from PySide6.QtWidgets import QApplication
+
 
     app = QApplication.instance()
     if app is None:

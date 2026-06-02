@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0
 """增量求值 + 惰性求值单元测试。"""
 
-from __future__ import annotations
-
-from calc_framework.dag.engine import BlockCache, evaluate_graph
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.state import (
-    DAGState,
-    compute_affected_nodes,
-    compute_context_hash,
-    compute_required_nodes,
-    find_changed_paths,
-    flatten_context,
-    propagate_dirty,
-)
-
+from __future__ import annotations
+
+from calc_framework.dag.engine import BlockCache, evaluate_graph
+from calc_framework.dag.serializer import dag_from_dict
+from calc_framework.dag.state import (
+    DAGState,
+    compute_affected_nodes,
+    compute_context_hash,
+    compute_required_nodes,
+    find_changed_paths,
+    flatten_context,
+    propagate_dirty,
+)
+
 # ── 简单 DAG 夹具 ──────────────────────────────────────
 
 _SIMPLE_DAG = {
@@ -432,8 +432,9 @@ class TestBlockCacheWithIncremental:
         assert result.outputs["product_result"] == 49.0
 
     def test_get_primary_output_node_missing_subgraph(self) -> None:
-        from calc_framework.dag.engine import _get_primary_output_node
-        from calc_framework.dag.schema import DAGGraph, CallNode
+        from calc_framework.dag.engine import _get_primary_output_node
+        from calc_framework.dag.schema import CallNode, DAGGraph
+
         expanded = DAGGraph()
         call_node = CallNode(subgraph="nonexistent", bindings={})
         result = _get_primary_output_node(expanded, call_node, "block_id")

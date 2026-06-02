@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """内置游戏机制插件。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from calc_framework.plugin.base import BasePlugin, PluginMeta
-from calc_framework.plugin.registry import get_registry
-
-
+from __future__ import annotations
+
+from typing import Any
+
+from calc_framework.plugin.base import BasePlugin, PluginMeta
+from calc_framework.plugin.registry import get_registry
+
+
 class CritPlugin(BasePlugin):
     """暴击机制插件 — 提供暴击率/暴击伤害的 DAG 子图模板。"""
 

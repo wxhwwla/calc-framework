@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
 """插件系统单元测试。"""
 
-from __future__ import annotations
-
-import pytest
-
-from calc_framework.dag.engine import evaluate_graph
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.service import DAGService
-from calc_framework.plugin import list_plugins
-from calc_framework.plugin.builtin import CritPlugin, DistanceDecayPlugin, DodgePlugin
-from calc_framework.plugin.registry import PluginRegistry
-
-
+from __future__ import annotations
+
+import pytest
+
+from calc_framework.dag.engine import evaluate_graph
+from calc_framework.dag.serializer import dag_from_dict
+from calc_framework.dag.service import DAGService
+from calc_framework.plugin import list_plugins
+from calc_framework.plugin.builtin import CritPlugin, DistanceDecayPlugin, DodgePlugin
+from calc_framework.plugin.registry import PluginRegistry
+
+
 class TestPluginRegistry:
     def test_register_and_list(self):
         reg = PluginRegistry()

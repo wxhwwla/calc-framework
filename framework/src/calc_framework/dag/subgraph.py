@@ -2,24 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """子图展开：将 call 节点内联为普通节点。"""
 
-from __future__ import annotations
-
-from copy import deepcopy
-
-from .schema import (
-    BinaryNode,
-    CallNode,
-    ConditionNode,
-    DAGGraph,
-    DAGOutput,
-    ExprNode,
-    NodeType,
-    UnaryNode,
-    VarNode,
-)
-from calc_framework.logging import get_logger
-
-logger = get_logger(__name__)
+from __future__ import annotationsfrom copy import deepcopyfrom calc_framework.logging import get_loggerfrom .schema import (    BinaryNode,    CallNode,    ConditionNode,    DAGGraph,    DAGOutput,    ExprNode,    NodeType,    UnaryNode,    VarNode,)logger = get_logger(__name__)
 
 
 def _prefixed_node(node: NodeType, prefix: str) -> NodeType:

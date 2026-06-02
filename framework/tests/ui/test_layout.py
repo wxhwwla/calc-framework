@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """layout.json 加载与校验 — 单元测试。"""
 
-import pytest
-from calc_framework.ui.layout import (
-    LayoutValidationError,
-    Section,
-    load_layout,
-    load_layout_json,
-)
-
-
+import pytest
+
+from calc_framework.ui.layout import (
+    LayoutValidationError,
+    Section,
+    load_layout,
+    load_layout_json,
+)
+
+
 class TestLoadLayout:
     def test_minimal_valid_with_one_input_section(self):
         data = {

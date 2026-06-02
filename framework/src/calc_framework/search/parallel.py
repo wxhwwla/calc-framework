@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
 """通用并行执行器 — 支持取消、进度回调、Top-N 追踪。"""
 
-from __future__ import annotations
-
-import time
-from collections.abc import Callable, Iterable
-from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
-from typing import TypeVar
-
-from calc_framework.search.cancel import SearchCancelToken
-from calc_framework.search.result import ParallelProgress
-from calc_framework.search.tracker import TopNTracker
-
+from __future__ import annotations
+
+import time
+from collections.abc import Callable, Iterable
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
+from typing import TypeVar
+
+from calc_framework.search.cancel import SearchCancelToken
+from calc_framework.search.result import ParallelProgress
+from calc_framework.search.tracker import TopNTracker
+
 T = TypeVar("T")
 R = TypeVar("R")
 

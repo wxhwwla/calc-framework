@@ -3,20 +3,7 @@
 """AST 沙箱单元测试。"""
 
 
-import pytest
-from calc_framework.dag.errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
-from calc_framework.dag.sandbox import (
-    clear_functions,
-    evaluate,
-    list_functions,
-    parse_expr,
-    register_function,
-    unregister_function,
-    validate_expr,
-)
-
-
-class TestSimpleArithmetic:
+import pytestfrom calc_framework.dag.errors import DAGCompileError, DAGRuntimeError, DAGSecurityErrorfrom calc_framework.dag.sandbox import (    clear_functions,    evaluate,    list_functions,    parse_expr,    register_function,    unregister_function,    validate_expr,)class TestSimpleArithmetic:
     """基本四则运算。"""
 
     def test_add(self) -> None:

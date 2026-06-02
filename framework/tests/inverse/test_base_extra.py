@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import sys
-from pathlib import Path
-
-import pytest
-
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
 _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from calc_framework.inverse.base import FitResult, FloorFormulaFitter  # noqa: E402
-from calc_framework.inverse.registry import FormulaType, registry  # noqa: E402
-
-
+from calc_framework.inverse.base import FitResult, FloorFormulaFitter  # noqa: E402
+from calc_framework.inverse.registry import FormulaType, registry  # noqa: E402
+
+
 class TestFitResultSummary:
 
     def test_summary_exact(self):

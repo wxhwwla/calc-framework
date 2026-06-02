@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
 """日志模块测试 — setup_logging, get_logger, set_level, _resolve_level。"""
 
-from __future__ import annotations
-
-import logging
-import os
-import tempfile
-from pathlib import Path
-from unittest.mock import patch
-
-import pytest
-
-from calc_framework.logging import _resolve_level, get_logger, set_level, setup_logging
-
+from __future__ import annotations
+
+import logging
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+from calc_framework.logging import _resolve_level, get_logger, set_level, setup_logging
+
 _ROOT_LOGGER = logging.getLogger("calc_framework")
 
 

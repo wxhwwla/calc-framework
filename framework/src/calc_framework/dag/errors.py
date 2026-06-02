@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 引擎异常类。"""
 
-from __future__ import annotations
-
-
-class DAGError(Exception):
+from __future__ import annotationsclass DAGError(Exception):
     """DAG 引擎所有异常的基类。"""
 
 

@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """MOBA / FPS 适配器集成测试。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-
-import pytest
-
-from calc_framework.dag.service import DAGService
-
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from calc_framework.dag.service import DAGService
+
 ADAPTERS_DIR = Path(__file__).resolve().parents[2] / "adapters"
 
 
@@ -54,8 +54,10 @@ class TestMobaAdapter:
     """MOBA 伤害公式测试。"""
 
     def test_schema_loads(self):
-        from calc_framework.data.attr_schema import AttributeSchema
-        import json
+        import json
+
+        from calc_framework.data.attr_schema import AttributeSchema
+
         schema_path = ADAPTERS_DIR / "moba" / "attr_schema.json"
         data = json.loads(schema_path.read_text(encoding="utf-8"))
         schema = AttributeSchema.from_dict(data)
@@ -147,8 +149,10 @@ class TestFpsAdapter:
     """FPS 武器伤害公式测试。"""
 
     def test_schema_loads(self):
-        from calc_framework.data.attr_schema import AttributeSchema
-        import json
+        import json
+
+        from calc_framework.data.attr_schema import AttributeSchema
+
         schema_path = ADAPTERS_DIR / "fps" / "attr_schema.json"
         data = json.loads(schema_path.read_text(encoding="utf-8"))
         schema = AttributeSchema.from_dict(data)

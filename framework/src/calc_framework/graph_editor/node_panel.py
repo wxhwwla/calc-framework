@@ -1,29 +1,29 @@
 # SPDX-License-Identifier: AGPL-3.0
 """左侧节点面板 — 按分类列出可用的节点类型，支持拖拽创建。"""
 
-from __future__ import annotations
-
-from pathlib import Path
-
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QDrag, QFont, QPixmap
-from PySide6.QtWidgets import (
-    QFileDialog,
-    QHBoxLayout,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QTabWidget,
-    QVBoxLayout,
-    QWidget,
-)
-
-from calc_framework.graph_editor.registry import (
-    get_nodes_by_category,
-    get_package_manager,
-    register_composite_type,
-)
-
+from __future__ import annotations
+
+from pathlib import Path
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QDrag, QFont, QPixmap
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+from calc_framework.graph_editor.registry import (
+    get_nodes_by_category,
+    get_package_manager,
+    register_composite_type,
+)
+
 # 节点类型对应的颜色（与画布保持一致）
 _NODE_TYPE_COLORS: dict[str, QColor] = {
     "const": QColor("#4ECDC4"),
@@ -204,11 +204,7 @@ class NodePanel(QTabWidget):
         """按类型 ID 查找面板中的拖拽项（用于测试）。"""
         for i in range(self.count()):
             tab = self.widget(i)
-            if isinstance(tab, DraggableTypeList):
-                for child in tab.findChildren(_DraggableListItem):
-                    if child.type_id == type_id:
-                        return child
-            elif hasattr(tab, "findChildren"):
+            if isinstance(tab, DraggableTypeList) or hasattr(tab, "findChildren"):
                 for child in tab.findChildren(_DraggableListItem):
                     if child.type_id == type_id:
                         return child

@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """tools.ocr.mapper 单元测试。"""
 
-from __future__ import annotations
-
-
-from tools.ocr.mapper import OcrMapper, OcrMatchResult
-
-
+from __future__ import annotations
+
+from tools.ocr.mapper import OcrMapper, OcrMatchResult
+
+
 class TestOcrMatchResult:
     def test_invalid_by_default(self) -> None:
         r = OcrMatchResult()

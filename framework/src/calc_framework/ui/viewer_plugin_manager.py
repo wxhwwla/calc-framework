@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -29,7 +29,7 @@ class PluginManagerDialog(QDialog):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        from calc_framework.plugin.registry import list_plugins, get_registry
+        from calc_framework.plugin.registry import get_registry, list_plugins
 
         plugins = list_plugins()
         reg = get_registry()

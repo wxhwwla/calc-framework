@@ -2,20 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAGService 封装层测试。"""
 
-from pathlib import Path
-
-import pytest
-from calc_framework.dag.schema import (
-    BinaryNode,
-    ConstNode,
-    DAGGraph,
-    DAGOutput,
-    DAGVariable,
-    VarNode,
-)
-
-
-class TestDAGService:
+from pathlib import Pathimport pytestfrom calc_framework.dag.schema import (    BinaryNode,    ConstNode,    DAGGraph,    DAGOutput,    DAGVariable,    VarNode,)class TestDAGService:
     @pytest.fixture
     def simple_dag(self) -> DAGGraph:
         return DAGGraph(

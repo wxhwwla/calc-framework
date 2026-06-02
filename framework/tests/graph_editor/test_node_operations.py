@@ -3,14 +3,7 @@
 """节点拖拽、删除、左侧面板测试。"""
 
 
-from calc_framework.graph_editor.schema import GraphNode
-from calc_framework.graph_editor.graph_editor_widget import (
-    GraphEditorWidget,
-)
-from calc_framework.graph_editor.ports import PortDirection, PortItem
-
-
-def _find_port(port_list: list[PortItem], direction: PortDirection, index: int = 0) -> PortItem:
+from calc_framework.graph_editor.graph_editor_widget import (    GraphEditorWidget,)from calc_framework.graph_editor.ports import PortDirection, PortItemfrom calc_framework.graph_editor.schema import GraphNodedef _find_port(port_list: list[PortItem], direction: PortDirection, index: int = 0) -> PortItem:
     for p in port_list:
         if p.direction == direction and p.port_index == index:
             return p

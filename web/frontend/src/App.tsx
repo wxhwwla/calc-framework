@@ -19,6 +19,7 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import { useNavigate, useLocation } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
@@ -32,6 +33,7 @@ const EditorPage = lazy(() => import("./pages/EditorPage"));
 const DesignerPage = lazy(() => import("./pages/DesignerPage"));
 const PackDesignerPage = lazy(() => import("./pages/PackDesignerPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
+const DataContributePage = lazy(() => import("./pages/DataContributePage"));
 
 const drawerWidth = 240;
 
@@ -42,6 +44,7 @@ const navItems = [
   { label: "公式图编辑器", path: "/editor", icon: <AccountTreeIcon /> },
   { label: "数据设计器", path: "/designer", icon: <BuildIcon /> },
   { label: "配置包设计器", path: "/pack-designer", icon: <Inventory2Icon /> },
+  { label: "数据贡献", path: "/contribute", icon: <NoteAddIcon /> },
   { label: "配置包市场", path: "/hub", icon: <StorefrontIcon /> },
 ];
 
@@ -94,6 +97,7 @@ function Shell() {
             <Route path="/designer" element={<DesignerPage />} />
             <Route path="/pack-designer" element={<PackDesignerPage />} />
             <Route path="/hub" element={<MarketplacePage />} />
+            <Route path="/contribute" element={<DataContributePage />} />
             <Route path="*" element={<Navigate to="/compute" replace />} />
           </Routes>
         </Suspense>

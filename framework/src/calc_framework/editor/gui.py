@@ -7,35 +7,35 @@
 - 底部：布局名称 + 导出/预览按钮
 """
 
-from __future__ import annotations
-
-from pathlib import Path
-from typing import Any
-
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QCheckBox,
-    QFileDialog,
-    QGroupBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QListWidget,
-    QListWidgetItem,
-    QMessageBox,
-    QPushButton,
-    QSplitter,
-    QVBoxLayout,
-    QWidget,
-)
-
-from calc_framework.dag.schema import DAGGraph
-from calc_framework.dag.serializer import load_dag
-from calc_framework.dag.service import DAGService
-from calc_framework.editor import LayoutEditor
-from calc_framework.ui.compute_sheet import ComputeSheet
-
-
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+)
+
+from calc_framework.dag.schema import DAGGraph
+from calc_framework.dag.serializer import load_dag
+from calc_framework.dag.service import DAGService
+from calc_framework.editor import LayoutEditor
+from calc_framework.ui.compute_sheet import ComputeSheet
+
+
 class _SectionWidget(QGroupBox):
     def __init__(
         self,

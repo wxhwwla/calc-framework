@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """连线绘制 — 端口之间的贝塞尔曲线。"""
 
-from __future__ import annotations
-
-from PySide6.QtCore import QPointF
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import QGraphicsItem, QGraphicsPathItem
-
-from calc_framework.graph_editor.ports import PortItem
-
+from __future__ import annotations
+
+from PySide6.QtCore import QPointF
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
+from PySide6.QtWidgets import QGraphicsItem, QGraphicsPathItem
+
+from calc_framework.graph_editor.ports import PortItem
+
 _WIRE_COLOR = QColor("#888888")
 _WIRE_WIDTH = 2.0
 _WIRE_HIGHLIGHT = QColor("#4ECDC4")

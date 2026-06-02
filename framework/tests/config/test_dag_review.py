@@ -3,11 +3,11 @@
 
 验证 ``endfield_full.dag.json`` 是否覆盖全部 15 个伤害乘区。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
 # Python 代码中的 15 乘区顺序（from games.endfield.calc.damage.engine.types）
 ZONE_ORDER_PYTHON = [
     "基础伤害区",

@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import json
-
-from calc_framework.dag.schema import (
-    DAGGraph,
-    DAGOutput,
-    DAGVariable,
-    ExprNode,
-)
-from calc_framework.dag.serializer import dag_to_dict
-from calc_framework.editor.__main__ import main
-from calc_framework.ui.layout import load_layout
-
+from __future__ import annotations
+
+import json
+
+from calc_framework.dag.schema import (
+    DAGGraph,
+    DAGOutput,
+    DAGVariable,
+    ExprNode,
+)
+from calc_framework.dag.serializer import dag_to_dict
+from calc_framework.editor.__main__ import main
+from calc_framework.ui.layout import load_layout
+
 SIMPLE_DAG = DAGGraph(
     name="simple",
     variables={

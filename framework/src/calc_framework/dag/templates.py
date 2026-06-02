@@ -20,8 +20,8 @@
     # {"template": "defense_reduction", "bindings": {"defense": "enemy_def", "scale": "const_0_5"}}
 """
 
-from __future__ import annotations
-
+from __future__ import annotations
+
 from copy import deepcopy
 from typing import Any
 

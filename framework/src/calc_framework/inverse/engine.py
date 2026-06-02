@@ -25,14 +25,14 @@
     print(f"精确匹配: {validation.is_exact}")
 """
 
-from __future__ import annotations
-
-from collections.abc import Sequence
-from typing import Any
-
-from .registry import registry
-
-
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Any
+
+from .registry import registry
+
+
 class InverseEngine:
     """通用公式反推引擎。
 

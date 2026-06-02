@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import sys
-from pathlib import Path
-
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 _SRC = Path(__file__).resolve().parents[2] / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from calc_framework.inverse.base import FitResult  # noqa: E402
-from calc_framework.inverse.advanced import (  # noqa: E402
-    ExponentialFormulaFitter,
-    PiecewiseFormulaFitter,
-    ThresholdFormulaFitter,
-)
-from calc_framework.inverse.registry import registry  # noqa: E402
-
-
+from calc_framework.inverse.advanced import (  # noqa: E402
+    ExponentialFormulaFitter,
+    PiecewiseFormulaFitter,
+    ThresholdFormulaFitter,
+)
+from calc_framework.inverse.base import FitResult  # noqa: E402
+from calc_framework.inverse.registry import registry  # noqa: E402
+
+
 class TestExponentialFormulaFitterExtra:
 
     def test_num_levels_less_than_2(self):

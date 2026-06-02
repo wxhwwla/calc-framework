@@ -1,24 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0
 """帮助对话框 — 在 GUI 内打开结构化的使用说明。"""
 
-from __future__ import annotations
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QDialog,
-    QHBoxLayout,
-    QPushButton,
-    QSplitter,
-    QTextBrowser,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
-)
-
-from calc_framework.graph_editor.help_content import HelpSection, build_help_tree
-
-
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QDialog,
+    QHBoxLayout,
+    QPushButton,
+    QSplitter,
+    QTextBrowser,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
+
+from calc_framework.graph_editor.help_content import HelpSection, build_help_tree
+
+
 class HelpDialog(QDialog):
     """结构化的帮助文档对话框。
 

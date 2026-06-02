@@ -1,26 +1,25 @@
 # SPDX-License-Identifier: AGPL-3.0
 """属性面板 — 编辑选中节点的配置参数。"""
 
-from __future__ import annotations
-
-
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QComboBox,
-    QDoubleSpinBox,
-    QFormLayout,
-    QGroupBox,
-    QLabel,
-    QLineEdit,
-    QVBoxLayout,
-    QWidget,
-)
-
-from calc_framework.graph_editor.registry import get_registry
-from calc_framework.graph_editor.schema import GraphNode
-
-
+from __future__ import annotations
+
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
+    QVBoxLayout,
+    QWidget,
+)
+
+from calc_framework.graph_editor.registry import get_registry
+from calc_framework.graph_editor.schema import GraphNode
+
+
 class PropPanel(QWidget):
     """底部属性面板，编辑选中节点的配置。"""
 

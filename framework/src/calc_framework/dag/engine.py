@@ -2,43 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 求值引擎：拓扑排序 + 节点求值。"""
 
-from __future__ import annotations
-
-import math
-import operator as op
-import time
-from collections import Counter, deque
-from dataclasses import dataclass, field
-from typing import Any
-
-from .errors import DAGCycleError, DAGRuntimeError
-from .sandbox import evaluate as sandbox_evaluate
-from .sandbox import parse_expr
-from .schema import (
-    BinaryNode,
-    CallNode,
-    ConditionNode,
-    ConstNode,
-    DAGGraph,
-    ExprNode,
-    NodeType,
-    UnaryNode,
-    UserInputNode,
-    VarNode,
-)
-from .state import (
-    DAGState,
-    compute_affected_nodes,
-    compute_context_hash,
-    compute_required_nodes,
-    find_changed_paths,
-    flatten_context,
-    propagate_dirty,
-)
-from .subgraph import expand_subgraphs
-from calc_framework.logging import get_logger
-
-logger = get_logger(__name__)
+from __future__ import annotationsimport mathimport operator as opimport timefrom collections import Counter, dequefrom dataclasses import dataclass, fieldfrom typing import Anyfrom calc_framework.logging import get_loggerfrom .errors import DAGCycleError, DAGRuntimeErrorfrom .sandbox import evaluate as sandbox_evaluatefrom .sandbox import parse_exprfrom .schema import (    BinaryNode,    CallNode,    ConditionNode,    ConstNode,    DAGGraph,    ExprNode,    NodeType,    UnaryNode,    UserInputNode,    VarNode,)from .state import (    DAGState,    compute_affected_nodes,    compute_context_hash,    compute_required_nodes,    find_changed_paths,    flatten_context,    propagate_dirty,)from .subgraph import expand_subgraphslogger = get_logger(__name__)
 
 _BINARY_OPS: dict[str, Any] = {
     "+": op.add,

@@ -2,15 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """GraphEditorWidget 画布组件测试。"""
 
-from calc_framework.graph_editor.schema import GraphNode, NodeConfig
-from calc_framework.graph_editor.graph_editor_widget import (
-    GraphScene,
-    GraphEditorWidget,
-    NodeItem,
-)
-
-
-def _node_items(scene: GraphScene) -> list[NodeItem]:
+from calc_framework.graph_editor.graph_editor_widget import (    GraphEditorWidget,    GraphScene,    NodeItem,)from calc_framework.graph_editor.schema import GraphNode, NodeConfigdef _node_items(scene: GraphScene) -> list[NodeItem]:
     return [it for it in scene.items() if isinstance(it, NodeItem)]
 
 

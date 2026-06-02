@@ -2,9 +2,9 @@
 """节点值格式化 — 单元测试。"""
 
 
-from calc_framework.ui.format import format_node_value
-
-
+from calc_framework.ui.format import format_node_value
+
+
 class TestFormatNodeValue:
     def test_float_default(self):
         assert format_node_value(3.14159) == "3.14159"

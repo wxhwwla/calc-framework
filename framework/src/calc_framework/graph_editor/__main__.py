@@ -28,17 +28,17 @@ def main() -> None:
     from calc_framework.graph_editor.file_actions import (
         collect_document,
         load_document,
-        save_graph_file,
         open_graph_file,
+        save_graph_file,
     )
     from calc_framework.graph_editor.graph_editor_widget import (
         GraphEditorWidget,
         NodeItem,
     )
+    from calc_framework.graph_editor.help_dialog import HelpDialog
     from calc_framework.graph_editor.node_panel import NodePanel
     from calc_framework.graph_editor.prop_panel import PropPanel
     from calc_framework.graph_editor.registry import create_default_node
-    from calc_framework.graph_editor.help_dialog import HelpDialog
 
     app = QApplication(sys.argv)
 
@@ -254,6 +254,7 @@ def main() -> None:
     """)
 
     from collections.abc import Callable
+
     from PySide6.QtWidgets import QToolButton
 
     def _tb(text: str, tip: str, cb: Callable[[], None]) -> None:

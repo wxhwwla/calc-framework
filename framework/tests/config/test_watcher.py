@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0
 """AdapterWatcher 热加载单元测试。"""
 
-from __future__ import annotations
-
-import json
-import tempfile
-import time
-from pathlib import Path
-
-import pytest
-
-from calc_framework.config.manager import AdapterManager
-from calc_framework.config.watcher import AdapterWatcher
-
-
+from __future__ import annotations
+
+import json
+import tempfile
+import time
+from pathlib import Path
+
+import pytest
+
+from calc_framework.config.manager import AdapterManager
+from calc_framework.config.watcher import AdapterWatcher
+
+
 @pytest.fixture
 def temp_adapter():
     """创建一个临时适配包目录。"""

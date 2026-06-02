@@ -13,13 +13,13 @@
     store.mark_run_status("abc123", "completed")
 """
 
-from __future__ import annotations
-
-import sqlite3
-from pathlib import Path
-
-from calc_framework.logging import get_logger
-
+from __future__ import annotations
+
+import sqlite3
+from pathlib import Path
+
+from calc_framework.logging import get_logger
+
 logger = get_logger(__name__)
 
 PROCESSED_BATCH_SIZE = 500

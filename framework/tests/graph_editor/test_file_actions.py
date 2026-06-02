@@ -2,27 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """文件导入/导出功能测试。"""
 
-import json
-import tempfile
-from pathlib import Path
-
-import pytest
-
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphNode,
-    GraphLayout,
-    NodeConfig,
-    SectionDef,
-    ValidationError,
-    validate,
-)
-from calc_framework.graph_editor.registry import create_default_node
-from calc_framework.graph_editor.serializer import document_to_dict, document_from_json, document_to_json
-
-
-class TestExportGraph:
+import jsonimport tempfilefrom pathlib import Pathimport pytestfrom calc_framework.graph_editor.registry import create_default_nodefrom calc_framework.graph_editor.schema import (    GraphDocument,    GraphEdge,    GraphLayout,    GraphNode,    NodeConfig,    SectionDef,    ValidationError,    validate,)from calc_framework.graph_editor.serializer import document_from_json, document_to_dict, document_to_jsonclass TestExportGraph:
     def test_export_minimal_graph(self) -> None:
         doc = GraphDocument(
             name="测试图",

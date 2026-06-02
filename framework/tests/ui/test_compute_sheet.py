@@ -4,17 +4,18 @@
 验证声明式 UI 正确加载 DAG + layout.json 并渲染为 QWidget 控件树。
 """
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
-import pytest
-from calc_framework.dag.serializer import load_dag
-from calc_framework.dag.service import DAGService
-from calc_framework.ui.compute_sheet import ComputeSheet
-from calc_framework.ui.layout import load_layout_json
-
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from calc_framework.dag.serializer import load_dag
+from calc_framework.dag.service import DAGService
+from calc_framework.ui.compute_sheet import ComputeSheet
+from calc_framework.ui.layout import load_layout_json
+
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 UI_DAG = FIXTURE_DIR / "ui_test.dag.json"
 
@@ -52,9 +53,10 @@ def layout():
 
 @pytest.fixture(scope="module")
 def qapp():
-    import sys
-
-    from PySide6.QtWidgets import QApplication
+    import sys
+
+    from PySide6.QtWidgets import QApplication
+
 
     app = QApplication.instance()
     if app is None:

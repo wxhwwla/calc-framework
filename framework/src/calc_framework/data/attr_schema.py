@@ -12,16 +12,7 @@
 框架可自动加载并执行标准化转换。
 """
 
-from __future__ import annotations
-
-import json
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Literal
-
-from calc_framework.errors import CalcFrameworkError
-
-AttrSource = Literal["character", "weapon", "equipment", "enemy", "computed"]
+from __future__ import annotationsimport jsonfrom dataclasses import dataclass, fieldfrom pathlib import Pathfrom typing import Any, Literalfrom calc_framework.errors import CalcFrameworkErrorAttrSource = Literal["character", "weapon", "equipment", "enemy", "computed"]
 AttrType = Literal["float", "int", "bool", "str", "percent"]
 
 VALID_SOURCES: set[str] = {"character", "weapon", "equipment", "enemy", "computed"}
@@ -159,6 +150,6 @@ class AttributeSchema:
 
     @classmethod
     def from_file(cls, path: str | Path) -> AttributeSchema:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         return cls.from_dict(data)

@@ -4,18 +4,18 @@
 提供编程 API + CLI，支持从 DAG 自动推断可用变量/输出并分配到排版区。
 """
 
-from __future__ import annotations
-
-import json
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
-
-from calc_framework.dag.schema import DAGGraph, DAGSubgraph
-from calc_framework.dag.serializer import load_dag
-from calc_framework.ui.layout import Layout, Section, load_layout
-
-
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from calc_framework.dag.schema import DAGGraph, DAGSubgraph
+from calc_framework.dag.serializer import load_dag
+from calc_framework.ui.layout import Layout, Section, load_layout
+
+
 @dataclass
 class EditorState:
     sections: list[Section] = field(default_factory=list)

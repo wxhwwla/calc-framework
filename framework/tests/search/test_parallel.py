@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """run_parallel 集成测试。"""
 
-from __future__ import annotations
-
-
-from calc_framework.search import SearchCancelToken, TopNTracker, run_parallel
-
-
+from __future__ import annotations
+
+from calc_framework.search import SearchCancelToken, TopNTracker, run_parallel
+
+
 def square(x: int) -> int:
     return x * x
 

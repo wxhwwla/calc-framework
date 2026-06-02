@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """插件注册表。"""
 
-from __future__ import annotations
-
-from typing import Any
-
-from calc_framework.dag.service import DAGService
-from calc_framework.dag.templates import register_template
-from calc_framework.logging import get_logger
-from calc_framework.plugin.base import BasePlugin, PluginMeta
-
+from __future__ import annotations
+
+from typing import Any
+
+from calc_framework.dag.service import DAGService
+from calc_framework.dag.templates import register_template
+from calc_framework.logging import get_logger
+from calc_framework.plugin.base import BasePlugin, PluginMeta
+
 logger = get_logger(__name__)
 
 _registry: PluginRegistry | None = None

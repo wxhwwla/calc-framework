@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DataContext 类型定义 — 通用数据上下文类型。"""
 
-from typing import Any, TypedDict
-
-
-class DataContext(TypedDict, total=False):
+from typing import Any, TypedDictclass DataContext(TypedDict, total=False):
     """DAG 求值上下文 TypedDict。
 
     顶层 key 约定：

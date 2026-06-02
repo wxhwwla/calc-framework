@@ -5,9 +5,9 @@
 """
 
 
-from calc_framework.ui.controls import infer_control
-
-
+from calc_framework.ui.controls import infer_control
+
+
 class TestInferControl:
     def test_user_input_float_with_min_max_yields_slider(self):
         var = {"type": "float", "source": "user_input", "default": 50, "min": 0, "max": 100}

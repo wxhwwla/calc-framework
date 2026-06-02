@@ -1,14 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """AdapterManager 和启动器单元测试。"""
 
-from __future__ import annotations
-
-
-import pytest
-
-from calc_framework.config.manager import AdapterManager, discover_adapters
-
-
+from __future__ import annotations
+
+import pytest
+
+from calc_framework.config.manager import AdapterManager, discover_adapters
+
+
 class TestDiscoverAdapters:
     def test_discovers_endfield_and_card_rpg(self):
         adapters = discover_adapters()

@@ -3,15 +3,7 @@
 """端口 (PortItem) 与连线 (WireItem) 测试。"""
 
 
-from PySide6.QtWidgets import QGraphicsScene
-
-from calc_framework.graph_editor.ports import PortItem, PortDirection
-from calc_framework.graph_editor.wire import WireItem
-from calc_framework.graph_editor.schema import GraphNode, NodeConfig
-from calc_framework.graph_editor.graph_editor_widget import NodeItem
-
-
-class TestPortItem:
+from PySide6.QtWidgets import QGraphicsScenefrom calc_framework.graph_editor.graph_editor_widget import NodeItemfrom calc_framework.graph_editor.ports import PortDirection, PortItemfrom calc_framework.graph_editor.schema import GraphNode, NodeConfigfrom calc_framework.graph_editor.wire import WireItemclass TestPortItem:
     def test_create_input_port(self, qapp) -> None:
         port = PortItem(PortDirection.INPUT, 0, "输入")
         assert port.direction == PortDirection.INPUT

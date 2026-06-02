@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
 """变量 Schema 校验 — 单元测试。"""
 
-import pytest
-from calc_framework.dag.schema import DAGGraph, DAGVariable
-from calc_framework.data.context import make_context
-from calc_framework.data.schema import (
-    VariableValidationError,
-    _resolve_path,
-    validate_variables,
-)
-
-
+import pytest
+
+from calc_framework.dag.schema import DAGGraph, DAGVariable
+from calc_framework.data.context import make_context
+from calc_framework.data.schema import (
+    VariableValidationError,
+    _resolve_path,
+    validate_variables,
+)
+
+
 def _make_graph(variables: dict[str, DAGVariable]) -> DAGGraph:
     return DAGGraph(
         name="test",

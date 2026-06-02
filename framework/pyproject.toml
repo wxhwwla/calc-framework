@@ -40,7 +40,7 @@ calc-launcher = "calc_framework.launcher:run_launcher"
 
 [project.optional-dependencies]
 ui = ["PySide6>=6.5"]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "pytest-benchmark>=5", "ruff>=0.5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -71,6 +71,31 @@ omit = [
     "*/graph_editor/prop_panel.py",
     "*/ui/compute_sheet.py",
 ]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "SIM", "RUF"]
+ignore = [
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF012",
+    "E402",
+    "N812",
+    "N803",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["RUF", "N802", "N806", "SIM115"]
+"**/__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
 
 [tool.coverage.report]
 exclude_lines = [

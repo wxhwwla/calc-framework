@@ -2,28 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """编辑器状态收集/加载功能测试。"""
 
-import tempfile
-from pathlib import Path
-
-
-from calc_framework.graph_editor.file_actions import (
-    collect_document,
-    load_document,
-    save_graph_file,
-    open_graph_file,
-)
-from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidget
-from calc_framework.graph_editor.registry import create_default_node
-from calc_framework.graph_editor.schema import (
-    GraphDocument,
-    GraphEdge,
-    GraphLayout,
-    GraphNode,
-    NodeConfig,
-)
-
-
-class TestCollectDocument:
+import tempfilefrom pathlib import Pathfrom calc_framework.graph_editor.file_actions import (    collect_document,    load_document,    open_graph_file,    save_graph_file,)from calc_framework.graph_editor.graph_editor_widget import GraphEditorWidgetfrom calc_framework.graph_editor.registry import create_default_nodefrom calc_framework.graph_editor.schema import (    GraphDocument,    GraphEdge,    GraphLayout,    GraphNode,    NodeConfig,)class TestCollectDocument:
     def test_collect_empty(self, qapp) -> None:
         widget = GraphEditorWidget()
         doc = collect_document(widget)

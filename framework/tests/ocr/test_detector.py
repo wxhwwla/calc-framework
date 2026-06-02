@@ -1,15 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """tools.ocr.detector 单元测试。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
-import pytest
-
-from tools.ocr.detector import BBox, BatchResult, DetectionResult, YOLOXDetector
-
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+from tools.ocr.detector import BatchResult, BBox, DetectionResult, YOLOXDetector
+
 # ── 数据类测试 ────────────────────────────────────
 
 

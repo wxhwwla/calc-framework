@@ -4,28 +4,28 @@
 from __future__ import annotations
 
 import json
-from typing import Any
-
-from PySide6.QtCore import QPoint, QPointF, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QGraphicsItem,
-    QGraphicsPathItem,
-    QGraphicsRectItem,
-    QGraphicsScene,
-    QGraphicsSimpleTextItem,
-    QGraphicsView,
-    QMessageBox,
-    QVBoxLayout,
-    QWidget,
-)
-
-from calc_framework.graph_editor.ports import PortDirection, PortItem
-from calc_framework.graph_editor.schema import GraphEdge, GraphNode
-from calc_framework.graph_editor.wire import WireItem
-
+from typing import Any
+
+from PySide6.QtCore import QPoint, QPointF, Qt, Signal
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QGraphicsItem,
+    QGraphicsPathItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsSimpleTextItem,
+    QGraphicsView,
+    QMessageBox,
+    QVBoxLayout,
+    QWidget,
+)
+
+from calc_framework.graph_editor.ports import PortDirection, PortItem
+from calc_framework.graph_editor.schema import GraphEdge, GraphNode
+from calc_framework.graph_editor.wire import WireItem
+
 _NODE_WIDTH = 160
 _NODE_HEIGHT = 50
 _BG_COLOR = QColor("#1E1E1E")
@@ -538,9 +538,10 @@ class SubGraphDialog(QDialog):
         self.setWindowTitle("子图编辑器")
         self.resize(800, 600)
 
-        from calc_framework.graph_editor.serializer import document_from_json
-        from calc_framework.graph_editor.file_actions import load_document
-        from calc_framework.graph_editor.prop_panel import PropPanel
+        from calc_framework.graph_editor.file_actions import load_document
+        from calc_framework.graph_editor.prop_panel import PropPanel
+        from calc_framework.graph_editor.serializer import document_from_json
+
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -597,8 +598,9 @@ class SubGraphDialog(QDialog):
 
     def get_graph_json(self) -> str:
         """获取编辑后的子图 JSON。"""
-        from calc_framework.graph_editor.file_actions import collect_document
-        from calc_framework.graph_editor.serializer import document_to_json
+        from calc_framework.graph_editor.file_actions import collect_document
+        from calc_framework.graph_editor.serializer import document_to_json
+
         doc = collect_document(self._editor)
         return document_to_json(doc)
 

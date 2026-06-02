@@ -3,13 +3,13 @@
 公式类型注册表 — FormulaType 注册与发现。
 """
 
-from __future__ import annotations
-
-from typing import Any
-
-from .base import FormulaFitter
-
-
+from __future__ import annotations
+
+from typing import Any
+
+from .base import FormulaFitter
+
+
 class FormulaType:
     """公式类型描述符。
 

@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """Catalog 生成器 — 生成社区分享平台的静态 HTML 目录。"""
 
-from __future__ import annotations
-
-import json
-from pathlib import Path
-from typing import Any
-
-from calc_framework.config.manager import discover_adapters
-from calc_framework.logging import get_logger
-
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from calc_framework.config.manager import discover_adapters
+from calc_framework.logging import get_logger
+
 logger = get_logger(__name__)
 
 CATALOG_HTML = """<!DOCTYPE html>

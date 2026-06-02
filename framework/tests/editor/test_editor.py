@@ -1,25 +1,26 @@
 # SPDX-License-Identifier: AGPL-3.0
-from __future__ import annotations
-
-import json
-
-import pytest
-from calc_framework.dag.schema import (
-    DAGGraph,
-    DAGOutput,
-    DAGSubgraph,
-    DAGVariable,
-    ExprNode,
-)
-from calc_framework.dag.serializer import dag_to_dict
-from calc_framework.editor import (
-    EditorState,
-    LayoutEditor,
-    discover_input_variables,
-    discover_outputs,
-)
-from calc_framework.ui.layout import load_layout_json
-
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from calc_framework.dag.schema import (
+    DAGGraph,
+    DAGOutput,
+    DAGSubgraph,
+    DAGVariable,
+    ExprNode,
+)
+from calc_framework.dag.serializer import dag_to_dict
+from calc_framework.editor import (
+    EditorState,
+    LayoutEditor,
+    discover_input_variables,
+    discover_outputs,
+)
+from calc_framework.ui.layout import load_layout_json
+
 SAMPLE_DAG = DAGGraph(
     name="test",
     variables={

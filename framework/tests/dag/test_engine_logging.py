@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 引擎结构化日志单元测试。"""
 
-from __future__ import annotations
-
-import pytest
-
-from calc_framework.dag.engine import evaluate_graph, topological_sort
-from calc_framework.dag.errors import DAGRuntimeError
-from calc_framework.dag.serializer import dag_from_dict
-
-
+from __future__ import annotations
+
+import pytest
+
+from calc_framework.dag.engine import evaluate_graph, topological_sort
+from calc_framework.dag.errors import DAGRuntimeError
+from calc_framework.dag.serializer import dag_from_dict
+
+
 def _make_simple_graph():
     return dag_from_dict({
         "schema_version": "dag-v1",

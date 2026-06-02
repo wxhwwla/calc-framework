@@ -2,16 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """节点类型注册表测试。"""
 
-from calc_framework.graph_editor.registry import (
-    get_registry,
-    get_node_type_ids,
-    get_display_name,
-    get_category,
-    create_default_node,
-)
-
-
-class TestRegistryData:
+from calc_framework.graph_editor.registry import (    create_default_node,    get_category,    get_display_name,    get_node_type_ids,    get_registry,)class TestRegistryData:
     def test_get_registry_returns_populated(self) -> None:
         reg = get_registry()
         assert len(reg) >= 7  # const, var, user_input, unary, binary, condition, output

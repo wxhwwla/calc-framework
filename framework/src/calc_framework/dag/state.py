@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 增量求值状态：跨求值调用追踪节点值变化。"""
 
-from __future__ import annotations
-
-from collections import deque
-from dataclasses import dataclass, field
-from typing import Any
-
-from .schema import (
-    BinaryNode,
-    ConditionNode,
-    DAGGraph,
-    ExprNode,
-    NodeType,
-    UnaryNode,
-)
-
-
+from __future__ import annotations
+
+from collections import deque
+from dataclasses import dataclass, field
+from typing import Any
+
+from .schema import (
+    BinaryNode,
+    ConditionNode,
+    DAGGraph,
+    ExprNode,
+    NodeType,
+    UnaryNode,
+)
+
+
 def _node_dependencies(node: NodeType) -> list[str]:
     """返回节点的直接依赖节点 ID 列表（与 engine.py 同步）。"""
     if isinstance(node, UnaryNode):

@@ -1,28 +1,28 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 模板库单元测试。"""
 
-from __future__ import annotations
-
-import json
-import tempfile
-from pathlib import Path
-
-import pytest
-
-from calc_framework.dag.sandbox import register_function, unregister_function
-from calc_framework.dag.serializer import dag_from_dict
-from calc_framework.dag.templates import (
-    TemplateError,
-    clear_templates,
-    expand_template_refs,
-    get_template,
-    list_templates,
-    register_template,
-    unregister_template,
-)
-from calc_framework.dag.engine import evaluate_graph
-
-
+from __future__ import annotations
+
+import json
+import tempfile
+from pathlib import Path
+
+import pytest
+
+from calc_framework.dag.engine import evaluate_graph
+from calc_framework.dag.sandbox import register_function, unregister_function
+from calc_framework.dag.serializer import dag_from_dict
+from calc_framework.dag.templates import (
+    TemplateError,
+    clear_templates,
+    expand_template_refs,
+    get_template,
+    list_templates,
+    register_template,
+    unregister_template,
+)
+
+
 @pytest.fixture(autouse=True)
 def reset_templates():
     """每个测试前重置模板注册表（保留内置模板）。"""

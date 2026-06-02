@@ -44,7 +44,7 @@ def _read_exe_version() -> str:
     try:
         root = repo_root()
         sys.path.insert(0, str(root))
-        from scripts.please_read_me import _EXE_VERSION  # noqa: WPS433
+        from scripts.please_read_me import _EXE_VERSION
 
         return str(_EXE_VERSION)
     except Exception:

@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """FileWatcher 单文件监视器单元测试。"""
 
-from __future__ import annotations
-
-import json
-import tempfile
-import time
-from pathlib import Path
-
-
-from calc_framework.config.file_watcher import FileWatcher
-
-
+from __future__ import annotations
+
+import json
+import tempfile
+import time
+from pathlib import Path
+
+from calc_framework.config.file_watcher import FileWatcher
+
+
 class TestFileWatcher:
     def test_start_and_stop(self):
         with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:

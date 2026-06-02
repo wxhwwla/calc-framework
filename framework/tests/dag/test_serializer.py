@@ -2,13 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 序列化（JSON ↔ DAGGraph）单元测试。"""
 
-import json
-import tempfile
-from pathlib import Path
-
-from calc_framework.dag.serializer import dag_from_dict, dag_to_dict, load_dag, save_dag
-
-_MINIMAL_DICT: dict = {
+import jsonimport tempfilefrom pathlib import Pathfrom calc_framework.dag.serializer import dag_from_dict, dag_to_dict, load_dag, save_dag_MINIMAL_DICT: dict = {
     "schema_version": "dag-v1",
     "name": "测试图",
     "nodes": {"c": {"type": "const", "value": 1}},

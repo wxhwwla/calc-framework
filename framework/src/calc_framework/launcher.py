@@ -98,9 +98,10 @@ def run_launcher(adapter_name: str | None = None) -> None:
 def _launch_ui(adapter_name: str, pkg: Any) -> None:
     """尝试启动 ComputeSheet GUI。"""
     try:
+        from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
+
         from calc_framework.ui.compute_sheet import ComputeSheet
         from calc_framework.ui.format import format_output
-        from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QStatusBar
     except ImportError as exc:
         print(f"提示：UI 依赖未安装（{exc}），仅 DAG 引擎可工作。")
         _run_headless_demo(adapter_name, pkg)
