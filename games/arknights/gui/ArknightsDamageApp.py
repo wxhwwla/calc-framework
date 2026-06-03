@@ -593,7 +593,7 @@ class ArknightsDamageApp(QMainWindow):
                   "再部署": "再部署时间", "阻挡数": "阻挡数", "攻击间隔": "攻击间隔"}
         self._det_stat_tbl.setRowCount(len(base))
         for i, (k, v) in enumerate(base.items()):
-            self._det_stat_tbl.setItem(i, 0, QTableWidgetItem(labels.get(k, k)))
+            self._det_stat_tbl.setItem(i, 0, QTableWidgetItem(labels.get(k, k)))  # type: ignore[arg-type]
             self._det_stat_tbl.setItem(i, 1, QTableWidgetItem(
                 f"{v:.1f}" if isinstance(v, float) else str(v)))
         self._det_stat_tbl.resizeColumnsToContents()

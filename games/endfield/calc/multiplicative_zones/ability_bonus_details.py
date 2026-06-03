@@ -144,7 +144,7 @@ def calculate_ability_bonus_with_details(
             """resolve level。"""
 
         def _should_skip(attr_name: str) -> bool:
-            return attr_name == sa3_name and sa3_name and sa3_level == 0
+            return bool(attr_name == sa3_name and sa3_name and sa3_level == 0)
             """should skip。"""
 
         def _classify(attr_name: str) -> str:

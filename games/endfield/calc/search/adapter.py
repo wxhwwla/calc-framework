@@ -145,7 +145,7 @@ class EndfieldSearchEngine(SearchEngine[OptimizerTask, LoadoutScore]):
 
             base_context=self._base_context,
 
-            weapons=plan.weapons,
+            weapons=list(plan.weapons),
 
             equipment_catalog=plan.equipment_catalog,
 
@@ -154,7 +154,6 @@ class EndfieldSearchEngine(SearchEngine[OptimizerTask, LoadoutScore]):
         )
 
         return list(tasks)
-        """generate candidates。"""
 
 
 
@@ -202,7 +201,7 @@ class EndfieldSearchEngine(SearchEngine[OptimizerTask, LoadoutScore]):
 
             base_context=self._base_context,
 
-            weapons=plan.weapons,
+            weapons=list(plan.weapons),
 
             equipment_catalog=plan.equipment_catalog,
 

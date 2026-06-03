@@ -209,7 +209,7 @@ def build_loadout_state_from_web(
         fixed_names = {}
     fixed_loadout = resolve_fixed_loadout_selection(
         fixed_equipment_names=fixed_names,
-        equipment_catalog=catalog,
+        equipment_catalog=catalog,  # type: ignore[arg-type]
         fixed_loadout_raw=body.get("fixed_loadout") if isinstance(body.get("fixed_loadout"), dict) else None,
     )
     use_manual = bool(body.get("use_manual_multi_skill_counts", False))

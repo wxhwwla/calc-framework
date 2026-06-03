@@ -8,10 +8,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from PySide6.QtCore import QThread
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
 from games.endfield.framework_bridge import get_logger
@@ -90,15 +90,15 @@ class ActionsSearchMixin:
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
-            QMessageBox.warning(self, "MVP 搜索", "请先选择有效的角色和武器。")
+            QMessageBox.warning(cast(QWidget, self), "MVP 搜索", "请先选择有效的角色和武器。")
             return
         job, err = prepare_search_job(inputs)
         if err or job is None:
-            QMessageBox.warning(self, "最优搜索", err or "无法准备搜索任务")
+            QMessageBox.warning(cast(QWidget, self), "最优搜索", err or "无法准备搜索任务")
             return
 
         output_dir = QFileDialog.getExistingDirectory(
-            self, "选择 MVP 搜索导出目录", str(default_search_output_root()),
+            cast(QWidget, self), "选择 MVP 搜索导出目录", str(default_search_output_root()),
         )
         export_root = allocate_search_run_directory(purpose="mvp_search") if not output_dir else Path(output_dir)
 
@@ -120,11 +120,11 @@ class ActionsSearchMixin:
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
-            QMessageBox.warning(self, "全量遍历", "请先选择有效的角色和武器。")
+            QMessageBox.warning(cast(QWidget, self), "全量遍历", "请先选择有效的角色和武器。")
             return
         job, err = prepare_search_job(inputs)
         if err or job is None:
-            QMessageBox.warning(self, "全量遍历", err or "无法准备搜索任务")
+            QMessageBox.warning(cast(QWidget, self), "全量遍历", err or "无法准备搜索任务")
             return
 
         dock = self.control_dock
@@ -135,7 +135,7 @@ class ActionsSearchMixin:
         self._search_estimated_total_seconds = estimate.estimated_seconds
         if estimate.estimated_seconds >= 120:
             reply = QMessageBox.question(
-                self, "确认全量遍历", f"{estimate.text}\n\n组合较多，是否仍要开始？",
+                cast(QWidget, self), "确认全量遍历", f"{estimate.text}\n\n组合较多，是否仍要开始？",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
@@ -195,7 +195,7 @@ class ActionsSearchMixin:
         self.control_dock.mvp_status_label.setText(status)
         self._set_search_btns_enabled(True)
         dialog = QtSearchResultsDialog(
-            self, title=mode_label, lines=lines,
+            cast(QWidget, self), title=mode_label, lines=lines,
             big_font=self.big_font, small_font=self.small_font,
             top_results=outcome.top_results,
             damage_metric=damage_metric,
@@ -212,7 +212,7 @@ class ActionsSearchMixin:
             self._search_thread.wait()
         self.control_dock.mvp_status_label.setText(f"搜索失败：{error_msg}")
         self._set_search_btns_enabled(True)
-        QMessageBox.critical(self, "搜索失败", error_msg)
+        QMessageBox.critical(cast(QWidget, self), "搜索失败", error_msg)
 
     def _on_cancel_search(self) -> None:
         if self._search_cancel_token is not None:
@@ -230,7 +230,7 @@ class ActionsSearchMixin:
     # ── 搜索历史 ──────────────────────────────
 
     def _on_search_history(self) -> None:
-        dialog = SearchHistoryDialog(self, big_font=self.big_font, small_font=self.small_font)
+        dialog = SearchHistoryDialog(cast(QWidget, self), big_font=self.big_font, small_font=self.small_font)
         dialog.exec()
 
     # ── 搜索估算信号连接 ─────────────────────────

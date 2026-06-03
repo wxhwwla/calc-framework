@@ -120,7 +120,7 @@ class TestFormulaConsistency:
     def test_basic_non_crit(self, crit_mode: str) -> None:
         """基础伤害: 无效果，改变暴击模式。"""
         ctx = _ctx()
-        local = calculate_single_hit_damage(ctx, crit_mode=crit_mode)
+        local = calculate_single_hit_damage(ctx, crit_mode=crit_mode)  # type: ignore[arg-type]
         dag_val = compute_15_zone_damage(**_dag_kwargs(ctx, crit_mode=crit_mode))
         assert abs(local.final_damage - dag_val) < 0.001, (
             f"crit_mode={crit_mode}: local={local.final_damage:.4f} dag={dag_val:.4f}"

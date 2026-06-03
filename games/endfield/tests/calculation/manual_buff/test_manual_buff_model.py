@@ -29,7 +29,7 @@ import unittestfrom games.endfield.calc.manual_buff.model import (    MANUAL_
         self.assertEqual(get_buffs_for_key(store, "战技:1:1"), [])
 
     def test_set_empty_buffs_removes_key(self):
-        store: dict[str, list[dict[str, float]]] = {}
+        store: dict[str, list[dict[str, str | float]]] = {}
         set_buffs_for_key(
             store,
             "猛击:0:1",

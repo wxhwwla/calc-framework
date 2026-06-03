@@ -177,7 +177,7 @@ def optimize_multi_skill_loadouts(
                     combo_stacks=base_context.combo_stacks,
                     break_defense_stacks=bd_stacks,
                     effects=base_effects + list(scenario.external_effects),
-                    crit_mode=config.crit_mode,
+                    crit_mode=config.crit_mode,  # type: ignore[arg-type]
                 )
                 segment_sum += dmg.final_damage
             breakdown[key] = segment_sum / count if count else 0.0

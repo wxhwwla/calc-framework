@@ -50,15 +50,15 @@ def bake_character_curves(
 
     if sk1_dt:
 
-        attrs["战技段伤害类型"] = list(sk1_dt)
+        attrs["战技段伤害类型"] = list(sk1_dt)  # type: ignore[assignment]
 
     if sk2_dt:
 
-        attrs["连携技段伤害类型"] = list(sk2_dt)
+        attrs["连携技段伤害类型"] = list(sk2_dt)  # type: ignore[assignment]
 
     if sk3_dt:
 
-        attrs["终结技段伤害类型"] = list(sk3_dt)
+        attrs["终结技段伤害类型"] = list(sk3_dt)  # type: ignore[assignment]
 
     return attrs
 

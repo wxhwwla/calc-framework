@@ -230,7 +230,10 @@ class ArknightsApp(QMainWindow):
         search = self._search_input.text().strip()
         try:
             self._filtered_operators = filter_operator_index(
-                self._all_operators, selected_stars, prof, branch, search,
+                self._all_operators,
+                active_stars=set(selected_stars),
+                profession=prof,
+                branch=branch,
             )
         except Exception as exc:
             _logger.warning("筛选失败: %s", exc)
@@ -338,6 +341,7 @@ class ArknightsApp(QMainWindow):
             "user_input.潜能攻击": ("character.潜能攻击", ["override"]),
         }
 
+        assert layout is not None
         compute_sheet = ComputeSheet(
             dag_service, layout, variables, base_context={},
             user_context_overrides=user_context_overrides,

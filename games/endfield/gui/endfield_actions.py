@@ -7,13 +7,14 @@ P2 迁移目标：所有面板最终使用 ComputeSheet + layout.json。
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QMessageBox,
     QVBoxLayout,
+    QWidget,
 )
 
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
@@ -121,11 +122,11 @@ class ActionsMixin:
         char_data = self.char_panel.get_selected_data()
         weapon_data = self.weapon_panel.get_selected_data()
         if not char_data or not weapon_data:
-            QMessageBox.warning(self, "无法计算", "请选择有效的角色和武器。")
+            QMessageBox.warning(cast(QWidget, self), "无法计算", "请选择有效的角色和武器。")
             return
         request = self._build_request()
         if request is None:
-            QMessageBox.warning(self, "无法计算", "无法读取配装数据。")
+            QMessageBox.warning(cast(QWidget, self), "无法计算", "无法读取配装数据。")
             return
         self._confirm_in_progress = True
         self.confirm_btn.setEnabled(False)
@@ -202,6 +203,7 @@ class ActionsMixin:
             "user_input.额外伤害加成": ("computed.伤害加成", ["add"]),
         }
 
+        assert layout is not None
         compute_sheet = ComputeSheet(
             dag_service, layout, variables, base_context={},
             user_context_overrides=user_context_overrides,
@@ -279,7 +281,7 @@ class ActionsMixin:
             """read counts。"""
 
         dialog = QtManualBuffDialog(
-            self, big_font=self.big_font, small_font=self.small_font,
+            cast(QWidget, self), big_font=self.big_font, small_font=self.small_font,
             read_counts_callback=_read_counts,
         )
         if not hasattr(self, "_manual_buff_store"):
@@ -317,7 +319,7 @@ class ActionsMixin:
             is_true_damage=self._is_true_damage,
         )
         if loadout is None:
-            QMessageBox.warning(self, "处决/治疗估算", "请先选择角色与武器。")
+            QMessageBox.warning(cast(QWidget, self), "处决/治疗估算", "请先选择角色与武器。")
             return
         from games.endfield.data_loading.enemy_params import resolve_enemy_max_hp
 
@@ -365,10 +367,10 @@ class ActionsMixin:
             is_true_damage=self._is_true_damage,
         )
         if loadout is None:
-            QMessageBox.warning(self, "导出预设", "无法读取配装数据。")
+            QMessageBox.warning(cast(QWidget, self), "导出预设", "无法读取配装数据。")
             return
         preset = loadout.to_loadout_preset()
-        path, _ = QFileDialog.getSaveFileName(self, "导出配装预设", "preset.json", "JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(cast(QWidget, self), "导出配装预设", "preset.json", "JSON (*.json)")
         if not path:
             return
         Path(path).write_text(export_preset_json(preset), encoding="utf-8")
@@ -378,7 +380,7 @@ class ActionsMixin:
     def _on_import_preset(self) -> None:
         from games.endfield.gui.app.loadout_preset import import_presets_from_json_text
 
-        path, _ = QFileDialog.getOpenFileName(self, "导入配装预设", "", "JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(cast(QWidget, self), "导入配装预设", "", "JSON (*.json)")
         if not path:
             return
         try:
@@ -389,7 +391,7 @@ class ActionsMixin:
             self._apply_preset_to_qt_app(preset[0])
             self.status_label.setText("预设已导入")
         except Exception as exc:
-            QMessageBox.warning(self, "导入预设失败", str(exc))
+            QMessageBox.warning(cast(QWidget, self), "导入预设失败", str(exc))
         """on import preset。"""
 
     def _apply_preset_to_qt_app(self, preset) -> None:
@@ -416,11 +418,11 @@ class ActionsMixin:
         """on compare presets。"""
 
     def _on_attribution(self) -> None:
-        QMessageBox.about(self, "数据来源与声明", SUMMARY_TEXT)
+        QMessageBox.about(cast(QWidget, self), "数据来源与声明", SUMMARY_TEXT)
         """on attribution。"""
 
     def _on_donation(self) -> None:
-        open_donation_dialog(self)
+        open_donation_dialog(cast(QWidget, self))
         """on donation。"""
 
     def _on_damage_dashboard(self) -> None:
@@ -428,7 +430,7 @@ class ActionsMixin:
 
         snapshot = get_snapshot_from_app(self)
         dialog = QtDamageDashboardDialog(
-            self, big_font=self.big_font, small_font=self.small_font, snapshot=snapshot,
+            cast(QWidget, self), big_font=self.big_font, small_font=self.small_font, snapshot=snapshot,
         )
         dialog.exec()
         """on damage dashboard。"""
@@ -438,7 +440,7 @@ class ActionsMixin:
 
         history = get_app_calculation_history(self)
         dialog = QtCalcHistoryDialog(
-            self, big_font=self.big_font, small_font=self.small_font,
+            cast(QWidget, self), big_font=self.big_font, small_font=self.small_font,
             history=history, apply_fn=self._apply_preset_to_qt_app,
         )
         dialog.exec()
@@ -447,21 +449,21 @@ class ActionsMixin:
     def _on_export_log(self) -> None:
         from utils.operation_log import get_session_operation_log
 
-        path, _ = QFileDialog.getSaveFileName(self, "导出操作日志", "operation_log.json", "JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(cast(QWidget, self), "导出操作日志", "operation_log.json", "JSON (*.json)")
         if not path:
             return
         try:
             get_session_operation_log().export_to_file(Path(path))
             self.status_label.setText("操作日志已导出")
         except Exception as exc:
-            QMessageBox.warning(self, "导出失败", str(exc))
+            QMessageBox.warning(cast(QWidget, self), "导出失败", str(exc))
         """on export log。"""
 
     def _on_open_help(self) -> None:
         from utils.gui.help_calculator import build_calculator_help
         from utils.gui.help_dialog import HelpDialog
 
-        dialog = HelpDialog(build_calculator_help, self, title="终末地伤害计算器 使用说明")
+        dialog = HelpDialog(build_calculator_help, cast(QWidget, self), title="终末地伤害计算器 使用说明")
         dialog.exec()
         """on open help。"""
 
@@ -487,10 +489,10 @@ class ActionsMixin:
                     self._on_confirm()
                 """apply ocr。"""
 
-            open_ocr_detection_dialog(self, on_apply=_apply_ocr)
+            open_ocr_detection_dialog(cast(QWidget, self), on_apply=_apply_ocr)
         except Exception as exc:
             msg = f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install torchvision easyocr"
-            QMessageBox.warning(self, "截图识装", msg)
+            QMessageBox.warning(cast(QWidget, self), "截图识装", msg)
         """on ocr detect。"""
 
     # ── 信号连接 ──────────────────────────────

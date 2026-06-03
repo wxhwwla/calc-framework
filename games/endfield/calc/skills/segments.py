@@ -284,7 +284,7 @@ def list_segment_count_specs(
             key = segment_key(skill_type, segment_index)
             damage_type, explicit = resolve_segment_damage_type(char_data, field_name, segment_index)
             type_display = format_damage_type_display(damage_type, is_default=not explicit)
-            display_pct = display_mult * 100.0
+            display_pct = (display_mult or 0.0) * 100.0
             combat_pct = combat_mult * 100.0
             specs.append(
                 {

@@ -124,4 +124,4 @@ def base_multiplier_for_formula(formula: SpellFormulaKind, *, calc_level: int) -
 
 def preview_level_multipliers(formula: SpellFormulaKind) -> tuple[float, float, float, float, float]:
     """返回 UI L0–L4 各档的基础倍率（供快照/测试）。"""
-    return tuple(base_multiplier_for_formula(formula, calc_level=calc_level_from_ui(ui_level)) for ui_level in range(5))
+    return tuple(base_multiplier_for_formula(formula, calc_level=calc_level_from_ui(ui_level)) for ui_level in range(5))  # type: ignore[return-value]

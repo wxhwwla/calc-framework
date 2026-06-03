@@ -294,5 +294,5 @@ def evaluate_search_damage(
         final_damage=final_damage,
         zone_values=zones,
         warnings=tuple(str(w) for w in _warnings),
-        unknown_effects=tuple({"effect_type": str(u[0]), "source": str(u[1])} for u in _unknown),
+        unknown_effects=tuple({"effect_type": str(u[0]), "source": str(u[1])} for u in _unknown),  # type: ignore[index]
     )

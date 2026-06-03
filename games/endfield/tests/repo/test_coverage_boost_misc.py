@@ -319,11 +319,11 @@ class TestMiscEnhancements(unittest.TestCase):
 
         )
 
-        sync_confirm_dependencies(**kwargs, enemy_defense=100.0)
+        sync_confirm_dependencies(**kwargs, enemy_defense=100.0)  # type: ignore[arg-type]
 
         cached_preview("z", lambda: 1)
 
-        sync_confirm_dependencies(**kwargs, enemy_defense=200.0)
+        sync_confirm_dependencies(**kwargs, enemy_defense=200.0)  # type: ignore[arg-type]
 
         _, hit = cached_preview("z", lambda: 2)
 

@@ -69,9 +69,9 @@ class TestConfirmRefresh(unittest.TestCase):
 
         self.assertEqual(
 
-            build_confirm_refresh_signature(**kwargs),
+            build_confirm_refresh_signature(**kwargs),  # type: ignore[arg-type]
 
-            build_confirm_refresh_signature(**kwargs),
+            build_confirm_refresh_signature(**kwargs),  # type: ignore[arg-type]
 
         )
 

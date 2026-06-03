@@ -277,7 +277,7 @@ class QtSurvivalEstimateDialog(QDialog):
         details = calculate_final_attack_with_details(
             self._char_data,
             self._weapon_data,
-            level=self._char_level,
+            char_level=self._char_level,
             weapon_level=self._weapon_level,
             trust_level=self._trust_level,
             **self._weapon_skill_kwargs,

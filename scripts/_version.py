@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.20.6"
+_VERSION = "3.21.0"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -27,8 +27,7 @@ _EXE_VERSION = "0.6.0-beta"
 
 # ==============================================================
 
-SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
-SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
+SUMMARY_BEGIN = ""
 
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
@@ -265,8 +264,37 @@ def get_exe_version() -> str:
     return _EXE_VERSION
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 更新 31 处文件
 # BODY:
-# - 变更 .gitignore
-# - 修改 scripts/tools/github_upload_module.py
+# - 修改 games/arknights/gui/ArknightsApp.py
+# - 修改 games/arknights/gui/ArknightsDamageApp.py
+# - 修改 games/endfield/calc/core/curve_baker.py
+# - 修改 games/endfield/calc/dag_adapter/search_evaluate.py
+# - 修改 games/endfield/calc/manual_buff/spell_params.py
+# - 修改 games/endfield/calc/multi_skill/optimizer/search.py
+# - 调整乘区逻辑 games/endfield/calc/multiplicative_zones/ability_bonus_details.py
+# - 修改 games/endfield/calc/search/adapter.py
+# - 修改 games/endfield/calc/skills/segments.py
+# - 修改 games/endfield/data_loading/web_loadout_bridge.py
+# - 修改 games/endfield/gui/controls/ocr/ocr_detect.py
+# - 修改 games/endfield/gui/controls/survival/qt_survival_dialog.py
+# - 修改 games/endfield/gui/endfield_actions.py
+# - 修改 games/endfield/gui/endfield_search.py
+# - 修改 games/endfield/gui/presentation/preview/multi_skill.py
+# - 修改 games/endfield/gui/presentation/preview/single_skill.py
+# - 修改 games/endfield/tests/calculation/loadout/optimizer/test_loadout_optimizer.py
+# - 修改 games/endfield/tests/calculation/loadout/optimizer/test_optimizer_types.py
+# - 修改 games/endfield/tests/calculation/loadout/state/test_loadout_attack_eval.py
+# - 修改 games/endfield/tests/calculation/manual_buff/test_manual_buff_model.py
+# - 修改 games/endfield/tests/calculation/search/plan/test_search_controller.py
+# - 修改 games/endfield/tests/calculation/search/run/test_multi_skill_full_search.py
+# - 修改 games/endfield/tests/calculation/search/run/test_search_runner.py
+# - 修改 games/endfield/tests/data/test_game_data_contract.py
+# - 修改 games/endfield/tests/data/test_game_data_facade.py
+# - 修改 games/endfield/tests/framework/test_formula_consistency.py
+# - 修改 games/endfield/tests/gui_design/app/test_confirm_refresh.py
+# - 修改 games/endfield/tests/gui_design/presentation/test_property_display_cache.py
+# - 修改 games/endfield/tests/gui_design/shell/test_qt_factory.py
+# - 修改 games/endfield/tests/repo/test_coverage_boost_misc.py
+# - 修改 scripts/_version.py
 # --- END UPLOAD_SUMMARY ---

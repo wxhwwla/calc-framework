@@ -329,7 +329,7 @@ def _build_multi_skill_search_preview_lines_impl(
         effects=[],
         counts=physical_abnormal_counts or {},
         char_level=char_level,
-        **resolved_enemy.abnormal_eval_kwargs(),
+        **resolved_enemy.abnormal_eval_kwargs(),  # type: ignore[arg-type]
     )
     spell_total, spell_breakdown = evaluate_spell_abnormal_total(
         context=DamageContext(
@@ -346,7 +346,7 @@ def _build_multi_skill_search_preview_lines_impl(
         effects=[],
         counts=spell_abnormal_counts or {},
         char_level=char_level,
-        **resolved_enemy.abnormal_eval_kwargs(),
+        **resolved_enemy.abnormal_eval_kwargs(),  # type: ignore[arg-type]
     )
     abnormal_total = physical_total + spell_total
     if abnormal_total > 0:

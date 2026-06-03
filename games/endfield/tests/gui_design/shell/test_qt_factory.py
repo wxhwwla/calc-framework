@@ -58,7 +58,7 @@ class TestQtFactoryAliases(unittest.TestCase):
 
     def test_ctk_button_instantiation(self) -> None:
 
-        btn = CTkButton(text="go")
+        btn = CTkButton(text="go")  # type: ignore[arg-type]
 
         self.assertEqual(btn.text(), "go")
 

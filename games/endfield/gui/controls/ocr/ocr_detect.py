@@ -19,7 +19,7 @@ def ocr_detect_from_file(image_path: str) -> dict[str, Any]:
     if not texts:
         return {"char_name": None, "weapon_name": None, "texts": [], "message": "未识别到文字"}
 
-    mapped = mapper.map_texts(texts)
+    mapped = mapper.map_texts(texts)  # type: ignore[arg-type]
     out: dict[str, Any] = {
         "char_name": mapped.char_name or None,
         "weapon_name": mapped.weapon_name or None,

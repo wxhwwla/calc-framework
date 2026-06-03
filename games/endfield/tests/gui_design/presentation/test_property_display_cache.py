@@ -59,9 +59,9 @@ class TestPropertyDisplayCache(unittest.TestCase):
 
         )
 
-        first = build_single_hit_damage_lines(**kwargs)
+        first = build_single_hit_damage_lines(**kwargs)  # type: ignore[arg-type]
 
-        second = build_single_hit_damage_lines(**kwargs)
+        second = build_single_hit_damage_lines(**kwargs)  # type: ignore[arg-type]
 
         self.assertEqual(first, second)
 

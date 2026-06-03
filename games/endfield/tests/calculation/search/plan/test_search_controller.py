@@ -2,7 +2,19 @@
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索编排（search_controller）行为测试。"""
 
-import unittestfrom games.endfield.calc.loadout.optimizer import OptimizerConfigfrom games.endfield.calc.loadout.slot_search import FixedLoadoutSelectionfrom games.endfield.calc.search.plan.controller import (    SearchJobInputs,    optimizer_config_for_search_job,    prepare_search_job,)from games.endfield.calc.search.run.single_skill import estimate_single_skill_searchclass TestSearchController(unittest.TestCase):
+import unittest
+
+from games.endfield.calc.loadout.optimizer import OptimizerConfig
+from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
+from games.endfield.calc.search.plan.controller import (
+    SearchJobInputs,
+    optimizer_config_for_search_job,
+    prepare_search_job,
+)
+from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
+
+
+class TestSearchController(unittest.TestCase):
     def _char(self) -> dict:
         return {
             "名称": "测试干员",
@@ -58,7 +70,7 @@ import unittestfrom games.endfield.calc.loadout.optimizer import OptimizerConf
             manual_counts={"战技": 2, "连携技": 1, "终结技": 0},
         )
         data.update(overrides)
-        return SearchJobInputs(**data)
+        return SearchJobInputs(**data)  # type: ignore[arg-type]
 
     def test_prepare_search_job_applies_enemy_defense_to_base_context(self) -> None:
         job, err = prepare_search_job(self._base_inputs(enemy_defense=333.0))
