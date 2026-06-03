@@ -4,12 +4,21 @@ import {
   Button, TextField, Chip, Alert, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions,
   Table, TableBody, TableCell, TableContainer, TableRow, Paper,
+  Accordion, AccordionSummary, AccordionDetails, IconButton,
+  Select, MenuItem, Checkbox,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchTemplates, fetchTemplateDetail, generateAdapter, type TemplateInfo, type TemplateDetail } from '../api/generator';
 import AIFormulaDialog from './AIFormulaDialog';
 import type { AIFormulaResponse } from '../api/generator';
 
 const STEPS = ['选择模板', '填写游戏信息', '预览与生成', '导出'];
+
+interface VarRow { name: string; type: string; source: string; default: number; description: string; }
+interface StepRow { id: string; op: string; lhs: string; rhs: string; expr: string; label: string; cond: string; true_val: string; false_val: string; }
+interface OutRow { name: string; node: string; label: string; is_primary: boolean; }
 
 export default function GeneratorPage() {
   const [activeStep, setActiveStep] = useState(0);
@@ -17,13 +26,19 @@ export default function GeneratorPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [templateDetail, setTemplateDetail] = useState<TemplateDetail | null>(null);
   const [gameName, setGameName] = useState('');
-  const [, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<{ files: Record<string, string>; file_count: number } | null>(null);
   const [error, setError] = useState('');
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiResult, setAiResult] = useState<AIFormulaResponse | null>(null);
   const [openFileDialog, setOpenFileDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState('');
+  const [showManualForm, setShowManualForm] = useState(false);
+
+  // 可编辑的变量/步骤/输出
+  const [editableVars, setEditableVars] = useState<VarRow[]>([]);
+  const [editableSteps, setEditableSteps] = useState<StepRow[]>([]);
+  const [editableOutputs, setEditableOutputs] = useState<OutRow[]>([]);
 
   useEffect(() => {
     fetchTemplates()
@@ -33,6 +48,10 @@ export default function GeneratorPage() {
 
   const handleSelectTemplate = async (id: string) => {
     setSelectedTemplate(id);
+    setAiResult(null);
+    setEditableVars([]);
+    setEditableSteps([]);
+    setEditableOutputs([]);
     try {
       const detail = await fetchTemplateDetail(id);
       setTemplateDetail(detail);
@@ -45,18 +64,25 @@ export default function GeneratorPage() {
     if (!selectedTemplate || !gameName) return;
     setGenerating(true);
     setError('');
+    setActiveStep(2);
     try {
+      // 使用可编辑数据（如果有 AI 结果则用 AI 的；如果有手动编辑的则用编辑过的）
+      const vars = editableVars.length > 0 ? editableVars : (aiResult?.variables || []);
+      const steps = editableSteps.length > 0 ? editableSteps : (aiResult?.formula_steps || []);
+      const outs = editableOutputs.length > 0 ? editableOutputs : (aiResult?.outputs || []);
+
       const res = await generateAdapter({
         template_id: selectedTemplate,
         game_name: gameName,
-        variables: aiResult?.variables || [],
-        formula_steps: aiResult?.formula_steps || [],
-        outputs: aiResult?.outputs || [],
+        variables: vars,
+        formula_steps: steps,
+        outputs: outs,
       });
       setResult(res);
       setActiveStep(3);
     } catch (e: any) {
       setError('生成失败: ' + e.message);
+      setActiveStep(1);
     } finally {
       setGenerating(false);
     }
@@ -64,7 +90,6 @@ export default function GeneratorPage() {
 
   const handleDownloadAll = () => {
     if (!result) return;
-    // 把多个文件逐个下载
     for (const [name, content] of Object.entries(result.files)) {
       const blob = new Blob([content], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -75,6 +100,198 @@ export default function GeneratorPage() {
       URL.revokeObjectURL(url);
     }
   };
+
+  /** 编辑变量 */
+  const updateVar = (i: number, field: keyof VarRow, value: any) => {
+    setEditableVars(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
+  };
+  const removeVar = (i: number) => setEditableVars(prev => prev.filter((_, idx) => idx !== i));
+  const addVar = () => setEditableVars(prev => [...prev, { name: '', type: 'number', source: 'input', default: 0, description: '' }]);
+
+  /** 编辑步骤 */
+  const updateStep = (i: number, field: keyof StepRow, value: any) => {
+    setEditableSteps(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
+  };
+  const removeStep = (i: number) => setEditableSteps(prev => prev.filter((_, idx) => idx !== i));
+  const addStep = () => setEditableSteps(prev => [...prev, { id: '', op: 'multiply', lhs: '', rhs: '', expr: '', label: '', cond: '', true_val: '', false_val: '' }]);
+
+  /** 编辑输出 */
+  const updateOut = (i: number, field: keyof OutRow, value: any) => {
+    setEditableOutputs(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
+  };
+  const removeOut = (i: number) => setEditableOutputs(prev => prev.filter((_, idx) => idx !== i));
+  const addOut = () => setEditableOutputs(prev => [...prev, { name: '', node: '', label: '', is_primary: false }]);
+
+  /** AI 结果应用 */
+  const handleAiApply = (data: AIFormulaResponse) => {
+    setAiResult(data);
+    setEditableVars(data.variables.map(v => ({
+      name: v.name || '', type: v.type || 'number', source: v.source || 'input',
+      default: v.default ?? 0, description: v.description || '',
+    })));
+    setEditableSteps(data.formula_steps.map(s => ({
+      id: s.id || '', op: s.op || 'multiply', lhs: s.lhs || '', rhs: s.rhs || '',
+      expr: s.expr || '', label: s.label || '', cond: s.cond || '',
+      true_val: s.true_val || s.true_val || '', false_val: s.false_val || s.false_val || '',
+    })));
+    setEditableOutputs(data.outputs.map(o => ({
+      name: o.name || '', node: o.node || '', label: o.label || '',
+      is_primary: o.is_primary ?? false,
+    })));
+    setShowManualForm(true);
+  };
+
+  const hasEditData = editableVars.length > 0 || editableSteps.length > 0 || editableOutputs.length > 0;
+
+  /** 渲染可编辑变量表 */
+  const renderVarEditor = () => (
+    <Box>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1 }}>
+        <Table size="small">
+          <TableBody>
+            {editableVars.map((v, i) => (
+              <TableRow key={i}>
+                <TableCell sx={{ p: 0.5, minWidth: 100 }}>
+                  <TextField size="small" variant="standard" value={v.name}
+                    onChange={e => updateVar(i, 'name', e.target.value)} placeholder="变量名" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 80 }}>
+                  <Select size="small" value={v.type} onChange={e => updateVar(i, 'type', e.target.value)}
+                    variant="standard" sx={{ fontSize: 13 }}>
+                    <MenuItem value="number">number</MenuItem>
+                    <MenuItem value="boolean">boolean</MenuItem>
+                  </Select>
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 80 }}>
+                  <Select size="small" value={v.source} onChange={e => updateVar(i, 'source', e.target.value)}
+                    variant="standard" sx={{ fontSize: 13 }}>
+                    <MenuItem value="input">input</MenuItem>
+                    <MenuItem value="constant">constant</MenuItem>
+                    <MenuItem value="computed">computed</MenuItem>
+                  </Select>
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 60 }}>
+                  <TextField size="small" variant="standard" type="number" value={v.default}
+                    onChange={e => updateVar(i, 'default', parseFloat(e.target.value) || 0)} />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 120 }}>
+                  <TextField size="small" variant="standard" value={v.description}
+                    onChange={e => updateVar(i, 'description', e.target.value)} placeholder="描述" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, width: 40 }}>
+                  <IconButton size="small" onClick={() => removeVar(i)}><DeleteIcon fontSize="small" /></IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Button size="small" startIcon={<AddIcon />} onClick={addVar}>添加变量</Button>
+    </Box>
+  );
+
+  /** 渲染可编辑步骤表 */
+  const renderStepEditor = () => (
+    <Box>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1 }}>
+        <Table size="small">
+          <TableBody>
+            {editableSteps.map((s, i) => (
+              <TableRow key={i}>
+                <TableCell sx={{ p: 0.5, minWidth: 60 }}>
+                  <TextField size="small" variant="standard" value={s.label}
+                    onChange={e => updateStep(i, 'label', e.target.value)} placeholder="标签" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 90 }}>
+                  <Select size="small" value={s.op} onChange={e => updateStep(i, 'op', e.target.value)}
+                    variant="standard" sx={{ fontSize: 13 }}>
+                    <MenuItem value="add">+ (add)</MenuItem>
+                    <MenuItem value="subtract">- (subtract)</MenuItem>
+                    <MenuItem value="multiply">× (multiply)</MenuItem>
+                    <MenuItem value="divide">÷ (divide)</MenuItem>
+                    <MenuItem value="cond">if (cond)</MenuItem>
+                    <MenuItem value="expr">表达式 (expr)</MenuItem>
+                  </Select>
+                </TableCell>
+                {s.op === 'cond' ? (
+                  <>
+                    <TableCell sx={{ p: 0.5, minWidth: 100 }}>
+                      <TextField size="small" variant="standard" value={s.cond}
+                        onChange={e => updateStep(i, 'cond', e.target.value)} placeholder="条件" />
+                    </TableCell>
+                    <TableCell sx={{ p: 0.5, minWidth: 80 }}>
+                      <TextField size="small" variant="standard" value={s.true_val}
+                        onChange={e => updateStep(i, 'true_val', e.target.value)} placeholder="成立" />
+                    </TableCell>
+                    <TableCell sx={{ p: 0.5, minWidth: 80 }}>
+                      <TextField size="small" variant="standard" value={s.false_val}
+                        onChange={e => updateStep(i, 'false_val', e.target.value)} placeholder="不成立" />
+                    </TableCell>
+                  </>
+                ) : s.op === 'expr' ? (
+                  <TableCell sx={{ p: 0.5, minWidth: 200 }}>
+                    <TextField size="small" variant="standard" value={s.expr}
+                      onChange={e => updateStep(i, 'expr', e.target.value)} placeholder="如: atk * 2.5 - def" fullWidth />
+                  </TableCell>
+                ) : (
+                  <>
+                    <TableCell sx={{ p: 0.5, minWidth: 100 }}>
+                      <TextField size="small" variant="standard" value={s.lhs}
+                        onChange={e => updateStep(i, 'lhs', e.target.value)} placeholder="左值/变量" />
+                    </TableCell>
+                    <TableCell sx={{ p: 0.5, minWidth: 100 }}>
+                      <TextField size="small" variant="standard" value={s.rhs}
+                        onChange={e => updateStep(i, 'rhs', e.target.value)} placeholder="右值/变量" />
+                    </TableCell>
+                  </>
+                )}
+                <TableCell sx={{ p: 0.5, width: 40 }}>
+                  <IconButton size="small" onClick={() => removeStep(i)}><DeleteIcon fontSize="small" /></IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Button size="small" startIcon={<AddIcon />} onClick={addStep}>添加步骤</Button>
+    </Box>
+  );
+
+  /** 渲染可编辑输出表 */
+  const renderOutEditor = () => (
+    <Box>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1 }}>
+        <Table size="small">
+          <TableBody>
+            {editableOutputs.map((o, i) => (
+              <TableRow key={i}>
+                <TableCell sx={{ p: 0.5, minWidth: 100 }}>
+                  <TextField size="small" variant="standard" value={o.name}
+                    onChange={e => updateOut(i, 'name', e.target.value)} placeholder="输出名" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 80 }}>
+                  <TextField size="small" variant="standard" value={o.node}
+                    onChange={e => updateOut(i, 'node', e.target.value)} placeholder="节点" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 100 }}>
+                  <TextField size="small" variant="standard" value={o.label}
+                    onChange={e => updateOut(i, 'label', e.target.value)} placeholder="显示名" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, minWidth: 60 }}>
+                  <Checkbox checked={o.is_primary}
+                    onChange={e => updateOut(i, 'is_primary', e.target.checked)} size="small" />
+                </TableCell>
+                <TableCell sx={{ p: 0.5, width: 40 }}>
+                  <IconButton size="small" onClick={() => removeOut(i)}><DeleteIcon fontSize="small" /></IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Button size="small" startIcon={<AddIcon />} onClick={addOut}>添加输出</Button>
+    </Box>
+  );
 
   return (
     <Box sx={{ p: 3, maxWidth: 1000, mx: 'auto' }}>
@@ -143,22 +360,59 @@ export default function GeneratorPage() {
               {templateDetail.dag_preview && ` DAG: ${templateDetail.dag_preview.nodes} 个节点, ${templateDetail.dag_preview.outputs} 个输出。`}
             </Alert>
           )}
-          {templateDetail && (
-            <Box sx={{ mb: 2 }}>
-              <Button variant="outlined" onClick={() => setAiDialogOpen(true)}>
-                AI 辅助解析公式
-              </Button>
-              {aiResult && (
-                <Typography variant="caption" display="block" sx={{ mt: 1, color: 'success.main' }}>
-                  ✅ AI 已解析: {aiResult.variables.length} 个变量, {aiResult.formula_steps.length} 个步骤, {aiResult.outputs.length} 个输出
-                </Typography>
-              )}
+
+          {/* AI 按钮 */}
+          <Box sx={{ mb: 2 }}>
+            <Button variant="outlined" onClick={() => setAiDialogOpen(true)}>
+              AI 辅助解析公式
+            </Button>
+            {aiResult && (
+              <Chip
+                label={`AI 已解析: ${aiResult.variables.length} 变量, ${aiResult.formula_steps.length} 步骤`}
+                color="success" size="small" sx={{ ml: 1 }}
+                onDelete={() => { setAiResult(null); setEditableVars([]); setEditableSteps([]); setEditableOutputs([]); setShowManualForm(false); }}
+              />
+            )}
+          </Box>
+
+          {/* 可编辑数据表（AI 解析后或手动展开） */}
+          {(hasEditData || showManualForm) && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>自定义数据（可编辑）</Typography>
+              <Accordion defaultExpanded={editableVars.length > 0}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2">变量 ({editableVars.length})</Typography>
+                </AccordionSummary>
+                <AccordionDetails>{renderVarEditor()}</AccordionDetails>
+              </Accordion>
+              <Accordion defaultExpanded={editableSteps.length > 0}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2">公式步骤 ({editableSteps.length})</Typography>
+                </AccordionSummary>
+                <AccordionDetails>{renderStepEditor()}</AccordionDetails>
+              </Accordion>
+              <Accordion defaultExpanded={editableOutputs.length > 0}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2">输出 ({editableOutputs.length})</Typography>
+                </AccordionSummary>
+                <AccordionDetails>{renderOutEditor()}</AccordionDetails>
+              </Accordion>
             </Box>
           )}
+
+          {/* 无 AI 时显示手动录入入口 */}
+          {!hasEditData && !aiResult && (
+            <Box sx={{ mb: 2 }}>
+              <Button size="small" onClick={() => setShowManualForm(true)} disabled={showManualForm}>
+                手动录入数据（不通过 AI）
+              </Button>
+            </Box>
+          )}
+
           <Box>
             <Button variant="outlined" onClick={() => setActiveStep(0)} sx={{ mr: 1 }}>上一步</Button>
-            <Button variant="contained" disabled={!gameName} onClick={handleGenerate}>
-              生成计算器
+            <Button variant="contained" disabled={!gameName || generating} onClick={handleGenerate}>
+              {generating ? '生成中...' : '生成计算器'}
             </Button>
           </Box>
         </Box>
@@ -217,9 +471,7 @@ export default function GeneratorPage() {
         open={aiDialogOpen}
         onClose={() => setAiDialogOpen(false)}
         templateId={selectedTemplate}
-        onApply={(data) => {
-          setAiResult(data);
-        }}
+        onApply={handleAiApply}
       />
     </Box>
   );

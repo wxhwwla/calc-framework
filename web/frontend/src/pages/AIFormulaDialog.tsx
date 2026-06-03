@@ -4,9 +4,11 @@ import {
   TextField, Button, Alert, CircularProgress, Chip,
   Box, Typography, Accordion, AccordionSummary, AccordionDetails,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Collapse,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { aiParseFormula, type AIFormulaResponse } from '../api/generator';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { aiParseFormula, aiTestConnection, type AIFormulaResponse } from '../api/generator';
 
 interface Props {
   open: boolean;
@@ -21,20 +23,55 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
   const [model, setModel] = useState(() => localStorage.getItem('ai_model') || 'gpt-4o-mini');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ status: string; message?: string } | null>(null);
   const [error, setError] = useState('');
   const [result, setResult] = useState<AIFormulaResponse | null>(null);
+  const [showRaw, setShowRaw] = useState(false);
+
+  const validateApiKey = (key: string): string | null => {
+    if (!key.trim()) return '请输入 API Key';
+    if (!key.trim().startsWith('sk-')) return 'API Key 似乎不正确，应以 sk- 开头（如 sk-xxxx）';
+    return null;
+  };
+
+  const handleTestConnection = async () => {
+    const keyErr = validateApiKey(apiKey);
+    if (keyErr) { setTestResult({ status: 'error', message: keyErr }); return; }
+
+    setTesting(true);
+    setTestResult(null);
+    setError('');
+    try {
+      const res = await aiTestConnection({
+        api_key: apiKey,
+        api_base: apiBase,
+        model,
+      });
+      setTestResult(res);
+      if (res.status === 'ok') {
+        localStorage.setItem('ai_api_key', apiKey);
+        localStorage.setItem('ai_api_base', apiBase);
+        localStorage.setItem('ai_model', model);
+      }
+    } catch (e: any) {
+      setTestResult({ status: 'error', message: e.message });
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const handleParse = async () => {
     if (!description.trim()) {
       setError('请输入公式描述');
       return;
     }
-    if (!apiKey.trim()) {
-      setError('请输入 API Key');
-      return;
-    }
+    const keyErr = validateApiKey(apiKey);
+    if (keyErr) { setError(keyErr); return; }
+
     setLoading(true);
     setError('');
+    setTestResult(null);
     try {
       // 保存到 localStorage
       localStorage.setItem('ai_api_key', apiKey);
@@ -49,8 +86,18 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         template_id: templateId,
       });
       setResult(res);
+
+      // 如果 AI 返回了警告，展开原始响应方便排查
+      if (res.validation_warnings?.length) {
+        setShowRaw(true);
+      }
     } catch (e: any) {
       setError(e.message);
+      // 尝试解析后端返回的 detail 字段
+      try {
+        const parsed = JSON.parse(e.message);
+        if (parsed.detail) setError(parsed.detail);
+      } catch { /* 已经是纯文本错误 */ }
     } finally {
       setLoading(false);
     }
@@ -65,7 +112,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>🤖 AI 公式解析</DialogTitle>
+      <DialogTitle>AI 公式解析</DialogTitle>
       <DialogContent>
         {/* API 配置 */}
         <Accordion defaultExpanded={!apiKey} sx={{ mb: 2 }}>
@@ -79,8 +126,10 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
                 label="API Key"
                 type="password"
                 value={apiKey}
-                onChange={e => setApiKey(e.target.value)}
+                onChange={e => { setApiKey(e.target.value); setTestResult(null); }}
                 placeholder="sk-..."
+                error={!!apiKey && !apiKey.startsWith('sk-') && apiKey.length > 5}
+                helperText={apiKey && !apiKey.startsWith('sk-') && apiKey.length > 5 ? '应以 sk- 开头' : 'OpenAI 兼容 API 的密钥'}
               />
               <TextField
                 fullWidth
@@ -95,8 +144,27 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
                 value={model}
                 onChange={e => setModel(e.target.value)}
                 placeholder="gpt-4o-mini"
-                helperText="支持任何 OpenAI 兼容接口（GPT、Claude、Ollama、DeepSeek 等）"
+                helperText="支持 GPT、Claude、Ollama、DeepSeek 等 OpenAI 兼容接口"
               />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleTestConnection}
+                  disabled={testing || !apiKey.trim()}
+                >
+                  {testing ? <CircularProgress size={16} sx={{ mr: 0.5 }} /> : null}
+                  {testing ? '测试中...' : '测试连接'}
+                </Button>
+                {testResult && (
+                  <Chip
+                    size="small"
+                    label={testResult.status === 'ok' ? '连接成功' : (testResult.message || '连接失败')}
+                    color={testResult.status === 'ok' ? 'success' : 'error'}
+                    variant="outlined"
+                  />
+                )}
+              </Box>
             </Box>
           </AccordionDetails>
         </Accordion>
@@ -121,13 +189,19 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
           ))}
         </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
 
         {/* 解析结果 */}
         {loading && <Box sx={{ textAlign: 'center', py: 3 }}><CircularProgress /><Typography>AI 正在分析公式...</Typography></Box>}
 
         {result && (
           <Box>
+            {result.validation_warnings && result.validation_warnings.length > 0 && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                {result.validation_warnings.map((w, i) => <div key={i}>{w}</div>)}
+              </Alert>
+            )}
+
             <Typography variant="h6" gutterBottom>AI 解析结果</Typography>
 
             <Typography variant="subtitle2">识别的变量 ({result.variables.length})</Typography>
@@ -173,11 +247,26 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
             </TableContainer>
 
             <Typography variant="subtitle2">输出 ({result.outputs.length})</Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
               {result.outputs.map((o, i) => (
                 <Chip key={i} label={o.label} color={o.is_primary ? 'primary' : 'default'} />
               ))}
             </Box>
+
+            {/* 展开原始响应 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Button size="small" onClick={() => setShowRaw(!showRaw)}>
+                {showRaw ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {showRaw ? '收起' : '展开'}原始返回
+              </Button>
+            </Box>
+            <Collapse in={showRaw}>
+              <Paper variant="outlined" sx={{ p: 1, bgcolor: 'grey.50', maxHeight: 200, overflow: 'auto' }}>
+                <pre style={{ fontSize: 11, margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {result.raw_response}
+                </pre>
+              </Paper>
+            </Collapse>
           </Box>
         )}
       </DialogContent>
@@ -186,7 +275,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         {result ? (
           <Button variant="contained" onClick={handleApply}>应用此结果</Button>
         ) : (
-          <Button variant="contained" onClick={handleParse} disabled={loading}>
+          <Button variant="contained" onClick={handleParse} disabled={loading || !description.trim()}>
             {loading ? '解析中...' : '解析公式'}
           </Button>
         )}

@@ -116,6 +116,7 @@ export interface AIFormulaResponse {
     is_primary: boolean;
   }>;
   raw_response: string;
+  validation_warnings?: string[];
 }
 
 export interface AITestRequest {

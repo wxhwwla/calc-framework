@@ -78,6 +78,7 @@ class AIFormulaResponse(BaseModel):
     formula_steps: list[dict]
     outputs: list[dict]
     raw_response: str = ""
+    validation_warnings: list[str] = []
 
 
 class AITestRequest(BaseModel):
@@ -223,6 +224,11 @@ async def ai_parse_formula(req: AIFormulaRequest):
 }}"""
 
     # 调用 LLM API
+    if not req.api_key.strip():
+        raise HTTPException(status_code=400, detail="API Key 不能为空")
+    if not req.api_key.strip().startswith("sk-"):
+        raise HTTPException(status_code=400, detail="API Key 格式似乎不正确，应以 sk- 开头")
+
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {req.api_key}",
@@ -244,32 +250,76 @@ async def ai_parse_formula(req: AIFormulaRequest):
             resp = await client.post(api_url, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
+    except httpx.ConnectError:
+        raise HTTPException(status_code=502, detail=f"无法连接到 {req.api_base}，请检查 API 地址是否正确")
     except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="AI 请求超时，请检查网络或更换模型")
+        raise HTTPException(status_code=504, detail="AI 请求超时，请检查网络连接或换用更快的模型")
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=502, detail=f"AI API 返回错误: {e.response.status_code} {e.response.text[:200]}")
+        status = e.response.status_code
+        detail = e.response.text[:300]
+        if status == 401:
+            raise HTTPException(status_code=502, detail="API Key 认证失败，请检查密钥是否正确")
+        elif status == 429:
+            raise HTTPException(status_code=502, detail="API 请求频率过高，请稍后再试")
+        else:
+            raise HTTPException(status_code=502, detail=f"AI API 返回错误 ({status}): {detail}")
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"AI 请求失败: {str(e)}")
 
     # 解析返回内容
     try:
         content = data["choices"][0]["message"]["content"]
-        # 尝试提取 JSON
-        import re
-        json_match = re.search(r'\{.*\}', content, re.DOTALL)
-        if json_match:
-            parsed = json.loads(json_match.group())
-        else:
-            parsed = json.loads(content)
+    except (KeyError, IndexError) as e:
+        raise HTTPException(status_code=502, detail=f"AI 返回格式异常，缺少 choices/content: {str(e)}")
 
-        return AIFormulaResponse(
-            variables=parsed.get("variables", []),
-            formula_steps=parsed.get("formula_steps", []),
-            outputs=parsed.get("outputs", []),
-            raw_response=content,
-        )
-    except (KeyError, json.JSONDecodeError, IndexError) as e:
-        raise HTTPException(status_code=502, detail=f"AI 响应解析失败: {str(e)}")
+    # 尝试提取 JSON
+    import re
+    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+    if json_match:
+        try:
+            parsed = json.loads(json_match.group())
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=502, detail=f"AI 返回的 JSON 格式无效: {str(e)}。原始返回: {content[:200]}")
+    else:
+        raise HTTPException(status_code=502, detail=f"AI 返回内容中未找到 JSON 数据。原始返回: {content[:200]}")
+
+    # 验证返回的数据结构
+    variables = parsed.get("variables", [])
+    formula_steps = parsed.get("formula_steps", [])
+    outputs = parsed.get("outputs", [])
+
+    if not formula_steps:
+        # AI 可能没理解要生成公式步骤，尝试给更友好的提示
+        pass
+
+    return AIFormulaResponse(
+        variables=variables,
+        formula_steps=formula_steps,
+        outputs=outputs,
+        raw_response=content,
+        validation_warnings=_validate_ai_result(variables, formula_steps, outputs),
+    )
+
+
+def _validate_ai_result(variables: list, formula_steps: list, outputs: list) -> list[str]:
+    """验证 AI 解析结果，返回警告列表。"""
+    warnings = []
+    if not variables:
+        warnings.append("AI 未识别到任何变量")
+    if not formula_steps:
+        warnings.append("AI 未识别到任何公式步骤")
+    if not outputs:
+        warnings.append("AI 未识别到任何输出")
+
+    # 检查 formula_steps 引用的变量是否都在 variables 中
+    var_names = {v.get("name", "") for v in variables}
+    for step in formula_steps:
+        for ref in [step.get("lhs", ""), step.get("rhs", ""), step.get("cond", ""),
+                     step.get("true_val", ""), step.get("false_val", "")]:
+            if ref and ref not in var_names and not ref.replace(".", "").isdigit():
+                warnings.append(f"公式步骤 '{step.get('label', step.get('id', ''))}' 引用了未定义的变量 '{ref}'")
+
+    return warnings
 
 
 @router.post("/ai/test")

@@ -59,9 +59,12 @@ def load_template(template_id: str) -> dict[str, Any]:
         raise ValueError(f"模板不存在: {template_id}")
 
     files = {}
-    # 加载根目录 JSON 文件
+    # 加载根目录 JSON 文件（non-dag 的 meta/attr_schema 等）
     for f in template_dir.glob("*.json"):
-        files[f.stem] = json.loads(f.read_text(encoding="utf-8"))
+        if f.name.endswith(".dag.json"):
+            files["dag"] = json.loads(f.read_text(encoding="utf-8"))
+        else:
+            files[f.stem] = json.loads(f.read_text(encoding="utf-8"))
 
     # 加载 functions.py（如有）
     func_file = template_dir / "functions.py"
