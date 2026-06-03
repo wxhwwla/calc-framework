@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.20.4"
+_VERSION = "3.20.5"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -259,18 +259,22 @@ def get_exe_version() -> str:
     """获取 EXE 版本号。"""
     return _EXE_VERSION
 
-# --- UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# --- BEGIN UPLOAD_SUMMARY ---
+# TITLE: 更新 15 处文件
 # BODY:
 # - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "scripts//345/220/257/345/212/250.bat"
-# - 变更 "scripts//345/220/257/345/212/250/345/274/200/345/217/221/350/200/205/345/267/245/345/205/267/347/256/261.bat"
-# - 变更 "scripts//345/220/257/345/212/250/346/234/254/345/234/260/346/234/215/345/212/241/345/231/250.bat"
-# - 变更 "scripts//345/220/257/345/212/250/346/270/270/346/210/217.bat"
+# - 修改 games/endfield/tests/tools/test_github_upload_signing.py
 # - 修改 scripts/_version.py
-# - 修改 scripts/please_read_me.py
-# - 修改 scripts/upload_meta.py
-# - 修改 scripts/version.py
+# - 修改 scripts/deploy_pythonanywhere.py
+# - 修改 scripts/devtool.py
+# - 修改 scripts/github_download_module.py
+# - 修改 scripts/github_upload_module.py
+# - 修改 scripts/import_calcpack.py
+# - 修改 scripts/tools/__init__.py
+# - 修改 scripts/tools/deploy_pythonanywhere.py
+# - 修改 scripts/tools/devtool.py
+# - 修改 scripts/tools/github_download_module.py
+# - 修改 scripts/tools/github_upload_module.py
+# - 修改 scripts/tools/import_calcpack.py
 # --- END UPLOAD_SUMMARY ---

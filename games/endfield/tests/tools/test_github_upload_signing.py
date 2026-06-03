@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """github_upload_module 提交签名行为测试。"""
 
-import unittestfrom unittest.mock import patchimport github_upload_module as uploadclass TestCommitSigningConfig(unittest.TestCase):
+import unittestfrom unittest.mock import patchfrom scripts.tools import github_upload_module as uploadclass TestCommitSigningConfig(unittest.TestCase):
     def test_gpgsign_true_does_not_need_dash_s(self):
         cfg = upload.SigningConfig(gpgsign="true", signingkey="ABCD", gpg_format="ssh")
         self.assertEqual(upload.commit_extra_args(cfg), [])

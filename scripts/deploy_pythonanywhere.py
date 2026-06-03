@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""PythonAnywhere 自动化部署 — 委托入口。"""
+"""PythonAnywhere 部署工具 — 已移动到 scripts/tools/。
 
+用法::
+    python scripts/tools/deploy_pythonanywhere.py [options]
+"""
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root
-
-ensure_root()
-
-from web.scripts.deploy_pythonanywhere import main
-
 if __name__ == "__main__":
-    main()
+    target = str(Path(__file__).parent / "tools" / "deploy_pythonanywhere.py")
+    print(f"NOTE: deploy_pythonanywhere.py 已移至 scripts/tools/，正在重导向…", file=sys.stderr)
+    sys.exit(subprocess.call([sys.executable, target] + sys.argv[1:]))
