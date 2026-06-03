@@ -30,6 +30,7 @@ ignore = [
 "web/backend/api/data_profiles.py" = ["E501"]
 "web/backend/api/generator.py" = ["E501"]
 "scripts/devtool.py" = ["N806", "RUF005"]
+"scripts/tools/devtool.py" = ["N806", "RUF005"]
 "scripts/github_upload_module.py" = ["RUF005", "UP022", "E501"]
 "scripts/tools/github_upload_module.py" = ["RUF005", "UP022", "E501"]
 "scripts/github_download_module.py" = ["RUF005", "UP022"]

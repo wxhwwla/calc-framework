@@ -17,7 +17,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
 
 ensure_root()
 
@@ -60,24 +60,21 @@ def import_calcpack(calcpack_path: str | Path, target_dir: str | Path | None = N
 
         # 确定目标目录
         if target_dir is None:
-            target_dir = ADAPTERS_DIR / name
+            dest = ADAPTERS_DIR / name
         else:
-            target_dir = Path(target_dir)
+            dest = Path(target_dir)
 
         # 检查是否已存在
-        if target_dir.exists():
-            raise FileExistsError(
-                f"适配器目录已存在: {target_dir}\n"
-                f"如需覆盖请手动删除后再试"
-            )
+        if dest.exists():
+            raise FileExistsError(f"适配器目录已存在: {dest}\n如需覆盖请手动删除后再试")
 
         # 解包
-        target_dir.mkdir(parents=True)
+        dest.mkdir(parents=True)
         for member in zf.namelist():
             if member.endswith("/"):
                 continue
             data = zf.read(member)
-            fp = target_dir / member
+            fp = dest / member
             fp.parent.mkdir(parents=True, exist_ok=True)
             fp.write_bytes(data)
 
@@ -87,7 +84,7 @@ def import_calcpack(calcpack_path: str | Path, target_dir: str | Path | None = N
             "name": meta.get("name", name),
             "version": meta.get("version", "0.0.0"),
             "description": meta.get("description", ""),
-            "directory": str(target_dir),
+            "directory": str(dest),
             "files": files,
         }
 
@@ -108,17 +105,17 @@ def main() -> None:
             print(f"导入成功: {result['name']} v{result['version']}")
             print(f"目录: {result['directory']}")
             print(f"文件: {len(result['files'])} 个")
-            for f in result['files']:
+            for f in result["files"]:
                 print(f"  - {f}")
         except Exception as e:
             print(f"导入失败: {e}")
             sys.exit(1)
     else:
         # GUI 模式 — 使用 tkinter 文件对话框
-        try:
-            import tkinter as tk
-            from tkinter import filedialog, messagebox
+        import tkinter as tk
+        from tkinter import filedialog, messagebox
 
+        try:
             root = tk.Tk()
             root.withdraw()
 

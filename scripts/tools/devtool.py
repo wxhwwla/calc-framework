@@ -27,6 +27,7 @@
     python scripts/tools/devtool.py scaffold <game>         # 新游戏适配脚手架（从模板生成）
     python scripts/tools/devtool.py scaffold <game> --force # 覆盖已存在的游戏目录
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,16 +35,16 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
 
 ensure_root()
 
 
 def _add_path() -> None:
     """将项目根目录加入 sys.path。"""
-    _REPO = Path(__file__).resolve().parent.parent.parent
-    if str(_REPO) not in sys.path:
-        sys.path.insert(0, str(_REPO))
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
 
 
 def _sub_args() -> list[str]:
@@ -51,7 +52,7 @@ def _sub_args() -> list[str]:
     rest = sys.argv[1:]
     for i, a in enumerate(rest):
         if not a.startswith("-"):
-            return rest[i + 1:]
+            return rest[i + 1 :]
     return []
 
 
@@ -59,6 +60,7 @@ def _cmd_check_deps(args: argparse.Namespace) -> int:
     """执行依赖自检。"""
     _add_path()
     from tools.check_optional_deps import main
+
     return main()
 
 
@@ -66,7 +68,8 @@ def _cmd_check_layout(args: argparse.Namespace) -> int:
     """执行代码布局门禁检查。"""
     _add_path()
     from tools.check_layout import main
-    sys.argv = [sys.argv[0]] + _sub_args()
+
+    sys.argv = [sys.argv[0], *_sub_args()]
     return main()
 
 
@@ -74,16 +77,18 @@ def _cmd_sync_bwiki(args: argparse.Namespace) -> int:
     """同步 BWIKI 数据。"""
     _add_path()
     from tools.bwiki_scout.sync_all import main
-    sys.argv = [sys.argv[0]] + _sub_args()
+
+    sys.argv = [sys.argv[0], *_sub_args()]
     return main()
 
 
 def _cmd_launcher(args: argparse.Namespace) -> None:
     """启动框架游戏选择器。"""
-    _FRAMEWORK_SRC = Path(__file__).resolve().parent.parent.parent / "framework" / "src"
-    if str(_FRAMEWORK_SRC) not in sys.path:
-        sys.path.insert(0, str(_FRAMEWORK_SRC))
+    framework_src = Path(__file__).resolve().parent.parent.parent / "framework" / "src"
+    if str(framework_src) not in sys.path:
+        sys.path.insert(0, str(framework_src))
     from calc_framework.launcher import run_launcher
+
     passthrough = _sub_args()
     adapter = passthrough[0] if passthrough else None
     run_launcher(adapter)
@@ -92,6 +97,7 @@ def _cmd_launcher(args: argparse.Namespace) -> None:
 def _cmd_framework(args: argparse.Namespace) -> int:
     """构建或发布 framework PyPI 包。"""
     from tools.framework_publish import main as fw_main
+
     passthrough = _sub_args()
     sys.argv = [sys.argv[0], *passthrough] if passthrough else [sys.argv[0], "--help"]
     result = fw_main()
@@ -108,12 +114,15 @@ def _cmd_plugin(args: argparse.Namespace) -> int:
     rest = passthrough[1:]
     if cmd == "build":
         from tools.plugin_pack import _demo_build
+
         return _demo_build(rest)
     if cmd == "install":
         from tools.plugin_pack import _demo_install
+
         return _demo_install(rest)
     if cmd == "rebuild-catalog":
         from web.hub.build_plugin_catalog import build_plugin_catalog
+
         repo = Path(__file__).resolve().parent.parent.parent
         output = repo / "web" / "hub" / "plugins_catalog.json"
         build_plugin_catalog(output)
@@ -127,8 +136,10 @@ def _cmd_check_origin(args: argparse.Namespace) -> int:
     """执行 AI 代码来源与版权检测。"""
     _add_path()
     from tools.check_code_origin import main
-    sys.argv = [sys.argv[0]] + _sub_args()
-    return main()
+
+    sys.argv = [sys.argv[0], *_sub_args()]
+    main()
+    return 0
 
 
 def _cmd_installer(args: argparse.Namespace) -> int:
@@ -140,6 +151,7 @@ def _cmd_installer(args: argparse.Namespace) -> int:
     rest = passthrough[1:]
     sys.argv = [sys.argv[0], *rest]
     from installer.build_installer import main as installer_main
+
     return installer_main() if installer_main is not None else 0
 
 
@@ -161,6 +173,7 @@ def _cmd_hub(args: argparse.Namespace) -> int:
     sub = passthrough[0]
     if sub == "start":
         import subprocess
+
         root = Path(__file__).resolve().parent.parent.parent
         cmd = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8520", "--reload"]
         print("启动 Calc Hub 服务: http://localhost:8520/api/hub")
@@ -170,6 +183,7 @@ def _cmd_hub(args: argparse.Namespace) -> int:
     elif sub == "status":
         import json
         import urllib.request
+
         try:
             resp = urllib.request.urlopen("http://localhost:8520/api/hub/stats", timeout=3)
             data = json.loads(resp.read())

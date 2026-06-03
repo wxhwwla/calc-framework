@@ -12,7 +12,8 @@
   "reportOptionalIterable": false,
   "reportOptionalSubscript": false,
   "include": [
-    "games"
+    "games",
+    "scripts"
   ],
   "exclude": [
     "**/node_modules",

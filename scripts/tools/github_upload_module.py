@@ -1,37 +1,6 @@
-# SPDX-License-Identifier: AGPL-3.0
-
-
 #!/usr/bin/env python3
-
-# -*- coding: utf-8 -*-
-
-"""
-
-将本仓库推送到 GitHub（仓库根目录运行，与脚本同目录）。
-
-
-
-认证：SSH（git@github.com:...），勿将 Token 写入 remote URL。
-
-
-
-用法:
-
-    python scripts/tools/github_upload_module.py              # 默认 patch +1，交互可选 minor
-
-    python scripts/tools/github_upload_module.py --minor      # 第二位 +1（新武器/新乘区等）
-
-    python scripts/tools/github_upload_module.py --no-bump    # 提交并推送，但不改 _VERSION
-
-
-
-版本与提交说明流程详见 please_read_me.py 中的 UPLOAD_WORKFLOW。
-
-
-
-若本机已配置 Git 提交签名（GPG/SSH），脚本会在 commit 时自动签名，便于 GitHub 显示 Verified。
-
-"""
+# SPDX-License-Identifier: AGPL-3.0
+"""Push this repo to GitHub over SSH and bump scripts/_version.py when needed."""
 
 from __future__ import annotations
 
@@ -44,6 +13,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 # ===== 配置区 =====
 
@@ -157,6 +130,53 @@ def run_git(
 def _repo_root() -> str:
     """返回仓库根目录的字符串路径。"""
     return str(Path(__file__).resolve().parent.parent.parent)
+
+
+def _git_dir() -> Path:
+    return Path(_repo_root()) / ".git"
+
+
+def _is_rebase_in_progress() -> bool:
+    git_dir = _git_dir()
+    return (git_dir / "rebase-merge").is_dir() or (git_dir / "rebase-apply").is_dir()
+
+
+def _is_merge_in_progress() -> bool:
+    return (_git_dir() / "MERGE_HEAD").is_file()
+
+
+def preflight_upload(*, check_only: bool = False) -> bool:
+    """上传前自检；check_only 时通过则打印提示并返回 True。"""
+    root = _repo_root()
+    if not os.path.isdir(os.path.join(root, ".git")):
+        print("[错误] 未找到 .git 目录")
+        return False
+    if _is_rebase_in_progress():
+        print("[错误] rebase 进行中，请先 git rebase --continue 或 --abort")
+        return False
+    if _is_merge_in_progress():
+        print("[错误] merge 进行中，请先完成或 abort merge")
+        return False
+
+    ref = _remote_branch_ref()
+    code, _, _ = run_git(["rev-parse", "--verify", ref], check=False, capture_output=True)
+    if code != 0:
+        if check_only:
+            print("[信息] 远程尚无 origin/main，可首次推送")
+        return True
+
+    code, merge_base, _ = run_git(
+        ["merge-base", "HEAD", ref],
+        check=False,
+        capture_output=True,
+    )
+    if code != 0 or not merge_base.strip():
+        print("[错误] 本地与 origin/main 无共同祖先（断历史），需人工 reconcile")
+        return False
+
+    if check_only:
+        print("[信息] 自检通过，可以上传")
+    return True
 
 
 def _origin_remote_url() -> str | None:
@@ -990,6 +1010,12 @@ def parse_args() -> argparse.Namespace:
         help="Minor 上传时不备份 .git 到 git_backup/snapshots/（不推荐）",
     )
 
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="仅自检仓库状态，不 pull/commit/push",
+    )
+
     return parser.parse_args()
 
 
@@ -1015,6 +1041,12 @@ def main() -> None:
 
     try:
         setup_git_repo()
+
+        if not preflight_upload(check_only=args.check):
+            sys.exit(1)
+
+        if args.check:
+            sys.exit(0)
 
         if not sync_with_remote(skip_pull=args.skip_pull):
             print("[中止] 同步远程失败，未推送")
