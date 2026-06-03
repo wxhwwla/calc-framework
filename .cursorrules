@@ -167,8 +167,10 @@ Full guide: [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-comm
 | pre-commit round 1 Failed | **Normal** for `ruff-format` / `mixed-line-ending` auto-fix; script re-adds and runs round 2 |
 | pre-commit `ruff-lint` Failed | **Real failure** — detect **only** the `ruff-lint...Failed` line, not any `Failed` in output |
 | Chinese path pathspec `344/274/232/...` | Never `Path()` on git porcelain before unquote; use `core.quotepath=false` + `_unquote_git_path()` |
-| pre-commit `ruff-lint` Failed (code) | e.g. `SUMMARY_END` missing; fix code, then `--no-bump` |
-| `_version.py` markers | `SUMMARY_BEGIN` / `SUMMARY_END` must not be empty; `ensure_summary_marker_assignments()` runs before upload |
+| Before `git commit` | `_refresh_staging_for_commit()` re-adds all change paths + unstaged wt changes (avoid hook stash conflict) |
+| Success criterion | `[成功] 推送完成` + `[完成]` — not pre-commit round 1 Failed alone |
+| pre-commit `ruff-lint` Failed (code) | **`F822 SUMMARY_*`**: fix `_version.py` top two lines (canonical aliases); not caused by md in same batch (§4.155); then `--no-bump` |
+| `_version.py` markers | Canonical: `SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN` + `SUMMARY_END = _UPLOAD_SUMMARY_END`; never `SUMMARY_BEGIN = ""`; ensure at import, after `write_version`, before `git add`; CRLF regex uses `[\r\n]+` |
 | After failed commit | Version may already be bumped locally → use `--no-bump`, not another full upload |
 | Stash untracked (PowerShell) | `git checkout 'stash@{0}^3' -- .pre-commit-config.yaml` |
 | CRLF | `LF will be replaced by CRLF` is warning; never `git add .` for whole-repo line-ending WIP |

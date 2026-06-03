@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.2"
+_VERSION = "3.21.3"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -29,16 +29,11 @@ _EXE_VERSION = "0.6.0-beta"
 
 _UPLOAD_SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
 _UPLOAD_SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
-SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
-SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
-
-_SUMMARY_ASSIGNMENTS = (
-    f'SUMMARY_BEGIN = "{_UPLOAD_SUMMARY_BEGIN}"',
-    f'SUMMARY_END = "{_UPLOAD_SUMMARY_END}"',
-)
-_SUMMARY_ASSIGNMENTS_BLOCK = "\n".join(_SUMMARY_ASSIGNMENTS) + "\n"
+SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
+SUMMARY_END = _UPLOAD_SUMMARY_END
+_SUMMARY_ASSIGNMENTS_BLOCK = "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\nSUMMARY_END = _UPLOAD_SUMMARY_END\n"
 _SUMMARY_ASSIGNMENTS_PATTERN = re.compile(
-    r"^SUMMARY_BEGIN\s*=.*\n(?:^SUMMARY_END\s*=.*\n)?",
+    r"^SUMMARY_BEGIN\s*=.*?[\r\n]+(?:^SUMMARY_END\s*=.*?[\r\n]+)?",
     re.MULTILINE,
 )
 
@@ -136,6 +131,7 @@ def write_version(path: Path | None, new_version: str) -> None:
         count=1,
     )
     path.write_text(updated, encoding="utf-8")
+    ensure_summary_marker_assignments(path)
 
 
 def bump_patch(version: str) -> str:
@@ -150,13 +146,26 @@ def bump_minor(version: str) -> str:
     return format_semver(major, minor + 1, 0)
 
 
+def _summary_markers_need_repair(text: str) -> bool:
+    """判断顶部 SUMMARY 标记赋值是否损坏（空字符串、缺行或与 canonical 不一致）。"""
+    if re.search(r'^SUMMARY_BEGIN\s*=\s*""\s*(?:\r)?$', text, re.MULTILINE):
+        return True
+    if re.search(r"^SUMMARY_END\s*=", text, re.MULTILINE) is None:
+        return True
+    match = _SUMMARY_ASSIGNMENTS_PATTERN.search(text)
+    if not match:
+        return True
+    canonical = match.group(0).replace("\r\n", "\n").replace("\r", "\n")
+    return canonical != _SUMMARY_ASSIGNMENTS_BLOCK
+
+
 def ensure_summary_marker_assignments(path: Path | None = None) -> bool:
     """修正 _version.py 顶部 SUMMARY_BEGIN/SUMMARY_END 赋值（防止空字符串或缺失）。"""
     path = path or please_read_me_path()
     text = path.read_text(encoding="utf-8")
-    match = _SUMMARY_ASSIGNMENTS_PATTERN.search(text)
-    if match and match.group(0) == _SUMMARY_ASSIGNMENTS_BLOCK:
+    if not _summary_markers_need_repair(text):
         return False
+    match = _SUMMARY_ASSIGNMENTS_PATTERN.search(text)
     if match:
         updated = text[: match.start()] + _SUMMARY_ASSIGNMENTS_BLOCK + text[match.end() :]
     else:
@@ -300,17 +309,12 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 变更 .cursor/rules/session-handoff.mdc
 # - 变更 .cursorrules
-# - 更新文档 AGENTS.md
-# - 更新文档 CONTEXT.md
-# - 更新文档 docs/README.md
 # - 更新文档 docs/上传脚本与-pre-commit.md
 # - 更新文档 docs/会话接续手册.md
 # - 更新文档 docs/操作指令集.md
-# - 修改 games/endfield/tests/tools/test_github_upload_signing.py
 # - 修改 games/endfield/tests/tools/test_upload_meta.py
 # - 修改 scripts/_version.py
 # - 修改 scripts/tools/github_upload_module.py

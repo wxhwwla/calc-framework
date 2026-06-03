@@ -1074,6 +1074,11 @@ def commit_and_push(
 
         print(f"[信息] 已写入上传总结至 {readme_path.name} 底部")
 
+        from scripts._version import ensure_summary_marker_assignments
+
+        if ensure_summary_marker_assignments(readme_path):
+            print("[信息] 已修复 _version.py 内 SUMMARY_BEGIN/SUMMARY_END 常量")
+
         _stage_upload_changes(change_paths, readme_path)
 
         if not _run_pre_commit_on_staged():

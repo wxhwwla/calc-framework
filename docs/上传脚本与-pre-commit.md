@@ -2,7 +2,7 @@
 
 > **谁应读**：维护者上传 GitHub 前；Agent 改 `scripts/tools/github_upload_module.py`、`scripts/_version.py`、`.pre-commit-config.yaml` 或帮用户排障上传失败时。  
 > **命令速查**：[`docs/操作指令集.md`](操作指令集.md) §5。  
-> **架构接缝**：[`docs/会话接续手册.md`](会话接续手册.md) §4.149–§4.153。
+> **架构接缝**：[`docs/会话接续手册.md`](会话接续手册.md) §4.149–§4.155。
 
 ---
 
@@ -74,20 +74,31 @@ python github_upload_module.py --no-bump
 
 ## 4. `scripts/_version.py` 总结标记（`[SEV-HIGH]`）
 
-| 常量 | 正确值 |
-|------|--------|
-| `SUMMARY_BEGIN` | `"# --- BEGIN UPLOAD_SUMMARY ---"` |
-| `SUMMARY_END` | `"# --- END UPLOAD_SUMMARY ---"` |
+| 常量 | 正确写法（模块级） |
+|------|-------------------|
+| `SUMMARY_BEGIN` | `SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN` |
+| `SUMMARY_END` | `SUMMARY_END = _UPLOAD_SUMMARY_END` |
 
-**禁止** `SUMMARY_BEGIN = ""` 或缺少 `SUMMARY_END` 行 → `ruff-lint` F821/F822，上传 commit 被取消。
+字符串值均为 `"# --- BEGIN UPLOAD_SUMMARY ---"` / `"# --- END UPLOAD_SUMMARY ---"`（由 `_UPLOAD_SUMMARY_*` 定义）。
 
-实现要点（2026-06-04 起）：
+**禁止** `SUMMARY_BEGIN = ""` 或缺少 `SUMMARY_END =` 行 → `ruff-lint` F821/F822（`__all__` 导出未定义名），上传 commit 被取消。
 
-- 读写总结块用内部 `_UPLOAD_SUMMARY_BEGIN/END`，不依赖可能被写坏的赋值行
-- 上传前 `ensure_summary_marker_assignments()` 自动修复顶部两行赋值
-- 业务逻辑在 `scripts/tools/github_upload_module.py`；根/`scripts/` 下文件仅为 **subprocess 重导向**（禁止 `import *` 包装）
+### 4.1 易误判：文档同批 ≠ 文档致错（§4.155）
 
-版本 bump 后若 commit 失败、版本已在工作区 +1：用 **`--no-bump`** 补推，勿重复 bump。
+上传总结常同时列出 `docs/*.md` 与 `scripts/_version.py`。pre-commit 报 **`F822 SUMMARY_END`** 时，根因几乎总在 **`_version.py` 顶部两行赋值**，与 md 正文无关。勿把「刚补了文档就 Failed」理解成 markdown 或 pre-commit 误伤文档。
+
+### 4.2 实现与防护（2026-06-04 §4.155 加固）
+
+| 机制 | 作用 |
+|------|------|
+| `_UPLOAD_SUMMARY_BEGIN/END` | 读写**底部**总结块，不依赖顶部赋值是否被写坏 |
+| `_summary_markers_need_repair()` | 检测空字符串、缺行、非 canonical 赋值 |
+| `ensure_summary_marker_assignments()` | 用 `[\r\n]+` regex 整行替换（**CRLF 须一次匹配两行**，旧 `\n` -only 会只删第一行） |
+| 调用时机 | import 时；`write_version` 写盘后；`write_summary_block` 开头；上传脚本 **`git add` 前** |
+
+业务逻辑在 `scripts/tools/github_upload_module.py`；根/`scripts/` 下文件仅为 **subprocess 重导向**（禁止 `import *` 包装）。
+
+版本 bump 后若 commit 失败、`_VERSION` 已在工作区 +1：用 **`--no-bump`** 补推，勿重复 bump。
 
 ---
 
@@ -159,7 +170,27 @@ fatal: pathspec '"docs/344/274/232/350/257/235/.../214.md"' did not match any fi
 - 默认 **人类** 执行 `python github_upload_module.py`；Agent 不得主动 upload
 - sandbox 内 **禁止** `git rm` / `git reset` / `git checkout HEAD --` 等写操作（见 `.cursorrules`）
 - 改上传逻辑只改 `scripts/tools/github_upload_module.py`
-- 上传失败排障顺序：`--check` → 看 **`ruff-lint` 行**是否 Failed → 查 pathspec 是否 `344/274/...` → 查 `_version.py` 标记 → `--no-bump` 补推
+- 上传失败排障顺序：`--check` → **`ruff-lint` 行** Failed → **`F822 SUMMARY_*` 查 `_version.py` 顶部**（非 doc 问题）→ pathspec `344/274/...` → **`--no-bump` 补推**（版本可能已是 3.21.x）
+
+---
+
+## 10. 验收：Windows 全流程（2026-06-04）
+
+**已验证 commit** `ad867583`（`v3.21.2: 更新 12 处文件`）→ `main` push 成功。
+
+| 阶段 | 正常日志 | 说明 |
+|------|----------|------|
+| 同步 | `已与 origin/main 同步，跳过 pull` | 落后 0 不 stash |
+| 暂存 | `git add（N 个路径，非全仓库）` | 中文 doc 路径正确 |
+| pre-commit 第 1 轮 | `ruff-format` / `trim trailing whitespace` / `mixed-line-ending` **Failed** | 含 `docs/会话接续手册.md` 时控制台可能乱码，**可忽略** |
+| pre-commit 第 2 轮 | 全部 Passed | `[信息] pre-commit 第 2 轮已通过` |
+| commit 前 | `git add（N 个路径，commit 前同步）` | `_refresh_staging_for_commit` |
+| commit hook | 再次 pre-commit 全 Passed | 无 `Stashed changes conflicted` |
+| 结束 | `[成功] 推送完成` + `[完成]` | 唯一成功判据 |
+
+**commit 消息里**可能出现 `create mode ... "docs/\\344\\270\\212..."`（Git 八进制显示），磁盘文件名仍为 `docs/上传脚本与-pre-commit.md`，**属显示 quirks，不是失败**。
+
+**补推**：中途 commit 失败但版本已写入 `_version.py` → 始终 `python github_upload_module.py --no-bump`，勿重复 bump。
 
 ---
 
@@ -171,4 +202,4 @@ python -m pytest games/endfield/tests/tools/test_upload_meta.py games/endfield/t
 
 ---
 
-*最后更新：2026-06-04（§4.153 中文 pathspec + ruff-lint 误判）*
+*最后更新：2026-06-04（§4.155 `_version` F822 / CRLF ensure / 文档同批误判）*

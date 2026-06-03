@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """upload_meta 版本与总结块测试"""
 
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -104,8 +105,39 @@ class TestUploadMeta(unittest.TestCase):
             )
             self.assertTrue(ensure_summary_marker_assignments(path))
             text = path.read_text(encoding="utf-8")
-            self.assertIn(f'SUMMARY_BEGIN = "{SUMMARY_BEGIN}"', text)
-            self.assertIn(f'SUMMARY_END = "{SUMMARY_END}"', text)
+            self.assertIn("SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN", text)
+            self.assertIn("SUMMARY_END = _UPLOAD_SUMMARY_END", text)
+
+    def test_write_version_keeps_summary_markers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "_version.py"
+            path.write_text(
+                "# ==============================================================\n\n"
+                "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
+                "SUMMARY_END = _UPLOAD_SUMMARY_END\n"
+                '_VERSION = "1.0.0"\n',
+                encoding="utf-8",
+            )
+            write_version(path, "1.0.1")
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN", text)
+            self.assertIn("SUMMARY_END = _UPLOAD_SUMMARY_END", text)
+            self.assertEqual(read_version(path), "1.0.1")
+
+    def test_ensure_summary_marker_assignments_repairs_crlf(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "_version.py"
+            path.write_text(
+                "# ==============================================================\n\n"
+                'SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\r\n'
+                'SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"\r\n'
+                '_VERSION = "1.0.0"\n',
+                encoding="utf-8",
+            )
+            self.assertTrue(ensure_summary_marker_assignments(path))
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN", text)
+            self.assertEqual(len(re.findall(r"^SUMMARY_END\s*=", text, re.MULTILINE)), 1)
 
     def test_strip_summary_keeps_workflow_doc_mention(self):
         """删除末尾总结块时，不得截断 UPLOAD_WORKFLOW 字符串内的说明文字。"""
