@@ -95,8 +95,9 @@ def _package_path() -> Path:
 
 def _import_upload_meta():
     """动态导入 upload_meta 模块。"""
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    scripts_dir = str(Path(__file__).resolve().parent.parent)
+    if scripts_dir not in sys.path:
+        sys.path.append(scripts_dir)
     from _path_setup import ensure_root  # noqa: E402
     ensure_root()
 
