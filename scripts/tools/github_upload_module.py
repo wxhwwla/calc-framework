@@ -95,13 +95,11 @@ def _package_path() -> Path:
 
 def _import_upload_meta():
     """动态导入 upload_meta 模块。"""
-    scripts_dir = str(Path(__file__).resolve().parent.parent)
-    if scripts_dir not in sys.path:
-        sys.path.append(scripts_dir)
-    from _path_setup import ensure_root  # noqa: E402
-    ensure_root()
+    from scripts._path_setup import ensure_root  # noqa: E402
 
-    import upload_meta
+    ensure_root()
+    from scripts import upload_meta  # noqa: E402
+
     return upload_meta
 
 
@@ -317,6 +315,8 @@ def _ensure_gitignore(repo_dir: str) -> None:
         "skills-lock.json",
 
         ".pytest_cache/",
+
+        "git_backup/snapshots/",
 
     ]
 
@@ -928,7 +928,37 @@ def _push_tag(version: str) -> bool:
 
 
 
-def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: bool = False) -> None:
+def _maybe_backup_git_for_minor(*, current_version: str, skip: bool) -> None:
+    """Minor 上传前备份 .git；失败则中止。"""
+    if skip:
+        print("[信息] 已跳过 .git 备份（--no-git-backup）")
+        return
+    try:
+        from scripts.tools import git_backup
+
+        dest = git_backup.backup_git_dir(
+            Path(_repo_root()),
+            current_version=current_version,
+            bump_kind="minor",
+        )
+        rel = dest.relative_to(_repo_root())
+        print(f"[信息] Minor 上传前已备份 .git → {rel}")
+        print(f"[信息] 说明与恢复步骤见 {git_backup.GIT_BACKUP_ROOT}/README.md")
+    except Exception as exc:
+        print(f"[错误] .git 备份失败: {exc}")
+        print("[中止] Minor 上传须先成功备份；若磁盘不足可用 --no-git-backup（不推荐）")
+        sys.exit(1)
+
+
+
+
+def commit_and_push(
+    *,
+    minor: bool = False,
+    no_bump: bool = False,
+    push_tag: bool = False,
+    skip_git_backup: bool = False,
+) -> None:
     """执行 git 提交与推送流程（含版本管理和总结块管理）。"""
     os.chdir(_repo_root())
     target_path = os.path.join(".", TARGET_DIR)
@@ -1036,6 +1066,11 @@ def commit_and_push(*, minor: bool = False, no_bump: bool = False, push_tag: boo
             current = meta.read_version(readme_path)
 
             if kind == "minor":
+
+                _maybe_backup_git_for_minor(
+                    current_version=current,
+                    skip=skip_git_backup,
+                )
 
                 version_for_msg = meta.bump_minor(current)
 
@@ -1175,6 +1210,16 @@ def parse_args() -> argparse.Namespace:
 
     )
 
+    parser.add_argument(
+
+        "--no-git-backup",
+
+        action="store_true",
+
+        help="Minor 上传时不备份 .git 到 git_backup/snapshots/（不推荐）",
+
+    )
+
     return parser.parse_args()
 
 
@@ -1215,7 +1260,12 @@ def main() -> None:
 
             sys.exit(1)
 
-        commit_and_push(minor=args.minor, no_bump=args.no_bump, push_tag=args.tag)
+        commit_and_push(
+            minor=args.minor,
+            no_bump=args.no_bump,
+            push_tag=args.tag,
+            skip_git_backup=args.no_git_backup,
+        )
 
         print("=" * 60)
 

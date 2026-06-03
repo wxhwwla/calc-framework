@@ -13,21 +13,26 @@
     4. 乘区计算：实时计算能力乘区、能力值加成、攻击力等数据
 """
 
-# ==================== 版本信息（只在此处修改） ====================
-# _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
-# _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
-_VERSION = "3.11.20"
-_EXE_VERSION = "0.6.0-beta"
-# ==============================================================
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+_repo_root = Path(__file__).resolve().parents[2]
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+
+from scripts._version import _EXE_VERSION, _VERSION  # noqa: E402
 
 # ==================== GitHub 上传流程（必读） ====================
 UPLOAD_WORKFLOW = """
 GitHub 上传与版本号（仓库根目录执行: python github_upload_module.py）
 
 1. 版本分工
+   - _VERSION / _EXE_VERSION 唯一定义在 scripts/_version.py（上传脚本自动读写）。
    - _VERSION：上传脚本在有「业务改动」并 push 成功时自动递增（第三位 +1 为默认）。
    - _EXE_VERSION：仅在你重新打包 exe 前手动修改，上传脚本不会改它。
-   - 第一位 MAJOR：永远只在下方 _VERSION 行手动改，脚本不会动。
+   - 第一位 MAJOR：永远在 scripts/_version.py 中手动改，脚本不会动。
 
 2. 何时自动 bump _VERSION
    - 会：本次有新的业务文件改动，将产生新 commit 并推送到远程。
@@ -40,7 +45,7 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
      · 非交互：python github_upload_module.py --minor
    - 不涨版本：python github_upload_module.py --no-bump
 
-4. 提交说明（临时写在「本文件最下面」）
+4. 提交说明（临时写在 scripts/_version.py 最下面）
    - 上传前：脚本根据 git 改动自动生成 # --- UPLOAD_SUMMARY --- 块（勿手删标记行）。
    - commit 消息格式：
        v1.8.2: 一句话标题
@@ -74,8 +79,8 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 PROJECT_STRUCTURE = """
 项目结构（Python 包目录 games/endfield/）：
     ├── main.py                    # 项目入口，启动应用
-    ├── pyproject.toml             # 包配置（版本读取 please_read_me._VERSION）
-    ├── please_read_me.py          # 版本号与帮助文本（本文件）
+    ├── pyproject.toml             # 包配置（版本读取 please_read_me._VERSION → scripts/_version.py）
+    ├── please_read_me.py          # 帮助文本（版本从 scripts/_version.py 导入）
     ├── build.py                   # 打包脚本
     ├── README.md                  # 开发与测试说明（首选文档）
     ├── scripts/                   # 命令行与维护脚本（反推 GUI、录入种子等）
@@ -207,23 +212,3 @@ def show_help() -> None:
 
 if __name__ == "__main__":
     show_help()
-
-# --- UPLOAD_SUMMARY ---
-# TITLE: 更新 15 处文件
-# BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
-# - 修改 adapters/endfield/calc/damage/inverse/fit_core.py
-# - 更新文档 docs/adr/0013-generic-inverse-engine.md
-# - 修改 framework/src/calc_framework/inverse/__init__.py
-# - 修改 framework/src/calc_framework/inverse/base.py
-# - 修改 framework/src/calc_framework/inverse/engine.py
-# - 修改 framework/src/calc_framework/inverse/registry.py
-# - 修改 framework/src/calc_framework/ui/viewer.py
-# - 修改 framework/tests/inverse/__init__.py
-# - 修改 framework/tests/inverse/test_engine.py
-# - 修改 games/endfield/gui/controls/ocr/__init__.py
-# - 修改 games/endfield/please_read_me.py
-# - 修改 tools/endfield_designer/designer_main.py
-# - 修改 tools/endfield_designer/seed_tab.py
-# --- END UPLOAD_SUMMARY ---

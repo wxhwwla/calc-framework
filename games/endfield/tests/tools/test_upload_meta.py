@@ -60,6 +60,42 @@ class TestUploadMeta(unittest.TestCase):
 
         )
 
+        self.assertFalse(
+
+            classify_changed_paths(
+
+                ["scripts/_version.py"],
+
+                "games/endfield",
+
+            )
+
+        )
+
+        self.assertFalse(
+
+            classify_changed_paths(
+
+                ["scripts/please_read_me.py"],
+
+                "games/endfield",
+
+            )
+
+        )
+
+        self.assertTrue(
+
+            classify_changed_paths(
+
+                ["framework/foo.py"],
+
+                "games/endfield",
+
+            )
+
+        )
+
 
 
     def test_summary_block_roundtrip(self):

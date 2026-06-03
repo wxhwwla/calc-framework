@@ -46,6 +46,7 @@
 ├── .agents/                      # Cursor Agent 技能
 ├── github_upload_module.py
 ├── github_download_module.py
+├── git_backup/                   # Minor 上传前 .git 本地快照（snapshots/ 不纳入 Git）
 ├── LICENSE · DATA_LICENSE · CONTEXT.md · CONTRIBUTING.md · AGENTS.md
 └── .github/                      # CI 与 Issue 模板
 ```

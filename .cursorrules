@@ -135,6 +135,16 @@ Before modifying `.github/workflows/*.yml`, read ALL existing workflow files to 
 | Delete workspace files | `del`, `rm -rf` | May delete important code |
 | Discard uncommitted changes | `git checkout --`, `git reset --hard` | Irreversible |
 | Push to remote | `git push`, upload script | Affects collaborators |
+| Delete `git_backup/snapshots/` | `rm -rf git_backup/snapshots` | Local `.git` recovery copies lost |
+| Commit git snapshots | `git add git_backup/snapshots` | Huge blobs; snapshots are gitignored by design |
+
+## git_backup/（Minor 上传前本地 .git 快照）
+
+- **触发**：`python github_upload_module.py --minor` 或交互选 **M** 时，commit 前自动复制 `.git` → `git_backup/snapshots/`
+- **说明**：`git_backup/README.md`（恢复步骤、磁盘占用、跳过方式 `--no-git-backup`）
+- **勿提交** `snapshots/` 到 GitHub（已在 `.gitignore`）
+- **不能代替 push**：远程 GitHub/Gitee 仍是主副本；备份仅用于误删本地 `.git` 时恢复
+- **Agent 不得擅自删除** `git_backup/snapshots/` 内任何快照；删前须人类确认（同 Pre-Deletion 协议）
 
 ## Upload to GitHub
 - **Default: human runs upload** with `python github_upload_module.py`

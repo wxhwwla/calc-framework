@@ -46,6 +46,12 @@ dist-types/
 终末地伤害计算器.exe
 games/endfield/终末地伤害计算器.exe
 
+# 上传脚本临时文件
+.git-upload-msg.txt
+
+# 本地 .git 快照（Minor 上传前自动备份，勿提交）
+git_backup/snapshots/
+
 # 日志
 *.log
 debug.log

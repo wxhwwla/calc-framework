@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.20.5"
+_VERSION = "3.20.6"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -27,7 +27,8 @@ _EXE_VERSION = "0.6.0-beta"
 
 # ==============================================================
 
-SUMMARY_BEGIN = ""
+SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
 
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
@@ -208,8 +209,12 @@ def classify_changed_paths(paths: list[str], package_dir_name: str = "games/endf
     readme_names = {
         f"{prefix}_version.py",
         "_version.py",
+        "scripts/_version.py",
         f"{prefix}please_read_me.py",
         "please_read_me.py",
+        "scripts/please_read_me.py",
+        "scripts/upload_meta.py",
+        "scripts/version.py",
     }
     for raw in paths:
         norm = raw.replace("\\", "/").strip()
@@ -260,10 +265,45 @@ def get_exe_version() -> str:
     return _EXE_VERSION
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 4 处文件
+# TITLE: 更新 39 处文件
 # BODY:
-# - 修改 scripts/_version.py
-# - 修改 scripts/github_download_module.py
-# - 修改 scripts/github_upload_module.py
-# - 修改 scripts/tools/github_upload_module.py
+# - 变更 %temp%/
+# - 变更 .agents/
+# - 变更 .cursor/
+# - 变更 .cursorrules
+# - 变更 .github/
+# - 变更 .gitignore
+# - 变更 .ruff.toml
+# - 更新文档 AGENTS.md
+# - 更新文档 CONTEXT.md
+# - 更新文档 CONTRIBUTING.md
+# - 变更 DATA_LICENSE
+# - 变更 Dockerfile
+# - 变更 LICENSE
+# - 更新文档 NOTICES.md
+# - 更新文档 README.md
+# - 修改 batch_docstring.py
+# - 变更 build_local-backend_g1w6kwx9/
+# - 变更 docker-compose.yml
+# - 变更 docs/
+# - 变更 framework/
+# - 变更 games/
+# - 修改 github_download_module.py
+# - 修改 github_upload_module.py
+# - 变更 installer/
+# - 变更 package.json
+# - 变更 pyrightconfig.json
+# - 变更 release_bundle/
+# - 变更 render.yaml
+# - 变更 requirements.txt
+# - 变更 resources/
+# - 修改 scan_docstrings.py
+# - 变更 scan_report.json
+# - 变更 scripts/
+# - 变更 tools/
+# - 变更 tsconfig.json
+# - 变更 ui_preferences.json
+# - 变更 utils/
+# - 变更 web/
+# - 变更 zbpack.json
 # --- END UPLOAD_SUMMARY ---
