@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.1"
+_VERSION = "3.21.2"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -27,8 +27,20 @@ _EXE_VERSION = "0.6.0-beta"
 
 # ==============================================================
 
+_UPLOAD_SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+_UPLOAD_SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
 SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
 SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
+
+_SUMMARY_ASSIGNMENTS = (
+    f'SUMMARY_BEGIN = "{_UPLOAD_SUMMARY_BEGIN}"',
+    f'SUMMARY_END = "{_UPLOAD_SUMMARY_END}"',
+)
+_SUMMARY_ASSIGNMENTS_BLOCK = "\n".join(_SUMMARY_ASSIGNMENTS) + "\n"
+_SUMMARY_ASSIGNMENTS_PATTERN = re.compile(
+    r"^SUMMARY_BEGIN\s*=.*\n(?:^SUMMARY_END\s*=.*\n)?",
+    re.MULTILINE,
+)
 
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
@@ -51,6 +63,7 @@ __all__ = [
     "bump_minor",
     "bump_patch",
     "classify_changed_paths",
+    "ensure_summary_marker_assignments",
     "format_semver",
     "get_exe_version",
     "get_version",
@@ -137,30 +150,51 @@ def bump_minor(version: str) -> str:
     return format_semver(major, minor + 1, 0)
 
 
+def ensure_summary_marker_assignments(path: Path | None = None) -> bool:
+    """修正 _version.py 顶部 SUMMARY_BEGIN/SUMMARY_END 赋值（防止空字符串或缺失）。"""
+    path = path or please_read_me_path()
+    text = path.read_text(encoding="utf-8")
+    match = _SUMMARY_ASSIGNMENTS_PATTERN.search(text)
+    if match and match.group(0) == _SUMMARY_ASSIGNMENTS_BLOCK:
+        return False
+    if match:
+        updated = text[: match.start()] + _SUMMARY_ASSIGNMENTS_BLOCK + text[match.end() :]
+    else:
+        anchor = "# ==============================================================\n\n"
+        if anchor not in text:
+            return False
+        updated = text.replace(anchor, anchor + _SUMMARY_ASSIGNMENTS_BLOCK, 1)
+    if updated == text:
+        return False
+    path.write_text(updated, encoding="utf-8")
+    return True
+
+
 def strip_summary_block(text: str) -> str:
     """从文本中移除 UPLOAD_SUMMARY 标记块。"""
-    begin = text.rfind(SUMMARY_BEGIN)
+    begin = text.rfind(_UPLOAD_SUMMARY_BEGIN)
     if begin == -1:
         return text.rstrip() + "\n"
-    end = text.find(SUMMARY_END, begin)
+    end = text.find(_UPLOAD_SUMMARY_END, begin)
     if end == -1:
         return text.rstrip() + "\n"
-    end += len(SUMMARY_END)
+    end += len(_UPLOAD_SUMMARY_END)
     return (text[:begin] + text[end:]).rstrip() + "\n"
 
 
 def write_summary_block(path: Path, title: str, bullets: list[str]) -> None:
     """将上传总结写入 _version.py 底部。"""
+    ensure_summary_marker_assignments(path)
     text = strip_summary_block(path.read_text(encoding="utf-8"))
     lines = [
         "",
-        SUMMARY_BEGIN,
+        _UPLOAD_SUMMARY_BEGIN,
         f"# TITLE: {title}",
         "# BODY:",
     ]
     for item in bullets:
         lines.append(f"# - {item}")
-    lines.append(SUMMARY_END)
+    lines.append(_UPLOAD_SUMMARY_END)
     lines.append("")
     path.write_text(text + "\n".join(lines), encoding="utf-8")
 
@@ -174,8 +208,8 @@ def remove_summary_block(path: Path) -> None:
 def read_summary_for_commit(path: Path) -> tuple[str, list[str]]:
     """从 _version.py 解析 UPLOAD_SUMMARY 块的内容。"""
     text = path.read_text(encoding="utf-8")
-    begin = text.rfind(SUMMARY_BEGIN)
-    end = text.find(SUMMARY_END, begin)
+    begin = text.rfind(_UPLOAD_SUMMARY_BEGIN)
+    end = text.find(_UPLOAD_SUMMARY_END, begin)
     if begin == -1 or end == -1:
         raise ValueError("_version.py 中缺少 UPLOAD_SUMMARY 标记块")
     block = text[begin:end]
@@ -266,17 +300,18 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 12 处文件
 # BODY:
-# - 变更 .ruff.toml
+# - 变更 .cursor/rules/session-handoff.mdc
+# - 变更 .cursorrules
+# - 更新文档 AGENTS.md
+# - 更新文档 CONTEXT.md
+# - 更新文档 docs/README.md
+# - 更新文档 docs/上传脚本与-pre-commit.md
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/操作指令集.md
 # - 修改 games/endfield/tests/tools/test_github_upload_signing.py
-# - 修改 github_download_module.py
-# - 修改 github_upload_module.py
-# - 变更 pyrightconfig.json
+# - 修改 games/endfield/tests/tools/test_upload_meta.py
 # - 修改 scripts/_version.py
-# - 修改 scripts/github_download_module.py
-# - 修改 scripts/github_upload_module.py
-# - 修改 scripts/tools/devtool.py
 # - 修改 scripts/tools/github_upload_module.py
-# - 修改 scripts/tools/import_calcpack.py
 # --- END UPLOAD_SUMMARY ---

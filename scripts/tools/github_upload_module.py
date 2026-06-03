@@ -58,6 +58,10 @@ def _import_upload_meta():
     from scripts._path_setup import ensure_root
 
     ensure_root()
+    from scripts._version import ensure_summary_marker_assignments, please_read_me_path
+
+    if ensure_summary_marker_assignments(please_read_me_path()):
+        print("[信息] 已修复 _version.py 内 SUMMARY_BEGIN/SUMMARY_END 常量")
     from scripts import upload_meta
 
     return upload_meta
@@ -480,6 +484,60 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
     return pull_ok
 
 
+def _unquote_git_path(raw: str) -> str:
+    """解析 git status 中带 C 风格转义的双引号路径。"""
+    text = raw.strip()
+    if not (text.startswith('"') and text.endswith('"')):
+        return text
+    inner = text[1:-1]
+    out = bytearray()
+    i = 0
+    while i < len(inner):
+        ch = inner[i]
+        if ch != "\\":
+            out.extend(ch.encode("utf-8"))
+            i += 1
+            continue
+        i += 1
+        if i >= len(inner):
+            break
+        esc = inner[i]
+        if esc in ('"', "\\"):
+            out.extend(esc.encode("utf-8"))
+            i += 1
+        elif esc == "n":
+            out.extend(b"\n")
+            i += 1
+        elif esc == "t":
+            out.extend(b"\t")
+            i += 1
+        elif esc.isdigit():
+            j = i
+            while j < len(inner) and j < i + 3 and inner[j].isdigit():
+                j += 1
+            out.append(int(inner[i:j], 8))
+            i = j
+        else:
+            out.extend(esc.encode("utf-8"))
+            i += 1
+    return out.decode("utf-8")
+
+
+def _normalize_change_path(raw: str) -> str:
+    """将 git 输出路径规范为仓库内 POSIX 相对路径（勿对转义路径用 Path）。"""
+    path = _unquote_git_path(raw.strip())
+    if not path:
+        return ""
+    path = path.replace("\\", "/")
+    root = _repo_root().replace("\\", "/")
+    if os.path.isabs(path) or (len(path) > 1 and path[1] == ":"):
+        try:
+            return os.path.relpath(path, root).replace("\\", "/")
+        except ValueError:
+            return path
+    return path
+
+
 def _porcelain_paths(porcelain: str) -> list[str]:
     """从 git status --porcelain 输出中提取文件路径列表。"""
     paths: list[str] = []
@@ -492,26 +550,31 @@ def _porcelain_paths(porcelain: str) -> list[str]:
         if " -> " in rest:
             rest = rest.split(" -> ")[-1].strip()
 
-        if rest:
-            paths.append(rest)
+        normalized = _normalize_change_path(rest)
+        if normalized:
+            paths.append(normalized)
 
     return paths
 
 
 def _collect_change_paths() -> list[str]:
     """收集所有已变更文件的路径。"""
-    _, porcelain, _ = run_git(["status", "--porcelain"], capture_output=True)
+    path_git = ["-c", "core.quotepath=false"]
+    _, porcelain, _ = run_git([*path_git, "status", "--porcelain"], capture_output=True)
     paths = _porcelain_paths(porcelain)
-    _, diff_unstaged, _ = run_git(["diff", "--name-only"], check=False, capture_output=True)
+    _, diff_unstaged, _ = run_git([*path_git, "diff", "--name-only"], check=False, capture_output=True)
 
-    _, diff_staged, _ = run_git(["diff", "--cached", "--name-only"], check=False, capture_output=True)
+    _, diff_staged, _ = run_git(
+        [*path_git, "diff", "--cached", "--name-only"],
+        check=False,
+        capture_output=True,
+    )
 
     for chunk in (diff_unstaged, diff_staged):
         for line in chunk.splitlines():
-            p = line.strip()
-
-            if p:
-                paths.append(p)
+            normalized = _normalize_change_path(line)
+            if normalized:
+                paths.append(normalized)
 
     return paths
 
@@ -648,10 +711,12 @@ def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> str | None:
 
 
 def _rel_repo_path(path: Path | str) -> str:
-    p = Path(path)
-    if p.is_absolute():
-        return os.path.relpath(p, _repo_root()).replace("\\", "/")
-    return p.as_posix()
+    if isinstance(path, Path):
+        p = path
+        if p.is_absolute():
+            return os.path.relpath(p, _repo_root()).replace("\\", "/")
+        return p.as_posix()
+    return _normalize_change_path(str(path))
 
 
 def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
@@ -678,14 +743,79 @@ def _pre_commit_installed() -> bool:
 
 
 def _staged_file_list() -> list[str]:
-    _, out, _ = run_git(["diff", "--cached", "--name-only"], check=False, capture_output=True)
-    return [line.strip() for line in out.splitlines() if line.strip()]
+    _, out, _ = run_git(
+        ["-c", "core.quotepath=false", "diff", "--cached", "--name-only"],
+        check=False,
+        capture_output=True,
+    )
+    paths: list[str] = []
+    for line in out.splitlines():
+        normalized = _normalize_change_path(line)
+        if normalized:
+            paths.append(normalized)
+    return paths
+
+
+def _unstaged_modified_paths() -> list[str]:
+    """返回工作区有改动但未进入 index 的路径（commit hook stash 冲突源）。"""
+    _, porcelain, _ = run_git(
+        ["-c", "core.quotepath=false", "status", "--porcelain"],
+        check=False,
+        capture_output=True,
+    )
+    paths: list[str] = []
+    for line in porcelain.splitlines():
+        if len(line) < 4:
+            continue
+        if line[0] == " " and line[1] not in (" ", "?"):
+            normalized = _normalize_change_path(line[3:])
+            if normalized:
+                paths.append(normalized)
+    return paths
+
+
+def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> None:
+    """commit 前重新 git add，消除 index/工作区不一致，避免 commit hook stash 冲突。"""
+    merged: list[str] = []
+    seen: set[str] = set()
+    for raw in (*change_paths, *_collect_change_paths()):
+        rel = _rel_repo_path(raw)
+        if rel and rel not in seen:
+            seen.add(rel)
+            merged.append(rel)
+    version_rel = _rel_repo_path(version_path)
+    if version_rel not in seen:
+        merged.append(version_rel)
+    unstaged = _unstaged_modified_paths()
+    added = 0
+    for path in unstaged:
+        if path not in seen:
+            seen.add(path)
+            merged.append(path)
+            added += 1
+    if added:
+        print(f"[信息] 补暂存 {added} 个工作区改动（避免 commit hook stash 冲突）")
+    print(f"[信息] git add（{len(merged)} 个路径，commit 前同步）")
+    run_git(["add", "--", *merged])
+
+
+def _pre_commit_has_lint_errors(output: str) -> bool:
+    for line in output.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("ruff-lint") and "Failed" in stripped:
+            return True
+    return False
 
 
 def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
     """运行 pre-commit；若钩子自动改文件则 re-add 后最多重试 rounds 次。"""
     if not _pre_commit_installed():
         return True
+    print(
+        f"[信息] pre-commit 最多 {rounds} 轮；"
+        "仅 ruff-format / mixed-line-ending 等自动修正时第 1 轮 Failed 属正常；"
+        "ruff-lint Failed 为代码错误，不会靠重试解决"
+    )
     for attempt in range(1, rounds + 1):
         files = _staged_file_list()
         if not files:
@@ -695,12 +825,31 @@ def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
             ["pre-commit", "run", "--files", *files],
             cwd=_repo_root(),
             check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
+        output = (proc.stdout or "") + (proc.stderr or "")
+        if proc.stdout:
+            print(proc.stdout, end="")
+        if proc.stderr:
+            print(proc.stderr, end="", file=sys.stderr)
         if proc.returncode == 0:
+            if attempt > 1:
+                print(f"[信息] pre-commit 第 {attempt} 轮已通过")
             return True
-        run_git(["add", "--", *files], check=False)
+        if _pre_commit_has_lint_errors(output):
+            print("[错误] ruff-lint 未通过（代码问题，非 format/换行），请按上方报错修复")
+            return False
+        if attempt < rounds:
+            print(
+                f"[信息] pre-commit 第 {attempt} 轮：钩子已自动修正格式/换行，已重新 git add，继续第 {attempt + 1} 轮…"
+            )
+        if files:
+            run_git(["add", "--", *files], check=False)
     print("[错误] pre-commit 未通过，commit 已取消")
-    print("[提示] 本地执行: pre-commit run --files <路径> → 修复 ruff 等问题 → git add → 再跑上传脚本 --no-bump")
+    print("[提示] 本地 pre-commit run --files <路径> → 修复 ruff 等问题 → git add → --no-bump")
     return False
 
 
@@ -721,7 +870,10 @@ def _commit_with_message(message: str) -> None:
     except subprocess.CalledProcessError as exc:
         print("[错误] git commit 失败（常见原因：pre-commit / ruff 未通过）")
         if _pre_commit_installed():
-            print("[提示] 查看上方 pre-commit 输出；修复后 git add 再执行 python github_upload_module.py --no-bump")
+            print(
+                "[提示] 若有 Unstaged files / Stashed changes conflicted："
+                "确认 docs 等已保存 → python github_upload_module.py --no-bump"
+            )
         raise exc
 
     finally:
@@ -926,6 +1078,8 @@ def commit_and_push(
 
         if not _run_pre_commit_on_staged():
             sys.exit(1)
+
+        _refresh_staging_for_commit(change_paths, readme_path)
 
         title_read, bullets_read = meta.read_summary_for_commit(readme_path)
 

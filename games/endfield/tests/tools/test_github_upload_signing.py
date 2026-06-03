@@ -55,5 +55,34 @@ class TestPreflightUpload(unittest.TestCase):
                         self.assertFalse(upload.preflight_upload(check_only=True))
 
 
+class TestPreCommitLintDetection(unittest.TestCase):
+    def test_format_failed_does_not_count_as_lint_error(self):
+        output = (
+            "ruff-lint................................................................Passed\n"
+            "ruff-format..............................................................Failed\n"
+        )
+        self.assertFalse(upload._pre_commit_has_lint_errors(output))
+
+    def test_lint_failed_is_detected(self):
+        output = "ruff-lint................................................................Failed\n"
+        self.assertTrue(upload._pre_commit_has_lint_errors(output))
+
+
+class TestGitPathNormalization(unittest.TestCase):
+    def test_unquote_octal_porcelain_path(self):
+        raw = '"docs/\\344\\270\\212\\344\\274\\240\\350\\204\\232\\346\\234\\254.md"'
+        self.assertEqual(
+            upload._unquote_git_path(raw),
+            "docs/上传脚本.md",
+        )
+
+    def test_normalize_does_not_split_octal_with_path(self):
+        raw = '"docs/\\344\\274\\232\\350\\257\\235\\346\\216\\245\\347\\273\\255\\346\\211\\213\\345\\206\\214.md"'
+        self.assertEqual(
+            upload._normalize_change_path(raw),
+            "docs/会话接续手册.md",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

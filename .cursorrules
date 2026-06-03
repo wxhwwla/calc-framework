@@ -14,6 +14,7 @@ Also read this entire file: `.cursorrules`
 | `docs/README.md` | **Doc index** (look here first to find docs) |
 | `docs/版本号说明.md` | Before modifying any version number |
 | `docs/操作指令集.md` | Before code changes or GitHub push |
+| `docs/上传脚本与-pre-commit.md` | **Before upload / changing upload script / pre-commit troubleshooting (required)** |
 | `docs/代码结构规范.md` | Before structural refactors or adding modules |
 | `docs/adr/0001-code-layout-constraints.md` | Before structural refactors or adding modules |
 | `CONTEXT.md` | Domain terminology |
@@ -153,6 +154,26 @@ Before modifying `.github/workflows/*.yml`, read ALL existing workflow files to 
 - **Do not** use bare `git commit` + `git push`
 - Version bumps go through the upload script only
 - When user asks for upload → `python github_upload_module.py` (add `--minor` or `--no-bump` when appropriate)
+- **Before changing upload flow or debugging upload failures**, read [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md)
+
+## Upload script & pre-commit (mandatory reading)
+
+Full guide: [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md). Summary:
+
+| Topic | Rule |
+|-------|------|
+| Entry | Root `github_upload_module.py` → subprocess to `scripts/tools/` with `cwd=repo root`; tools script inserts repo root into `sys.path` |
+| Wrapper | No `import *` in `scripts/github_upload_module.py`; subprocess redirect only |
+| pre-commit round 1 Failed | **Normal** for `ruff-format` / `mixed-line-ending` auto-fix; script re-adds and runs round 2 |
+| pre-commit `ruff-lint` Failed | **Real failure** — detect **only** the `ruff-lint...Failed` line, not any `Failed` in output |
+| Chinese path pathspec `344/274/232/...` | Never `Path()` on git porcelain before unquote; use `core.quotepath=false` + `_unquote_git_path()` |
+| pre-commit `ruff-lint` Failed (code) | e.g. `SUMMARY_END` missing; fix code, then `--no-bump` |
+| `_version.py` markers | `SUMMARY_BEGIN` / `SUMMARY_END` must not be empty; `ensure_summary_marker_assignments()` runs before upload |
+| After failed commit | Version may already be bumped locally → use `--no-bump`, not another full upload |
+| Stash untracked (PowerShell) | `git checkout 'stash@{0}^3' -- .pre-commit-config.yaml` |
+| CRLF | `LF will be replaced by CRLF` is warning; never `git add .` for whole-repo line-ending WIP |
+| `.ruff.toml` ignores | Paths must match real files (e.g. `scripts/tools/devtool.py`) |
+| `PRE_COMMIT_ALLOW_NO_CONFIG` | Only when config truly absent; restore `.pre-commit-config.yaml` if stashed |
 
 ## Download from GitHub
 - **Do not** run `github_download_module.py` unless user explicitly wants to discard local work

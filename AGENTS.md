@@ -13,7 +13,7 @@ If the user @-mentions either file, treat it as mandatory context before any cod
 
 ## Project operations
 
-Before changing code or pushing to GitHub, read the human operation guide: [`docs/操作指令集.md`](docs/操作指令集.md) (`[根]` / `[工具]` / `[包]` directories, upload script, versioning). Domain terms: [`CONTEXT.md`](CONTEXT.md). Repo maintenance scripts live under [`tools/`](tools/README.md) (not package `scripts/`). License: [`LICENSE`](LICENSE), [`DATA_LICENSE`](DATA_LICENSE), [`docs/数据来源与许可.md`](docs/数据来源与许可.md).
+Before changing code or pushing to GitHub, read the human operation guide: [`docs/操作指令集.md`](docs/操作指令集.md) (`[根]` / `[工具]` / `[包]` directories, upload script, versioning). **Upload / pre-commit troubleshooting:** [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md) (**required**). Domain terms: [`CONTEXT.md`](CONTEXT.md). Repo maintenance scripts live under [`tools/`](tools/README.md) (not package `scripts/`). License: [`LICENSE`](LICENSE), [`DATA_LICENSE`](DATA_LICENSE), [`docs/数据来源与许可.md`](docs/数据来源与许可.md).
 
 ### Pushing to GitHub (agents)
 
@@ -23,6 +23,7 @@ Before changing code or pushing to GitHub, read the human operation guide: [`doc
 - If the user explicitly requests upload, run from repo root: `python github_upload_module.py` (add `--minor` or `--no-bump` when appropriate).
 - Version bumps for `_VERSION` must go through the upload script so `please_read_me.py` and commit messages stay consistent.
 - Upload script may **GPG/SSH-sign** commits when configured; unconfigured commits may lack GitHub **Verified** badge.
+- **Mandatory:** [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md) — pre-commit two-round behavior, `_version` SUMMARY markers, stash/CRLF, `--no-bump` retry, **ruff-lint line-only detection**, **Windows 中文 pathspec（禁止 Path(porcelain)）**.
 
 ### Pulling from GitHub (agents)
 

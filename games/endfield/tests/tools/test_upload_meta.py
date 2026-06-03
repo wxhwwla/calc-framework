@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """upload_meta 版本与总结块测试"""
 
-
-
 import tempfile
 import unittest
 from pathlib import Path
 
+from scripts._version import ensure_summary_marker_assignments
 from scripts.upload_meta import (
     SUMMARY_BEGIN,
     SUMMARY_END,
@@ -25,83 +24,49 @@ from scripts.upload_meta import (
 
 
 class TestUploadMeta(unittest.TestCase):
-
     def test_bump_patch_and_minor(self):
-
         self.assertEqual(bump_patch("1.8.1"), "1.8.2")
 
         self.assertEqual(bump_minor("1.8.1"), "1.9.0")
 
-
-
     def test_classify_business_paths(self):
-
         self.assertTrue(
-
             classify_changed_paths(
-
                 ["games/endfield/gui/gui.py"],
-
                 "games/endfield",
-
             )
-
         )
 
         self.assertFalse(
-
             classify_changed_paths(
-
                 ["games/endfield/please_read_me.py"],
-
                 "games/endfield",
-
             )
-
         )
 
         self.assertFalse(
-
             classify_changed_paths(
-
                 ["scripts/_version.py"],
-
                 "games/endfield",
-
             )
-
         )
 
         self.assertFalse(
-
             classify_changed_paths(
-
                 ["scripts/please_read_me.py"],
-
                 "games/endfield",
-
             )
-
         )
 
         self.assertTrue(
-
             classify_changed_paths(
-
                 ["framework/foo.py"],
-
                 "games/endfield",
-
             )
-
         )
-
-
 
     def test_summary_block_roundtrip(self):
-
         with tempfile.TemporaryDirectory() as tmp:
-
             path = Path(tmp) / "please_read_me.py"
 
             path.write_text('_VERSION = "1.0.0"\n', encoding="utf-8")
@@ -128,36 +93,36 @@ class TestUploadMeta(unittest.TestCase):
 
             self.assertNotIn(SUMMARY_END, text)
 
-
+    def test_ensure_summary_marker_assignments_repairs_empty_begin(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "_version.py"
+            path.write_text(
+                "# ==============================================================\n\n"
+                'SUMMARY_BEGIN = ""\n'
+                '_VERSION = "1.0.0"\n',
+                encoding="utf-8",
+            )
+            self.assertTrue(ensure_summary_marker_assignments(path))
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(f'SUMMARY_BEGIN = "{SUMMARY_BEGIN}"', text)
+            self.assertIn(f'SUMMARY_END = "{SUMMARY_END}"', text)
 
     def test_strip_summary_keeps_workflow_doc_mention(self):
-
         """删除末尾总结块时，不得截断 UPLOAD_WORKFLOW 字符串内的说明文字。"""
 
         with tempfile.TemporaryDirectory() as tmp:
-
             path = Path(tmp) / "please_read_me.py"
 
             path.write_text(
-
                 f'UPLOAD_WORKFLOW = """\n'
-
                 f"说明 {SUMMARY_BEGIN} 标记\n"
-
                 f'"""\n'
-
                 f"def get_version():\n"
-
                 f'    return "1.0.0"\n'
-
                 f"\n{SUMMARY_BEGIN}\n"
-
                 f"# TITLE: t\n# BODY:\n# - a\n"
-
                 f"{SUMMARY_END}\n",
-
                 encoding="utf-8",
-
             )
 
             remove_summary_block(path)
@@ -170,12 +135,8 @@ class TestUploadMeta(unittest.TestCase):
 
             self.assertNotIn(SUMMARY_END, text)
 
-
-
     def test_write_version(self):
-
         with tempfile.TemporaryDirectory() as tmp:
-
             path = Path(tmp) / "please_read_me.py"
 
             path.write_text('_VERSION = "1.2.3"\n', encoding="utf-8")
@@ -185,10 +146,5 @@ class TestUploadMeta(unittest.TestCase):
             self.assertEqual(read_version(path), "1.2.4")
 
 
-
-
-
 if __name__ == "__main__":
-
     unittest.main()
-

@@ -78,7 +78,8 @@
 | **插件敌人解析** | `data/enemy_params.py`：`enemy_damage_context_overrides(enemy_id)` → dict 含全部 5 个敌方参数；`resolve_*` 系列函数按 id 读取单个字段 |
 | **总伤结算面板** | `gui/presentation/total_damage_panel.py`：确认后展示各技能段加权总伤明细（技能类型占比 → 段级单次×次数 → 🏆 加权总伤）；`hide_damage()` / `update_from_snapshot()`
 | **Web 版框架** | `web/frontend/`（React + TypeScript + Vite + MUI v6 + Zustand + React Flow）+ `web/backend/`（FastAPI）。前端接入 DAG 引擎 API，支持适配器选择、参数表单、结果展示、DAG 可视化 |
-| **Upload Script** | `[根]` `github_upload_module.py`（重导向 `scripts/`）：bump `scripts/_version.py` 中的 `_VERSION` + commit + push（可选 `--minor` / `--no-bump` / `--tag` / `--no-git-backup`）。**Minor 上传**前自动备份 `.git` 到 `git_backup/snapshots/`（见 `git_backup/README.md`）。中途终止会残留 `UPLOAD_SUMMARY` 块和 git stash，需手动清理 |
+| **Upload Script** | `[根]` `github_upload_module.py`（subprocess → `scripts/tools/`）：bump `scripts/_version.py`、pre-commit（最多 2 轮）、仅 add 变更路径、commit + push（`--check` / `--minor` / `--no-bump` / `--tag` / `--no-git-backup`）。**必读** [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md)。Minor 前备份 `.git` → `git_backup/snapshots/` |
+| **UPLOAD_SUMMARY** | `scripts/_version.py` 底部临时块；顶部 `SUMMARY_BEGIN`/`SUMMARY_END` 禁止为空。Windows 中文 doc 路径：`core.quotepath=false`，勿对 porcelain 转义串用 `Path()` |
 | **下载覆盖** | 根目录 `github_download_module.py`；须输入确认词 `覆盖本地`；会丢弃未提交与未跟踪文件 |
 | **三目标打包** | `main_build.py --target {calculator|designer|pack-designer}`：计算器/数据设计器/配置包设计器三个 exe |
 | **终末地数据设计器** | `designer/designer_main.py` — 三个页签：公式反推（InverseTab）、数据编辑（DataEditorTab）、数据浏览（DataBrowserTab）。独立于计算器主 GUI |
