@@ -13,7 +13,7 @@
 | **操作速查** | [`docs/操作指令集.md`](docs/操作指令集.md) | 日常命令与 `[根]` / `[工具]` / `[包]` 目录约定 |
 | **文档索引** | [`docs/README.md`](docs/README.md) | `docs/` 下各文件用途 |
 | **领域术语** | [`CONTEXT.md`](CONTEXT.md) | Issue、测试、文档统一用语 |
-| **算法说明** | [`docs/算法与架构.md`](docs/算法与架构.md) | 公式与架构细节（根目录 `PROJECT_DOCUMENTATION.md` 为跳转） |
+| **算法说明** | [`docs/算法与架构.md`](docs/算法与架构.md) | 公式与架构细节 |
 | **许可与合规** | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | 软件/数据双许可、典型情形 |
 
 ## 目录约定
@@ -46,8 +46,8 @@
 ├── .agents/                      # Cursor Agent 技能
 ├── github_upload_module.py
 ├── github_download_module.py
-├── LICENSE · DATA_LICENSE · CONTEXT.md
-└── PROJECT_DOCUMENTATION.md      # 跳转 → docs/算法与架构.md
+├── LICENSE · DATA_LICENSE · CONTEXT.md · CONTRIBUTING.md · AGENTS.md
+└── .github/                      # CI 与 Issue 模板
 ```
 
 IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `.gitignore` 中忽略。

@@ -47,7 +47,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.17"
+_VERSION = "3.19.18"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -412,45 +412,19 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 39 处文件
+# TITLE: 更新 13 处文件
 # BODY:
 # - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
 # - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 .github/workflows/ci.yml
-# - 变更 .github/workflows/layout-sync.yml
-# - 变更 .github/workflows/web-ci.yml
-# - 变更 .ruff.toml
-# - 更新文档 CONTRIBUTING.md
-# - 修改 scripts/build.py
-# - 修改 scripts/deploy_pythonanywhere.py
-# - 修改 scripts/devtool.py
-# - 修改 scripts/github_download_module.py
-# - 修改 scripts/github_upload_module.py
-# - 修改 scripts/main.py
-# - 修改 scripts/main_arknights.py
-# - 修改 scripts/main_build.py
-# - 修改 scripts/main_designer.py
-# - 修改 scripts/main_generator.py
-# - 修改 scripts/main_launcher.py
-# - 修改 scripts/main_pack_designer.py
+# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
+# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
+# - 更新文档 PROJECT_DOCUMENTATION.md
+# - 更新文档 README.md
+# - 更新文档 docs/CONTRIBUTORS.md
+# - 更新文档 docs/README.md
+# - 更新文档 docs/adr/0002-formula-graph-editor.md
+# - 更新文档 docs/agents/audit-issues-2026-05-20.md
+# - 更新文档 docs/agents/git-credential-audit-2026-05-20.md
+# - 修改 games/endfield/tests/repo/test_repo_layout.py
 # - 修改 scripts/please_read_me.py
-# - 修改 scripts/upload_meta.py
-# - 修改 scripts/version.py
-# - 修改 web/backend/api/adapters.py
-# - 修改 web/backend/api/arknights.py
-# - 修改 web/backend/api/compute.py
-# - 修改 web/backend/api/data.py
-# - 修改 web/backend/api/data_mutations.py
-# - 修改 web/backend/api/generator.py
-# - 修改 web/backend/api/history.py
-# - 修改 web/backend/api/hub.py
-# - 修改 web/backend/api/layout.py
-# - 修改 web/backend/api/ocr.py
-# - 修改 web/backend/api/pack.py
-# - 修改 web/backend/api/search.py
-# - 修改 web/backend/asgi.py
-# - 修改 web/backend/main.py
-# - 修改 web/backend/run_packaged_main.py
-# - 修改 web/backend/tests/test_arknights_data_fallback.py
-# - 变更 web/frontend/src/components/designer/ProfileDataBrowser.tsx
 # --- END UPLOAD_SUMMARY ---

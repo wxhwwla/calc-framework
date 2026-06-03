@@ -16,7 +16,7 @@
 | [数据来源与许可.md](数据来源与许可.md) | 软件 AGPL + 商业双许可、数据 `DATA_LICENSE`、典型情形 |
 | [商业许可要点.md](商业许可要点.md) | 商业洽谈提纲（非合同） |
 | [合规自查清单.md](合规自查清单.md) | 发布前自检 |
-| [算法与架构.md](算法与架构.md) | 公式、乘区、模块结构（原根目录 `PROJECT_DOCUMENTATION.md`） |
+| [算法与架构.md](算法与架构.md) | 公式、乘区、模块结构 |
 | [MVP搜索验收说明.md](MVP搜索验收说明.md) | 全量遍历、并行线程、`search_output/` 导出、GUI/打包验收 |
 
 **JSON 数据契约**（角色/武器/预设字段）：[`CONTEXT.md`](../CONTEXT.md) 术语表 + [`games/endfield/README.md`](../games/endfield/README.md)「数据格式」节 + `tests/test_game_data_contract.py`。

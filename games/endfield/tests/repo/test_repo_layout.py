@@ -17,10 +17,13 @@ import unittestfrom games.endfield.tests.conftest import REPO_ROOTclass Tes
         text = doc.read_text(encoding="utf-8")
         self.assertIn("乘区", text)
 
-    def test_root_project_doc_points_to_docs(self):
-        stub = REPO_ROOT / "PROJECT_DOCUMENTATION.md"
-        self.assertTrue(stub.is_file())
-        self.assertIn("算法与架构", stub.read_text(encoding="utf-8"))
+    def test_algorithm_doc_is_canonical(self):
+        """算法文档应在 docs/ 下，根目录不应有残留跳转文件。"""
+        stub = REPO_ROOT / "PROJECT_DOCUMENTATION.md"
+        self.assertFalse(stub.exists(), "PROJECT_DOCUMENTATION.md 已迁移到 docs/，应删除根目录跳转文件")
+        doc = REPO_ROOT / "docs" / "算法与架构.md"
+        self.assertTrue(doc.is_file())
+        self.assertIn("乘区", doc.read_text(encoding="utf-8"))
 
     def test_legacy_character_script_fully_removed(self):
         self.assertFalse((REPO_ROOT / "_add_character_legacy.py").exists())
