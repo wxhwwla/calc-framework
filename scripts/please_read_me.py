@@ -38,7 +38,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.11"
+_VERSION = "3.19.12"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -378,12 +378,12 @@ if __name__ == "__main__":
 # --- UPLOAD_SUMMARY ---
 # TITLE: 更新 8 处文件
 # BODY:
-# - 修改 scripts/import_calcpack.py
-# - 修改 scripts/main_generator.py
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
 # - 修改 scripts/please_read_me.py
 # - 修改 web/backend/api/generator.py
-# - 修改 web/backend/main.py
-# - 变更 web/frontend/src/App.tsx
+# - 变更 web/backend/requirements.txt
 # - 变更 web/frontend/src/api/generator.ts
+# - 变更 web/frontend/src/pages/AIFormulaDialog.tsx
 # - 变更 web/frontend/src/pages/GeneratorPage.tsx
 # --- END UPLOAD_SUMMARY ---

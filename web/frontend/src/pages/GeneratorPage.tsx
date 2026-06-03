@@ -6,6 +6,8 @@ import {
   Table, TableBody, TableCell, TableContainer, TableRow, Paper,
 } from '@mui/material';
 import { fetchTemplates, fetchTemplateDetail, generateAdapter, type TemplateInfo, type TemplateDetail } from '../api/generator';
+import AIFormulaDialog from './AIFormulaDialog';
+import type { AIFormulaResponse } from '../api/generator';
 
 const STEPS = ['选择模板', '填写游戏信息', '预览与生成', '导出'];
 
@@ -18,6 +20,8 @@ export default function GeneratorPage() {
   const [, setGenerating] = useState(false);
   const [result, setResult] = useState<{ files: Record<string, string>; file_count: number } | null>(null);
   const [error, setError] = useState('');
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiResult, setAiResult] = useState<AIFormulaResponse | null>(null);
   const [openFileDialog, setOpenFileDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState('');
 
@@ -45,9 +49,9 @@ export default function GeneratorPage() {
       const res = await generateAdapter({
         template_id: selectedTemplate,
         game_name: gameName,
-        variables: [],
-        formula_steps: [],
-        outputs: [],
+        variables: aiResult?.variables || [],
+        formula_steps: aiResult?.formula_steps || [],
+        outputs: aiResult?.outputs || [],
       });
       setResult(res);
       setActiveStep(3);
@@ -139,6 +143,18 @@ export default function GeneratorPage() {
               {templateDetail.dag_preview && ` DAG: ${templateDetail.dag_preview.nodes} 个节点, ${templateDetail.dag_preview.outputs} 个输出。`}
             </Alert>
           )}
+          {templateDetail && (
+            <Box sx={{ mb: 2 }}>
+              <Button variant="outlined" onClick={() => setAiDialogOpen(true)}>
+                AI 辅助解析公式
+              </Button>
+              {aiResult && (
+                <Typography variant="caption" display="block" sx={{ mt: 1, color: 'success.main' }}>
+                  ✅ AI 已解析: {aiResult.variables.length} 个变量, {aiResult.formula_steps.length} 个步骤, {aiResult.outputs.length} 个输出
+                </Typography>
+              )}
+            </Box>
+          )}
           <Box>
             <Button variant="outlined" onClick={() => setActiveStep(0)} sx={{ mr: 1 }}>上一步</Button>
             <Button variant="contained" disabled={!gameName} onClick={handleGenerate}>
@@ -195,6 +211,16 @@ export default function GeneratorPage() {
           <Button onClick={() => setOpenFileDialog(false)}>关闭</Button>
         </DialogActions>
       </Dialog>
+
+      {/* AI 公式解析对话框 */}
+      <AIFormulaDialog
+        open={aiDialogOpen}
+        onClose={() => setAiDialogOpen(false)}
+        templateId={selectedTemplate}
+        onApply={(data) => {
+          setAiResult(data);
+        }}
+      />
     </Box>
   );
 }

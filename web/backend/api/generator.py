@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+import httpx
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/generator", tags=["generator"])
@@ -59,6 +60,47 @@ class GenerateRequest(BaseModel):
     variables: list[VariableDef] = []
     formula_steps: list[FormulaStep] = []
     outputs: list[OutputDef] = []
+
+
+class AIFormulaRequest(BaseModel):
+    """AI 公式解析请求。"""
+    api_key: str = ""
+    api_base: str = "https://api.openai.com/v1"
+    model: str = "gpt-4o-mini"
+    formula_description: str
+    template_id: str = "simple"
+    variables_context: list[dict] = []  # 模板已有的变量上下文
+
+
+class AIFormulaResponse(BaseModel):
+    """AI 公式解析响应。"""
+    variables: list[dict]
+    formula_steps: list[dict]
+    outputs: list[dict]
+    raw_response: str = ""
+
+
+class AITestRequest(BaseModel):
+    """AI API 连接测试请求。"""
+    api_key: str = ""
+    api_base: str = "https://api.openai.com/v1"
+    model: str = "gpt-4o-mini"
+
+
+# AI 系统提示词
+AI_SYSTEM_PROMPT = """你是一个游戏伤害计算器的 DAG 公式解析专家。用户会描述一个游戏的伤害公式，你需要将其解析为结构化的 DAG 节点数据。
+
+框架说明：
+- variables：输入变量，每个包含 name/type/source/default/description
+  - type: float / int / bool / percent
+  - source: character / weapon / enemy / user_input
+- formula_steps：公式步骤，每步一个运算，包含 id/op/lhs/rhs/label
+  - op: + - * / condition expr
+  - condition 需要 cond/true_val/false_val
+  - expr 需要 expr/input_map
+- outputs：计算结果输出，包含 name/node/label/is_primary
+
+请只输出 JSON，不要额外的解释文字。JSON 格式必须严格符合 Python json.loads 可解析。"""
 
 
 @router.get("/templates")
@@ -155,3 +197,102 @@ def generate_adapter(req: GenerateRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/ai/parse")
+async def ai_parse_formula(req: AIFormulaRequest):
+    """用 AI 解析自然语言公式描述，返回结构化 DAG 数据。"""
+    if not req.formula_description:
+        raise HTTPException(status_code=400, detail="公式描述不能为空")
+
+    # 构建用户消息
+    context_info = ""
+    if req.variables_context:
+        context_info = f"\n模板已有变量上下文：\n{json.dumps(req.variables_context, ensure_ascii=False, indent=2)}"
+
+    user_message = f"""模板类型：{req.template_id}{context_info}
+
+用户描述的公式：
+{req.formula_description}
+
+请解析为 DAG 节点。输出 JSON 格式：
+{{
+  "variables": [{{"name": "ATK", "type": "float", "source": "character", "default": 100, "description": "攻击力"}}],
+  "formula_steps": [{{"id": "step1", "op": "*", "lhs": "ATK", "rhs": "skill_mult", "label": "攻击力×技能倍率"}}],
+  "outputs": [{{"name": "最终伤害", "node": "step1", "label": "最终伤害", "is_primary": true}}]
+}}"""
+
+    # 调用 LLM API
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {req.api_key}",
+    }
+    payload = {
+        "model": req.model,
+        "messages": [
+            {"role": "system", "content": AI_SYSTEM_PROMPT},
+            {"role": "user", "content": user_message},
+        ],
+        "temperature": 0.1,
+        "response_format": {"type": "json_object"},
+    }
+
+    api_url = req.api_base.rstrip("/") + "/chat/completions"
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(api_url, json=payload, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="AI 请求超时，请检查网络或更换模型")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=502, detail=f"AI API 返回错误: {e.response.status_code} {e.response.text[:200]}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AI 请求失败: {str(e)}")
+
+    # 解析返回内容
+    try:
+        content = data["choices"][0]["message"]["content"]
+        # 尝试提取 JSON
+        import re
+        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        if json_match:
+            parsed = json.loads(json_match.group())
+        else:
+            parsed = json.loads(content)
+
+        return AIFormulaResponse(
+            variables=parsed.get("variables", []),
+            formula_steps=parsed.get("formula_steps", []),
+            outputs=parsed.get("outputs", []),
+            raw_response=content,
+        )
+    except (KeyError, json.JSONDecodeError, IndexError) as e:
+        raise HTTPException(status_code=502, detail=f"AI 响应解析失败: {str(e)}")
+
+
+@router.post("/ai/test")
+async def ai_test_connection(req: AITestRequest):
+    """测试 AI API 连接是否正常。"""
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {req.api_key}",
+    }
+    payload = {
+        "model": req.model,
+        "messages": [
+            {"role": "user", "content": "回复 OK 表示连接正常"}
+        ],
+        "max_tokens": 10,
+    }
+    api_url = req.api_base.rstrip("/") + "/chat/completions"
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(api_url, json=payload, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+            return {"status": "ok", "model": data.get("model", "")}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
