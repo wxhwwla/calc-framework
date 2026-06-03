@@ -99,8 +99,9 @@ def argv_for_tool(tool_id: str, root: Path | None = None) -> list[str]:
     """构造启动工具的命令行参数。"""
     base = root or repo_root()
     mapping: dict[str, list[str]] = {
-        "designer": [sys.executable, str(base / "scripts" / "main_designer.py")],
-        "pack_designer": [sys.executable, str(base / "scripts" / "main_pack_designer.py")],
+        # designer/pack_designer → 已整合到开发者工具箱
+        "designer": [sys.executable, str(base / "scripts" / "main_dev_toolkit.py")],
+        "pack_designer": [sys.executable, str(base / "scripts" / "main_dev_toolkit.py")],
         "viewer": [sys.executable, "-m", "calc_framework.ui.viewer"],
         "graph_editor": [sys.executable, "-m", "calc_framework.graph_editor"],
         "layout_editor": [sys.executable, "-m", "calc_framework.editor"],

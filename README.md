@@ -54,20 +54,42 @@ IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `
 
 ## 快速开始
 
+### 推荐：使用启动器选择游戏
+
 ```powershell
-# [包] 安装并启动 GUI
+# [根] 统一启动器 — 自动发现已安装的游戏适配包
+python scripts/main_launcher.py
+
+# 或双击 bat 文件
+scripts\启动游戏.bat
+```
+
+启动器会列出所有可用的游戏，点击即可启动对应的桌面计算器。
+
+### 直接启动
+
+```powershell
+# [包] 终末地计算器
 cd games/endfield
 pip install -e ".[dev]"
 python main.py
 ```
 
 ```powershell
-# 明日方舟桌面 GUI
+# [根] 明日方舟桌面 GUI
 python scripts/main_arknights.py
 ```
 
 ```powershell
-# [根] 推送 GitHub（版本号由脚本维护，见包内 please_read_me.py）
+# [根] 开发者工具箱（数据设计、图编辑器、调试器、AI 生成等）
+python scripts/main_dev_toolkit.py
+scripts\启动开发者工具箱.bat
+```
+
+### 发布与上传
+
+```powershell
+# [根] 推送 GitHub（版本号由脚本维护）
 python github_upload_module.py
 ```
 
