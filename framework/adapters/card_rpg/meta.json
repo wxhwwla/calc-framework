@@ -1,7 +1,7 @@
 {
   "name": "卡牌RPG伤害计算",
   "game": "经典卡牌RPG（示例）",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "schema_version": "dag-v1",
   "entry_dag": "card_rpg.dag.json",
   "attr_schema": "attr_schema.json",

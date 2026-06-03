@@ -1,7 +1,7 @@
 {
   "name": "FPS 武器伤害计算",
   "game": "通用 FPS (CS/COD/Valorant)",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "schema_version": "dag-v1",
   "entry_dag": "fps.dag.json",
   "description": "通用 FPS 武器伤害公式：基础伤害 × 距离衰减 × 部位倍率 × 穿透减伤 → 实际伤害",

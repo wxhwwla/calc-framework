@@ -3,27 +3,30 @@
 # SPDX-License-Identifier: AGPL-3.0
 """
 
-终末地伤害计算小工具 - 项目说明文档
+多游戏伤害计算框架 - 项目说明文档
 
 
 
 项目简介：
 
-    本工具是一个基于 PySide6 开发的伤害计算辅助工具，用于游戏《明日方舟：终末地》。
+    本工具是基于 PySide6 和 FastAPI 开发的多游戏伤害计算框架。
 
-    玩家可以通过选择角色和武器，查看属性面板和乘区数据，帮助优化配装和战斗策略。
+    支持《明日方舟：终末地》《明日方舟》等多款游戏的伤害计算，
+    提供桌面 GUI（PySide6）和 Web 版（React + FastAPI）两种使用方式。
+
+    玩家可以通过选择角色/武器/装备，查看属性面板和乘区数据，
+    帮助优化配装和战斗策略。
 
 
 
 功能特性：
 
-    1. 角色选择：支持按类型、星级筛选角色
-
-    2. 武器选择：支持按类型、星级筛选武器，包含特殊能力等级选择
-
-    3. 属性展示：角色属性列与武器属性列分列显示等级曲线明细
-
+    1. 多游戏支持：终末地、明日方舟等，框架可扩展
+    2. 角色/武器/装备选择：支持按类型、星级筛选
+    3. 属性展示：角色属性列与装备属性列分列显示等级曲线明细
     4. 乘区计算：实时计算能力乘区、能力值加成、攻击力等数据
+    5. Web 版：浏览器访问，无需安装
+    6. 适配器市场：可发现和下载社区适配器包
 
 """
 
@@ -35,7 +38,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.5"
+_VERSION = "3.19.6"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -161,91 +164,57 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 
 PROJECT_STRUCTURE = """
 
-项目结构（Python 包目录 games/endfield/）：
+项目结构：
 
-    ├── main.py                    # 项目入口，启动应用
+    ├── framework/                    # 计算框架核心库
+    │   ├── src/calc_framework/       #   DAG 引擎、UI（ComputeSheet）、编辑器、搜索、逆推
+    │   ├── adapters/                 #   游戏适配器定义
+    │   │   ├── endfield/             #     终末地计算适配
+    │   │   ├── arknights/            #     明日方舟计算适配
+    │   │   ├── fps/                  #     通用 FPS 示例适配
+    │   │   ├── moba/                 #     通用 MOBA 示例适配
+    │   │   └── card_rpg/             #     卡牌 RPG 示例适配
+    │   └── tests/                    #     框架测试
 
-    ├── pyproject.toml             # 包配置（版本读取 please_read_me._VERSION）
+    ├── games/                        # 游戏适配包（薄包装、数据、GUI）
+    │   ├── endfield/                 #   明日方舟：终末地 桌面计算器
+    │   └── arknights/                #   明日方舟 桌面计算器
 
-    ├── please_read_me.py          # 版本号与帮助文本（本文件）
+    ├── web/                          # Web 前后端
+    │   ├── frontend/                 #   React + TypeScript + MUI 前端
+    │   ├── backend/                  #   FastAPI 后端（API 路由、计算服务）
+    │   └── hub/                      #   适配器市场目录
 
-    ├── build.py                   # 打包脚本
+    ├── scripts/                      # 入口脚本（统一 _path_setup 模式）
+    │   ├── main.py                   #   终末地桌面计算器
+    │   ├── main_arknights.py         #   明日方舟桌面计算器
+    │   ├── main_designer.py          #   适配器包数据设计器
+    │   ├── main_build.py             #   打包构建
+    │   ├── main_pack_designer.py     #   适配器包设计器
+    │   ├── main_launcher.py          #   框架启动器
+    │   ├── launcher.pyw              #   图形化启动器
+    │   └── 启动本地服务器.bat        #   Web 本地服务器
 
-    ├── README.md                  # 开发与测试说明（首选文档）
+    ├── tools/                        # 开发工具脚本
+    │   ├── bwiki_scout/              #   BWIKI 数据采集
+    │   ├── designer/                 #   适配器包设计工具
+    │   ├── endfield_scripts/         #   终末地数据维护
+    │   ├── data_pipeline/            #   数据管线（CSV/JSON 读取、校验）
+    │   ├── data_sandbox/             #   数据沙箱验证
+    │   ├── audit/                    #   审计脚本
+    │   ├── ocr/                      #   截图识别工具
+    │   └── ...（代码检查、打包发布等）
 
-    ├── scripts/                   # 命令行与维护脚本（反推 GUI、录入种子等）
-
-    ├── tests/                     # pytest 单元测试（不含可交互 GUI）
-
-    ├── gui/                       # GUI（五列 + 底栏）
-
-    │   ├── gui.py / confirm_orchestrator.py / search_controls.py
-
-    │   ├── display_lines.py / display_view.py / display_request.py
-
-    │   ├── loadout_state.py / loadout_evaluation.py / preview_lines.py
-
-    │   └── selection_panel.py / selection_components.py
-
-    ├── legal/                     # 许可与数据来源（GUI 对话框）
-
-    │   └── attribution.py
-
-    ├── calculation/               # 公式、乘区、伤害引擎、装备搜索
-
-    │   ├── damage_engine.py / loadout_optimizer.py / mvp_pipeline.py
-
-    │   └── multiplicative_zones/  # 能力、防御、最终攻击力等
-
-    │       ├── base_zone.py       # 乘区基类
-
-    │       ├── attribute_zone.py  # 能力乘区
-
-    │       ├── defense_zone.py     # 防御减伤区
-
-    │       ├── ability_bonus_zone.py # 能力值加成区
-
-    │       ├── final_attack_zone.py  # 最终攻击力区
-
-    │       └── zone_manager.py    # 乘区管理器
-
-    ├── data/                      # 统一数据加载层
-
-    │   └── loader.py              # 角色和武器数据的统一加载与缓存
-
-    ├── utils/                     # 工具函数模块
-
-    │   └── path_utils.py          # 路径处理工具
-
-    └── character_weapon_equipment/# 数据文件目录（许可见仓库根 DATA_LICENSE）
-
-        ├── DATA_README.md         # 数据许可入口说明
-
-        ├── character_data/        # 角色数据（JSON格式）
-
-        └── weapon_data/           # 武器数据（JSON格式）
-
-
-
-仓库根目录（与 [包] 并列）：
-
-    ├── README.md / CONTEXT.md     # 门面与术语
-
-    ├── docs/                      # 操作指令集、许可、算法与架构
-
-    ├── tools/                     # 仓库级维护（见 tools/README.md）
-
-    │   ├── bwiki_scout/         # BWIKI 侦察（output/ 已 gitignore）
-
-    │   └── audit/               # 如 create_audit_issues.ps1
-
-    ├── legacy/                  # 遗留脚本，不参与日常
-
-    ├── LICENSE / DATA_LICENSE   # 软件与数据许可
-
-    ├── github_upload_module.py  # 上传（版本 bump + 可选签名）
-
-    └── github_download_module.py # 拉取覆盖（须输入「覆盖本地」）
+    ├── docs/                         # 项目文档（20+ 文档）
+    ├── installer/                    # NSIS 安装程序构建
+    ├── release_bundle/               # 发布打包配置
+    ├── utils/                        # 通用工具模块
+    ├── resources/                    # 资源文件（捐赠码等）
+    │
+    ├── README.md / CONTEXT.md        # 门面与领域术语
+    ├── LICENSE / DATA_LICENSE        # 软件与数据许可
+    ├── AGENTS.md                     # Agent 技能配置
+    └── .github/                      # CI 工作流与 Issue 模板
 
 """
 
@@ -255,45 +224,46 @@ USAGE_INFO = """
 
 使用方法：
 
-    1. 运行方式：
+    【桌面计算器】
 
-        python main.py
+        python scripts/main.py               # 终末地伤害计算器
+        python scripts/main_arknights.py      # 明日方舟伤害计算器
+        python scripts/launcher.pyw           # 图形化启动器（选择游戏）
 
+    【Web 版】
 
+        python web/run_local.py               # 启动本地 Web 服务
+        或双击 scripts/启动本地服务器.bat
+        然后浏览器打开 http://localhost:8000
 
-    2. 打包方式（产出 dist/终末地伤害计算器/ 文件夹，exe 与 JSON 分开放置）：
+    【数据设计器】
 
-        pip install -e ".[build]"
+        python scripts/main_designer.py       # 适配器包数据设计
+        python scripts/main_pack_designer.py  # 适配器包打包设计
 
-        python build.py
+    【打包构建】
 
-        全量/MVP 搜索导出在 exe 同级 search_output/（见 发布说明.txt）
+        python scripts/main_build.py --target local-backend   # 本地 exe
+        python scripts/main_build.py --help                   # 查看所有目标
 
+    【测试】
 
+        python -m pytest framework/tests/ games/endfield/tests/ games/arknights/tests/ -q
 
-    3. 操作流程：
+    【安装依赖】
 
-        - 在左侧选择角色类型和星级
-
-        - 在左侧选择武器类型和星级
-
-        - 调整等级和信赖等级（角色）
-
-        - 调整特殊能力等级（武器）
-
-        - 点击「确认选择」刷新角色/武器属性列；两侧均有效时再更新右侧乘区
+        pip install -e ".[dev]"               # 安装所有开发依赖
 
 
 
 技术栈：
 
     - Python 3.10+
-
-    - PySide6（GUI框架）
-
-    - JSON（数据存储）
-
-    - PyInstaller（打包工具）
+    - PySide6（桌面 GUI 框架）
+    - FastAPI + React/TypeScript + MUI（Web 前后端）
+    - JSON（游戏数据存储）
+    - PyInstaller（桌面打包工具）
+    - pytest（测试框架）
 
 """
 
@@ -349,7 +319,7 @@ def get_full_intro() -> str:
     """获取完整的项目介绍文档。"""
     return f"""
 
-终末地伤害计算小工具 v{_VERSION}
+多游戏伤害计算框架 v{_VERSION}
 
 {"=" * 50}
 
@@ -375,7 +345,7 @@ def show_help() -> None:
 
 ============================================================
 
-终末地伤害计算小工具 v{_VERSION}
+多游戏伤害计算框架 v{_VERSION}
 
 ============================================================
 
@@ -406,10 +376,13 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 4 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 framework/adapters/arknights/meta.json
+# - 变更 framework/adapters/card_rpg/meta.json
+# - 变更 framework/adapters/endfield/meta.json
+# - 变更 framework/adapters/fps/meta.json
+# - 变更 framework/adapters/moba/meta.json
 # - 修改 scripts/please_read_me.py
-# - 变更 web/frontend/src/components/GlobalHelpDialog.tsx
-# - 变更 web/frontend/src/components/calculator/HelpDialog.tsx
+# - 变更 web/hub/catalog.json
 # --- END UPLOAD_SUMMARY ---

@@ -1,7 +1,7 @@
 {
   "name": "终末地伤害计算",
   "game": "明日方舟：终末地",
-  "version": "3.0.0",
+  "version": "0.6.0-beta",
   "schema_version": "dag-v1",
   "entry_dag": "dag/endfield_full.dag.json",
   "functions": {
