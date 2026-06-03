@@ -78,6 +78,7 @@ app.include_router(history_router)
 app.include_router(ocr_router)
 app.include_router(arknights_router)
 app.include_router(contribute_router)
+app.include_router(generator_router)
 
 def _resolve_repo_root() -> Path:
     """开发=仓库根；PyInstaller 本地后端=``_MEIPASS``。"""

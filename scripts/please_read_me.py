@@ -38,7 +38,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.10"
+_VERSION = "3.19.11"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -376,24 +376,14 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 18 处文件
+# TITLE: 更新 8 处文件
 # BODY:
+# - 修改 scripts/import_calcpack.py
+# - 修改 scripts/main_generator.py
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/export_sample_calcpacks.py
-# - 修改 tools/generator/__init__.py
-# - 修改 tools/generator/dag_builder.py
-# - 修改 tools/generator/engine.py
-# - 修改 tools/generator/layout_builder.py
-# - 修改 tools/generator/schema_builder.py
-# - 修改 tools/generator/templates.py
-# - 修改 tools/generator/validators.py
-# - 修改 web/backend/api/hub.py
-# - 变更 web/frontend/src/api/hub.ts
-# - 变更 web/frontend/src/pages/AdaptersPage.tsx
-# - 变更 web/hub/adapters/.gitkeep
-# - 变更 web/hub/samples/card_rpg_sample.calcpack
-# - 变更 web/hub/samples/fps_sample.calcpack
-# - 变更 web/hub/samples/moba_sample.calcpack
-# - 变更 web/hub/samples/multi-zone_sample.calcpack
-# - 变更 web/hub/samples/simple_sample.calcpack
+# - 修改 web/backend/api/generator.py
+# - 修改 web/backend/main.py
+# - 变更 web/frontend/src/App.tsx
+# - 变更 web/frontend/src/api/generator.ts
+# - 变更 web/frontend/src/pages/GeneratorPage.tsx
 # --- END UPLOAD_SUMMARY ---

@@ -24,6 +24,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
@@ -38,6 +39,7 @@ const DesignerPage = lazy(() => import("./pages/DesignerPage"));
 const PackDesignerPage = lazy(() => import("./pages/PackDesignerPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
 const DataContributePage = lazy(() => import("./pages/DataContributePage"));
+const GeneratorPage = lazy(() => import("./pages/GeneratorPage"));
 
 const drawerWidth = 240;
 
@@ -50,6 +52,7 @@ const navItems = [
   { label: "配置包设计器", path: "/pack-designer", icon: <Inventory2Icon /> },
   { label: "数据贡献", path: "/contribute", icon: <NoteAddIcon /> },
   { label: "配置包市场", path: "/hub", icon: <StorefrontIcon /> },
+  { label: "AI 生成器", path: "/generator", icon: <SmartToyIcon /> },
 ];
 
 function Shell() {
@@ -150,6 +153,7 @@ function Shell() {
             <Route path="/pack-designer" element={<PackDesignerPage />} />
             <Route path="/hub" element={<MarketplacePage />} />
             <Route path="/contribute" element={<DataContributePage />} />
+            <Route path="/generator" element={<GeneratorPage />} />
             <Route path="*" element={<Navigate to="/compute" replace />} />
           </Routes>
         </Suspense>
