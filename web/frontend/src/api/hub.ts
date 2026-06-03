@@ -107,3 +107,51 @@ export async function ratePack(
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   return resp.json();
 }
+
+
+// ── 简化便捷端点（适配器市场前端使用） ────────────────────────────────────
+
+export interface HubListResponse {
+  adapters: HubPackInfo[];
+  total: number;
+}
+
+export async function listHubAdapters(): Promise<HubListResponse> {
+  const resp = await fetch(`${HUB_BASE}/list`);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+export async function uploadHubAdapter(
+  file: File
+): Promise<{ message: string; id: string; name: string; version: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const resp = await fetch(`${HUB_BASE}/upload`, {
+    method: "POST",
+    body: form,
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`上传失败 (${resp.status}): ${text}`);
+  }
+  return resp.json();
+}
+
+export async function downloadHubAdapter(adapterId: string): Promise<void> {
+  const resp = await fetch(`${HUB_BASE}/download/${encodeURIComponent(adapterId)}`);
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`下载失败 (${resp.status}): ${text}`);
+  }
+  const blob = await resp.blob();
+  const disposition = resp.headers.get("Content-Disposition") || "";
+  const match = disposition.match(/filename="?(.+?)"?$/);
+  const filename = match ? match[1] : `${adapterId}.calcpack`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

@@ -165,4 +165,90 @@ async def hub_stats():
         "db_path": str(Path(__file__).resolve().parent.parent / "data" / "hub" / "catalog.db"),
     }
 
+
+# ── 简化便捷端点（适配器市场前端使用） ──────────────────────────────────────
+
+
+@router.get("/list")
+async def list_hub_adapters():
+    """列举市场中的所有适配器（简化版）。"""
+    packs, total = list_packs(limit=1000)
+    return {"adapters": packs, "total": total}
+
+
+@router.post("/upload")
+async def upload_hub_adapter(file: UploadFile):
+    """上传 .calcpack 适配器包（一步式：创建元数据+保存文件）。"""
+    if not file.filename or not file.filename.endswith(".calcpack"):
+        raise HTTPException(status_code=400, detail="仅支持 .calcpack 文件")
+
+    from hub.storage import validate_calcpack_archive
+
+    content = await file.read()
+    ok, err, meta = validate_calcpack_archive(content)
+    if not ok:
+        raise HTTPException(status_code=400, detail=f"配置包无效: {err}")
+
+    name = meta.get("name", file.filename.replace(".calcpack", ""))
+    version = meta.get("version", "0.1.0")
+    description = meta.get("description", "")
+    author = meta.get("author", "")
+    tags = [str(t).strip() for t in (meta.get("tags") or []) if str(t).strip()]
+    game = str(meta.get("game") or "").strip()
+    if game and game not in tags:
+        tags.append(game)
+
+    result = create_pack(
+        name=name,
+        version=version,
+        description=description,
+        author=author,
+        tags=tags,
+    )
+
+    filename = f"{result.id}.calcpack"
+    saved = save_pack_file(result.id, content, filename)
+    update_pack(result.id, file_size=saved.stat().st_size)
+
+    return {
+        "message": f"适配器 '{name}' 上传成功",
+        "id": result.id,
+        "name": name,
+        "version": version,
+    }
+
+
+@router.get("/download/{adapter_id}")
+async def download_hub_adapter(adapter_id: str):
+    """下载适配器包（自动查找 pack 目录下第一个 .calcpack 文件）。"""
+    pack = get_pack(adapter_id)
+    if pack is None:
+        raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")
+
+    from hub.storage import _PACKS_DIR
+    pack_dir = _PACKS_DIR / adapter_id
+    if not pack_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"适配器文件不存在: {adapter_id}")
+
+    calcpack_files = sorted(pack_dir.glob("*.calcpack"))
+    if not calcpack_files:
+        raise HTTPException(status_code=404, detail=f"适配器 '{adapter_id}' 无可下载文件")
+
+    filename = calcpack_files[0].name
+    increment_download(adapter_id)
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        path=str(calcpack_files[0]),
+        filename=f"{pack.get('name', adapter_id)}_{pack.get('version', '0.1.0')}.calcpack",
+        media_type="application/octet-stream",
+    )
+
+
+@router.delete("/adapters/{adapter_id}")
+async def delete_hub_adapter(adapter_id: str):
+    """删除适配器。"""
+    if not delete_pack(adapter_id):
+        raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")
+    return {"message": f"适配器 '{adapter_id}' 已删除"}
+
 __all__: list[str] = []

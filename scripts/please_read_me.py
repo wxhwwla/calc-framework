@@ -38,7 +38,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.9"
+_VERSION = "3.19.10"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -378,22 +378,22 @@ if __name__ == "__main__":
 # --- UPLOAD_SUMMARY ---
 # TITLE: 更新 18 处文件
 # BODY:
-# - 变更 "docs/AI-Prompt/346/250/241/346/235/277.md"
-# - 变更 framework/adapters/multi-zone/attr_schema.json
-# - 修改 framework/adapters/multi-zone/functions.py
-# - 变更 framework/adapters/multi-zone/meta.json
-# - 变更 framework/adapters/multi-zone/multi-zone.dag.json
-# - 变更 framework/adapters/multi-zone/ui/layout.json
-# - 变更 framework/adapters/simple/attr_schema.json
-# - 修改 framework/adapters/simple/functions.py
-# - 变更 framework/adapters/simple/meta.json
-# - 变更 framework/adapters/simple/simple.dag.json
-# - 变更 framework/adapters/simple/ui/layout.json
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/wiki_scout/__init__.py
-# - 修改 tools/wiki_scout/client.py
-# - 修改 tools/wiki_scout/extractor.py
-# - 变更 tools/wiki_scout/output/.gitkeep
-# - 修改 tools/wiki_scout/providers/__init__.py
-# - 修改 tools/wiki_scout/providers/bwiki.py
+# - 修改 tools/export_sample_calcpacks.py
+# - 修改 tools/generator/__init__.py
+# - 修改 tools/generator/dag_builder.py
+# - 修改 tools/generator/engine.py
+# - 修改 tools/generator/layout_builder.py
+# - 修改 tools/generator/schema_builder.py
+# - 修改 tools/generator/templates.py
+# - 修改 tools/generator/validators.py
+# - 修改 web/backend/api/hub.py
+# - 变更 web/frontend/src/api/hub.ts
+# - 变更 web/frontend/src/pages/AdaptersPage.tsx
+# - 变更 web/hub/adapters/.gitkeep
+# - 变更 web/hub/samples/card_rpg_sample.calcpack
+# - 变更 web/hub/samples/fps_sample.calcpack
+# - 变更 web/hub/samples/moba_sample.calcpack
+# - 变更 web/hub/samples/multi-zone_sample.calcpack
+# - 变更 web/hub/samples/simple_sample.calcpack
 # --- END UPLOAD_SUMMARY ---
