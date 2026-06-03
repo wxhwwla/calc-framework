@@ -1,0 +1,40 @@
+# 项目级 ruff 配置
+# 各子包（games/endfield/、framework/）的 pyproject.toml 可追加局部规则
+target-version = "py310"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "SIM", "RUF"]
+ignore = [
+    "RUF001",  # 允许中文全角字符
+    "RUF002",  # 允许中文全角标点
+    "RUF003",  # 允许注释使用中文全角标点
+    "RUF012",  # 允许 mutable class vars
+    "E402",    # 允许 WMI 补丁在 import 之前运行
+    "N812",    # 允许下层 import 用别名
+    "N803",    # 允许参数名大写（与数据字段名一致）
+    "SIM108",  # 允许 if-else 替代三元表达式
+    "SIM117",  # 允许嵌套 with
+    "SIM102",  # 允许嵌套 if
+    "SIM105",  # 允许 try-except-pass 替代 contextlib.suppress
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["RUF", "N802", "N806", "SIM115"]
+"**/__init__.py" = ["F401"]
+"web/backend/_path_setup.py" = ["N806"]
+"web/backend/run_packaged_main.py" = ["N806"]
+"web/backend/main.py" = ["N806"]
+"web/backend/api/search.py" = ["N806", "E501"]
+"web/backend/api/layout.py" = ["E501"]
+"web/backend/api/data_profiles.py" = ["E501"]
+"web/backend/api/generator.py" = ["E501"]
+"scripts/devtool.py" = ["N806", "RUF005"]
+"scripts/github_upload_module.py" = ["RUF005", "RUF059", "UP022", "E501"]
+"scripts/github_download_module.py" = ["RUF005", "UP022"]
+"scripts/github_upload_module_web.py" = ["E501"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

@@ -3,9 +3,8 @@
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
-
 from api.persistent_store import load_list, save_list
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/history")
 

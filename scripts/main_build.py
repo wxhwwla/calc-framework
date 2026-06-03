@@ -41,32 +41,22 @@
 
 from __future__ import annotations
 
-
-
 import argparse
-
 import os
-
 import shutil
-
 import subprocess
-
 import sys
-
 import tempfile
-
 import time
-
 from pathlib import Path
-
-
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPTS = _REPO_ROOT / "scripts"
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
+
 ensure_root()
 
 _GAMES = _REPO_ROOT / "games" / "endfield"
@@ -77,27 +67,17 @@ if str(_GAMES) not in sys.path:
 
 
 
-from please_read_me import get_exe_version, get_version  # noqa: E402
+from please_read_me import get_exe_version, get_version
 
-from release_bundle.release_layout import (  # noqa: E402
-
+from release_bundle.release_layout import (
     ALL_BUILD_TARGETS,
-
     BuildTarget,
-
     release_dir_from_dist,
-
     stage_release_folder,
-
     target_app_name,
-
     target_entry,
-
 )
-
-from utils.platform_win32_patch import apply_platform_win32_patch  # noqa: E402
-
-
+from utils.platform_win32_patch import apply_platform_win32_patch
 
 DEFAULT_BUILD_TIMEOUT_SECONDS = 20 * 60
 
@@ -300,15 +280,14 @@ def _build_target(
             "--paths", str(base_dir / "games"),
             "--paths", str(base_dir / "games" / "endfield"),
         ])
-    elif target == "designer":
-        cmd.extend(["--paths", str(base_dir / "tools")])
-    elif target == "pack-designer":
+    elif target == "designer" or target == "pack-designer":
         cmd.extend(["--paths", str(base_dir / "tools")])
     elif target == "arknights":
         cmd.extend([
             "--paths", str(base_dir / "games"),
             "--paths", str(base_dir / "games" / "arknights"),
-            "--add-data", f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+            "--add-data",
+            f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
         ])
 
     cmd.append(entry)
@@ -377,7 +356,12 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="终末地/明日方舟 — 打包脚本")
 
-    parser.add_argument("--target", choices=["calculator", "designer", "pack-designer", "local-backend", "arknights", "all"], default="all")
+    parser.add_argument(
+        "--target",
+        choices=["calculator", "designer", "pack-designer",
+                 "local-backend", "arknights", "all"],
+        default="all",
+    )
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
     parser.add_argument("--no-frontend-build", action="store_true", help="local-backend 时跳过前端构建")
     args = parser.parse_args()

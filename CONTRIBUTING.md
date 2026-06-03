@@ -1,222 +1,450 @@
 # 贡献指南
 
-欢迎来到 **终末地伤害计算器** 项目！感谢你愿意花时间让这个工具变得更好。
+> 感谢你考虑为 Calc Framework 项目贡献代码！🎉
 
-## 目录
+本指南帮助你了解如何参与开发、提交 Issue、创建 PR 以及为游戏适配包做贡献。
 
-- [开始之前](#开始之前)
-- [Issues：报告问题与提出建议](#issues报告问题与提出建议)
-- [Pull Requests：提交代码](#pull-requests提交代码)
-- [开发环境搭建](#开发环境搭建)
-- [代码规范](#代码规范)
-- [测试要求](#测试要求)
-- [数据贡献](#数据贡献)
-- [许可证](#许可证)
+Calc Framework 是一个多游戏伤害计算框架，包含 PySide6 桌面 GUI、React + FastAPI Web 前端/后端、Python DAG 计算引擎、BWIKI 数据采集工具、AI 计算器生成器以及 Docker 部署支持。
 
-## 开始之前
+项目概述见 [`README.md`](README.md)，领域术语见 [`CONTEXT.md`](CONTEXT.md)，日常操作命令见 [`docs/操作指令集.md`](docs/操作指令集.md)。
 
-### 需要了解的知识
+---
 
-| 领域 | 最低要求 | 推荐材料 |
-|------|---------|---------|
-| Python | 基础语法 | Python 官方教程 |
-| PySide6 | 了解信号/槽机制 | Qt for Python 文档 |
-| DAG 计算 | 了解有向无环图概念 | `docs/框架适配新游戏指南.md` |
-| 游戏机制 | 熟悉目标游戏的伤害公式 | 游戏 Wiki |
+## 行为准则
 
-### 与本项目已有贡献者交流
+本项目采用简洁的行为准则：**互相尊重，就事论事**。
 
-遇到问题可以先查阅已有文档，或通过 Issues 提问。
+- 讨论时保持友善和理性
+- 承认不同水平——欢迎新贡献者，也尊重资深开发者
+- 不接受人身攻击、歧视性言论或恶意挑衅
 
-## Issues：报告问题与提出建议
+严重违反者将被暂时或永久封禁。
 
-### 报告 Bug
+---
 
-1. 使用 **Bug 报告模板** 创建 Issue
-2. 尽量提供完整的复现步骤、期望结果与实际结果
-3. 如果是计算错误，请附上计算过程截图或日志
-4. 标签会自动设置为 `needs-triage`，维护者会尽快确认
+## 快速开始
 
-### 提出功能建议
+### 环境要求
 
-1. 使用 **功能建议模板** 创建 Issue
-2. 清晰描述"想解决什么问题"而不是"想加什么功能"
-3. 如果已有类似 Issue，可以在原 Issue 下补充评论
+| 工具 | 版本要求 |
+|------|----------|
+| Python | 3.10+（推荐 3.12） |
+| Node.js | 18+（仅 Web 前端开发需要） |
+| Git | 最新稳定版 |
+
+### 1. 克隆仓库
+
+```bash
+git clone git@github.com:wxhwwla/calc-framework.git
+cd calc-framework
+```
+
+### 2. 创建虚拟环境（重要）
+
+Windows 系统下，**创建 venv 前必须先设置 UTF-8 编码**，否则 pip 安装含 Unicode 字符的包时可能损坏文件：
+
+```powershell
+# PowerShell
+$env:PYTHONUTF8 = "1"
+chcp 65001 > $null
+
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+```bash
+# Linux / macOS
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. 安装依赖
+
+```powershell
+# 安装通用计算框架（可编辑模式）
+python -m pip install -e framework
+
+# 安装游戏包（终末地）+ 开发依赖
+cd games/endfield
+pip install -e ".[dev]"
+
+# 如果需要打包 exe
+pip install -e ".[build]"
+
+# 回到仓库根目录
+cd ../..
+```
+
+安装选项说明：
+
+| 选项 | 包含 | 用途 |
+|------|------|------|
+| `.[dev]` | pytest、pyyaml 等 | 日常开发 |
+| `.[build]` | PyInstaller | 打包 exe |
+| `.[ocr]` | TorchVision、EasyOCR | 截图识装功能 |
+
+### 4. 安装前端依赖（仅 Web 开发）
+
+```powershell
+cd web/frontend
+npm install
+cd ../..
+```
+
+### 5. 运行测试确认环境正常
+
+```powershell
+python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q
+```
+
+测试全部通过即表示环境就绪。
+
+---
+
+## 项目结构概览
+
+```
+calc-framework/
+├── framework/                      # 通用计算框架（独立 pip 包 calc-framework）
+│   ├── src/calc_framework/         #   核心代码
+│   │   ├── dag/                    #     DAG 求值引擎（9 种节点、拓扑排序、AST 沙箱）
+│   │   ├── data/                   #     数据引擎（DataContext、Schema）
+│   │   ├── ui/                     #     声明式 UI（ComputeSheet、CalcPackViewer）
+│   │   ├── search/                 #     搜索/枚举引擎
+│   │   ├── plugin/                 #     插件系统（暴击/闪避/距离衰减）
+│   │   └── config/                 #     适配器管理器
+│   └── adapters/                   #   游戏适配器目录（自动发现）
+│       ├── endfield/               #     终末地适配器
+│       ├── arknights/              #     明日方舟适配器
+│       ├── card_rpg/               #     卡牌RPG（验证用）
+│       ├── moba/                   #     MOBA 公式（验证用）
+│       └── fps/                    #     FPS 公式（验证用）
+├── games/                          # 游戏适配包
+│   ├── endfield/                   #   终末地伤害计算器
+│   │   ├── calc/                   #     计算引擎
+│   │   ├── data/                   #     游戏 JSON 数据
+│   │   ├── data_loading/           #     数据加载层
+│   │   ├── gui/                    #     PySide6 GUI 界面
+│   │   ├── tests/                  #     pytest 测试
+│   │   └── scripts/                #     包内维护脚本
+│   └── arknights/                  #   明日方舟适配包
+│       ├── calc/dag_adapter/       #     DAG 适配桥接
+│       └── tests/                  #     37 个 pytest
+├── web/                            # Web 版（React + FastAPI）
+│   ├── backend/                    #   FastAPI 后端
+│   │   └── api/                    #     API 路由模块
+│   ├── frontend/                   #   React 前端
+│   │   └── src/
+│   │       ├── pages/              #     页面级组件
+│   │       ├── components/         #     通用组件
+│   │       ├── store/              #     Zustand 状态管理
+│   │       └── api/                #     API 调用封装
+│   └── hub/                        #   Calc Hub 静态市场主页
+├── tools/                          # 仓库维护工具
+│   ├── bwiki_scout/                #   BWIKI 数据侦察与同步
+│   ├── data_pipeline/              #   数据 ETL 工具链
+│   ├── data_sandbox/               #   数据沙箱（隔离测试）
+│   ├── designer/                   #   配置包设计器
+│   ├── ocr/                        #   截图识装管线
+│   └── generator/                  #   AI 计算器生成器模板
+├── scripts/                        # 入口脚本
+│   ├── main.py                     #   终末地伤害计算器
+│   ├── main_launcher.py            #   统一启动器
+│   ├── main_designer.py            #   数据设计器
+│   ├── main_build.py               #   多目标打包
+│   ├── main_generator.py           #   AI 计算器生成器
+│   ├── devtool.py                  #   开发者工具
+│   ├── github_upload_module.py     #   GitHub 上传脚本
+│   └── github_download_module.py   #   GitHub 下载脚本
+├── docs/                           # 项目文档
+├── .github/workflows/              # CI 工作流（ci.yml、release.yml 等）
+├── Dockerfile                      # Docker 部署
+├── docker-compose.yml              # Docker Compose
+├── CONTEXT.md                      # 领域术语
+├── LICENSE                         # 软件许可证（AGPL-3.0）
+└── DATA_LICENSE                    # 数据许可证
+```
+
+> **目录约束**：任意目录下直接子项 ≤ 10，业务 `.py` 文件 ≤ 400 行（硬顶 500）。详见 [`docs/代码结构规范.md`](docs/代码结构规范.md) 和 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)。
+
+---
+
+## 开发工作流
+
+### 代码风格
+
+本项目使用 **ruff** 进行 Python 代码格式化与检查：
+
+```powershell
+# 检查所有 Python 代码
+python -m ruff check games/ framework/src/ tools/ web/backend/
+```
+
+代码风格要点见 `.trae/rules/project_rules.md` 中的「Python 代码风格规范」：
+
+- **导入排序**：`future → 标准库 → 第三方 → 框架 → 本地应用` 四组顺序
+- **公共 API**：每个 `__init__.py` 必须声明 `__all__`
+- **文档字符串**：使用 Google 风格
+- **异常层级**：以 `Error` 结尾，基类 + 子类
+- **测试命名**：`test_` 前缀
+
+### 类型检查
+
+```powershell
+# Python 类型检查
+pip install pyright
+pyright
+
+# TypeScript 类型检查（仅 Web 前端）
+cd web/frontend && npx tsc --noEmit
+```
+
+### 运行测试
+
+```powershell
+# 全量测试
+python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q
+
+# 带覆盖率
+python -m pytest games/endfield/tests/ --cov=games.endfield --cov-report=term-missing
+
+# 运行特定测试
+python -m pytest games/endfield/tests/test_calculation.py -v
+
+# Web E2E 测试
+cd web/frontend && npm run cypress:run
+```
+
+### 前端构建检查
+
+```powershell
+cd web/frontend
+npx tsc --noEmit    # 类型检查
+npm run build       # 构建
+```
+
+### CI 工作流
+
+本项目配置了多个 GitHub Actions 工作流：
+
+| 工作流 | 触发条件 | 作用 |
+|--------|----------|------|
+| `ci.yml` | push/PR 到 main | 终末地方舟测试 + ruff lint + 覆盖率门槛 60% |
+| `framework-ci.yml` | push/PR 到 main | 框架层 374 测试 + 跨品类适配器验证 |
+| `release.yml` | `v*` 标签推送 | 打包 exe + 创建 GitHub Release |
+| `layout-sync.yml` | PR 涉及 layout 文件 | 验证布局同步一致性 |
+| `code-origin-check.yml` | 每周一 | AI 代码来源/版权扫描 |
+| `web-e2e.yml` | push/PR 到 main | Cypress E2E 测试 |
+
+提交 PR 前，确保 CI 全部通过。
+
+---
+
+## 做出修改
+
+### 分支命名
+
+```text
+feature/xxx        # 新功能
+fix/xxx            # Bug 修复
+refactor/xxx       # 重构
+docs/xxx           # 文档变更
+chore/xxx          # 构建/CI/工具
+```
+
+建议分支名用英文，简短描述即可。例如：`fix/search-panel-crash`、`feature/add-moba-adapter`。
+
+### 提交信息
+
+本项目使用上传脚本管理版本号和提交信息，通常不建议直接 `git commit`。但如果需要手动提交：
+
+```
+<类型>: <简短描述>
+
+<可选详细说明>
+```
+
+示例：
+
+```
+fix: 修复全量搜索面板在高分辨率下布局错位
+
+- 修复 QSplitter 初始比例计算
+- 增加最小宽度保护
+```
+
+> 完整发布流程见 [`docs/操作指令集.md`](docs/操作指令集.md) 和 [`scripts/please_read_me.py`](games/endfield/please_read_me.py) 中的 `UPLOAD_WORKFLOW`。
+
+### 保持专注
+
+每个 PR 只做一件事。如果你的修改涉及多个不相关的问题，请拆分为多个 PR。
+
+---
+
+## 新增游戏适配器
+
+本框架通过适配器系统支持多款游戏。新增游戏适配器的推荐方式：
+
+### 方式一：使用 AI 生成器（推荐给新手）
+
+```powershell
+python scripts/main_generator.py
+```
+
+此交互式工具引导你完成：选模板 → 填写游戏信息 → 生成适配器骨架 → 预览导出。
+
+### 方式二：手动脚手架
+
+参考模板目录 `docs/game-template/` 和已有适配器实现：
+
+1. 在 `framework/adapters/` 下创建游戏目录
+2. 编写 `meta.json`（适配器元信息）
+3. 编写 DAG 公式定义（`<game>.dag.json`）
+4. 编写 `attr_schema.json`（变量属性描述）
+5. 编写 UI 布局（`ui/layout.json`）
+6. 实现自定义纯函数（`functions.py`，可选）
+7. 添加游戏数据文件（`data/`，可选）
+
+详细步骤见 [`docs/框架适配新游戏指南.md`](docs/框架适配新游戏指南.md)。
+
+### 架构原则
+
+- **纯 DAG 适配器架构**：所有计算逻辑在 `framework/adapters/{game}/functions.py` 中以 DAG 可调用函数注册
+- **薄游戏包**：`games/{game}/` 只做数据加载 + DAG 适配 + 轻量 GUI
+- **单计算路径**：一个公式只有一个实现源头，不存在需要同步的两套代码
+
+---
+
+## 提交变更
+
+### PR 检查清单
+
+提交 PR 前，请确认以下项目：
+
+- [ ] 代码通过 ruff lint：`python -m ruff check games/ framework/src/`
+- [ ] Python 类型检查通过：`pyright`
+- [ ] 全量测试通过：`python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q`
+- [ ] 新代码有对应的单元测试
+- [ ] Web 前端（若有改动）：`cd web/frontend && npx tsc --noEmit && npm run build` 通过
+- [ ] 未违反目录超限规则（子项 ≤ 10）
+- [ ] 未违反文件长度规则（业务 `.py` ≤ 400 行，硬顶 500）
+- [ ] 新 `__init__.py` 声明了 `__all__`
+- [ ] 遵循显式导入原则（包内相对导入，包目录有 `__init__.py`）
+- [ ] 文档已同步更新（如有影响）
+
+### CI 要求
+
+- 所有 CI 工作流必须通过
+- 覆盖率不得显著下降（CI 门槛 60%）
+- 新增依赖须经许可证检查（禁止 GPL-3.0、SSPL 等传染性许可）
+
+### PR 流程
+
+1. Fork 本仓库
+2. 创建你的特性分支（`git checkout -b feature/xxx`）
+3. 提交修改（注意：大改动建议先开 Issue 讨论）
+4. 推送到你的 Fork（`git push origin feature/xxx`）
+5. 在 GitHub 上创建 Pull Request
+6. 等待 Review 和 CI 通过
+
+---
+
+## Bug 报告与功能建议
+
+我们使用 [GitHub Issues](https://github.com/wxhwwla/calc-framework/issues) 跟踪问题。
+
+### Bug 报告
+
+提交 Bug 报告时，请尽量提供：
+
+1. **复现步骤**：详细的操作步骤，他人可按此复现
+2. **期望行为**：正常情况下应发生什么
+3. **实际行为**：实际发生了什么
+4. **环境信息**：操作系统、Python 版本、项目版本（窗口标题中的版本号）
+5. **截图/日志**：终端报错或截图
+
+Bug 报告模板位于 `.github/ISSUE_TEMPLATE/bug_report.yml`，填写时会自动引导。
+
+### 功能建议
+
+提交功能建议时，请说明：
+
+1. **问题或动机**：现在哪里不方便？你想达成什么目标？
+2. **建议方案**：你期望产品如何表现？
+3. **备选方案**（可选）：考虑过哪些替代做法？
+
+功能建议模板位于 `.github/ISSUE_TEMPLATE/feature_request.yml`。
 
 ### 标签说明
 
 | 标签 | 含义 |
 |------|------|
-| `needs-triage` | 待分类（新 Issue 默认） |
+| `needs-triage` | 待分拣（新 Issue 默认） |
 | `needs-info` | 需要更多信息 |
-| `good-first-issue` | 适合新贡献者 |
-| `help-wanted` | 需要社区帮助 |
-| `ready-for-agent` | 适合 AI Agent 处理 |
-| `ready-for-human` | 需要人工审查 |
-| `bug` | 确认的 Bug |
-| `enhancement` | 功能增强 |
-| `wontfix` | 暂不处理 |
+| `ready-for-agent` | 可由 AI Agent 处理 |
+| `good-first-issue` | 适合新贡献者的友善问题 |
+| `help-wanted` | 需要帮助 |
+| `wontfix` | 决定不修复 |
 
-## Pull Requests：提交代码
+---
 
-### 工作流程
+## 文档
 
-```
-Fork → Clone → Branch → Commit → Test → Push → PR → Review → Merge
-```
+项目的所有文档位于 `docs/` 目录，使用 Markdown 格式。
 
-### 步骤详解
+### 文档修改守则
 
-1. **Fork 仓库**：点击 GitHub 页面右上角的 Fork 按钮
-2. **Clone 到本地**：`git clone https://github.com/你的用户名/endfield_damage_calculator.git`
-3. **创建分支**：从 `main` 分支创建特性分支
-   - 功能分支：`feat/简短描述`（如 `feat/ak-operator-search`）
-   - 修复分支：`fix/简短描述`（如 `fix/skill-multiplier-bug`）
-   - 文档分支：`docs/简短描述`（如 `docs/readme-update`）
-4. **编码**：遵循代码规范
-5. **本地测试**：确保全量测试通过
-6. **Push 到远程**：`git push origin 你的分支名`
-7. **创建 PR**：在 GitHub 上点击 "New Pull Request"，填写变更说明
-8. **等待 Review**：维护者会在 1-3 个工作日内 Review
+- 改代码后同步更新相关文档——**不要等最后**
+- 文档使用 UTF-8 编码（无 BOM）
+- 如果你新增了一个功能，记得更新对应的文档
 
-### PR 规范
+### 关键文档
 
-| 项目 | 要求 |
-|------|------|
-| 标题 | 清晰概括变更内容（50 字以内） |
-| 描述 | 说明"为什么改"+"怎么改"+"测试验证结果" |
-| 改动范围 | 尽量小，一个 PR 只解决一个问题 |
-| 测试 | 新增功能必须有对应的测试 |
-| 文档 | 用户可见的变更需同步更新相关文档 |
-| 类型检查 | TypeScript（Web 端）必须 `tsc --noEmit` 0 错误 |
+| 文件 | 内容 | 何时更新 |
+|------|------|----------|
+| [`docs/会话接续手册.md`](docs/会话接续手册.md) | 架构状态、近期完成 | 每次完成功能后 |
+| [`docs/操作指令集.md`](docs/操作指令集.md) | 日常命令 | 新增命令或参数时 |
+| [`docs/代码结构规范.md`](docs/代码结构规范.md) | 目录/文件约束 | 结构性变更时 |
+| [`docs/框架适配新游戏指南.md`](docs/框架适配新游戏指南.md) | 适配器开发 | API 变更时 |
+| [`CONTEXT.md`](CONTEXT.md) | 领域术语 | 新增术语时 |
+| [`README.md`](README.md) | 项目门面 | 功能/结构有显著变化时 |
 
-### Review 流程
+### 文档风格
 
-1. PR 提交后自动触发 CI
-2. 维护者 Review 代码，必要时提出修改意见
-3. 所有讨论 resolved 后，由维护者 Merge
+- 中文撰写（与项目用户群体一致）
+- 如果某个指代另一份文件的说明，使用**相对链接**（如 `[docs/操作指令集.md](docs/操作指令集.md)`）
+- 代码块标注语言（`python`、`powershell`、`bash` 等）
 
-## 开发环境搭建
+---
 
-### 基础环境
+## 许可与合规
 
-```bash
-# 克隆仓库
-git clone https://github.com/your-org/endfield_damage_calculator.git
-cd endfield_damage_calculator
+- **软件**：默认 AGPL-3.0，可申请**商业许可**（见 [`LICENSE`](LICENSE)）
+- **游戏数据**：单独许可（[`DATA_LICENSE`](DATA_LICENSE)），**商用不可用本仓库数据**
+- 发布时须同时附带 `LICENSE`、`DATA_LICENSE` 和 `NOTICES.md`
+- 新增依赖前检查其许可证：禁止 GPL-3.0-only / SSPL / 无许可证依赖
+- 详情见 [`docs/数据来源与许可.md`](docs/数据来源与许可.md) 和 [`docs/合规自查清单.md`](docs/合规自查清单.md)
 
-# 创建虚拟环境（确保 UTF-8 编码）
-$env:PYTHONUTF8 = "1"
-chcp 65001 > $null
-python -m venv .venv
-.venv\Scripts\Activate.ps1
+---
 
-# 安装依赖
-pip install -e .                              # 框架 + 游戏包
-pip install -e ".[dev]"                       # 开发依赖（pytest 等）
-pip install -r web/backend/requirements.txt   # Web 后端
-cd web/frontend && npm install && cd ../..    # Web 前端
-```
+## 常见问题
 
-### 运行测试
+**Q：我不会 Python，能参与贡献吗？**
 
-```bash
-# 全量测试
-python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q
+可以！你可以帮助完善文档、报告 Bug、提供游戏数据、参与讨论。Web 前端的 TypeScript 也欢迎贡献。
 
-# 某个模块
-python -m pytest games/endfield/tests/test_calculation.py -v
+**Q：我想适配一款新游戏，从哪开始？**
 
-# Web 前端类型检查
-cd web/frontend && npx tsc --noEmit
-```
+推荐使用 `python scripts/main_generator.py` 交互式生成器，或阅读 [`docs/框架适配新游戏指南.md`](docs/框架适配新游戏指南.md)。
 
-### 开发者工具箱
+**Q：每次提交都要跑全量测试吗？**
 
-```bash
-python devtool.py check-deps      # 依赖自检
-python devtool.py check-layout    # 代码布局门禁
-python devtool.py sync-bwiki      # BWIKI 数据同步
-python devtool.py scaffold        # 新游戏适配脚手架
-```
+PR 阶段 CI 会运行全量测试，本地开发时你只需要运行与你改动相关的测试即可。
 
-## 代码规范
+**Q：如何提交大改动？**
 
-完整的代码规范请阅读 [`.trae/rules/project_rules.md`](.trae/rules/project_rules.md) 中"Python 代码风格规范"部分。
+建议先开 Issue 说明改动方案，获得反馈后再开始编码，避免做了大量工作后发现方向不对。
 
-### 快速参考
+---
 
-| 规则 | 说明 |
-|------|------|
-| 导入排序 | 标准库 → 第三方 → 框架库 → 本地应用，组间空行 |
-| 文档字符串 | Google 风格三段式 |
-| 类型注解 | 所有公共函数必须有类型注解 |
-| 测试覆盖率 | 新代码 >80% 行覆盖 |
-| 异常定义 | 继承 `DAGError` 基类，使用关键字参数 |
-
-### Web 前端规范
-
-- 使用 MUI v6 组件，遵循现有的排版模式
-- 使用 TypeScript，严格模式
-- 新状态用 zustand store，不要 prop drilling
-- API 调用放在 `src/api/` 下
-
-## 测试要求
-
-### 什么时候写测试
-
-- 新增功能 → 写功能测试
-- 修复 Bug → 先写复现测试，再修代码
-- 重构 → 确保现有测试全通过
-
-### 测试运行
-
-```bash
-# 全量
-python -m pytest games/endfield/tests framework/tests games/arknights/tests -q
-
-# 某个文件
-python -m pytest games/endfield/tests/tools/test_bwiki_scout.py -v
-
-# Web 前端
-cd web/frontend && npx tsc --noEmit && cd ../..
-```
-
-### CI 检查项
-
-| 检查 | 说明 |
-|------|------|
-| 全量 pytest | 所有测试必须通过 |
-| 前端类型检查 | `tsc --noEmit` 0 错误 |
-| 代码布局门禁 | `devtool.py check-layout` 必须通过 |
-| 许可证扫描 | 新代码不得含有未经授权的第三方代码 |
-
-## 数据贡献
-
-如果你不是开发者，但想贡献游戏数据（角色数值、武器数值等）：
-
-### 简易方式（推荐非技术用户）
-
-1. 打开 Web 版 → 数据贡献页
-2. 使用"简易录入"表单填写数据
-3. 下载生成的 JSON 文件
-4. 在 GitHub 上以 Issue 或 PR 附件形式提交
-
-### 标准方式
-
-1. 使用 `tools/data_sandbox/` CLI 工具在本地验证数据
-2. 确保通过 schema 校验：「`python -m tools.data_sandbox.sandbox validate 你的文件.json`」
-3. 生成完整报告：「`python -m tools.data_sandbox.sandbox report 你的文件.json -o 报告.md`」
-4. 将数据和报告一起提交 PR
-
-### BWIKI 数据维护者
-
-- 运行增量同步：`python devtool.py sync-bwiki --apply --bump-version`
-- 运行数据验证：`python devtool.py sync-bwiki --apply --bump-version --verify`
-- 手动查看数据版本：`python -m tools.bwiki_scout.bump_data_version`
-
-## 许可证
-
-- 代码部分：AGPL-3.0
-- 游戏数据部分：详见 [`DATA_LICENSE`](DATA_LICENSE) 和 [`docs/数据来源与许可.md`](docs/数据来源与许可.md)
-- 提交代码即表示你同意将你的贡献以 AGPL-3.0 许可发布
+再次感谢你的贡献！🎉

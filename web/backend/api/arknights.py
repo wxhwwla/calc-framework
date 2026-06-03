@@ -3,10 +3,9 @@
 
 from __future__ import annotations
 
+from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-from calc_framework.config.manager import AdapterManager
 
 from games.arknights.calc.dag_adapter import compute_snapshot_with_dag
 from games.arknights.operator_catalog import (

@@ -10,8 +10,6 @@ from pydantic import BaseModel
 
 from ._json_utils import ENDFIELD_DATA_ROOT, load_json
 
-
-
 router = APIRouter(prefix="/api/data", tags=["data"])
 
 

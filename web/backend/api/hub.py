@@ -7,8 +7,6 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile
-from pydantic import BaseModel, Field
-
 from hub.storage import (
     create_pack,
     delete_pack,
@@ -20,6 +18,7 @@ from hub.storage import (
     save_pack_file,
     update_pack,
 )
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/hub", tags=["hub"])
 
@@ -159,7 +158,7 @@ async def rate_pack_endpoint(pack_id: str, rate: RateRequest):
 @router.get("/stats")
 async def hub_stats():
     """获取 Calc Hub 统计信息（总包数、数据库路径）。"""
-    packs, total = list_packs(limit=0)
+    _packs, total = list_packs(limit=0)
     return {
         "total_packs": total,
         "db_path": str(Path(__file__).resolve().parent.parent / "data" / "hub" / "catalog.db"),
@@ -234,7 +233,6 @@ async def download_hub_adapter(adapter_id: str):
     if not calcpack_files:
         raise HTTPException(status_code=404, detail=f"适配器 '{adapter_id}' 无可下载文件")
 
-    filename = calcpack_files[0].name
     increment_download(adapter_id)
     from fastapi.responses import FileResponse
     return FileResponse(

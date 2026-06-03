@@ -8,15 +8,16 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
 import httpx
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/generator", tags=["generator"])
 
 # 导入生成器引擎
 try:
-    from tools.generator import GeneratorEngine, list_templates as list_gen_templates
+    from tools.generator import GeneratorEngine
+    from tools.generator import list_templates as list_gen_templates
 
     engine = GeneratorEngine()
     _HAS_ENGINE = True
@@ -264,13 +265,13 @@ async def ai_parse_formula(req: AIFormulaRequest):
         else:
             raise HTTPException(status_code=502, detail=f"AI API 返回错误 ({status}): {detail}")
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI 请求失败: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"AI 请求失败: {e!s}")
 
     # 解析返回内容
     try:
         content = data["choices"][0]["message"]["content"]
     except (KeyError, IndexError) as e:
-        raise HTTPException(status_code=502, detail=f"AI 返回格式异常，缺少 choices/content: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"AI 返回格式异常，缺少 choices/content: {e!s}")
 
     # 尝试提取 JSON
     import re
@@ -279,7 +280,7 @@ async def ai_parse_formula(req: AIFormulaRequest):
         try:
             parsed = json.loads(json_match.group())
         except json.JSONDecodeError as e:
-            raise HTTPException(status_code=502, detail=f"AI 返回的 JSON 格式无效: {str(e)}。原始返回: {content[:200]}")
+            raise HTTPException(status_code=502, detail=f"AI 返回的 JSON 格式无效: {e!s}。原始返回: {content[:200]}")
     else:
         raise HTTPException(status_code=502, detail=f"AI 返回内容中未找到 JSON 数据。原始返回: {content[:200]}")
 

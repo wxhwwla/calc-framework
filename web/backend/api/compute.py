@@ -3,15 +3,13 @@
 
 from typing import Any
 
+from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from calc_framework.config.manager import AdapterManager
-
-from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 from web.backend.api.loadout_schemas import WebLoadoutBody
 
-
+from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 
 router = APIRouter(prefix="/api/compute", tags=["compute"])
 
@@ -390,9 +388,9 @@ def compare(req: CompareRequest):
 @router.post("/preview")
 def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
     """返回配装搜索前预览行（描述当前选定装备范围的文字）。"""
+    from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
     from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
     from games.endfield.gui.app.loadout_evaluation import build_search_preview_lines
-    from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
     catalog = req.equipment_catalog or get_equipment_catalog()
     try:

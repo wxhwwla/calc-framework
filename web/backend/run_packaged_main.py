@@ -33,9 +33,9 @@ def _setup_paths() -> None:
 
 _setup_paths()
 
-import uvicorn  # noqa: E402
+import uvicorn
 
-from web.backend.main import app  # noqa: E402
+from web.backend.main import app
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8180"))

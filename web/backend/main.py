@@ -2,18 +2,11 @@
 """Web 后端入口 — FastAPI 应用实例 + 路由注册 + 全局中间件/异常处理器 / 静态文件挂载。"""
 
 try:
-    from . import _path_setup  # noqa: F401  # sets sys.path for dev mode
+    from . import _path_setup  # sets sys.path for dev mode
 except ImportError:
     import _path_setup  # noqa: F401  # fallback when run as top-level module
 import sys
 from pathlib import Path
-
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
-from fastapi.staticfiles import StaticFiles
-
-from web.backend.bridge import setup_logging, get_logger
 
 from api.adapters import router as adapters_router
 from api.arknights import router as arknights_router
@@ -29,8 +22,12 @@ from api.ocr import router as ocr_router
 from api.pack import router as pack_router
 from api.search import router as search_router
 from api.survival import router as survival_router
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
-
+from web.backend.bridge import get_logger, setup_logging
 
 setup_logging(level="INFO", console=True)
 

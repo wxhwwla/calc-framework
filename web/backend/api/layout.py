@@ -4,10 +4,9 @@
 from pathlib import Path
 from typing import Any
 
+from api.adapter_assets import get_adapter_dag, get_adapter_layout
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-
-from api.adapter_assets import get_adapter_dag, get_adapter_layout
 
 from ._json_utils import ADAPTER_ROOT, load_json
 

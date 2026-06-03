@@ -90,6 +90,7 @@ def delete_equipment(name: str) -> dict[str, str]:
 def inverse_formula_payload(type_: str, values: list[float]) -> dict[str, Any]:
     """执行公式反推（属性或技能）。"""
     try:
+        from games.endfield.calc.damage.formula import calculate_growth_curve
         from games.endfield.calc.damage.inverse import (
             fit_attribute_formula,
             fit_skill_formula,
@@ -98,7 +99,6 @@ def inverse_formula_payload(type_: str, values: list[float]) -> dict[str, Any]:
             validate_attribute_formula,
             validate_skill_formula,
         )
-        from games.endfield.calc.damage.formula import calculate_growth_curve
     except ImportError as e:
         raise HTTPException(status_code=500, detail=f"逆推引擎导入失败: {e}") from e
 

@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root, ensure_framework_src
+from _path_setup import ensure_framework_src, ensure_root
 
 ensure_root()
 ensure_framework_src()

@@ -36,7 +36,7 @@ from _path_setup import ensure_root
 
 ensure_root()
 
-from tools.generator import GeneratorEngine  # noqa: E402
+from tools.generator import GeneratorEngine
 
 
 class GeneratorWindow(QMainWindow):

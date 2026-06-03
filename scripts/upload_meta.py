@@ -15,13 +15,8 @@
 
 from __future__ import annotations
 
-
-
 import re
-
 from pathlib import Path
-
-
 
 SUMMARY_BEGIN = "# --- UPLOAD_SUMMARY ---"
 

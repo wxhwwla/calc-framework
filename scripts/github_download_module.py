@@ -30,21 +30,12 @@
 
 from __future__ import annotations
 
-
-
 import argparse
-
 import os
-
 import re
-
 import subprocess
-
 import sys
-
-from typing import Any, Tuple
-
-
+from typing import Any
 
 # 须完整输入该词才会执行 reset --hard / clean -fd
 
@@ -102,7 +93,7 @@ def run_git(
     check: bool = True,
     capture_output: bool = False,
     timeout: int | None = None,
-) -> Tuple[int, str, str]:
+) -> tuple[int, str, str]:
     """执行 git 命令并返回 (returncode, stdout, stderr)。"""
     try:
         if capture_output:
@@ -200,7 +191,7 @@ def _remote_url() -> str:
 
             sys.exit(1)
 
-        with open(KEY_FILE, "r", encoding="utf-8") as f:
+        with open(KEY_FILE, encoding="utf-8") as f:
 
             token = f.read().strip()
 
@@ -468,9 +459,11 @@ def main() -> None:
 
 
 
-from pathlib import Path  # noqa: E402
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
+
 ensure_root()
 
 if __name__ == "__main__":

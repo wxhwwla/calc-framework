@@ -7,13 +7,13 @@
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _path_setup import ensure_root
+
 ensure_root()
 
-from games.endfield.please_read_me import _VERSION, _EXE_VERSION  # noqa: F401, E402
+from games.endfield.please_read_me import _EXE_VERSION, _VERSION
 
-
-
-__all__ = ["_VERSION", "_EXE_VERSION"]
+__all__ = ["_EXE_VERSION", "_VERSION"]
 

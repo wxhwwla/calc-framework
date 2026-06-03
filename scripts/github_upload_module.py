@@ -37,26 +37,15 @@
 
 from __future__ import annotations
 
-
-
 import argparse
-
 import os
-
 import re
-
 import subprocess
-
 import sys
-
+from collections.abc import Callable
 from dataclasses import dataclass
-
-
 from pathlib import Path
-
-from typing import Any, Callable, List, Optional, Tuple
-
-
+from typing import Any
 
 # ===== 配置区 =====
 
@@ -112,7 +101,7 @@ def _import_upload_meta():
     from _path_setup import ensure_root
     ensure_root()
 
-    import upload_meta  # noqa: E402
+    import upload_meta
     return upload_meta
 
 
@@ -149,7 +138,7 @@ def run_git(
     check: bool = True,
     capture_output: bool = False,
     timeout: int | None = 30,
-) -> Tuple[int, str, str]:
+) -> tuple[int, str, str]:
     """执行 git 命令并返回 (returncode, stdout, stderr)。"""
     try:
         if capture_output:
@@ -263,7 +252,7 @@ def _remote_url() -> str:
 
             sys.exit(1)
 
-        with open(KEY_FILE, "r", encoding="utf-8") as f:
+        with open(KEY_FILE, encoding="utf-8") as f:
 
             token = f.read().strip()
 
@@ -335,7 +324,7 @@ def _ensure_gitignore(repo_dir: str) -> None:
 
     if os.path.isfile(path):
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
 
             existing = f.read()
 
@@ -597,9 +586,9 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
 
 
 
-def _porcelain_paths(porcelain: str) -> List[str]:
+def _porcelain_paths(porcelain: str) -> list[str]:
     """从 git status --porcelain 输出中提取文件路径列表。"""
-    paths: List[str] = []
+    paths: list[str] = []
     for line in porcelain.splitlines():
 
         if len(line) < 4:
@@ -622,7 +611,7 @@ def _porcelain_paths(porcelain: str) -> List[str]:
 
 
 
-def _collect_change_paths() -> List[str]:
+def _collect_change_paths() -> list[str]:
     """收集所有已变更文件的路径。"""
     _, porcelain, _ = run_git(["status", "--porcelain"], capture_output=True)
     paths = _porcelain_paths(porcelain)
@@ -809,7 +798,7 @@ def signing_status_message(cfg: SigningConfig) -> str:
 
 
 
-def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> Optional[str]:
+def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> str | None:
     """交互询问或根据 flags 确定版本升级类型。"""
     if no_bump:
         return None

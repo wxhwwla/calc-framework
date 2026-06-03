@@ -8,17 +8,17 @@ on:
   push:
     branches: [main, master]
     paths:
-      - "framework/calc_engine/endfield/ui/layout.json"
-      - "framework/src/calc_framework/configs/endfield_full.dag.json"
-      - "framework/calc_engine/endfield/attr_schema.json"
+      - "framework/adapters/*/ui/layout.json"
+      - "framework/adapters/*/dag/*.dag.json"
+      - "framework/adapters/*/attr_schema.json"
       - "tools/validate_layout_sync.py"
       - ".github/workflows/layout-sync.yml"
   pull_request:
     branches: [main, master]
     paths:
-      - "framework/calc_engine/endfield/ui/layout.json"
-      - "framework/src/calc_framework/configs/endfield_full.dag.json"
-      - "framework/calc_engine/endfield/attr_schema.json"
+      - "framework/adapters/*/ui/layout.json"
+      - "framework/adapters/*/dag/*.dag.json"
+      - "framework/adapters/*/attr_schema.json"
       - "tools/validate_layout_sync.py"
 
 jobs:

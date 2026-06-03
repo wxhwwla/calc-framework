@@ -1,22 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配装搜索 API — 工作量预估/全量搜索/SSE 流式搜索/敌人数值/装备目录/搜索历史。"""
 
-import json
-
 import asyncio
-
+import json
 import time
-
-from typing import Any, AsyncGenerator
-
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
-
 from fastapi.responses import StreamingResponse
-
 from pydantic import BaseModel, Field
-
-
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
@@ -188,17 +181,12 @@ async def estimate_search(req: EstimateRequest):
 
     try:
 
-        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
-
         from games.endfield.calc.search.plan.controller import prepare_search_job
-
         from games.endfield.calc.search.plan.estimate import (
-
-            preview_search_workload,
-
             estimate_search_duration,
-
+            preview_search_workload,
         )
+        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
 
@@ -272,10 +260,8 @@ async def run_search(req: SearchRequest):
 
     try:
 
+        from games.endfield.calc.search.plan.controller import optimizer_config_for_search_job, prepare_search_job
         from games.endfield.calc.search.run.runner import SearchRunner
-
-        from games.endfield.calc.search.plan.controller import prepare_search_job, optimizer_config_for_search_job
-
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
@@ -432,16 +418,11 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
 
     try:
 
-        from games.endfield.calc.search.run.runner import SearchRunner
-
         from games.endfield.calc.search.plan.controller import (
-
-            prepare_search_job,
-
             optimizer_config_for_search_job,
-
+            prepare_search_job,
         )
-
+        from games.endfield.calc.search.run.runner import SearchRunner
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError as e:
@@ -656,7 +637,7 @@ async def run_search_stream(req: SearchRequest):
 
 
 # 搜索历史（文件持久化，最近 10 次）
-from api.persistent_store import load_list, save_list  # noqa: E402
+from api.persistent_store import load_list, save_list
 
 _SEARCH_STORE_KEY = "search_history"
 _search_history: list[dict] = load_list(_SEARCH_STORE_KEY)

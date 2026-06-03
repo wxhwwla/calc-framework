@@ -13,14 +13,14 @@ sys.path.insert(0, str(_REPO / "framework" / "src"))
 sys.path.insert(0, str(_REPO))
 sys.path.insert(0, str(_BACKEND))
 
-from api.arknights import (  # noqa: E402
+import unittest
+
+from api.arknights import (
+    ComputeRequest,
+    compute_damage_payload,
     list_operators_payload,
     operator_summary_payload,
-    compute_damage_payload,
-    ComputeRequest,
 )
-
-import unittest  # noqa: E402
 
 
 class TestArknightsDataFallback(unittest.TestCase):

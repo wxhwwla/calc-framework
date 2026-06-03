@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """OCR 图片识别 API — 上传截图后调用 OCR 引擎检测。"""
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from pathlib import Path
 import os
 import tempfile
+from pathlib import Path
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 router = APIRouter(prefix="/api/ocr", tags=["ocr"])
 

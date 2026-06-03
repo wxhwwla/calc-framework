@@ -17,6 +17,12 @@
     玩家可以通过选择角色/武器/装备，查看属性面板和乘区数据，
     帮助优化配装和战斗策略。
 
+    【AI 计算器生成器】支持通过可视化表单或自然语言（AI 解析）快速生成
+    新游戏的计算适配器，无需编程即可创建伤害计算器。
+    【BWIKI 数据采集】内置 Wiki 爬虫，可从终末地 BWIKI 自动同步角色/
+    武器/装备数据。
+    【适配器市场】可发现、下载、分享社区适配器包（calcpack）。
+
 
 
 功能特性：
@@ -25,8 +31,11 @@
     2. 角色/武器/装备选择：支持按类型、星级筛选
     3. 属性展示：角色属性列与装备属性列分列显示等级曲线明细
     4. 乘区计算：实时计算能力乘区、能力值加成、攻击力等数据
-    5. Web 版：浏览器访问，无需安装
-    6. 适配器市场：可发现和下载社区适配器包
+    5. AI 计算器生成器：4 步向导（选模板→填信息→生成→导出），支持 AI 自然语言公式解析
+    6. BWIKI 数据采集：侦察/解析/同步三阶段工具链，自动同步终末地数据
+    7. Web 版：浏览器访问，支持 PWA 离线使用、移动端自适应
+    8. 适配器市场：可发现和下载社区适配器包（calcpack）
+    9. Docker 部署：一键容器化部署 Web 服务
 
 """
 
@@ -38,7 +47,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.16"
+_VERSION = "3.19.17"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -181,9 +190,11 @@ PROJECT_STRUCTURE = """
     │   └── arknights/                #   明日方舟 桌面计算器
 
     ├── web/                          # Web 前后端
-    │   ├── frontend/                 #   React + TypeScript + MUI 前端
-    │   ├── backend/                  #   FastAPI 后端（API 路由、计算服务）
-    │   └── hub/                      #   适配器市场目录
+    │   ├── frontend/                 #   React + TypeScript + MUI 前端（含 PWA 离线支持）
+    │   ├── backend/                  #   FastAPI 后端（API 路由、计算服务、生成器 API）
+    │   ├── hub/                      #   适配器市场目录
+    │   ├── scripts/                  #   部署脚本（PythonAnywhere 等）
+    │   └── Dockerfile                #   容器化部署
 
     ├── scripts/                      # 入口脚本（统一 _path_setup 模式）
     │   ├── main.py                   #   终末地桌面计算器
@@ -192,25 +203,29 @@ PROJECT_STRUCTURE = """
     │   ├── main_build.py             #   打包构建
     │   ├── main_pack_designer.py     #   适配器包设计器
     │   ├── main_launcher.py          #   框架启动器
+    │   ├── main_generator.py         #   AI 计算器生成器（桌面版）
+    │   ├── import_calcpack.py        #   calcpack 导入工具
     │   ├── launcher.pyw              #   图形化启动器
     │   └── 启动本地服务器.bat        #   Web 本地服务器
 
     ├── tools/                        # 开发工具脚本
-    │   ├── bwiki_scout/              #   BWIKI 数据采集
+    │   ├── generator/                #   计算器生成器引擎（模板、AI 解析、生成）
+    │   ├── bwiki_scout/              #   BWIKI 数据采集（侦察/解析/同步三阶段）
+    │   ├── wiki_scout/               #   通用 MediaWiki 爬虫框架
     │   ├── designer/                 #   适配器包设计工具
     │   ├── endfield_scripts/         #   终末地数据维护
-    │   ├── data_pipeline/            #   数据管线（CSV/JSON 读取、校验）
+    │   ├── data_pipeline/            #   数据管线（CSV/JSON 读取、校验、迁移）
     │   ├── data_sandbox/             #   数据沙箱验证
     │   ├── audit/                    #   审计脚本
     │   ├── ocr/                      #   截图识别工具
     │   └── ...（代码检查、打包发布等）
 
-    ├── docs/                         # 项目文档（20+ 文档）
+    ├── docs/                         # 项目文档（30+ 文档）
     ├── installer/                    # NSIS 安装程序构建
-    ├── release_bundle/               # 发布打包配置
     ├── utils/                        # 通用工具模块
     ├── resources/                    # 资源文件（捐赠码等）
     │
+    ├── Dockerfile / docker-compose.yml  # 容器化部署配置
     ├── README.md / CONTEXT.md        # 门面与领域术语
     ├── LICENSE / DATA_LICENSE        # 软件与数据许可
     ├── AGENTS.md                     # Agent 技能配置
@@ -230,16 +245,33 @@ USAGE_INFO = """
         python scripts/main_arknights.py      # 明日方舟伤害计算器
         python scripts/launcher.pyw           # 图形化启动器（选择游戏）
 
+    【AI 计算器生成器】
+
+        python scripts/main_generator.py                # 桌面版生成器
+        python tools/export_sample_calcpacks.py --list-templates  # 列出模板
+        python tools/export_sample_calcpacks.py --from-template simple --name "我的游戏"  # 从模板导出
+
     【Web 版】
 
         python web/run_local.py               # 启动本地 Web 服务
         或双击 scripts/启动本地服务器.bat
         然后浏览器打开 http://localhost:8000
+        （支持 PWA 离线安装到桌面）
+
+    【Docker 部署】
+
+        docker-compose up -d                  # 启动 Web 服务（端口 8000）
+
+    【BWIKI 数据采集】
+
+        python tools/bwiki_scout/scout.py     # 侦察（拉取 Wiki 数据）
+        python tools/bwiki_scout/sync_all.py --apply  # 同步到本地 JSON
 
     【数据设计器】
 
         python scripts/main_designer.py       # 适配器包数据设计
         python scripts/main_pack_designer.py  # 适配器包打包设计
+        python scripts/import_calcpack.py     # 导入 calcpack 到本地
 
     【打包构建】
 
@@ -264,6 +296,8 @@ USAGE_INFO = """
     - JSON（游戏数据存储）
     - PyInstaller（桌面打包工具）
     - pytest（测试框架）
+    - Docker（容器化部署，可选）
+    - OpenAI 兼容 API（AI 公式解析，可选）
 
 """
 
@@ -271,7 +305,7 @@ USAGE_INFO = """
 
 FORMULA_INFO = """
 
-伤害计算公式：
+伤害计算公式（终末地示例）：
 
     最终攻击力 = 中间攻击力 × (能力值加成 + 1)
 
@@ -365,10 +399,12 @@ def show_help() -> None:
 
 
 
-import sys  # noqa: E402
-from pathlib import Path  # noqa: E402
+import sys
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
+
 ensure_root()
 
 if __name__ == "__main__":
@@ -376,9 +412,45 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 3 处文件
+# TITLE: 更新 39 处文件
 # BODY:
-# - 变更 games/endfield/data/equipments.json
+# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
+# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
+# - 变更 .github/workflows/ci.yml
+# - 变更 .github/workflows/layout-sync.yml
+# - 变更 .github/workflows/web-ci.yml
+# - 变更 .ruff.toml
+# - 更新文档 CONTRIBUTING.md
+# - 修改 scripts/build.py
+# - 修改 scripts/deploy_pythonanywhere.py
+# - 修改 scripts/devtool.py
+# - 修改 scripts/github_download_module.py
+# - 修改 scripts/github_upload_module.py
+# - 修改 scripts/main.py
+# - 修改 scripts/main_arknights.py
+# - 修改 scripts/main_build.py
+# - 修改 scripts/main_designer.py
+# - 修改 scripts/main_generator.py
+# - 修改 scripts/main_launcher.py
+# - 修改 scripts/main_pack_designer.py
 # - 修改 scripts/please_read_me.py
-# - 修改 tools/bwiki_scout/equipment_wiki.py
+# - 修改 scripts/upload_meta.py
+# - 修改 scripts/version.py
+# - 修改 web/backend/api/adapters.py
+# - 修改 web/backend/api/arknights.py
+# - 修改 web/backend/api/compute.py
+# - 修改 web/backend/api/data.py
+# - 修改 web/backend/api/data_mutations.py
+# - 修改 web/backend/api/generator.py
+# - 修改 web/backend/api/history.py
+# - 修改 web/backend/api/hub.py
+# - 修改 web/backend/api/layout.py
+# - 修改 web/backend/api/ocr.py
+# - 修改 web/backend/api/pack.py
+# - 修改 web/backend/api/search.py
+# - 修改 web/backend/asgi.py
+# - 修改 web/backend/main.py
+# - 修改 web/backend/run_packaged_main.py
+# - 修改 web/backend/tests/test_arknights_data_fallback.py
+# - 变更 web/frontend/src/components/designer/ProfileDataBrowser.tsx
 # --- END UPLOAD_SUMMARY ---
