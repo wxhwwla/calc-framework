@@ -60,9 +60,7 @@ def _write_manifest(
         "current_version": current_version,
         "bump_kind": bump_kind,
         "head": head,
-        "restore_hint": (
-            "关闭 IDE 后删除工作区 .git，再将本目录下的 .git 复制回仓库根目录"
-        ),
+        "restore_hint": ("关闭 IDE 后删除工作区 .git，再将本目录下的 .git 复制回仓库根目录"),
     }
     dest.joinpath(MANIFEST_NAME).write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
