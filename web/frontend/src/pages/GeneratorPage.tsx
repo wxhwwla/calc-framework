@@ -5,7 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Table, TableBody, TableCell, TableContainer, TableRow, Paper,
   Accordion, AccordionSummary, AccordionDetails, IconButton,
-  Select, MenuItem, Checkbox,
+  Select, MenuItem, Checkbox, useMediaQuery, useTheme,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
@@ -21,6 +21,9 @@ interface StepRow { id: string; op: string; lhs: string; rhs: string; expr: stri
 interface OutRow { name: string; node: string; label: string; is_primary: boolean; }
 
 export default function GeneratorPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [activeStep, setActiveStep] = useState(0);
   const [templates, setTemplates] = useState<Record<string, TemplateInfo>>({});
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
@@ -146,7 +149,7 @@ export default function GeneratorPage() {
   /** 渲染可编辑变量表 */
   const renderVarEditor = () => (
     <Box>
-      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1 }}>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1, overflowX: 'auto' }}>
         <Table size="small">
           <TableBody>
             {editableVars.map((v, i) => (
@@ -193,7 +196,7 @@ export default function GeneratorPage() {
   /** 渲染可编辑步骤表 */
   const renderStepEditor = () => (
     <Box>
-      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1 }}>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1, overflowX: 'auto' }}>
         <Table size="small">
           <TableBody>
             {editableSteps.map((s, i) => (
@@ -260,7 +263,7 @@ export default function GeneratorPage() {
   /** 渲染可编辑输出表 */
   const renderOutEditor = () => (
     <Box>
-      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1 }}>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 1, overflowX: 'auto' }}>
         <Table size="small">
           <TableBody>
             {editableOutputs.map((o, i) => (
@@ -294,13 +297,13 @@ export default function GeneratorPage() {
   );
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1000, mx: 'auto' }}>
-      <Typography variant="h4" gutterBottom>AI 计算器生成器</Typography>
+    <Box sx={{ p: isMobile ? 2 : 3, maxWidth: 1000, mx: 'auto' }}>
+      <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>AI 计算器生成器</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         选择模板，填写游戏信息，AI 自动生成计算器适配包。
       </Typography>
 
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+      <Stepper activeStep={activeStep} alternativeLabel={isMobile} sx={{ mb: 4 }}>
         {STEPS.map(label => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
@@ -310,7 +313,7 @@ export default function GeneratorPage() {
       {activeStep === 0 && (
         <Box>
           <Typography variant="h6" gutterBottom>选择一个品类模板</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 2 }}>
             {Object.entries(templates).map(([id, info]) => (
               <Card
                 key={id}
@@ -335,7 +338,7 @@ export default function GeneratorPage() {
             ))}
           </Box>
           <Box sx={{ mt: 3 }}>
-            <Button variant="contained" disabled={!selectedTemplate} onClick={() => setActiveStep(1)}>
+            <Button variant="contained" disabled={!selectedTemplate} onClick={() => setActiveStep(1)} sx={{ py: isMobile ? 1.5 : undefined }}>
               下一步
             </Button>
           </Box>
@@ -363,7 +366,7 @@ export default function GeneratorPage() {
 
           {/* AI 按钮 */}
           <Box sx={{ mb: 2 }}>
-            <Button variant="outlined" onClick={() => setAiDialogOpen(true)}>
+            <Button variant="outlined" onClick={() => setAiDialogOpen(true)} sx={{ py: isMobile ? 1.5 : undefined }}>
               AI 辅助解析公式
             </Button>
             {aiResult && (
@@ -409,9 +412,9 @@ export default function GeneratorPage() {
             </Box>
           )}
 
-          <Box>
-            <Button variant="outlined" onClick={() => setActiveStep(0)} sx={{ mr: 1 }}>上一步</Button>
-            <Button variant="contained" disabled={!gameName || generating} onClick={handleGenerate}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button variant="outlined" onClick={() => setActiveStep(0)} sx={{ py: isMobile ? 1.5 : undefined, flex: isMobile ? '1 1 auto' : undefined }}>上一步</Button>
+            <Button variant="contained" disabled={!gameName || generating} onClick={handleGenerate} sx={{ py: isMobile ? 1.5 : undefined, flex: isMobile ? '1 1 auto' : undefined }}>
               {generating ? '生成中...' : '生成计算器'}
             </Button>
           </Box>
@@ -433,7 +436,7 @@ export default function GeneratorPage() {
             生成成功！共 {result.file_count} 个文件。
           </Alert>
 
-          <TableContainer component={Paper} sx={{ mb: 2 }}>
+          <TableContainer component={Paper} sx={{ mb: 2, overflowX: 'auto' }}>
             <Table>
               <TableBody>
                 {Object.entries(result.files).map(([name, content]) => (
@@ -447,14 +450,14 @@ export default function GeneratorPage() {
             </Table>
           </TableContainer>
 
-          <Button variant="contained" onClick={handleDownloadAll}>
+          <Button variant="contained" onClick={handleDownloadAll} sx={{ py: isMobile ? 1.5 : undefined }}>
             下载全部文件
           </Button>
         </Box>
       )}
 
       {/* 文件内容预览对话框 */}
-      <Dialog open={openFileDialog} onClose={() => setOpenFileDialog(false)} maxWidth="md" fullWidth>
+      <Dialog open={openFileDialog} onClose={() => setOpenFileDialog(false)} maxWidth="md" fullWidth fullScreen={isMobile}>
         <DialogTitle>{selectedFile}</DialogTitle>
         <DialogContent>
           <pre style={{ fontSize: 12, overflow: 'auto', maxHeight: 500 }}>

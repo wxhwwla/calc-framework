@@ -4,7 +4,7 @@ import {
   TextField, Button, Alert, CircularProgress, Chip,
   Box, Typography, Accordion, AccordionSummary, AccordionDetails,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Collapse,
+  Collapse, useMediaQuery, useTheme,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -18,6 +18,9 @@ interface Props {
 }
 
 export default function AIFormulaDialog({ open, onClose, templateId, onApply }: Props) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('ai_api_key') || '');
   const [apiBase, setApiBase] = useState(() => localStorage.getItem('ai_api_base') || 'https://api.openai.com/v1');
   const [model, setModel] = useState(() => localStorage.getItem('ai_model') || 'gpt-4o-mini');
@@ -111,7 +114,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
       <DialogTitle>AI 公式解析</DialogTitle>
       <DialogContent>
         {/* API 配置 */}
@@ -148,10 +151,11 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
               />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Button
-                  size="small"
+                  size={isMobile ? 'medium' : 'small'}
                   variant="outlined"
                   onClick={handleTestConnection}
                   disabled={testing || !apiKey.trim()}
+                  sx={{ py: isMobile ? 1.5 : undefined }}
                 >
                   {testing ? <CircularProgress size={16} sx={{ mr: 0.5 }} /> : null}
                   {testing ? '测试中...' : '测试连接'}
@@ -205,7 +209,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
             <Typography variant="h6" gutterBottom>AI 解析结果</Typography>
 
             <Typography variant="subtitle2">识别的变量 ({result.variables.length})</Typography>
-            <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 150 }}>
+            <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 150, overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -226,7 +230,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
             </TableContainer>
 
             <Typography variant="subtitle2">公式步骤 ({result.formula_steps.length})</Typography>
-            <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 150 }}>
+            <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 150, overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -271,11 +275,11 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>取消</Button>
+        <Button onClick={onClose} sx={{ py: isMobile ? 1.5 : undefined }}>取消</Button>
         {result ? (
-          <Button variant="contained" onClick={handleApply}>应用此结果</Button>
+          <Button variant="contained" onClick={handleApply} sx={{ py: isMobile ? 1.5 : undefined }}>应用此结果</Button>
         ) : (
-          <Button variant="contained" onClick={handleParse} disabled={loading || !description.trim()}>
+          <Button variant="contained" onClick={handleParse} disabled={loading || !description.trim()} sx={{ py: isMobile ? 1.5 : undefined }}>
             {loading ? '解析中...' : '解析公式'}
           </Button>
         )}
