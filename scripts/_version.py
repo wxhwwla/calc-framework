@@ -265,45 +265,8 @@ def get_exe_version() -> str:
     return _EXE_VERSION
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 39 处文件
+# TITLE: 更新 2 处文件
 # BODY:
-# - 变更 %temp%/
-# - 变更 .agents/
-# - 变更 .cursor/
-# - 变更 .cursorrules
-# - 变更 .github/
 # - 变更 .gitignore
-# - 变更 .ruff.toml
-# - 更新文档 AGENTS.md
-# - 更新文档 CONTEXT.md
-# - 更新文档 CONTRIBUTING.md
-# - 变更 DATA_LICENSE
-# - 变更 Dockerfile
-# - 变更 LICENSE
-# - 更新文档 NOTICES.md
-# - 更新文档 README.md
-# - 修改 batch_docstring.py
-# - 变更 build_local-backend_g1w6kwx9/
-# - 变更 docker-compose.yml
-# - 变更 docs/
-# - 变更 framework/
-# - 变更 games/
-# - 修改 github_download_module.py
-# - 修改 github_upload_module.py
-# - 变更 installer/
-# - 变更 package.json
-# - 变更 pyrightconfig.json
-# - 变更 release_bundle/
-# - 变更 render.yaml
-# - 变更 requirements.txt
-# - 变更 resources/
-# - 修改 scan_docstrings.py
-# - 变更 scan_report.json
-# - 变更 scripts/
-# - 变更 tools/
-# - 变更 tsconfig.json
-# - 变更 ui_preferences.json
-# - 变更 utils/
-# - 变更 web/
-# - 变更 zbpack.json
+# - 修改 scripts/tools/github_upload_module.py
 # --- END UPLOAD_SUMMARY ---

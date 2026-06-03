@@ -61,9 +61,6 @@ debug.log
 .env.*
 git_key.txt
 
-# 上传脚本临时文件
-.git-upload-msg.txt
-
 # 系统文件
 Thumbs.db
 Desktop.ini

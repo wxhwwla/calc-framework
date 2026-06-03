@@ -443,144 +443,129 @@ def setup_git_repo() -> str:
     return remote
 
 
+def _remote_branch_ref() -> str:
+    return f"origin/{DEFAULT_BRANCH}"
 
+
+def _fetch_origin_main(*, timeout: int = 300) -> None:
+    run_git(["fetch", "origin", DEFAULT_BRANCH], check=False, timeout=timeout)
+
+
+def _count_ahead_behind() -> tuple[int, int]:
+    """返回 (领先 origin/main 的 commit 数, 落后数)。"""
+    ref = _remote_branch_ref()
+    code, _, _ = run_git(["rev-parse", "--verify", ref], check=False, capture_output=True)
+    if code != 0:
+        return 0, 0
+    _, ahead, _ = run_git(
+        ["rev-list", "--count", f"{ref}..HEAD"],
+        check=False,
+        capture_output=True,
+    )
+    _, behind, _ = run_git(
+        ["rev-list", "--count", f"HEAD..{ref}"],
+        check=False,
+        capture_output=True,
+    )
+    ahead_n = int(ahead.strip()) if ahead.strip().isdigit() else 0
+    behind_n = int(behind.strip()) if behind.strip().isdigit() else 0
+    return ahead_n, behind_n
+
+
+def _stash_error_lines(stderr: str) -> list[str]:
+    lines: list[str] = []
+    for raw in stderr.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("warning:") and "LF will be replaced by CRLF" in line:
+            continue
+        lines.append(line)
+    return lines
+
+
+def _stash_dirty_worktree() -> bool:
+    """暂存未提交改动；失败时不执行 git reset（避免 Windows 上 .gitignore 锁文件）。"""
+    _, status_out, _ = run_git(["status", "--porcelain"], check=False, capture_output=True)
+    if not status_out.strip():
+        return True
+
+    print("[信息] 暂存本地未提交更改")
+    stash_code, _, stash_err = run_git(
+        ["stash", "push", "--include-untracked", "-m", "upload-script"],
+        check=False,
+        capture_output=True,
+    )
+    if stash_code == 0:
+        return True
+
+    issues = _stash_error_lines(stash_err)
+    detail = "\n  ".join(issues) if issues else stash_err.strip() or f"exit {stash_code}"
+    print(f"[错误] 暂存失败:\n  {detail}")
+    print("[提示] 关闭 Cursor/杀毒对仓库的占用后重试，或本次使用 --skip-pull")
+    return False
+
+
+def _pop_stash_if_needed(stashed: bool, *, pull_ok: bool) -> None:
+    if not stashed or not pull_ok:
+        return
+    code, _, stderr = run_git(
+        ["stash", "pop", "--index"],
+        check=False,
+        capture_output=True,
+    )
+    if code != 0:
+        print("[警告] 暂存恢复失败，请手动执行 git stash pop")
+        if stderr.strip():
+            print(f"[警告] {stderr.strip()}")
 
 
 def sync_with_remote(*, skip_pull: bool = False) -> bool:
     """拉取远程更新并与本地同步。"""
     if skip_pull or SKIP_PULL:
         print("[信息] 已跳过拉取" + ("（--skip-pull）" if skip_pull else "（SKIP_PULL=True）"))
-
         return True
 
-
-
     print("[信息] 拉取远程更新...")
+    _fetch_origin_main()
+
+    ahead, behind = _count_ahead_behind()
+    if behind == 0:
+        print(f"[信息] 已与 origin/main 同步（领先 {ahead} commit），跳过 pull")
+        return True
+
+    print(f"[信息] 落后 origin/main {behind} 个 commit，执行 pull --rebase...")
 
     code, stdout, _ = run_git(["rev-list", "--count", "--all"], check=False, capture_output=True)
-
     has_commits = int(stdout.strip()) > 0 if code == 0 and stdout.strip() else False
-
-
-
-    code, status_out, _ = run_git(["status", "--porcelain"], check=False, capture_output=True)
-
-    stashed = False
-
-    if status_out.strip() and has_commits:
-
-        has_untracked = False
-
-        for line in status_out.splitlines():
-
-            if line[:2].strip() == "??":
-
-                has_untracked = True
-
-                break
-
-        if has_untracked:
-
-            print("[信息] 检测到未跟踪文件，暂先 add 以便 pull 时安全暂存")
-
-            run_git(["add", "-A"], check=False)
-
-
-
-        print("[信息] 暂存本地未提交更改")
-
-        stash_code, _, stash_err = run_git(
-
-            ["stash", "push", "--include-untracked", "-m", "upload-script"],
-
-            check=False,
-
-            capture_output=True,
-
-        )
-
-        if stash_code != 0:
-
-            print(f"[警告] 暂存失败: {stash_err.strip()}")
-
-            if has_untracked:
-
-                run_git(["reset", "HEAD"], check=False)
-
-            return False
-
-        stashed = True
-
-
-
     if not has_commits:
-
         print("[信息] 本地无提交，跳过 pull")
+        return True
 
-        pull_ok = True
+    stashed = _stash_dirty_worktree()
+    if not stashed:
+        return False
 
-    else:
-
-        code, _, stderr = run_git(
-
-            ["pull", "--rebase", "origin", DEFAULT_BRANCH],
-
+    code, _, stderr = run_git(
+        ["pull", "--rebase", "origin", DEFAULT_BRANCH],
+        check=False,
+        capture_output=False,
+        timeout=300,
+    )
+    pull_ok = code == 0
+    if not pull_ok:
+        _code2, heads, _ = run_git(
+            ["ls-remote", "--heads", "origin", DEFAULT_BRANCH],
             check=False,
-
-            capture_output=False,
-
-            timeout=300,
-
-        )
-
-        pull_ok = code == 0
-
-        if not pull_ok:
-
-            code2, heads, _ = run_git(
-
-                ["ls-remote", "--heads", "origin", DEFAULT_BRANCH],
-
-                check=False,
-
-                capture_output=True,
-
-            )
-
-            if not heads.strip():
-
-                print("[信息] 远程尚无 main 分支，将首次推送")
-
-                pull_ok = True
-
-            else:
-
-                print(f"[警告] 拉取失败: {stderr.strip()}")
-
-
-
-    if stashed and pull_ok:
-
-        code, _, stderr = run_git(
-
-            ["stash", "pop", "--index"],
-
-            check=False,
-
             capture_output=True,
-
         )
+        if not heads.strip():
+            print("[信息] 远程尚无 main 分支，将首次推送")
+            pull_ok = True
+        else:
+            print(f"[警告] 拉取失败: {stderr.strip()}")
 
-        if code != 0:
-
-            print("[警告] 暂存恢复有冲突（本地文件已被远程版本覆盖），使用本地版本覆盖")
-
-            run_git(["checkout", "--theirs", "."], check=False)
-
-            run_git(["reset", "HEAD", "."], check=False)
-
-
-
+    _pop_stash_if_needed(stashed, pull_ok=pull_ok)
     return pull_ok
 
 
@@ -879,9 +864,16 @@ def _push_to_remote() -> bool:
 
             raise
 
-        print("[信息] 推送失败，尝试 pull --rebase 后重试")
+        print("[信息] 推送失败，尝试 fetch → pull --rebase 后重试")
 
+        _fetch_origin_main()
+        _, behind = _count_ahead_behind()
+        if behind == 0:
+            raise
+        if not _stash_dirty_worktree():
+            raise
         run_git(["pull", "--rebase", "origin", DEFAULT_BRANCH], timeout=300)
+        _pop_stash_if_needed(True, pull_ok=True)
 
         run_git(push_args, timeout=300)
 
