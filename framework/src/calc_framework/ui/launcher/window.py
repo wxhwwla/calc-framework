@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
+import threading
 import webbrowser
 from pathlib import Path
 
@@ -12,7 +14,6 @@ from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QFrame,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -30,7 +31,6 @@ from .runtime import (
     AdapterEntry,
     argv_for_adapter,
     argv_for_calcpack,
-    argv_for_tool,
     list_adapter_entries,
     repo_root,
     spawn_detached,
@@ -89,8 +89,9 @@ class GameLauncherWindow(QMainWindow):
         super().__init__()
         version = _read_exe_version()
         self.setWindowTitle(f"游戏计算器启动器 v{version}")
-        self.setMinimumSize(520, 480)
+        self.setMinimumSize(520, 520)
         self._root = repo_root()
+        self._server_process: subprocess.Popen | None = None
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -107,6 +108,7 @@ class GameLauncherWindow(QMainWindow):
         root_layout.addWidget(scroll, stretch=1)
 
         root_layout.addWidget(self._build_tools_group())
+        root_layout.addWidget(self._build_web_server_group())
         root_layout.addWidget(self._build_footer())
 
         self._status = QStatusBar()
@@ -115,10 +117,10 @@ class GameLauncherWindow(QMainWindow):
         self._reload_adapters()
 
     def _build_tools_group(self) -> QGroupBox:
-        box = QGroupBox("工具")
-        grid = QGridLayout(box)
+        box = QGroupBox("开发工具")
+        layout = QVBoxLayout(box)
 
-        # 开发者工具箱（统一入口）
+        # 开发者工具箱（统一入口，包含所有开发工具）
         tk_btn = QPushButton("🔧 开发者工具箱")
         tk_btn.setStyleSheet(
             "QPushButton { background: #094771; color: white; "
@@ -126,28 +128,17 @@ class GameLauncherWindow(QMainWindow):
             "QPushButton:hover { background: #0f5f99; }"
         )
         tk_btn.clicked.connect(self._launch_dev_toolkit)
-        grid.addWidget(tk_btn, 0, 0, 1, 3)
-        grid.setRowMinimumHeight(0, 48)
+        layout.addWidget(tk_btn)
 
-        # 单独工具（向下兼容）
-        tools = [
-            ("数据设计器", "designer"),
-            ("配置包设计器", "pack_designer"),
-            ("CalcPack 查看器", "viewer"),
-            ("公式图编辑器", "graph_editor"),
-            ("布局编辑器", "layout_editor"),
-        ]
-        for i, (label, tool_id) in enumerate(tools):
-            btn = QPushButton(label)
-            btn.clicked.connect(lambda _=False, tid=tool_id: self._launch_tool(tid))
-            grid.addWidget(btn, 1 + i // 3, i % 3)
+        hint = QLabel("包含：数据编辑 / 布局编辑 / 图编辑 / DAG调试 / 计算包查看 / AI生成 / OCR标注")
+        hint.setWordWrap(True)
+        hint.setProperty("secondary", True)
+        layout.addWidget(hint)
         return box
 
     def _launch_dev_toolkit(self) -> None:
         """启动开发者工具箱。"""
         try:
-            from .runtime import repo_root
-
             root = repo_root()
             script = root / "scripts" / "main_dev_toolkit.py"
             if not script.exists():
@@ -157,6 +148,98 @@ class GameLauncherWindow(QMainWindow):
             self._status.showMessage("已启动开发者工具箱", 5000)
         except OSError as exc:
             QMessageBox.warning(self, "启动失败", str(exc))
+
+    def _build_web_server_group(self) -> QGroupBox:
+        """本地 Web 服务器控制区。"""
+        box = QGroupBox("本地 Web 服务器")
+        layout = QHBoxLayout(box)
+
+        self._server_status = QLabel("⚪ 未启动")
+        layout.addWidget(self._server_status)
+
+        self._server_btn = QPushButton("启动服务器")
+        self._server_btn.clicked.connect(self._toggle_web_server)
+        layout.addWidget(self._server_btn)
+
+        self._open_browser_btn = QPushButton("打开浏览器")
+        self._open_browser_btn.clicked.connect(
+            lambda: webbrowser.open("http://localhost:8180")
+        )
+        self._open_browser_btn.setEnabled(False)
+        layout.addWidget(self._open_browser_btn)
+
+        layout.addStretch()
+        return box
+
+    def _toggle_web_server(self) -> None:
+        """切换 Web 服务器启动/停止。"""
+        if self._server_process is not None:
+            self._stop_web_server()
+        else:
+            self._start_web_server()
+
+    def _start_web_server(self) -> None:
+        """启动本地 Web 服务器（uvicorn）。"""
+        backend_dir = self._root / "web" / "backend"
+        if not (backend_dir / "main.py").exists():
+            QMessageBox.warning(self, "启动失败", f"找不到后端入口:\n{backend_dir / 'main.py'}")
+            return
+
+        self._server_btn.setEnabled(False)
+        self._server_btn.setText("启动中...")
+        self._server_status.setText("🟡 正在启动...")
+
+        def _run() -> None:
+            try:
+                proc = subprocess.Popen(
+                    [sys.executable, "-m", "uvicorn", "main:app",
+                     "--host", "127.0.0.1", "--port", "8180"],
+                    cwd=str(backend_dir),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+                import time
+                time.sleep(2)
+
+                if proc.poll() is not None:
+                    # 进程已退出
+                    self._server_status_label("🔴 启动失败")
+                    self._server_btn.setText("启动服务器")
+                    self._server_btn.setEnabled(True)
+                else:
+                    self._server_process = proc
+                    self._server_status_label("🟢 运行中 (127.0.0.1:8180)")
+                    self._server_btn.setText("停止服务器")
+                    self._server_btn.setEnabled(True)
+                    self._open_browser_btn.setEnabled(True)
+                    webbrowser.open("http://localhost:8180")
+            except Exception as exc:
+                self._server_status_label(f"🔴 错误: {exc}")
+                self._server_btn.setText("启动服务器")
+                self._server_btn.setEnabled(True)
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _server_status_label(self, text: str) -> None:
+        """线程安全地更新状态标签。"""
+        from PySide6.QtCore import QMetaObject, Qt as _Qt
+
+        QMetaObject.invokeMethod(
+            self._server_status,
+            "setText",
+            _Qt.ConnectionType.QueuedConnection,
+            text,
+        )
+
+    def _stop_web_server(self) -> None:
+        """停止 Web 服务器。"""
+        if self._server_process is not None:
+            self._server_process.terminate()
+            self._server_process = None
+        self._server_status.setText("⚪ 已停止")
+        self._server_btn.setText("启动服务器")
+        self._open_browser_btn.setEnabled(False)
 
     def _build_footer(self) -> QWidget:
         row = QWidget()
@@ -201,13 +284,6 @@ class GameLauncherWindow(QMainWindow):
             spawn_detached(argv_for_adapter(entry, self._root))
             self._status.showMessage(f"已启动：{entry.name}", 5000)
         except OSError as exc:
-            QMessageBox.warning(self, "启动失败", str(exc))
-
-    def _launch_tool(self, tool_id: str) -> None:
-        try:
-            spawn_detached(argv_for_tool(tool_id, self._root))
-            self._status.showMessage(f"已启动工具：{tool_id}", 5000)
-        except (KeyError, OSError) as exc:
             QMessageBox.warning(self, "启动失败", str(exc))
 
     def _open_calcpack_dialog(self) -> None:
