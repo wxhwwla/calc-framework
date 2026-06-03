@@ -11,6 +11,7 @@ Also read this entire file: `.cursorrules`
 ## Pre-Change Reading
 | File | When to Read |
 |------|-------------|
+| `docs/README.md` | **Doc index** (look here first to find docs) |
 | `docs/操作指令集.md` | Before code changes or GitHub push |
 | `docs/代码结构规范.md` | Before structural refactors or adding modules |
 | `docs/adr/0001-code-layout-constraints.md` | Before structural refactors or adding modules |
@@ -158,6 +159,32 @@ Feature / bug fix / code change → default to `design-then-build`:
 2. TDD: red → green → refactor
 3. Low-risk ops (tests, edits, deps installs) → auto-consent
 4. High-risk ops (upload script, git push, destructive) → ask user first
+
+## Documentation Location (2026-06-03)
+
+### Core Principle
+**All project documentation lives in `docs/`.**
+Do not create doc files outside `docs/` unless there is a strong reason (see exceptions below).
+
+### Files outside `docs/` (explicitly allowed)
+
+| File | Purpose | Reason to keep outside |
+|------|---------|------------------------|
+| `README.md` (root) | Project overview | GitHub front page requirement |
+| `CONTEXT.md` (root) | Domain glossary | Referenced by agent skills/rules |
+| `CONTRIBUTING.md` (root) | Contributing guide | GitHub convention |
+| `AGENTS.md` (root) | Agent skills config | Agent toolchain requirement |
+| `NOTICES.md` (root) | Legal notices | Root-level convention |
+| `games/*/README.md` | Game package description | Self-contained per package |
+| `framework/README.md` | Framework description | Self-contained per package |
+| `tools/README.md` | Tools directory description | Self-contained per tool dir |
+| `tools/bwiki_scout/README.md` | BWIKI tool description | Self-contained per tool |
+| `tools/bwiki_scout/CACHE.md` | Cache documentation | Self-contained per tool |
+
+### Forbidden
+- Creating new `.md` doc files outside `docs/` without a strong reason from the above table
+- Treating agent skill files (`.agents/skills/`, `.trae/skills/`) as project documentation — they are AI tool configs, not project docs
+- Keeping temp lint reports (e.g. `ruff_*.txt`) or one-time analysis output in the repo
 
 ## Full Release Cycle Workflow
 

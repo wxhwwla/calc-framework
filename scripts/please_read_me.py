@@ -47,7 +47,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.18"
+_VERSION = "3.19.19"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -412,19 +412,12 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 13 处文件
+# TITLE: 更新 6 处文件
 # BODY:
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 变更 "docs//347/256/227/346/263/225/344/270/216/346/236/266/346/236/204.md"
-# - 变更 "docs//351/241/271/347/233/256/347/233/256/346/240/207.md"
-# - 更新文档 PROJECT_DOCUMENTATION.md
-# - 更新文档 README.md
-# - 更新文档 docs/CONTRIBUTORS.md
-# - 更新文档 docs/README.md
-# - 更新文档 docs/adr/0002-formula-graph-editor.md
-# - 更新文档 docs/agents/audit-issues-2026-05-20.md
-# - 更新文档 docs/agents/git-credential-audit-2026-05-20.md
-# - 修改 games/endfield/tests/repo/test_repo_layout.py
+# - 变更 .cursorrules
+# - 变更 _ruff_report.txt
+# - 变更 ruff_after.txt
+# - 变更 ruff_errors.txt
+# - 变更 ruff_remaining.txt
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
