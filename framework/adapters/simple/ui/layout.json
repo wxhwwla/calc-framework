@@ -1,0 +1,18 @@
+{
+  "schema_version": "ui-v1",
+  "name": "简单伤害计算",
+  "sections": [
+    {
+      "id": "inputs",
+      "type": "inputs",
+      "title": "输入参数",
+      "variables": ["user_input.skill_mult", "user_input.is_crit"]
+    },
+    {
+      "id": "damage",
+      "type": "outputs",
+      "title": "伤害结果",
+      "outputs": ["总攻击力", "基础伤害", "暴击倍率", "最终伤害"]
+    }
+  ]
+}

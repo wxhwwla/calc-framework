@@ -1,0 +1,11 @@
+{
+  "attributes": [
+    { "name": "base_atk", "type": "float", "source": "user_input", "default": 100, "description": "基础攻击力" },
+    { "name": "atk_pct", "type": "percent", "source": "user_input", "default": 0.0, "description": "攻击力百分比加成" },
+    { "name": "dmg_bonus", "type": "percent", "source": "user_input", "default": 0.0, "description": "伤害加成百分比" },
+    { "name": "defense_val", "type": "float", "source": "user_input", "default": 50, "description": "防御力" },
+    { "name": "crit_rate", "type": "percent", "source": "character", "default": 0.05, "description": "暴击率" },
+    { "name": "crit_dmg_input", "type": "percent", "source": "user_input", "default": 0.5, "description": "暴击伤害" },
+    { "name": "is_crit", "type": "bool", "source": "user_input", "default": false, "description": "是否暴击" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "简单伤害计算",
+  "game": "通用游戏",
+  "description": "最简单的单公式计算器模板：攻击×倍率-防御",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "simple.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {
+    "clamp": "functions.py"
+  }
+}

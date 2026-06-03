@@ -1,0 +1,319 @@
+{
+  "schema_version": "dag-v1",
+  "name": "多乘区伤害公式",
+  "description": "精简版多乘区伤害计算：最终伤害 = 攻击力区 × 增伤区 × 防御区 × 暴击区",
+  "variables": {
+    "user_input.base_atk": {
+      "type": "float",
+      "source": "user_input",
+      "default": 100,
+      "description": "基础攻击力"
+    },
+    "user_input.atk_pct": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "攻击力百分比加成"
+    },
+    "user_input.dmg_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "伤害加成百分比"
+    },
+    "user_input.defense_val": {
+      "type": "float",
+      "source": "user_input",
+      "default": 50,
+      "description": "防御力"
+    },
+    "user_input.crit_dmg_input": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.5,
+      "description": "暴击伤害"
+    },
+    "user_input.is_crit": {
+      "type": "bool",
+      "source": "user_input",
+      "default": false,
+      "description": "是否暴击"
+    }
+  },
+  "subgraphs": {
+    "atk_zone": {
+      "description": "攻击力区：基础攻击 × (1 + 攻击力%)",
+      "parameters": {
+        "base": {
+          "type": "float",
+          "source": "computed",
+          "description": "基础攻击力"
+        },
+        "pct": {
+          "type": "float",
+          "source": "computed",
+          "description": "攻击力百分比加成"
+        }
+      },
+      "nodes": {
+        "const_1": {
+          "type": "const",
+          "value": 1.0
+        },
+        "pct_factor": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "pct",
+          "label": "1 + 攻击力%"
+        },
+        "result": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "base",
+          "rhs": "pct_factor",
+          "label": "攻击力结果"
+        }
+      },
+      "outputs": {
+        "攻击力结果": {
+          "node": "result",
+          "label": "攻击力结果",
+          "format": "",
+          "is_primary": true
+        }
+      }
+    },
+    "dmg_bonus_zone": {
+      "description": "增伤区：1 + 增伤%",
+      "parameters": {
+        "bonus": {
+          "type": "float",
+          "source": "computed",
+          "description": "伤害加成百分比"
+        }
+      },
+      "nodes": {
+        "const_1": {
+          "type": "const",
+          "value": 1.0
+        },
+        "result": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "bonus",
+          "label": "增伤区"
+        }
+      },
+      "outputs": {
+        "增伤区": {
+          "node": "result",
+          "label": "增伤区",
+          "format": "",
+          "is_primary": true
+        }
+      }
+    },
+    "defense_zone": {
+      "description": "防御区：100 / (100 + 防御力)",
+      "parameters": {
+        "def_val": {
+          "type": "float",
+          "source": "computed",
+          "description": "防御力"
+        }
+      },
+      "nodes": {
+        "const_100": {
+          "type": "const",
+          "value": 100.0
+        },
+        "def_plus_100": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_100",
+          "rhs": "def_val",
+          "label": "100 + 防御力"
+        },
+        "result": {
+          "type": "binary",
+          "op": "/",
+          "lhs": "const_100",
+          "rhs": "def_plus_100",
+          "label": "防御区"
+        }
+      },
+      "outputs": {
+        "防御区": {
+          "node": "result",
+          "label": "防御区",
+          "format": "",
+          "is_primary": true
+        }
+      }
+    },
+    "crit_zone": {
+      "description": "暴击区：暴击 ? 1 + 暴伤 : 1",
+      "parameters": {
+        "is_crit": {
+          "type": "bool",
+          "source": "computed",
+          "description": "是否暴击"
+        },
+        "crit_dmg": {
+          "type": "float",
+          "source": "computed",
+          "description": "暴击伤害"
+        }
+      },
+      "nodes": {
+        "const_1": {
+          "type": "const",
+          "value": 1.0
+        },
+        "crit_base": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "crit_dmg",
+          "label": "1 + 暴伤"
+        },
+        "result": {
+          "type": "condition",
+          "cond": "is_crit",
+          "true_val": "crit_base",
+          "false_val": "const_1",
+          "label": "暴击区"
+        }
+      },
+      "outputs": {
+        "暴击区": {
+          "node": "result",
+          "label": "暴击区",
+          "format": "",
+          "is_primary": true
+        }
+      }
+    }
+  },
+  "nodes": {
+    "var_base_atk": {
+      "type": "var",
+      "path": "user_input.base_atk",
+      "label": "基础攻击力"
+    },
+    "var_atk_pct": {
+      "type": "var",
+      "path": "user_input.atk_pct",
+      "label": "攻击力%"
+    },
+    "var_dmg_bonus": {
+      "type": "var",
+      "path": "user_input.dmg_bonus",
+      "label": "增伤%"
+    },
+    "var_defense": {
+      "type": "var",
+      "path": "user_input.defense_val",
+      "label": "防御力"
+    },
+    "var_crit_dmg": {
+      "type": "var",
+      "path": "user_input.crit_dmg_input",
+      "label": "暴击伤害"
+    },
+    "var_is_crit": {
+      "type": "var",
+      "path": "user_input.is_crit",
+      "label": "是否暴击"
+    },
+    "atk_zone_call": {
+      "type": "call",
+      "subgraph": "atk_zone",
+      "bindings": {
+        "base": "var_base_atk",
+        "pct": "var_atk_pct"
+      },
+      "label": "攻击力区"
+    },
+    "dmg_zone_call": {
+      "type": "call",
+      "subgraph": "dmg_bonus_zone",
+      "bindings": {
+        "bonus": "var_dmg_bonus"
+      },
+      "label": "增伤区"
+    },
+    "def_zone_call": {
+      "type": "call",
+      "subgraph": "defense_zone",
+      "bindings": {
+        "def_val": "var_defense"
+      },
+      "label": "防御区"
+    },
+    "crit_zone_call": {
+      "type": "call",
+      "subgraph": "crit_zone",
+      "bindings": {
+        "is_crit": "var_is_crit",
+        "crit_dmg": "var_crit_dmg"
+      },
+      "label": "暴击区"
+    },
+    "mul_atk_dmg": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "atk_zone_call",
+      "rhs": "dmg_zone_call",
+      "label": "攻击力 × 增伤"
+    },
+    "mul_def": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "mul_atk_dmg",
+      "rhs": "def_zone_call",
+      "label": "× 防御区"
+    },
+    "final_damage": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "mul_def",
+      "rhs": "crit_zone_call",
+      "label": "最终伤害"
+    }
+  },
+  "outputs": {
+    "攻击力结果": {
+      "node": "atk_zone_call",
+      "label": "攻击力结果",
+      "format": "",
+      "is_primary": true
+    },
+    "增伤区": {
+      "node": "dmg_zone_call",
+      "label": "增伤区",
+      "format": "",
+      "is_primary": true
+    },
+    "防御区": {
+      "node": "def_zone_call",
+      "label": "防御区",
+      "format": "",
+      "is_primary": true
+    },
+    "暴击区": {
+      "node": "crit_zone_call",
+      "label": "暴击区",
+      "format": "",
+      "is_primary": true
+    },
+    "最终伤害": {
+      "node": "final_damage",
+      "label": "最终伤害",
+      "format": "",
+      "is_primary": true
+    }
+  }
+}

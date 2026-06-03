@@ -1,0 +1,13 @@
+{
+  "name": "多乘区伤害计算",
+  "game": "通用多乘区RPG",
+  "description": "精简版多乘区伤害计算器：攻击力区 × 增伤区 × 防御区 × 暴击区",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "multi-zone.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {
+    "clamp": "functions.py"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "ui-v1",
+  "name": "多乘区伤害计算",
+  "sections": [
+    {
+      "id": "inputs",
+      "type": "inputs",
+      "title": "输入参数",
+      "variables": [
+        "user_input.base_atk",
+        "user_input.atk_pct",
+        "user_input.dmg_bonus",
+        "user_input.defense_val",
+        "user_input.crit_dmg_input",
+        "user_input.is_crit"
+      ]
+    },
+    {
+      "id": "zone_detail",
+      "type": "outputs",
+      "title": "各区明细",
+      "columns": 2,
+      "outputs": ["攻击力结果", "增伤区", "防御区", "暴击区"]
+    },
+    {
+      "id": "final_result",
+      "type": "outputs",
+      "title": "最终伤害",
+      "columns": 1,
+      "outputs": ["最终伤害"]
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "schema_version": "dag-v1",
+  "name": "简单伤害公式",
+  "description": "最简单的单公式伤害计算：damage = max(ATK × skill_mult - DEF, 0) × crit_mult",
+  "variables": {
+    "character.ATK": {
+      "type": "float",
+      "source": "character",
+      "default": 100,
+      "description": "攻击力"
+    },
+    "character.DEF": {
+      "type": "float",
+      "source": "character",
+      "default": 50,
+      "description": "防御力"
+    },
+    "character.crit_dmg": {
+      "type": "float",
+      "source": "character",
+      "default": 0.5,
+      "description": "暴击伤害"
+    },
+    "user_input.skill_mult": {
+      "type": "float",
+      "source": "user_input",
+      "default": 1.0,
+      "description": "技能倍率"
+    },
+    "user_input.is_crit": {
+      "type": "bool",
+      "source": "user_input",
+      "default": false,
+      "description": "是否暴击"
+    }
+  },
+  "subgraphs": {},
+  "nodes": {
+    "var_atk": {
+      "type": "var",
+      "path": "character.ATK",
+      "label": "攻击力"
+    },
+    "var_def": {
+      "type": "var",
+      "path": "character.DEF",
+      "label": "防御力"
+    },
+    "var_skill_mult": {
+      "type": "var",
+      "path": "user_input.skill_mult",
+      "label": "技能倍率"
+    },
+    "var_is_crit": {
+      "type": "var",
+      "path": "user_input.is_crit",
+      "label": "是否暴击"
+    },
+    "var_crit_dmg": {
+      "type": "var",
+      "path": "character.crit_dmg",
+      "label": "暴击伤害"
+    },
+    "atk_x_skill": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "var_atk",
+      "rhs": "var_skill_mult",
+      "label": "ATK×倍率"
+    },
+    "base_damage": {
+      "type": "binary",
+      "op": "-",
+      "lhs": "atk_x_skill",
+      "rhs": "var_def",
+      "label": "减法后伤害"
+    },
+    "clamped": {
+      "type": "expr",
+      "expr": "clamp(base_damage, 0, 999999)",
+      "inputs": {
+        "base_damage": "base_damage"
+      },
+      "label": "钳制（≥0）"
+    },
+    "const_1": {
+      "type": "const",
+      "value": 1.0,
+      "label": "1.0"
+    },
+    "crit_mult_base": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "const_1",
+      "rhs": "var_crit_dmg",
+      "label": "暴击倍率基数"
+    },
+    "crit_mult": {
+      "type": "condition",
+      "cond": "var_is_crit",
+      "true_val": "crit_mult_base",
+      "false_val": "const_1",
+      "label": "暴击倍率"
+    },
+    "final_damage": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "clamped",
+      "rhs": "crit_mult",
+      "label": "最终伤害"
+    }
+  },
+  "outputs": {
+    "总攻击力": {
+      "node": "var_atk",
+      "label": "总攻击力",
+      "format": "",
+      "is_primary": true
+    },
+    "基础伤害": {
+      "node": "clamped",
+      "label": "基础伤害",
+      "format": "",
+      "is_primary": true
+    },
+    "暴击倍率": {
+      "node": "crit_mult",
+      "label": "暴击倍率",
+      "format": "",
+      "is_primary": false
+    },
+    "最终伤害": {
+      "node": "final_damage",
+      "label": "最终伤害",
+      "format": "",
+      "is_primary": true
+    }
+  }
+}
