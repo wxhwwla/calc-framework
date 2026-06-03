@@ -27,7 +27,8 @@ _EXE_VERSION = "0.6.0-beta"
 
 # ==============================================================
 
-SUMMARY_BEGIN = ""
+SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
 
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
@@ -258,23 +259,3 @@ def get_version() -> str:
 def get_exe_version() -> str:
     """获取 EXE 版本号。"""
     return _EXE_VERSION
-
-# --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 15 处文件
-# BODY:
-# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 修改 games/endfield/tests/tools/test_github_upload_signing.py
-# - 修改 scripts/_version.py
-# - 修改 scripts/deploy_pythonanywhere.py
-# - 修改 scripts/devtool.py
-# - 修改 scripts/github_download_module.py
-# - 修改 scripts/github_upload_module.py
-# - 修改 scripts/import_calcpack.py
-# - 修改 scripts/tools/__init__.py
-# - 修改 scripts/tools/deploy_pythonanywhere.py
-# - 修改 scripts/tools/devtool.py
-# - 修改 scripts/tools/github_download_module.py
-# - 修改 scripts/tools/github_upload_module.py
-# - 修改 scripts/tools/import_calcpack.py
-# --- END UPLOAD_SUMMARY ---
