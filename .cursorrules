@@ -12,6 +12,7 @@ Also read this entire file: `.cursorrules`
 | File | When to Read |
 |------|-------------|
 | `docs/README.md` | **Doc index** (look here first to find docs) |
+| `docs/版本号说明.md` | Before modifying any version number |
 | `docs/操作指令集.md` | Before code changes or GitHub push |
 | `docs/代码结构规范.md` | Before structural refactors or adding modules |
 | `docs/adr/0001-code-layout-constraints.md` | Before structural refactors or adding modules |

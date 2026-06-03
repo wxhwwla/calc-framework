@@ -117,6 +117,19 @@ class GameLauncherWindow(QMainWindow):
     def _build_tools_group(self) -> QGroupBox:
         box = QGroupBox("工具")
         grid = QGridLayout(box)
+
+        # 开发者工具箱（统一入口）
+        tk_btn = QPushButton("🔧 开发者工具箱")
+        tk_btn.setStyleSheet(
+            "QPushButton { background: #094771; color: white; "
+            "font-weight: bold; padding: 8px; border-radius: 4px; }"
+            "QPushButton:hover { background: #0f5f99; }"
+        )
+        tk_btn.clicked.connect(self._launch_dev_toolkit)
+        grid.addWidget(tk_btn, 0, 0, 1, 3)
+        grid.setRowMinimumHeight(0, 48)
+
+        # 单独工具（向下兼容）
         tools = [
             ("数据设计器", "designer"),
             ("配置包设计器", "pack_designer"),
@@ -127,8 +140,23 @@ class GameLauncherWindow(QMainWindow):
         for i, (label, tool_id) in enumerate(tools):
             btn = QPushButton(label)
             btn.clicked.connect(lambda _=False, tid=tool_id: self._launch_tool(tid))
-            grid.addWidget(btn, i // 3, i % 3)
+            grid.addWidget(btn, 1 + i // 3, i % 3)
         return box
+
+    def _launch_dev_toolkit(self) -> None:
+        """启动开发者工具箱。"""
+        try:
+            from .runtime import repo_root
+
+            root = repo_root()
+            script = root / "scripts" / "main_dev_toolkit.py"
+            if not script.exists():
+                QMessageBox.warning(self, "启动失败", "找不到 main_dev_toolkit.py")
+                return
+            spawn_detached([sys.executable, str(script)])
+            self._status.showMessage("已启动开发者工具箱", 5000)
+        except OSError as exc:
+            QMessageBox.warning(self, "启动失败", str(exc))
 
     def _build_footer(self) -> QWidget:
         row = QWidget()

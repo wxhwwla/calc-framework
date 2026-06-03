@@ -47,7 +47,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.19"
+_VERSION = "3.20.0"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -412,12 +412,15 @@ if __name__ == "__main__":
     show_help()
 
 # --- UPLOAD_SUMMARY ---
-# TITLE: 更新 6 处文件
+# TITLE: 更新 9 处文件
 # BODY:
+# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
+# - 变更 "docs//347/211/210/346/234/254/345/217/267/350/257/264/346/230/216.md"
 # - 变更 .cursorrules
-# - 变更 _ruff_report.txt
-# - 变更 ruff_after.txt
-# - 变更 ruff_errors.txt
-# - 变更 ruff_remaining.txt
+# - 修改 framework/src/calc_framework/dev_toolkit/__init__.py
+# - 修改 framework/src/calc_framework/dev_toolkit/main_window.py
+# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
+# - 修改 framework/src/calc_framework/ui/launcher/window.py
+# - 修改 scripts/main_dev_toolkit.py
 # - 修改 scripts/please_read_me.py
 # --- END UPLOAD_SUMMARY ---
