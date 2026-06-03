@@ -38,7 +38,7 @@
 
 # _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
 
-_VERSION = "3.19.6"
+_VERSION = "3.19.7"
 
 _EXE_VERSION = "0.6.0-beta"
 
@@ -378,11 +378,11 @@ if __name__ == "__main__":
 # --- UPLOAD_SUMMARY ---
 # TITLE: 更新 7 处文件
 # BODY:
-# - 变更 framework/adapters/arknights/meta.json
-# - 变更 framework/adapters/card_rpg/meta.json
-# - 变更 framework/adapters/endfield/meta.json
-# - 变更 framework/adapters/fps/meta.json
-# - 变更 framework/adapters/moba/meta.json
+# - 变更 "docs/AI-/350/256/241/347/256/227/345/231/250/347/224/237/346/210/220/346/214/207/345/215/227.md"
+# - 变更 framework/adapters/_template/attr_schema.json
+# - 变更 framework/adapters/_template/dag/template.dag.json
+# - 修改 framework/adapters/_template/functions.py
+# - 变更 framework/adapters/_template/meta.json
+# - 变更 framework/adapters/_template/ui/layout.json
 # - 修改 scripts/please_read_me.py
-# - 变更 web/hub/catalog.json
 # --- END UPLOAD_SUMMARY ---

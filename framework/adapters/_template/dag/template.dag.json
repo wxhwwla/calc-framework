@@ -1,0 +1,71 @@
+{
+  "schema_version": "dag-v1",
+  "name": "模板 DAG",
+  "description": "最简单的单公式 DAG 模板。把此文件改名为 {your_game}.dag.json，替换 variables/nodes/outputs 即可。",
+  "variables": {
+    "character.attack": {
+      "type": "float",
+      "source": "character",
+      "default": 100,
+      "description": "基础攻击力"
+    },
+    "character.defense": {
+      "type": "float",
+      "source": "character",
+      "default": 50,
+      "description": "基础防御力"
+    },
+    "user_input.skill_mult": {
+      "type": "float",
+      "source": "user_input",
+      "default": 1.0,
+      "description": "技能倍率（用户输入）"
+    }
+  },
+  "subgraphs": {},
+  "nodes": {
+    "var_attack": {
+      "type": "var",
+      "path": "character.attack",
+      "label": "基础攻击力"
+    },
+    "var_skill_mult": {
+      "type": "var",
+      "path": "user_input.skill_mult",
+      "label": "技能倍率"
+    },
+    "raw_damage": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "var_attack",
+      "rhs": "var_skill_mult",
+      "label": "技能伤害"
+    },
+    "var_defense": {
+      "type": "var",
+      "path": "character.defense",
+      "label": "防御力"
+    },
+    "final_damage": {
+      "type": "binary",
+      "op": "-",
+      "lhs": "raw_damage",
+      "rhs": "var_defense",
+      "label": "最终伤害（减法）"
+    }
+  },
+  "outputs": {
+    "技能伤害": {
+      "node": "raw_damage",
+      "label": "技能伤害",
+      "format": "",
+      "is_primary": true
+    },
+    "最终伤害": {
+      "node": "final_damage",
+      "label": "最终伤害",
+      "format": "",
+      "is_primary": true
+    }
+  }
+}

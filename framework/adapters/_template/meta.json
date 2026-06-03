@@ -1,12 +1,14 @@
 {
-    "name": "游戏名称",
-    "description": "游戏简介",
-    "schema_version": "dag-v1",
-    "version": "0.1.0",
-    "entry_dag": "dag/your_game.dag.json",
-    "ui_layout": "ui/layout.json",
-    "attr_schema": "attr_schema.json",
-    "functions": {
-        "your_function": "functions.py"
-    }
+  "name": "游戏名称",
+  "game": "游戏名称",
+  "description": "游戏简介",
+  "version": "0.1.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "dag/template.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {
+    "clamp": "functions.py",
+    "lerp": "functions.py"
+  }
 }

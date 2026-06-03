@@ -1,22 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""DAG 自定义函数 — 替换为你的游戏公式。
+"""DAG 自定义函数 — DAG 表达式中通过 expr 节点调用的纯函数。
 
-此文件在 meta.json 的 "functions" 字段中注册。
-每个顶层函数通过函数名自动注册到 DAG 沙箱。
+所有顶层函数通过函数名自动注册到 DAG 沙箱。
 """
 
 from __future__ import annotations
 
 
-def your_function(param1: float, param2: float) -> float:
-    """你的游戏公式。
+def clamp(value: float, min_val: float, max_val: float) -> float:
+    """将 value 约束在 [min_val, max_val] 区间内。"""
+    return max(min_val, min(max_val, value))
 
-    Args:
-        param1: 参数 1
-        param2: 参数 2
 
-    Returns:
-        float: 计算结果
-    """
-    # TODO: 替换为实际公式
-    return param1 * param2
+def lerp(a: float, b: float, t: float) -> float:
+    """线性插值：a + (b - a) * t"""
+    return a + (b - a) * t

@@ -1,23 +1,8 @@
 {
-    "schema_version": "1.0",
-    "fields": [
-        {
-            "name": "attack",
-            "type": "float",
-            "source": "character",
-            "description": "基础攻击力"
-        },
-        {
-            "name": "defense",
-            "type": "float",
-            "source": "character",
-            "description": "基础防御力"
-        },
-        {
-            "name": "hp",
-            "type": "float",
-            "source": "character",
-            "description": "生命值"
-        }
-    ]
+  "attributes": [
+    { "name": "attack", "type": "float", "source": "character", "default": 100, "description": "基础攻击力" },
+    { "name": "defense", "type": "float", "source": "character", "default": 50, "description": "基础防御力" },
+    { "name": "hp", "type": "float", "source": "character", "default": 1000, "description": "生命值" },
+    { "name": "skill_mult", "type": "float", "source": "user_input", "default": 1.0, "description": "技能倍率" }
+  ]
 }

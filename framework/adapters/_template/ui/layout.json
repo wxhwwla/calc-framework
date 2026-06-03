@@ -1,0 +1,19 @@
+{
+  "schema_version": "ui-v1",
+  "name": "模板计算表",
+  "description": "通用模板布局 — 替换 sections 中的 variables/outputs 即可",
+  "sections": [
+    {
+      "id": "inputs",
+      "type": "inputs",
+      "title": "输入参数",
+      "variables": ["user_input.skill_mult"]
+    },
+    {
+      "id": "stats",
+      "type": "outputs",
+      "title": "属性面板",
+      "outputs": ["技能伤害", "最终伤害"]
+    }
+  ]
+}
