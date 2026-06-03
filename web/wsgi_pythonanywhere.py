@@ -1044,11 +1044,48 @@ def _handle_data_api(environ, start_response):
     return _http_error(start_response, "unknown endpoint", 404)
 
 
+def _handle_generator_api(environ, start_response):
+    """生成器 API：模板列表/详情/生成（PA 仅支持只读端点）。"""
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/generator"):
+        return None
+
+    try:
+        from api.generator import get_template_detail, get_templates
+    except Exception as e:
+        return _json(start_response, {"error": f"generator import failed: {e}"}, "500 Internal Server Error")
+
+    try:
+        if path == "/api/generator/templates" and method == "GET":
+            return _json(start_response, get_templates())
+
+        m = re.match(r"^/api/generator/templates/([^/]+)$", path)
+        if m and method == "GET":
+            return _json(start_response, get_template_detail(m.group(1)))
+
+        if method == "POST":
+            return _json(
+                start_response,
+                {
+                    "error": "generator POST endpoints require the local backend (FastAPI). "
+                             "Use the desktop client or run the local search server.",
+                    "code": "pa_generator_unsupported",
+                },
+                "501 Not Implemented",
+            )
+    except Exception as e:
+        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+
+    return _http_error(start_response, "unknown generator endpoint", 404)
+
+
 def application(environ, start_response):
     for handler in (
         _handle_donation,
         _handle_layout_compute,
         _handle_search_api,
+        _handle_generator_api,
         _handle_hub,
         _handle_pack,
         _handle_adapters,

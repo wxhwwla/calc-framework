@@ -109,7 +109,7 @@ def get_templates():
     """获取所有可用模板。"""
     if not _HAS_ENGINE:
         # fallback: 读取目录
-        adapters_dir = Path(__file__).resolve().parents[2] / "framework" / "adapters"
+        adapters_dir = Path(__file__).resolve().parents[3] / "framework" / "adapters"
         templates = {}
         for d in adapters_dir.iterdir():
             if d.is_dir() and not d.name.startswith("_"):
@@ -127,7 +127,7 @@ def get_templates():
 @router.get("/templates/{template_id}")
 def get_template_detail(template_id: str):
     """获取模板详情，包括文件结构预览。"""
-    adapters_dir = Path(__file__).resolve().parents[2] / "framework" / "adapters"
+    adapters_dir = Path(__file__).resolve().parents[3] / "framework" / "adapters"
     d = adapters_dir / template_id
     if not d.is_dir():
         raise HTTPException(status_code=404, detail=f"模板不存在: {template_id}")

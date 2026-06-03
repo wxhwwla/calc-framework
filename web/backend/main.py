@@ -20,6 +20,7 @@ from api.arknights import router as arknights_router
 from api.compute import router as compute_router
 from api.contribute import router as contribute_router
 from api.data import router as data_router
+from api.generator import router as generator_router
 from api.history import router as history_router
 from api.hub import router as hub_router
 from api.layout import router as layout_router
@@ -111,32 +112,6 @@ if _DONATION_DIR.is_dir():
 else:
     logger.warning("捐赠目录不存在，跳过挂载: %s", _DONATION_DIR)
 
-# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
-_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
-if _FRONTEND_DIST.is_dir():
-    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
-    logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
-
-
-
-@app.exception_handler(Exception)
-
-async def global_exception_handler(request: Request, exc: Exception):
-
-    logger.error("未捕获的异常: %s", exc, exc_info=True)
-
-    return JSONResponse(
-
-        status_code=500,
-
-        content={"detail": f"服务器内部错误: {exc}"},
-
-    )
-
-
-
-
-
 @app.get("/api/health")
 
 async def health():
@@ -163,9 +138,6 @@ async def health():
 
 # ── 客户端下载 ────────────────────────────────────────────────────────────────
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-
-
 @app.get("/api/download/client")
 def download_client():
     """下载本地搜索服务器（PyInstaller 打包，双击即可运行）。"""
@@ -179,5 +151,28 @@ def download_client():
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Content-Length": str(len(content)),
         },
+    )
+
+
+# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
+_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
+if _FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
+    logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
+
+
+
+@app.exception_handler(Exception)
+
+async def global_exception_handler(request: Request, exc: Exception):
+
+    logger.error("未捕获的异常: %s", exc, exc_info=True)
+
+    return JSONResponse(
+
+        status_code=500,
+
+        content={"detail": f"服务器内部错误: {exc}"},
+
     )
 

@@ -448,6 +448,21 @@ def _verify_deployment(config: dict) -> None:
     except Exception as e:
         print(f"  [FAIL] {ak_url}: {e}")
         ok = False
+
+    gen_template_url = f"https://{domain}/api/generator/templates"
+    try:
+        with urlopen(gen_template_url, timeout=30) as resp:
+            gen_body = resp.read().decode("utf-8", errors="replace")
+        gen_data = json.loads(gen_body)
+        if isinstance(gen_data, dict) and len(gen_data) >= 0:
+            print(f"  [OK] {gen_template_url} (模板数: {len(gen_data)})")
+        else:
+            print(f"  [FAIL] {gen_template_url} 返回非预期内容")
+            ok = False
+    except Exception as e:
+        print(f"  [FAIL] {gen_template_url}: {e}")
+        ok = False
+
     if not ok:
         print("\n  [HINT] 若仍报 missing argument 'send'，请打开 PA Web → WSGI configuration file")
         print("  确认路径为 /var/www/你的用户名_pythonanywhere_com_wsgi.py，且内容为 wsgi_pythonanywhere.py（无 application=app）")
@@ -641,6 +656,52 @@ def _upload_backend_files(config: dict) -> None:
         print(f"  [WARN] {count} 个成功, {errors} 个失败")
     else:
         print(f"  [OK] 后端 {count} 个文件上传完成")
+
+
+def _upload_generator_tools(config: dict) -> None:
+    """上传 tools/generator/ 下的 Python / JSON 文件（生成器 API 依赖）。"""
+    print("\n[UP-GEN] 上传生成器工具文件 tools/generator/...")
+    username = config.get("username")
+    token = config.get("api_token")
+    project = config.get("project", "calc-framework")
+    if not username or not token:
+        print("  [ERR] 未配置 API Token")
+        sys.exit(1)
+
+    gen_dir = _REPO_ROOT / "tools" / "generator"
+    if not gen_dir.is_dir():
+        print("  [SKIP] tools/generator/ 目录不存在")
+        return
+
+    remote_base = f"/home/{username}/{project}/tools/generator/"
+    count = 0
+    errors = 0
+    py_files = sorted(gen_dir.rglob("*"))
+    for i, fpath in enumerate(py_files):
+        if not fpath.is_file() or fpath.suffix not in (".py", ".json"):
+            continue
+        if i > 0:
+            time.sleep(_PA_UPLOAD_INTERVAL)
+        rel = fpath.relative_to(gen_dir.parent)  # relative to tools/
+        remote_path = f"/home/{username}/{project}/" + str(rel).replace("\\", "/")
+        ok = _upload_bytes_to_path(
+            config,
+            remote_path,
+            fpath.read_bytes(),
+            str(rel),
+            quiet=True,
+        )
+        if ok:
+            count += 1
+            print(f"  [OK] {rel}")
+        else:
+            errors += 1
+            print(f"  [ERR] {rel}")
+
+    if errors:
+        print(f"  [WARN] {count} 个成功, {errors} 个失败")
+    else:
+        print(f"  [OK] 生成器工具 {count} 个文件上传完成")
 
 
 # ── 本地上传: local-backend zip ──────────────────────────────────────────────
@@ -850,6 +911,7 @@ def main() -> None:
         if not args.backend_only:
             _upload_dist_files(config)
         _upload_backend_files(config)
+        _upload_generator_tools(config)
         _ensure_hub_storage(config)
         _upload_wsgi(config)
         if not args.backend_only:
