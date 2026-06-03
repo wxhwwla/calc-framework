@@ -174,6 +174,16 @@ def equipment_record_from_wiki_params(
 
     rarity_raw = str(params.get("稀有度") or params.get("星级") or "").strip()
 
+    # 先收集套装效果
+    effects = _collect_numbered_texts(params, "效果")
+
+    three_set_effects = collect_set_bonus_texts(params)
+
+    # 如果没有实际套装效果，则不视为套装装备（设置为空字符串）
+    if not effects and not three_set_effects:
+
+        set_name = ""
+
     return {
 
         "名称": name.strip(),
@@ -192,9 +202,9 @@ def equipment_record_from_wiki_params(
 
         "属性词条": collect_attribute_affixes(params),
 
-        "效果": _collect_numbered_texts(params, "效果"),
+        "效果": effects,
 
-        "三件套效果": collect_set_bonus_texts(params),
+        "三件套效果": three_set_effects,
 
         "_source": "bwiki",
 
