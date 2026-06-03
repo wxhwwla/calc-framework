@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-
 # SPDX-License-Identifier: AGPL-3.0
 """
-
 多游戏伤害计算框架 - 项目说明文档
 
-
+💡 版本常量已迁移到 `scripts/_version.py`，此文件为项目文档入口。
 
 项目简介：
 
@@ -24,7 +22,6 @@
     【适配器市场】可发现、下载、分享社区适配器包（calcpack）。
 
 
-
 功能特性：
 
     1. 多游戏支持：终末地、明日方舟等，框架可扩展
@@ -36,31 +33,41 @@
     7. Web 版：浏览器访问，支持 PWA 离线使用、移动端自适应
     8. 适配器市场：可发现和下载社区适配器包（calcpack）
     9. Docker 部署：一键容器化部署 Web 服务
-
 """
 
+from __future__ import annotations
 
+import sys
+from pathlib import Path
 
-# ==================== 版本信息（只在此处修改） ====================
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _path_setup import ensure_root
 
-# _VERSION：项目与 pip 包版本（pyproject.toml 通过 dynamic 读取，勿在别处重复写死）
+ensure_root()
 
-# _EXE_VERSION：窗口标题与 dist/*.exe 用户可见版本（仅重新打包 exe 时手动修改；改后须重新 build.py）
+from _version import _EXE_VERSION, _VERSION, get_exe_version, get_version
 
-_VERSION = "3.20.3"
-
-_EXE_VERSION = "0.6.0-beta"
+__all__ = [
+    "_EXE_VERSION",
+    "_VERSION",
+    "FORMULA_INFO",
+    "PROJECT_STRUCTURE",
+    "UPLOAD_WORKFLOW",
+    "USAGE_INFO",
+    "VERSION_INFO",
+    "get_exe_version",
+    "get_full_intro",
+    "get_version",
+    "show_help",
+]
 
 # ==============================================================
-
-
-
-# ==================== GitHub 上传流程（必读） ====================
 
 UPLOAD_WORKFLOW = """
 
 GitHub 上传与版本号（仓库根目录执行: python github_upload_module.py）
 
+版本常量定义在 scripts/_version.py 中。/
 
 
 1. 版本分工
@@ -69,8 +76,7 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 
    - _EXE_VERSION：GUI 窗口标题与 exe 版本号，仅你手动修改。**git 标签使用此版本**（`--tag` 时）。
 
-   - 第一位 MAJOR：永远只在下方 _VERSION 行手动改，脚本不会动。
-
+   - 第一位 MAJOR：永远只在 _version.py 中手动修改，脚本不会动。
 
 
 2. 何时自动 bump _VERSION
@@ -78,7 +84,6 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    - 会：本次有新的业务文件改动，将产生新 commit 并推送到远程。
 
    - 不会：仅补推已有 commit、与远程已同步无改动、或使用了 --no-bump。
-
 
 
 3. 升级幅度
@@ -94,8 +99,7 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    - 不涨版本：python github_upload_module.py --no-bump
 
 
-
-4. 提交说明（临时写在「本文件最下面」）
+4. 提交说明（临时写在 _version.py 最下面）
 
    - 上传前：脚本根据 git 改动自动生成 # --- UPLOAD_SUMMARY --- 块（勿手删标记行）。
 
@@ -103,16 +107,12 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 
        v3.11.21: 一句话标题
 
-
-
        - 修改 xxx
-
        - 更新 weapons.json ...
 
    - push 成功后：脚本删除该总结块（_VERSION 保留）。
 
    - push 失败：总结块保留，版本不回滚；修好网络后可只 push 或 --no-bump 再传。
-
 
 
 5. 发布标签（Tag）
@@ -124,19 +124,13 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    - 确保标签被 SSH 签名（需配置签名密钥并添加到 GitHub Signing keys）。
 
 
-
 6. 常用命令
 
    python github_upload_module.py
-
    python github_upload_module.py --minor
-
    python github_upload_module.py --no-bump
-
    python github_upload_module.py --tag         # 正常推送 + 创建发行版标签
-
    python github_upload_module.py --no-bump --tag   # 不 bump 版本 + 创建标签
-
 
 
 7. 提交签名（推荐，GitHub Verified）
@@ -146,7 +140,6 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    - 未配置时脚本会打印设置提示；见 docs/操作指令集.md §1.5。
 
 
-
 8. 从远程覆盖本地（危险，勿误点）
 
    - 仓库根：python github_download_module.py
@@ -154,10 +147,7 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
    - 须完整输入确认词「覆盖本地」才会执行；会 reset --hard 并 clean 未跟踪文件。
 
 
-
 许可与数据：LICENSE（软件）、DATA_LICENSE（游戏 JSON）、docs/数据来源与许可.md
-
-
 
 完整操作指令（GUI、数据、测试、打包、GitHub、BWIKI、Cursor）见仓库根目录：
 
@@ -166,10 +156,6 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 """
 
 # ==============================================================
-
-
-
-# ==================== 项目结构文档（自动生成） ====================
 
 PROJECT_STRUCTURE = """
 
@@ -197,43 +183,18 @@ PROJECT_STRUCTURE = """
     │   └── Dockerfile                #   容器化部署
 
     ├── scripts/                      # 入口脚本（统一 _path_setup 模式）
-    │   ├── main.py                   #   终末地桌面计算器
-    │   ├── main_arknights.py         #   明日方舟桌面计算器
-    │   ├── main_designer.py          #   适配器包数据设计器
+    │   ├── _version.py               #   版本常量（唯一源头）
+    │   ├── main_launcher.py          #   框架启动器（推荐入口）
+    │   ├── main_dev_toolkit.py       #   开发者工具箱
     │   ├── main_build.py             #   打包构建
-    │   ├── main_pack_designer.py     #   适配器包设计器
-    │   ├── main_launcher.py          #   框架启动器
-    │   ├── main_generator.py         #   AI 计算器生成器（桌面版）
-    │   ├── import_calcpack.py        #   calcpack 导入工具
-    │   ├── launcher.pyw              #   图形化启动器
-    │   └── 启动本地服务器.bat        #   Web 本地服务器
+    │   └── ...（其他入口）
 
     ├── tools/                        # 开发工具脚本
-    │   ├── generator/                #   计算器生成器引擎（模板、AI 解析、生成）
-    │   ├── bwiki_scout/              #   BWIKI 数据采集（侦察/解析/同步三阶段）
-    │   ├── wiki_scout/               #   通用 MediaWiki 爬虫框架
-    │   ├── designer/                 #   适配器包设计工具
-    │   ├── endfield_scripts/         #   终末地数据维护
-    │   ├── data_pipeline/            #   数据管线（CSV/JSON 读取、校验、迁移）
-    │   ├── data_sandbox/             #   数据沙箱验证
-    │   ├── audit/                    #   审计脚本
-    │   ├── ocr/                      #   截图识别工具
-    │   └── ...（代码检查、打包发布等）
-
     ├── docs/                         # 项目文档（30+ 文档）
     ├── installer/                    # NSIS 安装程序构建
-    ├── utils/                        # 通用工具模块
-    ├── resources/                    # 资源文件（捐赠码等）
-    │
-    ├── Dockerfile / docker-compose.yml  # 容器化部署配置
-    ├── README.md / CONTEXT.md        # 门面与领域术语
-    ├── LICENSE / DATA_LICENSE        # 软件与数据许可
-    ├── AGENTS.md                     # Agent 技能配置
-    └── .github/                      # CI 工作流与 Issue 模板
+    └── ...
 
 """
-
-
 
 USAGE_INFO = """
 
@@ -241,42 +202,39 @@ USAGE_INFO = """
 
     【桌面计算器】
 
-        python scripts/main.py               # 终末地伤害计算器
-        python scripts/main_arknights.py      # 明日方舟伤害计算器
-        python scripts/launcher.pyw           # 图形化启动器（选择游戏）
+        python scripts/启动.bat 游戏       # 启动器（选择游戏，推荐）
+        python scripts/main_launcher.py    # 同上
+
+    【开发者工具箱】
+
+        python scripts/启动.bat 工具箱        # 数据设计/图编辑/调试/AI生成
+        python scripts/main_dev_toolkit.py    # 同上
 
     【AI 计算器生成器】
 
-        python scripts/main_generator.py                # 桌面版生成器
         python tools/export_sample_calcpacks.py --list-templates  # 列出模板
         python tools/export_sample_calcpacks.py --from-template simple --name "我的游戏"  # 从模板导出
 
     【Web 版】
 
-        python web/run_local.py               # 启动本地 Web 服务
-        或双击 scripts/启动本地服务器.bat
-        然后浏览器打开 http://localhost:8000
+        python web/run_local.py            # 启动本地 Web 服务
+        或 启动.bat 服务器
+        然后浏览器打开 http://localhost:8180
         （支持 PWA 离线安装到桌面）
 
     【Docker 部署】
 
-        docker-compose up -d                  # 启动 Web 服务（端口 8000）
+        docker-compose up -d               # 启动 Web 服务（端口 8000）
 
     【BWIKI 数据采集】
 
-        python tools/bwiki_scout/scout.py     # 侦察（拉取 Wiki 数据）
-        python tools/bwiki_scout/sync_all.py --apply  # 同步到本地 JSON
-
-    【数据设计器】
-
-        python scripts/main_designer.py       # 适配器包数据设计
-        python scripts/main_pack_designer.py  # 适配器包打包设计
-        python scripts/import_calcpack.py     # 导入 calcpack 到本地
+        python tools/bwiki_scout/scout.py                   # 侦察（拉取 Wiki 数据）
+        python tools/bwiki_scout/sync_all.py --apply         # 同步到本地 JSON
 
     【打包构建】
 
-        python scripts/main_build.py --target local-backend   # 本地 exe
-        python scripts/main_build.py --help                   # 查看所有目标
+        python scripts/main_build.py --target local-backend  # 本地 exe
+        python scripts/main_build.py --help                  # 查看所有目标
 
     【测试】
 
@@ -284,8 +242,7 @@ USAGE_INFO = """
 
     【安装依赖】
 
-        pip install -e ".[dev]"               # 安装所有开发依赖
-
+        pip install -e ".[dev]"              # 安装所有开发依赖
 
 
 技术栈：
@@ -301,8 +258,6 @@ USAGE_INFO = """
 
 """
 
-
-
 FORMULA_INFO = """
 
 伤害计算公式（终末地示例）：
@@ -317,8 +272,6 @@ FORMULA_INFO = """
 
 """
 
-
-
 VERSION_INFO = f"""
 
 版本信息：
@@ -328,25 +281,6 @@ VERSION_INFO = f"""
     EXE版本:  v{_EXE_VERSION}
 
 """
-
-
-
-
-
-def get_version() -> str:
-    """获取项目版本号。"""
-    return _VERSION
-
-
-
-
-
-def get_exe_version() -> str:
-    """获取 EXE 版本号。"""
-    return _EXE_VERSION
-
-
-
 
 
 def get_full_intro() -> str:
@@ -368,9 +302,6 @@ def get_full_intro() -> str:
 {UPLOAD_WORKFLOW}
 
     """
-
-
-
 
 
 def show_help() -> None:
@@ -396,27 +327,5 @@ def show_help() -> None:
     """)
 
 
-
-
-
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root
-
-ensure_root()
-
 if __name__ == "__main__":
-
     show_help()
-
-# --- UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
-# BODY:
-# - 变更 "docs//344/273/243/347/240/201/347/273/223/346/236/204/350/247/204/350/214/203.md"
-# - 变更 "docs//344/274/232/350/257/235/346/216/245/347/273/255/346/211/213/345/206/214.md"
-# - 变更 "docs//346/223/215/344/275/234/346/214/207/344/273/244/351/233/206.md"
-# - 修改 scripts/build.py
-# - 修改 scripts/please_read_me.py
-# --- END UPLOAD_SUMMARY ---
