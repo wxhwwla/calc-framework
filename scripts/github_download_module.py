@@ -15,6 +15,7 @@ from _path_setup import ensure_root  # noqa: E402
 ensure_root()
 
 from scripts.tools.github_download_module import *  # noqa: F401, F403, E402
+from scripts.tools.github_download_module import main  # noqa: E402
 
 if __name__ == "__main__":
     main()

@@ -27,7 +27,7 @@ if __name__ == "__main__":
     print("  💡 提示：Web 服务器启动器已整合到「游戏计算器启动器」")
     print()
     print("  推荐使用：")
-    print("    python scripts/启动游戏.bat")
+    print("    python scripts/启动.bat 游戏")
     print("    python scripts/main_launcher.py")
     print()
     print("  即将自动打开启动器…")

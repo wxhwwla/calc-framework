@@ -26,7 +26,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print("  ⚠️ 注意：此入口已弃用，将在未来版本中移除。")
     print("  推荐使用启动器选择游戏：")
-    print("    python scripts/启动游戏.bat")
+    print("    python scripts/启动.bat 游戏")
     print("    python scripts/main_launcher.py")
     print("=" * 60)
     print()

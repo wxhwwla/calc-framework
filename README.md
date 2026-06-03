@@ -61,7 +61,7 @@ IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `
 python scripts/main_launcher.py
 
 # 或双击 bat 文件
-scripts\启动游戏.bat
+scripts\启动.bat
 ```
 
 启动器会列出所有可用的游戏，点击即可启动对应的桌面计算器。
@@ -83,7 +83,7 @@ python scripts/main_arknights.py
 ```powershell
 # [根] 开发者工具箱（数据设计、图编辑器、调试器、AI 生成等）
 python scripts/main_dev_toolkit.py
-scripts\启动开发者工具箱.bat
+scripts\启动.bat
 ```
 
 ### 发布与上传
