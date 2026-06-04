@@ -11,9 +11,19 @@
 | 命令 | 用途 |
 |------|------|
 | `python github_upload_module.py --check` | 仅自检（rebase/merge/断历史），不 commit/push |
-| `python github_upload_module.py` | 有业务改动：bump + 总结块 + pre-commit + commit + push |
-| `python github_upload_module.py --no-bump` | **补推**（已有未推送 commit，或显式跳过 bump） |
+| `python github_upload_module.py` | 提交并 push 到 **`develop`**；仅 patch bump `_VERSION` |
+| `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump） |
 | `python github_upload_module.py --minor` | 第二位 +1；commit 前备份 `.git` → `git_backup/snapshots/` |
+| `python github_upload_module.py --tag` | 与双版本发布同用：合并 **main** 后打 `v{_EXE_VERSION}` 标签 |
+
+**分支策略（2026-06-03 起）**：
+
+| 分支 | 用途 |
+|------|------|
+| **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
+| **`main`** | 仅当 **`_VERSION` 与 `_EXE_VERSION` 均相对 origin/main 变更** 时，脚本自动 `develop → main` 合并推送 |
+
+发 **main 正式版** 前须在同一提交中：上传 bump `_VERSION` + 手动改 `_EXE_VERSION` + 可选 `--tag`。
 
 **入口**：优先 `[根]/github_upload_module.py`（subprocess → `scripts/tools/github_upload_module.py`，`cwd=仓库根`）。  
 **禁止**裸 `git commit` + `git push` 代替上传脚本。
@@ -49,7 +59,8 @@
 
 ### 3.2 真失败（不会靠第 2 轮解决）
 
-- **`ruff-lint` 行显示 Failed**（如 `F821`/`F822` 未定义名）→ 必须改代码
+- **`ruff-lint` 行 Failed 且输出含 `remaining`（>0）**（如 `F821`/`F822` 未定义名）→ 必须改代码
+- **`ruff-lint` Failed 但 `(N fixed, 0 remaining)`** → 与 format 相同，钩子已自动修完，re-add 后第 2 轮应过
 - 两轮后仍 Failed → `[错误] pre-commit 未通过`
 
 **误判教训（§4.153）**：不能因输出里 **任意位置** 出现 `Failed` 就当作 `ruff-lint` 失败（`ruff-format` / `mixed-line-ending` 也会 Failed）。脚本现 **只检查以 `ruff-lint` 开头且含 Failed 的那一行**。
@@ -59,7 +70,8 @@
 | 输出 | 含义 | 脚本行为 |
 |------|------|----------|
 | `ruff-lint ... Passed` + `ruff-format ... Failed` | 正常，第 1 轮 | re-add → 第 2 轮 |
-| `ruff-lint ... Failed` | 代码错误 | **立即中止**，提示手修 |
+| `ruff-lint ... Failed` + `(N fixed, 0 remaining)` | 自动修 lint | re-add → 第 2 轮 |
+| `ruff-lint ... Failed` + `N remaining`（N>0） | 代码错误 | **立即中止**，提示手修 |
 | 第 2 轮全 Passed | 成功 | 继续 commit |
 
 本地修复流程：

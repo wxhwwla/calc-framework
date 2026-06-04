@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.5"
+_VERSION = "3.21.6"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,18 +333,13 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 更新文档 README.md
 # - 更新文档 docs/上传脚本与-pre-commit.md
-# - 修改 games/endfield/tests/calculation/damage/engine/test_damage_engine.py
-# - 修改 games/endfield/tests/calculation/test_more_coverage.py
-# - 调整乘区逻辑 games/endfield/tests/calculation/test_multiplicative_zones.py
-# - 修改 games/endfield/tests/calculation/zone_snapshot/test_zone_snapshot_types.py
-# - 变更 games/endfield/tests/cov_err.txt
-# - 变更 games/endfield/tests/cov_report.txt
-# - 修改 games/endfield/tests/data_loading/test_enemy_eval_params.py
+# - 更新文档 docs/会话接续手册.md
 # - 修改 games/endfield/tests/tools/test_github_upload_signing.py
 # - 修改 scripts/_version.py
 # - 修改 scripts/tools/github_upload_module.py
+# - 变更 web/frontend/package-lock.json
+# - 变更 web/frontend/package.json
 # --- END UPLOAD_SUMMARY ---
