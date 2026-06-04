@@ -170,7 +170,7 @@ def _build_target(
         "-m",
         "PyInstaller",
         "--onefile",
-        "--windowed",
+        "--console",
         f"--name={app_name}",
         f"--distpath={tmp_dist}",
         f"--workpath={work_dir}",
@@ -303,7 +303,34 @@ def _build_target(
 
     release_root.mkdir(parents=True, exist_ok=True)
     dest_exe = release_root / f"{app_name}.exe"
-    shutil.copy2(tmp_exe, dest_exe)
+
+    # 尝试先删除旧 exe（可能被 Defender 锁定）
+    if dest_exe.exists():
+        for attempt in range(5):
+            try:
+                dest_exe.unlink(missing_ok=True)
+                break
+            except PermissionError:
+                _logger.warning("  ⚠ 目标 exe 被锁定，等待重试 (%d/5)…", attempt + 1)
+                time.sleep(2)
+        else:
+            _logger.warning("  ⚠ 无法删除旧 exe，尝试覆盖复制…")
+
+    # 复制并重试
+    import errno
+
+    for attempt in range(5):
+        try:
+            shutil.copy2(tmp_exe, dest_exe)
+            break
+        except OSError as exc:
+            if exc.errno == errno.EACCES and attempt < 4:
+                _logger.warning("  ⚠ 复制被锁定，等待重试 (%d/5)…", attempt + 1)
+                time.sleep(2)
+            else:
+                shutil.rmtree(tmp_dist, ignore_errors=True)
+                raise
+
     shutil.rmtree(tmp_dist, ignore_errors=True)
 
     _logger.info("  → 已生成: %s (%.1f MB)", dest_exe, dest_exe.stat().st_size / 1024 / 1024)

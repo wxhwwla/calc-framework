@@ -215,14 +215,14 @@ class ArknightsApp(QMainWindow):
         self._operator_detail.setWidget(self._detail_widget)
         layout.addWidget(self._operator_detail, stretch=1)
 
-        self._all_operators: list[dict[str, Any]] = []
+        self._all_operators: dict[str, dict[str, Any]] = {}
         self._filtered_operators: list[dict[str, Any]] = []
         try:
             self._all_operators = load_operators_map()
-            self._filtered_operators = list(self._all_operators)
+            self._filtered_operators = list(self._all_operators.values())
         except Exception as exc:
             _logger.warning("干员数据加载失败: %s", exc)
-            self._all_operators = []
+            self._all_operators = {}
             self._filtered_operators = []
 
         self._filter_and_populate()
@@ -237,7 +237,7 @@ class ArknightsApp(QMainWindow):
         search = self._search_input.text().strip()
         try:
             self._filtered_operators = filter_operator_index(
-                self._all_operators,
+                list(self._all_operators.values()),
                 active_stars=set(selected_stars),
                 profession=prof,
                 branch=branch,
@@ -245,7 +245,7 @@ class ArknightsApp(QMainWindow):
             )
         except Exception as exc:
             _logger.warning("筛选失败: %s", exc)
-            self._filtered_operators = list(self._all_operators)
+            self._filtered_operators = list(self._all_operators.values())
 
         current_name = self._operator_combo.currentText() if self._operator_combo.count() > 0 else ""
         self._operator_combo.blockSignals(True)

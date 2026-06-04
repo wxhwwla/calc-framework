@@ -20,7 +20,7 @@ _VERSION = "3.21.15"
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
 第一位 MAJOR 永远只在下方手动修改，脚本不会动。"""
 
-_EXE_VERSION = "0.6.0-beta"
+_EXE_VERSION = "0.7.0-beta"
 """窗口标题与 dist/*.exe 用户可见版本。
 
 仅手动修改；改后须重新打包（main_build.py）。"""
@@ -333,19 +333,14 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 13 处文件
+# TITLE: 更新 8 处文件
 # BODY:
-# - 修改 framework/src/calc_framework/config/manager.py
-# - 修改 framework/src/calc_framework/ui/launcher/window.py
-# - 修改 framework/src/calc_framework/ui/log_widget.py
 # - 修改 games/arknights/gui/ArknightsApp.py
-# - 修改 games/endfield/gui/endfield_app.py
 # - 修改 release_bundle/launcher_entry.py
 # - 修改 release_bundle/release_layout.py
 # - 修改 scripts/_version.py
 # - 修改 scripts/main_build.py
-# - 修改 scripts/main_launcher.py
-# - 修改 scripts/please_read_me.py
-# - 修改 web/backend/api/download_client.py
 # - 修改 web/build_local_backend.py
+# - 变更 web/frontend/src/App.tsx
+# - 修改 web/scripts/deploy_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

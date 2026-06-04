@@ -181,4 +181,21 @@ def _read_release_versions() -> tuple[str, str]:
 
 
 def release_dir_from_dist(dist_dir: Path, *, target: BuildTarget = "launcher") -> Path:
-    return dist_dir / target_app_name(target)
+    name = target_app_name(target)
+    result = dist_dir / name
+    # 如果目录被 Defender 锁定，用时间戳后缀
+    if result.is_dir():
+        try:
+            test = result / ".write_test"
+            test.touch(exist_ok=True)
+            test.unlink(missing_ok=True)
+        except (PermissionError, OSError):
+            import time as _time
+
+            ts = _time.strftime("%Y%m%d_%H%M%S")
+            alt = dist_dir / f"{name}_{ts}"
+            import logging
+
+            logging.getLogger(__name__).warning("目录被锁定，改用: %s", alt)
+            result = alt
+    return result

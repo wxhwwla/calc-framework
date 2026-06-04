@@ -21,61 +21,8 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-import threading
 import webbrowser
 from pathlib import Path
-
-# ── 启动闪屏 ──────────────────────────────────────────────
-
-_SPLASH_CAN_CLOSE = threading.Event()
-_SPLASH_THREAD: threading.Thread | None = None
-
-
-def _show_splash(text: str = "游戏计算器启动中…") -> None:
-    """在独立线程中显示 tkinter 闪屏窗口。"""
-    global _SPLASH_THREAD
-    if _SPLASH_THREAD and _SPLASH_THREAD.is_alive():
-        return  # 已显示
-
-    def _run():
-        import tkinter as tk
-
-        root = tk.Tk()
-        root.title("")
-        root.overrideredirect(True)
-        root.attributes("-topmost", True)
-
-        w, h = 320, 100
-        x = (root.winfo_screenwidth() - w) // 2
-        y = (root.winfo_screenheight() - h) // 2
-        root.geometry(f"{w}x{h}+{x}+{y}")
-
-        root.configure(bg="#2d2d2d")
-        tk.Label(
-            root,
-            text=text,
-            font=("Microsoft YaHei", 13),
-            fg="#d4d4d4",
-            bg="#2d2d2d",
-        ).pack(expand=True)
-
-        def _check_close():
-            if _SPLASH_CAN_CLOSE.is_set():
-                root.destroy()
-            else:
-                root.after(100, _check_close)
-
-        root.after(100, _check_close)
-        root.mainloop()
-
-    _SPLASH_CAN_CLOSE.clear()
-    _SPLASH_THREAD = threading.Thread(target=_run, daemon=True)
-    _SPLASH_THREAD.start()
-
-
-def _close_splash() -> None:
-    """通知闪屏线程关闭。"""
-    _SPLASH_CAN_CLOSE.set()
 
 
 def _setup_paths() -> None:
@@ -212,31 +159,21 @@ def main() -> None:
         if args.version:
             _show_version()
         elif args.server:
-            _show_splash("正在启动 Web 服务器…")
-            _close_splash()
             _launch_server()
         elif args.game:
-            _show_splash("正在启动游戏…")
-            # 重型导入在闪屏期间完成
             if args.game == "endfield":
                 from games.endfield.main import main as _game_main
             elif args.game == "arknights":
                 from games.arknights.main import main as _game_main
-            _close_splash()
             _game_main()
         elif args.tool:
-            _show_splash("正在启动工具箱…")
-            _close_splash()
             _launch_tool(args.tool)
         elif args.calcpack:
             _launch_calcpack(args.calcpack)
         else:
             # 默认：启动器 GUI
-            _show_splash()
-            # 在闪屏期间完成重型导入
             from calc_framework.ui.launcher import run_gui_launcher
 
-            _close_splash()
             run_gui_launcher()
     except Exception as exc:
         import traceback
