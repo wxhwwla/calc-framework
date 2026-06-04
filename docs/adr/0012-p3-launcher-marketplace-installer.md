@@ -1,6 +1,6 @@
 # ADR-0012：P3 多游戏启动器 + 应用商店 + 安装包
 
-**状态**：草案  
+**状态**：已批准（Phase 1-3 已完成，Phase 4-5 待办）  
 **日期**：2026-05-30  
 **决策者**：维护者  
 
@@ -159,6 +159,64 @@ ZIP 分发对技术用户够用。安装包的价值在于面向非技术玩家�
 
 ## 后续决策
 
-- Phase 1-3 自动连续，不做中间验收
+- Phase 1-3 自动连续，不做中间验收 ✅（2026-06-04 已完成）
 - Phase 4（在线市场）在 Phase 3 完成后由维护者决定是否立即开始
 - Phase 5（安装包）与 Phase 4 无依赖，可并行
+
+## 实现总结（2026-06-04）
+
+### Phase 1：统一启动器 GUI ✅
+
+`framework/src/calc_framework/ui/launcher/window.py` + `runtime.py` 已实现：
+- 自动发现 `framework/adapters/` 下的所有适配包
+- 游戏卡片 + 启动按钮（子进程启动游戏或 ComputeSheet）
+- 开发者工具箱入口
+- 本地 Web 服务器控制
+- 打开 .calcpack 文件
+
+### Phase 2：单 exe 打包 ✅
+
+新增/修改文件：
+
+| 文件 | 说明 |
+|------|------|
+| `release_bundle/launcher_entry.py` | 统一 exe 入口，路由 `--game` / `--tool` / `--calcpack` / `--version` |
+| `release_bundle/release_layout.py` | 新增 `launcher` build target（app name: Game Calc Platform） |
+| `scripts/main_build.py` | 新增 `--target launcher` 打包配置，内嵌框架 + 双游戏 + 工具 + 适配器 |
+| `framework/src/calc_framework/ui/launcher/runtime.py` | 支持 `sys.frozen` 检测，冻结模式用同一 exe 带参数启动 |
+| `.github/workflows/release.yml` | 构建命令改为 `main_build.py --target launcher`，发布 `GameCalcPlatform_v*.zip` |
+| `installer/endfield_calculator_setup.nsi` | 优先安装新版 launcher exe，兼容旧版分体 exe |
+| `installer/build_installer.py` | 新增 launcher 目录校验 |
+
+打包命令：
+```bash
+python scripts/main_build.py --target launcher --no-bump
+```
+
+使用方式：
+```bash
+Game Calc Platform.exe                      # 启动器
+Game Calc Platform.exe --game endfield      # 直接终末地
+Game Calc Platform.exe --game arknights     # 直接明日方舟
+Game Calc Platform.exe --tool dev_toolkit   # 直接工具箱
+Game Calc Platform.exe --version             # 版本号
+```
+
+### Phase 3：自动更新 ✅
+
+新增 `framework/src/calc_framework/ui/launcher/auto_update.py`，集成到启动器 GUI：
+
+- 启动时后台检查 GitHub Release 版本
+- 比较 `_EXE_VERSION` vs 远程 tag
+- 新版本弹窗通知（`_UpdateDialog`）
+- 带进度条下载 ZIP + SHA256 校验 + 解压替换
+- 手动「检查更新」按钮触发
+- 更新完成提示重启
+
+### Phase 4：Calc Hub 在线市场 ⏳ 待办
+
+依赖项：启动器已预留「Calc Hub」按钮和 `_HUB_URL` 常量，后端 API 和前端页面待开发。
+
+### Phase 5：安装包 ✅（已有基础，NSIS 脚本已更新）
+
+安装包已支持新版 launcher 结构，`GameCalcPlatform_Setup_v*.exe` 作为发布产物。

@@ -230,8 +230,6 @@ def _build_target(
                 f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
                 "--add-data",
                 f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
-                "--add-data",
-                f"{base_dir / 'games' / 'endfield' / 'data_version.json'};games/endfield/data_version.json",
                 # 明日方舟解析数据
                 "--add-data",
                 f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
