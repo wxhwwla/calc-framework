@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.4"
+_VERSION = "3.21.5"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -33,14 +33,6 @@ _UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
 _UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
 SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
 SUMMARY_END = _UPLOAD_SUMMARY_END
-
-_MARKER_HEADER_PATTERN = re.compile(
-    r"^(?:_SUMMARY_MARKER_BEGIN|_SUMMARY_MARKER_END|_UPLOAD_SUMMARY_BEGIN|"
-    r"_UPLOAD_SUMMARY_END|SUMMARY_BEGIN|SUMMARY_END)\s*=.*?[\r\n]+",
-    re.MULTILINE,
-)
-_MARKER_SECTION_ANCHOR_TAIL = re.compile(r"^_VERSION_PATTERN", re.MULTILINE)
-
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
     re.MULTILINE,
@@ -50,6 +42,9 @@ _EXE_VERSION_PATTERN = re.compile(
     r'^(_EXE_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
     re.MULTILINE,
 )
+
+# 标记区尾部锚点：匹配标记区之后的首行内容
+_MARKER_SECTION_ANCHOR_TAIL = re.compile(r"^_VERSION_PATTERN", re.MULTILINE)
 
 __all__ = [
     "SUMMARY_BEGIN",
@@ -338,26 +333,18 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 20 处文件
+# TITLE: 更新 12 处文件
 # BODY:
-# - 变更 .cursorrules
-# - 更新文档 AGENTS.md
-# - 更新文档 CONTEXT.md
-# - 更新文档 CONTRIBUTING.md
 # - 更新文档 README.md
-# - 更新文档 docs/README.md
-# - 更新文档 docs/adr/0001-code-layout-constraints.md
-# - 更新文档 docs/代码结构规范.md
-# - 更新文档 docs/会话接续手册.md
-# - 修改 games/endfield/tests/calculation/damage/engine/test_damage_remaining.py
-# - 修改 games/endfield/tests/calculation/skills/test_special_fields.py
-# - 修改 games/endfield/tests/calculation/test_calc_coverage.py
+# - 更新文档 docs/上传脚本与-pre-commit.md
+# - 修改 games/endfield/tests/calculation/damage/engine/test_damage_engine.py
 # - 修改 games/endfield/tests/calculation/test_more_coverage.py
 # - 调整乘区逻辑 games/endfield/tests/calculation/test_multiplicative_zones.py
+# - 修改 games/endfield/tests/calculation/zone_snapshot/test_zone_snapshot_types.py
+# - 变更 games/endfield/tests/cov_err.txt
+# - 变更 games/endfield/tests/cov_report.txt
 # - 修改 games/endfield/tests/data_loading/test_enemy_eval_params.py
-# - 修改 games/endfield/tests/data_loading/test_equipment_filters_config.py
-# - 修改 games/endfield/tests/data_loading/test_loader_crud.py
-# - 修改 games/endfield/tests/tools/test_upload_meta.py
+# - 修改 games/endfield/tests/tools/test_github_upload_signing.py
 # - 修改 scripts/_version.py
-# - 修改 tools/check_layout.py
+# - 修改 scripts/tools/github_upload_module.py
 # --- END UPLOAD_SUMMARY ---

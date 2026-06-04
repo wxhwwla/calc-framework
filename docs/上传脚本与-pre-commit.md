@@ -12,7 +12,7 @@
 |------|------|
 | `python github_upload_module.py --check` | 仅自检（rebase/merge/断历史），不 commit/push |
 | `python github_upload_module.py` | 有业务改动：bump + 总结块 + pre-commit + commit + push |
-| `python github_upload_module.py --no-bump` | **补推**（版本已 bump 或 commit 失败后的重试） |
+| `python github_upload_module.py --no-bump` | **补推**（已有未推送 commit，或显式跳过 bump） |
 | `python github_upload_module.py --minor` | 第二位 +1；commit 前备份 `.git` → `git_backup/snapshots/` |
 
 **入口**：优先 `[根]/github_upload_module.py`（subprocess → `scripts/tools/github_upload_module.py`，`cwd=仓库根`）。  
@@ -27,7 +27,7 @@
 | 仅 `git add` 变更路径 | 不用 `git add .`，避免 CRLF 全仓库脏改动被一并提交 |
 | 落后 0 时跳过 pull/stash | 已与 `origin/main` 同步时不 pull，避免 Windows 上无意义的 stash |
 | pre-commit 最多 2 轮 | 见 §3 |
-| push 成功删总结块 | 失败则保留 `_version.py` 底部 `# --- BEGIN UPLOAD_SUMMARY ---` 块 |
+| push 成功删总结块 | 失败则保留 `_version.py` 底部块；**pre-commit/commit 失败会自动回滚 bump 与总结块** |
 | PowerShell 红色 Git 输出 | Git 写 stderr，非失败；看末尾 `[完成]` / exit code |
 
 ---
@@ -67,7 +67,7 @@
 ```powershell
 pre-commit run --files <路径1> <路径2> ...
 git add <被钩子改动的文件>
-python github_upload_module.py --no-bump
+python github_upload_module.py
 ```
 
 ---
@@ -98,7 +98,8 @@ python github_upload_module.py --no-bump
 
 业务逻辑在 `scripts/tools/github_upload_module.py`；根/`scripts/` 下文件仅为 **subprocess 重导向**（禁止 `import *` 包装）。
 
-版本 bump 后若 commit 失败、`_VERSION` 已在工作区 +1：用 **`--no-bump`** 补推，勿重复 bump。
+版本号在 **pre-commit 通过后** 才写入 `_version.py`；pre-commit 或 commit 失败时脚本自动回滚 `_VERSION` 与底部总结块，**修复后直接重跑上传脚本即可**（无需 `--no-bump`）。  
+仅当 **commit 已成功、push 失败** 或 **显式跳过 bump** 时用 `--no-bump`。
 
 ---
 
@@ -170,7 +171,7 @@ fatal: pathspec '"docs/344/274/232/350/257/235/.../214.md"' did not match any fi
 - 默认 **人类** 执行 `python github_upload_module.py`；Agent 不得主动 upload
 - sandbox 内 **禁止** `git rm` / `git reset` / `git checkout HEAD --` 等写操作（见 `.cursorrules`）
 - 改上传逻辑只改 `scripts/tools/github_upload_module.py`
-- 上传失败排障顺序：`--check` → **`ruff-lint` 行** Failed → **`F822 SUMMARY_*` 查 `_version.py` 顶部**（非 doc 问题）→ pathspec `344/274/...` → **`--no-bump` 补推**（版本可能已是 3.21.x）
+- 上传失败排障顺序：`--check` → **`ruff-lint` 行** Failed → **`F822 SUMMARY_*` 查 `_version.py` 顶部**（非 doc 问题）→ pathspec `344/274/...` → 修复后重跑；**push 失败** 用 `--no-bump`
 
 ---
 
@@ -184,13 +185,13 @@ fatal: pathspec '"docs/344/274/232/350/257/235/.../214.md"' did not match any fi
 | 暂存 | `git add（N 个路径，非全仓库）` | 中文 doc 路径正确 |
 | pre-commit 第 1 轮 | `ruff-format` / `trim trailing whitespace` / `mixed-line-ending` **Failed** | 含 `docs/会话接续手册.md` 时控制台可能乱码，**可忽略** |
 | pre-commit 第 2 轮 | 全部 Passed | `[信息] pre-commit 第 2 轮已通过` |
-| commit 前 | `git add（N 个路径，commit 前同步）` | `_refresh_staging_for_commit` |
-| commit hook | 再次 pre-commit 全 Passed | 无 `Stashed changes conflicted` |
+| commit 前 | `commit 前 pre-commit` → 全部 Passed | `write_version` + `_refresh_staging` 后再跑一轮，避免 commit hook 换行 Failed |
+| commit hook | 再次 pre-commit 全 Passed | 与上一行同步后应一致通过 |
 | 结束 | `[成功] 推送完成` + `[完成]` | 唯一成功判据 |
 
 **commit 消息里**可能出现 `create mode ... "docs/\\344\\270\\212..."`（Git 八进制显示），磁盘文件名仍为 `docs/上传脚本与-pre-commit.md`，**属显示 quirks，不是失败**。
 
-**补推**：中途 commit 失败但版本已写入 `_version.py` → 始终 `python github_upload_module.py --no-bump`，勿重复 bump。
+**补推**：commit 已成功但 push 失败 → `python github_upload_module.py --no-bump`。
 
 ---
 

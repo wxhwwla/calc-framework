@@ -167,3 +167,59 @@ class TestDataGenerator:
         result = generate_weapon_attributes(params)
         assert "基础攻击力" in result
         assert "攻击力+" in result
+
+    def test_generate_weapon_attributes_with_curve(self) -> None:
+        """武器属性含 curve 键的路径。"""
+        params: dict[str, Any] = {
+            "基础攻击力": {"base": 100, "growth": 50, "divisor": 10},
+            "攻击力+": {"curve": [1.0, 2.0, 3.0, 4.0, 5.0]},
+        }
+        result = generate_weapon_attributes(params)
+        assert "攻击力+" in result
+        assert result["攻击力+"] == [1.0, 2.0, 3.0, 4.0, 5.0]
+
+    def test_generate_weapon_attributes_with_special(self) -> None:
+        """武器属性含 special 路径。"""
+        params: dict[str, Any] = {
+            "基础攻击力": {"base": 100, "growth": 50, "divisor": 10},
+            "攻击力+": {"base": 5, "growth": 5, "divisor": 10, "special": [50.0]},
+        }
+        result = generate_weapon_attributes(params)
+        assert "攻击力+" in result
+        assert len(result["攻击力+"]) == 9
+
+    def test_generate_character_attributes_with_dict_skills(self) -> None:
+        """角色技能倍率为 dict 非 list 的路径。"""
+        params: dict[str, Any] = {
+            "力量": {"base": 100, "growth": 50, "divisor": 10},
+            "敏捷": {"base": 80, "growth": 40, "divisor": 10},
+            "基础攻击力": {"base": 500, "growth": 30, "divisor": 10},
+            "战技倍率": {
+                "base": 100,
+                "growth": 20,
+                "divisor": 10,
+                "special": [300.0],
+            },
+        }
+        result = generate_character_attributes(params)
+        assert "战技倍率" in result
+        assert isinstance(result["战技倍率"], list)
+        # dict 被包在外层列表中 => 单个元素
+        assert len(result["战技倍率"]) == 1
+        # skill_curve 生成 12 个值
+        assert len(result["战技倍率"][0]) == 12
+
+    def test_generate_attributes_mode_weapon(self) -> None:
+        """generate_attributes 统一接口 weapon 模式。"""
+        from games.endfield.calc.core.data_generator import generate_attributes
+
+        params = {"基础攻击力": {"base": 100, "growth": 50, "divisor": 10}}
+        result = generate_attributes(params, mode="weapon")
+        assert "基础攻击力" in result
+
+    def test_generate_attributes_invalid_mode(self) -> None:
+        """generate_attributes 无效模式应抛出 ValueError。"""
+        from games.endfield.calc.core.data_generator import generate_attributes
+
+        with pytest.raises(ValueError, match="不支持的生成模式"):
+            generate_attributes({}, mode="invalid")

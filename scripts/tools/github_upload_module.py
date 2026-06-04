@@ -849,8 +849,54 @@ def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
         if files:
             run_git(["add", "--", *files], check=False)
     print("[错误] pre-commit 未通过，commit 已取消")
-    print("[提示] 本地 pre-commit run --files <路径> → 修复 ruff 等问题 → git add → --no-bump")
+    print("[提示] 修复 ruff 等问题后重新运行 python github_upload_module.py（无需 --no-bump）")
     return False
+
+
+def _version_file_relpath(readme_path: Path) -> str:
+    """返回 _version.py 相对仓库根的路径（POSIX）。"""
+    return readme_path.relative_to(_repo_root()).as_posix()
+
+
+def _read_version_from_git_head(readme_path: Path) -> str | None:
+    """从 HEAD 读取已提交的 _VERSION；无 commit 或文件不存在时返回 None。"""
+    from scripts._version import _VERSION_PATTERN
+
+    code, out, _ = run_git(
+        ["show", f"HEAD:{_version_file_relpath(readme_path)}"],
+        check=False,
+        capture_output=True,
+    )
+    if code != 0 or not out.strip():
+        return None
+    match = _VERSION_PATTERN.search(out)
+    return match.group(2) if match else None
+
+
+def _sync_saved_version_with_head(readme_path: Path, meta) -> str:
+    """回滚/bump 基准以 HEAD 为准，修正上次上传失败留在工作区的版本号。"""
+    saved_version = meta.read_version(readme_path)
+    head_version = _read_version_from_git_head(readme_path)
+    if head_version and saved_version != head_version:
+        print(f"[信息] 校正 _VERSION：工作区 {saved_version} → HEAD {head_version}（上次上传失败残留）")
+        meta.write_version(readme_path, head_version)
+        return head_version
+    return saved_version
+
+
+def _rollback_upload_draft(
+    readme_path,
+    meta,
+    *,
+    saved_version: str,
+    restore_version: bool,
+) -> None:
+    """上传在 commit 前失败时撤销总结块与（可选）已写入的版本号。"""
+    meta.remove_summary_block(readme_path)
+    if restore_version:
+        meta.write_version(readme_path, saved_version)
+        print(f"[信息] 已回滚 _VERSION → {saved_version}")
+    print("[信息] 已移除 _version.py 底部 UPLOAD_SUMMARY 块")
 
 
 def _commit_with_message(message: str) -> None:
@@ -870,10 +916,7 @@ def _commit_with_message(message: str) -> None:
     except subprocess.CalledProcessError as exc:
         print("[错误] git commit 失败（常见原因：pre-commit / ruff 未通过）")
         if _pre_commit_installed():
-            print(
-                "[提示] 若有 Unstaged files / Stashed changes conflicted："
-                "确认 docs 等已保存 → python github_upload_module.py --no-bump"
-            )
+            print("[提示] 若有 Unstaged files / Stashed changes conflicted：确认 docs 等已保存后重新运行上传脚本")
         raise exc
 
     finally:
@@ -1044,29 +1087,29 @@ def commit_and_push(
 
             no_bump = True
 
-        version_for_msg = meta.read_version(readme_path)
+        saved_version = _sync_saved_version_with_head(readme_path, meta)
+        version_for_msg = saved_version
+        version_planned_bump = False
 
         if business and not no_bump:
             kind = _ask_bump_kind(minor_flag=minor, no_bump=False)
 
-            current = meta.read_version(readme_path)
-
             if kind == "minor":
                 _maybe_backup_git_for_minor(
-                    current_version=current,
+                    current_version=saved_version,
                     skip=skip_git_backup,
                 )
 
-                version_for_msg = meta.bump_minor(current)
+                version_for_msg = meta.bump_minor(saved_version)
 
-                print(f"[信息] 版本 minor: {current} → {version_for_msg}")
+                print(f"[信息] 版本 minor: {saved_version} → {version_for_msg}（pre-commit 通过后再写入 _version.py）")
 
             else:
-                version_for_msg = meta.bump_patch(current)
+                version_for_msg = meta.bump_patch(saved_version)
 
-                print(f"[信息] 版本 patch: {current} → {version_for_msg}")
+                print(f"[信息] 版本 patch: {saved_version} → {version_for_msg}（pre-commit 通过后再写入 _version.py）")
 
-            meta.write_version(readme_path, version_for_msg)
+            version_planned_bump = True
 
         title, bullets = meta.summarize_changes(change_paths)
 
@@ -1082,9 +1125,28 @@ def commit_and_push(
         _stage_upload_changes(change_paths, readme_path)
 
         if not _run_pre_commit_on_staged():
+            _rollback_upload_draft(
+                readme_path,
+                meta,
+                saved_version=saved_version,
+                restore_version=False,
+            )
             sys.exit(1)
 
+        if version_planned_bump:
+            meta.write_version(readme_path, version_for_msg)
+
         _refresh_staging_for_commit(change_paths, readme_path)
+
+        print("[信息] commit 前 pre-commit（含版本号写入 / 未暂存改动同步后）…")
+        if not _run_pre_commit_on_staged():
+            _rollback_upload_draft(
+                readme_path,
+                meta,
+                saved_version=saved_version,
+                restore_version=version_planned_bump,
+            )
+            sys.exit(1)
 
         title_read, bullets_read = meta.read_summary_for_commit(readme_path)
 
@@ -1094,7 +1156,16 @@ def commit_and_push(
 
         print(f"[信息] git commit:\n{commit_msg.splitlines()[0]} ...")
 
-        _commit_with_message(commit_msg)
+        try:
+            _commit_with_message(commit_msg)
+        except subprocess.CalledProcessError:
+            _rollback_upload_draft(
+                readme_path,
+                meta,
+                saved_version=saved_version,
+                restore_version=version_planned_bump,
+            )
+            sys.exit(1)
 
         created_commit = True
 
@@ -1107,7 +1178,7 @@ def commit_and_push(
     except subprocess.CalledProcessError:
         push_succeeded = False
 
-        print("[警告] 推送未成功；please_read_me 底部总结块已保留，版本未回滚")
+        print("[警告] 推送未成功；本地 commit 已保留，修复后请 python github_upload_module.py --no-bump 仅补推")
 
         raise
 
@@ -1142,7 +1213,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-bump",
         action="store_true",
-        help="本次有业务改动也不递增 _VERSION",
+        help="本次不递增 _VERSION（已有未推送 commit 或显式跳过 bump 时使用）",
     )
 
     parser.add_argument(

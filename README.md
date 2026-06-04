@@ -1,6 +1,6 @@
 # Calc Framework — 通用伤害计算框架
 
-> 通用伤害计算框架 · 支持《明日方舟：终末地》与《明日方舟》（Arknights）
+> 通用伤害计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》（Arknights）
 >
 > **Web 端（已部署）**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com) · 部署指南：[docs/PythonAnywhere-部署指南.md](docs/PythonAnywhere-部署指南.md)
 
