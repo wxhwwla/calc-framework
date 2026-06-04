@@ -75,11 +75,12 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
     """
 
     def __init__(self) -> None:
-        super().__init__()
-
+        # QApplication 必须在任何 QWidget 创建之前初始化
         self._qapp: QApplication = QApplication(sys.argv)
         self._qapp.setStyle("Fusion")
         self._apply_dark_style()
+
+        super().__init__()
 
         self.big_font: QFont = QFont()
         self.big_font.setPointSize(14)

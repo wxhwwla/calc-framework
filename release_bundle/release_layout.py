@@ -23,18 +23,20 @@ from typing import Literal
 
 from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
-BuildTarget = Literal["launcher"]
+BuildTarget = Literal["launcher", "toolkit"]
 
-ALL_BUILD_TARGETS: tuple[BuildTarget, ...] = ("launcher",)
+ALL_BUILD_TARGETS: tuple[BuildTarget, ...] = ("launcher", "toolkit")
 
 
 TARGET_APP_NAMES: dict[BuildTarget, str] = {
     "launcher": "Game Calc Platform",
+    "toolkit": "开发者工具箱",
 }
 
 
 TARGET_ENTRIES: dict[BuildTarget, str] = {
     "launcher": "release_bundle/launcher_entry.py",
+    "toolkit": "scripts/main_dev_toolkit.py",
 }
 
 
@@ -102,6 +104,21 @@ GUI 框架：PySide6（LGPL-3.0）。仪表盘：matplotlib。
 """
 
 
+def _toolkit_readme(exe_version: str, package_version: str) -> str:
+    return f"""开发者工具箱 — 发布包说明
+
+【版本】EXE v{exe_version}（源码包 v{package_version}）
+
+【软件】开发者工具箱.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+
+本工具为框架开发工具集合，包含：数据编辑、布局编辑、图编辑、
+DAG调试、计算包查看、AI生成、OCR标注等功能。
+
+独立 exe，无需安装 Python 环境。
+
+"""
+
+
 def stage_release_folder(
     release_root: Path,
     *,
@@ -111,7 +128,22 @@ def stage_release_folder(
 ) -> None:
     release_root.mkdir(parents=True, exist_ok=True)
 
-    # 复制游戏数据
+    exe_version, package_version = _read_release_versions()
+
+    if target == "toolkit":
+        # 工具箱只复制许可文件和发布说明
+        for dest_rel, src_rel in LICENSE_FILES:
+            src = repo_root / src_rel
+            if not src.is_file():
+                raise FileNotFoundError(f"缺少许可文件: {src}")
+            shutil.copy2(src, release_root / dest_rel)
+        (release_root / RELEASE_README_NAME).write_text(
+            _toolkit_readme(exe_version=exe_version, package_version=package_version),
+            encoding="utf-8",
+        )
+        return
+
+    # launcher: 复制游戏数据
     for dest_rel, src_rel in RELEASE_DATA_FILES:
         src = project_root / src_rel
         if not src.is_file():
@@ -136,7 +168,6 @@ def stage_release_folder(
             raise FileNotFoundError(f"缺少许可文件: {src}")
         shutil.copy2(src, release_root / dest_rel)
 
-    exe_version, package_version = _read_release_versions()
     (release_root / RELEASE_README_NAME).write_text(
         _launcher_readme(exe_version=exe_version, package_version=package_version),
         encoding="utf-8",

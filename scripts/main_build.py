@@ -5,35 +5,16 @@
 
 打包脚本 — 根入口
 
-
-
 使用方法：
 
-    python main_build.py                     # 默认打包全部
+    python main_build.py                     # 同时打包启动器 + 工具箱
+    python main_build.py --target launcher   # 仅打包启动器
+    python main_build.py --target toolkit    # 仅打包工具箱
 
-    python main_build.py --target calculator # 仅打包计算器
+输出：
 
-    python main_build.py --target designer   # 仅打包数据设计器
-
-    python main_build.py --target pack-designer   # 仅打包配置包设计器
-
-    python main_build.py --target arknights       # 仅打包明日方舟计算器
-
-    python main_build.py --target local-backend   # 仅打包本地搜索服务器（会先构建 Web 前端）
-
-
-
-输出（各目标独立目录，可 `--target all` 一次顺序打齐）：
-
-  dist/终末地伤害计算器/      ── 伤害计算器
-
-  dist/数据设计器/            ── 数据设计器
-
-  dist/配置包设计器/          ── 配置包设计器
-
-  dist/明日方舟伤害计算器/    ── 明日方舟计算器
-
-  dist/终末地本地搜索服务器/  ── Web 全量搜索本地后端
+    dist/Game Calc Platform/     ← 游戏启动器（选择游戏 → 进入计算器）
+    dist/开发者工具箱/           ← 开发者工具箱（数据/布局/图编辑等）
 
 """
 
@@ -181,14 +162,17 @@ def _build_target(
 
     spec_dir = tempfile.mkdtemp(prefix=f"spec_{target}_", dir=base_dir)
 
+    # 用临时 dist 目录避免 Windows Defender 锁定问题
+    tmp_dist = Path(tempfile.mkdtemp(prefix=f"dist_{target}_", dir=base_dir))
+
     cmd: list[str] = [
         sys.executable,
         "-m",
         "PyInstaller",
         "--onefile",
-        "--console",
+        "--windowed",
         f"--name={app_name}",
-        f"--distpath={release_root}",
+        f"--distpath={tmp_dist}",
         f"--workpath={work_dir}",
         f"--specpath={spec_dir}",
         "--noconfirm",
@@ -201,41 +185,94 @@ def _build_target(
     donation_data = f"{base_dir / 'resources' / 'donation'};resources/donation"
     cmd.extend(["--add-data", donation_data])
 
-    # 启动器模式：打包框架 + 所有游戏 + 所有工具 + 数据
-    cmd.extend(
-        [
-            "--paths",
-            str(base_dir / "framework" / "src"),
-            "--paths",
-            str(base_dir / "games"),
-            "--paths",
-            str(base_dir / "games" / "endfield"),
-            "--paths",
-            str(base_dir / "games" / "arknights"),
-            "--paths",
-            str(base_dir / "tools"),
-            "--paths",
-            str(base_dir / "scripts"),
-            # 内嵌所有游戏数据
-            "--add-data",
-            f"{base_dir / 'games' / 'endfield' / 'data'};games/endfield/data",
-            "--add-data",
-            f"{base_dir / 'games' / 'endfield' / 'data_loading'};games/endfield/data_loading",
-            "--add-data",
-            f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
-            "--add-data",
-            f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
-            # 明日方舟解析数据
-            "--add-data",
-            f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
-            # 框架适配器
-            "--add-data",
-            f"{base_dir / 'framework' / 'adapters'};framework/adapters",
-            # 工具包
-            "--add-data",
-            f"{base_dir / 'utils'};utils",
-        ]
-    )
+    # 目标特定配置
+    if target == "toolkit":
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir / "framework" / "src"),
+                "--paths",
+                str(base_dir),
+                "--paths",
+                str(base_dir / "scripts"),
+                "--paths",
+                str(base_dir / "tools"),
+                "--add-data",
+                f"{base_dir / 'utils'};utils",
+            ]
+        )
+    else:
+        # launcher: 打包框架 + 所有游戏 + 所有工具 + 数据 + Web 后端
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir / "framework" / "src"),
+                "--paths",
+                str(base_dir / "games"),
+                "--paths",
+                str(base_dir / "games" / "endfield"),
+                "--paths",
+                str(base_dir / "games" / "arknights"),
+                "--paths",
+                str(base_dir / "tools"),
+                "--paths",
+                str(base_dir / "scripts"),
+                "--paths",
+                str(base_dir / "web" / "backend"),
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'data'};games/endfield/data",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'data_loading'};games/endfield/data_loading",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
+                "--add-data",
+                f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+                "--add-data",
+                f"{base_dir / 'framework' / 'adapters'};framework/adapters",
+                "--add-data",
+                f"{base_dir / 'utils'};utils",
+                "--add-data",
+                f"{base_dir / 'web' / 'backend'};web/backend",
+                "--add-data",
+                f"{base_dir / 'web' / 'frontend' / 'dist'};web/frontend/dist",
+                "--hidden-import",
+                "uvicorn",
+                "--hidden-import",
+                "uvicorn.logging",
+                "--hidden-import",
+                "uvicorn.loops",
+                "--hidden-import",
+                "uvicorn.loops.auto",
+                "--hidden-import",
+                "uvicorn.protocols",
+                "--hidden-import",
+                "uvicorn.protocols.http",
+                "--hidden-import",
+                "uvicorn.protocols.http.auto",
+                "--hidden-import",
+                "uvicorn.protocols.websocket",
+                "--hidden-import",
+                "uvicorn.protocols.websocket.auto",
+                "--hidden-import",
+                "uvicorn.middleware",
+                "--hidden-import",
+                "uvicorn.middleware.asgi2",
+                "--hidden-import",
+                "uvicorn.middleware.wsgi",
+                "--hidden-import",
+                "uvicorn.supervisors",
+                "--hidden-import",
+                "uvicorn.supervisors.basereload",
+                "--hidden-import",
+                "uvicorn.supervisors.multiprocess",
+                "--hidden-import",
+                "uvicorn.supervisors.statreload",
+                "--hidden-import",
+                "uvicorn.supervisors.watchgodreload",
+            ]
+        )
 
     cmd.append(entry)
 
@@ -255,26 +292,39 @@ def _build_target(
     shutil.rmtree(spec_dir, ignore_errors=True)
 
     if result.returncode != 0:
+        shutil.rmtree(tmp_dist, ignore_errors=True)
         raise RuntimeError(f"PyInstaller 打包 [{target}] 失败 (exit={result.returncode})")
 
-    exe_path = release_root / f"{app_name}.exe"
+    # 从临时 dist 目录复制到正式发布目录
+    tmp_exe = tmp_dist / f"{app_name}.exe"
+    if not tmp_exe.exists():
+        shutil.rmtree(tmp_dist, ignore_errors=True)
+        raise FileNotFoundError(f"打包成功但未找到 exe: {tmp_exe}")
 
-    if not exe_path.exists():
-        raise FileNotFoundError(f"打包成功但未找到 exe: {exe_path}")
+    release_root.mkdir(parents=True, exist_ok=True)
+    dest_exe = release_root / f"{app_name}.exe"
+    shutil.copy2(tmp_exe, dest_exe)
+    shutil.rmtree(tmp_dist, ignore_errors=True)
 
-    _logger.info("  → 已生成: %s (%.1f MB)", exe_path, exe_path.stat().st_size / 1024 / 1024)
+    _logger.info("  → 已生成: %s (%.1f MB)", dest_exe, dest_exe.stat().st_size / 1024 / 1024)
 
-    return exe_path
+    return dest_exe
 
 
 def main() -> None:
-    """CLI 入口。打包统一启动器。"""
+    """CLI 入口。打包统一启动器和开发者工具箱。"""
     apply_platform_win32_patch()
     setup_logging(level="INFO")
 
     parser = argparse.ArgumentParser(description="Game Calc Platform — 打包脚本")
 
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
+    parser.add_argument(
+        "--target",
+        choices=["launcher", "toolkit", "all"],
+        default="all",
+        help="打包目标：launcher（启动器）/ toolkit（工具箱）/ all（全部）",
+    )
     args = parser.parse_args()
 
     base_dir = _REPO_ROOT
@@ -286,19 +336,24 @@ def main() -> None:
         pkg_version = get_version()
         _logger.info("版本: exe=%s, 包=%s", exe_version, pkg_version)
 
-    target: BuildTarget = "launcher"
-    exe_path = _build_target(target, base_dir, dist_dir)
+    if args.target == "all":
+        targets: list[BuildTarget] = ["launcher", "toolkit"]
+    else:
+        targets = [args.target]  # type: ignore[list-item]
 
-    release_root = exe_path.parent
+    for target in targets:
+        exe_path = _build_target(target, base_dir, dist_dir)
 
-    stage_release_folder(
-        release_root,
-        project_root=base_dir,
-        repo_root=base_dir,
-        target=target,
-    )
+        release_root = exe_path.parent
 
-    _logger.info("  发布目录: %s", release_root)
+        stage_release_folder(
+            release_root,
+            project_root=base_dir,
+            repo_root=base_dir,
+            target=target,
+        )
+
+        _logger.info("  发布目录: %s", release_root)
 
 
 if __name__ == "__main__":

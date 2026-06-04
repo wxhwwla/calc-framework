@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Q_ARG, QMetaObject, Qt, Slot
 from PySide6.QtGui import QAction, QFont, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -50,13 +50,13 @@ _DEFAULT_MAX_LINES = 10_000
 class QLogHandler(logging.Handler):
     """logging → Qt 信号桥接。
 
-    在任意线程调用 ``emit()``，通过 Qt 信号在主线程安全追加日志。
+    在任意线程调用 ``emit()``，通过 ``QMetaObject.invokeMethod``
+    在主线程安全追加日志。不依赖 Signal（避免 PySide6 多继承问题）。
     """
 
-    log_received = Signal(str, int)  # html_fragment, levelno
-
-    def __init__(self, level: int = logging.NOTSET) -> None:
+    def __init__(self, widget: LogWidget, level: int = logging.NOTSET) -> None:
         super().__init__(level)
+        self._widget = widget
         self.setFormatter(
             logging.Formatter(
                 "[%(asctime)s.%(msecs)03d] [%(levelname)-7s] [%(name)s] %(message)s",
@@ -68,7 +68,13 @@ class QLogHandler(logging.Handler):
         try:
             msg = self.format(record)
             html = _format_record_html(msg, record.levelno)
-            self.log_received.emit(html, record.levelno)
+            QMetaObject.invokeMethod(
+                self._widget,
+                "_append_log_safe",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, html),
+                Q_ARG(int, record.levelno),
+            )
         except Exception:
             self.handleError(record)
 
@@ -146,8 +152,7 @@ class LogWidget(QWidget):
         """
         name = logger_name or _ROOT_LOGGER
         logger = logging.getLogger(name)
-        self.handler = QLogHandler(level)
-        self.handler.log_received.connect(self._append_log)
+        self.handler = QLogHandler(self, level)
         logger.addHandler(self.handler)
         # 防止冒泡到根 logger 重复输出（如果根 logger 已有 handler）
         logger.propagate = True
@@ -172,7 +177,9 @@ class LogWidget(QWidget):
 
     # ── 内部 ──────────────────────────────────────────────
 
-    def _append_log(self, html: str, levelno: int) -> None:
+    @Slot(str, int)
+    def _append_log_safe(self, html: str, levelno: int) -> None:
+        """由 QMetaObject.invokeMethod 在主线程调用的日志追加方法。"""
         if levelno < self._level_filter:
             return
         text = self._text

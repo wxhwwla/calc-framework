@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.14"
+_VERSION = "3.21.15"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,7 +333,19 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 修改 scripts/_version.py
+# TITLE: 更新 13 处文件
 # BODY:
+# - 修改 framework/src/calc_framework/config/manager.py
+# - 修改 framework/src/calc_framework/ui/launcher/window.py
+# - 修改 framework/src/calc_framework/ui/log_widget.py
+# - 修改 games/arknights/gui/ArknightsApp.py
+# - 修改 games/endfield/gui/endfield_app.py
+# - 修改 release_bundle/launcher_entry.py
+# - 修改 release_bundle/release_layout.py
 # - 修改 scripts/_version.py
+# - 修改 scripts/main_build.py
+# - 修改 scripts/main_launcher.py
+# - 修改 scripts/please_read_me.py
+# - 修改 web/backend/api/download_client.py
+# - 修改 web/build_local_backend.py
 # --- END UPLOAD_SUMMARY ---

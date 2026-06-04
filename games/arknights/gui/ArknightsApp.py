@@ -75,12 +75,13 @@ class ArknightsApp(QMainWindow):
     """
 
     def __init__(self) -> None:
-        super().__init__()
-        """初始化实例。"""
-
+        # QApplication 必须在任何 QWidget 创建之前初始化
         self._qapp: QApplication = QApplication(sys.argv)
         self._qapp.setStyle("Fusion")
         self._apply_dark_style()
+
+        super().__init__()
+        """初始化实例。"""
 
         self.big_font: QFont = QFont()
         self.big_font.setPointSize(14)

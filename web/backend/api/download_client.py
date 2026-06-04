@@ -37,10 +37,11 @@ def build_client_download() -> tuple[bytes, str, str]:
             "===============================================\n\n"
             "The pre-packaged local backend is not yet available.\n\n"
             "For developers, run in the project root:\n"
-            "  python web/build_local_backend.py\n\n"
+            "  python scripts/main_build.py\n\n"
             "Then upload the zip to the server.\n",
         )
     body = buf.getvalue()
     return body, "local-backend-readme.zip", "application/zip"
+
 
 __all__: list[str] = []

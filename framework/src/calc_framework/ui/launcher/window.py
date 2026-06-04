@@ -15,13 +15,12 @@ import threading
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import QMetaObject, Qt
+from PySide6.QtCore import Q_ARG, QMetaObject, Qt, QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QFileDialog,
     QFrame,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -163,13 +162,13 @@ class _UpdateDialog(QDialog):
                 self._progress,
                 "setMaximum",
                 Qt.ConnectionType.QueuedConnection,
-                total,
+                Q_ARG(int, total),
             )
             QMetaObject.invokeMethod(
                 self._progress,
                 "setValue",
                 Qt.ConnectionType.QueuedConnection,
-                downloaded,
+                Q_ARG(int, downloaded),
             )
 
         def _status_cb(msg: str) -> None:
@@ -177,30 +176,17 @@ class _UpdateDialog(QDialog):
                 self._status_label,
                 "setText",
                 Qt.ConnectionType.QueuedConnection,
-                msg,
+                Q_ARG(str, msg),
             )
 
         def _do_update():
             success = download_and_replace(info.zip_url, exe_path, _progress_cb, _status_cb)
             if success:
-                QMetaObject.invokeMethod(
-                    self,
-                    "accept",
-                    Qt.ConnectionType.QueuedConnection,
-                )
+                QTimer.singleShot(0, self.accept)
                 # 弹出重启提示
-                QMetaObject.invokeMethod(
-                    self.parent(),
-                    "_on_update_complete",
-                    Qt.ConnectionType.QueuedConnection,
-                )
+                QTimer.singleShot(0, lambda: self.parent()._on_update_complete())
             else:
-                QMetaObject.invokeMethod(
-                    self._download_btn,
-                    "setEnabled",
-                    Qt.ConnectionType.QueuedConnection,
-                    True,
-                )
+                QTimer.singleShot(0, lambda: self._download_btn.setEnabled(True))
 
         threading.Thread(target=_do_update, daemon=True).start()
 
@@ -214,7 +200,6 @@ class GameLauncherWindow(QMainWindow):
         self.setWindowTitle(f"游戏计算器启动器 v{self._version}")
         self.setMinimumSize(520, 520)
         self._root = repo_root()
-        self._server_process: subprocess.Popen | None = None
         self._log_visible = False
 
         _logger.info("启动器初始化 — v%s (root=%s)", self._version, self._root)
@@ -233,9 +218,6 @@ class GameLauncherWindow(QMainWindow):
         scroll.setWidget(scroll_body)
         root_layout.addWidget(scroll, stretch=1)
 
-        root_layout.addWidget(self._build_tools_group())
-        root_layout.addWidget(self._build_web_server_group())
-
         # 日志面板（初始隐藏）
         self._log_widget = LogWidget(max_lines=5000)
         self._log_widget.setVisible(False)
@@ -251,6 +233,9 @@ class GameLauncherWindow(QMainWindow):
 
         # Phase 3：后台检查更新
         self._check_for_updates_background()
+
+        # 延迟自动启动默认游戏（等窗口完全渲染）
+        QTimer.singleShot(1500, self._auto_launch_default)
 
     # ── Phase 3: 自动更新 ─────────────────────────────────
 
@@ -269,28 +254,23 @@ class GameLauncherWindow(QMainWindow):
 
         def _on_check_result(info: ReleaseInfo | None) -> None:
             if info is None:
-                QMetaObject.invokeMethod(
-                    self._status,
-                    "showMessage",
-                    Qt.ConnectionType.QueuedConnection,
-                    "检查更新失败（网络错误或无 Release）",
-                    5000,
+                QTimer.singleShot(
+                    0,
+                    lambda: self._status.showMessage(
+                        "检查更新失败（网络错误或无 Release）",
+                        5000,
+                    ),
                 )
                 return
             if info.is_newer:
-                QMetaObject.invokeMethod(
-                    self,
-                    "_show_update_notification",
-                    Qt.ConnectionType.QueuedConnection,
-                    info,
-                )
+                QTimer.singleShot(0, lambda: self._show_update_notification(info))
             else:
-                QMetaObject.invokeMethod(
-                    self._status,
-                    "showMessage",
-                    Qt.ConnectionType.QueuedConnection,
-                    f"已是最新版本 ({self._version})",
-                    5000,
+                QTimer.singleShot(
+                    0,
+                    lambda: self._status.showMessage(
+                        f"已是最新版本 ({self._version})",
+                        5000,
+                    ),
                 )
 
         check_for_update_async(_on_check_result)
@@ -313,124 +293,7 @@ class GameLauncherWindow(QMainWindow):
             subprocess.Popen([sys.executable])
             sys.exit(0)
 
-    # ── 工具按钮 ───────────────────────────────────────────
-
-    def _build_tools_group(self) -> QGroupBox:
-        box = QGroupBox("开发工具")
-        layout = QVBoxLayout(box)
-
-        # 开发者工具箱（统一入口，包含所有开发工具）
-        tk_btn = QPushButton("🔧 开发者工具箱")
-        tk_btn.setStyleSheet(
-            "QPushButton { background: #094771; color: white; "
-            "font-weight: bold; padding: 8px; border-radius: 4px; }"
-            "QPushButton:hover { background: #0f5f99; }"
-        )
-        tk_btn.clicked.connect(self._launch_dev_toolkit)
-        layout.addWidget(tk_btn)
-
-        hint = QLabel("包含：数据编辑 / 布局编辑 / 图编辑 / DAG调试 / 计算包查看 / AI生成 / OCR标注")
-        hint.setWordWrap(True)
-        hint.setProperty("secondary", True)
-        layout.addWidget(hint)
-        return box
-
-    def _launch_dev_toolkit(self) -> None:
-        """启动开发者工具箱。"""
-        try:
-            from .runtime import argv_for_tool
-
-            spawn_detached(argv_for_tool("dev_toolkit", self._root))
-            self._status.showMessage("已启动开发者工具箱", 5000)
-        except (OSError, KeyError) as exc:
-            QMessageBox.warning(self, "启动失败", str(exc))
-
-    def _build_web_server_group(self) -> QGroupBox:
-        """本地 Web 服务器控制区。"""
-        box = QGroupBox("本地 Web 服务器")
-        layout = QHBoxLayout(box)
-
-        self._server_status = QLabel("⚪ 未启动")
-        layout.addWidget(self._server_status)
-
-        self._server_btn = QPushButton("启动服务器")
-        self._server_btn.clicked.connect(self._toggle_web_server)
-        layout.addWidget(self._server_btn)
-
-        self._open_browser_btn = QPushButton("打开浏览器")
-        self._open_browser_btn.clicked.connect(lambda: webbrowser.open("http://localhost:8180"))
-        self._open_browser_btn.setEnabled(False)
-        layout.addWidget(self._open_browser_btn)
-
-        layout.addStretch()
-        return box
-
-    def _toggle_web_server(self) -> None:
-        """切换 Web 服务器启动/停止。"""
-        if self._server_process is not None:
-            self._stop_web_server()
-        else:
-            self._start_web_server()
-
-    def _start_web_server(self) -> None:
-        """启动本地 Web 服务器（uvicorn）。"""
-        backend_dir = self._root / "web" / "backend"
-        if not (backend_dir / "main.py").exists():
-            QMessageBox.warning(self, "启动失败", f"找不到后端入口:\n{backend_dir / 'main.py'}")
-            return
-
-        self._server_btn.setEnabled(False)
-        self._server_btn.setText("启动中...")
-        self._server_status.setText("🟡 正在启动...")
-
-        def _run() -> None:
-            try:
-                proc = subprocess.Popen(
-                    [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8180"],
-                    cwd=str(backend_dir),
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    creationflags=subprocess.CREATE_NO_WINDOW,
-                )
-                import time
-
-                time.sleep(2)
-
-                if proc.poll() is not None:
-                    self._server_status_label("🔴 启动失败")
-                    self._server_btn.setText("启动服务器")
-                    self._server_btn.setEnabled(True)
-                else:
-                    self._server_process = proc
-                    self._server_status_label("🟢 运行中 (127.0.0.1:8180)")
-                    self._server_btn.setText("停止服务器")
-                    self._server_btn.setEnabled(True)
-                    self._open_browser_btn.setEnabled(True)
-                    webbrowser.open("http://localhost:8180")
-            except Exception as exc:
-                self._server_status_label(f"🔴 错误: {exc}")
-                self._server_btn.setText("启动服务器")
-                self._server_btn.setEnabled(True)
-
-        threading.Thread(target=_run, daemon=True).start()
-
-    def _server_status_label(self, text: str) -> None:
-        """线程安全地更新状态标签。"""
-        QMetaObject.invokeMethod(
-            self._server_status,
-            "setText",
-            Qt.ConnectionType.QueuedConnection,
-            text,
-        )
-
-    def _stop_web_server(self) -> None:
-        """停止 Web 服务器。"""
-        if self._server_process is not None:
-            self._server_process.terminate()
-            self._server_process = None
-        self._server_status.setText("⚪ 已停止")
-        self._server_btn.setText("启动服务器")
-        self._open_browser_btn.setEnabled(False)
+    # ── 底部栏 ───────────────────────────────────────────
 
     def _build_footer(self) -> QWidget:
         row = QWidget()
@@ -473,15 +336,19 @@ class GameLauncherWindow(QMainWindow):
             if item.widget():
                 item.widget().deleteLater()
 
-        entries = list_adapter_entries()
+        # 只显示有完整桌面计算器的游戏适配器
+        entries = [e for e in list_adapter_entries() if e.has_full_app]
         if not entries:
-            self._adapter_layout.addWidget(QLabel("未发现适配包。请确认 framework/adapters/ 下存在 meta.json。"))
+            self._adapter_layout.addWidget(
+                QLabel("未发现游戏适配包。请确认 framework/adapters/ 下存在游戏 meta.json。")
+            )
         else:
             for entry in entries:
                 self._adapter_layout.addWidget(_AdapterCard(entry, self._launch_adapter))
             self._adapter_layout.addStretch()
 
-        self._status.showMessage(f"已发现 {len(entries)} 个适配包")
+        self._status.showMessage(f"已发现 {len(entries)} 个游戏")
+        _logger.info("游戏适配器: %s", [e.adapter_id for e in entries])
 
     def _launch_adapter(self, entry: AdapterEntry) -> None:
         try:
@@ -489,6 +356,16 @@ class GameLauncherWindow(QMainWindow):
             self._status.showMessage(f"已启动：{entry.name}", 5000)
         except OSError as exc:
             QMessageBox.warning(self, "启动失败", str(exc))
+
+    def _auto_launch_default(self) -> None:
+        """窗口打开后自动启动终末地（如果有）。"""
+        entries = [e for e in list_adapter_entries() if e.has_full_app]
+        if not entries:
+            return
+        # 优先启动终末地
+        default = next((e for e in entries if e.adapter_id == "endfield"), entries[0])
+        _logger.info("自动启动默认游戏: %s", default.adapter_id)
+        self._launch_adapter(default)
 
     def _open_calcpack_dialog(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
