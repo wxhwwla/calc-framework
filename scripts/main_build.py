@@ -270,7 +270,16 @@ def _build_target(
             ]
         )
     elif target == "designer" or target == "pack-designer":
-        cmd.extend(["--paths", str(base_dir / "tools")])
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir),
+                "--paths",
+                str(base_dir / "scripts"),
+                "--paths",
+                str(base_dir / "tools"),
+            ]
+        )
     elif target == "arknights":
         cmd.extend(
             [
