@@ -85,7 +85,7 @@ def _launcher_readme(exe_version: str, package_version: str) -> str:
 
 本软件是统一启动器，包含以下功能：
 
-  - 终末地伤害计算器（--game endfield）
+  - 终末地伤害计算器（Calc Framework）（--game endfield）
 
   - 明日方舟伤害计算器（--game arknights）
 

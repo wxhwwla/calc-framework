@@ -5,7 +5,7 @@ Unicode True
 RequestExecutionLevel admin
 
 !define PRODUCT_NAME "Game Calc Platform"
-!define PUBLISHER "Endfield Damage Calculator"
+!define PUBLISHER "Calc Framework"
 
 !ifndef VERSION
   !define VERSION "0.0.0"
@@ -22,30 +22,13 @@ InstallDirRegKey HKLM "Software\${PUBLISHER}\${PRODUCT_NAME}" ""
 
 ; 请求管理员权限
 !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
-
-; 判断启动器 exe 名称（新版 launcher 或旧版计算器）
 !define LAUNCHER_EXE "Game Calc Platform.exe"
-!define OLD_CALC_EXE "终末地伤害计算器.exe"
 
 Section "-MainInstall"
   SetOutPath "$INSTDIR"
 
-  ; 复制启动器入口（优先新版 launcher，兼容旧版分体 exe）
-  IfFileExists "${APP_ROOT}\Game Calc Platform\Game Calc Platform.exe" 0 +4
-    File /r "${APP_ROOT}\Game Calc Platform\*.*"
-    Goto after_apps
-
-  ; 旧版：复制三个应用的可执行文件目录
-  IfFileExists "${APP_ROOT}\终末地伤害计算器\*.*" 0 +2
-    File /r "${APP_ROOT}\终末地伤害计算器\*.*"
-
-  IfFileExists "${APP_ROOT}\数据设计器\*.*" 0 +2
-    File /r "${APP_ROOT}\数据设计器\*.*"
-
-  IfFileExists "${APP_ROOT}\配置包设计器\*.*" 0 +2
-    File /r "${APP_ROOT}\配置包设计器\*.*"
-
-  after_apps:
+  ; 复制启动器目录
+  File /r "${APP_ROOT}\Game Calc Platform\*.*"
 
   ; 复制许可文件
   File "${APP_ROOT}\..\LICENSE"
@@ -75,27 +58,19 @@ Section "StartMenuAndDesktop"
   ; 开始菜单
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
 
-  ; 新版启动器
+  ; 启动器
   IfFileExists "$INSTDIR\${LAUNCHER_EXE}" 0 +3
     CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Launch ${PRODUCT_NAME}.lnk" "$INSTDIR\${LAUNCHER_EXE}" "" "$INSTDIR\${LAUNCHER_EXE}" 0
 
-  ; 旧版分体 exe（兼容）
-  IfFileExists "$INSTDIR\${OLD_CALC_EXE}" 0 +3
-    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\终末地伤害计算器.lnk" "$INSTDIR\${OLD_CALC_EXE}" "" "$INSTDIR\${OLD_CALC_EXE}" 0
-
-  IfFileExists "$INSTDIR\数据设计器.exe" 0 +3
-    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\数据设计器.lnk" "$INSTDIR\数据设计器.exe" "" "$INSTDIR\数据设计器.exe" 0
-
-  IfFileExists "$INSTDIR\配置包设计器.exe" 0 +3
-    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\配置包设计器.lnk" "$INSTDIR\配置包设计器.exe" "" "$INSTDIR\配置包设计器.exe" 0
+  ; 独立入口（如果存在）
+  IfFileExists "$INSTDIR\开发者工具箱.exe" 0 +3
+    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\开发者工具箱.lnk" "$INSTDIR\开发者工具箱.exe" "" "$INSTDIR\开发者工具箱.exe" 0
 
   CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\卸载.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 
-  ; 桌面快捷方式（优先启动器）
+  ; 桌面快捷方式
   IfFileExists "$INSTDIR\${LAUNCHER_EXE}" 0 +2
     CreateShortCut "$DESKTOP\Game Calc Platform.lnk" "$INSTDIR\${LAUNCHER_EXE}" "" "$INSTDIR\${LAUNCHER_EXE}" 0
-  IfFileExists "$INSTDIR\${OLD_CALC_EXE}" 0 +2
-    CreateShortCut "$DESKTOP\终末地伤害计算器.lnk" "$INSTDIR\${OLD_CALC_EXE}" "" "$INSTDIR\${OLD_CALC_EXE}" 0
 SectionEnd
 
 Section /o "AddToPath"
@@ -117,7 +92,6 @@ Section "Uninstall"
 
   ; 删除桌面快捷方式
   Delete "$DESKTOP\Game Calc Platform.lnk"
-  Delete "$DESKTOP\终末地伤害计算器.lnk"
 
   ; 删除注册表项
   DeleteRegKey HKLM "${UNINSTALL_KEY}"

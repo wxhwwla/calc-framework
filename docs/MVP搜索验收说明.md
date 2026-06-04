@@ -75,7 +75,7 @@
 | 运行方式 | 路径 |
 |----------|------|
 | 开发 | `[包]/search_output/full_search_<时间戳>/` |
-| 打包 exe | `dist/终末地伤害计算器/search_output/full_search_<时间戳>/`（与 exe **同级**） |
+| 打包 exe | `dist/Game Calc Platform/search_output/full_search_<时间戳>/`（与 exe **同级**） |
 
 内含 `search_runs.db`、`mvp_exports/` 等。
 

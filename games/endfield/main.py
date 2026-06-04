@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """
-终末地伤害计算小工具 - 项目入口文件
+终末地伤害计算器 - Calc Framework（通用游戏计算框架）游戏适配包
 
 项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
 ├── main.py                    # 本文件：启动 GUI（PySide6 版）

@@ -5,7 +5,7 @@
 单 exe 路由入口，支持命令行参数选择运行模式：
 
     无参数              → 启动器 GUI
-    --game endfield     → 终末地伤害计算器
+    --game endfield     → 终末地伤害计算器（Calc Framework）
     --game arknights    → 明日方舟伤害计算器
     --tool dev_toolkit  → 开发者工具箱
     --tool viewer       → 计算包查看器
@@ -165,6 +165,10 @@ def main() -> None:
                 from games.endfield.main import main as _game_main
             elif args.game == "arknights":
                 from games.arknights.main import main as _game_main
+            else:
+                _game_main = None
+                sys.stderr.write(f"未知游戏: {args.game}\n")
+                sys.exit(1)
             _game_main()
         elif args.tool:
             _launch_tool(args.tool)

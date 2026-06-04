@@ -43,7 +43,7 @@
 
 ## 本项目著作权
 
-- 软件源代码：Copyright (C) 2024-2026 wxhwwla — 见 [`LICENSE`](LICENSE)
-- 数据整理与编排：Copyright (C) 2024-2026 wxhwwla — 见 [`DATA_LICENSE`](DATA_LICENSE)
+- 软件源代码：Copyright (C) 2024–2026 wxhwwla Calc Framework（通用游戏计算框架）— 见 [`LICENSE`](LICENSE)
+- 数据整理与编排：Copyright (C) 2024–2026 wxhwwla Calc Framework（通用游戏计算框架）— 见 [`DATA_LICENSE`](DATA_LICENSE)
 
 如有遗漏或署名错误，请通过 Issue 或 wxhwwla@gmail.com 联系更正。

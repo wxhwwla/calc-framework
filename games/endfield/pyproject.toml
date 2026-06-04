@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "calc-framework-endfield"
 dynamic = ["version"]
-description = "终末地伤害计算小工具"
+description = "终末地伤害计算器 - Calc Framework（通用游戏计算框架）游戏适配包"
 authors = [
     { name = "wxhwwla", email = "wxhwwla@gmail.com" }
 ]
@@ -156,4 +156,3 @@ line-ending = "auto"
 #    # CTkFont 的 weight 参数只接受 "normal"/"bold"
 #
 # 配置参考：../pyrightconfig.json（抑制 mixin/可选访问等安全模式）
-

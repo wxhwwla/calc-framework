@@ -1,4 +1,4 @@
-# 终末地伤害计算器 — GUI 使用说明
+# Calc Framework（通用游戏计算框架）— GUI 使用说明
 
 > **💡 内置帮助**：所有 GUI 均内置了帮助对话框（按 **F1** 或点击「帮助」按钮/菜单），即使无法访问此文档也能使用。
 > 本文档作为完整参考，涵盖比内置帮助更详细的内容。
@@ -15,7 +15,7 @@
 | **数据设计器** | `python games/endfield/designer_main.py` | 公式反推 / 数据浏览 / 数据编辑 |
 | **DAG 工具** | `python games/endfield/dag_main.py` | DAG JSON 生成与调试 |
 
-打包后的 exe 路径同理（`终末地伤害计算器.exe` / `终末地设计器.exe`）。
+打包后的 exe 路径同理（`Game Calc Platform.exe` / `开发者工具箱.exe`）。
 
 ---
 
