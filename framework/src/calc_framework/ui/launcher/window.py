@@ -8,6 +8,7 @@ Phase 3: 自动更新检查
 
 from __future__ import annotations
 
+import logging
 import subprocess
 import sys
 import threading
@@ -33,6 +34,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...logging import get_logger, setup_logging
+from ..log_widget import LogWidget
 from ..theme import ThemeManager
 from .auto_update import ReleaseInfo, check_for_update_async, download_and_replace
 from .runtime import (
@@ -43,6 +46,8 @@ from .runtime import (
     repo_root,
     spawn_detached,
 )
+
+_logger = get_logger(__name__)
 
 _HUB_URL = "https://wxhwwla.pythonanywhere.com/hub"
 _GITHUB_URL = "https://github.com/wxhwwla/calc-framework"
@@ -210,6 +215,9 @@ class GameLauncherWindow(QMainWindow):
         self.setMinimumSize(520, 520)
         self._root = repo_root()
         self._server_process: subprocess.Popen | None = None
+        self._log_visible = False
+
+        _logger.info("启动器初始化 — v%s (root=%s)", self._version, self._root)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -227,6 +235,13 @@ class GameLauncherWindow(QMainWindow):
 
         root_layout.addWidget(self._build_tools_group())
         root_layout.addWidget(self._build_web_server_group())
+
+        # 日志面板（初始隐藏）
+        self._log_widget = LogWidget(max_lines=5000)
+        self._log_widget.setVisible(False)
+        self._log_widget.attach_to_logger(level=logging.INFO)
+        root_layout.addWidget(self._log_widget)
+
         root_layout.addWidget(self._build_footer())
 
         self._status = QStatusBar()
@@ -434,12 +449,23 @@ class GameLauncherWindow(QMainWindow):
         update_btn.clicked.connect(self._check_updates_manual)
         layout.addWidget(update_btn)
 
+        self._log_toggle_btn = QPushButton("📋 日志")
+        self._log_toggle_btn.setCheckable(True)
+        self._log_toggle_btn.clicked.connect(self._toggle_log_panel)
+        layout.addWidget(self._log_toggle_btn)
+
         about_btn = QPushButton("GitHub")
         about_btn.clicked.connect(lambda: webbrowser.open(_GITHUB_URL))
         layout.addWidget(about_btn)
 
         layout.addStretch()
         return row
+
+    def _toggle_log_panel(self) -> None:
+        """切换日志面板显示/隐藏。"""
+        self._log_visible = not self._log_visible
+        self._log_widget.setVisible(self._log_visible)
+        self._log_toggle_btn.setChecked(self._log_visible)
 
     def _reload_adapters(self) -> None:
         while self._adapter_layout.count():
@@ -488,6 +514,8 @@ class GameLauncherWindow(QMainWindow):
 
 def run_gui_launcher() -> None:
     """启动 PySide6 启动器窗口。"""
+    setup_logging(level="INFO")
+
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName("游戏计算器启动器")
     tm = ThemeManager()

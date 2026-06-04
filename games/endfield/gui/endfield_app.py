@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -21,6 +22,8 @@ if str(_FRAMEWORK_SRC) not in sys.path:
 
 from typing import Any
 
+from calc_framework.ui.log_widget import LogWidget
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -192,7 +195,30 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         help_action.setShortcut(QKeySequence("F1"))
         help_action.triggered.connect(self._on_open_help)
         help_menu.addAction(help_action)
+
+        # 调试菜单
+        debug_menu = menubar.addMenu("调试(&D)")
+        log_action = QAction("日志(&L)", self)
+        log_action.triggered.connect(self._open_log_dialog)
+        debug_menu.addAction(log_action)
+
         """setup app menu。"""
+
+    def _open_log_dialog(self) -> None:
+        """打开日志查看对话框。"""
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("运行时日志")
+        dialog.resize(700, 400)
+        layout = QVBoxLayout(dialog)
+        log_widget = LogWidget(max_lines=5000)
+        log_widget.attach_to_logger(level=logging.INFO)
+        layout.addWidget(log_widget)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialog.show()
+        _logger.info("日志查看窗口已打开")
+        """open log dialog。"""
 
     @property
     def confirm_btn(self):
