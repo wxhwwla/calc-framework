@@ -21,7 +21,14 @@ def main() -> None:
     if str(_REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(_REPO_ROOT))
 
+    from calc_framework.logging import setup_logging
+
+    log_dir = _REPO_ROOT / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    setup_logging(level="INFO", log_file=str(log_dir / "arknights.log"))
+
     from games.arknights.gui.ArknightsApp import ArknightsApp
+
     app = ArknightsApp()
     app.run()
 

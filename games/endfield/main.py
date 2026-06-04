@@ -65,10 +65,14 @@ def main() -> None:
     preload_thread.start()
 
     # 初始化框架日志系统（环境变量 CALC_FRAMEWORK_LOG_LEVEL 控制级别）
+    from utils.path_utils import get_application_dir
+
     from games.endfield.framework_bridge import get_logger
     from games.endfield.framework_bridge import setup_logging as fw_setup_logging
 
-    fw_setup_logging()
+    log_dir = get_application_dir() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    fw_setup_logging(log_file=str(log_dir / "app.log"))
     _logger = get_logger(__name__)
     _logger.info("应用启动中…")
 
@@ -79,8 +83,6 @@ def main() -> None:
         _logger.info("正在加载界面…")
 
     # 导入 GUI 模块
-    from utils.path_utils import get_application_dir
-
     from games.endfield.data_loading.plugin_registry import load_default_plugins
     from gui.endfield_app import EndfieldApp as DamageCalculatorApp
 

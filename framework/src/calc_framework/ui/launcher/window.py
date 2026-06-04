@@ -514,6 +514,12 @@ class GameLauncherWindow(QMainWindow):
 
 def run_gui_launcher() -> None:
     """启动 PySide6 启动器窗口。"""
+    import os
+
+    log_dir = Path(__file__).resolve().parents[4] / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault("CALC_FRAMEWORK_LOG_FILE", str(log_dir / "launcher.log"))
+
     setup_logging(level="INFO")
 
     app = QApplication.instance() or QApplication(sys.argv)
