@@ -31,9 +31,7 @@ class TestLauncherRuntime:
         entries = {e.adapter_id: e for e in list_adapter_entries()}
         root = repo_root()
         argv = argv_for_adapter(entries["endfield"], root)
-        assert argv[-1].endswith("scripts/main.py") or argv[-1].replace("\\", "/").endswith(
-            "scripts/main.py"
-        )
+        assert argv[-1].endswith("scripts/main.py") or argv[-1].replace("\\", "/").endswith("scripts/main.py")
 
     def test_argv_for_generic_adapter(self) -> None:
         entries = {e.adapter_id: e for e in list_adapter_entries()}
@@ -46,7 +44,7 @@ class TestLauncherRuntime:
     def test_argv_for_tools(self) -> None:
         root = repo_root()
         designer = argv_for_tool("designer", root)
-        assert "main_designer.py" in designer[-1]
+        assert "main_dev_toolkit.py" in designer[-1]
         graph = argv_for_tool("graph_editor", root)
         assert graph[-1] == "calc_framework.graph_editor"
 

@@ -19,23 +19,13 @@
 
 """
 
-
-
 from __future__ import annotations
 
-
-
 import argparse
-
 import shutil
-
 import subprocess
-
 import sys
-
 from pathlib import Path
-
-
 
 _INSTALLER_DIR = Path(__file__).resolve().parent
 
@@ -44,105 +34,71 @@ _PROJECT_ROOT = _INSTALLER_DIR.parent
 _NSI_SCRIPT = _INSTALLER_DIR / "endfield_calculator_setup.nsi"
 
 
-
-
-
 def _get_version() -> str:
     """从 please_read_me.py 读取 EXE 版本号。"""
     sys.path.insert(0, str(_PROJECT_ROOT))
 
     try:
-
         from please_read_me import _EXE_VERSION
 
         return _EXE_VERSION
 
     except ImportError:
-
         return "0.0.0"
 
 
-
-
-
 def _ensure_nsis() -> str | None:
-
     """检查 NSIS 编译器是否可用。"""
 
     makensis = shutil.which("makensis")
 
     if makensis:
-
         return makensis
 
     alt_paths = [
-
         r"C:\Program Files (x86)\NSIS\makensis.exe",
-
         r"C:\Program Files\NSIS\makensis.exe",
-
     ]
 
     for p in alt_paths:
-
         if Path(p).is_file():
-
             return p
 
     return None
 
 
-
-
-
 def _validate_dist(dist_dir: Path) -> list[str]:
-
     """验证构建产物目录是否完整。"""
 
     issues: list[str] = []
 
     expected_apps = [
-
+        ("Game Calc Platform", "Game Calc Platform.exe"),
         ("终末地伤害计算器", "终末地伤害计算器.exe"),
-
         ("数据设计器", "数据设计器.exe"),
-
         ("配置包设计器", "配置包设计器.exe"),
-
     ]
 
     for app_name, exe_name in expected_apps:
-
         app_dir = dist_dir / app_name
 
         exe_path = app_dir / exe_name
 
         if not exe_path.exists():
-
             issues.append(f"缺少 {exe_name}（预期位置: {exe_path})")
 
         elif not app_dir.is_dir():
-
             issues.append(f"目录不存在: {app_dir}")
 
     return issues
 
 
-
-
-
 def build_installer(
-
     dist_dir: Path,
-
     version: str,
-
     *,
-
     dry_run: bool = False,
-
 ) -> int:
-
     """执行安装包构建。
 
 
@@ -156,7 +112,6 @@ def build_installer(
     makensis = _ensure_nsis()
 
     if not makensis:
-
         print("错误: 未找到 NSIS 编译器 (makensis)。", file=sys.stderr)
 
         print("请安装 NSIS: https://nsis.sourceforge.io/Download", file=sys.stderr)
@@ -165,43 +120,27 @@ def build_installer(
 
         return 1
 
-
-
     if not _NSI_SCRIPT.is_file():
-
         print(f"错误: NSIS 脚本不存在: {_NSI_SCRIPT}", file=sys.stderr)
 
         return 1
 
-
-
     issues = _validate_dist(dist_dir)
 
     if issues:
-
         print("警告: 构建产物不完整:", file=sys.stderr)
 
         for issue in issues:
-
             print(f"  - {issue}", file=sys.stderr)
 
         print("安装包可能缺少部分组件。\n", file=sys.stderr)
 
-
-
     cmd = [
-
         makensis,
-
         f"/DVERSION={version}",
-
         f"/DAPP_ROOT={dist_dir}",
-
         str(_NSI_SCRIPT),
-
     ]
-
-
 
     print(f"NSIS: {makensis}")
 
@@ -215,180 +154,111 @@ def build_installer(
 
     print(f"命令: {' '.join(cmd)}\n")
 
-
-
     if dry_run:
-
         print("[dry-run] 未执行构建。")
 
         return 0
 
-
-
     result = subprocess.run(cmd, cwd=str(_INSTALLER_DIR))
 
     if result.returncode != 0:
-
         print(f"错误: NSIS 构建失败 (exit={result.returncode})", file=sys.stderr)
 
         return 1
 
-
-
     output_path = dist_dir / f"GameCalcPlatform_Setup_v{version}.exe"
 
     if output_path.exists():
-
         size_mb = output_path.stat().st_size / 1024 / 1024
 
         print(f"\n安装包已生成: {output_path} ({size_mb:.1f} MB)")
 
     else:
-
         print(f"\n警告: 未找到输出文件 {output_path}", file=sys.stderr)
-
-
 
     return 0
 
 
-
-
-
 def check_environment() -> int:
-
     """检查构建环境是否就绪。"""
 
     makensis = _ensure_nsis()
 
     if makensis:
-
         print(f"[OK] NSIS: {makensis}")
 
     else:
-
         print("[FAIL] NSIS: 未找到 (makensis)")
 
         print("       请从 https://nsis.sourceforge.io/Download 安装")
 
-
-
     if _NSI_SCRIPT.is_file():
-
         print(f"[OK] 脚本: {_NSI_SCRIPT}")
 
     else:
-
         print(f"[FAIL] 脚本: {_NSI_SCRIPT} 不存在")
-
-
 
     _add_path()
 
     try:
-
         from scripts.please_read_me import _EXE_VERSION, _VERSION
 
         print(f"[OK] 版本: exe={_EXE_VERSION}, src={_VERSION}")
 
     except ImportError:
-
         print("[FAIL] 版本: 无法读取 please_read_me.py")
 
-
-
     return 0 if makensis and _NSI_SCRIPT.is_file() else 1
-
-
-
 
 
 def _add_path() -> None:
     """将项目根目录加入 sys.path。"""
     if str(_PROJECT_ROOT) not in sys.path:
-
         sys.path.insert(0, str(_PROJECT_ROOT))
-
-
-
 
 
 def main() -> int:
     """CLI 入口。解析参数并执行安装包构建或环境检查。"""
     parser = argparse.ArgumentParser(description="NSIS 安装包构建器")
     parser.add_argument(
-
         "--dist-dir",
-
         type=Path,
-
         default=_PROJECT_ROOT / "dist",
-
         help="构建产物目录（默认: dist/）",
-
     )
 
     parser.add_argument(
-
         "--version",
-
         type=str,
-
         default=None,
-
         help="版本号（默认: please_read_me._EXE_VERSION）",
-
     )
 
     parser.add_argument(
-
         "--dry-run",
-
         action="store_true",
-
         help="仅打印构建命令，不执行",
-
     )
 
     parser.add_argument(
-
         "--check",
-
         action="store_true",
-
         help="仅检查构建环境，不执行构建",
-
     )
-
-
 
     args = parser.parse_args()
 
-
-
     if args.check:
-
         return check_environment()
-
-
 
     version = args.version or _get_version()
 
     return build_installer(
-
         dist_dir=args.dist_dir.resolve(),
-
         version=version,
-
         dry_run=args.dry_run,
-
     )
 
 
-
-
-
 if __name__ == "__main__":
-
     sys.exit(main())
-

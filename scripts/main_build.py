@@ -37,8 +37,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 import argparse
@@ -62,9 +60,7 @@ ensure_root()
 _GAMES = _REPO_ROOT / "games" / "endfield"
 
 if str(_GAMES) not in sys.path:
-
     sys.path.insert(0, str(_GAMES))
-
 
 
 from please_read_me import get_exe_version, get_version
@@ -84,69 +80,45 @@ DEFAULT_BUILD_TIMEOUT_SECONDS = 20 * 60
 DEFAULT_HEARTBEAT_SECONDS = 15
 
 
-
-
-
 def _read_int_env(name: str, default: int) -> int:
     """读取整数环境变量，无效或为空时返回默认值。"""
     raw = os.getenv(name, "").strip()
 
     if not raw:
-
         return default
 
     try:
-
         value = int(raw)
 
     except ValueError:
-
         return default
 
     return value if value > 0 else default
 
 
-
-
-
 def _terminate_process_tree(proc: subprocess.Popen[bytes]) -> None:
     """终止进程树（跨平台）。"""
     if proc.poll() is not None:
-
         return
 
     try:
-
         if os.name == "nt":
-
             subprocess.run(
-
                 ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-
                 check=False,
-
                 stdout=subprocess.DEVNULL,
-
                 stderr=subprocess.DEVNULL,
-
             )
 
         else:
-
             proc.kill()
 
     except Exception:
-
         try:
-
             proc.kill()
 
         except Exception:
-
             pass
-
-
-
 
 
 def _run_with_watchdog(
@@ -161,42 +133,25 @@ def _run_with_watchdog(
 
     deadline = time.monotonic() + timeout_seconds
 
-
-
     while True:
-
         elapsed = time.monotonic()
 
         remaining = deadline - elapsed
 
         if remaining <= 0:
-
             _terminate_process_tree(proc)
 
-            raise TimeoutError(
-
-                f"打包超时 {timeout_seconds}s，已终止进程树 (PID={proc.pid})"
-
-            )
-
-
+            raise TimeoutError(f"打包超时 {timeout_seconds}s，已终止进程树 (PID={proc.pid})")
 
         ret = proc.poll()
 
         if ret is not None:
-
             return subprocess.CompletedProcess(cmd, ret)
 
-
-
         if int(elapsed) % heartbeat_seconds == 0:
-
             print(f"[看门狗] 运行中… ({int(remaining)}s 剩余)")
 
         time.sleep(1)
-
-
-
 
 
 def _build_target(
@@ -223,115 +178,141 @@ def _build_target(
 
     print(f"{'=' * 60}")
 
-
-
     work_dir = tempfile.mkdtemp(prefix=f"build_{target}_", dir=base_dir)
 
     spec_dir = tempfile.mkdtemp(prefix=f"spec_{target}_", dir=base_dir)
 
     cmd: list[str] = [
-
         sys.executable,
-
         "-m",
-
         "PyInstaller",
-
         "--onefile",
-
         "--windowed",
-
         f"--name={app_name}",
-
         f"--distpath={release_root}",
-
         f"--workpath={work_dir}",
-
         f"--specpath={spec_dir}",
-
         "--noconfirm",
-
         "--clean",
-
     ]
 
+    is_launcher = target == "launcher"
     is_local_backend = target == "local-backend"
-
     if extra_args:
         cmd.extend(extra_args)
 
     donation_data = f"{base_dir / 'resources' / 'donation'};resources/donation"
     cmd.extend(["--add-data", donation_data])
 
-    if is_local_backend:
+    if is_launcher:
+        # 启动器模式：打包框架 + 所有游戏 + 所有工具 + 数据
+        cmd[cmd.index("--windowed")] = "--console"
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir / "framework" / "src"),
+                "--paths",
+                str(base_dir / "games"),
+                "--paths",
+                str(base_dir / "games" / "endfield"),
+                "--paths",
+                str(base_dir / "games" / "arknights"),
+                "--paths",
+                str(base_dir / "tools"),
+                "--paths",
+                str(base_dir / "scripts"),
+                # 内嵌所有游戏数据
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'data'};games/endfield/data",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'data_loading'};games/endfield/data_loading",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield' / 'data_version.json'};games/endfield/data_version.json",
+                # 明日方舟解析数据
+                "--add-data",
+                f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+                # 框架适配器
+                "--add-data",
+                f"{base_dir / 'framework' / 'adapters'};framework/adapters",
+                # 工具包
+                "--add-data",
+                f"{base_dir / 'utils'};utils",
+            ]
+        )
+    elif is_local_backend:
         # 控制台模式（服务器需要在终端运行）
         cmd[cmd.index("--windowed")] = "--console"
-        cmd.extend([
-            "--paths", str(base_dir / "framework" / "src"),
-            "--paths", str(base_dir / "games"),
-            "--paths", str(base_dir / "web" / "backend"),
-            # 内嵌前端构建产物
-            "--add-data", f"{base_dir / 'web' / 'frontend' / 'dist'};web/frontend/dist",
-            # 内嵌游戏数据（用于 _path_setup.py 路径解析）
-            "--add-data", f"{base_dir / 'games' / 'endfield'};games/endfield",
-        ])
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir / "framework" / "src"),
+                "--paths",
+                str(base_dir / "games"),
+                "--paths",
+                str(base_dir / "web" / "backend"),
+                # 内嵌前端构建产物
+                "--add-data",
+                f"{base_dir / 'web' / 'frontend' / 'dist'};web/frontend/dist",
+                # 内嵌游戏数据（用于 _path_setup.py 路径解析）
+                "--add-data",
+                f"{base_dir / 'games' / 'endfield'};games/endfield",
+            ]
+        )
     elif target == "calculator":
-        cmd.extend([
-            "--paths", str(base_dir / "games"),
-            "--paths", str(base_dir / "games" / "endfield"),
-        ])
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir / "games"),
+                "--paths",
+                str(base_dir / "games" / "endfield"),
+            ]
+        )
     elif target == "designer" or target == "pack-designer":
         cmd.extend(["--paths", str(base_dir / "tools")])
     elif target == "arknights":
-        cmd.extend([
-            "--paths", str(base_dir / "games"),
-            "--paths", str(base_dir / "games" / "arknights"),
-            "--add-data",
-            f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
-        ])
+        cmd.extend(
+            [
+                "--paths",
+                str(base_dir / "games"),
+                "--paths",
+                str(base_dir / "games" / "arknights"),
+                "--add-data",
+                f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+            ]
+        )
 
     cmd.append(entry)
-
-
 
     timeout = _read_int_env("ENDFIELD_BUILD_TIMEOUT_SECONDS", DEFAULT_BUILD_TIMEOUT_SECONDS)
 
     heartbeat = _read_int_env("ENDFIELD_BUILD_HEARTBEAT_SECONDS", DEFAULT_HEARTBEAT_SECONDS)
 
-
-
     result = _run_with_watchdog(
-
-        cmd, cwd=base_dir, timeout_seconds=timeout, heartbeat_seconds=heartbeat,
-
+        cmd,
+        cwd=base_dir,
+        timeout_seconds=timeout,
+        heartbeat_seconds=heartbeat,
     )
-
-
 
     shutil.rmtree(work_dir, ignore_errors=True)
 
     shutil.rmtree(spec_dir, ignore_errors=True)
 
-
-
     if result.returncode != 0:
-
         raise RuntimeError(f"PyInstaller 打包 [{target}] 失败 (exit={result.returncode})")
-
-
 
     exe_path = release_root / f"{app_name}.exe"
 
     if not exe_path.exists():
-
         raise FileNotFoundError(f"打包成功但未找到 exe: {exe_path}")
 
     print(f"  → 已生成: {exe_path} ({exe_path.stat().st_size / 1024 / 1024:.1f} MB)")
 
     return exe_path
-
-
-
 
 
 def _ensure_frontend_built(base_dir: Path) -> None:
@@ -352,14 +333,11 @@ def main() -> None:
     """CLI 入口。解析参数并执行对应目标的打包。"""
     apply_platform_win32_patch()
 
-
-
     parser = argparse.ArgumentParser(description="终末地/明日方舟 — 打包脚本")
 
     parser.add_argument(
         "--target",
-        choices=["calculator", "designer", "pack-designer",
-                 "local-backend", "arknights", "all"],
+        choices=["launcher", "calculator", "designer", "pack-designer", "local-backend", "arknights", "all"],
         default="all",
     )
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
@@ -379,43 +357,27 @@ def main() -> None:
     if "local-backend" in targets and not args.no_frontend_build:
         _ensure_frontend_built(base_dir)
 
-
-
     if not args.no_bump:
-
         exe_version = get_exe_version()
 
         pkg_version = get_version()
 
         print(f"版本: exe={exe_version}, 包={pkg_version}")
 
-
-
     for target in targets:
-
         exe_path = _build_target(target, base_dir, dist_dir)
 
         release_root = exe_path.parent
 
         stage_release_folder(
-
             release_root,
-
             project_root=base_dir,
-
             repo_root=base_dir,
-
             target=target,
-
         )
 
         print(f"  发布目录: {release_root}")
 
 
-
-
-
 if __name__ == "__main__":
-
     main()
-

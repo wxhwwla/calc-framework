@@ -15,26 +15,19 @@
 
 """
 
-
-
 from __future__ import annotations
 
-
-
 import shutil
-
 from pathlib import Path
-
 from typing import Literal
-
 
 from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, EQUIPMENTS_JSON_PATH, WEAPONS_JSON_PATH
 
+BuildTarget = Literal["launcher", "calculator", "designer", "pack-designer", "local-backend", "arknights"]
 
-BuildTarget = Literal["calculator", "designer", "pack-designer", "local-backend", "arknights"]
-
-# 默认 `--target all` 顺序：先桌面 GUI，再 Web 本地后端
+# 默认 `--target all` 顺序：launcher（单 exe）优先，旧分体目标保留过渡
 ALL_BUILD_TARGETS: tuple[BuildTarget, ...] = (
+    "launcher",
     "calculator",
     "designer",
     "pack-designer",
@@ -44,22 +37,17 @@ ALL_BUILD_TARGETS: tuple[BuildTarget, ...] = (
 
 
 TARGET_APP_NAMES: dict[BuildTarget, str] = {
-
+    "launcher": "Game Calc Platform",
     "calculator": "终末地伤害计算器",
-
     "designer": "数据设计器",
-
     "pack-designer": "配置包设计器",
-
     "local-backend": "终末地本地搜索服务器",
-
     "arknights": "明日方舟伤害计算器",
-
 }
 
 
-
 TARGET_ENTRIES: dict[BuildTarget, str] = {
+    "launcher": "release_bundle/launcher_entry.py",
     "calculator": "scripts/main.py",
     "designer": "scripts/main_designer.py",
     "pack-designer": "scripts/main_pack_designer.py",
@@ -68,58 +56,35 @@ TARGET_ENTRIES: dict[BuildTarget, str] = {
 }
 
 
-
 RELEASE_DATA_FILES: tuple[tuple[str, str], ...] = (
-
     (CHARACTERS_JSON_PATH, CHARACTERS_JSON_PATH),
-
     (WEAPONS_JSON_PATH, WEAPONS_JSON_PATH),
-
     (EQUIPMENTS_JSON_PATH, EQUIPMENTS_JSON_PATH),
-
 )
 
 
 ARKNIGHTS_DATA_REL = "tools/arknights_scout/output/parsed"
 
 
-
 LICENSE_FILES: tuple[tuple[str, str], ...] = (
-
     ("DATA_LICENSE", "DATA_LICENSE"),
-
     ("LICENSE", "LICENSE"),
-
     ("NOTICES.md", "NOTICES.md"),
-
 )
-
 
 
 RELEASE_README_NAME = "发布说明.txt"
 
 
-
-
-
 def target_app_name(target: BuildTarget) -> str:
-
     return TARGET_APP_NAMES[target]
 
 
-
-
-
 def target_entry(target: BuildTarget) -> str:
-
     return TARGET_ENTRIES[target]
 
 
-
-
-
 def _calculator_readme(exe_version: str, package_version: str) -> str:
-
     return f"""终末地伤害计算小工具 — 发布包说明
 
 
@@ -153,11 +118,7 @@ GUI 框架：PySide6（LGPL-3.0）。仪表盘：matplotlib。
 """
 
 
-
-
-
 def _designer_readme(exe_version: str, package_version: str) -> str:
-
     return f"""数据设计器 — 发布包说明
 
 
@@ -185,11 +146,7 @@ GUI 框架：PySide6（LGPL-3.0）。
 """
 
 
-
-
-
 def _pack_designer_readme(exe_version: str, package_version: str) -> str:
-
     return f"""配置包设计器 — 发布包说明
 
 
@@ -217,11 +174,7 @@ def _pack_designer_readme(exe_version: str, package_version: str) -> str:
 """
 
 
-
-
-
 def _local_backend_readme(exe_version: str, package_version: str) -> str:
-
     return f"""终末地本地搜索服务器 — 发布包说明
 
 
@@ -259,9 +212,43 @@ def _local_backend_readme(exe_version: str, package_version: str) -> str:
 """
 
 
+def _launcher_readme(exe_version: str, package_version: str) -> str:
+    return f"""Game Calc Platform — 发布包说明
+
+
+
+【版本】EXE v{exe_version}（源码包 v{package_version}）
+
+【软件】Game Calc Platform.exe — 见 LICENSE（AGPL-3.0 或您已取得的商业许可）
+
+【数据】games/endfield/data/ 下 JSON — 见 DATA_LICENSE（非商业可用；商用不可用本仓库数据）
+
+【明日方舟数据】tools/arknights_scout/output/parsed/ 下干员 JSON — 见 DATA_LICENSE
+
+
+
+本软件是统一启动器，包含以下功能：
+
+  - 终末地伤害计算器（--game endfield）
+
+  - 明日方舟伤害计算器（--game arknights）
+
+  - 开发者工具箱（--tool dev_toolkit）
+
+  - 计算包查看器（--tool viewer）
+
+  - 本地 Web 搜索服务器
+
+
+
+GUI 框架：PySide6（LGPL-3.0）。仪表盘：matplotlib。
+
+分发时请保持 exe 与本目录内数据文件相对位置不变。
+
+"""
+
 
 def _arknights_readme(exe_version: str, package_version: str) -> str:
-
     return f"""明日方舟伤害计算器 — 发布包说明
 
 【版本】EXE v{exe_version}（源码包 v{package_version}）
@@ -279,26 +266,33 @@ GUI 框架：PySide6（LGPL-3.0）。
 """
 
 
-
 def stage_release_folder(
-
     release_root: Path,
-
     *,
-
     project_root: Path,
-
     repo_root: Path,
-
     target: BuildTarget = "calculator",
-
 ) -> None:
-
     release_root.mkdir(parents=True, exist_ok=True)
 
-
-
-    if target == "local-backend":
+    if target == "launcher":
+        # 启动器需要所有游戏的数据
+        for dest_rel, src_rel in RELEASE_DATA_FILES:
+            src = project_root / src_rel
+            if not src.is_file():
+                raise FileNotFoundError(f"缺少游戏数据源文件: {src}")
+            dest = release_root / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+        # 明日方舟干员数据
+        parsed_src = project_root / ARKNIGHTS_DATA_REL
+        if parsed_src.is_dir():
+            parsed_dst = release_root / ARKNIGHTS_DATA_REL
+            parsed_dst.mkdir(parents=True, exist_ok=True)
+            for f in parsed_src.iterdir():
+                if f.suffix == ".json":
+                    shutil.copy2(f, parsed_dst)
+    elif target == "local-backend":
         # local-backend 前端 dist 已在 PyInstaller 中通过 --add-data 内嵌
         # 但仍需要游戏数据 JSON 文件在 exe 旁
         for dest_rel, src_rel in RELEASE_DATA_FILES:
@@ -326,19 +320,17 @@ def stage_release_folder(
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
 
-
-
     for dest_rel, src_rel in LICENSE_FILES:
         src = repo_root / src_rel
         if not src.is_file():
             raise FileNotFoundError(f"缺少许可文件: {src}")
         shutil.copy2(src, release_root / dest_rel)
 
-
-
     exe_version, package_version = _read_release_versions()
 
-    if target == "calculator":
+    if target == "launcher":
+        readme_fn = _launcher_readme
+    elif target == "calculator":
         readme_fn = _calculator_readme
     elif target == "designer":
         readme_fn = _designer_readme
@@ -357,19 +349,11 @@ def stage_release_folder(
     )
 
 
-
-
-
 def _read_release_versions() -> tuple[str, str]:
-
     from scripts.please_read_me import get_exe_version, get_version
 
     return get_exe_version(), get_version()
 
 
-
-
-
 def release_dir_from_dist(dist_dir: Path, *, target: BuildTarget = "calculator") -> Path:
-
     return dist_dir / target_app_name(target)
