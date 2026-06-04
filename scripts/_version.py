@@ -333,22 +333,7 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 16 处文件
+# TITLE: 修改 scripts/_version.py
 # BODY:
-# - 变更 .github/ISSUE_TEMPLATE/bug_report.yml
-# - 修改 framework/src/calc_framework/ui/launcher/runtime.py
-# - 修改 framework/tests/ui/test_launcher_runtime.py
-# - 修改 games/endfield/tests/repo/test_release_layout.py
-# - 修改 games/endfield/tests/repo/test_repo_release_layout.py
-# - 修改 release_bundle/release_layout.py
 # - 修改 scripts/_version.py
-# - 变更 scripts/launcher.pyw
-# - 修改 scripts/main.py
-# - 修改 scripts/main_arknights.py
-# - 修改 scripts/main_build.py
-# - 修改 scripts/main_designer.py
-# - 修改 scripts/main_launcher.py
-# - 修改 scripts/main_pack_designer.py
-# - 修改 scripts/tools/github_upload_module.py
-# - 修改 web/build_local_backend.py
 # --- END UPLOAD_SUMMARY ---
