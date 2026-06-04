@@ -70,7 +70,6 @@ if str(_GAMES) not in sys.path:
 from please_read_me import get_exe_version, get_version
 
 from release_bundle.release_layout import (
-    ALL_BUILD_TARGETS,
     BuildTarget,
     release_dir_from_dist,
     stage_release_folder,
@@ -187,7 +186,7 @@ def _build_target(
         "-m",
         "PyInstaller",
         "--onefile",
-        "--windowed",
+        "--console",
         f"--name={app_name}",
         f"--distpath={release_root}",
         f"--workpath={work_dir}",
@@ -196,101 +195,47 @@ def _build_target(
         "--clean",
     ]
 
-    is_launcher = target == "launcher"
-    is_local_backend = target == "local-backend"
     if extra_args:
         cmd.extend(extra_args)
 
     donation_data = f"{base_dir / 'resources' / 'donation'};resources/donation"
     cmd.extend(["--add-data", donation_data])
 
-    if is_launcher:
-        # 启动器模式：打包框架 + 所有游戏 + 所有工具 + 数据
-        cmd[cmd.index("--windowed")] = "--console"
-        cmd.extend(
-            [
-                "--paths",
-                str(base_dir / "framework" / "src"),
-                "--paths",
-                str(base_dir / "games"),
-                "--paths",
-                str(base_dir / "games" / "endfield"),
-                "--paths",
-                str(base_dir / "games" / "arknights"),
-                "--paths",
-                str(base_dir / "tools"),
-                "--paths",
-                str(base_dir / "scripts"),
-                # 内嵌所有游戏数据
-                "--add-data",
-                f"{base_dir / 'games' / 'endfield' / 'data'};games/endfield/data",
-                "--add-data",
-                f"{base_dir / 'games' / 'endfield' / 'data_loading'};games/endfield/data_loading",
-                "--add-data",
-                f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
-                "--add-data",
-                f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
-                # 明日方舟解析数据
-                "--add-data",
-                f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
-                # 框架适配器
-                "--add-data",
-                f"{base_dir / 'framework' / 'adapters'};framework/adapters",
-                # 工具包
-                "--add-data",
-                f"{base_dir / 'utils'};utils",
-            ]
-        )
-    elif is_local_backend:
-        # 控制台模式（服务器需要在终端运行）
-        cmd[cmd.index("--windowed")] = "--console"
-        cmd.extend(
-            [
-                "--paths",
-                str(base_dir / "framework" / "src"),
-                "--paths",
-                str(base_dir / "games"),
-                "--paths",
-                str(base_dir / "web" / "backend"),
-                # 内嵌前端构建产物
-                "--add-data",
-                f"{base_dir / 'web' / 'frontend' / 'dist'};web/frontend/dist",
-                # 内嵌游戏数据（用于 _path_setup.py 路径解析）
-                "--add-data",
-                f"{base_dir / 'games' / 'endfield'};games/endfield",
-            ]
-        )
-    elif target == "calculator":
-        cmd.extend(
-            [
-                "--paths",
-                str(base_dir / "games"),
-                "--paths",
-                str(base_dir / "games" / "endfield"),
-            ]
-        )
-    elif target == "designer" or target == "pack-designer":
-        cmd.extend(
-            [
-                "--paths",
-                str(base_dir),
-                "--paths",
-                str(base_dir / "scripts"),
-                "--paths",
-                str(base_dir / "tools"),
-            ]
-        )
-    elif target == "arknights":
-        cmd.extend(
-            [
-                "--paths",
-                str(base_dir / "games"),
-                "--paths",
-                str(base_dir / "games" / "arknights"),
-                "--add-data",
-                f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
-            ]
-        )
+    # 启动器模式：打包框架 + 所有游戏 + 所有工具 + 数据
+    cmd.extend(
+        [
+            "--paths",
+            str(base_dir / "framework" / "src"),
+            "--paths",
+            str(base_dir / "games"),
+            "--paths",
+            str(base_dir / "games" / "endfield"),
+            "--paths",
+            str(base_dir / "games" / "arknights"),
+            "--paths",
+            str(base_dir / "tools"),
+            "--paths",
+            str(base_dir / "scripts"),
+            # 内嵌所有游戏数据
+            "--add-data",
+            f"{base_dir / 'games' / 'endfield' / 'data'};games/endfield/data",
+            "--add-data",
+            f"{base_dir / 'games' / 'endfield' / 'data_loading'};games/endfield/data_loading",
+            "--add-data",
+            f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
+            "--add-data",
+            f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
+            # 明日方舟解析数据
+            "--add-data",
+            f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+            # 框架适配器
+            "--add-data",
+            f"{base_dir / 'framework' / 'adapters'};framework/adapters",
+            # 工具包
+            "--add-data",
+            f"{base_dir / 'utils'};utils",
+        ]
+    )
 
     cmd.append(entry)
 
@@ -322,67 +267,38 @@ def _build_target(
     return exe_path
 
 
-def _ensure_frontend_built(base_dir: Path) -> None:
-    """确保 web/frontend/dist/ 存在，不存在则构建。"""
-    dist_dir = base_dir / "web" / "frontend" / "dist"
-    if dist_dir.is_dir() and any(dist_dir.iterdir()):
-        _logger.info("[前置] 前端 dist/ 已存在，跳过构建")
-        return
-    _logger.info("[前置] 构建前端...")
-    frontend_dir = base_dir / "web" / "frontend"
-    npm_cmd = "npm.cmd" if os.name == "nt" else "npm"
-    subprocess.run([npm_cmd, "install"], cwd=str(frontend_dir), check=True)
-    subprocess.run([npm_cmd, "run", "build"], cwd=str(frontend_dir), check=True)
-    _logger.info("[前置] 前端构建完成")
-
-
 def main() -> None:
-    """CLI 入口。解析参数并执行对应目标的打包。"""
+    """CLI 入口。打包统一启动器。"""
     apply_platform_win32_patch()
     setup_logging(level="INFO")
 
-    parser = argparse.ArgumentParser(description="终末地/明日方舟 — 打包脚本")
+    parser = argparse.ArgumentParser(description="Game Calc Platform — 打包脚本")
 
-    parser.add_argument(
-        "--target",
-        choices=["launcher", "calculator", "designer", "pack-designer", "local-backend", "arknights", "all"],
-        default="all",
-    )
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
-    parser.add_argument("--no-frontend-build", action="store_true", help="local-backend 时跳过前端构建")
     args = parser.parse_args()
 
     base_dir = _REPO_ROOT
     dist_dir = base_dir / "dist"
     dist_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.target == "all":
-        targets = list(ALL_BUILD_TARGETS)
-    else:
-        targets: list[BuildTarget] = [args.target]
-
-    # local-backend 需要前端构建产物
-    if "local-backend" in targets and not args.no_frontend_build:
-        _ensure_frontend_built(base_dir)
-
     if not args.no_bump:
         exe_version = get_exe_version()
         pkg_version = get_version()
         _logger.info("版本: exe=%s, 包=%s", exe_version, pkg_version)
 
-    for target in targets:
-        exe_path = _build_target(target, base_dir, dist_dir)
+    target: BuildTarget = "launcher"
+    exe_path = _build_target(target, base_dir, dist_dir)
 
-        release_root = exe_path.parent
+    release_root = exe_path.parent
 
-        stage_release_folder(
-            release_root,
-            project_root=base_dir,
-            repo_root=base_dir,
-            target=target,
-        )
+    stage_release_folder(
+        release_root,
+        project_root=base_dir,
+        repo_root=base_dir,
+        target=target,
+    )
 
-        _logger.info("  发布目录: %s", release_root)
+    _logger.info("  发布目录: %s", release_root)
 
 
 if __name__ == "__main__":

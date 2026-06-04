@@ -9,12 +9,9 @@
 
   python scripts/main_launcher.py
   python scripts/main_launcher.py path/to/game.calcpack
-
-完整桌面计算器也可从启动器内启动，或直接::
-
-  python scripts/main.py          # 终末地
-  python scripts/main_arknights.py  # 明日方舟
+  python scripts/启动.bat
 """
+
 from __future__ import annotations
 
 import sys

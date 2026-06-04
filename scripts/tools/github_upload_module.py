@@ -764,6 +764,11 @@ def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
         print("[错误] 无有效暂存路径")
         sys.exit(1)
     print(f"[信息] git add（{len(paths)} 个路径，非全仓库）")
+    # 过滤已删除的文件
+    paths = [p for p in paths if os.path.exists(os.path.join(_repo_root(), p))]
+    if not paths:
+        print("[错误] 全部路径对应的文件已不存在（可能已被删除）")
+        sys.exit(1)
     run_git(["add", "--", *paths])
 
 
@@ -825,6 +830,11 @@ def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> 
     if added:
         print(f"[信息] 补暂存 {added} 个工作区改动（避免 commit hook stash 冲突）")
     print(f"[信息] git add（{len(merged)} 个路径，commit 前同步）")
+    # 过滤已删除的文件（git add 不存在的文件会报错）
+    merged = [p for p in merged if os.path.exists(os.path.join(_repo_root(), p))]
+    if not merged:
+        print("[信息] 无有效文件需暂存，跳过 git add")
+        return
     run_git(["add", "--", *merged])
 
 

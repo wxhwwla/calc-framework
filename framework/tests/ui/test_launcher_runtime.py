@@ -31,7 +31,7 @@ class TestLauncherRuntime:
         entries = {e.adapter_id: e for e in list_adapter_entries()}
         root = repo_root()
         argv = argv_for_adapter(entries["endfield"], root)
-        assert argv[-1].endswith("scripts/main.py") or argv[-1].replace("\\", "/").endswith("scripts/main.py")
+        assert argv[-1].replace("\\", "/").endswith("games/endfield/main.py")
 
     def test_argv_for_generic_adapter(self) -> None:
         entries = {e.adapter_id: e for e in list_adapter_entries()}

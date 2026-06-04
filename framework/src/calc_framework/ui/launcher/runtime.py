@@ -19,8 +19,8 @@ from ...config.manager import _get_adapters_dir
 
 # 完整桌面计算器入口（按 adapters/ 子目录 id）
 _FULL_APP_SCRIPTS: dict[str, str] = {
-    "endfield": "scripts/main.py",
-    "arknights": "scripts/main_arknights.py",
+    "endfield": "games/endfield/main.py",
+    "arknights": "games/arknights/main.py",
 }
 
 
