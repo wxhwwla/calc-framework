@@ -67,6 +67,7 @@ def run_ocr_detection(folder: str | Path) -> dict[str, Any] | None:
                     if mapped.is_valid:
                         mapped_preset = mapped.to_loadout_preset_dict()
             except Exception:
+                _logger.debug("单张截图 OCR 识别失败（已跳过）: %s", r.image_path)
                 continue
 
         if mapped_preset is None and all_ocr_texts:
@@ -157,6 +158,7 @@ class _DetectionDialog(QDialog):
         lines.append(f"截图文件夹: {self._folder}")
         try:
             from tools.ocr.detector import YOLOXDetector
+
             detector = YOLOXDetector(conf_threshold=0.25)
             batch = detector.detect_folder(
                 str(self._folder),
@@ -176,6 +178,7 @@ class _DetectionDialog(QDialog):
                         lines.append(f"  [{d.confidence:.2f}] {d.class_name} {coord}")
                 try:
                     from tools.ocr.recognizer import OCRRecognizer
+
                     ocr = OCRRecognizer()
                     ocr_result = ocr.recognize(r.image_path)
                     if ocr_result.texts:
@@ -235,13 +238,15 @@ class _DetectionDialog(QDialog):
             QMessageBox.information(self, "下载完成", "EasyOCR 模型已下载完成！\n现在可以正常使用截图识装功能。")
             self._run_detection()
         else:
-            QMessageBox.critical(self, "下载失败",
-                                 "模型下载失败。\n\n请尝试在终端手动运行:\n  python tools/ocr/download_models.py")
+            QMessageBox.critical(
+                self, "下载失败", "模型下载失败。\n\n请尝试在终端手动运行:\n  python tools/ocr/download_models.py"
+            )
         """on download finished。"""
 
 
 class _DownloadThread(QThread):
     """后台下载 OCR 模型。"""
+
     finished = Signal(bool)
     progress = Signal(int)
 
@@ -276,6 +281,7 @@ class _DownloadThread(QThread):
                         zf.extractall(cache)
                     zip_path.unlink()
                 except Exception:
+                    _logger.warning("OCR 模型下载/解压失败", exc_info=True)
                     self.finished.emit(False)
                     return
                 completed += 1
@@ -283,6 +289,7 @@ class _DownloadThread(QThread):
 
             self.finished.emit(True)
         except Exception:
+            _logger.exception("OCR 模型下载线程异常")
             self.finished.emit(False)
         """执行主流程。"""
 

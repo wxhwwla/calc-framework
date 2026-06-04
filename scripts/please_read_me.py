@@ -41,20 +41,20 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _path_setup import ensure_root
+from scripts._path_setup import ensure_root
 
 ensure_root()
 
 from _version import _EXE_VERSION, _VERSION, get_exe_version, get_version
 
 __all__ = [
-    "_EXE_VERSION",
-    "_VERSION",
     "FORMULA_INFO",
     "PROJECT_STRUCTURE",
     "UPLOAD_WORKFLOW",
     "USAGE_INFO",
     "VERSION_INFO",
+    "_EXE_VERSION",
+    "_VERSION",
     "get_exe_version",
     "get_full_intro",
     "get_version",

@@ -8,15 +8,12 @@
   python web/build_local_backend.py --no-build    # 仅打包，跳过前端构建
 
 输出:
-  dist/终末地本地搜索服务器/
-    ├── 终末地本地搜索服务器.exe    ← PyInstaller 单文件
-    ├── games/endfield/data/       ← 游戏 JSON 数据
-    ├── LICENSE / DATA_LICENSE / NOTICES.md
-    └── 发布说明.txt
+  dist/Game Calc Platform/
+    └── Web 搜索服务器由启动器内嵌 Web 面板启动
 
-构建后，将 dist/终末地本地搜索服务器/ 目录上传到服务器，
-或直接提供 zip 下载给用户。
+从启动器（Game Calc Platform.exe）的「本地 Web 服务器」区域启动即可。
 """
+
 from __future__ import annotations
 
 import os
@@ -26,6 +23,7 @@ import zipfile
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
+_APP_NAME = "终末地本地搜索服务器"
 
 
 def _check_pyinstaller() -> None:
@@ -55,30 +53,77 @@ def _build_frontend() -> None:
 
 
 def _run_pyinstaller() -> Path:
-    """运行 PyInstaller 打包。"""
+    """直接通过 PyInstaller 打包本地搜索服务器。"""
     print("[2/4] PyInstaller 打包...")
-    # 用 main_build.py 的 local-backend 目标
-    result = subprocess.run(
-        [sys.executable, "main_build.py",
-         "--target", "local-backend",
-         "--no-frontend-build"],
-        cwd=str(_REPO_ROOT),
-        capture_output=True, text=True,
-    )
+    import tempfile
+
+    work_dir = tempfile.mkdtemp(prefix="build_local_backend_")
+    spec_dir = tempfile.mkdtemp(prefix="spec_local_backend_")
+    release_dir = _REPO_ROOT / "dist" / _APP_NAME
+    entry = str(_REPO_ROOT / "web" / "backend" / "run_packaged_main.py")
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "PyInstaller",
+        "--onefile",
+        "--console",
+        f"--name={_APP_NAME}",
+        f"--distpath={release_dir!s}",
+        f"--workpath={work_dir}",
+        f"--specpath={spec_dir}",
+        "--noconfirm",
+        "--clean",
+        "--paths",
+        str(_REPO_ROOT / "framework" / "src"),
+        "--paths",
+        str(_REPO_ROOT / "games"),
+        "--paths",
+        str(_REPO_ROOT / "web" / "backend"),
+        "--add-data",
+        f"{_REPO_ROOT / 'web' / 'frontend' / 'dist'};web/frontend/dist",
+        "--add-data",
+        f"{_REPO_ROOT / 'games' / 'endfield'};games/endfield",
+        entry,
+    ]
+
+    result = subprocess.run(cmd, cwd=str(_REPO_ROOT), capture_output=True, text=True)
     if result.returncode != 0:
         print(result.stdout[-3000:])
         print(result.stderr[-3000:])
         raise RuntimeError(f"PyInstaller 打包失败 (exit={result.returncode})")
     print(result.stdout[-2000:])
 
-    # 找到生成的 exe
-    release_dir = _REPO_ROOT / "dist" / "终末地本地搜索服务器"
-    exe_path = release_dir / "终末地本地搜索服务器.exe"
+    exe_path = release_dir / f"{_APP_NAME}.exe"
     if not exe_path.exists():
         raise FileNotFoundError(f"未找到打包后的 exe: {exe_path}")
 
     mb_size = exe_path.stat().st_size / 1024 / 1024
     print(f"  [OK] exe 已生成: {exe_path} ({mb_size:.1f} MB)")
+
+    # 复制游戏数据和许可文件
+    import shutil
+
+    from release_bundle.release_layout import LICENSE_FILES, RELEASE_DATA_FILES, _launcher_readme
+
+    for dest_rel, src_rel in RELEASE_DATA_FILES:
+        src = _REPO_ROOT / src_rel
+        if src.is_file():
+            dest = release_dir / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+
+    for dest_rel, src_rel in LICENSE_FILES:
+        src = _REPO_ROOT / src_rel
+        if src.is_file():
+            shutil.copy2(src, release_dir / dest_rel)
+
+    # 生成发布说明
+    (release_dir / "发布说明.txt").write_text(
+        _launcher_readme("?", "?"),
+        encoding="utf-8",
+    )
+
     return release_dir
 
 

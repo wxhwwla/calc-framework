@@ -29,7 +29,9 @@ KEY_FILE = "git_key.txt"
 
 TARGET_DIR = "games/endfield"
 
-DEFAULT_BRANCH = "main"
+WORK_BRANCH = "develop"
+RELEASE_BRANCH = "main"
+DEFAULT_BRANCH = WORK_BRANCH
 
 SKIP_PULL = False
 
@@ -166,7 +168,7 @@ def preflight_upload(*, check_only: bool = False) -> bool:
     code, _, _ = run_git(["rev-parse", "--verify", ref], check=False, capture_output=True)
     if code != 0:
         if check_only:
-            print("[信息] 远程尚无 origin/main，可首次推送")
+            print(f"[信息] 远程尚无 origin/{WORK_BRANCH}，可首次推送")
         return True
 
     code, merge_base, _ = run_git(
@@ -175,7 +177,7 @@ def preflight_upload(*, check_only: bool = False) -> bool:
         capture_output=True,
     )
     if code != 0 or not merge_base.strip():
-        print("[错误] 本地与 origin/main 无共同祖先（断历史），需人工 reconcile")
+        print(f"[错误] 本地与 origin/{WORK_BRANCH} 无共同祖先（断历史），需人工 reconcile")
         return False
 
     if check_only:
@@ -322,13 +324,20 @@ def setup_git_repo() -> str:
 
     current_branch = current_branch.strip()
 
-    if current_branch != DEFAULT_BRANCH:
-        print(f"[信息] 当前分支「{current_branch}」，切换到 {DEFAULT_BRANCH}")
+    if current_branch != WORK_BRANCH:
+        print(f"[信息] 当前分支「{current_branch}」，切换到 {WORK_BRANCH}")
 
-        code, _, _ = run_git(["checkout", DEFAULT_BRANCH], check=False, capture_output=True)
+        code, _, _ = run_git(["checkout", WORK_BRANCH], check=False, capture_output=True)
 
         if code != 0:
-            run_git(["checkout", "-b", DEFAULT_BRANCH])
+            code, _, _ = run_git(
+                ["checkout", "-b", WORK_BRANCH, RELEASE_BRANCH],
+                check=False,
+                capture_output=True,
+            )
+            if code != 0:
+                run_git(["checkout", "-b", WORK_BRANCH])
+            print(f"[信息] 已创建本地分支 {WORK_BRANCH}")
 
     _, stdout, _ = run_git(["remote", "-v"], capture_output=True)
 
@@ -359,15 +368,35 @@ def setup_git_repo() -> str:
 
 
 def _remote_branch_ref() -> str:
-    return f"origin/{DEFAULT_BRANCH}"
+    return f"origin/{WORK_BRANCH}"
+
+
+def _remote_release_ref() -> str:
+    return f"origin/{RELEASE_BRANCH}"
+
+
+def _fetch_origin_work(*, timeout: int = 300) -> None:
+    run_git(["fetch", "origin", WORK_BRANCH], check=False, timeout=timeout)
+
+
+def _fetch_origin_release(*, timeout: int = 300) -> None:
+    run_git(["fetch", "origin", RELEASE_BRANCH], check=False, timeout=timeout)
+
+
+def _fetch_all_origin_branches(*, timeout: int = 300) -> None:
+    run_git(
+        ["fetch", "origin", WORK_BRANCH, RELEASE_BRANCH],
+        check=False,
+        timeout=timeout,
+    )
 
 
 def _fetch_origin_main(*, timeout: int = 300) -> None:
-    run_git(["fetch", "origin", DEFAULT_BRANCH], check=False, timeout=timeout)
+    _fetch_origin_work(timeout=timeout)
 
 
 def _count_ahead_behind() -> tuple[int, int]:
-    """返回 (领先 origin/main 的 commit 数, 落后数)。"""
+    """返回 (领先 origin/develop 的 commit 数, 落后数)。"""
     ref = _remote_branch_ref()
     code, _, _ = run_git(["rev-parse", "--verify", ref], check=False, capture_output=True)
     if code != 0:
@@ -446,10 +475,10 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
 
     ahead, behind = _count_ahead_behind()
     if behind == 0:
-        print(f"[信息] 已与 origin/main 同步（领先 {ahead} commit），跳过 pull")
+        print(f"[信息] 已与 origin/{WORK_BRANCH} 同步（领先 {ahead} commit），跳过 pull")
         return True
 
-    print(f"[信息] 落后 origin/main {behind} 个 commit，执行 pull --rebase...")
+    print(f"[信息] 落后 origin/{WORK_BRANCH} {behind} 个 commit，执行 pull --rebase...")
 
     code, stdout, _ = run_git(["rev-list", "--count", "--all"], check=False, capture_output=True)
     has_commits = int(stdout.strip()) > 0 if code == 0 and stdout.strip() else False
@@ -462,7 +491,7 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
         return False
 
     code, _, stderr = run_git(
-        ["pull", "--rebase", "origin", DEFAULT_BRANCH],
+        ["pull", "--rebase", "origin", WORK_BRANCH],
         check=False,
         capture_output=False,
         timeout=300,
@@ -470,12 +499,12 @@ def sync_with_remote(*, skip_pull: bool = False) -> bool:
     pull_ok = code == 0
     if not pull_ok:
         _code2, heads, _ = run_git(
-            ["ls-remote", "--heads", "origin", DEFAULT_BRANCH],
+            ["ls-remote", "--heads", "origin", WORK_BRANCH],
             check=False,
             capture_output=True,
         )
         if not heads.strip():
-            print("[信息] 远程尚无 main 分支，将首次推送")
+            print(f"[信息] 远程尚无 {WORK_BRANCH} 分支，将首次推送")
             pull_ok = True
         else:
             print(f"[警告] 拉取失败: {stderr.strip()}")
@@ -735,6 +764,11 @@ def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
         print("[错误] 无有效暂存路径")
         sys.exit(1)
     print(f"[信息] git add（{len(paths)} 个路径，非全仓库）")
+    # 过滤已删除的文件
+    paths = [p for p in paths if os.path.exists(os.path.join(_repo_root(), p))]
+    if not paths:
+        print("[错误] 全部路径对应的文件已不存在（可能已被删除）")
+        sys.exit(1)
     run_git(["add", "--", *paths])
 
 
@@ -796,15 +830,27 @@ def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> 
     if added:
         print(f"[信息] 补暂存 {added} 个工作区改动（避免 commit hook stash 冲突）")
     print(f"[信息] git add（{len(merged)} 个路径，commit 前同步）")
+    # 过滤已删除的文件（git add 不存在的文件会报错）
+    merged = [p for p in merged if os.path.exists(os.path.join(_repo_root(), p))]
+    if not merged:
+        print("[信息] 无有效文件需暂存，跳过 git add")
+        return
     run_git(["add", "--", *merged])
 
 
 def _pre_commit_has_lint_errors(output: str) -> bool:
+    lint_failed = False
     for line in output.splitlines():
         stripped = line.strip()
         if stripped.startswith("ruff-lint") and "Failed" in stripped:
-            return True
-    return False
+            lint_failed = True
+            break
+    if not lint_failed:
+        return False
+    # ruff --fix --exit-non-zero-on-fix：已全部自动修正时仍 Failed，应 re-add 重试
+    if re.search(r"\(\d+ fixed, 0 remaining\)", output):
+        return False
+    return not re.search(r"Found \d+ errors? .*0 remaining", output)
 
 
 def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
@@ -813,8 +859,8 @@ def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
         return True
     print(
         f"[信息] pre-commit 最多 {rounds} 轮；"
-        "仅 ruff-format / mixed-line-ending 等自动修正时第 1 轮 Failed 属正常；"
-        "ruff-lint Failed 为代码错误，不会靠重试解决"
+        "仅 ruff-format / mixed-line-ending / ruff-lint 自动修正时第 1 轮 Failed 属正常；"
+        "ruff-lint Failed 且仍有 remaining 为代码错误，不会靠重试解决"
     )
     for attempt in range(1, rounds + 1):
         files = _staged_file_list()
@@ -884,6 +930,76 @@ def _sync_saved_version_with_head(readme_path: Path, meta) -> str:
     return saved_version
 
 
+def _read_versions_at_ref(ref: str, readme_path: Path) -> tuple[str | None, str | None]:
+    """从指定 git ref 读取 _VERSION 与 _EXE_VERSION。"""
+    from scripts._version import _EXE_VERSION_PATTERN, _VERSION_PATTERN
+
+    code, out, _ = run_git(
+        ["show", f"{ref}:{_version_file_relpath(readme_path)}"],
+        check=False,
+        capture_output=True,
+    )
+    if code != 0 or not out.strip():
+        return None, None
+    v_match = _VERSION_PATTERN.search(out)
+    e_match = _EXE_VERSION_PATTERN.search(out)
+    return (
+        v_match.group(2) if v_match else None,
+        e_match.group(2) if e_match else None,
+    )
+
+
+def _should_merge_to_release(meta, readme_path: Path) -> bool:
+    """当前 develop 相对 origin/main 是否 _VERSION 与 _EXE_VERSION 均已变更。"""
+    release_ref = _remote_release_ref()
+    code, _, _ = run_git(["rev-parse", "--verify", release_ref], check=False, capture_output=True)
+    if code != 0:
+        print(f"[信息] 远程尚无 {RELEASE_BRANCH}，跳过合并")
+        return False
+    main_v, main_e = _read_versions_at_ref(release_ref, readme_path)
+    if not main_v or not main_e:
+        return False
+    cur_v = meta.read_version(readme_path)
+    cur_e = meta.read_exe_version(readme_path)
+    if cur_v != main_v and cur_e != main_e:
+        print(
+            f"[信息] 双版本变更：_VERSION {main_v}→{cur_v}，"
+            f"_EXE_VERSION {main_e}→{cur_e} → 合并 {WORK_BRANCH} → {RELEASE_BRANCH}"
+        )
+        return True
+    print(f"[信息] 未双版本变更（{RELEASE_BRANCH}: {main_v}/{main_e}；当前: {cur_v}/{cur_e}），仅推送 {WORK_BRANCH}")
+    return False
+
+
+def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None:
+    """将 develop 合并进 main 并推送；可选打 release 标签。"""
+    _, saved_out, _ = run_git(["branch", "--show-current"], capture_output=True)
+    saved_branch = saved_out.strip()
+    try:
+        _fetch_all_origin_branches()
+        code, _, _ = run_git(["checkout", RELEASE_BRANCH], check=False, capture_output=True)
+        if code != 0:
+            run_git(["checkout", "-b", RELEASE_BRANCH, _remote_release_ref()])
+        run_git(["pull", "--rebase", "origin", RELEASE_BRANCH], timeout=300)
+        run_git(
+            [
+                "merge",
+                "--no-ff",
+                WORK_BRANCH,
+                "-m",
+                f"release: merge {WORK_BRANCH} into {RELEASE_BRANCH}",
+            ],
+            timeout=120,
+        )
+        run_git(["push", "origin", RELEASE_BRANCH], timeout=300)
+        print(f"[成功] 已合并 {WORK_BRANCH} → {RELEASE_BRANCH} 并推送")
+        if push_tag:
+            _push_tag(meta.read_exe_version(readme_path))
+    finally:
+        if saved_branch:
+            run_git(["checkout", saved_branch], check=False)
+
+
 def _rollback_upload_draft(
     readme_path,
     meta,
@@ -925,8 +1041,13 @@ def _commit_with_message(message: str) -> None:
 
 
 def _push_to_remote() -> bool:
-    """将当前分支推送到 origin。"""
-    push_args = ["push", "origin", DEFAULT_BRANCH]
+    """将 develop 推送到 origin；远程无 develop 时使用 -u。"""
+    remote_ref = _remote_branch_ref()
+    code, _, _ = run_git(["rev-parse", "--verify", remote_ref], check=False, capture_output=True)
+    push_args = ["push", "origin", WORK_BRANCH]
+    if code != 0:
+        push_args = ["push", "-u", "origin", WORK_BRANCH]
+        print(f"[信息] 首次推送 {WORK_BRANCH} 分支")
     if FORCE_PUSH:
         push_args.append("--force-with-lease")
 
@@ -955,7 +1076,7 @@ def _push_to_remote() -> bool:
             raise
         if not _stash_dirty_worktree():
             raise
-        run_git(["pull", "--rebase", "origin", DEFAULT_BRANCH], timeout=300)
+        run_git(["pull", "--rebase", "origin", WORK_BRANCH], timeout=300)
         _pop_stash_if_needed(True, pull_ok=True)
 
         run_git(push_args, timeout=300)
@@ -1041,7 +1162,7 @@ def commit_and_push(
     readme_path = meta.please_read_me_path()
 
     _, remote_heads, _ = run_git(
-        ["ls-remote", "--heads", "origin", DEFAULT_BRANCH],
+        ["ls-remote", "--heads", "origin", WORK_BRANCH],
         check=False,
         capture_output=True,
     )
@@ -1052,7 +1173,7 @@ def commit_and_push(
 
     if remote_exists:
         code, ahead, _ = run_git(
-            ["rev-list", "--count", f"origin/{DEFAULT_BRANCH}..{DEFAULT_BRANCH}"],
+            ["rev-list", "--count", f"origin/{WORK_BRANCH}..{WORK_BRANCH}"],
             check=False,
             capture_output=True,
         )
@@ -1182,6 +1303,20 @@ def commit_and_push(
 
         raise
 
+    if push_succeeded:
+        try:
+            if _should_merge_to_release(meta, readme_path):
+                _merge_work_into_release(
+                    meta=meta,
+                    readme_path=readme_path,
+                    push_tag=push_tag,
+                )
+            elif push_tag:
+                print(f"[信息] --tag 已跳过：需 _VERSION 与 _EXE_VERSION 均相对 {RELEASE_BRANCH} 变更后才合并并打标签")
+        except subprocess.CalledProcessError:
+            print(f"[警告] {WORK_BRANCH} 已推送，但合并 {RELEASE_BRANCH} 失败，请人工处理 merge")
+            raise
+
     if push_succeeded and created_commit:
         meta.remove_summary_block(readme_path)
 
@@ -1191,11 +1326,6 @@ def commit_and_push(
             f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}"
             f"（_EXE_VERSION = {meta.read_exe_version(readme_path)}）"
         )
-
-    if push_succeeded and push_tag:
-        version = meta.read_exe_version(readme_path)
-
-        _push_tag(version)
 
 
 def parse_args() -> argparse.Namespace:

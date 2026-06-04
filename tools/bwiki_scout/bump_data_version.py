@@ -74,7 +74,7 @@ def parse_semver(version: str) -> tuple[int, int, int]:
 
 
 def format_semver(major: int, minor: int, patch: int) -> str:
-    """ format_semver 实现。
+    """format_semver 实现。
 
     Args:
         major: 参数描述。
@@ -104,7 +104,7 @@ def has_data_changes(sync_results: list[dict[str, Any]]) -> bool:
     for result in sync_results:
         if not result.get("dry_run", True):
             updated_count = result.get("updated_count", 0)
-            planned = result.get("planned", [])
+            result.get("planned", [])
             added = result.get("added", [])
             if updated_count > 0 or added:
                 return True
@@ -184,14 +184,7 @@ def bump_data_version(
 def run_verify_tests() -> dict[str, Any]:
     """运行数据验证测试，返回测试结果摘要。"""
     repo = _repo_root()
-    test_args = [
-        sys.executable,
-        "-m",
-        "pytest",
-    ] + VERIFY_TEST_PATHS + [
-        "-q",
-        "--tb=short",
-    ]
+    test_args = [sys.executable, "-m", "pytest", *VERIFY_TEST_PATHS, "-q", "--tb=short"]
 
     result = subprocess.run(
         test_args,

@@ -290,12 +290,13 @@ This repo has multiple rule/agent config files:
 |------|---------|-------------|
 | `.trae/rules/project_rules.md` | Primary rules (most complete) | Trae IDE |
 | `.cursorrules` | Cursor-compatible rules | Cursor IDE |
-| `AGENTS.md` | Project-level agent skills | All |
+| `AGENTS.md` | Lightweight agent entry guide (session continuity, upload/download policy only) | All |
 
 ### Sync Rules
 
 1. **Source of truth**: `.trae/rules/project_rules.md`
 2. **When modifying rules**: Update `project_rules.md` first, **then immediately sync** to `.cursorrules` (same sections, same version).
+   - `AGENTS.md` is a lightweight entry guide, not a full rule copy. Only sync top-level agent behavior rules (session continuity reading list, upload/download policy). It should reference `project_rules.md` as the detailed source, not duplicate all content.
 3. **What NOT to sync**: Environment-specific rules (sandbox safety is sandbox-only), IDE-specific configuration.
 4. **Check on each update**: After updating `project_rules.md`, check if `.cursorrules` is stale; if so, sync immediately.
 5. **Consequence**: Failure to sync causes inconsistent agent behavior across IDEs.

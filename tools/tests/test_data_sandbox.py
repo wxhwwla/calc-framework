@@ -14,13 +14,9 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from pathlib import Path
 
-import pytest
 
 from tools.data_sandbox import Validator, Tester, Reporter
-from tools.data_sandbox.validator import ValidationResult, EntityError
-from tools.data_sandbox.tester import TestResult, TestResultItem
 
 
 # ── 测试辅助 ──
@@ -96,7 +92,7 @@ _INVALID_ENTITY_WRONG_TYPES = {
 
 def _write_temp_json(data, suffix=".json"):
     """将数据写入临时 JSON 文件并返回路径。"""
-    f = tempfile.NamedTemporaryFile(
+    f = tempfile.NamedTemporaryFile(  # noqa: SIM115
         mode="w", suffix=suffix, delete=False, encoding="utf-8"
     )
     json.dump(data, f, ensure_ascii=False)
@@ -164,7 +160,7 @@ class TestValidator:
 
     def test_validate_malformed_json(self):
         """校验格式错误的 JSON 应返回 parse_error。"""
-        f = tempfile.NamedTemporaryFile(
+        f = tempfile.NamedTemporaryFile(  # noqa: SIM115
             mode="w", suffix=".json", delete=False, encoding="utf-8"
         )
         f.write('{"名称": "缺少结束括号"')
@@ -223,7 +219,9 @@ class TestTester:
 
     def test_tester_zero_rates(self):
         """测试倍率全为 0 应报告。"""
-        data = [{"名称": "零倍率", "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [0, 0, 0]}]}]}]
+        data = [
+            {"名称": "零倍率", "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [0, 0, 0]}]}]}
+        ]
         t = Tester()
         result = t.test(data)
         assert not result.passed
@@ -231,7 +229,9 @@ class TestTester:
 
     def test_tester_negative_rates(self):
         """测试含负数倍率应报告。"""
-        data = [{"名称": "负倍率", "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [-10, 100]}]}]}]
+        data = [
+            {"名称": "负倍率", "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [-10, 100]}]}]}
+        ]
         t = Tester()
         result = t.test(data)
         assert not result.passed
@@ -239,7 +239,13 @@ class TestTester:
 
     def test_tester_valid_entity_type(self):
         """测试合法实体类型应通过。"""
-        data = [{"名称": "角色", "_entity_type": "character", "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [100]}]}]}]
+        data = [
+            {
+                "名称": "角色",
+                "_entity_type": "character",
+                "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [100]}]}],
+            }
+        ]
         t = Tester()
         result = t.test(data)
         type_items = [item for item in result.items if "实体类型" in item.test_name]
@@ -248,7 +254,13 @@ class TestTester:
 
     def test_tester_invalid_entity_type(self):
         """测试非法实体类型应失败。"""
-        data = [{"名称": "角色", "_entity_type": "illegal_type", "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [100]}]}]}]
+        data = [
+            {
+                "名称": "角色",
+                "_entity_type": "illegal_type",
+                "技能": [{"名称": "s1", "标签": "主动", "百分比": True, "段": [{"倍率": [100]}]}],
+            }
+        ]
         t = Tester()
         result = t.test(data)
         type_items = [item for item in result.items if "实体类型" in item.test_name]
@@ -306,7 +318,7 @@ class TestReporter:
         data = [_VALID_ENTITY]
         r = Reporter()
         report = r.generate(data, source_file="same.json", reference_data=list(data))
-        md = r.render_markdown(report)
+        r.render_markdown(report)
         assert report.diff is not None
         assert not report.diff.has_changes
 

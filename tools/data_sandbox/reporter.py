@@ -12,25 +12,25 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
 from tools.data_pipeline.diff import (
-    DataDiffResult,
     compare_entities,
     render_text as _render_diff_text,
 )
 
-from .tester import Tester, TestResult, TestResultItem
+from .tester import Tester, TestResult
 from .validator import Validator, ValidationResult
 
 
 @dataclass
 class DiffSummary:
     """差异摘要。"""
+
     total_old: int
     total_new: int
     added: int
@@ -47,25 +47,28 @@ class DiffSummary:
 @dataclass
 class Report:
     """完整的 Sandbox 报告。"""
+
     source_file: str
     validation: ValidationResult
     test: TestResult
-    diff: Optional[DiffSummary] = None
+    diff: DiffSummary | None = None
     timestamp: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     @property
     def summary(self) -> str:
         """summary 实现。"""
         parts = []
-        parts.append(f"✅ 校验通过" if self.validation.passed
-                      else f"❌ 校验失败 ({self.validation.total_errors} 个错误)")
-        parts.append(f"✅ 测试通过" if self.test.passed
-                      else f"❌ 测试失败 ({self.test.failed_count}/{self.test.total} 项未通过)")
+        parts.append(
+            "✅ 校验通过" if self.validation.passed else f"❌ 校验失败 ({self.validation.total_errors} 个错误)"
+        )
+        parts.append(
+            "✅ 测试通过" if self.test.passed else f"❌ 测试失败 ({self.test.failed_count}/{self.test.total} 项未通过)"
+        )
         if self.diff:
             if self.diff.has_changes:
-                parts.append(f"🔍 有差异")
+                parts.append("🔍 有差异")
             else:
-                parts.append(f"✅ 无差异")
+                parts.append("✅ 无差异")
         return " | ".join(parts)
 
 
@@ -80,7 +83,7 @@ class Reporter:
         self,
         data: List[Dict[str, Any]],
         source_file: str = "(内存数据)",
-        reference_data: Optional[List[Dict[str, Any]]] = None,
+        reference_data: List[Dict[str, Any]] | None = None,
         reference_label: str = "local reference",
     ) -> Report:
         """生成完整报告。
@@ -97,7 +100,7 @@ class Reporter:
         vr = self._validator.validate(data)
         tr = self._tester.test(data)
 
-        diff_summary: Optional[DiffSummary] = None
+        diff_summary: DiffSummary | None = None
         if reference_data is not None:
             diff_summary = self._compute_diff(data, reference_data, reference_label)
 
@@ -111,7 +114,7 @@ class Reporter:
     def generate_from_file(
         self,
         path: str | Path,
-        reference_path: Optional[str | Path] = None,
+        reference_path: str | Path | None = None,
         reference_label: str = "local reference",
     ) -> Report:
         """从文件生成完整报告。
@@ -125,10 +128,11 @@ class Reporter:
             Report 对象
         """
         from .validator import Validator
+
         v = Validator()
         data = v._load_json(path)
 
-        ref_data: Optional[List[Dict[str, Any]]] = None
+        ref_data: List[Dict[str, Any]] | None = None
         if reference_path:
             ref_data = v._load_json(reference_path)
 
@@ -149,7 +153,7 @@ class Reporter:
             Markdown 格式的报告文本
         """
         lines: List[str] = []
-        lines.append(f"# 数据沙箱报告")
+        lines.append("# 数据沙箱报告")
         lines.append("")
         lines.append(f"- **源文件**: `{report.source_file}`")
         lines.append(f"- **生成时间**: {report.timestamp}")
@@ -165,7 +169,8 @@ class Reporter:
 
     @staticmethod
     def _render_validation_section(
-        lines: List[str], vr: ValidationResult,
+        lines: List[str],
+        vr: ValidationResult,
     ) -> None:
         """_render_validation_section 实现。"""
         lines.append("## 一、Schema 校验")
@@ -193,7 +198,8 @@ class Reporter:
 
     @staticmethod
     def _render_test_section(
-        lines: List[str], tr: TestResult,
+        lines: List[str],
+        tr: TestResult,
     ) -> None:
         """_render_test_section 实现。"""
         lines.append("## 二、健全性测试")
@@ -204,9 +210,7 @@ class Reporter:
             lines.append("")
             return
 
-        lines.append(f"共 {tr.total} 项测试，"
-                      f"✅ {tr.passed_count} 项通过，"
-                      f"❌ {tr.failed_count} 项未通过")
+        lines.append(f"共 {tr.total} 项测试，✅ {tr.passed_count} 项通过，❌ {tr.failed_count} 项未通过")
         lines.append("")
 
         failed = [item for item in tr.items if not item.passed]
@@ -227,14 +231,15 @@ class Reporter:
 
     @staticmethod
     def _render_diff_section(
-        lines: List[str], diff: DiffSummary,
+        lines: List[str],
+        diff: DiffSummary,
     ) -> None:
         """_render_diff_section 实现。"""
         lines.append("## 三、差异摘要")
         lines.append("")
 
-        lines.append(f"| 指标 | 值 |")
-        lines.append(f"|------|----|")
+        lines.append("| 指标 | 值 |")
+        lines.append("|------|----|")
         lines.append(f"| 参考数据 | {diff.total_old} 条 |")
         lines.append(f"| 测试数据 | {diff.total_new} 条 |")
         lines.append(f"| 新增 | {diff.added} |")

@@ -8,14 +8,14 @@ from .mapper import OcrMapper, OcrMatchResult
 from .recognizer import OCRRecognizer, OCRResult, OCRText, GAME_TERMS
 
 __all__ = [
+    "GAME_TERMS",
     "BBox",
     "BatchResult",
     "DetectionResult",
-    "YOLOXDetector",
-    "OcrMapper",
-    "OcrMatchResult",
     "OCRRecognizer",
     "OCRResult",
     "OCRText",
-    "GAME_TERMS",
+    "OcrMapper",
+    "OcrMatchResult",
+    "YOLOXDetector",
 ]

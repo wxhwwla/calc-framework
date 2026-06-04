@@ -1,19 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据设计器内置说明书内容。"""
 
-
-
 from __future__ import annotations
 
-
-
 from utils.gui.help_dialog import HelpSection
-
 from utils.gui.help_loader import load_multi_category
 
 
 def build_designer_help() -> list[HelpSection]:
-
     result = [
         _overview(),
         _inverse_tab(),
@@ -33,17 +27,10 @@ def build_designer_help() -> list[HelpSection]:
     return result
 
 
-
-
-
 def _overview() -> HelpSection:
-
     return HelpSection(
-
         category="入门",
-
         title="概述",
-
         content="""\
 
 <h2>数据设计器</h2>
@@ -75,21 +62,13 @@ def _overview() -> HelpSection:
 </ol>
 
 """,
-
     )
 
 
-
-
-
 def _inverse_tab() -> HelpSection:
-
     return HelpSection(
-
         category="公式反推",
-
         title="功能说明",
-
         content="""\
 
 <h2>公式反推</h2>
@@ -141,21 +120,13 @@ def _inverse_tab() -> HelpSection:
 </ul>
 
 """,
-
     )
 
 
-
-
-
 def _data_editor_tab() -> HelpSection:
-
     return HelpSection(
-
         category="数据编辑",
-
         title="功能说明",
-
         content="""\
 
 <h2>数据编辑</h2>
@@ -229,21 +200,13 @@ def _data_editor_tab() -> HelpSection:
 </ul>
 
 """,
-
     )
 
 
-
-
-
 def _data_browser_tab() -> HelpSection:
-
     return HelpSection(
-
         category="数据浏览",
-
         title="功能说明",
-
         content="""\
 
 <h2>数据浏览</h2>
@@ -283,21 +246,13 @@ def _data_browser_tab() -> HelpSection:
 </ul>
 
 """,
-
     )
 
 
-
-
-
 def _tools() -> HelpSection:
-
     return HelpSection(
-
         category="工具",
-
         title="底栏工具",
-
         content="""\
 
 <h2>底栏工具</h2>
@@ -337,21 +292,13 @@ def _tools() -> HelpSection:
 </ul>
 
 """,
-
     )
 
 
-
-
-
 def _tips() -> HelpSection:
-
     return HelpSection(
-
         category="常见问题",
-
         title="使用技巧",
-
         content="""\
 
 <h2>使用技巧与常见问题</h2>
@@ -395,6 +342,4 @@ A: 数据文件位于 <code>games/endfield/data/</code> 目录下，可以直接
 A: 使用「数据录入」页签可以逐个录入。批量操作需要使用脚本工具。</p>
 
 """,
-
     )
-

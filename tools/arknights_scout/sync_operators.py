@@ -23,7 +23,7 @@ def sync_operators(
     *,
     names: list[str] | None = None,
 ) -> dict[str, Any]:
-    """ sync_operators 实现。
+    """sync_operators 实现。
 
     Args:
         raw_dir: 参数描述。

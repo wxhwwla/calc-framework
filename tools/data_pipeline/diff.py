@@ -19,10 +19,9 @@
 
 from __future__ import annotations
 
-import difflib
 import json
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 # ── 差异数据结构 ──
@@ -31,6 +30,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class FieldChange:
     """某个字段的值变化。"""
+
     field: str
     old_value: Any
     new_value: Any
@@ -40,17 +40,19 @@ class FieldChange:
 @dataclass
 class SegmentDiff:
     """技能段的差异。"""
+
     index: int
-    rates_old: Optional[List[int]] = None
-    rates_new: Optional[List[int]] = None
-    type_old: Optional[str] = None
-    type_new: Optional[str] = None
+    rates_old: List[int] | None = None
+    rates_new: List[int] | None = None
+    type_old: str | None = None
+    type_new: str | None = None
     field_changes: List[FieldChange] = field(default_factory=list)
 
 
 @dataclass
 class SkillDiff:
     """技能的差异。"""
+
     name: str
     status: str  # "added" / "removed" / "modified"
     added_segments: List[int] = field(default_factory=list)
@@ -62,6 +64,7 @@ class SkillDiff:
 @dataclass
 class EntityDiff:
     """单个实体的差异。"""
+
     name: str
     status: str  # "added" / "removed" / "modified"
     field_changes: List[FieldChange] = field(default_factory=list)
@@ -73,6 +76,7 @@ class EntityDiff:
 @dataclass
 class DataDiffResult:
     """完整的数据差异比较结果。"""
+
     added: List[EntityDiff] = field(default_factory=list)
     removed: List[EntityDiff] = field(default_factory=list)
     modified: List[EntityDiff] = field(default_factory=list)
@@ -130,14 +134,10 @@ def compare_entities(
     new_names = set(new_by_name.keys())
 
     for name in sorted(new_names - old_names):
-        result.added.append(
-            EntityDiff(name=name, status="added")
-        )
+        result.added.append(EntityDiff(name=name, status="added"))
 
     for name in sorted(old_names - new_names):
-        result.removed.append(
-            EntityDiff(name=name, status="removed")
-        )
+        result.removed.append(EntityDiff(name=name, status="removed"))
 
     for name in sorted(old_names & new_names):
         diff = _diff_entity(old_by_name[name], new_by_name[name], name)
@@ -151,7 +151,7 @@ def _diff_entity(
     old: Dict[str, Any],
     new: Dict[str, Any],
     name: str,
-) -> Optional[EntityDiff]:
+) -> EntityDiff | None:
     """比较单个实体的新旧版本，返回差异或 None（无变化）。"""
     old_clean = _without_skills(old)
     new_clean = _without_skills(new)
@@ -202,19 +202,21 @@ def _diff_dict(
         if _values_equal(old_val, new_val):
             continue
         path = f"{prefix}.{key}" if prefix else key
-        changes.append(FieldChange(
-            field=key,
-            old_value=_summarize_value(old_val),
-            new_value=_summarize_value(new_val),
-            path=path,
-        ))
+        changes.append(
+            FieldChange(
+                field=key,
+                old_value=_summarize_value(old_val),
+                new_value=_summarize_value(new_val),
+                path=path,
+            )
+        )
 
     return changes
 
 
 def _values_equal(a: Any, b: Any) -> bool:
     """判断两个值是否相等（支持列表/嵌套比较）。"""
-    if type(a) != type(b):
+    if type(a) is not type(b):
         return False
     if isinstance(a, list):
         if len(a) != len(b):
@@ -270,7 +272,7 @@ def _diff_skill(
     new: Dict[str, Any],
     entity_name: str,
     skill_name: str,
-) -> Optional[SkillDiff]:
+) -> SkillDiff | None:
     """比较单个技能的新旧版本。"""
     old_segments = old.get("段", [])
     new_segments = new.get("段", [])
@@ -300,13 +302,15 @@ def _diff_skill(
         elif status == "removed":
             sd.removed_segments.append(idx)
         else:
-            sd.modified_segments.append(SegmentDiff(
-                index=idx,
-                rates_old=seg_diff.get("rates_old"),
-                rates_new=seg_diff.get("rates_new"),
-                type_old=seg_diff.get("type_old"),
-                type_new=seg_diff.get("type_new"),
-            ))
+            sd.modified_segments.append(
+                SegmentDiff(
+                    index=idx,
+                    rates_old=seg_diff.get("rates_old"),
+                    rates_new=seg_diff.get("rates_new"),
+                    type_old=seg_diff.get("type_old"),
+                    type_new=seg_diff.get("type_new"),
+                )
+            )
 
     return sd
 
@@ -336,14 +340,16 @@ def _diff_segments(
             new_type = new_seg.get("伤害类型")
 
             if old_rates != new_rates or old_type != new_type:
-                result.append({
-                    "index": i,
-                    "status": "modified",
-                    "rates_old": old_rates,
-                    "rates_new": new_rates,
-                    "type_old": old_type,
-                    "type_new": new_type,
-                })
+                result.append(
+                    {
+                        "index": i,
+                        "status": "modified",
+                        "rates_old": old_rates,
+                        "rates_new": new_rates,
+                        "type_old": old_type,
+                        "type_new": new_type,
+                    }
+                )
 
     return result
 
@@ -359,7 +365,7 @@ def render_text(result: DataDiffResult) -> str:
         lines.append("✅ 无差异 — 新旧数据完全一致")
         return "\n".join(lines)
 
-    lines.append(f"📊 数据差异报告")
+    lines.append("📊 数据差异报告")
     lines.append(f"   旧数据: {result.total_old} 条")
     lines.append(f"   新数据: {result.total_new} 条")
     lines.append(f"   差异: {result.summary}")
@@ -438,18 +444,14 @@ def _entity_to_json(diff: EntityDiff) -> Dict[str, Any]:
     """_entity_to_json 实现。"""
     return {
         "name": diff.name,
-        "field_changes": [
-            {"field": fc.field, "old": fc.old_value, "new": fc.new_value}
-            for fc in diff.field_changes
-        ],
+        "field_changes": [{"field": fc.field, "old": fc.old_value, "new": fc.new_value} for fc in diff.field_changes],
         "added_skills": [{"name": s.name} for s in diff.added_skills],
         "removed_skills": [{"name": s.name} for s in diff.removed_skills],
         "modified_skills": [
             {
                 "name": s.name,
                 "field_changes": [
-                    {"field": fc.field, "old": fc.old_value, "new": fc.new_value}
-                    for fc in s.field_changes
+                    {"field": fc.field, "old": fc.old_value, "new": fc.new_value} for fc in s.field_changes
                 ],
                 "added_segments": s.added_segments,
                 "removed_segments": s.removed_segments,
@@ -531,14 +533,14 @@ def _render_entities_html(result: DataDiffResult) -> str:
         parts.append(f'<div class="section-title removed">🗑️ 已删除 ({len(result.removed)} 个)</div>')
         for ed in result.removed:
             parts.append(f'<div class="entity"><span class="entity-name removed">- {ed.name}</span></div>')
-        parts.append('</div>')
+        parts.append("</div>")
 
     if result.added:
         parts.append('<div class="section">')
         parts.append(f'<div class="section-title added">🆕 新增 ({len(result.added)} 个)</div>')
         for ed in result.added:
             parts.append(f'<div class="entity"><span class="entity-name added">+ {ed.name}</span></div>')
-        parts.append('</div>')
+        parts.append("</div>")
 
     if result.modified:
         parts.append('<div class="section">')
@@ -552,7 +554,7 @@ def _render_entities_html(result: DataDiffResult) -> str:
                     f'<span class="old">{_escape_html(str(fc.old_value))}</span>'
                     f'<span class="arrow">→</span>'
                     f'<span class="new">{_escape_html(str(fc.new_value))}</span>'
-                    f'</div>'
+                    f"</div>"
                 )
             for sd in ed.removed_skills:
                 parts.append(f'<div class="skill removed">🗑️ 技能 &ldquo;{_escape_html(sd.name)}&rdquo; 已删除</div>')
@@ -566,7 +568,7 @@ def _render_entities_html(result: DataDiffResult) -> str:
                         f'<span class="old">{_escape_html(str(fc.old_value))}</span>'
                         f'<span class="arrow">→</span>'
                         f'<span class="new">{_escape_html(str(fc.new_value))}</span>'
-                        f'</div>'
+                        f"</div>"
                     )
                 for si in sd.added_segments:
                     parts.append(f'<div class="segment" style="color:#28a745">🆕 段[{si}] 新增</div>')
@@ -579,7 +581,7 @@ def _render_entities_html(result: DataDiffResult) -> str:
                             f'<span class="old">{seg.rates_old}</span>'
                             f'<span class="arrow">→</span>'
                             f'<span class="new">{seg.rates_new}</span>'
-                            f'</div>'
+                            f"</div>"
                         )
                     if seg.type_old != seg.type_new:
                         parts.append(
@@ -587,10 +589,10 @@ def _render_entities_html(result: DataDiffResult) -> str:
                             f'<span class="old">{seg.type_old}</span>'
                             f'<span class="arrow">→</span>'
                             f'<span class="new">{seg.type_new}</span>'
-                            f'</div>'
+                            f"</div>"
                         )
-            parts.append('</div>')
-        parts.append('</div>')
+            parts.append("</div>")
+        parts.append("</div>")
 
     return "\n".join(parts)
 
@@ -601,7 +603,7 @@ def _escape_html(text: str) -> str:
         text.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
-        .replace("\"", "&quot;")
+        .replace('"', "&quot;")
         .replace("'", "&#39;")
     )
 
@@ -625,7 +627,7 @@ def diff_main(args: List[str]) -> int:
     new_path = args[1] if len(args) > 1 else None
 
     if new_path is None:
-        print("用法: python -m tools.data_pipeline diff <旧文件> <新文件> [选项]", file=__import__('sys').stderr)
+        print("用法: python -m tools.data_pipeline diff <旧文件> <新文件> [选项]", file=__import__("sys").stderr)
         return 1
 
     output_path = None
@@ -640,7 +642,7 @@ def diff_main(args: List[str]) -> int:
             output_format = args[i + 1]
             i += 2
         else:
-            print(f"未知参数: {args[i]}", file=__import__('sys').stderr)
+            print(f"未知参数: {args[i]}", file=__import__("sys").stderr)
             return 1
 
     try:
@@ -654,11 +656,11 @@ def diff_main(args: List[str]) -> int:
         old_data = read_json(old_path)
         new_data = read_json(new_path)
     except Exception as e:
-        print(f"读取失败: {e}", file=__import__('sys').stderr)
+        print(f"读取失败: {e}", file=__import__("sys").stderr)
         return 1
 
-    old_errors = validate_all(old_data)
-    new_errors = validate_all(new_data)
+    validate_all(old_data)  # type: ignore[arg-type]
+    validate_all(new_data)  # type: ignore[arg-type]
 
     result = compare_entities(old_data, new_data)
 
@@ -670,7 +672,6 @@ def diff_main(args: List[str]) -> int:
         content = render_text(result)
 
     if output_path:
-        import os
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"差异报告已写入 {output_path}")

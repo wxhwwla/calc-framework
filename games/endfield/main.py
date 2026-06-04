@@ -45,10 +45,9 @@ def preload_data():
 
         preload_game_data()
     except Exception as exc:
-        # 启动阶段仅预加载；GUI 打开面板时会再次加载并弹窗提示
-        import logging
+        from games.endfield.framework_bridge import get_logger
 
-        logging.getLogger(__name__).warning("预加载游戏数据失败: %s", exc)
+        get_logger(__name__).warning("预加载游戏数据失败: %s", exc)
 
 
 def main() -> None:
@@ -66,23 +65,29 @@ def main() -> None:
     preload_thread.start()
 
     # 初始化框架日志系统（环境变量 CALC_FRAMEWORK_LOG_LEVEL 控制级别）
+    from utils.path_utils import get_application_dir
+
+    from games.endfield.framework_bridge import get_logger
     from games.endfield.framework_bridge import setup_logging as fw_setup_logging
-    fw_setup_logging()
+
+    log_dir = get_application_dir() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    fw_setup_logging(log_file=str(log_dir / "app.log"))
+    _logger = get_logger(__name__)
+    _logger.info("应用启动中…")
 
     if not getattr(sys, "frozen", False):
         from utils.optional_deps import ensure_runtime_dependencies
 
         ensure_runtime_dependencies()
-        print("正在加载界面…", flush=True)
+        _logger.info("正在加载界面…")
 
     # 导入 GUI 模块
-    from utils.path_utils import get_application_dir
-
     from games.endfield.data_loading.plugin_registry import load_default_plugins
     from gui.endfield_app import EndfieldApp as DamageCalculatorApp
 
     if not getattr(sys, "frozen", False):
-        print("正在创建主窗口…", flush=True)
+        _logger.info("正在创建主窗口…")
 
     # 热加载 plugins/ 下的扩展 JSON/YAML（敌方等）
     load_default_plugins(get_application_dir())
@@ -95,7 +100,7 @@ def main() -> None:
 
         extras_hint = format_missing_gui_extras()
         if extras_hint:
-            print(extras_hint, flush=True)
+            _logger.info("缺失扩展提示:\n%s", extras_hint)
 
     # 启动主事件循环，显示窗口
     app.run()
@@ -109,7 +114,9 @@ if __name__ == "__main__":
     # 调用主函数启动应用
     main()
 
-    # 输出启动耗时（仅在控制台运行时显示）
+    # 输出启动耗时
     if not hasattr(sys, "frozen"):
         elapsed = (time.time() - start_time) * 1000
-        print(f"启动耗时: {elapsed:.2f}ms")
+        from games.endfield.framework_bridge import get_logger
+
+        get_logger(__name__).info("启动耗时: %.2fms", elapsed)

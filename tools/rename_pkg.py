@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc-engine/ -> calc_engine/ in all text files (skip temp scripts and calc_engine/ dir itself)."""
+
 import os
 
 
@@ -50,7 +51,7 @@ def main():
             if not is_text_file(fpath):
                 continue
 
-            with open(fpath, "r", encoding="utf-8") as fh:
+            with open(fpath, encoding="utf-8") as fh:
                 content = fh.read()
 
             original = content

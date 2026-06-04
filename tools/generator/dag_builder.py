@@ -153,4 +153,5 @@ def dag_to_json(dag: dict[str, Any], name: str = "", description: str = "") -> s
     if description:
         dag["description"] = description
     import json
+
     return json.dumps(dag, ensure_ascii=False, indent=2)

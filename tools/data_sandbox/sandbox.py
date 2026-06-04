@@ -25,7 +25,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List
 
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _project_root not in sys.path:
@@ -67,7 +67,7 @@ def main() -> None:
         sys.exit(1)
 
 
-def _parse_file_arg(args: List[str], index: int) -> Optional[str]:
+def _parse_file_arg(args: List[str], index: int) -> str | None:
     """_parse_file_arg 实现。"""
     if index < len(args):
         return args[index]
@@ -133,9 +133,7 @@ def _cmd_test(args: List[str]) -> int:
         print(f"❌ 加载错误: {result.load_error}")
         return 1
 
-    print(f"共 {result.total} 项测试，"
-          f"✅ {result.passed_count} 项通过，"
-          f"❌ {result.failed_count} 项未通过")
+    print(f"共 {result.total} 项测试，✅ {result.passed_count} 项通过，❌ {result.failed_count} 项未通过")
     print("")
 
     failed = [item for item in result.items if not item.passed]
@@ -157,7 +155,7 @@ def _cmd_report(args: List[str]) -> int:
         return 1
 
     file_path = args[0]
-    output_path: Optional[str] = None
+    output_path: str | None = None
 
     i = 1
     while i < len(args):
@@ -230,10 +228,10 @@ def _cmd_diff(args: List[str]) -> int:
         return 0
 
     diff = report.diff
-    print(f"📊 数据差异报告")
+    print("📊 数据差异报告")
     print(f"   参考数据: {diff.total_old} 条")
     print(f"   自定义数据: {diff.total_new} 条")
-    print(f"   差异: ", end="")
+    print("   差异: ", end="")
     parts = []
     if diff.added:
         parts.append(f"+{diff.added} 新增")

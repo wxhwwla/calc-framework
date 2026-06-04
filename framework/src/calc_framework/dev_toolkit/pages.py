@@ -122,10 +122,13 @@ class _GraphEditorPage(QWidget):
         try:
             from PySide6.QtCore import Qt as _Qt
             from PySide6.QtGui import QShortcut
+
+            # ── 顶部工具栏 ──
             from PySide6.QtWidgets import (
                 QFileDialog,
                 QMessageBox,
                 QSplitter,
+                QToolBar,
                 QToolButton,
             )
 
@@ -144,9 +147,6 @@ class _GraphEditorPage(QWidget):
             from calc_framework.graph_editor.node_panel import NodePanel
             from calc_framework.graph_editor.prop_panel import PropPanel
             from calc_framework.graph_editor.registry import create_default_node
-
-            # ── 顶部工具栏 ──
-            from PySide6.QtWidgets import QToolBar
 
             toolbar = QToolBar("常用操作")
             toolbar.setMovable(False)
@@ -179,9 +179,7 @@ class _GraphEditorPage(QWidget):
                 current_file[0] = None
 
             def _open_file():
-                path_str, _ = QFileDialog.getOpenFileName(
-                    self, "打开计算图", "", "计算图文件 (*.json);;所有文件 (*)"
-                )
+                path_str, _ = QFileDialog.getOpenFileName(self, "打开计算图", "", "计算图文件 (*.json);;所有文件 (*)")
                 if not path_str:
                     return
                 path = Path(path_str)
@@ -194,9 +192,7 @@ class _GraphEditorPage(QWidget):
 
             def _save_file():
                 if current_file[0] is None:
-                    path_str, _ = QFileDialog.getSaveFileName(
-                        self, "保存", "", "计算图文件 (*.json)"
-                    )
+                    path_str, _ = QFileDialog.getSaveFileName(self, "保存", "", "计算图文件 (*.json)")
                     if not path_str:
                         return
                     current_file[0] = Path(path_str)
@@ -345,9 +341,7 @@ class _ViewerPage(QWidget):
     def _on_open(self) -> None:
         from PySide6.QtWidgets import QFileDialog
 
-        path, _ = QFileDialog.getOpenFileName(
-            self, "打开 .calcpack", "", "CalcPack (*.calcpack);;所有文件 (*.*)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "打开 .calcpack", "", "CalcPack (*.calcpack);;所有文件 (*.*)")
         if path:
             from calc_framework.ui.viewer import open_calcpack
 
@@ -370,10 +364,7 @@ class _GeneratorPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         try:
-            from tools.generator import GeneratorEngine
-
             from PySide6.QtWidgets import (
-                QFileDialog,
                 QGroupBox,
                 QHBoxLayout,
                 QLineEdit,
@@ -382,6 +373,7 @@ class _GeneratorPage(QWidget):
                 QSplitter,
                 QTextEdit,
             )
+            from tools.generator import GeneratorEngine
 
             self._engine = GeneratorEngine()
             self._result_files: dict[str, str] = {}
@@ -505,9 +497,7 @@ class _GeneratorPage(QWidget):
             fp = out / rel
             fp.parent.mkdir(parents=True, exist_ok=True)
             fp.write_text(content, encoding="utf-8")
-        QMessageBox.information(
-            self, "导出完成", f"已导出 {len(self._result_files)} 个文件到:\n{out}"
-        )
+        QMessageBox.information(self, "导出完成", f"已导出 {len(self._result_files)} 个文件到:\n{out}")
 
 
 _register_page("ai_generator", _GeneratorPage)

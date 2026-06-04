@@ -25,8 +25,8 @@ from PySide6.QtWidgets import (
 )
 
 from utils.donation_assets import (
-    WECHAT_DONATION_PREFERRED,
     AFDIAN_DONATION_PREFERRED,
+    WECHAT_DONATION_PREFERRED,
     caption_for_donation_path,
     default_wechat_donation_rel,
     resolve_donation_rel_paths,

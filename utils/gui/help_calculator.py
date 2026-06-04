@@ -1,22 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0
 """计算器内置说明书内容。"""
 
-
-
 from __future__ import annotations
 
-
-
 from utils.gui.help_dialog import HelpSection
-
 from utils.gui.help_loader import load_multi_category
 
 
-
-
-
 def build_calculator_help() -> list[HelpSection]:
-
     result = [
         _overview(),
         _main_tab(),
@@ -38,17 +29,10 @@ def build_calculator_help() -> list[HelpSection]:
     return result
 
 
-
-
-
 def _overview() -> HelpSection:
-
     return HelpSection(
-
         category="入门",
-
         title="概述",
-
         content="""\
 
 <h2>终末地伤害计算器</h2>
@@ -92,21 +76,13 @@ def _overview() -> HelpSection:
 </ul>
 
 """,
-
     )
 
 
-
-
-
 def _main_tab() -> HelpSection:
-
     return HelpSection(
-
         category="计算页",
-
         title="界面布局",
-
         content="""\
 
 <h2>计算页 — 五列布局</h2>
@@ -210,15 +186,10 @@ def _main_tab() -> HelpSection:
 </ul>
 
 """,
-
         sub_sections=[
-
             HelpSection(
-
                 category="计算页",
-
                 title="操作流程",
-
                 content="""\
 
 <h2>计算页 — 操作流程</h2>
@@ -256,15 +227,10 @@ def _main_tab() -> HelpSection:
 <p><b>提示</b>：修改等级/信赖/技能等级后，确认按钮会变成橙色并显示「待更新」，需要再次点击才能刷新结果。</p>
 
 """,
-
             ),
-
             HelpSection(
-
                 category="计算页",
-
                 title="角色选择项详解",
-
                 content="""\
 
 <h2>角色参数说明</h2>
@@ -300,15 +266,10 @@ def _main_tab() -> HelpSection:
 <p>当前使用的技能等级（1-12）。等级越高，技能倍率越高。</p>
 
 """,
-
             ),
-
             HelpSection(
-
                 category="计算页",
-
                 title="武器选择项详解",
-
                 content="""\
 
 <h2>武器参数说明</h2>
@@ -338,25 +299,15 @@ def _main_tab() -> HelpSection:
 <p>部分武器拥有特殊技能，需要达到特定条件才能触发。勾选「启用」开关来启用。</p>
 
 """,
-
             ),
-
         ],
-
     )
 
 
-
-
-
 def _advanced_tab() -> HelpSection:
-
     return HelpSection(
-
         category="高级页",
-
         title="界面概览",
-
         content="""\
 
 <h2>高级页 — 三列布局</h2>
@@ -418,15 +369,10 @@ def _advanced_tab() -> HelpSection:
 </ul>
 
 """,
-
         sub_sections=[
-
             HelpSection(
-
                 category="高级页",
-
                 title="搜索功能",
-
                 content="""\
 
 <h2>全量搜索</h2>
@@ -478,15 +424,10 @@ def _advanced_tab() -> HelpSection:
 </ul>
 
 """,
-
             ),
-
             HelpSection(
-
                 category="高级页",
-
                 title="多技能与手动次数",
-
                 content="""\
 
 <h2>多技能与手动次数</h2>
@@ -532,25 +473,15 @@ def _advanced_tab() -> HelpSection:
 <p>勾选后按暴击率取期望伤害值（而非单次伤害值），更准确地反映长期战斗中的平均输出。</p>
 
 """,
-
             ),
-
         ],
-
     )
 
 
-
-
-
 def _search() -> HelpSection:
-
     return HelpSection(
-
         category="搜索",
-
         title="搜索模式详解",
-
         content="""\
 
 <h2>搜索模式详解</h2>
@@ -596,21 +527,13 @@ def _search() -> HelpSection:
 <p>在全量搜索结果基础上，对 Top 方案进行更精细的评估。</p>
 
 """,
-
     )
 
 
-
-
-
 def _features() -> HelpSection:
-
     return HelpSection(
-
         category="特色功能",
-
         title="实用功能",
-
         content="""\
 
 <h2>实用功能</h2>
@@ -682,11 +605,7 @@ def _features() -> HelpSection:
 </ul>
 
 """,
-
     )
-
-
-
 
 
 def _nga_mechanics() -> HelpSection:
@@ -724,13 +643,9 @@ def _nga_mechanics() -> HelpSection:
 
 
 def _tips() -> HelpSection:
-
     return HelpSection(
-
         category="常见问题",
-
         title="使用技巧与常见问题",
-
         content="""\
 
 <h2>使用技巧与常见问题</h2>
@@ -784,6 +699,4 @@ A: 数据仅供参考，不保证与游戏内完全一致。如有差异欢迎�
 A: 在 GitHub 仓库提交 Issue（Bug 报告 / 功能建议）。</p>
 
 """,
-
     )
-

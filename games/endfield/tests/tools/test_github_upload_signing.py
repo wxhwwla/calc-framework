@@ -3,6 +3,7 @@
 """github_upload_module 提交签名行为测试。"""
 
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from scripts.tools import github_upload_module as upload
@@ -67,6 +68,17 @@ class TestPreCommitLintDetection(unittest.TestCase):
         output = "ruff-lint................................................................Failed\n"
         self.assertTrue(upload._pre_commit_has_lint_errors(output))
 
+    def test_lint_auto_fix_only_is_not_hard_error(self):
+        output = (
+            "ruff-lint................................................................Failed\n"
+            "- hook id: ruff\n"
+            "- exit code: 1\n"
+            "- files were modified by this hook\n"
+            "\n"
+            "Found 1 error (1 fixed, 0 remaining).\n"
+        )
+        self.assertFalse(upload._pre_commit_has_lint_errors(output))
+
 
 class TestGitPathNormalization(unittest.TestCase):
     def test_unquote_octal_porcelain_path(self):
@@ -87,7 +99,6 @@ class TestGitPathNormalization(unittest.TestCase):
 class TestRollbackUploadDraft(unittest.TestCase):
     def test_rollback_restores_version_and_removes_summary(self):
         import tempfile
-        from pathlib import Path
 
         from scripts import upload_meta as meta
 
@@ -120,6 +131,53 @@ _VERSION = "1.0.0"
             )
             self.assertEqual(meta.read_version(path), "1.0.0")
             self.assertNotIn("# TITLE: t", path.read_text(encoding="utf-8"))
+
+
+class TestDualVersionReleaseMerge(unittest.TestCase):
+    def setUp(self):
+        from scripts.upload_meta import please_read_me_path
+
+        self.readme = please_read_me_path()
+
+    def test_should_merge_when_both_versions_differ(self):
+        class FakeMeta:
+            @staticmethod
+            def read_version(_path):
+                return "3.22.0"
+
+            @staticmethod
+            def read_exe_version(_path):
+                return "0.7.0"
+
+        def fake_run_git(args, **kwargs):
+            if args[:2] == ["rev-parse", "--verify"]:
+                return 0, "abc", ""
+            if args[0] == "show":
+                return 0, '_VERSION = "3.21.4"\n_EXE_VERSION = "0.6.0-beta"\n', ""
+            return 1, "", ""
+
+        with patch.object(upload, "run_git", side_effect=fake_run_git):
+            self.assertTrue(upload._should_merge_to_release(FakeMeta(), self.readme))
+
+    def test_should_not_merge_when_only_project_version_differs(self):
+        class FakeMeta:
+            @staticmethod
+            def read_version(_path):
+                return "3.22.0"
+
+            @staticmethod
+            def read_exe_version(_path):
+                return "0.6.0-beta"
+
+        def fake_run_git(args, **kwargs):
+            if args[:2] == ["rev-parse", "--verify"]:
+                return 0, "abc", ""
+            if args[0] == "show":
+                return 0, '_VERSION = "3.21.4"\n_EXE_VERSION = "0.6.0-beta"\n', ""
+            return 1, "", ""
+
+        with patch.object(upload, "run_git", side_effect=fake_run_git):
+            self.assertFalse(upload._should_merge_to_release(FakeMeta(), self.readme))
 
 
 if __name__ == "__main__":

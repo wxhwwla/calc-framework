@@ -8,11 +8,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
 
 ensure_root()
 
-from web.scripts.deploy_pythonanywhere import main  # noqa: E402
+from web.scripts.deploy_pythonanywhere import main
 
 if __name__ == "__main__":
     main()

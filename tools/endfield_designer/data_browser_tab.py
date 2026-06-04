@@ -3,10 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据浏览页签 — 查看角色、武器、装备 JSON 数据。"""
 
-
-
 from __future__ import annotations
-
 
 
 import json
@@ -16,31 +13,20 @@ from pathlib import Path
 from typing import Any
 
 
-
 from PySide6.QtCore import Qt
 
 from PySide6.QtGui import QFont
 
 from PySide6.QtWidgets import (
-
     QComboBox,
-
     QHBoxLayout,
-
     QLabel,
-
     QPushButton,
-
     QTableWidget,
-
     QTableWidgetItem,
-
     QVBoxLayout,
-
     QWidget,
-
 )
-
 
 
 _LABEL_STYLE = "color: #CCCCCC;"
@@ -100,37 +86,19 @@ _BTN_STYLE = """
 """
 
 
-
 # 数据源配置
 
 _DATA_SOURCES: list[tuple[str, str, list[str]]] = [
-
-    ("character", "character_data/characters.json",
-
-     ["名称", "类型", "星级", "主能力", "副能力", "武器"]),
-
-    ("weapon", "weapon_data/weapons.json",
-
-     ["名称", "类型", "星级"]),
-
-    ("equipment", "equipment_data/equipments.json",
-
-     ["名称", "部位", "星级"]),
-
+    ("character", "character_data/characters.json", ["名称", "类型", "星级", "主能力", "副能力", "武器"]),
+    ("weapon", "weapon_data/weapons.json", ["名称", "类型", "星级"]),
+    ("equipment", "equipment_data/equipments.json", ["名称", "部位", "星级"]),
 ]
 
 
-
-
-
 class DataBrowserTab(QWidget):
-
     """数据浏览页签：查看角色/武器/装备 JSON 列表。"""
 
-
-
     def __init__(self, big_font: QFont, small_font: QFont) -> None:
-
         super().__init__()
 
         self._big = big_font
@@ -145,18 +113,13 @@ class DataBrowserTab(QWidget):
 
         self._load_data()
 
-
-
     def _build_ui(self) -> None:
-
         """_build_ui 实现。"""
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(12, 12, 12, 12)
 
         layout.setSpacing(8)
-
-
 
         header = QLabel("数据浏览")
 
@@ -165,8 +128,6 @@ class DataBrowserTab(QWidget):
         header.setStyleSheet("color: #FF6B6B; padding: 4px 0;")
 
         layout.addWidget(header)
-
-
 
         top_row = QHBoxLayout()
 
@@ -184,8 +145,6 @@ class DataBrowserTab(QWidget):
 
         top_row.addStretch()
 
-
-
         self._refresh_btn = QPushButton("刷新")
 
         self._refresh_btn.setStyleSheet(_BTN_STYLE)
@@ -194,19 +153,13 @@ class DataBrowserTab(QWidget):
 
         top_row.addWidget(self._refresh_btn)
 
-
-
         layout.addLayout(top_row)
-
-
 
         self._count_label = self._label("")
 
         self._count_label.setStyleSheet(_HINT_STYLE)
 
         layout.addWidget(self._count_label)
-
-
 
         self._table = QTableWidget()
 
@@ -224,10 +177,7 @@ class DataBrowserTab(QWidget):
 
         layout.addWidget(self._table, stretch=1)
 
-
-
     def _label(self, text: str) -> QLabel:
-
         """_label 实现。"""
         lbl = QLabel(text)
 
@@ -237,15 +187,11 @@ class DataBrowserTab(QWidget):
 
         return lbl
 
-
-
     def _load_data(self) -> None:
-
         """_load_data 实现。"""
         idx = self._source_combo.currentIndex()
 
         if idx < 0 or idx >= len(_DATA_SOURCES):
-
             return
 
         _, rel_path, columns = _DATA_SOURCES[idx]
@@ -253,15 +199,12 @@ class DataBrowserTab(QWidget):
         json_path = self._pkg_root / rel_path
 
         try:
-
             with json_path.open(encoding="utf-8") as f:
-
                 raw = json.load(f)
 
             self._all_data = raw if isinstance(raw, list) else [raw]
 
         except Exception as exc:
-
             self._all_data = []
 
             self._count_label.setText(f"加载失败: {exc}")
@@ -272,16 +215,11 @@ class DataBrowserTab(QWidget):
 
             return
 
-
-
         self._count_label.setText(f"共 {len(self._all_data)} 条记录")
 
         self._populate_table(columns)
 
-
-
     def _populate_table(self, columns: list[str]) -> None:
-
         """_populate_table 实现。"""
         self._table.setColumnCount(len(columns))
 
@@ -289,12 +227,8 @@ class DataBrowserTab(QWidget):
 
         self._table.setRowCount(len(self._all_data))
 
-
-
         for row_idx, item in enumerate(self._all_data):
-
             for col_idx, col_name in enumerate(columns):
-
                 value = item.get(col_name, "")
 
                 display = str(value) if not isinstance(value, list) else f"[数组, {len(value)} 项]"
@@ -305,8 +239,6 @@ class DataBrowserTab(QWidget):
 
                 self._table.setItem(row_idx, col_idx, cell)
 
-
-
         self._table.resizeColumnsToContents()
 
         total_width = sum(self._table.columnWidth(c) for c in range(len(columns)))
@@ -314,6 +246,4 @@ class DataBrowserTab(QWidget):
         viewport_width = self._table.viewport().width()
 
         if total_width < viewport_width:
-
             self._table.horizontalHeader().setStretchLastSection(True)
-

@@ -23,6 +23,7 @@
   - 脚本自动使用 Python zipfile 模块（ZIP_DEFLATED，兼容 Linux）
   - 自动处理 dist/dist/ 双层嵌套问题
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,7 +38,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 # ── 路径 ──────────────────────────────────────────────────────────────────────
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -72,8 +73,12 @@ def _load_config() -> dict:
                 if ini.has_option(section, key):
                     config[key] = ini.get(section, key)
     # 环境变量覆盖
-    for env_key, cfg_key in [("PA_USERNAME", "username"), ("PA_API_TOKEN", "api_token"),
-                              ("PA_PROJECT", "project"), ("PA_DOMAIN", "domain")]:
+    for env_key, cfg_key in [
+        ("PA_USERNAME", "username"),
+        ("PA_API_TOKEN", "api_token"),
+        ("PA_PROJECT", "project"),
+        ("PA_DOMAIN", "domain"),
+    ]:
         val = os.environ.get(env_key)
         if val:
             config[cfg_key] = val
@@ -85,7 +90,7 @@ def _load_config() -> dict:
 
 def _run_npm(args: list[str], cwd: Path) -> None:
     """跨平台执行 npm 命令。"""
-    cmd = ["npm.cmd" if sys.platform == "win32" else "npm"] + args
+    cmd = [*(["npm.cmd"] if sys.platform == "win32" else ["npm"]), *args]
     print(f"  $ {' '.join(cmd)}  (in {cwd.name})")
     result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode != 0:
@@ -183,20 +188,26 @@ def _upload_bytes_to_path(
 
     for attempt in range(max_retries):
         code, body = _pa_request(
-            "POST", url, token,
+            "POST",
+            url,
+            token,
             data=body_data,
             content_type=f"multipart/form-data; boundary={boundary.decode()}",
+            timeout=60.0,
         )
         if code in (200, 201):
             if not quiet:
                 print(f"  [OK] {label} → {remote_path}")
             return True
-        if code == 429 and attempt + 1 < max_retries:
-            wait = 2 + attempt
-            print(f"  [WAIT] {label} 限流 (429)，{wait}s 后重试 ({attempt + 1}/{max_retries})...")
+        if (code in (-1, -2) or code == 429) and attempt + 1 < max_retries:
+            wait = 5 * (attempt + 1)
+            reason = "超时" if code == -2 else ("网络错误" if code == -1 else "限流")
+            if not quiet:
+                print(f"  [RETRY] {label}: {reason} ({code})，{wait}s 后重试 ({attempt + 1}/{max_retries})...")
             time.sleep(wait)
             continue
-        print(f"  [ERR] {label} HTTP {code}: {body[:300]}")
+        if not quiet or code not in (200, 201):
+            print(f"  [ERR] {label} HTTP {code}: {body[:300]}")
         return False
     return False
 
@@ -249,7 +260,8 @@ def _upload_directory_tree(
     remote_base = remote_base.rstrip("/") + "/"
     ok, err = 0, 0
     files = sorted(
-        p for p in local_root.rglob("*")
+        p
+        for p in local_root.rglob("*")
         if p.is_file() and p.suffix in suffixes and not any(s in skip_parts for s in p.parts)
     )
     total = len(files)
@@ -320,7 +332,10 @@ def _upload_arknights_runtime(config: dict) -> None:
     games_init = _REPO_ROOT / "games" / "__init__.py"
     if games_init.is_file():
         _upload_bytes_to_path(
-            config, f"{home}/games/__init__.py", games_init.read_bytes(), "games/__init__.py",
+            config,
+            f"{home}/games/__init__.py",
+            games_init.read_bytes(),
+            "games/__init__.py",
         )
 
     _upload_directory_tree(
@@ -465,26 +480,32 @@ def _verify_deployment(config: dict) -> None:
 
     if not ok:
         print("\n  [HINT] 若仍报 missing argument 'send'，请打开 PA Web → WSGI configuration file")
-        print("  确认路径为 /var/www/你的用户名_pythonanywhere_com_wsgi.py，且内容为 wsgi_pythonanywhere.py（无 application=app）")
+        print(
+            "  确认路径为 /var/www/你的用户名_pythonanywhere_com_wsgi.py，"
+            "且内容为 wsgi_pythonanywhere.py（无 application=app）"
+        )
     else:
         print("  [OK] API 正常，请 Ctrl+F5 刷新 /compute")
 
 
-def _pa_request(method: str, url: str, token: str, data: bytes | None = None,
-                content_type: str | None = None) -> tuple[int, str]:
-    """向 PythonAnywhere API 发起请求。"""
+def _pa_request(
+    method: str, url: str, token: str, data: bytes | None = None, content_type: str | None = None, timeout: float = 30.0
+) -> tuple[int, str]:
+    """向 PythonAnywhere API 发起请求（含超时）。"""
     headers = {"Authorization": f"Token {token}"}
     if content_type:
         headers["Content-Type"] = content_type
     req = Request(url, data=data, headers=headers, method=method)
     try:
-        with urlopen(req) as resp:
+        with urlopen(req, timeout=timeout) as resp:
             return resp.status, resp.read().decode("utf-8")
     except HTTPError as e:
         body = e.read().decode("utf-8")[:500]
         return e.code, body
     except URLError as e:
         return -1, str(e)
+    except TimeoutError:
+        return -2, "timeout"
 
 
 def _upload_zip(config: dict) -> None:
@@ -526,7 +547,9 @@ def _upload_zip(config: dict) -> None:
     body_data = b"\r\n".join(body_parts)
 
     code, body = _pa_request(
-        "POST", url, token,
+        "POST",
+        url,
+        token,
         data=body_data,
         content_type=f"multipart/form-data; boundary={boundary.decode()}",
     )
@@ -570,43 +593,70 @@ def _upload_dist_files(config: dict) -> None:
             remote_path = dist_base + arcname
             file_data = zf.read(info)
 
-            url = _pa_file_url(username, remote_path)
+            # 上传+重试（含超时和限流）
+            ok = False
+            code = -1
+            body_data = b""
             boundary = b"----pa-deploy-boundary"
-            body_parts = [
-                b"--" + boundary,
-                f'Content-Disposition: form-data; name="content"; filename="{arcname}"'.encode(),
-                b"Content-Type: application/octet-stream",
-                b"",
-                file_data,
-                b"--" + boundary + b"--",
-            ]
-            body_data = b"\r\n".join(body_parts)
-            code, body = _pa_request(
-                "POST", url, token,
-                data=body_data,
-                content_type=f"multipart/form-data; boundary={boundary.decode()}",
-            )
-            if code in (200, 201):
+            for attempt in range(4):
+                url = _pa_file_url(username, remote_path)
+                body_parts = [
+                    b"--" + boundary,
+                    f'Content-Disposition: form-data; name="content"; filename="{arcname}"'.encode(),
+                    b"Content-Type: application/octet-stream",
+                    b"",
+                    file_data,
+                    b"--" + boundary + b"--",
+                ]
+                body_data = b"\r\n".join(body_parts)
+                code, body = _pa_request(
+                    "POST",
+                    url,
+                    token,
+                    data=body_data,
+                    content_type=f"multipart/form-data; boundary={boundary.decode()}",
+                    timeout=60.0,
+                )
+                if code in (200, 201):
+                    ok = True
+                    break
+                if (code in (-1, -2) or code == 429) and attempt < 3:
+                    wait = 5 * (attempt + 1)
+                    reason = "超时" if code == -2 else ("网络错误" if code == -1 else "限流")
+                    print(f"  [RETRY] {arcname}: {reason} ({code})，{wait}s 后重试 ({attempt + 1}/3)...")
+                    time.sleep(wait)
+                else:
+                    # 其他错误或最后一次重试
+                    if attempt < 3:
+                        time.sleep(3)
+
+            if ok:
                 count += 1
                 print(f"  [OK] {arcname} ({len(file_data)} bytes)")
             else:
                 errors += 1
-                print(f"  [WARN] {arcname}: HTTP {code} — 重试...")
-                # 尝试创建父目录后重试
+                print(f"  [WARN] {arcname}: 上传失败 (HTTP {code})")
+                # 尝试创建父目录后重试最后一轮
                 if "/" in arcname:
                     parent = "/".join(arcname.split("/")[:-1])
                     dummy_url = _pa_file_url(username, f"{dist_base}{parent}/.keep")
-                    _pa_request("POST", dummy_url, token, data=b"--boundary\r\n...",
-                                content_type="multipart/form-data; boundary=boundary")
-                retry_code, _ = _pa_request(
-                    "POST", url, token,
-                    data=body_data,
-                    content_type=f"multipart/form-data; boundary={boundary.decode()}",
-                )
-                if retry_code in (200, 201):
-                    count += 1
-                    errors -= 1
-                    print(f"  [OK] {arcname} (重试成功)")
+                    _pa_request(
+                        "POST", dummy_url, token, data=b"dummy", content_type="multipart/form-data; boundary=boundary"
+                    )
+                    retry_url = _pa_file_url(username, remote_path)
+                    r_code, _ = _pa_request(
+                        "POST",
+                        retry_url,
+                        token,
+                        data=body_data,
+                        content_type=f"multipart/form-data; boundary={boundary.decode()}",
+                    )
+                    if r_code in (200, 201):
+                        errors -= 1
+                        count += 1
+                        print(f"  [OK] {arcname} (重试成功)")
+
+            time.sleep(_PA_UPLOAD_INTERVAL)
 
     if errors:
         print(f"  [WARN] {count} 个成功, {errors} 个失败")
@@ -673,7 +723,6 @@ def _upload_generator_tools(config: dict) -> None:
         print("  [SKIP] tools/generator/ 目录不存在")
         return
 
-    remote_base = f"/home/{username}/{project}/tools/generator/"
     count = 0
     errors = 0
     py_files = sorted(gen_dir.rglob("*"))
@@ -740,7 +789,9 @@ def _upload_local_backend_zip(config: dict) -> None:
     body_data = b"\r\n".join(body_parts)
 
     code, body = _pa_request(
-        "POST", url, token,
+        "POST",
+        url,
+        token,
         data=body_data,
         content_type=f"multipart/form-data; boundary={boundary.decode()}",
     )
@@ -800,7 +851,7 @@ def _init_config() -> None:
         encoding="utf-8",
     )
     print("  [OK] 配置模板已生成，请编辑填入 api_token")
-    print(f"  也可通过环境变量设置: PA_USERNAME, PA_API_TOKEN, PA_PROJECT, PA_DOMAIN")
+    print("  也可通过环境变量设置: PA_USERNAME, PA_API_TOKEN, PA_PROJECT, PA_DOMAIN")
 
 
 # ── 打印服务器端指令 ──────────────────────────────────────────────────────────────
@@ -811,24 +862,26 @@ def _print_server_instructions(zip_path: Path) -> None:
     print("\n" + "=" * 60)
     print("📋 手动部署指南")
     print("=" * 60)
-    print(f"\n1. 上传 zip 到 PythonAnywhere:")
-    print(f"   打开 https://www.pythonanywhere.com/user/wxhwwla/files/")
+    print("\n1. 上传 zip 到 PythonAnywhere:")
+    print("   打开 https://www.pythonanywhere.com/user/wxhwwla/files/")
     print(f"   上传 {zip_path} 到 /home/wxhwwla/calc-framework/frontend/")
     print(f"\n   或直接用 API 上传: python {sys.argv[0]} --upload")
-    print(f"\n2. 在 PythonAnywhere Bash 控制台中执行:")
-    print(f"\n   cd ~/calc-framework")
-    print(f"   git pull")
-    print(f"   source ~/.virtualenvs/calc-framework/bin/activate")
-    print(f"   pip install -q -r web/backend/requirements.txt")
-    print(f"   pip install -q -e framework/")
-    print(f"   （--all 会自动上传 WSGI；或手动 cp web/wsgi_pythonanywhere.py /var/www/用户名_pythonanywhere_com_wsgi.py）")
-    print(f"   cd ~/calc-framework/web/frontend")
-    print(f"   rm -rf dist")
-    print(f"   mkdir -p dist && cd dist")
-    print(f"   unzip -q ~/calc-framework/frontend/dist.zip")
-    print(f"   cd ~/calc-framework")
-    print(f"   rm -f frontend/dist.zip")
-    print(f"\n3. 在 Web 页面点击 Reload")
+    print("\n2. 在 PythonAnywhere Bash 控制台中执行:")
+    print("\n   cd ~/calc-framework")
+    print("   git pull")
+    print("   source ~/.virtualenvs/calc-framework/bin/activate")
+    print("   pip install -q -r web/backend/requirements.txt")
+    print("   pip install -q -e framework/")
+    print(
+        "   （--all 会自动上传 WSGI；或手动 cp web/wsgi_pythonanywhere.py /var/www/用户名_pythonanywhere_com_wsgi.py）"
+    )
+    print("   cd ~/calc-framework/web/frontend")
+    print("   rm -rf dist")
+    print("   mkdir -p dist && cd dist")
+    print("   unzip -q ~/calc-framework/frontend/dist.zip")
+    print("   cd ~/calc-framework")
+    print("   rm -f frontend/dist.zip")
+    print("\n3. 在 Web 页面点击 Reload")
     print("=" * 60)
 
 
@@ -854,9 +907,13 @@ def main() -> None:
     )
     parser.add_argument("--upload", action="store_true", help="构建+打包+上传到 PythonAnywhere（需 API Token）")
     parser.add_argument("--reload", action="store_true", help="重载 PythonAnywhere Web App（需 API Token）")
-    parser.add_argument("--all", action="store_true", dest="do_all", help="显式全自动: 构建->打包->上传->部署->重载（需 API Token）")
+    parser.add_argument(
+        "--all", action="store_true", dest="do_all", help="显式全自动: 构建->打包->上传->部署->重载（需 API Token）"
+    )
     parser.add_argument("--zip-only", action="store_true", help="仅重新打包 dist/（跳过 npm run build）")
-    parser.add_argument("--backend-only", action="store_true", help="仅上传后端 Python + WSGI 并重载（跳过前端构建/上传）")
+    parser.add_argument(
+        "--backend-only", action="store_true", help="仅上传后端 Python + WSGI 并重载（跳过前端构建/上传）"
+    )
     parser.add_argument("--init-config", action="store_true", help="生成配置文件模板")
     parser.add_argument("--username", help="PythonAnywhere 用户名（覆盖配置文件）")
     parser.add_argument("--api-token", help="PythonAnywhere API Token（覆盖配置文件）")

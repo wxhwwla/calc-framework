@@ -31,19 +31,19 @@ PySide6 后台 Worker 基础设施。
 
 """
 
-
-
 from __future__ import annotations
 
 import traceback
 from collections.abc import Callable
 from typing import Any
 
+from calc_framework.logging import get_logger
 from PySide6.QtCore import QObject, QThread, Signal, Slot
+
+_logger = get_logger(__name__)
 
 
 class CalcWorker(QObject):
-
     """在子线程中执行 ``fn(*args, **kwargs)``，完成后通过信号返回结果。
 
 
@@ -70,28 +70,18 @@ class CalcWorker(QObject):
 
     """
 
-
-
     progress = Signal(int, int)
 
     finished = Signal(str)
 
     error = Signal(str)
 
-
-
     def __init__(
-
         self,
-
         fn: Callable[..., Any],
-
         args: tuple = (),
-
         kwargs: dict | None = None,
-
     ) -> None:
-
         super().__init__()
 
         self._fn = fn
@@ -105,14 +95,10 @@ class CalcWorker(QObject):
         self._thread: QThread | None = None
         """初始化实例。"""
 
-
-
     def start(self) -> None:
-
         """创建 QThread 并启动后台计算。"""
 
         if self._thread is not None and self._thread.isRunning():
-
             return
 
         self._thread = QThread()
@@ -125,59 +111,41 @@ class CalcWorker(QObject):
 
         self._thread.start()
 
-
-
     @Slot()
-
     def _run(self) -> None:
-
         """在子线程中执行（由 ``QThread.started`` 触发）。"""
 
         try:
-
             result = self._fn(*self._args, **self._kwargs)
 
             if not self._cancelled:
-
                 self.finished.emit(str(result))
 
         except Exception as exc:
-
+            _logger.warning("CalcWorker 后台计算异常", exc_info=True)
             if not self._cancelled:
-
                 tb = traceback.format_exc()
 
                 self.error.emit(f"{exc}\n{tb}")
 
         finally:
-
             if self._thread is not None:
-
                 self._thread.quit()
 
-
-
     def cancel(self) -> None:
-
         """取消计算并终止线程。"""
 
         self._cancelled = True
 
         if self._thread is not None and self._thread.isRunning():
-
             self._thread.quit()
 
             self._thread.wait(3000)
 
-
-
     def wait_for_finished(self, timeout: int = 30000) -> bool:
-
         """等待线程退出。"""
 
         if self._thread is not None and self._thread.isRunning():
-
             return self._thread.wait(timeout)
 
         return True
-

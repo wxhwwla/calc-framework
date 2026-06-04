@@ -26,8 +26,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 import argparse
@@ -44,7 +42,6 @@ CONFIRM_PHRASE = "覆盖本地"
 _MAX_LISTED_CHANGES = 30
 
 
-
 DEFAULT_REMOTE_SSH = "git@github.com:wxhwwla/calc-framework.git"
 AUTH_MODE = "ssh"
 REMOTE_HTTPS = "https://github.com/wxhwwla/calc-framework.git"
@@ -54,37 +51,24 @@ KEY_FILE = "git_key.txt"
 DEFAULT_BRANCH = "main"
 
 
-
 _TOKEN_IN_REMOTE = re.compile(
-
     r"https://[^@\s]+@github\.com/",
-
     re.IGNORECASE,
-
 )
-
-
-
 
 
 def _decode_output(output: Any) -> str:
     """将命令输出解码为字符串。"""
     if output is None:
-
         return ""
 
     if isinstance(output, str):
-
         return output
 
     if isinstance(output, bytes):
-
         return output.decode("utf-8", errors="replace")
 
     return str(output)
-
-
-
 
 
 def run_git(
@@ -97,45 +81,30 @@ def run_git(
     """执行 git 命令并返回 (returncode, stdout, stderr)。"""
     try:
         if capture_output:
-
             proc = subprocess.run(
-
-                ["git"] + args,
-
-                stdout=subprocess.PIPE,
-
-                stderr=subprocess.PIPE,
-
+                ["git", *args],
+                capture_output=True,
                 encoding="utf-8",
-
                 errors="replace",
-
                 check=check,
-
                 timeout=timeout,
-
             )
 
             return proc.returncode, _decode_output(proc.stdout), _decode_output(proc.stderr)
 
-        proc = subprocess.run(["git"] + args, check=check, timeout=timeout)
+        proc = subprocess.run(["git", *args], check=check, timeout=timeout)
 
         return proc.returncode, "", ""
 
     except subprocess.CalledProcessError:
-
         print(f"[错误] Git 命令失败: git {' '.join(args)}")
 
         raise
 
     except FileNotFoundError:
-
         print("[错误] 未找到 git")
 
         sys.exit(1)
-
-
-
 
 
 def _repo_root() -> str:
@@ -147,29 +116,20 @@ def _origin_remote_url() -> str | None:
     """从 git 配置读取 origin 远程 URL。"""
 
     if not os.path.isdir(os.path.join(_repo_root(), ".git")):
-
         return None
 
     code, url, _ = run_git(
-
         ["remote", "get-url", "origin"],
-
         check=False,
-
         capture_output=True,
-
     )
 
     if code != 0:
-
         return None
 
     url = url.strip()
 
     return url or None
-
-
-
 
 
 def _remote_url() -> str:
@@ -178,21 +138,17 @@ def _remote_url() -> str:
         origin = _origin_remote_url()
 
         if origin and not _TOKEN_IN_REMOTE.search(origin):
-
             return origin
 
         return DEFAULT_REMOTE_SSH
 
     if AUTH_MODE == "https_token":
-
         if not os.path.isfile(KEY_FILE):
-
             print(f"[错误] 需要 {KEY_FILE} 或改用 AUTH_MODE='ssh'")
 
             sys.exit(1)
 
         with open(KEY_FILE, encoding="utf-8") as f:
-
             token = f.read().strip()
 
         path = REMOTE_HTTPS.removeprefix("https://")
@@ -202,18 +158,12 @@ def _remote_url() -> str:
     sys.exit(f"[错误] 未知 AUTH_MODE: {AUTH_MODE}")
 
 
-
-
-
 def setup_git_repo() -> None:
     """初始化/检查 git 仓库，配置 remote 和分支。"""
     os.chdir(_repo_root())
     remote = _remote_url()
 
-
-
     if not os.path.isdir(".git"):
-
         print("[信息] 初始化 Git 仓库")
 
         run_git(["init"])
@@ -222,36 +172,24 @@ def setup_git_repo() -> None:
 
         run_git(["config", "user.email", "wxhwwla@gmail.com"])
 
-
-
     _, stdout, _ = run_git(["remote", "-v"], capture_output=True)
 
     if _TOKEN_IN_REMOTE.search(stdout):
-
         print("[警告] 原 origin 含嵌入 Token，将替换为 SSH 地址")
 
     if "origin" not in stdout:
-
         run_git(["remote", "add", "origin", remote])
 
     else:
-
         run_git(["remote", "set-url", "origin", remote])
-
-
 
     _, cur, _ = run_git(["branch", "--show-current"], capture_output=True)
 
     if cur.strip() != DEFAULT_BRANCH:
-
         code, _, _ = run_git(["checkout", DEFAULT_BRANCH], check=False, capture_output=True)
 
         if code != 0:
-
             run_git(["checkout", "-b", DEFAULT_BRANCH])
-
-
-
 
 
 def _porcelain_status() -> str:
@@ -261,14 +199,10 @@ def _porcelain_status() -> str:
     return status
 
 
-
-
-
 def _print_pending_changes(porcelain: str) -> None:
     """打印工作区中未提交的变更列表。"""
     lines = [ln for ln in porcelain.splitlines() if ln.strip()]
     if not lines:
-
         print("[信息] 工作区无已跟踪文件的修改（仍将执行 clean -fd 删除未跟踪文件）")
 
         return
@@ -276,19 +210,13 @@ def _print_pending_changes(porcelain: str) -> None:
     print(f"[警告] 检测到 {len(lines)} 项本地变更（未提交或将丢失）：")
 
     for line in lines[:_MAX_LISTED_CHANGES]:
-
         print(f"  {line}")
 
     if len(lines) > _MAX_LISTED_CHANGES:
-
         print(f"  ... 另有 {len(lines) - _MAX_LISTED_CHANGES} 项未列出")
 
 
-
-
-
 def require_user_confirm(*, skip: bool = False) -> bool:
-
     """
 
     要求用户输入 CONFIRM_PHRASE 后才允许继续。
@@ -300,18 +228,13 @@ def require_user_confirm(*, skip: bool = False) -> bool:
     """
 
     if skip:
-
         print("[警告] 已使用 --yes，跳过人工确认")
 
         return True
 
-
-
     os.chdir(_repo_root())
 
     porcelain = _porcelain_status()
-
-
 
     print("=" * 60)
 
@@ -336,17 +259,14 @@ def require_user_confirm(*, skip: bool = False) -> bool:
     print("直接回车或输入其他内容将取消。")
 
     try:
-
         typed = input("> ").strip()
 
     except (EOFError, KeyboardInterrupt):
-
         print("\n[已取消]")
 
         return False
 
     if typed != CONFIRM_PHRASE:
-
         print(f"[已取消] 未输入「{CONFIRM_PHRASE}」，本地未改动。")
 
         return False
@@ -356,43 +276,28 @@ def require_user_confirm(*, skip: bool = False) -> bool:
     return True
 
 
-
-
-
 def force_pull() -> bool:
     """执行 git fetch + reset --hard + clean -fd 与远程对齐。"""
     os.chdir(_repo_root())
     print("[信息] 强制与 origin/main 对齐（本地未提交更改将丢失）")
 
-
-
     status = _porcelain_status()
 
     if status.strip():
-
         print("[警告] 存在本地更改，将 reset --hard")
-
-
 
     run_git(["fetch", "origin"], timeout=300)
 
     code, _, stderr = run_git(
-
         ["reset", "--hard", f"origin/{DEFAULT_BRANCH}"],
-
         check=False,
-
         capture_output=True,
-
     )
 
     if code != 0:
-
         print(f"[错误] reset 失败: {stderr.strip()}")
 
         return False
-
-
 
     run_git(["clean", "-fd"], check=False)
 
@@ -401,29 +306,19 @@ def force_pull() -> bool:
     return True
 
 
-
-
-
 def main() -> None:
     """CLI 入口。执行完整的拉取覆盖流程。"""
     parser = argparse.ArgumentParser(
         description="从 GitHub 拉取并覆盖本地（危险操作，须确认）",
-
     )
 
     parser.add_argument(
-
         "--yes",
-
         action="store_true",
-
         help=f"跳过确认（慎用）；默认须输入「{CONFIRM_PHRASE}」",
-
     )
 
     args = parser.parse_args()
-
-
 
     print("=" * 60)
 
@@ -432,15 +327,12 @@ def main() -> None:
     print("=" * 60)
 
     try:
-
         setup_git_repo()
 
         if not require_user_confirm(skip=args.yes):
-
             sys.exit(0)
 
         if not force_pull():
-
             sys.exit(1)
 
         print("=" * 60)
@@ -450,22 +342,17 @@ def main() -> None:
         print("=" * 60)
 
     except Exception as exc:
-
         print(f"\n[错误] {exc}")
 
         sys.exit(1)
 
 
-
-
-
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _path_setup import ensure_root  # noqa: E402
+from _path_setup import ensure_root
 
 ensure_root()
 
 if __name__ == "__main__":
-
     main()

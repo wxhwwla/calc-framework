@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 SYNC_STATE_FILENAME = "sync_state.json"
@@ -50,7 +50,7 @@ def save_sync_state(output_root: Path, state: Dict[str, Any]) -> None:
     )
 
 
-def get_entity_hash(state: Dict[str, Any], name: str) -> Optional[str]:
+def get_entity_hash(state: Dict[str, Any], name: str) -> str | None:
     """获取指定条目的已记录哈希，无记录则返回 None。"""
     return (state.get("entities") or {}).get(name)
 
@@ -118,7 +118,7 @@ def get_stale_entities_from_cache(
     kind: str,
     *,
     local_names: set[str],
-    output_root: Optional[Path] = None,
+    output_root: Path | None = None,
     include_new: bool = False,
 ) -> list[str]:
     """从缓存目录扫描出需要（重新）同步的条目。

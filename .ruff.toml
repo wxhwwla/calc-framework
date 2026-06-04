@@ -36,6 +36,28 @@ ignore = [
 "scripts/github_download_module.py" = ["RUF005", "UP022"]
 "scripts/github_upload_module_web.py" = ["E501"]
 
+# games/ — 遗留文件，放宽规则避免阻塞 pre-commit
+"games/arknights/gui/ArknightsDamageApp.py" = ["N999", "E501", "N806"]
+"games/arknights/main.py" = ["N806"]
+"games/arknights/tests/conftest.py" = ["E501"]
+
+# framework/ — 遗留文件
+"framework/src/calc_framework/dev_toolkit/*.py" = ["I001"]
+
+# tools/ — CLI/工具代码，放宽 lint 规则避免预存问题阻塞 pre-commit
+"tools/**/*.py" = [
+    "N802",    # Qt 覆写方法名（dragEnterEvent 等）
+    "N817",    # Qt import 别名（QPainter as QP）
+    "SIM101",  # 多个 isinstance
+    "SIM114",  # 合并 if 分支
+    "I001",    # import 排序
+    "UP035",   # typing 弃用别名
+    "UP006",   # 类型注解旧语法
+    "UP038",   # isinstance 元组写法（pre-commit ruff 0.9 仍报，3.10+ 联合写法在部分环境不一致）
+    "E501",    # 行长（CLI 工具优先可读性）
+]
+"tools/ocr/label.py" = ["F401"]  # Qt 条件导入
+
 [format]
 quote-style = "double"
 indent-style = "space"

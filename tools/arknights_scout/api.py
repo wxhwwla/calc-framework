@@ -45,7 +45,7 @@ class MediaWikiClient:
         return self._get(payload, ignore_error_codes=ignore_error_codes)
 
     def fetch_parsed_gallery_html(self, page_title: str) -> str:
-        """ fetch_parsed_gallery_html 实现。
+        """fetch_parsed_gallery_html 实现。
 
         Args:
             page_title: 参数描述。
@@ -65,7 +65,7 @@ class MediaWikiClient:
         return data.get("parse", {}).get("text", {}).get("*", "") or ""
 
     def fetch_category_members(self, category_title: str, *, limit: int = 500) -> list[str]:
-        """ fetch_category_members 实现。
+        """fetch_category_members 实现。
 
         Args:
             category_title: 参数描述。
@@ -98,7 +98,7 @@ class MediaWikiClient:
         return members[:limit]
 
     def fetch_pages_content(self, titles: list[str]) -> dict[str, dict[str, Any]]:
-        """ fetch_pages_content 实现。
+        """fetch_pages_content 实现。
 
         Args:
             titles: 参数描述。
@@ -200,9 +200,7 @@ class MediaWikiClient:
         else:
             assert last_http_error is not None
             body = last_http_error.read().decode("utf-8", errors="replace")
-            raise RuntimeError(
-                f"MediaWiki API HTTP {last_http_error.code}: {body[:500]}"
-            ) from last_http_error
+            raise RuntimeError(f"MediaWiki API HTTP {last_http_error.code}: {body[:500]}") from last_http_error
         data = json.loads(raw)
         if "error" in data:
             code = data["error"].get("code", "")

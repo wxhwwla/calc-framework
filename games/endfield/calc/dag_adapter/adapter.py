@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.config.adapter import AdapterPackage
+from calc_framework.logging import get_logger
+
+_logger = get_logger(__name__)
 
 from games.endfield.calc.dag_adapter.loader import EndfieldContextLoader
 from games.endfield.calc.zone_snapshot.types import ZoneDisplayLine
@@ -69,9 +72,12 @@ def evaluate_attack_chain_via_dag(
     pkg = _ensure_dag()
     kwargs = bonuses_kwargs or {}
     ctx = build_dag_context(
-        char, weapon,
-        char_level=char_level, weapon_level=weapon_level,
-        trust_level=trust_level, bonuses_kwargs=kwargs,
+        char,
+        weapon,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+        bonuses_kwargs=kwargs,
     )
 
     result = pkg.dag_service.evaluate(ctx)
@@ -104,9 +110,12 @@ def compute_full_damage_via_dag(
     pkg = _ensure_dag()
     bk = bonuses_kwargs or {}
     ctx = build_dag_context(
-        char, weapon,
-        char_level=char_level, weapon_level=weapon_level,
-        trust_level=trust_level, bonuses_kwargs=bk,
+        char,
+        weapon,
+        char_level=char_level,
+        weapon_level=weapon_level,
+        trust_level=trust_level,
+        bonuses_kwargs=bk,
     )
     result = pkg.dag_service.evaluate(ctx)
     zo = result.outputs
@@ -150,7 +159,8 @@ def compute_snapshot_with_dag(
 
     pkg = _ensure_dag()
     ctx = build_dag_context(
-        char, weapon,
+        char,
+        weapon,
         char_level=selection.char_level,
         weapon_level=selection.weapon_level,
         trust_level=selection.trust_level,
@@ -205,22 +215,19 @@ def compute_snapshot_with_dag(
 
     lines.append(
         ZoneDisplayLine(
-            f"基础攻击力: {base_atk:.1f} "
-            f"({char_base:.1f}+{weapon_base:.1f})",
+            f"基础攻击力: {base_atk:.1f} ({char_base:.1f}+{weapon_base:.1f})",
             "#00D4AA",
         )
     )
     lines.append(
         ZoneDisplayLine(
-            f"攻击加成攻击力: {atk_bonus_atk:.1f} "
-            f"({base_atk:.1f}×{atk_mult:.3f})",
+            f"攻击加成攻击力: {atk_bonus_atk:.1f} ({base_atk:.1f}×{atk_mult:.3f})",
             "#9B59B6",
         )
     )
     lines.append(
         ZoneDisplayLine(
-            f"中间攻击力: {mid_atk:.1f} "
-            f"({atk_bonus_atk:.1f}+{add_atk:.1f})",
+            f"中间攻击力: {mid_atk:.1f} ({atk_bonus_atk:.1f}+{add_atk:.1f})",
             "#3498DB",
         )
     )
@@ -228,15 +235,15 @@ def compute_snapshot_with_dag(
     final_atk = zo.get("最终攻击力", 0.0)
     lines.append(
         ZoneDisplayLine(
-            f"最终攻击力: {final_atk:.1f} "
-            f"({mid_atk:.1f}×(1+{ability_bonus:.4f}))",
+            f"最终攻击力: {final_atk:.1f} ({mid_atk:.1f}×(1+{ability_bonus:.4f}))",
             "#E74C3C",
         )
     )
 
     # 最终伤害 — DAG 公式计算（15 乘区连乘）
     final_dmg = compute_full_damage_via_dag(
-        char, weapon,
+        char,
+        weapon,
         char_level=selection.char_level,
         weapon_level=selection.weapon_level,
         trust_level=selection.trust_level,
@@ -256,10 +263,12 @@ def compute_snapshot_with_dag(
     refine_add_atk = zo.get("武器精炼附加攻击力加成", 0.0)
     if refine_main > 0 or refine_add_atk > 0:
         refine_lv = ctx.get("weapon", {}).get("精炼等级", 1)
-        lines.append(ZoneDisplayLine(
-            f"武器精炼(Lv{refine_lv}): 主能力值+{refine_main:.1f} 附加攻击力+{refine_add_atk:.1f}",
-            "#2ECC71",
-        ))
+        lines.append(
+            ZoneDisplayLine(
+                f"武器精炼(Lv{refine_lv}): 主能力值+{refine_main:.1f} 附加攻击力+{refine_add_atk:.1f}",
+                "#2ECC71",
+            )
+        )
 
     return lines
 
@@ -283,6 +292,7 @@ def _ensure_dag() -> AdapterPackage:
     try:
         _ADAPTER_PACKAGE = AdapterPackage(_ADAPTER_DIR)
     except Exception:
+        _logger.info("适配包加载失败，重新生成 DAG JSON")
         _generate_dag_json()
         _ADAPTER_PACKAGE = AdapterPackage(_ADAPTER_DIR)
 
@@ -301,13 +311,17 @@ def _write_default_meta() -> None:
     import json
 
     (_ADAPTER_DIR / "meta.json").write_text(
-        json.dumps({
-            "name": "终末地伤害计算",
-            "game": "明日方舟：终末地",
-            "version": "3.0.0",
-            "schema_version": "dag-v1",
-            "entry_dag": "../../src/calc_framework/configs/endfield_full.dag.json",
-        }, ensure_ascii=False, indent=2),
+        json.dumps(
+            {
+                "name": "终末地伤害计算",
+                "game": "明日方舟：终末地",
+                "version": "3.0.0",
+                "schema_version": "dag-v1",
+                "entry_dag": "../../src/calc_framework/configs/endfield_full.dag.json",
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )
     """write default meta。"""

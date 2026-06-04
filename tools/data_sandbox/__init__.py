@@ -24,10 +24,10 @@ from .tester import Tester, TestResult
 from .reporter import Reporter, Report
 
 __all__ = [
-    "Validator",
-    "ValidationResult",
-    "Tester",
-    "TestResult",
-    "Reporter",
     "Report",
+    "Reporter",
+    "TestResult",
+    "Tester",
+    "ValidationResult",
+    "Validator",
 ]

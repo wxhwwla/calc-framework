@@ -8,7 +8,7 @@ from typing import Any
 
 
 def safe_dirname(title: str) -> str:
-    """ safe_dirname 实现。
+    """safe_dirname 实现。
 
     Args:
         title: 参数描述。
@@ -21,7 +21,7 @@ def safe_dirname(title: str) -> str:
 
 
 def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
-    """ save_page_bundle 实现。
+    """save_page_bundle 实现。
 
     Args:
         raw_dir: 参数描述。
@@ -46,7 +46,7 @@ def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
 
 
 def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
-    """ load_page_bundle 实现。
+    """load_page_bundle 实现。
 
     Args:
         raw_dir: 参数描述。
@@ -78,7 +78,7 @@ def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
 
 
 def write_manifest(output_root: Path, manifest: dict[str, Any]) -> Path:
-    """ write_manifest 实现。
+    """write_manifest 实现。
 
     Args:
         output_root: 参数描述。

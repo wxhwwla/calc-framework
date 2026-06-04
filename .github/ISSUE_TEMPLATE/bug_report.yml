@@ -38,7 +38,7 @@ body:
       label: 复现步骤
       description: 按顺序列出操作，他人可按此复现。
       placeholder: |
-        1. 启动 `python scripts/main.py`
+        1. 启动 `python scripts/main_launcher.py`
         2. 选择角色「…」、武器「…」
         3. 点击「…」
         4. 看到 …

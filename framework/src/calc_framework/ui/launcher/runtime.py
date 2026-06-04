@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""启动器运行时：适配器发现与子进程启动。"""
+"""启动器运行时：适配器发现与子进程启动。
+
+支持两种模式：
+- 开发模式（dev）：用 python.exe 直接启动脚本
+- 冻结模式（frozen/PyInstaller）：用同一 exe 带 --game/--tool 参数启动
+"""
 
 from __future__ import annotations
 
@@ -14,9 +19,19 @@ from ...config.manager import _get_adapters_dir
 
 # 完整桌面计算器入口（按 adapters/ 子目录 id）
 _FULL_APP_SCRIPTS: dict[str, str] = {
-    "endfield": "scripts/main.py",
-    "arknights": "scripts/main_arknights.py",
+    "endfield": "games/endfield/main.py",
+    "arknights": "games/arknights/main.py",
 }
+
+
+def _is_frozen() -> bool:
+    """判断是否在 PyInstaller 冻结模式下运行。"""
+    return getattr(sys, "frozen", False)
+
+
+def _frozen_exe_args() -> list[str]:
+    """返回冻结模式下的 exe 路径前缀。"""
+    return [sys.executable]
 
 
 @dataclass(frozen=True)
@@ -38,6 +53,9 @@ class AdapterEntry:
 
 def repo_root() -> Path:
     """仓库根目录（framework/src/calc_framework/ui/launcher → 上溯 5 级）。"""
+    if _is_frozen():
+        # 冻结模式下，sys._MEIPASS 是解压目录
+        return Path(sys._MEIPASS)  # type: ignore[attr-defined]
     return Path(__file__).resolve().parents[5]
 
 
@@ -89,6 +107,9 @@ def list_adapter_entries(adapters_dir: Path | None = None) -> list[AdapterEntry]
 def argv_for_adapter(entry: AdapterEntry, root: Path | None = None) -> list[str]:
     """构造启动适配器的命令行参数。"""
     base = root or repo_root()
+    if _is_frozen():
+        return [*_frozen_exe_args(), "--game", entry.adapter_id]
+    # 开发模式
     script = _FULL_APP_SCRIPTS.get(entry.adapter_id)
     if script:
         return [sys.executable, str(base / script)]
@@ -98,8 +119,21 @@ def argv_for_adapter(entry: AdapterEntry, root: Path | None = None) -> list[str]
 def argv_for_tool(tool_id: str, root: Path | None = None) -> list[str]:
     """构造启动工具的命令行参数。"""
     base = root or repo_root()
+    if _is_frozen():
+        # 冻结模式：用同一 exe 启动
+        frozen_tool_map = {
+            "dev_toolkit": "dev_toolkit",
+            "viewer": "viewer",
+            "graph_editor": "graph_editor",
+            "layout_editor": "layout_editor",
+        }
+        mapped = frozen_tool_map.get(tool_id)
+        if mapped:
+            return [*_frozen_exe_args(), "--tool", mapped]
+        return [*_frozen_exe_args(), "--tool", "dev_toolkit"]
+
+    # 开发模式
     mapping: dict[str, list[str]] = {
-        # designer/pack_designer → 已整合到开发者工具箱
         "designer": [sys.executable, str(base / "scripts" / "main_dev_toolkit.py")],
         "pack_designer": [sys.executable, str(base / "scripts" / "main_dev_toolkit.py")],
         "viewer": [sys.executable, "-m", "calc_framework.ui.viewer"],
@@ -113,6 +147,8 @@ def argv_for_tool(tool_id: str, root: Path | None = None) -> list[str]:
 
 def argv_for_calcpack(path: Path, root: Path | None = None) -> list[str]:
     """打开 .calcpack 文件。"""
+    if _is_frozen():
+        return [*_frozen_exe_args(), "--calcpack", str(path.resolve())]
     root or repo_root()
     return [sys.executable, "-m", "calc_framework.ui.viewer", str(path.resolve())]
 
@@ -121,7 +157,10 @@ def spawn_detached(argv: list[str], root: Path | None = None) -> subprocess.Pope
     """在独立子进程中启动（不阻塞启动器）。"""
     base = root or repo_root()
     env = os.environ.copy()
-    env["PYTHONPATH"] = build_pythonpath(base)
+
+    if not _is_frozen():
+        env["PYTHONPATH"] = build_pythonpath(base)
+
     kwargs: dict = {
         "cwd": str(base),
         "env": env,

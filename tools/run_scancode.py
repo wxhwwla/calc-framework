@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import subprocess
-import sys
 import tempfile
 import time
 from pathlib import Path
@@ -51,9 +50,13 @@ def scan_directory(repo_root: Path, src_dir: str, out_path: Path) -> dict:
 
     cmd = [
         "scancode",
-        "--license", "--copyright", "--info",
-        "--processes", "16",
-        "--json-pp", str(out_path),
+        "--license",
+        "--copyright",
+        "--info",
+        "--processes",
+        "16",
+        "--json-pp",
+        str(out_path),
         str(target),
     ]
 
@@ -156,8 +159,8 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
     report_path = repo_root / "scan_report.json"
 
-    print(f"ScanCode 许可证/版权扫描")
-    print(f"{'='*50}")
+    print("ScanCode 许可证/版权扫描")
+    print(f"{'=' * 50}")
     print(f"源目录数: {len(SOURCE_DIRS)}")
     print()
 
@@ -167,7 +170,8 @@ def main() -> None:
 
     try:
         for src_dir in SOURCE_DIRS:
-            out_path = temp_dir / f"{src_dir.replace('/', '_').replace('\\\\', '_')}.json"
+            sanitized = src_dir.replace("/", "_").replace("\\", "_")
+            out_path = temp_dir / f"{sanitized}.json"
             data = scan_directory(repo_root, src_dir, out_path)
             results.append(data)
 
@@ -179,19 +183,20 @@ def main() -> None:
         print()
 
         # 打印摘要
-        print(f"{'='*50}")
-        print(f"扫描报告摘要")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
+        print("扫描报告摘要")
+        print(f"{'=' * 50}")
         analyze_report(merged)
 
     finally:
         # 清理临时文件
         import shutil
+
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     print()
     print(f"完整报告: {report_path}")
-    print(f"分析工具: python tools/check_code_origin.py")
+    print("分析工具: python tools/check_code_origin.py")
 
 
 if __name__ == "__main__":

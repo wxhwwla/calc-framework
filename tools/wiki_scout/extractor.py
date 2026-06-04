@@ -11,6 +11,7 @@ from typing import Any
 @dataclass
 class ExtractedData:
     """爬虫提取出的标准化数据。"""
+
     game_name: str = ""
     source: str = ""
     characters: list[dict[str, Any]] = field(default_factory=list)

@@ -61,7 +61,7 @@ def parse_template_kv(text: str) -> dict[str, str]:
 
 
 def parse_rarity(rarity_str: str) -> int:
-    """ parse_rarity 实现。
+    """parse_rarity 实现。
 
     Args:
         rarity_str: 参数描述。
@@ -76,7 +76,7 @@ def parse_rarity(rarity_str: str) -> int:
 
 
 def parse_trust_bonus(kv: dict[str, str]) -> dict[str, int]:
-    """ parse_trust_bonus 实现。
+    """parse_trust_bonus 实现。
 
     Args:
         kv: 参数描述。
@@ -98,7 +98,7 @@ def parse_trust_bonus(kv: dict[str, str]) -> dict[str, int]:
 
 
 def parse_talents(kv: dict[str, str]) -> list[dict[str, str]]:
-    """ parse_talents 实现。
+    """parse_talents 实现。
 
     Args:
         kv: 参数描述。
@@ -143,7 +143,7 @@ def _parse_level_range(values: list[str]) -> list[dict[str, Any]]:
 
 
 def parse_skills(kv: dict[str, str]) -> list[dict[str, Any]]:
-    """ parse_skills 实现。
+    """parse_skills 实现。
 
     Args:
         kv: 参数描述。
@@ -215,7 +215,7 @@ def parse_skills(kv: dict[str, str]) -> list[dict[str, Any]]:
 
 
 def parse_base_stats(kv: dict[str, str], rarity: int) -> dict[str, Any]:
-    """ parse_base_stats 实现。
+    """parse_base_stats 实现。
 
     Args:
         kv: 参数描述。
@@ -258,7 +258,7 @@ def parse_base_stats(kv: dict[str, str], rarity: int) -> dict[str, Any]:
 
 
 def parse_potentials(kv: dict[str, str]) -> list[str]:
-    """ parse_potentials 实现。
+    """parse_potentials 实现。
 
     Args:
         kv: 参数描述。
@@ -275,7 +275,7 @@ def parse_potentials(kv: dict[str, str]) -> list[str]:
 
 
 def parse_modules(kv: dict[str, str]) -> list[dict[str, str]]:
-    """ parse_modules 实现。
+    """parse_modules 实现。
 
     Args:
         kv: 参数描述。

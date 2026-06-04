@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import shutil
 import sys
 from pathlib import Path
 
@@ -34,10 +33,7 @@ def _find_template_root() -> Path:
 def _validate_game_name(name: str) -> str:
     """验证游戏名称并返回 snake_case 格式。"""
     if not re.match(r"^[a-z][a-z0-9_]*$", name):
-        raise ValueError(
-            f"游戏名称必须是小写字母、数字和下划线，以字母开头。"
-            f" 收到: {name!r}"
-        )
+        raise ValueError(f"游戏名称必须是小写字母、数字和下划线，以字母开头。 收到: {name!r}")
     return name
 
 
@@ -77,10 +73,7 @@ def scaffold_game(game_name: str, *, force: bool = False) -> dict[str, Path]:
 
     for label, target in targets.items():
         if target.exists() and not force:
-            raise FileExistsError(
-                f"{label} 目录已存在: {target}\n"
-                f"如需覆盖，请添加 --force 参数"
-            )
+            raise FileExistsError(f"{label} 目录已存在: {target}\n如需覆盖，请添加 --force 参数")
 
     os.makedirs(targets["框架适配器"], exist_ok=True)
     os.makedirs(targets["游戏包源码"], exist_ok=True)
@@ -182,8 +175,8 @@ def main(argv: list[str] | None = None) -> int:
     for label, path in targets.items():
         print(f"   {label}: {path}")
 
-    pascal = to_pascal_case(args.game_name)
-    print(f"\n📋 下一步：")
+    to_pascal_case(args.game_name)
+    print("\n📋 下一步：")
     print(f"   1. 创建 DAG 公式: framework/adapters/{args.game_name}/{args.game_name}.dag.json")
     print(f"   2. 实现数据加载器: games/{args.game_name}/calc/dag_adapter/loader.py")
     print(f"   3. 注册自定义函数: framework/adapters/{args.game_name}/functions.py")

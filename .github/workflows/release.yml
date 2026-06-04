@@ -82,16 +82,23 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e framework
           python -m pip install -e games/endfield ".[dev,build]"
-      - name: Build release
-        run: python scripts/build.py --no-bump
+      - name: Build release (launcher)
+        run: python scripts/main_build.py --target launcher --no-bump
       - name: Package ZIP artifacts
         shell: pwsh
         run: |
           $version = "${{ needs.verify-version.outputs.tag_version }}"
-          $name = "终末地伤害计算器_v${version}"
+          # 主产物：启动器（单 exe，含所有游戏+工具）
+          if (Test-Path "dist/Game Calc Platform") {
+            $launcher_zip = "GameCalcPlatform_v${version}.zip"
+            Compress-Archive -Path "dist/Game Calc Platform/*" -DestinationPath "dist/${launcher_zip}"
+            Write-Host "Created: dist/${launcher_zip}"
+          }
+          # 过渡期：继续打包旧分体目标（供仍需独立 exe 的用户）
           if (Test-Path "dist/终末地伤害计算器") {
-            Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}.zip"
-            Write-Host "Created: dist/${name}.zip"
+            $name = "终末地伤害计算器_v${version}.zip"
+            Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}"
+            Write-Host "Created: dist/${name}"
           }
           if (Test-Path "dist/数据设计器") {
             $designer_zip = "数据设计器_v${version}.zip"
@@ -118,6 +125,7 @@ jobs:
         with:
           name: release-artifact
           path: |
+            dist/GameCalcPlatform_v*.zip
             dist/终末地伤害计算器_v*.zip
             dist/数据设计器_v*.zip
             dist/配置包设计器_v*.zip
@@ -141,6 +149,7 @@ jobs:
           name: "v${{ needs.verify-version.outputs.tag_version }}"
           tag_name: ${{ github.ref_name }}
           files: |
+            GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip
             终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip
             数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
             配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip

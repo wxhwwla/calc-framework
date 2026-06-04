@@ -128,24 +128,21 @@ class ThemePanel(QWidget):
 
     def _load_dag(self) -> None:
         """_load_dag 实现。"""
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择 DAG JSON", "", "JSON Files (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "选择 DAG JSON", "", "JSON Files (*.json)")
         if not path:
             return
         try:
             with open(path, encoding="utf-8") as f:
                 self._dag_data = json.load(f)
-            self._dag_label.setText(f"公式图: {os.path.basename(path)}（{len(self._dag_data.get('nodes', {}))} 个节点）")
+            node_count = len(self._dag_data.get("nodes", {}))
+            self._dag_label.setText(f"公式图: {os.path.basename(path)}（{node_count} 个节点）")
             QMessageBox.information(self, "已加载", f"公式图: {path}")
         except Exception as e:
             QMessageBox.critical(self, "失败", str(e))
 
     def _load_layout(self) -> None:
         """_load_layout 实现。"""
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择 layout.json", "", "JSON Files (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "选择 layout.json", "", "JSON Files (*.json)")
         if not path:
             return
         try:
@@ -159,9 +156,7 @@ class ThemePanel(QWidget):
 
     def _load_data(self) -> None:
         """_load_data 实现。"""
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择数据 JSON", "", "JSON Files (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "选择数据 JSON", "", "JSON Files (*.json)")
         if not path:
             return
         try:
@@ -178,9 +173,7 @@ class ThemePanel(QWidget):
 
     def _update_data_label(self) -> None:
         """_update_data_label 实现。"""
-        self._data_label.setText(
-            f"已加载: {', '.join(f'{k}({len(v)}条)' for k, v in self._data_files.items())}"
-        )
+        self._data_label.setText(f"已加载: {', '.join(f'{k}({len(v)}条)' for k, v in self._data_files.items())}")
 
     _shared_data_files: dict[str, list] = {}
     _shared_dag_data: dict | None = None
@@ -262,7 +255,9 @@ class ThemePanel(QWidget):
             return
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "导出 .calcpack", "game.calcpack",
+            self,
+            "导出 .calcpack",
+            "game.calcpack",
             "CalcPack (*.calcpack);;ZIP (*.zip);;All Files (*)",
         )
         if not path:

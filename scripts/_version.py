@@ -14,13 +14,13 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.5"
+_VERSION = "3.21.15"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
 第一位 MAJOR 永远只在下方手动修改，脚本不会动。"""
 
-_EXE_VERSION = "0.6.0-beta"
+_EXE_VERSION = "0.7.0-beta"
 """窗口标题与 dist/*.exe 用户可见版本。
 
 仅手动修改；改后须重新打包（main_build.py）。"""
@@ -333,18 +333,14 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 12 处文件
+# TITLE: 更新 8 处文件
 # BODY:
-# - 更新文档 README.md
-# - 更新文档 docs/上传脚本与-pre-commit.md
-# - 修改 games/endfield/tests/calculation/damage/engine/test_damage_engine.py
-# - 修改 games/endfield/tests/calculation/test_more_coverage.py
-# - 调整乘区逻辑 games/endfield/tests/calculation/test_multiplicative_zones.py
-# - 修改 games/endfield/tests/calculation/zone_snapshot/test_zone_snapshot_types.py
-# - 变更 games/endfield/tests/cov_err.txt
-# - 变更 games/endfield/tests/cov_report.txt
-# - 修改 games/endfield/tests/data_loading/test_enemy_eval_params.py
-# - 修改 games/endfield/tests/tools/test_github_upload_signing.py
+# - 修改 games/arknights/gui/ArknightsApp.py
+# - 修改 release_bundle/launcher_entry.py
+# - 修改 release_bundle/release_layout.py
 # - 修改 scripts/_version.py
-# - 修改 scripts/tools/github_upload_module.py
+# - 修改 scripts/main_build.py
+# - 修改 web/build_local_backend.py
+# - 变更 web/frontend/src/App.tsx
+# - 修改 web/scripts/deploy_pythonanywhere.py
 # --- END UPLOAD_SUMMARY ---

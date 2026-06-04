@@ -3,12 +3,14 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import {
   AppBar,
   Box,
+  Collapse,
   Drawer,
   IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  ListSubheader,
   Toolbar,
   Typography,
   useMediaQuery,
@@ -25,6 +27,9 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
@@ -43,9 +48,18 @@ const GeneratorPage = lazy(() => import("./pages/GeneratorPage"));
 
 const drawerWidth = 240;
 
-const navItems = [
+interface NavItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+}
+
+const gameItems: NavItem[] = [
   { label: "终末地计算", path: "/compute", icon: <CalculateIcon /> },
   { label: "明日方舟", path: "/arknights", icon: <AutoAwesomeIcon /> },
+];
+
+const toolItems: NavItem[] = [
   { label: "适配器管理", path: "/adapters", icon: <ExtensionIcon /> },
   { label: "公式图编辑器", path: "/editor", icon: <AccountTreeIcon /> },
   { label: "数据设计器", path: "/designer", icon: <BuildIcon /> },
@@ -55,6 +69,54 @@ const navItems = [
   { label: "AI 生成器", path: "/generator", icon: <SmartToyIcon /> },
 ];
 
+function NavGroup({
+  title,
+  icon,
+  items,
+  currentPath,
+  onNavigate,
+  defaultOpen,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  items: NavItem[];
+  currentPath: string;
+  onNavigate: (path: string) => void;
+  defaultOpen: boolean;
+}) {
+  const isActive = items.some((i) => i.path === currentPath);
+  const [open, setOpen] = useState(defaultOpen || isActive);
+
+  return (
+    <>
+      <ListSubheader
+        component="div"
+        sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer", bgcolor: "transparent" }}
+        onClick={() => setOpen(!open)}
+      >
+        {icon}
+        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>{title}</Typography>
+        {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+      </ListSubheader>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <List disablePadding>
+          {items.map((item) => (
+            <ListItemButton
+              key={item.path}
+              selected={currentPath === item.path}
+              sx={{ pl: 4 }}
+              onClick={() => onNavigate(item.path)}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          ))}
+        </List>
+      </Collapse>
+    </>
+  );
+}
+
 function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,24 +124,30 @@ function Shell() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (isMobile) setMobileOpen(false);
+  };
+
   const drawerContent = (
     <>
       <Toolbar />
-      <List>
-        {navItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => {
-              navigate(item.path);
-              if (isMobile) setMobileOpen(false);
-            }}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
-        ))}
-      </List>
+      <NavGroup
+        title="游戏"
+        icon={<SportsEsportsIcon fontSize="small" />}
+        items={gameItems}
+        currentPath={location.pathname}
+        onNavigate={handleNavigate}
+        defaultOpen={true}
+      />
+      <NavGroup
+        title="开发工具"
+        icon={<BuildIcon fontSize="small" />}
+        items={toolItems}
+        currentPath={location.pathname}
+        onNavigate={handleNavigate}
+        defaultOpen={false}
+      />
     </>
   );
 
@@ -106,7 +174,6 @@ function Shell() {
         </Toolbar>
       </AppBar>
 
-      {/* 手机端：temporary Drawer */}
       {isMobile ? (
         <Drawer
           variant="temporary"
@@ -120,7 +187,6 @@ function Shell() {
           {drawerContent}
         </Drawer>
       ) : (
-        /* 桌面端：permanent Drawer */
         <Drawer
           variant="permanent"
           sx={{

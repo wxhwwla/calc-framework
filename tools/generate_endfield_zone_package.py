@@ -25,10 +25,7 @@
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import json
@@ -38,7 +35,6 @@ import zipfile
 from pathlib import Path
 
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 OUTPUT_DIR = REPO_ROOT / "output"
@@ -46,15 +42,12 @@ OUTPUT_DIR = REPO_ROOT / "output"
 PACKAGE_NAME = "终末地乘区包"
 
 
-
 # ── 每个乘区的定义 ──
 
 # zone_id: (display_name, inputs, internal_graph_builder)
 
 
-
 ZONE_DEFS: list[dict] = []
-
 
 
 # ═══════════════════════════════════════════
@@ -64,170 +57,93 @@ ZONE_DEFS: list[dict] = []
 # ═══════════════════════════════════════════
 
 
-
 _counter = [0]
 
 
-
-
-
 def _id() -> str:
-
     """_id 实现。"""
     _counter[0] += 1
 
     return f"n{_counter[0]}"
 
 
-
-
-
 def _reset_counter() -> None:
     """重置节点 ID 计数器。"""
 
 
-
-
-
 def _graph(
-
     name: str,
-
     desc: str,
-
     nodes: list[dict],
-
     edges: list[dict],
-
 ) -> dict:
-
     """构造一个 graph_editor 格式的 JSON 字典。"""
 
     output_ids = [n["id"] for n in nodes if n["type"] == "output"]
 
     return {
-
         "schema_version": "calc-graph-v1",
-
         "name": name,
-
         "description": desc,
-
         "nodes": nodes,
-
         "edges": edges,
-
         "layout": {
-
             "sections": [
-
                 {"id": "s1", "title": "输出", "output_nodes": output_ids, "columns": 1},
-
             ],
-
         },
-
         "external_variables": {},
-
     }
-
-
-
 
 
 def _ui(label: str, default: float = 0.0, min_v: float = -1e9, max_v: float = 1e9, step: float = 0.01) -> dict:
-
     """_ui 实现。"""
     return {
-
         "id": _id(),
-
         "type": "user_input",
-
         "label": label,
-
         "config": {"default": default, "min": min_v, "max": max_v, "step": step},
-
         "position": {"x": 0, "y": 0},
-
     }
-
-
-
 
 
 def _const(value: float) -> dict:
-
     """_const 实现。"""
     return {
-
         "id": _id(),
-
         "type": "const",
-
         "label": str(value),
-
         "config": {"value": value},
-
         "position": {"x": 0, "y": 0},
-
     }
-
-
-
 
 
 def _binary(op: str, lhs_id: str, rhs_id: str, label: str = "") -> dict:
-
     """_binary 实现。"""
     return {
-
         "id": _id(),
-
         "type": "binary",
-
         "op": op,
-
         "label": label,
-
         "config": {},
-
         "position": {"x": 0, "y": 0},
-
     }
-
-
-
 
 
 def _output(label: str) -> dict:
-
     """_output 实现。"""
     return {
-
         "id": _id(),
-
         "type": "output",
-
         "label": label,
-
         "config": {},
-
         "position": {"x": 0, "y": 0},
-
     }
 
 
-
-
-
 def _wire(frm: str, fport: int, to: str, tport: int) -> dict:
-
     """_wire 实现。"""
     return {"from_node": frm, "from_port": fport, "to_node": to, "to_port": tport}
-
-
-
 
 
 # ═══════════════════════════════════════════
@@ -237,11 +153,7 @@ def _wire(frm: str, fport: int, to: str, tport: int) -> dict:
 # ═══════════════════════════════════════════
 
 
-
-
-
 def zone_01_base_damage() -> tuple[str, str, dict]:
-
     """基础伤害区: final_attack × skill_multiplier"""
 
     _reset_counter()
@@ -269,11 +181,7 @@ def zone_01_base_damage() -> tuple[str, str, dict]:
     return "基础伤害区", "最终攻击力 × 技能倍率", _graph("基础伤害区", "基础伤害 = 最终攻击力 × 技能倍率", nodes, edges)
 
 
-
-
-
 def zone_02_crit() -> tuple[str, str, dict]:
-
     """暴击区: 1 + 暴击率 × (暴击伤害 - 1)"""
 
     _reset_counter()
@@ -315,11 +223,7 @@ def zone_02_crit() -> tuple[str, str, dict]:
     return "暴击区", "1 + 暴击率×(暴击伤害-1)", _graph("暴击区", "暴击区 = 1 + 暴击率×(暴击伤害-1)", nodes, edges)
 
 
-
-
-
 def zone_03_damage_bonus() -> tuple[str, str, dict]:
-
     """伤害加成区: 1 + sum(各类伤害加成)"""
 
     _reset_counter()
@@ -368,14 +272,14 @@ def zone_03_damage_bonus() -> tuple[str, str, dict]:
 
     edges.append(_wire(a4["id"], 0, out["id"], 0))
 
-    return "伤害加成区", "1 + 伤害类型 + 技能类型 + 失衡 + 其他", _graph("伤害加成区", "伤害加成区 = 1 + 各类伤害加成之和", nodes, edges)
-
-
-
+    return (
+        "伤害加成区",
+        "1 + 伤害类型 + 技能类型 + 失衡 + 其他",
+        _graph("伤害加成区", "伤害加成区 = 1 + 各类伤害加成之和", nodes, edges),
+    )
 
 
 def zone_04_damage_reduction() -> tuple[str, str, dict]:
-
     """伤害减免区: 1 - 减免总值"""
 
     _reset_counter()
@@ -403,11 +307,7 @@ def zone_04_damage_reduction() -> tuple[str, str, dict]:
     return "伤害减免区", "1 - 减免总值", _graph("伤害减免区", "伤害减免区 = 1 - 伤害减免总值", nodes, edges)
 
 
-
-
-
 def zone_05_amplification() -> tuple[str, str, dict]:
-
     """增幅区: 1 + 增幅总值"""
 
     _reset_counter()
@@ -435,11 +335,7 @@ def zone_05_amplification() -> tuple[str, str, dict]:
     return "增幅区", "1 + 增幅总值", _graph("增幅区", "增幅区 = 1 + 所有增幅之和", nodes, edges)
 
 
-
-
-
 def zone_06_weakness() -> tuple[str, str, dict]:
-
     """虚弱区: 1 - 虚弱总值"""
 
     _reset_counter()
@@ -467,11 +363,7 @@ def zone_06_weakness() -> tuple[str, str, dict]:
     return "虚弱区", "1 - 虚弱总值", _graph("虚弱区", "虚弱区 = 1 - 虚弱总值", nodes, edges)
 
 
-
-
-
 def zone_07_shelter() -> tuple[str, str, dict]:
-
     """庇护区: 1 - 庇护值"""
 
     _reset_counter()
@@ -499,11 +391,7 @@ def zone_07_shelter() -> tuple[str, str, dict]:
     return "庇护区", "1 - 庇护值", _graph("庇护区", "庇护区 = 1 - 庇护值", nodes, edges)
 
 
-
-
-
 def zone_08_fragile() -> tuple[str, str, dict]:
-
     """脆弱区: 1 + 脆弱总值"""
 
     _reset_counter()
@@ -531,11 +419,7 @@ def zone_08_fragile() -> tuple[str, str, dict]:
     return "脆弱区", "1 + 脆弱总值", _graph("脆弱区", "脆弱区 = 1 + 所有脆弱之和", nodes, edges)
 
 
-
-
-
 def zone_09_vulnerability() -> tuple[str, str, dict]:
-
     """易伤区: 1 + 易伤总值"""
 
     _reset_counter()
@@ -563,11 +447,7 @@ def zone_09_vulnerability() -> tuple[str, str, dict]:
     return "易伤区", "1 + 易伤总值", _graph("易伤区", "易伤区 = 1 + 所有易伤之和", nodes, edges)
 
 
-
-
-
 def zone_10_defense() -> tuple[str, str, dict]:
-
     """防御区: 100 / (100 + 敌方防御)"""
 
     _reset_counter()
@@ -601,11 +481,7 @@ def zone_10_defense() -> tuple[str, str, dict]:
     return "防御区", "100 / (100 + 敌方防御)", _graph("防御区", "防御区 = 100 / (100 + 敌方防御)", nodes, edges)
 
 
-
-
-
 def zone_11_imbalance() -> tuple[str, str, dict]:
-
     """失衡易伤区: 失衡易伤系数（默认 1.0）"""
 
     _reset_counter()
@@ -625,11 +501,7 @@ def zone_11_imbalance() -> tuple[str, str, dict]:
     return "失衡易伤区", "失衡易伤系数", _graph("失衡易伤区", "失衡易伤区 = 系数（默认 1.0）", nodes, edges)
 
 
-
-
-
 def zone_12_resistance() -> tuple[str, str, dict]:
-
     """抗性区: 1 - (抗性 - 无视抗性) / 100"""
 
     _reset_counter()
@@ -673,11 +545,7 @@ def zone_12_resistance() -> tuple[str, str, dict]:
     return "抗性区", "1 - (抗性-无视)/100", _graph("抗性区", "抗性区 = 1 - (敌方抗性-无视抗性)/100", nodes, edges)
 
 
-
-
-
 def zone_13_non_control_reduction() -> tuple[str, str, dict]:
-
     """非主控减伤区: 1 - 非主控减伤"""
 
     _reset_counter()
@@ -705,11 +573,7 @@ def zone_13_non_control_reduction() -> tuple[str, str, dict]:
     return "非主控减伤区", "1 - 非主控减伤", _graph("非主控减伤区", "非主控减伤区 = 1 - 非主控减伤值", nodes, edges)
 
 
-
-
-
 def zone_14_combo_bonus() -> tuple[str, str, dict]:
-
     """连击增伤区: 1 + 连击增伤"""
 
     _reset_counter()
@@ -737,11 +601,7 @@ def zone_14_combo_bonus() -> tuple[str, str, dict]:
     return "连击增伤区", "1 + 连击增伤", _graph("连击增伤区", "连击增伤区 = 1 + 连击增伤值", nodes, edges)
 
 
-
-
-
 def zone_15_special() -> tuple[str, str, dict]:
-
     """特殊乘区: 特殊乘区值（默认 1.0）"""
 
     _reset_counter()
@@ -761,45 +621,25 @@ def zone_15_special() -> tuple[str, str, dict]:
     return "特殊乘区", "特殊乘区系数", _graph("特殊乘区", "特殊乘区 = 系数（默认 1.0）", nodes, edges)
 
 
-
-
-
 # 15 乘区列表
 
 ALL_ZONE_BUILDERS = [
-
     zone_01_base_damage,
-
     zone_02_crit,
-
     zone_03_damage_bonus,
-
     zone_04_damage_reduction,
-
     zone_05_amplification,
-
     zone_06_weakness,
-
     zone_07_shelter,
-
     zone_08_fragile,
-
     zone_09_vulnerability,
-
     zone_10_defense,
-
     zone_11_imbalance,
-
     zone_12_resistance,
-
     zone_13_non_control_reduction,
-
     zone_14_combo_bonus,
-
     zone_15_special,
-
 ]
-
 
 
 # ═══════════════════════════════════════════
@@ -809,17 +649,10 @@ ALL_ZONE_BUILDERS = [
 # ═══════════════════════════════════════════
 
 
-
-
-
 def _ensure_ascii_for_json(obj: object) -> str:
-
     """序列化 JSON。"""
 
     return json.dumps(obj, ensure_ascii=False, indent=2)
-
-
-
 
 
 def main() -> None:
@@ -827,12 +660,9 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-
-
     zip_path = OUTPUT_DIR / f"{PACKAGE_NAME}.zip"
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-
         # ── 逐个写入乘区 JSON ──
 
         print("生成 15 个乘区子图...")
@@ -840,7 +670,6 @@ def main() -> None:
         zone_files: list[str] = []
 
         for builder in ALL_ZONE_BUILDERS:
-
             zone_name, zone_desc, graph = builder()
 
             filename = f"{zone_name}.json"
@@ -850,8 +679,6 @@ def main() -> None:
             zone_files.append(filename)
 
             print(f"  ✓ {zone_name} — {zone_desc}")
-
-
 
         # ── 顶层链图 ──
 
@@ -865,8 +692,6 @@ def main() -> None:
 
         print(f"  ✓ {chain_filename}")
 
-
-
     print(f"\n✅ 包已生成: {zip_path}")
 
     print(f"   共 {len(ALL_ZONE_BUILDERS) + 1} 个文件")
@@ -874,20 +699,16 @@ def main() -> None:
     print("\n使用方式: 打开公式计算图编辑器 → 切换到「包」选项卡 → 点击「+ 导入包」→ 选择此 ZIP")
 
 
-
-
-
 def _build_chain_graph() -> dict:
-
     """
 
     构建 15 乘区串联链图。
 
-    
+
 
     结构：
 
-        const(1.0) 
+        const(1.0)
 
             × [复合:基础伤害区]   ← 端口: 最终攻击力, 技能倍率
 
@@ -901,7 +722,7 @@ def _build_chain_graph() -> dict:
 
             = [output:最终伤害]
 
-    
+
 
     每个复合计算其乘区的倍率值，最后全部乘起来得最终伤害。
 
@@ -910,20 +731,15 @@ def _build_chain_graph() -> dict:
     zone_sub_graphs: list[tuple[str, str]] = []
 
     for builder in ALL_ZONE_BUILDERS:
-
         zone_name, _, graph = builder()
 
         zone_sub_graphs.append((zone_name, json.dumps(graph, ensure_ascii=False)))
-
-
 
     _reset_counter()
 
     nodes: list[dict] = []
 
     edges: list[dict] = []
-
-
 
     # ── const(1.0) 作为乘算起点 ──
 
@@ -933,8 +749,6 @@ def _build_chain_graph() -> dict:
 
     accum_id = c1["id"]
 
-
-
     # ── 创建顶层 user_input 节点（用于 基础伤害区） ──
 
     # 这些会连接到第一个复合节点（基础伤害区）的输入端口
@@ -943,53 +757,33 @@ def _build_chain_graph() -> dict:
 
     ui_skill = _ui("技能倍率", 1.0, 0, 1e9)
 
-
-
     for idx, (zone_name, sub_json) in enumerate(zone_sub_graphs):
-
         type_id = f"@{PACKAGE_NAME}/{zone_name}"
 
-
-
         comp = {
-
             "id": _id(),
-
             "type": "composite",
-
             "op": type_id,
-
             "label": zone_name,
-
             "config": {
-
                 "source_graph": sub_json,
-
                 "package_name": PACKAGE_NAME,
-
             },
-
             "position": {"x": 0, "y": 0},
-
         }
 
         comp_id = comp["id"]
 
         nodes.append(comp)
 
-
-
         # 第一个复合节点（基础伤害区）需要两个输入
 
         if idx == 0:
-
             nodes += [ui_atk, ui_skill]
 
             edges.append(_wire(ui_atk["id"], 0, comp_id, 0))
 
             edges.append(_wire(ui_skill["id"], 0, comp_id, 1))
-
-
 
         # accum × zone_multiplier
 
@@ -1003,11 +797,7 @@ def _build_chain_graph() -> dict:
 
         edges.append(_wire(comp_id, 0, mul["id"], 1))
 
-
-
         accum_id = mul_id
-
-
 
     out = _output("最终伤害")
 
@@ -1015,41 +805,22 @@ def _build_chain_graph() -> dict:
 
     edges.append(_wire(accum_id, 0, out["id"], 0))
 
-
-
     output_ids = [out["id"]]
 
     return {
-
         "schema_version": "calc-graph-v1",
-
         "name": "终末地15乘区链",
-
         "description": "终末地 15 乘区完整伤害计算公式。每个乘区为独立的复合节点，双击可编辑内部逻辑。",
-
         "nodes": nodes,
-
         "edges": edges,
-
         "layout": {
-
             "sections": [
-
                 {"id": "s1", "title": "输出", "output_nodes": output_ids, "columns": 1},
-
             ],
-
         },
-
         "external_variables": {},
-
     }
 
 
-
-
-
 if __name__ == "__main__":
-
     main()
-

@@ -1,44 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0
 """启动器内置说明书内容。"""
 
-
-
 from __future__ import annotations
-
-
 
 from utils.gui.help_dialog import HelpSection
 
 
-
-
-
 def build_launcher_help() -> list[HelpSection]:
-
     return [
-
         _overview(),
-
         _tools(),
-
         _calcpack(),
-
         _tips(),
-
     ]
 
 
-
-
-
 def _overview() -> HelpSection:
-
     return HelpSection(
-
         category="入门",
-
         title="概述",
-
         content="""\
 
 <h2>Game Calc Platform — 统一启动器</h2>
@@ -72,21 +52,13 @@ def _overview() -> HelpSection:
 </ul>
 
 """,
-
     )
 
 
-
-
-
 def _tools() -> HelpSection:
-
     return HelpSection(
-
         category="工具",
-
         title="工具按钮说明",
-
         content="""\
 
 <h2>工具按钮</h2>
@@ -112,21 +84,13 @@ def _tools() -> HelpSection:
 适合数据维护者。</p>
 
 """,
-
     )
 
 
-
-
-
 def _calcpack() -> HelpSection:
-
     return HelpSection(
-
         category="配置包",
-
         title=".calcpack 文件说明",
-
         content="""\
 
 <h2>.calcpack 配置包</h2>
@@ -168,21 +132,13 @@ def _calcpack() -> HelpSection:
 <p>使用「配置包设计器」工具（<code>python -m tools.designer</code>）来创建和编辑配置包。</p>
 
 """,
-
     )
 
 
-
-
-
 def _tips() -> HelpSection:
-
     return HelpSection(
-
         category="常见问题",
-
         title="使用技巧",
-
         content="""\
 
 <h2>使用技巧</h2>
@@ -208,6 +164,4 @@ def _tips() -> HelpSection:
 <p>如果有安装其他游戏的适配器，启动器会以卡片形式展示。点击卡片即可切换到该游戏的计算器。</p>
 
 """,
-
     )
-

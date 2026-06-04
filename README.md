@@ -25,7 +25,7 @@
 | **Web 版** `[Web]` | [`web/`](web/) | React + FastAPI 完整 Web 应用（三个 PySide6 GUI 的 Web 版） |
 | **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、审计脚本（`tools/audit/`） |
 | **人类文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构 |
-| **Python 包** `[包]` | `games/endfield/` | `main.py`、`pytest`、`build.py`、包内 `scripts/`（反推、seed） |
+| **Python 包** `[包]` | `games/endfield/` | `main.py`、`pytest`、`scripts/main_build.py`（打包）、包内 `scripts/`（反推、seed） |
 
 ### 仓库顶层一览
 

@@ -39,10 +39,7 @@
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import json
@@ -55,15 +52,12 @@ import os
 from typing import Any, Dict, List
 
 
-
 # 确保项目根在 sys.path 中（tools/ 是隐式 namespace package）
 
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 if _project_root not in sys.path:
-
     sys.path.insert(0, _project_root)
-
 
 
 from tools.data_pipeline.diff import diff_main
@@ -90,76 +84,53 @@ def main() -> None:
     do_validate = args.get("validate", False)
     migrate_chars = args.get("migrate_characters", False)
     migrate_weaps = args.get("migrate_weapons", False)
-    stacked = args.get("stacked_skills", False)
-
-
+    args.get("stacked_skills", False)
 
     # --- 读取 ---
 
     try:
-
         if _is_csv(path):
-
             records = read_csv(path)
 
         else:
-
             records = read_json(path)
 
     except Exception as e:
-
         print(f"读取失败: {e}", file=sys.stderr)
 
         sys.exit(1)
 
-
-
     # --- 转换 ---
 
     try:
-
         if migrate_chars:
-
             entities = from_characters([dict(r) for r in records])
 
         elif migrate_weaps:
-
             entities = from_weapons([dict(r) for r in records])
 
         else:
-
             entities = to_standard(records)
 
     except Exception as e:
-
         print(f"转换失败: {e}", file=sys.stderr)
 
         sys.exit(1)
 
-
-
     # --- 校验 ---
 
     if do_validate:
-
         _run_validation(entities)
-
-
 
     # --- 输出 ---
 
     if output:
-
         _write_json(entities, output)
 
         print(f"已写入 {output} ({len(entities)} 条)")
 
     else:
-
         print(json.dumps(entities, ensure_ascii=False, indent=2))
-
-
-
 
 
 def _parse_args() -> Dict[str, Any]:
@@ -207,67 +178,42 @@ def _parse_args() -> Dict[str, Any]:
     return result
 
 
-
-
-
 def _is_csv(path: str) -> bool:
-
     """_is_csv 实现。"""
     return path.lower().endswith(".csv")
 
 
-
-
-
 def _run_validation(entities: List[Dict[str, Any]]) -> None:
-
-
-
-
     """_run_validation 实现。"""
     errors = validate_all(entities)
 
     has_errors = False
 
     for idx, errs in errors:
-
         if errs:
-
             name = entities[idx].get("名称", f"[{idx}]")
 
             print(f"校验失败: {name}")
 
             for e in errs:
-
                 print(f"  - {e}")
 
             has_errors = True
 
     if has_errors:
-
         print("校验未通过，仍继续输出")
 
     else:
-
         print(f"校验通过: {len(entities)} 条")
 
 
-
-
-
 def _write_json(data: Any, path: str) -> None:
-
     """_write_json 实现。"""
     with open(path, "w", encoding="utf-8") as f:
-
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-
-
-
 def _show_schema_help() -> None:
-
     """_show_schema_help 实现。"""
     print("""
 
@@ -354,10 +300,5 @@ def _show_schema_help() -> None:
 """)
 
 
-
-
-
 if __name__ == "__main__":
-
     main()
-

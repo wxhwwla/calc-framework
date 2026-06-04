@@ -8,15 +8,15 @@ from typing import Any
 import pytest
 
 from games.arknights.calc.skill_parser import (
+    _strip_wiki_markup,
     parse_auto_attack,
     parse_skill,
-    _strip_wiki_markup,
 )
-
 
 # ═══════════════════════════════════════════════
 #  辅助函数
 # ═══════════════════════════════════════════════
+
 
 def _make_skill(
     name: str = "测试技能",
@@ -47,6 +47,7 @@ def _make_skill(
 #  _strip_wiki_markup
 # ═══════════════════════════════════════════════
 
+
 class TestStripWikiMarkup:
     def test_blue_markup(self) -> None:
         assert _strip_wiki_markup("{{蓝色|攻击力+100%}}") == "攻击力+100%"
@@ -74,6 +75,7 @@ class TestStripWikiMarkup:
 #  parse_auto_attack
 # ═══════════════════════════════════════════════
 
+
 class TestParseAutoAttack:
     def test_returns_defaults(self) -> None:
         info = parse_auto_attack()
@@ -88,6 +90,7 @@ class TestParseAutoAttack:
 # ═══════════════════════════════════════════════
 #  parse_skill — 倍率模式
 # ═══════════════════════════════════════════════
+
 
 class TestSkillMultiplierPatterns:
     """测试各种倍率描述模式的提取。"""
@@ -142,6 +145,7 @@ class TestSkillMultiplierPatterns:
 #  parse_skill — 连发数
 # ═══════════════════════════════════════════════
 
+
 class TestHitCount:
     def test_standard_rapid_fire(self) -> None:
         """N连发"""
@@ -173,6 +177,7 @@ class TestHitCount:
 #  parse_skill — 条件触发
 # ═══════════════════════════════════════════════
 
+
 class TestConditional:
     def test_conditional_detected(self) -> None:
         """仅攻击到一人时提升至XX%"""
@@ -192,6 +197,7 @@ class TestConditional:
 # ═══════════════════════════════════════════════
 #  parse_skill — 伤害类型 & 治疗
 # ═══════════════════════════════════════════════
+
 
 class TestDamageTypeAndHealing:
     def test_physical_damage(self) -> None:
@@ -243,6 +249,7 @@ class TestDamageTypeAndHealing:
 # ═══════════════════════════════════════════════
 #  parse_skill — SP / Duration
 # ═══════════════════════════════════════════════
+
 
 class TestSkillMeta:
     def test_sp_cost(self) -> None:
@@ -297,6 +304,7 @@ class TestSkillMeta:
 # ═══════════════════════════════════════════════
 #  parse_skill — 组合场景（真实运营商）
 # ═══════════════════════════════════════════════
+
 
 class TestRealOperatorScenarios:
     """模拟真实干员技能组合。"""
@@ -402,6 +410,7 @@ class TestRealOperatorScenarios:
 # ═══════════════════════════════════════════════
 #  total_mult 计算
 # ═══════════════════════════════════════════════
+
 
 class TestTotalMultiplier:
     def test_single_strike(self) -> None:

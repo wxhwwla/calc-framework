@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc_engine/endfield/ filesystem paths in non-.md files (excluding adapters/ dir)."""
+
 import os
 
 
@@ -48,7 +49,7 @@ def main():
             if not is_text_file(fpath):
                 continue
 
-            with open(fpath, "r", encoding="utf-8") as fh:
+            with open(fpath, encoding="utf-8") as fh:
                 content = fh.read()
 
             original = content
