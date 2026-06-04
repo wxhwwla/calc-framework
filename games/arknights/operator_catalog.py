@@ -50,9 +50,11 @@ def filter_operator_index(
     active_stars: set[int],
     profession: str = "",
     branch: str = "",
+    search: str = "",
 ) -> list[dict[str, Any]]:
-    """按星级 / 主职业(职业) / 副职业(分支) 筛选。"""
+    """按星级 / 主职业(职业) / 副职业(分支) / 名称搜索词 筛选。"""
     all_stars = len(active_stars) >= len(STAR_TIERS)
+    needle = search.strip()
     result: list[dict[str, Any]] = []
     for op in index:
         if not all_stars and op["星级"] not in active_stars:
@@ -60,6 +62,8 @@ def filter_operator_index(
         if profession and op["职业"] != profession:
             continue
         if branch and op["分支"] != branch:
+            continue
+        if needle and needle not in op.get("名称", ""):
             continue
         result.append(op)
     return result

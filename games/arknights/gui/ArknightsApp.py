@@ -1,3 +1,4 @@
+# ruff: noqa: N999
 # SPDX-License-Identifier: AGPL-3.0
 """单片式 ArknightsApp — 明日方舟伤害计算主窗口。
 
@@ -7,12 +8,13 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QAction, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -35,14 +37,17 @@ _GAMES_ARKNIGHTS = _CUR_FILE.parents[1]
 if str(_GAMES_ARKNIGHTS) not in sys.path:
     sys.path.insert(0, str(_GAMES_ARKNIGHTS))
 
-for p in [d for d in (Path.cwd(), _CUR_FILE.parents[3], _CUR_FILE.parents[2].parent / "endfield")
-          if str(d) not in sys.path]:
+for p in [
+    d for d in (Path.cwd(), _CUR_FILE.parents[3], _CUR_FILE.parents[2].parent / "endfield") if str(d) not in sys.path
+]:
     sys.path.insert(0, str(p))
 
-from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info  # noqa: E402
-from games.arknights.operator_catalog import load_operators_map, filter_operator_index  # noqa: E402
-from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json  # noqa: E402
-from games.endfield.gui.legal.donation_qt import open_donation_dialog  # noqa: E402
+from calc_framework.ui.log_widget import LogWidget
+
+from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
+from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+from games.arknights.operator_catalog import filter_operator_index, load_operators_map
+from games.endfield.gui.legal.donation_qt import open_donation_dialog
 
 _logger = get_logger("gui.arknights_app")
 
@@ -118,6 +123,9 @@ class ArknightsApp(QMainWindow):
         self._zone_labels: dict[str, QLabel] = {}
         self._donation_btn = QPushButton("☕ 打赏支持")
         self._donation_btn.clicked.connect(lambda: open_donation_dialog(self))
+
+        # 菜单栏
+        self._setup_menu()
         """初始化实例。"""
         """初始化实例。"""
 
@@ -187,9 +195,7 @@ class ArknightsApp(QMainWindow):
         self._skill_level_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self._skill_level_slider.setTickInterval(1)
         self._skill_level_label = QLabel("技能等级: 7")
-        self._skill_level_slider.valueChanged.connect(
-            lambda v: self._skill_level_label.setText(f"技能等级: {v}")
-        )
+        self._skill_level_slider.valueChanged.connect(lambda v: self._skill_level_label.setText(f"技能等级: {v}"))
         skill_layout.addWidget(self._skill_level_label)
         skill_layout.addWidget(self._skill_level_slider)
 
@@ -234,6 +240,7 @@ class ArknightsApp(QMainWindow):
                 active_stars=set(selected_stars),
                 profession=prof,
                 branch=branch,
+                search=search,
             )
         except Exception as exc:
             _logger.warning("筛选失败: %s", exc)
@@ -315,16 +322,86 @@ class ArknightsApp(QMainWindow):
 
         variables = dict(dag_service.dag.variables)
         user_vars: dict[str, Any] = {
-            "user_input.技能倍率": {"source": "user_input", "type": "float", "default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01},
-            "user_input.技能等级": {"source": "user_input", "type": "int", "default": 7, "min": 1, "max": 10, "step": 1},
-            "user_input.敌人防御": {"source": "user_input", "type": "float", "default": 200.0, "min": 0, "max": 10000, "step": 10},
-            "user_input.敌人法术抗性": {"source": "user_input", "type": "float", "default": 50.0, "min": 0, "max": 100, "step": 1},
-            "user_input.攻击力百分比加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},
-            "user_input.伤害加成": {"source": "user_input", "type": "float", "default": 0.0, "min": -5.0, "max": 5.0, "step": 0.01},
-            "user_input.物理穿透": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 3000, "step": 10},
-            "user_input.法术穿透": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},
-            "user_input.信赖攻击": {"source": "user_input", "type": "float", "default": 0, "min": 0, "max": 500, "step": 1},
-            "user_input.潜能攻击": {"source": "user_input", "type": "float", "default": 0, "min": 0, "max": 500, "step": 1},
+            "user_input.技能倍率": {
+                "source": "user_input",
+                "type": "float",
+                "default": 1.0,
+                "min": 0.0,
+                "max": 10.0,
+                "step": 0.01,
+            },
+            "user_input.技能等级": {
+                "source": "user_input",
+                "type": "int",
+                "default": 7,
+                "min": 1,
+                "max": 10,
+                "step": 1,
+            },
+            "user_input.敌人防御": {
+                "source": "user_input",
+                "type": "float",
+                "default": 200.0,
+                "min": 0,
+                "max": 10000,
+                "step": 10,
+            },
+            "user_input.敌人法术抗性": {
+                "source": "user_input",
+                "type": "float",
+                "default": 50.0,
+                "min": 0,
+                "max": 100,
+                "step": 1,
+            },
+            "user_input.攻击力百分比加成": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 5.0,
+                "step": 0.01,
+            },
+            "user_input.伤害加成": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": -5.0,
+                "max": 5.0,
+                "step": 0.01,
+            },
+            "user_input.物理穿透": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 3000,
+                "step": 10,
+            },
+            "user_input.法术穿透": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 1.0,
+                "step": 0.01,
+            },
+            "user_input.信赖攻击": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0,
+                "min": 0,
+                "max": 500,
+                "step": 1,
+            },
+            "user_input.潜能攻击": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0,
+                "min": 0,
+                "max": 500,
+                "step": 1,
+            },
         }
         variables.update(user_vars)
 
@@ -343,7 +420,10 @@ class ArknightsApp(QMainWindow):
 
         assert layout is not None
         compute_sheet = ComputeSheet(
-            dag_service, layout, variables, base_context={},
+            dag_service,
+            layout,
+            variables,
+            base_context={},
             user_context_overrides=user_context_overrides,
         )
 
@@ -384,21 +464,51 @@ class ArknightsApp(QMainWindow):
         """将计算结果格式化为 HTML 表格字符串。"""
         outputs = result.outputs if hasattr(result, "outputs") else {}
         lines = ['<hr><table style="width:100%;border-collapse:collapse;">']
-        lines.append('<tr style="background:#2B6CB6;color:white;">'
-                     '<td colspan="2" style="padding:6px 10px;font-weight:bold;font-size:15px;">'
-                     '计算结果</td></tr>')
+        lines.append(
+            '<tr style="background:#2B6CB6;color:white;">'
+            '<td colspan="2" style="padding:6px 10px;font-weight:bold;font-size:15px;">'
+            "计算结果</td></tr>"
+        )
         for name in ["最终攻击力", "物理伤害", "法术伤害", "真伤伤害"]:
             val = outputs.get(name)
             if val is not None:
-                lines.append(f'<tr><td style="padding:3px 10px;">{name}</td>'
-                             f'<td style="padding:3px 10px;text-align:right;font-weight:bold;">'
-                             f'{val:.2f}</td></tr>')
-        lines.append('</table>')
+                lines.append(
+                    f'<tr><td style="padding:3px 10px;">{name}</td>'
+                    f'<td style="padding:3px 10px;text-align:right;font-weight:bold;">'
+                    f"{val:.2f}</td></tr>"
+                )
+        lines.append("</table>")
         return "\n".join(lines)
 
     def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
         """ComputeSheet 求值完成回调（预留）。"""
         pass
+
+    # ── 菜单栏 ──────────────────────────────────────────
+
+    def _setup_menu(self) -> None:
+        """设置菜单栏。"""
+        menubar = self.menuBar()
+
+        debug_menu = menubar.addMenu("调试(&D)")
+        log_action = QAction("日志(&L)", self)
+        log_action.triggered.connect(self._open_log_dialog)
+        debug_menu.addAction(log_action)
+
+    def _open_log_dialog(self) -> None:
+        """打开日志查看对话框。"""
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("运行时日志")
+        dialog.resize(700, 400)
+        layout = QVBoxLayout(dialog)
+        log_widget = LogWidget(max_lines=5000)
+        log_widget.attach_to_logger(level=logging.INFO)
+        layout.addWidget(log_widget)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialog.show()
+        _logger.info("日志查看窗口已打开")
 
     def _apply_dark_style(self) -> None:
         """应用深色主题样式表。"""

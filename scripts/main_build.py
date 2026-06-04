@@ -57,6 +57,10 @@ from _path_setup import ensure_root
 
 ensure_root()
 
+from calc_framework.logging import get_logger, setup_logging
+
+_logger = get_logger(__name__)
+
 _GAMES = _REPO_ROOT / "games" / "endfield"
 
 if str(_GAMES) not in sys.path:
@@ -149,7 +153,7 @@ def _run_with_watchdog(
             return subprocess.CompletedProcess(cmd, ret)
 
         if int(elapsed) % heartbeat_seconds == 0:
-            print(f"[看门狗] 运行中… ({int(remaining)}s 剩余)")
+            _logger.info("看门狗 — 运行中… (%ds 剩余)", int(remaining))
 
         time.sleep(1)
 
@@ -168,15 +172,11 @@ def _build_target(
 
     entry = target_entry(target)
 
-    print(f"\n{'=' * 60}")
-
-    print(f"  [{target}] {app_name}")
-
-    print(f"  入口: {entry}")
-
-    print(f"  输出: {release_root}")
-
-    print(f"{'=' * 60}")
+    _logger.info("=" * 60)
+    _logger.info("  [%s] %s", target, app_name)
+    _logger.info("  入口: %s", entry)
+    _logger.info("  输出: %s", release_root)
+    _logger.info("=" * 60)
 
     work_dir = tempfile.mkdtemp(prefix=f"build_{target}_", dir=base_dir)
 
@@ -308,7 +308,7 @@ def _build_target(
     if not exe_path.exists():
         raise FileNotFoundError(f"打包成功但未找到 exe: {exe_path}")
 
-    print(f"  → 已生成: {exe_path} ({exe_path.stat().st_size / 1024 / 1024:.1f} MB)")
+    _logger.info("  → 已生成: %s (%.1f MB)", exe_path, exe_path.stat().st_size / 1024 / 1024)
 
     return exe_path
 
@@ -317,19 +317,20 @@ def _ensure_frontend_built(base_dir: Path) -> None:
     """确保 web/frontend/dist/ 存在，不存在则构建。"""
     dist_dir = base_dir / "web" / "frontend" / "dist"
     if dist_dir.is_dir() and any(dist_dir.iterdir()):
-        print("[前置] 前端 dist/ 已存在，跳过构建")
+        _logger.info("[前置] 前端 dist/ 已存在，跳过构建")
         return
-    print("[前置] 构建前端...")
+    _logger.info("[前置] 构建前端...")
     frontend_dir = base_dir / "web" / "frontend"
     npm_cmd = "npm.cmd" if os.name == "nt" else "npm"
     subprocess.run([npm_cmd, "install"], cwd=str(frontend_dir), check=True)
     subprocess.run([npm_cmd, "run", "build"], cwd=str(frontend_dir), check=True)
-    print("[前置] 前端构建完成")
+    _logger.info("[前置] 前端构建完成")
 
 
 def main() -> None:
     """CLI 入口。解析参数并执行对应目标的打包。"""
     apply_platform_win32_patch()
+    setup_logging(level="INFO")
 
     parser = argparse.ArgumentParser(description="终末地/明日方舟 — 打包脚本")
 
@@ -357,10 +358,8 @@ def main() -> None:
 
     if not args.no_bump:
         exe_version = get_exe_version()
-
         pkg_version = get_version()
-
-        print(f"版本: exe={exe_version}, 包={pkg_version}")
+        _logger.info("版本: exe=%s, 包=%s", exe_version, pkg_version)
 
     for target in targets:
         exe_path = _build_target(target, base_dir, dist_dir)
@@ -374,7 +373,7 @@ def main() -> None:
             target=target,
         )
 
-        print(f"  发布目录: {release_root}")
+        _logger.info("  发布目录: %s", release_root)
 
 
 if __name__ == "__main__":

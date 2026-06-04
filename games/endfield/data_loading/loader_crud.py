@@ -14,6 +14,8 @@ from typing import Any
 
 from utils.path_utils import get_resource_path
 
+from games.endfield.framework_bridge import get_logger
+
 from .loader import (
     CHARACTERS_JSON_PATH,
     EQUIPMENTS_JSON_PATH,
@@ -24,6 +26,8 @@ from .loader import (
     reload_equipments,
     reload_weapons,
 )
+
+_logger = get_logger(__name__)
 
 
 def save_characters(data: list[dict[str, Any]]) -> bool:
@@ -44,6 +48,7 @@ def save_characters(data: list[dict[str, Any]]) -> bool:
         reload_characters()
         return True
     except Exception:
+        _logger.warning("保存角色数据失败", exc_info=True)
         return False
 
 
@@ -65,6 +70,7 @@ def save_weapons(data: list[dict[str, Any]]) -> bool:
         reload_weapons()
         return True
     except Exception:
+        _logger.warning("保存武器数据失败", exc_info=True)
         return False
 
 
@@ -86,6 +92,7 @@ def save_equipments(data: list[dict[str, Any]]) -> bool:
         reload_equipments()
         return True
     except Exception:
+        _logger.warning("保存装备数据失败", exc_info=True)
         return False
 
 
