@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.3"
+_VERSION = "3.21.4"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -27,15 +27,19 @@ _EXE_VERSION = "0.6.0-beta"
 
 # ==============================================================
 
-_UPLOAD_SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
-_UPLOAD_SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
+_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
+_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
 SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
 SUMMARY_END = _UPLOAD_SUMMARY_END
-_SUMMARY_ASSIGNMENTS_BLOCK = "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\nSUMMARY_END = _UPLOAD_SUMMARY_END\n"
-_SUMMARY_ASSIGNMENTS_PATTERN = re.compile(
-    r"^SUMMARY_BEGIN\s*=.*?[\r\n]+(?:^SUMMARY_END\s*=.*?[\r\n]+)?",
+
+_MARKER_HEADER_PATTERN = re.compile(
+    r"^(?:_SUMMARY_MARKER_BEGIN|_SUMMARY_MARKER_END|_UPLOAD_SUMMARY_BEGIN|"
+    r"_UPLOAD_SUMMARY_END|SUMMARY_BEGIN|SUMMARY_END)\s*=.*?[\r\n]+",
     re.MULTILINE,
 )
+_MARKER_SECTION_ANCHOR_TAIL = re.compile(r"^_VERSION_PATTERN", re.MULTILINE)
 
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
@@ -146,33 +150,56 @@ def bump_minor(version: str) -> str:
     return format_semver(major, minor + 1, 0)
 
 
-def _summary_markers_need_repair(text: str) -> bool:
-    """判断顶部 SUMMARY 标记赋值是否损坏（空字符串、缺行或与 canonical 不一致）。"""
-    if re.search(r'^SUMMARY_BEGIN\s*=\s*""\s*(?:\r)?$', text, re.MULTILINE):
-        return True
-    if re.search(r"^SUMMARY_END\s*=", text, re.MULTILINE) is None:
-        return True
-    match = _SUMMARY_ASSIGNMENTS_PATTERN.search(text)
-    if not match:
-        return True
-    canonical = match.group(0).replace("\r\n", "\n").replace("\r", "\n")
-    return canonical != _SUMMARY_ASSIGNMENTS_BLOCK
+def _canonical_marker_header() -> str:
+    """返回 _version.py 顶部 UPLOAD_SUMMARY 标记区 canonical 文本。"""
+    return (
+        f'_SUMMARY_MARKER_BEGIN = "{_SUMMARY_MARKER_BEGIN}"\n'
+        f'_SUMMARY_MARKER_END = "{_SUMMARY_MARKER_END}"\n'
+        "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
+        "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
+        "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
+        "SUMMARY_END = _UPLOAD_SUMMARY_END\n"
+    )
+
+
+def _markers_section_ok(text: str) -> bool:
+    """判断磁盘上的标记区是否完整且非空字符串。"""
+    required = (
+        f'_SUMMARY_MARKER_BEGIN = "{_SUMMARY_MARKER_BEGIN}"',
+        f'_SUMMARY_MARKER_END = "{_SUMMARY_MARKER_END}"',
+        "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
+        "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
+        "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",
+        "SUMMARY_END = _UPLOAD_SUMMARY_END",
+    )
+    if any(line not in text for line in required):
+        return False
+    return (
+        re.search(
+            r'^_(?:UPLOAD_SUMMARY|SUMMARY_MARKER)_(?:BEGIN|END)\s*=\s*""\s*(?:\r)?$',
+            text,
+            re.MULTILINE,
+        )
+        is None
+    )
 
 
 def ensure_summary_marker_assignments(path: Path | None = None) -> bool:
-    """修正 _version.py 顶部 SUMMARY_BEGIN/SUMMARY_END 赋值（防止空字符串或缺失）。"""
+    """修正 _version.py 顶部 UPLOAD_SUMMARY 标记区（防止空字符串或缺行）。"""
     path = path or please_read_me_path()
     text = path.read_text(encoding="utf-8")
-    if not _summary_markers_need_repair(text):
+    if _markers_section_ok(text):
         return False
-    match = _SUMMARY_ASSIGNMENTS_PATTERN.search(text)
-    if match:
-        updated = text[: match.start()] + _SUMMARY_ASSIGNMENTS_BLOCK + text[match.end() :]
-    else:
-        anchor = "# ==============================================================\n\n"
-        if anchor not in text:
-            return False
-        updated = text.replace(anchor, anchor + _SUMMARY_ASSIGNMENTS_BLOCK, 1)
+    anchor = "# ==============================================================\n\n"
+    idx = text.find(anchor)
+    if idx == -1:
+        return False
+    head_end = idx + len(anchor)
+    tail = text[head_end:]
+    cut = _MARKER_SECTION_ANCHOR_TAIL.search(tail)
+    if not cut:
+        return False
+    updated = text[:head_end] + _canonical_marker_header() + tail[cut.start() :]
     if updated == text:
         return False
     path.write_text(updated, encoding="utf-8")
@@ -181,13 +208,15 @@ def ensure_summary_marker_assignments(path: Path | None = None) -> bool:
 
 def strip_summary_block(text: str) -> str:
     """从文本中移除 UPLOAD_SUMMARY 标记块。"""
-    begin = text.rfind(_UPLOAD_SUMMARY_BEGIN)
+    begin_marker = _SUMMARY_MARKER_BEGIN
+    end_marker = _SUMMARY_MARKER_END
+    begin = text.rfind(begin_marker)
     if begin == -1:
         return text.rstrip() + "\n"
-    end = text.find(_UPLOAD_SUMMARY_END, begin)
+    end = text.find(end_marker, begin)
     if end == -1:
         return text.rstrip() + "\n"
-    end += len(_UPLOAD_SUMMARY_END)
+    end += len(end_marker)
     return (text[:begin] + text[end:]).rstrip() + "\n"
 
 
@@ -197,13 +226,13 @@ def write_summary_block(path: Path, title: str, bullets: list[str]) -> None:
     text = strip_summary_block(path.read_text(encoding="utf-8"))
     lines = [
         "",
-        _UPLOAD_SUMMARY_BEGIN,
+        _SUMMARY_MARKER_BEGIN,
         f"# TITLE: {title}",
         "# BODY:",
     ]
     for item in bullets:
         lines.append(f"# - {item}")
-    lines.append(_UPLOAD_SUMMARY_END)
+    lines.append(_SUMMARY_MARKER_END)
     lines.append("")
     path.write_text(text + "\n".join(lines), encoding="utf-8")
 
@@ -309,13 +338,26 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 20 处文件
 # BODY:
 # - 变更 .cursorrules
-# - 更新文档 docs/上传脚本与-pre-commit.md
+# - 更新文档 AGENTS.md
+# - 更新文档 CONTEXT.md
+# - 更新文档 CONTRIBUTING.md
+# - 更新文档 README.md
+# - 更新文档 docs/README.md
+# - 更新文档 docs/adr/0001-code-layout-constraints.md
+# - 更新文档 docs/代码结构规范.md
 # - 更新文档 docs/会话接续手册.md
-# - 更新文档 docs/操作指令集.md
+# - 修改 games/endfield/tests/calculation/damage/engine/test_damage_remaining.py
+# - 修改 games/endfield/tests/calculation/skills/test_special_fields.py
+# - 修改 games/endfield/tests/calculation/test_calc_coverage.py
+# - 修改 games/endfield/tests/calculation/test_more_coverage.py
+# - 调整乘区逻辑 games/endfield/tests/calculation/test_multiplicative_zones.py
+# - 修改 games/endfield/tests/data_loading/test_enemy_eval_params.py
+# - 修改 games/endfield/tests/data_loading/test_equipment_filters_config.py
+# - 修改 games/endfield/tests/data_loading/test_loader_crud.py
 # - 修改 games/endfield/tests/tools/test_upload_meta.py
 # - 修改 scripts/_version.py
-# - 修改 scripts/tools/github_upload_module.py
+# - 修改 tools/check_layout.py
 # --- END UPLOAD_SUMMARY ---

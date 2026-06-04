@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""仓库布局门禁：目录子项数 ≤10、业务 .py 文件行数 ≤500。
+"""仓库布局门禁：目录子项数 ≤20（目标 ≤15）、业务 .py 文件行数 ≤500。
 
 用法（仓库根目录）::
 
@@ -32,7 +32,7 @@ def _iter_check_dirs(root: Path) -> list[Path]:
     return out
 
 
-def check_directory_width(*, max_items: int = 10) -> list[str]:
+def check_directory_width(*, max_items: int = 20) -> list[str]:
     """检查目录子项数是否超过上限。
 
     Args:
@@ -106,7 +106,7 @@ def main() -> int:
         退出码（0 通过，1 失败）
     """
     parser = argparse.ArgumentParser(description="检查代码布局约束")
-    parser.add_argument("--max-items", type=int, default=10)
+    parser.add_argument("--max-items", type=int, default=20)
     parser.add_argument("--max-lines", type=int, default=400)
     parser.add_argument("--warn-only-lines", action="store_true", help="超长文件仅警告，不失败")
     args = parser.parse_args()

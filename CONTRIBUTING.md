@@ -165,7 +165,7 @@ calc-framework/
 └── DATA_LICENSE                    # 数据许可证
 ```
 
-> **目录约束**：任意目录下直接子项 ≤ 10，业务 `.py` 文件 ≤ 400 行（硬顶 500）。详见 [`docs/代码结构规范.md`](docs/代码结构规范.md) 和 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)。
+> **目录约束**：任意目录下直接子项 **≤ 20（硬顶）**、**目标 ≤ 15**；业务 `.py` 文件 ≤ 400 行（硬顶 500）。详见 [`docs/代码结构规范.md`](docs/代码结构规范.md) 和 [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md)。
 
 ---
 
@@ -184,7 +184,7 @@ python -m ruff check games/ framework/src/ tools/ web/backend/
 
 - **导入排序**：`future → 标准库 → 第三方 → 框架 → 本地应用` 四组顺序
 - **公共 API**：每个 `__init__.py` 必须声明 `__all__`
-- **文档字符串**：使用 Google 风格
+- **文档字符串**：公共 API 与长函数（≥40 行）用 Google 风格（中文）；内部短 helper 可不写
 - **异常层级**：以 `Error` 结尾，基类 + 子类
 - **测试命名**：`test_` 前缀
 
@@ -326,7 +326,7 @@ python scripts/main_generator.py
 - [ ] 全量测试通过：`python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q`
 - [ ] 新代码有对应的单元测试
 - [ ] Web 前端（若有改动）：`cd web/frontend && npx tsc --noEmit && npm run build` 通过
-- [ ] 未违反目录超限规则（子项 ≤ 10）
+- [ ] 未违反目录超限规则（子项 ≤ 20，目标 ≤ 15）
 - [ ] 未违反文件长度规则（业务 `.py` ≤ 400 行，硬顶 500）
 - [ ] 新 `__init__.py` 声明了 `__all__`
 - [ ] 遵循显式导入原则（包内相对导入，包目录有 `__init__.py`）

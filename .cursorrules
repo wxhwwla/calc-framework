@@ -31,10 +31,12 @@ Mark ALL diagnostics with a severity label:
 | `[SEV-HIGH]` | Silent data loss, arithmetic overflow, wrong answer in calc |
 
 ## Code Style
-- NO comments unless explicitly asked
+- Docstrings (Google style, **中文**): **required** for public API, FastAPI routes/models, and long functions (~≥40 lines body); **optional** for private `_` helpers and trivial wrappers; use judgment for other internal code
+- NO `#` line comments unless explicitly asked (docstrings are not line comments)
 - NO emojis unless explicitly asked
 - Match existing code conventions (imports, typing, framework choices)
 - Before adding a new library, check that it's already used in the project
+- Directory width: **≤20 items hard cap** (target ≤15); file length ≤400 lines (500 hard cap) — see ADR-0001
 
 ## Parallel Execution
 When a task can be broken into independent subtasks, run them in parallel (single message, multiple tool calls) to minimize wall-clock time. Examples:

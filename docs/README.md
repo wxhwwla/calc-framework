@@ -6,7 +6,7 @@
 
 | 文件 | 用途 |
 |------|------|
-| [代码结构规范.md](代码结构规范.md) | **目录 ≤10、文件 ≤400 行**；迁移 backlog、PR 自检 |
+| [代码结构规范.md](代码结构规范.md) | **目录 ≤20（目标 ≤15）、文件 ≤400 行**；docstring 分级要求；迁移 backlog、PR 自检 |
 | [adr/0001-code-layout-constraints.md](adr/0001-code-layout-constraints.md) | 结构约束 ADR（Agent/评审依据） |
 | [代码规范-ruff修复模式.md](代码规范-ruff修复模式.md) | **ruff + pyright 规范修复模式**：E501/F401/N806/E741/`**kwargs`拆包/QDoubleSpinBox stub |
 | [会话接续手册.md](会话接续手册.md) | **Agent 与长期协作**：接缝表、已完成项、勿重复工作、测试基线 |

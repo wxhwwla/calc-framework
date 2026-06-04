@@ -1,4 +1,4 @@
-# Calc Framework — 终末地
+# Calc Framework — 通用伤害计算框架
 
 > 通用伤害计算框架 · 支持《明日方舟：终末地》与《明日方舟》（Arknights）
 >

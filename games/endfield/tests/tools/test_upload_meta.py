@@ -100,6 +100,7 @@ class TestUploadMeta(unittest.TestCase):
             path.write_text(
                 "# ==============================================================\n\n"
                 'SUMMARY_BEGIN = ""\n'
+                '_VERSION_PATTERN = re.compile(r"x")\n'
                 '_VERSION = "1.0.0"\n',
                 encoding="utf-8",
             )
@@ -108,14 +109,41 @@ class TestUploadMeta(unittest.TestCase):
             self.assertIn("SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN", text)
             self.assertIn("SUMMARY_END = _UPLOAD_SUMMARY_END", text)
 
-    def test_write_version_keeps_summary_markers(self):
+    def test_ensure_repairs_empty_upload_summary_begin(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "_version.py"
             path.write_text(
                 "# ==============================================================\n\n"
+                '_UPLOAD_SUMMARY_BEGIN = ""\n'
                 "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
                 "SUMMARY_END = _UPLOAD_SUMMARY_END\n"
+                '_VERSION_PATTERN = re.compile(r"x")\n'
                 '_VERSION = "1.0.0"\n',
+                encoding="utf-8",
+            )
+            self.assertTrue(ensure_summary_marker_assignments(path))
+            text = path.read_text(encoding="utf-8")
+            self.assertNotIn('_UPLOAD_SUMMARY_BEGIN = ""', text)
+            self.assertIn('_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"', text)
+
+    def test_write_version_keeps_summary_markers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "_version.py"
+            path.write_text(
+                """# ==============================================================
+
+_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
+_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
+_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
+SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
+SUMMARY_END = _UPLOAD_SUMMARY_END
+_VERSION_PATTERN = re.compile(
+    r'^(_VERSION\\s*=\\s*["\\'])([^"\\']+)(["\\'])',
+    re.MULTILINE,
+)
+_VERSION = "1.0.0"
+""",
                 encoding="utf-8",
             )
             write_version(path, "1.0.1")
@@ -131,6 +159,7 @@ class TestUploadMeta(unittest.TestCase):
                 "# ==============================================================\n\n"
                 'SUMMARY_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\r\n'
                 'SUMMARY_END = "# --- END UPLOAD_SUMMARY ---"\r\n'
+                '_VERSION_PATTERN = re.compile(r"x")\n'
                 '_VERSION = "1.0.0"\n',
                 encoding="utf-8",
             )
