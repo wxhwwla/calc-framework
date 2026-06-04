@@ -8,7 +8,7 @@ _UNIFY_WHITESPACE = re.compile(r"\s+")
 
 
 def normalize_name_for_match(name: str) -> str:
-    """ normalize_name_for_match 实现。
+    """normalize_name_for_match 实现。
 
     Args:
         name: 参数描述。

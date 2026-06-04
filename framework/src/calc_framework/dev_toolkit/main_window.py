@@ -108,7 +108,7 @@ class DevToolkitWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         version = _read_framework_version()
-        self.setWindowTitle(f"开发者工具箱 v0.1.0")
+        self.setWindowTitle("开发者工具箱 v0.1.0")
         self.resize(1400, 900)
 
         # ── 中央区域：侧栏 + 分割器 + 内容 ──

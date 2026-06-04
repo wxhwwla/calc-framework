@@ -6,8 +6,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """原始页面缓存与 manifest 写入。"""
 
-
-
 import json
 
 import re
@@ -17,12 +15,8 @@ from pathlib import Path
 from typing import Any
 
 
-
-
-
 def safe_dirname(title: str) -> str:
-
-    """ safe_dirname 实现。
+    """safe_dirname 实现。
 
     Args:
         title: 参数描述。
@@ -35,11 +29,7 @@ def safe_dirname(title: str) -> str:
     return cleaned or "untitled"
 
 
-
-
-
 def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
-
     """将单页 wikitext/html/meta 写入 raw 子目录。"""
 
     page_dir = raw_dir / safe_dirname(title)
@@ -49,13 +39,9 @@ def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
     meta_path = page_dir / "meta.json"
 
     meta = {
-
         "title": bundle.get("title", title),
-
         "pageid": bundle.get("pageid"),
-
         "ns": bundle.get("ns"),
-
     }
 
     meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -67,11 +53,7 @@ def save_page_bundle(raw_dir: Path, title: str, bundle: dict[str, Any]) -> Path:
     return page_dir
 
 
-
-
-
 def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
-
     """从 raw 缓存读取单页；无有效 wikitext 时返回 None。"""
 
     page_dir = raw_dir / safe_dirname(title)
@@ -79,13 +61,11 @@ def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
     wikitext_path = page_dir / "wikitext.txt"
 
     if not wikitext_path.is_file():
-
         return None
 
     wikitext = wikitext_path.read_text(encoding="utf-8")
 
     if not wikitext.strip():
-
         return None
 
     meta: dict[str, Any] = {"title": title}
@@ -93,7 +73,6 @@ def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
     meta_path = page_dir / "meta.json"
 
     if meta_path.is_file():
-
         meta.update(json.loads(meta_path.read_text(encoding="utf-8")))
 
     html_path = page_dir / "html.html"
@@ -101,26 +80,16 @@ def load_page_bundle(raw_dir: Path, title: str) -> dict[str, Any] | None:
     html = html_path.read_text(encoding="utf-8") if html_path.is_file() else ""
 
     return {
-
         "title": meta.get("title", title),
-
         "pageid": meta.get("pageid"),
-
         "ns": meta.get("ns"),
-
         "wikitext": wikitext,
-
         "html": html,
-
     }
 
 
-
-
-
 def write_manifest(output_root: Path, manifest: dict[str, Any]) -> Path:
-
-    """ write_manifest 实现。
+    """write_manifest 实现。
 
     Args:
         output_root: 参数描述。
@@ -134,4 +103,3 @@ def write_manifest(output_root: Path, manifest: dict[str, Any]) -> Path:
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return path
-

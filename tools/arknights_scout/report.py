@@ -7,7 +7,7 @@ from typing import Any
 
 
 def write_summary_report(reports_dir: Path, *, manifest: dict[str, Any], **kwargs: Any) -> Path:
-    """ write_summary_report 实现。
+    """write_summary_report 实现。
 
     Args:
         reports_dir: 参数描述。
@@ -26,7 +26,7 @@ def write_summary_report(reports_dir: Path, *, manifest: dict[str, Any], **kwarg
 
 
 def write_names_diff_report(reports_dir: Path, name_diff: dict[str, Any]) -> Path:
-    """ write_names_diff_report 实现。
+    """write_names_diff_report 实现。
 
     Args:
         reports_dir: 参数描述。
@@ -45,7 +45,7 @@ def write_schema_diff_report(
     local_schema: list[dict[str, Any]],
     **kwargs: Any,
 ) -> Path:
-    """ write_schema_diff_report 实现。
+    """write_schema_diff_report 实现。
 
     Args:
         reports_dir: 参数描述。
@@ -67,7 +67,7 @@ def write_sample_bundle(
     wiki_bundle: dict[str, Any] | None = None,
     local_sample: Any = None,
 ) -> Path:
-    """ write_sample_bundle 实现。
+    """write_sample_bundle 实现。
 
     Args:
         reports_dir: 参数描述。
@@ -89,7 +89,7 @@ def write_sample_bundle(
 
 
 def write_stats_diff_report(reports_dir: Path, stats_diff: Any) -> Path:
-    """ write_stats_diff_report 实现。
+    """write_stats_diff_report 实现。
 
     Args:
         reports_dir: 参数描述。

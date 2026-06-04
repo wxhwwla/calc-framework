@@ -1,10 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据录入页签 — 角色/武器表单式录入，无需写代码。"""
 
-
-
 from __future__ import annotations
-
 
 
 import sys
@@ -14,44 +11,25 @@ from pathlib import Path
 from typing import Any
 
 
-
-
 from PySide6.QtGui import QFont
 
 from PySide6.QtWidgets import (
-
     QCheckBox,
-
     QComboBox,
-
     QDoubleSpinBox,
-
     QFormLayout,
-
     QGroupBox,
-
     QHBoxLayout,
-
     QLabel,
-
     QLineEdit,
-
     QMessageBox,
-
     QPushButton,
-
     QScrollArea,
-
     QSpinBox,
-
     QTabWidget,
-
     QVBoxLayout,
-
     QWidget,
-
 )
-
 
 
 # path setup
@@ -61,19 +39,15 @@ _REPO = Path(__file__).resolve().parents[2]
 _GAMES = _REPO / "games" / "endfield"
 
 if str(_GAMES) not in sys.path:
-
     sys.path.insert(0, str(_GAMES))
 
 if str(_REPO) not in sys.path:
-
     sys.path.insert(0, str(_REPO))
-
 
 
 from tools.endfield_scripts.add_character import add_character
 
 from tools.endfield_scripts.add_weapon import add_weapon
-
 
 
 _LABEL = "color: #CCCCCC;"
@@ -149,17 +123,10 @@ _INPUT = """
 """
 
 
-
-
-
 class _FormulaGroup(QGroupBox):
-
     """公式参数组：base / growth / divisor / offset。"""
 
-
-
     def __init__(self, title: str, parent: QWidget | None = None):
-
         super().__init__(title, parent)
 
         self.setStyleSheet(_INPUT)
@@ -198,10 +165,7 @@ class _FormulaGroup(QGroupBox):
 
         layout.addRow("Offset:", self.offset)
 
-
-
     def set_values(self, *, base=0, growth=0, divisor=1, offset=0):
-
         """set_values 实现。"""
         self.base.setValue(base)
 
@@ -211,27 +175,20 @@ class _FormulaGroup(QGroupBox):
 
         self.offset.setValue(offset)
 
-
-
     def values(self) -> dict[str, float | int]:
-
         """values 实现。"""
-        return {"base": self.base.value(), "growth": self.growth.value(),
-
-                "divisor": self.divisor.value(), "offset": self.offset.value()}
-
-
-
+        return {
+            "base": self.base.value(),
+            "growth": self.growth.value(),
+            "divisor": self.divisor.value(),
+            "offset": self.offset.value(),
+        }
 
 
 class _CharSeedTab(QWidget):
-
     """角色录入表单。"""
 
-
-
     def __init__(self, big_font: QFont, small_font: QFont):
-
         super().__init__()
 
         self._big = big_font
@@ -240,10 +197,7 @@ class _CharSeedTab(QWidget):
 
         self._build_ui()
 
-
-
     def _label(self, text: str) -> QLabel:
-
         """_label 实现。"""
         lbl = QLabel(text)
 
@@ -251,10 +205,7 @@ class _CharSeedTab(QWidget):
 
         return lbl
 
-
-
     def _build_ui(self) -> None:
-
         """_build_ui 实现。"""
         scroll = QScrollArea()
 
@@ -268,8 +219,6 @@ class _CharSeedTab(QWidget):
 
         layout.setSpacing(8)
 
-
-
         header = QLabel("角色录入 — 填写以下参数后点击「保存到文件」")
 
         header.setFont(self._big)
@@ -278,13 +227,9 @@ class _CharSeedTab(QWidget):
 
         layout.addWidget(header)
 
-
-
         form = QFormLayout()
 
         form.setSpacing(6)
-
-
 
         self._name = QLineEdit()
 
@@ -292,15 +237,11 @@ class _CharSeedTab(QWidget):
 
         form.addRow(self._label("名称:"), self._name)
 
-
-
         self._char_type = QComboBox()
 
         self._char_type.addItems(["近卫", "突击", "重装", "术师", "辅助", "先锋", "特种"])
 
         form.addRow(self._label("类型:"), self._char_type)
-
-
 
         self._star = QSpinBox()
 
@@ -310,15 +251,11 @@ class _CharSeedTab(QWidget):
 
         form.addRow(self._label("星级:"), self._star)
 
-
-
         self._weapon = QComboBox()
 
         self._weapon.addItems(["单手剑", "双手剑", "长柄武器", "手铳", "施术单元"])
 
         form.addRow(self._label("武器:"), self._weapon)
-
-
 
         self._primary = QComboBox()
 
@@ -326,19 +263,13 @@ class _CharSeedTab(QWidget):
 
         form.addRow(self._label("主能力:"), self._primary)
 
-
-
         self._secondary = QComboBox()
 
         self._secondary.addItems(["敏捷", "力量", "智识", "意志"])
 
         form.addRow(self._label("副能力:"), self._secondary)
 
-
-
         layout.addLayout(form)
-
-
 
         attr_group = QGroupBox("属性成长参数")
 
@@ -368,8 +299,6 @@ class _CharSeedTab(QWidget):
 
         layout.addWidget(attr_group)
 
-
-
         skill_group = QGroupBox("技能参数（可留空，后续在 JSON 中编辑）")
 
         skill_group.setStyleSheet(_INPUT)
@@ -378,25 +307,25 @@ class _CharSeedTab(QWidget):
 
         self._sk1 = QLineEdit()
 
-        self._sk1.setPlaceholderText('[{"base": 156, "growth": 78, "divisor": 5, "offset": 0, "special": [300,323,350]}]')
+        self._sk1.setPlaceholderText(
+            '[{"base": 156, "growth": 78, "divisor": 5, "offset": 0, "special": [300,323,350]}]'
+        )
 
         skill_form.addRow(self._label("技能1:"), self._sk1)
 
         self._sk2 = QLineEdit()
 
-        self._sk2.setPlaceholderText('同上格式（多个段用逗号分隔）')
+        self._sk2.setPlaceholderText("同上格式（多个段用逗号分隔）")
 
         skill_form.addRow(self._label("技能2:"), self._sk2)
 
         self._sk3 = QLineEdit()
 
-        self._sk3.setPlaceholderText('同上格式（多个段用逗号分隔）')
+        self._sk3.setPlaceholderText("同上格式（多个段用逗号分隔）")
 
         skill_form.addRow(self._label("技能3:"), self._sk3)
 
         layout.addWidget(skill_group)
-
-
 
         btn_row = QHBoxLayout()
 
@@ -420,8 +349,6 @@ class _CharSeedTab(QWidget):
 
         layout.addLayout(btn_row)
 
-
-
         layout.addStretch()
 
         scroll.setWidget(inner)
@@ -430,44 +357,31 @@ class _CharSeedTab(QWidget):
 
         main_layout.addWidget(scroll)
 
-
-
     def _parse_skill_json(self, text: str) -> list:
-
         """_parse_skill_json 实现。"""
         text = text.strip()
 
         if not text:
-
             return []
 
         import json
 
         try:
-
             return json.loads(text)
 
         except json.JSONDecodeError:
-
             raise ValueError(f"技能 JSON 格式错误:\n{text}\n\n请使用正确的 JSON 数组格式。")
 
-
-
     def _save(self) -> None:
-
         """_save 实现。"""
         name = self._name.text().strip()
 
         if not name:
-
             QMessageBox.warning(self, "输入错误", "角色名称不能为空")
 
             return
 
-
-
         try:
-
             char_type = self._char_type.currentText()
 
             star = self._star.value()
@@ -477,8 +391,6 @@ class _CharSeedTab(QWidget):
             primary = self._primary.currentText()
 
             secondary = self._secondary.currentText()
-
-
 
             strength = self._strength.values()
 
@@ -490,15 +402,11 @@ class _CharSeedTab(QWidget):
 
             base_atk = self._base_atk.values()
 
-
-
             sk1_raw = self._sk1.text().strip()
 
             sk2_raw = self._sk2.text().strip()
 
             sk3_raw = self._sk3.text().strip()
-
-
 
             sk1 = self._parse_skill_json(sk1_raw) if sk1_raw else []
 
@@ -506,36 +414,31 @@ class _CharSeedTab(QWidget):
 
             sk3 = self._parse_skill_json(sk3_raw) if sk3_raw else []
 
-
-
             add_character(
-
-                name=name, char_type=char_type, star=star,
-
-                primary=primary, secondary=secondary, weapon=weapon,
-
-                strength=strength, agility=agility,
-
-                intellect=intellect, will=will, base_atk=base_atk,
-
-                sk1=sk1, sk2=sk2, sk3=sk3,
-
+                name=name,
+                char_type=char_type,
+                star=star,
+                primary=primary,
+                secondary=secondary,
+                weapon=weapon,
+                strength=strength,
+                agility=agility,
+                intellect=intellect,
+                will=will,
+                base_atk=base_atk,
+                sk1=sk1,
+                sk2=sk2,
+                sk3=sk3,
             )
 
             QMessageBox.information(self, "成功", f"角色「{name}」已保存！")
 
             self._clear()
 
-
-
         except Exception as e:
-
             QMessageBox.critical(self, "保存失败", f"错误:\n{e}")
 
-
-
     def _clear(self) -> None:
-
         """_clear 实现。"""
         self._name.clear()
 
@@ -550,7 +453,6 @@ class _CharSeedTab(QWidget):
         self._secondary.setCurrentIndex(1)
 
         for g in [self._strength, self._agility, self._intellect, self._will, self._base_atk]:
-
             g.set_values()
 
         self._sk1.clear()
@@ -560,17 +462,10 @@ class _CharSeedTab(QWidget):
         self._sk3.clear()
 
 
-
-
-
 class _WeaponSeedTab(QWidget):
-
     """武器录入表单。"""
 
-
-
     def __init__(self, big_font: QFont, small_font: QFont):
-
         super().__init__()
 
         self._big = big_font
@@ -579,10 +474,7 @@ class _WeaponSeedTab(QWidget):
 
         self._build_ui()
 
-
-
     def _label(self, text: str) -> QLabel:
-
         """_label 实现。"""
         lbl = QLabel(text)
 
@@ -590,10 +482,7 @@ class _WeaponSeedTab(QWidget):
 
         return lbl
 
-
-
     def _build_ui(self) -> None:
-
         """_build_ui 实现。"""
         scroll = QScrollArea()
 
@@ -607,8 +496,6 @@ class _WeaponSeedTab(QWidget):
 
         layout.setSpacing(8)
 
-
-
         header = QLabel("武器录入 — 填写以下参数后点击「保存到文件」")
 
         header.setFont(self._big)
@@ -617,13 +504,9 @@ class _WeaponSeedTab(QWidget):
 
         layout.addWidget(header)
 
-
-
         form = QFormLayout()
 
         form.setSpacing(6)
-
-
 
         self._name = QLineEdit()
 
@@ -631,15 +514,11 @@ class _WeaponSeedTab(QWidget):
 
         form.addRow(self._label("名称:"), self._name)
 
-
-
         self._weapon_type = QComboBox()
 
         self._weapon_type.addItems(["单手剑", "双手剑", "长柄武器", "手铳", "施术单元"])
 
         form.addRow(self._label("类型:"), self._weapon_type)
-
-
 
         self._star = QSpinBox()
 
@@ -649,11 +528,7 @@ class _WeaponSeedTab(QWidget):
 
         form.addRow(self._label("星级:"), self._star)
 
-
-
         layout.addLayout(form)
-
-
 
         atk_group = QGroupBox("基础攻击力成长")
 
@@ -667,8 +542,6 @@ class _WeaponSeedTab(QWidget):
 
         layout.addWidget(atk_group)
 
-
-
         bonus_group = QGroupBox("附加属性（填写 JSON）")
 
         bonus_group.setStyleSheet(_INPUT)
@@ -678,16 +551,12 @@ class _WeaponSeedTab(QWidget):
         self._bonus_attrs = QLineEdit()
 
         self._bonus_attrs.setPlaceholderText(
-
             '{"攻击力+": {"base": 5, "growth": 4, "divisor": 1, "offset": 0, "special": [39]}}'
-
         )
 
         bonus_form.addRow(self._label("属性列表:"), self._bonus_attrs)
 
         layout.addWidget(bonus_group)
-
-
 
         special_group = QGroupBox("特殊能力（可选）")
 
@@ -717,8 +586,6 @@ class _WeaponSeedTab(QWidget):
 
         layout.addWidget(special_group)
 
-
-
         btn_row = QHBoxLayout()
 
         self._save_btn = QPushButton("保存到文件")
@@ -741,8 +608,6 @@ class _WeaponSeedTab(QWidget):
 
         layout.addLayout(btn_row)
 
-
-
         layout.addStretch()
 
         scroll.setWidget(inner)
@@ -751,98 +616,71 @@ class _WeaponSeedTab(QWidget):
 
         main_layout.addWidget(scroll)
 
-
-
     def _parse_json(self, text: str) -> Any:
-
         """_parse_json 实现。"""
         text = text.strip()
 
         if not text:
-
             return None
 
         import json
 
         return json.loads(text)
 
-
-
     def _save(self) -> None:
-
         """_save 实现。"""
         name = self._name.text().strip()
 
         if not name:
-
             QMessageBox.warning(self, "输入错误", "武器名称不能为空")
 
             return
 
-
-
         try:
-
             weapon_type = self._weapon_type.currentText()
 
             star = self._star.value()
 
             base_atk = self._base_atk.values()
 
-
-
             bonus_raw = self._bonus_attrs.text().strip()
 
             bonus_attrs = self._parse_json(bonus_raw) if bonus_raw else None
 
-
-
             special_ability = None
 
             if self._special_enabled.isChecked():
-
                 sname = self._special_name.text().strip()
 
                 curve_raw = self._special_curve.text().strip()
 
                 if curve_raw:
-
                     curve = self._parse_json(curve_raw)
 
                     special_ability = {"enabled": True, "name": sname, "curve": curve}
 
                 else:
-
                     sv = self._special_formula.values()
 
                     special_ability = {"enabled": True, "name": sname, **sv}
 
-
-
             add_weapon(
-
-                name=name, weapon_type=weapon_type, star=star,
-
-                base_atk=base_atk, bonus_attrs=bonus_attrs,
-
+                name=name,
+                weapon_type=weapon_type,
+                star=star,
+                base_atk=base_atk,
+                bonus_attrs=bonus_attrs,
                 special_ability=special_ability,
-
             )
 
             QMessageBox.information(self, "成功", f"武器「{name}」已保存！")
 
             self._clear()
 
-
-
         except Exception as e:
-
             QMessageBox.critical(self, "保存失败", f"错误:\n{e}")
 
-
-
     def _clear(self) -> None:
-
         """_clear 实现。"""
         self._name.clear()
 
@@ -863,17 +701,10 @@ class _WeaponSeedTab(QWidget):
         self._special_curve.clear()
 
 
-
-
-
 class SeedTab(QWidget):
-
     """数据录入页签 — 角色和武器录入（含子页签）。"""
 
-
-
     def __init__(self, big_font: QFont, small_font: QFont):
-
         super().__init__()
 
         layout = QVBoxLayout(self)
@@ -887,4 +718,3 @@ class SeedTab(QWidget):
         self._tabs.addTab(_WeaponSeedTab(big_font, small_font), "武器录入")
 
         layout.addWidget(self._tabs)
-

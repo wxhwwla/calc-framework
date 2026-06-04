@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace games.endfield -> games.endfield in all .py files outside calc-engine/ (moved to tools/)."""
+
 import os
 
 
@@ -12,8 +13,16 @@ REPLACEMENTS = [
 ]
 
 EXCLUDE_DIRS = {
-    ".venv", "__pycache__", ".pytest_cache", ".git", ".trae",
-    "node_modules", "dist", "build", "calc-engine", ".github",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".git",
+    ".trae",
+    "node_modules",
+    "dist",
+    "build",
+    "calc-engine",
+    ".github",
 }
 
 EXCLUDE_FILES = {"replace_adapters_imports.py"}
@@ -28,7 +37,7 @@ def replace_in_file(filepath: str) -> bool:
     Returns:
         文件被修改返回 True，否则 False
     """
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         content = f.read()
 
     original = content

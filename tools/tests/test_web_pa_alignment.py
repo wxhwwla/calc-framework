@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: AGPL-3.0
-from pathlib import Path
 
 from web.backend.api.download_client import build_client_download, find_local_backend_zip
 

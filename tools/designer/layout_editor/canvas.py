@@ -15,31 +15,47 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from PySide6.QtCore import Qt, QPointF, Signal
+from calc_framework.logging import get_logger
+from calc_framework.ui.layout import Section, load_layout
+from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import (
-
-    QBrush, QColor, QDragEnterEvent, QDropEvent, QFont,
-
-    QLinearGradient, QPainter, QPen, QPixmap,
-
+    QBrush,
+    QColor,
+    QDragEnterEvent,
+    QDragMoveEvent,
+    QDropEvent,
+    QFont,
+    QLinearGradient,
+    QPainter,
+    QPen,
+    QPixmap,
 )
 from PySide6.QtWidgets import (
-
-    QComboBox, QDialog, QFileDialog, QFormLayout,
-
-    QGraphicsItem, QGraphicsRectItem, QGraphicsScene,
-
-    QGraphicsSimpleTextItem, QGraphicsView,
-
-    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget,
-
-    QListWidgetItem, QMessageBox, QPushButton, QScrollArea,
-
-    QSpinBox, QSplitter, QVBoxLayout, QWidget,
-
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFormLayout,
+    QGraphicsItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsSimpleTextItem,
+    QGraphicsView,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSpinBox,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
-from calc_framework.ui.layout import Section, load_layout
+_logger = get_logger(__name__)
 
 _SECTION_COLOR = QColor("#2D2D2D")
 _SECTION_BORDER = QColor("#555555")
@@ -79,7 +95,16 @@ class _ControlItem(QGraphicsRectItem):
 class _SectionItem(QGraphicsRectItem):
     """画布上的一个 Section 区块。"""
 
-    def __init__(self, section_id: str, title: str, section_type: str, columns: int, widget_type: str = "", widget_config: dict | None = None, parent=None):
+    def __init__(
+        self,
+        section_id: str,
+        title: str,
+        section_type: str,
+        columns: int,
+        widget_type: str = "",
+        widget_config: dict | None = None,
+        parent=None,
+    ):
         h = _SECTION_HEADER_H + _CONTROL_MARGIN
         super().__init__(0, 0, _SECTION_WIDTH, h, parent)
         self._section_id = section_id
@@ -116,7 +141,7 @@ class _SectionItem(QGraphicsRectItem):
         type_tag.setPos(_SECTION_WIDTH - 60, 6)
 
     def add_control(self, var_name: str, label: str) -> _ControlItem:
-        """ add_control 实现。
+        """add_control 实现。
 
         Args:
             var_name: 参数描述。
@@ -133,7 +158,7 @@ class _SectionItem(QGraphicsRectItem):
         return ctrl
 
     def remove_control(self, var_name: str) -> bool:
-        """ remove_control 实现。
+        """remove_control 实现。
 
         Args:
             var_name: 参数描述。
@@ -184,16 +209,50 @@ class _SectionItem(QGraphicsRectItem):
         """to_section 实现。"""
         if self._section_type == "widget":
             return Section(
-                id=self._section_id, title=self._title,
-                type="widget", widget_type=self._widget_type,
+                id=self._section_id,
+                title=self._title,
+                type="widget",
+                widget_type=self._widget_type,
                 widget_config=dict(self._widget_config),
             )
-        inp_vars = [c.var_name for c in self._controls if c.var_name.startswith("character.") or c.var_name.startswith("weapon.") or c.var_name.startswith("equipment.") or c.var_name.startswith("enemy.") or c.var_name.startswith("user.")]
-        out_vars = [c.var_name for c in self._controls if not (c.var_name.startswith("character.") or c.var_name.startswith("weapon.") or c.var_name.startswith("equipment.") or c.var_name.startswith("enemy.") or c.var_name.startswith("user."))]
+        inp_vars = [
+            c.var_name
+            for c in self._controls
+            if c.var_name.startswith("character.")
+            or c.var_name.startswith("weapon.")
+            or c.var_name.startswith("equipment.")
+            or c.var_name.startswith("enemy.")
+            or c.var_name.startswith("user.")
+        ]
+        out_vars = [
+            c.var_name
+            for c in self._controls
+            if not (
+                c.var_name.startswith("character.")
+                or c.var_name.startswith("weapon.")
+                or c.var_name.startswith("equipment.")
+                or c.var_name.startswith("enemy.")
+                or c.var_name.startswith("user.")
+            )
+        ]
         if self._section_type == "inputs":
-            return Section(id=self._section_id, title=self._title, type="inputs", variables=inp_vars, outputs=[], columns=self._columns)
+            return Section(
+                id=self._section_id,
+                title=self._title,
+                type="inputs",
+                variables=inp_vars,
+                outputs=[],
+                columns=self._columns,
+            )
         else:
-            return Section(id=self._section_id, title=self._title, type="outputs", variables=[], outputs=out_vars, columns=self._columns)
+            return Section(
+                id=self._section_id,
+                title=self._title,
+                type="outputs",
+                variables=[],
+                outputs=out_vars,
+                columns=self._columns,
+            )
 
 
 class SectionEditDialog(QDialog):
@@ -292,11 +351,8 @@ class DonationConfigDialog(QDialog):
         layout.addRow(btns)
 
     def _browse_image(self) -> None:
-
         """_browse_image 实现。"""
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择捐赠图片", "", "图片 (*.png *.jpg *.jpeg *.bmp)"
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "选择捐赠图片", "", "图片 (*.png *.jpg *.jpeg *.bmp)")
         if path:
             self._path_edit.setText(path)
 
@@ -394,10 +450,11 @@ class LayoutCanvasPanel(QWidget):
 
         class _DropView(QGraphicsView):
             """_DropView 类。"""
+
             drop_callback = None
 
             def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-                """ dragEnterEvent 实现。
+                """dragEnterEvent 实现。
 
                 Args:
                     event: 参数描述。
@@ -408,8 +465,8 @@ class LayoutCanvasPanel(QWidget):
                 if event.mimeData().hasText():
                     event.acceptProposedAction()
 
-            def dragMoveEvent(self, event: QDragEnterEvent) -> None:
-                """ dragMoveEvent 实现。
+            def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+                """dragMoveEvent 实现。
 
                 Args:
                     event: 参数描述。
@@ -421,7 +478,7 @@ class LayoutCanvasPanel(QWidget):
                     event.acceptProposedAction()
 
             def dropEvent(self, event: QDropEvent) -> None:
-                """ dropEvent 实现。
+                """dropEvent 实现。
 
                 Args:
                     event: 参数描述。
@@ -463,12 +520,12 @@ class LayoutCanvasPanel(QWidget):
         self._scene.selectionChanged.connect(self._on_selection_changed)
 
     def _set_grid_background(self) -> None:
-
         """_set_grid_background 实现。"""
         pix = QPixmap(_GRID_SIZE * 2, _GRID_SIZE * 2)
         pix.fill(QColor("#1E1E1E"))
-        from PySide6.QtGui import QPainter as QP
-        p = QP(pix)
+        from PySide6.QtGui import QPainter
+
+        p = QPainter(pix)
         p.setPen(QPen(QColor("#2A2A2A"), 1))
         p.drawPoint(0, 0)
         p.drawPoint(_GRID_SIZE, 0)
@@ -534,7 +591,9 @@ class LayoutCanvasPanel(QWidget):
         scene_pt = self._view.mapToScene(int(scene_pos.x()), int(scene_pos.y()))
         sec_item = self._find_section_at(scene_pt)
         if sec_item is None:
-            QMessageBox.information(self, "提示", "请先将变量拖拽到 Section 区块内。\n先点击左上角「+ 添加 Section」创建区块。")
+            QMessageBox.information(
+                self, "提示", "请先将变量拖拽到 Section 区块内。\n先点击左上角「+ 添加 Section」创建区块。"
+            )
             return
         for existing in sec_item._controls:
             if existing.var_name == var_name:
@@ -566,7 +625,9 @@ class LayoutCanvasPanel(QWidget):
         item = selected[0]
         if isinstance(item, _SectionItem):
             self._prop_title.setText(f"Section: {item.section_title}")
-            self._prop_detail.setText(f"ID: {item.section_id}\n类型: {item.section_type}\n控件数: {len(item._controls)}")
+            self._prop_detail.setText(
+                f"ID: {item.section_id}\n类型: {item.section_type}\n控件数: {len(item._controls)}"
+            )
         elif isinstance(item, _ControlItem):
             self._prop_title.setText(f"控件: {item.var_name}")
             self._prop_detail.setText(f"标签: {item._label}")
@@ -574,7 +635,7 @@ class LayoutCanvasPanel(QWidget):
             self._prop_title.setText(type(item).__name__)
 
     def populate_adapters(self, names: list[str]) -> None:
-        """ populate_adapters 实现。
+        """populate_adapters 实现。
 
         Args:
             names: 参数描述。
@@ -601,6 +662,7 @@ class LayoutCanvasPanel(QWidget):
         self._adapter_name = name
         try:
             from calc_framework.config.manager import AdapterManager
+
             mgr = AdapterManager()
             pkg = mgr.load(name)
             self._dag_service = pkg.dag_service
@@ -635,6 +697,7 @@ class LayoutCanvasPanel(QWidget):
         try:
             layout = load_layout(data)
         except Exception:
+            _logger.warning("布局数据加载失败，跳过")
             return
         self._section_id_counter = 0
         for i, sec in enumerate(layout.sections):
@@ -661,16 +724,18 @@ class LayoutCanvasPanel(QWidget):
         for item in self._scene.items():
             if isinstance(item, _SectionItem):
                 sec = item.to_section()
-                sections.append({
-                    "id": sec.id,
-                    "type": sec.type,
-                    "title": sec.title,
-                    "variables": sec.variables,
-                    "outputs": sec.outputs,
-                    "columns": sec.columns,
-                    "widget_type": sec.widget_type,
-                    "widget_config": sec.widget_config,
-                })
+                sections.append(
+                    {
+                        "id": sec.id,
+                        "type": sec.type,
+                        "title": sec.title,
+                        "variables": sec.variables,
+                        "outputs": sec.outputs,
+                        "columns": sec.columns,
+                        "widget_type": sec.widget_type,
+                        "widget_config": sec.widget_config,
+                    }
+                )
         return {
             "schema_version": "ui-v1",
             "name": self._adapter_name or "Computed Layout",
@@ -684,6 +749,7 @@ class LayoutCanvasPanel(QWidget):
             QMessageBox.information(self, "提示", "请先选择适配器")
             return
         from calc_framework.config.manager import AdapterManager
+
         mgr = AdapterManager()
         pkg = mgr.load(self._adapter_name)
         adapter_path = Path(str(pkg._adapter_dir))
@@ -699,7 +765,6 @@ class LayoutCanvasPanel(QWidget):
         """_open_preview 实现。"""
         from calc_framework.ui.compute_sheet import ComputeSheet
         from calc_framework.ui.layout import load_layout
-
 
         data = self._build_layout_data()
         if not data["sections"]:

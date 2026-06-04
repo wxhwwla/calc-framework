@@ -35,10 +35,7 @@
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import json
@@ -52,11 +49,7 @@ import zipfile
 from pathlib import Path
 
 
-
-
-
 def build_plugin(plugin_dir: str | Path, output: str | Path | None = None) -> Path:
-
     """将插件目录打包为 .calcplugin ZIP 文件。
 
 
@@ -80,10 +73,7 @@ def build_plugin(plugin_dir: str | Path, output: str | Path | None = None) -> Pa
     meta_path = src / "plugin.json"
 
     if not meta_path.is_file():
-
         raise FileNotFoundError(f"插件目录缺少 plugin.json: {meta_path}")
-
-
 
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
 
@@ -91,40 +81,25 @@ def build_plugin(plugin_dir: str | Path, output: str | Path | None = None) -> Pa
 
     version = meta.get("version", "1.0.0")
 
-
-
     if output is None:
-
         output = Path(f"{name}-{version}.calcplugin")
 
     else:
-
         output = Path(output)
 
-
-
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
-
         for fpath in src.rglob("*"):
-
             if fpath.is_file() and fpath.name != ".gitkeep":
-
                 arcname = str(fpath.relative_to(src))
 
                 zf.write(fpath, arcname)
-
-
 
     print(f"✓ 插件已打包: {output} ({output.stat().st_size / 1024:.1f} KB)")
 
     return output
 
 
-
-
-
 def install_plugin(plugin_file: str | Path, target_dir: str | Path) -> Path:
-
     """安装 .calcplugin 文件到目标目录。
 
 
@@ -146,19 +121,13 @@ def install_plugin(plugin_file: str | Path, target_dir: str | Path) -> Path:
     src = Path(plugin_file).resolve()
 
     if not src.is_file():
-
         raise FileNotFoundError(f"插件文件未找到: {src}")
-
-
 
     dst = Path(target_dir).resolve()
 
     dst.mkdir(parents=True, exist_ok=True)
 
-
-
     with zipfile.ZipFile(src, "r") as zf:
-
         meta = json.loads(zf.read("plugin.json").decode("utf-8"))
 
         name = meta.get("name", src.stem)
@@ -168,26 +137,19 @@ def install_plugin(plugin_file: str | Path, target_dir: str | Path) -> Path:
         plugin_dst = dst / f"{name}-{version}"
 
         if plugin_dst.exists():
-
             shutil.rmtree(plugin_dst)
 
         zf.extractall(str(plugin_dst))
-
-
 
     print(f"✓ 插件已安装: {plugin_dst}")
 
     return plugin_dst
 
 
-
-
-
 def _demo_build(args: list[str]) -> int:
     """演示打包插件目录。"""
 
     if len(args) < 1:
-
         print("用法: python devtool.py plugin build <plugin_dir> [-o output]")
 
         return 1
@@ -197,26 +159,19 @@ def _demo_build(args: list[str]) -> int:
     output = args[2] if len(args) > 2 and args[1] == "-o" else None
 
     try:
-
         build_plugin(plugin_dir, output)
 
         return 0
 
     except Exception as e:
-
         print(f"✗ 打包失败: {e}", file=sys.stderr)
 
         return 1
 
 
-
-
-
 def _demo_install(args: list[str]) -> int:
-
     """_demo_install 实现。"""
     if len(args) < 1:
-
         print("用法: python devtool.py plugin install <plugin.calcplugin>")
 
         return 1
@@ -228,14 +183,11 @@ def _demo_install(args: list[str]) -> int:
     target = repo / "web" / "hub" / "plugins"
 
     try:
-
         install_plugin(plugin_file, target)
 
         return 0
 
     except Exception as e:
-
         print(f"✗ 安装失败: {e}", file=sys.stderr)
 
         return 1
-

@@ -207,7 +207,9 @@ class TestDataGenerator:
         # dict 被包在外层列表中 => 单个元素
         assert len(result["战技倍率"]) == 1
         # skill_curve 生成 12 个值
-        assert len(result["战技倍率"][0]) == 12
+        skill_first = result["战技倍率"][0]
+        assert isinstance(skill_first, list)
+        assert len(skill_first) == 12
 
     def test_generate_attributes_mode_weapon(self) -> None:
         """generate_attributes 统一接口 weapon 模式。"""

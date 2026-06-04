@@ -14,8 +14,8 @@ from .templates import list_templates, CATEGORY_TEMPLATES
 from .validators import validate_adapter
 
 __all__ = [
+    "CATEGORY_TEMPLATES",
     "GeneratorEngine",
     "list_templates",
-    "CATEGORY_TEMPLATES",
     "validate_adapter",
 ]

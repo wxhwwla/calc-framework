@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配置包设计器 data_editor profiles 单元测试。"""
 
-from pathlib import Path
-
 from tools.designer.data_editor.profiles import (
     ADAPTER_NAME_TO_PROFILE,
     ARKNIGHTS_OPERATORS_JSON,

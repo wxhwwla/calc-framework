@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc_engine/endfield and games.endfield in .md docs with calc-engine equivalents."""
+
 import os
 
 
@@ -15,12 +16,14 @@ def main():
     modified_files = []
 
     for root, dirs, files in os.walk(repo_root):
-        dirs[:] = [d for d in dirs if d not in {".venv", "__pycache__", ".git", ".trae", "node_modules", "dist", "build"}]
+        dirs[:] = [
+            d for d in dirs if d not in {".venv", "__pycache__", ".git", ".trae", "node_modules", "dist", "build"}
+        ]
         for f in files:
             if not f.endswith(".md"):
                 continue
             fpath = os.path.join(root, f)
-            with open(fpath, "r", encoding="utf-8") as fh:
+            with open(fpath, encoding="utf-8") as fh:
                 content = fh.read()
 
             original = content

@@ -47,7 +47,7 @@ def collect_titles_for_kind(
     gallery_page: str,
     category_title: str,
 ) -> tuple[list[str], list[str], list[str]]:
-    """ collect_titles_for_kind 实现。
+    """collect_titles_for_kind 实现。
 
     Args:
         client: 参数描述。
@@ -186,7 +186,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     result = run_scout(output_root=args.output, per_kind_limit=args.limit, only_kind=args.only_kind)
     stats = result.get("cache_stats") or {}
-    print(f"完成：共 {result['page_count']} 页（本地复用 {stats.get('from_cache', 0)}，新拉取 {stats.get('fetched', 0)}）")
+    print(
+        f"完成：共 {result['page_count']} 页（本地复用 {stats.get('from_cache', 0)}，新拉取 {stats.get('fetched', 0)}）"
+    )
     print(f"原始缓存目录: {args.output / 'raw'}")
     print(f"manifest: {result['manifest_path']}")
     print(f"报告目录: {result['reports_dir']}")

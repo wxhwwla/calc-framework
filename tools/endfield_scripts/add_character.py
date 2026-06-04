@@ -15,10 +15,7 @@
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import copy
@@ -30,13 +27,9 @@ from pathlib import Path
 from typing import Any
 
 
-
 from games.endfield.calc.core.curve_baker import bake_character_curves
 
 from games.endfield.data_loading.loader import reload_characters
-
-
-
 
 
 def add_character(
@@ -91,41 +84,23 @@ def add_character(
         ),
     }
 
-
-
     if json_path is None:
-
         json_path = Path(__file__).resolve().parent.parent.parent / "games" / "endfield" / "data" / "characters.json"
 
-
-
     with open(json_path, encoding="utf-8") as f:
-
         characters = json.load(f)
 
-
-
     if any(c["名称"] == name for c in characters):
-
         print(f"Warning: 角色「{name}」已存在，覆盖数据。")
 
         characters = [c for c in characters if c["名称"] != name]
 
-
-
     characters.append(character)
 
-
-
     with open(json_path, "w", encoding="utf-8") as f:
-
         json.dump(characters, f, ensure_ascii=False, indent=2)
 
-
-
     reload_characters()
-
-
 
     print(f"OK: 角色「{name}」已添加！")
 
@@ -140,12 +115,7 @@ def add_character(
     return character
 
 
-
-
-
 if __name__ == "__main__":
-
     print("角色录入库函数: add_character(...)")
 
     print("批量配置请运行: python scripts/seed_characters.py")
-

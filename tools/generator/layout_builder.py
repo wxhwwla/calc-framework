@@ -27,20 +27,24 @@ def build_layout(
     sections: list[dict[str, Any]] = []
 
     if input_variables:
-        sections.append({
-            "id": "inputs",
-            "type": "inputs",
-            "title": "输入参数",
-            "variables": input_variables,
-        })
+        sections.append(
+            {
+                "id": "inputs",
+                "type": "inputs",
+                "title": "输入参数",
+                "variables": input_variables,
+            }
+        )
 
     if output_names:
-        sections.append({
-            "id": "results",
-            "type": "outputs",
-            "title": "计算结果",
-            "outputs": output_names,
-        })
+        sections.append(
+            {
+                "id": "results",
+                "type": "outputs",
+                "title": "计算结果",
+                "outputs": output_names,
+            }
+        )
 
     layout: dict[str, Any] = {
         "schema_version": "ui-v1",
@@ -62,5 +66,6 @@ def layout_to_json(
     """生成格式化的 layout.json 字符串。"""
     return json.dumps(
         build_layout(name, input_variables, output_names, description=description),
-        ensure_ascii=False, indent=2,
+        ensure_ascii=False,
+        indent=2,
     )

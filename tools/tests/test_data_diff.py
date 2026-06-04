@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import json
 
 from tools.data_pipeline.diff import (
     DataDiffResult,
@@ -301,6 +300,7 @@ def test_summary_property():
 
 def EntityDiff_mock(name: str):
     from tools.data_pipeline.diff import EntityDiff
+
     return EntityDiff(name=name, status="modified")
 
 

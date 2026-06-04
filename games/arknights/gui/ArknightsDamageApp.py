@@ -32,11 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from utils.gui.donation import open_donation_dialog, append_donation_help_menu_action
-from utils.gui.help_dialog import HelpDialog
-from utils.gui.help_loader import load_multi_category
-
-from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info, compute_snapshot_with_dag
+from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
 from games.arknights.calc.skill_parser import ParsedSkillInfo
 from games.arknights.operator_catalog import (
     STAR_TIERS,
@@ -46,7 +42,9 @@ from games.arknights.operator_catalog import (
     list_professions,
     load_operators_map,
 )
-
+from utils.gui.donation import append_donation_help_menu_action, open_donation_dialog
+from utils.gui.help_dialog import HelpDialog
+from utils.gui.help_loader import load_multi_category
 
 DARK_QSS = """
 QMainWindow, QWidget { background-color: #1A1A1A; color: #D1D1D1; }
@@ -399,7 +397,9 @@ class ArknightsDamageApp(QMainWindow):
         for label, key in [("最终攻击力", "atk"), ("物理伤害", "phys"), ("法术伤害", "magic"), ("真实伤害", "true")]:
             c = QFrame()
             c.setFrameShape(QFrame.StyledPanel)
-            c.setStyleSheet("QFrame { background-color: #222; border: 1px solid #464646; border-radius: 8px; padding: 8px; }")
+            c.setStyleSheet(
+                "QFrame { background-color: #222; border: 1px solid #464646; border-radius: 8px; padding: 8px; }"
+            )
             cl = QVBoxLayout(c)
             cl.setContentsMargins(8, 4, 8, 4)
             cl.setSpacing(2)
@@ -520,9 +520,9 @@ class ArknightsDamageApp(QMainWindow):
         self._skill_combo.clear()
         self._skill_combo.addItem("普攻")
         for i in range(min(self._skill_count, 3)):
-            self._skill_combo.addItem(f"技能{i+1}")
+            self._skill_combo.addItem(f"技能{i + 1}")
         for i in range(self._skill_count, 3):
-            self._skill_combo.addItem(f"技能{i+1}（无数据）")
+            self._skill_combo.addItem(f"技能{i + 1}（无数据）")
         self._skill_combo.blockSignals(False)
         self._update_detail()
         self._on_skill_changed(1)  # default to skill 1
@@ -566,7 +566,7 @@ class ArknightsDamageApp(QMainWindow):
         eff_mult = info.effective_multiplier
         auto_text = f"自动检测: {eff_mult:.2f}x"
         if info.atk_buff_hint > 0:
-            auto_text += f"（含 ATK+{info.atk_buff_hint*100:.0f}% 加成）"
+            auto_text += f"（含 ATK+{info.atk_buff_hint * 100:.0f}% 加成）"
         self._mult_auto_label.setText(auto_text)
         self._mult_input.setText(f"{eff_mult:.2f}")
 
@@ -588,22 +588,25 @@ class ArknightsDamageApp(QMainWindow):
         self._det_trait.setText(trait)
 
         base = op.get("基础属性", {})
-        labels = {"生命": "生命上限", "攻击": "攻击力", "防御": "防御力",
-                  "法术抗性": "法术抗性", "部署费用": "部署费用",
-                  "再部署": "再部署时间", "阻挡数": "阻挡数", "攻击间隔": "攻击间隔"}
+        labels = {
+            "生命": "生命上限",
+            "攻击": "攻击力",
+            "防御": "防御力",
+            "法术抗性": "法术抗性",
+            "部署费用": "部署费用",
+            "再部署": "再部署时间",
+            "阻挡数": "阻挡数",
+            "攻击间隔": "攻击间隔",
+        }
         self._det_stat_tbl.setRowCount(len(base))
         for i, (k, v) in enumerate(base.items()):
             self._det_stat_tbl.setItem(i, 0, QTableWidgetItem(labels.get(k, k)))  # type: ignore[arg-type]
-            self._det_stat_tbl.setItem(i, 1, QTableWidgetItem(
-                f"{v:.1f}" if isinstance(v, float) else str(v)))
+            self._det_stat_tbl.setItem(i, 1, QTableWidgetItem(f"{v:.1f}" if isinstance(v, float) else str(v)))
         self._det_stat_tbl.resizeColumnsToContents()
 
         trust = op.get("信赖加成", {})
         if trust and any(v != 0 for v in trust.values()):
-            parts = "  ".join(
-                f"{labels.get(k, k)} {'+' if v >= 0 else ''}{v}"
-                for k, v in trust.items() if v != 0
-            )
+            parts = "  ".join(f"{labels.get(k, k)} {'+' if v >= 0 else ''}{v}" for k, v in trust.items() if v != 0)
             self._det_trust.setText(f"信赖加成（200%）：{parts}")
             self._det_trust.show()
         else:
@@ -611,7 +614,7 @@ class ArknightsDamageApp(QMainWindow):
 
         talents = op.get("天赋", [])
         if talents:
-            lines = [f"{t.get('name','')}（{t.get('unlock','')}）：{t.get('description','')}" for t in talents]
+            lines = [f"{t.get('name', '')}（{t.get('unlock', '')}）：{t.get('description', '')}" for t in talents]
             self._det_talent.setText("天赋：\n" + "\n".join(lines))
             self._det_talent.show()
         else:
@@ -672,11 +675,17 @@ class ArknightsDamageApp(QMainWindow):
             # 更新结果卡片
             self._result_cards["atk"].setText(f"{final_atk:.1f}")
             self._result_cards["phys"].setText(f"{phys:.1f}")
-            self._result_cards["phys"].setStyleSheet("font-size: 18px; font-weight: bold; color: #DAA520; border: none;")
+            self._result_cards["phys"].setStyleSheet(
+                "font-size: 18px; font-weight: bold; color: #DAA520; border: none;"
+            )
             self._result_cards["magic"].setText(f"{magic:.1f}")
-            self._result_cards["magic"].setStyleSheet("font-size: 18px; font-weight: bold; color: #2B6CB6; border: none;")
+            self._result_cards["magic"].setStyleSheet(
+                "font-size: 18px; font-weight: bold; color: #2B6CB6; border: none;"
+            )
             self._result_cards["true"].setText(f"{true_dmg:.1f}")
-            self._result_cards["true"].setStyleSheet("font-size: 18px; font-weight: bold; color: #68D391; border: none;")
+            self._result_cards["true"].setStyleSheet(
+                "font-size: 18px; font-weight: bold; color: #68D391; border: none;"
+            )
 
             # 乘区明细表
             op = self._current_operator
@@ -685,7 +694,7 @@ class ArknightsDamageApp(QMainWindow):
             zone_rows = [
                 ("基础攻击力", f"{base_atk:.1f}"),
                 ("信赖加成", f"+{trust_atk:.1f}" if trust_atk > 0 else "0"),
-                (f"ATK%加成（{(atk_bonus*100):.0f}%）", f"+{base_atk * atk_bonus:.1f}"),
+                (f"ATK%加成（{(atk_bonus * 100):.0f}%）", f"+{base_atk * atk_bonus:.1f}"),
                 ("最终攻击力", f"{final_atk:.1f}"),
                 ("技能倍率", f"x{skill_mult:.2f}"),
                 ("连发数", f"x{hit_count}"),
@@ -694,7 +703,10 @@ class ArknightsDamageApp(QMainWindow):
                 ("防御力", f"{enemy_def:.0f}"),
                 ("法术抗性", f"{enemy_res:.0f}%"),
                 ("", ""),
-                ("物理伤害（单发）", f"{phys:.1f}" if hit_count <= 1 else f"{(phys/hit_count if hit_count else 0):.1f}"),
+                (
+                    "物理伤害（单发）",
+                    f"{phys:.1f}" if hit_count <= 1 else f"{(phys / hit_count if hit_count else 0):.1f}",
+                ),
                 # "法术伤害（单发）" 类似
             ]
             if hit_count > 1:
@@ -720,6 +732,7 @@ class ArknightsDamageApp(QMainWindow):
             self._result_label.setText(f"计算错误: {e}")
             self._result_label.setStyleSheet("color: #FC8181; font-size: 12px; padding: 8px;")
             import traceback
+
             traceback.print_exc()
 
     def run(self) -> None:

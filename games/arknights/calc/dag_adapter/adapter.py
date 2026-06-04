@@ -103,7 +103,8 @@ def get_parsed_skill_info(operator: dict[str, Any], level: int = 7, skill_index:
     Returns:
         ParsedSkillInfo 完整解析结果
     """
-    from games.arknights.calc.skill_parser import parse_skill, parse_auto_attack
+    from games.arknights.calc.skill_parser import parse_auto_attack, parse_skill
+
     if skill_index < 0:
         return parse_auto_attack()
     skills = operator.get("技能", [])

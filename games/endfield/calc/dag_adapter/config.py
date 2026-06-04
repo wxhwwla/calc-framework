@@ -23,6 +23,10 @@ import json
 import sys
 from pathlib import Path
 
+from calc_framework.logging import get_logger
+
+_logger = get_logger(__name__)
+
 _FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"
 if str(_SRC_DIR) not in sys.path:
@@ -39,7 +43,6 @@ from calc_framework.dag.schema import (
 from calc_framework.dag.serializer import dag_to_dict
 
 OUTPUT_PATH = _SRC_DIR / "calc_framework" / "configs" / "endfield_full.dag.json"
-
 
 
 from ._subgraph_builders import (
@@ -66,21 +69,29 @@ def _make_master_graph() -> DAGGraph:
             "character.基础攻击": DAGVariable(type="float", source="character", description="角色基础攻击力"),
             "weapon.基础攻击": DAGVariable(type="float", source="weapon", description="武器基础攻击力"),
             "weapon.攻击力+": DAGVariable(
-                type="float", source="weapon", description="攻击力+ 小数加成（0.15 = 15%）",
+                type="float",
+                source="weapon",
+                description="攻击力+ 小数加成（0.15 = 15%）",
             ),
             "weapon.附加攻击力+": DAGVariable(type="float", source="weapon", description="附加攻击力+ 平值"),
             "equipment.攻击力平值": DAGVariable(
-                type="float", source="equipment", description="装备平铺攻击力", default=0.0,
+                type="float",
+                source="equipment",
+                description="装备平铺攻击力",
+                default=0.0,
             ),
             "computed.主能力平值加算": DAGVariable(
-                type="float", source="computed", description="主能力平值全部来源",
+                type="float",
+                source="computed",
+                description="主能力平值全部来源",
             ),
             "computed.副能力平值加算": DAGVariable(type="float", source="computed", description="副能力平值全部来源"),
             "computed.主能力百分比": DAGVariable(type="float", source="computed", description="主能力百分比加成"),
             "computed.副能力百分比": DAGVariable(type="float", source="computed", description="副能力百分比加成"),
             "computed.技能倍率": DAGVariable(type="float", source="computed", description="技能倍率"),
             "computed.伤害加成": DAGVariable(
-                type="float", source="computed",
+                type="float",
+                source="computed",
                 description="伤害加成区 = 1+类型+技能+失衡+其他",
             ),
             "computed.伤害减免": DAGVariable(type="float", source="computed", description="伤害减免区 = ∏(1-减免值)"),
@@ -95,80 +106,118 @@ def _make_master_graph() -> DAGGraph:
             "computed.连击增伤": DAGVariable(type="float", source="computed", description="连击增伤区"),
             "computed.特殊乘区": DAGVariable(type="float", source="computed", description="特殊乘区"),
             "character.暴击率": DAGVariable(
-                type="float", source="character",
-                description="暴击率（小数，如 0.05 = 5%）", default=0.05,
+                type="float",
+                source="character",
+                description="暴击率（小数，如 0.05 = 5%）",
+                default=0.05,
             ),
             "character.暴击伤害": DAGVariable(
-                type="float", source="character",
-                description="暴击伤害（小数，如 0.5 = 50%）", default=0.5,
+                type="float",
+                source="character",
+                description="暴击伤害（小数，如 0.5 = 50%）",
+                default=0.5,
             ),
             "enemy.防御": DAGVariable(
-                type="float", source="enemy",
-                description="敌方防御值", default=100,
+                type="float",
+                source="enemy",
+                description="敌方防御值",
+                default=100,
             ),
             "character.力量": DAGVariable(
-                type="float", source="character",
-                description="力量基础值", default=0.0,
+                type="float",
+                source="character",
+                description="力量基础值",
+                default=0.0,
             ),
             "character.敏捷": DAGVariable(
-                type="float", source="character",
-                description="敏捷基础值", default=0.0,
+                type="float",
+                source="character",
+                description="敏捷基础值",
+                default=0.0,
             ),
             "character.智识": DAGVariable(
-                type="float", source="character",
-                description="智识基础值", default=0.0,
+                type="float",
+                source="character",
+                description="智识基础值",
+                default=0.0,
             ),
             "character.意志": DAGVariable(
-                type="float", source="character",
-                description="意志基础值", default=0.0,
+                type="float",
+                source="character",
+                description="意志基础值",
+                default=0.0,
             ),
             "computed.力量加成值": DAGVariable(
-                type="float", source="computed",
-                description="力量加成值（武器技能）", default=0.0,
+                type="float",
+                source="computed",
+                description="力量加成值（武器技能）",
+                default=0.0,
             ),
             "computed.敏捷加成值": DAGVariable(
-                type="float", source="computed",
-                description="敏捷加成值（武器技能）", default=0.0,
+                type="float",
+                source="computed",
+                description="敏捷加成值（武器技能）",
+                default=0.0,
             ),
             "computed.智识加成值": DAGVariable(
-                type="float", source="computed",
-                description="智识加成值（武器技能）", default=0.0,
+                type="float",
+                source="computed",
+                description="智识加成值（武器技能）",
+                default=0.0,
             ),
             "computed.意志加成值": DAGVariable(
-                type="float", source="computed",
-                description="意志加成值（武器技能）", default=0.0,
+                type="float",
+                source="computed",
+                description="意志加成值（武器技能）",
+                default=0.0,
             ),
             "character.基础生命值": DAGVariable(
-                type="float", source="character",
-                description="角色基础生命值", default=0.0,
+                type="float",
+                source="character",
+                description="角色基础生命值",
+                default=0.0,
             ),
             "character.基础防御力": DAGVariable(
-                type="float", source="character",
-                description="角色基础防御力", default=0.0,
+                type="float",
+                source="character",
+                description="角色基础防御力",
+                default=0.0,
             ),
             "weapon.精炼等级": DAGVariable(
-                type="int", source="weapon",
-                description="武器精炼等级（1-9）", default=1,
+                type="int",
+                source="weapon",
+                description="武器精炼等级（1-9）",
+                default=1,
             ),
             "computed.武器精炼主能力值加成": DAGVariable(
-                type="float", source="computed",
-                description="武器精炼主能力值+加成", default=0.0,
+                type="float",
+                source="computed",
+                description="武器精炼主能力值+加成",
+                default=0.0,
             ),
             "computed.武器精炼附加攻击力加成": DAGVariable(
-                type="float", source="computed",
-                description="武器精炼附加攻击力+加成", default=0.0,
+                type="float",
+                source="computed",
+                description="武器精炼附加攻击力+加成",
+                default=0.0,
             ),
             "weapon.法术伤害+": DAGVariable(
-                type="float", source="weapon",
-                description="武器法术伤害+加成（小数）", default=0.0,
+                type="float",
+                source="weapon",
+                description="武器法术伤害+加成（小数）",
+                default=0.0,
             ),
             "weapon.攻击力+平值": DAGVariable(
-                type="float", source="weapon",
-                description="武器攻击力+平值加成", default=0.0,
+                type="float",
+                source="weapon",
+                description="武器攻击力+平值加成",
+                default=0.0,
             ),
             "weapon.最大生命值+": DAGVariable(
-                type="float", source="weapon",
-                description="武器最大生命值+加成", default=0.0,
+                type="float",
+                source="weapon",
+                description="武器最大生命值+加成",
+                default=0.0,
             ),
         },
         subgraphs={
@@ -229,29 +278,37 @@ def _make_master_graph() -> DAGGraph:
             "comp_attr_智识_bonus": VarNode(type="var", path="computed.智识加成值", label="智识加成"),
             "comp_attr_意志_bonus": VarNode(type="var", path="computed.意志加成值", label="意志加成"),
             "attr_力量_total": BinaryNode(
-                type="binary", op="+",
-                lhs="char_attr_力量", rhs="comp_attr_力量_bonus",
+                type="binary",
+                op="+",
+                lhs="char_attr_力量",
+                rhs="comp_attr_力量_bonus",
                 label="力量最终值",
             ),
             "attr_敏捷_total": BinaryNode(
-                type="binary", op="+",
-                lhs="char_attr_敏捷", rhs="comp_attr_敏捷_bonus",
+                type="binary",
+                op="+",
+                lhs="char_attr_敏捷",
+                rhs="comp_attr_敏捷_bonus",
                 label="敏捷最终值",
             ),
             "attr_智识_total": BinaryNode(
-                type="binary", op="+",
-                lhs="char_attr_智识", rhs="comp_attr_智识_bonus",
+                type="binary",
+                op="+",
+                lhs="char_attr_智识",
+                rhs="comp_attr_智识_bonus",
                 label="智识最终值",
             ),
             "attr_意志_total": BinaryNode(
-                type="binary", op="+",
-                lhs="char_attr_意志", rhs="comp_attr_意志_bonus",
+                type="binary",
+                op="+",
+                lhs="char_attr_意志",
+                rhs="comp_attr_意志_bonus",
                 label="意志最终值",
             ),
-
             # ── 块 1：属性块 ──
             "block1_ability": CallNode(
-                type="call", subgraph="ability_bonus",
+                type="call",
+                subgraph="ability_bonus",
                 bindings={
                     "main_flat": "main_flat",
                     "sub_flat": "sub_flat",
@@ -260,10 +317,10 @@ def _make_master_graph() -> DAGGraph:
                 },
                 label="属性块-能力值加成",
             ),
-
             # ── 块 2：攻击力块 ──
             "block2_attack": CallNode(
-                type="call", subgraph="final_attack",
+                type="call",
+                subgraph="final_attack",
                 bindings={
                     "char_base_atk": "char_atk",
                     "weapon_base_atk": "weapon_atk",
@@ -274,20 +331,20 @@ def _make_master_graph() -> DAGGraph:
                 },
                 label="攻击力块",
             ),
-
             # ── 块 3：暴击块 ──
             "block3_crit": CallNode(
-                type="call", subgraph="crit_zone",
+                type="call",
+                subgraph="crit_zone",
                 bindings={
                     "crit_rate": "char_crit_rate",
                     "crit_damage": "char_crit_dmg",
                 },
                 label="暴击块",
             ),
-
             # ── 块 4：基础伤害块 ──
             "block4_base": CallNode(
-                type="call", subgraph="base_damage_block",
+                type="call",
+                subgraph="base_damage_block",
                 bindings={
                     "final_attack": "block2_attack",
                     "skill_mult": "skill_mult",
@@ -295,10 +352,10 @@ def _make_master_graph() -> DAGGraph:
                 },
                 label="基础伤害块",
             ),
-
             # ── 块 5：增益/减益块 ──
             "block5_buff": CallNode(
-                type="call", subgraph="buff_debuff_block",
+                type="call",
+                subgraph="buff_debuff_block",
                 bindings={
                     "damage_after_crit": "block4_base",
                     "zone_dmg_bonus": "zone_dmg_bonus",
@@ -311,10 +368,10 @@ def _make_master_graph() -> DAGGraph:
                 },
                 label="增益减益块",
             ),
-
             # ── 块 6：环境乘区块 ──
             "block6_env": CallNode(
-                type="call", subgraph="environment_block",
+                type="call",
+                subgraph="environment_block",
                 bindings={
                     "damage_after_buff": "block5_buff",
                     "enemy_defense": "enemy_def",
@@ -378,10 +435,10 @@ def main() -> None:
     """CLI 入口：生成并保存 DAG JSON。"""
     g = generate()
     out = save_dag(g)
-    print(f"已生成: {out}")
-    print(f"  子图: {list(g.subgraphs.keys())}")
-    print(f"  节点: {len(g.nodes)} 个")
-    print(f"  输出: {list(g.outputs.keys())}")
+    _logger.info("已生成: %s", out)
+    _logger.info("  子图: %s", list(g.subgraphs.keys()))
+    _logger.info("  节点: %d 个", len(g.nodes))
+    _logger.info("  输出: %s", list(g.outputs.keys()))
 
 
 if __name__ == "__main__":

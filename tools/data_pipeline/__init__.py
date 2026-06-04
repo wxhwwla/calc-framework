@@ -12,11 +12,11 @@ from .schema import (
 )
 
 __all__ = [
-    "EntitySchema",
-    "SkillSchema",
-    "SegmentSchema",
-    "EntityType",
     "STANDARD_ENTITY_TYPES",
+    "EntitySchema",
+    "EntityType",
+    "SegmentSchema",
+    "SkillSchema",
     "diff",
     "readers",
     "transformers",

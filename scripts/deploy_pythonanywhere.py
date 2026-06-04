@@ -5,6 +5,7 @@
 用法::
     python scripts/tools/deploy_pythonanywhere.py [options]
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -13,5 +14,5 @@ from pathlib import Path
 
 if __name__ == "__main__":
     target = str(Path(__file__).parent / "tools" / "deploy_pythonanywhere.py")
-    print(f"NOTE: deploy_pythonanywhere.py 已移至 scripts/tools/，正在重导向…", file=sys.stderr)
-    sys.exit(subprocess.call([sys.executable, target] + sys.argv[1:]))
+    print("NOTE: deploy_pythonanywhere.py 已移至 scripts/tools/，正在重导向…", file=sys.stderr)
+    sys.exit(subprocess.call([sys.executable, target, *sys.argv[1:]]))

@@ -21,13 +21,14 @@ _SKIP_PREFIXES = (
 
 class _GalleryLinkParser(HTMLParser):
     """_GalleryLinkParser 类。"""
+
     def __init__(self, site_prefix: str) -> None:
         super().__init__()
         self._site_prefix = site_prefix.rstrip("/")
         self.titles: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        """ handle_starttag 实现。
+        """handle_starttag 实现。
 
         Args:
             tag: 参数描述。
@@ -60,7 +61,7 @@ def _href_to_title(href: str, site_prefix: str) -> str:
     prefix = f"{site_prefix}/"
     if not path.startswith(prefix):
         return ""
-    tail = unquote(path[len(prefix):])
+    tail = unquote(path[len(prefix) :])
     return tail.replace("_", " ").strip()
 
 
@@ -76,7 +77,7 @@ def _is_entry_title(title: str) -> bool:
 
 
 def extract_gallery_entry_titles(html: str, *, site_path: str = "/arknights") -> list[str]:
-    """ extract_gallery_entry_titles 实现。
+    """extract_gallery_entry_titles 实现。
 
     Args:
         html: 参数描述。

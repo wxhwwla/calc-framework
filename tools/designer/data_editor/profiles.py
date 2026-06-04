@@ -12,6 +12,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 @dataclass(frozen=True)
 class DataProfile:
     """DataProfile 类。"""
+
     id: str
     label: str
     adapter_dir: Path
@@ -33,16 +34,12 @@ PROFILES: dict[str, DataProfile] = {
         id="arknights",
         label="明日方舟",
         adapter_dir=_PROJECT_ROOT / "framework" / "adapters" / "arknights",
-        entity_tabs=(
-            ("干员", "operators.json", ["名称", "职业", "星级", "分支"]),
-        ),
+        entity_tabs=(("干员", "operators.json", ["名称", "职业", "星级", "分支"]),),
     ),
 }
 
 # 干员 JSON 默认路径（BWIKI 解析产物）
-ARKNIGHTS_OPERATORS_JSON = (
-    _PROJECT_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
-)
+ARKNIGHTS_OPERATORS_JSON = _PROJECT_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
 
 ADAPTER_NAME_TO_PROFILE: dict[str, str] = {
     "终末地伤害计算": "endfield",

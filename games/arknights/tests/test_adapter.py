@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info
 
 

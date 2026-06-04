@@ -35,40 +35,26 @@ CSV 格式约定（两套模式）：
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import csv
 
 
-
 from pathlib import Path
 
-from typing import Any, List, Optional
-
+from typing import Any, List
 
 
 from ..schema import RawRecord
 
 
-
-
-
 def read_csv(
-
     path: str | Path,
-
     *,
-
     encoding: str = "utf-8-sig",
-
     delimiter: str = ",",
-
 ) -> List[RawRecord]:
-
     """读取 CSV 返回原始记录列表。
 
 
@@ -92,11 +78,9 @@ def read_csv(
     records: List[RawRecord] = []
 
     with open(path, newline="", encoding=encoding) as f:
-
         reader = csv.DictReader(f, delimiter=delimiter)
 
         for row in reader:
-
             cleaned = {k.strip(): _clean_value(v) for k, v in row.items() if k}
 
             records.append(cleaned)
@@ -104,95 +88,65 @@ def read_csv(
     return records
 
 
-
-
-
-def _clean_value(value: Optional[str]) -> Any:
-
+def _clean_value(value: str | None) -> Any:
     """_clean_value 实现。"""
     if value is None:
-
         return None
 
     stripped = value.strip()
 
     if stripped == "" or stripped == "-":
-
         return None
 
     return stripped
 
 
-
-
-
-def parse_comma_list(text: Optional[str]) -> List[str]:
-
+def parse_comma_list(text: str | None) -> List[str]:
     """解析逗号分隔的字符串为列表。"""
 
     if not text:
-
         return []
 
     return [s.strip() for s in text.split(",") if s.strip()]
 
 
-
-
-
-def parse_int_list(text: Optional[str]) -> List[int]:
-
+def parse_int_list(text: str | None) -> List[int]:
     """解析逗号分隔的整数列表。"""
 
     if not text:
-
         return []
 
     result: List[int] = []
 
     for s in text.split(","):
-
         s = s.strip()
 
         if s:
-
             try:
-
                 result.append(int(s))
 
             except ValueError:
-
                 pass
 
     return result
 
 
-
-
-
-def parse_float_list(text: Optional[str]) -> List[float]:
-
+def parse_float_list(text: str | None) -> List[float]:
     """解析逗号分隔的浮点数列表。"""
 
     if not text:
-
         return []
 
     result: List[float] = []
 
     for s in text.split(","):
-
         s = s.strip()
 
         if s:
-
             try:
-
                 result.append(float(s))
 
             except ValueError:
-
                 pass
 
     return result
-

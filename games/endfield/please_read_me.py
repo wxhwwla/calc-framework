@@ -22,7 +22,7 @@ _repo_root = Path(__file__).resolve().parents[2]
 if str(_repo_root) not in sys.path:
     sys.path.insert(0, str(_repo_root))
 
-from scripts._version import _EXE_VERSION, _VERSION  # noqa: E402
+from scripts._version import _EXE_VERSION, _VERSION
 
 # ==================== GitHub 上传流程（必读） ====================
 UPLOAD_WORKFLOW = """

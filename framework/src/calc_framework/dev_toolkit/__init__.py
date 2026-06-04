@@ -8,5 +8,5 @@ __all__: list[str] = [
     "main",
 ]
 
-from . import pages  # noqa: F401 — 注册所有页面
+from . import pages
 from .main_window import DevToolkitWindow, main

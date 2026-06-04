@@ -20,7 +20,7 @@ _REPO = Path(__file__).resolve().parents[1]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-from tools.designer.exporter import export_calcpack  # noqa: E402 — sys.path 必须优先设置
+from tools.designer.exporter import export_calcpack
 
 ADAPTER_ROOT = _REPO / "framework" / "adapters"
 OUTPUT_DIR = _REPO / "web" / "hub" / "samples"
@@ -116,10 +116,7 @@ def _create_from_template(template_id: str, game_name: str, output_path: str) ->
     """
     src = ADAPTER_ROOT / template_id
     if not src.is_dir():
-        msg = (
-            f"模板 {template_id!r} 不存在于 {ADAPTER_ROOT}\n"
-            f"可用模板: {', '.join(_discover_templates())}"
-        )
+        msg = f"模板 {template_id!r} 不存在于 {ADAPTER_ROOT}\n可用模板: {', '.join(_discover_templates())}"
         raise FileNotFoundError(msg)
 
     # 复制到临时目录
@@ -144,9 +141,7 @@ def _create_from_template(template_id: str, game_name: str, output_path: str) ->
         meta["name"] = game_name
         meta["game"] = game_name
         meta["entry_dag"] = f"{game_name}.dag.json"
-        meta_path.write_text(
-            json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
         # 重命名 DAG 文件
         old_dag = tmp / orig_entry
@@ -227,8 +222,7 @@ def main() -> int:
         templates = _discover_templates()
         if args.from_template not in templates:
             print(
-                f"错误: 模板 {args.from_template!r} 不存在。\n"
-                f"可用模板: {', '.join(templates)}",
+                f"错误: 模板 {args.from_template!r} 不存在。\n可用模板: {', '.join(templates)}",
                 file=sys.stderr,
             )
             return 1

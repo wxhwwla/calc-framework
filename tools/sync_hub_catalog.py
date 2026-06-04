@@ -16,7 +16,7 @@ SAMPLE_IDS = frozenset({"fps", "moba", "card_rpg"})
 
 
 def build_adapter_entry(adapter_id: str, meta: dict) -> dict:
-    """ build_adapter_entry 实现。
+    """build_adapter_entry 实现。
 
     Args:
         adapter_id: 参数描述。

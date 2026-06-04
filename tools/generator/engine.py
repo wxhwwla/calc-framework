@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any
 
 from .templates import list_templates, load_template
-from .dag_builder import build_simple_formula, dag_to_json
-from .schema_builder import build_attr_schema, attr_schema_to_json
-from .layout_builder import build_layout, layout_to_json
+from .dag_builder import build_simple_formula
+from .schema_builder import build_attr_schema
+from .layout_builder import build_layout
 from .validators import validate_adapter
 
 
@@ -84,8 +84,8 @@ class GeneratorEngine:
             ui_layout = build_layout(f"{game_name}计算表", input_vars, output_names)
 
         # 6. 验证
-        dag_outputs = dag.get("outputs", {}) if dag else {}
-        validation = validate_adapter(meta, dag, attr_schema, ui_layout)
+        dag.get("outputs", {}) if dag else {}
+        validate_adapter(meta, dag, attr_schema, ui_layout)
 
         # 7. 组装输出文件
         files: dict[str, str] = {}

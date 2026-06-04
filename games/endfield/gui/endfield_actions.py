@@ -85,7 +85,8 @@ class ActionsMixin:
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
-            self.char_panel, self.weapon_panel,
+            self.char_panel,
+            self.weapon_panel,
             calculation_mode=self._current_calc_mode,
             weapon_scope_label=dock.single_skill_scope_combo.currentText(),
             equipment_scope_label=dock.equipment_scope_combo.currentText(),
@@ -172,21 +173,91 @@ class ActionsMixin:
 
         variables = dict(dag_service.dag.variables)
         user_vars: dict[str, Any] = {
-            "user_input.敌人防御": {"source": "user_input", "type": "float", "default": 100.0, "min": 0, "max": 99999, "step": 10.0},  # noqa: E501
+            "user_input.敌人防御": {
+                "source": "user_input",
+                "type": "float",
+                "default": 100.0,
+                "min": 0,
+                "max": 99999,
+                "step": 10.0,
+            },
             "user_input.敌人等阶": {"source": "user_input", "type": "str", "default": "普通"},
-            "user_input.敌人抗性": {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},  # noqa: E501
-            "user_input.无视抗性": {"source": "user_input", "type": "float", "default": 0.0, "min": -100, "max": 100, "step": 1.0},  # noqa: E501
-            "user_input.失衡易伤系数": {"source": "user_input", "type": "float", "default": 1.3, "min": 0.1, "max": 10.0, "step": 0.05},  # noqa: E501
+            "user_input.敌人抗性": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": -100,
+                "max": 100,
+                "step": 1.0,
+            },
+            "user_input.无视抗性": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": -100,
+                "max": 100,
+                "step": 1.0,
+            },
+            "user_input.失衡易伤系数": {
+                "source": "user_input",
+                "type": "float",
+                "default": 1.3,
+                "min": 0.1,
+                "max": 10.0,
+                "step": 0.05,
+            },
             "user_input.是否失衡": {"source": "user_input", "type": "bool", "default": False},
             "user_input.是否真实伤害": {"source": "user_input", "type": "bool", "default": False},
             "user_input.连击层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.额外暴击率": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.01},  # noqa: E501
-            "user_input.额外暴击伤害": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},  # noqa: E501
-            "user_input.额外伤害加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 5.0, "step": 0.01},  # noqa: E501
-            "user_input.附带效果倍率": {"source": "user_input", "type": "float", "default": 1.0, "min": 0.1, "max": 3.0, "step": 0.05},  # noqa: E501
+            "user_input.额外暴击率": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 1.0,
+                "step": 0.01,
+            },
+            "user_input.额外暴击伤害": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 5.0,
+                "step": 0.01,
+            },
+            "user_input.额外伤害加成": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 5.0,
+                "step": 0.01,
+            },
+            "user_input.附带效果倍率": {
+                "source": "user_input",
+                "type": "float",
+                "default": 1.0,
+                "min": 0.1,
+                "max": 3.0,
+                "step": 0.05,
+            },
             "user_input.破防层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.失衡效率加成": {"source": "user_input", "type": "float", "default": 0.0, "min": 0, "max": 1.0, "step": 0.05},  # noqa: E501
-            "user_input.腐蚀计时(秒)": {"source": "user_input", "type": "float", "default": 15.0, "min": 0.0, "max": 15.0, "step": 0.5},  # noqa: E501
+            "user_input.失衡效率加成": {
+                "source": "user_input",
+                "type": "float",
+                "default": 0.0,
+                "min": 0,
+                "max": 1.0,
+                "step": 0.05,
+            },
+            "user_input.腐蚀计时(秒)": {
+                "source": "user_input",
+                "type": "float",
+                "default": 15.0,
+                "min": 0.0,
+                "max": 15.0,
+                "step": 0.5,
+            },
         }
         variables.update(user_vars)
 
@@ -205,7 +276,10 @@ class ActionsMixin:
 
         assert layout is not None
         compute_sheet = ComputeSheet(
-            dag_service, layout, variables, base_context={},
+            dag_service,
+            layout,
+            variables,
+            base_context={},
             user_context_overrides=user_context_overrides,
         )
         self._populate_sheet(compute_sheet)
@@ -230,7 +304,8 @@ class ActionsMixin:
     def _populate_sheet(self, sheet: ComputeSheet) -> None:
         dock = self.control_dock
         loadout = read_loadout_from_panels(
-            self.char_panel, self.weapon_panel,
+            self.char_panel,
+            self.weapon_panel,
             calculation_mode=self._current_calc_mode,
             weapon_scope_label=dock.single_skill_scope_combo.currentText(),
             equipment_scope_label=dock.equipment_scope_combo.currentText(),
@@ -244,7 +319,8 @@ class ActionsMixin:
             include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
             extra_crit_rate=dock.read_extra_crit_rate(),
             extra_crit_damage=dock.read_extra_crit_damage(),
-            enemy_defense=self._enemy_defense, enemy_resistance=self._enemy_resistance,
+            enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
             ignore_resistance=self._ignore_resistance,
             imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
             is_unbalanced=self._is_unbalanced,
@@ -281,7 +357,9 @@ class ActionsMixin:
             """read counts。"""
 
         dialog = QtManualBuffDialog(
-            cast(QWidget, self), big_font=self.big_font, small_font=self.small_font,
+            cast(QWidget, self),
+            big_font=self.big_font,
+            small_font=self.small_font,
             read_counts_callback=_read_counts,
         )
         if not hasattr(self, "_manual_buff_store"):
@@ -297,7 +375,8 @@ class ActionsMixin:
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
-            self.char_panel, self.weapon_panel,
+            self.char_panel,
+            self.weapon_panel,
             calculation_mode=self._current_calc_mode,
             weapon_scope_label=dock.single_skill_scope_combo.currentText(),
             equipment_scope_label=dock.equipment_scope_combo.currentText(),
@@ -346,7 +425,8 @@ class ActionsMixin:
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
-            self.char_panel, self.weapon_panel,
+            self.char_panel,
+            self.weapon_panel,
             calculation_mode=self._current_calc_mode,
             weapon_scope_label=dock.single_skill_scope_combo.currentText(),
             equipment_scope_label=dock.equipment_scope_combo.currentText(),
@@ -360,7 +440,8 @@ class ActionsMixin:
             include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
             extra_crit_rate=dock.read_extra_crit_rate(),
             extra_crit_damage=dock.read_extra_crit_damage(),
-            enemy_defense=self._enemy_defense, enemy_resistance=self._enemy_resistance,
+            enemy_defense=self._enemy_defense,
+            enemy_resistance=self._enemy_resistance,
             ignore_resistance=self._ignore_resistance,
             imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
             is_unbalanced=self._is_unbalanced,
@@ -411,8 +492,11 @@ class ActionsMixin:
         from games.endfield.gui.controls.enhancement.qt_dialogs import QtCompareDialog
 
         dialog = QtCompareDialog(
-            parent=self, big_font=self.big_font, small_font=self.small_font,
-            char_panel=self.char_panel, weapon_panel=self.weapon_panel,
+            parent=self,
+            big_font=self.big_font,
+            small_font=self.small_font,
+            char_panel=self.char_panel,
+            weapon_panel=self.weapon_panel,
         )
         dialog.exec()
         """on compare presets。"""
@@ -430,7 +514,10 @@ class ActionsMixin:
 
         snapshot = get_snapshot_from_app(self)
         dialog = QtDamageDashboardDialog(
-            cast(QWidget, self), big_font=self.big_font, small_font=self.small_font, snapshot=snapshot,
+            cast(QWidget, self),
+            big_font=self.big_font,
+            small_font=self.small_font,
+            snapshot=snapshot,
         )
         dialog.exec()
         """on damage dashboard。"""
@@ -440,8 +527,11 @@ class ActionsMixin:
 
         history = get_app_calculation_history(self)
         dialog = QtCalcHistoryDialog(
-            cast(QWidget, self), big_font=self.big_font, small_font=self.small_font,
-            history=history, apply_fn=self._apply_preset_to_qt_app,
+            cast(QWidget, self),
+            big_font=self.big_font,
+            small_font=self.small_font,
+            history=history,
+            apply_fn=self._apply_preset_to_qt_app,
         )
         dialog.exec()
         """on calc history。"""
@@ -449,7 +539,9 @@ class ActionsMixin:
     def _on_export_log(self) -> None:
         from utils.operation_log import get_session_operation_log
 
-        path, _ = QFileDialog.getSaveFileName(cast(QWidget, self), "导出操作日志", "operation_log.json", "JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(
+            cast(QWidget, self), "导出操作日志", "operation_log.json", "JSON (*.json)"
+        )
         if not path:
             return
         try:
@@ -531,5 +623,3 @@ class ActionsMixin:
         if hasattr(dock, "_export_log_btn") and dock._export_log_btn:
             dock._export_log_btn.clicked.connect(self._on_export_log)
         """connect more settings btns。"""
-
-

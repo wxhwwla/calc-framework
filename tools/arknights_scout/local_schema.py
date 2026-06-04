@@ -6,7 +6,7 @@ from typing import Any
 
 
 def load_local_name_sets(characters_json: Path, *extra: Path) -> dict[str, set[str]]:
-    """ load_local_name_sets 实现。
+    """load_local_name_sets 实现。
 
     Args:
         characters_json: 参数描述。
@@ -17,6 +17,7 @@ def load_local_name_sets(characters_json: Path, *extra: Path) -> dict[str, set[s
     result: dict[str, set[str]] = {"operator": set()}
     if characters_json.is_file():
         import json
+
         chars = json.loads(characters_json.read_text(encoding="utf-8"))
         for c in chars:
             name = c.get("名称") or c.get("name") or ""
@@ -26,7 +27,7 @@ def load_local_name_sets(characters_json: Path, *extra: Path) -> dict[str, set[s
 
 
 def summarize_local_schema(characters_json: Path, *extra: Path) -> list[dict[str, Any]]:
-    """ summarize_local_schema 实现。
+    """summarize_local_schema 实现。
 
     Args:
         characters_json: 参数描述。
@@ -37,6 +38,7 @@ def summarize_local_schema(characters_json: Path, *extra: Path) -> list[dict[str
     if not characters_json.is_file():
         return []
     import json
+
     chars = json.loads(characters_json.read_text(encoding="utf-8"))
     if not chars:
         return []
@@ -50,7 +52,7 @@ def compare_name_sets(
     *,
     normalize,
 ) -> dict[str, Any]:
-    """ compare_name_sets 实现。
+    """compare_name_sets 实现。
 
     Args:
         wiki_set: 参数描述。

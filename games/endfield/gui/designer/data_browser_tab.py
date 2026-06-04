@@ -3,14 +3,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据浏览页签：查看角色/武器/装备 JSON 列表。"""
 
-
-
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from PySide6.QtGui import QFont
+
+_logger = logging.getLogger(__name__)
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -28,7 +29,6 @@ _JSON_PATHS = {
 }
 
 
-
 _STYLE = """
 
     QTextEdit { background-color: #1E1E1E; color: #D1D1D1;
@@ -40,18 +40,11 @@ _STYLE = """
 """
 
 
-
-
-
 class DataBrowserTab(QWidget):
-
     def __init__(self, big_font: QFont, small_font: QFont) -> None:
-
         super().__init__()
 
         layout = QVBoxLayout(self)
-
-
 
         row = QHBoxLayout()
 
@@ -62,8 +55,6 @@ class DataBrowserTab(QWidget):
         label.setStyleSheet("color: #CCCCCC;")
 
         row.addWidget(label)
-
-
 
         self.kind_combo = QComboBox()
 
@@ -77,8 +68,6 @@ class DataBrowserTab(QWidget):
 
         layout.addLayout(row)
 
-
-
         self.text_edit = QTextEdit()
 
         self.text_edit.setReadOnly(True)
@@ -87,25 +76,17 @@ class DataBrowserTab(QWidget):
 
         layout.addWidget(self.text_edit)
 
-
-
         self._load()
         """初始化实例。"""
 
-
-
     def _load(self) -> None:
-
         kind = self.kind_combo.currentText()
 
         try:
-
             json_path = _JSON_PATHS.get(kind)
 
             if json_path and json_path.is_file():
-
                 with json_path.open(encoding="utf-8") as f:
-
                     data = json.load(f)
 
                 names = [item.get("名称", "?") for item in data]
@@ -113,14 +94,13 @@ class DataBrowserTab(QWidget):
                 text = f"共 {len(names)} 条\n" + "\n".join(f"  - {n}" for n in names)
 
             else:
-
                 text = "数据文件未找到"
 
         except Exception as e:
-
+            _logger.warning("JSON 数据加载失败: %s", e)
             text = f"加载失败: {e}"
 
         self.text_edit.setPlainText(text)
         """load。"""
-    """DataBrowserTab。"""
 
+    """DataBrowserTab。"""

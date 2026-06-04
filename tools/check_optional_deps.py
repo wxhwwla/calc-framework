@@ -16,10 +16,7 @@
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import sys
@@ -29,40 +26,27 @@ from importlib.util import find_spec
 from pathlib import Path
 
 
-
 _PKG = Path(__file__).resolve().parent.parent / "games" / "endfield"
 
 if str(_PKG) not in sys.path:
-
     sys.path.insert(0, str(_PKG))
 
 
-
-from utils.optional_deps import (  # noqa: E402
-
+from utils.optional_deps import (
     DEV_OPTIONAL_DEPS,
-
     GUI_OPTIONAL_DEPS,
-
     RUNTIME_PIP_PACKAGES,
-
     is_matplotlib_available,
-
 )
 
 
-
-
-
 def _print_group(title: str, deps: tuple) -> int:
-
     """_print_group 实现。"""
     print(title)
 
     missing = 0
 
     for dep in deps:
-
         ok = dep.available()
 
         mark = "OK" if ok else "缺失"
@@ -70,7 +54,6 @@ def _print_group(title: str, deps: tuple) -> int:
         print(f"  [{mark}] {dep.feature}")
 
         if not ok:
-
             print(f"         → {dep.pip_hint}")
 
             missing += 1
@@ -80,9 +63,6 @@ def _print_group(title: str, deps: tuple) -> int:
     return missing
 
 
-
-
-
 def _print_runtime() -> int:
     """打印运行时依赖的状态并返回缺失数。"""
     print("运行时（pyproject dependencies）")
@@ -90,7 +70,6 @@ def _print_runtime() -> int:
     missing = 0
 
     for module, spec in RUNTIME_PIP_PACKAGES:
-
         ok = find_spec(module) is not None if module != "matplotlib" else is_matplotlib_available()
 
         mark = "OK" if ok else "缺失"
@@ -98,7 +77,6 @@ def _print_runtime() -> int:
         print(f"  [{mark}] {spec}")
 
         if not ok:
-
             print("         → pip install -e .")
 
             missing += 1
@@ -106,9 +84,6 @@ def _print_runtime() -> int:
     print()
 
     return missing
-
-
-
 
 
 def main() -> int:
@@ -128,7 +103,6 @@ def main() -> int:
     n += _print_group("开发/打包", DEV_OPTIONAL_DEPS)
 
     if n:
-
         print(f"共 {n} 项未安装。")
 
         return 1
@@ -138,10 +112,5 @@ def main() -> int:
     return 0
 
 
-
-
-
 if __name__ == "__main__":
-
     raise SystemExit(main())
-

@@ -3,12 +3,9 @@
 
 from __future__ import annotations
 
-import json
 import time
 import logging
-from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin, urlencode
 
 import requests
 
@@ -32,10 +29,12 @@ class MediaWikiClient:
     ) -> None:
         self.api_url = api_url.rstrip("/")
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": user_agent or "WikiScout/1.0 (calc-framework)",
-            "Accept": "application/json",
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": user_agent or "WikiScout/1.0 (calc-framework)",
+                "Accept": "application/json",
+            }
+        )
         self.rate_limit = rate_limit  # 请求间隔（秒）
         self.timeout = timeout
         self._last_request = 0.0
@@ -164,13 +163,14 @@ def get_api_url(wiki_url: str) -> str:
         if "/wiki/" in api_url or "/zh/" in api_url:
             # 去掉路径末尾，加上 api.php
             from urllib.parse import urlparse
+
             parsed = urlparse(api_url)
             base = f"{parsed.scheme}://{parsed.netloc}"
             path = parsed.path
             # 如果是 /wiki/xxx 或 /zh/xxx，取域名根
             for prefix in ["/wiki/", "/zh/", "/index.php"]:
                 if prefix in path:
-                    path = path[:path.index(prefix)]
+                    path = path[: path.index(prefix)]
                     break
             api_url = f"{base}{path}/api.php" if path else f"{base}/api.php"
         else:

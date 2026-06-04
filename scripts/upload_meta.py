@@ -9,15 +9,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from scripts._version import (  # noqa: F401
-    SUMMARY_BEGIN,
-    SUMMARY_END,
     _EXE_VERSION,
     _EXE_VERSION_PATTERN,
     _VERSION,
     _VERSION_PATTERN,
+    SUMMARY_BEGIN,
+    SUMMARY_END,
     build_commit_message,
     bump_minor,
     bump_patch,
