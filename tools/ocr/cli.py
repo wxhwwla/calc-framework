@@ -33,7 +33,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-from .detector import YOLOXDetector
+from .detector import TorchVisionDetector
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -155,7 +155,7 @@ def main(argv: list[str] | None = None) -> None:
 
     # ── 初始化检测器 ──────────────────────────────
 
-    detector = YOLOXDetector(
+    detector = TorchVisionDetector(
         model_path=str(model_path) if model_path else None,
         conf_threshold=args.conf,
         iou_threshold=args.iou,

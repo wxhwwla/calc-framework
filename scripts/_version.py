@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.16"
+_VERSION = "3.21.17"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,31 +333,13 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 25 处文件
+# TITLE: 更新 7 处文件
 # BODY:
-# - 更新文档 CONTEXT.md
-# - 更新文档 CONTRIBUTING.md
-# - 变更 DATA_LICENSE
-# - 变更 LICENSE
-# - 更新文档 NOTICES.md
-# - 更新文档 README.md
-# - 更新文档 docs/GUI使用说明.md
-# - 更新文档 docs/MVP搜索验收说明.md
-# - 更新文档 docs/adr/0007-endfield-migration-roadmap.md
-# - 更新文档 docs/会话接续手册.md
-# - 更新文档 docs/依赖说明.md
-# - 更新文档 docs/合规自查清单.md
-# - 更新文档 docs/操作指令集.md
-# - 更新文档 docs/数据来源与许可.md
-# - 更新文档 docs/版本号说明.md
-# - 更新文档 framework/README.md
-# - 变更 framework/adapters/endfield/meta.json
-# - 更新文档 games/endfield/README.md
-# - 修改 games/endfield/gui/endfield_app.py
-# - 修改 games/endfield/main.py
-# - 修改 games/endfield/please_read_me.py
-# - 变更 games/endfield/pyproject.toml
-# - 变更 installer/endfield_calculator_setup.nsi
-# - 修改 release_bundle/launcher_entry.py
-# - 修改 release_bundle/release_layout.py
+# - 修改 framework/tests/ocr/test_detector.py
+# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
+# - 修改 tools/ocr/__init__.py
+# - 修改 tools/ocr/cli.py
+# - 修改 tools/ocr/detector.py
+# - 变更 web/frontend/package-lock.json
+# - 变更 web/frontend/package.json
 # --- END UPLOAD_SUMMARY ---
