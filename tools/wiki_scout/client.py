@@ -7,7 +7,10 @@ import time
 import logging
 from typing import Any
 
-import requests
+try:
+    import requests  # type: ignore
+except ImportError:
+    requests = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,8 @@ class MediaWikiClient:
         rate_limit: float = 0.5,
         timeout: int = 30,
     ) -> None:
+        if requests is None:
+            raise ImportError("需要安装 requests 库: pip install requests")
         self.api_url = api_url.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update(
@@ -141,12 +146,22 @@ def detect_wiki_type(url: str) -> str:
     Returns:
         "bwiki" | "fandom" | "huiji" | "mediawiki" | "unknown"
     """
-    url_lower = url.lower()
-    if "bilibili.com" in url_lower or "biligame" in url_lower:
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    hostname = parsed.hostname or ""
+    hostname_lower = hostname.lower()
+
+    # 精确域名匹配，防止子串绕过
+    if hostname_lower == "bilibili.com" or hostname_lower.endswith(".bilibili.com"):
         return "bwiki"
-    if "fandom.com" in url_lower:
+    if hostname_lower == "biligame.com" or hostname_lower.endswith(".biligame.com"):
+        return "bwiki"
+    if hostname_lower == "fandom.com" or hostname_lower.endswith(".fandom.com"):
         return "fandom"
-    if "huijiwiki.com" in url_lower or "wiki.biligame.com" in url_lower:
+    if hostname_lower == "huijiwiki.com" or hostname_lower.endswith(".huijiwiki.com"):
+        return "bwiki"
+    if hostname_lower == "wiki.biligame.com" or hostname_lower.endswith(".wiki.biligame.com"):
         return "bwiki"
     return "mediawiki"
 
@@ -160,19 +175,16 @@ def get_api_url(wiki_url: str) -> str:
     api_url = wiki_url.rstrip("/")
     if not api_url.endswith("/api.php"):
         # 尝试常见位置
-        if "/wiki/" in api_url or "/zh/" in api_url:
-            # 去掉路径末尾，加上 api.php
-            from urllib.parse import urlparse
+        from urllib.parse import urlparse
 
-            parsed = urlparse(api_url)
-            base = f"{parsed.scheme}://{parsed.netloc}"
-            path = parsed.path
-            # 如果是 /wiki/xxx 或 /zh/xxx，取域名根
-            for prefix in ["/wiki/", "/zh/", "/index.php"]:
-                if prefix in path:
-                    path = path[: path.index(prefix)]
-                    break
-            api_url = f"{base}{path}/api.php" if path else f"{base}/api.php"
+        parsed = urlparse(api_url)
+        base = f"{parsed.scheme}://{parsed.netloc}"
+        path = parsed.path or ""
+        # 如果路径以 /wiki/xxx 或 /zh/xxx 开头，取域名根 + /api.php
+        for prefix in ["/wiki/", "/zh/", "/index.php"]:
+            if path.startswith(prefix):
+                api_url = f"{base}/api.php"
+                break
         else:
             api_url = f"{api_url}/api.php"
     return api_url

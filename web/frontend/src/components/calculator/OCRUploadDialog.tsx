@@ -10,8 +10,10 @@ interface OCRUploadDialogProps {
   onResult: (data: { char_name?: string; weapon_name?: string; preset?: Record<string, unknown> }) => void;
 }
 
-const isPythonAnywhere = typeof window !== "undefined"
-  && window.location.hostname.includes("pythonanywhere.com");
+const isPythonAnywhere = (() => {
+  const hostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+  return hostname === "pythonanywhere.com" || hostname.endsWith(".pythonanywhere.com");
+})();
 
 export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null);

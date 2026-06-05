@@ -29,7 +29,10 @@ interface SearchPanelProps {
 type SearchStatus = "idle" | "estimating" | "ready" | "running" | "done" | "error";
 
 /** 检测是否运行在 PythonAnywhere（不支持全量搜索） */
-const isPythonAnywhere = window.location.hostname.includes("pythonanywhere.com");
+const isPythonAnywhere = (() => {
+  const hostname = window.location.hostname.toLowerCase();
+  return hostname === "pythonanywhere.com" || hostname.endsWith(".pythonanywhere.com");
+})();
 
 const handleDownloadClient = () => {
   window.location.href = "/api/download/client";

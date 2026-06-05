@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.17"
+_VERSION = "3.21.18"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,13 +333,15 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 7 处文件
+# TITLE: 更新 9 处文件
 # BODY:
-# - 修改 framework/tests/ocr/test_detector.py
-# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
-# - 修改 tools/ocr/__init__.py
-# - 修改 tools/ocr/cli.py
-# - 修改 tools/ocr/detector.py
-# - 变更 web/frontend/package-lock.json
-# - 变更 web/frontend/package.json
+# - 修改 games/endfield/calc/skills/special_fields/name_utils.py
+# - 修改 scripts/_version.py
+# - 修改 tools/wiki_scout/client.py
+# - 修改 web/backend/api/contribute.py
+# - 修改 web/backend/api/generator.py
+# - 变更 web/frontend/src/api/skillParser.ts
+# - 变更 web/frontend/src/components/calculator/OCRUploadDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
+# - 变更 web/frontend/src/pages/AIFormulaDialog.tsx
 # --- END UPLOAD_SUMMARY ---

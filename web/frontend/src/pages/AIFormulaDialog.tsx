@@ -21,9 +21,9 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('ai_api_key') || '');
-  const [apiBase, setApiBase] = useState(() => localStorage.getItem('ai_api_base') || 'https://api.openai.com/v1');
-  const [model, setModel] = useState(() => localStorage.getItem('ai_model') || 'gpt-4o-mini');
+  const [apiKey, setApiKey] = useState(() => sessionStorage.getItem('ai_api_key') || '');
+  const [apiBase, setApiBase] = useState(() => sessionStorage.getItem('ai_api_base') || 'https://api.openai.com/v1');
+  const [model, setModel] = useState(() => sessionStorage.getItem('ai_model') || 'gpt-4o-mini');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -53,9 +53,9 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
       });
       setTestResult(res);
       if (res.status === 'ok') {
-        localStorage.setItem('ai_api_key', apiKey);
-        localStorage.setItem('ai_api_base', apiBase);
-        localStorage.setItem('ai_model', model);
+        sessionStorage.setItem('ai_api_key', apiKey);
+        sessionStorage.setItem('ai_api_base', apiBase);
+        sessionStorage.setItem('ai_model', model);
       }
     } catch (e: any) {
       setTestResult({ status: 'error', message: e.message });
@@ -76,10 +76,10 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
     setError('');
     setTestResult(null);
     try {
-      // 保存到 localStorage
-      localStorage.setItem('ai_api_key', apiKey);
-      localStorage.setItem('ai_api_base', apiBase);
-      localStorage.setItem('ai_model', model);
+      // 保存到 sessionStorage（仅在当前标签页有效，关闭后清除）
+      sessionStorage.setItem('ai_api_key', apiKey);
+      sessionStorage.setItem('ai_api_base', apiBase);
+      sessionStorage.setItem('ai_model', model);
 
       const res = await aiParseFormula({
         api_key: apiKey,
