@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """子图展开单元测试。"""
+# pyright: reportCallIssue=false
 
 from __future__ import annotations
 

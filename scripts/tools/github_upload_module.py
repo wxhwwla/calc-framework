@@ -930,45 +930,18 @@ def _sync_saved_version_with_head(readme_path: Path, meta) -> str:
     return saved_version
 
 
-def _read_versions_at_ref(ref: str, readme_path: Path) -> tuple[str | None, str | None]:
-    """从指定 git ref 读取 _VERSION 与 _EXE_VERSION。"""
-    from scripts._version import _EXE_VERSION_PATTERN, _VERSION_PATTERN
-
-    code, out, _ = run_git(
-        ["show", f"{ref}:{_version_file_relpath(readme_path)}"],
-        check=False,
-        capture_output=True,
-    )
-    if code != 0 or not out.strip():
-        return None, None
-    v_match = _VERSION_PATTERN.search(out)
-    e_match = _EXE_VERSION_PATTERN.search(out)
-    return (
-        v_match.group(2) if v_match else None,
-        e_match.group(2) if e_match else None,
-    )
-
-
-def _should_merge_to_release(meta, readme_path: Path) -> bool:
-    """当前 develop 相对 origin/main 是否 _VERSION 与 _EXE_VERSION 均已变更。"""
+def _should_merge_to_release(meta, readme_path: Path, *, was_minor: bool) -> bool:
+    """次版本号上传时自动同步 develop → main。"""
+    if not was_minor:
+        print(f"[信息] 非次版本上传，仅推送 {WORK_BRANCH}")
+        return False
     release_ref = _remote_release_ref()
     code, _, _ = run_git(["rev-parse", "--verify", release_ref], check=False, capture_output=True)
     if code != 0:
         print(f"[信息] 远程尚无 {RELEASE_BRANCH}，跳过合并")
         return False
-    main_v, main_e = _read_versions_at_ref(release_ref, readme_path)
-    if not main_v or not main_e:
-        return False
-    cur_v = meta.read_version(readme_path)
-    cur_e = meta.read_exe_version(readme_path)
-    if cur_v != main_v and cur_e != main_e:
-        print(
-            f"[信息] 双版本变更：_VERSION {main_v}→{cur_v}，"
-            f"_EXE_VERSION {main_e}→{cur_e} → 合并 {WORK_BRANCH} → {RELEASE_BRANCH}"
-        )
-        return True
-    print(f"[信息] 未双版本变更（{RELEASE_BRANCH}: {main_v}/{main_e}；当前: {cur_v}/{cur_e}），仅推送 {WORK_BRANCH}")
-    return False
+    print(f"[信息] 次版本上传 → 合并 {WORK_BRANCH} → {RELEASE_BRANCH}")
+    return True
 
 
 def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None:
@@ -1185,6 +1158,7 @@ def commit_and_push(
                 print(f"[信息] 已有 {ahead.strip()} 个提交未推送（不 bump 版本）")
 
     created_commit = False
+    was_minor = False  # 是否次版本上传（用于合并到 main）
 
     push_succeeded = False
 
@@ -1216,6 +1190,7 @@ def commit_and_push(
             kind = _ask_bump_kind(minor_flag=minor, no_bump=False)
 
             if kind == "minor":
+                was_minor = True
                 _maybe_backup_git_for_minor(
                     current_version=saved_version,
                     skip=skip_git_backup,
@@ -1305,14 +1280,14 @@ def commit_and_push(
 
     if push_succeeded:
         try:
-            if _should_merge_to_release(meta, readme_path):
+            if _should_merge_to_release(meta, readme_path, was_minor=was_minor):
                 _merge_work_into_release(
                     meta=meta,
                     readme_path=readme_path,
                     push_tag=push_tag,
                 )
             elif push_tag:
-                print(f"[信息] --tag 已跳过：需 _VERSION 与 _EXE_VERSION 均相对 {RELEASE_BRANCH} 变更后才合并并打标签")
+                print("[信息] --tag 已跳过：仅次版本上传时合并并打标签，请使用 --minor 或输入 M")
         except subprocess.CalledProcessError:
             print(f"[警告] {WORK_BRANCH} 已推送，但合并 {RELEASE_BRANCH} 失败，请人工处理 merge")
             raise

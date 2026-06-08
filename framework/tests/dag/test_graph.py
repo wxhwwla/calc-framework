@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 图算法单元测试：拓扑排序、节点依赖、节点显示。"""
+# pyright: reportCallIssue=false
 
 from __future__ import annotations
 
