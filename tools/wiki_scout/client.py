@@ -162,6 +162,13 @@ class MediaWikiClient:
         return pages[0] if pages else None
 
 
+def _matches_domain(hostname: str, domain: str) -> bool:
+    """安全匹配域名或子域名，防止子串绕过。"""
+    lower_host = hostname.lower()
+    lower_domain = domain.lower()
+    return lower_host == lower_domain or lower_host.endswith(f".{lower_domain}")
+
+
 def detect_wiki_type(url: str) -> str:
     """根据 URL 检测 Wiki 平台类型。
 
@@ -172,18 +179,13 @@ def detect_wiki_type(url: str) -> str:
 
     parsed = urlparse(url)
     hostname = parsed.hostname or ""
-    hostname_lower = hostname.lower()
 
     # 精确域名匹配，防止子串绕过
-    if hostname_lower == "bilibili.com" or hostname_lower.endswith(".bilibili.com"):
+    if _matches_domain(hostname, "bilibili.com") or _matches_domain(hostname, "biligame.com"):
         return "bwiki"
-    if hostname_lower == "biligame.com" or hostname_lower.endswith(".biligame.com"):
-        return "bwiki"
-    if hostname_lower == "fandom.com" or hostname_lower.endswith(".fandom.com"):
+    if _matches_domain(hostname, "fandom.com"):
         return "fandom"
-    if hostname_lower == "huijiwiki.com" or hostname_lower.endswith(".huijiwiki.com"):
-        return "bwiki"
-    if hostname_lower == "wiki.biligame.com" or hostname_lower.endswith(".wiki.biligame.com"):
+    if _matches_domain(hostname, "huijiwiki.com") or _matches_domain(hostname, "wiki.biligame.com"):
         return "bwiki"
     return "mediawiki"
 

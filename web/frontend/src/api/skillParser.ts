@@ -146,13 +146,12 @@ function extractHitCount(info: ParsedSkill, desc: string) {
 }
 
 function stripWikiMarkup(text: string): string {
-  // 通用剥离所有 {{...}} wiki 标记（含嵌套，最多 5 层）
+  // 递归剥离所有 {{...}} wiki 标记（含嵌套）
   let prev = "";
   let result = text;
-  for (let i = 0; i < 5; i++) {
-    result = result.replace(/\{\{[^}]*\}\}/g, "");
-    if (result === prev) break;
+  while (result !== prev) {
     prev = result;
+    result = result.replace(/\{\{[^{}]*\}\}/g, "");  // 只匹配不含 {} 的最内层 {{...}}
   }
   return result
     .replace(/<BR\s*\/?>/gi, " ")

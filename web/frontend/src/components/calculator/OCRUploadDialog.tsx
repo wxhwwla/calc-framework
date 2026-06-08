@@ -12,7 +12,7 @@ interface OCRUploadDialogProps {
 
 const isPythonAnywhere = (() => {
   const hostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
-  return hostname === "pythonanywhere.com" || hostname.endsWith(".pythonanywhere.com");
+  return hostname === "pythonanywhere.com" || hostname === "www.pythonanywhere.com" || hostname.endsWith(".pythonanywhere.com");
 })();
 
 export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDialogProps) {

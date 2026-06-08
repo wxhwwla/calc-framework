@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.22"
+_VERSION = "3.22.0"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,14 +333,26 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 8 处文件
+# TITLE: 更新 20 处文件
 # BODY:
 # - 修改 batch_docstring.py
+# - 更新文档 docs/会话接续手册.md
+# - 修改 framework/tests/dag/test_block_cache.py
+# - 修改 framework/tests/dag/test_sandbox.py
+# - 修改 framework/tests/dag/test_serializer.py
+# - 修改 framework/tests/search/test_session.py
+# - 修改 games/endfield/calc/skills/special_fields/name_utils.py
 # - 变更 package.json
 # - 变更 render.yaml
 # - 修改 scan_docstrings.py
 # - 变更 scan_report.json
 # - 修改 scripts/_version.py
+# - 修改 tools/wiki_scout/client.py
 # - 变更 tsconfig.json
+# - 修改 web/backend/api/generator.py
+# - 变更 web/frontend/package.json
+# - 变更 web/frontend/src/api/skillParser.ts
+# - 变更 web/frontend/src/components/calculator/OCRUploadDialog.tsx
+# - 变更 web/frontend/src/components/calculator/SearchPanel.tsx
 # - 变更 zbpack.json
 # --- END UPLOAD_SUMMARY ---

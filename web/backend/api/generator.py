@@ -246,7 +246,7 @@ def _validate_api_url(url: str) -> str:
             if ip in net:
                 raise HTTPException(status_code=400, detail=f"禁止访问内网地址: {hostname}")
     except ValueError:
-        # 不是 IP 地址（是域名），尝试 DNS 解析
+        # 不是 IP 地址（是域名），尝试 DNS 解析（SSRF 防护：验证域名不指向内网）
         try:
             addrs = socket.getaddrinfo(hostname, 80, family=socket.AF_INET)
             for addr in addrs:

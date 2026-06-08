@@ -31,7 +31,8 @@ type SearchStatus = "idle" | "estimating" | "ready" | "running" | "done" | "erro
 /** 检测是否运行在 PythonAnywhere（不支持全量搜索） */
 const isPythonAnywhere = (() => {
   const hostname = window.location.hostname.toLowerCase();
-  return hostname === "pythonanywhere.com" || hostname.endsWith(".pythonanywhere.com");
+  // 使用 === 和 .endsWith 防止域名子串绕过
+  return hostname === "pythonanywhere.com" || hostname === "www.pythonanywhere.com" || hostname.endsWith(".pythonanywhere.com");
 })();
 
 const handleDownloadClient = () => {

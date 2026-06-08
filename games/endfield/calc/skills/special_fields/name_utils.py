@@ -10,7 +10,8 @@ from typing import Any
 
 from .codec import LEGACY_SPECIAL_KEY, SPECIAL_FIELD_KEYS
 
-_EFFECT_NAME_RE = re.compile(r'([^\s，。；:：,\.()（）"“”\[\]【】]{1,40}\+)')
+# 原子组 (?>...) 防止 {1,40}+ 回溯造成多项式时间
+_EFFECT_NAME_RE = re.compile(r'(?>[^\s，。；:：,.()（）"“”\[\]【】]{1,40})\+')
 
 
 def weapon_special_field_keys(weapon: dict[str, Any]) -> frozenset[str]:
