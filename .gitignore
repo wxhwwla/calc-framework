@@ -56,6 +56,11 @@ git_backup/snapshots/
 *.log
 debug.log
 
+# 一次性临时工具/扫描产物
+batch_docstring.py
+scan_docstrings.py
+scan_report.json
+
 # 环境与密钥（勿提交）
 .env
 .env.*
