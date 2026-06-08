@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.21"
+_VERSION = "3.21.22"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,32 +333,9 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 31 处文件
+# TITLE: 更新 8 处文件
 # BODY:
 # - 修改 batch_docstring.py
-# - 修改 framework/src/calc_framework/dag/graph_types.py
-# - 修改 framework/src/calc_framework/dag/node_types.py
-# - 修改 framework/src/calc_framework/dag/state.py
-# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
-# - 修改 framework/src/calc_framework/graph_editor/graph_editor_widget.py
-# - 修改 framework/src/calc_framework/graph_editor/help_content.py
-# - 修改 framework/src/calc_framework/graph_editor/items.py
-# - 修改 framework/src/calc_framework/graph_editor/node_panel.py
-# - 修改 framework/src/calc_framework/graph_editor/prop_panel.py
-# - 修改 framework/src/calc_framework/launcher.py
-# - 修改 framework/src/calc_framework/ui/launcher/runtime.py
-# - 修改 framework/src/calc_framework/ui/launcher/window.py
-# - 修改 framework/src/calc_framework/ui/viewer_events.py
-# - 修改 framework/src/calc_framework/ui/viewer_plugin_manager.py
-# - 修改 framework/src/calc_framework/ui/viewer_render.py
-# - 修改 framework/tests/dag/test_block_cache.py
-# - 修改 framework/tests/dag/test_engine.py
-# - 修改 framework/tests/dag/test_graph.py
-# - 修改 framework/tests/dag/test_service.py
-# - 修改 framework/tests/dag/test_state.py
-# - 修改 framework/tests/dag/test_subgraph.py
-# - 修改 framework/tests/search/test_result.py
-# - 变更 games/endfield/pyproject.toml
 # - 变更 package.json
 # - 变更 render.yaml
 # - 修改 scan_docstrings.py
