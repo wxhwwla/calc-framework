@@ -1,7 +1,0 @@
-{
-  "name": "calc-framework",
-  "private": true,
-  "scripts": {
-    "build": "cd web/frontend && npm install && npm run build"
-  }
-}

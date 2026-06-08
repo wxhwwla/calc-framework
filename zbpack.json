@@ -1,7 +1,0 @@
-{
-  "python": {
-    "entry": "web/backend/main.py",
-    "version": "3.12"
-  },
-  "build_command": "pip install -r web/backend/requirements.txt && pip install -e framework/"
-}
