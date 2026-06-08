@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.21.19"
+_VERSION = "3.21.20"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,17 +333,20 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 11 处文件
+# TITLE: 更新 14 处文件
 # BODY:
 # - 变更 .gitignore
 # - 修改 batch_docstring.py
-# - 更新文档 docs/MVP搜索验收说明.md
-# - 更新文档 docs/代码结构规范.md
 # - 更新文档 docs/会话接续手册.md
-# - 更新文档 docs/制造游戏计算器完整流程.md
-# - 更新文档 docs/操作指令集.md
-# - 更新文档 docs/算法与架构.md
+# - 更新文档 docs/项目目标.md
+# - 修改 framework/tests/config/test_file_watcher.py
+# - 变更 package.json
+# - 变更 render.yaml
 # - 修改 scan_docstrings.py
 # - 变更 scan_report.json
 # - 修改 scripts/_version.py
+# - 修改 tools/wiki_scout/client.py
+# - 变更 tsconfig.json
+# - 修改 web/scripts/deploy_pythonanywhere.py
+# - 变更 zbpack.json
 # --- END UPLOAD_SUMMARY ---

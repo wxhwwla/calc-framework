@@ -61,6 +61,9 @@ batch_docstring.py
 scan_docstrings.py
 scan_report.json
 
+# 运行时用户偏好（不应跟踪）
+ui_preferences.json
+
 # 环境与密钥（勿提交）
 .env
 .env.*

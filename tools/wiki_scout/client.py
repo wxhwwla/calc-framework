@@ -29,6 +29,9 @@ class MediaWikiClient:
         user_agent: str | None = None,
         rate_limit: float = 0.5,
         timeout: int = 30,
+        max_retries: int = 3,
+        retry_backoff: float = 2.0,
+        referer: str | None = None,
     ) -> None:
         if requests is None:
             raise ImportError("需要安装 requests 库: pip install requests")
@@ -40,8 +43,12 @@ class MediaWikiClient:
                 "Accept": "application/json",
             }
         )
+        if referer:
+            self.session.headers["Referer"] = referer
         self.rate_limit = rate_limit  # 请求间隔（秒）
         self.timeout = timeout
+        self.max_retries = max_retries
+        self.retry_backoff = retry_backoff
         self._last_request = 0.0
 
     def _wait(self) -> None:
@@ -52,16 +59,31 @@ class MediaWikiClient:
         self._last_request = time.time()
 
     def call(self, params: dict[str, str]) -> dict[str, Any]:
-        """调用 MediaWiki API。"""
+        """调用 MediaWiki API（含自动重试）。"""
         self._wait()
         params["format"] = "json"
-        resp = self.session.get(
-            self.api_url,
-            params=params,
-            timeout=self.timeout,
-        )
-        resp.raise_for_status()
-        return resp.json()
+        last_error: Exception | None = None
+        for attempt in range(self.max_retries):
+            try:
+                resp = self.session.get(
+                    self.api_url,
+                    params=params,
+                    timeout=self.timeout,
+                )
+                if resp.status_code in (429, 503, 502):
+                    logger.warning(
+                        "HTTP %d on attempt %d/%d, retrying…", resp.status_code, attempt + 1, self.max_retries
+                    )
+                    time.sleep(self.retry_backoff * (attempt + 1))
+                    continue
+                resp.raise_for_status()
+                return resp.json()
+            except (requests.ConnectionError, requests.Timeout) as e:
+                last_error = e
+                logger.warning("请求失败 (attempt %d/%d): %s", attempt + 1, self.max_retries, e)
+                if attempt < self.max_retries - 1:
+                    time.sleep(self.retry_backoff * (attempt + 1))
+        raise last_error or RuntimeError(f"API 调用失败: {params.get('action', 'unknown')}")
 
     def query_category(self, category: str, limit: int = 50) -> list[dict[str, Any]]:
         """获取分类下的所有页面。"""
