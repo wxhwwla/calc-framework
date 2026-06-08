@@ -46,7 +46,7 @@ class CalcPackViewerRenderMixin:
         try:
             self._loaded_data = load_calcpack(path)
         except Exception as e:
-            QMessageBox.critical(self, "加载失败", str(e))
+            QMessageBox.critical(self, "加载失败", str(e))  # type: ignore[arg-type]
             return
 
         self._calcpack_path = str(path)
@@ -68,7 +68,7 @@ class CalcPackViewerRenderMixin:
 
         dag_data = self._loaded_data.get("dag/formula.dag.json")
         if not dag_data:
-            QMessageBox.critical(self, "加载失败", ".calcpack 缺少 dag/formula.dag.json")
+            QMessageBox.critical(self, "加载失败", ".calcpack 缺少 dag/formula.dag.json")  # type: ignore[arg-type]
             return
 
         dag = dag_from_dict(dag_data)
@@ -77,7 +77,7 @@ class CalcPackViewerRenderMixin:
 
         layout_data = self._loaded_data.get("ui/layout.json")
         if not layout_data:
-            QMessageBox.critical(self, "加载失败", ".calcpack 缺少 ui/layout.json")
+            QMessageBox.critical(self, "加载失败", ".calcpack 缺少 ui/layout.json")  # type: ignore[arg-type]
             return
 
         if asset_map:
@@ -139,13 +139,9 @@ class CalcPackViewerRenderMixin:
             combo.blockSignals(False)
             combo.currentIndexChanged.connect(self._on_entity_changed)
             self._entity_selectors[source_prefix] = combo
-            self._entity_data[source_prefix] = {
-                n: e for n, e in zip(names, entities)
-            }
+            self._entity_data[source_prefix] = {n: e for n, e in zip(names, entities)}
 
-            label = {"character": "角色", "weapon": "武器", "equipment": "装备"}.get(
-                source_prefix, source_prefix
-            )
+            label = {"character": "角色", "weapon": "武器", "equipment": "装备"}.get(source_prefix, source_prefix)
             self._entity_form.addRow(f"{label}:", combo)
 
     def _rebuild_sheet(self) -> None:

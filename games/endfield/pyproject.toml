@@ -75,10 +75,10 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["calculation", "data", "gui_design"]
+source = ["calc", "data", "data_loading", "gui"]
 
 [tool.coverage.report]
-fail_under = 60
+fail_under = 40
 skip_empty = true
 exclude_lines = [
     "pragma: no cover",

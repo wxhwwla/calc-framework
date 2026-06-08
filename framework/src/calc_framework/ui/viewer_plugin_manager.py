@@ -70,7 +70,13 @@ class PluginManagerDialog(QDialog):
         layout.addLayout(toolbar)
 
         if not plugins:
-            layout.addWidget(QLabel("暂无已注册的插件。\n点击「导入 .calcplugin」安装一个插件，或「打包插件目录」将源码目录打包为 .calcplugin。"))  # noqa: E501
+            layout.addWidget(
+                QLabel(
+                    "暂无已注册的插件。\n"
+                    "点击「导入 .calcplugin」安装一个插件，"
+                    "或「打包插件目录」将源码目录打包为 .calcplugin。"
+                )
+            )
         else:
             for name in plugins:
                 plugin = reg.get(name)
@@ -93,21 +99,23 @@ class PluginManagerDialog(QDialog):
     def _import_plugin(self) -> None:
         """导入 .calcplugin 文件。"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "导入插件", "",
+            self,
+            "导入插件",
+            "",
             "CalcPlugin (*.calcplugin);;ZIP (*.zip);;All Files (*)",
         )
         if not path:
             return
         try:
             from tools.plugin_pack import install_plugin
+
             repo = Path(__file__).resolve().parents[3]
             target = repo / "web" / "hub" / "plugins"
             installed = install_plugin(path, target)
             msg = f"插件已安装: {installed.name}"
             if self._status_callback:
                 self._status_callback(msg)
-            QMessageBox.information(self, "导入成功",
-                                    f"插件已安装到:\n{installed}\n\n点击「刷新」查看已注册的插件。")
+            QMessageBox.information(self, "导入成功", f"插件已安装到:\n{installed}\n\n点击「刷新」查看已注册的插件。")
         except Exception as e:
             QMessageBox.critical(self, "导入失败", f"导入插件时出错:\n{e}")
 
@@ -118,8 +126,11 @@ class PluginManagerDialog(QDialog):
             return
         try:
             from tools.plugin_pack import build_plugin
+
             output, _ = QFileDialog.getSaveFileName(
-                self, "保存为 .calcplugin", "",
+                self,
+                "保存为 .calcplugin",
+                "",
                 "CalcPlugin (*.calcplugin)",
             )
             if not output:
@@ -133,7 +144,8 @@ class PluginManagerDialog(QDialog):
             QMessageBox.critical(self, "打包失败", f"打包插件时出错:\n{e}")
 
         """_refresh。"""
+
     def _refresh(self) -> None:
         self.accept()
-        dialog = PluginManagerDialog(self.parent(), self._status_callback)
+        dialog = PluginManagerDialog(self.parent(), self._status_callback)  # type: ignore[arg-type]
         dialog.exec()

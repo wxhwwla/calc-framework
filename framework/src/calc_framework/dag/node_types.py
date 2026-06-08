@@ -3,27 +3,22 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 节点类型定义。"""
 
-
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Literal
 
-_VALID_UNARY_OPS = frozenset({"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"})  # noqa: E501
+_VALID_UNARY_OPS = frozenset(
+    {"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"}
+)
 
 _VALID_BINARY_OPS = frozenset({"+", "-", "*", "/", "^", "min", "max", "mod"})
 
 _VALID_NODE_TYPES = frozenset({"const", "var", "unary", "binary", "condition", "expr", "user_input", "call"})
 
 
-
-
-
 @dataclass
-
 class ConstNode:
-
     """常量节点。"""
 
     type: Literal["const"] = "const"
@@ -35,13 +30,8 @@ class ConstNode:
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class VarNode:
-
     """变量引用节点。"""
 
     type: Literal["var"] = "var"
@@ -53,77 +43,43 @@ class VarNode:
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class UnaryNode:
-
     """一元运算节点。"""
 
     type: Literal["unary"] = "unary"
-
     op: str = ""
-
     input: str = ""
-
     label: str = ""
-
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class BinaryNode:
-
     """二元运算节点。"""
 
     type: Literal["binary"] = "binary"
-
     op: str = ""
-
     lhs: str = ""
-
     rhs: str = ""
-
     label: str = ""
-
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class ConditionNode:
-
     """条件分支节点。"""
 
     type: Literal["condition"] = "condition"
-
     cond: str = ""
-
     true_val: str = ""
-
     false_val: str = ""
-
     label: str = ""
-
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class ExprNode:
-
     """内联表达式节点。"""
 
     type: Literal["expr"] = "expr"
@@ -137,13 +93,8 @@ class ExprNode:
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class UserInputNode:
-
     """GUI 输入节点。"""
 
     type: Literal["user_input"] = "user_input"
@@ -161,13 +112,8 @@ class UserInputNode:
     description: str = ""
 
 
-
-
-
 @dataclass
-
 class CallNode:
-
     """子图调用节点。"""
 
     type: Literal["call"] = "call"
@@ -181,13 +127,7 @@ class CallNode:
     description: str = ""
 
 
-
-
-
 NodeType = ConstNode | VarNode | UnaryNode | BinaryNode | ConditionNode | ExprNode | UserInputNode | CallNode
-
-
-
 
 
 def _collect_node_refs(node: NodeType) -> list[str]:

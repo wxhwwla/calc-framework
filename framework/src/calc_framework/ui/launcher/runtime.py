@@ -167,4 +167,4 @@ def spawn_detached(argv: list[str], root: Path | None = None) -> subprocess.Pope
     }
     if sys.platform == "win32":
         kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE  # type: ignore[attr-defined]
-    return subprocess.Popen(argv, **kwargs)
+    return subprocess.Popen(argv, **kwargs)  # type: ignore[return-value]

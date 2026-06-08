@@ -300,7 +300,7 @@ class _DebuggerPage(QWidget):
                 {"a": 10.0, "b": 20.0},
                 self,
             )
-            layout.addWidget(self._debugger)
+            layout.addWidget(self._debugger)  # type: ignore[arg-type]
         except Exception as exc:
             logger.exception("加载 DAG 调试器失败")
             layout.addWidget(QLabel(f"加载失败: {exc}"))

@@ -21,7 +21,7 @@ class CalcPackViewerEventMixin:
     # _entity_selectors, _level_spin, _asset_temp_dir
 
     def _show_help(self) -> None:
-        dialog = HelpDialog(build_viewer_help, self, title="CalcPackViewer 使用说明")
+        dialog = HelpDialog(build_viewer_help, self, title="CalcPackViewer 使用说明")  # type: ignore[arg-type]
         dialog.exec()
 
     @staticmethod
@@ -54,12 +54,14 @@ class CalcPackViewerEventMixin:
             self._splitter.setSizes([max(100, sizes[0]), max(400, sizes[1] - 200), 200])
 
     def _show_plugin_manager_dialog(self) -> None:
-        dialog = PluginManagerDialog(self, self._status_label.setText)
+        dialog = PluginManagerDialog(self, self._status_label.setText)  # type: ignore[arg-type]
         dialog.exec()
 
     def _open_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "打开 .calcpack", "",
+            self,
+            "打开 .calcpack",
+            "",  # type: ignore[arg-type]
             "CalcPack (*.calcpack);;ZIP (*.zip);;All Files (*)",
         )
         if path:
@@ -79,9 +81,7 @@ class CalcPackViewerEventMixin:
             if combo.currentIndex() >= 0:
                 selected.append(f"{src}={combo.currentText()}")
         lv = self._level_spin.value() if self._level_spin else 90
-        self._status_label.setText(
-            f"已求值 — {', '.join(selected) if selected else '自定义输入'} Lv.{lv}"
-        )
+        self._status_label.setText(f"已求值 — {', '.join(selected) if selected else '自定义输入'} Lv.{lv}")
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)

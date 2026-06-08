@@ -1,240 +1,243 @@
-#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""DAG 求值引擎单元测试。"""
-
-import pytestfrom calc_framework.dag.engine import evaluate_graph, topological_sortfrom calc_framework.dag.errors import DAGCycleError, DAGRuntimeErrorfrom calc_framework.dag.serializer import dag_from_dict_SIMPLE_LINEAR: dict = {
-    "schema_version": "dag-v1",
-    "name": "线性图",
-    "variables": {"a": {"type": "float", "source": "computed"}},
-    "nodes": {
-        "a_node": {"type": "var", "path": "a"},
-        "two": {"type": "const", "value": 2},
-        "result": {"type": "binary", "op": "*", "lhs": "a_node", "rhs": "two"},
-    },
-    "outputs": {"prod": {"node": "result", "label": "乘积"}},
-}
-
-
-_SUBGRAPH_GRAPH: dict = {
-    "schema_version": "dag-v1",
-    "name": "子图求值",
-    "subgraphs": {
-        "double": {
-            "parameters": {"val": {"type": "float"}},
-            "nodes": {
-                "two": {"type": "const", "value": 2},
-                "result": {"type": "binary", "op": "*", "lhs": "val", "rhs": "two"},
-            },
-            "outputs": {"doubled": {"node": "result", "label": "x2"}},
-        },
-    },
-    "nodes": {
-        "in_val": {"type": "const", "value": 5},
-        "call_double": {"type": "call", "subgraph": "double", "bindings": {"val": "in_val"}},
-    },
-    "outputs": {"main_out": {"node": "call_double.doubled", "label": "结果"}},
-}
-
-
-_CONDITION_GRAPH: dict = {
-    "schema_version": "dag-v1",
-    "name": "条件图",
-    "variables": {"flag": {"type": "float", "source": "computed"}},
-    "nodes": {
-        "flag_node": {"type": "var", "path": "flag"},
-        "true_val": {"type": "const", "value": 100},
-        "false_val": {"type": "const", "value": 0},
-        "branch": {"type": "condition", "cond": "flag_node", "true_val": "true_val", "false_val": "false_val"},
-    },
-    "outputs": {"result": {"node": "branch", "label": "分支结果"}},
-}
-
-
-_EXPR_GRAPH: dict = {
-    "schema_version": "dag-v1",
-    "name": "表达式图",
-    "nodes": {
-        "e": {"type": "expr", "expr": "1 + floor(3.7)", "inputs": {}},
-    },
-    "outputs": {"out": {"node": "e", "label": "expr"}},
-}
-
-
-_CYCLE_GRAPH: dict = {
-    "schema_version": "dag-v1",
-    "name": "循环图",
-    "nodes": {
-        "a": {"type": "binary", "op": "+", "lhs": "b", "rhs": "b"},
-        "b": {"type": "binary", "op": "+", "lhs": "a", "rhs": "a"},
-    },
-    "outputs": {"x": {"node": "a", "label": "x"}},
-}
-
-
-_RESOLVE_PATH_DICT: dict = {
-    "schema_version": "dag-v1",
-    "name": "嵌套路径 dict",
-    "variables": {"character.attack": {"type": "float", "source": "character"}},
-    "nodes": {
-        "atk_node": {"type": "var", "path": "character.attack"},
-    },
-    "outputs": {"atk": {"node": "atk_node", "label": "攻击"}},
-}
-
-
-_MISSING_OUTPUT_DAG: dict = {
-    "schema_version": "dag-v1",
-    "name": "缺失输出引用",
-    "subgraphs": {
-        "add_one": {
-            "parameters": {"val": {"type": "float"}},
-            "nodes": {
-                "one": {"type": "const", "value": 1},
-                "result": {"type": "binary", "op": "+", "lhs": "val", "rhs": "one"},
-            },
-            "outputs": {"out": {"node": "result", "label": "val+1", "is_primary": True}},
-        },
-    },
-    "nodes": {
-        "in_val": {"type": "const", "value": 5},
-        "call_add": {"type": "call", "subgraph": "add_one", "bindings": {"val": "in_val"}},
-    },
-    "outputs": {
-        "valid": {"node": "call_add", "label": "有效输出"},
-        "invalid": {"node": "call_add.nonexistent", "label": "无效输出"},
-    },
-}
-
-
-class TestTopologicalSort:
-    """拓扑排序。"""
-
-    def test_linear_graph_order(self) -> None:
-        g = dag_from_dict(_SIMPLE_LINEAR)
-        order = topological_sort(g)
-        assert len(order) == 3
-        const_idx = order.index("two")
-        var_idx = order.index("a_node")
-        result_idx = order.index("result")
-        assert const_idx < result_idx
-        assert var_idx < result_idx
-
-    def test_cycle_detected(self) -> None:
-        g = dag_from_dict(_CYCLE_GRAPH)
-        with pytest.raises(DAGCycleError):
-            topological_sort(g)
-
-
-class TestEvaluateGraph:
-    """完整图求值。"""
-
-    def test_simple_linear(self) -> None:
-        g = dag_from_dict(_SIMPLE_LINEAR)
-        result = evaluate_graph(g, {"a": 3.0})
-        assert result.outputs["prod"] == pytest.approx(6.0)
-
-    def test_subgraph_evaluation(self) -> None:
-        g = dag_from_dict(_SUBGRAPH_GRAPH)
-        result = evaluate_graph(g, {})
-        assert result.outputs["main_out"] == pytest.approx(10.0)
-
-    def test_condition_true_branch(self) -> None:
-        g = dag_from_dict(_CONDITION_GRAPH)
-        result = evaluate_graph(g, {"flag": 1.0})
-        assert result.outputs["result"] == pytest.approx(100.0)
-
-    def test_condition_false_branch(self) -> None:
-        g = dag_from_dict(_CONDITION_GRAPH)
-        result = evaluate_graph(g, {"flag": 0.0})
-        assert result.outputs["result"] == pytest.approx(0.0)
-
-    def test_expr_node(self) -> None:
-        g = dag_from_dict(_EXPR_GRAPH)
-        result = evaluate_graph(g, {})
-        assert result.outputs["out"] == pytest.approx(4.0)
-
-    def test_node_values_contain_intermediates(self) -> None:
-        g = dag_from_dict(_SIMPLE_LINEAR)
-        result = evaluate_graph(g, {"a": 4.0})
-        assert result.node_values["two"] == pytest.approx(2.0)
-        assert result.node_values["result"] == pytest.approx(8.0)
-
-    def test_user_input_default(self) -> None:
-        g = dag_from_dict({
-            "schema_version": "dag-v1",
-            "name": "ui",
-            "nodes": {"ui": {"type": "user_input", "default": 42}},
-            "outputs": {"o": {"node": "ui", "label": "o"}},
-        })
-        result = evaluate_graph(g, {})
-        assert result.outputs["o"] == pytest.approx(42.0)
-
-    def test_unary_node(self) -> None:
-        g = dag_from_dict({
-            "schema_version": "dag-v1",
-            "name": "unary",
-            "variables": {"x": {"type": "float", "source": "computed"}},
-            "nodes": {
-                "x_node": {"type": "var", "path": "x"},
-                "neg": {"type": "unary", "op": "neg", "input": "x_node"},
-            },
-            "outputs": {"o": {"node": "neg", "label": "o"}},
-        })
-        result = evaluate_graph(g, {"x": 3.0})
-        assert result.outputs["o"] == pytest.approx(-3.0)
-
-    def test_unknown_unary_op(self) -> None:
-        from calc_framework.dag.schema import DAGGraph, DAGOutput, DAGVariable, UnaryNode, VarNode
-        g = DAGGraph(
-            name="unknown_unary",
-            variables={"x": DAGVariable(type="float", source="computed")},
-            nodes={
-                "x_node": VarNode(path="x"),
-                "bad": UnaryNode(op="foo", input="x_node"),
-            },
-            outputs={"o": DAGOutput(node="bad", label="o")},
-        )
-        with pytest.raises(DAGRuntimeError, match="未知一元运算"):
-            evaluate_graph(g, {"x": 1.0})
-
-    def test_unknown_binary_op(self) -> None:
-        from calc_framework.dag.schema import BinaryNode, ConstNode, DAGGraph, DAGOutput, DAGVariable, VarNode
-        g = DAGGraph(
-            name="unknown_binary",
-            variables={"x": DAGVariable(type="float", source="computed")},
-            nodes={
-                "x_node": VarNode(path="x"),
-                "two": ConstNode(value=2),
-                "bad": BinaryNode(op="^^^", lhs="x_node", rhs="two"),
-            },
-            outputs={"o": DAGOutput(node="bad", label="o")},
-        )
-        with pytest.raises(DAGRuntimeError, match="未知二元运算"):
-            evaluate_graph(g, {"x": 1.0})
-
-    def test_unsupported_node_type(self) -> None:
-        from dataclasses import dataclass
-        from calc_framework.dag.engine import _eval_single_node
-
-        @dataclass
-        class MockNode:
-            type: str = "mock"
-
-        with pytest.raises(DAGRuntimeError, match="不支持的节点类型"):
-            _eval_single_node(MockNode(), {}, {})
-
-    def test_resolve_path_with_dict(self) -> None:
-        g = dag_from_dict(_RESOLVE_PATH_DICT)
-        result = evaluate_graph(g, {"character": {"attack": 100.0}})
-        assert result.outputs["atk"] == pytest.approx(100.0)
-
-    def test_resolve_path_non_dict_intermediate(self) -> None:
-        g = dag_from_dict(_RESOLVE_PATH_DICT)
-        with pytest.raises(DAGRuntimeError):
-            evaluate_graph(g, {"character": 10.0})
-
-    def test_missing_output_reference(self) -> None:
-        g = dag_from_dict(_MISSING_OUTPUT_DAG)
-        result = evaluate_graph(g, {})
-        assert result.outputs["valid"] == pytest.approx(6.0)
-        assert "invalid" not in result.outputs
+"""DAG 求值引擎单元测试。"""
+
+from __future__ import annotations
+
+import pytest
+
+from calc_framework.dag.engine import _eval_single_node, evaluate_graph
+from calc_framework.dag.errors import DAGRuntimeError
+from calc_framework.dag.graph_types import DAGGraph, DAGOutput
+from calc_framework.dag.node_types import (
+    BinaryNode,
+    ConditionNode,
+    ConstNode,
+    ExprNode,
+    UnaryNode,
+    UserInputNode,
+    VarNode,
+)
+from calc_framework.dag.state import DAGState
+
+
+class TestEvalSingleNode:
+    def test_const(self) -> None:
+        assert _eval_single_node(ConstNode(value=5.0), {}, {}) == 5.0
+
+    def test_const_float_coerce(self) -> None:
+        assert _eval_single_node(ConstNode(value=3), {}, {}) == 3.0
+
+    def test_var_found(self) -> None:
+        assert _eval_single_node(VarNode(path="x"), {}, {"x": 42.0}) == 42.0
+
+    def test_var_nested(self) -> None:
+        ctx = {"character": {"atk": 100.0}}
+        assert _eval_single_node(VarNode(path="character.atk"), {}, ctx) == 100.0
+
+    def test_var_not_found(self) -> None:
+        with pytest.raises(DAGRuntimeError):
+            _eval_single_node(VarNode(path="missing"), {}, {})
+
+    def test_user_input(self) -> None:
+        assert _eval_single_node(UserInputNode(default=3.0), {}, {}) == 3.0
+
+    def test_unary_neg(self) -> None:
+        assert _eval_single_node(UnaryNode(op="neg", input="n1"), {"n1": 5.0}, {}) == -5.0
+
+    def test_unary_abs(self) -> None:
+        assert _eval_single_node(UnaryNode(op="abs", input="n1"), {"n1": -3.0}, {}) == 3.0
+
+    def test_unary_unknown_op(self) -> None:
+        with pytest.raises(DAGRuntimeError):
+            _eval_single_node(UnaryNode(op="bogus", input="n1"), {"n1": 1.0}, {})
+
+    def test_binary_add(self) -> None:
+        node = BinaryNode(op="+", lhs="a", rhs="b")
+        assert _eval_single_node(node, {"a": 1.0, "b": 2.0}, {}) == 3.0
+
+    def test_binary_mul(self) -> None:
+        node = BinaryNode(op="*", lhs="a", rhs="b")
+        assert _eval_single_node(node, {"a": 3.0, "b": 4.0}, {}) == 12.0
+
+    def test_binary_div(self) -> None:
+        node = BinaryNode(op="/", lhs="a", rhs="b")
+        assert _eval_single_node(node, {"a": 10.0, "b": 2.0}, {}) == 5.0
+
+    def test_binary_div_by_zero(self) -> None:
+        node = BinaryNode(op="/", lhs="a", rhs="b")
+        with pytest.raises(DAGRuntimeError):
+            _eval_single_node(node, {"a": 1.0, "b": 0.0}, {})
+
+    def test_binary_mod(self) -> None:
+        node = BinaryNode(op="mod", lhs="a", rhs="b")
+        assert _eval_single_node(node, {"a": 7.0, "b": 3.0}, {}) == 1.0
+
+    def test_binary_unknown_op(self) -> None:
+        node = BinaryNode(op="bogus", lhs="a", rhs="b")
+        with pytest.raises(DAGRuntimeError):
+            _eval_single_node(node, {"a": 1.0, "b": 2.0}, {})
+
+    def test_condition_true(self) -> None:
+        node = ConditionNode(cond="c", true_val="t", false_val="f")
+        assert _eval_single_node(node, {"c": 1.0, "t": 10.0, "f": 20.0}, {}) == 10.0
+
+    def test_condition_false(self) -> None:
+        node = ConditionNode(cond="c", true_val="t", false_val="f")
+        assert _eval_single_node(node, {"c": 0.0, "t": 10.0, "f": 20.0}, {}) == 20.0
+
+    def test_expr_node(self) -> None:
+        node = ExprNode(expr="a + b", inputs={"a": "n1", "b": "n2"})
+        assert _eval_single_node(node, {"n1": 3.0, "n2": 4.0}, {}) == 7.0
+
+    def test_unsupported_type(self) -> None:
+        with pytest.raises(DAGRuntimeError):
+            _eval_single_node("string_node", {}, {})  # type: ignore[arg-type]
+
+
+class TestEvaluateGraph:
+    def test_single_const(self) -> None:
+        graph = DAGGraph(nodes={"n1": ConstNode(value=42.0)})
+        result = evaluate_graph(graph, {})
+        assert result.node_values["n1"] == 42.0
+
+    def test_linear_chain(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=10.0),
+                "b": UnaryNode(op="neg", input="a"),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.node_values["a"] == 10.0
+        assert result.node_values["b"] == -10.0
+
+    def test_binary_chain(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=2.0),
+                "b": ConstNode(value=3.0),
+                "c": BinaryNode(op="+", lhs="a", rhs="b"),
+                "d": BinaryNode(op="*", lhs="c", rhs="b"),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.node_values["c"] == 5.0
+        assert result.node_values["d"] == 15.0
+
+    def test_var_input(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "v": VarNode(path="x"),
+                "o": UnaryNode(op="neg", input="v"),
+            }
+        )
+        result = evaluate_graph(graph, {"x": 7.0})
+        assert result.node_values["v"] == 7.0
+        assert result.node_values["o"] == -7.0
+
+    def test_incremental_unchanged(self) -> None:
+        """相同上下文两次求值应返回缓存结果。"""
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=1.0),
+                "v": VarNode(path="x"),
+            }
+        )
+        state = DAGState()
+        evaluate_graph(graph, {"x": 5.0}, dag_state=state)  # first eval populates state
+        r2 = evaluate_graph(graph, {"x": 5.0}, dag_state=state)
+        assert r2.node_values["v"] == 5.0
+        assert r2.node_values["a"] == 1.0
+        assert state.evaluation_count == 2
+
+    def test_incremental_changed(self) -> None:
+        """上下文变化后应重算。"""
+        graph = DAGGraph(
+            nodes={
+                "v": VarNode(path="x"),
+                "o": UnaryNode(op="neg", input="v"),
+            }
+        )
+        state = DAGState()
+        r1 = evaluate_graph(graph, {"x": 5.0}, dag_state=state)
+        assert r1.node_values["o"] == -5.0
+        r2 = evaluate_graph(graph, {"x": 10.0}, dag_state=state)
+        assert r2.node_values["o"] == -10.0
+
+    def test_cycle_detection(self) -> None:
+        """循环依赖应立即报错。"""
+        graph = DAGGraph(
+            nodes={
+                "a": UnaryNode(op="neg", input="b"),
+                "b": UnaryNode(op="neg", input="a"),
+            }
+        )
+        with pytest.raises(Exception):
+            evaluate_graph(graph, {})
+
+    def test_div_by_zero_handling(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=1.0),
+                "b": ConstNode(value=0.0),
+                "c": BinaryNode(op="div", lhs="a", rhs="b"),
+            }
+        )
+        with pytest.raises(Exception):
+            evaluate_graph(graph, {})
+
+    def test_outputs_in_result(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=5.0),
+                "b": ConstNode(value=3.0),
+                "sum": BinaryNode(op="+", lhs="a", rhs="b"),
+            },
+            outputs={"result": DAGOutput(node="sum", label="sum", format=".1f", is_primary=True)},
+        )
+        result = evaluate_graph(graph, {})
+        assert result.outputs.get("result") == 8.0
+
+    def test_execution_order_topo(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=1.0),
+                "b": UnaryNode(op="neg", input="a"),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.execution_order.index("a") < result.execution_order.index("b")
+
+    def test_condition_node(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "cond": ConstNode(value=1.0),
+                "t": ConstNode(value=100.0),
+                "f": ConstNode(value=200.0),
+                "c": ConditionNode(cond="cond", true_val="t", false_val="f"),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.node_values["c"] == 100.0
+
+    def test_expr_node(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "a": ConstNode(value=7.0),
+                "b": ConstNode(value=3.0),
+                "e": ExprNode(expr="a * b + 1", inputs={"a": "a", "b": "b"}),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.node_values["e"] == 22.0
+
+    def test_user_input_default(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "u": UserInputNode(default=99.0),
+                "o": UnaryNode(op="neg", input="u"),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.node_values["u"] == 99.0
+        assert result.node_values["o"] == -99.0

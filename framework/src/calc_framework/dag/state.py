@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 增量求值状态：跨求值调用追踪节点值变化。"""
 
-
-
 from __future__ import annotations
 
 from collections import deque
@@ -20,35 +18,25 @@ from .schema import (
 
 
 def _node_dependencies(node: NodeType) -> list[str]:
-
     """返回节点的直接依赖节点 ID 列表（与 engine.py 同步）。"""
 
     if isinstance(node, UnaryNode):
-
         return [node.input]
 
     if isinstance(node, BinaryNode):
-
         return [node.lhs, node.rhs]
 
     if isinstance(node, ConditionNode):
-
         return [node.cond, node.true_val, node.false_val]
 
     if isinstance(node, ExprNode):
-
         return list(node.inputs.values())
 
     return []
 
 
-
-
-
 @dataclass
-
 class DAGState:
-
     """增量求值状态。
 
 
@@ -79,12 +67,16 @@ class DAGState:
 
     evaluation_count: int = 0
 
-
-
+    def reset(self) -> None:
+        """重置状态，清空所有缓存的节点值和上下文。"""
+        self.node_values.clear()
+        self.prev_outputs.clear()
+        self.prev_flat_context.clear()
+        self.context_hash = 0
+        self.evaluation_count = 0
 
 
 def flatten_context(context: dict[str, Any]) -> dict[str, float]:
-
     """将嵌套上下文展平为点分隔路径 → 值的扁平字典。
 
 
@@ -102,30 +94,19 @@ def flatten_context(context: dict[str, Any]) -> dict[str, float]:
     return flat
 
 
-
-
-
 def _flatten_impl(prefix: str, obj: Any, result: dict[str, float]) -> None:
-
     """递归展平嵌套字典。"""
     if isinstance(obj, dict):
-
         for key, val in obj.items():
-
             new_prefix = f"{prefix}.{key}" if prefix else key
 
             _flatten_impl(new_prefix, val, result)
 
-    elif isinstance(obj, (int, float)):
-
+    elif isinstance(obj, int | float):
         result[prefix] = float(obj)
 
 
-
-
-
 def compute_context_hash(context: dict[str, Any]) -> int:
-
     """计算上下文的稳定哈希，用于快速判断上下文是否变化。"""
 
     flat = flatten_context(context)
@@ -133,17 +114,10 @@ def compute_context_hash(context: dict[str, Any]) -> int:
     return hash(tuple(sorted(flat.items())))
 
 
-
-
-
 def find_changed_paths(
-
     old_flat: dict[str, float],
-
     new_flat: dict[str, float],
-
 ) -> set[str]:
-
     """比较两个扁平上下文，返回值发生变化的路径集合。"""
 
     changed: set[str] = set()
@@ -151,25 +125,16 @@ def find_changed_paths(
     all_keys = set(old_flat) | set(new_flat)
 
     for key in all_keys:
-
         if old_flat.get(key) != new_flat.get(key):
-
             changed.add(key)
 
     return changed
 
 
-
-
-
 def compute_affected_nodes(
-
     graph: DAGGraph,
-
     changed_paths: set[str],
-
 ) -> set[str]:
-
     """根据变化的上下文路径，找出图中直接受影响的 VarNode ID。
 
 
@@ -189,39 +154,24 @@ def compute_affected_nodes(
     """
 
     if not changed_paths:
-
         return set()
-
-
 
     affected: set[str] = set()
 
     for nid, node in graph.nodes.items():
-
         if getattr(node, "type", None) == "var":
-
             path: str = getattr(node, "path", "")
 
             if path in changed_paths:
-
                 affected.add(nid)
-
-
 
     return affected
 
 
-
-
-
 def propagate_dirty(
-
     expanded_nodes: dict[str, NodeType],
-
     seed: set[str],
-
 ) -> set[str]:
-
     """从种子节点开始 BFS 传播脏标记到所有下游节点。
 
 
@@ -243,55 +193,35 @@ def propagate_dirty(
     adj: dict[str, list[str]] = {}
 
     for nid in expanded_nodes:
-
         adj.setdefault(nid, [])
 
     for nid, node in expanded_nodes.items():
-
         refs = _node_dependencies(node)
 
         for ref in refs:
-
             if ref in adj:
-
                 adj[ref].append(nid)
-
-
 
     dirty: set[str] = set(seed)
 
     queue: deque[str] = deque(seed)
 
-
-
     while queue:
-
         current = queue.popleft()
 
         for downstream in adj.get(current, []):
-
             if downstream not in dirty:
-
                 dirty.add(downstream)
 
                 queue.append(downstream)
 
-
-
     return dirty
 
 
-
-
-
 def compute_required_nodes(
-
     expanded_nodes: dict[str, NodeType],
-
     output_refs: set[str],
-
 ) -> set[str]:
-
     """从输出引用节点反向遍历，找出所有"必要节点"（惰性求值用）。
 
 
@@ -317,40 +247,27 @@ def compute_required_nodes(
     rev_adj: dict[str, list[str]] = {}
 
     for nid in expanded_nodes:
-
         rev_adj.setdefault(nid, [])
 
     for nid, node in expanded_nodes.items():
-
         refs = _node_dependencies(node)
 
         rev_adj[nid].extend(refs)
-
-
 
     required: set[str] = set()
 
     queue: deque[str] = deque(output_refs)
 
-
-
     while queue:
-
         current = queue.popleft()
 
         if current in required:
-
             continue
 
         required.add(current)
 
         for dep in rev_adj.get(current, []):
-
             if dep not in required:
-
                 queue.append(dep)
 
-
-
     return required
-
