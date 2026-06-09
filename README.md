@@ -1,3 +1,6 @@
+[![GitHub stars](https://img.shields.io/github/stars/wxhwwla/calc-framework?style=social)](https://github.com/wxhwwla/calc-framework)
+[![AtomGit stars](https://atomgit.com/wxhwwla/calc-framework/star/badge.svg)](https://atomgit.com/wxhwwla/calc-framework)
+
 # Calc Framework（通用游戏计算框架）
 
 > 通用游戏计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》（Arknights）

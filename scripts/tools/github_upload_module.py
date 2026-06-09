@@ -1253,6 +1253,17 @@ def commit_and_push(
         print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
         run_git(["add", _version_file_relpath(readme_path)])
 
+        # 删块后可能触发换行符修正，再跑一轮 pre-commit
+        print("[信息] 删块后 pre-commit（修换行符）…")
+        if not _run_pre_commit_on_staged(rounds=2):
+            _rollback_upload_draft(
+                readme_path,
+                meta,
+                saved_version=saved_version,
+                restore_version=version_planned_bump,
+            )
+            sys.exit(1)
+
         print(signing_status_message(resolve_signing_config()))
 
         print(f"[信息] git commit:\n{commit_msg.splitlines()[0]} ...")
