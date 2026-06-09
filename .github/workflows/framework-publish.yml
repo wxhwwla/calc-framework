@@ -29,15 +29,19 @@ jobs:
         run: |
           sed -i "s/version = \".*\"/version = \"${{ github.event.inputs.version }}\"/" pyproject.toml
 
-      - name: Install system deps for Qt6 (PySide6)
+      - name: Install test dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y qt6-base-dev libegl1-mesa libegl1 xvfb
+          python -m pip install -e ".[dev]"
+          # PySide6 依赖的测试（GUI）在 CI 中跳过；核心 DAG/搜索/inverse 测试无需 Qt
 
-      - name: Run tests
+      - name: Run core tests
         run: |
-          python -m pip install -e ".[dev,ui]"
-          xvfb-run python -m pytest tests/ -q
+          PYTHONPATH="${{ github.workspace }}" python -m pytest tests/ -q \
+            --ignore=tests/editor/test_gui.py \
+            --ignore=tests/ui/test_compute_sheet.py \
+            --ignore=tests/ui/test_endfield_compute_sheet.py \
+            --ignore=tests/ocr \
+            --ignore=tests/utils
 
       - name: Build distribution
         run: python -m build

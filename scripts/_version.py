@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.22.3"
+_VERSION = "3.22.4"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -333,7 +333,8 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 修改 scripts/_version.py
+# TITLE: 更新 2 处文件
 # BODY:
+# - 变更 .github/workflows/framework-publish.yml
 # - 修改 scripts/_version.py
 # --- END UPLOAD_SUMMARY ---
