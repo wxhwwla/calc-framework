@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.22.1"
+_VERSION = "3.22.2"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -330,3 +330,11 @@ def get_version() -> str:
 def get_exe_version() -> str:
     """获取 EXE 版本号。"""
     return _EXE_VERSION
+
+
+# --- BEGIN UPLOAD_SUMMARY ---
+# TITLE: 更新 2 处文件
+# BODY:
+# - 变更 web/frontend/package-lock.json
+# - 变更 web/frontend/package.json
+# --- END UPLOAD_SUMMARY ---
