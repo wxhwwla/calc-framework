@@ -330,22 +330,3 @@ def get_version() -> str:
 def get_exe_version() -> str:
     """获取 EXE 版本号。"""
     return _EXE_VERSION
-
-
-# --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 13 处文件
-# BODY:
-# - 修改 batch_docstring.py
-# - 修改 framework/tests/dag/test_graph.py
-# - 修改 framework/tests/dag/test_subgraph.py
-# - 修改 games/endfield/calc/dag_adapter/config.py
-# - 修改 games/endfield/tests/tools/test_github_upload_signing.py
-# - 变更 package.json
-# - 变更 render.yaml
-# - 修改 scan_docstrings.py
-# - 变更 scan_report.json
-# - 修改 scripts/_version.py
-# - 修改 scripts/tools/github_upload_module.py
-# - 变更 tsconfig.json
-# - 变更 zbpack.json
-# --- END UPLOAD_SUMMARY ---
