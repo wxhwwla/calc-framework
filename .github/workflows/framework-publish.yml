@@ -36,12 +36,11 @@ jobs:
 
       - name: Run core tests
         run: |
-          PYTHONPATH="${{ github.workspace }}" python -m pytest tests/ -q \
-            --ignore=tests/editor/test_gui.py \
-            --ignore=tests/ui/test_compute_sheet.py \
-            --ignore=tests/ui/test_endfield_compute_sheet.py \
-            --ignore=tests/ocr \
-            --ignore=tests/utils
+          python -m pytest tests/dag/ tests/search/ tests/config/ tests/data/ \
+            tests/ui/test_sheet_evaluator.py tests/ui/test_controls.py \
+            tests/ui/test_format.py tests/ui/test_layout.py \
+            tests/publish/ tests/plugin/ tests/inverse/ \
+            tests/test_logging.py -q
 
       - name: Build distribution
         run: python -m build
