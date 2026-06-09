@@ -333,8 +333,7 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 2 处文件
+# TITLE: 修改 scripts/_version.py
 # BODY:
-# - 变更 .github/workflows/framework-publish.yml
 # - 修改 scripts/_version.py
 # --- END UPLOAD_SUMMARY ---
