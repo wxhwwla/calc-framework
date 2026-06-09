@@ -7,7 +7,6 @@ from typing import Any
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileDialog
-from utils.gui.help_dialog import HelpDialog
 
 from .viewer_help_content import build_viewer_help
 from .viewer_plugin_manager import PluginManagerDialog
@@ -21,6 +20,8 @@ class CalcPackViewerEventMixin:
     # _entity_selectors, _level_spin, _asset_temp_dir
 
     def _show_help(self) -> None:
+        from utils.gui.help_dialog import HelpDialog
+
         dialog = HelpDialog(build_viewer_help, self, title="CalcPackViewer 使用说明")  # type: ignore[arg-type]
         dialog.exec()
 

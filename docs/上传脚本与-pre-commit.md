@@ -14,14 +14,14 @@
 | `python github_upload_module.py` | 提交并 push 到 **`develop`**；仅 patch bump `_VERSION` |
 | `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump） |
 | `python github_upload_module.py --minor` | 第二位 +1；commit 前备份 `.git` → `git_backup/snapshots/` |
-| `python github_upload_module.py --tag` | 与双版本发布同用：合并 **main** 后打 `v{_EXE_VERSION}` 标签 |
+| `python github_upload_module.py --tag` | 次版本上传时合并 main 后打 `v{_EXE_VERSION}` 标签 |
 
 **分支策略（2026-06-03 起）**：
 
 | 分支 | 用途 |
 |------|------|
 | **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
-| **`main`** | 仅当 **`_VERSION` 与 `_EXE_VERSION` 均相对 origin/main 变更** 时，脚本自动 `develop → main` 合并推送 |
+| **`main`** | 仅当 **输入 M（次版本号）** 时，脚本自动 `develop → main` 合并推送（`--minor` 或交互式输入 `M`） |
 
 发 **main 正式版** 前须在同一提交中：上传 bump `_VERSION` + 手动改 `_EXE_VERSION` + 可选 `--tag`。
 

@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0
 """CalcPackViewer 帮助内容。"""
 
-from utils.gui.help_dialog import HelpSection
-from utils.gui.help_loader import load_multi_category
+from __future__ import annotations
 
 
-def build_viewer_help() -> list[HelpSection]:
+def build_viewer_help() -> list[HelpSection]:  # noqa: F821
     """构造 CalcPackViewer 的使用说明帮助内容。"""
+    from utils.gui.help_dialog import HelpSection
+    from utils.gui.help_loader import load_multi_category
+
     result = [
         HelpSection(
             category="入门",
