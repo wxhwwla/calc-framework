@@ -240,7 +240,7 @@ When a dev cycle goes from planning to delivery, follow these steps **in order**
 ### Phase 4: Verification
 6. **Run tests** — Full suite pass:
    ```bash
-   python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -q
+   python -m pytest games/endfield/tests/ framework/tests/ games/arknights/tests/ -v
    ```
    - For new modules, write tests >80% line coverage.
 7. **Check deps** — If new pip dependencies added:
