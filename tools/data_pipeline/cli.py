@@ -49,7 +49,7 @@ import sys
 import os
 
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 # 确保项目根在 sys.path 中（tools/ 是隐式 namespace package）
@@ -63,6 +63,7 @@ if _project_root not in sys.path:
 from tools.data_pipeline.diff import diff_main
 from tools.data_pipeline.readers.csv_reader import read_csv
 from tools.data_pipeline.readers.json_reader import read_json
+from tools.data_pipeline.schema import EntitySchema
 from tools.data_pipeline.transformers.from_legacy_endfield import from_characters, from_weapons
 from tools.data_pipeline.transformers.to_standard import to_standard
 from tools.data_pipeline.validators.schema_check import validate_all
@@ -183,7 +184,7 @@ def _is_csv(path: str) -> bool:
     return path.lower().endswith(".csv")
 
 
-def _run_validation(entities: List[Dict[str, Any]]) -> None:
+def _run_validation(entities: list[EntitySchema]) -> None:
     """_run_validation 实现。"""
     errors = validate_all(entities)
 

@@ -568,10 +568,16 @@ def _normalize_change_path(raw: str) -> str:
 
 
 def _porcelain_paths(porcelain: str) -> list[str]:
-    """从 git status --porcelain 输出中提取文件路径列表。"""
+    """从 git status --porcelain 输出中提取文件路径列表。
+    跳过已删除（D）条目——这些已被 git rm --cached 从索引移除，不应重新 add。
+    """
     paths: list[str] = []
     for line in porcelain.splitlines():
         if len(line) < 4:
+            continue
+
+        # XY status: X=staging, Y=working tree. 跳过 D (已删除)
+        if line[0] == "D" or line[0:2] in (" D", "DD"):
             continue
 
         rest = line[3:].strip()
@@ -587,20 +593,17 @@ def _porcelain_paths(porcelain: str) -> list[str]:
 
 
 def _collect_change_paths() -> list[str]:
-    """收集所有已变更文件的路径。"""
+    """收集所有已变更文件的路径（排除已删除条目）。"""
     path_git = ["-c", "core.quotepath=false"]
     _, porcelain, _ = run_git([*path_git, "status", "--porcelain"], capture_output=True)
     paths = _porcelain_paths(porcelain)
-    _, diff_unstaged, _ = run_git([*path_git, "diff", "--name-only"], check=False, capture_output=True)
-
-    _, diff_staged, _ = run_git(
-        [*path_git, "diff", "--cached", "--name-only"],
-        check=False,
-        capture_output=True,
-    )
-
-    for chunk in (diff_unstaged, diff_staged):
-        for line in chunk.splitlines():
+    # diff --diff-filter=d 排除已从索引删除的文件
+    for diff_cmd in (
+        ["diff", "--diff-filter=d", "--name-only"],
+        ["diff", "--cached", "--diff-filter=d", "--name-only"],
+    ):
+        _, out, _ = run_git([*path_git, *diff_cmd], check=False, capture_output=True)
+        for line in out.splitlines():
             normalized = _normalize_change_path(line)
             if normalized:
                 paths.append(normalized)
@@ -763,13 +766,18 @@ def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
     if not paths:
         print("[错误] 无有效暂存路径")
         sys.exit(1)
-    print(f"[信息] git add（{len(paths)} 个路径，非全仓库）")
-    # 过滤已删除的文件
+    print(f"[信息] git add（{len(paths)} 个路径，非全仓库，分批进行）")
+    # 过滤已删除的文件（git add 不存在的文件会报错）
     paths = [p for p in paths if os.path.exists(os.path.join(_repo_root(), p))]
     if not paths:
         print("[错误] 全部路径对应的文件已不存在（可能已被删除）")
         sys.exit(1)
-    run_git(["add", "--", *paths])
+    # 分批 add 避免 Windows 命令行长度限制（CreateProcess 上限 ~8191 字符）
+    batch_size = 50
+    for i in range(0, len(paths), batch_size):
+        batch = paths[i : i + batch_size]
+        run_git(["add", "--", *batch])
+    print(f"[信息] git add 完成（{len(paths)} 个路径，共 {(len(paths) + batch_size - 1) // batch_size} 批）")
 
 
 def _pre_commit_installed() -> bool:
@@ -835,7 +843,11 @@ def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> 
     if not merged:
         print("[信息] 无有效文件需暂存，跳过 git add")
         return
-    run_git(["add", "--", *merged])
+    batch_size = 50
+    for i in range(0, len(merged), batch_size):
+        batch = merged[i : i + batch_size]
+        run_git(["add", "--", *batch])
+    print(f"[信息] commit 前同步完成（{len(merged)} 个路径，共 {(len(merged) + batch_size - 1) // batch_size} 批）")
 
 
 def _pre_commit_has_lint_errors(output: str) -> bool:

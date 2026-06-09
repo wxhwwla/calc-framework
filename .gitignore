@@ -79,6 +79,16 @@ Desktop.ini
 # 机器学习模型文件（体积大，应自行下载或通过 LFS 管理）
 yolov8n.pt
 
+# BWIKI 爬虫全量输出（可从源数据重生成）
+tools/arknights_scout/output/
+
+# 生成的标准数据文件（可从 tools/arknights_scout/output/parsed/ 重生成）
+games/arknights/data/operators_standard.json
+
+# Web 后端运行时数据
+web/backend/data/compute_history.json
+web/backend/api/.staging/
+
 # 压缩包
 *.zip
 

@@ -1,9 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0
-"""pytest 配置：控制台进度指示器，防止测试静默看起来像卡死。"""
+"""pytest 配置：加入仓库根路径 + 控制台进度指示器。"""
 
 from __future__ import annotations
 
 import sys
+from pathlib import Path
+
+# 加入仓库根路径，使 tests/ocr/ 和 tests/utils/ 中的测试
+# 能正确导入 tools/ 和 utils/ 模块
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 
 def pytest_runtest_logreport(report):

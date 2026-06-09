@@ -7,6 +7,8 @@
 
 ## 架构总览
 
+> **注意**：通过 `pip install calc-framework-endfield` 安装后，DAG 引擎、搜索、inverse 等计算核心功能开箱即用。GUI 功能（CalcPackViewer、ComputeSheet、启动器、图编辑器）需要本项目完整环境（含 `utils/`、`tools/` 等目录），在纯 pip 安装环境下不可用。
+
 ```
 ┌─────────────────────────────────────────────┐
 │               适配包 (AdapterPackage)         │
@@ -182,20 +184,30 @@ my-game-adapter/
 
 ### 终末地（15 乘区）
 
-`framework/games/endfield/` — 真实游戏完整适配器。
+`framework/adapters/endfield/` — 真实游戏完整适配器，含角色/武器/装备数据和 15 乘区 DAG。
 
-### 卡牌RPG（攻击-防御公式）
+### 卡牌RPG（攻击-防御公式）— [详细文档](adapters/card_rpg/README.md)
 
-`framework/adapters/card_rpg/` — 示例适配器，证明框架跨品类通用。
+`framework/adapters/card_rpg/` — 示例适配器，证明框架跨品类通用。经典回合制减法公式：
 
 ```
-framework/adapters/card_rpg/
-├── meta.json               # 适配器元信息
-├── attr_schema.json        # 属性声明（ATK/DEF/crit_rate/crit_dmg）
-├── card_rpg.dag.json       # DAG 公式（attack - def × 0.5 + crit）
-├── functions.py            # 自定义函数（clamp）
-├── loader.py               # CardRPGLoader（DataContextLoader 实现）
-└── ui/layout.json          # ComputeSheet 排版
+最终伤害 = max((ATK + ATK_bonus) × skill_mult - DEF × 0.5, 0) × crit_mult
+```
+
+### FPS 武器伤害 — [详细文档](adapters/fps/README.md)
+
+`framework/adapters/fps/` — 通用 FPS 伤害公式，含距离衰减、部位倍率、护甲穿透：
+
+```
+单发伤害 = base_damage × 部位倍率 × 距离衰减 × (1 - 护甲减伤比)
+```
+
+### MOBA 英雄伤害 — [详细文档](adapters/moba/README.md)
+
+`framework/adapters/moba/` — 通用 MOBA 伤害公式，含 AD/AP 加成、双抗减伤、暴击、冷却缩减：
+
+```
+技能总伤害 = (skill_base + ad_ratio×AD + ap_ratio×AP) × crit_mult × (1 - 减伤比)
 ```
 
 ```python
