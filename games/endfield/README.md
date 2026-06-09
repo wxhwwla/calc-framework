@@ -1,4 +1,4 @@
-# 终末地伤害计算小工具（详细文档）
+# 终末地伤害计算器 — Calc Framework（通用游戏计算框架）适配包
 
 > 本文件为 **Python 包目录** `[包]` 下的详细说明。  
 > GitHub 首页与速览见仓库根 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../docs/算法与架构.md)；通用框架见 [**framework/**](../framework/)。

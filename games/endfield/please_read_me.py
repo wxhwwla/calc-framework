@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-终末地伤害计算小工具 - 项目说明文档
+终末地伤害计算器 - Calc Framework（通用游戏计算框架）游戏适配包
 
 项目简介：
     本工具是一个基于 PySide6 开发的伤害计算辅助工具，用于游戏《明日方舟：终末地》。
@@ -184,7 +184,7 @@ def get_exe_version() -> str:
 def get_full_intro() -> str:
     """获取完整的项目介绍文档"""
     return f"""
-终末地伤害计算小工具 v{_VERSION}
+终末地伤害计算器 v{_VERSION} — Calc Framework（通用游戏计算框架）
 {"=" * 50}
 {PROJECT_STRUCTURE}
 {USAGE_INFO}
@@ -200,7 +200,7 @@ def show_help() -> None:
     """
     print(f"""
 ============================================================
-终末地伤害计算小工具 v{_VERSION}
+终末地伤害计算器 v{_VERSION} — Calc Framework（通用游戏计算框架）
 ============================================================
 {PROJECT_STRUCTURE}
 {USAGE_INFO}

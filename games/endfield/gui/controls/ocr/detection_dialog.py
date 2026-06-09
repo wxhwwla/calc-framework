@@ -38,11 +38,11 @@ def run_ocr_detection(folder: str | Path) -> dict[str, Any] | None:
         preset_dict 或 None（识别失败）
     """
     try:
-        from tools.ocr.detector import YOLOXDetector
+        from tools.ocr.detector import TorchVisionDetector
         from tools.ocr.mapper import OcrMapper
         from tools.ocr.recognizer import OCRRecognizer
 
-        detector = YOLOXDetector(conf_threshold=0.25)
+        detector = TorchVisionDetector(conf_threshold=0.25)
         ocr = OCRRecognizer()
         mapper = OcrMapper()
 
@@ -157,9 +157,9 @@ class _DetectionDialog(QDialog):
         lines: list[str] = []
         lines.append(f"截图文件夹: {self._folder}")
         try:
-            from tools.ocr.detector import YOLOXDetector
+            from tools.ocr.detector import TorchVisionDetector
 
-            detector = YOLOXDetector(conf_threshold=0.25)
+            detector = TorchVisionDetector(conf_threshold=0.25)
             batch = detector.detect_folder(
                 str(self._folder),
                 save_json=False,

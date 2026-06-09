@@ -103,7 +103,7 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         self._imbalance_efficiency_bonus: float = 0.0
         self._break_defense_stacks: int = 0
 
-        self.setWindowTitle(f"终末地伤害计算小工具 v{get_exe_version()}")
+        self.setWindowTitle(f"终末地伤害计算器 v{get_exe_version()} — Calc Framework")
         self.setMinimumSize(1024, 600)
         self.resize(1280, 720)
 

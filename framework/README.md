@@ -304,7 +304,7 @@ errors = schema.validate(ctx)
 python -m calc_framework.launcher
 
 # 直接指定
-python -m calc_framework.launcher 终末地伤害计算器
+python -m calc_framework.launcher "终末地计算器（Calc Framework）"
 ```
 
 适配器搜索路径由 ``CALC_ADAPTERS_DIR`` 环境变量控制（默认 ``framework/adapters/``）。

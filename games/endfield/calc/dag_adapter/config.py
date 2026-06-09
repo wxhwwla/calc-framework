@@ -17,6 +17,8 @@
 主图：6 个 CallNode 块通过链式绑定串联，展开后等价于原 70 节点扁平 DAG。
 """
 
+# pyright: reportCallIssue=false
+
 from __future__ import annotations
 
 import json

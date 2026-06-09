@@ -139,45 +139,23 @@ class TestDualVersionReleaseMerge(unittest.TestCase):
 
         self.readme = please_read_me_path()
 
-    def test_should_merge_when_both_versions_differ(self):
-        class FakeMeta:
-            @staticmethod
-            def read_version(_path):
-                return "3.22.0"
-
-            @staticmethod
-            def read_exe_version(_path):
-                return "0.7.0"
-
+    def test_should_merge_when_minor(self):
         def fake_run_git(args, **kwargs):
             if args[:2] == ["rev-parse", "--verify"]:
                 return 0, "abc", ""
-            if args[0] == "show":
-                return 0, '_VERSION = "3.21.4"\n_EXE_VERSION = "0.6.0-beta"\n', ""
             return 1, "", ""
 
         with patch.object(upload, "run_git", side_effect=fake_run_git):
-            self.assertTrue(upload._should_merge_to_release(FakeMeta(), self.readme))
+            self.assertTrue(upload._should_merge_to_release(None, self.readme, was_minor=True))
 
-    def test_should_not_merge_when_only_project_version_differs(self):
-        class FakeMeta:
-            @staticmethod
-            def read_version(_path):
-                return "3.22.0"
-
-            @staticmethod
-            def read_exe_version(_path):
-                return "0.6.0-beta"
-
+    def test_should_not_merge_when_patch(self):
         def fake_run_git(args, **kwargs):
             if args[:2] == ["rev-parse", "--verify"]:
                 return 0, "abc", ""
-            if args[0] == "show":
-                return 0, '_VERSION = "3.21.4"\n_EXE_VERSION = "0.6.0-beta"\n', ""
             return 1, "", ""
 
         with patch.object(upload, "run_git", side_effect=fake_run_git):
-            self.assertFalse(upload._should_merge_to_release(FakeMeta(), self.readme))
+            self.assertFalse(upload._should_merge_to_release(None, self.readme, was_minor=False))
 
 
 if __name__ == "__main__":

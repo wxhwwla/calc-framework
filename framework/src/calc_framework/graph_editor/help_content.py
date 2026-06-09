@@ -20,6 +20,7 @@ from .help_nodes import _node_types
 @dataclass
 class HelpSection:
     """帮助文档中的一个分类。"""
+
     category: str
     title: str
     content: str
@@ -41,7 +42,7 @@ def build_help_tree() -> list[HelpSection]:
         _compilation(),
         _format(),
     ]
-    return result + docs
+    return result + docs  # type: ignore[return-value]
 
 
 def _overview() -> HelpSection:

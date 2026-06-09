@@ -1,15 +1,15 @@
-# Calc Framework — 通用伤害计算框架
+# Calc Framework（通用游戏计算框架）
 
-> 通用伤害计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》（Arknights）
+> 通用游戏计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》（Arknights）
 >
-> **Web 端（已部署）**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com) · 部署指南：[docs/PythonAnywhere-部署指南.md](docs/PythonAnywhere-部署指南.md)
+> **Web 版（已部署）**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com) · 部署指南：[docs/PythonAnywhere-部署指南.md](docs/PythonAnywhere-部署指南.md) · 项目名称：Calc Framework（通用游戏计算框架）
 
 ## 文档分层
 
 | 层级 | 文件 | 适合谁 |
 |------|------|--------|
 | **门面（本页）** | 仓库根 `README.md` | 第一次打开仓库、GitHub 首页 |
-| **详细开发** | [`games/endfield/README.md`](games/endfield/README.md) | 安装、GUI、测试、API、数据格式 |
+| **详细开发（终末地）** | [`games/endfield/README.md`](games/endfield/README.md) | 安装、GUI、测试、API、数据格式 |
 | **操作速查** | [`docs/操作指令集.md`](docs/操作指令集.md) | 日常命令与 `[根]` / `[工具]` / `[包]` 目录约定 |
 | **文档索引** | [`docs/README.md`](docs/README.md) | `docs/` 下各文件用途 |
 | **领域术语** | [`CONTEXT.md`](CONTEXT.md) | Issue、测试、文档统一用语 |
@@ -20,35 +20,37 @@
 
 | 名称 | 路径 | 典型操作 |
 |------|------|----------|
-| **仓库根** `[根]` | 本目录 | `github_upload_module.py`、`github_download_module.py`、`CONTEXT.md`、许可文件 |
+| **仓库根** `[根]` | 本目录 | 启动器（`scripts/main_launcher.py`）、打包（`scripts/main_build.py`）、许可文件 |
 | **通用框架** `[框架]` | [`framework/`](framework/) | `calc-framework` 独立 pip 包：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器 |
-| **Web 版** `[Web]` | [`web/`](web/) | React + FastAPI 完整 Web 应用（三个 PySide6 GUI 的 Web 版） |
-| **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、审计脚本（`tools/audit/`） |
-| **人类文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构 |
-| **Python 包** `[包]` | `games/endfield/` | `main.py`、`pytest`、`scripts/main_build.py`（打包）、包内 `scripts/`（反推、seed） |
+| **Web 版** `[Web]` | [`web/`](web/) | React + FastAPI 完整 Web 应用（Web 版计算器/数据设计器/配置包设计器） |
+| **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、数据 ETL、OCR 截图识装 |
+| **项目文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构、合规文档 |
+| **游戏适配包** `[包]` | `games/endfield/` | pip 包：数据加载 + DAG 适配 + GUI；包内 `scripts/`（反推、seed） |
+| **发布布局** | `release_bundle/` | 发布目录配置、exe 入口、打包模板 |
 
 ### 仓库顶层一览
 
 ```
 [根]/
-├── framework/                    # [框架] 通用计算框架 calc-framework
+├── framework/                    # [框架] calc-framework 通用计算框架
 ├── web/                          # [Web] React + FastAPI 前端
 │   ├── backend/                  #   FastAPI 后端（/api/*）
-│   ├── frontend/                 #   React 前端（三个 GUI 的 Web 版）
-│   └── hub/                      #   Calc Hub 静态主页
+│   ├── frontend/                 #   React 前端（三 GUI 的 Web 版）
+│   └── hub/                      #   Calc Hub 静态市场主页
 ├── games/                        # [包] 游戏适配包
 │   ├── endfield/                  #   终末地伤害计算器（产品代码与测试）
-│   └── arknights/                 #   明日方舟伤害计算适配包（DAG + API + 测试）
-├── docs/                         # 操作指令集、许可、算法说明
-├── tools/                        # [工具] 仓库级维护（非包内 scripts）
-├── legacy/                       # 遗留脚本，不参与日常流程
-├── .github/                      # CI、Issue 表单模板（Bug / 功能建议）
-├── .agents/                      # Cursor Agent 技能
-├── github_upload_module.py
-├── github_download_module.py
-├── git_backup/                   # Minor 上传前 .git 本地快照（snapshots/ 不纳入 Git）
+│   ├── arknights/                 #   明日方舟适配包（DAG + API + 测试）
+│   └── (game-template)           #   新游戏适配骨架模板
+├── docs/                         # 项目文档
+├── tools/                        # [工具] 仓库级维护工具
+├── scripts/                      # [入口] 启动器/打包/入口脚本
+├── release_bundle/               # 发布目录布局配置
+├── installer/                    # NSIS 安装包
+├── .github/                      # CI、Issue 表单模板
+├── .trae/                        # Trae IDE 配置
+├── git_backup/                   # 上传前 .git 快照
 ├── LICENSE · DATA_LICENSE · CONTEXT.md · CONTRIBUTING.md · AGENTS.md
-└── .github/                      # CI 与 Issue 模板
+└── NOTICES.md                    # 第三方声明
 ```
 
 IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `.gitignore` 中忽略。
@@ -58,14 +60,11 @@ IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `
 ### 推荐：使用启动器选择游戏
 
 ```powershell
-# [根] 统一启动器 — 自动发现已安装的游戏适配包
+# [根] 游戏启动器 — 自动发现已安装的游戏适配包
 python scripts/main_launcher.py
-
-# 或双击 bat 文件
-scripts\启动.bat
 ```
 
-启动器会列出所有可用的游戏，点击即可启动对应的桌面计算器。
+启动器会列出所有可用的游戏适配器（终末地、明日方舟），点击即可启动对应的桌面计算器。「开发者工具箱」按钮可打开框架开发工具集合。
 
 ### 直接启动
 
@@ -73,25 +72,19 @@ scripts\启动.bat
 # [包] 终末地计算器
 cd games/endfield
 pip install -e ".[dev]"
-python main.py
+python -m games.endfield.main
 ```
 
 ```powershell
-# [根] 明日方舟桌面 GUI
-python scripts/main_arknights.py
-```
-
-```powershell
-# [根] 开发者工具箱（数据设计、图编辑器、调试器、AI 生成等）
+# [根] 开发者工具箱（数据编辑、图编辑器、DAG 调试、AI 生成等）
 python scripts/main_dev_toolkit.py
-scripts\启动.bat
 ```
 
 ### 发布与上传
 
 ```powershell
 # [根] 推送 GitHub（版本号由脚本维护）
-python github_upload_module.py
+python scripts/tools/github_upload_module.py
 ```
 
 更多命令（测试、打包、SSH、拉取覆盖本地）见 [`docs/操作指令集.md`](docs/操作指令集.md)。
@@ -128,9 +121,9 @@ python github_upload_module.py
 
 | Web 版 | 对应 PySide6 GUI | 路由 |
 |--------|-----------------|------|
-| 伤害计算器 | `main.py` | `/` |
-| 数据设计器 | `main_designer.py` | `/designer` |
-| 配置包设计器 | `main_pack_designer.py` | `/pack-designer` |
+| 伤害计算器 | `games/endfield/main.py` | `/` |
+| 数据设计器 | `web/` | `/designer` |
+| 配置包设计器 | `web/` | `/pack-designer` |
 
 **同步机制**：`layout.json`/`attr_schema.json`/计算引擎/数据文件共享同一份，Web 通过 FastAPI API 调用。
 

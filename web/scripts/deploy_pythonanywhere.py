@@ -842,7 +842,9 @@ def _init_config() -> None:
         "[pythonanywhere]\n"
         "# PythonAnywhere 用户名\n"
         "username = wxhwwla\n"
-        "# API Token（Account → API Token → Create new token）\n"
+        "# API Token\n"
+        "# 获取方式: 登录 PA → Account → API Token → Create new token\n"
+        "# 链接: https://www.pythonanywhere.com/user/wxhwwla/account/api_token/\n"
         "api_token = \n"
         "# 项目目录名（服务器上 ~/ 下的目录）\n"
         "project = calc-framework\n"
@@ -851,7 +853,9 @@ def _init_config() -> None:
         encoding="utf-8",
     )
     print("  [OK] 配置模板已生成，请编辑填入 api_token")
+    print("  获取 API Token: https://www.pythonanywhere.com/user/wxhwwla/account/api_token/")
     print("  也可通过环境变量设置: PA_USERNAME, PA_API_TOKEN, PA_PROJECT, PA_DOMAIN")
+    sys.exit(0)
 
 
 # ── 打印服务器端指令 ──────────────────────────────────────────────────────────────

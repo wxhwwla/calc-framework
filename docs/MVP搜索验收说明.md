@@ -58,7 +58,7 @@
 
 ### 4.1 全量遍历（推荐，弹窗看 TopN）
 
-1. 启动：`python main.py`（或发布文件夹内 exe）
+1. 启动：`python scripts/main_launcher.py`（选终末地，或发布文件夹内 exe）
 2. 在 **计算页** 选择角色、武器、技能；点击「确认选择」（乘区下方或高级页均可）
 3. 切换到 **高级页**，在 **全量搜索** 区设置：
    - **武器候选范围** / **装备范围**
@@ -75,7 +75,7 @@
 | 运行方式 | 路径 |
 |----------|------|
 | 开发 | `[包]/search_output/full_search_<时间戳>/` |
-| 打包 exe | `dist/终末地伤害计算器/search_output/full_search_<时间戳>/`（与 exe **同级**） |
+| 打包 exe | `dist/Game Calc Platform/search_output/full_search_<时间戳>/`（与 exe **同级**） |
 
 内含 `search_runs.db`、`mvp_exports/` 等。
 

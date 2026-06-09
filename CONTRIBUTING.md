@@ -148,14 +148,11 @@ calc-framework/
 │   ├── ocr/                        #   截图识装管线
 │   └── generator/                  #   AI 计算器生成器模板
 ├── scripts/                        # 入口脚本
-│   ├── main.py                     #   终末地伤害计算器
-│   ├── main_launcher.py            #   统一启动器
-│   ├── main_designer.py            #   数据设计器
+│   ├── main_launcher.py            #   游戏启动器
 │   ├── main_build.py               #   多目标打包
-│   ├── main_generator.py           #   AI 计算器生成器
-│   ├── devtool.py                  #   开发者工具
-│   ├── github_upload_module.py     #   GitHub 上传脚本
-│   └── github_download_module.py   #   GitHub 下载脚本
+│   ├── main_dev_toolkit.py         #   开发者工具箱
+│   ├── tools/github_upload_module.py #   GitHub 上传脚本
+│   └── tools/github_download_module.py # GitHub 下载脚本
 ├── docs/                           # 项目文档
 ├── .github/workflows/              # CI 工作流（ci.yml、release.yml 等）
 ├── Dockerfile                      # Docker 部署

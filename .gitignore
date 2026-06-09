@@ -31,6 +31,8 @@ pytest-cache-files-*/
 cypress/screenshots/
 cypress/videos/
 .coverage
+.cov75
+cov_report.txt
 htmlcov/
 .tox/
 .nox/
@@ -55,6 +57,14 @@ git_backup/snapshots/
 # 日志
 *.log
 debug.log
+
+# 一次性临时工具/扫描产物
+batch_docstring.py
+scan_docstrings.py
+scan_report.json
+
+# 运行时用户偏好（不应跟踪）
+ui_preferences.json
 
 # 环境与密钥（勿提交）
 .env

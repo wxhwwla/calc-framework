@@ -3,10 +3,13 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json
+import socket
 import tempfile
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -23,6 +26,7 @@ try:
     _HAS_ENGINE = True
 except ImportError:
     engine = None
+    list_gen_templates = None  # type: ignore[assignment]
     _HAS_ENGINE = False
 
 
@@ -65,6 +69,7 @@ class GenerateRequest(BaseModel):
 
 class AIFormulaRequest(BaseModel):
     """AI 公式解析请求。"""
+
     api_key: str = ""
     api_base: str = "https://api.openai.com/v1"
     model: str = "gpt-4o-mini"
@@ -75,6 +80,7 @@ class AIFormulaRequest(BaseModel):
 
 class AIFormulaResponse(BaseModel):
     """AI 公式解析响应。"""
+
     variables: list[dict]
     formula_steps: list[dict]
     outputs: list[dict]
@@ -84,6 +90,7 @@ class AIFormulaResponse(BaseModel):
 
 class AITestRequest(BaseModel):
     """AI API 连接测试请求。"""
+
     api_key: str = ""
     api_base: str = "https://api.openai.com/v1"
     model: str = "gpt-4o-mini"
@@ -122,6 +129,7 @@ def get_templates():
                         "description": meta.get("description", ""),
                     }
         return templates
+    assert list_gen_templates is not None  # _HAS_ENGINE=True 时保证已导入
     return list_gen_templates()
 
 
@@ -201,6 +209,59 @@ def generate_adapter(req: GenerateRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# ── SSRF 防护 ──────────────────────────────────────
+
+_PRIVATE_NETWORKS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]
+
+_LOCAL_HOSTNAMES = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
+
+
+def _validate_api_url(url: str) -> str:
+    """校验 API URL 防止 SSRF 攻击。
+
+    Raises:
+        HTTPException: URL 指向内网地址、使用非 http(s) 协议、或无法解析。
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=400, detail=f"不支持的协议: {parsed.scheme}，仅允许 http/https")
+
+    hostname = parsed.hostname or ""
+    if hostname in _LOCAL_HOSTNAMES:
+        raise HTTPException(status_code=400, detail=f"禁止访问内部地址: {hostname}")
+
+    # 如果是 IP 地址，检查是否在私有网段
+    try:
+        ip = ipaddress.ip_address(hostname)
+        for net in _PRIVATE_NETWORKS:
+            if ip in net:
+                raise HTTPException(status_code=400, detail=f"禁止访问内网地址: {hostname}")
+    except ValueError:
+        # 不是 IP 地址（是域名），尝试 DNS 解析（SSRF 防护：验证域名不指向内网）
+        try:
+            addrs = socket.getaddrinfo(hostname, 80, family=socket.AF_INET)
+            for addr in addrs:
+                ip_str = addr[4][0]
+                ip = ipaddress.ip_address(ip_str)
+                for net in _PRIVATE_NETWORKS:
+                    if ip in net:
+                        raise HTTPException(status_code=400, detail=f"域名 {hostname} 解析到内网地址 {ip_str}，已阻止")
+        except socket.gaierror:
+            # DNS 解析失败 — 不阻止（可能是暂时性网络问题或自定义域名）
+            pass
+
+    return url.rstrip("/")
+
+
 @router.post("/ai/parse")
 async def ai_parse_formula(req: AIFormulaRequest):
     """用 AI 解析自然语言公式描述，返回结构化 DAG 数据。"""
@@ -244,7 +305,8 @@ async def ai_parse_formula(req: AIFormulaRequest):
         "response_format": {"type": "json_object"},
     }
 
-    api_url = req.api_base.rstrip("/") + "/chat/completions"
+    safe_base = _validate_api_url(req.api_base)
+    api_url = safe_base + "/chat/completions"
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -252,7 +314,7 @@ async def ai_parse_formula(req: AIFormulaRequest):
             resp.raise_for_status()
             data = resp.json()
     except httpx.ConnectError:
-        raise HTTPException(status_code=502, detail=f"无法连接到 {req.api_base}，请检查 API 地址是否正确")
+        raise HTTPException(status_code=502, detail=f"无法连接到 {api_url}，请检查 API 地址是否正确")
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="AI 请求超时，请检查网络连接或换用更快的模型")
     except httpx.HTTPStatusError as e:
@@ -275,7 +337,8 @@ async def ai_parse_formula(req: AIFormulaRequest):
 
     # 尝试提取 JSON
     import re
-    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+
+    json_match = re.search(r"\{.*\}", content, re.DOTALL)
     if json_match:
         try:
             parsed = json.loads(json_match.group())
@@ -315,8 +378,13 @@ def _validate_ai_result(variables: list, formula_steps: list, outputs: list) -> 
     # 检查 formula_steps 引用的变量是否都在 variables 中
     var_names = {v.get("name", "") for v in variables}
     for step in formula_steps:
-        for ref in [step.get("lhs", ""), step.get("rhs", ""), step.get("cond", ""),
-                     step.get("true_val", ""), step.get("false_val", "")]:
+        for ref in [
+            step.get("lhs", ""),
+            step.get("rhs", ""),
+            step.get("cond", ""),
+            step.get("true_val", ""),
+            step.get("false_val", ""),
+        ]:
             if ref and ref not in var_names and not ref.replace(".", "").isdigit():
                 warnings.append(f"公式步骤 '{step.get('label', step.get('id', ''))}' 引用了未定义的变量 '{ref}'")
 
@@ -332,12 +400,11 @@ async def ai_test_connection(req: AITestRequest):
     }
     payload = {
         "model": req.model,
-        "messages": [
-            {"role": "user", "content": "回复 OK 表示连接正常"}
-        ],
+        "messages": [{"role": "user", "content": "回复 OK 表示连接正常"}],
         "max_tokens": 10,
     }
-    api_url = req.api_base.rstrip("/") + "/chat/completions"
+    safe_base = _validate_api_url(req.api_base)
+    api_url = safe_base + "/chat/completions"
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:

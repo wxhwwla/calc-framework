@@ -47,6 +47,7 @@ def cli_selector() -> str | None:
         desc = ""
         try:
             import json
+
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
             desc = meta.get("description", "")
         except Exception:
@@ -131,14 +132,16 @@ def _launch_ui(adapter_name: str, pkg: Any) -> None:
 
     if layout_path.is_file():
         from calc_framework.ui.layout import load_layout_json
+
         ui_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
     else:
         from calc_framework.ui.layout import Layout
+
         ui_layout = Layout(schema_version="ui-v1", name="default", sections=[])
 
     variables = pkg.dag_service.dag.variables if hasattr(pkg.dag_service.dag, "variables") else {}
     sheet = ComputeSheet(pkg.dag_service, ui_layout, variables)
-    layout.addWidget(sheet)
+    layout.addWidget(sheet)  # type: ignore[arg-type]
 
     status = QStatusBar()
     window.setStatusBar(status)

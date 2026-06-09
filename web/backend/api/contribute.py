@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -66,9 +66,7 @@ def _validate_entity(entity: dict[str, Any]) -> list[str]:
     return errors
 
 
-def _validate_skill(
-    skill: dict[str, Any], entity_name: str, index: int, errors: list[str]
-) -> None:
+def _validate_skill(skill: dict[str, Any], entity_name: str, index: int, errors: list[str]) -> None:
     prefix = f"'{entity_name}'.技能[{index}]"
     sname = skill.get("名称", "")
     if not sname or not isinstance(sname, str):
@@ -137,6 +135,10 @@ async def submit_contribute(payload: dict[str, Any]):
     name = payload.get("名称", "unknown")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_name = "".join(c if c.isalnum() or c in ("-_",) else "_" for c in name)
+    # 防止路径穿越：只取文件名部分（防止 safe_name 含路径分隔符残留）
+    safe_name = PurePath(safe_name).name
+    if not safe_name:
+        safe_name = "unnamed"
     filename = f"contribute_{safe_name}_{ts}.json"
 
     staging = _ensure_staging_dir()
@@ -155,5 +157,6 @@ async def submit_contribute(payload: dict[str, Any]):
         message="提交成功",
         filename=filename,
     )
+
 
 __all__: list[str] = []

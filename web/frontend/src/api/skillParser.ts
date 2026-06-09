@@ -146,11 +146,17 @@ function extractHitCount(info: ParsedSkill, desc: string) {
 }
 
 function stripWikiMarkup(text: string): string {
-  return text
-    .replace(/\{\{蓝色\|([^}]+)\}\}/g, "$1")
-    .replace(/\{\{color\|[^|]+\|([^}]+)\}\}/g, "$1")
+  // 递归剥离所有 {{...}} wiki 标记（含嵌套）
+  let prev = "";
+  let result = text;
+  while (result !== prev) {
+    prev = result;
+    result = result.replace(/\{\{[^{}]*\}\}/g, "");  // 只匹配不含 {} 的最内层 {{...}}
+  }
+  return result
     .replace(/<BR\s*\/?>/gi, " ")
     .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 

@@ -1,19 +1,17 @@
-#!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0
-"""framework/ 测试 fixtures。"""
+"""pytest 配置：控制台进度指示器，防止测试静默看起来像卡死。"""
+
+from __future__ import annotations
 
 import sys
-from pathlib import Path
-
-import pytest
-
-REPO_ROOT = Path(__file__).parents[2]  # conftest → tests/ → framework/ → 仓库根
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
 
-@pytest.fixture
-def fixtures_dir() -> Path:
-    return FIXTURES_DIR
+def pytest_runtest_logreport(report):
+    """每完成一个测试输出一个 '.'，防止长时间静默。"""
+    if report.when == "call" and report.passed:
+        sys.stdout.write(".")
+        sys.stdout.flush()
+
+
+def pytest_sessionfinish(session):
+    sys.stdout.write("\n")

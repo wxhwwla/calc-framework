@@ -17,9 +17,9 @@ YOLOX 目标检测器 — 基于 YOLOX (Apache 2.0) 替代 Ultralytics YOLO (AGP
 
 用法（代码）:
 
-    from tools.ocr.detector import YOLOXDetector
+    from tools.ocr.detector import TorchVisionDetector
 
-    d = YOLOXDetector("yolox_s.pth")
+    d = TorchVisionDetector()
 
     result = d.detect_single("screenshot.png")
 
@@ -298,7 +298,7 @@ def _to_tensor(image: Image.Image, device: str = "cpu") -> Any:
     return torch.from_numpy(arr).unsqueeze(0).to(device)
 
 
-class YOLOXDetector:
+class TorchVisionDetector:
     """基于 TorchVision (MIT) 的目标检测器，接口兼容 Detectron2 / Ultralytics。
 
 
