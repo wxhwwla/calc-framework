@@ -31,6 +31,8 @@ pytest-cache-files-*/
 cypress/screenshots/
 cypress/videos/
 .coverage
+.cov75
+cov_report.txt
 htmlcov/
 .tox/
 .nox/

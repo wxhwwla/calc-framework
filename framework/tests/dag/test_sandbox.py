@@ -158,6 +158,46 @@ class TestParseValidation:
             validate_expr("1 ** 2")
 
 
+class TestSandboxEdgePaths:
+    """覆盖沙箱的异常/边缘路径。"""
+
+    def test_integral_odd_n(self) -> None:
+        """积分使用奇数 n 时应触发偶数化分支。"""
+        register_function("double", lambda x: x * 2)
+        result = evaluate(parse_expr("integral('double', 0, 10, 101)"), {})
+        assert isinstance(result, float)
+        unregister_function("double")
+
+    def test_bitwise_not_rejected(self) -> None:
+        """~ 运算符不在白名单中应被拒绝。"""
+        from calc_framework.dag.errors import DAGSecurityError
+
+        with pytest.raises(DAGSecurityError):
+            parse_expr("~1")
+
+    def test_bytes_constant_rejected(self) -> None:
+        """bytes 常量不是支持的常量类型应报错。"""
+        import ast
+
+        from calc_framework.dag.errors import DAGRuntimeError
+        from calc_framework.dag.sandbox import _eval_node
+
+        node = ast.Constant(value=b"hello")
+        with pytest.raises(DAGRuntimeError, match="常量"):
+            _eval_node(node, {})
+
+    def test_unsupported_node_type(self) -> None:
+        """不支持的 AST 节点类型应报错。"""
+        import ast
+
+        from calc_framework.dag.errors import DAGRuntimeError
+        from calc_framework.dag.sandbox import _eval_node
+
+        node = ast.List(elts=[ast.Constant(value=1.0)], ctx=ast.Load())
+        with pytest.raises(DAGRuntimeError, match="不支持的节点类型"):
+            _eval_node(node, {})
+
+
 class TestRuntimeErrors:
     """运行时错误处理。"""
 

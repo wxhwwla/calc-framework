@@ -131,3 +131,20 @@ class TestFileWatcher:
 
         finally:
             tmp.unlink(missing_ok=True)
+
+    def test_double_start_ignored(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            tmp = Path(f.name)
+        try:
+            watcher = FileWatcher(tmp, on_change=lambda: None, poll_interval=0.3)
+            watcher.start()
+            watcher.start()  # 第二次 start 应无效果，不抛异常
+            assert watcher.is_running
+            watcher.stop()
+        finally:
+            tmp.unlink(missing_ok=True)
+
+    def test_read_mtime_handles_missing(self):
+        """不存在的文件应返回 0.0。"""
+        watcher = FileWatcher(Path("nonexistent_file_xyz.json"), on_change=lambda: None)
+        assert watcher._read_mtime() == 0.0
