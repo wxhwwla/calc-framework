@@ -1282,6 +1282,11 @@ def commit_and_push(
         created_commit = True
 
     else:
+        # 补推已有 commit：从 HEAD 读取版本号，若末尾 .0 则为次版本 bump，应合并并打标签
+        head_version = _read_version_from_git_head(readme_path)
+        if head_version and re.match(r"^\d+\.\d+\.0$", head_version):
+            was_minor = True
+            print(f"[信息] 检测到 HEAD 次版本 {head_version}，补推后自动合并 {RELEASE_BRANCH}")
         print("[信息] 跳过新版本 commit，仅推送已有提交")
 
     try:
