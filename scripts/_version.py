@@ -333,11 +333,7 @@ def get_exe_version() -> str:
 
 
 # --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 更新 5 处文件
+# TITLE: 修改 scripts/_version.py
 # BODY:
-# - 更新文档 docs/上传脚本与-pre-commit.md
-# - 更新文档 docs/会话接续手册.md
-# - 修改 framework/src/calc_framework/ui/viewer_events.py
-# - 修改 framework/src/calc_framework/ui/viewer_help_content.py
 # - 修改 scripts/_version.py
 # --- END UPLOAD_SUMMARY ---
