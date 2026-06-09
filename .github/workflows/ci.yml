@@ -2,6 +2,8 @@
 # 包路径：games/endfield/，测试在此目录下
 
 name: Game CI
+permissions:
+  contents: read
 
 on:
   push:

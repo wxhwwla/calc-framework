@@ -3,6 +3,8 @@
 # 每次 web/** 变更时运行，约 2-3 分钟
 
 name: Web CI
+permissions:
+  contents: read
 
 on:
   push:

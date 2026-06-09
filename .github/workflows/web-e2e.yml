@@ -2,6 +2,8 @@
 # 启动后端 + 前端 dev server → 运行 Cypress E2E 测试
 
 name: Web E2E
+permissions:
+  contents: read
 
 on:
   push:

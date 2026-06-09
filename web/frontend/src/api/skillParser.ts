@@ -147,11 +147,24 @@ function extractHitCount(info: ParsedSkill, desc: string) {
 
 function stripWikiMarkup(text: string): string {
   // 递归剥离所有 {{...}} wiki 标记（含嵌套）
-  let prev = "";
-  let result = text;
-  while (result !== prev) {
-    prev = result;
-    result = result.replace(/\{\{[^{}]*\}\}/g, "");  // 只匹配不含 {} 的最内层 {{...}}
+  // 用深度计数器逐字符处理，确保正确处理任意深度嵌套
+  let depth = 0;
+  let result = "";
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '{' && text[i + 1] === '{') {
+      depth++;
+      i++; // 跳过第二个 {
+      continue;
+    }
+    if (ch === '}' && text[i + 1] === '}') {
+      depth--;
+      i++; // 跳过第二个 }
+      continue;
+    }
+    if (depth === 0) {
+      result += ch;
+    }
   }
   return result
     .replace(/<BR\s*\/?>/gi, " ")

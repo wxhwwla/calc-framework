@@ -2,6 +2,8 @@
 # 包路径：framework/，含 DAG 引擎 + graph_editor 可视化编辑器
 
 name: Framework CI
+permissions:
+  contents: read
 
 on:
   push:

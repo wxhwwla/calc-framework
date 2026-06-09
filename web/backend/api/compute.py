@@ -14,29 +14,23 @@ from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 router = APIRouter(prefix="/api/compute", tags=["compute"])
 
 
-
 _manager = AdapterManager(ADAPTER_ROOT)
 
 _DATA = ENDFIELD_DATA_ROOT
 
 
-
 class EvaluateRequest(BaseModel):
-
     adapter: str
 
     context: dict
 
 
-
 class EvaluateResponse(BaseModel):
-
     outputs: dict[str, float]
 
     node_values: dict[str, float | str | None]
 
     execution_order: list[str]
-
 
 
 def evaluate_payload(req: EvaluateRequest) -> EvaluateResponse:
@@ -110,7 +104,6 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
 
 
 class SnapshotRequest(BaseModel):
-
     char_name: str
 
     weapon_name: str
@@ -164,12 +157,9 @@ class SnapshotRequest(BaseModel):
     extra_crit_damage: float = 0.0
 
 
-
-
 _CHARACTERS_PATH = _DATA / "characters.json"
 
 _WEAPONS_PATH = _DATA / "weapons.json"
-
 
 
 def snapshot_payload(req: SnapshotRequest) -> dict:
@@ -180,7 +170,6 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
     char_data = next((c for c in chars if c.get("名称") == req.char_name), None)
 
     if not char_data:
-
         raise HTTPException(status_code=404, detail=f"角色不存在: {req.char_name}")
 
     weapons = load_json(_WEAPONS_PATH) or []
@@ -188,10 +177,7 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
     weapon_data = next((w for w in weapons if w.get("名称") == req.weapon_name), None)
 
     if not weapon_data:
-
         raise HTTPException(status_code=404, detail=f"武器不存在: {req.weapon_name}")
-
-
 
     skill_counts: dict[str, int] = {}
 
@@ -202,91 +188,51 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
     ult_skills = char_data.get("终结技倍率", [])
 
     for seg_idx in range(max(len(raw_skills), len(conn_skills), len(ult_skills))):
-
         for st, arr in [("战技", raw_skills), ("连携技", conn_skills), ("终结技", ult_skills)]:
-
             if seg_idx < len(arr) and len(arr[seg_idx]) > 0:
-
                 key = f"{st}:{seg_idx + 1}"
 
                 skill_counts[key] = 1
 
-
-
     try:
-
         result = build_damage_snapshot(
-
             char_data=char_data,
-
             weapon_data=weapon_data,
-
             char_level=req.char_level,
-
             weapon_level=req.weapon_level,
-
             trust_level=req.trust_level,
-
             skill_levels=(req.skill_1_level, req.skill_2_level, req.skill_3_level),
-
             skill_counts=skill_counts,
-
             use_manual_counts=False,
-
             normal_skill_1_level=req.normal_skill_1_level,
-
             normal_skill_2_level=req.normal_skill_2_level,
-
             normal_skill_3_level=req.normal_skill_3_level,
-
             special_skill_1_level=req.special_skill_1_level,
-
             special_skill_1_stack=req.special_skill_1_stack,
-
             special_skill_2_level=req.special_skill_2_level,
-
             special_skill_2_stack=req.special_skill_2_stack,
-
             enemy_defense=req.enemy_defense,
-
             enemy_resistance=req.enemy_resistance,
-
             ignore_resistance=req.ignore_resistance,
-
             imbalance_vulnerability_coeff=req.imbalance_vulnerability_coeff,
-
             is_unbalanced=req.is_unbalanced,
-
             is_true_damage=req.is_true_damage,
-
             combo_stacks=req.combo_stacks,
-
             break_defense_stacks=req.break_defense_stacks,
-
         )
 
         return dict(
-
             segment_damage=result.segment_damage,
-
             segment_counts=result.segment_counts,
-
             segment_totals=result.segment_totals,
-
             skill_type_totals=result.skill_type_totals,
-
             weighted_total_damage=result.weighted_total_damage,
-
             rotation_share_percent=result.rotation_share_percent,
-
             zone_share_percent=result.zone_share_percent,
-
             selected_skill_label=result.selected_skill_label,
-
         )
 
     except Exception as e:
-
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -379,7 +325,10 @@ def compare(req: CompareRequest):
             sn = build_snapshot_from_loadout(loadout)
             results.append({"label": entry.label, "total": sn.weighted_total_damage})
         except Exception as e:
-            results.append({"label": entry.label, "error": str(e), "total": 0})
+            from web.backend.bridge import get_logger
+
+            get_logger(__name__).warning("配装对比计算失败: %s", e)
+            results.append({"label": entry.label, "error": "计算异常", "total": 0})
 
     results.sort(key=lambda r: r.get("total", 0), reverse=True)
     return results
@@ -438,11 +387,13 @@ def preset_export(req: PresetExportRequest) -> dict[str, Any]:
         build_loadout_state_from_web,
         loadout_state_to_web_preset,
     )
+
     loadout = build_loadout_state_from_web(
         char_data=req.char_data,
         weapon_data=req.weapon_data,
         body=req.to_loadout_dict(),
     )
     return loadout_state_to_web_preset(loadout)
+
 
 __all__: list[str] = []

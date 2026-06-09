@@ -256,8 +256,11 @@ def _validate_api_url(url: str) -> str:
                     if ip in net:
                         raise HTTPException(status_code=400, detail=f"域名 {hostname} 解析到内网地址 {ip_str}，已阻止")
         except socket.gaierror:
-            # DNS 解析失败 — 不阻止（可能是暂时性网络问题或自定义域名）
-            pass
+            # DNS 解析失败 — 阻止（SSRF 防护：无法验证目标地址安全）
+            raise HTTPException(
+                status_code=400,
+                detail=f"无法解析域名 {hostname}，请检查 API 地址是否正确",
+            )
 
     return url.rstrip("/")
 
@@ -307,6 +310,8 @@ async def ai_parse_formula(req: AIFormulaRequest):
 
     safe_base = _validate_api_url(req.api_base)
     api_url = safe_base + "/chat/completions"
+    # 二次验证：确保最终 URL 的 hostname 未被 SSRF 绕过
+    _validate_api_url(api_url)
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -314,20 +319,19 @@ async def ai_parse_formula(req: AIFormulaRequest):
             resp.raise_for_status()
             data = resp.json()
     except httpx.ConnectError:
-        raise HTTPException(status_code=502, detail=f"无法连接到 {api_url}，请检查 API 地址是否正确")
+        raise HTTPException(status_code=502, detail="无法连接到 AI API，请检查 API 地址是否正确")
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="AI 请求超时，请检查网络连接或换用更快的模型")
     except httpx.HTTPStatusError as e:
         status = e.response.status_code
-        detail = e.response.text[:300]
         if status == 401:
             raise HTTPException(status_code=502, detail="API Key 认证失败，请检查密钥是否正确")
         elif status == 429:
             raise HTTPException(status_code=502, detail="API 请求频率过高，请稍后再试")
         else:
-            raise HTTPException(status_code=502, detail=f"AI API 返回错误 ({status}): {detail}")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI 请求失败: {e!s}")
+            raise HTTPException(status_code=502, detail=f"AI API 返回错误 (HTTP {status})")
+    except Exception:
+        raise HTTPException(status_code=502, detail="AI 请求失败，请稍后重试")
 
     # 解析返回内容
     try:
@@ -413,4 +417,7 @@ async def ai_test_connection(req: AITestRequest):
             data = resp.json()
             return {"status": "ok", "model": data.get("model", "")}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        from web.backend.bridge import get_logger
+
+        get_logger(__name__).warning("AI 连接测试失败: %s", e)
+        return {"status": "error", "message": "连接测试失败，请检查 API 地址和密钥"}
