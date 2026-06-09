@@ -330,10 +330,3 @@ def get_version() -> str:
 def get_exe_version() -> str:
     """获取 EXE 版本号。"""
     return _EXE_VERSION
-
-
-# --- BEGIN UPLOAD_SUMMARY ---
-# TITLE: 修改 scripts/_version.py
-# BODY:
-# - 修改 scripts/_version.py
-# --- END UPLOAD_SUMMARY ---
