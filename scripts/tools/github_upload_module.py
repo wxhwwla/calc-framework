@@ -1248,6 +1248,11 @@ def commit_and_push(
 
         commit_msg = meta.build_commit_message(version_for_msg, title_read, bullets_read)
 
+        # 摘要已读入 commit 消息，从磁盘删除并重新暂存以免进入仓库历史
+        meta.remove_summary_block(readme_path)
+        print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
+        run_git(["add", _version_file_relpath(readme_path)])
+
         print(signing_status_message(resolve_signing_config()))
 
         print(f"[信息] git commit:\n{commit_msg.splitlines()[0]} ...")
@@ -1293,10 +1298,6 @@ def commit_and_push(
             raise
 
     if push_succeeded and created_commit:
-        meta.remove_summary_block(readme_path)
-
-        print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
-
         print(
             f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}"
             f"（_EXE_VERSION = {meta.read_exe_version(readme_path)}）"
