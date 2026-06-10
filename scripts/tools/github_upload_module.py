@@ -40,19 +40,10 @@ FORCE_PUSH = False
 # =================
 
 
-_SCRIPT_NAME = os.path.basename(__file__)
-
-_DOWNLOAD_SCRIPT = "scripts/tools/github_download_module.py"
-
 _TOKEN_IN_REMOTE = re.compile(
     r"https://[^@\s]+@github\.com/",
     re.IGNORECASE,
 )
-
-
-def _package_path() -> Path:
-    """返回游戏包目录路径。"""
-    return Path(_repo_root()) / TARGET_DIR
 
 
 def _import_upload_meta():
@@ -942,7 +933,7 @@ def _sync_saved_version_with_head(readme_path: Path, meta) -> str:
     return saved_version
 
 
-def _should_merge_to_release(meta, readme_path: Path, *, was_minor: bool) -> bool:
+def _should_merge_to_release(*, was_minor: bool) -> bool:
     """次版本号上传时自动同步 develop → main。"""
     if not was_minor:
         print(f"[信息] 非次版本上传，仅推送 {WORK_BRANCH}")
@@ -1127,8 +1118,13 @@ def commit_and_push(
     no_bump: bool = False,
     push_tag: bool = False,
     skip_git_backup: bool = False,
+    dry_run: bool = False,
 ) -> None:
-    """执行 git 提交与推送流程（含版本管理和总结块管理）。"""
+    """执行 git 提交与推送流程（含版本管理和总结块管理）。
+
+    参数:
+        dry_run: 预览模式，展示操作计划但不实际修改或推送。
+    """
     os.chdir(_repo_root())
     target_path = os.path.join(".", TARGET_DIR)
 
@@ -1174,6 +1170,10 @@ def commit_and_push(
 
     push_succeeded = False
 
+    # 必须在分支外初始化，否则补推 (has_unpushed) 时变量不存在
+    saved_version = ""
+    version_planned_bump = False
+
     if not has_unpushed:
         change_paths = _collect_change_paths()
 
@@ -1218,6 +1218,32 @@ def commit_and_push(
                 print(f"[信息] 版本 patch: {saved_version} → {version_for_msg}（pre-commit 通过后再写入 _version.py）")
 
             version_planned_bump = True
+
+        # ============ DryRun 预览模式 ============
+        if dry_run:
+            print("")
+            print("=" * 60)
+            print("  [DryRun] 预览模式 — 不修改任何文件，不推送")
+            print("=" * 60)
+            print(f"  当前版本:     {saved_version}")
+            if version_planned_bump:
+                print(f"  目标版本:     {version_for_msg}")
+                print(f"  递增类型:     {'Minor' if was_minor else 'Patch'}")
+            else:
+                print("  版本递增:     跳过")
+            print(f"  分支:         {WORK_BRANCH}")
+            print(f"  目标目录:     {TARGET_DIR}")
+            print(f"  变更文件:     {len(change_paths)} 个")
+            for p in sorted(change_paths):
+                print(f"    - {p}")
+            if was_minor:
+                print(f"  Minor 操作:   合并 {WORK_BRANCH} → {RELEASE_BRANCH}")
+            if push_tag:
+                print(f"  标签:         v{version_for_msg if version_planned_bump else saved_version}")
+            print("=" * 60)
+            print("  [DryRun] 完成 — 实际执行请去掉 --dry-run")
+            print("=" * 60)
+            return
 
         title, bullets = meta.summarize_changes(change_paths)
 
@@ -1307,13 +1333,20 @@ def commit_and_push(
     except subprocess.CalledProcessError:
         push_succeeded = False
 
+        # 推送失败：回滚已写入的版本号（如果版本被递增了）
+        if version_planned_bump and created_commit:
+            print("[信息] 推送失败，回滚 _VERSION 到推送前状态…")
+            meta.write_version(readme_path, saved_version)
+            print(f"[信息] 已回滚 _VERSION → {saved_version}")
+            print("[信息] 版本号已恢复到推送前值，修复后可重新运行上传脚本")
+
         print("[警告] 推送未成功；本地 commit 已保留，修复后请 python github_upload_module.py --no-bump 仅补推")
 
         raise
 
     if push_succeeded:
         try:
-            if _should_merge_to_release(meta, readme_path, was_minor=was_minor):
+            if _should_merge_to_release(was_minor=was_minor):
                 _merge_work_into_release(
                     meta=meta,
                     readme_path=readme_path,
@@ -1380,6 +1413,12 @@ def parse_args() -> argparse.Namespace:
         help="仅自检仓库状态，不 pull/commit/push",
     )
 
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="预览模式：展示将要执行的操作，不实际修改任何文件或推送",
+    )
+
     return parser.parse_args()
 
 
@@ -1412,16 +1451,19 @@ def main() -> None:
         if args.check:
             sys.exit(0)
 
-        if not sync_with_remote(skip_pull=args.skip_pull):
-            print("[中止] 同步远程失败，未推送")
+        # DryRun: 跳过 sync_with_remote（仅展示本地状态）
+        if not args.dry_run:
+            if not sync_with_remote(skip_pull=args.skip_pull):
+                print("[中止] 同步远程失败，未推送")
 
-            sys.exit(1)
+                sys.exit(1)
 
         commit_and_push(
             minor=args.minor,
             no_bump=args.no_bump,
             push_tag=args.tag,
             skip_git_backup=args.no_git_backup,
+            dry_run=args.dry_run,
         )
 
         print("=" * 60)

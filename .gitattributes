@@ -1,1 +1,52 @@
-"* text=auto"
+# 统一换行符处理
+* text=auto
+
+# Python 源码
+*.py text eol=lf diff=python
+*.pyw text eol=lf diff=python
+*.pyi text eol=lf diff=python
+
+# Web 前端
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# 脚本文件
+*.ps1 text eol=lf
+*.bat text eol=lf
+*.sh text eol=lf
+
+# 文档与配置
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.txt text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.ini text eol=lf
+*.spec text eol=lf
+*.nsi text eol=lf
+
+# 图像 / 二进制
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.gif binary
+*.dll binary
+*.pyd binary
+*.so binary
+*.woff binary
+*.woff2 binary
+
+# 字体
+*.ttf binary
+*.otf binary
+
+# 模型文件
+*.pt binary

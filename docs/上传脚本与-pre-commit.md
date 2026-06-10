@@ -11,6 +11,7 @@
 | 命令 | 用途 |
 |------|------|
 | `python github_upload_module.py --check` | 仅自检（rebase/merge/断历史），不 commit/push |
+| `python github_upload_module.py --dry-run` | **预览模式**：展示将要执行的变更文件、版本递增计划，不实际修改/推送 |
 | `python github_upload_module.py` | 提交并 push 到 **`develop`**；仅 patch bump `_VERSION` |
 | `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump） |
 | `python github_upload_module.py --minor` | 第二位 +1；commit 前备份 `.git` → `git_backup/snapshots/` |
@@ -38,6 +39,7 @@
 | 落后 0 时跳过 pull/stash | 已与 `origin/main` 同步时不 pull，避免 Windows 上无意义的 stash |
 | pre-commit 最多 2 轮 | 见 §3 |
 | push 成功删总结块 | 失败则保留 `_version.py` 底部块；**pre-commit/commit 失败会自动回滚 bump 与总结块** |
+| push 失败 | **自动回滚 `_VERSION`** 到推送前值；本地 commit 保留，修复后 `--no-bump` 补推 |
 | PowerShell 红色 Git 输出 | Git 写 stderr，非失败；看末尾 `[完成]` / exit code |
 
 ---
@@ -187,7 +189,60 @@ fatal: pathspec '"docs/344/274/232/350/257/235/.../214.md"' did not match any fi
 
 ---
 
-## 10. 验收：Windows 全流程（2026-06-04）
+## 9. `--dry-run` 预览模式（2026-06-10 新增）
+
+**用途**：在上传前预览将要执行的操作，不修改任何文件，不推送。
+
+```powershell
+python github_upload_module.py --dry-run
+```
+
+**输出内容**：
+```
+[DryRun] 预览模式 — 不修改任何文件，不推送
+  当前版本:     3.23.2
+  目标版本:     3.23.3
+  递增类型:     Patch
+  分支:         develop
+  目标目录:     games/endfield
+  变更文件:     N 个
+    - path/to/file1.py
+    - path/to/file2.md
+  ...
+[DryRun] 完成 — 实际执行请去掉 --dry-run
+```
+
+**特点**：
+- 走完整变更收集 → 分类 → 版本规划流程，但不写磁盘
+- 不执行 `sync_with_remote()`（避免误触发 stash/pull）
+- 可与 `--minor` / `--no-bump` / `--tag` 组合预览不同策略
+
+---
+
+## 10. 推送失败版本回滚（2026-06-10 新增）
+
+**触发条件**：`_push_to_remote()` 抛异常（网络故障 / SSH 断开 / 远程拒绝等）。
+
+**脚本行为**：
+1. 若本次上传**创建了新 commit 且 bump 了版本号**，自动将 `_VERSION` 回滚到推送前值
+2. 打印回滚日志：
+   ```
+   [信息] 推送失败，回滚 _VERSION 到推送前状态…
+   [信息] 已回滚 _VERSION → 3.23.1
+   [信息] 版本号已恢复到推送前值，修复后可重新运行上传脚本
+   ```
+3. 本地 commit 保留（不撤销），修复网络后 `python github_upload_module.py --no-bump` 仅补推
+
+**与旧行为的区别**：
+
+| 场景 | 旧行为 | 新行为 |
+|------|--------|--------|
+| push 失败 | 版本号已 bump，需手动恢复 | 自动回滚版本号 |
+| 修复后 | 版本号已错，需 `--no-bump` + 手改 | 直接重跑上传脚本即可 |
+
+---
+
+## 11. 验收：Windows 全流程（2026-06-04）
 
 **已验证 commit** `ad867583`（`v3.21.2: 更新 12 处文件`）→ `main` push 成功。
 
@@ -215,4 +270,4 @@ python -m pytest games/endfield/tests/tools/test_upload_meta.py games/endfield/t
 
 ---
 
-*最后更新：2026-06-04（§4.155 `_version` F822 / CRLF ensure / 文档同批误判）*
+*最后更新：2026-06-10（新增 §9 `--dry-run` 预览模式 + §10 推送失败版本回滚）*

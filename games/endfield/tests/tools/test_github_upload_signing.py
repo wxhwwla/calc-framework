@@ -140,22 +140,22 @@ class TestDualVersionReleaseMerge(unittest.TestCase):
         self.readme = please_read_me_path()
 
     def test_should_merge_when_minor(self):
-        def fake_run_git(args, **kwargs):
+        def fake_run_git(args, **_):
             if args[:2] == ["rev-parse", "--verify"]:
                 return 0, "abc", ""
             return 1, "", ""
 
         with patch.object(upload, "run_git", side_effect=fake_run_git):
-            self.assertTrue(upload._should_merge_to_release(None, self.readme, was_minor=True))
+            self.assertTrue(upload._should_merge_to_release(was_minor=True))
 
     def test_should_not_merge_when_patch(self):
-        def fake_run_git(args, **kwargs):
+        def fake_run_git(args, **_):
             if args[:2] == ["rev-parse", "--verify"]:
                 return 0, "abc", ""
             return 1, "", ""
 
         with patch.object(upload, "run_git", side_effect=fake_run_git):
-            self.assertFalse(upload._should_merge_to_release(None, self.readme, was_minor=False))
+            self.assertFalse(upload._should_merge_to_release(was_minor=False))
 
 
 if __name__ == "__main__":
