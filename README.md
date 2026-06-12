@@ -1,44 +1,43 @@
 [![GitHub stars](https://img.shields.io/github/stars/wxhwwla/calc-framework?style=social)](https://github.com/wxhwwla/calc-framework)
 [![AtomGit stars](https://atomgit.com/wxhwwla/calc-framework/star/badge.svg)](https://atomgit.com/wxhwwla/calc-framework)
 
-# Calc Framework — Universal Game Damage Calculator / 通用游戏计算框架
+# Calc Framework — Universal Game Damage Calculator
 
 > A universal game calculation framework. Currently supports **Arknights: Endfield** and **Arknights**.
 >
-> **Web Demo（在线版）**: [wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)
+> **Web Demo**: [wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)
 >
-> 通用游戏计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》
+> [:cn: 中文文档](README_zh.md)
 
 ---
 
-## Documentation Map / 文档导航
+## Documentation Map
 
-| Document | Audience / 适合谁 |
-|----------|------|
-| **This page（本页）** | First-time visitors, GitHub homepage / 首次访问、GitHub 首页 |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | System architecture overview / 系统架构概览 |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute / 如何贡献 |
-| [`CONTEXT.md`](CONTEXT.md) | Domain terminology / 领域术语表 |
-| [`docs/项目目标.md`](docs/项目目标.md) | Project vision & roadmap (ZH) / 项目愿景与路线图 |
-| [`docs/操作指令集.md`](docs/操作指令集.md) | Command reference (ZH) / 操作命令速查 |
-| [`docs/算法与架构.md`](docs/算法与架构.md) | Algorithm details (ZH, partially outdated) / 算法与架构细节 |
-| [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | Licensing & data sources (ZH) / 许可与数据来源 |
-| [`games/endfield/README.md`](games/endfield/README.md) | Endfield package details / 终末地包详细说明 |
+| Document | Audience |
+|----------|----------|
+| **This page** | First-time visitors, GitHub homepage |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) ([中文](ARCHITECTURE_zh.md)) | System architecture overview |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) ([中文](CONTRIBUTING_zh.md)) | How to contribute |
+| [`CONTEXT.md`](CONTEXT.md) ([中文](CONTEXT_zh.md)) | Domain terminology |
+| [`docs/项目目标.md`](docs/项目目标.md) | Project vision & roadmap (ZH) |
+| [`docs/操作指令集.md`](docs/操作指令集.md) | Command reference (ZH) |
+| [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | Licensing & data sources (ZH) |
+| [`games/endfield/README.md`](games/endfield/README.md) | Endfield package details |
 
 ---
 
-## Directory Overview / 目录一览
+## Directory Overview
 
 ```
 [repo root]/
-├── framework/                    # [Framework] calc-framework — generic pip package
+├── framework/                    # calc-framework — generic pip package
 │   ├── src/calc_framework/       #   DAG engine, inverse engine, data, UI, search, plugin
 │   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba)
-├── web/                          # [Web] React + FastAPI full-stack web app
+├── web/                          # React + FastAPI full-stack web app
 │   ├── backend/                  #   FastAPI backend (/api/*)
 │   ├── frontend/                 #   React frontend (TypeScript + MUI + Vite)
 │   └── hub/                      #   Calc Hub — static marketplace
-├── games/                        # [Games] Game adapter packages
+├── games/                        # Game adapter packages
 │   ├── endfield/                 #   Endfield damage calculator (calc + gui + data + tests)
 │   └── arknights/                #   Arknights calculator (DAG + GUI + tests)
 ├── docs/                         # Project documentation
@@ -53,45 +52,44 @@
 
 ---
 
-## Quick Start / 快速开始
+## Quick Start
 
-### Recommended: Launcher / 推荐：启动器
+### Recommended: Launcher
 
 ```powershell
-# Launcher — auto-discovers installed game adapters
-# 自动发现已安装的游戏适配包
+# Auto-discovers installed game adapters
 python scripts/main_launcher.py
 ```
 
-### Direct Launch / 直接启动
+### Direct Launch
 
 ```powershell
-# Endfield Calculator / 终末地计算器
+# Endfield Calculator
 cd games/endfield
 pip install -e ".[dev]"
 python -m games.endfield.main
 ```
 
 ```powershell
-# Developer Toolkit / 开发者工具箱
+# Developer Toolkit
 python scripts/main_dev_toolkit.py
 ```
 
-### Web Version / Web 版
+### Web Version
 
 ```powershell
-# Backend / 后端
+# Backend
 cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8002
 
-# Frontend / 前端 (separate terminal / 新终端)
+# Frontend (separate terminal)
 cd web/frontend && npm install && npm run dev
 ```
 
 ---
 
-## Features / 功能概览
+## Features
 
-### Endfield Damage Calculator / 终末地伤害计算器
+### Endfield Damage Calculator
 
 - Character / weapon / equipment selection with dual-tab GUI (Calculate + Advanced)
 - 15-zone damage formula driven by DAG engine (framework `ComputeSheet`)
@@ -103,14 +101,14 @@ cd web/frontend && npm install && npm run dev
 - Preset JSON import/export, batch comparison, damage dashboard (matplotlib)
 - Survival estimation, enemy parameter panel, manual buff controls
 
-### Arknights Calculator / 明日方舟计算器
+### Arknights Calculator
 
 - Operator selection by star / profession / branch with skill parser
 - Physical / Magic / True damage calculation via DAG engine
 - BWIKI data crawling: 420+ operators with full stats
 - 28 attributes + 5 custom functions + 51-node DAG
 
-### Generic Framework / 通用框架
+### Generic Framework
 
 - **DAG Engine**: 9 node types, topological sort, AST sandbox, subgraph expansion, block-level caching
 - **Inverse Engine**: `data_to_params()` / `params_to_curve()` — bidirectional formula fitting for any game
@@ -120,7 +118,7 @@ cd web/frontend && npm install && npm run dev
 - **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 
-### Web Version / Web 版
+### Web Version
 
 | Web Page | Desktop Equivalent | Route |
 |----------|-------------------|-------|
@@ -129,12 +127,11 @@ cd web/frontend && npm install && npm run dev
 | Pack Designer | Dev toolkit | `/pack-designer` |
 | Calc Hub Marketplace | — | `/marketplace` |
 
-The Web version shares `layout.json` / `attr_schema.json` / DAG files / data JSON with the desktop version.
-Both render the same declarations — one codebase, two rendering targets.
+The Web version shares `layout.json` / `attr_schema.json` / DAG files / data JSON with the desktop version. One codebase, two rendering targets.
 
 ---
 
-## Framework Quick API / 框架速览
+## Framework Quick API
 
 ```python
 from calc_framework.inverse.engine import InverseEngine
@@ -166,13 +163,13 @@ result = adapter.fit(data)  # auto-match by data length
 
 ---
 
-## Testing / 测试
+## Testing
 
 ```powershell
-# Framework tests / 框架测试
+# Framework tests
 cd framework && pytest tests/ -q     # 1019 passed
 
-# Endfield tests / 终末地测试
+# Endfield tests
 cd games/endfield && pytest tests/calculation/ tests/data_loading/ -q  # 693 passed
 ```
 
@@ -180,18 +177,18 @@ cd games/endfield && pytest tests/calculation/ tests/data_loading/ -q  # 693 pas
 
 ---
 
-## Community / 社区与交流
+## Community
 
 | Channel | Purpose |
 |---------|---------|
-| [GitHub Issues](https://github.com/wxhwwla/calc-framework/issues) | Bug reports / feature requests（推荐） |
+| [GitHub Issues](https://github.com/wxhwwla/calc-framework/issues) | Bug reports / feature requests |
 | [GitHub Discussions](https://github.com/wxhwwla/calc-framework/discussions) | Technical discussion / Q&A |
-| QQ Group: `1040157567` | Chinese community（建设中） |
+| QQ Group: `1040157567` | Chinese community |
 | Discord | Invite link TBD |
 
 ---
 
-## License & Data / 许可证与数据来源
+## License & Data
 
 | Content | License |
 |---------|---------|

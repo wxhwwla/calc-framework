@@ -1,14 +1,13 @@
-# Architecture Overview / 架构概述
+# Architecture Overview
 
 > This document is the root-level entry point for project architecture.
-> Detailed design: [`docs/算法与架构.md`](docs/算法与架构.md) (ZH, partially outdated).
 > Architecture Decision Records: [`docs/adr/`](docs/adr/).
 >
-> 本文档是项目架构的根级入口。详细设计见算法与架构.md，架构决策记录见 adr/。
+> [:cn: 中文版](ARCHITECTURE_zh.md)
 
 ---
 
-## Tech Stack / 技术栈
+## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
@@ -25,7 +24,7 @@
 
 ---
 
-## System Layers / 系统分层
+## System Layers
 
 ```
 GUI Layer (PySide6 / React → FastAPI)
@@ -43,7 +42,7 @@ Inverse Engine (calc_framework.inverse)
 
 ---
 
-## Directory Structure / 目录结构
+## Directory Structure
 
 ```
 framework/          ← Generic calc framework (pip package calc-framework)
@@ -78,17 +77,17 @@ utils/              ← Shared utilities (gui/paths/updater)
 
 ---
 
-## Core Design Decisions / 核心设计决策
+## Core Design Decisions (ADRs)
 
-| ADR | Topic / 主题 |
-|-----|------|
-| [ADR-0001](docs/adr/0001-code-layout-constraints.md) | Directory & file size constraints / 目录与文件规模约束 |
-| [ADR-0003](docs/adr/0003-generic-calc-framework.md) | Generic calc framework design / 通用计算框架设计 |
-| [ADR-0005](docs/adr/0005-data-schema-design.md) | Four-layer data schema / 四层数据 Schema |
-| [ADR-0006](docs/adr/0006-calcpack-and-designer.md) | CalcPack & designer / 配置包与设计器 |
-| [ADR-0013](docs/adr/0013-generic-inverse-engine.md) | Generic inverse engine SPI / 通用反推引擎 |
-| [ADR-0020](docs/adr/0020-multiplicative-zones-decouple.md) | Multiplicative zone decoupling / 乘区解耦 |
-| [ADR-0023](docs/adr/0023-standardized-game-package-architecture.md) | Standard game package architecture / 标准游戏包架构 |
+| ADR | Topic |
+|-----|-------|
+| [ADR-0001](docs/adr/0001-code-layout-constraints.md) | Directory & file size constraints |
+| [ADR-0003](docs/adr/0003-generic-calc-framework.md) | Generic calc framework design |
+| [ADR-0005](docs/adr/0005-data-schema-design.md) | Four-layer data schema |
+| [ADR-0006](docs/adr/0006-calcpack-and-designer.md) | CalcPack & designer |
+| [ADR-0013](docs/adr/0013-generic-inverse-engine.md) | Generic inverse engine SPI |
+| [ADR-0020](docs/adr/0020-multiplicative-zones-decouple.md) | Multiplicative zone decoupling |
+| [ADR-0023](docs/adr/0023-standardized-game-package-architecture.md) | Standard game package architecture |
 | [ADR-0024](docs/adr/0024-universal-inverse-abstraction.md) | Inverse engine full abstraction — GrowthParams + GameInverseAdapter |
 | [ADR-0025](docs/adr/0025-framework-consolidation.md) | Framework interface consistency — errors, themes, CalcWorker |
 
@@ -96,7 +95,7 @@ Full ADR list: [`docs/adr/`](docs/adr/).
 
 ---
 
-## Key Abstractions / 关键抽象
+## Key Abstractions
 
 | Component | Path | Description |
 |-----------|------|-------------|
@@ -111,6 +110,6 @@ Full ADR list: [`docs/adr/`](docs/adr/).
 
 ---
 
-## Contributing / 贡献
+## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) / 见贡献指南。
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
