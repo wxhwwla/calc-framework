@@ -1,6 +1,8 @@
 # Framework PyPI Publish — calc-framework 包发布
 
 name: Framework PyPI Publish
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:

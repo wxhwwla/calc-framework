@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Box, Typography, Paper, Grid, TextField, Button, CircularProgress,
   Alert, Card, CardContent, Slider, Divider, Chip, Select, MenuItem,
@@ -6,6 +6,7 @@ import {
   Table, TableBody, TableCell, TableRow, TableContainer,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { useTranslation } from "react-i18next";
 import { useArknightsStore } from "../store/arknightsStore";
 import {
   parseSkill, parseAutoAttack,
@@ -14,9 +15,9 @@ import {
 import OperatorSelector from "../components/arknights/OperatorSelector";
 import ArknightsAttributeDisplay from "../components/arknights/ArknightsAttributeDisplay";
 
-const SKILL_NAMES = ["普攻", "技能1", "技能2", "技能3"];
-
 export default function ArknightsComputePage() {
+  const { t } = useTranslation();
+  const skillNames = useMemo(() => [t("arknights.normalAtk"), t("arknights.skill1"), t("arknights.skill2"), t("arknights.skill3")], [t]);
   const {
     operatorIndex, operatorLoading, selectedOperator, operatorDetail, detailLoading,
     computeParams, computeResult, computeLoading, error,
@@ -119,7 +120,7 @@ export default function ArknightsComputePage() {
                     label="技能"
                     onChange={(e) => setSkillIndex(e.target.value as number)}
                   >
-                    {SKILL_NAMES.map((n, i) => {
+                    {skillNames.map((n, i) => {
                       const skills: ArknightsSkill[] = (operatorDetail as any)?.技能 ?? [];
                       const disabled = i > 0 && (i - 1) >= skills.length;
                       return <MenuItem key={i} value={i} disabled={disabled}>{n}</MenuItem>;

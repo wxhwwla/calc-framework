@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "calc-framework"
 version = "0.3.0"
-description = "通用游戏数值计算框架 — DAG 公式引擎 + 声明式 UI 渲染 + 搜索枚举引擎"
+description = "通用游戏数值计算框架 — DAG 公式引擎 + 声明式 UI 渲染 + 搜索枚举引擎。纯 pip 安装后 DAG 引擎/搜索/inverse 开箱即用；GUI 功能（CalcPackViewer/ComputeSheet）需完整项目环境。"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "AGPL-3.0-only" }

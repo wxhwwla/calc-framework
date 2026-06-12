@@ -181,8 +181,8 @@ def _parse_node(raw: dict[str, Any]) -> NodeType:
         if fv is None or (isinstance(fv, str) and not fv):
             raise DAGCompileError("condition 节点缺少 false_val")
         return ConditionNode(
-            cond=_parse_ref(cond),
-            true_val=_parse_ref(tv),
+            cond=_parse_ref(cond),  # type: ignore[arg-type]
+            true_val=_parse_ref(tv),  # type: ignore[arg-type]
             false_val=_parse_ref(fv),  # type: ignore[arg-type]
             label=label,
             description=desc,

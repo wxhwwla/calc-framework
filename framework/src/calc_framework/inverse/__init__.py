@@ -15,9 +15,10 @@
 """
 
 from .advanced import ExponentialFormulaFitter, PiecewiseFormulaFitter, ThresholdFormulaFitter
-from .base import FitResult, FloorFormulaFitter, FormulaFitter
+from .base import FitResult, FloorFormulaFitter, FormulaFitter, GrowthParams
 from .engine import InverseEngine
 from .registry import FormulaType, registry
+from .schema import GameInverseAdapter, InverseSchema
 
 __all__ = [
     "ExponentialFormulaFitter",
@@ -25,7 +26,10 @@ __all__ = [
     "FloorFormulaFitter",
     "FormulaFitter",
     "FormulaType",
+    "GameInverseAdapter",
+    "GrowthParams",
     "InverseEngine",
+    "InverseSchema",
     "PiecewiseFormulaFitter",
     "ThresholdFormulaFitter",
     "registry",

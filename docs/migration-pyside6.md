@@ -1,7 +1,7 @@
 # PySide6 迁移方案
 
 > 将 GUI 层从 CustomTkinter（CTk）逐步替换为 PySide6（Qt for Python）。
-> 架构决策见 [`docs/adr/0002-migrate-to-pyside6.md`](adr/0002-migrate-to-pyside6.md)。
+> 架构决策见 [`docs/adr/0014-pyside6-migration.md`](adr/0014-pyside6-migration.md)。
 
 ---
 

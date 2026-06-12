@@ -149,7 +149,7 @@ def argv_for_calcpack(path: Path, root: Path | None = None) -> list[str]:
     """打开 .calcpack 文件。"""
     if _is_frozen():
         return [*_frozen_exe_args(), "--calcpack", str(path.resolve())]
-    root or repo_root()
+    root = root or repo_root()
     return [sys.executable, "-m", "calc_framework.ui.viewer", str(path.resolve())]
 
 

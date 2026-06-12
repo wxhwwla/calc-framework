@@ -40,19 +40,10 @@ FORCE_PUSH = False
 # =================
 
 
-_SCRIPT_NAME = os.path.basename(__file__)
-
-_DOWNLOAD_SCRIPT = "scripts/tools/github_download_module.py"
-
 _TOKEN_IN_REMOTE = re.compile(
     r"https://[^@\s]+@github\.com/",
     re.IGNORECASE,
 )
-
-
-def _package_path() -> Path:
-    """返回游戏包目录路径。"""
-    return Path(_repo_root()) / TARGET_DIR
 
 
 def _import_upload_meta():
@@ -330,8 +321,19 @@ def setup_git_repo() -> str:
         code, _, _ = run_git(["checkout", WORK_BRANCH], check=False, capture_output=True)
 
         if code != 0:
+            # 检查 develop 是否已存在本地
+            _, branches, _ = run_git(["branch"], capture_output=True)
+            if WORK_BRANCH in branches:
+                # 已存在但切换失败 → 本地有未提交改动
+                print(f"[错误] 本地有未提交的改动，无法自动切换到 {WORK_BRANCH}")
+                print(
+                    f"[提示] 请手动处理：git stash --include-untracked && git checkout {WORK_BRANCH} && git stash pop"
+                )
+                print(f"[提示] 或直接在 {WORK_BRANCH} 分支上运行本脚本（推荐）")
+                sys.exit(1)
+            # 分支不存在 → 从 main 创建
             code, _, _ = run_git(
-                ["checkout", "-b", WORK_BRANCH, RELEASE_BRANCH],
+                ["checkout", "-b", WORK_BRANCH, f"origin/{RELEASE_BRANCH}"],
                 check=False,
                 capture_output=True,
             )
@@ -568,10 +570,16 @@ def _normalize_change_path(raw: str) -> str:
 
 
 def _porcelain_paths(porcelain: str) -> list[str]:
-    """从 git status --porcelain 输出中提取文件路径列表。"""
+    """从 git status --porcelain 输出中提取文件路径列表。
+    跳过已删除（D）条目——这些已被 git rm --cached 从索引移除，不应重新 add。
+    """
     paths: list[str] = []
     for line in porcelain.splitlines():
         if len(line) < 4:
+            continue
+
+        # XY status: X=staging, Y=working tree. 跳过 D (已删除)
+        if line[0] == "D" or line[0:2] in (" D", "DD"):
             continue
 
         rest = line[3:].strip()
@@ -587,20 +595,17 @@ def _porcelain_paths(porcelain: str) -> list[str]:
 
 
 def _collect_change_paths() -> list[str]:
-    """收集所有已变更文件的路径。"""
+    """收集所有已变更文件的路径（排除已删除条目）。"""
     path_git = ["-c", "core.quotepath=false"]
     _, porcelain, _ = run_git([*path_git, "status", "--porcelain"], capture_output=True)
     paths = _porcelain_paths(porcelain)
-    _, diff_unstaged, _ = run_git([*path_git, "diff", "--name-only"], check=False, capture_output=True)
-
-    _, diff_staged, _ = run_git(
-        [*path_git, "diff", "--cached", "--name-only"],
-        check=False,
-        capture_output=True,
-    )
-
-    for chunk in (diff_unstaged, diff_staged):
-        for line in chunk.splitlines():
+    # diff --diff-filter=d 排除已从索引删除的文件
+    for diff_cmd in (
+        ["diff", "--diff-filter=d", "--name-only"],
+        ["diff", "--cached", "--diff-filter=d", "--name-only"],
+    ):
+        _, out, _ = run_git([*path_git, *diff_cmd], check=False, capture_output=True)
+        for line in out.splitlines():
             normalized = _normalize_change_path(line)
             if normalized:
                 paths.append(normalized)
@@ -763,13 +768,18 @@ def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
     if not paths:
         print("[错误] 无有效暂存路径")
         sys.exit(1)
-    print(f"[信息] git add（{len(paths)} 个路径，非全仓库）")
-    # 过滤已删除的文件
+    print(f"[信息] git add（{len(paths)} 个路径，非全仓库，分批进行）")
+    # 过滤已删除的文件（git add 不存在的文件会报错）
     paths = [p for p in paths if os.path.exists(os.path.join(_repo_root(), p))]
     if not paths:
         print("[错误] 全部路径对应的文件已不存在（可能已被删除）")
         sys.exit(1)
-    run_git(["add", "--", *paths])
+    # 分批 add 避免 Windows 命令行长度限制（CreateProcess 上限 ~8191 字符）
+    batch_size = 50
+    for i in range(0, len(paths), batch_size):
+        batch = paths[i : i + batch_size]
+        run_git(["add", "--", *batch])
+    print(f"[信息] git add 完成（{len(paths)} 个路径，共 {(len(paths) + batch_size - 1) // batch_size} 批）")
 
 
 def _pre_commit_installed() -> bool:
@@ -835,7 +845,11 @@ def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> 
     if not merged:
         print("[信息] 无有效文件需暂存，跳过 git add")
         return
-    run_git(["add", "--", *merged])
+    batch_size = 50
+    for i in range(0, len(merged), batch_size):
+        batch = merged[i : i + batch_size]
+        run_git(["add", "--", *batch])
+    print(f"[信息] commit 前同步完成（{len(merged)} 个路径，共 {(len(merged) + batch_size - 1) // batch_size} 批）")
 
 
 def _pre_commit_has_lint_errors(output: str) -> bool:
@@ -930,7 +944,7 @@ def _sync_saved_version_with_head(readme_path: Path, meta) -> str:
     return saved_version
 
 
-def _should_merge_to_release(meta, readme_path: Path, *, was_minor: bool) -> bool:
+def _should_merge_to_release(*, was_minor: bool) -> bool:
     """次版本号上传时自动同步 develop → main。"""
     if not was_minor:
         print(f"[信息] 非次版本上传，仅推送 {WORK_BRANCH}")
@@ -1115,8 +1129,13 @@ def commit_and_push(
     no_bump: bool = False,
     push_tag: bool = False,
     skip_git_backup: bool = False,
+    dry_run: bool = False,
 ) -> None:
-    """执行 git 提交与推送流程（含版本管理和总结块管理）。"""
+    """执行 git 提交与推送流程（含版本管理和总结块管理）。
+
+    参数:
+        dry_run: 预览模式，展示操作计划但不实际修改或推送。
+    """
     os.chdir(_repo_root())
     target_path = os.path.join(".", TARGET_DIR)
 
@@ -1162,6 +1181,10 @@ def commit_and_push(
 
     push_succeeded = False
 
+    # 必须在分支外初始化，否则补推 (has_unpushed) 时变量不存在
+    saved_version = ""
+    version_planned_bump = False
+
     if not has_unpushed:
         change_paths = _collect_change_paths()
 
@@ -1206,6 +1229,32 @@ def commit_and_push(
                 print(f"[信息] 版本 patch: {saved_version} → {version_for_msg}（pre-commit 通过后再写入 _version.py）")
 
             version_planned_bump = True
+
+        # ============ DryRun 预览模式 ============
+        if dry_run:
+            print("")
+            print("=" * 60)
+            print("  [DryRun] 预览模式 — 不修改任何文件，不推送")
+            print("=" * 60)
+            print(f"  当前版本:     {saved_version}")
+            if version_planned_bump:
+                print(f"  目标版本:     {version_for_msg}")
+                print(f"  递增类型:     {'Minor' if was_minor else 'Patch'}")
+            else:
+                print("  版本递增:     跳过")
+            print(f"  分支:         {WORK_BRANCH}")
+            print(f"  目标目录:     {TARGET_DIR}")
+            print(f"  变更文件:     {len(change_paths)} 个")
+            for p in sorted(change_paths):
+                print(f"    - {p}")
+            if was_minor:
+                print(f"  Minor 操作:   合并 {WORK_BRANCH} → {RELEASE_BRANCH}")
+            if push_tag:
+                print(f"  标签:         v{version_for_msg if version_planned_bump else saved_version}")
+            print("=" * 60)
+            print("  [DryRun] 完成 — 实际执行请去掉 --dry-run")
+            print("=" * 60)
+            return
 
         title, bullets = meta.summarize_changes(change_paths)
 
@@ -1282,6 +1331,11 @@ def commit_and_push(
         created_commit = True
 
     else:
+        # 补推已有 commit：从 HEAD 读取版本号，若末尾 .0 则为次版本 bump，应合并并打标签
+        head_version = _read_version_from_git_head(readme_path)
+        if head_version and re.match(r"^\d+\.\d+\.0$", head_version):
+            was_minor = True
+            print(f"[信息] 检测到 HEAD 次版本 {head_version}，补推后自动合并 {RELEASE_BRANCH}")
         print("[信息] 跳过新版本 commit，仅推送已有提交")
 
     try:
@@ -1290,13 +1344,20 @@ def commit_and_push(
     except subprocess.CalledProcessError:
         push_succeeded = False
 
+        # 推送失败：回滚已写入的版本号（如果版本被递增了）
+        if version_planned_bump and created_commit:
+            print("[信息] 推送失败，回滚 _VERSION 到推送前状态…")
+            meta.write_version(readme_path, saved_version)
+            print(f"[信息] 已回滚 _VERSION → {saved_version}")
+            print("[信息] 版本号已恢复到推送前值，修复后可重新运行上传脚本")
+
         print("[警告] 推送未成功；本地 commit 已保留，修复后请 python github_upload_module.py --no-bump 仅补推")
 
         raise
 
     if push_succeeded:
         try:
-            if _should_merge_to_release(meta, readme_path, was_minor=was_minor):
+            if _should_merge_to_release(was_minor=was_minor):
                 _merge_work_into_release(
                     meta=meta,
                     readme_path=readme_path,
@@ -1363,6 +1424,12 @@ def parse_args() -> argparse.Namespace:
         help="仅自检仓库状态，不 pull/commit/push",
     )
 
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="预览模式：展示将要执行的操作，不实际修改任何文件或推送",
+    )
+
     return parser.parse_args()
 
 
@@ -1395,16 +1462,19 @@ def main() -> None:
         if args.check:
             sys.exit(0)
 
-        if not sync_with_remote(skip_pull=args.skip_pull):
-            print("[中止] 同步远程失败，未推送")
+        # DryRun: 跳过 sync_with_remote（仅展示本地状态）
+        if not args.dry_run:
+            if not sync_with_remote(skip_pull=args.skip_pull):
+                print("[中止] 同步远程失败，未推送")
 
-            sys.exit(1)
+                sys.exit(1)
 
         commit_and_push(
             minor=args.minor,
             no_bump=args.no_bump,
             push_tag=args.tag,
             skip_git_backup=args.no_git_backup,
+            dry_run=args.dry_run,
         )
 
         print("=" * 60)

@@ -7,6 +7,8 @@
 
 ## 架构总览
 
+> **注意**：通过 `pip install calc-framework-endfield` 安装后，DAG 引擎、搜索、inverse 等计算核心功能开箱即用。GUI 功能（CalcPackViewer、ComputeSheet、启动器、图编辑器）需要本项目完整环境（含 `utils/`、`tools/` 等目录），在纯 pip 安装环境下不可用。
+
 ```
 ┌─────────────────────────────────────────────┐
 │               适配包 (AdapterPackage)         │
@@ -88,9 +90,11 @@ print(result.outputs)
 
 | 模块 | 职责 |
 |------|------|
+| `engine.py` | 搜索引擎核心（枚举空间 + 遍历策略） |
 | `tracker.py` | Top-N 结果追踪（通用泛型） |
-| `cancel.py` | 搜索取消令牌（超量/主动取消） |
 | `parallel.py` | 并行执行器（进度回调、Top-N、取消） |
+| `persist.py` | 搜索进度持久化（SQLite） |
+| `session.py` | 搜索会话管理 |
 | `result.py` | 通用搜索结果类型 |
 
 适用于任何需要遍历大量候选并保留最优结果的场景（配装搜索、参数枚举、伤害最大化等）。
@@ -116,6 +120,7 @@ print(result.outputs)
 |------|------|
 | `context.py` | DataContext TypedDict + make_context 工厂 |
 | `loader.py` | DataContextLoader 抽象基类 |
+| `json_loader.py` | JsonDataLoader[T] 通用懒加载缓存 — 消除 get/reload 重复模式 |
 | `schema.py` | 四层数据契约（EntitySchema / SkillSchema / SegmentSchema） |
 | `attr_schema.py` | 属性声明 Schema — 适配器声明字段结构，框架自动构建 DataContext（resolve/validate） |
 
@@ -126,13 +131,54 @@ print(result.outputs)
 | `compute_sheet.py` | 声明式计算表 QWidget，从 DAG + layout.json 自动渲染 |
 | `controls.py` | infer_control 根据变量声明推断控件类型 |
 | `layout.py` | Layout/Section 排版定义 |
-| `format.py` | 数值格式化 |
+| `theme.py` | ThemeManager 多主题管理（dark/light/high_contrast） |
+| `viewer.py` | CalcPackViewer 通用展示层 |
+| `viewer_render.py` | 查看器动态渲染引擎 |
+| `sheet_evaluator.py` | ComputeSheet 实时求值器 |
+| `sheet_widgets.py` | 输入控件工厂 |
+
+### 逆推引擎 — `calc_framework.inverse`
+
+| 模块 | 职责 |
+|------|------|
+| `base.py` | FormulaFitter 基类与类型定义 |
+| `engine.py` | InverseEngine 统一逆推入口 |
+| `registry.py` | FormulaType 注册表 |
+| `strategies.py` | 通用拟合策略（floor/growth 等） |
+| `exponential_fitter.py` | 指数公式拟合器 |
+| `piecewise_fitter.py` | 分段公式拟合器 |
+| `threshold_fitter.py` | 阈值公式拟合器 |
+
+### 图编辑器 — `calc_framework.graph_editor`
+
+| 模块 | 职责 |
+|------|------|
+| 可视化 DAG 编辑画布 | QGraphicsView 节点拖拽、连线、网格吸附 |
+| 复合节点支持 | 双击进入子图编辑 |
+| 模板管理 | 内置模板浏览与插入 |
+
+### 开发者工具箱 — `calc_framework.dev_toolkit`
+
+CLI 工具集，含 DAG 调试器、图验证、模板管理等开发辅助功能。
 
 ### 配置层 — `calc_framework.config`
 
 | 模块 | 职责 |
 |------|------|
 | `adapter.py` | AdapterPackage 加载 meta.json + DAG |
+
+### 逆推引擎适配层 — `calc_framework.inverse.schema`
+
+| 模块 | 职责 |
+|------|------|
+| `InverseSchema` | 声明式数据模式 — 替代手写 if/elif 分派 |
+| `GameInverseAdapter` | 游戏适配器 ABC — 新游戏通过声明 schemas 即可接入逆推引擎 |
+
+### 工具模块
+
+| 模块 | 路径 | 职责 |
+|------|------|------|
+| semver | `calc_framework.semver` | parse_semver / format_semver / bump_patch / bump_minor |
 
 ---
 
@@ -182,20 +228,30 @@ my-game-adapter/
 
 ### 终末地（15 乘区）
 
-`framework/games/endfield/` — 真实游戏完整适配器。
+`framework/adapters/endfield/` — 真实游戏完整适配器，含角色/武器/装备数据和 15 乘区 DAG。
 
-### 卡牌RPG（攻击-防御公式）
+### 卡牌RPG（攻击-防御公式）— [详细文档](adapters/card_rpg/README.md)
 
-`framework/adapters/card_rpg/` — 示例适配器，证明框架跨品类通用。
+`framework/adapters/card_rpg/` — 示例适配器，证明框架跨品类通用。经典回合制减法公式：
 
 ```
-framework/adapters/card_rpg/
-├── meta.json               # 适配器元信息
-├── attr_schema.json        # 属性声明（ATK/DEF/crit_rate/crit_dmg）
-├── card_rpg.dag.json       # DAG 公式（attack - def × 0.5 + crit）
-├── functions.py            # 自定义函数（clamp）
-├── loader.py               # CardRPGLoader（DataContextLoader 实现）
-└── ui/layout.json          # ComputeSheet 排版
+最终伤害 = max((ATK + ATK_bonus) × skill_mult - DEF × 0.5, 0) × crit_mult
+```
+
+### FPS 武器伤害 — [详细文档](adapters/fps/README.md)
+
+`framework/adapters/fps/` — 通用 FPS 伤害公式，含距离衰减、部位倍率、护甲穿透：
+
+```
+单发伤害 = base_damage × 部位倍率 × 距离衰减 × (1 - 护甲减伤比)
+```
+
+### MOBA 英雄伤害 — [详细文档](adapters/moba/README.md)
+
+`framework/adapters/moba/` — 通用 MOBA 伤害公式，含 AD/AP 加成、双抗减伤、暴击、冷却缩减：
+
+```
+技能总伤害 = (skill_base + ad_ratio×AD + ap_ratio×AP) × crit_mult × (1 - 减伤比)
 ```
 
 ```python

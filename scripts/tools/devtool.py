@@ -59,7 +59,7 @@ def _sub_args() -> list[str]:
 def _cmd_check_deps(args: argparse.Namespace) -> int:
     """执行依赖自检。"""
     _add_path()
-    from tools.check_optional_deps import main
+    from tools.quality.check_optional_deps import main
 
     return main()
 
@@ -67,7 +67,7 @@ def _cmd_check_deps(args: argparse.Namespace) -> int:
 def _cmd_check_layout(args: argparse.Namespace) -> int:
     """执行代码布局门禁检查。"""
     _add_path()
-    from tools.check_layout import main
+    from tools.quality.check_layout import main
 
     sys.argv = [sys.argv[0], *_sub_args()]
     return main()
@@ -96,7 +96,7 @@ def _cmd_launcher(args: argparse.Namespace) -> None:
 
 def _cmd_framework(args: argparse.Namespace) -> int:
     """构建或发布 framework PyPI 包。"""
-    from tools.framework_publish import main as fw_main
+    from tools.publish.framework_publish import main as fw_main
 
     passthrough = _sub_args()
     sys.argv = [sys.argv[0], *passthrough] if passthrough else [sys.argv[0], "--help"]
@@ -113,11 +113,11 @@ def _cmd_plugin(args: argparse.Namespace) -> int:
     cmd = passthrough[0]
     rest = passthrough[1:]
     if cmd == "build":
-        from tools.plugin_pack import _demo_build
+        from tools.publish.plugin_pack import _demo_build
 
         return _demo_build(rest)
     if cmd == "install":
-        from tools.plugin_pack import _demo_install
+        from tools.publish.plugin_pack import _demo_install
 
         return _demo_install(rest)
     if cmd == "rebuild-catalog":

@@ -3,6 +3,8 @@
 # 验证 Web 端和 PySide6 端能否一致消费 layout 配置。
 
 name: Layout Sync
+permissions:
+  contents: read
 
 on:
   push:

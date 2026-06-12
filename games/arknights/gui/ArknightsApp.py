@@ -512,12 +512,11 @@ class ArknightsApp(QMainWindow):
         _logger.info("日志查看窗口已打开")
 
     def _apply_dark_style(self) -> None:
-        """应用深色主题样式表。"""
-        self._qapp.setStyleSheet("""
-            QMainWindow { background-color: #1A1A1A; }
-            QWidget { background-color: #1A1A1A; }
-            QLabel { color: #D1D1D1; }
-        """)
+        """应用深色主题样式表（委托框架 ThemeManager）。"""
+        from calc_framework.ui.theme import ThemeManager
+
+        tm = ThemeManager()
+        self._qapp.setStyleSheet(tm.stylesheet("dark"))
 
     def run(self) -> None:
         """启动应用主循环。"""

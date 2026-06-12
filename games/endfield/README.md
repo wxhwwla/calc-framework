@@ -31,8 +31,10 @@
 games/endfield/
 ├── main.py                    # 项目入口，启动应用
 ├── pyproject.toml             # 打包配置文件
-├── _path_setup.py             # 路径设置（统一 sys.path 管理）
 ├── please_read_me.py          # 项目说明文档（版本信息）
+├── framework_bridge.py        # calc-framework 桥接层
+├── _replace_imports.py        # 打包时 import 重写工具
+├── ui_preferences.json        # GUI 偏好持久化
 ├── calc/                      # 计算引擎
 │   ├── core/                  # 核心计算（配置、公式、数据生成）
 │   ├── dag_adapter/           # DAG 引擎适配器（桥接 calc-framework）
@@ -53,8 +55,8 @@ games/endfield/
 │   ├── weapons.json           # 武器数据
 │   ├── equipments.json        # 装备数据
 │   ├── data_version.json      # 数据版本号
-│   └── ...                    # 其他数据文件
-├── data_loading/              # 数据加载层
+│   └── DATA_README.md         # 数据说明
+├── data_loading/              # 数据加载层（loader, catalog, facade, enemy params）
 ├── gui/                       # PySide6 GUI 界面
 │   ├── app/                   # 应用逻辑（配装状态、预设、求值）
 │   ├── controls/              # 控件（敌人、增强、Buff、多技能、搜索、OCR、生存）
@@ -64,8 +66,11 @@ games/endfield/
 │   ├── panels/                # 选择面板（类型/星级/名称/等级/能力值）
 │   ├── presentation/          # 展示层（属性列、技能预览、搜索结果）
 │   ├── shared/                # 共享模块（属性列、计算历史、配装对比）
-│   └── shell/                 # 主窗口 & 控制栏
-├── scripts/                   # 包内维护脚本（逆推 CLI/GUI、种子数据录入）
+│   ├── shell/                 # 主窗口 & 控制栏
+│   ├── endfield_app.py        # 主应用窗口
+│   ├── endfield_actions.py    # 操作编排
+│   ├── endfield_search.py     # 搜索集成
+│   └── endfield_shell.py      # Shell 启动
 ├── tests/                     # pytest 单元测试
 │   ├── calculation/           # 计算引擎测试
 │   ├── data/                  # 数据契约测试
@@ -74,8 +79,6 @@ games/endfield/
 │   ├── repo/                  # 仓库级测试
 │   ├── tools/                 # 工具模块测试
 │   └── utils/                 # 工具函数测试
-├── utils/                     # 工具函数
-└── release_bundle/            # 发布布局配置
 ```
 
 ### 仓库根目录（与本包并列）
@@ -83,10 +86,11 @@ games/endfield/
 | 路径 | 说明 |
 |------|------|
 | [`framework/`](../framework/) | **通用计算框架 calc-framework**：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器（独立 pip 包） |
-| [`tools/`](../tools/README.md) | BWIKI 侦察、审计等；在 `[根]` 执行 `python tools/bwiki_scout/scout.py` |
+| [`tools/`](../tools/README.md) | BWIKI 侦察、数据管线、OCR 等；在 `[根]` 执行 |
+| [`scripts/`](../scripts/) | 入口脚本：启动器（`main_launcher.py`）、打包（`main_build.py`）、开发者工具箱 |
 | [`docs/`](../docs/README.md) | 操作指令集、许可、算法文档 |
-| [`legacy/`](../legacy/README.md) | 遗留脚本，新录入请用本包 `add_character` / `add_weapon` |
-| `github_upload_module.py` / `github_download_module.py` | 在 `[根]` 运行 |
+| [`web/`](../web/) | Web 版（React 前端 + FastAPI 后端） |
+| [`utils/`](../utils/) | 共享工具库（路径、字体、窗口、更新器等） |
 
 ---
 
@@ -94,7 +98,7 @@ games/endfield/
 
 ### 环境要求
 
-- Python 3.10+
+- Python 3.11+
 - PySide6 6.6+（默认 GUI 后端）
 - matplotlib 3.8+（运行时依赖，含伤害仪表盘）
 
@@ -107,9 +111,9 @@ games/endfield/
 
 ### 版本号
 
-- `_VERSION`：日常由上传脚本在有业务改动并 push 成功时自动递增（见下方「GitHub 上传」）；`pyproject.toml` 通过 dynamic 读取。
-- `_EXE_VERSION`：仅重新打包 exe 前在 `please_read_me.py` **手动**修改；**改后必须重新 `python build.py`**，旧 `dist/` 内 exe 不会自动更新。
-- 完整流程说明：同文件中的 `UPLOAD_WORKFLOW` 常量，或 `python please_read_me.py` 打印帮助。
+- `_VERSION`：位于 `scripts/_version.py`，日常由上传脚本在有业务改动并 push 成功时自动递增；`pyproject.toml` 通过 `dynamic` 从 `please_read_me._VERSION` 读取。
+- `_EXE_VERSION`：位于 `scripts/_version.py`，仅重新打包 exe 前手动修改；**改后必须重新 `python scripts/main_build.py`**，旧 `dist/` 内 exe 不会自动更新。
+- 完整流程说明：`scripts/_version.py` 内的 `UPLOAD_WORKFLOW` 常量，或 `python scripts/please_read_me.py` 打印帮助。
 
 ### GitHub 上传（仓库根目录）
 
@@ -151,7 +155,7 @@ python main.py
 
 ```bash
 pip install -e ".[build]"
-python build.py
+python scripts/main_build.py --target calculator
 ```
 
 打包前会检查 PyInstaller 与 matplotlib；Windows 上通过 `pyinstaller_entry` 规避 WMI 卡死；各 GUI 子模块 import CTk 前亦打补丁。默认 20 分钟超时 + 15 秒心跳（见 `docs/操作指令集.md` §7）。产物内仪表盘无需用户另装 matplotlib。
@@ -282,22 +286,13 @@ result = calculated / scale_factor
 
 ### 计算模块
 
-#### `calculation/formula.py`
+#### `calc/damage/` — 伤害计算引擎
 
-| 函数名 | 参数 | 返回值 | 说明 |
-|--------|------|--------|------|
-| `calculate_skill_curve` | `base, growth, divisor, offset, special=None, max_level=12` | `List[float]` | 计算技能倍率曲线 |
-| `calculate_bonus_attribute` | `base, growth, divisor, offset, special=None, max_level=9` | `List[float]` | 计算属性加成曲线 |
-| `calculate_growth_curve` | `base, growth, divisor, offset` | `List[int]` | 计算属性成长曲线（90级） |
+核心伤害计算与反向公式拟合。详见 [`docs/算法与架构.md`](../docs/算法与架构.md)。
 
-#### `calculation/inverse.py`
+#### `calc/multiplicative_zones/` — 15 乘区实现
 
-| 函数名 | 参数 | 返回值 | 说明 |
-|--------|------|--------|------|
-| `fit_attribute_formula` | `data: List[int\|float]` | `Tuple[base, growth, divisor, offset]` | 拟合属性成长公式 |
-| `fit_skill_formula` | `data: List[int\|float]` | `Tuple[base, growth, divisor, offset, special]` | 拟合技能倍率公式（12级） |
-| `fit_skill_formula_no_special` | `data: List[int\|float]` | `Tuple[base, growth, divisor, offset, special]` | 拟合技能倍率公式（9级） |
-| `fit_formula` | `data: List[int\|float]` | `Tuple` | 自动检测并拟合公式 |
+含能力加成、防御、最终攻击力等各乘区计算逻辑。DAG 适配器见 `calc/dag_adapter/`。
 
 ---
 
@@ -414,13 +409,14 @@ v1 与旧 `ws_*` 字段导入时自动归一（`loadout_preset.py`）。
 ### 添加新角色
 
 ```bash
-python character_weapon_equipment/character_data/add_character.py
+# 通过 tools/endfield_scripts/ 下的工具录入
+python tools/endfield_scripts/seed_characters.py
 ```
 
 ### 添加新武器
 
 ```bash
-python character_weapon_equipment/weapon_data/add_weapon.py
+python tools/endfield_scripts/seed_weapons.py
 ```
 
 ### 代码规范

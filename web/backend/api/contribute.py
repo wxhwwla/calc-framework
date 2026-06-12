@@ -142,7 +142,11 @@ async def submit_contribute(payload: dict[str, Any]):
     filename = f"contribute_{safe_name}_{ts}.json"
 
     staging = _ensure_staging_dir()
-    filepath = staging / filename
+    filepath = (staging / filename).resolve()
+    # 路径穿越防护：确认最终路径仍在 staging 目录内
+    staging_resolved = staging.resolve()
+    if not str(filepath).startswith(str(staging_resolved)):
+        raise HTTPException(status_code=400, detail="无效的文件名")
     meta = {
         "_meta": {
             "submitted_at": datetime.now().isoformat(),

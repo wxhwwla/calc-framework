@@ -10,6 +10,7 @@ from .schema import (
     EntityType,
     STANDARD_ENTITY_TYPES,
 )
+from .transformers.from_arknights_scout import convert_all as convert_arknights
 
 __all__ = [
     "STANDARD_ENTITY_TYPES",
@@ -17,6 +18,7 @@ __all__ = [
     "EntityType",
     "SegmentSchema",
     "SkillSchema",
+    "convert_arknights",
     "diff",
     "readers",
     "transformers",

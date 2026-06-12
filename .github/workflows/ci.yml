@@ -2,6 +2,8 @@
 # 包路径：games/endfield/，测试在此目录下
 
 name: Game CI
+permissions:
+  contents: read
 
 on:
   push:
@@ -56,4 +58,4 @@ jobs:
         run: |
           python -m pytest web/backend/tests/ -q
       - name: Coverage summary
-        run: python -m coverage report --fail-under=60
+        run: python -m coverage report --fail-under=65

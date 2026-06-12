@@ -1,180 +1,200 @@
 [![GitHub stars](https://img.shields.io/github/stars/wxhwwla/calc-framework?style=social)](https://github.com/wxhwwla/calc-framework)
 [![AtomGit stars](https://atomgit.com/wxhwwla/calc-framework/star/badge.svg)](https://atomgit.com/wxhwwla/calc-framework)
 
-# Calc Framework（通用游戏计算框架）
+# Calc Framework — Universal Game Damage Calculator
 
-> 通用游戏计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》（Arknights）
+> A universal game calculation framework. Currently supports **Arknights: Endfield** and **Arknights**.
 >
-> **Web 版（已部署）**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com) · 部署指南：[docs/PythonAnywhere-部署指南.md](docs/PythonAnywhere-部署指南.md) · 项目名称：Calc Framework（通用游戏计算框架）
+> **Web Demo**: [wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)
+>
+> [:cn: 中文文档](README_zh.md)
 
-## 文档分层
+---
 
-| 层级 | 文件 | 适合谁 |
-|------|------|--------|
-| **门面（本页）** | 仓库根 `README.md` | 第一次打开仓库、GitHub 首页 |
-| **详细开发（终末地）** | [`games/endfield/README.md`](games/endfield/README.md) | 安装、GUI、测试、API、数据格式 |
-| **操作速查** | [`docs/操作指令集.md`](docs/操作指令集.md) | 日常命令与 `[根]` / `[工具]` / `[包]` 目录约定 |
-| **文档索引** | [`docs/README.md`](docs/README.md) | `docs/` 下各文件用途 |
-| **领域术语** | [`CONTEXT.md`](CONTEXT.md) | Issue、测试、文档统一用语 |
-| **算法说明** | [`docs/算法与架构.md`](docs/算法与架构.md) | 公式与架构细节 |
-| **许可与合规** | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | 软件/数据双许可、典型情形 |
+## Documentation Map
 
-## 目录约定
+| Document | Audience |
+|----------|----------|
+| **This page** | First-time visitors, GitHub homepage |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) ([中文](ARCHITECTURE_zh.md)) | System architecture overview |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) ([中文](CONTRIBUTING_zh.md)) | How to contribute |
+| [`CONTEXT.md`](CONTEXT.md) ([中文](CONTEXT_zh.md)) | Domain terminology |
+| [`docs/项目目标.md`](docs/项目目标.md) | Project vision & roadmap (ZH) |
+| [`docs/操作指令集.md`](docs/操作指令集.md) | Command reference (ZH) |
+| [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | Licensing & data sources (ZH) |
+| [`games/endfield/README.md`](games/endfield/README.md) | Endfield package details |
 
-| 名称 | 路径 | 典型操作 |
-|------|------|----------|
-| **仓库根** `[根]` | 本目录 | 启动器（`scripts/main_launcher.py`）、打包（`scripts/main_build.py`）、许可文件 |
-| **通用框架** `[框架]` | [`framework/`](framework/) | `calc-framework` 独立 pip 包：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器 |
-| **Web 版** `[Web]` | [`web/`](web/) | React + FastAPI 完整 Web 应用（Web 版计算器/数据设计器/配置包设计器） |
-| **维护工具** `[工具]` | [`tools/`](tools/README.md) | BWIKI 侦察（`tools/bwiki_scout/`）、数据 ETL、OCR 截图识装 |
-| **项目文档** | [`docs/`](docs/README.md) | 操作指令集、许可说明、算法与架构、合规文档 |
-| **游戏适配包** `[包]` | `games/endfield/` | pip 包：数据加载 + DAG 适配 + GUI；包内 `scripts/`（反推、seed） |
-| **发布布局** | `release_bundle/` | 发布目录配置、exe 入口、打包模板 |
+---
 
-### 仓库顶层一览
+## Directory Overview
 
 ```
-[根]/
-├── framework/                    # [框架] calc-framework 通用计算框架
-├── web/                          # [Web] React + FastAPI 前端
-│   ├── backend/                  #   FastAPI 后端（/api/*）
-│   ├── frontend/                 #   React 前端（三 GUI 的 Web 版）
-│   └── hub/                      #   Calc Hub 静态市场主页
-├── games/                        # [包] 游戏适配包
-│   ├── endfield/                  #   终末地伤害计算器（产品代码与测试）
-│   ├── arknights/                 #   明日方舟适配包（DAG + API + 测试）
-│   └── (game-template)           #   新游戏适配骨架模板
-├── docs/                         # 项目文档
-├── tools/                        # [工具] 仓库级维护工具
-├── scripts/                      # [入口] 启动器/打包/入口脚本
-├── release_bundle/               # 发布目录布局配置
-├── installer/                    # NSIS 安装包
-├── .github/                      # CI、Issue 表单模板
-├── .trae/                        # Trae IDE 配置
-├── git_backup/                   # 上传前 .git 快照
-├── LICENSE · DATA_LICENSE · CONTEXT.md · CONTRIBUTING.md · AGENTS.md
-└── NOTICES.md                    # 第三方声明
+[repo root]/
+├── framework/                    # calc-framework — generic pip package
+│   ├── src/calc_framework/       #   DAG engine, inverse engine, data, UI, search, plugin
+│   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba)
+├── web/                          # React + FastAPI full-stack web app
+│   ├── backend/                  #   FastAPI backend (/api/*)
+│   ├── frontend/                 #   React frontend (TypeScript + MUI + Vite)
+│   └── hub/                      #   Calc Hub — static marketplace
+├── games/                        # Game adapter packages
+│   ├── endfield/                 #   Endfield damage calculator (calc + gui + data + tests)
+│   └── arknights/                #   Arknights calculator (DAG + GUI + tests)
+├── docs/                         # Project documentation
+├── tools/                        # Dev tools (BWIKI scout, data pipeline, OCR, designer)
+├── scripts/                      # Entry scripts (launcher, build, dev toolkit)
+├── release_bundle/               # Release layout config
+├── installer/                    # NSIS installer
+├── .github/                      # CI workflows, issue templates
+├── LICENSE · DATA_LICENSE · CONTEXT.md · CONTRIBUTING.md
+└── NOTICES.md                    # Third-party notices
 ```
 
-IDE 配置目录（`.idea/`、`.trae/`、`.vscode/`）仅本机使用，已在 `.gitignore` 中忽略。
+---
 
-## 快速开始
+## Quick Start
 
-### 推荐：使用启动器选择游戏
+### Recommended: Launcher
 
 ```powershell
-# [根] 游戏启动器 — 自动发现已安装的游戏适配包
+# Auto-discovers installed game adapters
 python scripts/main_launcher.py
 ```
 
-启动器会列出所有可用的游戏适配器（终末地、明日方舟），点击即可启动对应的桌面计算器。「开发者工具箱」按钮可打开框架开发工具集合。
-
-### 直接启动
+### Direct Launch
 
 ```powershell
-# [包] 终末地计算器
+# Endfield Calculator
 cd games/endfield
 pip install -e ".[dev]"
 python -m games.endfield.main
 ```
 
 ```powershell
-# [根] 开发者工具箱（数据编辑、图编辑器、DAG 调试、AI 生成等）
+# Developer Toolkit
 python scripts/main_dev_toolkit.py
 ```
 
-### 发布与上传
+### Web Version
 
 ```powershell
-# [根] 推送 GitHub（版本号由脚本维护）
-python scripts/tools/github_upload_module.py
-```
-
-更多命令（测试、打包、SSH、拉取覆盖本地）见 [`docs/操作指令集.md`](docs/操作指令集.md)。
-
-## 功能概览
-
-### 终末地伤害计算器
-
-- 角色 / 武器 / 装备选择；**高级页**含全量遍历、**固定配装 0–4**、多技能次数；全量可按单技能或**手动次数加权总伤**排序（实验）
-- 确认选择后刷新右侧乘区（能力、攻击力等）
-- 角色 / 武器 / **装备** JSON；全量搜索导出至 **`search_output/`**（开发或 exe 同级，非 C 盘临时目录）
-- 公式反推与录入脚本；BWIKI 装备同步
-- GUI「数据来源与许可」：软件 AGPL / 数据许可说明与链接
-  - 高级页「工具与分享」（「更多设置」折叠内）：配装预设、操作日志、计算历史、伤害仪表盘（见 [操作指令集 §6.1](docs/操作指令集.md)）
-  - BWIKI 数据侦察与同步（`tools/bwiki_scout/`：拉取缓存、对比报告；可选 `--apply` 以 Wiki 为准更新 JSON/seed，见 [操作指令集 §9](docs/操作指令集.md)）
-
-### 明日方舟（Arknights）伤害计算
-
-支持原始《明日方舟》（非终末地）的伤害计算，通过框架适配器系统实现：
-
-- **数据爬取**：`tools/arknights_scout/` — BWIKI 爬虫，全量解析 420+ 干员（星级/职业/基础属性/技能/天赋/潜能/模组）
-- **游戏适配包**：`framework/adapters/arknights/` — 28 属性 + 5 自定义函数 + 51 节点 DAG 计算图
-- **伤害公式**：物理（`max(ATK×倍率-DEF, ATK×倍率×5%)×(1+伤害加成)`）、法术（`ATK×倍率×(1-RES/100)×(1+伤害加成)`）、真实伤害
-- **Web API**：`/api/arknights/` — 3 个端点（干员列表/详情/计算）
-- **测试覆盖**：37 个 pytest（含真实数据集成测试）
-
-### 计算框架（通用）
-
-- **跨品类适配**：通过 `framework/adapters/` 下的命名空间包自动发现，已支持 endfield（终末地）、arknights（明日方舟）、card_rpg/fps/moba（验证用玩具适配器）
-
-## Web 版
-
-三个 PySide6 GUI 的 Web 移植版（React + FastAPI），采用声明式同步策略：
-
-| Web 版 | 对应 PySide6 GUI | 路由 |
-|--------|-----------------|------|
-| 伤害计算器 | `games/endfield/main.py` | `/` |
-| 数据设计器 | `web/` | `/designer` |
-| 配置包设计器 | `web/` | `/pack-designer` |
-
-**同步机制**：`layout.json`/`attr_schema.json`/计算引擎/数据文件共享同一份，Web 通过 FastAPI API 调用。
-
-```powershell
-# 启动 Web 后端
+# Backend
 cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8002
 
-# 启动 Web 前端（新终端）
+# Frontend (separate terminal)
 cd web/frontend && npm install && npm run dev
 ```
 
-详见 [`docs/操作指令集.md`](docs/操作指令集.md) §1.7 和 [`docs/项目目标.md`](docs/项目目标.md) §P4。
+---
 
-细节与布局说明见 [**详细 README**](games/endfield/README.md)。
+## Features
 
-## 反馈与 Issue
+### Endfield Damage Calculator
 
-| 方式 | 说明 |
-|------|------|
-| **GitHub Issues** | 仓库 **Issues → New issue** → 选 **Bug 报告** 或 **功能建议**（`.github/ISSUE_TEMPLATE/`） |
-| **模板字段** | 描述、复现步骤、期望行为、OS / Python / 项目版本；Bug 默认标签 `needs-triage` |
-| **命令行** | `gh issue create`（需 `gh auth login`）；见 [`docs/操作指令集.md`](docs/操作指令集.md) §1.3 |
-| **协作约定** | Agent / 维护者见 [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)、[`triage-labels.md`](docs/agents/triage-labels.md) |
-| **测试覆盖率** | [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml) + `pytest-cov`（门槛 **57%**→80%，含 GUI 集成测） |
+- Character / weapon / equipment selection with dual-tab GUI (Calculate + Advanced)
+- 15-zone damage formula driven by DAG engine (framework `ComputeSheet`)
+- Full-search enumeration with Top-N tracking, parallel execution, SQLite resume
+- Multi-skill weighted total damage, fixed loadout (0–4 pieces)
+- Equipment affix parsing, priority sorting, non-beneficial pruning
+- OCR screenshot import → auto-fill calculator (TorchVision + EasyOCR)
+- Formula inverse fitting: data → 4-parameter growth formula
+- Preset JSON import/export, batch comparison, damage dashboard (matplotlib)
+- Survival estimation, enemy parameter panel, manual buff controls
 
-## 社区与交流
+### Arknights Calculator
 
-| 方式 | 说明 |
-|------|------|
-| **[GitHub Issues]** | Bug 报告 / 功能建议（推荐，可追踪） |
-| **[GitHub Discussions]** | 技术讨论 / 问题求助 |
-| **QQ 群** | `1040157567`（建设中） |
-| **Discord** | 邀请链接建设中 |
+- Operator selection by star / profession / branch with skill parser
+- Physical / Magic / True damage calculation via DAG engine
+- BWIKI data crawling: 420+ operators with full stats
+- 28 attributes + 5 custom functions + 51-node DAG
 
-欢迎 Star 和 Fork！如果你觉得这个工具有用，请给仓库点个 ⭐。
+### Generic Framework
 
-[GitHub Issues]: https://github.com/wxhwwla/calc-framework/issues
-[GitHub Discussions]: https://github.com/wxhwwla/calc-framework/discussions
+- **DAG Engine**: 9 node types, topological sort, AST sandbox, subgraph expansion, block-level caching
+- **Inverse Engine**: `data_to_params()` / `params_to_curve()` — bidirectional formula fitting for any game
+- **Search Engine**: Top-N enumeration, parallel execution, cancel tokens, SQLite persistence
+- **ComputeSheet**: Declarative UI — consumes `layout.json` + DAG variables → auto-renders controls
+- **Plugin System**: Registry pattern + 3 built-in plugins (crit/dodge/distance) + `.calcplugin` format
+- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters
+- **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 
-## 许可证与数据来源
+### Web Version
 
-| 内容 | 说明 |
-|------|------|
-| **本软件** | **AGPL-3.0**（默认）或书面 **商业许可** → [`LICENSE`](LICENSE) |
-| **游戏数据** | 单独许可 → [`DATA_LICENSE`](DATA_LICENSE)（**商用不可用本仓库数据**） |
-| **完整说明** | [`docs/数据来源与许可.md`](docs/数据来源与许可.md)（含典型情形对照） |
-| **商业洽谈** | [`docs/商业许可要点.md`](docs/商业许可要点.md)（提纲，非合同） |
-| **发布自检** | [`docs/合规自查清单.md`](docs/合规自查清单.md) |
-| **第三方声明** | [`NOTICES.md`](NOTICES.md) |
+| Web Page | Desktop Equivalent | Route |
+|----------|-------------------|-------|
+| Damage Calculator | `games/endfield/main.py` | `/` |
+| Data Designer | Dev toolkit | `/designer` |
+| Pack Designer | Dev toolkit | `/pack-designer` |
+| Calc Hub Marketplace | — | `/marketplace` |
 
-使用或分发即视为接受相应许可。GUI「数据来源与许可」可查看简略版并打开链接。
+The Web version shares `layout.json` / `attr_schema.json` / DAG files / data JSON with the desktop version. One codebase, two rendering targets.
+
+---
+
+## Framework Quick API
+
+```python
+from calc_framework.inverse.engine import InverseEngine
+
+engine = InverseEngine()
+
+# Data → 4 params (any level count, any game)
+params = engine.data_to_params([100, 105, 110, 115, 120])
+# GrowthParams(base=100, growth=5, divisor=1, offset=0)
+
+# 4 params + levels → curve
+curve = engine.params_to_curve(params, num_levels=90)
+# [100.0, 105.0, ..., 545.0]
+```
+
+```python
+from calc_framework.inverse.schema import GameInverseAdapter, InverseSchema
+
+# New game integration: declarative, zero dispatch code
+class MyGame(GameInverseAdapter):
+    @property
+    def schemas(self):
+        return [InverseSchema(length=60), InverseSchema(length=10)]
+    def default_formula(self): return "floor_linear"
+
+adapter = MyGame()
+result = adapter.fit(data)  # auto-match by data length
+```
+
+---
+
+## Testing
+
+```powershell
+# Framework tests
+cd framework && pytest tests/ -q     # 1019 passed
+
+# Endfield tests
+cd games/endfield && pytest tests/calculation/ tests/data_loading/ -q  # 693 passed
+```
+
+[![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
+
+---
+
+## Community
+
+| Channel | Purpose |
+|---------|---------|
+| [GitHub Issues](https://github.com/wxhwwla/calc-framework/issues) | Bug reports / feature requests |
+| [GitHub Discussions](https://github.com/wxhwwla/calc-framework/discussions) | Technical discussion / Q&A |
+| QQ Group: `1040157567` | Chinese community |
+| Discord | Invite link TBD |
+
+---
+
+## License & Data
+
+| Content | License |
+|---------|---------|
+| **Software** | [AGPL-3.0](LICENSE) (default) or written commercial license |
+| **Game Data** | [DATA_LICENSE](DATA_LICENSE) — non-commercial use only |
+| **Full Details** | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) |
+| **Third-Party** | [`NOTICES.md`](NOTICES.md) |
+
+Use or distribution constitutes acceptance of the applicable license.

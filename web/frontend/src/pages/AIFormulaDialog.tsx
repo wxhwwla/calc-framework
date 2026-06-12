@@ -21,7 +21,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const [apiKey, setApiKey] = useState(() => sessionStorage.getItem('ai_api_key') || '');
+  const [apiKey, setApiKey] = useState('');
   const [apiBase, setApiBase] = useState(() => sessionStorage.getItem('ai_api_base') || 'https://api.openai.com/v1');
   const [model, setModel] = useState(() => sessionStorage.getItem('ai_model') || 'gpt-4o-mini');
   const [description, setDescription] = useState('');
@@ -53,7 +53,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
       });
       setTestResult(res);
       if (res.status === 'ok') {
-        sessionStorage.setItem('ai_api_key', apiKey);
+        // 仅持久化非敏感配置
         sessionStorage.setItem('ai_api_base', apiBase);
         sessionStorage.setItem('ai_model', model);
       }
@@ -76,8 +76,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
     setError('');
     setTestResult(null);
     try {
-      // 保存到 sessionStorage（仅在当前标签页有效，关闭后清除）
-      sessionStorage.setItem('ai_api_key', apiKey);
+      // 仅持久化非敏感配置（API Key 保持在内存中，刷新后需重新输入）
       sessionStorage.setItem('ai_api_base', apiBase);
       sessionStorage.setItem('ai_model', model);
 

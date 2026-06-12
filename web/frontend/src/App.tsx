@@ -16,6 +16,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import MenuIcon from "@mui/icons-material/Menu";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import ExtensionIcon from "@mui/icons-material/Extension";
@@ -54,20 +55,24 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const gameItems: NavItem[] = [
-  { label: "终末地计算", path: "/compute", icon: <CalculateIcon /> },
-  { label: "明日方舟", path: "/arknights", icon: <AutoAwesomeIcon /> },
-];
-
-const toolItems: NavItem[] = [
-  { label: "适配器管理", path: "/adapters", icon: <ExtensionIcon /> },
-  { label: "公式图编辑器", path: "/editor", icon: <AccountTreeIcon /> },
-  { label: "数据设计器", path: "/designer", icon: <BuildIcon /> },
-  { label: "配置包设计器", path: "/pack-designer", icon: <Inventory2Icon /> },
-  { label: "数据贡献", path: "/contribute", icon: <NoteAddIcon /> },
-  { label: "配置包市场", path: "/hub", icon: <StorefrontIcon /> },
-  { label: "AI 生成器", path: "/generator", icon: <SmartToyIcon /> },
-];
+function useNavItems(): { gameItems: NavItem[]; toolItems: NavItem[] } {
+  const { t } = useTranslation();
+  return {
+    gameItems: [
+      { label: t("nav.endfieldCalc"), path: "/compute", icon: <CalculateIcon /> },
+      { label: t("nav.arknights"), path: "/arknights", icon: <AutoAwesomeIcon /> },
+    ],
+    toolItems: [
+      { label: t("nav.adapters"), path: "/adapters", icon: <ExtensionIcon /> },
+      { label: t("nav.editor"), path: "/editor", icon: <AccountTreeIcon /> },
+      { label: t("nav.designer"), path: "/designer", icon: <BuildIcon /> },
+      { label: t("nav.packDesigner"), path: "/pack-designer", icon: <Inventory2Icon /> },
+      { label: t("nav.contribute"), path: "/contribute", icon: <NoteAddIcon /> },
+      { label: t("nav.marketplace"), path: "/hub", icon: <StorefrontIcon /> },
+      { label: t("nav.generator"), path: "/generator", icon: <SmartToyIcon /> },
+    ],
+  };
+}
 
 function NavGroup({
   title,
@@ -123,6 +128,13 @@ function Shell() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t, i18n } = useTranslation();
+  const { gameItems, toolItems } = useNavItems();
+
+  const toggleLanguage = () => {
+    const next = i18n.language === "zh-CN" ? "en" : "zh-CN";
+    i18n.changeLanguage(next);
+  };
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -133,7 +145,7 @@ function Shell() {
     <>
       <Toolbar />
       <NavGroup
-        title="游戏"
+        title={t("nav.games")}
         icon={<SportsEsportsIcon fontSize="small" />}
         items={gameItems}
         currentPath={location.pathname}
@@ -141,7 +153,7 @@ function Shell() {
         defaultOpen={true}
       />
       <NavGroup
-        title="开发工具"
+        title={t("nav.devTools")}
         icon={<BuildIcon fontSize="small" />}
         items={toolItems}
         currentPath={location.pathname}
@@ -166,8 +178,11 @@ function Shell() {
             </IconButton>
           )}
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            游戏计算器 · Web 版
+            {t("app.title")}
           </Typography>
+          <IconButton color="inherit" onClick={toggleLanguage} title={t("common.language")} size="small" sx={{ mr: 1 }}>
+            <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : "中"}</Typography>
+          </IconButton>
           <GlobalAttributionButton />
           <GlobalDonationButton />
           <GlobalHelpDialog />

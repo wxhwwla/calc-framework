@@ -59,11 +59,7 @@ class SearchRequest(BaseModel):
     extra_crit_damage: float = Field(default=0.0, description="额外暴击伤害")
 
 
-
-
-
 class EstimateRequest(BaseModel):
-
     char_data: dict[str, Any]
 
     char_level: int = 90
@@ -154,7 +150,6 @@ def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]
 
 
 class LoadoutResult(BaseModel):
-
     weapon_name: str
 
     chest: str
@@ -170,17 +165,11 @@ class LoadoutResult(BaseModel):
     segment_breakdown: dict[str, float] | None = None
 
 
-
-
-
 @router.post("/estimate")
-
 async def estimate_search(req: EstimateRequest):
-
     """预估搜索工作量（组合总数 + 预计耗时）。"""
 
     try:
-
         from games.endfield.calc.search.plan.controller import prepare_search_job
         from games.endfield.calc.search.plan.estimate import (
             estimate_search_duration,
@@ -188,168 +177,104 @@ async def estimate_search(req: EstimateRequest):
         )
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
-    except ImportError as e:
-
-        raise HTTPException(status_code=500, detail=f"导入搜索引擎失败: {e}")
-
-
+    except ImportError:
+        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
-
         req, fixed_loadout = _prepare_search_req(req)
 
         inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
-
-
         job, err = prepare_search_job(inputs)
 
         if err or job is None:
+            from web.backend.bridge import get_logger
 
-            return {"total_combinations": 0, "estimated_seconds": 0, "warning": err or "作业组装失败"}
-
-
+            if err:
+                get_logger(__name__).warning("搜索作业组装失败: %s", err)
+            return {"total_combinations": 0, "estimated_seconds": 0, "warning": "搜索作业组装失败"}
 
         from games.endfield.calc.search.plan.controller import optimizer_config_for_search_job
-
-
 
         config = optimizer_config_for_search_job(job, top_n=10)
 
         preview = preview_search_workload(
-
             weapons=list(job.weapon_candidates),
-
             equipment_catalog=dict(job.equipment_catalog),
-
             config=config,
-
         )
 
         duration = estimate_search_duration(total_combinations=preview.total_combinations, max_workers=req.max_workers)
 
-
-
         return {
-
             "total_combinations": preview.total_combinations,
-
             "weapon_count": preview.weapon_count,
-
             "loadout_combinations": preview.loadout_combinations,
-
             "estimated_seconds": duration.estimated_seconds,
-
             "warnings": list(preview.warnings),
-
         }
 
     except Exception as e:
-
         raise HTTPException(status_code=500, detail=f"预估失败: {e}")
 
 
-
-
-
 @router.post("/run")
-
 async def run_search(req: SearchRequest):
-
     """执行全量搜索并返回 Top-N 结果。"""
 
     try:
-
         from games.endfield.calc.search.plan.controller import optimizer_config_for_search_job, prepare_search_job
         from games.endfield.calc.search.run.runner import SearchRunner
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
-    except ImportError as e:
-
-        raise HTTPException(status_code=500, detail=f"导入搜索引擎失败: {e}")
-
-
+    except ImportError:
+        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
-
         req, fixed_loadout = _prepare_search_req(req)
 
         inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
-
-
         job, err = prepare_search_job(inputs)
 
         if err or job is None:
-
             raise HTTPException(status_code=400, detail=err or "作业组装失败")
-
-
 
         config = optimizer_config_for_search_job(job, top_n=req.top_n)
 
-
-
         result = SearchRunner.run(
-
             base_context=job.base_context,
-
             weapons=list(job.weapon_candidates),
-
             equipment_catalog=dict(job.equipment_catalog),
-
             config=config,
-
             max_workers=req.max_workers,
-
         )
-
-
 
         top_results = []
 
         for score in result.top_results:
-
-            top_results.append(LoadoutResult(
-
-                weapon_name=score.weapon_name,
-
-                chest=score.loadout_names.get("chest", ""),
-
-                gloves=score.loadout_names.get("gloves", ""),
-
-                accessory_a=score.loadout_names.get("accessory_a", ""),
-
-                accessory_b=score.loadout_names.get("accessory_b", ""),
-
-                final_damage=float(score.final_damage),
-
-                segment_breakdown=dict(score.segment_breakdown) if score.segment_breakdown else None,
-
-            ))
-
-
+            top_results.append(
+                LoadoutResult(
+                    weapon_name=score.weapon_name,
+                    chest=score.loadout_names.get("chest", ""),
+                    gloves=score.loadout_names.get("gloves", ""),
+                    accessory_a=score.loadout_names.get("accessory_a", ""),
+                    accessory_b=score.loadout_names.get("accessory_b", ""),
+                    final_damage=float(score.final_damage),
+                    segment_breakdown=dict(score.segment_breakdown) if score.segment_breakdown else None,
+                )
+            )
 
         return {
-
             "top_results": [r.model_dump() for r in top_results],
-
             "total_combinations": result.total_combinations,
-
             "searched_combinations": result.processed_combinations,
-
             "cancelled": result.cancelled,
-
             "warnings": list(result.warnings) if hasattr(result, "warnings") else [],
-
         }
 
     except Exception as e:
-
         raise HTTPException(status_code=500, detail=f"搜索失败: {e}")
-
-
-
 
 
 @router.get("/enemies")
@@ -385,39 +310,35 @@ def get_enemy_choices():
 
 
 @router.get("/catalog")
-
 async def get_equipment_catalog(scope: str = "全部装备"):
-
     """获取装备目录（分部位列表；scope 与 GUI 装备范围文案一致）。"""
 
     try:
-
         from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 
         catalog = get_equipment_catalog(scope_label=scope)
 
         return {
-
-            key: [{"名称": e.get("名称", ""), "部位": e.get("部位", ""), "所属套组": e.get("所属套组", ""), "稀有度": e.get("稀有度", "")} for e in entries]
-
+            key: [
+                {
+                    "名称": e.get("名称", ""),
+                    "部位": e.get("部位", ""),
+                    "所属套组": e.get("所属套组", ""),
+                    "稀有度": e.get("稀有度", ""),
+                }
+                for e in entries
+            ]
             for key, entries in catalog.items()
-
         }
 
     except Exception as e:
-
         raise HTTPException(status_code=500, detail=f"获取装备目录失败: {e}")
 
 
-
-
-
 async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, None]:
-
     """生成 SSE 事件流：start → heartbeat → summary → chunk(s) → stream_end。"""
 
     try:
-
         from games.endfield.calc.search.plan.controller import (
             optimizer_config_for_search_job,
             prepare_search_job,
@@ -425,37 +346,30 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
         from games.endfield.calc.search.run.runner import SearchRunner
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
-    except ImportError as e:
-
-        yield f"data: {json.dumps({'type': 'error', 'message': f'导入搜索引擎失败: {e}'})}\n\n"
+    except ImportError:
+        yield f"data: {json.dumps({'type': 'error', 'message': '搜索引擎加载失败，请确认完整项目环境已安装'})}\n\n"
 
         return
 
-
-
     try:
-
         req, fixed_loadout = _prepare_search_req(req)
 
         inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
 
-
-
         job, err = prepare_search_job(inputs)
 
         if err or job is None:
+            from web.backend.bridge import get_logger
 
-            yield f"data: {json.dumps({'type': 'error', 'message': err or '作业组装失败'})}\n\n"
+            if err:
+                get_logger(__name__).warning("搜索作业组装失败: %s", err)
+            yield f"data: {json.dumps({'type': 'error', 'message': '搜索作业组装失败'})}\n\n"
 
             return
 
-
-
         config = optimizer_config_for_search_job(job, top_n=req.top_n)
 
-        total_combinations = config.total_combinations if hasattr(config, 'total_combinations') else 0
-
-
+        total_combinations = config.total_combinations if hasattr(config, "total_combinations") else 0
 
         CHUNK_SIZE = 5
 
@@ -463,176 +377,110 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
 
         loop = asyncio.get_event_loop()
 
-
-
         def _run_search():
-
             try:
-
                 start = time.time()
 
                 result = SearchRunner.run(
-
                     base_context=job.base_context,
-
                     weapons=list(job.weapon_candidates),
-
                     equipment_catalog=dict(job.equipment_catalog),
-
                     config=config,
-
                     max_workers=req.max_workers,
-
                 )
 
                 elapsed = time.time() - start
 
-
-
                 top_results = []
 
                 for score in result.top_results:
-
-                    top_results.append({
-
-                        "weapon_name": score.weapon_name,
-
-                        "chest": score.loadout_names.get("chest", ""),
-
-                        "gloves": score.loadout_names.get("gloves", ""),
-
-                        "accessory_a": score.loadout_names.get("accessory_a", ""),
-
-                        "accessory_b": score.loadout_names.get("accessory_b", ""),
-
-                        "final_damage": float(score.final_damage),
-
-                        "segment_breakdown": dict(score.segment_breakdown) if score.segment_breakdown else None,
-
-                    })
-
-
+                    top_results.append(
+                        {
+                            "weapon_name": score.weapon_name,
+                            "chest": score.loadout_names.get("chest", ""),
+                            "gloves": score.loadout_names.get("gloves", ""),
+                            "accessory_a": score.loadout_names.get("accessory_a", ""),
+                            "accessory_b": score.loadout_names.get("accessory_b", ""),
+                            "final_damage": float(score.final_damage),
+                            "segment_breakdown": dict(score.segment_breakdown) if score.segment_breakdown else None,
+                        }
+                    )
 
                 asyncio.run_coroutine_threadsafe(
-
-                    queue.put({
-
-                        "type": "done",
-
-                        "top_results": top_results,
-
-                        "total_combinations": result.total_combinations,
-
-                        "searched_combinations": result.processed_combinations,
-
-                        "cancelled": result.cancelled,
-
-                        "elapsed_seconds": round(elapsed, 1),
-
-                    }),
-
+                    queue.put(
+                        {
+                            "type": "done",
+                            "top_results": top_results,
+                            "total_combinations": result.total_combinations,
+                            "searched_combinations": result.processed_combinations,
+                            "cancelled": result.cancelled,
+                            "elapsed_seconds": round(elapsed, 1),
+                        }
+                    ),
                     loop,
-
                 )
 
             except Exception as e:
-
                 asyncio.run_coroutine_threadsafe(
-
                     queue.put({"type": "error", "message": str(e)}),
-
                     loop,
-
                 )
-
-
 
         task = asyncio.get_event_loop().run_in_executor(None, _run_search)
 
-
-
         yield f"data: {json.dumps({'type': 'start', 'total_combinations': total_combinations})}\n\n"
 
-
-
         while True:
-
             try:
-
                 msg = await asyncio.wait_for(queue.get(), timeout=1.0)
 
             except asyncio.TimeoutError:
-
                 yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
 
                 continue
 
-
-
             if msg["type"] == "done":
-
                 results = msg.pop("top_results", [])
 
                 yield f"data: {json.dumps({'type': 'summary', 'total_combinations': msg.get('total_combinations', 0), 'searched_combinations': msg.get('searched_combinations', 0), 'cancelled': msg.get('cancelled', False), 'elapsed_seconds': msg.get('elapsed_seconds', 0)})}\n\n"
 
-
-
                 for i in range(0, len(results), CHUNK_SIZE):
-
-                    chunk = results[i:i + CHUNK_SIZE]
+                    chunk = results[i : i + CHUNK_SIZE]
 
                     yield f"data: {json.dumps({'type': 'chunk', 'results': chunk, 'chunk_index': i // CHUNK_SIZE, 'total_chunks': (len(results) + CHUNK_SIZE - 1) // CHUNK_SIZE})}\n\n"
-
-
 
                 yield f"data: {json.dumps({'type': 'stream_end'})}\n\n"
 
                 break
 
-
-
             elif msg["type"] == "error":
+                from web.backend.bridge import get_logger
 
-                yield f"data: {json.dumps({'type': 'error', 'message': msg['message']})}\n\n"
-
+                get_logger(__name__).warning("搜索错误: %s", msg.get("message", ""))
+                yield f"data: {json.dumps({'type': 'error', 'message': '搜索过程中出现错误，请重试'})}\n\n"
                 break
-
-
 
         await task
 
-
-
     except Exception as e:
+        from web.backend.bridge import get_logger
 
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-
-
-
+        get_logger(__name__).warning("搜索异常: %s", e)
+        yield f"data: {json.dumps({'type': 'error', 'message': '搜索异常，请重试'})}\n\n"
 
 
 @router.post("/run_stream")
-
 async def run_search_stream(req: SearchRequest):
-
     """流式全量搜索 — 通过 SSE 逐步返回进度与结果。"""
 
     return StreamingResponse(
-
         _search_stream_generator(req),
-
         media_type="text/event-stream",
-
         headers={
-
             "Cache-Control": "no-cache",
-
             "Connection": "keep-alive",
-
             "X-Accel-Buffering": "no",
-
         },
-
     )
 
 
@@ -669,5 +517,5 @@ def save_search_history_route(entry: dict):
     """保存一次搜索记录。"""
     return save_search_history(entry)
 
-__all__: list[str] = []
 
+__all__: list[str] = []
