@@ -133,6 +133,6 @@
 
 - [ADR-0003](./0003-generic-calc-framework.md) — 通用计算框架详细设计
 - [ADR-0001](./0001-code-layout-constraints.md) — 代码结构约束
-- [ADR-0002](./0002-migrate-to-pyside6.md) — PySide6 迁移
+- [ADR-0014](./0014-pyside6-migration.md) — PySide6 迁移
 - [会话接续手册](../会话接续手册.md) — 项目接缝与当前进度
 - [CONTEXT.md](../../CONTEXT.md) — 领域术语表

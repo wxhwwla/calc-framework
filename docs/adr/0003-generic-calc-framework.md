@@ -751,7 +751,7 @@ def test_endfield_dag_equals_legacy():
 ## 11. 相关文档
 
 - [ADR-0001：代码目录与文件规模约束](0001-code-layout-constraints.md)
-- [ADR-0002：GUI 框架从 CustomTkinter 迁移到 PySide6](0002-migrate-to-pyside6.md)
+- [ADR-0014：GUI 框架从 CustomTkinter 迁移到 PySide6](0014-pyside6-migration.md)
 - [CONTEXT.md](../../CONTEXT.md) — 领域术语表
 - [docs/会话接续手册.md](../会话接续手册.md) — 项目接缝与当前进度
 - [docs/代码结构规范.md](../代码结构规范.md) — 目录与文件约束

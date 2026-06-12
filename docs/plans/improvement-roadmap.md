@@ -143,6 +143,14 @@
 | **方案** | 在 `framework/README.md` 和 `framework/pyproject.toml` 中明确标注 GUI 功能依赖完整项目环境 |
 | **完成情况** | framework/README.md 架构总览下新增注意警示框；pyproject.toml 描述中标注限制 |
 
+### 3. 消除 formula.py 与框架的重复逻辑 ✅ 已完成（2026-06-13）
+
+| 项目 | 说明 |
+|------|------|
+| **问题** | `games/endfield/calc/damage/formula.py` 的 `calculate_growth_curve`、`validate_attribute_formula` 与框架 `FloorFormulaFitter.compute()`/`validate()` 实现了完全相同的公式；`has_fractional_part`/`infer_decimal_mode` 与框架 `_detect_scale` 重复 |
+| **方案** | 三步委托重构：① validate_attribute_formula → _FITTER.validate()；② calculate_growth_curve → _FITTER.compute()；③ infer_decimal_mode → _FITTER._detect_scale() |
+| **完成情况** | 三步全部完成，formula.py 减少 ~40 行重复代码，正反向计算共享同一套框架实现。全量测试通过 |
+
 ---
 
 ## 架构与技术债务
@@ -192,4 +200,7 @@
 | 2026-06-09 | P1 两项完成：多游戏适配器 README + 框架 pip GUI 限制文档化 | Agent |
 | 2026-06-09 | P2 两项完成：CI 门槛 60→65 + Web 后端 22 个集成测试 | Agent |
 | 2026-06-09 | P2 明日方舟 data_pipeline 接入完成 | Agent |
-| 2026-06-09 | P2 Web E2E 覆盖完成：新增 6 spec 40+ 测试 | Agent |
+| 2026-06-13 | ADR-0024 逆推引擎完全抽象化：GrowthParams + GameInverseAdapter + data_to_params/params_to_curve 双向 API | Agent |
+| 2026-06-13 | P0-1 消除 formula 重复：validate_attribute_formula → 框架 FloorFormulaFitter.validate() | Agent |
+| 2026-06-13 | P0-2 消除 formula 重复：calculate_growth_curve → 框架 FloorFormulaFitter.compute() | Agent |
+| 2026-06-13 | P0-3 消除 formula 重复：统一 has_fractional_part / infer_decimal_mode → 框架 _detect_scale | Agent |

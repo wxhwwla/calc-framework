@@ -90,9 +90,11 @@ print(result.outputs)
 
 | 模块 | 职责 |
 |------|------|
+| `engine.py` | 搜索引擎核心（枚举空间 + 遍历策略） |
 | `tracker.py` | Top-N 结果追踪（通用泛型） |
-| `cancel.py` | 搜索取消令牌（超量/主动取消） |
 | `parallel.py` | 并行执行器（进度回调、Top-N、取消） |
+| `persist.py` | 搜索进度持久化（SQLite） |
+| `session.py` | 搜索会话管理 |
 | `result.py` | 通用搜索结果类型 |
 
 适用于任何需要遍历大量候选并保留最优结果的场景（配装搜索、参数枚举、伤害最大化等）。
@@ -128,7 +130,35 @@ print(result.outputs)
 | `compute_sheet.py` | 声明式计算表 QWidget，从 DAG + layout.json 自动渲染 |
 | `controls.py` | infer_control 根据变量声明推断控件类型 |
 | `layout.py` | Layout/Section 排版定义 |
-| `format.py` | 数值格式化 |
+| `theme.py` | ThemeManager 多主题管理（dark/light/high_contrast） |
+| `viewer.py` | CalcPackViewer 通用展示层 |
+| `viewer_render.py` | 查看器动态渲染引擎 |
+| `sheet_evaluator.py` | ComputeSheet 实时求值器 |
+| `sheet_widgets.py` | 输入控件工厂 |
+
+### 逆推引擎 — `calc_framework.inverse`
+
+| 模块 | 职责 |
+|------|------|
+| `base.py` | FormulaFitter 基类与类型定义 |
+| `engine.py` | InverseEngine 统一逆推入口 |
+| `registry.py` | FormulaType 注册表 |
+| `strategies.py` | 通用拟合策略（floor/growth 等） |
+| `exponential_fitter.py` | 指数公式拟合器 |
+| `piecewise_fitter.py` | 分段公式拟合器 |
+| `threshold_fitter.py` | 阈值公式拟合器 |
+
+### 图编辑器 — `calc_framework.graph_editor`
+
+| 模块 | 职责 |
+|------|------|
+| 可视化 DAG 编辑画布 | QGraphicsView 节点拖拽、连线、网格吸附 |
+| 复合节点支持 | 双击进入子图编辑 |
+| 模板管理 | 内置模板浏览与插入 |
+
+### 开发者工具箱 — `calc_framework.dev_toolkit`
+
+CLI 工具集，含 DAG 调试器、图验证、模板管理等开发辅助功能。
 
 ### 配置层 — `calc_framework.config`
 
