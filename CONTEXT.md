@@ -1,6 +1,28 @@
-# Calc Framework（通用游戏计算框架）— 领域上下文
+# Calc Framework — Domain Context / 领域上下文
 
-本文件定义项目内统一术语，供 Issue、测试与文档引用。
+> This document defines unified terminology for Issues, tests, and documentation.
+> English glossary below; detailed Chinese definitions follow.
+>
+> 本文件定义项目内统一术语，供 Issue、测试与文档引用。
+
+## English Glossary / 英文术语速查
+
+| Term | Meaning |
+|------|---------|
+| **Character** | A record in `characters.json`: type, star rating, level curves, four primary stats (STR/AGI/INT/WIL), base ATK/HP/DEF, skill multipliers |
+| **Weapon** | A record in `weapons.json`: base ATK curve, normal skills (affixes), special skills |
+| **Equipment** | A record in `equipments.json`: chest/gloves/accessory slot |
+| **Level Curve** | A numeric array matching level count (typically 90), pre-baked in JSON |
+| **Multiplicative Zone** | One of 15 damage formula zones (ability bonus, defense, final ATK, etc.) |
+| **DAG** | Directed Acyclic Graph — the formula computation graph |
+| **Inverse / Fitting** | Given level data → solve for growth formula parameters (base, growth, divisor, offset) |
+| **Full Search** | Enumerate all weapon×equipment combinations, keep Top-N by damage |
+| **Loadout** | A specific weapon + 4 equipment pieces combination |
+| **CalcPack** | A `.calcpack` ZIP bundle: DAG + layout.json + data → self-contained calculator |
+| **ComputeSheet** | Declarative UI panel auto-rendered from `layout.json` + DAG variables |
+| **GrowthParams** | Typed container for `(base, growth, divisor, offset, is_decimal, special_values)` |
+
+---
 
 ## 核心对象
 
