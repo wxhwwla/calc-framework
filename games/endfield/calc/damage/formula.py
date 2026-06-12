@@ -15,7 +15,6 @@
     - trust: 信赖等级 0-4
 """
 
-import math
 
 # ==================== 通用常量 ====================
 
@@ -144,35 +143,24 @@ def calculate_skill_curve(
     if is_decimal is None:
         is_decimal = infer_decimal_mode(base, growth, divisor, offset, special=special_values)
 
-    # 小数数据：乘10处理
-    scale_factor = 10 if is_decimal else 1
-    scaled_base = base * scale_factor
-    scaled_growth = growth * scale_factor
-    scaled_offset = offset * scale_factor
+    # 构建 level_overrides（游戏层逻辑：special_values → 等级映射）
+    level_overrides: dict[int, float] = {}
+    if special_values:
+        if len(special_values) == 1:
+            # 1 个特殊值 → 替代第 9 级
+            level_overrides[9] = special_values[0]
+        elif len(special_values) >= 3:
+            # 3 个特殊值 → 替代第 10-12 级
+            for i, v in enumerate(special_values[:3]):
+                level_overrides[10 + i] = v
 
-    curve = []
+    from calc_framework.inverse.base import FloorFormulaFitter
 
-    # 1-9级使用公式计算
-    for lv in range(1, 10):
-        # 统一使用整数计算逻辑（floor）
-        calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
-
-        # 如果有特殊值且当前等级是9级，使用特殊值
-        if special_values and len(special_values) == 1 and lv == 9:
-            curve.append(round(special_values[0], 1))
-        else:
-            # 小数数据：除10还原
-            curve.append(round(calculated / scale_factor, 1))
-
-    # 10-12级使用特殊值或继续计算
-    if special_values and len(special_values) >= 3:
-        curve.extend([round(v, 1) for v in special_values[:3]])
-    else:
-        for lv in range(10, 13):
-            calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
-            curve.append(round(calculated / scale_factor, 1))
-
-    return curve
+    return FloorFormulaFitter().compute(
+        {"base": base, "growth": growth, "divisor": divisor, "offset": offset, "is_decimal": is_decimal},
+        num_levels=12,
+        level_overrides=level_overrides or None,
+    )
 
 
 def calculate_bonus_attribute(
@@ -211,27 +199,15 @@ def calculate_bonus_attribute(
     if is_decimal is None:
         is_decimal = infer_decimal_mode(base, growth, divisor, offset, special=special)
 
-    # 小数数据：乘10处理（使用round确保浮点数精度）
-    scale_factor = 10 if is_decimal else 1
-    scaled_base = round(base * scale_factor)
-    scaled_growth = round(growth * scale_factor)
-    scaled_offset = round(offset * scale_factor)
+    # 构建 level_overrides（游戏层逻辑：special → 等级映射）
+    level_overrides: dict[int, float] = {}
+    if special and max_level >= 9:
+        level_overrides[9] = special[0]
 
-    # 前8级用公式计算
-    curve = []
-    for lv in range(1, min(9, max_level + 1)):
-        # 统一使用整数计算逻辑（floor）
-        calculated = scaled_base + math.floor((scaled_growth * (lv - 1) + scaled_offset) / divisor)
-        # 小数数据：除10还原
-        curve.append(round(calculated / scale_factor, 1))
+    from calc_framework.inverse.base import FloorFormulaFitter
 
-    # 如果max_level>=9，需要计算第9级
-    if max_level >= 9:
-        if special and len(special) > 0:
-            curve.append(round(special[0], 1))
-        else:
-            # 计算第9级（lv=9对应索引8）
-            calculated = scaled_base + math.floor((scaled_growth * 8 + scaled_offset) / divisor)
-            curve.append(round(calculated / scale_factor, 1))
-
-    return curve
+    return FloorFormulaFitter().compute(
+        {"base": base, "growth": growth, "divisor": divisor, "offset": offset, "is_decimal": is_decimal},
+        num_levels=max_level,
+        level_overrides=level_overrides or None,
+    )

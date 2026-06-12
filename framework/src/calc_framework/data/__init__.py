@@ -4,6 +4,7 @@
 
 from calc_framework.data.attr_schema import AttributeDecl, AttributeSchema
 from calc_framework.data.context import DataContext, make_context
+from calc_framework.data.json_loader import JsonDataLoader
 from calc_framework.data.loader import DataContextLoader
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "AttributeSchema",
     "DataContext",
     "DataContextLoader",
+    "JsonDataLoader",
     "make_context",
 ]

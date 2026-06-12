@@ -329,23 +329,50 @@ class FloorFormulaFitter(FormulaFitter):
         self,
         params: dict[str, Any],
         num_levels: int = 1,
+        *,
+        level_overrides: dict[int, float] | None = None,
     ) -> list[float]:
+        """用给定参数正向计算各等级的值。
+
+        Args:
+            params: 公式参数字典（base/growth/divisor/offset/is_decimal）
+            num_levels: 要计算的等级数
+            level_overrides: 等级 → 固定值的映射（1-based）。
+                             用于技能特殊值等场景，如 ``{9: 23.4, 10: 28.0}``
+                             表示第 9、10 级不使用公式而使用固定值。
+
+        Returns:
+            各等级的值列表（索引 0 = 等级 1）
+        """
         base = params["base"]
-
         growth = params["growth"]
-
         divisor = params["divisor"]
-
         offset = params.get("offset", 0)
-
         is_decimal = params.get("is_decimal", False)
 
-        if is_decimal:
-            return [
-                round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1) for lv in range(1, num_levels + 1)
-            ]
+        if level_overrides is None:
+            level_overrides = {}
 
-        return [round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1) for lv in range(1, num_levels + 1)]
+        if is_decimal:
+            # 小数模式：×10 → floor → ÷10，保留精度
+            scale = 10
+            sb = base * scale
+            sg = growth * scale
+            so = offset * scale
+            curve = []
+            for lv in range(1, num_levels + 1):
+                if lv in level_overrides:
+                    curve.append(round(level_overrides[lv], 1))
+                else:
+                    curve.append(round((sb + math.floor((sg * (lv - 1) + so) / divisor)) / scale, 1))
+        else:
+            curve = []
+            for lv in range(1, num_levels + 1):
+                if lv in level_overrides:
+                    curve.append(round(level_overrides[lv], 1))
+                else:
+                    curve.append(round(base + math.floor((growth * (lv - 1) + offset) / divisor), 1))
+        return curve
 
     def validate(
         self,

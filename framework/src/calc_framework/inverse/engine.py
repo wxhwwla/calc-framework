@@ -112,6 +112,8 @@ class InverseEngine:
         formula_id: str,
         params: dict[str, Any] | GrowthParams,
         num_levels: int = 1,
+        *,
+        level_overrides: dict[int, float] | None = None,
     ) -> list[float]:
         """用参数正向计算各等级值。
 
@@ -119,11 +121,12 @@ class InverseEngine:
             formula_id: 公式类型 ID
             params: 参数 dict 或 GrowthParams
             num_levels: 要计算的等级数
+            level_overrides: 等级 → 固定值映射（1-based）。用于技能特殊值场景。
         """
         if isinstance(params, GrowthParams):
             params = params.to_dict()
         ft = registry.get(formula_id)
-        return ft.fitter.compute(params, num_levels)
+        return ft.fitter.compute(params, num_levels, level_overrides=level_overrides)
 
     def validate(
         self,
@@ -182,6 +185,8 @@ class InverseEngine:
         params: GrowthParams | dict[str, Any],
         num_levels: int,
         formula_id: str = "floor_linear",
+        *,
+        level_overrides: dict[int, float] | None = None,
     ) -> list[float]:
         """4 参数 + 等级 → 数据曲线（最简调用）。
 
@@ -194,12 +199,17 @@ class InverseEngine:
             curve = engine.params_to_curve(params, num_levels=90)
             # [100.0, 105.0, 110.0, ..., 545.0]
 
+            # 带特殊值
+            curve = engine.params_to_curve(params, num_levels=12,
+                                           level_overrides={10: 200.0, 11: 220.0, 12: 240.0})
+
         Args:
             params: 公式参数（GrowthParams 或 dict）
             num_levels: 要计算的等级数
             formula_id: 公式类型 ID
+            level_overrides: 等级 → 固定值映射（1-based）
 
         Returns:
             各等级值列表（索引 0 = 等级 1）
         """
-        return self.compute(formula_id, params, num_levels)
+        return self.compute(formula_id, params, num_levels, level_overrides=level_overrides)
