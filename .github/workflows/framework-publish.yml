@@ -44,7 +44,7 @@ jobs:
         run: python -m twine upload dist/*
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: framework-v${{ github.event.inputs.version }}
           name: calc-framework v${{ github.event.inputs.version }}

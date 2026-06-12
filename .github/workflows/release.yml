@@ -146,7 +146,7 @@ jobs:
         shell: bash
         run: ls -la
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "v${{ needs.verify-version.outputs.tag_version }}"
           tag_name: ${{ github.ref_name }}
