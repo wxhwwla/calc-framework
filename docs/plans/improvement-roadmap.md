@@ -207,3 +207,7 @@
 | 2026-06-13 | P1 compute() 增强：level_overrides + 修复 is_decimal 缩放 bug；calculate_skill_curve/bonus_attribute 委托框架 | Agent |
 | 2026-06-13 | P2 JsonDataLoader[T] 泛型提取 + loader.py 消除 ~80 行重复 | Agent |
 | 2026-06-13 | ADR-0025 接口一致性巩固：异常层次/CalcWorker→utils/主题→ThemeManager/semver提取/游戏模板更新 | Agent |
+| 2026-06-13 | 代码结构合规：tools/ 31→18项（拆quality/migration/publish），豁免表更新，ci门禁通过 | Agent |
+| 2026-06-13 | i18n 阶段1完成（6文档中英分离）+ 阶段2基础设施（Web i18n ~130条，tsc零错误） | Agent |
+| 2026-06-13 | 上传脚本修复：develop/main checkout -b 冲突bug + 错误集更新 | Agent |
+| 2026-06-13 | develop→main 合并完成（d99fa165，118文件，9535行新增） | Agent |
