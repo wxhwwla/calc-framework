@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """数据加载模块"""
 
+from calc_framework.errors import CalcFrameworkError
 
-class DataLoadingError(Exception):
-    """游戏数据加载领域所有异常的基类。"""
+
+class DataLoadingError(CalcFrameworkError):
+    """游戏数据加载领域所有异常的基类（继承框架 CalcFrameworkError）。"""
 
 
 from .game_data_facade import GameDataFacade

@@ -69,8 +69,11 @@ scripts/            ← 入口脚本（启动器/打包/上传/部署）
 | [ADR-0003](docs/adr/0003-generic-calc-framework.md) | 通用计算框架设计 |
 | [ADR-0005](docs/adr/0005-data-schema-design.md) | 四层数据 Schema |
 | [ADR-0006](docs/adr/0006-calcpack-and-designer.md) | 配置包与设计器 |
+| [ADR-0013](docs/adr/0013-generic-inverse-engine.md) | 通用反推引擎 SPI |
 | [ADR-0020](docs/adr/0020-multiplicative-zones-decouple.md) | 乘区解耦 |
 | [ADR-0023](docs/adr/0023-standardized-game-package-architecture.md) | 标准游戏包架构 |
+| [ADR-0024](docs/adr/0024-universal-inverse-abstraction.md) | 逆推引擎完全抽象化 — GrowthParams + GameInverseAdapter |
+| [ADR-0025](docs/adr/0025-framework-consolidation.md) | 框架接口一致性巩固 |
 
 完整 ADR 列表见 [`docs/adr/`](docs/adr/)。
 

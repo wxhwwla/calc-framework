@@ -45,12 +45,27 @@ find . -type f \( -name '*.py' -o -name '*.json' -o -name '*.md' \) -exec sed -i
 完成替换后，按以下顺序推进：
 
 1. **创建 DAG 公式**：在 `framework/adapters/your_game/` 下创建 `.dag.json`（可参考 arknights 或 endfield）
-2. **实现数据加载器**：填充 `calc/dag_adapter/loader.py` 中的 TODO，从你的游戏数据结构提取属性
-3. **注册自定义函数**：在 `framework/adapters/your_game/functions.py` 中添加游戏专属公式
-4. **配置 UI 布局**：在 `framework/adapters/your_game/ui/layout.json` 中定义输入/输出 Section
-5. **运行测试**：`python -m pytest games/your_game/tests/ -v`
-6. **启动 GUI**：`python games/your_game/main.py`
-7. **打包**：使用图编辑器/布局编辑器导出 `.calcpack`
+2. **实现数据加载器**：填充 `calc/dag_adapter/loader.py` 中的 TODO，实现 `DataContextLoader` ABC
+3. **（可选）接入逆推引擎**：创建 `GameInverseAdapter` 子类，声明数据模式即可自动获得「数据→公式参数」拟合能力
+4. **注册自定义函数**：在 `framework/adapters/your_game/functions.py` 中添加游戏专属公式
+5. **配置 UI 布局**：在 `framework/adapters/your_game/ui/layout.json` 中定义输入/输出 Section
+6. **运行测试**：`python -m pytest games/your_game/tests/ -v`
+7. **启动 GUI**：`python games/your_game/main.py`
+8. **打包**：使用图编辑器/布局编辑器导出 `.calcpack`
+
+### 3.1 使用框架组件（推荐）
+
+模板预置了以下框架组件的 import，开箱即用：
+
+| 组件 | 用途 | 导入路径 |
+|------|------|----------|
+| `JsonDataLoader` | 通用 JSON 懒加载缓存 | `from calc_framework.data.json_loader import JsonDataLoader` |
+| `GrowthParams` | 类型化成长公式参数 | `from calc_framework.inverse.base import GrowthParams` |
+| `GameInverseAdapter` | 逆推引擎适配器 ABC | `from calc_framework.inverse.schema import GameInverseAdapter, InverseSchema` |
+| `InverseEngine` | 通用逆推引擎入口 | `from calc_framework.inverse.engine import InverseEngine` |
+| `CalcWorker` | Qt 后台线程包装器 | `from utils.gui.qt_worker import CalcWorker` |
+| `ThemeManager` | 多主题管理 | `from calc_framework.ui.theme import ThemeManager` |
+| `CalcFrameworkError` | 框架异常基类 | `from calc_framework.errors import CalcFrameworkError` |
 
 ### 4. 目录结构（替换后）
 

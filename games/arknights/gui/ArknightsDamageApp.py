@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
+# 深色主题 QSS — 框架 ThemeManager 基础 + Arknights 特定覆盖
+from calc_framework.ui.theme import ThemeManager as _ThemeManager
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
@@ -46,23 +48,15 @@ from utils.gui.donation import append_donation_help_menu_action, open_donation_d
 from utils.gui.help_dialog import HelpDialog
 from utils.gui.help_loader import load_multi_category
 
-DARK_QSS = """
-QMainWindow, QWidget { background-color: #1A1A1A; color: #D1D1D1; }
-QLabel { color: #D1D1D1; }
+_BASE_DARK = _ThemeManager().stylesheet("dark")
+DARK_QSS = (
+    _BASE_DARK
+    + """
 QGroupBox {
     border: 1px solid #464646; border-radius: 8px; margin-top: 12px;
     padding-top: 16px; font-size: 13px; font-weight: bold; color: #E0E0E0;
 }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 6px; }
-QComboBox, QLineEdit, QSpinBox {
-    background-color: #2B2B2B; color: #D1D1D1; border: 1px solid #464646;
-    border-radius: 4px; padding: 4px 8px; min-height: 24px;
-}
-QComboBox:hover, QLineEdit:focus, QSpinBox:focus { border: 1px solid #2B6CB6; }
-QComboBox QAbstractItemView {
-    background-color: #2B2B2B; color: #D1D1D1;
-    selection-background-color: #2B6CB6;
-}
 QPushButton {
     background-color: #2B6CB6; color: white; border: none; border-radius: 6px;
     padding: 8px 24px; font-size: 14px; font-weight: bold; min-height: 20px;
@@ -76,15 +70,11 @@ QSlider::handle:horizontal {
     margin: -5px 0; border-radius: 8px;
 }
 QSlider::sub-page:horizontal { background: #2B6CB6; border-radius: 3px; }
-QTableWidget {
-    background-color: #1E1E1E; color: #D1D1D1; border: 1px solid #464646;
-    border-radius: 4px; gridline-color: #333333;
-}
+QTableWidget { border-radius: 4px; gridline-color: #333333; }
 QTableWidget::item { padding: 4px 8px; }
-QHeaderView::section { background-color: #2B2B2B; color: #D1D1D1; border: 1px solid #464646; padding: 4px; }
-QScrollArea, QSplitter::handle { border: none; background-color: #464646; }
-QCheckBox { color: #D1D1D1; }
+QHeaderView::section { border: 1px solid #464646; padding: 4px; }
 """
+)
 
 
 class ArknightsDamageApp(QMainWindow):

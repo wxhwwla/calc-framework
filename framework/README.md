@@ -120,6 +120,7 @@ print(result.outputs)
 |------|------|
 | `context.py` | DataContext TypedDict + make_context 工厂 |
 | `loader.py` | DataContextLoader 抽象基类 |
+| `json_loader.py` | JsonDataLoader[T] 通用懒加载缓存 — 消除 get/reload 重复模式 |
 | `schema.py` | 四层数据契约（EntitySchema / SkillSchema / SegmentSchema） |
 | `attr_schema.py` | 属性声明 Schema — 适配器声明字段结构，框架自动构建 DataContext（resolve/validate） |
 
@@ -165,6 +166,19 @@ CLI 工具集，含 DAG 调试器、图验证、模板管理等开发辅助功�
 | 模块 | 职责 |
 |------|------|
 | `adapter.py` | AdapterPackage 加载 meta.json + DAG |
+
+### 逆推引擎适配层 — `calc_framework.inverse.schema`
+
+| 模块 | 职责 |
+|------|------|
+| `InverseSchema` | 声明式数据模式 — 替代手写 if/elif 分派 |
+| `GameInverseAdapter` | 游戏适配器 ABC — 新游戏通过声明 schemas 即可接入逆推引擎 |
+
+### 工具模块
+
+| 模块 | 路径 | 职责 |
+|------|------|------|
+| semver | `calc_framework.semver` | parse_semver / format_semver / bump_patch / bump_minor |
 
 ---
 

@@ -204,3 +204,6 @@
 | 2026-06-13 | P0-1 消除 formula 重复：validate_attribute_formula → 框架 FloorFormulaFitter.validate() | Agent |
 | 2026-06-13 | P0-2 消除 formula 重复：calculate_growth_curve → 框架 FloorFormulaFitter.compute() | Agent |
 | 2026-06-13 | P0-3 消除 formula 重复：统一 has_fractional_part / infer_decimal_mode → 框架 _detect_scale | Agent |
+| 2026-06-13 | P1 compute() 增强：level_overrides + 修复 is_decimal 缩放 bug；calculate_skill_curve/bonus_attribute 委托框架 | Agent |
+| 2026-06-13 | P2 JsonDataLoader[T] 泛型提取 + loader.py 消除 ~80 行重复 | Agent |
+| 2026-06-13 | ADR-0025 接口一致性巩固：异常层次/CalcWorker→utils/主题→ThemeManager/semver提取/游戏模板更新 | Agent |
