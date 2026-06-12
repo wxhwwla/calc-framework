@@ -321,8 +321,19 @@ def setup_git_repo() -> str:
         code, _, _ = run_git(["checkout", WORK_BRANCH], check=False, capture_output=True)
 
         if code != 0:
+            # 检查 develop 是否已存在本地
+            _, branches, _ = run_git(["branch"], capture_output=True)
+            if WORK_BRANCH in branches:
+                # 已存在但切换失败 → 本地有未提交改动
+                print(f"[错误] 本地有未提交的改动，无法自动切换到 {WORK_BRANCH}")
+                print(
+                    f"[提示] 请手动处理：git stash --include-untracked && git checkout {WORK_BRANCH} && git stash pop"
+                )
+                print(f"[提示] 或直接在 {WORK_BRANCH} 分支上运行本脚本（推荐）")
+                sys.exit(1)
+            # 分支不存在 → 从 main 创建
             code, _, _ = run_git(
-                ["checkout", "-b", WORK_BRANCH, RELEASE_BRANCH],
+                ["checkout", "-b", WORK_BRANCH, f"origin/{RELEASE_BRANCH}"],
                 check=False,
                 capture_output=True,
             )
