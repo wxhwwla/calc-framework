@@ -164,7 +164,7 @@
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
 | GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 749 行（超 400 目标，低于 500 硬顶） |
 | 目录宽度 | ⚠️ 持续监控 | `scripts/` 17 项接近 20 上限 |
-| `games.endfield` 覆盖率 | 🟡 64% | CI 门槛 40%，有下滑空间 |
+| `games.endfield` 覆盖率 | 🟢 85% | CI 门槛 65%，远超要求 ✅ |
 | `framework` 覆盖率 | 🟢 73% | 超过 70% 目标 ✅ |
 | `web/backend` 覆盖率 | 🔴 ~15% | 基本无后端测试 |
 | Web E2E 测试 | 🔴 少量 | 仅 2 个 spec 文件 |

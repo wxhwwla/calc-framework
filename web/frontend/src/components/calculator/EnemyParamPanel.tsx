@@ -16,6 +16,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { useTranslation } from "react-i18next";
 import {
   fetchEnemyChoices,
   DEFAULT_ENEMY_PARAMS,
@@ -46,6 +47,7 @@ function enemyToParams(enemy: EnemyInfo): EnemyParams {
 }
 
 export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps) {
+  const { t } = useTranslation();
   const [enemies, setEnemies] = useState<EnemyInfo[]>([]);
   const [selectedEnemyId, setSelectedEnemyId] = useState("");
   const [params, setParams] = useState<EnemyParams>({ ...DEFAULT_ENEMY_PARAMS });
@@ -98,11 +100,11 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
         }}
         onClick={() => setExpanded(!expanded)}
       >
-        <Typography variant="subtitle2">敌方参数</Typography>
+        <Typography variant="subtitle2">{t("enemy.title")}</Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            防御 {params.enemy_defense} | 抗性 {params.enemy_resistance}%
-            {params.is_true_damage ? " | 真实伤害" : ""}
+            {t("enemy.defense")} {params.enemy_defense} | {t("enemy.resistance")} {params.enemy_resistance}%
+            {params.is_true_damage ? ` | ${t("compute.trueDmg")}` : ""}
           </Typography>
           {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
         </Box>
@@ -111,14 +113,14 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
       <Collapse in={expanded}>
         <Box sx={{ p: 2, pt: 0, display: "flex", flexDirection: "column", gap: 2 }}>
           <FormControl size="small" fullWidth>
-            <InputLabel>插件敌人</InputLabel>
+            <InputLabel>{t("compute.pluginEnemy")}</InputLabel>
             <Select
               value={selectedEnemyId}
-              label="插件敌人"
+              label={t("compute.pluginEnemy")}
               onChange={(e) => applyEnemy(e.target.value)}
             >
               <MenuItem value="">
-                <em>默认敌人</em>
+                <em>{t("compute.defaultEnemy")}</em>
               </MenuItem>
               {enemies
                 .filter((e) => e.id !== "")
@@ -134,7 +136,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="防御力"
+              label={t("enemy.defense")}
               type="number"
               value={params.enemy_defense}
               onChange={(e) => updateParam("enemy_defense", parseFloat(e.target.value) || 0)}
@@ -144,7 +146,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="抗性 (%)"
+              label={t("enemy.resistance")}
               type="number"
               value={params.enemy_resistance}
               onChange={(e) => updateParam("enemy_resistance", parseFloat(e.target.value) || 0)}
@@ -154,7 +156,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="无视抗性 (%)"
+              label={t("enemy.ignoreResistance")}
               type="number"
               value={params.ignore_resistance}
               onChange={(e) => updateParam("ignore_resistance", parseFloat(e.target.value) || 0)}
@@ -164,7 +166,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="失衡易伤系数"
+              label={t("enemy.imbalanceCoeff")}
               type="number"
               value={params.imbalance_vulnerability_coeff}
               onChange={(e) =>

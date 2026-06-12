@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button, Collapse, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 import CharacterSelector from "../components/calculator/CharacterSelector";
 import AttributeDisplay from "../components/calculator/AttributeDisplay";
 import WebComputeSheet from "../components/WebComputeSheet";
@@ -56,10 +57,11 @@ import { fetchWeapons } from "../api/data";
 
 const DamageChart = lazy(() => import("../components/calculator/DamageChart"));
 
-const WEAPON_SCOPE_OPTIONS = ["当前武器", "同类型同星级", "同类型全部"];
-const EQUIPMENT_SCOPE_OPTIONS = ["全部装备", "仅套装装备", "仅散件装备"];
-
 export default function ComputePage() {
+  const { t } = useTranslation();
+  const weaponScopeOptions = useMemo(() => [t("compute.currentWeapon"), t("compute.sameTypeStar"), t("compute.sameTypeAll")], [t]);
+  const equipmentScopeOptions = useMemo(() => [t("compute.allEquipment"), t("compute.setOnly"), t("compute.pieceOnly")], [t]);
+
   const [tab, setTab] = useState(0);
   const loading = useComputeStore((s) => s.loading);
   const error = useComputeStore((s) => s.error);
@@ -405,7 +407,7 @@ export default function ComputePage() {
                   label="武器候选范围"
                   onChange={(e) => setWeaponScope(e.target.value)}
                 >
-                  {WEAPON_SCOPE_OPTIONS.map((o) => (
+                  {weaponScopeOptions.map((o) => (
                     <MenuItem key={o} value={o}>{o}</MenuItem>
                   ))}
                 </Select>
@@ -417,7 +419,7 @@ export default function ComputePage() {
                   label="装备范围"
                   onChange={(e) => setEquipmentScope(e.target.value)}
                 >
-                  {EQUIPMENT_SCOPE_OPTIONS.map((o) => (
+                  {equipmentScopeOptions.map((o) => (
                     <MenuItem key={o} value={o}>{o}</MenuItem>
                   ))}
                 </Select>

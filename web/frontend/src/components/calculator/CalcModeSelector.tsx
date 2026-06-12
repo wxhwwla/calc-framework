@@ -1,11 +1,6 @@
+import { useMemo } from "react";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-
-const CALC_MODES = [
-  { label: "单段伤害计算", mode: "single_hit" },
-  { label: "乘区快照", mode: "zone_snapshot" },
-  { label: "单技能遍历(快速预览)", mode: "single_skill_search" },
-  { label: "多技能遍历(快速预览)", mode: "multi_skill_search" },
-];
+import { useTranslation } from "react-i18next";
 
 interface CalcModeSelectorProps {
   value: string;
@@ -13,11 +8,19 @@ interface CalcModeSelectorProps {
 }
 
 export default function CalcModeSelector({ value, onChange }: CalcModeSelectorProps) {
+  const { t } = useTranslation();
+  const calcModes = useMemo(() => [
+    { label: t("compute.singleHit"), mode: "single_hit" },
+    { label: t("compute.zoneSnapshot"), mode: "zone_snapshot" },
+    { label: t("compute.singleSkillPreview"), mode: "single_skill_search" },
+    { label: t("compute.multiSkillPreview"), mode: "multi_skill_search" },
+  ], [t]);
+
   return (
     <FormControl fullWidth size="small">
-      <InputLabel>计算模式</InputLabel>
-      <Select value={value} label="计算模式" onChange={(e) => onChange(e.target.value)}>
-        {CALC_MODES.map((m) => (
+      <InputLabel>{t("compute.calcMode")}</InputLabel>
+      <Select value={value} label={t("compute.calcMode")} onChange={(e) => onChange(e.target.value)}>
+        {calcModes.map((m) => (
           <MenuItem key={m.mode} value={m.mode}>
             {m.label}
           </MenuItem>
