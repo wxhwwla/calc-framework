@@ -14,7 +14,7 @@
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.0",
-    "@mui/material": "^6.1.0",
+    "@mui/material": "^9.1.1",
     "@xyflow/react": "^12.10.2",
     "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
