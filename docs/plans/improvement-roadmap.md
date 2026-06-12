@@ -117,9 +117,9 @@
 
 | 项目 | 说明 |
 |------|------|
-| **问题** | 部分目录接近 20 项上限（`scripts/` 17 项、`tools/` 16 项、`web/frontend/src/` 15 项），ADR-0001 约束需持续监控 |
-| **方案** | 在 CI 中定期运行 `check_layout.py`（当前已在 CI），设 `--warn-only` 标记非阻断性警告 |
-| **优先级建议** | 新增模块时同步检查，避免一次性超过上限 |
+| **问题** | 部分目录超限或接近上限（`tools/` 31→18 ✅ 已修复，`web/backend/api/` 21，`scripts/` 17），ADR-0001 约束需持续监控 |
+| **方案** | 在 CI 中定期运行 `check_layout.py`（当前已在 CI）；2026-06-13 完成 tools/ 拆分（quality/migration/publish 三个子目录，16 个文件移入） |
+| **优先级建议** | 新增模块时同步检查；`web/backend/api/` 需通过 FastAPI APIRouter 拆分，风险较高暂缓 |
 
 ---
 
