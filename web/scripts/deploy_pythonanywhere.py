@@ -1676,6 +1676,62 @@ def _setup_first_time(config: dict) -> None:
     print("  3. 若干员列表为空，请解压干员数据（见上方指南第 4 步备注）")
 
 
+def _fast_deploy(config: dict) -> None:
+    """快速部署：调用服务器 /api/admin/deploy（git pull + npm build）。
+
+    前提：代码已 git push 到 GitHub。
+    """
+    domain = config.get("domain", f"{config['username']}.pythonanywhere.com")
+    deploy_url = f"https://{domain}/api/admin/deploy"
+
+    print("\n[FAST] 快速部署模式（服务器端 git pull + npm build）")
+    print("  确保代码已 git push，否则服务器拉不到最新版本。")
+    print()
+
+    # Step 1: 触发部署
+    print("[FAST] Step 1/3: 触发服务器部署...")
+    try:
+        req = Request(deploy_url, method="POST")
+        with urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        if result.get("ok"):
+            print(f"  [OK] {result.get('status')}")
+        else:
+            print(f"  [ERR] {result}")
+            return
+    except Exception as e:
+        print(f"  [ERR] 触发失败: {e}")
+        print("  可能原因：服务器未部署 /api/admin/deploy 端点（需先慢速部署一次）")
+        return
+
+    # Step 2: 轮询等待
+    print("\n[FAST] Step 2/3: 等待部署完成（git pull + npm build，约 2-3 分钟）...")
+    for i in range(60):
+        time.sleep(5)
+        try:
+            req = Request(deploy_url, method="GET")
+            with urlopen(req, timeout=15) as resp:
+                status = json.loads(resp.read().decode("utf-8"))
+            if status.get("done"):
+                print(f"  [OK] 部署完成: {status.get('status')}")
+                break
+        except Exception:
+            pass
+        if i % 6 == 5:
+            print(f"  仍在进行中... ({(i + 1) * 5}s)")
+    else:
+        print("  [WARN] 超时（5 分钟），请检查 PA 服务器状态")
+
+    # Step 3: 重载 + 验证
+    print("\n[FAST] Step 3/3: 重载 Web App...")
+    _reload_webapp(config)
+    print("  等待重载生效...")
+    time.sleep(5)
+    _verify_deployment(config)
+
+    print(f"\n  [OK] 快速部署完成! 访问 https://{domain}/compute")
+
+
 # ── 主流程 ──────────────────────────────────────────────────────────────────────
 
 
@@ -1693,7 +1749,8 @@ def main() -> None:
             f"  python {sys.argv[0]} --all               显式全自动\n\n"
             f"  python {sys.argv[0]} --init-config       初始化配置文件（交互式）\n"
             f"  python {sys.argv[0]} --guide             打印首次部署完整指南\n"
-            f"  python {sys.argv[0]} --setup             首次从零部署（自动创建 Web App）\n\n"
+            f"  python {sys.argv[0]} --setup             首次从零部署（自动创建 Web App）\n"
+            f"  python {sys.argv[0]} --fast              快速部署: git pull + npm build，~3 分钟\n\n"
             "配置文件: ~/.pythonanywhere\n"
             "环境变量: PA_USERNAME, PA_API_TOKEN, PA_PROJECT, PA_DOMAIN"
         ),
@@ -1706,6 +1763,12 @@ def main() -> None:
     parser.add_argument("--zip-only", action="store_true", help="仅重新打包 dist/（跳过 npm run build）")
     parser.add_argument(
         "--backend-only", action="store_true", help="仅上传后端 Python + WSGI 并重载（跳过前端构建/上传）"
+    )
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        dest="do_fast",
+        help="快速部署: 调用服务器 /api/admin/deploy（git pull + npm build），~3 分钟",
     )
     parser.add_argument("--init-config", action="store_true", help="交互式生成配置文件模板（含 Token 验证）")
     parser.add_argument(
@@ -1774,6 +1837,14 @@ def main() -> None:
     # --setup: 首次从零部署
     if args.do_setup:
         _setup_first_time(config)
+        return
+
+    # --fast: 服务器端 git pull + npm build（~3 分钟，无需上传文件）
+    if args.do_fast:
+        if not has_api:
+            print("[ERR] --fast 需要配置 API Token")
+            sys.exit(1)
+        _fast_deploy(config)
         return
 
     # 默认行为：无参且配了 Token → 全自动；无参且无 Token → 仅构建+打包

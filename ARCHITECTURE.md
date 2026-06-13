@@ -20,6 +20,7 @@
 | Linting | ruff (lint + format) + pyright |
 | Packaging | PyInstaller (onedir) + NSIS installer |
 | Container | Docker + docker-compose |
+| i18n | react-i18next (Web) + DesktopTranslator/JSON (Desktop) |
 | Deployment | PythonAnywhere (Web version) |
 
 ---
@@ -53,7 +54,7 @@ framework/          ← Generic calc framework (pip package calc-framework)
     search/         ← Full enumeration: search/parallel/persistence
     inverse/        ← Inverse engine: FormulaFitter SPI + GrowthParams + GameInverseAdapter
     editor/         ← Graph editor (PySide6 visual DAG)
-    ui/             ← ComputeSheet (declarative layout panel) + ThemeManager
+    ui/             ← ComputeSheet (declarative layout panel) + ThemeManager + DesktopTranslator (i18n)
     plugin/         ← Plugin system (registry + builtins)
     config/         ← Adapter discovery/cache/hot-reload
     publish/        ← Adapter package validation + catalog generation
@@ -106,6 +107,7 @@ Full ADR list: [`docs/adr/`](docs/adr/).
 | `JsonDataLoader[T]` | `calc_framework.data.json_loader` | Generic lazy-load cache — eliminates get/reload boilerplate |
 | `DataContextLoader` | `calc_framework.data.loader` | ABC for building DAG evaluation context |
 | `ThemeManager` | `calc_framework.ui.theme` | Multi-theme QSS management (dark/light/high_contrast) |
+| `DesktopTranslator` | `calc_framework.ui.i18n` | Desktop GUI i18n singleton — JSON-based translations with fallback, interpolation, thread-safe |
 | `CalcWorker` | `utils.gui.qt_worker` | Generic QThread+QObject background worker |
 
 ---

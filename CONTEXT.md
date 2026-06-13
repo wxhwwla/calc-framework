@@ -29,6 +29,9 @@
 | **CalcWorker** | Generic QThread+QObject wrapper for background computation |
 | **ThemeManager** | Multi-theme QSS manager (dark/light/high_contrast) |
 | **DataContextLoader** | ABC for building the context dict that feeds DAG evaluation |
+| **DesktopTranslator** | Singleton i18n system for PySide6 desktop apps — loads JSON translation files, supports zh-CN/en locale switching |
+| **I18n Key** | Dot-notation path into translation JSON (e.g. `desktop.launcher.windowTitle`), shared between desktop and web |
+| **i18n_data/** | Translation JSON directory at `framework/src/calc_framework/ui/i18n_data/` — one file per locale (`zh-CN.json`, `en.json`) |
 
 ---
 

@@ -1151,8 +1151,51 @@ def _handle_admin_unpack(environ, start_response):
         return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
 
 
+def _handle_admin_deploy(environ, start_response):
+    """管理端点：git pull + npm build（POST 启动 / GET 查状态）。
+
+    部署新版本只需两步：
+      1. git push
+      2. curl -X POST https://xxx.pythonanywhere.com/api/admin/deploy
+      3. 等待 2-3 分钟，在 PA Web 页面 Reload
+    """
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if path != "/api/admin/deploy":
+        return None
+
+    import subprocess
+
+    status_file = _BASE / ".deploy_status.json"
+
+    if method == "GET":
+        if status_file.is_file():
+            try:
+                return _json(start_response, json.loads(status_file.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+        return _json(start_response, {"done": False, "status": "idle"})
+
+    if method != "POST":
+        return None
+
+    script = (
+        f"cd {_BASE} && "
+        f"git pull origin develop 2>&1 && "
+        f"cd web/frontend && npm install --silent 2>&1 && npm run build 2>&1 && "
+        f'echo \'{{"done":true,"status":"ok"}}\' > {status_file} || '
+        f'echo \'{{"done":false,"status":"failed"}}\' > {status_file}'
+    )
+    try:
+        subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return _json(start_response, {"ok": True, "status": "deploy started"})
+    except Exception as e:
+        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+
+
 def application(environ, start_response):
     for handler in (
+        _handle_admin_deploy,
         _handle_donation,
         _handle_layout_compute,
         _handle_search_api,

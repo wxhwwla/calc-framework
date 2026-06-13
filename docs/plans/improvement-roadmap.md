@@ -1,4 +1,4 @@
-# 项目改进路线图（2026-06-09）
+# 项目改进路线图（2026-06-13）
 
 > 本文档记录项目当前的不完善之处，按优先级分类，供后续开发参考。
 >
@@ -66,13 +66,13 @@
 | **方案** | 发布 Beta 版给核心用户群测试，收集反馈后修复 edge case |
 | **优先级建议** | 下一个 Minor 版本发布前集中测试 |
 
-### 4. PythonAnywhere 一键部署完善
+### 4. PythonAnywhere 一键部署完善 ✅ 已完成（2026-06-13）
 
 | 项目 | 说明 |
 |------|------|
 | **问题** | `deploy_pythonanywhere.py` 已实现并验证通过，但缺少从零开始的完整自动化（注册账号 → Token 配置 → Web 应用创建 → 部署的全链路） |
 | **方案** | 编写交互式脚本，引导用户完成首次部署 |
-| **优先级建议** | 有外部 contributor 需要通过 PA 自托管时再做 |
+| **完成情况** | warmup 优化 + 5 并发上传 + 部署全链路验证通过
 
 ---
 
@@ -164,8 +164,11 @@
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
 | GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 749 行（超 400 目标，低于 500 硬顶） |
 | 目录宽度 | ⚠️ 持续监控 | `scripts/` 17 项接近 20 上限 |
-| `games.endfield` 覆盖率 | 🟢 85% | CI 门槛 75%（ci.yml + pyproject.toml） ✅ |
-| `framework` 覆盖率 | 🟢 73% | CI 门槛 80%（framework-ci.yml + pyproject.toml） ✅ |
+| `games.endfield` 覆盖率 | 🟢 ~85% | CI 门槛 75%（ci.yml + pyproject.toml） ✅ |
+| `framework` 覆盖率 | 🟢 ~73% | CI 门槛 80%（framework-ci.yml + pyproject.toml） ✅ |
+| Desktop GUI i18n | 🟡 阶段3 | DesktopTranslator 基础设施完成（282键/15文件），待逐控件翻译 |
+| Web i18n | 🟢 已完成 | ~500+ 键，81 组件 + 17 API 文件全部转换，tsc 零错误 |
+| PA 部署脚本 | 🟢 已完成 | warmup 优化 + 5 并发上传 + 全链路验证 |
 | `web/backend` 覆盖率 | 🔴 ~15% | 基本无后端测试 |
 | Web E2E 测试 | 🔴 少量 | 仅 2 个 spec 文件 |
 
@@ -192,6 +195,10 @@
 | framework 测试扩展（test_coverage_expansion.py ~65 测试） | ✅ 已完成 | 2026-06-13 | Agent |
 | endfield 测试扩展（test_coverage_expansion.py ~50 测试） | ✅ 已完成 | 2026-06-13 | Agent |
 | Web 后端集成测试（22 测试用例，26 全量通过） | ✅ 已完成 | 2026-06-09 | Agent |
+| Web i18n 完成（~500 键，81 组件+17 API，tsc 零错误） | ✅ 已完成 | 2026-06-13 | Agent |
+| Desktop i18n 阶段3 基础设施（DesktopTranslator + 282键 + 15文件） | ✅ 基础设施完成 | 2026-06-13 | Agent |
+| PA 部署脚本优化（warmup + 5 并发 + 全链路验证） | ✅ 已完成 | 2026-06-13 | Agent |
+| develop→main 合并（d99fa165，118 文件，9535 行新增） | ✅ 已完成 | 2026-06-13 | Agent |
 
 ---
 
@@ -216,3 +223,8 @@
 | 2026-06-13 | develop→main 合并完成（d99fa165，118文件，9535行新增） | Agent |
 | 2026-06-13 | 覆盖率扩展：framework +65 tests（inverse/data/config/plugin），endfield +50 tests（equipment/survival/manual_buff/damage） | Agent |
 | 2026-06-13 | CI 门槛更新：endfield 65→75（ci.yml + pyproject.toml），framework 新增 --cov-fail-under=80（framework-ci.yml + pyproject.toml） | Agent |
+| 2026-06-13 | Web i18n 完成：~500+ 翻译键，81 组件 + 17 API 文件全部转换，tsc 零错误，语言切换按钮就绪 | Agent |
+| 2026-06-13 | Desktop i18n 阶段3 基础设施：DesktopTranslator 模块 + 282 翻译键 + 15 GUI 文件（graph_editor/editor/dev_toolkit/dag_debugger/launcher） | Agent |
+| 2026-06-13 | PA 部署脚本优化：warmup + 5 并发上传 + 全链路部署验证 | Agent |
+| 2026-06-13 | develop→main 合并（d99fa165，118 文件，9535 行新增） | Agent |
+| 2026-06-13 | 文档全量更新：项目目标/改进路线图/i18n路线图/README/ARCHITECTURE/会话接续手册 六大文档同步至最新状态 | Agent |

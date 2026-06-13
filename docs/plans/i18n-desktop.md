@@ -1,7 +1,7 @@
 # Desktop GUI i18n 多语言支持
 
 > **阶段 3**: 桌面 PySide6 应用国际化  
-> **状态**: 基础设施已完成，待逐步覆盖 UI 文件  
+> **状态**: 基础设施已完成（282 键 / 15 文件），待逐控件翻译 endfield_app / designer  
 > **日期**: 2026-06-13
 
 ---
@@ -154,7 +154,7 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 
 ## 当前覆盖状态
 
-### 已覆盖 (~100 键)
+### 已覆盖 (282 键)
 
 | 命名空间 | 键数 | 说明 |
 |----------|:----:|------|
@@ -162,10 +162,33 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `common.*` | 38 | 通用 UI 词汇 |
 | `desktop.viewer.*` | 22 | CalcPackViewer 菜单、面板、状态栏 |
 | `desktop.launcher.*` | 27 | 启动器窗口、更新对话框 |
-| `desktop.devToolkit.*` | 15 | 开发者工具箱导航、状态栏 |
+| `desktop.devToolkit.*` | 39 | 开发者工具箱导航、页签（8）、分组（2）、AI生成器（14） |
 | `desktop.pluginManager.*` | 8 | 插件管理器对话框 |
 | `desktop.log.*` | 2 | 日志面板 |
 | `desktop.themeNames.*` | 2 | 主题名称 |
+| `desktop.graphEditor.*` | 83 | 图编辑器完整 UI（菜单、工具栏、属性面板、节点编辑、帮助对话） |
+| `desktop.editor.*` | 30 | 布局编辑器（DAG加载、节管理、导出、预览） |
+| `desktop.debugger.*` | 12 | DAG 分步调试器（步骤控制、进度显示、示例图） |
+
+### 已集成 GUI 文件 (15 个)
+
+| 文件 | 所属模块 | 状态 |
+|------|----------|:--:|
+| `graph_editor/graph_editor_widget.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/node_panel.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/prop_panel.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/file_actions.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/file_io.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/ports_and_wire.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/node_operations.py` | graphEditor | ✅ 已集成 |
+| `graph_editor/help_content.py` | graphEditor | ✅ 已集成 |
+| `editor/gui.py` | editor | ✅ 已集成 |
+| `dev_toolkit/pages.py` | devToolkit | ✅ 已集成 |
+| `dag_debugger/dag_debugger.py` | debugger | ✅ 已集成 |
+| `launcher/launcher_window.py` | launcher | ✅ 已集成 |
+| `viewer.py` | viewer | ✅ 已集成 |
+| `plugin_manager.py` | pluginManager | ✅ 已集成 |
+| `theme.py` + `log_widget.py` | themeNames / log | ✅ 已集成 |
 
 ### 待覆盖 (后续 PR)
 

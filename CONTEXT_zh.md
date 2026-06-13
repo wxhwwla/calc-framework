@@ -47,5 +47,8 @@
 | **JsonDataLoader[T]** | 通用 JSON 懒加载缓存 |
 | **CalcWorker** | 通用 QThread 后台线程包装器 |
 | **ThemeManager** | 多主题 QSS 管理（暗色/亮色/高对比度） |
+| **DesktopTranslator** | 桌面 PySide6 应用的单例 i18n 翻译系统 — 加载 JSON 翻译文件，支持 zh-CN/en 语言切换 |
+| **i18n 键名** | 翻译 JSON 中的点分隔路径（如 `desktop.launcher.windowTitle`），桌面与 Web 共享键名结构 |
+| **i18n_data/** | 翻译 JSON 目录，位于 `framework/src/calc_framework/ui/i18n_data/` — 每种语言一个文件（`zh-CN.json`、`en.json`） |
 
 [完整术语表见 git 历史中的 CONTEXT.md]
