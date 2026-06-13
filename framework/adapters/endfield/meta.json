@@ -1,9 +1,12 @@
 {
   "name": "终末地伤害计算（Calc Framework）",
   "game": "明日方舟：终末地",
+  "description": "终末地伤害计算器 — 支持 15 乘区完整 DAG、全量搜索配装、OCR 截图识装、多技能加权、固定配装",
   "version": "0.6.0-beta",
   "schema_version": "dag-v1",
   "entry_dag": "dag/endfield_full.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
   "functions": {
     "clamp": "functions.py",
     "lerp": "functions.py",

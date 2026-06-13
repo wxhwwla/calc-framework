@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -34,16 +35,17 @@ const COLOR_KEYS: (keyof ThemeConfig["colors"])[] = [
 ];
 
 export default function ThemeExportTab() {
+  const { t } = useTranslation();
   const adapterId = usePackDesignerStore((s) => s.adapterId);
   const layoutDraft = usePackDesignerStore((s) => s.layoutDraft);
   const [theme, setTheme] = useState<ThemeConfig | null>(null);
   const [fontFamily, setFontFamily] = useState("Microsoft YaHei");
   const [fontSize, setFontSize] = useState(12);
   const [colors, setColors] = useState<Record<string, string>>({});
-  const [packName, setPackName] = useState("自定义计算配置");
+  const [packName, setPackName] = useState("");
   const [dataInfo, setDataInfo] = useState<Record<string, number>>({});
-  const [dagInfo, setDagInfo] = useState("未加载");
-  const [layoutInfo, setLayoutInfo] = useState("未加载");
+  const [dagInfo, setDagInfo] = useState(t("packDesigner.themeExportTab.notLoaded"));
+  const [layoutInfo, setLayoutInfo] = useState(t("packDesigner.themeExportTab.notLoaded"));
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -58,7 +60,7 @@ export default function ThemeExportTab() {
 
   useEffect(() => {
     fetchAdapterMeta(adapterId)
-      .then((m) => setPackName(String(m.name ?? "自定义计算配置")))
+      .then((m) => setPackName(String(m.name ?? "")))
       .catch(() => {});
   }, [adapterId]);
 
@@ -72,12 +74,12 @@ export default function ThemeExportTab() {
       const info: Record<string, number> = {};
       for (const e of summary) info[e.key] = e.count;
       setDataInfo(info);
-      setDagInfo(`${Object.keys(dag.nodes ?? {}).length} 个节点`);
-      setLayoutInfo(`${(layout.sections as unknown[])?.length ?? 0} 个区块`);
+      setDagInfo(t("packDesigner.themeExportTab.nodesCount", { n: Object.keys(dag.nodes ?? {}).length }));
+      setLayoutInfo(t("packDesigner.themeExportTab.sectionsCount", { n: (layout.sections as unknown[])?.length ?? 0 }));
     } catch {
       setDataInfo({});
-      setDagInfo("未加载");
-      setLayoutInfo("未加载");
+      setDagInfo(t("packDesigner.themeExportTab.notLoaded"));
+      setLayoutInfo(t("packDesigner.themeExportTab.notLoaded"));
     }
   }, [adapterId]);
 
@@ -131,7 +133,7 @@ export default function ThemeExportTab() {
         filename: `${packName}.calcpack`,
       });
 
-      setSuccess(`已导出 ${packName}.calcpack（${adapterId}）`);
+      setSuccess(t("packDesigner.themeExportTab.exported", { file: `${packName}.calcpack`, adapter: adapterId }));
     } catch (e: unknown) {
       setError(String(e));
     }
@@ -155,9 +157,12 @@ export default function ThemeExportTab() {
       });
 
       setSuccess(
-        `预览 (${adapterId}): DAG ${preview.dag_nodes} 节点, ` +
-        `Layout ${preview.layout_sections} 区块, ` +
-        `数据: ${JSON.stringify(preview.data_files)}`,
+        t("packDesigner.themeExportTab.previewResult", {
+          adapter: adapterId,
+          dag: preview.dag_nodes,
+          layout: preview.layout_sections,
+          data: JSON.stringify(preview.data_files),
+        })
       );
     } catch (e: unknown) {
       setError(String(e));
@@ -167,36 +172,36 @@ export default function ThemeExportTab() {
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        主题与导出
+        {t("packDesigner.themeExportTab.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        导出内容随页顶所选适配器加载（DAG / layout / 数据分轨）。
+        {t("packDesigner.themeExportTab.description")}
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>已加载数据</Typography>
+        <Typography variant="subtitle2" gutterBottom>{t("packDesigner.themeExportTab.loadedData")}</Typography>
         <TableContainer>
           <Table size="small">
             <TableBody>
               <TableRow>
-                <TableCell sx={{ border: "none", pl: 0 }}>适配器</TableCell>
+                <TableCell sx={{ border: "none", pl: 0 }}>{t("packDesigner.themeExportTab.adapter")}</TableCell>
                 <TableCell sx={{ border: "none" }}>{adapterId}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ border: "none", pl: 0 }}>数据文件</TableCell>
+                <TableCell sx={{ border: "none", pl: 0 }}>{t("packDesigner.themeExportTab.dataFiles")}</TableCell>
                 <TableCell sx={{ border: "none" }}>
                   {Object.entries(dataInfo).map(([k, v]) => (
-                    <Chip key={k} label={`${k}: ${v}条`} size="small" sx={{ mr: 0.5 }} />
+                    <Chip key={k} label={`${k}: ${v}${t("common.countUnit")}`} size="small" sx={{ mr: 0.5 }} />
                   ))}
-                  {Object.keys(dataInfo).length === 0 && "无（仅公式+布局）"}
+                  {Object.keys(dataInfo).length === 0 && t("packDesigner.themeExportTab.noDataFiles")}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ border: "none", pl: 0 }}>DAG</TableCell>
+                <TableCell sx={{ border: "none", pl: 0 }}>{t("packDesigner.themeExportTab.dag")}</TableCell>
                 <TableCell sx={{ border: "none" }}>{dagInfo}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ border: "none", pl: 0 }}>Layout</TableCell>
+                <TableCell sx={{ border: "none", pl: 0 }}>{t("packDesigner.themeExportTab.layout")}</TableCell>
                 <TableCell sx={{ border: "none" }}>{layoutInfo}</TableCell>
               </TableRow>
             </TableBody>
@@ -205,22 +210,22 @@ export default function ThemeExportTab() {
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>主题配置</Typography>
+        <Typography variant="subtitle2" gutterBottom>{t("packDesigner.themeExportTab.themeConfig")}</Typography>
 
         <TextField
           fullWidth
           size="small"
-          label="字体"
+          label={t("packDesigner.themeExportTab.font")}
           value={fontFamily}
           onChange={(e) => setFontFamily(e.target.value)}
           sx={{ mb: 1 }}
         />
 
         <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-          <InputLabel>字号</InputLabel>
+          <InputLabel>{t("packDesigner.themeExportTab.fontSize")}</InputLabel>
           <Select
             value={fontSize}
-            label="字号"
+            label={t("packDesigner.themeExportTab.fontSize")}
             onChange={(e: SelectChangeEvent<number>) => setFontSize(e.target.value as number)}
           >
             {[10, 11, 12, 13, 14, 16, 18, 20, 24].map((s) => (
@@ -230,7 +235,7 @@ export default function ThemeExportTab() {
         </FormControl>
 
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
-          色板
+          {t("packDesigner.themeExportTab.colorPalette")}
         </Typography>
 
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
@@ -259,12 +264,12 @@ export default function ThemeExportTab() {
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>导出配置</Typography>
+        <Typography variant="subtitle2" gutterBottom>{t("packDesigner.themeExportTab.exportConfig")}</Typography>
 
         <TextField
           fullWidth
           size="small"
-          label="配置包名称"
+          label={t("packDesigner.themeExportTab.packName")}
           value={packName}
           onChange={(e) => setPackName(e.target.value)}
           sx={{ mb: 2 }}
@@ -272,10 +277,10 @@ export default function ThemeExportTab() {
 
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button variant="outlined" onClick={handlePreview}>
-            预览
+            {t("packDesigner.themeExportTab.preview")}
           </Button>
           <Button variant="contained" onClick={handleExport}>
-            导出 .calcpack
+            {t("packDesigner.themeExportTab.exportCalcpack")}
           </Button>
         </Box>
       </Paper>

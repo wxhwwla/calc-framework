@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Link, Box,
 } from "@mui/material";
@@ -22,73 +23,73 @@ interface DataSourceDialogProps {
 }
 
 export default function DataSourceDialog({ open, onClose }: DataSourceDialogProps) {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>数据来源与许可</DialogTitle>
+      <DialogTitle>{t("dataSourceDialog.title")}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" gutterBottom>
-          <strong>【非官方工具】</strong>
-          本 Web 版为爱好者计算器，不代表游戏官方或 BWIKI 运营方。
+          <strong>【{t("common.notOfficial")}】</strong>
+          {" "}
+          {t("dataSourceDialog.unofficialNotice")}
         </Typography>
 
         <Typography variant="subtitle2" sx={{ mt: 2 }} gutterBottom>
-          源代码
+          {t("dataSourceDialog.sourceCodeSection")}
         </Typography>
         <Typography variant="body2" gutterBottom>
-          本项目托管于 GitHub：
+          {t("dataSourceDialog.sourceCodeText")}
           {" "}
           <Link href={REPO_URL} target="_blank" rel="noopener">
             {REPO_DISPLAY_NAME}
           </Link>
-          （默认 <Link href={AGPL_30_URL} target="_blank" rel="noopener">AGPL-3.0</Link>，
-          详见 <Link href={LICENSE_URL} target="_blank" rel="noopener">LICENSE</Link>）。
-          闭源商用须书面商业许可（{COMMERCIAL_CONTACT}）。
+          （<Link href={AGPL_30_URL} target="_blank" rel="noopener">AGPL-3.0</Link>，
+          <Link href={LICENSE_URL} target="_blank" rel="noopener">LICENSE</Link>）。
+          {COMMERCIAL_CONTACT}
         </Typography>
 
         <Typography variant="subtitle2" sx={{ mt: 2 }} gutterBottom>
-          游戏数据
+          {t("dataSourceDialog.gameDataSection")}
         </Typography>
         <Typography variant="body2" gutterBottom>
-          · 终末地 JSON：仓库维护，参考{" "}
-          <Link href={BWIKI_ENDFIELD_URL} target="_blank" rel="noopener">终末地 BWIKI</Link>
+          {t("dataSourceDialog.gameDataText")}
+          {" "}
+          <Link href={BWIKI_ENDFIELD_URL} target="_blank" rel="noopener">BWIKI</Link>
           <br />
-          · 明日方舟干员：参考{" "}
-          <Link href={BWIKI_ARKNIGHTS_URL} target="_blank" rel="noopener">明日方舟 BWIKI</Link>
-          （CC BY-SA 4.0 等，见{" "}
-          <Link href={CC_BY_SA_40_URL} target="_blank" rel="noopener">署名说明</Link>）
-          <br />
-          · 游戏名称、数值、美术等版权归各游戏权利方
+          <Link href={BWIKI_ARKNIGHTS_URL} target="_blank" rel="noopener">BWIKI</Link>
+          {" "}
+          <Link href={CC_BY_SA_40_URL} target="_blank" rel="noopener">CC BY-SA 4.0</Link>
         </Typography>
         <Typography variant="body2" sx={{ mt: 1 }} gutterBottom>
-          数据汇编许可见{" "}
           <Link href={DATA_LICENSE_URL} target="_blank" rel="noopener">DATA_LICENSE</Link>
-          （商用禁止使用本仓库 JSON 与采集流程）。
+          ：{t("dataSourceDialog.dataLicenseNote")}
         </Typography>
 
         <Typography variant="subtitle2" sx={{ mt: 2 }} gutterBottom>
-          更多文档
+          {t("dataSourceDialog.moreDocsSection")}
         </Typography>
         <Box component="ul" sx={{ m: 0, pl: 2.5, typography: "body2" }}>
           <li>
-            <Link href={ATTRIBUTION_DOC_URL} target="_blank" rel="noopener">数据来源与许可（完整）</Link>
+            <Link href={ATTRIBUTION_DOC_URL} target="_blank" rel="noopener">{t("dataSourceDialog.docDataSource")}</Link>
           </li>
           <li>
-            <Link href={COMMERCIAL_OUTLINE_URL} target="_blank" rel="noopener">商业许可要点</Link>
+            <Link href={COMMERCIAL_OUTLINE_URL} target="_blank" rel="noopener">{t("dataSourceDialog.docCommercial")}</Link>
           </li>
           <li>
-            <Link href={NOTICES_URL} target="_blank" rel="noopener">NOTICES（第三方与商标）</Link>
+            <Link href={NOTICES_URL} target="_blank" rel="noopener">{t("dataSourceDialog.docNotices")}</Link>
           </li>
         </Box>
 
         <Typography variant="body2" sx={{ mt: 2 }} color="text.secondary">
-          计算结果仅供参考，可能与游戏内数值存在差异。
+          {t("dataSourceDialog.disclaimer")}
         </Typography>
       </DialogContent>
       <DialogActions>
         <Button component="a" href={REPO_URL} target="_blank" rel="noopener">
-          打开 GitHub
+          {t("dataSourceDialog.openGitHub")}
         </Button>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

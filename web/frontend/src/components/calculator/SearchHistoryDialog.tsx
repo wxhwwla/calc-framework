@@ -15,6 +15,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { fetchSearchHistory, type SearchHistoryEntry } from "../../api/search";
 
 interface SearchHistoryDialogProps {
@@ -28,6 +29,7 @@ function formatTime(s: number): string {
 }
 
 export default function SearchHistoryDialog({ open, onClose }: SearchHistoryDialogProps) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<SearchHistoryEntry[]>([]);
   const [expandedEntry, setExpandedEntry] = useState<number | null>(null);
 
@@ -46,11 +48,11 @@ export default function SearchHistoryDialog({ open, onClose }: SearchHistoryDial
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>搜索历史（最近10次）</DialogTitle>
+      <DialogTitle>{t("searchHistoryDialog.title")}</DialogTitle>
       <DialogContent>
         {entries.length === 0 ? (
           <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-            尚无搜索历史
+            {t("searchHistoryDialog.empty")}
           </Typography>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -65,7 +67,7 @@ export default function SearchHistoryDialog({ open, onClose }: SearchHistoryDial
                       {entry.char_name} + {entry.weapon_name} · {entry.skill_name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {entry.result_count} 结果 · {entry.total_combinations?.toLocaleString()} 组合
+                      {t("searchHistoryDialog.results", { n: entry.result_count })} · {t("searchHistoryDialog.combinations", { n: entry.total_combinations?.toLocaleString() ?? 0 })}
                       {entry.elapsed_seconds != null ? ` · ${formatTime(entry.elapsed_seconds)}` : ""}
                     </Typography>
                   </Box>
@@ -79,13 +81,13 @@ export default function SearchHistoryDialog({ open, onClose }: SearchHistoryDial
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>排名</TableCell>
-                          <TableCell>武器</TableCell>
-                          <TableCell>护甲</TableCell>
-                          <TableCell>护手</TableCell>
-                          <TableCell>配件A</TableCell>
-                          <TableCell>配件B</TableCell>
-                          <TableCell align="right">伤害</TableCell>
+                          <TableCell>{t("searchHistoryDialog.rank")}</TableCell>
+                          <TableCell>{t("searchHistoryDialog.weapon")}</TableCell>
+                          <TableCell>{t("searchHistoryDialog.chest")}</TableCell>
+                          <TableCell>{t("searchHistoryDialog.gloves")}</TableCell>
+                          <TableCell>{t("searchHistoryDialog.accessoryA")}</TableCell>
+                          <TableCell>{t("searchHistoryDialog.accessoryB")}</TableCell>
+                          <TableCell align="right">{t("searchHistoryDialog.damage")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -110,7 +112,7 @@ export default function SearchHistoryDialog({ open, onClose }: SearchHistoryDial
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

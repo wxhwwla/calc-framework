@@ -9,6 +9,7 @@ PythonAnywhere WSGI 入口（免费套餐：WSGI + 同步 API，不用裸 FastAP
   cp ~/calc-framework/web/wsgi_pythonanywhere.py /var/www/wxhwwla_pythonanywhere_com_wsgi.py
   # Web 页面 → Reload
 """
+
 from __future__ import annotations
 
 import gzip
@@ -79,13 +80,32 @@ def _donation_manifest() -> list[dict[str, str]]:
                 break
     return found
 
+
 for _p in (str(_FRAMEWORK_SRC), str(_BASE), str(_BACKEND)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+# ── 模块预热：在重载时提前加载耗时的 API 模块 ──────────────────────────
+# 避免首次请求时加载 zip 中 422 个干员 JSON 导致超时（PA 免费版 1 worker）。
+# 每个 try/except 独立，防止一个模块失败导致整个 app 不可用。
+_WARMUP_OK: dict[str, bool] = {}
+for _mod_name in ("api.arknights", "api.generator"):
+    try:
+        __import__(_mod_name, fromlist=["router"])
+        _WARMUP_OK[_mod_name] = True
+    except Exception as _exc:
+        _WARMUP_OK[_mod_name] = False
+
+
+def _warmup_status() -> dict[str, bool]:
+    """返回预热状态（可被 /api/health 消费）。"""
+    return dict(_WARMUP_OK)
+
+
 _VENV_ACTIVATE = Path(f"/home/{PA_USERNAME}/.virtualenvs/{PA_VENV}/bin/activate_this.py")
 if _VENV_ACTIVATE.is_file():
-    exec(open(_VENV_ACTIVATE, encoding="utf-8").read(), {"__file__": str(_VENV_ACTIVATE)})
+    with open(_VENV_ACTIVATE, encoding="utf-8") as _f:
+        exec(_f.read(), {"__file__": str(_VENV_ACTIVATE)})
 
 # 勿使用 application = app（会报 missing argument 'send'）
 # 关键 API 在下方同步处理；其余功能在 PA 免费版上可能不可用。
@@ -102,7 +122,6 @@ _MIME = {
     ".html": "text/html",
     ".json": "application/json",
     ".woff2": "font/woff2",
-    ".webp": "image/webp",
 }
 
 
@@ -222,11 +241,10 @@ def _handle_layout_compute(environ, start_response):
     """计算页依赖的 layout / evaluate / loadout API。"""
     path = _fix_path(environ.get("PATH_INFO", ""))
     method = environ.get("REQUEST_METHOD", "GET")
+    if not (path.startswith("/api/layout") or path.startswith("/api/compute")):
+        return None
 
     try:
-        from fastapi import HTTPException
-
-        from api.layout import get_dag_payload, get_layout_payload, get_variables_payload
         from api.compute import (
             CompareRequest,
             EvaluateRequest,
@@ -242,6 +260,8 @@ def _handle_layout_compute(environ, start_response):
             preset_export,
             snapshot_payload,
         )
+        from api.layout import get_dag_payload, get_layout_payload, get_variables_payload
+        from fastapi import HTTPException
     except Exception as e:
         return _json(start_response, {"error": f"layout/compute import failed: {e}"}, "500 Internal Server Error")
 
@@ -359,7 +379,9 @@ def _handle_search_api(environ, start_response):
                 return _json(
                     start_response,
                     {
-                        "error": "run_stream not supported on PythonAnywhere; use local backend or POST /api/search/run",
+                        "error": (
+                            "run_stream not supported on PythonAnywhere; use local backend or POST /api/search/run"
+                        ),
                         "code": "pa_stream_unsupported",
                     },
                     "501 Not Implemented",
@@ -671,13 +693,15 @@ def _handle_adapters(environ, start_response):
                 if not meta_file.is_file():
                     continue
                 meta = json.loads(meta_file.read_text(encoding="utf-8"))
-                results.append({
-                    "id": apath.name,
-                    "name": meta.get("name", apath.name),
-                    "game": meta.get("game", ""),
-                    "version": meta.get("version", ""),
-                    "description": meta.get("description", ""),
-                })
+                results.append(
+                    {
+                        "id": apath.name,
+                        "name": meta.get("name", apath.name),
+                        "game": meta.get("game", ""),
+                        "version": meta.get("version", ""),
+                        "description": meta.get("description", ""),
+                    }
+                )
             return _json(start_response, results)
 
         m = re.match(r"^/api/adapters/([^/]+)/meta$", path)
@@ -696,6 +720,7 @@ def _handle_adapters(environ, start_response):
                 get_adapter_layout,
                 get_pack_export_bundle,
             )
+
             aid = m.group(1)
             action = m.group(2)
             if action == "layout":
@@ -761,14 +786,13 @@ def _handle_arknights(environ, start_response):
         return None
 
     try:
-        from fastapi import HTTPException
-
         from api.arknights import (
             ComputeRequest,
             compute_damage_payload,
             list_operators_payload,
             operator_summary_payload,
         )
+        from fastapi import HTTPException
     except Exception as e:
         return _json(start_response, {"error": f"arknights import failed: {e}"}, "500 Internal Server Error")
 
@@ -816,13 +840,6 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
     sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
 
     try:
-        from api.data_profiles import (
-            create_entity_row,
-            delete_entity_row,
-            list_entity_rows,
-            profiles_metadata,
-            update_entity_row,
-        )
         from api.data_mutations import (
             create_character,
             create_equipment,
@@ -834,6 +851,11 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             update_character,
             update_equipment,
             update_weapon,
+        )
+        from api.data_profiles import (
+            create_entity_row,
+            delete_entity_row,
+            update_entity_row,
         )
 
         if path == "/api/data/inverse" and method == "POST":
@@ -1069,7 +1091,7 @@ def _handle_generator_api(environ, start_response):
                 start_response,
                 {
                     "error": "generator POST endpoints require the local backend (FastAPI). "
-                             "Use the desktop client or run the local search server.",
+                    "Use the desktop client or run the local search server.",
                     "code": "pa_generator_unsupported",
                 },
                 "501 Not Implemented",

@@ -8,14 +8,20 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { fetchEquipmentCatalog } from "../../api/search";
 
-const SLOT_SPECS: { key: string; label: string }[] = [
-  { key: "chest", label: "护甲" },
-  { key: "gloves", label: "护手" },
-  { key: "accessory_a", label: "配件A" },
-  { key: "accessory_b", label: "配件B" },
-];
+const SLOT_KEYS = ["chest", "gloves", "accessory_a", "accessory_b"] as const;
+type SlotKey = typeof SLOT_KEYS[number];
+
+function slotI18nKey(key: SlotKey): string {
+  switch (key) {
+    case "chest": return "fixedLoadout.chest";
+    case "gloves": return "fixedLoadout.gloves";
+    case "accessory_a": return "fixedLoadout.accessoryA";
+    case "accessory_b": return "fixedLoadout.accessoryB";
+  }
+}
 
 export interface FixedLoadoutSelection {
   chest: string | null;
@@ -29,8 +35,6 @@ interface FixedLoadoutPanelProps {
   equipmentScope?: string;
 }
 
-const NO_FIX_LABEL = "（不固定）";
-
 /** 与 GUI qt_control_dock.populate_fixed_loadout_slots 一致：配件 A/B 共用 accessories 列表 */
 function catalogKeyForSlot(slotKey: string): string {
   if (slotKey === "accessory_a" || slotKey === "accessory_b") return "accessories";
@@ -38,6 +42,7 @@ function catalogKeyForSlot(slotKey: string): string {
 }
 
 export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoadoutPanelProps) {
+  const { t } = useTranslation();
   const [catalog, setCatalog] = useState<Record<string, { 名称: string }[]>>({});
   const [selection, setSelection] = useState<FixedLoadoutSelection>({
     chest: null,
@@ -67,34 +72,36 @@ export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoa
     [selection, onChange],
   );
 
+  const noFixLabel = t("fixedLoadout.noFix");
+
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Typography variant="subtitle2" gutterBottom>
-        固定配装
+        {t("fixedLoadout.title")}
         {hasAnyFixed && (
           <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-            （已固定 {Object.values(selection).filter((v) => v !== null).length} 件）
+            {t("fixedLoadout.fixedCount", { n: Object.values(selection).filter((v) => v !== null).length })}
           </Typography>
         )}
       </Typography>
 
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-        选择装备名称固定该槽位，选「（不固定）」则遍历。
+        {t("fixedLoadout.hint")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-        {SLOT_SPECS.map((slot) => (
-          <FormControl key={slot.key} size="small" sx={{ minWidth: 160, flex: 1 }}>
-            <InputLabel>{slot.label}</InputLabel>
+        {SLOT_KEYS.map((key) => (
+          <FormControl key={key} size="small" sx={{ minWidth: 160, flex: 1 }}>
+            <InputLabel>{t(slotI18nKey(key))}</InputLabel>
             <Select
-              value={selection[slot.key as keyof FixedLoadoutSelection] ?? ""}
-              label={slot.label}
-              onChange={(e) => handleSlotChange(slot.key, e.target.value)}
+              value={selection[key] ?? ""}
+              label={t(slotI18nKey(key))}
+              onChange={(e) => handleSlotChange(key, e.target.value)}
             >
               <MenuItem value="">
-                <em>{NO_FIX_LABEL}</em>
+                <em>{noFixLabel}</em>
               </MenuItem>
-              {(catalog[catalogKeyForSlot(slot.key)] || []).map((eq) => (
+              {(catalog[catalogKeyForSlot(key)] || []).map((eq) => (
                 <MenuItem key={eq.名称} value={eq.名称}>
                   {eq.名称}
                 </MenuItem>

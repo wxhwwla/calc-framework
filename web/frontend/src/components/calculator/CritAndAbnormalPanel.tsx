@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { useTranslation } from "react-i18next";
 
 export interface CritAndAbnormalSettings {
   extraCritRate: number;
@@ -37,6 +38,7 @@ interface CritAndAbnormalPanelProps {
 }
 
 export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [extraCritRate, setExtraCritRate] = useState(0);
   const [extraCritDamage, setExtraCritDamage] = useState(0);
@@ -105,7 +107,7 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>类型</TableCell>
+              <TableCell>{t("critAbnormal.typeLabel")}</TableCell>
               {specs[0]?.ui_levels.map((lv) => (
                 <TableCell key={lv} align="center">
                   L{lv}
@@ -147,7 +149,7 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
         onClick={() => setExpanded(!expanded)}
       >
         <Typography variant="subtitle2" sx={{ flex: 1 }}>
-          暴击 / 异常矩阵
+          {t("critAbnormal.title")}
         </Typography>
         {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </Box>
@@ -156,7 +158,7 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
           <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
             <TextField
               size="small"
-              label="额外暴击率"
+              label={t("critAbnormal.extraCritRate")}
               type="number"
               value={extraCritRate}
               onChange={(e) => {
@@ -167,7 +169,7 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
             />
             <TextField
               size="small"
-              label="额外暴击伤害"
+              label={t("critAbnormal.extraCritDamage")}
               type="number"
               value={extraCritDamage}
               onChange={(e) => {
@@ -188,15 +190,15 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
                 size="small"
               />
             }
-            label="计入条件装备暴击"
+            label={t("critAbnormal.includeConditionalCrit")}
           />
           {hint && (
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
               {hint}
             </Typography>
           )}
-          {renderMatrix("物理异常", physSpecs, "physical")}
-          {renderMatrix("法术异常", spellSpecs, "spell")}
+          {renderMatrix(t("critAbnormal.physicalAbnormal"), physSpecs, "physical")}
+          {renderMatrix(t("critAbnormal.spellAbnormal"), spellSpecs, "spell")}
           <Button
             size="small"
             onClick={() => {
@@ -205,7 +207,7 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
               notify({ physicalAbnormalCounts: {}, spellAbnormalCounts: {} });
             }}
           >
-            清空矩阵
+            {t("critAbnormal.clearMatrix")}
           </Button>
         </Box>
       </Collapse>

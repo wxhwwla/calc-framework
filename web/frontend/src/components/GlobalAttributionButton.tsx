@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import SourceIcon from "@mui/icons-material/Source";
 import DataSourceDialog from "./calculator/DataSourceDialog";
 
-/** 顶栏「开源/许可」— 全站可打开数据来源对话框 */
 export default function GlobalAttributionButton() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -16,7 +17,7 @@ export default function GlobalAttributionButton() {
           color="inherit"
           size="small"
           onClick={() => setOpen(true)}
-          title="源代码与数据许可"
+          title={t("common.sourceCode")}
         >
           <SourceIcon />
         </IconButton>
@@ -27,9 +28,9 @@ export default function GlobalAttributionButton() {
           startIcon={<SourceIcon />}
           onClick={() => setOpen(true)}
           sx={{ ml: 0.5, textTransform: "none" }}
-          title="源代码与数据许可"
+          title={t("common.sourceCode")}
         >
-          开源/许可
+          {t("common.openSource")}
         </Button>
       )}
       <DataSourceDialog open={open} onClose={() => setOpen(false)} />

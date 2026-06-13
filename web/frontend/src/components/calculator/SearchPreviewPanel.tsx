@@ -1,4 +1,5 @@
 import { Box, Paper, Typography, CircularProgress } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface SearchPreviewPanelProps {
   lines: string[] | null;
@@ -7,10 +8,11 @@ interface SearchPreviewPanelProps {
 }
 
 export default function SearchPreviewPanel({ lines, loading, error }: SearchPreviewPanelProps) {
+  const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
       <Typography variant="subtitle2" gutterBottom>
-        快速预览（与桌面 GUI 同款）
+        {t("searchPreview.title")}
       </Typography>
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>

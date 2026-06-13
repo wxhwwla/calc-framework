@@ -1,17 +1,21 @@
 import { type DragEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Chip, Typography, Paper } from "@mui/material";
 import type { DagNodeTypeName } from "../../store/editorStore";
 import { getNodeColor } from "../../store/editorStore";
 
-const NODE_OPTIONS: { type: DagNodeTypeName; label: string; desc: string }[] = [
-  { type: "const", label: "常量", desc: "固定数值" },
-  { type: "var", label: "变量", desc: "引用上下文变量" },
-  { type: "unary", label: "一元运算", desc: "neg/abs/sqrt/ln..." },
-  { type: "binary", label: "二元运算", desc: "+ - * / ^ min max" },
-  { type: "condition", label: "条件", desc: "if-else 分支" },
-  { type: "expr", label: "表达式", desc: "数学公式" },
-  { type: "user_input", label: "用户输入", desc: "滑块/数值输入" },
-];
+function useNodeOptions(): { type: DagNodeTypeName; label: string; desc: string }[] {
+  const { t } = useTranslation();
+  return [
+    { type: "const", label: t("dag.nodeTypes.const"), desc: t("dag.nodeTypes.constDesc") },
+    { type: "var", label: t("dag.nodeTypes.var"), desc: t("dag.nodeTypes.varDesc") },
+    { type: "unary", label: t("dag.nodeTypes.unary"), desc: t("dag.nodeTypes.unaryDesc") },
+    { type: "binary", label: t("dag.nodeTypes.binary"), desc: t("dag.nodeTypes.binaryDesc") },
+    { type: "condition", label: t("dag.nodeTypes.condition"), desc: t("dag.nodeTypes.conditionDesc") },
+    { type: "expr", label: t("dag.nodeTypes.expr"), desc: t("dag.nodeTypes.exprDesc") },
+    { type: "user_input", label: t("dag.nodeTypes.userInput"), desc: t("dag.nodeTypes.userInputDesc") },
+  ];
+}
 
 const onDragStart = (event: DragEvent, nodeType: DagNodeTypeName) => {
   event.dataTransfer.setData("application/dag-node-type", nodeType);
@@ -19,13 +23,15 @@ const onDragStart = (event: DragEvent, nodeType: DagNodeTypeName) => {
 };
 
 export default function NodePalette() {
+  const { t } = useTranslation();
+  const NODE_OPTIONS = useNodeOptions();
   return (
     <Paper sx={{ p: 1.5 }}>
       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-        节点面板
+        {t("dag.nodePaletteTitle")}
       </Typography>
       <Typography variant="caption" sx={{ color: "#888", display: "block", mb: 1 }}>
-        拖拽节点到画布创建
+        {t("dag.nodePaletteHint")}
       </Typography>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
         {NODE_OPTIONS.map((opt) => {

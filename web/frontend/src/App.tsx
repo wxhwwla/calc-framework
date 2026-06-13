@@ -181,7 +181,7 @@ function Shell() {
             {t("app.title")}
           </Typography>
           <IconButton color="inherit" onClick={toggleLanguage} title={t("common.language")} size="small" sx={{ mr: 1 }}>
-            <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : "中"}</Typography>
+            <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : t("common.language")}</Typography>
           </IconButton>
           <GlobalAttributionButton />
           <GlobalDonationButton />

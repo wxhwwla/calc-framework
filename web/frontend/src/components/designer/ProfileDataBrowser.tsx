@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Autocomplete,
   Box,
@@ -31,6 +32,7 @@ const FILTERABLE_KEYS: readonly string[] = ["类型", "星级", "部位", "所�
 
 /** 多游戏数据浏览 */
 export default function ProfileDataBrowser({ profileId }: Props) {
+  const { t } = useTranslation();
   const profile = getProfile(profileId);
   const [entityKey, setEntityKey] = useState(profile?.entities[0]?.key ?? "");
   const entity = getEntity(profileId, entityKey);
@@ -162,10 +164,10 @@ export default function ProfileDataBrowser({ profileId }: Props) {
       >
         {showEntitySelector && (
           <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel>实体类型</InputLabel>
+            <InputLabel>{t("designer.dataEditorTab.entityType")}</InputLabel>
             <Select
               value={entityKey}
-              label="实体类型"
+              label={t("designer.dataEditorTab.entityType")}
               onChange={(e: SelectChangeEvent) => {
                 setEntityKey(e.target.value);
               }}
@@ -181,7 +183,7 @@ export default function ProfileDataBrowser({ profileId }: Props) {
 
         <TextField
           size="small"
-          placeholder="搜索名称..."
+          placeholder={t("common.search") + "..."}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -198,17 +200,17 @@ export default function ProfileDataBrowser({ profileId }: Props) {
             value={filters[field.key] ?? null}
             onChange={(_e, v) => handleFilterChange(field.key, v)}
             renderInput={(params) => (
-              <TextField {...params} label={field.label} placeholder="不限" />
+              <TextField {...params} label={field.label} placeholder={t("common.all")} />
             )}
             sx={{ minWidth: 140 }}
           />
         ))}
 
         <Button variant="outlined" size="small" onClick={loadData}>
-          刷新
+          {t("designer.dataBrowserTab.refresh")}
         </Button>
         <Typography variant="body2" color="text.secondary">
-          共 {filteredRows.length} 条
+          {t("designer.dataEditorTab.countLabel", { profile: profile?.label ?? "", entity: entity?.label ?? "", count: filteredRows.length })}
         </Typography>
       </Stack>
 
@@ -233,7 +235,7 @@ export default function ProfileDataBrowser({ profileId }: Props) {
             {paginatedRows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length || 1} align="center">
-                  <Typography color="text.secondary">暂无数据</Typography>
+                  <Typography color="text.secondary">{t("common.noData")}</Typography>
                 </TableCell>
               </TableRow>
             )}

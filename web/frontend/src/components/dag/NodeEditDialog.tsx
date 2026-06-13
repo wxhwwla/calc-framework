@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -25,6 +26,7 @@ interface NodeEditDialogProps {
 }
 
 export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: NodeEditDialogProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<DagNodeData>({ label: "", nodeType: "const" });
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ borderLeft: `4px solid ${color}`, pl: 2 }}>
-        编辑节点: {nodeId}
+        {t("dag.nodeEdit.title")}: {nodeId}
         <Typography variant="caption" sx={{ ml: 1, color: "#888" }}>
           ({data.nodeType})
         </Typography>
@@ -51,14 +53,14 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
           <TextField
-            label="节点 ID"
+            label={t("dag.nodeEdit.nodeId")}
             value={nodeId}
             size="small"
             disabled
             fullWidth
           />
           <TextField
-            label="标签"
+            label={t("dag.nodeEdit.label")}
             value={form.label || ""}
             onChange={(e) => setForm({ ...form, label: e.target.value })}
             size="small"
@@ -67,7 +69,7 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
 
           {data.nodeType === "const" && (
             <TextField
-              label="数值"
+              label={t("dag.nodeEdit.value")}
               type="number"
               value={form.value ?? 0}
               onChange={(e) => setForm({ ...form, value: parseFloat(e.target.value) || 0 })}
@@ -78,18 +80,18 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
 
           {data.nodeType === "var" && (
             <TextField
-              label="变量路径"
+              label={t("dag.nodeEdit.variablePath")}
               value={form.path || ""}
               onChange={(e) => setForm({ ...form, path: e.target.value })}
               size="small"
               fullWidth
-              placeholder="character.力量"
+              placeholder={t("dag.nodeEdit.varPathPlaceholder")}
             />
           )}
 
           {(data.nodeType === "unary" || data.nodeType === "binary") && (
             <TextField
-              label="运算符"
+              label={t("dag.nodeEdit.operator")}
               select
               value={form.op || (data.nodeType === "binary" ? "+" : "neg")}
               onChange={(e) => setForm({ ...form, op: e.target.value })}
@@ -105,40 +107,40 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
           {data.nodeType === "expr" && (
             <>
               <TextField
-                label="表达式"
+                label={t("dag.nodeEdit.expression")}
                 value={form.expr || ""}
                 onChange={(e) => setForm({ ...form, expr: e.target.value })}
                 size="small"
                 fullWidth
                 multiline
                 rows={2}
-                placeholder="a + b * 2"
+                placeholder={t("dag.nodeEdit.exprPlaceholder")}
               />
               <Typography variant="caption" sx={{ color: "#888" }}>
-                表达式中的变量名需与连线上的 handle 名称匹配
+                {t("dag.nodeEdit.exprHint")}
               </Typography>
             </>
           )}
 
           {data.nodeType === "condition" && (
             <Typography variant="caption" sx={{ color: "#888" }}>
-              条件节点通过连线绑定 cond/true/false 三个输入
+              {t("dag.nodeEdit.conditionHint")}
             </Typography>
           )}
 
           {data.nodeType === "user_input" && (
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              <TextField label="默认值" type="number" value={form.default ?? 0} onChange={(e) => setForm({ ...form, default: parseFloat(e.target.value) || 0 })} size="small" />
-              <TextField label="最小值" type="number" value={form.min ?? 0} onChange={(e) => setForm({ ...form, min: parseFloat(e.target.value) || 0 })} size="small" />
-              <TextField label="最大值" type="number" value={form.max ?? 100} onChange={(e) => setForm({ ...form, max: parseFloat(e.target.value) || 100 })} size="small" />
-              <TextField label="步长" type="number" value={form.step ?? 1} onChange={(e) => setForm({ ...form, step: parseFloat(e.target.value) || 1 })} size="small" />
+              <TextField label={t("dag.nodeEdit.defaultVal")} type="number" value={form.default ?? 0} onChange={(e) => setForm({ ...form, default: parseFloat(e.target.value) || 0 })} size="small" />
+              <TextField label={t("dag.nodeEdit.minVal")} type="number" value={form.min ?? 0} onChange={(e) => setForm({ ...form, min: parseFloat(e.target.value) || 0 })} size="small" />
+              <TextField label={t("dag.nodeEdit.maxVal")} type="number" value={form.max ?? 100} onChange={(e) => setForm({ ...form, max: parseFloat(e.target.value) || 100 })} size="small" />
+              <TextField label={t("dag.nodeEdit.step")} type="number" value={form.step ?? 1} onChange={(e) => setForm({ ...form, step: parseFloat(e.target.value) || 1 })} size="small" />
             </Box>
           )}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>取消</Button>
-        <Button variant="contained" onClick={handleSave}>保存</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
+        <Button variant="contained" onClick={handleSave}>{t("common.save")}</Button>
       </DialogActions>
     </Dialog>
   );

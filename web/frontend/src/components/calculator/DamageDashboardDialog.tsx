@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Box,
 } from "@mui/material";
@@ -10,18 +11,18 @@ interface DamageDashboardDialogProps {
   snapshot: DamageSnapshot | null;
 }
 
-/** 对齐桌面 QtDamageDashboardDialog：轮转段伤 + 乘区占比 */
 export default function DamageDashboardDialog({ open, onClose, snapshot }: DamageDashboardDialogProps) {
+  const { t } = useTranslation();
   const segmentPie = snapshot?.segment_totals ?? null;
   const zoneShare = snapshot?.zone_share_percent ?? undefined;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>伤害仪表盘</DialogTitle>
+      <DialogTitle>{t("damageDashboard.title")}</DialogTitle>
       <DialogContent dividers>
         {!snapshot ? (
           <Box sx={{ py: 4, textAlign: "center", color: "text.secondary" }}>
-            请先选择角色与武器并点击「确认选择」。
+            {t("damageDashboard.selectCharWeaponHint")}
           </Box>
         ) : (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
@@ -35,7 +36,7 @@ export default function DamageDashboardDialog({ open, onClose, snapshot }: Damag
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

@@ -11,13 +11,21 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
+// Data access keys — kept as Chinese for charData field lookups
 const SKILL_TYPES = ["战技", "连携技", "终结技"] as const;
 const SKILL_FIELDS = ["战技倍率", "连携技倍率", "终结技倍率"] as const;
 
+// i18n display mapping for skill types
+const SKILL_TYPE_I18N: Record<string, string> = {
+  "战技": "multiSkill.skillTypes.combatSkill",
+  "连携技": "multiSkill.skillTypes.chainSkill",
+  "终结技": "multiSkill.skillTypes.finisher",
+};
+
 export interface SegmentSpec {
   key: string;
-  label: string;
   skillType: string;
   segmentIndex: number;
   multiplierPercent: number;
@@ -66,7 +74,6 @@ function extractSegmentSpecs(
 
       specs.push({
         key,
-        label: `${skillType} 第${segIdx + 1}段 (${Math.round(multiplierPct)}%) · ${damageType}`,
         skillType,
         segmentIndex: segIdx + 1,
         multiplierPercent: multiplierPct,
@@ -98,6 +105,7 @@ export default function MultiSkillPanel({
   skillLevels = [0, 0, 0],
   onChange,
 }: MultiSkillPanelProps) {
+  const { t } = useTranslation();
   const [useManual, setUseManual] = useState(false);
   const [damageComponentMode, setDamageComponentMode] = useState("skill_and_abnormal");
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -149,7 +157,7 @@ export default function MultiSkillPanel({
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Typography variant="subtitle2" gutterBottom>
-        多技能次数
+        {t("multiSkill.title")}
       </Typography>
 
       <FormControlLabel
@@ -160,62 +168,67 @@ export default function MultiSkillPanel({
             size="small"
           />
         }
-        label={<Typography variant="body2">使用手动次数</Typography>}
+        label={<Typography variant="body2">{t("multiSkill.useManual")}</Typography>}
       />
 
       {useManual && (
         <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1.5 }}>
           {segmentSpecs.length === 0 && (
             <Typography variant="caption" color="text.secondary">
-              请先选择角色并设置技能等级
+              {t("multiSkill.selectCharAndSkillFirst")}
             </Typography>
           )}
 
-          {segmentSpecs.map((spec) => (
-            <Box
-              key={spec.key}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{ minWidth: { xs: 140, sm: 200 }, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+          {segmentSpecs.map((spec) => {
+            const displayType = SKILL_TYPE_I18N[spec.skillType]
+              ? t(SKILL_TYPE_I18N[spec.skillType])
+              : spec.skillType;
+            return (
+              <Box
+                key={spec.key}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
               >
-                {spec.label}
-              </Typography>
-              <TextField
-                size="small"
-                type="number"
-                value={counts[spec.key] ?? 0}
-                onChange={(e) => handleCountChange(spec.key, parseInt(e.target.value) || 0)}
-                slotProps={{ htmlInput: { min: 0, max: 99, step: 1 } }}
-                sx={{ width: 80 }}
-              />
-              <Typography variant="caption" color="text.secondary">
-                次
-              </Typography>
-            </Box>
-          ))}
+                <Typography
+                  variant="body2"
+                  sx={{ minWidth: { xs: 140, sm: 200 }, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                >
+                  {displayType} {t("totalDamage.segment", { n: spec.segmentIndex })} ({Math.round(spec.multiplierPercent)}%) · {spec.damageType}
+                </Typography>
+                <TextField
+                  size="small"
+                  type="number"
+                  value={counts[spec.key] ?? 0}
+                  onChange={(e) => handleCountChange(spec.key, parseInt(e.target.value) || 0)}
+                  slotProps={{ htmlInput: { min: 0, max: 99, step: 1 } }}
+                  sx={{ width: 80 }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  {t("multiSkill.countUnit")}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
       )}
 
       <Box sx={{ mt: 2, display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>伤害口径</InputLabel>
+          <InputLabel>{t("multiSkill.damageScope")}</InputLabel>
           <Select
             value={damageComponentMode}
-            label="伤害口径"
+            label={t("multiSkill.damageScope")}
             onChange={(e) => {
               setDamageComponentMode(e.target.value);
               notifyChange({ damageComponentMode: e.target.value });
             }}
           >
-            <MenuItem value="skill_and_abnormal">技能+异常</MenuItem>
-            <MenuItem value="skill_only">仅技能</MenuItem>
-            <MenuItem value="abnormal_only">仅异常</MenuItem>
+            <MenuItem value="skill_and_abnormal">{t("multiSkill.skillAndAbnormal")}</MenuItem>
+            <MenuItem value="skill_only">{t("multiSkill.skillOnly")}</MenuItem>
+            <MenuItem value="abnormal_only">{t("multiSkill.abnormalOnly")}</MenuItem>
           </Select>
         </FormControl>
       </Box>

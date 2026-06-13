@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Paper, Typography, useTheme } from "@mui/material";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
@@ -15,6 +16,7 @@ interface DamageChartProps {
 }
 
 export default function DamageChart({ outputValues, zoneShare }: DamageChartProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const textColor = theme.palette.text.primary;
   const hasPieData = outputValues && Object.keys(outputValues).length > 1;
@@ -95,12 +97,12 @@ export default function DamageChart({ outputValues, zoneShare }: DamageChartProp
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Typography variant="subtitle2" gutterBottom>
-        伤害可视化
+        {t("damageChart.title")}
       </Typography>
 
       {!hasPieData && (!outputValues || Object.keys(outputValues).length === 0) && (
         <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-          尚无足够数据生成图表
+          {t("damageChart.noData")}
         </Typography>
       )}
 
@@ -119,7 +121,7 @@ export default function DamageChart({ outputValues, zoneShare }: DamageChartProp
       {zoneOption && (
         <Box sx={{ height: 220, mt: hasPieData || barOption ? 2 : 0 }}>
           <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
-            乘区贡献占比
+            {t("damageChart.zoneContribution")}
           </Typography>
           <ReactEChartsCore
             echarts={echarts}

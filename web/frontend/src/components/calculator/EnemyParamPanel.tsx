@@ -46,6 +46,14 @@ function enemyToParams(enemy: EnemyInfo): EnemyParams {
   };
 }
 
+const ENEMY_TIER_I18N: Record<string, string> = {
+  普通: "enemyTiers.normal",
+  进阶: "enemyTiers.advanced",
+  精英: "enemyTiers.elite",
+  头目: "enemyTiers.boss",
+  领袖: "enemyTiers.leader",
+};
+
 export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps) {
   const { t } = useTranslation();
   const [enemies, setEnemies] = useState<EnemyInfo[]>([]);
@@ -178,7 +186,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="连击层数 (0–4)"
+              label={t("enemy.comboStacks")}
               type="number"
               value={params.combo_stacks}
               onChange={(e) =>
@@ -190,7 +198,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="破防层数 (0–4)"
+              label={t("enemy.breakDefenseStacks")}
               type="number"
               value={params.break_defense_stacks}
               onChange={(e) =>
@@ -205,7 +213,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="附带效果倍率"
+              label={t("enemy.attachedEffectMultiplier")}
               type="number"
               value={params.attached_effect_multiplier}
               onChange={(e) =>
@@ -217,7 +225,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="腐蚀计时 (秒)"
+              label={t("enemy.corrosionDuration")}
               type="number"
               value={params.corrosion_duration_seconds}
               onChange={(e) =>
@@ -227,10 +235,10 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
               slotProps={{ htmlInput: { min: 0, max: 15, step: 0.1 } }}
             />
             <FormControl size="small" fullWidth>
-              <InputLabel>敌人等阶</InputLabel>
+              <InputLabel>{t("enemy.tier")}</InputLabel>
               <Select
                 value={params.enemy_tier}
-                label="敌人等阶"
+                label={t("enemy.tier")}
                 onChange={(e) => {
                   updateParam("enemy_tier", e.target.value);
                   setTimeout(handleBlur, 0);
@@ -238,7 +246,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
               >
                 {ENEMY_TIERS.map((tier) => (
                   <MenuItem key={tier} value={tier}>
-                    {tier}
+                    {ENEMY_TIER_I18N[tier] ? t(ENEMY_TIER_I18N[tier]) : tier}
                   </MenuItem>
                 ))}
               </Select>
@@ -246,7 +254,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
             <TextField
               size="small"
               fullWidth
-              label="失衡效率加成"
+              label={t("enemy.imbalanceEfficiency")}
               type="number"
               value={params.imbalance_efficiency_bonus}
               onChange={(e) =>
@@ -269,7 +277,7 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
                   size="small"
                 />
               }
-              label={<Typography variant="body2">失衡状态</Typography>}
+              label={<Typography variant="body2">{t("enemy.imbalanced")}</Typography>}
             />
             <FormControlLabel
               control={
@@ -282,11 +290,11 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
                   size="small"
                 />
               }
-              label={<Typography variant="body2">真实伤害</Typography>}
+              label={<Typography variant="body2">{t("enemy.trueDamage")}</Typography>}
             />
             <Box sx={{ flex: 1 }} />
             <Button size="small" variant="text" startIcon={<RestartAltIcon />} onClick={handleReset}>
-              恢复默认
+              {t("enemy.resetDefault")}
             </Button>
           </Box>
         </Box>

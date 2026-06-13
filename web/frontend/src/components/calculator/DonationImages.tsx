@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Typography } from "@mui/material";
 import {
   DONATION_API_BASE,
@@ -12,8 +13,19 @@ interface DonationImagesProps {
 
 type ResolvedSlot = { label: string; file: string | null };
 
+const LABEL_I18N_MAP: Record<string, string> = {
+  "微信赞赏码": "donation.weChatLabel",
+  "爱发电": "donation.afdianLabel",
+};
+
+function resolveLabel(t: (key: string, options?: Record<string, unknown>) => string, label: string): string {
+  const key = LABEL_I18N_MAP[label];
+  return key ? t(key) : label;
+}
+
 /** 按槽位尝试候选文件名（微信 jpg / 爱发电 png 等可混用） */
 export default function DonationImages({ maxWidth = 280 }: DonationImagesProps) {
+  const { t } = useTranslation();
   const [slots, setSlots] = useState<ResolvedSlot[]>(() =>
     DONATION_IMAGE_SLOTS.map((s) => ({ label: s.label, file: null })),
   );
@@ -72,8 +84,7 @@ export default function DonationImages({ maxWidth = 280 }: DonationImagesProps) 
     <Box sx={{ py: 1 }}>
       {visible.length === 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
-          暂未配置捐赠二维码（请将 donation_q.jpg、afdian_qr.png 等放入
-          resources/donation/ 并重新部署）
+          {t("donation.noQrConfigured")}
         </Typography>
       )}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "center" }}>
@@ -83,11 +94,11 @@ export default function DonationImages({ maxWidth = 280 }: DonationImagesProps) 
               <Box
                 component="img"
                 src={donationImageUrl(file)}
-                alt={label}
+                alt={resolveLabel(t, label)}
                 sx={{ maxWidth, width: "100%", borderRadius: 1 }}
               />
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                {label}
+                {resolveLabel(t, label)}
               </Typography>
             </Box>
           ) : null,

@@ -1,5 +1,6 @@
 import { Box, Slider, Typography, Paper, Chip } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface WeaponSkillPanelProps {
   weaponData: Record<string, unknown> | null;
@@ -18,6 +19,7 @@ interface SpecialSkillSpec {
 }
 
 export default function WeaponSkillPanel({ weaponData, onChange }: WeaponSkillPanelProps) {
+  const { t } = useTranslation();
   const normalSkills = useMemo<NormalSkillSpec[]>(() => {
     if (!weaponData) return [];
     const raw = weaponData["normal_skills"];
@@ -87,7 +89,7 @@ export default function WeaponSkillPanel({ weaponData, onChange }: WeaponSkillPa
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <Typography variant="subtitle2" sx={{ mb: 1, color: "text.secondary" }}>
-        武器技能等级
+        {t("weaponSkillPanel.title")}
       </Typography>
       {normalSkills.map((ns, i) => (
         <Box key={`n${i}`} sx={{ mb: 1 }}>
@@ -112,7 +114,7 @@ export default function WeaponSkillPanel({ weaponData, onChange }: WeaponSkillPa
               特殊·{ss.name}: Lv.{values[`special_skill_${i + 1}_level`] ?? 1}
             </Typography>
             {ss.maxStack > 1 && (
-              <Chip label={`${values[`special_skill_${i + 1}_stack`] ?? 0}/${ss.maxStack}层`} size="small" variant="outlined" />
+              <Chip label={t("weaponSkillPanel.stackCount", { current: values[`special_skill_${i + 1}_stack`] ?? 0, max: ss.maxStack })} size="small" variant="outlined" />
             )}
           </Box>
           <Slider
@@ -127,7 +129,7 @@ export default function WeaponSkillPanel({ weaponData, onChange }: WeaponSkillPa
           {ss.maxStack > 1 && (
             <Box sx={{ ml: 2 }}>
               <Typography variant="caption" color="text.secondary">
-                叠加层数
+                {t("weaponSkillPanel.stackSlider")}
               </Typography>
               <Slider
                 size="small"

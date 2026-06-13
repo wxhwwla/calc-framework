@@ -3,6 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Typography, Box, LinearProgress,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface OCRUploadDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ const isPythonAnywhere = (() => {
 })();
 
 export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDialogProps) {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +32,7 @@ export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDi
       formData.append("file", file);
       const r = await fetch("/api/ocr/detect", { method: "POST", body: formData });
       if (r.status === 501) {
-        throw new Error("OCR 未部署（线上站不支持；请用桌面版截图识装）");
+        throw new Error(t("ocrDialog.notDeployed"));
       }
       if (!r.ok) throw new Error(await r.text());
       const data = await r.json();
@@ -41,15 +43,15 @@ export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDi
     } finally {
       setLoading(false);
     }
-  }, [file, onResult, onClose]);
+  }, [file, onResult, onClose, t]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>截图识装 (OCR)</DialogTitle>
+      <DialogTitle>{t("ocrDialog.title")}</DialogTitle>
       <DialogContent>
         {isPythonAnywhere && (
           <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
-            PythonAnywhere 未安装 OCR 依赖；请使用桌面计算器「截图识装」。
+            {t("ocrDialog.pythonAnywhereNotice")}
           </Typography>
         )}
         <Box sx={{ mb: 2 }}>
@@ -63,7 +65,7 @@ export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDi
         </Box>
         {file && (
           <Typography variant="body2" color="text.secondary">
-            已选择: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+            {t("ocrDialog.selected")}: {file.name} ({(file.size / 1024).toFixed(1)} KB)
           </Typography>
         )}
         {loading && <LinearProgress sx={{ mt: 1 }} />}
@@ -74,9 +76,9 @@ export default function OCRUploadDialog({ open, onClose, onResult }: OCRUploadDi
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>取消</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button variant="contained" onClick={handleUpload} disabled={!file || loading}>
-          {loading ? "识别中..." : "识别"}
+          {loading ? t("ocrDialog.recognizing") : t("ocrDialog.recognize")}
         </Button>
       </DialogActions>
     </Dialog>

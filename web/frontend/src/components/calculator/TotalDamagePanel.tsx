@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Box, Paper, Typography, Divider } from "@mui/material";
 import type { DamageSnapshot } from "../../api/compute";
 
@@ -6,7 +7,14 @@ interface TotalDamagePanelProps {
   loading: boolean;
 }
 
+/** DO NOT i18n — these match API segment key prefixes */
 const SKILL_TYPE_ORDER = ["战技", "连携技", "终结技"];
+
+const SKILL_TYPE_I18N: Record<string, string> = {
+  "战技": "totalDamage.skillTypes.combatSkill",
+  "连携技": "totalDamage.skillTypes.chainSkill",
+  "终结技": "totalDamage.skillTypes.finisher",
+};
 
 function parseSegmentKey(key: string): { skillType: string; segNum: number } {
   const parts = key.split(":");
@@ -15,11 +23,13 @@ function parseSegmentKey(key: string): { skillType: string; segNum: number } {
 }
 
 export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanelProps) {
+  const { t } = useTranslation();
+
   if (loading && !snapshot) {
     return (
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          伤害快照
+          {t("totalDamage.title")}
         </Typography>
       </Paper>
     );
@@ -41,12 +51,12 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        伤害快照
+        {t("totalDamage.title")}
       </Typography>
 
       <Box sx={{ textAlign: "center", mb: 2 }}>
         <Typography variant="caption" color="text.secondary">
-          加权总伤
+          {t("totalDamage.weightedTotal")}
         </Typography>
         <Typography variant="h5" fontWeight="bold" color="primary">
           {snapshot.weighted_total_damage.toLocaleString(undefined, {
@@ -59,6 +69,7 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
       {orderedTypes.map((skillType) => {
         const keys = grouped.get(skillType)!;
         const typeTotal = snapshot.skill_type_totals[skillType] ?? 0;
+        const i18nKey = SKILL_TYPE_I18N[skillType] ?? skillType;
         return (
           <Box key={skillType} sx={{ mb: 1.5 }}>
             <Typography
@@ -67,7 +78,7 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
               color="warning.main"
               sx={{ mb: 0.5 }}
             >
-              {skillType} ({typeTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })})
+              {t(i18nKey)} ({typeTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })})
             </Typography>
             {keys.map((key) => {
               const { segNum } = parseSegmentKey(key);
@@ -81,7 +92,7 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
                   variant="caption"
                   sx={{ display: "block", ml: 2, lineHeight: 1.8, color: "text.secondary" }}
                 >
-                  第{segNum}段: {single.toFixed(1)} x {count} = {st.toFixed(1)} ({pct.toFixed(1)}%)
+                  {t("totalDamage.segment", { n: segNum })}: {single.toFixed(1)} x {count} = {st.toFixed(1)} ({pct.toFixed(1)}%)
                 </Typography>
               );
             })}
@@ -89,7 +100,7 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
               variant="caption"
               sx={{ display: "block", ml: 2, color: "success.main", fontWeight: "bold" }}
             >
-              小计: {typeTotal.toFixed(1)}
+              {t("totalDamage.subtotal")}: {typeTotal.toFixed(1)}
             </Typography>
           </Box>
         );
@@ -98,7 +109,7 @@ export default function TotalDamagePanel({ snapshot, loading }: TotalDamagePanel
       <Divider sx={{ my: 1 }} />
 
       <Typography variant="caption" color="text.secondary">
-        选中: {snapshot.selected_skill_label}
+        {t("totalDamage.selected")}: {snapshot.selected_skill_label}
       </Typography>
     </Paper>
   );
