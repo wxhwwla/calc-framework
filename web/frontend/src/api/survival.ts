@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/survival";
 
 export interface SurvivalEstimateRequest {
@@ -55,7 +57,7 @@ export async function fetchSurvivalEstimate(
   });
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`生存估算失败: ${text}`);
+    throw new Error(`${i18n.t("api.survivalEstimateFailed")}: ${text}`);
   }
   return r.json();
 }

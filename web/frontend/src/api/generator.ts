@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/generator";
 
 export interface TemplateInfo {
@@ -133,7 +135,7 @@ export async function aiParseFormula(req: AIFormulaRequest): Promise<AIFormulaRe
   });
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`AI 解析失败: ${text}`);
+    throw new Error(`${i18n.t("api.aiParseFailed")}: ${text}`);
   }
   return r.json();
 }

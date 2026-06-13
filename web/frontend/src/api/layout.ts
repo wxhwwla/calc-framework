@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/layout";
 
 export interface LayoutSection {
@@ -43,25 +45,25 @@ export interface AttrSchemaEntry {
 
 export async function fetchLayout(): Promise<LayoutDefinition> {
   const r = await fetch(BASE);
-  if (!r.ok) throw new Error(`获取 layout 失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.layoutGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
 export async function fetchVariables(): Promise<Record<string, DagVariable>> {
   const r = await fetch(`${BASE}/variables`);
-  if (!r.ok) throw new Error(`获取 variables 失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.variablesGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
 export async function fetchAttrSchema(): Promise<AttrSchemaEntry[]> {
   const r = await fetch(`${BASE}/schema`);
-  if (!r.ok) throw new Error(`获取 schema 失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.schemaGetFailed")}: ${r.statusText}`);
   const data = await r.json();
   return data.attributes;
 }
 
 export async function fetchDag(): Promise<Record<string, unknown>> {
   const r = await fetch(`${BASE}/dag`);
-  if (!r.ok) throw new Error(`获取 DAG 失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.dagGetFailed")}: ${r.statusText}`);
   return r.json();
 }

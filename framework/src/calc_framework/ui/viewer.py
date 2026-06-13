@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 from ..dag.schema import DAGVariable
 from ..dag.service import DAGService
 from .compute_sheet import ComputeSheet
+from .i18n import tr
 from .layout import Layout
 from .theme import ThemeManager
 from .viewer_events import CalcPackViewerEventMixin
@@ -45,14 +46,12 @@ from .viewer_render import CalcPackViewerRenderMixin
 
 
 class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainWindow):
-
     """通用 .calcpack 查看器 — 加载计算包并渲染交互界面。"""
 
     def __init__(self, calcpack_path: str | None = None):
-
         super().__init__()
 
-        self.setWindowTitle("计算包查看器")
+        self.setWindowTitle(tr("desktop.viewer.windowTitle"))
 
         self.resize(1100, 750)
 
@@ -106,7 +105,7 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._left_layout.setContentsMargins(4, 4, 4, 4)
 
-        self._entity_group = QGroupBox("选择实体")
+        self._entity_group = QGroupBox(tr("desktop.viewer.selectEntity"))
 
         self._entity_form = QFormLayout(self._entity_group)
 
@@ -134,29 +133,29 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._right_layout.setContentsMargins(4, 4, 4, 4)
 
-        self._info_group = QGroupBox("包信息")
+        self._info_group = QGroupBox(tr("desktop.viewer.packInfo"))
 
         info_form = QFormLayout(self._info_group)
 
-        self._info_name = QLabel("—")
+        self._info_name = QLabel(tr("desktop.viewer.unknown"))
 
-        info_form.addRow("名称:", self._info_name)
+        info_form.addRow(tr("desktop.viewer.labelName"), self._info_name)
 
-        self._info_game = QLabel("—")
+        self._info_game = QLabel(tr("desktop.viewer.unknown"))
 
-        info_form.addRow("游戏:", self._info_game)
+        info_form.addRow(tr("desktop.viewer.labelGame"), self._info_game)
 
-        self._info_version = QLabel("—")
+        self._info_version = QLabel(tr("desktop.viewer.unknown"))
 
-        info_form.addRow("版本:", self._info_version)
+        info_form.addRow(tr("desktop.viewer.labelVersion"), self._info_version)
 
-        self._info_vars = QLabel("—")
+        self._info_vars = QLabel(tr("desktop.viewer.unknown"))
 
-        info_form.addRow("变量:", self._info_vars)
+        info_form.addRow(tr("desktop.viewer.labelVariables"), self._info_vars)
 
-        self._info_outputs = QLabel("—")
+        self._info_outputs = QLabel(tr("desktop.viewer.unknown"))
 
-        info_form.addRow("输出:", self._info_outputs)
+        info_form.addRow(tr("desktop.viewer.labelOutputs"), self._info_outputs)
 
         self._right_layout.addWidget(self._info_group)
 
@@ -172,7 +171,7 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         bar = QStatusBar()
 
-        self._status_label = QLabel("就绪 — 打开一个 .calcpack 文件开始使用")
+        self._status_label = QLabel(tr("desktop.viewer.statusReady"))
 
         bar.addWidget(self._status_label)
 
@@ -187,18 +186,16 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
         self.setStatusBar(bar)
 
         if calcpack_path:
-
             path_copy = calcpack_path
 
             QTimer.singleShot(100, lambda p=path_copy: self.load_calcpack(p))
 
     def _build_menu(self) -> None:
-
         mb = self.menuBar()
 
-        file_menu = mb.addMenu("文件")
+        file_menu = mb.addMenu(tr("desktop.viewer.menuFile"))
 
-        open_action = QAction("打开 .calcpack...", self)
+        open_action = QAction(tr("desktop.viewer.menuOpenCalcpack"), self)
 
         open_action.setShortcut("Ctrl+O")
 
@@ -208,7 +205,7 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         file_menu.addSeparator()
 
-        exit_action = QAction("退出", self)
+        exit_action = QAction(tr("desktop.viewer.menuExit"), self)
 
         exit_action.setShortcut("Ctrl+Q")
 
@@ -216,15 +213,15 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         file_menu.addAction(exit_action)
 
-        tools_menu = mb.addMenu("工具")
+        tools_menu = mb.addMenu(tr("desktop.viewer.menuTools"))
 
-        plugin_action = QAction("插件管理器...", self)
+        plugin_action = QAction(tr("desktop.viewer.menuPluginManager"), self)
 
         plugin_action.triggered.connect(self._show_plugin_manager_dialog)
 
         tools_menu.addAction(plugin_action)
 
-        theme_menu = mb.addMenu("主题")
+        theme_menu = mb.addMenu(tr("desktop.viewer.menuTheme"))
 
         self._theme_actions: dict[str, QAction] = {}
 
@@ -235,7 +232,6 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
         theme_group.triggered.connect(self._on_theme_switched)
 
         for key in self._theme_manager.theme_names:
-
             display = self._theme_manager.get_theme(key).get("name", key)
 
             action = QAction(display, self, checkable=True)
@@ -243,7 +239,6 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
             action.setData(key)
 
             if key == self._theme_manager.current_name:
-
                 action.setChecked(True)
 
             theme_group.addAction(action)
@@ -254,9 +249,9 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         file_menu.addSeparator()
 
-        layout_menu = mb.addMenu("布局")
+        layout_menu = mb.addMenu(tr("desktop.viewer.menuLayout"))
 
-        toggle_left_action = QAction("切换左侧面板", self)
+        toggle_left_action = QAction(tr("desktop.viewer.menuToggleLeft"), self)
 
         toggle_left_action.setShortcut("Ctrl+B")
 
@@ -264,7 +259,7 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         layout_menu.addAction(toggle_left_action)
 
-        toggle_right_action = QAction("切换右侧面板", self)
+        toggle_right_action = QAction(tr("desktop.viewer.menuToggleRight"), self)
 
         toggle_right_action.setShortcut("Ctrl+R")
 
@@ -272,9 +267,9 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         layout_menu.addAction(toggle_right_action)
 
-        help_menu = mb.addMenu("帮助")
+        help_menu = mb.addMenu(tr("desktop.viewer.menuHelp"))
 
-        help_action = QAction("使用说明", self)
+        help_action = QAction(tr("desktop.viewer.menuHelpUsage"), self)
 
         help_action.setShortcut("F1")
 
@@ -288,7 +283,6 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
 
 def open_calcpack(path: str | Path) -> None:
-
     """便捷函数：加载并显示 .calcpack 文件。"""
 
     QApplication.instance() or QApplication([])
@@ -300,7 +294,6 @@ def open_calcpack(path: str | Path) -> None:
 
 
 def main() -> None:
-
     """CLI 入口。
 
     用法::
@@ -313,14 +306,13 @@ def main() -> None:
 
     app = QApplication(sys.argv)
 
-    app.setApplicationName("计算包查看器")
+    app.setApplicationName(tr("app.calcpackViewer"))
 
     path = sys.argv[1] if len(sys.argv) > 1 else None
 
     viewer = CalcPackViewer(path)
 
     if path:
-
         viewer.load_calcpack(path)
 
     viewer.show()
@@ -329,5 +321,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-
     main()

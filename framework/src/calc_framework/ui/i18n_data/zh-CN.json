@@ -1,0 +1,159 @@
+{
+  "app": {
+    "title": "游戏计算器",
+    "calcpackViewer": "计算包查看器",
+    "launcher": "游戏计算器启动器",
+    "devToolkit": "开发者工具箱"
+  },
+
+  "common": {
+    "close": "关闭",
+    "ok": "确定",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "search": "搜索",
+    "loading": "加载中…",
+    "error": "错误",
+    "success": "成功",
+    "noData": "暂无数据",
+    "back": "返回",
+    "submit": "提交",
+    "reset": "重置",
+    "export": "导出",
+    "import": "导入",
+    "refresh": "刷新",
+    "language": "语言",
+    "help": "帮助",
+    "name": "名称",
+    "type": "类型",
+    "version": "版本",
+    "description": "描述",
+    "operations": "操作",
+    "enabled": "启用",
+    "disabled": "禁用",
+    "all": "全部",
+    "default": "默认",
+    "unknown": "未知",
+    "selectFile": "选择文件",
+    "notOfficial": "非官方工具",
+    "openSource": "开源/许可",
+    "donate": "捐赠",
+    "file": "文件",
+    "tools": "工具",
+    "theme": "主题",
+    "layout": "布局",
+    "entity": "实体",
+    "select": "选择",
+    "info": "信息",
+    "ready": "就绪",
+    "label": "标签"
+  },
+
+  "desktop": {
+    "viewer": {
+      "windowTitle": "计算包查看器",
+      "selectEntity": "选择实体",
+      "packInfo": "包信息",
+      "statusReady": "就绪 — 打开一个 .calcpack 文件开始使用",
+      "labelName": "名称:",
+      "labelGame": "游戏:",
+      "labelVersion": "版本:",
+      "labelVariables": "变量:",
+      "labelOutputs": "输出:",
+      "unknown": "—",
+      "menuFile": "文件",
+      "menuOpenCalcpack": "打开 .calcpack...",
+      "menuExit": "退出",
+      "menuTools": "工具",
+      "menuPluginManager": "插件管理器...",
+      "menuTheme": "主题",
+      "menuLayout": "布局",
+      "menuToggleLeft": "切换左侧面板",
+      "menuToggleRight": "切换右侧面板",
+      "menuHelp": "帮助",
+      "menuHelpUsage": "使用说明",
+      "loadFailed": "加载失败",
+      "themeSwitched": "主题切换为: {name}",
+      "helpDialogTitle": "CalcPackViewer 使用说明"
+    },
+
+    "launcher": {
+      "windowTitle": "游戏计算器启动器 v{version}",
+      "selectAdapter": "选择游戏适配器",
+      "noAdapters": "未发现游戏适配包。请确认 framework/adapters/ 下存在游戏 meta.json。",
+      "launch": "启动",
+      "fullApp": "完整桌面计算器",
+      "genericSheet": "通用 ComputeSheet",
+      "openCalcpack": "打开 .calcpack…",
+      "checkUpdate": "检查更新",
+      "logToggle": "📋 日志",
+      "github": "GitHub",
+      "calcHub": "Calc Hub",
+      "adapterCount": "已发现 {n} 个游戏",
+      "adapterLaunched": "已启动：{name}",
+      "calcpackOpened": "已打开：{name}",
+      "launchFailed": "启动失败",
+      "openFailed": "打开失败",
+      "fileNotFound": "文件不存在：{path}",
+      "updateTitle": "发现新版本",
+      "updateAvailable": "新版本 {version} 可用",
+      "currentVersion": "当前版本: {version}",
+      "noReleaseNotes": "(无发布说明)",
+      "downloadUpdate": "下载更新",
+      "viewRelease": "查看发布说明",
+      "ignoreVersion": "忽略此版本",
+      "updateCompleteTitle": "更新完成",
+      "updateCompleteMsg": "新版本已下载并替换。是否立即重启以应用更新？",
+      "checkingUpdate": "正在检查更新…",
+      "updateFailed": "检查更新失败（网络错误或无 Release）",
+      "upToDate": "已是最新版本 ({version})"
+    },
+
+    "devToolkit": {
+      "windowTitle": "开发者工具箱 v{version}",
+      "sidebarTitle": "  工具",
+      "ready": "就绪",
+      "frameworkVersion": "框架 v{version}",
+      "pageNotRegistered": "页面未注册: {page}",
+      "loadPageFailed": "加载失败: {error}",
+      "tabs": {
+        "dataEditor": "数据编辑",
+        "layoutEditor": "布局编辑",
+        "exportPack": "导出打包",
+        "graphEditor": "图编辑器",
+        "dagDebugger": "DAG 调试器",
+        "calcpackViewer": "计算包查看",
+        "aiGenerator": "AI 生成器",
+        "ocrLabel": "OCR 标注"
+      },
+      "groups": {
+        "config": "📦 配置",
+        "development": "🔧 开发"
+      }
+    },
+
+    "pluginManager": {
+      "windowTitle": "插件管理器 ({n} 已注册)",
+      "importPlugin": "导入 .calcplugin...",
+      "buildPlugin": "打包插件目录...",
+      "importSuccess": "导入成功: {name}",
+      "importFailed": "导入失败: {error}",
+      "buildSuccess": "打包成功: {name}",
+      "buildFailed": "打包失败: {error}",
+      "noPlugins": "暂无已注册插件"
+    },
+
+    "log": {
+      "panelTitle": "日志",
+      "clear": "清除"
+    },
+
+    "themeNames": {
+      "dark": "暗色主题",
+      "light": "亮色主题"
+    }
+  }
+}

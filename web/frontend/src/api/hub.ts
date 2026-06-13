@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const HUB_BASE = "/api/hub";
 
 export interface HubPackInfo {
@@ -133,7 +135,7 @@ export async function uploadHubAdapter(
   });
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`上传失败 (${resp.status}): ${text}`);
+    throw new Error(`${i18n.t("api.uploadFailed")} (${resp.status}): ${text}`);
   }
   return resp.json();
 }
@@ -142,7 +144,7 @@ export async function downloadHubAdapter(adapterId: string): Promise<void> {
   const resp = await fetch(`${HUB_BASE}/download/${encodeURIComponent(adapterId)}`);
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`下载失败 (${resp.status}): ${text}`);
+    throw new Error(`${i18n.t("api.downloadFailed")} (${resp.status}): ${text}`);
   }
   const blob = await resp.blob();
   const disposition = resp.headers.get("Content-Disposition") || "";

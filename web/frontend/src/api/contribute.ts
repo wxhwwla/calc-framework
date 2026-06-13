@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/contribute";
 
 export async function validateContributeData(data: unknown): Promise<{ valid: boolean; errors: string[] }> {
@@ -17,7 +19,7 @@ export async function submitContributeData(data: unknown): Promise<{ message: st
   });
   if (!r.ok) {
     const err = await r.json().catch(() => ({ detail: r.statusText }));
-    throw new Error(err.detail || "提交失败");
+    throw new Error(err.detail || i18n.t("api.submitFailed"));
   }
   return r.json();
 }
