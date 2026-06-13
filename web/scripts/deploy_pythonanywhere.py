@@ -14,6 +14,7 @@
   python web/scripts/deploy_pythonanywhere.py --upload      # 构建+打包+上传（不重载）
   python web/scripts/deploy_pythonanywhere.py --reload      # 仅重载 Web App
   python web/scripts/deploy_pythonanywhere.py --backend-only # 仅上传后端+WSGI（跳过前端）
+  python web/scripts/deploy_pythonanywhere.py --fast        # 快速部署: git push → /api/admin/deploy，~3分钟
   python web/scripts/deploy_pythonanywhere.py --help        # 查看完整帮助
 
 首次使用:

@@ -701,7 +701,12 @@ python web/scripts/deploy_pythonanywhere.py --validate-token
 # 2. 首次从零部署（创建 Web App + 上传一切）
 python web/scripts/deploy_pythonanywhere.py --setup
 
-# 3. 以后每次更新只需一条命令
+# 3. 以后每次更新，推荐用快速部署（~3 分钟）
+python web/scripts/deploy_pythonanywhere.py --fast
+# git push 后 → 调用服务器 /api/admin/deploy → 后台 git pull + npm build → Reload
+# 无需逐文件上传，比 --all 快 5-10 倍
+
+# 4. 常规全量部署（上传全部文件，~5 分钟）
 python web/scripts/deploy_pythonanywhere.py --all
 # 自动完成：npm run build → zip打包 → 上传 → 服务器git pull+解压+pip → Reload
 # 等待执行完毕，刷新浏览器即可看到最新内容

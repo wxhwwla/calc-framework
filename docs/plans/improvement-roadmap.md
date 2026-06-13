@@ -169,6 +169,7 @@
 | Desktop GUI i18n | 🟡 阶段3 | DesktopTranslator 基础设施完成（282键/15文件），待逐控件翻译 |
 | Web i18n | 🟢 已完成 | ~500+ 键，81 组件 + 17 API 文件全部转换，tsc 零错误 |
 | PA 部署脚本 | 🟢 已完成 | warmup 优化 + 5 并发上传 + 全链路验证 |
+| 快速部署模式 | 🟢 已完成 | `--fast` 标志 + `/api/admin/deploy` 端点：git push 后服务器自部署，~3 分钟 |
 | `web/backend` 覆盖率 | 🔴 ~15% | 基本无后端测试 |
 | Web E2E 测试 | 🔴 少量 | 仅 2 个 spec 文件 |
 
@@ -198,6 +199,7 @@
 | Web i18n 完成（~500 键，81 组件+17 API，tsc 零错误） | ✅ 已完成 | 2026-06-13 | Agent |
 | Desktop i18n 阶段3 基础设施（DesktopTranslator + 282键 + 15文件） | ✅ 基础设施完成 | 2026-06-13 | Agent |
 | PA 部署脚本优化（warmup + 5 并发 + 全链路验证） | ✅ 已完成 | 2026-06-13 | Agent |
+| 快速部署模式实现（--fast + /api/admin/deploy） | ✅ 已完成 | 2026-06-13 | Agent |
 | develop→main 合并（d99fa165，118 文件，9535 行新增） | ✅ 已完成 | 2026-06-13 | Agent |
 
 ---
