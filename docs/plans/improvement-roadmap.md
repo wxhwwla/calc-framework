@@ -88,14 +88,14 @@
 | **方案** | 编写 `tools/data_pipeline/transformers/from_arknights_scout.py`，将 arknights_scout 的 JSON 转换为 EntitySchema 格式 |
 | **完成情况** | 420/422 干员成功转换，16 个空技能干员（机器人等边缘用例）正常跳过。输出 `games/arknights/data/operators_standard.json`。12 个单元测试全部通过 |
 
-### 2. CI 覆盖率门槛偏低
+### 2. CI 覆盖率门槛偏低 ✅ 已提升（2026-06-13）
 
 | 项目 | 说明 |
 |------|------|
 | **问题** | `games/endfield/` 的 CI 覆盖率门槛为 `--fail-under=40`（当前实际 ~64%），`framework/` 全量 ~73% |
 | **影响** | 覆盖率降低不影响 CI 通过，长期可能下滑 |
-| **方案** | 逐步提升门槛：40 → 50 → 60，配合新增测试 |
-| **优先级建议** | 每次 PR 至少新增 10 条覆盖率相关测试，3 轮后可提升到 60 |
+| **方案** | 提升门槛：endfield 40→75，framework 增加 --fail-under=80 |
+| **完成情况** | 2026-06-13: endfield CI 门槛从 65→75（ci.yml + pyproject.toml）；framework CI 新增 --cov-fail-under=80（framework-ci.yml）；framework pyproject.toml 添加 fail_under=80 |
 
 ### 3. Web 后端测试覆盖 ✅ 已完成（2026-06-09）
 
@@ -164,8 +164,8 @@
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
 | GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 749 行（超 400 目标，低于 500 硬顶） |
 | 目录宽度 | ⚠️ 持续监控 | `scripts/` 17 项接近 20 上限 |
-| `games.endfield` 覆盖率 | 🟢 85% | CI 门槛 65%，远超要求 ✅ |
-| `framework` 覆盖率 | 🟢 73% | 超过 70% 目标 ✅ |
+| `games.endfield` 覆盖率 | 🟢 85% | CI 门槛 75%（ci.yml + pyproject.toml） ✅ |
+| `framework` 覆盖率 | 🟢 73% | CI 门槛 80%（framework-ci.yml + pyproject.toml） ✅ |
 | `web/backend` 覆盖率 | 🔴 ~15% | 基本无后端测试 |
 | Web E2E 测试 | 🔴 少量 | 仅 2 个 spec 文件 |
 
@@ -188,6 +188,9 @@
 | 多游戏适配器 README 创建（fps/moba/card_rpg） | ✅ 已完成 | 2026-06-09 | Agent |
 | 框架 pip GUI 限制文档化（README + pyproject.toml） | ✅ 已完成 | 2026-06-09 | Agent |
 | CI 覆盖率门槛抬升（ci.yml 60→65） | ✅ 已完成 | 2026-06-09 | Agent |
+| CI 覆盖率门槛抬升（endfield 65→75, framework 新增 80） | ✅ 已完成 | 2026-06-13 | Agent |
+| framework 测试扩展（test_coverage_expansion.py ~65 测试） | ✅ 已完成 | 2026-06-13 | Agent |
+| endfield 测试扩展（test_coverage_expansion.py ~50 测试） | ✅ 已完成 | 2026-06-13 | Agent |
 | Web 后端集成测试（22 测试用例，26 全量通过） | ✅ 已完成 | 2026-06-09 | Agent |
 
 ---
@@ -211,3 +214,5 @@
 | 2026-06-13 | i18n 阶段1完成（6文档中英分离）+ 阶段2基础设施（Web i18n ~130条，tsc零错误） | Agent |
 | 2026-06-13 | 上传脚本修复：develop/main checkout -b 冲突bug + 错误集更新 | Agent |
 | 2026-06-13 | develop→main 合并完成（d99fa165，118文件，9535行新增） | Agent |
+| 2026-06-13 | 覆盖率扩展：framework +65 tests（inverse/data/config/plugin），endfield +50 tests（equipment/survival/manual_buff/damage） | Agent |
+| 2026-06-13 | CI 门槛更新：endfield 65→75（ci.yml + pyproject.toml），framework 新增 --cov-fail-under=80（framework-ci.yml + pyproject.toml） | Agent |

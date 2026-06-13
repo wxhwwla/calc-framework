@@ -7,6 +7,8 @@ from PySide6.QtCore import QPointF
 from PySide6.QtGui import QBrush, QColor, QFont, QPen
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsRectItem, QGraphicsSimpleTextItem
 
+from calc_framework.ui.i18n import tr
+
 from .ports import PortDirection, PortItem
 from .schema import GraphNode
 
@@ -235,12 +237,12 @@ def _composite_port_labels(source_graph: str) -> tuple[list[str], list[str]]:
             ntype = n.get("type", "")
 
             if ntype == "user_input":
-                label = n.get("label", "") or n.get("id", "输入")
+                label = n.get("label", "") or n.get("id", tr("desktop.graphEditor.nodeTypeInput"))
 
                 in_labels.append(label)
 
             elif ntype == "output":
-                label = n.get("label", "") or n.get("id", "输出")
+                label = n.get("label", "") or n.get("id", tr("desktop.graphEditor.nodeTypeOutput"))
 
                 out_labels.append(label)
 

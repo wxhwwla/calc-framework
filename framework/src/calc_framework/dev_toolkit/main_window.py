@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from calc_framework.logging import get_logger
+from calc_framework.ui.i18n import tr
 
 logger = get_logger(__name__)
 
@@ -40,15 +41,61 @@ def _register_page(page_id: str, widget_class: type[QWidget]) -> None:
 
 # (page_id, label, group)
 _PAGE_DEFS: list[tuple[str, str, str]] = [
-    ("data_editor", "数据编辑", "📦 配置"),
-    ("layout_editor", "布局编辑", "📦 配置"),
-    ("export_pack", "导出打包", "📦 配置"),
-    ("graph_editor", "图编辑器", "🔧 开发"),
-    ("dag_debugger", "DAG 调试器", "🔧 开发"),
-    ("calcpack_viewer", "计算包查看", "🔧 开发"),
-    ("ai_generator", "AI 生成器", "🔧 开发"),
-    ("ocr_label", "OCR 标注", "🔧 开发"),
+    ("data_editor", None, None),  # label/group via tr()
+    ("layout_editor", None, None),
+    ("export_pack", None, None),
+    ("graph_editor", None, None),
+    ("dag_debugger", None, None),
+    ("calcpack_viewer", None, None),
+    ("ai_generator", None, None),
+    ("ocr_label", None, None),
 ]
+
+# Resolved at first access
+_PAGE_DEFS_RESOLVED: list[tuple[str, str, str]] | None = None
+_GROUP_CONFIG = [
+    ("config", "desktop.devToolkit.groups.config"),
+    ("development", "desktop.devToolkit.groups.development"),
+]
+_GROUP_PAGE_MAP = [
+    ("data_editor", "config"),
+    ("layout_editor", "config"),
+    ("export_pack", "config"),
+    ("graph_editor", "development"),
+    ("dag_debugger", "development"),
+    ("calcpack_viewer", "development"),
+    ("ai_generator", "development"),
+    ("ocr_label", "development"),
+]
+
+_TAB_KEY_MAP = {
+    "data_editor": "desktop.devToolkit.tabs.dataEditor",
+    "layout_editor": "desktop.devToolkit.tabs.layoutEditor",
+    "export_pack": "desktop.devToolkit.tabs.exportPack",
+    "graph_editor": "desktop.devToolkit.tabs.graphEditor",
+    "dag_debugger": "desktop.devToolkit.tabs.dagDebugger",
+    "calcpack_viewer": "desktop.devToolkit.tabs.calcpackViewer",
+    "ai_generator": "desktop.devToolkit.tabs.aiGenerator",
+    "ocr_label": "desktop.devToolkit.tabs.ocrLabel",
+}
+
+_GROUP_KEY_MAP = {
+    "config": "desktop.devToolkit.groups.config",
+    "development": "desktop.devToolkit.groups.development",
+}
+
+
+def _get_page_defs() -> list[tuple[str, str, str]]:
+    global _PAGE_DEFS_RESOLVED
+    if _PAGE_DEFS_RESOLVED is not None:
+        return _PAGE_DEFS_RESOLVED
+    result: list[tuple[str, str, str]] = []
+    for page_id, group_id in _GROUP_PAGE_MAP:
+        label = tr(_TAB_KEY_MAP[page_id])
+        group = tr(_GROUP_KEY_MAP[group_id])
+        result.append((page_id, label, group))
+    _PAGE_DEFS_RESOLVED = result
+    return result
 
 
 class _SidebarWidget(QWidget):
@@ -63,7 +110,7 @@ class _SidebarWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        header = QLabel("  工具")
+        header = QLabel(tr("desktop.devToolkit.sidebarTitle"))
         header.setProperty("heading", True)
         header.setFixedHeight(32)
         layout.addWidget(header)
@@ -74,8 +121,9 @@ class _SidebarWidget(QWidget):
         layout.addWidget(self._list)
 
     def _populate(self) -> None:
+        page_defs = _get_page_defs()
         current_group = ""
-        for page_id, label, group in _PAGE_DEFS:
+        for page_id, label, group in page_defs:
             if group != current_group:
                 current_group = group
                 item = QListWidgetItem(group)
@@ -108,7 +156,7 @@ class DevToolkitWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         version = _read_framework_version()
-        self.setWindowTitle("开发者工具箱 v0.1.0")
+        self.setWindowTitle(tr("desktop.devToolkit.windowTitle", version=version))
         self.resize(1400, 900)
 
         # ── 中央区域：侧栏 + 分割器 + 内容 ──
@@ -135,18 +183,20 @@ class DevToolkitWindow(QMainWindow):
         # ── 状态栏 ──
         self._status = QStatusBar()
         self.setStatusBar(self._status)
-        self._status_label = QLabel(f"框架 v{version}")
+        self._status_label = QLabel(tr("desktop.devToolkit.frameworkVersion", version=version))
         self._status.addPermanentWidget(self._status_label)
-        self._status.showMessage("就绪", 5000)
+        self._status.showMessage(tr("desktop.devToolkit.ready"), 5000)
 
         # 默认选中第一项
-        self._sidebar.list_widget.setCurrentRow(1 if _PAGE_DEFS else 0)
+        page_defs = _get_page_defs()
+        self._sidebar.list_widget.setCurrentRow(1 if page_defs else 0)
 
     def _init_pages(self) -> None:
         """懒加载所有页面。"""
         self._pages: dict[str, QWidget] = {}
         self._page_order: list[str] = []
-        for page_id, label, group in _PAGE_DEFS:
+        page_defs = _get_page_defs()
+        for page_id, _label, _group in page_defs:
             self._page_order.append(page_id)
 
     def _ensure_page(self, page_id: str) -> QWidget:
@@ -156,13 +206,13 @@ class DevToolkitWindow(QMainWindow):
 
         cls = _PAGE_REGISTRY.get(page_id)
         if cls is None:
-            w = QLabel(f"页面未注册: {page_id}")
+            w = QLabel(tr("desktop.devToolkit.pageNotRegistered", page=page_id))
         else:
             try:
                 w = cls(self)
             except Exception as exc:
                 logger.exception("加载页面失败: %s", page_id)
-                w = QLabel(f"加载失败: {exc}")
+                w = QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc))
 
         self._pages[page_id] = w
         self._stack.addWidget(w)
@@ -182,7 +232,7 @@ class DevToolkitWindow(QMainWindow):
 def main() -> None:
     """启动开发者工具箱。"""
     app = QApplication.instance() or QApplication(sys.argv)
-    app.setApplicationName("开发者工具箱")
+    app.setApplicationName(tr("app.devToolkit"))
     window = DevToolkitWindow()
     window.show()
     sys.exit(app.exec())

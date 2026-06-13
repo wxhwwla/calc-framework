@@ -1102,12 +1102,62 @@ def _handle_generator_api(environ, start_response):
     return _http_error(start_response, "unknown generator endpoint", 404)
 
 
+def _handle_admin_unpack(environ, start_response):
+    """管理端点：解压 dist.zip（POST 启动 / GET 查询状态）。
+
+    POST: 后台启动 unzip 子进程，立即返回。
+    GET: 返回解压状态（done/count/error）。
+    """
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/admin/unpack-dist"):
+        return None
+
+    import subprocess
+
+    zip_path = _BASE / "web" / "frontend" / "dist.zip"
+    dist_dir = _BASE / "web" / "frontend" / "dist"
+    status_file = _BASE / "web" / "frontend" / ".unpack_status.json"
+
+    if method == "GET":
+        if status_file.is_file():
+            try:
+                status = json.loads(status_file.read_text(encoding="utf-8"))
+                return _json(start_response, status)
+            except Exception:
+                return _json(start_response, {"done": False, "status": "error reading status"})
+        # 检查是否已经解压过（dist/ 有文件且 dist.zip 不存在）
+        if dist_dir.is_dir() and not zip_path.is_file():
+            return _json(start_response, {"done": True, "files": "already extracted"})
+        return _json(start_response, {"done": False, "status": "not started"})
+
+    if method != "POST":
+        return None
+
+    if not zip_path.is_file():
+        return _http_error(start_response, f"dist.zip not found: {zip_path}", 404)
+
+    # 后台解压（避免 WSGI 超时）
+    script = (
+        f"rm -rf {dist_dir} && mkdir -p {dist_dir} && "
+        f"cd {dist_dir} && unzip -oq {zip_path} && "
+        f"rm -f {zip_path} && "
+        f"echo '{{\"done\":true,\"files\":'$(ls -1 | wc -l)'}}' > {status_file}"
+    )
+    try:
+        subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return _json(start_response, {"ok": True, "status": "unpack started in background"})
+    except Exception as e:
+        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+
+
 def application(environ, start_response):
     for handler in (
         _handle_donation,
         _handle_layout_compute,
         _handle_search_api,
         _handle_generator_api,
+        _handle_admin_unpack,
         _handle_hub,
         _handle_pack,
         _handle_adapters,

@@ -9,6 +9,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from calc_framework.ui.i18n import tr
+
 
 def main() -> None:
     from PySide6.QtCore import Qt
@@ -43,7 +45,7 @@ def main() -> None:
     app = QApplication(sys.argv)
 
     window = QMainWindow()
-    window.setWindowTitle("公式计算图编辑器")
+    window.setWindowTitle(tr("desktop.graphEditor.windowTitle"))
     window.resize(1500, 950)
 
     # ── 中央控件 ──
@@ -74,9 +76,7 @@ def main() -> None:
     current_file: Path | None = None
 
     # ── 信号连接 ──
-    node_panel.node_created.connect(
-        lambda type_id: canvas.add_graph_node(create_default_node(type_id))
-    )
+    node_panel.node_created.connect(lambda type_id: canvas.add_graph_node(create_default_node(type_id)))
 
     canvas.scene().selectionChanged.connect(lambda: _on_selection_changed())
 
@@ -145,18 +145,18 @@ def main() -> None:
     # ── 菜单栏 ──
     menubar = window.menuBar()
 
-    file_menu = menubar.addMenu("文件")
+    file_menu = menubar.addMenu(tr("common.file"))
 
     def _new_file() -> None:
         canvas.clear_scene()
         prop_panel.show_node(None)
         nonlocal current_file
         current_file = None
-        window.setWindowTitle("公式计算图编辑器 — 未命名")
+        window.setWindowTitle(tr("desktop.graphEditor.windowTitleUntitled"))
 
     def _open_file() -> None:
         path_str, _ = QFileDialog.getOpenFileName(
-            window, "打开计算图", "", "计算图文件 (*.json);;所有文件 (*)"
+            window, tr("desktop.graphEditor.openGraph"), "", tr("desktop.graphEditor.graphFileFilter")
         )
         if not path_str:
             return
@@ -166,9 +166,11 @@ def main() -> None:
             load_document(doc, canvas)
             nonlocal current_file
             current_file = path
-            window.setWindowTitle(f"公式计算图编辑器 — {path.name}")
+            window.setWindowTitle(tr("desktop.graphEditor.windowTitleFile", name=path.name))
         except Exception as e:
-            QMessageBox.critical(window, "打开失败", f"无法打开文件:\n{e}")
+            QMessageBox.critical(
+                window, tr("desktop.graphEditor.openFailed"), tr("desktop.graphEditor.openFailedDetail", error=e)
+            )
 
     def _save_file() -> None:
         nonlocal current_file
@@ -178,13 +180,15 @@ def main() -> None:
         doc = collect_document(canvas)
         try:
             save_graph_file(doc, current_file)
-            window.setWindowTitle(f"公式计算图编辑器 — {current_file.name}")
+            window.setWindowTitle(tr("desktop.graphEditor.windowTitleFile", name=current_file.name))
         except Exception as e:
-            QMessageBox.critical(window, "保存失败", f"无法保存文件:\n{e}")
+            QMessageBox.critical(
+                window, tr("desktop.graphEditor.saveFailed"), tr("desktop.graphEditor.saveFailedDetail", error=e)
+            )
 
     def _save_as_file() -> None:
         path_str, _ = QFileDialog.getSaveFileName(
-            window, "另存计算图", "", "计算图文件 (*.json);;所有文件 (*)"
+            window, tr("desktop.graphEditor.saveAsGraph"), "", tr("desktop.graphEditor.graphFileFilter")
         )
         if not path_str:
             return
@@ -196,38 +200,40 @@ def main() -> None:
             save_graph_file(doc, path)
             nonlocal current_file
             current_file = path
-            window.setWindowTitle(f"公式计算图编辑器 — {path.name}")
+            window.setWindowTitle(tr("desktop.graphEditor.windowTitleFile", name=path.name))
         except Exception as e:
-            QMessageBox.critical(window, "保存失败", f"无法保存文件:\n{e}")
+            QMessageBox.critical(
+                window, tr("desktop.graphEditor.saveFailed"), tr("desktop.graphEditor.saveFailedDetail", error=e)
+            )
 
-    new_action = QAction("新建", window)
+    new_action = QAction(tr("desktop.graphEditor.new"), window)
     new_action.setShortcut(QKeySequence.StandardKey.New)
     new_action.triggered.connect(lambda: _new_file())
     file_menu.addAction(new_action)
 
-    open_action = QAction("打开...", window)
+    open_action = QAction(tr("desktop.graphEditor.open"), window)
     open_action.setShortcut(QKeySequence.StandardKey.Open)
     open_action.triggered.connect(lambda: _open_file())
     file_menu.addAction(open_action)
 
-    save_action = QAction("保存", window)
+    save_action = QAction(tr("desktop.graphEditor.save"), window)
     save_action.setShortcut(QKeySequence.StandardKey.Save)
     save_action.triggered.connect(lambda: _save_file())
     file_menu.addAction(save_action)
 
-    save_as_action = QAction("另存为...", window)
+    save_as_action = QAction(tr("desktop.graphEditor.saveAs"), window)
     save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
     save_as_action.triggered.connect(lambda: _save_as_file())
     file_menu.addAction(save_as_action)
 
     # ── 帮助菜单 ──
-    help_menu = menubar.addMenu("帮助")
+    help_menu = menubar.addMenu(tr("common.help"))
 
     def _show_help() -> None:
         dialog = HelpDialog(window)
         dialog.exec()
 
-    help_action = QAction("使用说明", window)
+    help_action = QAction(tr("desktop.graphEditor.usageGuide"), window)
     help_action.setShortcut(QKeySequence(Qt.Key.Key_F1))
     help_action.triggered.connect(lambda: _show_help())
     help_menu.addAction(help_action)
@@ -237,7 +243,7 @@ def main() -> None:
     append_donation_help_menu_action(help_menu, window)
 
     # ── 工具栏 ──
-    toolbar = window.addToolBar("常用操作")
+    toolbar = window.addToolBar(tr("desktop.graphEditor.commonOperations"))
     toolbar.setMovable(False)
     toolbar.setStyleSheet("""
         QToolBar {
@@ -271,26 +277,34 @@ def main() -> None:
             res = evaluate_graph(dag, {})
             output_lines = [f"{k}: {v}" for k, v in res.outputs.items()]
             node_lines = [f"{k}: {v}" for k, v in res.node_values.items()]
-            msg = "【输出结果】\n" + "\n".join(output_lines) if output_lines else "(无输出)"
-            msg += "\n\n【节点值】\n" + "\n".join(node_lines) if node_lines else ""
-            QMessageBox.information(window, "运算结果", msg)
+            msg = (
+                tr("desktop.graphEditor.evalOutputResult") + "\n" + "\n".join(output_lines)
+                if output_lines
+                else tr("desktop.graphEditor.evalNoOutput")
+            )
+            msg += "\n\n" + tr("desktop.graphEditor.evalNodeValues") + "\n" + "\n".join(node_lines) if node_lines else ""
+            QMessageBox.information(window, tr("desktop.graphEditor.evalResult"), msg)
         except Exception as e:
-            QMessageBox.critical(window, "运算失败", str(e))
+            QMessageBox.critical(window, tr("desktop.graphEditor.evalFailed"), str(e))
 
-    _tb("[新建]", "新建空白计算图 (Ctrl+N)", _new_file)
-    _tb("[打开]", "打开计算图文件 (Ctrl+O)", _open_file)
-    _tb("[保存]", "保存当前计算图 (Ctrl+S)", _save_file)
+    _tb(tr("desktop.graphEditor.newBtn"), tr("desktop.graphEditor.newTip"), _new_file)
+    _tb(tr("desktop.graphEditor.openBtn"), tr("desktop.graphEditor.openTip"), _open_file)
+    _tb(tr("desktop.graphEditor.saveBtn"), tr("desktop.graphEditor.saveTip"), _save_file)
     toolbar.addSeparator()
-    _tb("[导入包]", "导入计算包 (ZIP/JSON)", lambda: node_panel._on_import_package())
+    _tb(
+        tr("desktop.graphEditor.importPackageBtn"),
+        tr("desktop.graphEditor.importPackageTip"),
+        lambda: node_panel._on_import_package(),
+    )
     toolbar.addSeparator()
-    _tb("[删除]", "删除选中节点 (Delete)", _delete_selected)
+    _tb(tr("common.delete"), tr("desktop.graphEditor.deleteTip"), _delete_selected)
     toolbar.addSeparator()
-    _tb("[适配]", "缩放画布以适配所有节点", canvas.fit_all)
-    _tb("[重置]", "重置缩放为 100%", canvas.reset_zoom)
+    _tb(tr("desktop.graphEditor.fitViewBtn"), tr("desktop.graphEditor.fitViewTip"), canvas.fit_all)
+    _tb(tr("desktop.graphEditor.resetViewBtn"), tr("desktop.graphEditor.resetViewTip"), canvas.reset_zoom)
     toolbar.addSeparator()
-    _tb("[运算]", "编译并求值整个计算图", _run_evaluate)
+    _tb(tr("desktop.graphEditor.evaluateBtn"), tr("desktop.graphEditor.evaluateTip"), _run_evaluate)
     toolbar.addSeparator()
-    _tb("[清除]", "清除画布上所有节点和连线", _new_file)
+    _tb(tr("desktop.graphEditor.clearBtn"), tr("desktop.graphEditor.clearTip"), _new_file)
 
     window.showMaximized()
     sys.exit(app.exec())

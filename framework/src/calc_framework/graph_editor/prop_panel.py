@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from calc_framework.ui.i18n import tr
+
 from .registry import get_registry
 from .schema import GraphNode
 
@@ -40,13 +42,13 @@ class PropPanel(QWidget):
 
         layout.setContentsMargins(8, 4, 8, 4)
 
-        title = QLabel("节点属性")
+        title = QLabel(tr("desktop.graphEditor.nodeProperties"))
 
         title.setFont(QFont("Microsoft YaHei", 11, QFont.Weight.Bold))
 
         layout.addWidget(title)
 
-        self._placeholder = QLabel("选择节点以编辑属性")
+        self._placeholder = QLabel(tr("desktop.graphEditor.selectNodeHint"))
 
         self._placeholder.setFont(QFont("Microsoft YaHei", 9))
 
@@ -76,7 +78,7 @@ class PropPanel(QWidget):
 
         self._preview_label.setStyleSheet("color: #4fc3f7; padding: 4px;")
 
-        preview_layout.addRow("预览值", self._preview_label)
+        preview_layout.addRow(tr("desktop.graphEditor.previewValue"), self._preview_label)
 
         layout.addWidget(preview_group)
 
@@ -121,7 +123,7 @@ class PropPanel(QWidget):
 
         id_label = QLabel(f"<b>{node.id}</b>")
 
-        self._form_row.addRow("ID", id_label)
+        self._form_row.addRow(tr("desktop.graphEditor.id"), id_label)
 
         # 标签（可编辑）
 
@@ -131,7 +133,7 @@ class PropPanel(QWidget):
 
         self._controls["label"] = label_edit
 
-        self._form_row.addRow("名称", label_edit)
+        self._form_row.addRow(tr("common.name"), label_edit)
 
         # 类型（只读）
 
@@ -141,7 +143,7 @@ class PropPanel(QWidget):
 
         type_label = QLabel(entry.display_name if entry else node.type)
 
-        self._form_row.addRow("类型", type_label)
+        self._form_row.addRow(tr("common.type"), type_label)
 
         if node.type == "const":
             self._add_const_controls(node)
@@ -168,7 +170,7 @@ class PropPanel(QWidget):
 
         self._controls["value"] = sb
 
-        self._form_row.addRow("数值", sb)
+        self._form_row.addRow(tr("desktop.graphEditor.value"), sb)
 
     def _add_var_controls(self, node: GraphNode) -> None:
         le = QLineEdit(node.config.path)
@@ -177,7 +179,7 @@ class PropPanel(QWidget):
 
         self._controls["path"] = le
 
-        self._form_row.addRow("变量路径", le)
+        self._form_row.addRow(tr("desktop.graphEditor.varPath"), le)
 
     def _add_user_input_controls(self, node: GraphNode) -> None:
         default_sb = QDoubleSpinBox()
@@ -190,7 +192,7 @@ class PropPanel(QWidget):
 
         self._controls["default"] = default_sb
 
-        self._form_row.addRow("默认值", default_sb)
+        self._form_row.addRow(tr("desktop.graphEditor.defaultValue"), default_sb)
 
         min_sb = QDoubleSpinBox()
 
@@ -202,7 +204,7 @@ class PropPanel(QWidget):
 
         self._controls["min"] = min_sb
 
-        self._form_row.addRow("最小值", min_sb)
+        self._form_row.addRow(tr("desktop.graphEditor.minValue"), min_sb)
 
         max_sb = QDoubleSpinBox()
 
@@ -214,7 +216,7 @@ class PropPanel(QWidget):
 
         self._controls["max"] = max_sb
 
-        self._form_row.addRow("最大值", max_sb)
+        self._form_row.addRow(tr("desktop.graphEditor.maxValue"), max_sb)
 
         step_sb = QDoubleSpinBox()
 
@@ -228,7 +230,7 @@ class PropPanel(QWidget):
 
         self._controls["step"] = step_sb
 
-        self._form_row.addRow("步长", step_sb)
+        self._form_row.addRow(tr("desktop.graphEditor.step"), step_sb)
 
     def _add_op_controls(self, node: GraphNode) -> None:
         reg = get_registry()
@@ -256,7 +258,7 @@ class PropPanel(QWidget):
 
         self._controls["op"] = cb
 
-        self._form_row.addRow("操作", cb)
+        self._form_row.addRow(tr("desktop.graphEditor.operation"), cb)
 
     def _on_label_changed(self, text: str) -> None:
         if self._current_node:

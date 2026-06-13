@@ -55,7 +55,7 @@ _SCRIPTS_DIR = _REPO_ROOT / "web" / "scripts"
 _ZIP_PATH = _REPO_ROOT / "dist_pa.zip"
 _ARKNIGHTS_PARSED_ZIP = _REPO_ROOT / "dist_arknights_parsed.zip"
 _PA_UPLOAD_INTERVAL = 0.2  # Files API 限流，逐文件上传时的间隔（秒；并发模式下调低）
-_MAX_CONCURRENT_UPLOADS = 3  # 并发上传线程数（避免触发 PA 限流）
+_MAX_CONCURRENT_UPLOADS = 5  # 并发上传线程数（PA 免费版通常可承受 5-8 并发）
 _CONFIG_PATH = Path.home() / ".pythonanywhere"
 
 # ── PythonAnywhere API ────────────────────────────────────────────────────────
@@ -174,7 +174,7 @@ def _upload_bytes_to_path(
     label: str,
     *,
     quiet: bool = False,
-    max_retries: int = 6,
+    max_retries: int = 3,
 ) -> bool:
     """通过 Files API 上传单个文件（含 429 重试）。"""
     username = config.get("username")
@@ -434,17 +434,30 @@ def _verify_deployment(config: dict) -> None:
     ]
     ok = True
     for url, needle, require_non_html in checks:
-        try:
-            with urlopen(url, timeout=30) as resp:
-                body = resp.read(800).decode("utf-8", errors="replace")
-            if needle in body and (not require_non_html or not body.lstrip().startswith("<")):
-                print(f"  [OK] {url}")
-            else:
-                print(f"  [FAIL] {url} 返回非预期内容: {body[:120]!r}")
+        # PA 免费版 reload 后首个请求可能冷启动超时，layout 端点加重试
+        is_layout = "/api/layout" in url
+        max_tries = 3 if is_layout else 1
+        for attempt in range(max_tries):
+            try:
+                with urlopen(url, timeout=45) as resp:
+                    body = resp.read(800).decode("utf-8", errors="replace")
+                if needle in body and (not require_non_html or not body.lstrip().startswith("<")):
+                    print(f"  [OK] {url}")
+                    break
+                else:
+                    if attempt + 1 < max_tries:
+                        print(f"  [RETRY] {url} (attempt {attempt + 2}/{max_tries})...")
+                        time.sleep(5)
+                        continue
+                    print(f"  [FAIL] {url} 返回非预期内容: {body[:120]!r}")
+                    ok = False
+            except Exception as e:
+                if attempt + 1 < max_tries:
+                    print(f"  [RETRY] {url}: {e} (attempt {attempt + 2}/{max_tries})...")
+                    time.sleep(5)
+                    continue
+                print(f"  [FAIL] {url}: {e}")
                 ok = False
-        except Exception as e:
-            print(f"  [FAIL] {url}: {e}")
-            ok = False
 
     ak_url = f"https://{domain}/api/arknights/operators"
     print(f"  [WARM] 预热 {ak_url}（首次加载耗时长，超时 120s）...")
@@ -582,7 +595,7 @@ def _upload_single_dist_file(
     boundary = b"----pa-deploy-boundary"
     body_data = b""
 
-    for attempt in range(4):
+    for attempt in range(2):
         url = _pa_file_url(username, remote_path)
         body_parts = [
             b"--" + boundary,
@@ -599,43 +612,23 @@ def _upload_single_dist_file(
             token,
             data=body_data,
             content_type=f"multipart/form-data; boundary={boundary.decode()}",
-            timeout=60.0,
+            timeout=30.0,
         )
         if code in (200, 201):
             return (arcname, len(file_data), True)
-        if (code in (-1, -2) or code == 429) and attempt < 3:
-            wait = 5 * (attempt + 1)
+        if (code in (-1, -2) or code == 429) and attempt < 1:
+            wait = 3
             reason = "超时" if code == -2 else ("网络错误" if code == -1 else "限流")
-            print(f"  [RETRY] {arcname}: {reason} ({code})，{wait}s 后重试 ({attempt + 1}/3)...")
+            print(f"  [RETRY] {arcname}: {reason} ({code})，{wait}s 后重试...")
             time.sleep(wait)
-        else:
-            if attempt < 3:
-                time.sleep(3)
-
-    # 尝试创建父目录后重试最后一轮
-    if "/" in arcname:
-        parent = "/".join(arcname.split("/")[:-1])
-        dummy_url = _pa_file_url(username, f"{dist_base}{parent}/.keep")
-        _pa_request("POST", dummy_url, token, data=b"dummy", content_type="multipart/form-data; boundary=boundary")
-        retry_url = _pa_file_url(username, remote_path)
-        r_code, _ = _pa_request(
-            "POST",
-            retry_url,
-            token,
-            data=body_data,
-            content_type=f"multipart/form-data; boundary={boundary.decode()}",
-        )
-        if r_code in (200, 201):
-            return (arcname, len(file_data), True)
 
     return (arcname, len(file_data), False)
 
 
 def _upload_dist_files(config: dict) -> None:
-    """将 dist/ 中的文件并发上传到 PythonAnywhere 服务器。
+    """将 dist/ 中的文件并发上传到 PythonAnywhere。
 
-    使用 ThreadPoolExecutor 并发上传（默认 3 线程），避免逐个串行的长时间等待。
-    单个文件内部仍有 4 次重试 + 父目录创建 fallback。
+    先发一个预热请求激活 PA API，再 5 并发上传剩余文件。
     """
     print("\n[UP] [阶段 3/4] 上传前端文件到 dist/...")
     username = config.get("username")
@@ -660,14 +653,21 @@ def _upload_dist_files(config: dict) -> None:
             entries.append((info.filename.replace("\\", "/"), zf.read(info)))
 
     total = len(entries)
-    print(f"  共 {total} 个文件，并发 {_MAX_CONCURRENT_UPLOADS} 线程...")
+
+    # 预热：先传一个小文件激活 PA API，避免首批并发全超时
+    warmup = next((e for e in entries if e[0].endswith("index.html")), entries[0])
+    print(f"  预热 PA API（{warmup[0]}，{len(warmup[1])} bytes）...")
+    _upload_bytes_to_path(config, dist_base + warmup[0], warmup[1], "warmup", quiet=True, max_retries=5)
+    entries = [e for e in entries if e[0] != warmup[0]]
+    total = len(entries)
+    print(f"  剩余 {total} 个文件，并发 {_MAX_CONCURRENT_UPLOADS} 线程...")
     t0 = time.time()
 
-    # 心跳线程：每 3s 输出进度
+    # 心跳线程
     heartbeat_stop = threading.Event()
 
     def _heartbeat() -> None:
-        while not heartbeat_stop.wait(3):
+        while not heartbeat_stop.wait(5):
             elapsed = time.time() - t0
             done = count + errors
             tail = f"，{errors} 失败" if errors else ""
@@ -680,30 +680,29 @@ def _upload_dist_files(config: dict) -> None:
     errors = 0
     with ThreadPoolExecutor(max_workers=_MAX_CONCURRENT_UPLOADS) as pool:
         futures = {
-            pool.submit(_upload_single_dist_file, config, username, dist_base, arcname, data): arcname
+            pool.submit(
+                _upload_bytes_to_path, config, dist_base + arcname, data, arcname, quiet=True, max_retries=3
+            ): arcname
             for arcname, data in entries
         }
         for f in as_completed(futures):
             arcname = futures[f]
-            done = count + errors + 1  # +1 for the file just completing
             try:
-                name, size, ok = f.result()
-                if ok:
+                if f.result():
                     count += 1
-                    print(f"  [{done}/{total} OK] {name} ({size} bytes)")
                 else:
                     errors += 1
-                    print(f"  [{done}/{total} WARN] {name}: 上传失败")
+                    print(f"  [WARN] {arcname}: 上传失败")
             except Exception as e:
                 errors += 1
-                print(f"  [{done}/{total} ERR] {arcname}: {e}")
+                print(f"  [ERR] {arcname}: {e}")
 
     heartbeat_stop.set()
     elapsed = time.time() - t0
     if errors:
-        print(f"  [⏱ {elapsed:.1f}s] {count} 成功, {errors} 失败")
+        print(f"  [⏱ {elapsed:.0f}s] {count} 成功, {errors} 失败")
     else:
-        print(f"  [⏱ {elapsed:.1f}s] 全部 {count} 个文件上传完成")
+        print(f"  [⏱ {elapsed:.0f}s] 全部 {count} 个文件上传完成")
 
 
 # ── 上传后端 Python 文件 ─────────────────────────────────────────────────────
@@ -1801,7 +1800,7 @@ def main() -> None:
     if not args.backend_only:
         _create_zip()
 
-    # Phase 3: 上传 + 部署（dist + 后端 + WSGI + 捐赠图）
+    # Phase 3: 上传全部文件（不重载，保持站点运行）
     if do_upload:
         if not args.backend_only:
             _upload_dist_files(config)
@@ -1815,7 +1814,7 @@ def main() -> None:
             _upload_donation_assets(config)
             _upload_local_backend_zip(config)
 
-    # Phase 4: 重载 + 验证
+    # Phase 4: 全部上传完成后一次性重载 + 验证
     if do_reload and has_api:
         _reload_webapp(config)
         if do_upload:

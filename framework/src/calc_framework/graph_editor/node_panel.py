@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from calc_framework.ui.i18n import tr
+
 from .registry import (
     get_nodes_by_category,
     get_package_manager,
@@ -141,14 +143,24 @@ class NodePanel(QTabWidget):
 
             items = [(e.type_id, e.display_name, colors.get(e.type_id, QColor("#888888"))) for e in entries]
 
-            tab = DraggableTypeList(items)
+            tab = DraggableTypeList(items, self)
 
-            self.addTab(tab, cat_name)
+            _tab_key_map = {
+                "输入": "desktop.graphEditor.tabInput",
+                "基础": "desktop.graphEditor.tabBasic",
+                "输出": "desktop.graphEditor.tabOutput",
+                "包": "desktop.graphEditor.tabPackage",
+            }
+            tab_label = (
+                tr(_tab_key_map.get(cat_name, f"desktop.graphEditor.tab_{cat_name}")) if cat_name in _tab_key_map else cat_name
+            )
 
-        # "包"选项卡前面加一个带导入按钮的包装器
+            self.addTab(tab, tab_label)
+
+        # 包选项卡前面加一个带导入按钮的包装器
 
         if "包" in cats:
-            pkg_idx = self.indexOf(self._find_tab("包"))  # type: ignore[arg-type]
+            pkg_idx = self.indexOf(self._find_tab(tr("desktop.graphEditor.tabPackage")))  # type: ignore[arg-type]
 
             if pkg_idx >= 0:
                 old_widget = self.widget(pkg_idx)
@@ -161,7 +173,7 @@ class NodePanel(QTabWidget):
 
                 wrapper_layout.setSpacing(0)
 
-                import_btn = QPushButton("+ 导入包")
+                import_btn = QPushButton(tr("desktop.graphEditor.importPackageBtnText"))
 
                 import_btn.setFont(QFont("Microsoft YaHei", 10))
 
@@ -197,7 +209,7 @@ class NodePanel(QTabWidget):
 
                 self.removeTab(pkg_idx)
 
-                self.insertTab(pkg_idx, wrapper, "包")
+                self.insertTab(pkg_idx, wrapper, tr("desktop.graphEditor.tabPackage"))
 
     def _find_tab(self, name: str) -> QWidget | None:
         for i in range(self.count()):
@@ -214,7 +226,7 @@ class NodePanel(QTabWidget):
     def _on_import_package(self) -> None:
         path_str, _ = QFileDialog.getOpenFileName(
             self,
-            "导入计算包",
+            tr("desktop.graphEditor.importPackage"),
             "",
             "计算包 (*.zip *.json);;ZIP 包 (*.zip);;计算图文件 (*.json)",
         )
@@ -231,7 +243,9 @@ class NodePanel(QTabWidget):
                 tdefs = pm.load_zip(path)
 
                 if not tdefs:
-                    QMessageBox.information(self, "导入结果", "ZIP 文件中未找到有效的 .json 图文件")
+                    QMessageBox.information(
+                        self, tr("desktop.graphEditor.importResult"), tr("desktop.graphEditor.noValidJsonInZip")
+                    )
 
                     return
 
@@ -242,8 +256,13 @@ class NodePanel(QTabWidget):
 
                 QMessageBox.information(
                     self,
-                    "导入成功",
-                    f"已从包 [{path.stem}] 导入 {len(tdefs)} 个复合节点:\n" + "\n".join(names),
+                    tr("desktop.graphEditor.importSuccess"),
+                    tr(
+                        "desktop.graphEditor.importSuccessDetail",
+                        package=path.stem,
+                        count=len(tdefs),
+                        names="\n".join(names),
+                    ),
                 )
 
             else:
@@ -253,21 +272,21 @@ class NodePanel(QTabWidget):
 
                 QMessageBox.information(
                     self,
-                    "导入成功",
-                    f"已导入复合节点: {tdef.display_name}",
+                    tr("desktop.graphEditor.importSuccess"),
+                    tr("desktop.graphEditor.importSuccessSingle", name=tdef.display_name),
                 )
 
         except Exception as e:
-            QMessageBox.critical(self, "导入失败", f"无法加载文件:\n{e}")
+            QMessageBox.critical(self, tr("desktop.graphEditor.importFailed"), tr("desktop.graphEditor.loadFailed", error=e))
 
             return
 
         self.refresh_package_tab()
 
-        # 自动切换到"包"选项卡
+        # 自动切换到包选项卡
 
         for i in range(self.count()):
-            if self.tabText(i) == "包":
+            if self.tabText(i) == tr("desktop.graphEditor.tabPackage"):
                 self.setCurrentIndex(i)
 
                 break

@@ -37,5 +37,5 @@ jobs:
           python -m pip install -e ".[dev,ui]"
       - name: Lint check (ruff)
         run: python -m ruff check src/ tests/
-      - name: Run tests (with xvfb for Qt)
-        run: xvfb-run python -m pytest tests/ -q
+      - name: Run tests with coverage (with xvfb for Qt)
+        run: xvfb-run python -m pytest tests/ -q --cov=calc_framework --cov-report=term --cov-fail-under=80

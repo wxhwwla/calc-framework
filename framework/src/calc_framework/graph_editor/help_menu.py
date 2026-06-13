@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0
 """帮助文档 — 菜单、操作、快捷键、文件、配置等说明。"""
 
+from calc_framework.ui.i18n import tr
+
 from .help_content import HelpSection
 
 
 def _operations() -> HelpSection:
     return HelpSection(
-        category="操作指南",
-        title="基本操作",
+        category=tr("desktop.graphEditor.helpCategoryOps"),
+        title=tr("desktop.graphEditor.helpBasicOps"),
         content="""\
 <h2>基本操作</h2>
 
@@ -51,8 +53,8 @@ def _operations() -> HelpSection:
 
 def _file_ops() -> HelpSection:
     return HelpSection(
-        category="文件操作",
-        title="文件操作",
+        category=tr("desktop.graphEditor.helpCategoryFile"),
+        title=tr("desktop.graphEditor.helpFileOps"),
         content="""\
 <h2>文件操作</h2>
 
@@ -88,8 +90,8 @@ def _file_ops() -> HelpSection:
 
 def _preview() -> HelpSection:
     return HelpSection(
-        category="实时预览",
-        title="实时预览",
+        category=tr("desktop.graphEditor.helpCategoryPreview"),
+        title=tr("desktop.graphEditor.helpLivePreview"),
         content="""\
 <h2>实时预览</h2>
 
@@ -121,8 +123,8 @@ def _preview() -> HelpSection:
 
 def _shortcuts() -> HelpSection:
     return HelpSection(
-        category="快捷键",
-        title="快捷键参考",
+        category=tr("desktop.graphEditor.helpCategoryShortcuts"),
+        title=tr("desktop.graphEditor.helpShortcuts"),
         content="""\
 <h2>快捷键参考</h2>
 
@@ -141,8 +143,8 @@ def _shortcuts() -> HelpSection:
 
 def _config() -> HelpSection:
     return HelpSection(
-        category="高级配置",
-        title="节点配置说明",
+        category=tr("desktop.graphEditor.helpCategoryAdvanced"),
+        title=tr("desktop.graphEditor.helpNodeConfig"),
         content="""\
 <h2>节点配置说明</h2>
 
@@ -162,8 +164,8 @@ def _config() -> HelpSection:
 
 def _compilation() -> HelpSection:
     return HelpSection(
-        category="高级配置",
-        title="编译流程",
+        category=tr("desktop.graphEditor.helpCategoryAdvanced"),
+        title=tr("desktop.graphEditor.helpCompilation"),
         content="""\
 <h2>编译流程</h2>
 
@@ -195,8 +197,8 @@ def _compilation() -> HelpSection:
 
 def _format() -> HelpSection:
     return HelpSection(
-        category="文件规范",
-        title="JSON 格式规范",
+        category=tr("desktop.graphEditor.helpCategoryFormat"),
+        title=tr("desktop.graphEditor.helpJsonFormat"),
         content="""\
 <h2>JSON 格式规范</h2>
 
