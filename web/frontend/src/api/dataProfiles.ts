@@ -49,3 +49,26 @@ export async function deleteProfileRow(
   );
   if (!r.ok) throw new Error(`${i18n.t("api.profileDeleteFailed")}: ${await r.text()}`);
 }
+
+export interface DagVerifyResult {
+  entity_name: string;
+  level: number;
+  outputs: Record<string, number>;
+  node_values: Record<string, number>;
+  node_count: number;
+}
+
+export async function dagVerify(
+  profileId: string,
+  entityKey: string,
+  entityName: string,
+  level: number = 90,
+): Promise<DagVerifyResult> {
+  const r = await fetch("/api/data/dag-verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile_id: profileId, entity_key: entityKey, entity_name: entityName, level }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}

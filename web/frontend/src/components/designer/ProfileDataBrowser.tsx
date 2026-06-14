@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -17,11 +18,14 @@ import {
   TablePagination,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import { fetchProfileRows } from "../../api/dataProfiles";
 import { getEntity, getProfile } from "../../constants/dataProfileConfig";
+import DagVerifyDialog from "./DagVerifyDialog";
 
 interface Props {
   profileId: string;
@@ -68,6 +72,14 @@ export default function ProfileDataBrowser({ profileId }: Props) {
     setFilters({});
     setPage(0);
   }, [entityKey]);
+
+  // DAG 验证对话框
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyName, setVerifyName] = useState("");
+  const openVerify = (name: string) => {
+    setVerifyName(name);
+    setVerifyOpen(true);
+  };
 
   const columns = entity?.columns ?? [];
   const fields = entity?.fields ?? [];
@@ -222,19 +234,32 @@ export default function ProfileDataBrowser({ profileId }: Props) {
               {columns.map((col) => (
                 <TableCell key={col}>{col}</TableCell>
               ))}
+              <TableCell align="center" sx={{ width: 60 }}>
+                {t("designer.dagVerify.verify", "验证")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedRows.map((row, idx) => (
-              <TableRow key={idx}>
+              <TableRow key={idx} hover>
                 {columns.map((col) => (
                   <TableCell key={col}>{String(row[col] ?? "--")}</TableCell>
                 ))}
+                <TableCell align="center">
+                  <Tooltip title={t("designer.dagVerify.verifyTip", "跑 DAG 验证数据")}>
+                    <IconButton
+                      size="small"
+                      onClick={() => openVerify(String(row[columns[0]] ?? ""))}
+                    >
+                      <PlayCircleOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
               </TableRow>
             ))}
             {paginatedRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length || 1} align="center">
+                <TableCell colSpan={columns.length + 1} align="center">
                   <Typography color="text.secondary">{t("common.noData")}</Typography>
                 </TableCell>
               </TableRow>
@@ -252,6 +277,15 @@ export default function ProfileDataBrowser({ profileId }: Props) {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[10, 25, 50, 100]}
+      />
+
+      {/* DAG 验证弹窗 */}
+      <DagVerifyDialog
+        open={verifyOpen}
+        onClose={() => setVerifyOpen(false)}
+        profileId={profileId}
+        entityKey={entityKey}
+        entityName={verifyName}
       />
     </Box>
   );

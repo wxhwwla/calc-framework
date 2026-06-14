@@ -587,6 +587,17 @@ const en = {
         setGroup: "Set",
       },
     },
+
+    // DAG verify
+    dagVerify: {
+      verify: "Verify",
+      verifyTip: "Run DAG to verify data",
+      outputs: "Output Nodes",
+      allNodes: "All Node Values",
+      nodeName: "Node",
+      nodeId: "Node ID",
+      value: "Value",
+    },
   },
 
   packDesigner: {

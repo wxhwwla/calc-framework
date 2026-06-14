@@ -592,6 +592,17 @@ const zhCN = {
         setGroup: "套组",
       },
     },
+
+    // DAG verify
+    dagVerify: {
+      verify: "验证",
+      verifyTip: "跑 DAG 验证数据",
+      outputs: "输出节点",
+      allNodes: "全部节点值",
+      nodeName: "节点",
+      nodeId: "节点 ID",
+      value: "值",
+    },
   },
 
   packDesigner: {
