@@ -8,12 +8,12 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "web/**"
       - ".github/workflows/web-ci.yml"
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "web/**"
 

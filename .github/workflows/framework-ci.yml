@@ -7,12 +7,12 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "framework/**"
       - ".github/workflows/framework-ci.yml"
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "framework/**"
 
