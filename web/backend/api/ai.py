@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 
@@ -125,7 +128,8 @@ async def ai_recommend(req: AiRecommendRequest):
                     parsed = json.loads(json_match.group())
                     ai_intent = parsed.get("intent", "")
                     ai_hint = parsed.get("search_hint", "")
-        except Exception:
+        except Exception as exc:
+            logger.warning("AI 意图理解失败: %s", exc)
             ai_intent = ""
             ai_hint = ""
 
@@ -188,8 +192,8 @@ async def ai_recommend(req: AiRecommendRequest):
                     "note": "当前配置的基线伤害",
                 }
             )
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("DAG 基线求值失败: %s", exc)
 
     return AiRecommendResponse(
         character_name=req.character_name,
@@ -199,6 +203,287 @@ async def ai_recommend(req: AiRecommendRequest):
         total_combinations=total_combinations,
         top_results=top_results,
     )
+
+
+# ── AI 结果解释 ──────────────────────────────────────
+
+
+class ExplainRequest(BaseModel):
+    query: str = Field(description="用户的原始查询")
+    character_name: str = Field(default="", description="角色名")
+    results: list[dict] = Field(description="搜索结果列表 [{label, damage, ...}]")
+    api_key: str = Field(default="", description="API Key")
+    api_base: str = Field(default="https://api.openai.com/v1")
+    model: str = Field(default="gpt-4o-mini")
+
+
+class ExplainResponse(BaseModel):
+    explanation: str
+    suggestions: list[str] = Field(default_factory=list)
+
+
+_EXPLAIN_PROMPT = """你是一个游戏伤害计算器的配装分析专家。用户搜索了最优配装，你需要用通俗易懂的语言解释：
+
+1. 为什么排名第一的配装伤害最高
+2. 它相比其他配装的优势在哪里
+3. 给用户的下一步建议（可以微调哪些参数获得更好的结果）
+
+输出 JSON：
+{
+  "explanation": "详细解释（2-3句话）",
+  "suggestions": ["建议1", "建议2"]
+}"""
+
+
+@router.post("/explain", response_model=ExplainResponse)
+async def ai_explain(req: ExplainRequest):
+    """AI 解释搜索结果——为什么这个配装最好，如何进一步优化。"""
+    if not req.api_key.strip():
+        return ExplainResponse(
+            explanation=(
+                f"共搜索到 {len(req.results)} 个配装方案。"
+                f"排名第一:「{req.results[0].get('label', '?')}」"
+                f"伤害 {req.results[0].get('damage', 0)}。"
+            ),
+            suggestions=["填入 API Key 可获得 AI 详细解释"],
+        )
+
+    results_text = "\n".join(
+        f"#{i + 1} {r.get('label', '?')}: 伤害 {r.get('damage', 0)}" for i, r in enumerate(req.results[:5])
+    )
+
+    user_msg = f"角色: {req.character_name}\n用户查询: {req.query}\n\n搜索结果:\n{results_text}"
+
+    try:
+        safe_base = _validate_api_url(req.api_base)
+        api_url = safe_base + "/chat/completions"
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                api_url,
+                json={
+                    "model": req.model,
+                    "messages": [
+                        {"role": "system", "content": _EXPLAIN_PROMPT},
+                        {"role": "user", "content": user_msg},
+                    ],
+                    "temperature": 0.5,
+                    "response_format": {"type": "json_object"},
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {req.api_key}",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                return ExplainResponse(
+                    explanation=parsed.get("explanation", ""),
+                    suggestions=parsed.get("suggestions", []),
+                )
+    except Exception as e:
+        return ExplainResponse(
+            explanation=f"排名第一: {req.results[0].get('label', '?')} (伤害 {req.results[0].get('damage', 0)})",
+            suggestions=[f"AI 解释失败: {e}"],
+        )
+
+    return ExplainResponse(explanation="", suggestions=[])
+
+
+# ── AI 语义搜索 ──────────────────────────────────────
+
+
+class SearchRequest(BaseModel):
+    query: str = Field(description="自然语言搜索，如'暴击率最高的单手剑'")
+    category: str = Field(default="weapons", description="搜索类别: characters / weapons / equipments")
+    api_key: str = Field(default="", description="API Key（可选，不填则用关键词匹配）")
+    api_base: str = Field(default="https://api.openai.com/v1")
+    model: str = Field(default="gpt-4o-mini")
+
+
+class SearchResponse(BaseModel):
+    query: str
+    category: str
+    results: list[dict] = Field(default_factory=list)
+    ai_refined: bool = False
+
+
+_SEARCH_PROMPT = """你是一个游戏数据搜索助手。根据用户的自然语言查询，从给出的数据列表中筛选最匹配的条目。
+
+输出 JSON:
+{
+  "matches": ["条目名称1", "条目名称2"],
+  "reasoning": "为什么这些最匹配"
+}"""
+
+
+@router.post("/search", response_model=SearchResponse)
+async def ai_search(req: SearchRequest):
+    """AI 语义搜索——用人话搜索角色/武器/装备。"""
+    # 加载数据
+    if req.category == "characters":
+        items = _list_chars()
+    elif req.category == "weapons":
+        items = _list_weapons()
+    else:
+        equip_path = ENDFIELD_DATA_ROOT / "equipments.json"
+        items = (load_json(equip_path) or []) if equip_path.exists() else []
+
+    names = [it.get("名称", "") for it in items if it.get("名称")]
+    if not names:
+        return SearchResponse(query=req.query, category=req.category)
+
+    results: list[dict] = []
+    ai_refined = False
+
+    # 先用关键词做基础匹配
+    keywords = req.query.replace("的", " ").replace("最", " ").split()
+    for it in items:
+        name = it.get("名称", "")
+        type_str = str(it.get("类型", ""))
+        star_str = str(it.get("星级", ""))
+        score = sum(1 for kw in keywords if kw in name or kw in type_str or kw in star_str)
+        if score > 0:
+            results.append({**it, "_score": score})
+
+    results.sort(key=lambda x: x.get("_score", 0), reverse=True)
+
+    # 如果有 API key，用 AI 精排
+    if req.api_key.strip() and len(names) <= 50:
+        try:
+            item_list = "\n".join(f"- {n}" for n in names[:50])
+            user_msg = f"数据列表:\n{item_list}\n\n用户查询: {req.query}"
+
+            safe_base = _validate_api_url(req.api_base)
+            api_url = safe_base + "/chat/completions"
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    api_url,
+                    json={
+                        "model": req.model,
+                        "messages": [
+                            {"role": "system", "content": _SEARCH_PROMPT},
+                            {"role": "user", "content": user_msg},
+                        ],
+                        "temperature": 0.1,
+                        "response_format": {"type": "json_object"},
+                    },
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {req.api_key}",
+                    },
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if json_match:
+                    parsed = json.loads(json_match.group())
+                    ai_matches = parsed.get("matches", [])
+                    # AI 结果排到最前
+                    ai_results = [it for m in ai_matches for it in items if it.get("名称") == m]
+                    existing_names = {r.get("名称") for r in results}
+                    for ar in ai_results:
+                        if ar.get("名称") not in existing_names:
+                            results.insert(0, {**ar, "_score": 99})
+                    ai_refined = True
+        except Exception as exc:
+            logger.warning("AI 搜索精排失败: %s", exc)
+
+    return SearchResponse(
+        query=req.query,
+        category=req.category,
+        results=results[:20],
+        ai_refined=ai_refined,
+    )
+
+
+# ── AI 对话配装（多轮）───────────────────────────────
+
+
+class ConversationRequest(BaseModel):
+    messages: list[dict] = Field(description="对话历史 [{role, content}]")
+    character_name: str = Field(default="", description="当前角色")
+    api_key: str = Field(default="", description="API Key")
+    api_base: str = Field(default="https://api.openai.com/v1")
+    model: str = Field(default="gpt-4o-mini")
+
+
+class ConversationResponse(BaseModel):
+    reply: str
+    action: str = ""  # "search" / "adjust" / "explain" / "none"
+
+
+_CONVERSATION_PROMPT = """你是一个游戏伤害计算器的配装顾问。你可以帮用户：
+- 推荐配装方向（暴击流、攻击流、均衡流）
+- 解释为什么某种配装更好
+- 建议下一步搜索参数
+
+当前可用功能：搜索最优配装、对比方案、查看伤害明细。
+
+输出 JSON:
+{
+  "reply": "自然语言回复",
+  "action": "none"
+}
+action 可以是: none（纯对话）/ search（建议用户搜索）/ explain（解释结果）"""
+
+
+@router.post("/chat", response_model=ConversationResponse)
+async def ai_chat(req: ConversationRequest):
+    """AI 多轮对话配装咨询。"""
+    if not req.api_key.strip():
+        return ConversationResponse(
+            reply="请填入 OpenAI API Key 以使用 AI 对话功能。支持 OpenAI 兼容 API（如 DeepSeek）。",
+            action="none",
+        )
+
+    system_msg = _CONVERSATION_PROMPT
+    if req.character_name:
+        system_msg += f"\n当前选中的角色: {req.character_name}"
+
+    try:
+        safe_base = _validate_api_url(req.api_base)
+        api_url = safe_base + "/chat/completions"
+
+        messages = [{"role": "system", "content": system_msg}] + req.messages[-10:]  # 最近 10 轮
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                api_url,
+                json={
+                    "model": req.model,
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "response_format": {"type": "json_object"},
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {req.api_key}",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                return ConversationResponse(
+                    reply=parsed.get("reply", content),
+                    action=parsed.get("action", "none"),
+                )
+    except Exception as e:
+        return ConversationResponse(reply=f"AI 服务暂时不可用: {e}", action="none")
+
+    return ConversationResponse(reply="", action="none")
 
 
 __all__: list[str] = []

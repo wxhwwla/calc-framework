@@ -79,7 +79,7 @@ export default function DataBrowserTab() {
     loadData();
   }, [loadData]);
 
-  const rows: any[] =
+  const rows: Record<string, unknown>[] =
     dataType === "character" ? characters : dataType === "weapon" ? weapons : equipments;
 
   const columns = useColumns(t)[dataType];

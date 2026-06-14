@@ -4,8 +4,11 @@
 import base64
 import io
 import json
+import logging
 import zipfile
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -68,8 +71,8 @@ def export_calcpack_bytes(req: ExportRequest) -> tuple[bytes, str]:
                 try:
                     raw = base64.b64decode(b64_content)
                     zf.writestr(f"assets/{name}", raw)
-                except Exception:
-                    pass  # skip invalid base64
+                except Exception as exc:
+                    logger.warning("资产文件 %s base64 解码失败: %s", name, exc)
     filename = req.filename if req.filename.endswith(".calcpack") else f"{req.filename}.calcpack"
     return buf.getvalue(), filename
 
