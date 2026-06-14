@@ -30,7 +30,7 @@ jobs:
       - name: Install system deps for Qt6 (PySide6)
         run: |
           sudo apt-get update
-          sudo apt-get install -y qt6-base-dev libegl1-mesa libegl1 xvfb
+          sudo apt-get install -y qt6-base-dev libegl-mesa0 libegl1 xvfb
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -54,7 +54,7 @@ jobs:
       - name: Install system deps for Qt6
         run: |
           sudo apt-get update
-          sudo apt-get install -y qt6-base-dev libegl1-mesa libegl1 xvfb
+          sudo apt-get install -y qt6-base-dev libegl-mesa0 libegl1 xvfb
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
