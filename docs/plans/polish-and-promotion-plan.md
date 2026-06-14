@@ -19,16 +19,23 @@
 - 真正缺失的是"数据编辑 → DAG 验证"这一环（桌面有，Web 没）
 - 新增 `POST /api/data/dag-verify` 端点 + `DagVerifyDialog` 前端组件 + `ProfileDataBrowser` 每行"验证"按钮
 - 现在 Web 端完整闭环：浏览数据 → 编辑数据 → 验证 DAG → 编辑 DAG/布局 → 导出 .calcpack
-| 3 | Web/桌面端功能不对称 | 🟡 中 | ⬜ 待处理 |
-| 4 | 缺少"新建计算器向导" → 创建门槛高 | 🔴 高 | ⬜ 待处理 |
-| 5 | Calc Hub 缺少成品展示 | 🟡 中 | ⬜ 待处理 |
+| 3 | Web/桌面端功能不对称 | 🟡 中 | ✅ 已完成 — `docs/plans/feature-symmetry-checklist.md` |
+| 4 | 缺少"新建计算器向导" → 创建门槛高 | 🔴 高 | ✅ 已完成 — `tools/generator/engine.py` (2026-06-14) |
+
+**向导修复详情**：
+- 前端 `GeneratorPage.tsx` 和后端 `api/generator.py` 骨架早已就绪（4 步向导 + AI 公式解析）
+- 核心缺失是 `tools/generator/GeneratorEngine` 模块——它压根不存在
+- 新建 `tools/generator/engine.py`（250 行）：从用户声明的变量/公式步骤/输出 → 自动生成完整适配器包（meta.json + DAG JSON + layout.json + attr_schema.json）
+- 生成引擎支持 6 种公式操作（+ - * / condition expr）、自动常量注入、自动 layout 排版
+- 现在用户通过 GeneratorPage → AI 解析或手动填表 → 一键生成可用的 .calcpack 适配器包
+| 5 | Calc Hub 缺少成品展示 | 🟡 中 | ✅ 已完成 — `scripts/tools/batch_export_calcpack.py` + `docs/plans/feature-symmetry-checklist.md` |
 | 6 | 缺少普通玩家操作教程（图文/视频） | 🟡 中 | ✅ 已完成 — `docs/player-guide.md` |
 | 7 | Web 端首屏加载慢、无加载动画 | 🟡 中 | ✅ 已修复 — 骨架屏 + PWA 已有缓存策略 |
 | 8 | Web 默认路由重定向问题 | 🟡 中 | ✅ 已修复 (2026-06-14) |
 | 9 | 仓库顶层有临时文件夹 | 🟢 低 | ✅ 已修复 (2026-06-14) |
 | 10 | 包安装文档与实际行为不一致 | 🟡 中 | ✅ 已修复 (2026-06-14) |
 | 11 | Issue 区无 good first issue 标签 | 🟢 低 | ✅ 已起草 — `docs/plans/good-first-issues.md` |
-| 12 | 缺少性能基准测试 | 🟢 低 | ⬜ 待处理 |
+| 12 | 缺少性能基准测试 | 🟢 低 | ✅ 已完成 — `framework/tests/benchmarks/test_dag_benchmark.py` |
 
 ---
 
