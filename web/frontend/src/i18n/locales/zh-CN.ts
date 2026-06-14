@@ -1073,6 +1073,17 @@ const zhCN = {
     loading: "加载中…",
   },
 
+  ai: {
+    recommendTitle: "AI 智能配装推荐",
+    recommendHint: "用自然语言描述你的配装需求，如"暴击率越高越好"、"推荐最高伤害配装"",
+    recommend: "AI 推荐",
+    yourQuery: "你的需求",
+    queryPlaceholder: "例：我想要暴击率超过50%的配装",
+    apiSettings: "AI API 设置（可选，不填则只搜索不解释）",
+    apiKeyHint: "支持 OpenAI 兼容 API（如 DeepSeek / Qwen 等）",
+    searchSpace: "搜索空间",
+  },
+
   plugins: {
     title: "插件管理器",
     noPlugins: "暂无已安装的插件",

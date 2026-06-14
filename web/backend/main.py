@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from api.adapters import router as adapters_router
+from api.ai import router as ai_router
 from api.arknights import router as arknights_router
 from api.compute import router as compute_router
 from api.contribute import router as contribute_router
@@ -46,6 +47,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+app.include_router(ai_router)
 
 app.include_router(compute_router)
 

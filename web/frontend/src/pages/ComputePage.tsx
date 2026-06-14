@@ -18,6 +18,8 @@ import SearchHistoryDialog from "../components/calculator/SearchHistoryDialog";
 import SkillLevelPanel from "../components/calculator/SkillLevelPanel";
 import WeaponSkillPanel from "../components/calculator/WeaponSkillPanel";
 import CalcModeSelector from "../components/calculator/CalcModeSelector";
+import AiRecommendDialog from "../components/calculator/AiRecommendDialog";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import type { LayoutDefinition } from "../components/WebComputeSheet";
 import type { DagVariable } from "../utils/controlInference";
 import type { EnemyParams } from "../api/search";
@@ -100,6 +102,7 @@ export default function ComputePage() {
     spellAbnormalCounts: {},
   });
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [searchHistoryOpen, setSearchHistoryOpen] = useState(false);
   const [historyEntry, setHistoryEntry] = useState<Record<string, unknown> | null>(null);
@@ -348,6 +351,16 @@ export default function ComputePage() {
                 onCharLevelChange={setCharLevel}
                 onWeaponLevelChange={setWeaponLevel}
               />
+              {selectedChar && (
+                <Button
+                  size="small"
+                  startIcon={<SmartToyIcon />}
+                  onClick={() => setAiDialogOpen(true)}
+                  sx={{ mt: 1 }}
+                >
+                  {t("ai.recommend", "AI 智能推荐")}
+                </Button>
+              )}
             </Paper>
 
             <Box
@@ -626,6 +639,13 @@ export default function ComputePage() {
           setSelectedWeapon(String(entry.weapon_name || ""));
           setHistoryDialogOpen(false);
         }}
+      />
+
+      <AiRecommendDialog
+        open={aiDialogOpen}
+        onClose={() => setAiDialogOpen(false)}
+        characterName={selectedChar}
+        weaponName={selectedWeapon || ""}
       />
 
       <SearchHistoryDialog

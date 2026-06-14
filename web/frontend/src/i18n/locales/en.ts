@@ -1060,6 +1060,17 @@ const en = {
     loading: "Loading...",
   },
 
+  ai: {
+    recommendTitle: "AI Smart Loadout",
+    recommendHint: "Describe your build needs in natural language, e.g. \"max crit rate\", \"highest damage build\"",
+    recommend: "Analyze",
+    yourQuery: "Your request",
+    queryPlaceholder: "e.g. I want a build with over 50% crit rate",
+    apiSettings: "API Settings (optional — search only without AI explanation)",
+    apiKeyHint: "OpenAI-compatible API supported (DeepSeek, Qwen, etc.)",
+    searchSpace: "Search space",
+  },
+
   plugins: {
     title: "Plugin Manager",
     noPlugins: "No plugins installed",
