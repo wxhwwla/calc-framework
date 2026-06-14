@@ -15,6 +15,7 @@ function useNodeTypeLabels() {
     condition: t("dag.nodeTypes.condition"),
     expr: t("dag.nodeTypes.expr"),
     user_input: t("dag.nodeTypes.userInput"),
+    call: t("dag.nodeTypes.call"),
   };
 }
 

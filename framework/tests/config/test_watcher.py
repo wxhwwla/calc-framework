@@ -18,7 +18,8 @@ from calc_framework.config.watcher import AdapterWatcher
 def temp_adapter():
     """创建一个临时适配包目录。"""
     with tempfile.TemporaryDirectory() as tmp:
-        base = Path(tmp)
+        base = Path(tmp) / "test_hot_reload"
+        base.mkdir()
         meta = {
             "schema_version": "dag-v1",
             "name": "test_hot_reload",
@@ -47,7 +48,7 @@ class TestAdapterWatcher:
         assert not watcher.is_running
 
     def test_watcher_detects_file_change(self, temp_adapter: Path):
-        mgr = AdapterManager(adapters_dir=temp_adapter)
+        mgr = AdapterManager(adapters_dir=temp_adapter.parent)
         reloaded: list[str] = []
 
         def on_reload(name, pkg):
@@ -76,7 +77,7 @@ class TestAdapterWatcher:
             watcher.stop()
 
     def test_watcher_ignores_unchanged(self, temp_adapter: Path):
-        mgr = AdapterManager(adapters_dir=temp_adapter)
+        mgr = AdapterManager(adapters_dir=temp_adapter.parent)
         reloaded: list[str] = []
 
         def on_reload(name, pkg):
@@ -96,7 +97,7 @@ class TestAdapterWatcher:
             watcher.stop()
 
     def test_watcher_detects_new_file(self, temp_adapter: Path):
-        mgr = AdapterManager(adapters_dir=temp_adapter)
+        mgr = AdapterManager(adapters_dir=temp_adapter.parent)
         reloaded: list[str] = []
 
         def on_reload(name, pkg):
@@ -120,7 +121,7 @@ class TestAdapterWatcher:
 
     def test_watcher_reloads_adapter_in_manager(self, temp_adapter: Path):
         """验证热加载后 AdapterManager 返回新版适配包。"""
-        mgr = AdapterManager(adapters_dir=temp_adapter)
+        mgr = AdapterManager(adapters_dir=temp_adapter.parent)
 
         # 根据 meta.json 中的 name
         pkg_name = "test_hot_reload" if "test_hot_reload" in mgr.names else mgr.names[0]
