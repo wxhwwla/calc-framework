@@ -647,7 +647,7 @@ def backfill_weapon_max_stack_from_cache(
         if dry_run:
             continue
 
-        write_weapon_special_slots(record, new_slots)
+        write_weapon_special_slots(record, new_slots)  # type: ignore[arg-type]
 
         seed = seed_by_name.get(name)
 
@@ -699,7 +699,7 @@ def needs_weapon_sync_with_wiki(
     if not isinstance(local_atk, list):
         return True
 
-    for lv, la, wa in zip(levels, local_atk, wiki_atk):
+    for _lv, la, wa in zip(levels, local_atk, wiki_atk):
         if abs(float(la) - float(wa)) > tolerance:
             return True
 

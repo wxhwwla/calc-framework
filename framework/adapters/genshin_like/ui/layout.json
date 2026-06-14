@@ -1,0 +1,48 @@
+{
+  "schema_version": "ui-v1",
+  "name": "动作RPG伤害计算表",
+  "description": "8乘区完整伤害公式计算界面",
+  "sections": [
+    {
+      "id": "inputs",
+      "type": "inputs",
+      "title": "⚔️ 战斗参数",
+      "description": "调整技能倍率、增伤、敌方属性等战斗参数",
+      "variables": [
+        "user_input.skill_mult",
+        "user_input.dmg_bonus",
+        "user_input.def_ignore",
+        "user_input.res_pen",
+        "user_input.char_level"
+      ]
+    },
+    {
+      "id": "attack",
+      "type": "outputs",
+      "title": "🗡️ 攻击力",
+      "description": "基础攻击力与总攻击力",
+      "outputs": ["基础攻击力", "总攻击力", "攻击x倍率"]
+    },
+    {
+      "id": "dmg_bonus",
+      "type": "outputs",
+      "title": "💥 增伤与暴击",
+      "description": "增伤乘区与暴击期望值",
+      "outputs": ["增伤后期望", "期望暴击倍率"]
+    },
+    {
+      "id": "defense_res",
+      "type": "outputs",
+      "title": "🛡️ 防御与抗性",
+      "description": "敌方防御与抗性对伤害的削减",
+      "outputs": ["防御乘区", "抗性乘区"]
+    },
+    {
+      "id": "final",
+      "type": "outputs",
+      "title": "🎯 最终结果",
+      "description": "反应增幅后的最终期望伤害",
+      "outputs": ["反应增幅", "最终伤害"]
+    }
+  ]
+}

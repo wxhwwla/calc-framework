@@ -7,9 +7,78 @@
     <meta name="description" content="Calc Framework Web 版 — 开源游戏数值计算器 (AGPL-3.0)，源代码 https://github.com/wxhwwla/calc-framework" />
     <meta name="theme-color" content="#1976d2" />
     <link rel="canonical" href="https://wxhwwla.pythonanywhere.com/" />
+    <style>
+      /* 骨架屏 — React 加载前显示，React mount 后自动替换 */
+      #root:empty::before,
+      .skeleton-loading {
+        display: block;
+      }
+      .skeleton-loading {
+        display: flex;
+        height: 100vh;
+        background: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      .sk-sidebar {
+        width: 240px;
+        background: #fff;
+        border-right: 1px solid #e0e0e0;
+        padding: 16px;
+        animation: sk-pulse 1.8s ease-in-out infinite;
+      }
+      .sk-main {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .sk-topbar {
+        height: 64px;
+        background: #1976d2;
+        border-radius: 4px;
+        animation: sk-pulse 1.8s ease-in-out infinite;
+      }
+      .sk-card {
+        height: 200px;
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        animation: sk-pulse 1.8s ease-in-out 0.2s infinite;
+      }
+      .sk-row {
+        display: flex;
+        gap: 16px;
+      }
+      .sk-row > * {
+        flex: 1;
+        height: 120px;
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        animation: sk-pulse 1.8s ease-in-out 0.4s infinite;
+      }
+      @keyframes sk-pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="skeleton-loading">
+        <div class="sk-sidebar"></div>
+        <div class="sk-main">
+          <div class="sk-topbar"></div>
+          <div class="sk-card"></div>
+          <div class="sk-row">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

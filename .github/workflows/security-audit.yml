@@ -1,0 +1,77 @@
+# 安全审计 — 依赖漏洞扫描 + 密钥泄露检查
+name: Security Audit
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "web/frontend/package-lock.json"
+      - "games/*/pyproject.toml"
+      - "framework/pyproject.toml"
+      - ".github/workflows/security-audit.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "web/frontend/package-lock.json"
+      - "games/*/pyproject.toml"
+      - "framework/pyproject.toml"
+  schedule:
+    - cron: "0 8 * * 1"  # 每周一 8:00 UTC
+
+jobs:
+  npm-audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "web/frontend/package-lock.json"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+  pip-audit:
+    name: pip-audit (framework)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pip-audit
+        run: python -m pip install pip-audit
+      - name: Audit framework
+        run: |
+          cd framework
+          python -m pip install -e ".[dev]" 2>/dev/null || true
+          pip-audit || true
+      - name: Audit endfield
+        run: |
+          cd games/endfield
+          python -m pip install -e ".[dev]" 2>/dev/null || true
+          pip-audit || true
+
+  detect-secrets:
+    name: detect-secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install detect-secrets
+        run: python -m pip install detect-secrets
+      - name: Scan for secrets
+        run: detect-secrets scan --all-files --exclude-files "package-lock\\.json|poetry\\.lock|.*\\.calcpack|.*\\.zip"

@@ -6,6 +6,7 @@ import {
   CircularProgress, Select, MenuItem, FormControl, InputLabel,
   Rating, Snackbar, Alert,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import UploadIcon from "@mui/icons-material/Upload";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -20,6 +21,7 @@ import {
 } from "../api/hub";
 
 export default function MarketplacePage() {
+  const { t } = useTranslation();
   const [packs, setPacks] = useState<HubPackInfo[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function MarketplacePage() {
 
   const handleUpload = async () => {
     if (!uploadName || !uploadVersion) {
-      setSnackMsg("名称和版本为必填项");
+      setSnackMsg(t("marketplace.nameVersionRequired"));
       setSnackSeverity("error");
       return;
     }
@@ -84,13 +86,13 @@ export default function MarketplacePage() {
       if (uploadFile) {
         await uploadPackFile(result.id, uploadFile);
       }
-      setSnackMsg(`上传成功: ${result.name} v${result.version}`);
+      setSnackMsg(t("marketplace.uploadSuccess", { name: result.name, version: result.version }));
       setSnackSeverity("success");
       setUploadOpen(false);
       resetUploadForm();
       loadPacks();
     } catch (e) {
-      setSnackMsg(`上传失败: ${e}`);
+      setSnackMsg(t("marketplace.uploadFailed", { e: String(e) }));
       setSnackSeverity("error");
     } finally {
       setUploading(false);
@@ -109,10 +111,10 @@ export default function MarketplacePage() {
   const handleDownload = async (pack: HubPackInfo) => {
     try {
       await downloadPackFile(pack.id, `${pack.name}_v${pack.version}.calcpack`);
-      setSnackMsg(`开始下载: ${pack.name}`);
+      setSnackMsg(t("marketplace.downloadStart", { name: pack.name }));
       setSnackSeverity("success");
     } catch (e) {
-      setSnackMsg(`下载失败: ${e}`);
+      setSnackMsg(t("marketplace.downloadFailed", { e: String(e) }));
       setSnackSeverity("error");
     }
   };
@@ -122,14 +124,14 @@ export default function MarketplacePage() {
     setRating(true);
     try {
       await ratePack(ratePackId, rateScore, rateComment);
-      setSnackMsg("评分成功");
+      setSnackMsg(t("marketplace.rateSuccess"));
       setSnackSeverity("success");
       setRatePackId(null);
       setRateScore(0);
       setRateComment("");
       loadPacks();
     } catch (e) {
-      setSnackMsg(`评分失败: ${e}`);
+      setSnackMsg(t("marketplace.rateFailed", { e: String(e) }));
       setSnackSeverity("error");
     } finally {
       setRating(false);
@@ -145,13 +147,13 @@ export default function MarketplacePage() {
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h5">配置包市场</Typography>
+        <Typography variant="h5">{t("marketplace.title")}</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadPacks}>
-            刷新
+            {t("marketplace.refresh")}
           </Button>
           <Button variant="contained" startIcon={<UploadIcon />} onClick={() => setUploadOpen(true)}>
-            上传
+            {t("marketplace.upload")}
           </Button>
         </Box>
       </Box>
@@ -159,7 +161,7 @@ export default function MarketplacePage() {
       <Paper sx={{ p: 2, mb: 2, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
         <TextField
           size="small"
-          label="搜索"
+          label={t("marketplace.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -167,13 +169,13 @@ export default function MarketplacePage() {
         />
         <IconButton onClick={handleSearch}><SearchIcon /></IconButton>
         <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>排序</InputLabel>
-          <Select value={sort} label="排序" onChange={(e) => setSort(e.target.value)}>
-            <MenuItem value="updated_at">最近更新</MenuItem>
-            <MenuItem value="created_at">最近上传</MenuItem>
-            <MenuItem value="rating">评分最高</MenuItem>
-            <MenuItem value="download_count">下载最多</MenuItem>
-            <MenuItem value="name">名称</MenuItem>
+          <InputLabel>{t("marketplace.sort")}</InputLabel>
+          <Select value={sort} label={t("marketplace.sort")} onChange={(e) => setSort(e.target.value)}>
+            <MenuItem value="updated_at">{t("marketplace.sortOptions.recentUpdate")}</MenuItem>
+            <MenuItem value="created_at">{t("marketplace.sortOptions.recentUpload")}</MenuItem>
+            <MenuItem value="rating">{t("marketplace.sortOptions.highestRating")}</MenuItem>
+            <MenuItem value="download_count">{t("marketplace.sortOptions.mostDownloads")}</MenuItem>
+            <MenuItem value="name">{t("marketplace.sortOptions.name")}</MenuItem>
           </Select>
         </FormControl>
       </Paper>
@@ -182,14 +184,14 @@ export default function MarketplacePage() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>名称</TableCell>
-              <TableCell>版本</TableCell>
-              <TableCell>作者</TableCell>
-              <TableCell>标签</TableCell>
-              <TableCell align="center">评分</TableCell>
-              <TableCell align="center">下载</TableCell>
-              <TableCell align="center">大小</TableCell>
-              <TableCell align="center">操作</TableCell>
+              <TableCell>{t("marketplace.columns.name")}</TableCell>
+              <TableCell>{t("marketplace.columns.version")}</TableCell>
+              <TableCell>{t("marketplace.columns.author")}</TableCell>
+              <TableCell>{t("marketplace.columns.tags")}</TableCell>
+              <TableCell align="center">{t("marketplace.columns.rating")}</TableCell>
+              <TableCell align="center">{t("marketplace.columns.downloads")}</TableCell>
+              <TableCell align="center">{t("marketplace.columns.size")}</TableCell>
+              <TableCell align="center">{t("marketplace.columns.operations")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -204,7 +206,7 @@ export default function MarketplacePage() {
               <TableRow>
                 <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">
-                    {search ? "未找到匹配的配置包" : "暂无配置包，马上上传第一个吧！"}
+                    {search ? t("marketplace.noMatch") : t("marketplace.empty")}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -248,49 +250,49 @@ export default function MarketplacePage() {
       </TableContainer>
 
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-        共 {total} 个配置包
+        {t("marketplace.totalPacks", { n: total })}
       </Typography>
 
       <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>上传配置包</DialogTitle>
+        <DialogTitle>{t("marketplace.uploadDialog")}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-            <TextField label="名称" required value={uploadName} onChange={(e) => setUploadName(e.target.value)} />
-            <TextField label="版本" required value={uploadVersion} onChange={(e) => setUploadVersion(e.target.value)} />
-            <TextField label="描述" multiline rows={3} value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} />
-            <TextField label="作者" value={uploadAuthor} onChange={(e) => setUploadAuthor(e.target.value)} />
-            <TextField label="标签（逗号分隔）" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} />
+            <TextField label={t("marketplace.uploadName")} required value={uploadName} onChange={(e) => setUploadName(e.target.value)} />
+            <TextField label={t("marketplace.uploadVersion")} required value={uploadVersion} onChange={(e) => setUploadVersion(e.target.value)} />
+            <TextField label={t("marketplace.uploadDesc")} multiline rows={3} value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} />
+            <TextField label={t("marketplace.uploadAuthor")} value={uploadAuthor} onChange={(e) => setUploadAuthor(e.target.value)} />
+            <TextField label={t("marketplace.uploadTags")} value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} />
             <Button variant="outlined" component="label">
-              选择文件 {uploadFile?.name || ".calcpack"}
+              {t("marketplace.uploadFile", { file: uploadFile?.name || "" })}
               <input type="file" hidden accept=".calcpack,.zip,.json" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
             </Button>
             {uploadFile && (
               <Typography variant="caption" color="text.secondary">
-                已选: {uploadFile.name} ({formatSize(uploadFile.size)})
+                {t("marketplace.selectedFile", { name: uploadFile.name, size: formatSize(uploadFile.size) })}
               </Typography>
             )}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setUploadOpen(false)}>取消</Button>
+          <Button onClick={() => setUploadOpen(false)}>{t("common.cancel")}</Button>
           <Button variant="contained" onClick={handleUpload} disabled={uploading}>
-            {uploading ? <CircularProgress size={20} /> : "上传"}
+            {uploading ? <CircularProgress size={20} /> : t("common.upload")}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={ratePackId !== null} onClose={() => setRatePackId(null)} fullWidth maxWidth="xs">
-        <DialogTitle>评分</DialogTitle>
+        <DialogTitle>{t("marketplace.rateDialog")}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1, minWidth: 300 }}>
             <Rating value={rateScore} onChange={(_, v) => setRateScore(v || 0)} />
-            <TextField label="评论（可选）" multiline rows={2} value={rateComment} onChange={(e) => setRateComment(e.target.value)} />
+            <TextField label={t("marketplace.rateComment")} multiline rows={2} value={rateComment} onChange={(e) => setRateComment(e.target.value)} />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRatePackId(null)}>取消</Button>
+          <Button onClick={() => setRatePackId(null)}>{t("common.cancel")}</Button>
           <Button variant="contained" onClick={handleRate} disabled={rating || rateScore === 0}>
-            {rating ? <CircularProgress size={20} /> : "提交评分"}
+            {rating ? <CircularProgress size={20} /> : t("marketplace.submitRating")}
           </Button>
         </DialogActions>
       </Dialog>

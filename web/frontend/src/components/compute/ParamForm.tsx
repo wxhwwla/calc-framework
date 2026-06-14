@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { Box, TextField, FormControlLabel, Switch, Typography } from "@mui/material";
 import { useComputeStore } from "../../store/computeStore";
 
 export default function ParamForm() {
+  const { t } = useTranslation();
   const schema = useComputeStore((s) => s.schema);
   const paramValues = useComputeStore((s) => s.paramValues);
   const setParam = useComputeStore((s) => s.setParam);
@@ -18,7 +20,7 @@ export default function ParamForm() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       <Typography variant="subtitle2" color="text.secondary">
-        参数输入
+        {t('compute.title', '参数输入')}
       </Typography>
       {schema.map((attr) => {
         const key = attr.name.includes(".")

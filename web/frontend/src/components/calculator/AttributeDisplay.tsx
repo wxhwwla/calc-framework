@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableRow, Chip, TableContainer, Divider, Slider } from "@mui/material";
 
 interface AttributeDisplayProps {
@@ -10,11 +11,18 @@ interface AttributeDisplayProps {
   skillLevels: Record<string, number>;
 }
 
+/** DO NOT i18n — label is used for display; rateField/dmgTypeField are JSON property keys */
 const SKILL_INFO: { label: string; rateField: string; dmgTypeField: string }[] = [
   { label: "战技", rateField: "战技倍率", dmgTypeField: "战技段伤害类型" },
   { label: "连携技", rateField: "连携技倍率", dmgTypeField: "连携技段伤害类型" },
   { label: "终结技", rateField: "终结技倍率", dmgTypeField: "终结技段伤害类型" },
 ];
+
+const SKILL_LABEL_I18N: Record<string, string> = {
+  "战技": "totalDamage.skillTypes.combatSkill", // reuse totalDamage keys
+  "连携技": "totalDamage.skillTypes.chainSkill",
+  "终结技": "totalDamage.skillTypes.finisher",
+};
 
 function getAttrAtLevel(data: Record<string, unknown> | null, attrName: string, level: number): number | string {
   if (!data) return "--";
@@ -41,7 +49,11 @@ function getSkillRateAtLevel(charData: Record<string, unknown>, rateField: strin
   return Number.isInteger(num) ? `${num}%` : `${num.toFixed(1)}%`;
 }
 
-function renderSkillRateDetails(charData: Record<string, unknown>, skillLevels: Record<string, number>) {
+function renderSkillRateDetails(
+  charData: Record<string, unknown>,
+  skillLevels: Record<string, number>,
+  t: (key: string, options?: Record<string, unknown>) => string,
+) {
   const rows: { skill: string; segments: string[] }[] = [];
 
   for (const info of SKILL_INFO) {
@@ -52,14 +64,16 @@ function renderSkillRateDetails(charData: Record<string, unknown>, skillLevels: 
     const key = info.label === "战技" ? "skill_1_level" : info.label === "连携技" ? "skill_2_level" : "skill_3_level";
     const skillLevel = (skillLevels[key] as number) || 8;
 
+    const skillI18nKey = SKILL_LABEL_I18N[info.label] ?? info.label;
+
     const detailLines: string[] = [];
     for (let i = 0; i < segments.length; i++) {
       const dmgTypes = charData[info.dmgTypeField];
       const dmgType = Array.isArray(dmgTypes) && i < dmgTypes.length ? String(dmgTypes[i] || "物理") : "物理";
       const rate = getSkillRateAtLevel(charData, rateField, skillLevel, i);
-      detailLines.push(`第${i + 1}段: ${rate || "--"} · ${dmgType}`);
+      detailLines.push(`${t("attributeDisplay.segment", { n: i + 1 })}: ${rate || "--"} · ${dmgType}`);
     }
-    rows.push({ skill: `${info.label} Lv.${skillLevel}`, segments: detailLines });
+    rows.push({ skill: `${t(skillI18nKey)} Lv.${skillLevel}`, segments: detailLines });
   }
 
   if (rows.length === 0) return null;
@@ -68,7 +82,7 @@ function renderSkillRateDetails(charData: Record<string, unknown>, skillLevels: 
     <Box>
       <Divider sx={{ my: 1 }} />
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        技能倍率明细
+        {t("attributeDisplay.skillRateDetails")}
       </Typography>
       {rows.map((row) => (
         <Typography key={row.skill} variant="body2" sx={{ fontSize: "0.75rem", lineHeight: 1.6 }}>
@@ -86,16 +100,19 @@ function formatCurveRange(curve: unknown): string {
   return `${nums[0]} ~ ${nums[nums.length - 1]}`;
 }
 
-function renderWeaponSkills(weaponData: Record<string, unknown>) {
+function renderWeaponSkills(
+  weaponData: Record<string, unknown>,
+  t: (key: string, options?: Record<string, unknown>) => string,
+) {
   const normalSkills = weaponData["normal_skills"];
   const specialSkills = weaponData["special_skills"];
 
   const sections: { title: string; skills: unknown[] }[] = [];
   if (Array.isArray(normalSkills) && normalSkills.length > 0) {
-    sections.push({ title: "普通技能", skills: normalSkills });
+    sections.push({ title: t("attributeDisplay.normalSkill"), skills: normalSkills });
   }
   if (Array.isArray(specialSkills) && specialSkills.length > 0) {
-    sections.push({ title: "特殊能力", skills: specialSkills });
+    sections.push({ title: t("attributeDisplay.specialSkill"), skills: specialSkills });
   }
 
   if (sections.length === 0) return null;
@@ -114,6 +131,7 @@ function renderWeaponSkills(weaponData: Record<string, unknown>) {
             const name = String(s["name"] || "");
             const curve = formatCurveRange(s["curve"]);
             const displayName = name || effect;
+            const maxStack = s["max_stack"];
             return (
               <Typography
                 key={i}
@@ -122,8 +140,8 @@ function renderWeaponSkills(weaponData: Record<string, unknown>) {
               >
                 {displayName}
                 {curve ? ` (Lv.1-9: ${curve})` : ""}
-                {s["max_stack"] != null && Number(s["max_stack"]) > 1
-                  ? ` · 最多${s["max_stack"]}层`
+                {maxStack != null && Number(maxStack) > 1
+                  ? ` · ${t("attributeDisplay.layerCount", { n: String(maxStack) })}`
                   : ""}
               </Typography>
             );
@@ -135,11 +153,13 @@ function renderWeaponSkills(weaponData: Record<string, unknown>) {
 }
 
 export default function AttributeDisplay({ characterData, weaponData, charLevel, weaponLevel, trustLevel, onTrustLevelChange, skillLevels }: AttributeDisplayProps) {
+  const { t } = useTranslation();
+
   if (!characterData && !weaponData) {
     return (
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography color="text.secondary" variant="body2" textAlign="center">
-          请先选择角色和武器
+          {t("attributeDisplay.selectCharWeaponFirst")}
         </Typography>
       </Paper>
     );
@@ -150,7 +170,7 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
       {characterData && (
         <Paper sx={{ p: 2, flex: 1 }}>
           <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            角色属性
+            {t("attributeDisplay.charAttr")}
             <Chip
               label={String(characterData["类型"] || "")}
               size="small"
@@ -168,55 +188,55 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
             <Table size="small">
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>名称</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.nameLabel")}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {String(characterData["名称"] || "")}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>主能力</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.mainAbility")}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {String(characterData["主能力"] || "")}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>副能力</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.subAbility")}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {String(characterData["副能力"] || "")}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>{`力量 (Lv.${charLevel})`}</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.strengthLabel")}{charLevel})</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel(characterData, "力量", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>{`敏捷 (Lv.${charLevel})`}</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.agilityLabel")}{charLevel})</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel(characterData, "敏捷", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>{`智识 (Lv.${charLevel})`}</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.intellectLabel")}{charLevel})</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel(characterData, "智识", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>{`意志 (Lv.${charLevel})`}</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.willLabel")}{charLevel})</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel(characterData, "意志", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>{`基础攻击 (Lv.${charLevel})`}</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.baseAttackLabel")}{charLevel})</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel(characterData, "基础攻击力", charLevel)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>信赖</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.trustLabel")}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {trustLevel}
                   </TableCell>
@@ -227,7 +247,7 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
 
           <Box sx={{ mt: 1 }}>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-              信赖等级
+              {t("attributeDisplay.trustLevel")}
             </Typography>
             <Slider
               size="small"
@@ -245,14 +265,14 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
             />
           </Box>
 
-          {renderSkillRateDetails(characterData, skillLevels)}
+          {renderSkillRateDetails(characterData, skillLevels, t)}
         </Paper>
       )}
 
       {weaponData && (
         <Paper sx={{ p: 2, flex: 1 }}>
           <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            武器属性
+            {t("attributeDisplay.weaponAttr")}
             <Chip
               label={`${String(weaponData["星级"] || "")}★`}
               size="small"
@@ -264,19 +284,19 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
             <Table size="small">
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>名称</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.nameLabel")}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {String(weaponData["名称"] || "")}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>类型</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.weaponType")}</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {String(weaponData["类型"] || "")}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ border: "none", pl: 0 }}>{`基础攻击 (Lv.${weaponLevel})`}</TableCell>
+                  <TableCell sx={{ border: "none", pl: 0 }}>{t("attributeDisplay.weaponBaseAttack")}{weaponLevel})</TableCell>
                   <TableCell sx={{ border: "none", fontWeight: "bold" }}>
                     {getAttrAtLevel(weaponData, "基础攻击力", weaponLevel)}
                   </TableCell>
@@ -284,7 +304,7 @@ export default function AttributeDisplay({ characterData, weaponData, charLevel,
               </TableBody>
             </Table>
           </TableContainer>
-          {renderWeaponSkills(weaponData)}
+          {renderWeaponSkills(weaponData, t)}
         </Paper>
       )}
     </Box>

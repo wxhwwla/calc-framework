@@ -18,6 +18,8 @@ import SearchHistoryDialog from "../components/calculator/SearchHistoryDialog";
 import SkillLevelPanel from "../components/calculator/SkillLevelPanel";
 import WeaponSkillPanel from "../components/calculator/WeaponSkillPanel";
 import CalcModeSelector from "../components/calculator/CalcModeSelector";
+import AiRecommendDialog from "../components/calculator/AiRecommendDialog";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import type { LayoutDefinition } from "../components/WebComputeSheet";
 import type { DagVariable } from "../utils/controlInference";
 import type { EnemyParams } from "../api/search";
@@ -100,6 +102,7 @@ export default function ComputePage() {
     spellAbnormalCounts: {},
   });
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [searchHistoryOpen, setSearchHistoryOpen] = useState(false);
   const [historyEntry, setHistoryEntry] = useState<Record<string, unknown> | null>(null);
@@ -269,7 +272,7 @@ export default function ComputePage() {
   const handleEvaluate = useCallback(async () => {
     const payload = makeLoadoutPayload();
     if (!payload) {
-      useComputeStore.setState({ error: "请先选择角色与武器", loading: false });
+      useComputeStore.setState({ error: t("compute.selectCharWeaponFirst"), loading: false });
       return;
     }
 
@@ -306,7 +309,7 @@ export default function ComputePage() {
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [makeLoadoutPayload, selectedChar, selectedWeapon, charLevel, weaponLevel]);
+  }, [makeLoadoutPayload, selectedChar, selectedWeapon, charLevel, weaponLevel, t]);
 
   const loadoutPayload = makeLoadoutPayload();
   const searchParams = loadoutPayload
@@ -324,13 +327,13 @@ export default function ComputePage() {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        终末地伤害计算器
+        {t("compute.pageTitle")}
       </Typography>
 
       <Paper sx={{ mb: 2 }}>
         <Tabs value={tab} onChange={(_e, v) => setTab(v)}>
-          <Tab label="计算页" />
-          <Tab label="高级页" />
+          <Tab label={t("compute.calcTab")} />
+          <Tab label={t("compute.advancedTab")} />
         </Tabs>
       </Paper>
 
@@ -348,6 +351,16 @@ export default function ComputePage() {
                 onCharLevelChange={setCharLevel}
                 onWeaponLevelChange={setWeaponLevel}
               />
+              {selectedChar && (
+                <Button
+                  size="small"
+                  startIcon={<SmartToyIcon />}
+                  onClick={() => setAiDialogOpen(true)}
+                  sx={{ mt: 1 }}
+                >
+                  {t("ai.recommend", "AI 智能推荐")}
+                </Button>
+              )}
             </Paper>
 
             <Box
@@ -355,7 +368,7 @@ export default function ComputePage() {
               onClick={() => setCharAdvancedExpanded(!charAdvancedExpanded)}
             >
               <Typography variant="subtitle2" sx={{ flex: 1 }}>
-                技能等级
+                {t("compute.skillLevelHeader")}
               </Typography>
               <IconButton size="small">
                 {charAdvancedExpanded ? <ExpandLess /> : <ExpandMore />}
@@ -370,7 +383,7 @@ export default function ComputePage() {
               onClick={() => setWeaponAdvancedExpanded(!weaponAdvancedExpanded)}
             >
               <Typography variant="subtitle2" sx={{ flex: 1 }}>
-                武器技能
+                {t("compute.weaponSkillHeader")}
               </Typography>
               <IconButton size="small">
                 {weaponAdvancedExpanded ? <ExpandLess /> : <ExpandMore />}
@@ -398,13 +411,13 @@ export default function ComputePage() {
 
             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
               <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                搜索范围
+                {t("compute.searchScope")}
               </Typography>
               <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-                <InputLabel>武器候选范围</InputLabel>
+                <InputLabel>{t("compute.weaponCandidateRange")}</InputLabel>
                 <Select
                   value={weaponScope}
-                  label="武器候选范围"
+                  label={t("compute.weaponCandidateRange")}
                   onChange={(e) => setWeaponScope(e.target.value)}
                 >
                   {weaponScopeOptions.map((o) => (
@@ -413,10 +426,10 @@ export default function ComputePage() {
                 </Select>
               </FormControl>
               <FormControl fullWidth size="small">
-                <InputLabel>装备范围</InputLabel>
+                <InputLabel>{t("compute.equipmentRange")}</InputLabel>
                 <Select
                   value={equipmentScope}
-                  label="装备范围"
+                  label={t("compute.equipmentRange")}
                   onChange={(e) => setEquipmentScope(e.target.value)}
                 >
                   {equipmentScopeOptions.map((o) => (
@@ -497,7 +510,7 @@ export default function ComputePage() {
                     onClick={() => setPresetDialogOpen(true)}
                     fullWidth
                   >
-                    工具与分享
+                    {t("compute.toolsAndShare")}
                   </Button>
                   <Button
                     variant="outlined"
@@ -505,14 +518,14 @@ export default function ComputePage() {
                     startIcon={<TuneIcon />}
                     onClick={() => setManualBuffDialogOpen(true)}
                   >
-                    Buff微调
+                    {t("compute.buffTweak")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setSurvivalDialogOpen(true)}
                   >
-                    处决/治疗
+                    {t("compute.executeHealButton")}
                   </Button>
                   <Button
                     variant="outlined"
@@ -520,14 +533,14 @@ export default function ComputePage() {
                     startIcon={<CompareArrowsIcon />}
                     onClick={() => setBatchCompareOpen(true)}
                   >
-                    方案对比
+                    {t("compute.compareButton")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setDashboardOpen(true)}
                   >
-                    伤害仪表盘
+                    {t("compute.dashboardButton")}
                   </Button>
                   <Button
                     variant="outlined"
@@ -535,7 +548,7 @@ export default function ComputePage() {
                     startIcon={<CameraAltIcon />}
                     onClick={() => setOcrDialogOpen(true)}
                   >
-                    截图识装
+                    {t("compute.ocrButton")}
                   </Button>
                 </Box>
                 <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
@@ -544,42 +557,42 @@ export default function ComputePage() {
                     size="small"
                     onClick={() => setHelpDialogOpen(true)}
                   >
-                    使用说明
+                    {t("compute.helpButton")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setDataSourceOpen(true)}
                   >
-                    数据来源
+                    {t("compute.dataSourceButton")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setDonationOpen(true)}
                   >
-                    捐赠
+                    {t("compute.donateButton")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => { logOperation("export_log"); exportLogsAsJson(); }}
                   >
-                    导出日志
+                    {t("compute.exportLogButton")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setHistoryDialogOpen(true)}
                   >
-                    历史
+                    {t("compute.historyButton")}
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
                     onClick={() => setSearchHistoryOpen(true)}
                   >
-                    搜索历史
+                    {t("compute.searchHistoryButton")}
                   </Button>
                 </Box>
               </Paper>
@@ -626,6 +639,13 @@ export default function ComputePage() {
           setSelectedWeapon(String(entry.weapon_name || ""));
           setHistoryDialogOpen(false);
         }}
+      />
+
+      <AiRecommendDialog
+        open={aiDialogOpen}
+        onClose={() => setAiDialogOpen(false)}
+        characterName={selectedChar}
+        weaponName={selectedWeapon || ""}
       />
 
       <SearchHistoryDialog

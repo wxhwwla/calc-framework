@@ -127,7 +127,7 @@ def _get_primary_output_node(expanded: DAGGraph, call_node: CallNode, call_id: s
     sub = expanded.subgraphs.get(call_node.subgraph)
     if sub is None:
         return None
-    for oid, odef in sub.outputs.items():
+    for _oid, odef in sub.outputs.items():
         if odef.is_primary:
             return f"{call_id}.{odef.node}"
     # Fallback: first output

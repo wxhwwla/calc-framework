@@ -13,6 +13,7 @@ import {
   Chip,
 } from "@mui/material";
 import RestoreIcon from "@mui/icons-material/Restore";
+import { useTranslation } from "react-i18next";
 import { fetchHistory, saveHistory, type HistoryEntry } from "../../api/history";
 
 interface CalcHistoryDialogProps {
@@ -28,6 +29,7 @@ export default function CalcHistoryDialog({
   onRestore,
   currentEntry,
 }: CalcHistoryDialogProps) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
 
   const loadEntries = useCallback(async () => {
@@ -51,11 +53,11 @@ export default function CalcHistoryDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>计算历史（最近10次）</DialogTitle>
+      <DialogTitle>{t("calcHistory.title")}</DialogTitle>
       <DialogContent>
         {entries.length === 0 ? (
           <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-            尚无计算历史
+            {t("calcHistory.empty")}
           </Typography>
         ) : (
           <List>
@@ -69,7 +71,7 @@ export default function CalcHistoryDialog({
                     startIcon={<RestoreIcon />}
                     onClick={() => onRestore(entry)}
                   >
-                    恢复此配置
+                    {t("calcHistory.restore")}
                   </Button>
                 }
               >
@@ -81,7 +83,7 @@ export default function CalcHistoryDialog({
                       </Typography>
                       {entry.outputs && (
                         <Chip
-                          label={`伤害: ${Object.values(entry.outputs)[0]?.toFixed(1) ?? "?"}`}
+                          label={`${t("calcHistory.damageLabel")}: ${Object.values(entry.outputs)[0]?.toFixed(1) ?? "?"}`}
                           size="small"
                           color="primary"
                           variant="outlined"
@@ -104,7 +106,7 @@ export default function CalcHistoryDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

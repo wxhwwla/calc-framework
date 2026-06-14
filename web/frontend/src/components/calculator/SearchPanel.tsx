@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Box,
@@ -40,6 +41,7 @@ const handleDownloadClient = () => {
 };
 
 export default function SearchPanel({ currentParams }: SearchPanelProps) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<SearchStatus>("idle");
   const [estimate, setEstimate] = useState<SearchEstimate | null>(null);
   const [result, setResult] = useState<SearchResult | null>(null);
@@ -107,7 +109,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
                 setStatus("done");
                 break;
               case "error":
-                setError(event.message || "搜索失败");
+                setError(event.message || t("api.searchRunFailed"));
                 setStatus("error");
                 break;
             }
@@ -139,7 +141,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         setStatus("error");
       }
     }
-  }, [currentParams, topN, maxWorkers, useStreaming]);
+  }, [currentParams, topN, maxWorkers, useStreaming, t]);
 
   const handleReset = useCallback(() => {
     abortRef.current?.abort();
@@ -160,22 +162,22 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
   }, []);
 
   const formatDuration = (seconds: number): string => {
-    if (seconds < 60) return `${Math.round(seconds)} 秒`;
-    if (seconds < 3600) return `${Math.round(seconds / 60)} 分 ${Math.round(seconds % 60)} 秒`;
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    if (seconds < 3600) return `${Math.round(seconds / 60)}m ${Math.round(seconds % 60)}s`;
     const h = Math.floor(seconds / 3600);
     const m = Math.round((seconds % 3600) / 60);
-    return `${h} 时 ${m} 分`;
+    return `${h}h ${m}m`;
   };
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        全量搜索
+        {t("searchPanel.title")}
       </Typography>
 
       {isPythonAnywhere && (
         <Alert severity="info" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
-          线上环境仅支持<strong>组合规模预估</strong>；全量搜索与流式搜索请下载本地服务器。
+          <span dangerouslySetInnerHTML={{ __html: t("searchPanel.pythonAnywhereNotice") }} />
           <Box sx={{ mt: 1 }}>
             <Button
               variant="contained"
@@ -184,9 +186,9 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               onClick={handleDownloadClient}
               sx={{ mr: 1, textTransform: "none" }}
             >
-              下载本地搜索服务器
+              {t("searchPanel.downloadServer")}
             </Button>
-            解压后双击 exe，在 localhost 使用完整搜索
+            {t("searchPanel.downloadServerHint")}
           </Box>
         </Alert>
       )}
@@ -195,7 +197,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
           <TextField
             size="small"
-            label="结果条数"
+            label={t("searchPanel.resultCount")}
             type="number"
             value={topN}
             onChange={(e) => setTopN(Math.max(1, parseInt(e.target.value) || 10))}
@@ -203,7 +205,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
           />
           <TextField
             size="small"
-            label="并行线程"
+            label={t("searchPanel.parallelThreads")}
             type="number"
             value={maxWorkers}
             onChange={(e) => setMaxWorkers(Math.max(1, parseInt(e.target.value) || 4))}
@@ -215,7 +217,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             onClick={handleEstimate}
             disabled={status === "estimating" || status === "running"}
           >
-            预估
+            {t("searchPanel.estimate")}
           </Button>
           <Button
             variant="contained"
@@ -224,7 +226,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             disabled={status === "estimating" || status === "running" || isPythonAnywhere}
             color={status === "ready" ? "success" : "primary"}
           >
-            {status === "ready" ? "开始搜索" : "全量搜索"}
+            {status === "ready" ? t("searchPanel.startSearch") : t("searchPanel.fullSearch")}
           </Button>
           {status === "running" && (
             <Button
@@ -233,17 +235,17 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               startIcon={<CancelIcon />}
               onClick={handleCancel}
             >
-              取消
+              {t("searchPanel.cancel")}
             </Button>
           )}
           {(status !== "idle" && status !== "error") && (
             <Button size="small" variant="text" onClick={handleReset}>
-              重置
+              {t("searchPanel.reset")}
             </Button>
           )}
           {!isPythonAnywhere && (
             <Chip
-              label={useStreaming ? "流式模式" : "批量模式"}
+              label={useStreaming ? t("searchPanel.streamMode") : t("searchPanel.batchMode")}
               size="small"
               color={useStreaming ? "info" : "default"}
               variant="outlined"
@@ -261,11 +263,11 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         >
           <Chip
             label={
-              status === "idle" ? "空闲" :
-              status === "estimating" ? "预估中" :
-              status === "ready" ? "已就绪" :
-              status === "running" ? "搜集中" :
-              status === "done" ? "已完成" : "错误"
+              status === "idle" ? t("searchPanel.statusIdle") :
+              status === "estimating" ? t("searchPanel.statusEstimating") :
+              status === "ready" ? t("searchPanel.statusReady") :
+              status === "running" ? t("searchPanel.statusRunning") :
+              status === "done" ? t("searchPanel.statusDone") : t("searchPanel.statusError")
             }
             size="small"
             color={
@@ -274,7 +276,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               status === "done" ? "success" : "warning"
             }
           />
-          <Chip label={`${maxWorkers} 线程`} size="small" variant="outlined" />
+          <Chip label={t("searchPanel.threads", { n: maxWorkers })} size="small" variant="outlined" />
           {status === "running" && streamProgress && (
             <Chip
               label={`${streamProgress.processed.toLocaleString()} / ${streamProgress.total.toLocaleString()}`}
@@ -287,7 +289,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
 
         {status === "estimating" && (
           <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary">正在预估搜索规模…</Typography>
+            <Typography variant="body2" color="text.secondary">{t("searchPanel.estimating")}</Typography>
             <LinearProgress />
           </Box>
         )}
@@ -295,9 +297,14 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         {estimate && (
           <Box sx={{ mb: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              预估: <strong>{estimate.total_combinations.toLocaleString()}</strong> 种组合
-              ({estimate.weapon_count} 武器 × {estimate.loadout_combinations.toLocaleString()} 配装)
-              &nbsp;预计 {formatDuration(estimate.estimated_seconds)}
+              <span dangerouslySetInnerHTML={{
+                __html: t("searchPanel.searchEstimate", {
+                  combinations: estimate.total_combinations.toLocaleString(),
+                  weapons: estimate.weapon_count,
+                  loadouts: estimate.loadout_combinations.toLocaleString(),
+                  time: formatDuration(estimate.estimated_seconds),
+                }),
+              }} />
               {estimate.warnings.length > 0 && (
                 <Chip label={estimate.warnings[0]} size="small" color="warning" sx={{ ml: 1 }} />
               )}
@@ -310,7 +317,10 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             {streamProgress ? (
               <Box>
                 <Typography variant="body2" color="info.main">
-                  搜索中: {streamProgress.processed.toLocaleString()} / {streamProgress.total.toLocaleString()} 组合
+                  {t("searchPanel.searching", {
+                    processed: streamProgress.processed.toLocaleString(),
+                    total: streamProgress.total.toLocaleString(),
+                  })}
                 </Typography>
                 <LinearProgress
                   color="info"
@@ -320,7 +330,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               </Box>
             ) : (
               <Box>
-                <Typography variant="body2" color="info.main">搜索进行中…请耐心等待</Typography>
+                <Typography variant="body2" color="info.main">{t("searchPanel.searchingNoProgress")}</Typography>
                 <LinearProgress color="info" />
               </Box>
             )}
@@ -332,7 +342,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
             <Typography variant="subtitle2">
-              实时结果 (已到 {streamResults.length} 条)
+              {t("searchPanel.liveResults", { n: streamResults.length })}
             </Typography>
           </Box>
 
@@ -341,12 +351,12 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               <TableHead>
                 <TableRow>
                   <TableCell>#</TableCell>
-                  <TableCell>武器</TableCell>
-                  <TableCell>护甲</TableCell>
-                  <TableCell>护手</TableCell>
-                  <TableCell>配件A</TableCell>
-                  <TableCell>配件B</TableCell>
-                  <TableCell align="right">伤害</TableCell>
+                  <TableCell>{t("searchPanel.tableWeapon")}</TableCell>
+                  <TableCell>{t("searchPanel.tableChest")}</TableCell>
+                  <TableCell>{t("searchPanel.tableGloves")}</TableCell>
+                  <TableCell>{t("searchPanel.tableAccessoryA")}</TableCell>
+                  <TableCell>{t("searchPanel.tableAccessoryB")}</TableCell>
+                  <TableCell align="right">{t("searchPanel.tableDamage")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -373,11 +383,14 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
             <Typography variant="subtitle2">
-              搜索结果 (Top-{result.top_results.length})
+              {t("searchPanel.searchResults", { n: result.top_results.length })}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              已完成 {result.searched_combinations.toLocaleString()} / {result.total_combinations.toLocaleString()} 组合
-              {result.cancelled && <Chip label="已取消" size="small" color="warning" sx={{ ml: 1 }} />}
+              {t("searchPanel.completed", {
+                searched: result.searched_combinations.toLocaleString(),
+                total: result.total_combinations.toLocaleString(),
+              })}
+              {result.cancelled && <Chip label={t("searchPanel.cancelled")} size="small" color="warning" sx={{ ml: 1 }} />}
             </Typography>
           </Box>
 
@@ -386,12 +399,12 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               <TableHead>
                 <TableRow>
                   <TableCell>#</TableCell>
-                  <TableCell>武器</TableCell>
-                  <TableCell>护甲</TableCell>
-                  <TableCell>护手</TableCell>
-                  <TableCell>配件A</TableCell>
-                  <TableCell>配件B</TableCell>
-                  <TableCell align="right">伤害</TableCell>
+                  <TableCell>{t("searchPanel.tableWeapon")}</TableCell>
+                  <TableCell>{t("searchPanel.tableChest")}</TableCell>
+                  <TableCell>{t("searchPanel.tableGloves")}</TableCell>
+                  <TableCell>{t("searchPanel.tableAccessoryA")}</TableCell>
+                  <TableCell>{t("searchPanel.tableAccessoryB")}</TableCell>
+                  <TableCell align="right">{t("searchPanel.tableDamage")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -411,7 +424,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
                 {result.top_results.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center">
-                      <Typography color="text.secondary">无结果</Typography>
+                      <Typography color="text.secondary">{t("searchPanel.noResults")}</Typography>
                     </TableCell>
                   </TableRow>
                 )}

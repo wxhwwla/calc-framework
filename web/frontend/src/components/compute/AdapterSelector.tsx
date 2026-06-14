@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FormControl,
   InputLabel,
@@ -11,6 +12,7 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 import { useComputeStore } from "../../store/computeStore";
 
 export default function AdapterSelector() {
+  const { t } = useTranslation();
   const adapters = useComputeStore((s) => s.adapters);
   const selectedAdapter = useComputeStore((s) => s.selectedAdapter);
   const loadAdapters = useComputeStore((s) => s.loadAdapters);
@@ -25,10 +27,10 @@ export default function AdapterSelector() {
   return (
     <Box sx={{ mb: 3 }}>
       <FormControl fullWidth>
-        <InputLabel>游戏品类 / 适配器</InputLabel>
+        <InputLabel>{t('packDesigner.adapter', '游戏品类 / 适配器')}</InputLabel>
         <Select
           value={selectedAdapter ?? ""}
-          label="游戏品类 / 适配器"
+          label={t('packDesigner.adapter', '游戏品类 / 适配器')}
           onChange={(e: SelectChangeEvent) => selectAdapter(e.target.value)}
         >
           {adapters.map((a) => (

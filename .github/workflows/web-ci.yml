@@ -38,8 +38,22 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      - name: ESLint check
+        run: npx eslint src/ --ext .ts,.tsx --max-warnings 10
+
       - name: Production build
         run: npx vite build
+
+      - name: Bundle size check
+        run: |
+          echo "=== Bundle Size Report ==="
+          du -sh dist/assets/*.js | sort -rh | head -10
+          echo ""
+          TOTAL=$(du -sb dist/ | cut -f1)
+          echo "Total: $((TOTAL / 1024)) KB"
+          if [ $TOTAL -gt 3072000 ]; then
+            echo "⚠️ Warning: Total bundle > 3 MB"
+          fi
 
   backend:
     name: Backend (ruff + pytest)

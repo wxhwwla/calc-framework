@@ -668,6 +668,17 @@ def _handle_api(environ, start_response):
 
 在经历了上述全部踩坑后，我们编写了自动化部署脚本。配置 API Token 后，一条命令即可完成所有操作，刷新浏览器就是最新版。
 
+> **首次部署（推荐）**：如果你是第一次部署，直接使用 `--setup` 即可从零创建 Web App：
+> ```bash
+> python web/scripts/deploy_pythonanywhere.py --setup
+> ```
+> `--setup` 自动完成：前端构建 → 打包 zip → API 创建 Web App → 上传 WSGI 文件 → 上传前端+后端文件 → 配置虚拟环境 → Reload。
+>
+> 如果想先了解完整部署流程再看自动化脚本，使用 `--guide` 打印详细指南：
+> ```bash
+> python web/scripts/deploy_pythonanywhere.py --guide
+> ```
+
 ### 11.1 脚本文件
 
 | 文件 | 职责 | 运行位置 |
@@ -682,9 +693,20 @@ def _handle_api(environ, start_response):
 ```bash
 # 1. 首次使用：生成配置文件
 python web/scripts/deploy_pythonanywhere.py --init-config
-# 编辑 ~/.pythonanywhere，填入你的 API Token
+# 交互式输入 username + API Token → 保存到 ~/.pythonanywhere
 
-# 2. 以后每次只需一条命令
+# 可选：验证 Token 是否有效
+python web/scripts/deploy_pythonanywhere.py --validate-token
+
+# 2. 首次从零部署（创建 Web App + 上传一切）
+python web/scripts/deploy_pythonanywhere.py --setup
+
+# 3. 以后每次更新，推荐用快速部署（~3 分钟）
+python web/scripts/deploy_pythonanywhere.py --fast
+# git push 后 → 调用服务器 /api/admin/deploy → 后台 git pull + npm build → Reload
+# 无需逐文件上传，比 --all 快 5-10 倍
+
+# 4. 常规全量部署（上传全部文件，~5 分钟）
 python web/scripts/deploy_pythonanywhere.py --all
 # 自动完成：npm run build → zip打包 → 上传 → 服务器git pull+解压+pip → Reload
 # 等待执行完毕，刷新浏览器即可看到最新内容

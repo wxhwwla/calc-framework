@@ -8,6 +8,7 @@ from typing import Any
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileDialog
 
+from .i18n import tr
 from .viewer_help_content import build_viewer_help
 from .viewer_plugin_manager import PluginManagerDialog
 
@@ -22,10 +23,9 @@ class CalcPackViewerEventMixin:
     def _show_help(self) -> None:
         from utils.gui.help_dialog import HelpDialog
 
-        dialog = HelpDialog(build_viewer_help, self, title="CalcPackViewer 使用说明")  # type: ignore[arg-type]
+        dialog = HelpDialog(build_viewer_help, self, title=tr("desktop.viewer.helpDialogTitle"))  # type: ignore[arg-type]
         dialog.exec()
 
-    @staticmethod
     def _on_theme_switched(self, action: QAction) -> None:
         key = action.data()
         if key:
@@ -34,7 +34,7 @@ class CalcPackViewerEventMixin:
             theme = self._theme_manager.get_theme(key)
             if theme:
                 self._theme_manager.apply_font(theme, self)
-            self._status_label.setText(f"主题切换为: {theme.get('name', key)}")
+            self._status_label.setText(tr("desktop.viewer.themeSwitched", name=theme.get("name", key)))
 
     def _toggle_left_panel(self) -> None:
         if self._splitter is None:
@@ -60,8 +60,8 @@ class CalcPackViewerEventMixin:
 
     def _open_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self,
-            "打开 .calcpack",
+            self,  # type: ignore[arg-type] — mixin, runtime is QMainWindow
+            tr("desktop.viewer.menuOpenCalcpack"),
             "",  # type: ignore[arg-type]
             "CalcPack (*.calcpack);;ZIP (*.zip);;All Files (*)",
         )

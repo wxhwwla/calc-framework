@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Box,
@@ -39,6 +40,7 @@ interface Props {
 
 /** 多游戏通用数据录入（对齐桌面 data_editor） */
 export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, compact }: Props) {
+  const { t } = useTranslation();
   const profile = getProfile(profileId);
   const [entityKey, setEntityKey] = useState(fixedEntity ?? profile?.entities[0]?.key ?? "");
   const entity = getEntity(profileId, entityKey);
@@ -117,7 +119,7 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
   };
 
   if (!profile || !entity) {
-    return <Typography color="text.secondary">未知数据模板：{profileId}</Typography>;
+    return <Typography color="text.secondary">{t("designer.dataEditorTab.unknownProfile")}: {profileId}</Typography>;
   }
 
   return (
@@ -126,10 +128,10 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
         <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", flexWrap: "wrap" }}>
           {!fixedEntity && profile.entities.length > 1 && (
             <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel>实体类型</InputLabel>
+              <InputLabel>{t("designer.dataEditorTab.entityType")}</InputLabel>
               <Select
                 value={entityKey}
-                label="实体类型"
+                label={t("designer.dataEditorTab.entityType")}
                 onChange={(e: SelectChangeEvent) => setEntityKey(e.target.value)}
               >
                 {profile.entities.map((e) => (
@@ -141,17 +143,17 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
             </FormControl>
           )}
           <Typography variant="body2" color="text.secondary">
-            {profile.label} · {entity.label} · 共 {rows.length} 条
+            {t("designer.dataEditorTab.countLabel", { profile: profile.label, entity: entity.label, count: rows.length })}
           </Typography>
         </Box>
       )}
 
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
         <Button variant="contained" size="small" onClick={openAdd}>
-          新增
+          {t("designer.dataEditorTab.new")}
         </Button>
         <Button variant="outlined" size="small" onClick={loadData}>
-          刷新
+          {t("common.refresh")}
         </Button>
       </Box>
 
@@ -168,7 +170,7 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
               {columns.map((col) => (
                 <TableCell key={col}>{col}</TableCell>
               ))}
-              <TableCell>操作</TableCell>
+              <TableCell>{t("designer.dataEditorTab.operations")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -179,10 +181,10 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
                 ))}
                 <TableCell>
                   <Button size="small" onClick={() => openEdit(idx)} sx={{ mr: 1 }}>
-                    编辑
+                    {t("designer.dataEditorTab.edit")}
                   </Button>
                   <Button size="small" color="error" onClick={() => handleDelete(idx)}>
-                    删除
+                    {t("common.delete")}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -190,7 +192,7 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
             {rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length + 1} align="center">
-                  <Typography color="text.secondary">暂无数据</Typography>
+                  <Typography color="text.secondary">{t("common.noData")}</Typography>
                 </TableCell>
               </TableRow>
             )}
@@ -199,7 +201,7 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
       </TableContainer>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingIndex === null ? "新增" : "编辑"}</DialogTitle>
+        <DialogTitle>{editingIndex === null ? t("designer.dataEditorTab.new") : t("designer.dataEditorTab.edit")}</DialogTitle>
         <DialogContent>
           {fields.map((f) => (
             <Box key={f.key} sx={{ mt: 2 }}>
@@ -232,9 +234,9 @@ export default function ProfileDataEditor({ profileId, entityKey: fixedEntity, c
           ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>取消</Button>
+          <Button onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
           <Button variant="contained" onClick={handleSave}>
-            保存
+            {t("common.save")}
           </Button>
         </DialogActions>
       </Dialog>

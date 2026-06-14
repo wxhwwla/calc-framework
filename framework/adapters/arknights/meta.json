@@ -1,6 +1,7 @@
 {
   "name": "明日方舟伤害计算",
   "game": "明日方舟",
+  "description": "明日方舟伤害计算器 — 支持物理/法术/真实伤害 DAG 计算、420+ 干员数据、技能倍率解析",
   "version": "0.6.0-beta",
   "schema_version": "dag-v1",
   "attr_schema": "attr_schema.json",

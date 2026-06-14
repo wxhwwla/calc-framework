@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Box,
@@ -16,6 +17,7 @@ import { getProfile } from "../../constants/dataProfileConfig";
 
 /** 配置包设计器 — 数据录入（按适配器分轨，可编辑实体走 ProfileDataEditor） */
 export default function PackDataTab() {
+  const { t } = useTranslation();
   const adapterId = usePackDesignerStore((s) => s.adapterId);
   const [entities, setEntities] = useState<DataEntitySummary[]>([]);
   const [entityKey, setEntityKey] = useState<string>("");
@@ -45,14 +47,14 @@ export default function PackDataTab() {
     return (
       <Box>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {profile.label}：Web 可编辑 {editable.map((e) => e.label).join(" / ")}（与桌面配置包设计器一致）。
+          {t("packDesigner.dataTab.webEditableHint", { label: profile.label })}
         </Typography>
         {editable.length > 1 && (
           <FormControl size="small" sx={{ mb: 2, minWidth: 160 }}>
-            <InputLabel>实体类型</InputLabel>
+            <InputLabel>{t("packDesigner.dataTab.entityType")}</InputLabel>
             <Select
               value={currentKey}
-              label="实体类型"
+              label={t("packDesigner.dataTab.entityType")}
               onChange={(e: SelectChangeEvent) => setEntityKey(e.target.value)}
             >
               {editable.map((e) => (
@@ -71,11 +73,11 @@ export default function PackDataTab() {
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        此适配器无 Web 可编辑 data；导出时仅含 DAG + layout。
+        {t("packDesigner.dataTab.noWebEditable")}
       </Typography>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {entities.length === 0 && !error && (
-        <Typography color="text.secondary">无内置 data 文件。</Typography>
+        <Typography color="text.secondary">{t("packDesigner.dataTab.noBuiltinData")}</Typography>
       )}
     </Box>
   );

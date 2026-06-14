@@ -91,8 +91,8 @@ class InverseEngine:
         Returns:
             (formula_id, FitResult) 元组，或 None（全部失败）
         """
-        best_result = None
-        best_id = None
+        best_result: FitResult | None = None
+        best_id = ""
         best_error = float("inf")
 
         for ft in registry.list_types():
@@ -126,7 +126,7 @@ class InverseEngine:
         if isinstance(params, GrowthParams):
             params = params.to_dict()
         ft = registry.get(formula_id)
-        return ft.fitter.compute(params, num_levels, level_overrides=level_overrides)
+        return ft.fitter.compute(params, num_levels, level_overrides=level_overrides)  # type: ignore[call-arg]
 
     def validate(
         self,
@@ -175,9 +175,7 @@ class InverseEngine:
         """
         result = self.fit(data, formula_id, **options)
         if result.growth_params is None:
-            raise ValueError(
-                f"拟合失败：无法从 data (len={len(data)}) 提取 {formula_id} 参数。 max_error={result.max_error}"
-            )
+            raise ValueError(f"拟合失败：无法从 data (len={len(data)}) 提取 {formula_id} 参数。 max_error={result.max_error}")
         return result.growth_params
 
     def params_to_curve(

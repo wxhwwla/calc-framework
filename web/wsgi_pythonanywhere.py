@@ -9,6 +9,7 @@ PythonAnywhere WSGI 入口（免费套餐：WSGI + 同步 API，不用裸 FastAP
   cp ~/calc-framework/web/wsgi_pythonanywhere.py /var/www/wxhwwla_pythonanywhere_com_wsgi.py
   # Web 页面 → Reload
 """
+
 from __future__ import annotations
 
 import gzip
@@ -79,13 +80,32 @@ def _donation_manifest() -> list[dict[str, str]]:
                 break
     return found
 
+
 for _p in (str(_FRAMEWORK_SRC), str(_BASE), str(_BACKEND)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+# ── 模块预热：在重载时提前加载耗时的 API 模块 ──────────────────────────
+# 避免首次请求时加载 zip 中 422 个干员 JSON 导致超时（PA 免费版 1 worker）。
+# 每个 try/except 独立，防止一个模块失败导致整个 app 不可用。
+_WARMUP_OK: dict[str, bool] = {}
+for _mod_name in ("api.arknights", "api.generator"):
+    try:
+        __import__(_mod_name, fromlist=["router"])
+        _WARMUP_OK[_mod_name] = True
+    except Exception as _exc:
+        _WARMUP_OK[_mod_name] = False
+
+
+def _warmup_status() -> dict[str, bool]:
+    """返回预热状态（可被 /api/health 消费）。"""
+    return dict(_WARMUP_OK)
+
+
 _VENV_ACTIVATE = Path(f"/home/{PA_USERNAME}/.virtualenvs/{PA_VENV}/bin/activate_this.py")
 if _VENV_ACTIVATE.is_file():
-    exec(open(_VENV_ACTIVATE, encoding="utf-8").read(), {"__file__": str(_VENV_ACTIVATE)})
+    with open(_VENV_ACTIVATE, encoding="utf-8") as _f:
+        exec(_f.read(), {"__file__": str(_VENV_ACTIVATE)})
 
 # 勿使用 application = app（会报 missing argument 'send'）
 # 关键 API 在下方同步处理；其余功能在 PA 免费版上可能不可用。
@@ -102,7 +122,6 @@ _MIME = {
     ".html": "text/html",
     ".json": "application/json",
     ".woff2": "font/woff2",
-    ".webp": "image/webp",
 }
 
 
@@ -222,11 +241,10 @@ def _handle_layout_compute(environ, start_response):
     """计算页依赖的 layout / evaluate / loadout API。"""
     path = _fix_path(environ.get("PATH_INFO", ""))
     method = environ.get("REQUEST_METHOD", "GET")
+    if not (path.startswith("/api/layout") or path.startswith("/api/compute")):
+        return None
 
     try:
-        from fastapi import HTTPException
-
-        from api.layout import get_dag_payload, get_layout_payload, get_variables_payload
         from api.compute import (
             CompareRequest,
             EvaluateRequest,
@@ -242,6 +260,8 @@ def _handle_layout_compute(environ, start_response):
             preset_export,
             snapshot_payload,
         )
+        from api.layout import get_dag_payload, get_layout_payload, get_variables_payload
+        from fastapi import HTTPException
     except Exception as e:
         return _json(start_response, {"error": f"layout/compute import failed: {e}"}, "500 Internal Server Error")
 
@@ -359,7 +379,9 @@ def _handle_search_api(environ, start_response):
                 return _json(
                     start_response,
                     {
-                        "error": "run_stream not supported on PythonAnywhere; use local backend or POST /api/search/run",
+                        "error": (
+                            "run_stream not supported on PythonAnywhere; use local backend or POST /api/search/run"
+                        ),
                         "code": "pa_stream_unsupported",
                     },
                     "501 Not Implemented",
@@ -671,13 +693,15 @@ def _handle_adapters(environ, start_response):
                 if not meta_file.is_file():
                     continue
                 meta = json.loads(meta_file.read_text(encoding="utf-8"))
-                results.append({
-                    "id": apath.name,
-                    "name": meta.get("name", apath.name),
-                    "game": meta.get("game", ""),
-                    "version": meta.get("version", ""),
-                    "description": meta.get("description", ""),
-                })
+                results.append(
+                    {
+                        "id": apath.name,
+                        "name": meta.get("name", apath.name),
+                        "game": meta.get("game", ""),
+                        "version": meta.get("version", ""),
+                        "description": meta.get("description", ""),
+                    }
+                )
             return _json(start_response, results)
 
         m = re.match(r"^/api/adapters/([^/]+)/meta$", path)
@@ -696,6 +720,7 @@ def _handle_adapters(environ, start_response):
                 get_adapter_layout,
                 get_pack_export_bundle,
             )
+
             aid = m.group(1)
             action = m.group(2)
             if action == "layout":
@@ -761,14 +786,13 @@ def _handle_arknights(environ, start_response):
         return None
 
     try:
-        from fastapi import HTTPException
-
         from api.arknights import (
             ComputeRequest,
             compute_damage_payload,
             list_operators_payload,
             operator_summary_payload,
         )
+        from fastapi import HTTPException
     except Exception as e:
         return _json(start_response, {"error": f"arknights import failed: {e}"}, "500 Internal Server Error")
 
@@ -816,13 +840,6 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
     sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
 
     try:
-        from api.data_profiles import (
-            create_entity_row,
-            delete_entity_row,
-            list_entity_rows,
-            profiles_metadata,
-            update_entity_row,
-        )
         from api.data_mutations import (
             create_character,
             create_equipment,
@@ -834,6 +851,11 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             update_character,
             update_equipment,
             update_weapon,
+        )
+        from api.data_profiles import (
+            create_entity_row,
+            delete_entity_row,
+            update_entity_row,
         )
 
         if path == "/api/data/inverse" and method == "POST":
@@ -1069,7 +1091,7 @@ def _handle_generator_api(environ, start_response):
                 start_response,
                 {
                     "error": "generator POST endpoints require the local backend (FastAPI). "
-                             "Use the desktop client or run the local search server.",
+                    "Use the desktop client or run the local search server.",
                     "code": "pa_generator_unsupported",
                 },
                 "501 Not Implemented",
@@ -1080,12 +1102,105 @@ def _handle_generator_api(environ, start_response):
     return _http_error(start_response, "unknown generator endpoint", 404)
 
 
+def _handle_admin_unpack(environ, start_response):
+    """管理端点：解压 dist.zip（POST 启动 / GET 查询状态）。
+
+    POST: 后台启动 unzip 子进程，立即返回。
+    GET: 返回解压状态（done/count/error）。
+    """
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if not path.startswith("/api/admin/unpack-dist"):
+        return None
+
+    import subprocess
+
+    zip_path = _BASE / "web" / "frontend" / "dist.zip"
+    dist_dir = _BASE / "web" / "frontend" / "dist"
+    status_file = _BASE / "web" / "frontend" / ".unpack_status.json"
+
+    if method == "GET":
+        if status_file.is_file():
+            try:
+                status = json.loads(status_file.read_text(encoding="utf-8"))
+                return _json(start_response, status)
+            except Exception:
+                return _json(start_response, {"done": False, "status": "error reading status"})
+        # 检查是否已经解压过（dist/ 有文件且 dist.zip 不存在）
+        if dist_dir.is_dir() and not zip_path.is_file():
+            return _json(start_response, {"done": True, "files": "already extracted"})
+        return _json(start_response, {"done": False, "status": "not started"})
+
+    if method != "POST":
+        return None
+
+    if not zip_path.is_file():
+        return _http_error(start_response, f"dist.zip not found: {zip_path}", 404)
+
+    # 后台解压（避免 WSGI 超时）
+    script = (
+        f"rm -rf {dist_dir} && mkdir -p {dist_dir} && "
+        f"cd {dist_dir} && unzip -oq {zip_path} && "
+        f"rm -f {zip_path} && "
+        f"echo '{{\"done\":true,\"files\":'$(ls -1 | wc -l)'}}' > {status_file}"
+    )
+    try:
+        subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return _json(start_response, {"ok": True, "status": "unpack started in background"})
+    except Exception as e:
+        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+
+
+def _handle_admin_deploy(environ, start_response):
+    """管理端点：git pull + npm build（POST 启动 / GET 查状态）。
+
+    部署新版本只需两步：
+      1. git push
+      2. curl -X POST https://xxx.pythonanywhere.com/api/admin/deploy
+      3. 等待 2-3 分钟，在 PA Web 页面 Reload
+    """
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    method = environ.get("REQUEST_METHOD", "GET")
+    if path != "/api/admin/deploy":
+        return None
+
+    import subprocess
+
+    status_file = _BASE / ".deploy_status.json"
+
+    if method == "GET":
+        if status_file.is_file():
+            try:
+                return _json(start_response, json.loads(status_file.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+        return _json(start_response, {"done": False, "status": "idle"})
+
+    if method != "POST":
+        return None
+
+    script = (
+        f"cd {_BASE} && "
+        f"git pull origin develop 2>&1 && "
+        f"cd web/frontend && npm install --silent 2>&1 && npm run build 2>&1 && "
+        f'echo \'{{"done":true,"status":"ok"}}\' > {status_file} || '
+        f'echo \'{{"done":false,"status":"failed"}}\' > {status_file}'
+    )
+    try:
+        subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return _json(start_response, {"ok": True, "status": "deploy started"})
+    except Exception as e:
+        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+
+
 def application(environ, start_response):
     for handler in (
+        _handle_admin_deploy,
         _handle_donation,
         _handle_layout_compute,
         _handle_search_api,
         _handle_generator_api,
+        _handle_admin_unpack,
         _handle_hub,
         _handle_pack,
         _handle_adapters,

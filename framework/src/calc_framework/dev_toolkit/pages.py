@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from calc_framework.dag.debugger_gui import StepDebuggerWidget
 from calc_framework.logging import get_logger
+from calc_framework.ui.i18n import tr
 
 from .main_window import _register_page
 
@@ -33,7 +34,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 
 # ═══════════════════════════════════════════════════════════════
-# 📦 配置 — 数据编辑
+# 配置 — 数据编辑
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -51,14 +52,14 @@ class _DataEditorPage(QWidget):
             layout.addWidget(self._panel)
         except Exception as exc:
             logger.exception("加载数据编辑器失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
 
 _register_page("data_editor", _DataEditorPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 📦 配置 — 布局编辑
+# 配置 — 布局编辑
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -76,14 +77,14 @@ class _LayoutEditorPage(QWidget):
             layout.addWidget(self._panel)
         except Exception as exc:
             logger.exception("加载布局编辑器失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
 
 _register_page("layout_editor", _LayoutEditorPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 📦 配置 — 导出打包
+# 配置 — 导出打包
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -101,14 +102,14 @@ class _ExportPage(QWidget):
             layout.addWidget(self._panel)
         except Exception as exc:
             logger.exception("加载导出页失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
 
 _register_page("export_pack", _ExportPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 开发 — 图编辑器
+# 开发 — 图编辑器
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -148,7 +149,7 @@ class _GraphEditorPage(QWidget):
             from calc_framework.graph_editor.prop_panel import PropPanel
             from calc_framework.graph_editor.registry import create_default_node
 
-            toolbar = QToolBar("常用操作")
+            toolbar = QToolBar(tr("desktop.graphEditor.commonOperations"))
             toolbar.setMovable(False)
 
             def _tb(text: str, cb):
@@ -179,7 +180,9 @@ class _GraphEditorPage(QWidget):
                 current_file[0] = None
 
             def _open_file():
-                path_str, _ = QFileDialog.getOpenFileName(self, "打开计算图", "", "计算图文件 (*.json);;所有文件 (*)")
+                path_str, _ = QFileDialog.getOpenFileName(
+                    self, tr("desktop.graphEditor.openGraph"), "", tr("desktop.graphEditor.graphFileFilter")
+                )
                 if not path_str:
                     return
                 path = Path(path_str)
@@ -188,11 +191,11 @@ class _GraphEditorPage(QWidget):
                     load_document(doc, self._canvas)
                     current_file[0] = path
                 except Exception as e:
-                    QMessageBox.critical(self, "打开失败", str(e))
+                    QMessageBox.critical(self, tr("desktop.graphEditor.openFailed"), str(e))
 
             def _save_file():
                 if current_file[0] is None:
-                    path_str, _ = QFileDialog.getSaveFileName(self, "保存", "", "计算图文件 (*.json)")
+                    path_str, _ = QFileDialog.getSaveFileName(self, tr("desktop.graphEditor.save"), "", "计算图文件 (*.json)")
                     if not path_str:
                         return
                     current_file[0] = Path(path_str)
@@ -200,7 +203,7 @@ class _GraphEditorPage(QWidget):
                 try:
                     save_graph_file(doc, current_file[0])
                 except Exception as e:
-                    QMessageBox.critical(self, "保存失败", str(e))
+                    QMessageBox.critical(self, tr("desktop.graphEditor.saveFailed"), str(e))
 
             def _delete_selected():
                 for item in self._canvas.scene().selectedItems():
@@ -213,22 +216,20 @@ class _GraphEditorPage(QWidget):
                     dag = compile_graph(doc)
                     res = evaluate_graph(dag, {})
                     lines = [f"{k}: {v}" for k, v in res.outputs.items()]
-                    msg = "\n".join(lines) if lines else "(无输出)"
-                    QMessageBox.information(self, "运算结果", msg)
+                    msg = "\n".join(lines) if lines else tr("desktop.graphEditor.evalNoOutput")
+                    QMessageBox.information(self, tr("desktop.graphEditor.evalResult"), msg)
                 except Exception as e:
-                    QMessageBox.critical(self, "运算失败", str(e))
+                    QMessageBox.critical(self, tr("desktop.graphEditor.evalFailed"), str(e))
 
-            _tb("[新建]", lambda: _new_file())
-            _tb("[打开]", lambda: _open_file())
-            _tb("[保存]", lambda: _save_file())
-            _tb("[删除]", lambda: _delete_selected())
-            _tb("[运算]", lambda: _run_evaluate())
-            _tb("[清除]", lambda: _new_file())
+            _tb(tr("desktop.graphEditor.newBtn"), lambda: _new_file())
+            _tb(tr("desktop.graphEditor.openBtn"), lambda: _open_file())
+            _tb(tr("desktop.graphEditor.saveBtn"), lambda: _save_file())
+            _tb(tr("common.delete"), lambda: _delete_selected())
+            _tb(tr("desktop.graphEditor.evaluateBtn"), lambda: _run_evaluate())
+            _tb(tr("desktop.graphEditor.clearBtn"), lambda: _new_file())
 
             # ── 信号 ──
-            self._node_panel.node_created.connect(
-                lambda type_id: self._canvas.add_graph_node(create_default_node(type_id))
-            )
+            self._node_panel.node_created.connect(lambda type_id: self._canvas.add_graph_node(create_default_node(type_id)))
 
             def _on_selection():
                 selected = self._canvas.scene().selectedItems()
@@ -254,14 +255,14 @@ class _GraphEditorPage(QWidget):
 
         except Exception as exc:
             logger.exception("加载图编辑器失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
 
 _register_page("graph_editor", _GraphEditorPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 开发 — DAG 调试器
+# 开发 — DAG 调试器
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -278,11 +279,21 @@ class _DebuggerPage(QWidget):
             # 创建一个示例 DAG 供调试
             dag_data = {
                 "schema_version": "dag-v1",
-                "name": "示例调试图",
-                "description": "简单的乘法和加法示例",
+                "name": tr("desktop.debugger.sampleGraphName"),
+                "description": tr("desktop.debugger.sampleGraphDesc"),
                 "variables": {
-                    "a": {"type": "float", "source": "user_input", "description": "输入值 A", "default": 10.0},
-                    "b": {"type": "float", "source": "user_input", "description": "输入值 B", "default": 20.0},
+                    "a": {
+                        "type": "float",
+                        "source": "user_input",
+                        "description": tr("desktop.debugger.sampleInputA"),
+                        "default": 10.0,
+                    },
+                    "b": {
+                        "type": "float",
+                        "source": "user_input",
+                        "description": tr("desktop.debugger.sampleInputB"),
+                        "default": 20.0,
+                    },
                 },
                 "nodes": {
                     "add": {"type": "binary", "op": "+", "left": {"var": "a"}, "right": {"var": "b"}},
@@ -303,14 +314,14 @@ class _DebuggerPage(QWidget):
             layout.addWidget(self._debugger)  # type: ignore[arg-type]
         except Exception as exc:
             logger.exception("加载 DAG 调试器失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
 
 _register_page("dag_debugger", _DebuggerPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 开发 — 计算包查看
+# 开发 — 计算包查看
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -329,19 +340,21 @@ class _ViewerPage(QWidget):
 
             # 给一个加载按钮
             btn_layout = QHBoxLayout()
-            open_btn = QPushButton("打开 .calcpack…")
+            open_btn = QPushButton(tr("desktop.launcher.openCalcpack"))
             open_btn.clicked.connect(self._on_open)
             btn_layout.addWidget(open_btn)
             btn_layout.addStretch()
             layout.addLayout(btn_layout)
         except Exception as exc:
             logger.exception("加载查看器失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
     def _on_open(self) -> None:
         from PySide6.QtWidgets import QFileDialog
 
-        path, _ = QFileDialog.getOpenFileName(self, "打开 .calcpack", "", "CalcPack (*.calcpack);;所有文件 (*.*)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("desktop.launcher.openCalcpack"), "", "CalcPack (*.calcpack);;所有文件 (*.*)"
+        )
         if path:
             from calc_framework.ui.viewer import open_calcpack
 
@@ -352,7 +365,7 @@ _register_page("calcpack_viewer", _ViewerPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 开发 — AI 生成器
+# 开发 — AI 生成器
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -388,7 +401,7 @@ class _GeneratorPage(QWidget):
             left_widget = QWidget()
             left_layout = QVBoxLayout(left_widget)
             left_layout.setContentsMargins(4, 4, 4, 4)
-            left_layout.addWidget(QLabel("品类模板"))
+            left_layout.addWidget(QLabel(tr("desktop.devToolkit.generator.categoryTemplates")))
             self._template_list = QListWidget()
             self._template_list.itemClicked.connect(self._on_template_selected)
             left_layout.addWidget(self._template_list)
@@ -398,19 +411,19 @@ class _GeneratorPage(QWidget):
             mid_widget = QWidget()
             mid_layout = QVBoxLayout(mid_widget)
             mid_layout.setContentsMargins(4, 4, 4, 4)
-            info_group = QGroupBox("游戏信息")
+            info_group = QGroupBox(tr("desktop.devToolkit.generator.gameInfo"))
             info_layout = QVBoxLayout(info_group)
             self._game_name_input = QLineEdit()
-            self._game_name_input.setPlaceholderText("输入游戏名称")
+            self._game_name_input.setPlaceholderText(tr("desktop.devToolkit.generator.gameNamePlaceholder"))
             info_layout.addWidget(self._game_name_input)
             mid_layout.addWidget(info_group)
 
             self._template_info = QTextEdit()
             self._template_info.setReadOnly(True)
-            self._template_info.setPlaceholderText("选择模板后显示详情")
+            self._template_info.setPlaceholderText(tr("desktop.devToolkit.generator.selectTemplateHint"))
             mid_layout.addWidget(self._template_info)
 
-            self._generate_btn = QPushButton("生成计算器")
+            self._generate_btn = QPushButton(tr("desktop.devToolkit.generator.generateBtn"))
             self._generate_btn.clicked.connect(self._on_generate)
             self._generate_btn.setEnabled(False)
             mid_layout.addWidget(self._generate_btn)
@@ -420,11 +433,11 @@ class _GeneratorPage(QWidget):
             right_widget = QWidget()
             right_layout = QVBoxLayout(right_widget)
             right_layout.setContentsMargins(4, 4, 4, 4)
-            right_layout.addWidget(QLabel("生成结果"))
+            right_layout.addWidget(QLabel(tr("desktop.devToolkit.generator.resultLabel")))
             self._result_view = QTextEdit()
             self._result_view.setReadOnly(True)
             right_layout.addWidget(self._result_view)
-            self._export_btn = QPushButton("导出到目录…")
+            self._export_btn = QPushButton(tr("desktop.devToolkit.generator.exportBtn"))
             self._export_btn.clicked.connect(self._on_export)
             self._export_btn.setEnabled(False)
             right_layout.addWidget(self._export_btn)
@@ -438,7 +451,7 @@ class _GeneratorPage(QWidget):
 
         except Exception as exc:
             logger.exception("加载 AI 生成器失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
     def _load_templates(self) -> None:
         try:
@@ -448,7 +461,7 @@ class _GeneratorPage(QWidget):
 
                 self._template_list.addItem(QListWidgetItem(str(tpl)))
         except Exception as exc:
-            self._template_info.setPlainText(f"加载模板失败: {exc}")
+            self._template_info.setPlainText(tr("desktop.devToolkit.generator.loadTemplatesFailed", error=exc))
 
     def _on_template_selected(self, item) -> None:
         self._generate_btn.setEnabled(True)
@@ -458,9 +471,12 @@ class _GeneratorPage(QWidget):
 
             tpl = load_template(tpl_name)
             self._template_info.setPlainText(
-                f"模板: {tpl_name}\n\n"
-                f"节点: {len(getattr(tpl, 'nodes', []) or [])}\n"
-                f"边: {len(getattr(tpl, 'edges', []) or [])}"
+                tr(
+                    "desktop.devToolkit.generator.templateInfo",
+                    name=tpl_name,
+                    node_count=len(getattr(tpl, "nodes", []) or []),
+                    edge_count=len(getattr(tpl, "edges", []) or []),
+                )
             )
         except Exception as exc:
             self._template_info.setPlainText(str(exc))
@@ -468,7 +484,7 @@ class _GeneratorPage(QWidget):
     def _on_generate(self) -> None:
         game = self._game_name_input.text().strip()
         if not game:
-            QMessageBox.warning(self, "提示", "请输入游戏名称")
+            QMessageBox.warning(self, tr("common.info"), tr("desktop.devToolkit.generator.gameNameRequired"))
             return
         item = self._template_list.currentItem()
         if not item:
@@ -480,16 +496,16 @@ class _GeneratorPage(QWidget):
             for path, content in result.items():
                 self._result_files[path] = content
                 line_count = len(content.splitlines())
-                lines.append(f"📄 {path}  ({line_count} 行)")
-            self._result_view.setPlainText("\n".join(lines) if lines else "生成结果为空")
+                lines.append(f"\U0001f4c4 {path}  ({line_count} lines)")
+            self._result_view.setPlainText("\n".join(lines) if lines else tr("desktop.devToolkit.generator.emptyResult"))
             self._export_btn.setEnabled(bool(self._result_files))
         except Exception as exc:
-            QMessageBox.critical(self, "生成失败", str(exc))
+            QMessageBox.critical(self, tr("desktop.devToolkit.generator.generateFailed"), str(exc))
 
     def _on_export(self) -> None:
         from PySide6.QtWidgets import QFileDialog
 
-        path = QFileDialog.getExistingDirectory(self, "选择导出目录")
+        path = QFileDialog.getExistingDirectory(self, tr("desktop.devToolkit.generator.selectExportDir"))
         if not path:
             return
         out = Path(path)
@@ -497,14 +513,18 @@ class _GeneratorPage(QWidget):
             fp = out / rel
             fp.parent.mkdir(parents=True, exist_ok=True)
             fp.write_text(content, encoding="utf-8")
-        QMessageBox.information(self, "导出完成", f"已导出 {len(self._result_files)} 个文件到:\n{out}")
+        QMessageBox.information(
+            self,
+            tr("desktop.devToolkit.generator.exportDone"),
+            tr("desktop.devToolkit.generator.exportDoneMsg", n=len(self._result_files), out=out),
+        )
 
 
 _register_page("ai_generator", _GeneratorPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 🔧 开发 — OCR 标注
+# 开发 — OCR 标注
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -522,7 +542,7 @@ class _OcrPage(QWidget):
             layout.addWidget(self._tool)
         except Exception as exc:
             logger.exception("加载 OCR 标注失败")
-            layout.addWidget(QLabel(f"加载失败: {exc}"))
+            layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))
 
 
 _register_page("ocr_label", _OcrPage)

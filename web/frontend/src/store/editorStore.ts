@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Node, Edge, Connection } from "@xyflow/react";
 
-export type DagNodeTypeName = "const" | "var" | "unary" | "binary" | "condition" | "expr" | "user_input";
+export type DagNodeTypeName = "const" | "var" | "unary" | "binary" | "condition" | "expr" | "user_input" | "call";
 
 export interface DagNodeData {
   label: string;
@@ -16,6 +16,8 @@ export interface DagNodeData {
   false_val?: string;
   expr?: string;
   inputs?: Record<string, string>;
+  subgraph?: string;
+  bindings?: Record<string, string>;
   default?: number;
   min?: number;
   max?: number;
@@ -31,6 +33,7 @@ const NODE_TYPE_COLORS: Record<string, string> = {
   condition: "#f44336",
   expr: "#9c27b0",
   user_input: "#00bcd4",
+  call: "#e91e63",
   output: "#9c27b0",
   default: "#616161",
 };
@@ -74,6 +77,10 @@ export function dagToFlow(dag: Record<string, unknown>): { nodes: Node<DagNodeDa
       data.max = n.max as number;
       data.step = n.step as number;
     }
+    if (nodeType === "call") {
+      data.subgraph = n.subgraph as string;
+      data.bindings = n.bindings as Record<string, string> || {};
+    }
 
     nodes.push({
       id,
@@ -99,6 +106,12 @@ export function dagToFlow(dag: Record<string, unknown>): { nodes: Node<DagNodeDa
       if (n.cond) edges.push({ id: `${n.cond}->${id}__cond`, source: String(n.cond), target: id, sourceHandle: undefined, targetHandle: "cond", label: "cond", animated: true });
       if (n.true_val) edges.push({ id: `${n.true_val}->${id}__true`, source: String(n.true_val), target: id, sourceHandle: undefined, targetHandle: "true", label: "true", animated: true });
       if (n.false_val) edges.push({ id: `${n.false_val}->${id}__false`, source: String(n.false_val), target: id, sourceHandle: undefined, targetHandle: "false", label: "false", animated: true });
+    }
+    if (nodeType === "call") {
+      const bindings = (n.bindings as Record<string, string>) || {};
+      for (const [param, sourceId] of Object.entries(bindings)) {
+        edges.push({ id: `${sourceId}->${id}__${param}`, source: String(sourceId), target: id, sourceHandle: undefined, targetHandle: param, label: param, animated: true });
+      }
     }
     ix++;
   }
@@ -166,6 +179,10 @@ export function flowToDag(nodes: Node<DagNodeData>[], edges: Edge[]): Record<str
         raw.max = d.max ?? 100;
         raw.step = d.step ?? 1;
         break;
+      case "call":
+        raw.subgraph = d.subgraph || "";
+        raw.bindings = d.bindings || {};
+        break;
     }
     dagNodes[n.id] = raw;
   }
@@ -218,6 +235,7 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
     if (nodeType === "expr") { data.expr = "0"; data.inputs = {}; }
     if (nodeType === "condition") {}
     if (nodeType === "user_input") { data.default = 0; data.min = 0; data.max = 100; data.step = 1; }
+    if (nodeType === "call") { data.subgraph = ""; data.bindings = {}; }
 
     const newNode: Node<DagNodeData> = { id, position, data, type: "dagNode" };
     set((s) => ({ nodes: [...s.nodes, newNode] }));

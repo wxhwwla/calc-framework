@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """包管理器 — 加载 JSON/ZIP 包，注册复合节点类型。"""
 
-
-
 from __future__ import annotations
 
 import json
@@ -17,9 +15,7 @@ from .serializer import document_from_json
 
 
 @dataclass
-
 class CompositePortDef:
-
     """复合节点的一个端口定义。"""
 
     label: str
@@ -29,22 +25,17 @@ class CompositePortDef:
     port_index: int
 
 
-
-
-
 @dataclass
-
 class CompositeTypeDef:
-
     """复合节点类型的注册信息。"""
 
-    type_id: str          # "@packagename/graphname"
+    type_id: str  # "@packagename/graphname"
 
-    display_name: str     # 显示名称
+    display_name: str  # 显示名称
 
-    package_name: str     # 包名（ZIP 文件名）
+    package_name: str  # 包名（ZIP 文件名）
 
-    source_file: str      # 原始文件名
+    source_file: str  # 原始文件名
 
     in_ports: list[CompositePortDef] = field(default_factory=list)
 
@@ -52,96 +43,61 @@ class CompositeTypeDef:
 
     source_graph_json: str = ""
 
-
-
     @property
-
     def in_count(self) -> int:
-
         """in_count。"""
         return len(self.in_ports)
 
-
-
     @property
-
     def out_count(self) -> int:
         """out_count。"""
 
         return len(self.out_ports)
 
-
-
     @property
     def in_labels(self) -> list[str]:
-
         return [p.label for p in self.in_ports]
-
-
 
     @property
     def out_labels(self) -> list[str]:
-
         return [p.label for p in self.out_ports]
 
 
-
-
-
 class PackageManager:
-
     """管理所有已加载的计算包。"""
 
-
-
     def __init__(self) -> None:
-
         self._packages: dict[str, list[CompositeTypeDef]] = {}
 
         self._type_map: dict[str, CompositeTypeDef] = {}
 
-
-
     def loaded_packages(self) -> dict[str, list[CompositeTypeDef]]:
-
         """返回 {包名: [复合节点定义, ...]}"""
 
         return dict(self._packages)
 
-
-
     def get_type_def(self, type_id: str) -> CompositeTypeDef | None:
-
         """按 type_id 查找复合节点定义。"""
 
         return self._type_map.get(type_id)
 
-
-
     def get_sub_graph_doc(self, type_id: str) -> GraphDocument | None:
-
         """获取复合节点对应的子图文档。"""
 
         tdef = self._type_map.get(type_id)
 
         if tdef is None or not tdef.source_graph_json:
-
             return None
 
         try:
-
             data = json.loads(tdef.source_graph_json)
 
             return document_from_json(data)
 
         except Exception:
-
             return None
 
-
-
     def load_json(self, path: Path, package_name: str = "") -> CompositeTypeDef:
-
         """从 .json 文件加载一个复合节点类型。"""
 
         graph_json = path.read_text(encoding="utf-8")
@@ -153,7 +109,6 @@ class PackageManager:
         graph_name = path.stem
 
         if not package_name:
-
             package_name = graph_name
 
         tdef = self._make_type_def(package_name, graph_name, path.name, graph_json, doc)
@@ -162,10 +117,7 @@ class PackageManager:
 
         return tdef
 
-
-
     def load_zip(self, path: Path) -> list[CompositeTypeDef]:
-
         """从 .zip 文件加载包（多个 .json 文件）。"""
 
         package_name = path.stem
@@ -173,23 +125,18 @@ class PackageManager:
         loaded: list[CompositeTypeDef] = []
 
         with zipfile.ZipFile(path, "r") as zf:
-
             for name in zf.namelist():
-
                 if not name.endswith(".json"):
-
                     continue
 
                 graph_json = zf.read(name).decode("utf-8")
 
                 try:
-
                     data = json.loads(graph_json)
 
                     doc = document_from_json(data)
 
                 except Exception:
-
                     continue
 
                 graph_name = Path(name).stem
@@ -199,73 +146,52 @@ class PackageManager:
                 loaded.append(tdef)
 
         for tdef in loaded:
-
             self._register(tdef)
 
         return loaded
 
-
-
     def _make_type_def(
-
-        self, package_name: str, graph_name: str, source_file: str,
-
-        graph_json: str, doc: GraphDocument,
-
+        self,
+        package_name: str,
+        graph_name: str,
+        source_file: str,
+        graph_json: str,
+        doc: GraphDocument,
     ) -> CompositeTypeDef:
-
         """_make_type_def。"""
         type_id = f"@{package_name}/{graph_name}"
 
         display_name = f"[{package_name}] {graph_name}"
 
-
-
         in_ports: list[CompositePortDef] = []
 
         out_ports: list[CompositePortDef] = []
 
-        for i, node in enumerate(doc.nodes):
-
+        for _i, node in enumerate(doc.nodes):
             if node.type == "user_input":
-
                 label = node.label or node.id
 
                 in_ports.append(CompositePortDef(label=label, node_id=node.id, port_index=0))
 
             elif node.type == "output":
-
                 label = node.label or node.id
 
                 out_ports.append(CompositePortDef(label=label, node_id=node.id, port_index=0))
 
-
-
         return CompositeTypeDef(
-
             type_id=type_id,
-
             display_name=display_name,
-
             package_name=package_name,
-
             source_file=source_file,
-
             in_ports=in_ports,
-
             out_ports=out_ports,
-
             source_graph_json=graph_json,
-
         )
-
-
 
     def _register(self, tdef: CompositeTypeDef) -> None:
         """_register。"""
 
         if tdef.package_name not in self._packages:
-
             self._packages[tdef.package_name] = []
 
         # 避免重复注册
@@ -273,8 +199,6 @@ class PackageManager:
         existing = [t for t in self._packages[tdef.package_name] if t.type_id == tdef.type_id]
 
         if not existing:
-
             self._packages[tdef.package_name].append(tdef)
 
         self._type_map[tdef.type_id] = tdef
-

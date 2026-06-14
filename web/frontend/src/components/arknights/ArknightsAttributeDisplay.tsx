@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -18,17 +19,18 @@ interface Props {
 const STAR_MAP: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 };
 
 export default function ArknightsAttributeDisplay({ operator }: Props) {
+  const { t } = useTranslation();
   const baseStats = operator.基础属性 || {};
 
   const STAT_LABELS: Record<string, string> = {
-    生命: "生命上限",
-    攻击: "攻击力",
-    防御: "防御力",
-    法术抗性: "法术抗性",
-    部署费用: "部署费用",
-    再部署: "再部署时间",
-    阻挡数: "阻挡数",
-    攻击间隔: "攻击间隔",
+    生命: t("attr.baseHP", "生命上限"),
+    攻击: t("arknights.atk", "攻击力"),
+    防御: t("arknights.defense", "防御力"),
+    法术抗性: t("arknights.res", "法术抗性"),
+    部署费用: t("arknights.extraBonus_cost", "部署费用"),
+    再部署: t("arknights.extraBonus_redeploy", "再部署时间"),
+    阻挡数: t("arknights.extraBonus_block", "阻挡数"),
+    攻击间隔: t("arknights.extraBonus_interval", "攻击间隔"),
   };
 
   return (
@@ -54,7 +56,7 @@ export default function ArknightsAttributeDisplay({ operator }: Props) {
       </Typography>
 
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
-        基础属性（满级）
+        {t("api.arknightsProps.baseAttr")}
       </Typography>
       <TableContainer sx={{ overflowX: 'auto' }}>
         <Table size="small" sx={{ mb: 1 }}>
@@ -80,7 +82,7 @@ export default function ArknightsAttributeDisplay({ operator }: Props) {
       {operator.信赖加成 && Object.keys(operator.信赖加成).length > 0 && (
         <>
           <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            信赖加成（200%）
+            {t("api.arknightsProps.trustBonus")}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
             {Object.entries(operator.信赖加成).map(([key, val]) => (
@@ -99,7 +101,7 @@ export default function ArknightsAttributeDisplay({ operator }: Props) {
       {operator.天赋 && operator.天赋.length > 0 && (
         <>
           <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            天赋
+            {t("api.arknightsProps.talent")}
           </Typography>
           {operator.天赋.map((t, i) => (
             <Tooltip key={i} title={t.description} arrow>

@@ -603,7 +603,7 @@ class DataEditorPanel(QWidget):
 
     def _auto_load(self) -> None:
         """_auto_load 实现。"""
-        for tab_name, tab in self._tabs.items():
+        for _tab_name, tab in self._tabs.items():
             filepath = self._data_dir() / tab._filename
 
             if filepath.exists():
@@ -662,7 +662,7 @@ class DataEditorPanel(QWidget):
 
         entities = tab.entities
 
-        errors = validate_all(entities)
+        errors = validate_all(entities)  # type: ignore[arg-type]
 
         has_err = False
 
@@ -723,7 +723,7 @@ class DataEditorPanel(QWidget):
         """get_data_files 实现。"""
         result: dict[str, list] = {}
 
-        for tab_name, tab in self._tabs.items():
+        for _tab_name, tab in self._tabs.items():
             stem = Path(tab._filename).stem
 
             key = stem.removesuffix("_standard") if stem.endswith("_standard") else stem

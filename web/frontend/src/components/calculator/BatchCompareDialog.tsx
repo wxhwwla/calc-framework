@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Typography, LinearProgress, Chip,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 import type { EnemyParams } from "../../api/search";
 
@@ -36,16 +37,20 @@ interface BatchCompareDialogProps {
 }
 
 export default function BatchCompareDialog({ open, onClose, enemyParams }: BatchCompareDialogProps) {
-  const [entries, setEntries] = useState<CompareEntry[]>([
-    { label: "方案1", char_name: "", weapon_name: "" },
-    { label: "方案2", char_name: "", weapon_name: "" },
-  ]);
+  const { t } = useTranslation();
+
+  const defaultEntries = useMemo<CompareEntry[]>(() => [
+    { label: `${t("common.plan")}1`, char_name: "", weapon_name: "" },
+    { label: `${t("common.plan")}2`, char_name: "", weapon_name: "" },
+  ], [t]);
+
+  const [entries, setEntries] = useState<CompareEntry[]>(defaultEntries);
   const [results, setResults] = useState<CompareResult[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   const addEntry = useCallback(() => {
-    setEntries((prev) => [...prev, { label: `方案${prev.length + 1}`, char_name: "", weapon_name: "" }]);
-  }, []);
+    setEntries((prev) => [...prev, { label: `${t("common.plan")}${prev.length + 1}`, char_name: "", weapon_name: "" }]);
+  }, [t]);
 
   const updateEntry = useCallback((idx: number, field: keyof CompareEntry, value: string) => {
     setEntries((prev) => {
@@ -83,24 +88,24 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
       const data: CompareResult[] = await r.json();
       setResults(data);
     } catch (e) {
-      setResults([{ label: "错误", total: 0, error: String(e) }]);
+      setResults([{ label: t("batchCompare.error"), total: 0, error: String(e) }]);
     } finally {
       setLoading(false);
     }
-  }, [entries, enemyParams]);
+  }, [entries, enemyParams, t]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>多方案对比</DialogTitle>
+      <DialogTitle>{t("batchCompare.title")}</DialogTitle>
       <DialogContent>
         <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, overflowX: 'auto' }}>
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>标签</TableCell>
-                <TableCell>角色</TableCell>
-                <TableCell>武器</TableCell>
-                <TableCell align="center">操作</TableCell>
+                <TableCell>{t("batchCompare.label")}</TableCell>
+                <TableCell>{t("batchCompare.character")}</TableCell>
+                <TableCell>{t("batchCompare.weapon")}</TableCell>
+                <TableCell align="center">{t("batchCompare.operations")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -118,7 +123,7 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
                       value={entry.char_name}
                       onChange={(e) => updateEntry(idx, "char_name", e.target.value)}
                       style={{ width: 140, border: "1px solid #ccc", borderRadius: 4, padding: "2px 6px" }}
-                      placeholder="角色名"
+                      placeholder={t("batchCompare.charPlaceholder")}
                     />
                   </TableCell>
                   <TableCell>
@@ -126,12 +131,12 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
                       value={entry.weapon_name}
                       onChange={(e) => updateEntry(idx, "weapon_name", e.target.value)}
                       style={{ width: 140, border: "1px solid #ccc", borderRadius: 4, padding: "2px 6px" }}
-                      placeholder="武器名"
+                      placeholder={t("batchCompare.weaponPlaceholder")}
                     />
                   </TableCell>
                   <TableCell align="center">
                     <Button size="small" color="error" onClick={() => removeEntry(idx)} disabled={entries.length <= 1}>
-                      删除
+                      {t("batchCompare.delete")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -141,7 +146,7 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
         </TableContainer>
 
         <Button variant="outlined" size="small" onClick={addEntry} sx={{ mb: 2 }}>
-          + 添加方案
+          {t("batchCompare.addPlan")}
         </Button>
 
         {loading && <LinearProgress sx={{ mb: 2 }} />}
@@ -151,10 +156,10 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>排名</TableCell>
-                  <TableCell>方案</TableCell>
-                  <TableCell align="right">总伤</TableCell>
-                  <TableCell>状态</TableCell>
+                  <TableCell>{t("common.rank")}</TableCell>
+                  <TableCell>{t("common.plan")}</TableCell>
+                  <TableCell align="right">{t("common.totalDamageShort")}</TableCell>
+                  <TableCell>{t("common.status")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -175,7 +180,7 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
                       {r.error ? (
                         <Typography variant="caption" color="error">{r.error}</Typography>
                       ) : (
-                        <Typography variant="caption" color="success.main">OK</Typography>
+                        <Typography variant="caption" color="success.main">{t("batchCompare.ok")}</Typography>
                       )}
                     </TableCell>
                   </TableRow>
@@ -186,9 +191,9 @@ export default function BatchCompareDialog({ open, onClose, enemyParams }: Batch
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
         <Button variant="contained" onClick={runCompare} disabled={loading}>
-          {loading ? "计算中..." : "对比"}
+          {loading ? t("batchCompare.calculating") : t("batchCompare.compare")}
         </Button>
       </DialogActions>
     </Dialog>

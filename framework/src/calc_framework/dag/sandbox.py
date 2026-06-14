@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """AST 沙箱：解析表达式字符串并在白名单约束下安全求值。"""
 
-
 from __future__ import annotations
 
 import ast
@@ -19,10 +18,10 @@ from .sandbox_config import (
     _SAFE_NODE_TYPES,
     _SAFE_UNARY_OPS,
     _all_allowed_names,
-    clear_functions,  # noqa: F401  # re-exported via __init__.py
-    list_functions,  # noqa: F401  # re-exported via __init__.py
-    register_function,  # noqa: F401  # re-exported via __init__.py
-    unregister_function,  # noqa: F401  # re-exported via __init__.py
+    clear_functions,  # noqa: F401  # re-exported via __init__.py  # type: ignore[unused-import]
+    list_functions,  # noqa: F401  # re-exported via __init__.py  # type: ignore[unused-import]
+    register_function,  # noqa: F401  # re-exported via __init__.py  # type: ignore[unused-import]
+    unregister_function,  # noqa: F401  # re-exported via __init__.py  # type: ignore[unused-import]
 )
 
 logger = get_logger(__name__)
@@ -103,7 +102,7 @@ def _eval_node(node: ast.AST, scope: dict[str, float]) -> Any:
     if isinstance(node, ast.Constant):
         if isinstance(node.value, str):
             return node.value
-        if isinstance(node.value, (int, float)):
+        if isinstance(node.value, int | float):
             return float(node.value)
         raise DAGRuntimeError(f"不支持的常量类型: {type(node.value).__name__}")
     if isinstance(node, ast.Name):

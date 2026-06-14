@@ -78,7 +78,7 @@ markers = [
 source = ["calc", "data", "data_loading", "gui"]
 
 [tool.coverage.report]
-fail_under = 40
+fail_under = 75
 skip_empty = true
 exclude_lines = [
     "pragma: no cover",

@@ -2,13 +2,15 @@
 """Web 后端入口 — FastAPI 应用实例 + 路由注册 + 全局中间件/异常处理器 / 静态文件挂载。"""
 
 try:
-    from . import _path_setup  # sets sys.path for dev mode
+    from . import _path_setup  # sets sys.path for dev mode  # type: ignore[unused-import]
 except ImportError:
-    import _path_setup  # noqa: F401  # fallback when run as top-level module
+    import _path_setup  # noqa: F401  # fallback when run as top-level module  # type: ignore[unused-import]
 import sys
 from pathlib import Path
 
 from api.adapters import router as adapters_router
+from api.admin import router as admin_router
+from api.ai import router as ai_router
 from api.arknights import router as arknights_router
 from api.compute import router as compute_router
 from api.contribute import router as contribute_router
@@ -20,11 +22,12 @@ from api.layout import router as layout_router
 from api.manual_buff import router as manual_buff_router
 from api.ocr import router as ocr_router
 from api.pack import router as pack_router
+from api.plugins import router as plugins_router
 from api.search import router as search_router
 from api.survival import router as survival_router
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from web.backend.bridge import get_logger, setup_logging
@@ -34,28 +37,26 @@ setup_logging(level="INFO", console=True)
 logger = get_logger(__name__)
 
 
-
-app = FastAPI(title="Calc Framework Web API", version="1.0.0",
-
-              docs_url="/api/docs", redoc_url="/api/redoc")
-
+app = FastAPI(title="Calc Framework Web API", version="1.0.0", docs_url="/api/docs", redoc_url="/api/redoc")
 
 
 app.add_middleware(
-
     CORSMiddleware,
-
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
-
 )
 
 
+# 速率限制中间件（在所有路由之前）
+from api.admin import RateLimitMiddleware
+
+app.add_middleware(RateLimitMiddleware)
+
+app.include_router(admin_router)
+
+app.include_router(ai_router)
 
 app.include_router(compute_router)
 
@@ -69,6 +70,8 @@ app.include_router(layout_router)
 
 app.include_router(pack_router)
 
+app.include_router(plugins_router)
+
 app.include_router(search_router)
 app.include_router(survival_router)
 app.include_router(manual_buff_router)
@@ -78,6 +81,7 @@ app.include_router(arknights_router)
 app.include_router(contribute_router)
 app.include_router(generator_router)
 
+
 def _resolve_repo_root() -> Path:
     """开发=仓库根；PyInstaller 本地后端=``_MEIPASS``。"""
     if getattr(sys, "frozen", False):
@@ -86,6 +90,16 @@ def _resolve_repo_root() -> Path:
 
 
 _REPO_ROOT = _resolve_repo_root()
+
+
+# 开发模式：若无前端构建产物，根路径重定向到 /compute
+_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
+if not _FRONTEND_DIST.is_dir():
+
+    @app.get("/")
+    async def root():
+        return RedirectResponse(url="/compute")
+
 
 # 捐赠二维码（与 GUI resources/donation/ 同源）
 _DONATION_DIR = _REPO_ROOT / "resources" / "donation"
@@ -109,31 +123,25 @@ if _DONATION_DIR.is_dir():
 else:
     logger.warning("捐赠目录不存在，跳过挂载: %s", _DONATION_DIR)
 
+
+_ADAPTER_ROOT = Path(__file__).resolve().parents[2] / "framework" / "adapters"
+from web.backend.bridge import AdapterManager
+
+_health_mgr = AdapterManager(_ADAPTER_ROOT)
+
+
 @app.get("/api/health")
-
 async def health():
-
-    from web.backend.bridge import AdapterManager
-
-
-    ADAPTER_ROOT = Path(__file__).resolve().parents[2] / "framework" / "adapters"
-
-    mgr = AdapterManager(ADAPTER_ROOT)
-
     return {
-
         "status": "ok",
-
         "framework_version": "1.0.0",
-
-        "adapters_count": len(mgr.available_adapters),
-
-        "adapters": list(mgr.available_adapters.keys()),
-
+        "adapters_count": len(_health_mgr.available_adapters),
+        "adapters": list(_health_mgr.available_adapters.keys()),
     }
 
 
 # ── 客户端下载 ────────────────────────────────────────────────────────────────
+
 
 @app.get("/api/download/client")
 def download_client():
@@ -151,25 +159,17 @@ def download_client():
     )
 
 
-# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
-_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
+# 生产环境：serve 前端构建产物
 if _FRONTEND_DIST.is_dir():
     app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
     logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
 
 
-
 @app.exception_handler(Exception)
-
 async def global_exception_handler(request: Request, exc: Exception):
-
     logger.error("未捕获的异常: %s", exc, exc_info=True)
 
     return JSONResponse(
-
         status_code=500,
-
-        content={"detail": f"服务器内部错误: {exc}"},
-
+        content={"detail": "服务器内部错误"},
     )
-

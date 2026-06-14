@@ -966,6 +966,10 @@ def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None
         _fetch_all_origin_branches()
         code, _, _ = run_git(["checkout", RELEASE_BRANCH], check=False, capture_output=True)
         if code != 0:
+            _, branches, _ = run_git(["branch"], capture_output=True)
+            if RELEASE_BRANCH in branches:
+                print(f"[错误] 无法切换到 {RELEASE_BRANCH}，合并取消")
+                return
             run_git(["checkout", "-b", RELEASE_BRANCH, _remote_release_ref()])
         run_git(["pull", "--rebase", "origin", RELEASE_BRANCH], timeout=300)
         run_git(

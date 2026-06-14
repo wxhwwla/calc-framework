@@ -150,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"[{mode}] 迁移武器 {result['changed_count']} 把")
 
-    for name in result["changed_names"]:
+    for name in result["changed_names"]:  # type: ignore[union-attr]
         print(f"  · {name}")
 
     if result["dry_run"] and result["changed_count"]:

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Typography,
   Table,
@@ -13,6 +14,7 @@ import {
 import { useComputeStore } from "../../store/computeStore";
 
 export default function ResultPanel() {
+  const { t } = useTranslation();
   const result = useComputeStore((s) => s.result);
   const loading = useComputeStore((s) => s.loading);
   const error = useComputeStore((s) => s.error);
@@ -21,7 +23,7 @@ export default function ResultPanel() {
     return (
       <Paper sx={{ p: 2, mt: 2 }}>
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          结算结果
+          {t('totalDamage.title', '结算结果')}
         </Typography>
         <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 1 }} />
         <Box sx={{ mt: 1 }}>
@@ -45,7 +47,7 @@ export default function ResultPanel() {
     return (
       <Paper sx={{ p: 2, mt: 2, textAlign: "center" }}>
         <Typography color="text.secondary">
-          选择适配器并输入参数后点击「计算」
+          {t('compute.selectCharWeaponFirst', '选择适配器并输入参数后点击「计算」')}
         </Typography>
       </Paper>
     );
@@ -56,7 +58,7 @@ export default function ResultPanel() {
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        结算结果
+        {t('totalDamage.title', '结算结果')}
       </Typography>
       <TableContainer sx={{ overflowX: 'auto' }}>
         <Table size="small">

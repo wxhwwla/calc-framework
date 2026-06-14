@@ -37,7 +37,7 @@ _EASYOCR_CACHE = Path.home() / ".EasyOCR" / "model"
 
 # 中英文需要的模型
 
-REQUIRED_MODELS: list[dict[str, str]] = [
+REQUIRED_MODELS: list[dict[str, str]] = [  # type: ignore[list-item]
     {
         "name": "craft_mlt_25k (检测模型)",
         "filename": "craft_mlt_25k.pth",

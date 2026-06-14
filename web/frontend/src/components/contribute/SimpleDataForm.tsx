@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Box,
@@ -94,21 +95,21 @@ function buildEntityJson(form: EntityForm): Record<string, unknown> {
   };
 }
 
-function validateForm(form: EntityForm): string[] {
+function validateForm(form: EntityForm, t: ReturnType<typeof useTranslation>["t"]): string[] {
   const errors: string[] = [];
-  if (!form.名称.trim()) errors.push("名称不能为空");
-  if (form.星级 < 3 || form.星级 > 6) errors.push("星级必须在 3~6 之间");
-  if (!form.类型) errors.push("请选择职业");
-  if (!form.属性) errors.push("请选择属性");
+  if (!form.名称.trim()) errors.push(t("contribute.simpleForm.validation.nameEmpty"));
+  if (form.星级 < 3 || form.星级 > 6) errors.push(t("contribute.simpleForm.validation.starRange"));
+  if (!form.类型) errors.push(t("contribute.simpleForm.validation.selectClass"));
+  if (!form.属性) errors.push(t("contribute.simpleForm.validation.selectAttribute"));
   const validSkills = form.技能.filter((s) => s.名称.trim());
-  if (validSkills.length === 0) errors.push("至少录入一个技能");
+  if (validSkills.length === 0) errors.push(t("contribute.simpleForm.validation.atLeastOneSkill"));
   for (const s of validSkills) {
     const validSegments = s.段.filter((seg) => seg.倍率.trim());
-    if (validSegments.length === 0) errors.push(`技能"${s.名称}"至少有一个倍率段`);
+    if (validSegments.length === 0) errors.push(t("contribute.simpleForm.validation.skillNeedSegment", { name: s.名称 }));
     for (const seg of validSegments) {
       const nums = seg.倍率.split(",").map((v) => v.trim()).filter(Boolean);
       if (nums.some((n) => isNaN(Number(n)) || !Number.isInteger(Number(n)))) {
-        errors.push(`技能"${s.名称}"的倍率包含非整数`);
+        errors.push(t("contribute.simpleForm.validation.rateNonInteger", { name: s.名称 }));
       }
     }
   }
@@ -116,6 +117,7 @@ function validateForm(form: EntityForm): string[] {
 }
 
 export default function SimpleDataForm() {
+  const { t } = useTranslation();
   const [form, setForm] = useState<EntityForm>({
     名称: "",
     星级: 3,
@@ -209,7 +211,7 @@ export default function SimpleDataForm() {
   }, []);
 
   const jsonOutput = buildEntityJson(form);
-  const validationErrors = validateForm(form);
+  const validationErrors = validateForm(form, t);
 
   const handleValidate = async () => {
     setSubmitResult(null);
@@ -221,12 +223,12 @@ export default function SimpleDataForm() {
       const result = await validateContributeData(jsonOutput);
       if (result.valid) {
         setErrors([]);
-        setSubmitResult("校验通过！数据格式正确。");
+        setSubmitResult(t("contribute.simpleForm.validation.validatePassed"));
       } else {
         setErrors(result.errors);
       }
     } catch {
-      setErrors(["校验请求失败，请检查网络连接"]);
+      setErrors([t("contribute.simpleForm.validation.validateFailed")]);
     }
   };
 
@@ -240,9 +242,9 @@ export default function SimpleDataForm() {
     try {
       const result = await submitContributeData(jsonOutput);
       setErrors([]);
-      setSubmitResult(`提交成功！已保存为 ${result.filename}。感谢您的贡献！`);
+      setSubmitResult(t("contribute.simpleForm.validation.submitSuccess", { filename: result.filename }));
     } catch (e: unknown) {
-      setErrors([e instanceof Error ? e.message : "提交失败"]);
+      setErrors([e instanceof Error ? e.message : t("contribute.simpleForm.validation.submitFailed")]);
     } finally {
       setSubmitting(false);
     }
@@ -264,38 +266,38 @@ export default function SimpleDataForm() {
 
   const handleCopyJson = () => {
     navigator.clipboard.writeText(JSON.stringify(jsonOutput, null, 2));
-    setSubmitResult("JSON 已复制到剪贴板");
+    setSubmitResult(t("contribute.simpleForm.validation.jsonCopied"));
   };
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        简易录入
+        {t("contribute.simpleForm.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        按步骤填写角色信息，系统会自动生成标准格式的 JSON 数据。
+        {t("contribute.simpleForm.description")}
       </Typography>
 
       {/* 基本信息 */}
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-          基本信息
+          {t("contribute.simpleForm.basicInfo")}
         </Typography>
         <Stack spacing={2}>
           <TextField
             fullWidth
             size="small"
-            label="名称"
-            placeholder="如：陈千语"
+            label={t("contribute.simpleForm.name")}
+            placeholder={t("contribute.simpleForm.namePlaceholder")}
             value={form.名称}
             onChange={(e) => updateField("名称", e.target.value)}
           />
           <Stack direction="row" spacing={2} flexWrap="wrap">
             <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel>星级</InputLabel>
+              <InputLabel>{t("contribute.simpleForm.star")}</InputLabel>
               <Select
                 value={String(form.星级)}
-                label="星级"
+                label={t("contribute.simpleForm.star")}
                 onChange={(e: SelectChangeEvent) =>
                   updateField("星级", Number(e.target.value))
                 }
@@ -308,10 +310,10 @@ export default function SimpleDataForm() {
               </Select>
             </FormControl>
             <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel>职业</InputLabel>
+              <InputLabel>{t("contribute.simpleForm.class")}</InputLabel>
               <Select
                 value={form.类型}
-                label="职业"
+                label={t("contribute.simpleForm.class")}
                 onChange={(e: SelectChangeEvent) =>
                   updateField("类型", e.target.value)
                 }
@@ -324,10 +326,10 @@ export default function SimpleDataForm() {
               </Select>
             </FormControl>
             <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel>属性</InputLabel>
+              <InputLabel>{t("contribute.simpleForm.attribute")}</InputLabel>
               <Select
                 value={form.属性}
-                label="属性"
+                label={t("contribute.simpleForm.attribute")}
                 onChange={(e: SelectChangeEvent) =>
                   updateField("属性", e.target.value)
                 }
@@ -347,7 +349,7 @@ export default function SimpleDataForm() {
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Typography variant="subtitle1" fontWeight={600} sx={{ flexGrow: 1 }}>
-            技能录入
+            {t("contribute.simpleForm.skillEntry")}
           </Typography>
           <Button
             variant="outlined"
@@ -355,13 +357,13 @@ export default function SimpleDataForm() {
             startIcon={<AddCircleIcon />}
             onClick={addSkill}
           >
-            添加技能
+            {t("contribute.simpleForm.addSkill")}
           </Button>
         </Box>
 
         {form.技能.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
-            暂无技能，点击"添加技能"开始录入
+            {t("contribute.simpleForm.noSkills")}
           </Typography>
         )}
 
@@ -377,13 +379,13 @@ export default function SimpleDataForm() {
                     </IconButton>
                     <TextField
                       size="small"
-                      placeholder="技能名称"
+                      placeholder={t("contribute.simpleForm.skillNamePlaceholder")}
                       value={skill.名称}
                       onChange={(e) => updateSkill(si, "名称", e.target.value)}
                       sx={{ flexGrow: 1 }}
                     />
                     <Chip
-                      label={skill.标签 === "主动" ? "主动" : "被动"}
+                      label={skill.标签 === "主动" ? t("contribute.simpleForm.active") : t("contribute.simpleForm.passive")}
                       color={skill.标签 === "主动" ? "primary" : "default"}
                       size="small"
                     />
@@ -400,10 +402,10 @@ export default function SimpleDataForm() {
                     <Box sx={{ mt: 2, pl: 4 }}>
                       <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
                         <FormControl size="small" sx={{ minWidth: 120 }}>
-                          <InputLabel>标签</InputLabel>
+                          <InputLabel>{t("contribute.simpleForm.label")}</InputLabel>
                           <Select
                             value={skill.标签}
-                            label="标签"
+                            label={t("contribute.simpleForm.label")}
                             onChange={(e: SelectChangeEvent) =>
                               updateSkill(si, "标签", e.target.value as "主动" | "被动")
                             }
@@ -424,18 +426,18 @@ export default function SimpleDataForm() {
                               }
                             />
                           }
-                          label="百分比"
+                          label={t("contribute.simpleForm.percentage")}
                         />
                         <FormControl size="small" sx={{ minWidth: 130 }}>
-                          <InputLabel>技能类型</InputLabel>
+                          <InputLabel>{t("contribute.simpleForm.skillType")}</InputLabel>
                           <Select
                             value={skill.技能类型}
-                            label="技能类型"
+                            label={t("contribute.simpleForm.skillType")}
                             onChange={(e: SelectChangeEvent) =>
                               updateSkill(si, "技能类型", e.target.value)
                             }
                           >
-                            <MenuItem value="">（无）</MenuItem>
+                            <MenuItem value="">{t("common.none")}</MenuItem>
                             {SKILL_TYPE_OPTIONS.map((v) => (
                               <MenuItem key={v} value={v}>
                                 {v}
@@ -446,7 +448,7 @@ export default function SimpleDataForm() {
                       </Stack>
 
                       <Typography variant="body2" fontWeight={500} sx={{ mb: 1 }}>
-                        倍率段
+                        {t("contribute.simpleForm.multiRate")}
                       </Typography>
 
                       {skill.段.map((seg, segIdx) => (
@@ -459,7 +461,7 @@ export default function SimpleDataForm() {
                         >
                           <TextField
                             size="small"
-                            placeholder="如：169,186,203"
+                            placeholder={t("contribute.simpleForm.ratePlaceholder")}
                             value={seg.倍率}
                             onChange={(e) =>
                               updateSegment(si, segIdx, "倍率", e.target.value)
@@ -474,7 +476,7 @@ export default function SimpleDataForm() {
                                 updateSegment(si, segIdx, "伤害类型", e.target.value)
                               }
                             >
-                              <MenuItem value="">（默认类型）</MenuItem>
+                              <MenuItem value="">{t("contribute.simpleForm.defaultType")}</MenuItem>
                               {SKILL_TYPE_OPTIONS.map((v) => (
                                 <MenuItem key={v} value={v}>
                                   {v}
@@ -498,7 +500,7 @@ export default function SimpleDataForm() {
                         onClick={() => addSegment(si)}
                         sx={{ mt: 1 }}
                       >
-                        添加段
+                        {t("contribute.simpleForm.addSegment")}
                       </Button>
                     </Box>
                   </Collapse>
@@ -535,20 +537,20 @@ export default function SimpleDataForm() {
           startIcon={<ContentCopyIcon />}
           onClick={handleCopyJson}
         >
-          复制 JSON
+          {t("contribute.simpleForm.copyJson")}
         </Button>
         <Button
           variant="outlined"
           startIcon={<DownloadIcon />}
           onClick={handleDownload}
         >
-          下载 JSON
+          {t("contribute.simpleForm.downloadJson")}
         </Button>
         <Button
           variant="outlined"
           onClick={handleValidate}
         >
-          校验数据
+          {t("contribute.simpleForm.validateData")}
         </Button>
         <Button
           variant="contained"
@@ -556,13 +558,13 @@ export default function SimpleDataForm() {
           onClick={handleSubmit}
           disabled={submitting}
         >
-          {submitting ? "提交中..." : "提交数据"}
+          {submitting ? t("contribute.simpleForm.submitting") : t("contribute.simpleForm.submitData")}
         </Button>
       </Stack>
 
       {/* 预览面板 */}
       <Typography variant="subtitle2" gutterBottom>
-        JSON 预览
+        {t("contribute.simpleForm.jsonPreview")}
       </Typography>
       <Paper
         variant="outlined"

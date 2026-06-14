@@ -282,7 +282,7 @@ def needs_sync_with_wiki(
         if not isinstance(local_arr, list):
             return True
 
-        for lv, la, wa in zip(levels, local_arr, wiki_arr):
+        for _lv, la, wa in zip(levels, local_arr, wiki_arr):
             if abs(float(la) - float(wa)) > tolerance:
                 return True
 

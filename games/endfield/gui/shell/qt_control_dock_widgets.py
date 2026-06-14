@@ -40,6 +40,7 @@ class SectionHeader(QLabel):
         self.setFont(font)
         self.setStyleSheet(f"color: {_SECTION_COLOR}; padding: 4px 0;")
         """初始化实例。"""
+
     """SectionHeader。"""
 
 
@@ -50,6 +51,7 @@ class HintLabel(QLabel):
         self.setStyleSheet(f"color: {_HINT_COLOR};")
         self.setWordWrap(True)
         """初始化实例。"""
+
     """HintLabel。"""
 
 
@@ -59,6 +61,7 @@ class SmallLabel(QLabel):
         self.setFont(font)
         self.setStyleSheet(f"color: {_LABEL_COLOR};")
         """初始化实例。"""
+
     """SmallLabel。"""
 
 
@@ -79,6 +82,7 @@ class ComboRow(QWidget):
     def current(self) -> str:
         return self.combo.currentText()
         """current。"""
+
     """ComboRow。"""
 
 
@@ -165,7 +169,7 @@ def read_abnormal_edits(
     keys: list[str],
 ) -> dict[str, int]:
     result: dict[str, int] = {}
-    for i, (row_name, edits) in enumerate(edits_by_row.items()):
+    for i, (_row_name, edits) in enumerate(edits_by_row.items()):
         total = 0
         for e in edits:
             try:

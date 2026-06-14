@@ -4,6 +4,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Typography, LinearProgress,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const BASE = "/api";
 
@@ -21,6 +22,7 @@ interface SearchBrowserDialogProps {
 }
 
 export default function SearchBrowserDialog({ open, onClose, adapter, context }: SearchBrowserDialogProps) {
+  const { t } = useTranslation();
   const [results, setResults] = useState<SearchHit[] | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,17 +52,17 @@ export default function SearchBrowserDialog({ open, onClose, adapter, context }:
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>搜索浏览器</DialogTitle>
+      <DialogTitle>{t("searchBrowser.title")}</DialogTitle>
       <DialogContent>
         {loading && <LinearProgress sx={{ mb: 2 }} />}
         {results === null && !loading && (
           <Typography variant="body2" color="text.secondary" textAlign="center">
-            尚无搜索结果，请执行搜索
+            {t("searchBrowser.noSearchYet")}
           </Typography>
         )}
         {results && results.length === 0 && (
           <Typography variant="body2" color="text.secondary" textAlign="center">
-            未找到结果
+            {t("searchBrowser.noResults")}
           </Typography>
         )}
         {results && results.length > 0 && (
@@ -69,9 +71,9 @@ export default function SearchBrowserDialog({ open, onClose, adapter, context }:
               <TableHead>
                 <TableRow>
                   <TableCell>#</TableCell>
-                  <TableCell>名称</TableCell>
-                  <TableCell align="right">分数</TableCell>
-                  <TableCell align="right">总伤</TableCell>
+                  <TableCell>{t("searchBrowser.name")}</TableCell>
+                  <TableCell align="right">{t("searchBrowser.score")}</TableCell>
+                  <TableCell align="right">{t("searchBrowser.totalDamage")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -91,9 +93,9 @@ export default function SearchBrowserDialog({ open, onClose, adapter, context }:
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
         <Button variant="contained" onClick={runSearch} disabled={loading}>
-          {loading ? "搜索中..." : "刷新"}
+          {loading ? t("searchBrowser.searchResultTable") : t("common.refresh")}
         </Button>
       </DialogActions>
     </Dialog>

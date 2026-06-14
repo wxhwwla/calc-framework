@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from calc_framework.ui.i18n import tr
+
 from .items import _GRID_SIZE, _NODE_HEIGHT, _NODE_WIDTH, NodeItem, _find_parent_node_id
 from .scene import GraphScene, _node_item_from_id
 from .schema import GraphEdge, GraphNode
@@ -218,7 +220,7 @@ class GraphEditorWidget(QWidget):
 
     def _open_subgraph_editor(self, node_id: str, source_graph: str) -> None:
         if not source_graph:
-            QMessageBox.information(self, "子图编辑器", "该复合节点没有嵌入的子图数据。")
+            QMessageBox.information(self, tr("desktop.graphEditor.subGraphEditor"), tr("desktop.graphEditor.noSubGraphData"))
 
             return
 
@@ -253,7 +255,7 @@ class SubGraphDialog(QDialog):
     def __init__(self, source_graph: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.setWindowTitle("子图编辑器")
+        self.setWindowTitle(tr("desktop.graphEditor.subGraphEditor"))
 
         self.resize(800, 600)
 

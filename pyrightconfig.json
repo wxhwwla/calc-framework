@@ -2,18 +2,28 @@
   "typeCheckingMode": "standard",
   "reportAttributeAccessIssue": false,
   "reportUnsupportedDunderAll": false,
-  "reportMissingImports": false,
   "reportImplicitStringConcatenation": false,
   "reportInvalidStringEscapeSequence": false,
   "reportPropertyTypeMismatch": false,
   "reportInconsistentConstructor": false,
   "reportPrivateImportUsage": false,
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
   "reportOptionalMemberAccess": false,
   "reportOptionalIterable": false,
   "reportOptionalSubscript": false,
+  "reportUnknownParameterType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownMemberType": false,
+  "reportUnknownVariableType": false,
+  "reportUnusedImport": "warning",
+  "reportUnusedVariable": "warning",
   "include": [
     "games",
-    "scripts"
+    "scripts",
+    "web/backend",
+    "framework/src",
+    "tools"
   ],
   "exclude": [
     "**/node_modules",
@@ -21,6 +31,7 @@
     "**/.*",
     "**/dist",
     "**/build",
-    ".venv"
+    ".venv",
+    "web/frontend"
   ]
 }

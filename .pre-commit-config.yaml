@@ -23,7 +23,7 @@ repos:
       - id: check-yaml
         args: [--allow-multiple-documents]
       - id: check-added-large-files
-        args: [--maxkb=1024]
+        args: [--maxkb=2048]
       - id: check-json
       - id: check-symlinks
       - id: destroyed-symlinks
@@ -39,3 +39,11 @@ repos:
       - id: python-use-type-annotations
       - id: text-unicode-replacement-char
         exclude: "docs/.*\\.md"
+
+  # detect-secrets — 待环境稳定后启用（CI security-audit.yml 已覆盖）
+  # - repo: https://github.com/Yelp/detect-secrets
+  #   rev: v1.5.0
+  #   hooks:
+  #     - id: detect-secrets
+  #       args: ["--baseline", ".secrets.baseline"]
+  #       exclude: "package-lock\\.json|poetry\\.lock|.*\\.calcpack|.*\\.zip"

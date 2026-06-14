@@ -320,7 +320,22 @@
 
 ---
 
-## 七、术语对照
+## 七、语言切换（i18n）
+
+桌面 GUI 支持中/英文界面切换，基于 `DesktopTranslator` 单例实现。
+
+| 操作 | 说明 |
+|------|------|
+| **默认语言** | 跟随系统 locale（`zh-CN` 自动使用中文，其余用英文） |
+| **切换语言** | 启动器/工具箱菜单中可切换显示语言 |
+| **翻译文件** | `framework/src/calc_framework/ui/i18n_data/zh-CN.json` + `en.json` |
+| **覆盖范围** | 启动器、CalcPack 查看器、工具箱、图编辑器、布局编辑器、DAG 调试器、插件管理器等（282 键） |
+
+翻译键使用 dot-notation 格式（如 `desktop.launcher.windowTitle`），与 Web i18n 共享键名结构。
+
+---
+
+## 八、术语对照
 
 | 界面显示 | 含义 |
 |---------|------|

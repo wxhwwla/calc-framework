@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert, CircularProgress, Chip,
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function AIFormulaDialog({ open, onClose, templateId, onApply }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -33,8 +35,8 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
   const [showRaw, setShowRaw] = useState(false);
 
   const validateApiKey = (key: string): string | null => {
-    if (!key.trim()) return '请输入 API Key';
-    if (!key.trim().startsWith('sk-')) return 'API Key 似乎不正确，应以 sk- 开头（如 sk-xxxx）';
+    if (!key.trim()) return t('generator.aiDialog.enterApiKey');
+    if (!key.trim().startsWith('sk-')) return t('generator.aiDialog.apiKeyInvalid');
     return null;
   };
 
@@ -66,7 +68,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
 
   const handleParse = async () => {
     if (!description.trim()) {
-      setError('请输入公式描述');
+      setError(t('generator.aiDialog.enterFormulaDesc'));
       return;
     }
     const keyErr = validateApiKey(apiKey);
@@ -114,39 +116,39 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
-      <DialogTitle>AI 公式解析</DialogTitle>
+      <DialogTitle>{t('generator.aiDialog.title')}</DialogTitle>
       <DialogContent>
         {/* API 配置 */}
         <Accordion defaultExpanded={!apiKey} sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>API 配置</Typography>
+            <Typography>{t('generator.aiDialog.apiConfig')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 fullWidth
-                label="API Key"
+                label={t('generator.aiDialog.apiKey')}
                 type="password"
                 value={apiKey}
                 onChange={e => { setApiKey(e.target.value); setTestResult(null); }}
                 placeholder="sk-..."
                 error={!!apiKey && !apiKey.startsWith('sk-') && apiKey.length > 5}
-                helperText={apiKey && !apiKey.startsWith('sk-') && apiKey.length > 5 ? '应以 sk- 开头' : 'OpenAI 兼容 API 的密钥'}
+                helperText={apiKey && !apiKey.startsWith('sk-') && apiKey.length > 5 ? t('generator.aiDialog.shouldStartWithSk') : t('generator.aiDialog.apiKeyHelp')}
               />
               <TextField
                 fullWidth
-                label="API 地址"
+                label={t('generator.aiDialog.apiBase')}
                 value={apiBase}
                 onChange={e => setApiBase(e.target.value)}
                 placeholder="https://api.openai.com/v1"
               />
               <TextField
                 fullWidth
-                label="模型"
+                label={t('generator.aiDialog.model')}
                 value={model}
                 onChange={e => setModel(e.target.value)}
                 placeholder="gpt-4o-mini"
-                helperText="支持 GPT、Claude、Ollama、DeepSeek 等 OpenAI 兼容接口"
+                helperText={t('generator.aiDialog.modelHint')}
               />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Button
@@ -157,12 +159,12 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
                   sx={{ py: isMobile ? 1.5 : undefined }}
                 >
                   {testing ? <CircularProgress size={16} sx={{ mr: 0.5 }} /> : null}
-                  {testing ? '测试中...' : '测试连接'}
+                  {testing ? t('generator.aiDialog.testing') : t('generator.aiDialog.testConnection')}
                 </Button>
                 {testResult && (
                   <Chip
                     size="small"
-                    label={testResult.status === 'ok' ? '连接成功' : (testResult.message || '连接失败')}
+                    label={testResult.status === 'ok' ? t('generator.aiDialog.connected') : (testResult.message || t('generator.aiDialog.connectionFailed'))}
                     color={testResult.status === 'ok' ? 'success' : 'error'}
                     variant="outlined"
                   />
@@ -175,12 +177,12 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         {/* 公式输入 */}
         <TextField
           fullWidth
-          label="描述你的伤害公式"
+          label={t('generator.aiDialog.formulaDescription')}
           multiline
           rows={4}
           value={description}
           onChange={e => setDescription(e.target.value)}
-          placeholder={'例如：\n最终伤害 = 攻击力 × 技能倍率 × (1 + 伤害加成) × (1 - 防御/(防御+100))\n如果暴击则 × (1 + 暴击伤害)\n角色属性：攻击力、防御力、暴击率、暴击伤害\n用户输入：技能倍率、是否暴击'}
+          placeholder={t('generator.aiDialog.formulaPlaceholder')}
           sx={{ mb: 2 }}
         />
 
@@ -195,7 +197,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
 
         {/* 解析结果 */}
-        {loading && <Box sx={{ textAlign: 'center', py: 3 }}><CircularProgress /><Typography>AI 正在分析公式...</Typography></Box>}
+        {loading && <Box sx={{ textAlign: 'center', py: 3 }}><CircularProgress /><Typography>{t('generator.aiDialog.analyzing')}</Typography></Box>}
 
         {result && (
           <Box>
@@ -205,14 +207,14 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
               </Alert>
             )}
 
-            <Typography variant="h6" gutterBottom>AI 解析结果</Typography>
+            <Typography variant="h6" gutterBottom>{t('generator.aiDialog.aiResult')}</Typography>
 
-            <Typography variant="subtitle2">识别的变量 ({result.variables.length})</Typography>
+            <Typography variant="subtitle2">{t('generator.aiDialog.identifiedVars', { n: result.variables.length })}</Typography>
             <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 150, overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>名称</TableCell><TableCell>类型</TableCell><TableCell>来源</TableCell><TableCell>默认值</TableCell>
+                    <TableCell>{t('common.name')}</TableCell><TableCell>{t('common.type')}</TableCell><TableCell>{t('generator.varPlaceholder', '来源')}</TableCell><TableCell>{t('dag.nodeEdit.defaultVal')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -228,12 +230,12 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
               </Table>
             </TableContainer>
 
-            <Typography variant="subtitle2">公式步骤 ({result.formula_steps.length})</Typography>
+            <Typography variant="subtitle2">{t('generator.aiDialog.formulaStepResults', { n: result.formula_steps.length })}</Typography>
             <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 150, overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>步骤</TableCell><TableCell>操作</TableCell><TableCell>左值</TableCell><TableCell>右值</TableCell>
+                    <TableCell>{t('generator.stepLabel')}</TableCell><TableCell>{t('dag.nodeEdit.operator')}</TableCell><TableCell>{t('generator.stepOpLhs')}</TableCell><TableCell>{t('generator.stepOpRhs')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -249,7 +251,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
               </Table>
             </TableContainer>
 
-            <Typography variant="subtitle2">输出 ({result.outputs.length})</Typography>
+            <Typography variant="subtitle2">{t('generator.aiDialog.outputResults', { n: result.outputs.length })}</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
               {result.outputs.map((o, i) => (
                 <Chip key={i} label={o.label} color={o.is_primary ? 'primary' : 'default'} />
@@ -260,7 +262,7 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Button size="small" onClick={() => setShowRaw(!showRaw)}>
                 {showRaw ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                {showRaw ? '收起' : '展开'}原始返回
+                {showRaw ? t('generator.aiDialog.hideRaw') : t('generator.aiDialog.showRaw')}
               </Button>
             </Box>
             <Collapse in={showRaw}>
@@ -274,12 +276,12 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} sx={{ py: isMobile ? 1.5 : undefined }}>取消</Button>
+        <Button onClick={onClose} sx={{ py: isMobile ? 1.5 : undefined }}>{t('common.cancel')}</Button>
         {result ? (
-          <Button variant="contained" onClick={handleApply} sx={{ py: isMobile ? 1.5 : undefined }}>应用此结果</Button>
+          <Button variant="contained" onClick={handleApply} sx={{ py: isMobile ? 1.5 : undefined }}>{t('generator.aiDialog.applyResult')}</Button>
         ) : (
           <Button variant="contained" onClick={handleParse} disabled={loading || !description.trim()} sx={{ py: isMobile ? 1.5 : undefined }}>
-            {loading ? '解析中...' : '解析公式'}
+            {loading ? t('generator.aiDialog.parsing') : t('generator.aiDialog.parseFormula')}
           </Button>
         )}
       </DialogActions>

@@ -7,6 +7,7 @@ import {
   Accordion, AccordionSummary, AccordionDetails, IconButton,
   Select, MenuItem, Checkbox, useMediaQuery, useTheme,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -14,15 +15,15 @@ import { fetchTemplates, fetchTemplateDetail, generateAdapter, type TemplateInfo
 import AIFormulaDialog from './AIFormulaDialog';
 import type { AIFormulaResponse } from '../api/generator';
 
-const STEPS = ['选择模板', '填写游戏信息', '预览与生成', '导出'];
-
 interface VarRow { name: string; type: string; source: string; default: number; description: string; }
 interface StepRow { id: string; op: string; lhs: string; rhs: string; expr: string; label: string; cond: string; true_val: string; false_val: string; }
 interface OutRow { name: string; node: string; label: string; is_primary: boolean; }
 
 export default function GeneratorPage() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const STEPS = [t('generator.steps.selectTemplate'), t('generator.steps.fillGameInfo'), t('generator.steps.previewGenerate'), t('generator.steps.exportStep')];
 
   const [activeStep, setActiveStep] = useState(0);
   const [templates, setTemplates] = useState<Record<string, TemplateInfo>>({});
@@ -46,8 +47,8 @@ export default function GeneratorPage() {
   useEffect(() => {
     fetchTemplates()
       .then(setTemplates)
-      .catch(e => setError('加载模板失败: ' + e.message));
-  }, []);
+      .catch(e => setError(t('generator.loadTemplatesFailed') + ': ' + e.message));
+  }, [t]);
 
   const handleSelectTemplate = async (id: string) => {
     setSelectedTemplate(id);
@@ -59,7 +60,7 @@ export default function GeneratorPage() {
       const detail = await fetchTemplateDetail(id);
       setTemplateDetail(detail);
     } catch (e: any) {
-      setError('加载模板详情失败: ' + e.message);
+      setError(t('generator.loadTemplateDetailFailed') + ': ' + e.message);
     }
   };
 
@@ -84,7 +85,7 @@ export default function GeneratorPage() {
       setResult(res);
       setActiveStep(3);
     } catch (e: any) {
-      setError('生成失败: ' + e.message);
+      setError(t('generator.generateFailed') + ': ' + e.message);
       setActiveStep(1);
     } finally {
       setGenerating(false);
@@ -156,7 +157,7 @@ export default function GeneratorPage() {
               <TableRow key={i}>
                 <TableCell sx={{ p: 0.5, minWidth: 100 }}>
                   <TextField size="small" variant="standard" value={v.name}
-                    onChange={e => updateVar(i, 'name', e.target.value)} placeholder="变量名" />
+                    onChange={e => updateVar(i, 'name', e.target.value)} placeholder={t("generator.varPlaceholder")} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 80 }}>
                   <Select size="small" value={v.type} onChange={e => updateVar(i, 'type', e.target.value)}
@@ -179,7 +180,7 @@ export default function GeneratorPage() {
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 120 }}>
                   <TextField size="small" variant="standard" value={v.description}
-                    onChange={e => updateVar(i, 'description', e.target.value)} placeholder="描述" />
+                    onChange={e => updateVar(i, 'description', e.target.value)} placeholder={t("generator.descPlaceholder")} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, width: 40 }}>
                   <IconButton size="small" onClick={() => removeVar(i)}><DeleteIcon fontSize="small" /></IconButton>
@@ -189,7 +190,7 @@ export default function GeneratorPage() {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button size="small" startIcon={<AddIcon />} onClick={addVar}>添加变量</Button>
+      <Button size="small" startIcon={<AddIcon />} onClick={addVar}>{t("generator.addVar")}</Button>
     </Box>
   );
 
@@ -203,7 +204,7 @@ export default function GeneratorPage() {
               <TableRow key={i}>
                 <TableCell sx={{ p: 0.5, minWidth: 60 }}>
                   <TextField size="small" variant="standard" value={s.label}
-                    onChange={e => updateStep(i, 'label', e.target.value)} placeholder="标签" />
+                    onChange={e => updateStep(i, 'label', e.target.value)} placeholder={t("generator.stepLabel")} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 90 }}>
                   <Select size="small" value={s.op} onChange={e => updateStep(i, 'op', e.target.value)}
@@ -213,38 +214,38 @@ export default function GeneratorPage() {
                     <MenuItem value="multiply">× (multiply)</MenuItem>
                     <MenuItem value="divide">÷ (divide)</MenuItem>
                     <MenuItem value="cond">if (cond)</MenuItem>
-                    <MenuItem value="expr">表达式 (expr)</MenuItem>
+                    <MenuItem value="expr">{`${t("dag.nodeTypes.expr")} (expr)`}</MenuItem>
                   </Select>
                 </TableCell>
                 {s.op === 'cond' ? (
                   <>
                     <TableCell sx={{ p: 0.5, minWidth: 100 }}>
                       <TextField size="small" variant="standard" value={s.cond}
-                        onChange={e => updateStep(i, 'cond', e.target.value)} placeholder="条件" />
+                        onChange={e => updateStep(i, 'cond', e.target.value)} placeholder={t("generator.stepOpCondition")} />
                     </TableCell>
                     <TableCell sx={{ p: 0.5, minWidth: 80 }}>
                       <TextField size="small" variant="standard" value={s.true_val}
-                        onChange={e => updateStep(i, 'true_val', e.target.value)} placeholder="成立" />
+                        onChange={e => updateStep(i, 'true_val', e.target.value)} placeholder={t("generator.stepOpTrue")} />
                     </TableCell>
                     <TableCell sx={{ p: 0.5, minWidth: 80 }}>
                       <TextField size="small" variant="standard" value={s.false_val}
-                        onChange={e => updateStep(i, 'false_val', e.target.value)} placeholder="不成立" />
+                        onChange={e => updateStep(i, 'false_val', e.target.value)} placeholder={t("generator.stepOpFalse")} />
                     </TableCell>
                   </>
                 ) : s.op === 'expr' ? (
                   <TableCell sx={{ p: 0.5, minWidth: 200 }}>
                     <TextField size="small" variant="standard" value={s.expr}
-                      onChange={e => updateStep(i, 'expr', e.target.value)} placeholder="如: atk * 2.5 - def" fullWidth />
+                      onChange={e => updateStep(i, 'expr', e.target.value)} placeholder={t("generator.stepOpExpr")} fullWidth />
                   </TableCell>
                 ) : (
                   <>
                     <TableCell sx={{ p: 0.5, minWidth: 100 }}>
                       <TextField size="small" variant="standard" value={s.lhs}
-                        onChange={e => updateStep(i, 'lhs', e.target.value)} placeholder="左值/变量" />
+                        onChange={e => updateStep(i, 'lhs', e.target.value)} placeholder={t("generator.stepOpLhs")} />
                     </TableCell>
                     <TableCell sx={{ p: 0.5, minWidth: 100 }}>
                       <TextField size="small" variant="standard" value={s.rhs}
-                        onChange={e => updateStep(i, 'rhs', e.target.value)} placeholder="右值/变量" />
+                        onChange={e => updateStep(i, 'rhs', e.target.value)} placeholder={t("generator.stepOpRhs")} />
                     </TableCell>
                   </>
                 )}
@@ -256,7 +257,7 @@ export default function GeneratorPage() {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button size="small" startIcon={<AddIcon />} onClick={addStep}>添加步骤</Button>
+      <Button size="small" startIcon={<AddIcon />} onClick={addStep}>{t("generator.addStep")}</Button>
     </Box>
   );
 
@@ -270,15 +271,15 @@ export default function GeneratorPage() {
               <TableRow key={i}>
                 <TableCell sx={{ p: 0.5, minWidth: 100 }}>
                   <TextField size="small" variant="standard" value={o.name}
-                    onChange={e => updateOut(i, 'name', e.target.value)} placeholder="输出名" />
+                    onChange={e => updateOut(i, 'name', e.target.value)} placeholder={t("generator.outPlaceholder")} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 80 }}>
                   <TextField size="small" variant="standard" value={o.node}
-                    onChange={e => updateOut(i, 'node', e.target.value)} placeholder="节点" />
+                    onChange={e => updateOut(i, 'node', e.target.value)} placeholder={t("generator.outNode")} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 100 }}>
                   <TextField size="small" variant="standard" value={o.label}
-                    onChange={e => updateOut(i, 'label', e.target.value)} placeholder="显示名" />
+                    onChange={e => updateOut(i, 'label', e.target.value)} placeholder={t("generator.outDisplayName")} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 60 }}>
                   <Checkbox checked={o.is_primary}
@@ -292,15 +293,15 @@ export default function GeneratorPage() {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button size="small" startIcon={<AddIcon />} onClick={addOut}>添加输出</Button>
+      <Button size="small" startIcon={<AddIcon />} onClick={addOut}>{t("generator.addOut")}</Button>
     </Box>
   );
 
   return (
     <Box sx={{ p: isMobile ? 2 : 3, maxWidth: 1000, mx: 'auto' }}>
-      <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>AI 计算器生成器</Typography>
+      <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>{t("generator.title")}</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        选择模板，填写游戏信息，AI 自动生成计算器适配包。
+        {t("generator.description")}
       </Typography>
 
       <Stepper activeStep={activeStep} alternativeLabel={isMobile} sx={{ mb: 4 }}>
@@ -312,7 +313,7 @@ export default function GeneratorPage() {
       {/* Step 0: 选择模板 */}
       {activeStep === 0 && (
         <Box>
-          <Typography variant="h6" gutterBottom>选择一个品类模板</Typography>
+          <Typography variant="h6" gutterBottom>{t("generator.selectTemplateHeading")}</Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 2 }}>
             {Object.entries(templates).map(([id, info]) => (
               <Card
@@ -330,7 +331,7 @@ export default function GeneratorPage() {
                   <Chip label={id} size="small" sx={{ mt: 1 }} />
                   {templateDetail?.dag_preview && selectedTemplate === id && (
                     <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                      DAG: {templateDetail.dag_preview.nodes} 节点, {templateDetail.dag_preview.outputs} 输出
+                      DAG: {t("dag.editor.nodesCount", { n: templateDetail.dag_preview.nodes })}, {t("generator.outputs", { n: templateDetail.dag_preview.outputs })}
                     </Typography>
                   )}
                 </CardContent>
@@ -339,7 +340,7 @@ export default function GeneratorPage() {
           </Box>
           <Box sx={{ mt: 3 }}>
             <Button variant="contained" disabled={!selectedTemplate} onClick={() => setActiveStep(1)} sx={{ py: isMobile ? 1.5 : undefined }}>
-              下一步
+              {t("generator.nextStep")}
             </Button>
           </Box>
         </Box>
@@ -348,30 +349,30 @@ export default function GeneratorPage() {
       {/* Step 1: 填写游戏信息 */}
       {activeStep === 1 && (
         <Box>
-          <Typography variant="h6" gutterBottom>填写游戏信息</Typography>
+          <Typography variant="h6" gutterBottom>{t("generator.fillGameInfoHeading")}</Typography>
           <TextField
             fullWidth
-            label="游戏名称"
+            label={t("generator.gameName")}
             value={gameName}
             onChange={e => setGameName(e.target.value)}
             sx={{ mb: 2, maxWidth: 400 }}
-            helperText="输入你的游戏名称，将用于命名计算器"
+            helperText={t("generator.gameNameHelper")}
           />
           {templateDetail && (
             <Alert severity="info" sx={{ mb: 2 }}>
-              已选择模板: {templateDetail.meta?.name as string}。
-              {templateDetail.dag_preview && ` DAG: ${templateDetail.dag_preview.nodes} 个节点, ${templateDetail.dag_preview.outputs} 个输出。`}
+              {t("generator.selectedTemplate")}: {templateDetail.meta?.name as string}。
+              {templateDetail.dag_preview && ` DAG: ${templateDetail.dag_preview.nodes} ${t("dag.editor.nodesCount", { n: templateDetail.dag_preview.nodes })}`}
             </Alert>
           )}
 
           {/* AI 按钮 */}
           <Box sx={{ mb: 2 }}>
             <Button variant="outlined" onClick={() => setAiDialogOpen(true)} sx={{ py: isMobile ? 1.5 : undefined }}>
-              AI 辅助解析公式
+              {t("generator.aiParseFormula")}
             </Button>
             {aiResult && (
               <Chip
-                label={`AI 已解析: ${aiResult.variables.length} 变量, ${aiResult.formula_steps.length} 步骤`}
+                label={t("generator.aiParsedLabel", { vars: aiResult.variables.length, steps: aiResult.formula_steps.length })}
                 color="success" size="small" sx={{ ml: 1 }}
                 onDelete={() => { setAiResult(null); setEditableVars([]); setEditableSteps([]); setEditableOutputs([]); setShowManualForm(false); }}
               />
@@ -381,22 +382,22 @@ export default function GeneratorPage() {
           {/* 可编辑数据表（AI 解析后或手动展开） */}
           {(hasEditData || showManualForm) && (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>自定义数据（可编辑）</Typography>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>{t("generator.customData")}</Typography>
               <Accordion defaultExpanded={editableVars.length > 0}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2">变量 ({editableVars.length})</Typography>
+                  <Typography variant="body2">{t("generator.variables", { n: editableVars.length })}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>{renderVarEditor()}</AccordionDetails>
               </Accordion>
               <Accordion defaultExpanded={editableSteps.length > 0}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2">公式步骤 ({editableSteps.length})</Typography>
+                  <Typography variant="body2">{t("generator.formulaSteps", { n: editableSteps.length })}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>{renderStepEditor()}</AccordionDetails>
               </Accordion>
               <Accordion defaultExpanded={editableOutputs.length > 0}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2">输出 ({editableOutputs.length})</Typography>
+                  <Typography variant="body2">{t("generator.outputs", { n: editableOutputs.length })}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>{renderOutEditor()}</AccordionDetails>
               </Accordion>
@@ -407,15 +408,15 @@ export default function GeneratorPage() {
           {!hasEditData && !aiResult && (
             <Box sx={{ mb: 2 }}>
               <Button size="small" onClick={() => setShowManualForm(true)} disabled={showManualForm}>
-                手动录入数据（不通过 AI）
+                {t("generator.manualEntry")}
               </Button>
             </Box>
           )}
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button variant="outlined" onClick={() => setActiveStep(0)} sx={{ py: isMobile ? 1.5 : undefined, flex: isMobile ? '1 1 auto' : undefined }}>上一步</Button>
+            <Button variant="outlined" onClick={() => setActiveStep(0)} sx={{ py: isMobile ? 1.5 : undefined, flex: isMobile ? '1 1 auto' : undefined }}>{t("generator.prevStep")}</Button>
             <Button variant="contained" disabled={!gameName || generating} onClick={handleGenerate} sx={{ py: isMobile ? 1.5 : undefined, flex: isMobile ? '1 1 auto' : undefined }}>
-              {generating ? '生成中...' : '生成计算器'}
+              {generating ? t("generator.generating") : t("generator.generateCalc")}
             </Button>
           </Box>
         </Box>
@@ -425,7 +426,7 @@ export default function GeneratorPage() {
       {activeStep === 2 && (
         <Box sx={{ textAlign: 'center', py: 6 }}>
           <CircularProgress />
-          <Typography sx={{ mt: 2 }}>正在生成计算器文件...</Typography>
+          <Typography sx={{ mt: 2 }}>{t("generator.generatingInProgress")}</Typography>
         </Box>
       )}
 
@@ -433,7 +434,7 @@ export default function GeneratorPage() {
       {activeStep === 3 && result && (
         <Box>
           <Alert severity="success" sx={{ mb: 2 }}>
-            生成成功！共 {result.file_count} 个文件。
+            {t("generator.generateSuccess", { n: result.file_count })}
           </Alert>
 
           <TableContainer component={Paper} sx={{ mb: 2, overflowX: 'auto' }}>
@@ -443,7 +444,7 @@ export default function GeneratorPage() {
                   <TableRow key={name} hover sx={{ cursor: 'pointer' }}
                     onClick={() => { setSelectedFile(name); setOpenFileDialog(true); }}>
                     <TableCell>{name}</TableCell>
-                    <TableCell align="right">{content.length} 字符</TableCell>
+                    <TableCell align="right">{t("generator.chars", { n: content.length })}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -451,7 +452,7 @@ export default function GeneratorPage() {
           </TableContainer>
 
           <Button variant="contained" onClick={handleDownloadAll} sx={{ py: isMobile ? 1.5 : undefined }}>
-            下载全部文件
+            {t("generator.downloadAll")}
           </Button>
         </Box>
       )}
@@ -465,7 +466,7 @@ export default function GeneratorPage() {
           </pre>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenFileDialog(false)}>关闭</Button>
+          <Button onClick={() => setOpenFileDialog(false)}>{t("common.close")}</Button>
         </DialogActions>
       </Dialog>
 

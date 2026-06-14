@@ -18,6 +18,7 @@ import {
   AccordionDetails,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useTranslation } from "react-i18next";
 import { fetchSurvivalEstimate, type SurvivalEstimateResult } from "../../api/survival";
 import { ENEMY_TIERS, type EnemyParams } from "../../api/search";
 
@@ -33,6 +34,14 @@ interface SurvivalEstimateDialogProps {
   selectedEnemyId?: string;
 }
 
+const TIER_I18N_MAP: Record<string, string> = {
+  普通: "enemyTiers.normal",
+  进阶: "enemyTiers.advanced",
+  精英: "enemyTiers.elite",
+  头目: "enemyTiers.boss",
+  领袖: "enemyTiers.leader",
+};
+
 export default function SurvivalEstimateDialog({
   open,
   onClose,
@@ -44,6 +53,7 @@ export default function SurvivalEstimateDialog({
   enemyParams,
   selectedEnemyId = "",
 }: SurvivalEstimateDialogProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SurvivalEstimateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +81,7 @@ export default function SurvivalEstimateDialog({
 
   const runEstimate = useCallback(async () => {
     if (!charData || !weaponData) {
-      setError("请先选择角色与武器");
+      setError(t("survivalEstimate.selectCharWeaponFirst"));
       return;
     }
     setLoading(true);
@@ -106,6 +116,7 @@ export default function SurvivalEstimateDialog({
       setLoading(false);
     }
   }, [
+    t,
     charData,
     weaponData,
     charLevel,
@@ -135,20 +146,20 @@ export default function SurvivalEstimateDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>处决 / 治疗 / 失衡估算</DialogTitle>
+      <DialogTitle>{t("survivalEstimate.title")}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mb: 2 }}>
           <FormControl size="small" fullWidth>
-            <InputLabel>敌人等阶</InputLabel>
+            <InputLabel>{t("survivalEstimate.enemyTier")}</InputLabel>
             <Select
               value={enemyTier}
-              label="敌人等阶"
+              label={t("survivalEstimate.enemyTier")}
               onChange={(e) => setEnemyTier(e.target.value)}
               onClose={runEstimate}
             >
-              {ENEMY_TIERS.map((t) => (
-                <MenuItem key={t} value={t}>
-                  {t}
+              {ENEMY_TIERS.map((tier) => (
+                <MenuItem key={tier} value={tier}>
+                  {TIER_I18N_MAP[tier] ? t(TIER_I18N_MAP[tier]) : tier}
                 </MenuItem>
               ))}
             </Select>
@@ -157,7 +168,7 @@ export default function SurvivalEstimateDialog({
             size="small"
             fullWidth
             type="number"
-            label="单次失衡值"
+            label={t("survivalEstimate.singleImbGain")}
             value={imbGainBase}
             onChange={(e) => setImbGainBase(parseFloat(e.target.value) || 0)}
             onBlur={runEstimate}
@@ -166,7 +177,7 @@ export default function SurvivalEstimateDialog({
             size="small"
             fullWidth
             type="number"
-            label="失衡效率加成"
+            label={t("survivalEstimate.imbEfficiency")}
             value={imbGainEff}
             onChange={(e) => setImbGainEff(parseFloat(e.target.value) || 0)}
             onBlur={runEstimate}
@@ -175,7 +186,7 @@ export default function SurvivalEstimateDialog({
             size="small"
             fullWidth
             type="number"
-            label="敌人最大生命"
+            label={t("survivalEstimate.enemyMaxHp")}
             value={enemyMaxHp}
             onChange={(e) => setEnemyMaxHp(parseFloat(e.target.value) || 0)}
             onBlur={runEstimate}
@@ -184,7 +195,7 @@ export default function SurvivalEstimateDialog({
             size="small"
             fullWidth
             type="number"
-            label="灼热抗性 (%)"
+            label={t("survivalEstimate.hotResist")}
             value={hotResist}
             onChange={(e) => setHotResist(parseFloat(e.target.value) || 0)}
             onBlur={runEstimate}
@@ -193,14 +204,14 @@ export default function SurvivalEstimateDialog({
 
         <Accordion disableGutters sx={{ mb: 1 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="body2">技力 / 终结技</Typography>
+            <Typography variant="body2">{t("survivalEstimate.spUltimate")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
               <TextField
                 size="small"
                 type="number"
-                label="起始技力"
+                label={t("survivalEstimate.startSp")}
                 value={spStart}
                 onChange={(e) => setSpStart(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -208,7 +219,7 @@ export default function SurvivalEstimateDialog({
               <TextField
                 size="small"
                 type="number"
-                label="自然回能时长 (s)"
+                label={t("survivalEstimate.naturalRegenDuration")}
                 value={spSeconds}
                 onChange={(e) => setSpSeconds(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -216,7 +227,7 @@ export default function SurvivalEstimateDialog({
               <TextField
                 size="small"
                 type="number"
-                label="起始终结充能"
+                label={t("survivalEstimate.startUltCharge")}
                 value={ultStart}
                 onChange={(e) => setUltStart(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -224,7 +235,7 @@ export default function SurvivalEstimateDialog({
               <TextField
                 size="small"
                 type="number"
-                label="生命汲取率"
+                label={t("survivalEstimate.lifeStealRate")}
                 value={lifeStealRate}
                 onChange={(e) => setLifeStealRate(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -236,14 +247,14 @@ export default function SurvivalEstimateDialog({
 
         <Accordion disableGutters sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="body2">治疗（三乘区）</Typography>
+            <Typography variant="body2">{t("survivalEstimate.healingThreeZones")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
               <TextField
                 size="small"
                 type="number"
-                label="治疗基础值"
+                label={t("survivalEstimate.baseHeal")}
                 value={baseHealFlat}
                 onChange={(e) => setBaseHealFlat(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -251,7 +262,7 @@ export default function SurvivalEstimateDialog({
               <TextField
                 size="small"
                 type="number"
-                label="每点意志+"
+                label={t("survivalEstimate.perWillBonus")}
                 value={statPerPoint}
                 onChange={(e) => setStatPerPoint(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -259,7 +270,7 @@ export default function SurvivalEstimateDialog({
               <TextField
                 size="small"
                 type="number"
-                label="治疗效率"
+                label={t("survivalEstimate.healEfficiency")}
                 value={healEfficiency}
                 onChange={(e) => setHealEfficiency(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -267,7 +278,7 @@ export default function SurvivalEstimateDialog({
               <TextField
                 size="small"
                 type="number"
-                label="独立治疗加成"
+                label={t("survivalEstimate.independentHeal")}
                 value={independentHealBonus}
                 onChange={(e) => setIndependentHealBonus(parseFloat(e.target.value) || 0)}
                 onBlur={runEstimate}
@@ -289,33 +300,33 @@ export default function SurvivalEstimateDialog({
         {result && !loading && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Typography variant="body2">
-              处决伤害: <strong>{result.execute_damage.toLocaleString()}</strong>（×
+              {t("survivalEstimate.executeDamage")}: <strong>{result.execute_damage.toLocaleString()}</strong>（×
               {result.execute_multiplier.toFixed(2)}）| 恢复技力 {result.execute_sp_restore}
             </Typography>
             <Typography variant="body2">
-              失衡: 上限 {result.imbalance_cap} / 持续 {result.imbalance_duration_sec}s | 有效累积{" "}
+              {t("survivalEstimate.imbalance")}: {t("survivalEstimate.imbalanceCap", { cap: result.imbalance_cap, dur: result.imbalance_duration_sec })} | {t("survivalEstimate.effectiveAccum")}{" "}
               {result.imbalance_gain_effective}（{result.imbalance_gain_percent.toFixed(1)}%）
             </Typography>
             <Typography variant="body2">
-              快速打进惩罚: ×{result.fast_break_multiplier.toFixed(2)} | 燃烧{" "}
+              {t("survivalEstimate.fastBreakPenalty")}: ×{result.fast_break_multiplier.toFixed(2)} | {t("survivalEstimate.burn")}{" "}
               {result.burn_tick_per_sec.toLocaleString()}/s
             </Typography>
             <Typography variant="body2">
-              技力: {result.sp_after_regen.toFixed(1)}（{result.sp_regen_per_sec}/s）| 终结充能{" "}
+              {t("survivalEstimate.sp")}: {result.sp_after_regen.toFixed(1)}（{result.sp_regen_per_sec}/s）| {t("survivalEstimate.ultCharge")}{" "}
               {result.ultimate_charge_after.toFixed(1)}
             </Typography>
             <Typography variant="body2">
-              治疗: {result.healing_amount.toLocaleString()} | 生命汲取{" "}
-              {result.life_steal_heal.toLocaleString()} | 角色生命 {result.character_max_hp.toLocaleString()}
+              {t("survivalEstimate.healing")}: {result.healing_amount.toLocaleString()} | {t("survivalEstimate.lifeSteal")}{" "}
+              {result.life_steal_heal.toLocaleString()} | {t("survivalEstimate.charHp")} {result.character_max_hp.toLocaleString()}
             </Typography>
           </Box>
         )}
       </DialogContent>
       <DialogActions>
         <Button onClick={runEstimate} disabled={loading}>
-          刷新
+          {t("common.refresh")}
         </Button>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

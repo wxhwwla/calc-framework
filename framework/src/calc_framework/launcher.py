@@ -10,6 +10,7 @@ from typing import Any
 from calc_framework.config.manager import AdapterManager, discover_adapters
 from calc_framework.data.context import make_context
 from calc_framework.logging import get_logger
+from calc_framework.ui.i18n import tr
 
 logger = get_logger(__name__)
 
@@ -111,10 +112,10 @@ def _launch_ui(adapter_name: str, pkg: Any) -> None:
     app = QApplication(sys.argv)
 
     window = QMainWindow()
-    window.setWindowTitle(f"游戏计算器 — {adapter_name}")
+    window.setWindowTitle(tr("desktop.launcher.fullAppTitle", adapter=adapter_name))
     window.setMinimumSize(800, 600)
 
-    help_menu = window.menuBar().addMenu("帮助")
+    help_menu = window.menuBar().addMenu(tr("common.help"))
     from utils.gui.donation import append_donation_help_menu_action
 
     append_donation_help_menu_action(help_menu, window)

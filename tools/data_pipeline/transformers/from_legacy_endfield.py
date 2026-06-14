@@ -81,7 +81,8 @@ def _migrate_character_skills(raw: Dict[str, Any], entity: EntitySchema) -> None
         segments = _extract_character_segments(raw, mf, tf)
 
         if segments:
-            entity["技能"].append(
+            entity["技能"] = entity.get("技能", [])  # type: ignore[typeddict-unknown-key]
+            entity["技能"].append(  # type: ignore[typeddict-unknown-key]
                 {
                     "名称": skill_name,
                     "标签": "主动",
@@ -236,7 +237,7 @@ def _migrate_weapon_skills(raw: Dict[str, Any], entity: EntitySchema) -> None:
         if not effect or not isinstance(curve, list):
             continue
 
-        entity["技能"].append(
+        entity.setdefault("技能", []).append(  # type: ignore[typeddict-unknown-key]
             {
                 "名称": str(effect),
                 "标签": "被动",
@@ -253,7 +254,7 @@ def _migrate_weapon_skills(raw: Dict[str, Any], entity: EntitySchema) -> None:
         if not effect or not isinstance(curve, list):
             continue
 
-        entity["技能"].append(
+        entity.setdefault("技能", []).append(  # type: ignore[typeddict-unknown-key]
             {
                 "名称": str(effect),
                 "标签": "被动",

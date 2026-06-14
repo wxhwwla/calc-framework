@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { useTranslation } from "react-i18next";
 import { mergeEnemyParams, type EnemyParams } from "../../api/search";
 import { exportDesktopPreset, type WebLoadoutPayload } from "../../api/loadout";
 
@@ -58,6 +59,7 @@ export default function PresetDialog({
   currentState,
   onImport,
 }: PresetDialogProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -76,7 +78,7 @@ export default function PresetDialog({
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch (e) {
-        alert(`导出失败: ${e}`);
+        alert(t("presetDialog.exportFailed", { e: String(e) }));
       } finally {
         setExporting(false);
       }
@@ -107,7 +109,7 @@ export default function PresetDialog({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [loadoutPayload, currentState]);
+  }, [loadoutPayload, currentState, t]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -124,7 +126,7 @@ export default function PresetDialog({
           const raw = JSON.parse(evt.target?.result as string) as Record<string, unknown>;
           const schema = String(raw.schema || "");
           if (!schema || !raw.char_name) {
-            alert("无效的预设文件：缺少必要字段");
+            alert(t("presetDialog.invalidMissingFields"));
             return;
           }
           if (schema === "endfield_loadout_preset_v2") {
@@ -136,26 +138,26 @@ export default function PresetDialog({
               enemy_params: mergeEnemyParams(web.enemy_params ?? {}),
             });
           } else {
-            alert(`不支持的预设格式: ${schema}`);
+            alert(t("presetDialog.unsupportedFormat", { schema }));
             return;
           }
           onClose();
         } catch {
-          alert("无效的预设文件：JSON 解析失败");
+          alert(t("presetDialog.invalidJson"));
         }
       };
       reader.readAsText(file);
       e.target.value = "";
     },
-    [onImport, onClose],
+    [onImport, onClose, t],
   );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>配装预设</DialogTitle>
+      <DialogTitle>{t("presetDialog.title")}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          导出为桌面同款 <code>endfield_loadout_preset_v2</code>，或导入桌面/Web 预设。
+          <span dangerouslySetInnerHTML={{ __html: t("presetDialog.description") }} />
         </Typography>
 
         <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
@@ -165,10 +167,10 @@ export default function PresetDialog({
             onClick={handleExport}
             disabled={exporting}
           >
-            导出配装
+            {t("presetDialog.exportPreset")}
           </Button>
           <Button variant="contained" startIcon={<FileUploadIcon />} onClick={handleImportClick}>
-            导入配装
+            {t("presetDialog.importPreset")}
           </Button>
         </Box>
 
@@ -181,7 +183,7 @@ export default function PresetDialog({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

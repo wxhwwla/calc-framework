@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Autocomplete,
   TextField,
@@ -40,6 +41,7 @@ export default function OperatorSelector({
   skillMultiplier,
   onSkillMultiplierChange,
 }: OperatorSelectorProps) {
+  const { t } = useTranslation();
   const [starFilter, setStarFilter] = useState<Set<number>>(() => new Set(ALL_STARS));
   const [professionFilter, setProfessionFilter] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
@@ -107,17 +109,17 @@ export default function OperatorSelector({
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
-        筛选干员
+        {t('operatorSelector.searchPlaceholder')}
       </Typography>
 
       <Stack spacing={1.5} sx={{ mb: 2 }}>
         <Box>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-            星级
+            {t('common.type', '星级')}
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             <Chip
-              label="全部"
+              label={t('common.all')}
               size="small"
               variant={allStarsOn ? "filled" : "outlined"}
               color={allStarsOn ? "primary" : "default"}
@@ -139,16 +141,16 @@ export default function OperatorSelector({
         </Box>
 
         <FormControl fullWidth size="small">
-          <InputLabel>主职业</InputLabel>
+          <InputLabel>{t('arknights.profession')}</InputLabel>
           <Select
             value={professionFilter}
-            label="主职业"
+            label={t('arknights.profession')}
             onChange={(e) => {
               setProfessionFilter(e.target.value);
               setBranchFilter("");
             }}
           >
-            <MenuItem value="">全部</MenuItem>
+            <MenuItem value="">{t('common.all')}</MenuItem>
             {professions.map((p) => (
               <MenuItem key={p} value={p}>{p}</MenuItem>
             ))}
@@ -156,14 +158,14 @@ export default function OperatorSelector({
         </FormControl>
 
         <FormControl fullWidth size="small">
-          <InputLabel>副职业（分支）</InputLabel>
+          <InputLabel>{t('arknights.branch')}</InputLabel>
           <Select
             value={branchFilter}
-            label="副职业（分支）"
+            label={t('arknights.branch')}
             onChange={(e) => setBranchFilter(e.target.value)}
             disabled={branches.length === 0}
           >
-            <MenuItem value="">全部</MenuItem>
+            <MenuItem value="">{t('common.all')}</MenuItem>
             {branches.map((b) => (
               <MenuItem key={b} value={b}>{b}</MenuItem>
             ))}
@@ -171,18 +173,18 @@ export default function OperatorSelector({
         </FormControl>
 
         <Typography variant="caption" color="text.secondary">
-          共 {filteredIndex.length} / {operatorIndex.length} 名干员
+          {`${t('arknights.operator')} ${filteredIndex.length} / ${operatorIndex.length}`}
         </Typography>
       </Stack>
 
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
-        选择干员
+        {t('arknights.pageTitle')}
       </Typography>
       <Autocomplete
         options={filteredNames}
         value={selectedOperator && filteredNames.includes(selectedOperator) ? selectedOperator : null}
         onChange={(_e, v) => { if (v) onSelect(v); }}
-        noOptionsText={filteredIndex.length === 0 ? "无匹配干员，请放宽筛选" : "无结果"}
+        noOptionsText={filteredIndex.length === 0 ? t('operatorSelector.searchPlaceholder') : t('common.noData')}
         renderOption={(props, name) => {
           const op = indexByName.get(name);
           const { key, ...rest } = props;
@@ -202,7 +204,7 @@ export default function OperatorSelector({
           );
         }}
         renderInput={(params) => (
-          <TextField {...params} size="small" placeholder="搜索干员名称..." />
+          <TextField {...params} size="small" placeholder={t('operatorSelector.searchPlaceholder')} />
         )}
         sx={{ mb: 2 }}
       />
@@ -210,11 +212,11 @@ export default function OperatorSelector({
       {selectedOperator && (
         <>
           <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            技能等级（1-7 = 技能等级, 8-10 = 专精1-3）
+            {t('arknights.skillLevel')}（{t('arknights.skillLevel')} 1-7, 8-10 = {t('arknights.specializationLevel', { n: 1 })}-{t('arknights.specializationLevel', { n: 3 })}）
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
             <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
-              Lv.{skillLevel}
+              {t('compute.level')} {skillLevel}
             </Typography>
             <Slider
               size="small"
@@ -227,8 +229,8 @@ export default function OperatorSelector({
               marks={[
                 { value: 1, label: "1" },
                 { value: 7, label: "7" },
-                { value: 8, label: "专1" },
-                { value: 10, label: "专3" },
+                { value: 8, label: t('arknights.specializationLevel', { n: 1 }) },
+                { value: 10, label: t('arknights.specializationLevel', { n: 3 }) },
               ]}
               sx={{ flex: 1 }}
             />
@@ -238,7 +240,7 @@ export default function OperatorSelector({
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((lv) => (
               <Chip
                 key={lv}
-                label={lv <= 7 ? `Lv.${lv}` : `专${lv - 7}`}
+                label={lv <= 7 ? `${t('compute.level')} ${lv}` : t('arknights.specializationLevel', { n: lv - 7 })}
                 size="small"
                 variant={skillLevel === lv ? "filled" : "outlined"}
                 color={skillLevel === lv ? "primary" : "default"}
@@ -249,7 +251,7 @@ export default function OperatorSelector({
           </Box>
 
           <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            技能倍率
+            {t('operatorSelector.skillMultiplier')}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
             <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>

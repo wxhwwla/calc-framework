@@ -190,7 +190,7 @@ def parse_input_with_tags() -> list[float | int]:
 
                         end = int(start_end[1].strip())
 
-                        end - start + 1
+                        end - start + 1  # type: ignore[unused-expression]
 
                     except ValueError:
                         pass

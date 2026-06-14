@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/history";
 
 export interface HistoryEntry {
@@ -13,7 +15,7 @@ export interface HistoryEntry {
 
 export async function fetchHistory(): Promise<HistoryEntry[]> {
   const r = await fetch(BASE);
-  if (!r.ok) throw new Error(`获取计算历史失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.calcHistoryGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
@@ -23,5 +25,5 @@ export async function saveHistory(entry: HistoryEntry): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(entry),
   });
-  if (!r.ok) throw new Error(`保存计算历史失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.calcHistorySaveFailed")}: ${r.statusText}`);
 }

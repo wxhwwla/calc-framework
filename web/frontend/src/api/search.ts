@@ -1,7 +1,21 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/search";
 
 /** 与桌面 `ENEMY_TIERS` 一致 */
 export const ENEMY_TIERS = ["普通", "进阶", "精英", "头目", "领袖"] as const;
+
+/** Display name mapping for ENEMY_TIERS (i18n-aware). */
+export function getEnemyTierDisplay(tier: string): string {
+  const map: Record<string, string> = {
+    "普通": i18n.t("enemyTiers.normal"),
+    "进阶": i18n.t("enemyTiers.advanced"),
+    "精英": i18n.t("enemyTiers.elite"),
+    "头目": i18n.t("enemyTiers.boss"),
+    "领袖": i18n.t("enemyTiers.leader"),
+  };
+  return map[tier] || tier;
+}
 
 /** 与桌面 `EnemyEvalParams` / 插件默认一致 */
 export const DEFAULT_ENEMY_PARAMS: EnemyParams = {
@@ -72,7 +86,7 @@ export interface SearchHistoryEntry {
 
 export async function fetchSearchHistory(): Promise<SearchHistoryEntry[]> {
   const r = await fetch(`${BASE}/history`);
-  if (!r.ok) throw new Error(`获取搜索历史失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.searchHistoryGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
@@ -82,12 +96,12 @@ export async function saveSearchHistory(entry: SearchHistoryEntry): Promise<void
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(entry),
   });
-  if (!r.ok) throw new Error(`保存搜索历史失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.searchHistorySaveFailed")}: ${r.statusText}`);
 }
 
 export async function fetchEnemyChoices(): Promise<EnemyInfo[]> {
   const r = await fetch(`${BASE}/enemies`);
-  if (!r.ok) throw new Error(`获取敌方参数失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.enemiesGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
@@ -170,7 +184,7 @@ export async function estimateSearch(
   });
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`搜索预估失败: ${text}`);
+    throw new Error(`${i18n.t("api.searchEstimateFailed")}: ${text}`);
   }
   return r.json();
 }
@@ -183,7 +197,7 @@ export async function runSearch(params: SearchRequest): Promise<SearchResult> {
   });
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`搜索失败: ${text}`);
+    throw new Error(`${i18n.t("api.searchRunFailed")}: ${text}`);
   }
   return r.json();
 }
@@ -192,7 +206,7 @@ export async function fetchEquipmentCatalog(
   scope = "全部装备",
 ): Promise<Record<string, { 名称: string; 部位: string; 所属套组: string; 稀有度: string }[]>> {
   const r = await fetch(`${BASE}/catalog?scope=${encodeURIComponent(scope)}`);
-  if (!r.ok) throw new Error(`获取装备目录失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.equipmentCatalogGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
@@ -222,12 +236,12 @@ export async function runSearchStream(
 
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`流式搜索失败: ${text}`);
+    throw new Error(`${i18n.t("api.searchStreamFailed")}: ${text}`);
   }
 
   const reader = r.body?.getReader();
   if (!reader) {
-    throw new Error("响应体不可读");
+    throw new Error(i18n.t("api.responseNotReadable"));
   }
 
   const decoder = new TextDecoder();

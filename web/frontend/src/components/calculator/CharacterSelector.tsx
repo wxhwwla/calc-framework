@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FormControl,
   InputLabel,
@@ -43,7 +44,7 @@ function LevelSlider({
   return (
     <Box sx={{ mb: 1.5 }}>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        {label}：Lv.{value}
+        {label} {value}
       </Typography>
       <Slider
         size="small"
@@ -59,7 +60,7 @@ function LevelSlider({
         {[80, 90].map((lv) => (
           <Chip
             key={lv}
-            label={`等级${lv}`}
+            label={`Lv.${lv}`}
             size="small"
             variant={value === lv ? "filled" : "outlined"}
             color={value === lv ? "primary" : "default"}
@@ -67,20 +68,6 @@ function LevelSlider({
             sx={{ height: 22, cursor: "pointer" }}
           />
         ))}
-        <Chip
-          label="满级"
-          size="small"
-          variant="outlined"
-          onClick={() => onChange(LEVEL_MAX)}
-          sx={{ height: 22, cursor: "pointer" }}
-        />
-        <Chip
-          label="归零"
-          size="small"
-          variant="outlined"
-          onClick={() => onChange(LEVEL_MIN)}
-          sx={{ height: 22, cursor: "pointer" }}
-        />
       </Box>
     </Box>
   );
@@ -96,6 +83,7 @@ export default function CharacterSelector({
   onCharLevelChange,
   onWeaponLevelChange,
 }: CharacterSelectorProps) {
+  const { t } = useTranslation();
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
   const [weapons, setWeapons] = useState<WeaponSummary[]>([]);
   const [charDataCache, setCharDataCache] = useState<Record<string, Record<string, unknown>>>({});
@@ -206,37 +194,37 @@ export default function CharacterSelector({
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
-        角色 / 武器选择
+        {t("attributeDisplay.sectionTitle")}
       </Typography>
 
       {/* ── 角色区域 ── */}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        角色
+        {t("compute.character")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
         <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
-          <InputLabel>类型</InputLabel>
+          <InputLabel>{t("common.type")}</InputLabel>
           <Select
             value={charTypeFilter}
-            label="类型"
+            label={t("common.type")}
             onChange={(e) => { setCharTypeFilter(e.target.value); setCharStarFilter(""); }}
           >
-            <MenuItem value="">全部</MenuItem>
-            {charTypes.map((t) => (
-              <MenuItem key={t} value={t}>{t}</MenuItem>
+            <MenuItem value="">{t("common.all")}</MenuItem>
+            {charTypes.map((t_val) => (
+              <MenuItem key={t_val} value={t_val}>{t_val}</MenuItem>
             ))}
           </Select>
         </FormControl>
 
         <FormControl size="small" sx={{ minWidth: 80, flex: 1 }}>
-          <InputLabel>星级</InputLabel>
+          <InputLabel>{t("designer.dataBrowserTab.columns.star")}</InputLabel>
           <Select
             value={charStarFilter}
-            label="星级"
+            label={t("designer.dataBrowserTab.columns.star")}
             onChange={(e) => setCharStarFilter(e.target.value)}
           >
-            <MenuItem value="">全部</MenuItem>
+            <MenuItem value="">{t("common.all")}</MenuItem>
             {charStarsByType.map((s) => (
               <MenuItem key={s} value={String(s)}>{s}★</MenuItem>
             ))}
@@ -245,10 +233,10 @@ export default function CharacterSelector({
       </Box>
 
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-        <InputLabel>名称</InputLabel>
+        <InputLabel>{t("common.name")}</InputLabel>
         <Select
           value={selectedChar}
-          label="名称"
+          label={t("common.name")}
           onChange={(e) => handleCharChange(e.target.value)}
         >
           {filteredChars.map((c) => (
@@ -264,34 +252,34 @@ export default function CharacterSelector({
       </FormControl>
 
       <LevelSlider
-        label="角色等级"
+        label={`${t("compute.character")} ${t("compute.level")}`}
         value={charLevel}
         onChange={onCharLevelChange}
       />
 
       {/* ── 武器区域 ── */}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        武器
+        {t("compute.weapon")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
         {charWeaponType && (
           <FormControl size="small" sx={{ minWidth: 80, flex: 1 }} disabled>
-            <InputLabel>类型</InputLabel>
-            <Select value={charWeaponType} label="类型">
+            <InputLabel>{t("common.type")}</InputLabel>
+            <Select value={charWeaponType} label={t("common.type")}>
               <MenuItem value={charWeaponType}>{charWeaponType}</MenuItem>
             </Select>
           </FormControl>
         )}
 
         <FormControl size="small" sx={{ minWidth: 80, flex: 1 }}>
-          <InputLabel>星级</InputLabel>
+          <InputLabel>{t("designer.dataBrowserTab.columns.star")}</InputLabel>
           <Select
             value={weaponStarFilter}
-            label="星级"
+            label={t("designer.dataBrowserTab.columns.star")}
             onChange={(e) => setWeaponStarFilter(e.target.value)}
           >
-            <MenuItem value="">全部</MenuItem>
+            <MenuItem value="">{t("common.all")}</MenuItem>
             {weaponStars.map((s) => (
               <MenuItem key={s} value={String(s)}>{s}★</MenuItem>
             ))}
@@ -300,10 +288,10 @@ export default function CharacterSelector({
       </Box>
 
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-        <InputLabel>名称</InputLabel>
+        <InputLabel>{t("common.name")}</InputLabel>
         <Select
           value={selectedWeapon}
-          label="名称"
+          label={t("common.name")}
           onChange={(e) => handleWeaponChange(e.target.value)}
         >
           {filteredWeapons.map((w) => (
@@ -319,7 +307,7 @@ export default function CharacterSelector({
       </FormControl>
 
       <LevelSlider
-        label="武器等级"
+        label={`${t("compute.weapon")} ${t("compute.level")}`}
         value={weaponLevel}
         onChange={onWeaponLevelChange}
       />

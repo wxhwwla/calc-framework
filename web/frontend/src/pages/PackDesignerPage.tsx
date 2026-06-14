@@ -11,6 +11,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import { useTranslation } from "react-i18next";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import ViewQuiltIcon from "@mui/icons-material/ViewQuilt";
 import PaletteIcon from "@mui/icons-material/Palette";
@@ -20,6 +21,7 @@ import ThemeExportTab from "../components/pack_designer/ThemeExportTab";
 import { usePackDesignerStore } from "../store/packDesignerStore";
 
 export default function PackDesignerPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState(0);
   const adapters = usePackDesignerStore((s) => s.adapters);
   const adapterId = usePackDesignerStore((s) => s.adapterId);
@@ -33,12 +35,12 @@ export default function PackDesignerPage() {
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, flexWrap: "wrap", gap: 2 }}>
-        <Typography variant="h5">配置包设计器</Typography>
+        <Typography variant="h5">{t("packDesigner.title")}</Typography>
         <FormControl size="small" sx={{ minWidth: { xs: 160, sm: 260 } }}>
-          <InputLabel>适配器</InputLabel>
+          <InputLabel>{t("packDesigner.adapter")}</InputLabel>
           <Select
             value={adapterId}
-            label="适配器"
+            label={t("packDesigner.adapter")}
             onChange={(e: SelectChangeEvent) => setAdapterId(e.target.value)}
           >
             {adapters.map((a) => (
@@ -52,9 +54,9 @@ export default function PackDesignerPage() {
 
       <Paper sx={{ mb: 2 }}>
         <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
-          <Tab icon={<EditNoteIcon />} label="数据录入" />
-          <Tab icon={<ViewQuiltIcon />} label="布局编辑" />
-          <Tab icon={<PaletteIcon />} label="主题与导出" />
+          <Tab icon={<EditNoteIcon />} label={t("packDesigner.dataEntry")} />
+          <Tab icon={<ViewQuiltIcon />} label={t("packDesigner.layoutEdit")} />
+          <Tab icon={<PaletteIcon />} label={t("packDesigner.themeExport")} />
         </Tabs>
       </Paper>
 

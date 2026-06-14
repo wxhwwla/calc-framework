@@ -1,0 +1,18 @@
+{
+  "attributes": [
+    { "name": "base_atk", "type": "float", "source": "character", "description": "角色基础攻击力" },
+    { "name": "atk_percent", "type": "percent", "source": "character", "default": 0, "description": "角色攻击力%" },
+    { "name": "crit_rate", "type": "percent", "source": "character", "default": 0.05, "description": "暴击率" },
+    { "name": "crit_dmg", "type": "percent", "source": "character", "default": 0.5, "description": "暴击伤害" },
+    { "name": "elemental_bonus", "type": "percent", "source": "character", "default": 0, "description": "元素伤害加成" },
+    { "name": "elemental_mastery", "type": "float", "source": "character", "default": 0, "description": "元素精通" },
+    { "name": "base_atk", "type": "float", "source": "weapon", "default": 0, "description": "武器基础攻击力" },
+    { "name": "atk_percent", "type": "percent", "source": "weapon", "default": 0, "description": "武器攻击力%" },
+    { "name": "crit_rate", "type": "percent", "source": "weapon", "default": 0, "description": "武器暴击率" },
+    { "name": "crit_dmg", "type": "percent", "source": "weapon", "default": 0, "description": "武器暴击伤害" },
+    { "name": "dmg_bonus", "type": "percent", "source": "weapon", "default": 0, "description": "武器增伤" },
+    { "name": "level", "type": "float", "source": "enemy", "default": 90, "description": "敌方等级" },
+    { "name": "def_base", "type": "float", "source": "enemy", "default": 950, "description": "敌方基础防御力" },
+    { "name": "resistance", "type": "percent", "source": "enemy", "default": 0.1, "description": "敌方抗性" }
+  ]
+}

@@ -8,5 +8,5 @@ __all__: list[str] = [
     "main",
 ]
 
-from . import pages
+from . import pages  # type: ignore[unused-import]
 from .main_window import DevToolkitWindow, main

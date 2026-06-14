@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from .strategies import (  # noqa: F401  # re-export for backward compat
-    ExponentialFormulaFitter,
-    PiecewiseFormulaFitter,
-    ThresholdFormulaFitter,
+    ExponentialFormulaFitter,  # type: ignore[unused-import]
+    PiecewiseFormulaFitter,  # type: ignore[unused-import]
+    ThresholdFormulaFitter,  # type: ignore[unused-import]
 )

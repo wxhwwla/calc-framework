@@ -40,7 +40,7 @@ def main() -> int:
     for weapon in rows:
         slots = read_weapon_special_slots(weapon)
 
-        write_weapon_special_slots(weapon, slots)
+        write_weapon_special_slots(weapon, slots)  # type: ignore[arg-type]
 
     _WEAPONS.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
 

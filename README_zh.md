@@ -1,13 +1,51 @@
 [![GitHub stars](https://img.shields.io/github/stars/wxhwwla/calc-framework?style=social)](https://github.com/wxhwwla/calc-framework)
 [![AtomGit stars](https://atomgit.com/wxhwwla/calc-framework/star/badge.svg)](https://atomgit.com/wxhwwla/calc-framework)
+[![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
+[![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
+[![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
 
 # Calc Framework — 通用游戏计算框架
 
 > 通用游戏计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》
 >
-> **在线版**：[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)
->
 > [:us: English](README.md)
+
+---
+
+## 🚀 快速开始
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+### 🎮 我是玩家
+
+**直接用计算器——无需安装。**
+
+[**打开 Web 版 →**](https://wxhwwla.pythonanywhere.com)
+
+*或* [下载桌面版](https://github.com/wxhwwla/calc-framework/releases)
+
+> 📖 [玩家手册](docs/player-guide.md)
+
+</td>
+<td align="center" width="50%">
+
+### 🔧 我是开发者
+
+**为我的游戏构建计算器，或参与贡献。**
+
+```bash
+git clone https://github.com/wxhwwla/calc-framework
+cd calc-framework
+python scripts/main_launcher.py
+```
+
+> 🏗 [快速上手 ↓](#快速上手) · [创建计算器](docs/制造游戏计算器完整流程.md) · [贡献路径](docs/contributor-pathways.md)
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -18,10 +56,10 @@
 | **本页** | 首次访问、GitHub 首页 |
 | [`ARCHITECTURE_zh.md`](ARCHITECTURE_zh.md) ([EN](ARCHITECTURE.md)) | 系统架构概览 |
 | [`CONTRIBUTING_zh.md`](CONTRIBUTING_zh.md) ([EN](CONTRIBUTING.md)) | 如何贡献 |
+| [`docs/contributor-pathways.md`](docs/contributor-pathways.md) | 玩家 → 贡献者成长路径 |
 | [`CONTEXT_zh.md`](CONTEXT_zh.md) ([EN](CONTEXT.md)) | 领域术语表 |
 | [`docs/项目目标.md`](docs/项目目标.md) | 项目愿景与路线图 |
 | [`docs/操作指令集.md`](docs/操作指令集.md) | 操作命令速查 |
-| [`docs/算法与架构.md`](docs/算法与架构.md) | 算法与架构细节（部分过期） |
 | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | 许可与数据来源 |
 | [`games/endfield/README.md`](games/endfield/README.md) | 终末地包详细说明 |
 
@@ -111,13 +149,16 @@ cd web/frontend && npm install && npm run dev
 
 ### 通用框架
 
-- **DAG 引擎**：9 种节点类型、拓扑排序、AST 沙箱、子图展开、块级缓存
+- **可视化 DAG 编辑器**：拖拽式节点编辑器（Web: ReactFlow, 桌面: PySide6），无需写代码即可构建伤害公式
+- **DAG 引擎**：8 种节点类型 + call（子图调用）、拓扑排序、AST 沙箱、子图展开、块级缓存、增量求值
 - **逆推引擎**：`data_to_params()` / `params_to_curve()` — 任意游戏双向公式拟合
 - **搜索引擎**：Top-N 枚举、并行执行、取消令牌、SQLite 持久化
 - **ComputeSheet**：声明式 UI — 消费 `layout.json` + DAG 变量 → 自动渲染控件
 - **插件系统**：注册表模式 + 3 内置插件（暴击/闪避/距离衰减）+ `.calcplugin` 格式
-- **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8) 适配器均通过
-- **主题管理**：暗色/亮色/高对比度，动态 QSS 生成
+- **AI 配装**：自然语言配装推荐 + 多轮对话 + 语义搜索 + AI 公式解析
+- **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点) 适配器均通过
+- **主题管理**：暗色/亮色/高对比度，动态 QSS 生成；Web 端暗/亮切换
+- **SaaS API**：API Key 管理 + 速率限制 + 用量统计
 
 ### Web 版
 

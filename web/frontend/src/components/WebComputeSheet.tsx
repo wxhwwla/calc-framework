@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Paper,
@@ -149,6 +150,7 @@ export default function WebComputeSheet({
   outputValues,
   loading = false,
 }: WebComputeSheetProps) {
+  const { t } = useTranslation();
   const userInputVars = useMemo(() => getUserInputVariables(variables), [variables]);
 
   const [inputValues, setInputValues] = useState<Record<string, number | boolean | string>>(() => {
@@ -257,7 +259,7 @@ export default function WebComputeSheet({
                     {(section.widget_config?.text as string) || DONATION_TEXT.split("\n\n")[0]}
                   </Typography>
                   <Button variant="outlined" color="secondary" onClick={() => setDonationOpen(true)}>
-                    自愿捐赠
+                    {t('donation.dialogTitle')}
                   </Button>
                 </Paper>
               );
@@ -293,7 +295,7 @@ export default function WebComputeSheet({
         disabled={loading}
         sx={{ mb: 2 }}
       >
-        {loading ? "计算中..." : "计算"}
+        {loading ? t('compute.calculating') : t('common.submit')}
       </Button>
 
       <DonationDialog open={donationOpen} onClose={() => setDonationOpen(false)} />

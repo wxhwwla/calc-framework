@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Autocomplete,
   Box,
   Button,
+  Chip,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -16,11 +19,14 @@ import {
   TablePagination,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import { fetchProfileRows } from "../../api/dataProfiles";
+import { fetchProfileRows, validateData, type ValidateResult } from "../../api/dataProfiles";
 import { getEntity, getProfile } from "../../constants/dataProfileConfig";
+import DagVerifyDialog from "./DagVerifyDialog";
 
 interface Props {
   profileId: string;
@@ -31,6 +37,7 @@ const FILTERABLE_KEYS: readonly string[] = ["类型", "星级", "部位", "所�
 
 /** 多游戏数据浏览 */
 export default function ProfileDataBrowser({ profileId }: Props) {
+  const { t } = useTranslation();
   const profile = getProfile(profileId);
   const [entityKey, setEntityKey] = useState(profile?.entities[0]?.key ?? "");
   const entity = getEntity(profileId, entityKey);
@@ -66,6 +73,32 @@ export default function ProfileDataBrowser({ profileId }: Props) {
     setFilters({});
     setPage(0);
   }, [entityKey]);
+
+  // DAG 验证对话框
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyName, setVerifyName] = useState("");
+  const openVerify = (name: string) => {
+    setVerifyName(name);
+    setVerifyOpen(true);
+  };
+
+  // 展开行详情
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  // 数据校验
+  const [validating, setValidating] = useState(false);
+  const [validateResult, setValidateResult] = useState<ValidateResult | null>(null);
+  const handleValidate = async () => {
+    setValidating(true);
+    setValidateResult(null);
+    try {
+      setValidateResult(await validateData(profileId, entityKey));
+    } catch {
+      setValidateResult(null);
+    } finally {
+      setValidating(false);
+    }
+  };
 
   const columns = entity?.columns ?? [];
   const fields = entity?.fields ?? [];
@@ -162,10 +195,10 @@ export default function ProfileDataBrowser({ profileId }: Props) {
       >
         {showEntitySelector && (
           <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel>实体类型</InputLabel>
+            <InputLabel>{t("designer.dataEditorTab.entityType")}</InputLabel>
             <Select
               value={entityKey}
-              label="实体类型"
+              label={t("designer.dataEditorTab.entityType")}
               onChange={(e: SelectChangeEvent) => {
                 setEntityKey(e.target.value);
               }}
@@ -181,7 +214,7 @@ export default function ProfileDataBrowser({ profileId }: Props) {
 
         <TextField
           size="small"
-          placeholder="搜索名称..."
+          placeholder={t("common.search") + "..."}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -198,19 +231,62 @@ export default function ProfileDataBrowser({ profileId }: Props) {
             value={filters[field.key] ?? null}
             onChange={(_e, v) => handleFilterChange(field.key, v)}
             renderInput={(params) => (
-              <TextField {...params} label={field.label} placeholder="不限" />
+              <TextField {...params} label={field.label} placeholder={t("common.all")} />
             )}
             sx={{ minWidth: 140 }}
           />
         ))}
 
         <Button variant="outlined" size="small" onClick={loadData}>
-          刷新
+          {t("designer.dataBrowserTab.refresh")}
         </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          color="warning"
+          onClick={handleValidate}
+          disabled={validating}
+        >
+          {validating ? "…" : t("designer.dagVerify.validateData", "校验数据")}
+        </Button>
+        {validateResult && (
+          <Typography variant="body2" color={validateResult.errors.length === 0 ? "success.main" : "error.main"}>
+            {validateResult.valid}/{validateResult.total} 通过
+            {validateResult.errors.length > 0 && ` (${validateResult.errors.length} 项有问题)`}
+          </Typography>
+        )}
         <Typography variant="body2" color="text.secondary">
-          共 {filteredRows.length} 条
+          {t("designer.dataEditorTab.countLabel", { profile: profile?.label ?? "", entity: entity?.label ?? "", count: filteredRows.length })}
         </Typography>
       </Stack>
+
+      {/* 校验错误详情 */}
+      {validateResult && validateResult.errors.length > 0 && (
+        <TableContainer sx={{ mb: 2, maxHeight: 200, overflowY: "auto" }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: 80 }}>#</TableCell>
+                <TableCell>{t("common.name")}</TableCell>
+                <TableCell>{t("common.error")}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {validateResult.errors.map((e) => (
+                <TableRow key={e.index}>
+                  <TableCell>{e.index}</TableCell>
+                  <TableCell>{e.name}</TableCell>
+                  <TableCell>
+                    {e.messages.map((m, mi) => (
+                      <Typography key={mi} variant="body2" color="error.main">{m}</Typography>
+                    ))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* 数据表格 */}
       <TableContainer sx={{ maxHeight: 500, overflowX: "auto" }}>
@@ -220,20 +296,67 @@ export default function ProfileDataBrowser({ profileId }: Props) {
               {columns.map((col) => (
                 <TableCell key={col}>{col}</TableCell>
               ))}
+              <TableCell align="center" sx={{ width: 60 }}>
+                {t("designer.dagVerify.verify", "验证")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedRows.map((row, idx) => (
-              <TableRow key={idx}>
-                {columns.map((col) => (
-                  <TableCell key={col}>{String(row[col] ?? "--")}</TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {paginatedRows.map((row, idx) => {
+              const globalIdx = page * rowsPerPage + idx;
+              const isExpanded = expandedIdx === globalIdx;
+              return [
+                <TableRow
+                  key={idx}
+                  hover
+                  onClick={() => setExpandedIdx(isExpanded ? null : globalIdx)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  {columns.map((col) => (
+                    <TableCell key={col}>{String(row[col] ?? "--")}</TableCell>
+                  ))}
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                    <Tooltip title={t("designer.dagVerify.verifyTip", "跑 DAG 验证数据")}>
+                      <IconButton
+                        size="small"
+                        onClick={() => openVerify(String(row[columns[0]] ?? ""))}
+                      >
+                        <PlayCircleOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>,
+                isExpanded && (
+                  <TableRow key={`${idx}-detail`}>
+                    <TableCell colSpan={columns.length + 1} sx={{ bgcolor: "grey.50", py: 0 }}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, py: 1 }}>
+                        {Object.entries(row).map(([key, val]) => {
+                          const display = Array.isArray(val)
+                            ? `[${val.length} 项] ${JSON.stringify(val).slice(0, 120)}${JSON.stringify(val).length > 120 ? "..." : ""}`
+                            : typeof val === "object" && val !== null
+                              ? JSON.stringify(val).slice(0, 120)
+                              : String(val ?? "--");
+                          return (
+                            <Chip
+                              key={key}
+                              label={`${key}: ${display}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ maxWidth: 400, fontSize: "0.7rem" }}
+                              title={JSON.stringify(val, null, 2)}
+                            />
+                          );
+                        })}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ),
+              ];
+            })}
             {paginatedRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length || 1} align="center">
-                  <Typography color="text.secondary">暂无数据</Typography>
+                <TableCell colSpan={columns.length + 1} align="center">
+                  <Typography color="text.secondary">{t("common.noData")}</Typography>
                 </TableCell>
               </TableRow>
             )}
@@ -250,6 +373,15 @@ export default function ProfileDataBrowser({ profileId }: Props) {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[10, 25, 50, 100]}
+      />
+
+      {/* DAG 验证弹窗 */}
+      <DagVerifyDialog
+        open={verifyOpen}
+        onClose={() => setVerifyOpen(false)}
+        profileId={profileId}
+        entityKey={entityKey}
+        entityName={verifyName}
       />
     </Box>
   );

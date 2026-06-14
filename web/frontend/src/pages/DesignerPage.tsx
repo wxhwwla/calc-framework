@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box, FormControl, InputLabel, MenuItem, Paper, Select, Tab, Tabs, Typography } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import { useTranslation } from "react-i18next";
 import BuildIcon from "@mui/icons-material/Build";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -10,18 +11,19 @@ import ProfileDataBrowser from "../components/designer/ProfileDataBrowser";
 import { DATA_PROFILES } from "../constants/dataProfileConfig";
 
 export default function DesignerPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState(0);
   const [profileId, setProfileId] = useState(DATA_PROFILES[0]?.id ?? "endfield");
 
   return (
     <Box>
       <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
-        <Typography variant="h5">数据设计器</Typography>
+        <Typography variant="h5">{t("designer.title")}</Typography>
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>数据模板</InputLabel>
+          <InputLabel>{t("designer.dataProfile")}</InputLabel>
           <Select
             value={profileId}
-            label="数据模板"
+            label={t("designer.dataProfile")}
             onChange={(e: SelectChangeEvent) => setProfileId(e.target.value)}
           >
             {DATA_PROFILES.map((p) => (
@@ -35,9 +37,9 @@ export default function DesignerPage() {
 
       <Paper sx={{ mb: 2 }}>
         <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
-          <Tab icon={<BuildIcon />} label="公式反推" />
-          <Tab icon={<EditIcon />} label="数据编辑" />
-          <Tab icon={<VisibilityIcon />} label="数据浏览" />
+          <Tab icon={<BuildIcon />} label={t("designer.inverse")} />
+          <Tab icon={<EditIcon />} label={t("designer.dataEdit")} />
+          <Tab icon={<VisibilityIcon />} label={t("designer.dataBrowse")} />
         </Tabs>
       </Paper>
 

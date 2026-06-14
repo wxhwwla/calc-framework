@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/data";
 
 export interface InverseResponse {
@@ -22,7 +24,7 @@ export async function inverseFormula(
   });
   if (!r.ok) {
     const text = await r.text();
-    throw new Error(`反推失败: ${text}`);
+    throw new Error(`${i18n.t("api.inverseFailed")}: ${text}`);
   }
   return r.json();
 }
@@ -33,7 +35,7 @@ export async function createCharacter(data: Record<string, unknown>): Promise<vo
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!r.ok) throw new Error(`新增角色失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.createCharFailed")}: ${r.statusText}`);
 }
 
 export async function updateCharacter(name: string, data: Record<string, unknown>): Promise<void> {
@@ -42,14 +44,14 @@ export async function updateCharacter(name: string, data: Record<string, unknown
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!r.ok) throw new Error(`更新角色失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.updateCharFailed")}: ${r.statusText}`);
 }
 
 export async function deleteCharacter(name: string): Promise<void> {
   const r = await fetch(`${BASE}/characters/${encodeURIComponent(name)}`, {
     method: "DELETE",
   });
-  if (!r.ok) throw new Error(`删除角色失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.deleteCharFailed")}: ${r.statusText}`);
 }
 
 export async function createWeapon(data: Record<string, unknown>): Promise<void> {
@@ -58,7 +60,7 @@ export async function createWeapon(data: Record<string, unknown>): Promise<void>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!r.ok) throw new Error(`新增武器失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.createWeaponFailed")}: ${r.statusText}`);
 }
 
 export async function updateWeapon(name: string, data: Record<string, unknown>): Promise<void> {
@@ -67,14 +69,14 @@ export async function updateWeapon(name: string, data: Record<string, unknown>):
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!r.ok) throw new Error(`更新武器失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.updateWeaponFailed")}: ${r.statusText}`);
 }
 
 export async function deleteWeapon(name: string): Promise<void> {
   const r = await fetch(`${BASE}/weapons/${encodeURIComponent(name)}`, {
     method: "DELETE",
   });
-  if (!r.ok) throw new Error(`删除武器失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.deleteWeaponFailed")}: ${r.statusText}`);
 }
 
 export async function createEquipment(data: Record<string, unknown>): Promise<void> {
@@ -83,7 +85,7 @@ export async function createEquipment(data: Record<string, unknown>): Promise<vo
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!r.ok) throw new Error(`新增装备失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.createEquipFailed")}: ${r.statusText}`);
 }
 
 export async function updateEquipment(name: string, data: Record<string, unknown>): Promise<void> {
@@ -92,12 +94,12 @@ export async function updateEquipment(name: string, data: Record<string, unknown
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!r.ok) throw new Error(`更新装备失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.updateEquipFailed")}: ${r.statusText}`);
 }
 
 export async function deleteEquipment(name: string): Promise<void> {
   const r = await fetch(`${BASE}/equipments/${encodeURIComponent(name)}`, {
     method: "DELETE",
   });
-  if (!r.ok) throw new Error(`删除装备失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.deleteEquipFailed")}: ${r.statusText}`);
 }

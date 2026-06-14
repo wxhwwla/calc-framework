@@ -126,7 +126,7 @@ def build_multi_zone_formula(
     dag["nodes"]["base"] = {"type": "var", "path": base_variable, "label": "基础值"}
 
     prev_node = "base"
-    for i, zone in enumerate(zones):
+    for _i, zone in enumerate(zones):
         zone_id = zone["id"]
         dag["nodes"][zone_id] = {
             "type": "binary",

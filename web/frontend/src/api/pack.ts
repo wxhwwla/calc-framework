@@ -1,3 +1,5 @@
+import i18n from "../i18n/config";
+
 const BASE = "/api/pack";
 
 export interface ThemeColors {
@@ -29,7 +31,7 @@ export interface ThemeConfig {
 
 export async function fetchDefaultTheme(): Promise<ThemeConfig> {
   const r = await fetch(`${BASE}/theme/default`);
-  if (!r.ok) throw new Error(`获取默认主题失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.defaultThemeGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
@@ -51,7 +53,7 @@ export async function previewExport(payload: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!r.ok) throw new Error(`预览失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.previewFailed")}: ${r.statusText}`);
   return r.json();
 }
 
@@ -70,7 +72,7 @@ export async function downloadCalcpack(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!r.ok) throw new Error(`导出失败: ${r.statusText}`);
+  if (!r.ok) throw new Error(`${i18n.t("api.exportFailed")}: ${r.statusText}`);
 
   const blob = await r.blob();
   const disposition = r.headers.get("Content-Disposition") ?? "";

@@ -31,13 +31,21 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import Paper from "@mui/material/Paper";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
+import { useThemeMode } from "./main";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
+import PluginManagerDialog from "./components/calculator/PluginManagerDialog";
 import GlobalAttributionButton from "./components/GlobalAttributionButton";
 import SiteFooter from "./components/SiteFooter";
 
 const ComputePage = lazy(() => import("./pages/ComputePage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 const ArknightsComputePage = lazy(() => import("./pages/ArknightsComputePage"));
 const AdaptersPage = lazy(() => import("./pages/AdaptersPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
@@ -127,7 +135,9 @@ function Shell() {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { mode, toggle: toggleTheme } = useThemeMode();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pluginOpen, setPluginOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const { gameItems, toolItems } = useNavItems();
 
@@ -180,12 +190,19 @@ function Shell() {
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             {t("app.title")}
           </Typography>
+          <IconButton color="inherit" onClick={toggleTheme} title={mode === "dark" ? t("common.lightMode", "亮色模式") : t("common.darkMode", "暗色模式")} size="small" sx={{ mr: 1 }}>
+            {mode === "dark" ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+          </IconButton>
           <IconButton color="inherit" onClick={toggleLanguage} title={t("common.language")} size="small" sx={{ mr: 1 }}>
-            <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : "中"}</Typography>
+            <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : t("common.language")}</Typography>
+          </IconButton>
+          <IconButton color="inherit" onClick={() => setPluginOpen(true)} title={t("plugins.title", "插件")} size="small" sx={{ mr: 1 }}>
+            <ExtensionIcon fontSize="small" />
           </IconButton>
           <GlobalAttributionButton />
           <GlobalDonationButton />
           <GlobalHelpDialog />
+          <PluginManagerDialog open={pluginOpen} onClose={() => setPluginOpen(false)} />
         </Toolbar>
       </AppBar>
 
@@ -219,6 +236,7 @@ function Shell() {
         sx={{
           flexGrow: 1,
           p: { xs: 1.5, md: 3 },
+          pb: { xs: 8, md: 3 },
           minWidth: 0,
           overflowX: "hidden",
         }}
@@ -226,6 +244,7 @@ function Shell() {
         <Toolbar />
         <Suspense fallback={<PageFallback />}>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/compute" element={<ComputePage />} />
             <Route path="/arknights" element={<ArknightsComputePage />} />
             <Route path="/adapters" element={<AdaptersPage />} />
@@ -238,6 +257,20 @@ function Shell() {
             <Route path="*" element={<Navigate to="/compute" replace />} />
           </Routes>
         </Suspense>
+        {isMobile && (
+          <Paper sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+            <BottomNavigation
+              value={location.pathname}
+              onChange={(_, path) => navigate(path)}
+              showLabels
+            >
+              <BottomNavigationAction label={t("nav.games")} value="/compute" icon={<CalculateIcon />} />
+              <BottomNavigationAction label={t("nav.editor")} value="/editor" icon={<AccountTreeIcon />} />
+              <BottomNavigationAction label={t("nav.marketplace")} value="/hub" icon={<StorefrontIcon />} />
+              <BottomNavigationAction label={t("nav.designer")} value="/designer" icon={<BuildIcon />} />
+            </BottomNavigation>
+          </Paper>
+        )}
         <SiteFooter />
       </Box>
     </Box>

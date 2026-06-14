@@ -73,7 +73,7 @@ export default function ArknightsComputePage() {
 
   return (
     <Box sx={{ p: 2, maxWidth: 1400, mx: "auto" }}>
-      <Typography variant="h5" gutterBottom>明日方舟 伤害计算器</Typography>
+      <Typography variant="h5" gutterBottom>{t("arknights.pageTitle")}</Typography>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => useArknightsStore.setState({ error: null })}>{error}</Alert>}
 
@@ -110,14 +110,14 @@ export default function ArknightsComputePage() {
         <Grid item xs={12} md={8}>
           {/* 技能选择 */}
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>技能选择</Typography>
+            <Typography variant="subtitle1" gutterBottom>{t("arknights.skillSelect")}</Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>技能</InputLabel>
+                  <InputLabel>{t("arknights.skill")}</InputLabel>
                   <Select
                     value={skillIndex}
-                    label="技能"
+                    label={t("arknights.skill")}
                     onChange={(e) => setSkillIndex(e.target.value as number)}
                   >
                     {skillNames.map((n, i) => {
@@ -130,7 +130,7 @@ export default function ArknightsComputePage() {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="caption" color="text.secondary">
-                  技能等级
+                  {t("arknights.skillLevel")}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Slider
@@ -153,13 +153,13 @@ export default function ArknightsComputePage() {
                   {parsedSkill.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                  SP={parsedSkill.spCost}  初始={parsedSkill.initSp}  持续={parsedSkill.duration}秒
+                  SP={parsedSkill.spCost}  {t("arknights.initSp")}={parsedSkill.initSp}  {t("arknights.durationSec")}={parsedSkill.duration}{t("arknights.seconds")}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   {parsedSkill.description}
                 </Typography>
                 {parsedSkill.isHealing && (
-                  <Chip label="⚕ 治疗技能" size="small" color="success" sx={{ mt: 0.5 }} />
+                  <Chip label={t("arknights.healSkill")} size="small" color="success" sx={{ mt: 0.5 }} />
                 )}
               </Box>
             )}
@@ -167,10 +167,10 @@ export default function ArknightsComputePage() {
 
           {/* 技能参数 */}
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>技能参数</Typography>
+            <Typography variant="subtitle1" gutterBottom>{t("arknights.skillParams")}</Typography>
             <Grid container spacing={2}>
               <Grid item xs={6} sm={3}>
-                <Typography variant="caption" color="text.secondary">技能倍率</Typography>
+                <Typography variant="caption" color="text.secondary">{t("arknights.skillMultiplier")}</Typography>
                 <TextField
                   size="small" fullWidth
                   value={manualMult || parsedSkill.effectiveMultiplier.toFixed(2)}
@@ -178,19 +178,19 @@ export default function ArknightsComputePage() {
                   placeholder={String(parsedSkill.effectiveMultiplier.toFixed(2))}
                 />
                 <Typography variant="caption" color="text.secondary">
-                  自动检测: {parsedSkill.effectiveMultiplier.toFixed(2)}x
+                  {t("arknights.autoDetect")}: {parsedSkill.effectiveMultiplier.toFixed(2)}x
                   {parsedSkill.atkBuffHint > 0 && ` (ATK+${(parsedSkill.atkBuffHint * 100).toFixed(0)}%)`}
                 </Typography>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Typography variant="caption" color="text.secondary">连发数</Typography>
+                <Typography variant="caption" color="text.secondary">{t("arknights.hitCount")}</Typography>
                 <TextField
                   size="small" fullWidth type="number"
                   value={hitCount}
                   onChange={(e) => setHitCount(Math.max(1, parseInt(e.target.value) || 1))}
                 />
                 <Typography variant="caption" color="text.secondary">
-                  自动检测: {parsedSkill.hitCount}
+                  {t("arknights.autoDetect")}: {parsedSkill.hitCount}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -203,11 +203,11 @@ export default function ArknightsComputePage() {
                         size="small"
                       />
                     }
-                    label={`仅攻击到一人时（${parsedSkill.conditionalMult.toFixed(2)}x）`}
+                    label={`${t("arknights.conditionalSingleTarget")}（${parsedSkill.conditionalMult.toFixed(2)}x）`}
                   />
                 )}
                 <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
-                  总伤害倍率: {totalDamageMult.toFixed(3)}x
+                  {t("arknights.totalDamageMultiplier")}: {totalDamageMult.toFixed(3)}x
                 </Typography>
               </Grid>
             </Grid>
@@ -215,10 +215,10 @@ export default function ArknightsComputePage() {
 
           {/* 敌人参数 */}
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>敌人参数</Typography>
+            <Typography variant="subtitle1" gutterBottom>{t("arknights.enemyParams")}</Typography>
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <Box sx={{ minWidth: 180, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">防御力</Typography>
+                <Typography variant="caption" color="text.secondary">{t("arknights.enemyDefense")}</Typography>
                 <Slider size="small" min={0} max={3000} step={10}
                   value={computeParams.enemy_def}
                   onChange={(_e, v) => setParam("enemy_def", v as number)}
@@ -227,7 +227,7 @@ export default function ArknightsComputePage() {
                   onChange={(e) => setParam("enemy_def", Number(e.target.value) || 0)} />
               </Box>
               <Box sx={{ minWidth: 180, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">法术抗性</Typography>
+                <Typography variant="caption" color="text.secondary">{t("arknights.magicResistance")}</Typography>
                 <Slider size="small" min={0} max={100} step={1}
                   value={computeParams.enemy_res}
                   onChange={(_e, v) => setParam("enemy_res", v as number)}
@@ -240,16 +240,16 @@ export default function ArknightsComputePage() {
 
           {/* 额外加成 */}
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>额外加成</Typography>
+            <Typography variant="subtitle1" gutterBottom>{t("arknights.extraBonus")}</Typography>
             <Grid container spacing={2}>
               {[
-                { label: "攻击力%加成", key: "atk_percent_bonus" as const, min: -100, max: 200, step: 5 },
-                { label: "伤害倍率加成%", key: "dmg_bonus" as const, min: -100, max: 200, step: 5 },
-                { label: "防御穿透%", key: "def_penetration" as const, min: 0, max: 100, step: 5 },
-                { label: "法抗穿透%", key: "res_penetration" as const, min: 0, max: 100, step: 5 },
-              ].map(({ label, key, min, max, step }) => (
+                { i18nKey: "arknights.atkPercentBonus" as const, key: "atk_percent_bonus" as const, min: -100, max: 200, step: 5 },
+                { i18nKey: "arknights.dmgBonusPercent" as const, key: "dmg_bonus" as const, min: -100, max: 200, step: 5 },
+                { i18nKey: "arknights.defPenetration" as const, key: "def_penetration" as const, min: 0, max: 100, step: 5 },
+                { i18nKey: "arknights.resPenetration" as const, key: "res_penetration" as const, min: 0, max: 100, step: 5 },
+              ].map(({ i18nKey, key, min, max, step }) => (
                 <Grid item xs={12} sm={6} key={key}>
-                  <Typography variant="caption" color="text.secondary">{label}</Typography>
+                  <Typography variant="caption" color="text.secondary">{t(i18nKey)}</Typography>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Slider size="small" min={min} max={max} step={step}
                       value={computeParams[key]}
@@ -273,7 +273,7 @@ export default function ArknightsComputePage() {
               onClick={handleCompute}
               disabled={!selectedOperator || computeLoading}
               sx={{ minWidth: 200 }}>
-              {computeLoading ? "计算中..." : "开始计算"}
+              {computeLoading ? t("arknights.calculating") : t("arknights.startCalc")}
             </Button>
           </Box>
 
@@ -283,14 +283,14 @@ export default function ArknightsComputePage() {
               {/* 卡片 */}
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
                 {[
-                  { label: "最终攻击力", value: Math.round(computeResult.final_atk), color: "default" },
-                  { label: "物理伤害", value: Math.round(computeResult.physical_damage), color: "warning.main" },
-                  { label: "法术伤害", value: Math.round(computeResult.magical_damage), color: "primary.main" },
-                  { label: "真实伤害", value: Math.round(computeResult.true_damage), color: "success.main" },
-                ].map(({ label, value, color }) => (
-                  <Card key={label} variant="outlined" sx={{ flex: 1, minWidth: 140 }}>
+                  { i18nKey: "arknights.finalAttack" as const, value: Math.round(computeResult.final_atk), color: "default" },
+                  { i18nKey: "arknights.physDmg" as const, value: Math.round(computeResult.physical_damage), color: "warning.main" },
+                  { i18nKey: "arknights.magicDmg" as const, value: Math.round(computeResult.magical_damage), color: "primary.main" },
+                  { i18nKey: "arknights.trueDmg" as const, value: Math.round(computeResult.true_damage), color: "success.main" },
+                ].map(({ i18nKey, value, color }) => (
+                  <Card key={i18nKey} variant="outlined" sx={{ flex: 1, minWidth: 140 }}>
                     <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
-                      <Typography variant="caption" color="text.secondary">{label}</Typography>
+                      <Typography variant="caption" color="text.secondary">{t(i18nKey)}</Typography>
                       <Typography variant="h5" sx={{ color }}>{value.toLocaleString()}</Typography>
                     </CardContent>
                   </Card>
@@ -300,26 +300,26 @@ export default function ArknightsComputePage() {
               {/* 乘区明细 */}
               <Paper sx={{ p: 2, mb: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
-                  乘区明细 — {computeResult.operator_name}（{parsedSkill.name}）
-                  {parsedSkill.isHealing && <Chip label="⚕ 治疗" size="small" color="success" sx={{ ml: 1 }} />}
+                  {t("arknights.zoneDetail")} — {computeResult.operator_name}（{parsedSkill.name}）
+                  {parsedSkill.isHealing && <Chip label={t("arknights.healChip")} size="small" color="success" sx={{ ml: 1 }} />}
                 </Typography>
                 <Divider sx={{ mb: 1 }} />
                 <TableContainer sx={{ overflowX: 'auto' }}>
                   <Table size="small" sx={{ maxWidth: 500 }}>
                     <TableBody>
                       {[
-                        ["基础攻击力", String(Math.round((operatorDetail as any)?.基础属性?.攻击 ?? 0))],
-                        ["信赖加成", `+${Math.round((operatorDetail as any)?.信赖加成?.攻击 ?? 0)}`],
-                        ["最终攻击力", String(Math.round(computeResult.final_atk))],
-                        ["技能倍率", `x${effectiveMult.toFixed(2)}`],
-                        ["连发数", `x${hitCount}`],
-                        ["总伤害倍率", `x${totalDamageMult.toFixed(2)}`],
-                        ["敌军防御力", String(computeParams.enemy_def)],
-                        ["敌军法抗", `${computeParams.enemy_res}%`],
+                        [t("arknights.baseAttack"), String(Math.round((operatorDetail as any)?.基础属性?.攻击 ?? 0))],
+                        [t("arknights.trustBonus"), `+${Math.round((operatorDetail as any)?.信赖加成?.攻击 ?? 0)}`],
+                        [t("arknights.finalAttack"), String(Math.round(computeResult.final_atk))],
+                        [t("arknights.skillMultiplier"), `x${effectiveMult.toFixed(2)}`],
+                        [t("arknights.hitCount"), `x${hitCount}`],
+                        [t("arknights.totalDmgMultiplier"), `x${totalDamageMult.toFixed(2)}`],
+                        [t("arknights.enemyDefense"), String(computeParams.enemy_def)],
+                        [t("arknights.enemyRes"), `${computeParams.enemy_res}%`],
                         ...(hitCount > 1 ? [
-                          [hitCount > 1 ? `物理伤害(合)` : "物理伤害", String(Math.round(computeResult.physical_damage))],
-                          [hitCount > 1 ? `法术伤害(合)` : "法术伤害", String(Math.round(computeResult.magical_damage))],
-                          [hitCount > 1 ? `真实伤害(合)` : "真实伤害", String(Math.round(computeResult.true_damage))],
+                          [t("arknights.physDmg"), String(Math.round(computeResult.physical_damage))],
+                          [t("arknights.magicDmg"), String(Math.round(computeResult.magical_damage))],
+                          [t("arknights.trueDmg"), String(Math.round(computeResult.true_damage))],
                         ] as [string, string][] : []),
                       ].map(([k, v]) => (
                         <TableRow key={k} sx={{ "&:last-child td": { borderBottom: 0 } }}>
@@ -334,14 +334,14 @@ export default function ArknightsComputePage() {
 
               {/* 异常/元素面板 */}
               <Paper sx={{ p: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>异常/元素伤害</Typography>
+                <Typography variant="subtitle2" gutterBottom>{t("arknights.abnormalElement")}</Typography>
                 <Divider sx={{ mb: 1 }} />
                 <TableContainer sx={{ overflowX: 'auto' }}>
                   <Table size="small" sx={{ maxWidth: 500 }}>
                     <TableBody>
                       {[
-                        ["灼燃损伤", "1.0x", "0"],
-                        ["凋亡损伤", "1.0x", "0"],
+                        [t("arknights.burnDamage"), "1.0x", "0"],
+                        [t("arknights.decayDamage"), "1.0x", "0"],
                       ].map(([type, mult, extra]) => (
                         <TableRow key={type}>
                           <TableCell sx={{ pl: 0, py: 0.25 }}><Typography variant="body2" color="text.secondary">{type}</Typography></TableCell>

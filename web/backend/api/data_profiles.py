@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json as _json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,9 +12,7 @@ from fastapi import HTTPException
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ENDFIELD_DATA = REPO_ROOT / "games" / "endfield" / "data"
-ARKNIGHTS_OPERATORS = (
-    REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
-)
+ARKNIGHTS_OPERATORS = REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
 
 
 @dataclass(frozen=True)
@@ -36,7 +35,9 @@ PROFILES: dict[str, ProfileDef] = {
         id="endfield",
         label="终末地",
         entities=(
-            EntityDef("characters", "角色", ENDFIELD_DATA / "characters.json", ("名称", "类型", "星级", "主能力", "副能力")),
+            EntityDef(
+                "characters", "角色", ENDFIELD_DATA / "characters.json", ("名称", "类型", "星级", "主能力", "副能力")
+            ),
             EntityDef("weapons", "武器", ENDFIELD_DATA / "weapons.json", ("名称", "类型", "星级")),
             EntityDef("equipments", "装备", ENDFIELD_DATA / "equipments.json", ("名称", "部位", "稀有度")),
         ),
@@ -44,9 +45,7 @@ PROFILES: dict[str, ProfileDef] = {
     "arknights": ProfileDef(
         id="arknights",
         label="明日方舟",
-        entities=(
-            EntityDef("operators", "干员", ARKNIGHTS_OPERATORS, ("名称", "职业", "星级", "分支")),
-        ),
+        entities=(EntityDef("operators", "干员", ARKNIGHTS_OPERATORS, ("名称", "职业", "星级", "分支")),),
     ),
 }
 
@@ -90,13 +89,11 @@ def profiles_metadata() -> list[dict[str, Any]]:
 
 def _load_entity_list(ent: EntityDef) -> list[dict[str, Any]]:
     if not ent.path.is_file():
-        raise HTTPException(status_code=404, detail=f"数据文件不存在: {ent.path.name}")
+        return []  # 数据文件尚未部署（如 PA 上未解压干员 zip），返回空列表
     try:
-        import json
-
         with open(ent.path, encoding="utf-8") as f:
-            data = json.load(f)
-    except json.JSONDecodeError as e:
+            data = _json.load(f)
+    except _json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"JSON 解析失败: {ent.path.name}: {e}") from e
     if not isinstance(data, list):
         raise HTTPException(status_code=500, detail=f"{ent.path.name} 根节点须为数组")
@@ -165,5 +162,6 @@ def delete_entity_row(profile_id: str, entity_key: str, name: str) -> dict[str, 
     raw.pop(idx)
     _save_entity_list(ent, raw)
     return {"message": "ok"}
+
 
 __all__: list[str] = []

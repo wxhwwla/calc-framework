@@ -1,18 +1,22 @@
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
 import { Box, Chip, Typography } from "@mui/material";
 import type { DagNodeData } from "../../store/editorStore";
 import { getNodeColor } from "../../store/editorStore";
 
-const NODE_TYPE_LABELS: Record<string, string> = {
-  const: "常量",
-  var: "变量",
-  unary: "一元运算",
-  binary: "二元运算",
-  condition: "条件",
-  expr: "表达式",
-  user_input: "用户输入",
-};
+function useNodeTypeLabels() {
+  const { t } = useTranslation();
+  return {
+    const: t("dag.nodeTypes.const"),
+    var: t("dag.nodeTypes.var"),
+    unary: t("dag.nodeTypes.unary"),
+    binary: t("dag.nodeTypes.binary"),
+    condition: t("dag.nodeTypes.condition"),
+    expr: t("dag.nodeTypes.expr"),
+    user_input: t("dag.nodeTypes.userInput"),
+  };
+}
 
 function getNodePreview(data: DagNodeData): string {
   switch (data.nodeType) {
@@ -36,6 +40,7 @@ function getNodePreview(data: DagNodeData): string {
 }
 
 function DagNode({ data, selected }: NodeProps<Node<DagNodeData>>) {
+  const NODE_TYPE_LABELS = useNodeTypeLabels();
   const color = getNodeColor(data.nodeType);
   const isBinaryOrUnary = data.nodeType === "binary" || data.nodeType === "unary";
   const isCondition = data.nodeType === "condition";

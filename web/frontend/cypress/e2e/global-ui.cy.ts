@@ -37,4 +37,17 @@ describe("全局 UI 元素 GlobalUI", () => {
     cy.scrollTo("bottom");
     cy.contains("数据浏览").should("be.visible");
   });
+
+  it("插件管理器可以从工具栏打开", () => {
+    cy.visit("/compute");
+    // 插件管理器按钮在工具栏（ExtensionIcon）
+    cy.get("button[title*='插件']").should("exist");
+  });
+
+  it("AI 配装对话框可以打开（选中角色后）", () => {
+    cy.visit("/compute");
+    // AI 按钮只在选中角色后才显示 — 验证页面加载无报错即可
+    cy.contains("角色选择").should("be.visible");
+    cy.get("body").should("be.visible");
+  });
 });

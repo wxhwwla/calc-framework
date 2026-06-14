@@ -20,6 +20,7 @@
 | [算法与架构.md](算法与架构.md) | 公式、乘区、模块结构 |
 | [MVP搜索验收说明.md](MVP搜索验收说明.md) | 全量遍历、并行线程、`search_output/` 导出、GUI/打包验收 |
 | [**错误集.md**](错误集.md) | **Bug 记录**：「问题 → 原因 → 修复 → 涉及文件 → 检查清单」 |
+| [plans/i18n-desktop.md](plans/i18n-desktop.md) | **桌面 GUI i18n 多语言**：DesktopTranslator 架构、282 键、zh-CN/en 翻译、与 Web i18n 对比 |
 
 **JSON 数据契约**（角色/武器/预设字段）：[`CONTEXT.md`](../CONTEXT.md) 术语表 + [`games/endfield/README.md`](../games/endfield/README.md)「数据格式」节 + `tests/test_game_data_contract.py`。
 | [agents/issue-tracker.md](agents/issue-tracker.md) | GitHub Issue、`gh` CLI、**Web 表单模板**（Bug / 功能建议） |

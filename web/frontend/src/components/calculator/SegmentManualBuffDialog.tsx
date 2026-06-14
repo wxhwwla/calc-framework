@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 
 export type ManualBuffEntry = { effect_type: string; value: number };
 export type ManualBuffStore = Record<string, ManualBuffEntry[]>;
@@ -51,6 +52,7 @@ export default function SegmentManualBuffDialog({
   physicalAbnormalCounts,
   spellAbnormalCounts,
 }: SegmentManualBuffDialogProps) {
+  const { t } = useTranslation();
   const [localStore, setLocalStore] = useState<ManualBuffStore>({});
   const [keys, setKeys] = useState<string[]>([]);
   const [selectedKey, setSelectedKey] = useState("");
@@ -125,11 +127,11 @@ export default function SegmentManualBuffDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>额外加成微调（段级）</DialogTitle>
+      <DialogTitle>{t("segmentManual.title")}</DialogTitle>
       <DialogContent sx={{ display: "flex", gap: 2, minHeight: 360, flexWrap: "wrap" }}>
         <Box sx={{ width: { xs: "100%", sm: 220 }, borderRight: { xs: 0, sm: 1 }, borderColor: "divider", pr: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            段/异常次数键
+            {t("segmentManual.keyListLabel")}
           </Typography>
           <List dense>
             {keys.map((key) => (
@@ -146,14 +148,14 @@ export default function SegmentManualBuffDialog({
         <Box sx={{ flex: 1 }}>
           <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
             <FormControl size="small" sx={{ flex: 1 }}>
-              <InputLabel>消耗品预设</InputLabel>
+              <InputLabel>{t("segmentManual.consumablePreset")}</InputLabel>
               <Select
                 value={selectedPreset}
-                label="消耗品预设"
+                label={t("segmentManual.consumablePreset")}
                 onChange={(e) => setSelectedPreset(String(e.target.value))}
               >
                 <MenuItem value="">
-                  <em>不应用</em>
+                  <em>{t("segmentManual.noApply")}</em>
                 </MenuItem>
                 {presets.map((p) => (
                   <MenuItem key={p.name} value={p.name}>
@@ -163,7 +165,7 @@ export default function SegmentManualBuffDialog({
               </Select>
             </FormControl>
             <Button size="small" onClick={applyPreset} disabled={!selectedPreset}>
-              写入全部活跃键
+              {t("segmentManual.writeAllActive")}
             </Button>
           </Box>
           {selectedKey ? (
@@ -192,7 +194,7 @@ export default function SegmentManualBuffDialog({
                   <TextField
                     size="small"
                     type="number"
-                    label="数值"
+                    label={t("segmentManual.valueLabel")}
                     value={entry.value}
                     onChange={(e) => {
                       const next = [...currentEntries];
@@ -219,16 +221,16 @@ export default function SegmentManualBuffDialog({
                   ])
                 }
               >
-                添加条目
+                {t("segmentManual.addEntry")}
               </Button>
             </>
           ) : (
-            <Typography color="text.secondary">请先在多技能/异常矩阵中设置次数</Typography>
+            <Typography color="text.secondary">{t("segmentManual.noKeysHint")}</Typography>
           )}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>取消</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button
           variant="contained"
           onClick={() => {
@@ -236,7 +238,7 @@ export default function SegmentManualBuffDialog({
             onClose();
           }}
         >
-          应用
+          {t("segmentManual.apply")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -177,7 +177,7 @@ class TestDamageEngine(unittest.TestCase):
         effects = [
             DamageEffect(effect_type="易伤", value=0.1, skill_types=("普攻",)),
         ]
-        known, unknown, warnings = _collect_effects(ctx, effects)
+        known, unknown, _warnings = _collect_effects(ctx, effects)
         self.assertEqual(len(known), 0)
         self.assertEqual(len(unknown), 0)
 

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Paper,
@@ -22,6 +23,7 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 import { inverseFormula, type InverseResponse } from "../../api/designer";
 
 export default function InverseTab() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"attribute" | "skill">("attribute");
   const [inputText, setInputText] = useState("");
   const [result, setResult] = useState<InverseResponse | null>(null);
@@ -33,10 +35,10 @@ export default function InverseTab() {
     const parts = cleaned.split(/[\s,]+/).filter(Boolean);
     return parts.map((p) => {
       const v = parseFloat(p.trim());
-      if (isNaN(v)) throw new Error(`无法解析数值: "${p}"`);
+      if (isNaN(v)) throw new Error(`${t("designer.inverseTab.parseError")}: "${p}"`);
       return v;
     });
-  }, []);
+  }, [t]);
 
   const handleCalculate = useCallback(async () => {
     setError(null);
@@ -62,21 +64,21 @@ export default function InverseTab() {
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        公式反推
+        {t("designer.inverseTab.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        从等级属性数据反向推导成长公式参数
+        {t("designer.inverseTab.description")}
       </Typography>
 
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-        <InputLabel>数据类型</InputLabel>
+        <InputLabel>{t("designer.inverseTab.dataType")}</InputLabel>
         <Select
           value={mode}
-          label="数据类型"
+          label={t("designer.inverseTab.dataType")}
           onChange={(e: SelectChangeEvent) => setMode(e.target.value as "attribute" | "skill")}
         >
-          <MenuItem value="attribute">属性数据（90级）</MenuItem>
-          <MenuItem value="skill">技能倍率（9/12级）</MenuItem>
+          <MenuItem value="attribute">{t("designer.inverseTab.attrData")}</MenuItem>
+          <MenuItem value="skill">{t("designer.inverseTab.skillData")}</MenuItem>
         </Select>
       </FormControl>
 
@@ -86,8 +88,8 @@ export default function InverseTab() {
         rows={6}
         placeholder={
           mode === "attribute"
-            ? "输入90个属性数据（空格或换行分隔）…\n例如: 100 105 110 115 …"
-            : "输入9或12个技能倍率数据（空格或换行分隔）…\n例如: 1.0 1.05 1.10 1.15 …"
+            ? t("designer.inverseTab.attrPlaceholder")
+            : t("designer.inverseTab.skillPlaceholder")
         }
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
@@ -96,10 +98,10 @@ export default function InverseTab() {
 
       <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
         <Button variant="contained" onClick={handleCalculate} disabled={loading || !inputText.trim()}>
-          {loading ? "计算中…" : "开始反推"}
+          {loading ? t("designer.inverseTab.calculating") : t("designer.inverseTab.startInverse")}
         </Button>
         <Button variant="outlined" onClick={handleClear}>
-          清除
+          {t("designer.inverseTab.clear")}
         </Button>
       </Box>
 
@@ -112,7 +114,7 @@ export default function InverseTab() {
       {result && (
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Typography variant="subtitle2" gutterBottom color="primary">
-            反推结果 {result.valid ? <Chip label="✓ 验证通过" size="small" color="success" /> : <Chip label="✗ 有误差" size="small" color="warning" />}
+            {t("designer.inverseTab.inverseResult")} {result.valid ? <Chip label={t("designer.inverseTab.verifiedPass")} size="small" color="success" /> : <Chip label={t("designer.inverseTab.hasError")} size="small" color="warning" />}
           </Typography>
 
           <TableContainer>

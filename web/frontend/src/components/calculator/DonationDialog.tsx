@@ -1,7 +1,7 @@
+import { useTranslation } from "react-i18next";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,
 } from "@mui/material";
-import { DONATION_TEXT } from "../../constants/donation";
 import DonationImages from "./DonationImages";
 
 interface DonationDialogProps {
@@ -10,17 +10,19 @@ interface DonationDialogProps {
 }
 
 export default function DonationDialog({ open, onClose }: DonationDialogProps) {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>自愿捐赠</DialogTitle>
+      <DialogTitle>{t("donation.dialogTitle")}</DialogTitle>
       <DialogContent dividers>
         <DonationImages />
         <Typography variant="body2" sx={{ whiteSpace: "pre-line", mt: 1 }}>
-          {DONATION_TEXT}
+          {t("donation.text")}
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>关闭</Button>
+        <Button onClick={onClose}>{t("common.close")}</Button>
       </DialogActions>
     </Dialog>
   );

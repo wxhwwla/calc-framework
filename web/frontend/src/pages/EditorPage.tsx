@@ -9,12 +9,14 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import DagEditorCanvas from "../components/dag/DagEditorCanvas";
 import NodePalette from "../components/dag/NodePalette";
 import NodeEditDialog from "../components/dag/NodeEditDialog";
 import { useEditorStore, type DagNodeData } from "../store/editorStore";
 
 export default function EditorPage() {
+  const { t } = useTranslation();
   const dagJson = useEditorStore((s) => s.dagJson);
   const dagName = useEditorStore((s) => s.dagName);
   const error = useEditorStore((s) => s.error);
@@ -42,16 +44,16 @@ export default function EditorPage() {
   const handleEditSave = useCallback(
     (nodeId: string, data: Partial<DagNodeData>) => {
       updateNodeData(nodeId, data);
-      setSnackMsg(`节点 ${nodeId} 已更新`);
+      setSnackMsg(t("dag.editor.nodeUpdated", { id: nodeId }));
     },
-    [updateNodeData],
+    [updateNodeData, t],
   );
 
   const handleSaveToJson = useCallback(() => {
     const json = saveToJson();
     setDagJson(json);
-    setSnackMsg("已导出为 DAG JSON");
-  }, [saveToJson, setDagJson]);
+    setSnackMsg(t("dag.editor.jsonExported"));
+  }, [saveToJson, setDagJson, t]);
 
   const handleLoadExample = useCallback(async () => {
     try {
@@ -73,17 +75,17 @@ export default function EditorPage() {
       const data = await r.json();
       if (data.node_values) {
         setDagJson(JSON.stringify({ name: "终末地伤害计算样例", nodes: data.node_values }, null, 2));
-        setSnackMsg("已加载示例数据，点击「渲染」查看");
+        setSnackMsg(t("dag.editor.exampleLoaded"));
       }
     } catch {
-      setSnackMsg("加载示例失败");
+      setSnackMsg(t("dag.editor.loadExampleFailed"));
     }
-  }, [setDagJson]);
+  }, [setDagJson, t]);
 
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        DAG 公式图编辑器
+        {t("dag.editor.title")}
       </Typography>
 
       <Grid container spacing={2}>
@@ -91,19 +93,19 @@ export default function EditorPage() {
           <NodePalette />
           <Paper sx={{ p: 1.5, mt: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              操作提示
+              {t("dag.editor.tips")}
             </Typography>
             <Typography variant="caption" sx={{ color: "#888", display: "block" }}>
-              • 从节点面板拖拽到画布创建节点
+              {t("dag.editor.tip1")}
             </Typography>
             <Typography variant="caption" sx={{ color: "#888", display: "block" }}>
-              • 从节点底部拖出连线到其他节点
+              {t("dag.editor.tip2")}
             </Typography>
             <Typography variant="caption" sx={{ color: "#888", display: "block" }}>
-              • 双击节点编辑属性
+              {t("dag.editor.tip3")}
             </Typography>
             <Typography variant="caption" sx={{ color: "#888", display: "block" }}>
-              • 选中后按 Delete/Backspace 删除
+              {t("dag.editor.tip4")}
             </Typography>
           </Paper>
         </Grid>
@@ -116,17 +118,17 @@ export default function EditorPage() {
       <Paper sx={{ p: 2, mt: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
           <TextField
-            label="DAG 名称"
+            label={t("dag.editor.dagName")}
             value={dagName}
             onChange={(e) => setDagName(e.target.value)}
             size="small"
             sx={{ minWidth: 200 }}
           />
           <Button variant="contained" onClick={handleSaveToJson}>
-            导出 JSON
+            {t("dag.editor.exportJson")}
           </Button>
           <Button variant="outlined" onClick={handleLoadExample}>
-            加载示例
+            {t("dag.editor.loadExample")}
           </Button>
           <Button
             variant="outlined"
@@ -136,24 +138,24 @@ export default function EditorPage() {
               parseAndRender();
             }}
           >
-            清空
+            {t("dag.editor.clear")}
           </Button>
           <Typography variant="caption" sx={{ color: "#888", ml: "auto" }}>
-            {nodes.length} 个节点
+            {t("dag.editor.nodesCount", { n: nodes.length })}
           </Typography>
         </Box>
         <TextField
           multiline
           rows={6}
           fullWidth
-          placeholder='DAG JSON（如 {"nodes": {...}}）'
+          placeholder={t("dag.editor.dagJsonPlaceholder")}
           value={dagJson}
           onChange={(e) => setDagJson(e.target.value)}
           sx={{ fontFamily: "monospace", fontSize: 12 }}
         />
         <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
           <Button variant="contained" onClick={parseAndRender}>
-            渲染
+            {t("dag.editor.render")}
           </Button>
         </Box>
         {error && (

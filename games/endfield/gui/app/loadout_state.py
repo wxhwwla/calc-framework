@@ -284,7 +284,7 @@ class LoadoutState:
 
 # ── Re-exports from loadout_serialize (API 兼容) ──────────────────────────
 from .loadout_serialize import (  # noqa: F401  # isort: skip  # re-exports
-    _resolve_selected_skill_for_search,
-    read_loadout_from_app,
-    read_loadout_from_panels,
+    _resolve_selected_skill_for_search,  # type: ignore[unused-import]
+    read_loadout_from_app,  # type: ignore[unused-import]
+    read_loadout_from_panels,  # type: ignore[unused-import]
 )

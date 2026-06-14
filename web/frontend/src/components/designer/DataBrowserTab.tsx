@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -32,30 +33,33 @@ interface ColumnDef {
   render?: (val: unknown) => string;
 }
 
-const COLUMNS: Record<DataType, ColumnDef[]> = {
-  character: [
-    { key: "名称", label: "名称" },
-    { key: "类型", label: "类型" },
-    { key: "星级", label: "星级", render: (v) => `${v}★` },
-    { key: "主能力", label: "主能力" },
-    { key: "副能力", label: "副能力" },
-    { key: "武器", label: "武器" },
-  ],
-  weapon: [
-    { key: "名称", label: "名称" },
-    { key: "类型", label: "类型" },
-    { key: "星级", label: "星级", render: (v) => `${v}★` },
-  ],
-  equipment: [
-    { key: "名称", label: "名称" },
-    { key: "装备种类", label: "种类" },
-    { key: "部位", label: "部位" },
-    { key: "稀有度", label: "稀有度" },
-    { key: "所属套组", label: "套组" },
-  ],
-};
+function useColumns(t: ReturnType<typeof useTranslation>["t"]): Record<DataType, ColumnDef[]> {
+  return {
+    character: [
+      { key: "名称", label: t("designer.dataBrowserTab.columns.name") },
+      { key: "类型", label: t("designer.dataBrowserTab.columns.type") },
+      { key: "星级", label: t("designer.dataBrowserTab.columns.star"), render: (v) => `${v}★` },
+      { key: "主能力", label: t("designer.dataBrowserTab.columns.mainAbility") },
+      { key: "副能力", label: t("designer.dataBrowserTab.columns.subAbility") },
+      { key: "武器", label: t("designer.dataBrowserTab.columns.weapon") },
+    ],
+    weapon: [
+      { key: "名称", label: t("designer.dataBrowserTab.columns.name") },
+      { key: "类型", label: t("designer.dataBrowserTab.columns.type") },
+      { key: "星级", label: t("designer.dataBrowserTab.columns.star"), render: (v) => `${v}★` },
+    ],
+    equipment: [
+      { key: "名称", label: t("designer.dataBrowserTab.columns.name") },
+      { key: "装备种类", label: t("designer.dataBrowserTab.columns.equipmentKind") },
+      { key: "部位", label: t("designer.dataBrowserTab.columns.part") },
+      { key: "稀有度", label: t("designer.dataBrowserTab.columns.rarity") },
+      { key: "所属套组", label: t("designer.dataBrowserTab.columns.setGroup") },
+    ],
+  };
+}
 
 export default function DataBrowserTab() {
+  const { t } = useTranslation();
   const [dataType, setDataType] = useState<DataType>("character");
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
   const [weapons, setWeapons] = useState<WeaponSummary[]>([]);
@@ -75,37 +79,37 @@ export default function DataBrowserTab() {
     loadData();
   }, [loadData]);
 
-  const rows: any[] =
+  const rows: Record<string, unknown>[] =
     dataType === "character" ? characters : dataType === "weapon" ? weapons : equipments;
 
-  const columns = COLUMNS[dataType];
+  const columns = useColumns(t)[dataType];
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        数据浏览
+        {t("designer.dataBrowserTab.title")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>数据源</InputLabel>
+          <InputLabel>{t("designer.dataBrowserTab.dataSource")}</InputLabel>
           <Select
             value={dataType}
-            label="数据源"
+            label={t("designer.dataBrowserTab.dataSource")}
             onChange={(e: SelectChangeEvent) => setDataType(e.target.value as DataType)}
           >
-            <MenuItem value="character">角色数据</MenuItem>
-            <MenuItem value="weapon">武器数据</MenuItem>
-            <MenuItem value="equipment">装备数据</MenuItem>
+            <MenuItem value="character">{t("designer.dataBrowserTab.characterData")}</MenuItem>
+            <MenuItem value="weapon">{t("designer.dataBrowserTab.weaponData")}</MenuItem>
+            <MenuItem value="equipment">{t("designer.dataBrowserTab.equipmentData")}</MenuItem>
           </Select>
         </FormControl>
 
         <Button variant="outlined" size="small" onClick={loadData}>
-          刷新
+          {t("designer.dataBrowserTab.refresh")}
         </Button>
 
         <Typography variant="body2" color="text.secondary">
-          共 {rows.length} 条记录
+          {t("designer.dataBrowserTab.totalRecords", { n: rows.length })}
         </Typography>
       </Box>
 
@@ -133,7 +137,7 @@ export default function DataBrowserTab() {
             {rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length} align="center">
-                  <Typography color="text.secondary">暂无数据</Typography>
+                  <Typography color="text.secondary">{t("common.noData")}</Typography>
                 </TableCell>
               </TableRow>
             )}

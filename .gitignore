@@ -92,6 +92,16 @@ web/backend/api/.staging/
 # 压缩包
 *.zip
 
+# 性能基准测试产物
+.benchmarks/
+
+# 构建临时目录
+build_local-backend_*/
+spec_local-backend_*/
+
+# 一次性输出目录
+output/
+
 # 本地数据库（若将来使用）
 *.sqlite3
 *.db

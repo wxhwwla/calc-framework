@@ -77,8 +77,10 @@ def export_one(adapter_id: str) -> Path:
     meta.setdefault("ui_layout", "ui/layout.json")
 
     dag = _load_json(_resolve_dag_path(adapter_dir, meta))
+    assert isinstance(dag, dict)
     layout_path = adapter_dir / meta.get("ui_layout", "ui/layout.json")
     layout = _load_json(layout_path)
+    assert isinstance(layout, dict)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUTPUT_DIR / f"{adapter_id}_sample.calcpack"
@@ -137,6 +139,7 @@ def _create_from_template(template_id: str, game_name: str, output_path: str) ->
         # 修改 meta.json
         meta_path = tmp / "meta.json"
         meta = _load_json(meta_path)
+        assert isinstance(meta, dict)
         orig_entry = meta.get("entry_dag", f"{template_id}.dag.json")
         meta["name"] = game_name
         meta["game"] = game_name
@@ -157,9 +160,11 @@ def _create_from_template(template_id: str, game_name: str, output_path: str) ->
         # 加载 DAG（优先找重命名后的文件）
         dag_path = new_dag if new_dag.is_file() else tmp / orig_entry
         dag = _load_json(dag_path)
+        assert isinstance(dag, dict)
 
         layout_path = tmp / meta_for_export.get("ui_layout", "ui/layout.json")
         layout = _load_json(layout_path)
+        assert isinstance(layout, dict)
 
         out = export_calcpack(
             output_path=output_path,

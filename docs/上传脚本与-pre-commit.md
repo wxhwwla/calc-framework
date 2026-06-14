@@ -270,4 +270,23 @@ python -m pytest games/endfield/tests/tools/test_upload_meta.py games/endfield/t
 
 ---
 
-*最后更新：2026-06-10（新增 §9 `--dry-run` 预览模式 + §10 推送失败版本回滚）*
+## 10. pre-commit 版本更新记录
+
+### 10.1 大文件限制
+
+`check-added-large-files` 限制已从 **1024 KB** 提升至 **2048 KB**（`.pre-commit-config.yaml` 中 `--maxkb=2048`），避免大型数据文件（如 ~1.3 MB 的 `arknights_parsed.json`）触发误报。
+
+### 10.2 行长限制差异
+
+不同组件使用不同的 ruff 行长限制：
+
+| 组件 | 配置文件 | 行长 |
+|------|----------|------|
+| 仓库根 + 终末地包 | `.ruff.toml` / `games/endfield/pyproject.toml` | **120** |
+| 框架核心 | `framework/pyproject.toml` | **130** |
+
+框架核心的 130 行限制是针对 DAG/搜索/逆推等较长表达式的宽松阈值。pre-commit 会根据被检查文件的**所属包**自动选择正确的配置。向框架提交代码时注意不要超过 130 字符。
+
+---
+
+*最后更新：2026-06-13（新增 §10 pre-commit 版本更新记录：2048 KB 大文件限制 + 130 行长差异）*

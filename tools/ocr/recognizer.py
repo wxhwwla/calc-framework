@@ -264,7 +264,7 @@ class OCRRecognizer:
         """_parse_raw 实现。"""
         texts: list[OCRText] = []
 
-        for bbox, text, confidence in raw:
+        for _bbox, text, confidence in raw:
             if confidence < 0.3:
                 continue
 

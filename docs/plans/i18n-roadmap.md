@@ -33,15 +33,17 @@
 
 **交付标准**：wxhwwla.pythonanywhere.com 支持中/英切换。
 
-### 阶段 3：桌面 GUI i18n（~1-2 周）
+### 阶段 3：桌面 GUI i18n（进行中 — 基础设施已完成）
 
-| 任务 | 技术方案 |
-|------|----------|
-| 提取 PySide6 控件文本 | Qt Linguist (`.ts` 文件) |
-| 翻译为英文 | Qt Linguist 或人工 |
-| 编译为 `.qm` | `lrelease` |
-| 启动时加载翻译 | `QTranslator` |
-| GUI 语言切换菜单 | QMenu + 动态重载 |
+| 任务 | 技术方案 | 状态 |
+|------|----------|:--:|
+| 创建 `i18n.py` 翻译引擎 | `DesktopTranslator` 单例 + JSON 扁平化 + 回退逻辑 | ✅ |
+| 提取 PySide6 控件文本 | JSON dot-notation 键名（与 Web 端共享结构） | ✅ |
+| 翻译为英文 | `zh-CN.json`（源语言）+ `en.json`（282 键） | ✅ |
+| 15 个 GUI 文件集成 | graph_editor / editor / dev_toolkit / dag_debugger / launcher / viewer / pluginManager | ✅ |
+| endfield_app / designer 逐控件翻译 | 将剩余硬编码中文字符串替换为 `tr()` 调用 | 🟡 |
+| GUI 语言切换菜单 | QMenu + 动态重载 + `set_locale()` | 🟡 |
+| 编译为 `.qm` | 已弃用 Qt Linguist 方案，改用 JSON（降低构建复杂度） | — |
 
 **交付标准**：exe 打包版支持中/英切换。
 
@@ -57,9 +59,24 @@
 
 ## 当前状态
 
-| 阶段 | 状态 | 开始日期 |
-|------|:--:|:--:|
-| 阶段 1：GitHub 门面 | ✅ 已完成 | 2026-06-13 |
-| 阶段 2：Web 前端 | 🟡 基础设施 + 主要组件翻译（~130 条，覆盖导航/计算器/方舟/敌参/模式选择，tsc 零错误） | 2026-06-13 |
-| 阶段 3：桌面 GUI | ⬜ 未开始 | — |
-| 阶段 4：渐进英文化 | ⬜ 未开始 | — |
+| 阶段 | 状态 | 开始日期 | 完成日期 |
+|------|:--:|:--:|:--:|
+| 阶段 1：GitHub 门面 | ✅ 已完成 | 2026-06-13 | 2026-06-13 |
+| 阶段 2：Web 前端 | ✅ 已完成 | 2026-06-13 | 2026-06-13 |
+| 阶段 3：桌面 GUI | 🟡 进行中 | 2026-06-13 | — |
+| 阶段 4：渐进英文化 | ⬜ 未开始 | — | — |
+
+### 阶段 2 完成详情
+
+- **翻译键数**：~500+ 键（zh-CN.json + en.json）
+- **覆盖范围**：81 个 React 组件 + 17 个 API 文件全部转换
+- **构建验证**：tsc --noEmit 零类型错误
+- **交付功能**：语言切换按钮（MUI Button + i18n.changeLanguage）+ 浏览器语言自动检测（i18next-browser-languagedetector）
+- **交付标准达成**：wxhwwla.pythonanywhere.com 已支持中/英切换
+
+### 阶段 3 当前进展
+
+- **基础设施**：`DesktopTranslator` 类（单例模式、缓存机制、回退逻辑、线程安全）
+- **翻译数据**：282 个翻译键（zh-CN.json + en.json），覆盖 15 个 GUI 文件
+- **已覆盖模块**：graph_editor（83键）、editor（30键）、dev_toolkit（39键）、debugger（12键）、launcher（27键）、viewer（22键）、pluginManager（8键）、common（38键）、app（4键）、themeNames（2键）、log（2键）
+- **待完成**：endfield_app、designer 等逐控件翻译
