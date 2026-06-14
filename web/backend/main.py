@@ -20,6 +20,7 @@ from api.layout import router as layout_router
 from api.manual_buff import router as manual_buff_router
 from api.ocr import router as ocr_router
 from api.pack import router as pack_router
+from api.plugins import router as plugins_router
 from api.search import router as search_router
 from api.survival import router as survival_router
 from fastapi import FastAPI, Request
@@ -57,6 +58,8 @@ app.include_router(hub_router)
 app.include_router(layout_router)
 
 app.include_router(pack_router)
+
+app.include_router(plugins_router)
 
 app.include_router(search_router)
 app.include_router(survival_router)

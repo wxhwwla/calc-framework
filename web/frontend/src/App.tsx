@@ -34,6 +34,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import PageFallback from "./components/PageFallback";
 import GlobalDonationButton from "./components/GlobalDonationButton";
 import GlobalHelpDialog from "./components/GlobalHelpDialog";
+import PluginManagerDialog from "./components/calculator/PluginManagerDialog";
 import GlobalAttributionButton from "./components/GlobalAttributionButton";
 import SiteFooter from "./components/SiteFooter";
 
@@ -128,6 +129,7 @@ function Shell() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pluginOpen, setPluginOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const { gameItems, toolItems } = useNavItems();
 
@@ -183,9 +185,13 @@ function Shell() {
           <IconButton color="inherit" onClick={toggleLanguage} title={t("common.language")} size="small" sx={{ mr: 1 }}>
             <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : t("common.language")}</Typography>
           </IconButton>
+          <IconButton color="inherit" onClick={() => setPluginOpen(true)} title={t("plugins.title", "插件")} size="small" sx={{ mr: 1 }}>
+            <ExtensionIcon fontSize="small" />
+          </IconButton>
           <GlobalAttributionButton />
           <GlobalDonationButton />
           <GlobalHelpDialog />
+          <PluginManagerDialog open={pluginOpen} onClose={() => setPluginOpen(false)} />
         </Toolbar>
       </AppBar>
 

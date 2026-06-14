@@ -56,7 +56,7 @@
 | 布局编辑 | ✅ LayoutCanvasPanel | ✅ PackLayoutTab | ✅ | |
 | 主题编辑 | ✅ ThemePanel | ✅ ThemeExportTab | ✅ | |
 | 导出 .calcpack | ✅ exporter.py | ✅ POST /api/pack/export | ✅ | |
-| 资产图片打包 | ✅ 解析 layout→收集图片 | ❌ | 🟡 待补 | 仅 donation 图片 |
+| 资产图片打包 | ✅ 解析 layout→收集图片 | ✅ POST /api/pack/export (asset_files) | ✅ | 2026-06-14 补上 |
 | 三页签数据共享 | ✅ 信号/槽 | ✅ 自动加载 | ✅ | |
 
 ---
@@ -66,12 +66,12 @@
 | 功能 | 桌面 (PySide6) | Web (React+FastAPI) | 对称？ | 备注 |
 |------|:---:|:---:|:---:|------|
 | OCR 截图导入 | ✅ 完整管线 | ❌ | ⚠️ 有意 | 浏览器限制，不补 |
-| 插件管理器 | ✅ | ❌ | 🟡 可选 | 可加 Web 版 |
+| 插件管理器 | ✅ | ✅ PluginManagerDialog + /api/plugins | ✅ | 2026-06-14 补上 |
 | Calc Hub 市场 | ❌ | ✅ MarketplacePage | ⚠️ 有意 | 天然 Web |
 | AI 生成器 | ❌ | ✅ GeneratorPage | ⚠️ 有意 | 天然 Web |
 | 数据贡献表单 | ❌ | ✅ DataContributePage | ⚠️ 有意 | 天然 Web |
 | 批量对比 | ✅ BatchCompareDialog | ✅ BatchCompareDialog | ✅ | 两端均已完整 |
-| 生存估计 | ✅ SurvivalEstimateDialog | ❌ 部分 | 🟡 待补 | API 已就绪 |
+| 生存估计 | ✅ SurvivalEstimateDialog | ✅ SurvivalEstimateDialog | ✅ | 两端均已完整 |
 | PWA 离线支持 | ❌ | ✅ | ⚠️ 有意 | 天然 Web |
 
 ---
@@ -109,7 +109,7 @@
 | 🟡 P1 | Web 端批量对比组件 | — | ✅ 已有 |
 | 🟡 P1 | Web 端数据验证 API（schema check） | — | ✅ 2026-06-14 |
 | 🟡 P2 | Web 端复合节点/子图编辑 | — | ✅ 2026-06-14 |
-| 🟢 P3 | Web 端资产图片打包 | 半天 | ⬜ |
-| 🟢 P3 | Web 端数据详情面板（展开行+技能树） | 1 天 | ⬜ |
-| 🟢 P3 | Web 端生存估计 UI | 1 天 | ⬜ |
-| 🟢 P3 | Web 端插件管理器 | 1–2 天 | ⬜ |
+| 🟢 P3 | Web 端资产图片打包 | — | ✅ 2026-06-14 |
+| 🟢 P3 | Web 端数据详情面板（展开行+技能树） | — | ✅ 2026-06-14 |
+| 🟢 P3 | Web 端生存估计 UI | — | ✅ 已有 |
+| 🟢 P3 | Web 端插件管理器 | — | ✅ 2026-06-14 |

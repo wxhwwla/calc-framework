@@ -1059,6 +1059,14 @@ const en = {
   pageFallback: {
     loading: "Loading...",
   },
+
+  plugins: {
+    title: "Plugin Manager",
+    noPlugins: "No plugins installed",
+    installed: "Installed",
+    available: "Available",
+    hint: "Plugins extend DAG computation (crit, dodge, distance decay, etc.). Install .calcplugin files to add new plugins.",
+  },
 };
 
 export default en;

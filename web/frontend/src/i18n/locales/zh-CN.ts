@@ -1072,6 +1072,14 @@ const zhCN = {
   pageFallback: {
     loading: "加载中…",
   },
+
+  plugins: {
+    title: "插件管理器",
+    noPlugins: "暂无已安装的插件",
+    installed: "已安装",
+    available: "可安装",
+    hint: "插件可扩展 DAG 计算能力（暴击、闪避、距离衰减等）。安装 .calcplugin 文件即可添加新插件。",
+  },
 };
 
 export default zhCN;

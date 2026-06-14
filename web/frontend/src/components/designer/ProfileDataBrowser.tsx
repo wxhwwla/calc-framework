@@ -4,6 +4,7 @@ import {
   Autocomplete,
   Box,
   Button,
+  Chip,
   FormControl,
   IconButton,
   InputLabel,
@@ -80,6 +81,9 @@ export default function ProfileDataBrowser({ profileId }: Props) {
     setVerifyName(name);
     setVerifyOpen(true);
   };
+
+  // 展开行详情
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   // 数据校验
   const [validating, setValidating] = useState(false);
@@ -298,23 +302,57 @@ export default function ProfileDataBrowser({ profileId }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedRows.map((row, idx) => (
-              <TableRow key={idx} hover>
-                {columns.map((col) => (
-                  <TableCell key={col}>{String(row[col] ?? "--")}</TableCell>
-                ))}
-                <TableCell align="center">
-                  <Tooltip title={t("designer.dagVerify.verifyTip", "跑 DAG 验证数据")}>
-                    <IconButton
-                      size="small"
-                      onClick={() => openVerify(String(row[columns[0]] ?? ""))}
-                    >
-                      <PlayCircleOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
+            {paginatedRows.map((row, idx) => {
+              const globalIdx = page * rowsPerPage + idx;
+              const isExpanded = expandedIdx === globalIdx;
+              return [
+                <TableRow
+                  key={idx}
+                  hover
+                  onClick={() => setExpandedIdx(isExpanded ? null : globalIdx)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  {columns.map((col) => (
+                    <TableCell key={col}>{String(row[col] ?? "--")}</TableCell>
+                  ))}
+                  <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                    <Tooltip title={t("designer.dagVerify.verifyTip", "跑 DAG 验证数据")}>
+                      <IconButton
+                        size="small"
+                        onClick={() => openVerify(String(row[columns[0]] ?? ""))}
+                      >
+                        <PlayCircleOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>,
+                isExpanded && (
+                  <TableRow key={`${idx}-detail`}>
+                    <TableCell colSpan={columns.length + 1} sx={{ bgcolor: "grey.50", py: 0 }}>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, py: 1 }}>
+                        {Object.entries(row).map(([key, val]) => {
+                          const display = Array.isArray(val)
+                            ? `[${val.length} 项] ${JSON.stringify(val).slice(0, 120)}${JSON.stringify(val).length > 120 ? "..." : ""}`
+                            : typeof val === "object" && val !== null
+                              ? JSON.stringify(val).slice(0, 120)
+                              : String(val ?? "--");
+                          return (
+                            <Chip
+                              key={key}
+                              label={`${key}: ${display}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ maxWidth: 400, fontSize: "0.7rem" }}
+                              title={JSON.stringify(val, null, 2)}
+                            />
+                          );
+                        })}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ),
+              ];
+            })}
             {paginatedRows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length + 1} align="center">
