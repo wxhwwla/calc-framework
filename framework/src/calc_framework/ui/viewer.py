@@ -285,7 +285,7 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 def open_calcpack(path: str | Path) -> None:
     """便捷函数：加载并显示 .calcpack 文件。"""
 
-    QApplication.instance() or QApplication([])
+    QApplication.instance() or QApplication([])  # type: ignore[unused-expression]
     viewer = CalcPackViewer()
 
     viewer.load_calcpack(path)

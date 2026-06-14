@@ -26,7 +26,6 @@ class CalcPackViewerEventMixin:
         dialog = HelpDialog(build_viewer_help, self, title=tr("desktop.viewer.helpDialogTitle"))  # type: ignore[arg-type]
         dialog.exec()
 
-    @staticmethod
     def _on_theme_switched(self, action: QAction) -> None:
         key = action.data()
         if key:
@@ -61,7 +60,7 @@ class CalcPackViewerEventMixin:
 
     def _open_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self,
+            self,  # type: ignore[arg-type] — mixin, runtime is QMainWindow
             tr("desktop.viewer.menuOpenCalcpack"),
             "",  # type: ignore[arg-type]
             "CalcPack (*.calcpack);;ZIP (*.zip);;All Files (*)",

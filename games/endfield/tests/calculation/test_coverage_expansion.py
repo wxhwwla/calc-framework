@@ -58,7 +58,7 @@ class TestEquipmentAffixExpanded:
     def test_skill_bonus_skill(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("战技伤害20%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("战技伤害20%", source="test_item")
         assert len(effects) == 1
         assert effects[0].skill_types == ("战技",)
         assert effects[0].value == 0.20
@@ -66,20 +66,20 @@ class TestEquipmentAffixExpanded:
     def test_skill_bonus_chain(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("连携技伤害加成25.5%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("连携技伤害加成25.5%", source="test_item")
         assert effects[0].skill_types == ("连携技",)
         assert effects[0].value == 0.255
 
     def test_skill_bonus_ultimate(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("终结技伤害加成30%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("终结技伤害加成30%", source="test_item")
         assert effects[0].skill_types == ("终结技",)
 
     def test_all_skill_bonus(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("全技能伤害加成10%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("全技能伤害加成10%", source="test_item")
         assert len(effects) == 1
         assert effects[0].effect_type == "技能类型伤害加成"
         assert effects[0].skill_types == ("战技", "连携技", "终结技")
@@ -88,21 +88,21 @@ class TestEquipmentAffixExpanded:
     def test_damage_type_bonus_physical(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("物理伤害加成12%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("物理伤害加成12%", source="test_item")
         assert len(effects) == 1
         assert effects[0].effect_type == "伤害类型伤害加成"
 
     def test_damage_type_bonus_灼热(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("灼热伤害8%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("灼热伤害8%", source="test_item")
         assert len(effects) == 1
         assert effects[0].effect_type == "伤害类型伤害加成"
 
     def test_damage_type_bonus_electromagnetic(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("电磁伤害加成18%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("电磁伤害加成18%", source="test_item")
         assert len(effects) == 1
 
     def test_originium_arts_strength(self):
@@ -117,46 +117,46 @@ class TestEquipmentAffixExpanded:
     def test_flat_attack_percent(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("攻击力5%", source="test_item")
+        effects, _flats = parse_equipment_affix_line("攻击力5%", source="test_item")
         assert len(effects) == 1
         assert effects[0].effect_type == "装备攻击力加成"
 
     def test_flat_stat_strength(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("力量12", source="test_item")
+        _effects, flats = parse_equipment_affix_line("力量12", source="test_item")
         assert "力量" in flats
         assert flats["力量"] > 0
 
     def test_flat_stat_intelligence(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("智识8", source="test_item")
+        _effects, flats = parse_equipment_affix_line("智识8", source="test_item")
         assert "智识" in flats
 
     def test_flat_stat_agility(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("敏捷15", source="test_item")
+        _effects, flats = parse_equipment_affix_line("敏捷15", source="test_item")
         assert "敏捷" in flats
 
     def test_flat_stat_will(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("意志10", source="test_item")
+        _effects, flats = parse_equipment_affix_line("意志10", source="test_item")
         assert "意志" in flats
 
     def test_set_effect_sentence_physical_damage(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("物理伤害+20%", source="set_bonus")
+        effects, _flats = parse_equipment_affix_line("物理伤害+20%", source="set_bonus")
         assert len(effects) == 1
         assert effects[0].effect_type == "伤害类型伤害加成"
 
     def test_set_effect_sentence_generic_damage(self):
         from games.endfield.calc.equipment.affix import parse_equipment_affix_line
 
-        effects, flats = parse_equipment_affix_line("伤害加成+15%", source="set_bonus")
+        effects, _flats = parse_equipment_affix_line("伤害加成+15%", source="set_bonus")
         assert len(effects) == 1
         assert effects[0].effect_type == "其他伤害加成"
 
@@ -164,7 +164,7 @@ class TestEquipmentAffixExpanded:
         from games.endfield.calc.equipment.affix import parse_equipment_effect_block
 
         block = "物理伤害+10%；战技伤害加成12%"
-        effects, flats = parse_equipment_effect_block(block, source="set")
+        effects, _flats = parse_equipment_effect_block(block, source="set")
         assert len(effects) == 2
 
     def test_parse_equipment_effect_block_with_flats(self):
@@ -337,7 +337,7 @@ class TestEquipmentSystemExpanded:
             accessory_a={"效果": [], "套装": "", "flat_stats": {}},
             accessory_b={"效果": [], "套装": "", "flat_stats": {}},
         )
-        effects, flat_stats, attack_percent = aggregate_loadout_modifiers(loadout)
+        _effects, flat_stats, attack_percent = aggregate_loadout_modifiers(loadout)
         assert "力量" in flat_stats
         assert flat_stats["力量"] == 15.0
         assert attack_percent == 0.0

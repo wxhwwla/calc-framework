@@ -56,7 +56,7 @@ def run_ocr_detection(folder: str | Path) -> dict[str, Any] | None:
         mapped_preset = None
 
         for r in batch.results:
-            for d in r.detections:
+            for _d in r.detections:
                 pass
             try:
                 ocr_result = ocr.recognize(r.image_path)
@@ -264,7 +264,7 @@ class _DownloadThread(QThread):
             total_models = len(REQUIRED_MODELS)
             completed = 0
             for model in REQUIRED_MODELS:
-                pth_path = cache / model["filename"]
+                pth_path = cache / model["filename"]  # type: ignore[operator]
                 if pth_path.exists():
                     completed += 1
                     self.progress.emit(int(completed / total_models * 100))
@@ -273,7 +273,7 @@ class _DownloadThread(QThread):
                 zip_path = cache / f"{model['filename']}.zip"
                 zip_url = model["zip_url"]
                 try:
-                    req = Request(zip_url, headers={"User-Agent": "Mozilla/5.0"})
+                    req = Request(zip_url, headers={"User-Agent": "Mozilla/5.0"})  # type: ignore[arg-type]
                     resp = urlopen(req, timeout=120)
                     with open(zip_path, "wb") as f:
                         f.write(resp.read())

@@ -10,6 +10,6 @@
 
 from __future__ import annotations
 
-from .exponential_fitter import ExponentialFormulaFitter  # noqa: F401
-from .piecewise_fitter import PiecewiseFormulaFitter  # noqa: F401
-from .threshold_fitter import ThresholdFormulaFitter  # noqa: F401
+from .exponential_fitter import ExponentialFormulaFitter  # noqa: F401  # type: ignore[unused-import]
+from .piecewise_fitter import PiecewiseFormulaFitter  # noqa: F401  # type: ignore[unused-import]
+from .threshold_fitter import ThresholdFormulaFitter  # noqa: F401  # type: ignore[unused-import]

@@ -4,7 +4,7 @@
 
 from .api import fit_formula, validate_formula
 from .attribute import fit_attribute_formula, remove_duplicates, validate_attribute_formula
-from .fit_core import _find_best_params, _is_decimal_data, _scale_data
+from .fit_core import _find_best_params, _is_decimal_data, _scale_data  # type: ignore[unused-import]
 from .skill import (
     fit_skill_formula,
     fit_skill_formula_no_special,

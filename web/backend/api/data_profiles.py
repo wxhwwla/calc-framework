@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json as _json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -90,11 +91,9 @@ def _load_entity_list(ent: EntityDef) -> list[dict[str, Any]]:
     if not ent.path.is_file():
         return []  # 数据文件尚未部署（如 PA 上未解压干员 zip），返回空列表
     try:
-        import json
-
         with open(ent.path, encoding="utf-8") as f:
-            data = json.load(f)
-    except json.JSONDecodeError as e:
+            data = _json.load(f)
+    except _json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"JSON 解析失败: {ent.path.name}: {e}") from e
     if not isinstance(data, list):
         raise HTTPException(status_code=500, detail=f"{ent.path.name} 根节点须为数组")

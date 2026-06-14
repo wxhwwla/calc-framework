@@ -586,7 +586,7 @@ class _EditDialog(QDialog):
         """get_data 实现。"""
         result: dict[str, Any] = {}
 
-        for field_name, field_type in self._fields:
+        for field_name, _field_type in self._fields:
             w = self._widgets[field_name]
 
             if isinstance(w, QLineEdit):

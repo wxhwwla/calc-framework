@@ -31,7 +31,7 @@ from pathlib import Path
 
 try:
     from PySide6.QtCore import Qt, QRectF, QPointF
-    from PySide6.QtGui import QPixmap, QPainter, QPen, QColor, QFont, QKeyEvent, QMouseEvent, QWheelEvent
+    from PySide6.QtGui import QPixmap, QPainter, QPen, QColor, QFont, QKeyEvent, QMouseEvent, QWheelEvent  # type: ignore[unused-import]
     from PySide6.QtWidgets import (
         QApplication,
         QWidget,
@@ -43,11 +43,11 @@ try:
         QScrollArea,
         QFileDialog,
         QMessageBox,
-        QSplitter,
+        QSplitter,  # type: ignore[unused-import]
         QListWidget,
         QListWidgetItem,
-        QSpinBox,
-        QCheckBox,
+        QSpinBox,  # type: ignore[unused-import]
+        QCheckBox,  # type: ignore[unused-import]
     )
 except ImportError:
     import sys as _sys

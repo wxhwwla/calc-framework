@@ -170,7 +170,7 @@ class TestSkillSegments(unittest.TestCase):
         self.assertAlmostEqual(score.final_damage, 2500.0)
 
     def test_aggregate_weighted_damage(self) -> None:
-        total, seg_totals, skill_totals = aggregate_weighted_damage(
+        total, _seg_totals, skill_totals = aggregate_weighted_damage(
             {"战技:1": 50.0, "连携技:1": 100.0, "连携技:2": 200.0},
             {"战技:1": 1, "连携技:1": 2, "连携技:2": 1},
         )

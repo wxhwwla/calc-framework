@@ -10,9 +10,9 @@
 from __future__ import annotations
 
 from scripts._version import (  # noqa: F401
-    _EXE_VERSION,
+    _EXE_VERSION,  # type: ignore[unused-import]
     _EXE_VERSION_PATTERN,
-    _VERSION,
+    _VERSION,  # type: ignore[unused-import]
     _VERSION_PATTERN,
     SUMMARY_BEGIN,
     SUMMARY_END,
@@ -21,8 +21,8 @@ from scripts._version import (  # noqa: F401
     bump_patch,
     classify_changed_paths,
     format_semver,
-    get_exe_version,
-    get_version,
+    get_exe_version,  # type: ignore[unused-import]
+    get_version,  # type: ignore[unused-import]
     parse_semver,
     please_read_me_path,
     read_exe_version,

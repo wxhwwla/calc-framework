@@ -104,7 +104,7 @@ def _copy_template_tree(
     if not src.is_dir():
         raise FileNotFoundError(f"模板目录不存在: {src}")
 
-    for root, dirs, files in os.walk(src):
+    for root, _dirs, files in os.walk(src):
         rel = Path(root).relative_to(src)
         target_dir = dst / rel
         os.makedirs(target_dir, exist_ok=True)

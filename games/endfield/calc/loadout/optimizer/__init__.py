@@ -7,7 +7,7 @@ from .evaluate import build_runtime_eval_snapshot, evaluate_task
 from .plan import build_optimizer_search_plan
 from .search import search_best_single_skill_loadouts
 from .tasks import (
-    OptimizerTask,
+    OptimizerTask,  # type: ignore[unused-import]
     enumerate_optimizer_tasks,
     iter_optimizer_tasks,
     optimizer_config_for_character,

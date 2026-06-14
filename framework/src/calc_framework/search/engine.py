@@ -33,8 +33,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -46,9 +44,7 @@ from .result import SearchCancelToken, SearchResult
 from .tracker import TopNTracker
 
 if TYPE_CHECKING:
-
     from .persist import SearchRunStore
-
 
 
 C = TypeVar("C")
@@ -56,16 +52,9 @@ C = TypeVar("C")
 R = TypeVar("R")
 
 
-
-
-
 @dataclass
-
 class SearchConfig:
-
     """通用搜索配置。"""
-
-
 
     top_n: int = 10
 
@@ -74,11 +63,7 @@ class SearchConfig:
     max_seconds: float | None = None
 
 
-
-
-
 class SearchEngine(ABC, Generic[C, R]):
-
     """游戏无关的搜索引擎基类。
 
 
@@ -101,34 +86,16 @@ class SearchEngine(ABC, Generic[C, R]):
 
     """
 
-
+    @abstractmethod
+    def generate_candidates(self) -> list[C]: ...
 
     @abstractmethod
-
-    def generate_candidates(self) -> list[C]:
-
-        ...
-
-
+    def evaluate(self, candidate: C) -> R: ...
 
     @abstractmethod
-
-    def evaluate(self, candidate: C) -> R:
-
-        ...
-
-
-
-    @abstractmethod
-
-    def score_key(self, result: R) -> float:
-
-        ...
-
-
+    def score_key(self, result: R) -> float: ...
 
     def candidate_key(self, candidate: C) -> str:
-
         """返回候选的唯一标识键，用于续跑去重。
 
 
@@ -141,149 +108,83 @@ class SearchEngine(ABC, Generic[C, R]):
 
         return str(candidate)
 
-
-
     def estimate_workload(self) -> int:
-
         return len(self.generate_candidates())
 
-
-
     def run(
-
         self,
-
         config: SearchConfig | None = None,
-
         *,
-
         cancel_token: SearchCancelToken | None = None,
-
         progress_callback: Any | None = None,
-
         run_store: SearchRunStore | None = None,
-
         run_signature: str | None = None,
-
     ) -> SearchResult[R]:
-
         cfg = config or SearchConfig()
 
         cancel = cancel_token or SearchCancelToken()
 
         total = self.estimate_workload()
 
-
-
         if run_store is not None and run_signature is not None:
-
             return self._run_with_persist(cfg, cancel, run_store, run_signature, progress_callback)
-
-
 
         return self._run_in_memory(cfg, cancel, progress_callback, total)
 
-
-
     def _run_in_memory(
-
         self,
-
         config: SearchConfig,
-
         cancel_token: SearchCancelToken,
-
         progress_callback: Any | None,
-
         total: int,
-
     ) -> SearchResult[R]:
-
         candidates = self.generate_candidates()
 
         tracker = TopNTracker[R](config.top_n, key_fn=self.score_key)
 
         evaluated_count = 0
 
-
-
         def _tracked_evaluate(candidate: C) -> R:
-
             nonlocal evaluated_count
 
             evaluated_count += 1
 
             return self.evaluate(candidate)
 
-
-
         def _progress(p):
-
             if progress_callback is not None:
-
                 progress_callback(p)
 
-
-
         results = run_parallel(
-
             tasks=candidates,
-
             evaluator=_tracked_evaluate,
-
             max_workers=config.max_workers,
-
             cancel_token=cancel_token,
-
             progress_callback=_progress,
-
             top_n_tracker=tracker,
-
         )
-
-
 
         return SearchResult[R](
-
             items=tuple(results),
-
             total_evaluated=evaluated_count,
-
             total_candidates=total,
-
             metadata={
-
                 "cancelled": cancel_token.is_cancelled,
-
                 "max_workers": config.max_workers,
-
             },
-
         )
 
-
-
     def _run_with_persist(
-
         self,
-
         config: SearchConfig,
-
         cancel_token: SearchCancelToken,
-
         run_store: SearchRunStore,
-
         run_signature: str,
-
         progress_callback: Any | None,
-
     ) -> SearchResult[R]:
-
         """执行可续跑搜索：跳过已处理组合，批量写入 processed。"""
 
         from .persist import PROCESSED_BATCH_SIZE
-
-
 
         total = self.estimate_workload()
 
@@ -291,15 +192,11 @@ class SearchEngine(ABC, Generic[C, R]):
 
         existing_keys = run_store.get_processed_keys(run_signature)
 
-
-
         candidates = self.generate_candidates()
 
         pending = [(self.candidate_key(c), c) for c in candidates if self.candidate_key(c) not in existing_keys]
 
         skipped = len(candidates) - len(pending)
-
-
 
         tracker = TopNTracker[R](config.top_n, key_fn=self.score_key)
 
@@ -307,10 +204,7 @@ class SearchEngine(ABC, Generic[C, R]):
 
         processed_count = 0
 
-
-
         def _on_result(key_and_candidate: tuple[str, C], result: R) -> None:
-
             nonlocal processed_count
 
             key, _ = key_and_candidate
@@ -322,52 +216,30 @@ class SearchEngine(ABC, Generic[C, R]):
             processed_buf.append(key)
 
             if len(processed_buf) >= PROCESSED_BATCH_SIZE:
-
                 run_store.mark_processed_batch(run_signature, processed_buf)
 
                 processed_buf.clear()
 
-
-
         def _progress(p):
-
             if progress_callback is not None:
-
-                processed_count + skipped
+                processed_count + skipped  # type: ignore[unused-expression]
 
                 progress_callback(p)
 
-
-
         from .parallel import run_parallel as _run_parallel
 
-
-
         results = _run_parallel(
-
             tasks=pending,
-
             evaluator=lambda kc: self.evaluate(kc[1]),
-
             max_workers=config.max_workers,
-
             cancel_token=cancel_token,
-
             progress_callback=_progress,
-
             top_n_tracker=tracker,
-
             on_result=_on_result,
-
         )
 
-
-
         if processed_buf:
-
             run_store.mark_processed_batch(run_signature, processed_buf)
-
-
 
         cancelled = cancel_token.is_cancelled
 
@@ -375,25 +247,13 @@ class SearchEngine(ABC, Generic[C, R]):
 
         run_store.mark_run_status(run_signature, status)
 
-
-
         return SearchResult[R](
-
             items=tuple(results),
-
             total_evaluated=processed_count + skipped,
-
             total_candidates=total,
-
             metadata={
-
                 "cancelled": cancelled,
-
                 "skipped_preprocessed": skipped,
-
                 "max_workers": config.max_workers,
-
             },
-
         )
-

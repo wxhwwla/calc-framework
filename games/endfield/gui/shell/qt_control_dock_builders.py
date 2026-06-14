@@ -33,8 +33,10 @@ from games.endfield.gui.shell.qt_control_dock_widgets import (
 )
 
 _FIXED_SLOT_SPECS: list[tuple[str, str]] = [
-    ("chest", "护甲"), ("gloves", "护手"),
-    ("accessory_a", "配件A"), ("accessory_b", "配件B"),
+    ("chest", "护甲"),
+    ("gloves", "护手"),
+    ("accessory_a", "配件A"),
+    ("accessory_b", "配件B"),
 ]
 _FIXED_SLOT_NONE_LABEL = "（不固定）"
 _SECTION_COLOR = "#FF6B6B"
@@ -105,7 +107,7 @@ class BuilderMixin:
         slots_grid = QHBoxLayout()
         slots_grid.setSpacing(4)
         self.fixed_loadout_slots.clear()
-        for slot_key, slot_label in _FIXED_SLOT_SPECS:
+        for _slot_key, slot_label in _FIXED_SLOT_SPECS:
             row = QVBoxLayout()
             row.setSpacing(2)
             slot_lbl = QLabel(slot_label)
@@ -125,7 +127,10 @@ class BuilderMixin:
         self.mvp_search_btn = self._make_btn("最优搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
         lay.addWidget(self.mvp_search_btn)
         self.full_search_btn = self._make_btn(
-            "全量遍历搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE,
+            "全量遍历搜索",
+            _SECONDARY_BTN_HEIGHT,
+            primary=True,
+            style=_BTN_PRIMARY_STYLE,
         )
         lay.addWidget(self.full_search_btn)
         self.search_cancel_btn = self._make_btn("取消搜索", _SECONDARY_BTN_HEIGHT)
@@ -196,16 +201,24 @@ class BuilderMixin:
         self._build_segment_rows_fallback()
         lay.addWidget(self._segment_rows_container)
 
-        self._survival_btn = self._make_btn("处决/治疗估算", _SECONDARY_BTN_HEIGHT, style="""
+        self._survival_btn = self._make_btn(
+            "处决/治疗估算",
+            _SECONDARY_BTN_HEIGHT,
+            style="""
             QPushButton { background-color: #5a4a78; color: white; border-radius: 6px; }
             QPushButton:hover { background-color: #6b5b8a; }
-        """)
+        """,
+        )
         lay.addWidget(self._survival_btn)
 
-        self._manual_buff_btn = self._make_btn("额外加成微调", _SECONDARY_BTN_HEIGHT, style="""
+        self._manual_buff_btn = self._make_btn(
+            "额外加成微调",
+            _SECONDARY_BTN_HEIGHT,
+            style="""
             QPushButton { background-color: #2d6a4f; color: white; border-radius: 6px; }
             QPushButton:hover { background-color: #40916c; }
-        """)
+        """,
+        )
         lay.addWidget(self._manual_buff_btn)
 
         lay.addWidget(SectionHeader("物理异常", self._big))
@@ -329,7 +342,7 @@ class BuilderMixin:
             w.setLayout(row)
             self._segment_rows_lay.addWidget(w)
             self._segment_count_edits_dict[key] = edit
+
     """BuilderMixin。"""
 
     # ── 搜索参数读取 ──────────────────────────
-

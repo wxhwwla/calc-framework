@@ -49,7 +49,7 @@ class _ResponsiveGroupBox(QGroupBox):
             if w:
                 w.setParent(None)
 
-        for i, (_var_path, label, widget, spec) in enumerate(self._items):
+        for i, (_var_path, label, widget, _spec) in enumerate(self._items):
             row = i // (cols // 2)
             col_offset = (i % (cols // 2)) * 2
             self._grid.addWidget(label, row, col_offset)

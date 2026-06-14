@@ -22,7 +22,7 @@ class PluginInfo(BaseModel):
 def _ensure_registry_loaded():
     """触发内置插件注册（首次调用时导入 builtin 模块）。"""
     try:
-        import calc_framework.plugin.builtin  # noqa: F401 — 触发 register()
+        import calc_framework.plugin.builtin  # noqa: F401 — 触发 register()  # type: ignore[unused-import]
     except ImportError:
         pass
 

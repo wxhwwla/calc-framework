@@ -40,7 +40,7 @@ def _register_page(page_id: str, widget_class: type[QWidget]) -> None:
 # ── 分类条目定义 ────────────────────────────────────────
 
 # (page_id, label, group)
-_PAGE_DEFS: list[tuple[str, str, str]] = [
+_PAGE_DEFS: list[tuple[str, str | None, str | None]] = [
     ("data_editor", None, None),  # label/group via tr()
     ("layout_editor", None, None),
     ("export_pack", None, None),

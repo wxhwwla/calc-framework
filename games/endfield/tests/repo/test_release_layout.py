@@ -32,7 +32,7 @@ class TestReleaseLayout(unittest.TestCase):
         if str(_PKG) not in sys.path:
             sys.path.insert(0, str(_PKG))
 
-        import release_bundle.release_layout  # noqa: F401
+        import release_bundle.release_layout  # noqa: F401  # type: ignore[unused-import]
 
         spec = importlib.util.find_spec("packaging.requirements")
 

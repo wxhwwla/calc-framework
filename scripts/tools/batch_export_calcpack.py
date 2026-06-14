@@ -142,7 +142,7 @@ def main() -> None:
 def _upload_to_hub(pack_paths: list[Path]) -> None:
     """将 .calcpack 文件上传到 Calc Hub（本地 Web 后端）。"""
     try:
-        import requests
+        import requests  # type: ignore
     except ImportError:
         print("[错误] 需要安装 requests: pip install requests")
         return

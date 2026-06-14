@@ -3,8 +3,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-def build_viewer_help() -> list[HelpSection]:  # noqa: F821
+if TYPE_CHECKING:
+    from utils.gui.help_dialog import HelpSection
+
+
+def build_viewer_help() -> list[HelpSection]:
     """构造 CalcPackViewer 的使用说明帮助内容。"""
     from utils.gui.help_dialog import HelpSection
     from utils.gui.help_loader import load_multi_category

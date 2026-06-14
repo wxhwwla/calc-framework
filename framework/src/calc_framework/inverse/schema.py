@@ -213,6 +213,7 @@ class GameInverseAdapter(ABC):
                 return result
 
         self.on_no_match(data)
+        raise RuntimeError("on_no_match 应已抛出异常")  # unreachable, satisfies type checker
 
     def compute(
         self,

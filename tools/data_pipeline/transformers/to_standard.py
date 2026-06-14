@@ -196,7 +196,7 @@ def _collect_skills(record: RawRecord, entity: EntitySchema) -> None:
 
         skill["段"] = [segment_indices[sid] for sid in seg_ids]
 
-        entity["技能"].append(skill)
+        entity.setdefault("技能", []).append(skill)
 
 
 def _typed(value: Any) -> Any:

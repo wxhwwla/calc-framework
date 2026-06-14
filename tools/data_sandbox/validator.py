@@ -98,7 +98,7 @@ class Validator:
                 ]
             )
 
-        results = _validate_all(data, strict=True)
+        results = _validate_all(data, strict=True)  # type: ignore[arg-type]
         entities = []
         for idx, errs in results:
             name = data[idx].get("名称", f"[{idx}]") if idx < len(data) else f"[{idx}]"

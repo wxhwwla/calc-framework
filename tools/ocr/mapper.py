@@ -235,7 +235,7 @@ class OcrMapper:
 
         raw_texts: list[str] = []
 
-        for text, conf, region in ocr_texts:
+        for text, _conf, _region in ocr_texts:
             text = text.strip()
 
             if not text:
@@ -278,7 +278,7 @@ class OcrMapper:
 
         # Need to retry if level detection skipped name detection
 
-        for text, conf, region in ocr_texts:
+        for text, _conf, _region in ocr_texts:
             text = text.strip()
 
             if not text:
@@ -292,7 +292,7 @@ class OcrMapper:
 
                     result.char_match_score = score
 
-        for text, conf, region in ocr_texts:
+        for text, _conf, _region in ocr_texts:
             text = text.strip()
 
             if not text:
