@@ -24,7 +24,7 @@ from api.search import router as search_router
 from api.survival import router as survival_router
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from web.backend.bridge import get_logger, setup_logging
@@ -34,27 +34,16 @@ setup_logging(level="INFO", console=True)
 logger = get_logger(__name__)
 
 
-
-app = FastAPI(title="Calc Framework Web API", version="1.0.0",
-
-              docs_url="/api/docs", redoc_url="/api/redoc")
-
+app = FastAPI(title="Calc Framework Web API", version="1.0.0", docs_url="/api/docs", redoc_url="/api/redoc")
 
 
 app.add_middleware(
-
     CORSMiddleware,
-
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
-
 )
-
 
 
 app.include_router(compute_router)
@@ -78,6 +67,7 @@ app.include_router(arknights_router)
 app.include_router(contribute_router)
 app.include_router(generator_router)
 
+
 def _resolve_repo_root() -> Path:
     """开发=仓库根；PyInstaller 本地后端=``_MEIPASS``。"""
     if getattr(sys, "frozen", False):
@@ -86,6 +76,13 @@ def _resolve_repo_root() -> Path:
 
 
 _REPO_ROOT = _resolve_repo_root()
+
+
+@app.get("/")
+async def root():
+    """根路径 → 重定向到终末地计算器。"""
+    return RedirectResponse(url="/compute")
+
 
 # 捐赠二维码（与 GUI resources/donation/ 同源）
 _DONATION_DIR = _REPO_ROOT / "resources" / "donation"
@@ -109,31 +106,25 @@ if _DONATION_DIR.is_dir():
 else:
     logger.warning("捐赠目录不存在，跳过挂载: %s", _DONATION_DIR)
 
+
 @app.get("/api/health")
-
 async def health():
-
     from web.backend.bridge import AdapterManager
-
 
     ADAPTER_ROOT = Path(__file__).resolve().parents[2] / "framework" / "adapters"
 
     mgr = AdapterManager(ADAPTER_ROOT)
 
     return {
-
         "status": "ok",
-
         "framework_version": "1.0.0",
-
         "adapters_count": len(mgr.available_adapters),
-
         "adapters": list(mgr.available_adapters.keys()),
-
     }
 
 
 # ── 客户端下载 ────────────────────────────────────────────────────────────────
+
 
 @app.get("/api/download/client")
 def download_client():
@@ -158,18 +149,11 @@ if _FRONTEND_DIST.is_dir():
     logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
 
 
-
 @app.exception_handler(Exception)
-
 async def global_exception_handler(request: Request, exc: Exception):
-
     logger.error("未捕获的异常: %s", exc, exc_info=True)
 
     return JSONResponse(
-
         status_code=500,
-
         content={"detail": f"服务器内部错误: {exc}"},
-
     )
-

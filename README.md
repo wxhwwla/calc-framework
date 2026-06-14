@@ -5,9 +5,44 @@
 
 > A universal game calculation framework. Currently supports **Arknights: Endfield** and **Arknights**.
 >
-> **Web Demo**: [wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)
->
 > [:cn: 中文文档](README_zh.md)
+
+---
+
+## 🚀 Get Started
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+### 🎮 I'm a Player
+
+**Use the calculator right now — no install needed.**
+
+[**Open Web App →**](https://wxhwwla.pythonanywhere.com)
+
+*or* [Download Desktop App](https://github.com/wxhwwla/calc-framework/releases)
+
+> 📖 [Player Guide](docs/player-guide.md)
+
+</td>
+<td align="center" width="50%">
+
+### 🔧 I'm a Developer
+
+**Build a calculator for my game, or contribute.**
+
+```bash
+git clone https://github.com/wxhwwla/calc-framework
+cd calc-framework
+python scripts/main_launcher.py
+```
+
+> 🏗 [Quick Start ↓](#quick-start) · [Create a Calculator](docs/制造游戏计算器完整流程.md)
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -54,28 +89,42 @@
 
 ## Quick Start
 
-### Recommended: Launcher
+### Option 1: Web Demo (No Install)
+
+→ **[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)**
+
+### Option 2: Desktop App
+
+Download the installer from [Releases](https://github.com/wxhwwla/calc-framework/releases).
+
+### Option 3: Run from Source (Developers)
 
 ```powershell
-# Auto-discovers installed game adapters
-python scripts/main_launcher.py
-```
+# 1. Clone
+git clone https://github.com/wxhwwla/calc-framework
+cd calc-framework
 
-### Direct Launch
+# 2. Install framework core
+cd framework
+pip install -e ".[dev]"
+cd ..
 
-```powershell
-# Endfield Calculator
+# 3. Install game adapter + launch
 cd games/endfield
 pip install -e ".[dev]"
 python -m games.endfield.main
 ```
 
-```powershell
-# Developer Toolkit
-python scripts/main_dev_toolkit.py
-```
+<details>
+<summary>Troubleshooting</summary>
 
-### Web Version
+- **`pip install -e ".[dev]"` fails**: Ensure Python ≥ 3.11. Try `pip install -e .` (without dev deps) first, then install dev tools separately.
+- **`No module named 'calc_framework'`**: Install the framework first: `cd framework && pip install -e .`
+- **OCR not working**: Install optional OCR deps: `pip install -e ".[ocr]"` (requires ~2 GB for TorchVision).
+
+</details>
+
+### Option 4: Web Version (Local)
 
 ```powershell
 # Backend
@@ -110,6 +159,7 @@ cd web/frontend && npm install && npm run dev
 
 ### Generic Framework
 
+- **Visual DAG Editor**: Drag-and-drop node editor (Web: ReactFlow, Desktop: PySide6) — build damage formulas visually, no code required
 - **DAG Engine**: 9 node types, topological sort, AST sandbox, subgraph expansion, block-level caching
 - **Inverse Engine**: `data_to_params()` / `params_to_curve()` — bidirectional formula fitting for any game
 - **Search Engine**: Top-N enumeration, parallel execution, cancel tokens, SQLite persistence
