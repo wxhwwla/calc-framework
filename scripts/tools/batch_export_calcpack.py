@@ -141,7 +141,11 @@ def main() -> None:
 
 def _upload_to_hub(pack_paths: list[Path]) -> None:
     """将 .calcpack 文件上传到 Calc Hub（本地 Web 后端）。"""
-    import requests
+    try:
+        import requests
+    except ImportError:
+        print("[错误] 需要安装 requests: pip install requests")
+        return
 
     hub_url = "http://127.0.0.1:8180/api/hub/upload"
     for fp in pack_paths:
