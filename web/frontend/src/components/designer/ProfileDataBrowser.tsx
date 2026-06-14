@@ -23,7 +23,7 @@ import {
 } from "@mui/material";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import { fetchProfileRows } from "../../api/dataProfiles";
+import { fetchProfileRows, validateData, type ValidateResult } from "../../api/dataProfiles";
 import { getEntity, getProfile } from "../../constants/dataProfileConfig";
 import DagVerifyDialog from "./DagVerifyDialog";
 
@@ -79,6 +79,21 @@ export default function ProfileDataBrowser({ profileId }: Props) {
   const openVerify = (name: string) => {
     setVerifyName(name);
     setVerifyOpen(true);
+  };
+
+  // 数据校验
+  const [validating, setValidating] = useState(false);
+  const [validateResult, setValidateResult] = useState<ValidateResult | null>(null);
+  const handleValidate = async () => {
+    setValidating(true);
+    setValidateResult(null);
+    try {
+      setValidateResult(await validateData(profileId, entityKey));
+    } catch {
+      setValidateResult(null);
+    } finally {
+      setValidating(false);
+    }
   };
 
   const columns = entity?.columns ?? [];
@@ -221,10 +236,53 @@ export default function ProfileDataBrowser({ profileId }: Props) {
         <Button variant="outlined" size="small" onClick={loadData}>
           {t("designer.dataBrowserTab.refresh")}
         </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          color="warning"
+          onClick={handleValidate}
+          disabled={validating}
+        >
+          {validating ? "…" : t("designer.dagVerify.validateData", "校验数据")}
+        </Button>
+        {validateResult && (
+          <Typography variant="body2" color={validateResult.errors.length === 0 ? "success.main" : "error.main"}>
+            {validateResult.valid}/{validateResult.total} 通过
+            {validateResult.errors.length > 0 && ` (${validateResult.errors.length} 项有问题)`}
+          </Typography>
+        )}
         <Typography variant="body2" color="text.secondary">
           {t("designer.dataEditorTab.countLabel", { profile: profile?.label ?? "", entity: entity?.label ?? "", count: filteredRows.length })}
         </Typography>
       </Stack>
+
+      {/* 校验错误详情 */}
+      {validateResult && validateResult.errors.length > 0 && (
+        <TableContainer sx={{ mb: 2, maxHeight: 200, overflowY: "auto" }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: 80 }}>#</TableCell>
+                <TableCell>{t("common.name")}</TableCell>
+                <TableCell>{t("common.error")}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {validateResult.errors.map((e) => (
+                <TableRow key={e.index}>
+                  <TableCell>{e.index}</TableCell>
+                  <TableCell>{e.name}</TableCell>
+                  <TableCell>
+                    {e.messages.map((m, mi) => (
+                      <Typography key={mi} variant="body2" color="error.main">{m}</Typography>
+                    ))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* 数据表格 */}
       <TableContainer sx={{ maxHeight: 500, overflowX: "auto" }}>

@@ -27,7 +27,7 @@
 |------|:---:|:---:|:---:|------|
 | 数据浏览 | ✅ DataEditorPanel | ✅ ProfileDataBrowser | ✅ | Web 有搜索/分页，更优 |
 | 数据 CRUD | ❌ 仅整体保存 | ✅ 行级 CRUD | ⚠️ 不对称 | Web 更强 |
-| 数据验证 (schema check) | ✅ | ❌ | 🔴 待补 | 需新增 API 端点 |
+| 数据验证 (schema check) | ✅ | ✅ POST /api/data/validate | ✅ | 2026-06-14 补上 |
 | DAG 验证（选中角色→跑 DAG） | ✅ | ✅ DagVerifyDialog | ✅ | 2026-06-14 补上 |
 | 公式反推 (inverse) | ✅ | ✅ InverseTab | ✅ | |
 | JSON 导入 | ✅ 文件选择器 | ❌ | 🟡 可选 | 前端可用 FileReader |
@@ -42,7 +42,7 @@
 | 可视化 DAG 编辑 | ✅ QGraphicsView | ✅ ReactFlow | ✅ | |
 | 拖拽节点 | ✅ | ✅ | ✅ | |
 | 连线编辑 | ✅ | ✅ | ✅ | |
-| 复合节点/子图 | ✅ | ❌ | 🟡 待补 | Web 端子图展开不支持 |
+| 复合节点/子图 | ✅ | ✅ call 节点 + 参数绑定 | ✅ | 2026-06-14 补上 |
 | 网格吸附 | ✅ | ❌ | 🟢 低优 | |
 | 节点属性面板 | ✅ | ✅ | ✅ | |
 
@@ -70,7 +70,7 @@
 | Calc Hub 市场 | ❌ | ✅ MarketplacePage | ⚠️ 有意 | 天然 Web |
 | AI 生成器 | ❌ | ✅ GeneratorPage | ⚠️ 有意 | 天然 Web |
 | 数据贡献表单 | ❌ | ✅ DataContributePage | ⚠️ 有意 | 天然 Web |
-| 批量对比 | ✅ BatchCompareDialog | ❌ | 🟡 待补 | `/api/compute/compare` 已就绪 |
+| 批量对比 | ✅ BatchCompareDialog | ✅ BatchCompareDialog | ✅ | 两端均已完整 |
 | 生存估计 | ✅ SurvivalEstimateDialog | ❌ 部分 | 🟡 待补 | API 已就绪 |
 | PWA 离线支持 | ❌ | ✅ | ⚠️ 有意 | 天然 Web |
 
@@ -103,13 +103,13 @@
 
 ## 待补项优先级
 
-| 优先级 | 功能 | 工作量 |
-|:------:|------|:------:|
-| 🔴 P0 | 桌面 i18n 阶段3 收尾（已在进行） | 持续 |
-| 🟡 P1 | Web 端批量对比组件 | 1–2 天 |
-| 🟡 P1 | Web 端数据验证 API（schema check） | 半天 |
-| 🟡 P2 | Web 端复合节点/子图编辑 | 2–3 天 |
-| 🟢 P3 | Web 端资产图片打包 | 半天 |
-| 🟢 P3 | Web 端数据详情面板（展开行+技能树） | 1 天 |
-| 🟢 P3 | Web 端生存估计 UI | 1 天 |
-| 🟢 P3 | Web 端插件管理器 | 1–2 天 |
+| 优先级 | 功能 | 工作量 | 状态 |
+|:------:|------|:------:|:----:|
+| 🔴 P0 | 桌面 i18n 阶段3 收尾（已在进行） | 持续 | 🟡 |
+| 🟡 P1 | Web 端批量对比组件 | — | ✅ 已有 |
+| 🟡 P1 | Web 端数据验证 API（schema check） | — | ✅ 2026-06-14 |
+| 🟡 P2 | Web 端复合节点/子图编辑 | — | ✅ 2026-06-14 |
+| 🟢 P3 | Web 端资产图片打包 | 半天 | ⬜ |
+| 🟢 P3 | Web 端数据详情面板（展开行+技能树） | 1 天 | ⬜ |
+| 🟢 P3 | Web 端生存估计 UI | 1 天 | ⬜ |
+| 🟢 P3 | Web 端插件管理器 | 1–2 天 | ⬜ |

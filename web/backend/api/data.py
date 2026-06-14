@@ -483,4 +483,78 @@ async def dag_verify(req: DagVerifyRequest):
     )
 
 
+# ── 数据验证 ──────────────────────────────────────────
+
+
+class ValidateRequest(BaseModel):
+    profile_id: str = PydanticField(default="endfield", description="数据模板 ID")
+    entity_key: str = PydanticField(default="characters", description="实体类型")
+
+
+class ValidateResponse(BaseModel):
+    profile_id: str
+    entity_key: str
+    total: int
+    valid: int
+    errors: list[dict]  # [{index, name, messages}]
+
+
+# 各实体类型的必填字段
+_REQUIRED_FIELDS: dict[str, list[str]] = {
+    "characters": ["名称", "类型", "星级", "武器", "主能力", "副能力"],
+    "weapons": ["名称", "类型", "星级"],
+    "equipments": ["名称", "部位", "稀有度"],
+    "operators": ["名称", "职业", "星级", "分支"],
+}
+
+# 各实体类型的数值等级曲线字段（需检查数组长度 ≥ 90）
+_LEVEL_CURVE_FIELDS: dict[str, list[str]] = {
+    "characters": ["基础攻击力", "力量", "敏捷", "智识", "意志"],
+    "weapons": ["基础攻击力"],
+}
+
+
+@router.post("/validate", summary="数据校验 — 检查必填字段、等级曲线完整性", response_model=ValidateResponse)
+async def validate_data(req: ValidateRequest):
+    """批量校验数据实体：检查必填字段、等级曲线长度等。"""
+    from api.data_profiles import list_entity_rows
+
+    rows = list_entity_rows(req.profile_id, req.entity_key, full=True)
+    required = _REQUIRED_FIELDS.get(req.entity_key, ["名称"])
+    curves = _LEVEL_CURVE_FIELDS.get(req.entity_key, [])
+
+    error_list: list[dict] = []
+    valid_count = 0
+
+    for i, entity in enumerate(rows):
+        name = entity.get("名称", f"[{i}]")
+        messages: list[str] = []
+
+        # 检查必填字段
+        for field in required:
+            val = entity.get(field)
+            if val is None or val == "":
+                messages.append(f"缺少必填字段 '{field}'")
+
+        # 检查等级曲线长度
+        for field in curves:
+            arr = entity.get(field, [])
+            if isinstance(arr, list):
+                if len(arr) < 80:
+                    messages.append(f"等级曲线 '{field}' 长度不足 ({len(arr)}，期望 ≥80)")
+
+        if messages:
+            error_list.append({"index": i, "name": str(name), "messages": messages})
+        else:
+            valid_count += 1
+
+    return ValidateResponse(
+        profile_id=req.profile_id,
+        entity_key=req.entity_key,
+        total=len(rows),
+        valid=valid_count,
+        errors=error_list,
+    )
+
+
 __all__: list[str] = []

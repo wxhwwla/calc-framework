@@ -671,6 +671,8 @@ const en = {
       exprDesc: "Math formula",
       userInput: "User Input",
       userInputDesc: "Slider/number input",
+      call: "Subgraph Call",
+      callDesc: "Reference a reusable subgraph block",
     },
     nodeEdit: {
       title: "Edit Node",
@@ -688,6 +690,11 @@ const en = {
       minVal: "Min",
       maxVal: "Max",
       step: "Step",
+      subgraphName: "Subgraph Name",
+      subgraphHint: "References a subgraph defined under 'subgraphs' in the DAG JSON",
+      bindings: "Bindings",
+      paramName: "Param",
+      sourceNode: "Source Node",
     },
     editor: {
       title: "DAG Formula Graph Editor",

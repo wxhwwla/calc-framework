@@ -136,6 +136,56 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
               <TextField label={t("dag.nodeEdit.step")} type="number" value={form.step ?? 1} onChange={(e) => setForm({ ...form, step: parseFloat(e.target.value) || 1 })} size="small" />
             </Box>
           )}
+
+          {data.nodeType === "call" && (
+            <>
+              <TextField
+                label={t("dag.nodeEdit.subgraphName", "子图名称")}
+                value={form.subgraph || ""}
+                onChange={(e) => setForm({ ...form, subgraph: e.target.value })}
+                size="small"
+                fullWidth
+                placeholder="endfield_full"
+                helperText={t("dag.nodeEdit.subgraphHint", "引用 DAG JSON 中 subgraphs 下定义的子图")}
+              />
+              <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                {t("dag.nodeEdit.bindings", "参数绑定")}
+              </Typography>
+              {form.bindings && Object.entries(form.bindings).map(([param, sourceId], i) => (
+                <Box key={i} sx={{ display: "flex", gap: 1 }}>
+                  <TextField
+                    label={t("dag.nodeEdit.paramName", "参数")}
+                    size="small"
+                    value={param}
+                    onChange={(e) => {
+                      const newBindings = { ...form.bindings };
+                      delete newBindings[param];
+                      newBindings[e.target.value] = sourceId;
+                      setForm({ ...form, bindings: newBindings });
+                    }}
+                    sx={{ flex: 1 }}
+                  />
+                  <TextField
+                    label={t("dag.nodeEdit.sourceNode", "源节点")}
+                    size="small"
+                    value={sourceId || ""}
+                    onChange={(e) => {
+                      const newBindings = { ...form.bindings };
+                      newBindings[param] = e.target.value;
+                      setForm({ ...form, bindings: newBindings });
+                    }}
+                    sx={{ flex: 2 }}
+                  />
+                </Box>
+              ))}
+              <Button
+                size="small"
+                onClick={() => setForm({ ...form, bindings: { ...(form.bindings || {}), "": "" } })}
+              >
+                + {t("generator.addStep", "添加参数")}
+              </Button>
+            </>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>

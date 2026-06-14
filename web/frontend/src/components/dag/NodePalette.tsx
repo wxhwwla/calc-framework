@@ -14,6 +14,7 @@ function useNodeOptions(): { type: DagNodeTypeName; label: string; desc: string 
     { type: "condition", label: t("dag.nodeTypes.condition"), desc: t("dag.nodeTypes.conditionDesc") },
     { type: "expr", label: t("dag.nodeTypes.expr"), desc: t("dag.nodeTypes.exprDesc") },
     { type: "user_input", label: t("dag.nodeTypes.userInput"), desc: t("dag.nodeTypes.userInputDesc") },
+    { type: "call", label: t("dag.nodeTypes.call"), desc: t("dag.nodeTypes.callDesc") },
   ];
 }
 

@@ -679,6 +679,8 @@ const zhCN = {
       exprDesc: "数学公式",
       userInput: "用户输入",
       userInputDesc: "滑块/数值输入",
+      call: "子图调用",
+      callDesc: "引用复用的子图块",
     },
     nodeEdit: {
       title: "编辑节点",
@@ -696,6 +698,11 @@ const zhCN = {
       minVal: "最小值",
       maxVal: "最大值",
       step: "步长",
+      subgraphName: "子图名称",
+      subgraphHint: "引用 DAG JSON 中 subgraphs 下定义的子图",
+      bindings: "参数绑定",
+      paramName: "参数名",
+      sourceNode: "源节点",
     },
     editor: {
       title: "DAG 公式图编辑器",

@@ -58,6 +58,24 @@ export interface DagVerifyResult {
   node_count: number;
 }
 
+export interface ValidateResult {
+  profile_id: string;
+  entity_key: string;
+  total: number;
+  valid: number;
+  errors: { index: number; name: string; messages: string[] }[];
+}
+
+export async function validateData(profileId: string, entityKey: string): Promise<ValidateResult> {
+  const r = await fetch("/api/data/validate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile_id: profileId, entity_key: entityKey }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
 export async function dagVerify(
   profileId: string,
   entityKey: string,
