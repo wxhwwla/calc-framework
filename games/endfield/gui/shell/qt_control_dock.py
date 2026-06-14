@@ -55,6 +55,7 @@ from games.endfield.gui.shell.qt_control_dock_widgets import (
 #  QtControlDock
 # ═══════════════════════════════════════════════════════
 
+
 class QtControlDock(BuilderMixin, QWidget):
     """高级页三列控制栏。
 
@@ -80,7 +81,7 @@ class QtControlDock(BuilderMixin, QWidget):
         on_ocr_detect: Callable[[], None] | None = None,
         on_search_history: Callable[[], None] | None = None,
     ) -> None:
-        super().__init__(parent)
+        super().__init__(parent)  # pyright: ignore[reportCallIssue]
         self._big = big_font or QFont()
         self._small = small_font or QFont()
         self._on_back_to_main = on_back_to_main
@@ -363,4 +364,3 @@ class QtControlDock(BuilderMixin, QWidget):
                 if e.isEnabled():
                     e.setText("0")
         self._mark_pending()
-

@@ -607,7 +607,7 @@ def _upload_single_dist_file(
             b"--" + boundary + b"--",
         ]
         body_data = b"\r\n".join(body_parts)
-        code, body = _pa_request(
+        code, _body = _pa_request(
             "POST",
             url,
             token,
@@ -1513,7 +1513,7 @@ def _setup_virtualenv_on_server(config: dict) -> None:
         f"python3.10 -m venv ~/.virtualenvs/{project} 2>/dev/null; "
         f"~/.virtualenvs/{project}/bin/pip install -q -r web/backend/requirements.txt 2>&1 | tail -5"
     )
-    console_id, err = _run_console_command(config, cmd, "venv-setup")
+    console_id, _err = _run_console_command(config, cmd, "venv-setup")
     if console_id > 0:
         print(f"  [OK] 已在服务器启动虚拟环境创建（Console #{console_id}）")
         print("  等待 30 秒后检查输出...")
