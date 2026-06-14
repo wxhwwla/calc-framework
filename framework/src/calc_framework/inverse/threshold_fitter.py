@@ -30,7 +30,11 @@ class ThresholdFormulaFitter(FormulaFitter):
             "name": "threshold",
             "description": "阈值公式：阈值前线性，阈值后切换到第二公式",
             "param_names": [
-                "base", "threshold", "pre_growth", "post_growth", "post_is_flat",
+                "base",
+                "threshold",
+                "pre_growth",
+                "post_growth",
+                "post_is_flat",
             ],
             "param_descriptions": {
                 "base": "1 级基础值",
@@ -83,11 +87,10 @@ class ThresholdFormulaFitter(FormulaFitter):
             post_data = data[threshold:]
             post_growth = self._fit_linear_growth(post_data)
             if post_growth is not None:
-                linear_result = self._try_post_linear(
-                    data, num_levels, threshold, base, pre_growth, post_growth)
+                linear_result = self._try_post_linear(data, num_levels, threshold, base, pre_growth, post_growth)
                 if linear_result is not None and linear_result.is_exact:
                     return linear_result
-                if linear_result is not None and (best_result is None or linear_result.max_error < best_result.max_error):  # noqa: E501
+                if linear_result is not None and (best_result is None or linear_result.max_error < best_result.max_error):
                     best_result = linear_result
 
         return best_result or FitResult(max_error=999999.0)
