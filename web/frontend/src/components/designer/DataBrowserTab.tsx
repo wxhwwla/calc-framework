@@ -81,7 +81,7 @@ export default function DataBrowserTab() {
 
   const rows: Record<string, unknown>[] = (
     dataType === "character" ? characters : dataType === "weapon" ? weapons : equipments
-  ) as Record<string, unknown>[];
+  ) as unknown as Record<string, unknown>[];
 
   const columns = useColumns(t)[dataType];
 
