@@ -13,6 +13,7 @@ const en = {
     edit: "Edit", add: "Add", search: "Search", loading: "Loading...", error: "Error",
     success: "Success", noData: "No Data", back: "Back", submit: "Submit", reset: "Reset",
     export: "Export", import: "Import", refresh: "Refresh", language: "Language",
+    lightMode: "Light Mode", darkMode: "Dark Mode",
     openSource: "Open Source", donate: "Donate", help: "Help",
     name: "Name", type: "Type", version: "Version", author: "Author", description: "Description",
     tags: "Tags", rating: "Rating", downloads: "Downloads", size: "Size", operations: "Actions",
@@ -1058,6 +1059,28 @@ const en = {
 
   pageFallback: {
     loading: "Loading...",
+  },
+
+  landing: {
+    heroSubtitle: "Universal Game Damage Engine — One Framework, Infinite Games",
+    startCalc: "🎮 Start Calculating",
+    createCalc: "🔧 Create Calculator",
+    featuresTitle: "Core Capabilities",
+    featuresSubtitle: "From data collection to formula verification, from visual editing to one-click publishing — full pipeline coverage",
+    featureCalc: "Precise Damage Calculation",
+    featureCalcDesc: "15-zone complete formula based on DAG engine, supports Arknights: Endfield, Arknights, and more",
+    featureDag: "Visual DAG Editor",
+    featureDagDesc: "Drag-and-drop formula editor — build damage formulas for any game without coding",
+    featureAi: "AI Smart Loadout",
+    featureAiDesc: "Describe your needs in natural language, AI understands and recommends optimal loadouts",
+    featureDesigner: "Data Designer",
+    featureDesignerDesc: "Browse, edit, and validate character/weapon/equipment data with formula inverse fitting",
+    featureMarket: "Pack Marketplace",
+    featureMarketDesc: "Community-shared .calcpack calculator packs, one-click download and use",
+    featurePlugin: "Plugin System",
+    featurePluginDesc: "Extensible plugins for crit, dodge, distance decay — enhance DAG computation",
+    ossTitle: "Open Source & Free",
+    ossLicense: "AGPL-3.0 Open Source · Commercial License Available",
   },
 
   ai: {

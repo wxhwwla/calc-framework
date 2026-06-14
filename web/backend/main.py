@@ -92,10 +92,13 @@ def _resolve_repo_root() -> Path:
 _REPO_ROOT = _resolve_repo_root()
 
 
-@app.get("/")
-async def root():
-    """根路径 → 重定向到终末地计算器。"""
-    return RedirectResponse(url="/compute")
+# 开发模式：若无前端构建产物，根路径重定向到 /compute
+_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
+if not _FRONTEND_DIST.is_dir():
+
+    @app.get("/")
+    async def root():
+        return RedirectResponse(url="/compute")
 
 
 # 捐赠二维码（与 GUI resources/donation/ 同源）
@@ -121,19 +124,19 @@ else:
     logger.warning("捐赠目录不存在，跳过挂载: %s", _DONATION_DIR)
 
 
+_ADAPTER_ROOT = Path(__file__).resolve().parents[2] / "framework" / "adapters"
+from web.backend.bridge import AdapterManager
+
+_health_mgr = AdapterManager(_ADAPTER_ROOT)
+
+
 @app.get("/api/health")
 async def health():
-    from web.backend.bridge import AdapterManager
-
-    ADAPTER_ROOT = Path(__file__).resolve().parents[2] / "framework" / "adapters"
-
-    mgr = AdapterManager(ADAPTER_ROOT)
-
     return {
         "status": "ok",
         "framework_version": "1.0.0",
-        "adapters_count": len(mgr.available_adapters),
-        "adapters": list(mgr.available_adapters.keys()),
+        "adapters_count": len(_health_mgr.available_adapters),
+        "adapters": list(_health_mgr.available_adapters.keys()),
     }
 
 
@@ -156,8 +159,7 @@ def download_client():
     )
 
 
-# 生产环境：serve 前端构建产物（render.yaml build 阶段生成）
-_FRONTEND_DIST = _REPO_ROOT / "web" / "frontend" / "dist"
+# 生产环境：serve 前端构建产物
 if _FRONTEND_DIST.is_dir():
     app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
     logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
@@ -169,5 +171,5 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     return JSONResponse(
         status_code=500,
-        content={"detail": f"服务器内部错误: {exc}"},
+        content={"detail": "服务器内部错误"},
     )

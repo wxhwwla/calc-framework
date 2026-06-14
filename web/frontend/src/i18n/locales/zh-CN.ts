@@ -13,6 +13,7 @@ const zhCN = {
     edit: "编辑", add: "添加", search: "搜索", loading: "加载中...", error: "错误",
     success: "成功", noData: "暂无数据", back: "返回", submit: "提交", reset: "重置",
     export: "导出", import: "导入", refresh: "刷新", language: "语言",
+    lightMode: "亮色模式", darkMode: "暗色模式",
     openSource: "开源/许可", donate: "捐赠", help: "帮助",
     name: "名称", type: "类型", version: "版本", author: "作者", description: "描述",
     tags: "标签", rating: "评分", downloads: "下载", size: "大小", operations: "操作",
@@ -1071,6 +1072,28 @@ const zhCN = {
 
   pageFallback: {
     loading: "加载中…",
+  },
+
+  landing: {
+    heroSubtitle: "通用游戏伤害计算引擎 — 一套框架，万物可算",
+    startCalc: "🎮 开始计算",
+    createCalc: "🔧 创建计算器",
+    featuresTitle: "核心能力",
+    featuresSubtitle: "从数据采集到公式验证，从可视化编辑到一键发布——全链路覆盖",
+    featureCalc: "精准伤害计算",
+    featureCalcDesc: "基于 DAG 引擎的 15 乘区完整公式，支持终末地、明日方舟等热门游戏",
+    featureDag: "可视化 DAG 编辑器",
+    featureDagDesc: "拖拽式公式编辑器，无需写代码即可构建任意游戏的伤害公式",
+    featureAi: "AI 智能配装",
+    featureAiDesc: "自然语言描述需求，AI 理解意图并推荐最优配装方案",
+    featureDesigner: "数据设计器",
+    featureDesignerDesc: "角色/武器/装备数据的浏览、编辑、验证，支持公式反推",
+    featureMarket: "配置包市场",
+    featureMarketDesc: "社区共享 .calcpack 计算器包，一键下载使用",
+    featurePlugin: "插件系统",
+    featurePluginDesc: "暴击、闪避、距离衰减等可扩展插件，提升 DAG 计算能力",
+    ossTitle: "开源 & 免费",
+    ossLicense: "AGPL-3.0 开源许可 · 商业授权可选",
   },
 
   ai: {
