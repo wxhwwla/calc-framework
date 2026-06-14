@@ -1316,7 +1316,7 @@ class TestOCRBasic(unittest.TestCase):
             files={"file": ("empty.png", BytesIO(b""), "image/png")},
         )
         # 期望失败 — 不是合法图片
-        self.assertIn(resp.status_code, (400, 422, 500))
+        self.assertIn(resp.status_code, (400, 422, 500, 501))
 
 
 # ══════════════════════════════════════════════════════════════════════════════

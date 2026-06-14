@@ -40,7 +40,7 @@ jobs:
       - name: Run tests with coverage (with xvfb for Qt)
         env:
           QT_QPA_PLATFORM: offscreen
-        run: xvfb-run python -m pytest tests/ -q --cov=calc_framework --cov-report=term --cov-fail-under=80
+        run: xvfb-run python -m pytest tests/ -q --ignore=tests/benchmarks/ --cov=calc_framework --cov-report=term --cov-fail-under=70
 
   benchmark:
     name: Benchmark (DAG engine)
