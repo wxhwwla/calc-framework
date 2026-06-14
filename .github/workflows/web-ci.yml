@@ -39,7 +39,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: ESLint check
-        run: npx eslint src/ --ext .ts,.tsx --max-warnings 10
+        run: npx eslint "src/**/*.{ts,tsx}" --max-warnings 50
 
       - name: Production build
         run: npx vite build

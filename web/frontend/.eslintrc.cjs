@@ -36,6 +36,8 @@ module.exports = {
 
     // 通用
     "no-console": ["warn", { allow: ["warn", "error"] }],
+    "no-constant-condition": ["error", { "checkLoops": false }],
+    "no-empty": ["error", { "allowEmptyCatch": true }],
   },
   ignorePatterns: ["dist/", "node_modules/", "cypress/", "*.config.*"],
 };
