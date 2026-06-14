@@ -77,7 +77,7 @@ jobs:
 
       - name: 上传 Cypress 截图（测试失败时）
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-screenshots
           path: web/frontend/cypress/screenshots/
