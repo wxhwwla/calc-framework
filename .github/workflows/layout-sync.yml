@@ -8,7 +8,7 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "framework/adapters/*/ui/layout.json"
       - "framework/adapters/*/dag/*.dag.json"
@@ -16,7 +16,7 @@ on:
       - "tools/validate_layout_sync.py"
       - ".github/workflows/layout-sync.yml"
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "framework/adapters/*/ui/layout.json"
       - "framework/adapters/*/dag/*.dag.json"

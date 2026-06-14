@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """画布场景 — 管理所有节点项和连线创建。"""
 
-
-
 from __future__ import annotations
 
 from typing import Any
@@ -24,19 +22,12 @@ _BRUSH_BG = QBrush(_BG_COLOR)
 _PEN_GRID = QPen(_GRID_COLOR, 1)
 
 
-
 class GraphScene(QGraphicsScene):
-
     """公式编辑器的场景，管理所有节点项和连线创建。"""
-
-
 
     wire_created = Signal(str, str, int, int)  # src_node_id, tgt_node_id, src_port, tgt_port
 
-
-
     def __init__(self, parent: Any = None) -> None:
-
         super().__init__(parent)
 
         self.setBackgroundBrush(_BRUSH_BG)
@@ -49,10 +40,7 @@ class GraphScene(QGraphicsScene):
 
         self._ghost_wire: QGraphicsPathItem | None = None
 
-
-
     def drawBackground(self, painter: QPainter, rect: Any) -> None:  # noqa: N802
-
         super().drawBackground(painter, rect)
 
         painter.setPen(_PEN_GRID)
@@ -66,7 +54,6 @@ class GraphScene(QGraphicsScene):
         x = left
 
         while x < int(rect.right()):
-
             painter.drawLine(x, int(rect.top()), x, int(rect.bottom()))
 
             x += grid_size
@@ -74,31 +61,21 @@ class GraphScene(QGraphicsScene):
         y = top
 
         while y < int(rect.bottom()):
-
             painter.drawLine(int(rect.left()), y, int(rect.right()), y)
 
             y += grid_size
 
-
-
     def _port_at(self, scene_pos: QPointF) -> PortItem | None:
-
         """返回场景坐标位置处的端口（跨过非端口项查找）。"""
 
         for item in self.items(scene_pos):
-
             if isinstance(item, PortItem):
-
                 return item
 
         return None
 
-
-
     def mousePressEvent(self, event) -> None:  # noqa: N802
-
         if event.button() != Qt.MouseButton.LeftButton:
-
             super().mousePressEvent(event)
 
             return
@@ -106,7 +83,6 @@ class GraphScene(QGraphicsScene):
         port = self._port_at(event.scenePos())
 
         if port is not None and port.direction == PortDirection.OUTPUT:
-
             self._wire_start_port = port
 
             self._ghost_wire = QGraphicsPathItem()
@@ -127,12 +103,8 @@ class GraphScene(QGraphicsScene):
 
         super().mousePressEvent(event)
 
-
-
     def mouseMoveEvent(self, event) -> None:  # noqa: N802
-
         if self._wire_start_port and self._ghost_wire:
-
             self._update_ghost(event.scenePos())
 
             event.accept()
@@ -141,12 +113,8 @@ class GraphScene(QGraphicsScene):
 
         super().mouseMoveEvent(event)
 
-
-
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802
-
         if self._wire_start_port and self._ghost_wire:
-
             source_port = self._wire_start_port
 
             self.removeItem(self._ghost_wire)
@@ -157,12 +125,10 @@ class GraphScene(QGraphicsScene):
 
             port = self._port_at(event.scenePos())
 
-            if port is not None and port.direction == PortDirection.INPUT and port.parentItem() is not source_port.parentItem():  # noqa: E501
-
-                    target_port = port
+            if port is not None and port.direction == PortDirection.INPUT and port.parentItem() is not source_port.parentItem():
+                target_port = port
 
             if target_port:
-
                 wire = WireItem(source_port, target_port)
 
                 self.addItem(wire)
@@ -174,7 +140,6 @@ class GraphScene(QGraphicsScene):
                 tgt_node = _find_parent_node_id(target_port)
 
                 if src_node and tgt_node:
-
                     self.wire_created.emit(src_node, tgt_node, source_port.port_index, target_port.port_index)
 
             self._wire_start_port = None
@@ -185,13 +150,10 @@ class GraphScene(QGraphicsScene):
 
         super().mouseReleaseEvent(event)
 
-
-
         """_update_ghost。"""
+
     def _update_ghost(self, scene_pos: QPointF) -> None:
-
         if not self._wire_start_port or not self._ghost_wire:
-
             return
 
         p1 = self._wire_start_port.scene_center()
@@ -213,15 +175,10 @@ class GraphScene(QGraphicsScene):
         self._ghost_wire.setPath(path)
 
 
-
-
 def _node_item_from_id(scene: GraphScene, node_id: str) -> NodeItem | None:
-
     """_node_item_from_id。"""
     for item in scene.items():
-
         if isinstance(item, NodeItem) and item.node_id == node_id:
-
             return item
 
     return None

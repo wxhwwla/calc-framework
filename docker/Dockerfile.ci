@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0
+# CI 测试镜像 — 包含 Python 3.12 + Node 20 + Qt6 + xvfb
+# 与 GitHub Actions ubuntu-latest 环境对齐
+# 用法: docker build -f docker/Dockerfile.ci -t calc-framework-ci .
+#       docker run --rm -v .:/workspace -w /workspace calc-framework-ci scripts/ci/run-all.sh
+
+FROM python:3.12-slim
+
+# 系统依赖：Qt6 (PySide6) + xvfb (无头 GUI 测试) + Node 20 (前端)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    qt6-base-dev \
+    libegl1-mesa \
+    libegl1 \
+    xvfb \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python 依赖（分层缓存）
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install pytest pytest-cov pytest-benchmark ruff
+
+# 验证安装
+RUN python --version && node --version && npm --version

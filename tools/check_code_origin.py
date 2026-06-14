@@ -144,6 +144,9 @@ LICENSE_PATTERNS: list[tuple[str, str, list[str]]] = [
 ]
 
 SPDX_PATTERN = re.compile(r"SPDX-License-Identifier:\s*(\S+)", re.IGNORECASE)
+
+# 项目自身使用的 SPDX 标识符，不会被标记为第三方
+OWN_SPDX_IDS = frozenset({"AGPL-3.0", "AGPL-3.0-only", "AGPL-3.0-or-later"})
 COPYRIGHT_PATTERN = re.compile(
     r"(?i)"
     r"(?:copyright\s+(?:©\s*)?(?:\d{4}[-\d{,4}]*(?:,\s*\d{4})*)?\s*(?:by\s+)?"
@@ -211,6 +214,8 @@ EXCLUDE_DIRS = {
     "spec_*",
     "egg-info",
     ".tox",
+    "legal",
+    "docs",
 }
 
 SOURCE_DIRS = [
@@ -225,7 +230,6 @@ SOURCE_DIRS = [
     "tools/tests",
     "scripts",
     "utils",
-    "docs",
 ]
 
 
@@ -270,11 +274,14 @@ def check_license_in_file(filepath: Path) -> list[dict]:
     text.splitlines()
 
     for match in SPDX_PATTERN.finditer(text):
+        spdx_id = match.group(1)
+        if spdx_id in OWN_SPDX_IDS:
+            continue
         line_num = text[: match.start()].count("\n") + 1
         findings.append(
             {
                 "type": "spdx",
-                "value": match.group(1),
+                "value": spdx_id,
                 "line": line_num,
             }
         )

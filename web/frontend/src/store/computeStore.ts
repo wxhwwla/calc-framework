@@ -41,7 +41,7 @@ export const useComputeStore = create<ComputeState>((set, get) => ({
       const schema = await fetchSchema(name);
       const paramValues: Record<string, number | boolean> = {};
       for (const attr of schema) {
-        if (attr.source === "character" || attr.source === "user_input"|| true) {
+        if (attr.source === "character" || attr.source === "user_input") {
           const key = attr.name.includes(".") ? attr.name.split(".")[1] : attr.name;
           paramValues[key] = attr.default ?? (attr.type === "bool" ? false : 0);
         }

@@ -71,7 +71,7 @@ _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
 
 def _hash_key(api_key: str) -> str:
-    return hashlib.sha256(api_key.encode()).hexdigest()
+    return hashlib.sha3_256(api_key.encode()).hexdigest()
 
 
 @router.post("/keys", response_model=CreateKeyResponse)
@@ -165,12 +165,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     注意：当前使用同步文件 I/O 存储 usage/key 数据。
     适用于单 worker 部署；多 worker 场景建议替换为 Redis 等外部存储。
+
+    测试时可通过 ``RateLimitMiddleware.enabled = False`` 全局禁用。
     """
 
+    enabled: bool = True
     _window: dict[str, list[float]] = defaultdict(list)
     _window_size = 60  # 秒
 
     async def dispatch(self, request: Request, call_next: Any) -> Any:
+        if not self.enabled:
+            return await call_next(request)
         # 跳过管理端点自身和静态文件
         path = request.url.path
         if path.startswith("/api/admin") or path.startswith("/api/docs") or path.startswith("/api/redoc"):

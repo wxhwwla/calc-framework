@@ -233,7 +233,6 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
     if (nodeType === "var") data.path = "computed.新变量";
     if (nodeType === "unary" || nodeType === "binary") data.op = nodeType === "binary" ? "+" : "neg";
     if (nodeType === "expr") { data.expr = "0"; data.inputs = {}; }
-    if (nodeType === "condition") {}
     if (nodeType === "user_input") { data.default = 0; data.min = 0; data.max = 100; data.step = 1; }
     if (nodeType === "call") { data.subgraph = ""; data.bindings = {}; }
 

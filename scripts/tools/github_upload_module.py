@@ -962,6 +962,14 @@ def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None
     """将 develop 合并进 main 并推送；可选打 release 标签。"""
     _, saved_out, _ = run_git(["branch", "--show-current"], capture_output=True)
     saved_branch = saved_out.strip()
+
+    # 暂存 pre-commit 自动修复的换行符等未提交改动，避免切分支冲突
+    stashed = False
+    _, status_out, _ = run_git(["status", "--porcelain"], capture_output=True)
+    if status_out.strip():
+        run_git(["stash", "--include-untracked", "-m", "upload: auto-stash before merge"])
+        stashed = True
+
     try:
         _fetch_all_origin_branches()
         code, _, _ = run_git(["checkout", RELEASE_BRANCH], check=False, capture_output=True)
@@ -989,6 +997,8 @@ def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None
     finally:
         if saved_branch:
             run_git(["checkout", saved_branch], check=False)
+        if stashed:
+            run_git(["stash", "pop"], check=False)
 
 
 def _rollback_upload_draft(

@@ -463,7 +463,7 @@ async def ai_chat(req: ConversationRequest):
         safe_base = _validate_api_url(req.api_base)
         api_url = safe_base + "/chat/completions"
 
-        messages = [{"role": "system", "content": system_msg}] + req.messages[-10:]  # 最近 10 轮
+        messages = [{"role": "system", "content": system_msg}, *req.messages[-10:]]
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(

@@ -4,10 +4,10 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths: ["**.py"]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths: ["**.py"]
   workflow_dispatch:
 

@@ -10,5 +10,11 @@ export default defineConfig({
     defaultCommandTimeout: 10000,
     video: false,
     screenshotOnRunFailure: true,
+    setupNodeEvents(on, _config) {
+      on("before:browser:launch", (_browser, launchOptions) => {
+        launchOptions.args.push("--lang=zh-CN");
+        return launchOptions;
+      });
+    },
   },
 });

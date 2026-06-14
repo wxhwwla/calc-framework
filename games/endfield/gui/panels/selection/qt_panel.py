@@ -11,8 +11,6 @@ PySide6 选择面板：类型/星级/名称/等级四级联动 + 子面板（信
 
 """
 
-
-
 from __future__ import annotations
 
 from typing import Any
@@ -35,16 +33,12 @@ from .qt_subpanels import QtSkillLevelPanel, QtTrustPanel
 
 
 def _empty_list_cb() -> QComboBox:
-
     cb = QComboBox()
 
     cb.setStyleSheet(_COMBO_STYLE)
 
     return cb
     """empty list cb。"""
-
-
-
 
 
 _COMBO_STYLE = """
@@ -90,11 +84,7 @@ _COMBO_STYLE = """
 """
 
 
-
-
-
 class QtSelectionPanel(PanelGettersMixin, QWidget):
-
     """通用的四级联动选择面板（角色/武器共用）。
 
 
@@ -121,25 +111,15 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
     """
 
-
-
     def __init__(
-
         self,
-
         data_list: list[dict[str, Any]],
-
         font: QFont,
-
         *,
-
         is_weapon_panel: bool = False,
-
         parent: QWidget | None = None,
-
     ) -> None:
-
-        super().__init__(parent)
+        super().__init__(parent)  # pyright: ignore[reportCallIssue]
 
         self.data_list: list[dict[str, Any]] = data_list
 
@@ -147,15 +127,11 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         self._font = font
 
-
-
         self.trust_panel: QtTrustPanel | None = None
 
         self.skill_panel: QtSkillLevelPanel | None = None
 
         self.special_panel: QtSpecialAbilityPanel | None = None
-
-
 
         self._build_gui()
 
@@ -164,25 +140,16 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self._init_values()
         """初始化实例。"""
 
-
-
     # ── 控件创建 ──────────────────────────────────────
 
-
-
     def _build_gui(self) -> None:
-
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(0, 0, 0, 0)
 
         layout.setSpacing(2)
 
-
-
         label_style = "color: #AAAAAA; padding: 2px 0;"
-
-
 
         self._add_label(layout, "类型", label_style)
 
@@ -192,8 +159,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         layout.addWidget(self.type_combo)
 
-
-
         self._add_label(layout, "星级", label_style)
 
         self.star_combo = _empty_list_cb()
@@ -201,8 +166,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self.star_combo.setFont(self._font)
 
         layout.addWidget(self.star_combo)
-
-
 
         name_text = "武器" if self.is_weapon_panel else "角色"
 
@@ -213,8 +176,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self.name_combo.setFont(self._font)
 
         layout.addWidget(self.name_combo)
-
-
 
         self._add_label(layout, "等级", label_style)
 
@@ -270,8 +231,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         layout.addLayout(level_row)
 
-
-
         # 预设按钮行
 
         preset_row = QHBoxLayout()
@@ -279,8 +238,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         preset_row.setContentsMargins(0, 0, 0, 0)
 
         preset_row.setSpacing(4)
-
-
 
         self._lvl80_btn = QPushButton("等级80")
 
@@ -290,19 +247,12 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         self._skill12_btn = QPushButton("技能12")
 
-
-
         preset_btns: list[QPushButton] = [self._lvl80_btn, self._lvl90_btn, self._skill9_btn, self._skill12_btn]
 
-
-
         if not self.is_weapon_panel:
-
             self._trust4_btn = QPushButton("信赖4")
 
             preset_btns.append(self._trust4_btn)
-
-
 
         self._max_all_btn = QPushButton("满级")
 
@@ -310,10 +260,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         preset_btns.extend([self._max_all_btn, self._min_all_btn])
 
-
-
         for btn in preset_btns:
-
             btn.setFont(self._font)
 
             btn.setStyleSheet("""
@@ -334,18 +281,13 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
             preset_row.addWidget(btn)
 
-
-
         preset_row.addStretch()
 
         layout.addLayout(preset_row)
 
-
-
         # 子面板：角色侧（信赖 + 技能等级） / 武器侧（特殊能力）
 
         if not self.is_weapon_panel:
-
             self.trust_panel = QtTrustPanel(self._font, parent=self)
 
             layout.addWidget(self.trust_panel)
@@ -357,7 +299,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
             layout.addWidget(self.skill_panel)
 
         else:
-
             self.special_panel = QtSpecialAbilityPanel(self._font, parent=self)
 
             self.special_panel.setVisible(False)
@@ -365,10 +306,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
             layout.addWidget(self.special_panel)
         """build gui。"""
 
-
-
     def _add_label(self, layout: QVBoxLayout, text: str, style: str) -> None:
-
         lbl = QLabel(text)
 
         lbl.setFont(self._font)
@@ -378,14 +316,9 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         layout.addWidget(lbl)
         """add label。"""
 
-
-
     # ── 级联信号 ──────────────────────────────────────
 
-
-
     def _connect_signals(self) -> None:
-
         self.type_combo.currentIndexChanged.connect(self._on_type_changed)
 
         self.star_combo.currentIndexChanged.connect(self._on_star_changed)
@@ -393,8 +326,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self.name_combo.currentIndexChanged.connect(self._on_name_changed)
 
         self.level_slider.valueChanged.connect(self._on_level_changed)
-
-
 
         self._lvl80_btn.clicked.connect(lambda: self._apply_level_preset(80))
 
@@ -405,7 +336,6 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self._skill12_btn.clicked.connect(lambda: self._apply_skill_preset(12))
 
         if not self.is_weapon_panel:
-
             self._trust4_btn.clicked.connect(self._apply_trust_preset)
 
         self._max_all_btn.clicked.connect(self._apply_max_preset)
@@ -413,25 +343,17 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self._min_all_btn.clicked.connect(self._apply_min_preset)
         """connect signals。"""
 
-
-
     def _init_values(self) -> None:
-
         types = sorted({item["类型"] for item in self.data_list if "类型" in item})
 
         if types:
-
             self.type_combo.addItems(types)
 
         else:
-
             self.type_combo.addItem("无数据")
         """init values。"""
 
-
-
     def update_data_list(self, new_data: list[dict[str, Any]]) -> None:
-
         """动态更新数据列表并重置选择（角色→武器过滤用）。"""
 
         self.data_list = new_data
@@ -456,14 +378,10 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         self._init_values()
 
-
-
     def _on_type_changed(self) -> None:
-
         sel_type = self.type_combo.currentText()
 
         if not sel_type or sel_type == "无数据":
-
             self.star_combo.clear()
 
             return
@@ -477,16 +395,12 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self.star_combo.addItems(stars)
         """on type changed。"""
 
-
-
     def _on_star_changed(self) -> None:
-
         sel_type = self.type_combo.currentText()
 
         sel_star = self.star_combo.currentText()
 
         if not sel_type or not sel_star:
-
             self.name_combo.clear()
 
             return
@@ -500,24 +414,18 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self.name_combo.addItems(names)
         """on star changed。"""
 
-
-
     def _on_name_changed(self) -> None:
-
         name = self.name_combo.currentText()
 
         if not name:
-
             return
 
         entry = next((ch for ch in self.data_list if ch.get("名称") == name), None)
 
         if entry:
-
             max_level = len(entry.get("等级", []))
 
             if max_level > 0:
-
                 self.level_slider.setMaximum(max_level)
 
                 current = min(self.level_slider.value(), max_level)
@@ -526,34 +434,23 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
                 self.level_label_widget.setText(str(current))
 
-
-
             if self.is_weapon_panel and self.special_panel:
-
                 self.special_panel.refresh(entry)
 
                 self.special_panel.setVisible(True)
 
             else:
-
                 if self.skill_panel:
-
                     self.skill_panel.refresh(entry)
 
                     self.skill_panel.setVisible(True)
         """on name changed。"""
 
-
-
     def _on_level_changed(self, value: int) -> None:
-
         self.level_label_widget.setText(str(value))
         """on level changed。"""
 
-
-
     def _apply_level_preset(self, target: int) -> None:
-
         max_lvl = self.level_slider.maximum()
 
         clamped = max(1, min(target, max_lvl))
@@ -563,104 +460,70 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         self.level_label_widget.setText(str(clamped))
         """apply level preset。"""
 
-
-
     def _apply_skill_preset(self, target: int) -> None:
-
         if self.is_weapon_panel and self.special_panel:
-
             self.special_panel.apply_skill_preset(target)
 
         elif self.skill_panel:
-
             self.skill_panel.apply_preset(target)
         """apply skill preset。"""
 
-
-
     def _apply_trust_preset(self) -> None:
-
         if self.trust_panel:
-
             self.trust_panel.set_level(4)
         """apply trust preset。"""
 
-
-
     def _apply_max_preset(self) -> None:
-
         self.level_slider.setValue(self.level_slider.maximum())
 
         self.level_label_widget.setText(str(self.level_slider.maximum()))
 
         if not self.is_weapon_panel:
-
             if self.trust_panel:
-
                 self.trust_panel.set_level(4)
 
             if self.skill_panel:
-
                 self.skill_panel.apply_preset(12)
 
         else:
-
             if self.special_panel:
-
                 self.special_panel.apply_skill_preset(9)
 
                 for rd in self.special_panel._special_rows:
-
                     if rd["row_w"].isVisible() and not rd["stk_slider"].isHidden():
-
                         rd["stk_slider"].setValue(rd["stk_slider"].maximum())
 
                         rd["stk_val_lbl"].setText(str(rd["stk_slider"].maximum()))
         """apply max preset。"""
 
-
-
     def _apply_min_preset(self) -> None:
-
         self.level_slider.setValue(1)
 
         self.level_label_widget.setText("1")
 
         if not self.is_weapon_panel:
-
             if self.trust_panel:
-
                 self.trust_panel.reset()
 
             if self.skill_panel:
-
                 self.skill_panel.apply_preset(1)
 
         else:
-
             if self.special_panel:
-
                 self.special_panel.apply_skill_preset(1)
 
                 for rd in self.special_panel._special_rows:
-
                     if rd["row_w"].isVisible() and not rd["stk_slider"].isHidden():
-
                         rd["stk_slider"].setValue(0)
 
                         rd["stk_val_lbl"].setText("0")
         """apply min preset。"""
 
-
-
     def select_by_name(self, name: str) -> bool:
-
         """按名称选择角色/武器（触发级联）。"""
 
         for item in self.data_list:
-
             if item.get("名称") == name:
-
                 item_type = item.get("类型", "")
 
                 item_star = str(item.get("星级", ""))
@@ -668,24 +531,18 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
                 idx_type = self.type_combo.findText(item_type)
 
                 if idx_type >= 0:
-
                     self.type_combo.setCurrentIndex(idx_type)
 
                 idx_star = self.star_combo.findText(item_star)
 
                 if idx_star >= 0:
-
                     self.star_combo.setCurrentIndex(idx_star)
 
                 idx_name = self.name_combo.findText(name)
 
                 if idx_name >= 0:
-
                     self.name_combo.setCurrentIndex(idx_name)
 
                     return True
 
         return False
-
-
-

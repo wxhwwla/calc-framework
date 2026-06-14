@@ -5,14 +5,14 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "web/frontend/package-lock.json"
       - "games/*/pyproject.toml"
       - "framework/pyproject.toml"
       - ".github/workflows/security-audit.yml"
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
     paths:
       - "web/frontend/package-lock.json"
       - "games/*/pyproject.toml"

@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: AGPL-3.0
+# CI 本地模拟 — 在 Docker 中运行与 GitHub Actions 完全一致的测试
+# 用法:
+#   docker compose -f docker-compose.ci.yml build
+#   docker compose -f docker-compose.ci.yml run --rm ci
+#   # 或指定单个 job:
+#   docker compose -f docker-compose.ci.yml run --rm ci-game
+#   docker compose -f docker-compose.ci.yml run --rm ci-web
+
+services:
+  # 完整 CI（所有 job）
+  ci:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ci
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: bash scripts/ci/run-all.sh
+
+  # Game CI 等效
+  ci-game:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ci
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: >
+      bash -c "
+        pip install -e framework -q &&
+        pip install -e games/endfield -q &&
+        ruff check games/endfield/ framework/src/ web/backend/ scripts/ &&
+        pytest games/endfield/tests/ -q --tb=short --ignore=games/endfield/tests/gui_design &&
+        pytest tools/tests/ -q --tb=short &&
+        pytest web/backend/tests/ -q --tb=short
+      "
+
+  # Framework CI 等效
+  ci-framework:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ci
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: >
+      bash -c "
+        pip install -e 'framework/[dev,ui]' -q &&
+        ruff check framework/src/ framework/tests/ &&
+        xvfb-run pytest framework/tests/ -q --tb=short --cov=calc_framework --cov-report=term
+      "
+
+  # Web CI 等效
+  ci-web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ci
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command: >
+      bash -c "
+        cd web/frontend &&
+        npm ci &&
+        npx tsc --noEmit &&
+        npx eslint 'src/**/*.{ts,tsx}' --max-warnings 50 &&
+        npx vite build --logLevel warn
+      "

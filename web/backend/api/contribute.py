@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path, PurePath
 from typing import Any
@@ -142,10 +143,10 @@ async def submit_contribute(payload: dict[str, Any]):
     filename = f"contribute_{safe_name}_{ts}.json"
 
     staging = _ensure_staging_dir()
-    filepath = (staging / filename).resolve()
-    # 路径穿越防护：确认最终路径仍在 staging 目录内
+    # 路径穿越防护：先 resolve staging 基准，再构造文件名并 resolve，确认不越界
     staging_resolved = staging.resolve()
-    if not str(filepath).startswith(str(staging_resolved)):
+    filepath = (staging / filename).resolve()
+    if not str(filepath).startswith(str(staging_resolved) + os.sep) and filepath != staging_resolved:
         raise HTTPException(status_code=400, detail="无效的文件名")
     meta = {
         "_meta": {
