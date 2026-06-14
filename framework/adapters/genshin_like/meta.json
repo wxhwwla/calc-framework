@@ -1,0 +1,14 @@
+{
+  "name": "动作RPG伤害计算（Genshin-Like）",
+  "game": "通用动作RPG模板",
+  "description": "通用动作RPG伤害公式模板 — 8乘区完整DAG + 5角色/5武器示例数据 + 反应/增幅系统。适用于原神/绝区零/鸣潮等动作RPG的伤害计算。",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "genshin_like.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {
+    "clamp": "functions.py",
+    "lerp": "functions.py"
+  }
+}

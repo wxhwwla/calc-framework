@@ -53,6 +53,7 @@ python scripts/main_launcher.py
 | **This page** | First-time visitors, GitHub homepage |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) ([中文](ARCHITECTURE_zh.md)) | System architecture overview |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) ([中文](CONTRIBUTING_zh.md)) | How to contribute |
+| [`docs/contributor-pathways.md`](docs/contributor-pathways.md) | Player → Contributor pathways |
 | [`CONTEXT.md`](CONTEXT.md) ([中文](CONTEXT_zh.md)) | Domain terminology |
 | [`docs/项目目标.md`](docs/项目目标.md) | Project vision & roadmap (ZH) |
 | [`docs/操作指令集.md`](docs/操作指令集.md) | Command reference (ZH) |
