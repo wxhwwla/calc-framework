@@ -71,7 +71,7 @@ _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
 
 def _hash_key(api_key: str) -> str:
-    return hashlib.sha256(api_key.encode()).hexdigest()
+    return hashlib.sha3_256(api_key.encode()).hexdigest()
 
 
 @router.post("/keys", response_model=CreateKeyResponse)
