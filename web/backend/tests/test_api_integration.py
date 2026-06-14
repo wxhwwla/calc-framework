@@ -24,9 +24,13 @@ for _p in [str(_FRAMEWORK_SRC), str(_REPO), str(_BACKEND)]:
 
 import unittest
 
+# 测试时禁用速率限制
+from api.admin import RateLimitMiddleware
 from fastapi.testclient import TestClient
 
 from web.backend.main import app
+
+RateLimitMiddleware.enabled = False
 
 # AdapterManager 使用 meta.json 中的 name 字段作为 key
 ENDFIELD_ADAPTER_NAME = "终末地伤害计算（Calc Framework）"
