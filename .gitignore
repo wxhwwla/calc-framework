@@ -30,6 +30,7 @@ node_modules/
 pytest-cache-files-*/
 cypress/screenshots/
 cypress/videos/
+cypress-screenshots/
 .coverage
 .cov75
 cov_report.txt

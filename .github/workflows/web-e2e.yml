@@ -55,9 +55,9 @@ jobs:
       - name: 启动后端 API 服务
         run: |
           cd web/backend
-          uvicorn main:app --port 8002 &
+          uvicorn main:app --port 8002 > /tmp/uvicorn.log 2>&1 &
           sleep 5
-          curl -s http://localhost:8002/api/layout -o /dev/null || (echo "Backend failed to start"; exit 1)
+          curl -s http://localhost:8002/api/layout -o /dev/null || (cat /tmp/uvicorn.log; echo "Backend failed to start"; exit 1)
 
       - name: 启动前端 dev server
         working-directory: web/frontend
@@ -69,6 +69,10 @@ jobs:
       - name: 运行 Cypress E2E 测试
         working-directory: web/frontend
         run: npx cypress run --e2e --browser=electron
+
+      - name: 打印后端日志（调试用）
+        if: always()
+        run: cat /tmp/uvicorn.log || true
 
       - name: 上传 Cypress 截图（测试失败时）
         if: failure()
