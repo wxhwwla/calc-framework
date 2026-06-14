@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from api.adapters import router as adapters_router
+from api.admin import router as admin_router
 from api.ai import router as ai_router
 from api.arknights import router as arknights_router
 from api.compute import router as compute_router
@@ -47,6 +48,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# 速率限制中间件（在所有路由之前）
+from api.admin import RateLimitMiddleware
+
+app.add_middleware(RateLimitMiddleware)
+
+app.include_router(admin_router)
 
 app.include_router(ai_router)
 
