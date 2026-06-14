@@ -239,6 +239,11 @@ _EXPLAIN_PROMPT = """你是一个游戏伤害计算器的配装分析专家。�
 async def ai_explain(req: ExplainRequest):
     """AI 解释搜索结果——为什么这个配装最好，如何进一步优化。"""
     if not req.api_key.strip():
+        if not req.results:
+            return ExplainResponse(
+                explanation=f"共搜索到 {len(req.results)} 个配装方案。",
+                suggestions=["填入 API Key 可获得 AI 详细解释"],
+            )
         return ExplainResponse(
             explanation=(
                 f"共搜索到 {len(req.results)} 个配装方案。"
@@ -287,8 +292,13 @@ async def ai_explain(req: ExplainRequest):
                     suggestions=parsed.get("suggestions", []),
                 )
     except Exception as e:
+        top_info = (
+            f"排名第一: {req.results[0].get('label', '?')} (伤害 {req.results[0].get('damage', 0)})"
+            if req.results
+            else "无结果"
+        )
         return ExplainResponse(
-            explanation=f"排名第一: {req.results[0].get('label', '?')} (伤害 {req.results[0].get('damage', 0)})",
+            explanation=top_info,
             suggestions=[f"AI 解释失败: {e}"],
         )
 

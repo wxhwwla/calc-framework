@@ -322,7 +322,7 @@ class GeneratorEngine:
 
     def _inject_const_nodes(self, nodes: dict[str, dict], steps: list[StepDef]) -> None:
         seen_consts: set[str] = set()
-        for _nid, node in nodes.items():
+        for _nid, node in list(nodes.items()):
             for key in ("lhs", "rhs", "cond", "true_val", "false_val"):
                 val = node.get(key, "")
                 if not isinstance(val, str) or not val:

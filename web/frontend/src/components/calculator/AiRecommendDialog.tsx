@@ -110,7 +110,11 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...baseBody(), query }),
     });
-    if (!r.ok) return;
+    if (!r.ok) {
+      setError(t("ai.error", "推荐请求失败，请稍后重试"));
+      setChat((prev) => [...prev, { role: "ai", content: t("ai.error", "出错了，请稍后重试") }]);
+      return;
+    }
     const data = await r.json();
     const results = data.top_results || [];
     const summary = results.length > 0
@@ -214,7 +218,7 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
                 )}
               </Paper>
               {msg.results && msg.results.length > 0 && apiKey.trim() && (
-                <Button size="small" onClick={handleExplain} sx={{ mt: 0.5, fontSize: "0.7rem" }}>
+                <Button size="small" onClick={handleExplain} disabled={loading} sx={{ mt: 0.5, fontSize: "0.7rem" }}>
                   🤖 {t("ai.explainResult", "AI 解释结果")}
                 </Button>
               )}

@@ -96,7 +96,7 @@ async def create_api_key(req: CreateKeyRequest):
         api_key=api_key,
         key_prefix=api_key[:12],
         name=keys[key_hash]["name"],
-        tier=req.tier,
+        tier=keys[key_hash]["tier"],
     )
 
 
@@ -162,6 +162,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     读取 ``X-API-Key`` header：
     - 有效 key：按 tier 限速
     - 无效或无 key：默认 20 req/min（宽松，方便开发）
+
+    注意：当前使用同步文件 I/O 存储 usage/key 数据。
+    适用于单 worker 部署；多 worker 场景建议替换为 Redis 等外部存储。
     """
 
     _window: dict[str, list[float]] = defaultdict(list)
@@ -170,7 +173,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> Any:
         # 跳过管理端点自身和静态文件
         path = request.url.path
-        if path.startswith("/api/admin") or path.startswith("/api/docs"):
+        if path.startswith("/api/admin") or path.startswith("/api/docs") or path.startswith("/api/redoc"):
             return await call_next(request)
 
         api_key = request.headers.get("X-API-Key", "")
