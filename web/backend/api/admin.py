@@ -71,7 +71,9 @@ _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
 
 def _hash_key(api_key: str) -> str:
-    return hashlib.sha3_256(api_key.encode()).hexdigest()
+    """对 API Key 做加盐哈希（防止彩虹表），salt 从 key 自身派生。"""
+    salt = hashlib.sha3_256(api_key[:16].encode()).digest()
+    return hashlib.sha3_256(salt + api_key.encode()).hexdigest()
 
 
 @router.post("/keys", response_model=CreateKeyResponse)

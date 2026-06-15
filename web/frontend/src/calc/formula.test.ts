@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateGrowthCurve, valueAtLevel, type GrowthParams } from "./formula";
+import { calculateGrowthCurve, valueAtLevel } from "./formula";
 
 describe("calculateGrowthCurve", () => {
   it("计算线性增长曲线", () => {

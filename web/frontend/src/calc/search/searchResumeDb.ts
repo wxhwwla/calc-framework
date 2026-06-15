@@ -59,9 +59,10 @@ let persistTimer: ReturnType<typeof setTimeout> | null = null;
 async function loadSql(): Promise<SqlJsStatic> {
   if (sqlModule) return sqlModule;
   const initSqlJs = (await import("sql.js")).default;
-  sqlModule = await initSqlJs({
+  const raw = await initSqlJs({
     locateFile: (file: string) => `/sql-wasm/${file}`,
   });
+  sqlModule = raw as unknown as SqlJsStatic;
   return sqlModule;
 }
 

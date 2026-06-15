@@ -1,5 +1,21 @@
 /** 技能解析器（TypeScript 版）— 匹配 Python skill_parser 行为。 */
 
+/** 用 DOM 解析器安全剥离 HTML 标签，防止正则 bypass。 */
+function stripHtmlTags(html: string): string {
+  if (typeof DOMParser !== "undefined") {
+    const doc = new DOMParser().parseFromString(
+      html.replace(/<BR\s*\/?>/gi, "\n"),
+      "text/html",
+    );
+    return doc.body.textContent || "";
+  }
+  // 回退：在无 DOM 环境（测试）下用更严格的正则
+  return html
+    .replace(/<BR\s*\/?>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&[^;]+;/g, " ");
+}
+
 export interface ParsedSkill {
   name: string;
   spType: string;
@@ -166,11 +182,9 @@ function stripWikiMarkup(text: string): string {
       result += ch;
     }
   }
-  return result
-    .replace(/<BR\s*\/?>/gi, " ")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  // 用 DOM 解析器安全剥离 HTML 标签（比正则更完整，防止 bypass）
+  const cleaned = stripHtmlTags(result);
+  return cleaned.replace(/\s+/g, " ").trim();
 }
 
 export function parseAutoAttack(): ParsedSkill {

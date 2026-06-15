@@ -43,12 +43,12 @@ describe("topologicalSort", () => {
   });
 
   it("检测环并抛出 DAGCycleError", () => {
-    const g = makeGraph(Object.fromEntries([b("a", "b"), b("b", "c"), b("c", "a")]));
+    const g = makeGraph(Object.fromEntries([b("a", "b", "c"), b("b", "c", "a"), b("c", "a", "b")]));
     expect(() => topologicalSort(g)).toThrow(DAGCycleError);
   });
 
   it("检测自环", () => {
-    const g = makeGraph(Object.fromEntries([b("a", "a")]));
+    const g = makeGraph(Object.fromEntries([b("a", "a", "a")]));
     expect(() => topologicalSort(g)).toThrow(DAGCycleError);
   });
 
