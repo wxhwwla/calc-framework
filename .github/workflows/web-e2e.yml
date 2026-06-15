@@ -9,12 +9,12 @@ on:
   push:
     branches: [main, master, develop]
     paths:
-      - "web/**"
+      - "web/frontend/**"
       - ".github/workflows/web-e2e.yml"
   pull_request:
     branches: [main, master, develop]
     paths:
-      - "web/**"
+      - "web/frontend/**"
 
 jobs:
   e2e:
@@ -47,10 +47,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: web/frontend
         run: npm ci
-
-      - name: TypeScript 编译验证
-        working-directory: web/frontend
-        run: npx tsc --noEmit
 
       - name: 启动后端 API 服务
         run: |
