@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0
 """配置包设计器 data_editor profiles 单元测试。"""
 
+import pytest
+
 from tools.designer.data_editor.profiles import (
     ADAPTER_NAME_TO_PROFILE,
     ARKNIGHTS_OPERATORS_JSON,
@@ -16,6 +18,10 @@ def test_endfield_profile_data_dir():
     assert (d / "characters_standard.json").is_file()
 
 
+@pytest.mark.skipif(
+    not ARKNIGHTS_OPERATORS_JSON.is_file(),
+    reason="明日方舟 parsed 数据文件未下载（CI 环境或未运行爬虫）",
+)
 def test_arknights_profile_points_to_parsed_operators():
     prof = PROFILES["arknights"]
     d = data_dir_for_profile(prof)
