@@ -99,6 +99,66 @@ export async function saveSearchHistory(entry: SearchHistoryEntry): Promise<void
   if (!r.ok) throw new Error(`${i18n.t("api.searchHistorySaveFailed")}: ${r.statusText}`);
 }
 
+/** 由搜索参数与结果构建历史条目。 */
+export function buildSearchHistoryEntry(
+  params: Pick<SearchRequest, "char_data" | "current_weapon" | "skill_name">,
+  result: SearchResult,
+  options: { topN: number; elapsedSeconds: number; source?: string },
+): SearchHistoryEntry {
+  return {
+    char_name: String(params.char_data?.名称 ?? ""),
+    weapon_name: String(params.current_weapon?.名称 ?? ""),
+    skill_name: params.skill_name,
+    top_n: options.topN,
+    result_count: result.top_results.length,
+    total_combinations: result.total_combinations,
+    searched_combinations: result.searched_combinations,
+    elapsed_seconds: options.elapsedSeconds,
+    top_results: result.top_results,
+    saved_at: new Date().toISOString(),
+    search_source: options.source ?? "api",
+  };
+}
+
+/** 搜索完成后写入历史（失败静默，不阻断 UI）。 */
+export async function persistSearchHistory(
+  params: Pick<SearchRequest, "char_data" | "current_weapon" | "skill_name">,
+  result: SearchResult,
+  options: { topN: number; elapsedSeconds: number; source?: string },
+): Promise<void> {
+  if (result.cancelled || result.top_results.length === 0) {
+    return;
+  }
+  try {
+    await saveSearchHistory(buildSearchHistoryEntry(params, result, options));
+  } catch {
+    // 历史为辅助功能，离线或 PA 写入失败时不打断主流程
+  }
+}
+
+/** 导出搜索结果 JSON（对齐桌面 search_output 可读格式）。 */
+export function downloadSearchResultJson(
+  params: SearchRequest,
+  result: SearchResult,
+  source = "web",
+): void {
+  const payload = {
+    schema: "endfield-search-export-v1",
+    exported_at: new Date().toISOString(),
+    source,
+    params,
+    result,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  anchor.href = url;
+  anchor.download = `search-top${result.top_results.length}-${stamp}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchEnemyChoices(): Promise<EnemyInfo[]> {
   const r = await fetch(`${BASE}/enemies`);
   if (!r.ok) throw new Error(`${i18n.t("api.enemiesGetFailed")}: ${r.statusText}`);

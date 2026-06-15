@@ -21,11 +21,11 @@ import CloudOffIcon from "@mui/icons-material/CloudOff";
 import DownloadIcon from "@mui/icons-material/Download";
 import EstimateIcon from "@mui/icons-material/Calculate";
 import SearchIcon from "@mui/icons-material/Search";
-import { canUseLocalSearch, runLocalTopNSearch } from "../../calc/search";
+import { canUseLocalSearch, runLocalTopNSearch, downloadSearchOutputBundle, exportSearchRunsDb } from "../../calc/search";
 import { getCalcBackend } from "../../config/calcBackend";
 import { getCalcContextMode } from "../../config/calcContext";
 import { getSearchBackendMode } from "../../config/searchBackend";
-import { estimateSearch, runSearch, runSearchStream, type LoadoutResult, type SearchEstimate, type SearchRequest, type SearchResult, type StreamEvent } from "../../api/search";
+import { estimateSearch, persistSearchHistory, runSearch, runSearchStream, type LoadoutResult, type SearchEstimate, type SearchRequest, type SearchResult, type StreamEvent } from "../../api/search";
 
 interface SearchPanelProps {
   currentParams: SearchRequest;
@@ -56,17 +56,28 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
   const [streamResults, setStreamResults] = useState<LoadoutResult[]>([]);
   const [useStreaming, setUseStreaming] = useState(true);
   const abortRef = useRef<AbortController | null>(null);
+  const searchStartedAtRef = useRef(0);
+
+  const finalizeSearch = useCallback(
+    async (res: SearchResult, source: string) => {
+      setResult(res);
+      setStatus("done");
+      const elapsed = (performance.now() - searchStartedAtRef.current) / 1000;
+      await persistSearchHistory(currentParams, res, { topN, elapsedSeconds: elapsed, source });
+    },
+    [currentParams, topN],
+  );
 
   const wasmLocalReady = getCalcBackend() === "wasm" && getCalcContextMode() === "local";
   const localSearchEligible = useMemo(
     () =>
       canUseLocalSearch({
-        totalCombinations: estimate?.total_combinations ?? 0,
-        useManualMultiSkill: currentParams.use_manual_multi_skill_counts,
         hasCatalog: Boolean(estimate?.weapons?.length && estimate?.equipment_catalog),
       }),
-    [estimate, currentParams.use_manual_multi_skill_counts],
+    [estimate],
   );
+  const largeCatalogWarning =
+    localSearchEligible && (estimate?.total_combinations ?? 0) > 50_000;
   const searchBlockedOnPa = isPythonAnywhere && !localSearchEligible;
 
   const handleEstimate = useCallback(async () => {
@@ -88,6 +99,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
     setError(null);
     setStreamProgress(null);
     setStreamResults([]);
+    searchStartedAtRef.current = performance.now();
 
     if (localSearchEligible && estimate?.weapons && estimate.equipment_catalog) {
       const abortController = new AbortController();
@@ -106,8 +118,12 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             },
           },
         );
-        setResult(res);
-        setStatus("done");
+        if (!res.cancelled) {
+          await finalizeSearch(res, "browser");
+        } else {
+          setResult(res);
+          setStatus("idle");
+        }
       } catch (e: unknown) {
         if ((e as Error).name === "AbortError") {
           setStatus("idle");
@@ -126,6 +142,8 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
       const abortController = new AbortController();
       abortRef.current = abortController;
       let accumulatedResults: LoadoutResult[] = [];
+      let streamTotal = 0;
+      let streamProcessed = 0;
 
       try {
         await runSearchStream(
@@ -133,12 +151,15 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
           (event: StreamEvent) => {
             switch (event.type) {
               case "start":
-                setStreamProgress({ processed: 0, total: event.total_combinations || 0 });
+                streamTotal = event.total_combinations || 0;
+                setStreamProgress({ processed: 0, total: streamTotal });
                 break;
               case "summary":
+                streamProcessed = event.searched_combinations || 0;
+                streamTotal = event.total_combinations || streamTotal;
                 setStreamProgress({
-                  processed: event.searched_combinations || 0,
-                  total: event.total_combinations || 0,
+                  processed: streamProcessed,
+                  total: streamTotal,
                 });
                 break;
               case "chunk":
@@ -148,14 +169,16 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
                 }
                 break;
               case "stream_end":
-                setResult({
-                  top_results: accumulatedResults,
-                  total_combinations: 0,
-                  searched_combinations: 0,
-                  cancelled: false,
-                  warnings: [],
-                });
-                setStatus("done");
+                void finalizeSearch(
+                  {
+                    top_results: accumulatedResults,
+                    total_combinations: streamTotal,
+                    searched_combinations: streamProcessed,
+                    cancelled: false,
+                    warnings: [],
+                  },
+                  "api-stream",
+                );
                 break;
               case "error":
                 setError(event.message || t("api.searchRunFailed"));
@@ -183,14 +206,13 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
           top_n: topN,
           max_workers: maxWorkers,
         });
-        setResult(res);
-        setStatus("done");
+        await finalizeSearch(res, "api");
       } catch (e: unknown) {
         setError(String(e));
         setStatus("error");
       }
     }
-  }, [currentParams, topN, maxWorkers, useStreaming, t, localSearchEligible, estimate]);
+  }, [currentParams, topN, maxWorkers, useStreaming, t, localSearchEligible, estimate, finalizeSearch]);
 
   const handleReset = useCallback(() => {
     abortRef.current?.abort();
@@ -239,6 +261,14 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             </Button>
             {t("searchPanel.downloadServerHint")}
           </Box>
+        </Alert>
+      )}
+
+      {largeCatalogWarning && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {t("searchPanel.largeCatalogWarning", {
+            count: (estimate?.total_combinations ?? 0).toLocaleString(),
+          })}
         </Alert>
       )}
 
@@ -443,17 +473,42 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
 
       {result && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1, flexWrap: "wrap", gap: 1 }}>
             <Typography variant="subtitle2">
               {t("searchPanel.searchResults", { n: result.top_results.length })}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t("searchPanel.completed", {
-                searched: result.searched_combinations.toLocaleString(),
-                total: result.total_combinations.toLocaleString(),
-              })}
-              {result.cancelled && <Chip label={t("searchPanel.cancelled")} size="small" color="warning" sx={{ ml: 1 }} />}
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={() => downloadSearchOutputBundle(result.top_results, topN)}
+              >
+                {t("searchPanel.exportSearchOutput")}
+              </Button>
+              <Button
+                size="small"
+                variant="text"
+                onClick={async () => {
+                  const blob = await exportSearchRunsDb();
+                  const url = URL.createObjectURL(blob);
+                  const anchor = document.createElement("a");
+                  anchor.href = url;
+                  anchor.download = "search_runs.db";
+                  anchor.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                {t("searchPanel.exportSqlite")}
+              </Button>
+              <Typography variant="caption" color="text.secondary">
+                {t("searchPanel.completed", {
+                  searched: result.searched_combinations.toLocaleString(),
+                  total: result.total_combinations.toLocaleString(),
+                })}
+                {result.cancelled && <Chip label={t("searchPanel.cancelled")} size="small" color="warning" sx={{ ml: 1 }} />}
+              </Typography>
+            </Box>
           </Box>
 
           <TableContainer sx={{ maxHeight: 400, overflowX: 'auto' }}>

@@ -16,3 +16,13 @@ export {
   type LocalSearchProgress,
 } from "./runLocalTopNSearch";
 export { TopNTracker } from "./topNTracker";
+export { buildComboKey } from "./comboKey";
+export { buildSearchRunSignature } from "./runSignature";
+export { buildSearchOutputFiles, downloadSearchOutputBundle } from "./exportSearchOutputs";
+export {
+  initSearchResumeDb,
+  exportSearchRunsDb,
+  flushSearchResumeDb,
+  countProcessed,
+} from "./searchResumeDb";
+export { evaluateMultiSkillWeightedDamage, hasActiveManualCounts } from "./multiSkillEval";
