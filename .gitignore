@@ -92,6 +92,7 @@ games/arknights/data/operators_standard.json
 
 # Web 后端运行时数据
 web/backend/data/compute_history.json
+web/backend/data/search_history.json
 web/backend/api/.staging/
 
 # 压缩包
@@ -99,6 +100,9 @@ web/backend/api/.staging/
 
 # 性能基准测试产物
 .benchmarks/
+
+# 覆盖率报告
+coverage.xml
 
 # 构建临时目录
 build_local-backend_*/
