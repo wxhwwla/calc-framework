@@ -32,6 +32,9 @@
 *.spec text eol=lf
 *.nsi text eol=lf
 
+# GitHub Linguist — HTML 只是爬虫数据缓存 + 入口模板，非核心逻辑
+*.html linguist-vendored
+
 # 图像 / 二进制
 *.png binary
 *.jpg binary

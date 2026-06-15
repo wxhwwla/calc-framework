@@ -37,7 +37,15 @@ CREATE TABLE IF NOT EXISTS scores (
 type SqlJsDatabase = {
   run: (sql: string, params?: unknown[]) => void;
   exec: (sql: string) => { columns: string[]; values: unknown[][] }[];
+  prepare: (sql: string) => SqlJsStatement;
   export: () => Uint8Array;
+};
+
+type SqlJsStatement = {
+  bind: (params: unknown[]) => void;
+  step: () => boolean;
+  getAsObject: () => Record<string, unknown>;
+  free: () => void;
 };
 
 type SqlJsStatic = {
@@ -125,10 +133,13 @@ export async function ensureSearchRun(signature: string, totalCombinations: numb
 
 export function isComboProcessed(signature: string, comboKey: string): boolean {
   const conn = requireDb();
-  const rows = conn.exec(
-    `SELECT combo_key FROM processed WHERE signature='${signature.replace(/'/g, "''")}' AND combo_key='${comboKey.replace(/'/g, "''")}'`,
+  const stmt = conn.prepare(
+    "SELECT combo_key FROM processed WHERE signature=? AND combo_key=?",
   );
-  return rows.length > 0 && rows[0].values.length > 0;
+  stmt.bind([signature, comboKey]);
+  const found = stmt.step();
+  stmt.free();
+  return found;
 }
 
 export function markProcessedBatch(signature: string, comboKeys: string[]): void {
@@ -192,9 +203,13 @@ export async function exportSearchRunsDb(): Promise<Blob> {
 
 export function countProcessed(signature: string): number {
   const conn = requireDb();
-  const rows = conn.exec(
-    `SELECT COUNT(*) FROM processed WHERE signature='${signature.replace(/'/g, "''")}'`,
-  );
-  if (!rows.length || !rows[0].values.length) return 0;
-  return Number(rows[0].values[0][0]) || 0;
+  const stmt = conn.prepare("SELECT COUNT(*) AS cnt FROM processed WHERE signature=?");
+  stmt.bind([signature]);
+  if (!stmt.step()) {
+    stmt.free();
+    return 0;
+  }
+  const row = stmt.getAsObject() as { cnt: number };
+  stmt.free();
+  return Number(row.cnt) || 0;
 }

@@ -26,7 +26,7 @@ async function loadWasmCurve(): Promise<WasmCurveModule | null> {
       wasmModule = null;
       return null;
     }
-    const mod = (await Function(`return import("${jsUrl}")`)()) as WasmCurveModule;
+    const mod = (await import(/* @vite-ignore */ jsUrl)) as WasmCurveModule;
     await mod.default(wasmUrl);
     wasmModule = mod;
   } catch {
