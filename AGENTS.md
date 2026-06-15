@@ -9,7 +9,7 @@
 
 If the user @-mentions either file, treat it as mandatory context before any code change.
 
-**Layout constraints:** Before structural refactors or adding modules, read [`docs/代码结构规范.md`](docs/代码结构规范.md) and [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md) (≤20 items per directory, target ≤15; ~400 lines per file). **Docstrings:** required for public API and long functions (~≥40 lines); optional for private internal helpers — see `docs/代码结构规范.md` §3 item 15.
+**Layout constraints:** Before structural refactors or adding modules, read [`docs/代码结构规范.md`](docs/代码结构规范.md) and [`docs/adr/0001-code-layout-constraints.md`](docs/adr/0001-code-layout-constraints.md) (≤20 items per directory, target ≤15; ~400 lines per file). **Docstrings:** required for public API and long functions (~≥40 lines); optional for private internal helpers — see `docs/代码结构规范.md` §3 item 16.
 
 ## Project operations
 
