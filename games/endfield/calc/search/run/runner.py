@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 
 # SPDX-License-Identifier: AGPL-3.0
-"""
-
-全量遍历执行统一入口（内存 TopN 与 SQLite 续跑）。
-
-
+"""全量遍历执行统一入口（内存 TopN 与 SQLite 续跑）。
 
 ``search_session.run_search_session`` 为实际实现；本模块提供稳定命名接缝。
-
-
-
 ``run_with_engine()`` 使用框架泛型 ``SearchEngine`` 接口（Phase 3 抽象）。
-
 """
 
 from __future__ import annotations
@@ -51,6 +43,7 @@ class SearchRunner:
         task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
         search_job: Any | None = None,
     ) -> SearchSessionResult:
+        """执行全量搜索（委托 run_search_session）。"""
         return run_search_session(
             base_context=base_context,
             weapons=weapons,
@@ -65,7 +58,6 @@ class SearchRunner:
             task_evaluator=task_evaluator,
             search_job=search_job,
         )
-        """执行主流程。"""
 
     @staticmethod
     def run_with_engine(
@@ -78,33 +70,22 @@ class SearchRunner:
     ) -> SearchResult[LoadoutScore]:
         """使用框架泛型 SearchEngine 执行搜索。
 
-
-
         示例::
 
-
-
             from games.endfield.calc.search.adapter import EndfieldSearchEngine
-
             from games.endfield.calc.search.run.runner import SearchRunner
 
-
-
             engine = EndfieldSearchEngine.from_job(job)
-
             result = SearchRunner.run_with_engine(
-
                 engine, top_n=20, max_workers=4,
-
                 progress_callback=my_progress_fn,
-
             )
-
         """
 
         config = SearchConfig(top_n=top_n, max_workers=max_workers)
 
         def _progress(p):
+            """将框架进度回调转换为 GUI 兼容格式。"""
             if progress_callback is not None:
                 progress_callback(
                     {
@@ -114,7 +95,6 @@ class SearchRunner:
                         "eta_seconds": p.estimated_remaining,
                     }
                 )
-            """progress。"""
 
         return engine.run(
             config=config,

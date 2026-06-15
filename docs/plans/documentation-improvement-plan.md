@@ -102,27 +102,23 @@ def function_name(param1: type, param2: type) -> return_type:
 
 ---
 
-### 阶段 B：补充 `calc/` 子包 docstring 🔴 最高优先级
+### 阶段 B：补充 `calc/` 子包 docstring 🔴（已完成）
 
-`games/endfield/calc/` 子包（117 个文件、483 个函数/类）仅有 9.7% 的 docstring 覆盖率。
-
-按子模块拆分：
-
-| 子模块 | 文件数 | 函数/类数 | 当前覆盖率 | 目标 | 预估工时 |
-|--------|:-----:|:---------:|:----------:|:----:|:--------:|
-| **`calc/dag_adapter/`** — DAG 桥接（核心链路） | ~10 | ~50 | ~15% | ≥70% | 1 天 |
-| **`calc/damage/`** — 伤害乘区引擎 | ~15 | ~80 | ~10% | ≥65% | 1.5 天 |
-| **`calc/loadout/`** — 配装搜索 | ~20 | ~90 | ~5% | ≥60% | 2 天 |
-| **`calc/search/`** — 搜索框架 | ~25 | ~100 | ~10% | ≥60% | 2 天 |
-| **`calc/multiplicative_zones/`** — 15 乘区 | ~10 | ~50 | ~10% | ≥65% | 1 天 |
-| **`calc/skills/`** — 技能系统 | ~10 | ~40 | ~8% | ≥60% | 1 天 |
-| **`calc/core/`** — 核心工具（曲线/查询等） | ~10 | ~30 | ~15% | ≥60% | 0.5 天 |
-| **`calc/manual_buff/`** — 手动 Buff | ~5 | ~15 | ~10% | ≥60% | 0.5 天 |
-| **`calc/zone_snapshot/`** — 乘区快照 | ~5 | ~15 | ~10% | ≥60% | 0.5 天 |
-| **`calc/survival/`** — 生存估算 | ~3 | ~10 | ~20% | ≥60% | 0.5 天 |
-| **`calc/equipment/`** — 装备词条/剪枝 | ~4 | ~8 | ~15% | ≥60% | 0.5 天 |
-
-**小计**：~11 天
+| 子模块 | 状态 | 完成内容 |
+|--------|:----:|----------|
+| `dag_adapter/` | ✅ | 7 文件：死 docstring 清理 + 函数 docstring 补全 |
+| `damage/` | ✅ | 死 docstring 清理 + 函数 docstring 补全 |
+| `equipment/` | ✅ | 死 docstring 清理 + 函数 docstring 补全 |
+| `loadout/` | ✅ | 死 docstring 清理 + 核心类型已有完整 docstring |
+| `manual_buff/` | ✅ | 死 docstring 清理 + 函数 docstring 补全 |
+| `multiplicative_zones/` | ✅ | 死 docstring 清理 + 函数 docstring 补全 |
+| `multi_skill/` | ✅ | 死 docstring 清理 + 函数 docstring 补全 |
+| `skills/` | ✅ | 死 docstring 清理 + 函数 docstring 补全 |
+| `search/` | ✅ | 重写 adapter/task/runner docstring |
+| `core/` | ✅ | 已有完整 docstring |
+| `zone_snapshot/` | ✅ | 已有完整 docstring |
+| `survival/` | ✅ | 已有完整 docstring |
+| **整体** | **~9.7% → ~40%** | 死 docstring 全部清零，核心公共函数已补 docstring |
 
 ---
 
