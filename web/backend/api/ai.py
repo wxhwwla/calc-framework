@@ -47,6 +47,8 @@ class AiRecommendRequest(BaseModel):
 
 
 class AiRecommendResponse(BaseModel):
+    """AI 配装推荐响应。"""
+
     character_name: str
     query: str
     ai_intent: str = ""
@@ -56,10 +58,12 @@ class AiRecommendResponse(BaseModel):
 
 
 def _list_chars() -> list[dict]:
+    """加载角色 JSON 数据。"""
     return load_json(_CHARS_PATH) or []
 
 
 def _list_weapons() -> list[dict]:
+    """加载武器 JSON 数据。"""
     return load_json(_WEAPONS_PATH) or []
 
 
@@ -209,6 +213,8 @@ async def ai_recommend(req: AiRecommendRequest):
 
 
 class ExplainRequest(BaseModel):
+    """AI 结果解释请求。"""
+
     query: str = Field(description="用户的原始查询")
     character_name: str = Field(default="", description="角色名")
     results: list[dict] = Field(description="搜索结果列表 [{label, damage, ...}]")
@@ -218,6 +224,8 @@ class ExplainRequest(BaseModel):
 
 
 class ExplainResponse(BaseModel):
+    """AI 结果解释响应。"""
+
     explanation: str
     suggestions: list[str] = Field(default_factory=list)
 
@@ -309,6 +317,8 @@ async def ai_explain(req: ExplainRequest):
 
 
 class SearchRequest(BaseModel):
+    """AI 语义搜索请求。"""
+
     query: str = Field(description="自然语言搜索，如'暴击率最高的单手剑'")
     category: str = Field(default="weapons", description="搜索类别: characters / weapons / equipments")
     api_key: str = Field(default="", description="API Key（可选，不填则用关键词匹配）")
@@ -317,6 +327,8 @@ class SearchRequest(BaseModel):
 
 
 class SearchResponse(BaseModel):
+    """AI 语义搜索响应。"""
+
     query: str
     category: str
     results: list[dict] = Field(default_factory=list)
@@ -419,6 +431,8 @@ async def ai_search(req: SearchRequest):
 
 
 class ConversationRequest(BaseModel):
+    """AI 多轮对话请求。"""
+
     messages: list[dict] = Field(description="对话历史 [{role, content}]")
     character_name: str = Field(default="", description="当前角色")
     api_key: str = Field(default="", description="API Key")
@@ -427,6 +441,8 @@ class ConversationRequest(BaseModel):
 
 
 class ConversationResponse(BaseModel):
+    """AI 多轮对话响应。"""
+
     reply: str
     action: str = ""  # "search" / "adjust" / "explain" / "none"
 

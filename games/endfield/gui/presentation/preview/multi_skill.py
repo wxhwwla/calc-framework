@@ -39,7 +39,6 @@ def _resolve_enemy_eval(
 ) -> EnemyEvalParams:
     if enemy_eval is not None:
         return enemy_eval
-    """resolve enemy eval。"""
     return EnemyEvalParams.from_defense_only(enemy_defense)
 
 
@@ -154,7 +153,6 @@ def build_multi_skill_search_preview_lines(
             extra_crit_damage=extra_crit_damage,
             enemy_eval=resolved_enemy,
         )
-        """compute。"""
 
     lines, _ = cached_preview("multi_skill_search_preview", _compute)
     return lines

@@ -37,22 +37,22 @@ _VALUE_STYLE = "color: #D1D1D1;"
 
 
 def _make_slider(vmin: int, vmax: int, val: int) -> QSlider:
+    """创建水平滑块控件。"""
     s = QSlider(Qt.Orientation.Horizontal)
     s.setMinimum(vmin)
     s.setMaximum(vmax)
     s.setValue(val)
     s.setStyleSheet(_SLIDER_STYLE)
-    """make slider。"""
     return s
 
 
 def _make_val_lbl(text: str, font: QFont) -> QLabel:
+    """创建数值标签控件。"""
     lbl = QLabel(text)
     lbl.setFont(font)
     lbl.setStyleSheet(_VALUE_STYLE)
     lbl.setFixedWidth(30)
     lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-    """make val lbl。"""
     return lbl
 
 
@@ -95,11 +95,11 @@ class QtSpecialAbilityPanel(QWidget):
             self._special_rows.append(rd)
 
         self._all_hidden()
-        """初始化实例。"""
 
     # ── 构建辅助 ──────────────────────────────────
 
     def _create_skill_row(self, layout: QVBoxLayout, title: str, vmin: int, vmax: int, font: QFont) -> dict:
+        """创建普通技能行（名称 + 滑块 + 数值）。"""
         name_lbl = QLabel(title)
         name_lbl.setFont(font)
         name_lbl.setStyleSheet(_LABEL_STYLE)
@@ -124,9 +124,9 @@ class QtSpecialAbilityPanel(QWidget):
             "slider": slider,
             "row_w": row_w,
         }
-        """create skill row。"""
 
     def _create_special_row(self, layout: QVBoxLayout, title: str, font: QFont) -> dict:
+        """创建特殊能力行（名称 + 等级滑块 + 层数滑块）。"""
         name_lbl = QLabel(title)
         name_lbl.setFont(font)
         name_lbl.setStyleSheet(_LABEL_STYLE)
@@ -169,7 +169,6 @@ class QtSpecialAbilityPanel(QWidget):
             "stk_slider": stk_slider,
             "row_w": row_w,
         }
-        """create special row。"""
 
     def _all_hidden(self) -> None:
         for rd in self._normal_rows:
@@ -282,76 +281,75 @@ class QtSpecialAbilityPanel(QWidget):
                 result.append((available, name, 1, max_stack))
             else:
                 result.append((False, "", 1, 1))
-        """read special slots。"""
         return result
 
     # ── 对外读取 ──────────────────────────────────
 
     @property
     def current_special_ability_1_name(self) -> str:
+        """当前特殊能力 1 的名称。"""
         if not self._normal_rows[0]["row_w"].isHidden():
             txt = self._normal_rows[0]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
-        """current special ability 1 name。"""
         return ""
 
     @property
     def current_special_ability_2_name(self) -> str:
+        """当前特殊能力 2 的名称。"""
         if not self._normal_rows[1]["row_w"].isHidden():
             txt = self._normal_rows[1]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
-        """current special ability 2 name。"""
         return ""
 
     @property
     def current_special_ability_3_name(self) -> str:
+        """当前特殊能力 3 的名称。"""
         if not self._normal_rows[2]["row_w"].isHidden():
             txt = self._normal_rows[2]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
-        """current special ability 3 name。"""
         return ""
 
     def get_normal_skill_level(self, idx: int) -> int:
+        """获取普通技能等级。"""
         if idx < 0 or idx > 2:
             return 0
         rd = self._normal_rows[idx]
         if not rd["row_w"].isHidden():
             return rd["slider"].value()
-        """获取normal skill level。"""
         return 0
 
     def get_special_skill_level(self, idx: int) -> int:
+        """获取特殊技能等级。"""
         if idx < 0 or idx > 1:
             return 1
         rd = self._special_rows[idx]
         if not rd["row_w"].isHidden():
             return rd["lvl_slider"].value()
-        """获取special skill level。"""
         return 1
 
     def get_special_skill_stack(self, idx: int) -> int:
+        """获取特殊技能层数。"""
         if idx < 0 or idx > 1:
             return 0
         rd = self._special_rows[idx]
         if not rd["row_w"].isHidden() and not rd["stk_slider"].isHidden():
             return rd["stk_slider"].value()
-        """获取special skill stack。"""
         return 0
 
     @property
     def current_weapon_special_name(self) -> str:
+        """当前武器特殊技能 1 的名称。"""
         rd = self._special_rows[0]
         if not rd["row_w"].isHidden():
             return rd["name_lbl"].text()
-        """current weapon special name。"""
         return ""
 
     @property
     def current_weapon_special_2_name(self) -> str:
+        """当前武器特殊技能 2 的名称。"""
         rd = self._special_rows[1]
         if not rd["row_w"].isHidden():
             return rd["name_lbl"].text()
-        """current weapon special 2 name。"""
         return ""
 
     def apply_skill_preset(self, level: int) -> None:

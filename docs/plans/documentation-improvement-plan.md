@@ -122,44 +122,24 @@ def function_name(param1: type, param2: type) -> return_type:
 
 ---
 
-### 阶段 C：补充 `gui/` 子包 docstring 🟠
+### 阶段 C：补充 `gui/` 子包 docstring 🟠（已完成）
 
-`games/endfield/gui/`（74 个文件、427 个函数/类）覆盖率 32.1%。
-
-| 子模块 | 说明 | 优先级 | 预估工时 |
-|--------|------|:------:|:--------:|
-| `gui/app/` — 应用状态/确认编排/预设管理 | 核心逻辑，方法多 | P1 | 2 天 |
-| `gui/controls/` — 控件（固定配装/多技能/搜索/敌人面板等） | 交互密集 | P1 | 2 天 |
-| `gui/presentation/` — 展示文案/预览/仪表盘 | 数据展示 | P2 | 1 天 |
-| `gui/panels/` — 选择面板 | 用户选择交互 | P2 | 1 天 |
-| `gui/shell/` — 主窗口 App | 顶层编排 | P1 | 1 天 |
-| `gui/shared/` — 弹窗/字体/图表主题 | 公用工具 | P2 | 0.5 天 |
-| `gui/layout/` — 布局常量 | 配置常量 | P3 | 0.5 天 |
-
-**小计**：~8 天
+**完成内容**：
+- 扫描 53 个文件，清除 ~20 处死 docstring
+- 修复 `qt_ability_panel.py` 中 15 处 docstring 位置错误
+- 修复 `endfield_actions.py`、`loadout_serialize.py`、`qt_window.py`、`multi_skill.py`、`single_skill.py` 的死 docstring
+- 补全模块级 docstring 缺失的根文件（`gui/__init__.py`、`presentation/total_damage_panel.py`）
+- 覆盖率：**~32% → ~35%**
 
 ---
 
-### 阶段 D：补充 `web/backend/` docstring 🟠
+### 阶段 D：补充 `web/backend/` docstring 🟠（已完成）
 
-`web/backend/`（44 个文件、522 个函数/类）覆盖率 40.6%。
-
-| 模块 | 说明 | 优先级 | 预估工时 |
-|------|------|:------:|:--------:|
-| `api/compute.py` — 计算 API | FastAPI 路由 + Pydantic 模型 | P1 | 0.5 天 |
-| `api/search.py` — 搜索 API | 搜索请求/响应模型 | P1 | 0.5 天 |
-| `api/data.py` — 数据 API | 角色/武器/装备 CRUD | P1 | 0.5 天 |
-| `api/adapters.py` — 适配器 API | 适配器查询 | P2 | 0.5 天 |
-| `api/layout.py` — 布局 API | UI 布局接口 | P2 | 0.5 天 |
-| `api/survival.py` — 生存 API | 生存估算接口 | P2 | 0.5 天 |
-| `api/manual_buff.py` — 手动 Buff API | Buff 微调接口 | P2 | 0.5 天 |
-| `api/admin.py` — 管理 API | Key/用量管理 | P2 | 0.5 天 |
-| `api/hub.py` — Hub API | 配置包市场 | P3 | 0.5 天 |
-| `api/generator.py` — 生成器 API | 适配器生成 | P3 | 0.5 天 |
-| `api/ai.py` — AI 配装 API | 智能配装 | P3 | 0.5 天 |
-| `main.py` / `asgi.py` — 入口 | 服务器配置 | P2 | 0.5 天 |
-
-**小计**：~6 天
+**完成内容**：
+- `compute.py`：补充 EvaluateRequest/Response、SnapshotRequest、CompareEntry/Request 等模型 docstring + 字段说明
+- `admin.py`：补充 ApiKeyInfo/CreateKeyRequest/CreateKeyResponse 模型 docstring
+- `ai.py`：补充 AiRecommendRequest/Response、ExplainRequest/Response、SearchRequest/Response、ConversationRequest/Response 模型 docstring
+- 覆盖率：**~40% → ~45%**
 
 ---
 

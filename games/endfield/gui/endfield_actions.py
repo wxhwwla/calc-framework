@@ -114,7 +114,6 @@ class ActionsMixin:
         )
         if loadout is None:
             return None
-        """build request。"""
         return DisplayRequest(loadout=loadout, equipment_catalog={}, preview_weapon_candidates=())
 
     def _on_confirm(self) -> None:
