@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 _FRAMEWORK = _REPO_ROOT / "framework"
 _ADAPTERS = _FRAMEWORK / "adapters"
 

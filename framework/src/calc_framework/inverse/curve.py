@@ -105,8 +105,8 @@ def expand_segment_linear(start: int | float, end: int | float, num_levels: int)
     if num_levels < 1:
         raise ValueError("num_levels 须 >= 1")
     if num_levels == 1:
-        return [int(round(end))]
-    return [int(round(start + (end - start) * i / (num_levels - 1))) for i in range(num_levels)]
+        return [round(end)]
+    return [round(start + (end - start) * i / (num_levels - 1)) for i in range(num_levels)]
 
 
 def _level_overrides_from_params(params: dict[str, Any], spec: SegmentSpec) -> dict[int, float] | None:
