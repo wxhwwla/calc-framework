@@ -302,7 +302,9 @@ class FloorFormulaFitter(FormulaFitter):
 
         divisor_range = options.get("divisor_range", (1, 501))
 
-        growth_range = options.get("growth_range", (1, 1001))
+        growth_range = options.get("growth_range")
+        if growth_range is None:
+            growth_range = self._default_growth_range(data)
 
         offset_search_limit = options.get("offset_search_limit", 500)
 
@@ -407,6 +409,13 @@ class FloorFormulaFitter(FormulaFitter):
         return 1
 
     @staticmethod
+    def _default_growth_range(data: Sequence[int | float]) -> tuple[int, int]:
+        """按数据单调性选择 growth 搜索区间（含负数，支持递减曲线如 SP 消耗）。"""
+        if len(data) >= 2 and float(data[-1]) < float(data[0]):
+            return (-1000, 1001)
+        return (1, 1001)
+
+    @staticmethod
     def _restore_param(value: float | int, scale_factor: int) -> int | float:
         """将反推参数还原为录入格式。"""
 
@@ -427,9 +436,7 @@ class FloorFormulaFitter(FormulaFitter):
         return (growth, divisor, abs(offset))
 
     @staticmethod
-    def _gcd_normalize(
-        growth: int, divisor: int, offset: int, scaled_data: list[int], scaled_base: int
-    ) -> tuple[int, int, int]:
+    def _gcd_normalize(growth: int, divisor: int, offset: int, scaled_data: list[int], scaled_base: int) -> tuple[int, int, int]:
         """GCD 约分简化参数。"""
 
         factor = math.gcd(growth, divisor)
@@ -518,9 +525,7 @@ class FloorFormulaFitter(FormulaFitter):
 
         for growth in range(*growth_range):
             for divisor in range(*divisor_range):
-                valid, offset_lower, offset_upper = self._offset_bounds(
-                    scaled_data, scaled_base, growth, divisor, num_levels
-                )
+                valid, offset_lower, offset_upper = self._offset_bounds(scaled_data, scaled_base, growth, divisor, num_levels)
 
                 if not valid:
                     continue
@@ -563,9 +568,7 @@ class FloorFormulaFitter(FormulaFitter):
 
                 _consider(growth, divisor, int(offset), float(error))
 
-                valid, offset_lower, offset_upper = self._offset_bounds(
-                    scaled_data, scaled_base, growth, divisor, num_levels
-                )
+                valid, offset_lower, offset_upper = self._offset_bounds(scaled_data, scaled_base, growth, divisor, num_levels)
 
                 if not valid:
                     continue

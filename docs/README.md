@@ -8,6 +8,7 @@
 |------|------|
 | [代码结构规范.md](代码结构规范.md) | **目录 ≤20（目标 ≤15）、文件 ≤400 行**；docstring 分级要求；迁移 backlog、PR 自检 |
 | [adr/0001-code-layout-constraints.md](adr/0001-code-layout-constraints.md) | 结构约束 ADR（Agent/评审依据） |
+| [adr/0026-multi-segment-curve-blueprint.md](adr/0026-multi-segment-curve-blueprint.md) | **多段曲线蓝图** CurveBlueprint / SegmentCurveEngine（逆推 N 段 × N 长度） |
 | [代码规范-ruff修复模式.md](代码规范-ruff修复模式.md) | **ruff + pyright 规范修复模式**：E501/F401/N806/E741/`**kwargs`拆包/QDoubleSpinBox stub |
 | [会话接续手册.md](会话接续手册.md) | **Agent 与长期协作**：接缝表、已完成项、勿重复工作、测试基线 |
 | [操作指令集.md](操作指令集.md) | **日常首选**：`[根]` / `[工具]` / `[包]` 路径与可复制命令（含 BWIKI §9 侦察与同步） |
@@ -21,6 +22,7 @@
 | [MVP搜索验收说明.md](MVP搜索验收说明.md) | 全量遍历、并行线程、`search_output/` 导出、GUI/打包验收 |
 | [**错误集.md**](错误集.md) | **Bug 记录**：「问题 → 原因 → 修复 → 涉及文件 → 检查清单」 |
 | [plans/i18n-desktop.md](plans/i18n-desktop.md) | **桌面 GUI i18n 多语言**：DesktopTranslator 架构、282 键、zh-CN/en 翻译、与 Web i18n 对比 |
+| [plans/search-perf-and-json-compaction-plan.md](plans/search-perf-and-json-compaction-plan.md) | **全量搜索多进程 + JSON 成长参数压缩**（实施计划与验收） |
 
 **JSON 数据契约**（角色/武器/预设字段）：[`CONTEXT.md`](../CONTEXT.md) 术语表 + [`games/endfield/README.md`](../games/endfield/README.md)「数据格式」节 + `tests/test_game_data_contract.py`。
 | [agents/issue-tracker.md](agents/issue-tracker.md) | GitHub Issue、`gh` CLI、**Web 表单模板**（Bug / 功能建议） |

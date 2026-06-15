@@ -13,7 +13,7 @@
 | **Character** | A record in `characters.json`: type, star rating, level curves, four primary stats (STR/AGI/INT/WIL), base ATK/HP/DEF, skill multipliers |
 | **Weapon** | A record in `weapons.json`: base ATK curve, normal skills (affixes), special skills |
 | **Equipment** | A record in `equipments.json`: chest/gloves/accessory slot |
-| **Level Curve** | A numeric array matching level count (typically 90), pre-baked in JSON |
+| **Level Curve** | Level-indexed numeric array (typically 90 levels), pre-baked in JSON **or** generated at load from **`成长参数`** (growth seeds: base/growth/divisor/offset) |
 | **Talent / Potential** | Weapon refinement level sequence (0–5), not character talents |
 | **Trust** | Trust level (0–4) with cumulative bonuses: 0→10→25→40→60 |
 | **Multiplicative Zone** | One of 15 damage formula zones (ability bonus, defense, final ATK, etc.) |
@@ -23,8 +23,12 @@
 | **Loadout** | A specific weapon + 4 equipment pieces combination |
 | **CalcPack** | A `.calcpack` ZIP bundle: DAG + layout.json + data → self-contained calculator |
 | **ComputeSheet** | Declarative UI panel auto-rendered from `layout.json` + DAG variables |
-| **GrowthParams** | Typed container for `(base, growth, divisor, offset, is_decimal, special_values)` |
-| **GameInverseAdapter** | ABC for game-specific inverse engine — declare schemas, auto-fit |
+| **GrowthParams** | Typed container for `(base, growth, divisor, offset, is_decimal, special_values)`; stored in JSON as **`成长参数`** per attribute |
+| **CurveBlueprint** | Framework declaration of N level segments, each with its own length, formula, and optional special indices (ADR-0026) |
+| **SegmentSpec** | One segment within a blueprint: `key`, `length`, `formula_id`, `special_indices`, `search_options` |
+| **SegmentCurveAdapter** | Game inverse base class — implement `iter_blueprints()`, segment fit/materialize |
+| **SegmentCurveEngine** | Low-level segment fit/compute; used by `SegmentCurveAdapter` |
+| **GameInverseAdapter** | ABC for game-specific inverse engine — declare schemas, auto-fit; use **`fit_with_key`** when multiple schemas share the same length |
 | **JsonDataLoader[T]** | Generic lazy JSON loader with in-memory cache |
 | **CalcWorker** | Generic QThread+QObject wrapper for background computation |
 | **ThemeManager** | Multi-theme QSS manager (dark/light/high_contrast) |

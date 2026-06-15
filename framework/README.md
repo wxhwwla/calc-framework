@@ -167,12 +167,15 @@ CLI 工具集，含 DAG 调试器、图验证、模板管理等开发辅助功�
 |------|------|
 | `adapter.py` | AdapterPackage 加载 meta.json + DAG |
 
-### 逆推引擎适配层 — `calc_framework.inverse.schema`
+### 逆推引擎适配层 — `calc_framework.inverse`
 
 | 模块 | 职责 |
 |------|------|
-| `InverseSchema` | 声明式数据模式 — 替代手写 if/elif 分派 |
-| `GameInverseAdapter` | 游戏适配器 ABC — 新游戏通过声明 schemas 即可接入逆推引擎 |
+| `InverseSchema` | 声明式数据模式 — 替代手写 if/elif 分派；可选 **`key`** 区分同长度多段 |
+| `GameInverseAdapter` | 游戏适配器 ABC — 新游戏通过声明 schemas 即可接入逆推引擎；**`fit_with_key`** 精确匹配 |
+| `SegmentSpec` / `CurveBlueprint` | **多段曲线蓝图** — N 段 × 独立段长（ADR-0026） |
+| `SegmentCurveAdapter` | 游戏逆推基类 — 实现 `iter_blueprints()`，聚合 schema + 段级 fit/materialize |
+| `inverse/materialize.py` | `has_segment_storage`、`blueprint_from_stored`、实体双读物化 |
 
 ### 工具模块
 

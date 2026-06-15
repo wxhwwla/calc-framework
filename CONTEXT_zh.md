@@ -13,7 +13,7 @@
 | **角色** | `characters.json` 中的一条记录，含类型、星级、等级曲线、四维属性（力量/敏捷/智识/意志）、基础攻击力、基础生命值、基础防御力、战技/连携/终结技倍率等 |
 | **武器** | `weapons.json` 中的一条记录，含 `基础攻击力` 曲线、`normal_skills`（普通技能词条）与 `special_skills`（特殊技能词条） |
 | **装备** | `equipments.json` 中的一条记录；部位为 **护甲 / 护手 / 配件** |
-| **等级曲线** | 与角色/武器等级列表等长的数值数组（通常 90 级），由 JSON 预存，运行时直接读取 |
+| **等级曲线** | 与等级列表等长的数值数组（通常 90 级）；JSON 可预存数组，或通过 **`成长参数`**（base/growth/divisor/offset）在 `loader` 加载时烘焙 |
 | **潜能** | 武器精炼等级序列（`talent`，0–5），不是角色天赋 |
 
 ## 属性与计算
@@ -43,7 +43,13 @@
 | **ComputeSheet** | 声明式计算表，读 DAG + layout.json → 自动渲染 |
 | **GrowthParams** | 类型化参数容器 `(base, growth, divisor, offset)` |
 | **InverseEngine** | 通用逆推引擎：`data_to_params()` / `params_to_curve()` |
-| **GameInverseAdapter** | 游戏逆推适配器 ABC — 声明 schemas，自动拟合 |
+| **CurveBlueprint** | 框架多段曲线声明：N 段 × 各段独立 length / formula / special（ADR-0026） |
+| **SegmentSpec** | 蓝图中的单段规格：`key`、`length`、`formula_id`、`special_indices` |
+| **SegmentCurveAdapter** | 游戏逆推基类 — 实现 `iter_blueprints()`，段级 fit/materialize |
+| **SegmentCurveEngine** | 底层段级引擎；由 ``SegmentCurveAdapter`` 组合使用 |
+| **GameInverseAdapter** | 游戏逆推适配器 ABC — 声明 schemas，自动拟合；同长度多段时用 **`fit_with_key`** |
+| **精英段（明日方舟）** | AK 在 blueprint 中用 `e0/e1/e2` 段 key；Wiki 存里程碑端点 |
+| **ArknightsInverseAdapter** | AK 逆推：`blueprint_for_rarity()` + `SKILL_SP_BLUEPRINT` |
 | **JsonDataLoader[T]** | 通用 JSON 懒加载缓存 |
 | **CalcWorker** | 通用 QThread 后台线程包装器 |
 | **ThemeManager** | 多主题 QSS 管理（暗色/亮色/高对比度） |

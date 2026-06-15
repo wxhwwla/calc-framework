@@ -15,8 +15,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,88 +33,49 @@ from .session import SearchSessionResult, run_search_session
 
 
 class SearchRunner:
-
     """全量/MVP 搜索执行门面（深模块接口）。"""
 
-
-
     @staticmethod
-
     def run(
-
         *,
-
         base_context: DamageContext,
-
         weapons: list[WeaponCandidate],
-
         equipment_catalog: dict[str, list[dict[str, Any]]],
-
         config: OptimizerConfig,
-
         max_workers: int = 1,
-
         cancel_token: SearchCancelToken | None = None,
-
         progress_callback: Callable[[dict], None] | None = None,
-
         db_path: Path | None = None,
-
         run_signature: str | None = None,
-
         search_eval: SearchEvalContext | None = None,
-
         task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
-
+        search_job: Any | None = None,
     ) -> SearchSessionResult:
-
         return run_search_session(
-
             base_context=base_context,
-
             weapons=weapons,
-
             equipment_catalog=equipment_catalog,
-
             config=config,
-
             max_workers=max_workers,
-
             cancel_token=cancel_token,
-
             progress_callback=progress_callback,
-
             db_path=db_path,
-
             run_signature=run_signature,
-
             search_eval=search_eval,
-
             task_evaluator=task_evaluator,
-
+            search_job=search_job,
         )
         """执行主流程。"""
 
-
-
     @staticmethod
-
     def run_with_engine(
-
         engine: SearchEngine[OptimizerTask, LoadoutScore],
-
         *,
-
         top_n: int = 10,
-
         max_workers: int = 4,
-
         cancel_token: SearchCancelToken | None = None,
-
         progress_callback: Callable[[dict], None] | None = None,
-
     ) -> SearchResult[LoadoutScore]:
-
         """使用框架泛型 SearchEngine 执行搜索。
 
 
@@ -145,34 +104,20 @@ class SearchRunner:
 
         config = SearchConfig(top_n=top_n, max_workers=max_workers)
 
-
-
         def _progress(p):
-
             if progress_callback is not None:
-
-                progress_callback({
-
-                    "processed": p.processed,
-
-                    "total": p.total,
-
-                    "speed_per_sec": p.processed / max(p.elapsed, 0.001),
-
-                    "eta_seconds": p.estimated_remaining,
-
-                })
+                progress_callback(
+                    {
+                        "processed": p.processed,
+                        "total": p.total,
+                        "speed_per_sec": p.processed / max(p.elapsed, 0.001),
+                        "eta_seconds": p.estimated_remaining,
+                    }
+                )
             """progress。"""
 
-
-
         return engine.run(
-
             config=config,
-
             cancel_token=cancel_token,
-
             progress_callback=_progress if progress_callback else None,
-
         )
-

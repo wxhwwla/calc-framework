@@ -215,23 +215,13 @@ def parse_skills(kv: dict[str, str]) -> list[dict[str, Any]]:
 
 
 def parse_base_stats(kv: dict[str, str], rarity: int) -> dict[str, Any]:
-    """parse_base_stats 实现。
+    """从模板字段解析基础属性与精英里程碑。
 
-    Args:
-        kv: 参数描述。
-        rarity: 参数描述。
-
-    Returns:
-        返回值描述。
+    ``基础属性`` 仍保留 ``hp/atk/def/res`` 等键（精0 满级或唯一可用 max），
+    另写入 ``属性里程碑`` 供分段逆推使用。
     """
-    stats: dict[str, Any] = {}
-    for field, key in [("初始生命max", "hp"), ("初始攻击max", "atk"), ("初始防御max", "def"), ("初始法抗max", "res")]:
-        raw = kv.get(field, "").strip()
-        if raw:
-            try:
-                stats[key] = int(raw)
-            except ValueError:
-                pass
+    flat, milestones = _parse_stat_milestones(kv)
+    stats: dict[str, Any] = dict(flat)
 
     interval = kv.get("攻击间隔", "").strip()
     if interval:
@@ -254,7 +244,46 @@ def parse_base_stats(kv: dict[str, str], rarity: int) -> dict[str, Any]:
         except ValueError:
             pass
 
+    if milestones:
+        stats["属性里程碑"] = milestones
+
     return stats
+
+
+def _parse_stat_milestones(kv: dict[str, str]) -> tuple[dict[str, Any], dict[str, dict[str, int]]]:
+    """解析四维属性的精英段端点。"""
+    flat: dict[str, Any] = {}
+    milestones: dict[str, dict[str, int]] = {}
+
+    for wiki_name, key in [("生命", "hp"), ("攻击", "atk"), ("防御", "def"), ("法抗", "res")]:
+        seg: dict[str, int] = {}
+        raw_lv1 = kv.get(f"初始{wiki_name}", "").strip()
+        raw_e0max = kv.get(f"初始{wiki_name}max", "").strip()
+        if raw_lv1:
+            try:
+                seg["e0_lv1"] = int(raw_lv1)
+            except ValueError:
+                pass
+        if raw_e0max:
+            try:
+                seg["e0_max"] = int(raw_e0max)
+            except ValueError:
+                pass
+        for elite in (1, 2):
+            raw = kv.get(f"精{elite}{wiki_name}max", "").strip()
+            if raw:
+                try:
+                    seg[f"e{elite}_max"] = int(raw)
+                except ValueError:
+                    pass
+        if seg:
+            milestones[key] = seg
+            if "e0_max" in seg:
+                flat[key] = seg["e0_max"]
+            elif "e0_lv1" in seg:
+                flat[key] = seg["e0_lv1"]
+
+    return flat, milestones
 
 
 def parse_potentials(kv: dict[str, str]) -> list[str]:
@@ -342,6 +371,9 @@ def parse_operator(wikitext: str) -> dict[str, Any] | None:
     base_stats = parse_base_stats(kv, rarity)
     if base_stats:
         operator["基础属性"] = base_stats
+        ms = base_stats.get("属性里程碑")
+        if ms:
+            operator["属性里程碑"] = ms
     trust = parse_trust_bonus(kv)
     if trust:
         operator["信赖加成"] = trust
