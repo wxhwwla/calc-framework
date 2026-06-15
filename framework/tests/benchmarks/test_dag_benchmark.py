@@ -64,20 +64,22 @@ class TestDAGSingleEval:
 
     @pytest.fixture(scope="class")
     def card_rpg_dag(self):
-        from calc_framework.dag.schema import DAGGraph, validate_graph
+        from framework.adapters.card_rpg.functions import clamp
 
+        from calc_framework.dag.sandbox import register_function
+        from calc_framework.dag.schema import validate_graph
+
+        register_function("clamp", clamp)
         dag_dict, _ = _load_dag("card_rpg", "card_rpg.dag.json")
-        graph = DAGGraph(**dag_dict)
-        validate_graph(graph)
+        graph = validate_graph(dag_dict)
         return graph, _build_context(dag_dict)
 
     @pytest.fixture(scope="class")
     def endfield_dag(self):
-        from calc_framework.dag.schema import DAGGraph, validate_graph
+        from calc_framework.dag.schema import validate_graph
 
         dag_dict, _ = _load_dag("endfield", "endfield_full.dag.json")
-        graph = DAGGraph(**dag_dict)
-        validate_graph(graph)
+        graph = validate_graph(dag_dict)
         return graph, _build_context(dag_dict)
 
     def test_bench_card_rpg_single(self, benchmark, card_rpg_dag):
@@ -102,11 +104,10 @@ class TestDAGIncremental:
 
     @pytest.fixture(scope="class")
     def endfield_dag(self):
-        from calc_framework.dag.schema import DAGGraph, validate_graph
+        from calc_framework.dag.schema import validate_graph
 
         dag_dict, _ = _load_dag("endfield", "endfield_full.dag.json")
-        graph = DAGGraph(**dag_dict)
-        validate_graph(graph)
+        graph = validate_graph(dag_dict)
         return graph, _build_context(dag_dict)
 
     def test_bench_1000_incremental(self, benchmark, endfield_dag):
@@ -129,11 +130,10 @@ class TestDAGBlockCache:
 
     @pytest.fixture(scope="class")
     def endfield_dag(self):
-        from calc_framework.dag.schema import DAGGraph, validate_graph
+        from calc_framework.dag.schema import validate_graph
 
         dag_dict, _ = _load_dag("endfield", "endfield_full.dag.json")
-        graph = DAGGraph(**dag_dict)
-        validate_graph(graph)
+        graph = validate_graph(dag_dict)
         return graph, _build_context(dag_dict)
 
     def test_bench_cache_miss(self, benchmark, endfield_dag):
