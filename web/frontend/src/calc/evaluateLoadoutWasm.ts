@@ -1,7 +1,10 @@
 import type { EvaluateResult } from "../api/compute";
 import type { WebLoadoutPayload } from "../api/loadout";
 import { getCalcBackend } from "../config/calcBackend";
-import { evaluateGraph, loadEndfieldDag } from "./dag";
+import { getCalcContextMode } from "../config/calcContext";
+import { buildLoadoutContext } from "./context";
+import { evaluateGraphInWorker } from "./dag/evaluateInWorker";
+import { loadEndfieldDag } from "./dag";
 
 async function fetchLoadoutContext(payload: WebLoadoutPayload): Promise<Record<string, unknown>> {
   const r = await fetch("/api/compute/loadout-context", {
@@ -16,11 +19,18 @@ async function fetchLoadoutContext(payload: WebLoadoutPayload): Promise<Record<s
   return data.context;
 }
 
-/** 4.2：服务端构建 context + 浏览器本地 DAG 求值；失败时返回 null 以回退 API。 */
+async function resolveContext(payload: WebLoadoutPayload): Promise<Record<string, unknown>> {
+  if (getCalcContextMode() === "local") {
+    return buildLoadoutContext(payload);
+  }
+  return fetchLoadoutContext(payload);
+}
+
+/** wasm：本地/远程 context + Worker DAG 求值；失败时返回 null 以回退 API。 */
 export async function evaluateLoadoutWasm(payload: WebLoadoutPayload): Promise<EvaluateResult | null> {
   try {
-    const [context, dag] = await Promise.all([fetchLoadoutContext(payload), loadEndfieldDag()]);
-    const result = evaluateGraph(dag, context);
+    const [context, dag] = await Promise.all([resolveContext(payload), loadEndfieldDag()]);
+    const result = await evaluateGraphInWorker(dag, context);
     return {
       outputs: result.outputs,
       node_values: result.node_values,

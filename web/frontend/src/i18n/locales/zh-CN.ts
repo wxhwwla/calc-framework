@@ -208,6 +208,9 @@ const zhCN = {
     tableAccessoryA: "配件A",
     tableAccessoryB: "配件B",
     tableDamage: "伤害",
+    localSearchReady: "当前组合规模可在浏览器内完成 TopN 搜索（WASM + Worker 池），无需本地 exe。",
+    browserSearch: "浏览器搜索",
+    localBackend: "本地搜索",
   },
 
   searchSettings: {

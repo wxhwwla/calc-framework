@@ -267,11 +267,20 @@ def build_adapter_context_from_loadout(
     loadout: Any,
     *,
     layout_calc_mode: str = "zone_snapshot",
+    equipment_catalog: dict[str, list[dict[str, Any]]] | None = None,
 ) -> dict[str, Any]:
     """LoadoutState → DAG adapter context（ComputeSheet 求值）。"""
     from games.endfield.calc.dag_adapter.adapter import build_dag_context
+    from games.endfield.data_loading.web_context_enrich import (
+        enrich_adapter_context,
+        resolve_equipment_modifiers,
+    )
 
     bonuses = dict(loadout.weapon_skill_kwargs())
+    equip_effects, flat_stats, atk_percent = resolve_equipment_modifiers(
+        fixed_equipment_names=getattr(loadout, "fixed_equipment_names", None),
+        equipment_catalog=equipment_catalog,
+    )
     ctx = build_dag_context(
         loadout.char_data,
         loadout.weapon_data,
@@ -279,7 +288,10 @@ def build_adapter_context_from_loadout(
         weapon_level=loadout.weapon_level,
         trust_level=loadout.trust_level,
         bonuses_kwargs=bonuses,
+        equipment_stat_bonus=flat_stats or None,
+        equipment_attack_percent=atk_percent,
     )
+    enrich_adapter_context(ctx, loadout, equip_effects=equip_effects, flat_stats=flat_stats)
     s1, s2, s3 = loadout.skill_levels
     ui = ctx.setdefault("user_input", {})
     ui["skill_1_level"] = s1

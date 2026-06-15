@@ -102,6 +102,11 @@ def export_golden() -> Path:
     public_path = _REPO / "web" / "frontend" / "public" / "wasm-golden" / "canonical_loadout.json"
     public_path.parent.mkdir(parents=True, exist_ok=True)
     public_path.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+
+    dag_src = _REPO / "framework" / "adapters" / "endfield" / "dag" / "endfield_full.dag.json"
+    dag_public = _REPO / "web" / "frontend" / "public" / "endfield-dag.json"
+    if dag_src.is_file():
+        dag_public.write_text(dag_src.read_text(encoding="utf-8"), encoding="utf-8")
     return path
 
 

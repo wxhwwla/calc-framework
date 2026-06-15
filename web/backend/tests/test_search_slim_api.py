@@ -102,6 +102,46 @@ class TestSearchSlimAPI(unittest.TestCase):
             data = resp.json()
             self.assertIn("total_combinations", data)
 
+    def test_estimate_include_catalog(self) -> None:
+        resp_chars = self.client.get("/api/data/characters/detail/all?format=compact")
+        resp_weapons = self.client.get("/api/data/weapons/detail/all?format=compact")
+        if resp_chars.status_code != 200 or resp_weapons.status_code != 200:
+            self.skipTest("数据 API 不可用")
+        chars = resp_chars.json()
+        weapons = resp_weapons.json()
+        if not chars or not weapons:
+            self.skipTest("无角色/武器")
+        char_data = compact_entity_for_transport(chars[0], kind="character")
+        current_weapon = compact_entity_for_transport(weapons[0], kind="weapon")
+        payload = {
+            "char_data": char_data,
+            "char_level": 90,
+            "weapon_level": 90,
+            "trust_level": 0,
+            "skill_name": "战技",
+            "skill_type": "战技",
+            "skill_multiplier": 1.0,
+            "damage_type": "物理",
+            "weapon_scope_label": "同类型",
+            "equipment_scope_label": "全部装备",
+            "current_weapon": current_weapon,
+            "skill_1_level": 8,
+            "skill_2_level": 8,
+            "skill_3_level": 8,
+            "include_catalog": True,
+        }
+        resp = self.client.post("/api/search/estimate", json=payload)
+        self.assertIn(resp.status_code, (200, 500))
+        if resp.status_code != 200:
+            return
+        data = resp.json()
+        if data.get("total_combinations", 0) <= 0:
+            self.skipTest("搜索作业组装失败或无组合")
+        self.assertIn("weapons", data)
+        self.assertIn("equipment_catalog", data)
+        self.assertGreaterEqual(len(data["weapons"]), 1)
+        self.assertIn("chest", data["equipment_catalog"])
+
 
 if __name__ == "__main__":
     unittest.main()

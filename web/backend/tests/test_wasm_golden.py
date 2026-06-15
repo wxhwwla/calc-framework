@@ -98,6 +98,32 @@ class TestWasmGolden(unittest.TestCase):
             self.assertIn(key, result.outputs)
             self.assertAlmostEqual(float(result.outputs[key]), float(expected), places=4, msg=key)
 
+    def test_loadout_context_computed_matches_golden(self) -> None:
+        from api.loadout_schemas import WebLoadoutBody
+
+        from games.endfield.data_loading.web_loadout_bridge import (
+            build_adapter_context_from_loadout,
+            build_loadout_state_from_web,
+        )
+
+        body = WebLoadoutBody(**self.golden["payload"])
+        loadout = build_loadout_state_from_web(
+            char_data=body.char_data,
+            weapon_data=body.weapon_data,
+            body=body.to_loadout_dict(),
+        )
+        ctx = build_adapter_context_from_loadout(loadout, layout_calc_mode="zone_snapshot")
+        golden_ctx = self.golden.get("context") or {}
+        for section in ("character", "weapon", "computed"):
+            for key, expected in (golden_ctx.get(section) or {}).items():
+                actual = (ctx.get(section) or {}).get(key)
+                if actual is None:
+                    continue
+                if isinstance(expected, int | float) and isinstance(actual, int | float):
+                    self.assertAlmostEqual(float(actual), float(expected), places=3, msg=f"{section}.{key}")
+                else:
+                    self.assertEqual(actual, expected, f"{section}.{key}")
+
     def test_node_verify_script(self) -> None:
         script = _REPO / "web" / "wasm" / "verify_golden.mjs"
         if not script.is_file():

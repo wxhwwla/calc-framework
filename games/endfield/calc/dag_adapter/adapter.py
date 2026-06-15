@@ -42,6 +42,8 @@ def build_dag_context(
     weapon_level: int,
     trust_level: int = 0,
     bonuses_kwargs: dict[str, Any] | None = None,
+    equipment_stat_bonus: dict[str, float] | None = None,
+    equipment_attack_percent: float = 0.0,
 ) -> dict[str, Any]:
     """从角色/武器数据构建 DAG 求值上下文（委托 EndfieldContextLoader）。"""
     loader = EndfieldContextLoader()
@@ -52,6 +54,8 @@ def build_dag_context(
         weapon_level=weapon_level,
         trust_level=trust_level,
         bonuses_kwargs=bonuses_kwargs or {},
+        equipment_stat_bonus=equipment_stat_bonus,
+        equipment_attack_percent=equipment_attack_percent,
     )
 
 

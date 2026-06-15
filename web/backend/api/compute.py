@@ -74,6 +74,8 @@ class PresetExportRequest(WebLoadoutBody):
 
 def _build_loadout_context(req: LoadoutPreviewRequest) -> dict[str, Any]:
     """WebLoadoutBody → DAG adapter context。"""
+    from api.search_catalog import resolve_equipment_catalog
+
     from games.endfield.data_loading.web_loadout_bridge import (
         build_adapter_context_from_loadout,
         build_loadout_state_from_web,
@@ -88,7 +90,17 @@ def _build_loadout_context(req: LoadoutPreviewRequest) -> dict[str, Any]:
         weapon_data=req.weapon_data,
         body=body,
     )
-    return build_adapter_context_from_loadout(loadout, layout_calc_mode=layout_mode)
+    catalog = req.equipment_catalog
+    if catalog is None:
+        catalog = resolve_equipment_catalog(
+            None,
+            equipment_scope_label=str(body.get("equipment_scope_label") or "全部装备"),
+        )
+    return build_adapter_context_from_loadout(
+        loadout,
+        layout_calc_mode=layout_mode,
+        equipment_catalog=catalog,
+    )
 
 
 @router.post("/evaluate-loadout", response_model=EvaluateResponse)

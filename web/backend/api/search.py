@@ -148,6 +148,13 @@ class EstimateRequest(BaseModel):
 
     extra_crit_damage: float = 0.0
 
+    include_catalog: bool = Field(
+        default=False,
+        description="为浏览器本地 TopN 搜索返回武器列表与完整装备目录",
+    )
+
+    max_workers: int = Field(default=4, description="并行线程数（仅用于耗时预估）")
+
 
 def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
     """归一化技能字段、实体引用与 catalog（与 GUI 桌面端保持一致）。"""
@@ -249,13 +256,17 @@ async def estimate_search(req: EstimateRequest):
 
         duration = estimate_search_duration(total_combinations=preview.total_combinations, max_workers=req.max_workers)
 
-        return {
+        payload: dict[str, Any] = {
             "total_combinations": preview.total_combinations,
             "weapon_count": preview.weapon_count,
             "loadout_combinations": preview.loadout_combinations,
             "estimated_seconds": duration.estimated_seconds,
             "warnings": list(preview.warnings),
         }
+        if getattr(req, "include_catalog", False):
+            payload["weapons"] = list(req.all_weapons or [])
+            payload["equipment_catalog"] = dict(req.equipment_catalog or {})
+        return payload
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"预估失败: {e}")

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -21,6 +21,10 @@ import CloudOffIcon from "@mui/icons-material/CloudOff";
 import DownloadIcon from "@mui/icons-material/Download";
 import EstimateIcon from "@mui/icons-material/Calculate";
 import SearchIcon from "@mui/icons-material/Search";
+import { canUseLocalSearch, runLocalTopNSearch } from "../../calc/search";
+import { getCalcBackend } from "../../config/calcBackend";
+import { getCalcContextMode } from "../../config/calcContext";
+import { getSearchBackendMode } from "../../config/searchBackend";
 import { estimateSearch, runSearch, runSearchStream, type LoadoutResult, type SearchEstimate, type SearchRequest, type SearchResult, type StreamEvent } from "../../api/search";
 
 interface SearchPanelProps {
@@ -53,25 +57,70 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
   const [useStreaming, setUseStreaming] = useState(true);
   const abortRef = useRef<AbortController | null>(null);
 
+  const wasmLocalReady = getCalcBackend() === "wasm" && getCalcContextMode() === "local";
+  const localSearchEligible = useMemo(
+    () =>
+      canUseLocalSearch({
+        totalCombinations: estimate?.total_combinations ?? 0,
+        useManualMultiSkill: currentParams.use_manual_multi_skill_counts,
+        hasCatalog: Boolean(estimate?.weapons?.length && estimate?.equipment_catalog),
+      }),
+    [estimate, currentParams.use_manual_multi_skill_counts],
+  );
+  const searchBlockedOnPa = isPythonAnywhere && !localSearchEligible;
+
   const handleEstimate = useCallback(async () => {
     setStatus("estimating");
     setError(null);
     setResult(null);
     try {
-      const est = await estimateSearch(currentParams);
+      const est = await estimateSearch(currentParams, { includeCatalog: wasmLocalReady });
       setEstimate(est);
       setStatus(est.total_combinations > 0 ? "ready" : "idle");
     } catch (e: unknown) {
       setError(String(e));
       setStatus("error");
     }
-  }, [currentParams]);
+  }, [currentParams, wasmLocalReady]);
 
   const handleRun = useCallback(async () => {
     setStatus("running");
     setError(null);
     setStreamProgress(null);
     setStreamResults([]);
+
+    if (localSearchEligible && estimate?.weapons && estimate.equipment_catalog) {
+      const abortController = new AbortController();
+      abortRef.current = abortController;
+      try {
+        const res = await runLocalTopNSearch(
+          { ...currentParams, top_n: topN, max_workers: maxWorkers },
+          {
+            weapons: estimate.weapons,
+            equipmentCatalog: estimate.equipment_catalog,
+            topN,
+            signal: abortController.signal,
+            onProgress: ({ processed, total, topResults }) => {
+              setStreamProgress({ processed, total });
+              setStreamResults(topResults);
+            },
+          },
+        );
+        setResult(res);
+        setStatus("done");
+      } catch (e: unknown) {
+        if ((e as Error).name === "AbortError") {
+          setStatus("idle");
+          setStreamProgress(null);
+        } else {
+          setError(String(e));
+          setStatus("error");
+        }
+      } finally {
+        abortRef.current = null;
+      }
+      return;
+    }
 
     if (useStreaming) {
       const abortController = new AbortController();
@@ -141,7 +190,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         setStatus("error");
       }
     }
-  }, [currentParams, topN, maxWorkers, useStreaming, t]);
+  }, [currentParams, topN, maxWorkers, useStreaming, t, localSearchEligible, estimate]);
 
   const handleReset = useCallback(() => {
     abortRef.current?.abort();
@@ -175,7 +224,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
         {t("searchPanel.title")}
       </Typography>
 
-      {isPythonAnywhere && (
+      {isPythonAnywhere && !localSearchEligible && (
         <Alert severity="info" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
           <span dangerouslySetInnerHTML={{ __html: t("searchPanel.pythonAnywhereNotice") }} />
           <Box sx={{ mt: 1 }}>
@@ -190,6 +239,12 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             </Button>
             {t("searchPanel.downloadServerHint")}
           </Box>
+        </Alert>
+      )}
+
+      {localSearchEligible && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {t("searchPanel.localSearchReady")}
         </Alert>
       )}
 
@@ -223,10 +278,14 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
             variant="contained"
             startIcon={<SearchIcon />}
             onClick={handleRun}
-            disabled={status === "estimating" || status === "running" || isPythonAnywhere}
+            disabled={status === "estimating" || status === "running" || searchBlockedOnPa}
             color={status === "ready" ? "success" : "primary"}
           >
-            {status === "ready" ? t("searchPanel.startSearch") : t("searchPanel.fullSearch")}
+            {localSearchEligible
+              ? t("searchPanel.browserSearch")
+              : status === "ready"
+                ? t("searchPanel.startSearch")
+                : t("searchPanel.fullSearch")}
           </Button>
           {status === "running" && (
             <Button
@@ -243,7 +302,7 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               {t("searchPanel.reset")}
             </Button>
           )}
-          {!isPythonAnywhere && (
+          {!searchBlockedOnPa && !localSearchEligible && (
             <Chip
               label={useStreaming ? t("searchPanel.streamMode") : t("searchPanel.batchMode")}
               size="small"
@@ -252,6 +311,9 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
               onClick={() => setUseStreaming(!useStreaming)}
               sx={{ cursor: "pointer" }}
             />
+          )}
+          {getSearchBackendMode() === "local" && wasmLocalReady && (
+            <Chip label={t("searchPanel.localBackend")} size="small" color="success" variant="outlined" />
           )}
         </Box>
 

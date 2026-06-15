@@ -121,6 +121,9 @@ export interface SearchEstimate {
   loadout_combinations: number;
   estimated_seconds: number;
   warnings: string[];
+  /** include_catalog=true 时由服务端返回 */
+  weapons?: Record<string, unknown>[];
+  equipment_catalog?: Record<string, Record<string, unknown>[]>;
 }
 
 export interface SearchResult {
@@ -179,11 +182,15 @@ export interface SearchRequest {
 
 export async function estimateSearch(
   params: Omit<SearchRequest, "top_n" | "max_workers" | "extra_crit_rate" | "extra_crit_damage">,
+  options?: { includeCatalog?: boolean },
 ): Promise<SearchEstimate> {
   const r = await fetch(`${BASE}/estimate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      ...params,
+      include_catalog: options?.includeCatalog ?? false,
+    }),
   });
   if (!r.ok) {
     const text = await r.text();

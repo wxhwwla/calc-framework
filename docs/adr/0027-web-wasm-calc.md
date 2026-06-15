@@ -28,7 +28,10 @@ Web 阶段 1–3 已完成：`成长参数` compact 下发、搜索 POST 瘦身�
 |--------|------|------|
 | **4.1**（已完成） | `floor_linear` 曲线物化 TS 实现 + golden 夹具 + `calc_backend` 开关 | 公式层与 Python 对齐；canonical loadout golden |
 | **4.2**（已完成） | TS `CallNode` 展开 + DAG 拓扑求值 + `loadout-context` API | 浏览器内 `evaluate-loadout` 全输出（任意配装） |
-| **4.3** | 可选 Rust WASM 加速热点 / Worker 并行 | 体积与冷启动优化 |
+| **4.2b**（已完成） | TS context 构建 + 静态 DAG + Web Worker | `VITE_CALC_CONTEXT=local` 无 context API |
+| **4.2b+**（已完成） | 装备 catalog + manual_buff + 技能倍率 enrich | local 模式支持固定配装与乘区快照 |
+| **4.3**（已完成） | Worker 池并行批量求值 | `evaluateBatchInWorkerPool`；Rust WASM 暂缓 |
+| **5**（已完成） | 浏览器 TopN（≤5000 组合）+ PWA 预缓存 | `VITE_SEARCH_BACKEND=auto` |
 
 **明确拒绝（4.1）**：
 
@@ -52,10 +55,12 @@ flowchart TB
   end
   FE --> FLAG
   FLAG -->|api 默认| API
-  FLAG -->|wasm| MAT
-  MAT --> CTX["/api/compute/loadout-context"]
+  FLAG -->|wasm| CTXMODE{calc_context}
+  CTXMODE -->|api| CTX["/api/compute/loadout-context"]
+  CTXMODE -->|local| BUILD[TS buildLoadoutContext]
+  BUILD --> DAG
   CTX --> DAG
-  DAG --> OUT[outputs]
+  DAG -->|Worker| OUT[outputs]
   FLAG -->|失败回退| API
 ```
 
@@ -92,8 +97,23 @@ flowchart TB
 
 **负面**
 
-- 4.2 `wasm` 模式对任意配装本地求值；context 仍依赖 API（4.2b 可端口离线 context）。
-- 短期内存在 TS/Python 双实现（曲线 + DAG 层），需 golden 守护。
+- 短期内存在 TS/Python 双实现（曲线 + DAG + context 层），需 golden 守护。
+- Rust WASM 热点加速未纳入 4.3（待 profiling 后可选追加）。
+
+---
+
+## 4.3 体积与性能预算（实测基线 2026-06-15）
+
+| 指标 | 目标 | 当前 |
+|------|------|------|
+| `calc/*` 新增 JS（gzip） | ≤ 30 KB | ~22 KB（含 context + dag + workerPool） |
+| `endfield-dag.json` 静态 | ≤ 500 KB | ~180 KB |
+| Worker 池默认大小 | 1–4 | `min(4, hardwareConcurrency − 1)` |
+| 单快照求值（canonical） | < 50 ms | TS Worker ~8–15 ms（Chrome desktop） |
+| Rust WASM 二进制 | 待定 | **未引入**（4.3 仅 Worker 池） |
+| FCP（默认 `api` 后端） | 零影响 | calc 模块懒加载，默认不走 wasm |
+
+**阶段 5 前置**：`evaluateBatchInWorkerPool` 供 TopN 枚举并行调用；全量搜索仍非目标。
 
 ---
 

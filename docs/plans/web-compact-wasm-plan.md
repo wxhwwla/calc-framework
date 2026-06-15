@@ -1,6 +1,6 @@
 # Web 简化数据 + 浏览器计算（WASM）+ 多段反推 — 实施计划
 
-**状态**：阶段 1–4.2 代码已完成（2026-06-15）；AK `compact --apply` 需本地 parsed 数据  
+**状态**：阶段 1–5（5.1/5.2）代码已完成（2026-06-15）；AK `compact --apply` 需本地 parsed 数据  
 **关联**：[`search-perf-and-json-compaction-plan.md`](search-perf-and-json-compaction-plan.md)（磁盘 compact）、[`adr/0026-multi-segment-curve-blueprint.md`](../adr/0026-multi-segment-curve-blueprint.md)（N 段反推）、[`PythonAnywhere-部署指南.md`](../PythonAnywhere-部署指南.md)
 
 ---
@@ -83,7 +83,8 @@
 | 4.0 | **选型 ADR** | A) Pyodide 打包 Python 计算栈；B) Rust/TS 重写 DAG+公式；C) 混合（TS 烘焙 + WASM 轻量 DAG） | ✅ ADR-0027 |
 | 4.1 | POC：单快照 `evaluate-loadout` 与 Python 同输入 golden ≤ 1e-6 | 依 4.0 | ✅ golden + TS 曲线 |
 | 4.2 | 前端开关：`calc_backend=wasm|api`（默认 api，POC 通过后 wasm） | 特性开关 | ✅ `VITE_CALC_BACKEND` |
-| 4.3 | 体积与冷启动预算：首包 ≤ ? MB，FCP 可接受 | 文档 | 4.1 |
+| 4.2b+ | 装备 catalog + manual_buff 离线 enrich | TS + Python | ✅ 2026-06-15 |
+| 4.3 | Worker 池并行 + 体积预算文档 | `evaluateBatchInWorkerPool` | ✅ 2026-06-15 |
 
 **非目标（阶段 4）**：全量搜索 WASM、SQLite 续跑进浏览器。
 
@@ -93,8 +94,8 @@
 
 | ID | 任务 | 说明 |
 |----|------|------|
-| 5.1 | Web Worker + WASM 枚举 TopN（小 catalog） | 替代 PA 上「只能估算 + 下载 exe」 |
-| 5.2 | PWA 预缓存 compact JSON + WASM 引擎 | 弱网可用 |
+| 5.1 | Web Worker + WASM 枚举 TopN（小 catalog） | `calc/search` + SearchPanel | ✅ 2026-06-15 |
+| 5.2 | PWA 预缓存 compact JSON + WASM 引擎 | vite PWA runtime cache | ✅ 2026-06-15 |
 | 5.3 | 可选：与本地 exe 搜索共用 `search_output` 格式 | 生态 |
 
 ---
