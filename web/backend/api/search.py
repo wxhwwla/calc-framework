@@ -215,6 +215,54 @@ class LoadoutResult(BaseModel):
     segment_breakdown: dict[str, float] | None = None
 
 
+class LoadoutComboItem(BaseModel):
+    """单条配装组合（score-batch 用）。"""
+
+    weapon_name: str
+    chest: str = ""
+    gloves: str = ""
+    accessory_a: str = ""
+    accessory_b: str = ""
+
+
+class ScoreBatchRequest(BaseModel):
+    """浏览器本地搜索 — 批量服务端评分（异常 parity）。"""
+
+    params: SearchRequest
+    loadouts: list[LoadoutComboItem] = Field(min_length=1, max_length=256)
+
+
+@router.post("/score-batch")
+async def score_search_batch(body: ScoreBatchRequest):
+    """对多条配装返回与桌面全量搜索一致的 final_damage（含异常 compose）。"""
+
+    try:
+        from games.endfield.calc.search.evaluate.batch_score import score_search_loadouts_batch
+        from games.endfield.calc.search.plan.controller import optimizer_config_for_search_job, prepare_search_job
+        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
+
+    except ImportError:
+        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+
+    try:
+        req, fixed_loadout = _prepare_search_req(body.params)
+        inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
+        job, err = prepare_search_job(inputs)
+        if err or job is None:
+            raise HTTPException(status_code=400, detail=err or "作业组装失败")
+        config = optimizer_config_for_search_job(job, top_n=10)
+        scores = score_search_loadouts_batch(
+            job=job,
+            loadouts=[item.model_dump() for item in body.loadouts],
+            crit_mode=config.crit_mode,
+        )
+        return {"final_damage": scores}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"批量评分失败: {e}") from e
+
+
 @router.post("/estimate")
 async def estimate_search(req: EstimateRequest):
     """预估搜索工作量（组合总数 + 预计耗时）。"""

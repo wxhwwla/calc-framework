@@ -1,4 +1,5 @@
 import type { LoadoutResult, SearchRequest, SearchResult } from "../../api/search";
+import { scoreSearchBatch } from "../../api/search";
 import { getCalcBackend } from "../../config/calcBackend";
 import { getCalcContextMode } from "../../config/calcContext";
 import { getSearchBackendMode } from "../../config/searchBackend";
@@ -14,6 +15,7 @@ import {
 } from "./enumerateLoadouts";
 import { filterWeaponsByScope } from "./filterWeapons";
 import { evaluateMultiSkillWeightedDamage, hasActiveManualCounts } from "./multiSkillEval";
+import { needsServerSearchScoring } from "./needsServerSearchScoring";
 import { pruneEquipmentCatalog } from "./pruneCatalog";
 import { buildSearchRunSignature } from "./runSignature";
 import {
@@ -81,7 +83,20 @@ async function evaluateBatchDamage(
   dag: Awaited<ReturnType<typeof loadEndfieldDag>>,
   params: SearchRequest,
   batchPayloads: ReturnType<typeof searchRequestToLoadoutPayload>[],
+  batchMeta: LoadoutResult[],
 ): Promise<number[]> {
+  if (needsServerSearchScoring(params)) {
+    return scoreSearchBatch(
+      params,
+      batchMeta.map((row) => ({
+        weapon_name: row.weapon_name,
+        chest: row.chest,
+        gloves: row.gloves,
+        accessory_a: row.accessory_a,
+        accessory_b: row.accessory_b,
+      })),
+    );
+  }
   const multi = params.use_manual_multi_skill_counts && hasActiveManualCounts(params.manual_counts);
   if (multi) {
     const out: number[] = [];
@@ -179,7 +194,7 @@ export async function runLocalTopNSearch(
       });
 
       if (batchPayloads.length >= batchSize) {
-        const damages = await evaluateBatchDamage(dag, params, batchPayloads);
+        const damages = await evaluateBatchDamage(dag, params, batchPayloads, batchMeta);
         for (let i = 0; i < damages.length; i += 1) {
           batchMeta[i].final_damage = damages[i];
           tracker.consider(batchMeta[i]);
@@ -214,7 +229,7 @@ export async function runLocalTopNSearch(
     }
 
     if (batchPayloads.length > 0) {
-      const damages = await evaluateBatchDamage(dag, params, batchPayloads);
+      const damages = await evaluateBatchDamage(dag, params, batchPayloads, batchMeta);
       for (let i = 0; i < damages.length; i += 1) {
         batchMeta[i].final_damage = damages[i];
         tracker.consider(batchMeta[i]);

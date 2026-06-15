@@ -35,6 +35,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build wasm-curve
+        working-directory: web/wasm-curve
+        run: wasm-pack build --target web --out-dir ../frontend/public/wasm-curve --release
+
       - name: TypeScript check
         run: npx tsc --noEmit
 

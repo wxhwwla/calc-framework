@@ -272,6 +272,32 @@ export async function runSearch(params: SearchRequest): Promise<SearchResult> {
   return r.json();
 }
 
+export interface LoadoutComboItem {
+  weapon_name: string;
+  chest: string;
+  gloves: string;
+  accessory_a: string;
+  accessory_b: string;
+}
+
+/** 浏览器本地搜索 — 批量服务端评分（异常 / compose_damage_total parity）。 */
+export async function scoreSearchBatch(
+  params: SearchRequest,
+  loadouts: LoadoutComboItem[],
+): Promise<number[]> {
+  const r = await fetch(`${BASE}/score-batch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ params, loadouts }),
+  });
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`${i18n.t("api.searchRunFailed")}: ${text}`);
+  }
+  const data = (await r.json()) as { final_damage?: number[] };
+  return Array.isArray(data.final_damage) ? data.final_damage : [];
+}
+
 export async function fetchEquipmentCatalog(
   scope = "全部装备",
 ): Promise<Record<string, { 名称: string; 部位: string; 所属套组: string; 稀有度: string }[]>> {
