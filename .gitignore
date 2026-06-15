@@ -57,7 +57,6 @@ git_backup/snapshots/
 
 # 日志
 *.log
-debug.log
 
 # 一次性临时工具/扫描产物
 batch_docstring.py

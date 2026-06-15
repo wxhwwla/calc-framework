@@ -53,3 +53,6 @@
 
 # 模型文件
 *.pt binary
+
+# WASM — 二进制产物，不计入语言统计
+*.wasm linguist-vendored binary
