@@ -24,6 +24,7 @@
 | [plans/i18n-desktop.md](plans/i18n-desktop.md) | **桌面 GUI i18n 多语言**：DesktopTranslator 架构、282 键、zh-CN/en 翻译、与 Web i18n 对比 |
 | [plans/search-perf-and-json-compaction-plan.md](plans/search-perf-and-json-compaction-plan.md) | **全量搜索多进程 + JSON 成长参数压缩**（实施计划与验收） |
 | [plans/web-compact-wasm-plan.md](plans/web-compact-wasm-plan.md) | **Web 简化数据 + WASM 浏览器计算 + 多段反推 API**（阶段 1–5 优先级） |
+| [plans/gitignore-and-attrs-cleanup.md](plans/gitignore-and-attrs-cleanup.md) | **Git 跟踪清理** — 移除误上传的 1276 个文件 + 补充 .gitattributes |
 
 **JSON 数据契约**（角色/武器/预设字段）：[`CONTEXT.md`](../CONTEXT.md) 术语表 + [`games/endfield/README.md`](../games/endfield/README.md)「数据格式」节 + `tests/test_game_data_contract.py`。
 | [agents/issue-tracker.md](agents/issue-tracker.md) | GitHub Issue、`gh` CLI、**Web 表单模板**（Bug / 功能建议） |

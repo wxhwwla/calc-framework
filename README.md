@@ -165,7 +165,7 @@ cd web/frontend && npm install && npm run dev
 ### Generic Framework
 
 - **Visual DAG Editor**: Drag-and-drop node editor (Web: ReactFlow, Desktop: PySide6) — build damage formulas visually, no code required
-- **DAG Engine**: 9 node types, topological sort, AST sandbox, subgraph expansion, block-level caching
+- **DAG Engine**: 8 node types (const/var/unary/binary/condition/expr/user-input/subgraph-call), topological sort, AST sandbox, subgraph expansion, block-level caching, incremental evaluation
 - **Inverse Engine**: `data_to_params()` / `params_to_curve()` — bidirectional formula fitting for any game
 - **Search Engine**: Top-N enumeration, parallel execution, cancel tokens, SQLite persistence
 - **ComputeSheet**: Declarative UI — consumes `layout.json` + DAG variables → auto-renders controls
@@ -173,12 +173,14 @@ cd web/frontend && npm install && npm run dev
 - **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 - **i18n**: Web (react-i18next, ~500+ keys, 98 files) + Desktop (DesktopTranslator, 282 keys, 15 files, en/zh-CN)
+- **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing
+- **SaaS API**: API Key management + rate limiting + usage statistics
 
 ### Web Version
 
 | Web Page | Desktop Equivalent | Route |
 |----------|-------------------|-------|
-| Damage Calculator | `games/endfield/main.py` | `/` |
+| Damage Calculator | `main.py` (desktop) / FastAPI+React (web) | `/` |
 | Data Designer | Dev toolkit | `/designer` |
 | Pack Designer | Dev toolkit | `/pack-designer` |
 | Calc Hub Marketplace | — | `/marketplace` |
@@ -223,10 +225,10 @@ result = adapter.fit(data)  # auto-match by data length
 
 ```powershell
 # Framework tests
-cd framework && pytest tests/ -q     # ~855 passed
+cd framework && pytest tests/ -q     # 1160 passed
 
 # Endfield tests (full suite)
-cd games/endfield && pytest tests/ -q  # ~1109 passed
+cd games/endfield && pytest tests/ -q  # 1585 passed
 ```
 
 [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)

@@ -3,6 +3,7 @@
 [![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
 [![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
 [![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
+[![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
 
 # Calc Framework — 通用游戏计算框架
 
@@ -150,7 +151,7 @@ cd web/frontend && npm install && npm run dev
 ### 通用框架
 
 - **可视化 DAG 编辑器**：拖拽式节点编辑器（Web: ReactFlow, 桌面: PySide6），无需写代码即可构建伤害公式
-- **DAG 引擎**：8 种节点类型 + call（子图调用）、拓扑排序、AST 沙箱、子图展开、块级缓存、增量求值
+- **DAG 引擎**：8 种节点类型（常量/变量/一元/二元/条件/表达式/用户输入/子图调用）、拓扑排序、AST 沙箱、子图展开、块级缓存、增量求值
 - **逆推引擎**：`data_to_params()` / `params_to_curve()` — 任意游戏双向公式拟合
 - **搜索引擎**：Top-N 枚举、并行执行、取消令牌、SQLite 持久化
 - **ComputeSheet**：声明式 UI — 消费 `layout.json` + DAG 变量 → 自动渲染控件
@@ -164,7 +165,7 @@ cd web/frontend && npm install && npm run dev
 
 | Web 页面 | 桌面对应 | 路由 |
 |----------|---------|------|
-| 伤害计算器 | `games/endfield/main.py` | `/` |
+| 伤害计算器 | `main.py`（桌面）/ FastAPI + React（Web） | `/` |
 | 数据设计器 | 开发者工具箱 | `/designer` |
 | 配置包设计器 | 开发者工具箱 | `/pack-designer` |
 | Calc Hub 市场 | — | `/marketplace` |
@@ -209,10 +210,10 @@ result = adapter.fit(data)  # 自动按长度匹配
 
 ```powershell
 # 框架测试
-cd framework && pytest tests/ -q     # 1019 passed
+cd framework && pytest tests/ -q     # 1160 passed
 
 # 终末地测试
-cd games/endfield && pytest tests/calculation/ tests/data_loading/ -q  # 693 passed
+cd games/endfield && pytest tests/ -q  # 1585 passed
 ```
 
 [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
