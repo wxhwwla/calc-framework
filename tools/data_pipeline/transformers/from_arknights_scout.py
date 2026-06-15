@@ -102,6 +102,10 @@ def _convert_operator(raw: dict[str, Any]) -> dict[str, Any]:
     if ms:
         entity["属性里程碑"] = ms
 
+    growth = raw.get("成长参数")
+    if growth:
+        entity["成长参数"] = growth
+
     # 信赖加成
     trust = raw.get("信赖加成", {})
     if trust:

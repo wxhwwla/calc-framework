@@ -8,6 +8,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from games.arknights.calc.inverse.materialize import materialize_operator_entity
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PARSED_DIR = REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed"
 DEFAULT_ZIP_CANDIDATES = (
@@ -105,7 +107,8 @@ def load_operators_map(
                 continue
             data = _read_json_file(f)
             if data is not None:
-                result[str(data.get("名称") or f.stem)] = data
+                name = str(data.get("名称") or f.stem)
+                result[name] = materialize_operator_entity(data)
 
     if len(result) >= MIN_PARSED_COUNT:
         return result
@@ -125,5 +128,6 @@ def load_operators_map(
                 data = json.loads(zf.read(arc).decode("utf-8"))
             except (json.JSONDecodeError, OSError):
                 continue
-            result[str(data.get("名称") or stem)] = data
+            name = str(data.get("名称") or stem)
+            result[name] = materialize_operator_entity(data)
     return result

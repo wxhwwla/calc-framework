@@ -12,6 +12,7 @@ from games.arknights.calc.inverse.segments import (
     elite_segment_key,
     segment_length,
 )
+from games.arknights.calc.inverse.stats import resolve_stats_from_segments
 
 __all__ = [
     "SKILL_SP_BLUEPRINT",
@@ -21,5 +22,6 @@ __all__ = [
     "elite_segment_key",
     "fit_operator_growth_params",
     "materialize_operator_entity",
+    "resolve_stats_from_segments",
     "segment_length",
 ]
