@@ -37,7 +37,7 @@ def exusiai_milestones() -> dict:
 
 
 def test_compact_operator_writes_growth_params(exusiai_milestones: dict) -> None:
-    out, warns = compact_operator(exusiai_milestones, max_error=0.05)
+    out, _ = compact_operator(exusiai_milestones, max_error=0.05)
     assert "成长参数" in out
     segments = out["成长参数"].get(GROWTH_PARAM_SEGMENTS_KEY, [])
     assert any(s["key"] == "e0.hp" for s in segments)

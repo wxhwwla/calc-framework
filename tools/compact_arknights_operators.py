@@ -80,7 +80,7 @@ def compact_parsed_dir(
     if not parsed_dir.is_dir():
         return {"success": False, "error": f"目录不存在: {parsed_dir}"}
 
-    stats = {
+    stats: dict[str, Any] = {
         "total": 0,
         "compacted": 0,
         "skipped": 0,

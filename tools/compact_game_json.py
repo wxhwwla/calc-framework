@@ -14,9 +14,10 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from calc_framework.inverse.engine import InverseEngine
+from calc_framework.inverse.base import FitResult
 
 from games.endfield.calc.core.data_generator import CHARACTER_NORMAL_ATTRS, CHARACTER_SKILL_ATTRS
+from games.endfield.calc.damage.inverse.adapter import EndfieldInverseAdapter
 from games.endfield.data_loading.curve_materialize import (
     GROWTH_PARAM_KEY,
     materialize_character_entity,
@@ -25,54 +26,76 @@ from games.endfield.data_loading.curve_materialize import (
 from games.endfield.data_loading.loader import CHARACTERS_JSON_PATH, WEAPONS_JSON_PATH
 
 DEFAULT_MAX_ERROR = 0.05
-SKILL_LEVELS = 12
 BONUS_LEVELS = 9
 
 
-def _growth_dict_from_curve(
-    engine: InverseEngine,
-    data: list[float | int],
+def _storage_from_fit(result: FitResult, *, max_error: float) -> dict[str, Any] | None:
+    if not result.params or result.max_error > max_error:
+        return None
+    stored: dict[str, Any] = {
+        "base": result.params["base"],
+        "growth": result.params["growth"],
+        "divisor": result.params["divisor"],
+        "offset": result.params.get("offset", 0),
+    }
+    special = result.params.get("special_values")
+    if special:
+        stored["special"] = [float(v) for v in special]
+    return stored
+
+
+def _fit_normal_attr(
+    adapter: EndfieldInverseAdapter,
+    values: list[float | int],
     *,
     max_error: float,
 ) -> dict[str, Any] | None:
-    if len(data) < 2:
+    if len(values) < 2:
         return None
-    result = engine.fit(data, "floor_linear", num_levels=len(data))
-    if result.max_error > max_error:
+    floats = [float(v) for v in values]
+    if len(floats) == 94:
+        result = adapter.fit_from_94(floats)
+    else:
+        result = adapter.fit_attribute_90(floats)
+    return _storage_from_fit(result, max_error=max_error)
+
+
+def _fit_skill_segment(
+    adapter: EndfieldInverseAdapter,
+    seg: list[float | int],
+    *,
+    max_error: float,
+) -> dict[str, Any] | None:
+    if not seg:
         return None
-    params = result.params
-    return {
-        "base": params["base"],
-        "growth": params["growth"],
-        "divisor": params["divisor"],
-        "offset": params.get("offset", 0),
-    }
+    floats = [float(v) for v in seg]
+    if len(floats) >= 12:
+        result = adapter.fit_skill_12(floats[:12])
+    elif len(floats) >= 9:
+        result = adapter.fit_skill_9(floats[:9])
+    else:
+        return None
+    return _storage_from_fit(result, max_error=max_error)
 
 
 def _fit_skill_segments(
-    engine: InverseEngine,
+    adapter: EndfieldInverseAdapter,
     segments: list[list[float | int]],
     *,
     max_error: float,
 ) -> list[dict[str, Any]] | None:
     out: list[dict[str, Any]] = []
     for seg in segments:
-        if not seg:
-            return None
-        entry = _growth_dict_from_curve(engine, seg[:SKILL_LEVELS], max_error=max_error)
+        entry = _fit_skill_segment(adapter, seg, max_error=max_error)
         if entry is None:
             return None
-        if len(seg) >= SKILL_LEVELS:
-            specials = seg[9:12] if len(seg) >= 12 else ([seg[8]] if len(seg) >= 9 else [])
-            if specials:
-                entry["special"] = [float(v) for v in specials]
         out.append(entry)
     return out
 
 
 def compact_character(
     char: dict[str, Any],
-    engine: InverseEngine,
+    adapter: EndfieldInverseAdapter,
     *,
     max_error: float,
 ) -> tuple[dict[str, Any], list[str]]:
@@ -84,7 +107,7 @@ def compact_character(
         values = char.get(attr)
         if not isinstance(values, list) or len(values) < 2:
             continue
-        fitted = _growth_dict_from_curve(engine, values, max_error=max_error)
+        fitted = _fit_normal_attr(adapter, values, max_error=max_error)
         if fitted is None:
             warnings.append(f"{name}.{attr} 拟合误差 > {max_error}，保留数组")
             continue
@@ -95,18 +118,16 @@ def compact_character(
         if raw is None:
             continue
         if isinstance(raw, list) and raw and isinstance(raw[0], list):
-            segments = _fit_skill_segments(engine, raw, max_error=max_error)
+            segments = _fit_skill_segments(adapter, raw, max_error=max_error)
             if segments is None:
                 warnings.append(f"{name}.{skill_attr} 多段拟合失败，保留数组")
                 continue
             params[skill_attr] = segments
         elif isinstance(raw, list):
-            fitted = _growth_dict_from_curve(engine, raw[:SKILL_LEVELS], max_error=max_error)
+            fitted = _fit_skill_segment(adapter, raw, max_error=max_error)
             if fitted is None:
                 warnings.append(f"{name}.{skill_attr} 拟合失败，保留数组")
                 continue
-            if len(raw) >= 9:
-                fitted["special"] = [float(raw[8])] if len(raw) == 9 else [float(v) for v in raw[9:12]]
             params[skill_attr] = [fitted]
 
     if not params:
@@ -127,7 +148,7 @@ def compact_character(
 
 def compact_weapon(
     weapon: dict[str, Any],
-    engine: InverseEngine,
+    adapter: EndfieldInverseAdapter,
     *,
     max_error: float,
 ) -> tuple[dict[str, Any], list[str]]:
@@ -137,7 +158,7 @@ def compact_weapon(
 
     base_atk = weapon.get("基础攻击力")
     if isinstance(base_atk, list) and len(base_atk) >= 2:
-        fitted = _growth_dict_from_curve(engine, base_atk, max_error=max_error)
+        fitted = _fit_normal_attr(adapter, base_atk, max_error=max_error)
         if fitted is not None:
             params["基础攻击力"] = fitted
         else:
@@ -148,7 +169,7 @@ def compact_weapon(
             continue
         if not isinstance(values, list) or len(values) < 2:
             continue
-        fitted = _growth_dict_from_curve(engine, values[:BONUS_LEVELS], max_error=max_error)
+        fitted = _fit_normal_attr(adapter, values[:BONUS_LEVELS], max_error=max_error)
         if fitted is None:
             warnings.append(f"{name}.{key} 拟合失败，保留数组")
             continue
@@ -166,7 +187,7 @@ def compact_weapon(
 
 
 def _run(*, apply: bool, max_error: float) -> int:
-    engine = InverseEngine()
+    adapter = EndfieldInverseAdapter()
     char_path = Path(CHARACTERS_JSON_PATH)
     weapon_path = Path(WEAPONS_JSON_PATH)
     characters = json.loads(char_path.read_text(encoding="utf-8"))
@@ -175,13 +196,13 @@ def _run(*, apply: bool, max_error: float) -> int:
 
     new_chars = []
     for char in characters:
-        compacted, warns = compact_character(char, engine, max_error=max_error)
+        compacted, warns = compact_character(char, adapter, max_error=max_error)
         new_chars.append(compacted)
         all_warnings.extend(warns)
 
     new_weapons = []
     for weapon in weapons:
-        compacted, warns = compact_weapon(weapon, engine, max_error=max_error)
+        compacted, warns = compact_weapon(weapon, adapter, max_error=max_error)
         new_weapons.append(compacted)
         all_warnings.extend(warns)
 

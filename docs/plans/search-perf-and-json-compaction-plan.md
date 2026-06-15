@@ -1,6 +1,6 @@
 # 全量搜索加速 + JSON 曲线压缩 — 实施计划
 
-**状态**：阶段 A/B 基础设施已完成（2026-06-15）；JSON 全库 `--apply` 由人类执行  
+**状态**：阶段 A/B 代码与测试已完成（2026-06-15）；JSON 全库 `--apply`、全量搜索耗时验证由人类本地执行  
 **目标**：缩短装备全量遍历耗时；缩小 `characters.json` / `weapons.json` 体积并保持数值一致。
 
 ---
@@ -39,7 +39,7 @@
 - `games/endfield/tests/calculation/search/run/test_search_session.py` 全过
 - `test_search_persistence.py` 续跑一致
 - `framework/tests/search/test_parallel.py` 不受影响（框架仍 thread）
-- 新增：`test_process_parallel_speedup`（小数据集，process ≥ thread 或 skip 单核 CI）
+- 新增：`test_bounded_parallel.py` — process/thread 结果一致；耗时对比小数据集 skip（spawn 开销）
 
 ---
 
@@ -86,8 +86,8 @@ python tools/compact_game_json.py --apply     # 写回 JSON（需 git 备份）
 
 ### B4 验收
 
-- `test_game_data_contract.py` 通过（迁移前后数值 golden）
-- 随机抽 3 角色：90 级各属性与迁移前 diff ≤ 0.1
+- `tools/tests/test_compact_game_json.py` roundtrip
+- 随机抽 3 角色：90 级各属性与迁移前 diff ≤ 0.1（人类 `--apply` 后）
 - `characters.json` 体积下降可度量（目标 ≥50% 角色块）
 
 ---

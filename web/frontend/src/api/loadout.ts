@@ -3,6 +3,7 @@ import type { MultiSkillSettings } from "../components/calculator/MultiSkillPane
 import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
 import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadoutPanel";
 import type { EvaluateResult } from "./compute";
+import { compactEntityForTransport } from "../utils/entityCompact";
 
 export interface WebLoadoutPayload {
   char_data: Record<string, unknown>;
@@ -66,8 +67,8 @@ export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayl
   if (!ctx.charData || !ctx.weaponData) return null;
   const calculationMode = resolveCalculationMode(ctx.calcMode, ctx.multiSkill);
   return {
-    char_data: ctx.charData,
-    weapon_data: ctx.weaponData,
+    char_data: compactEntityForTransport(ctx.charData, "character"),
+    weapon_data: compactEntityForTransport(ctx.weaponData, "weapon"),
     char_level: ctx.charLevel,
     weapon_level: ctx.weaponLevel,
     trust_level: ctx.trustLevel,

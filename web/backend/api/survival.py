@@ -37,11 +37,12 @@ class SurvivalEstimateRequest(BaseModel):
 def survival_estimate(req: SurvivalEstimateRequest) -> dict[str, Any]:
     """执行生存能力预估计算。"""
     from games.endfield.calc.survival.estimate import build_survival_estimate
+    from web.backend.data_materialize import prepare_character_for_compute, prepare_weapon_for_compute
 
     try:
         return build_survival_estimate(
-            char_data=req.char_data,
-            weapon_data=req.weapon_data,
+            char_data=prepare_character_for_compute(req.char_data),
+            weapon_data=prepare_weapon_for_compute(req.weapon_data),
             char_level=req.char_level,
             weapon_level=req.weapon_level,
             trust_level=req.trust_level,
@@ -62,5 +63,6 @@ def survival_estimate(req: SurvivalEstimateRequest) -> dict[str, Any]:
         )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
 
 __all__: list[str] = []

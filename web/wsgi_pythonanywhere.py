@@ -979,7 +979,14 @@ def _handle_data_api(environ, start_response):
 
     if sub == "characters/detail/all":
         d = _read_json(_DATA / "characters.json")
-        return _json(start_response, d) if d else _http_error(start_response, "not found", 404)
+        if not d:
+            return _http_error(start_response, "not found", 404)
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_entity_list, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
+        return _json(start_response, format_entity_list(d, fmt, kind="character"))
     if sub == "characters":
         raw = _read_json(_DATA / "characters.json") or []
         return _json(
@@ -999,14 +1006,26 @@ def _handle_data_api(environ, start_response):
     m = re.match(r"^characters/(.+)$", sub)
     if m:
         n = m.group(1).strip()
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_character_entity, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
         for c in _read_json(_DATA / "characters.json") or []:
             if c.get("名称") == n:
-                return _json(start_response, c)
+                return _json(start_response, format_character_entity(c, fmt))
         return _http_error(start_response, f"not found: {n}", 404)
 
     if sub == "weapons/detail/all":
         d = _read_json(_DATA / "weapons.json")
-        return _json(start_response, d) if d else _http_error(start_response, "not found", 404)
+        if not d:
+            return _http_error(start_response, "not found", 404)
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_entity_list, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
+        return _json(start_response, format_entity_list(d, fmt, kind="weapon"))
     if sub == "weapons":
         raw = _read_json(_DATA / "weapons.json") or []
         result = []
@@ -1020,9 +1039,14 @@ def _handle_data_api(environ, start_response):
     m = re.match(r"^weapons/(.+)$", sub)
     if m:
         n = m.group(1).strip()
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_weapon_entity, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
         for w in _read_json(_DATA / "weapons.json") or []:
             if w.get("名称") == n:
-                return _json(start_response, w)
+                return _json(start_response, format_weapon_entity(w, fmt))
         return _http_error(start_response, f"not found: {n}", 404)
 
     if sub == "equipments/detail/all":

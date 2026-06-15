@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class EnemyParamsBody(BaseModel):
@@ -56,11 +56,21 @@ class WebLoadoutBody(BaseModel):
     calculation_mode: str | None = Field(default=None, description="计算模式（旧字段）")
     calc_mode: str | None = Field(default=None, description="计算模式")
 
+    @model_validator(mode="after")
+    def _materialize_curve_entities(self) -> WebLoadoutBody:
+        """含 ``成长参数`` 的请求体在计算前物化为运行时数组。"""
+        from web.backend.data_materialize import prepare_character_for_compute, prepare_weapon_for_compute
+
+        object.__setattr__(self, "char_data", prepare_character_for_compute(self.char_data))
+        object.__setattr__(self, "weapon_data", prepare_weapon_for_compute(self.weapon_data))
+        return self
+
     def to_loadout_dict(self) -> dict[str, Any]:
         """将 enemy_params 展开到顶层，返回 LoadoutState 兼容字典。"""
         data = self.model_dump()
         enemy = data.pop("enemy_params", {})
         data.update(enemy)
         return data
+
 
 __all__: list[str] = []

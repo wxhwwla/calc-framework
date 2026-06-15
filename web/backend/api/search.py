@@ -143,8 +143,12 @@ def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]
         enrich_search_request_fields,
         resolve_search_fixed_loadout,
     )
+    from web.backend.data_materialize import prepare_character_for_compute, prepare_weapon_for_compute
 
-    enriched = req.model_copy(update=enrich_search_request_fields(req))
+    char_data = prepare_character_for_compute(req.char_data)
+    current_weapon = prepare_weapon_for_compute(req.current_weapon)
+    normalized = req.model_copy(update={"char_data": char_data, "current_weapon": current_weapon})
+    enriched = normalized.model_copy(update=enrich_search_request_fields(normalized))
     fixed = resolve_search_fixed_loadout(enriched)
     return enriched, fixed
 
