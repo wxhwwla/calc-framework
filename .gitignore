@@ -2,6 +2,8 @@
 .idea/
 .trae/
 .vscode/
+.claude/
+.cursorrules
 *.swp
 *~
 
@@ -79,6 +81,9 @@ Desktop.ini
 # 机器学习模型文件（体积大，应自行下载或通过 LFS 管理）
 yolov8n.pt
 
+# WASM 二进制（体积大，应通过 LFS 或按需下载）
+*.wasm
+
 # BWIKI 爬虫全量输出（可从源数据重生成）
 tools/arknights_scout/output/
 
@@ -111,3 +116,4 @@ games/endfield/search_output/
 
 # BWIKI 侦察缓存（体积大、可本地重跑）
 tools/bwiki_scout/output/
+debug.log

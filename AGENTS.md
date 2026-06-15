@@ -17,10 +17,12 @@ Before changing code or pushing to GitHub, read the human operation guide: [`doc
 
 ### Pushing to GitHub (agents)
 
-- **Default: the human runs upload.** Publishing is done by the repo maintainer locally with `python github_upload_module.py` from repo root. Agents **must not** run the upload script unless the user **explicitly asks in that conversation** (e.g. “帮我上传”“执行上传脚本”).
-- When work is ready but the user has not asked to publish, **stop** and tell them which command to run (`github_upload_module.py`, optional `--minor` / `--no-bump`); do not upload on your own initiative.
-- **Do not** use bare `git commit` + `git push` to publish changes.
-- If the user explicitly requests upload, run from repo root: `python github_upload_module.py` (add `--minor` or `--no-bump` when appropriate).
+**All git upload operations (staging, committing, pushing) must go through the upload script.** Agents must NOT execute `git add`, `git commit`, or `git push` directly.
+
+- **Default: the human runs upload.** Publishing is done by the repo maintainer locally with `python github_upload_module.py` from repo root. Agents **must not** run the upload script unless the user **explicitly asks in that conversation** (e.g. “帮我上传””执行上传脚本”).
+- When work is ready but the user has not asked to publish, **stop** and tell them which command to run (`github_upload_module.py`, optional `--minor` / `--no-bump` / `--dry-run`); do not upload or execute any git write operation on your own initiative.
+- **Do not** use bare `git add`, `git commit`, or `git push` to stage or publish changes — always use the upload script.
+- If the user explicitly requests upload, run from repo root: `python github_upload_module.py` (add `--minor` or `--no-bump` or `--dry-run` when appropriate).
 - Version bumps for `_VERSION` must go through the upload script so `please_read_me.py` and commit messages stay consistent.
 - Upload script may **GPG/SSH-sign** commits when configured; unconfigured commits may lack GitHub **Verified** badge.
 - **Mandatory:** [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md) — pre-commit two-round behavior, `_version` SUMMARY markers, stash/CRLF, `--no-bump` retry, **ruff-lint line-only detection**, **Windows 中文 pathspec（禁止 Path(porcelain)）**.
