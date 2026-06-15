@@ -9,12 +9,11 @@ PySide6 GUI，提供公式反推、数据浏览等功能，用于角色/武器�
 
 """
 
-
-
 from __future__ import annotations
 
 import sys
 
+from calc_framework.ui.theme import ThemeManager
 from games.endfield.gui.designer.data_browser_tab import DataBrowserTab
 from games.endfield.gui.designer.data_editor_tab import DataEditorTab
 from games.endfield.gui.designer.inverse_tab import InverseTab
@@ -36,13 +35,8 @@ APP_NAME = "数据设计器"
 APP_VERSION = "1.0.0"
 
 
-
-
-
 class DesignerApp(QMainWindow):
-
     def __init__(self) -> None:
-
         super().__init__()
 
         self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}")
@@ -51,21 +45,15 @@ class DesignerApp(QMainWindow):
 
         self.resize(1100, 750)
 
-
-
         self.big_font = QFont()
 
         self.big_font.setPointSize(14)
 
         self.big_font.setBold(True)
 
-
-
         self.small_font = QFont()
 
         self.small_font.setPointSize(12)
-
-
 
         central = QWidget()
 
@@ -74,8 +62,6 @@ class DesignerApp(QMainWindow):
         layout = QVBoxLayout(central)
 
         layout.setContentsMargins(8, 8, 8, 8)
-
-
 
         self.tabs = QTabWidget()
 
@@ -87,13 +73,9 @@ class DesignerApp(QMainWindow):
 
         layout.addWidget(self.tabs, stretch=1)
 
-
-
         bottom_bar = QHBoxLayout()
 
         bottom_bar.setContentsMargins(0, 4, 0, 0)
-
-
 
         status = QLabel(f"{APP_NAME} v{APP_VERSION} —— 数据维护工具，不包含伤害计算功能")
 
@@ -104,8 +86,6 @@ class DesignerApp(QMainWindow):
         status.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         bottom_bar.addWidget(status, stretch=1)
-
-
 
         self.help_btn = QPushButton("📖 使用说明")
 
@@ -155,19 +135,12 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(self.donation_btn)
 
-
-
         layout.addLayout(bottom_bar)
-
-
 
         self._apply_dark_style()
         """初始化实例。"""
 
-
-
     def _open_help(self) -> None:
-
         from utils.gui.help_designer import build_designer_help
         from utils.gui.help_dialog import HelpDialog
 
@@ -177,34 +150,20 @@ class DesignerApp(QMainWindow):
         """open help。"""
 
     def _open_donation(self) -> None:
-
         from utils.gui.donation import open_donation_dialog
 
         open_donation_dialog(self)
         """open donation。"""
 
-
-
     def _apply_dark_style(self) -> None:
+        """通过框架 ThemeManager 应用深色主题。"""
+        tm = ThemeManager()
+        self.setStyleSheet(tm.stylesheet("dark"))
 
-        self.setStyleSheet("""
-
-            QMainWindow { background-color: #1A1A1A; }
-
-            QWidget { background-color: #1A1A1A; }
-
-            QLabel { color: #D1D1D1; }
-
-        """)
-        """apply dark style。"""
     """DesignerApp。"""
 
 
-
-
-
 def main() -> None:
-
     app = QApplication(sys.argv)
 
     app.setStyle("Fusion")
@@ -217,10 +176,5 @@ def main() -> None:
     """main。"""
 
 
-
-
-
 if __name__ == "__main__":
-
     main()
-
