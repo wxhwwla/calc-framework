@@ -3,6 +3,7 @@
 [![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
 [![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
 [![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
+[![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
 
 # Calc Framework — Universal Game Damage Calculator
 
