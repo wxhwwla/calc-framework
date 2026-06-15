@@ -9,6 +9,8 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+_WIN_ONLY = unittest.skipUnless(sys.platform.startswith("win"), "winreg 仅 Windows 可用")
+
 
 class TestPlatformWin32Patch(unittest.TestCase):
     def test_patch_imports_cleanly(self) -> None:
@@ -39,6 +41,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
         with patch.dict("os.environ", {}, clear=True):
             self.assertEqual(_windows_machine_from_env(), "AMD64")
 
+    @_WIN_ONLY
     def test_read_windows_version_from_registry(self) -> None:
         import utils.platform_win32_patch as pwp
 
@@ -71,6 +74,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             self.assertEqual(machine, "AMD64")
 
+    @_WIN_ONLY
     def test_read_windows_version_registry_build_gte_22000(self) -> None:
         import utils.platform_win32_patch as pwp
 
@@ -99,6 +103,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             self.assertEqual(release, "11")
 
+    @_WIN_ONLY
     def test_read_windows_version_major_version_oserror(self) -> None:
         """CurrentMajorVersionNumber OSError 时根据 build 降级。"""
 
@@ -171,6 +176,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             pwp.apply_platform_win32_patch()
 
+    @_WIN_ONLY
     def test_apply_and_call_patched_functions(self) -> None:
         """apply 后调用 patched 函数应触发闭包。"""
 
@@ -216,6 +222,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             self.assertEqual(machine, "AMD64")
 
+    @_WIN_ONLY
     def test_apply_and_call_patched_uname(self) -> None:
         """apply 后调用 platform.uname() 触发闭包。"""
 
@@ -258,6 +265,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             self.assertEqual(uname_result.machine, "AMD64")
 
+    @_WIN_ONLY
     def test_apply_and_call_release_and_version(self) -> None:
         """apply 后调用 release/version 闭包。"""
 
@@ -299,6 +307,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             self.assertIn("10.0.", version)
 
+    @_WIN_ONLY
     def test_win32_ver_oserror_fallback(self) -> None:
         """win32_ver 在 registry 异常时回退原函数。"""
 
@@ -321,6 +330,7 @@ class TestPlatformWin32Patch(unittest.TestCase):
 
             self.assertEqual(ver[0], "10")
 
+    @_WIN_ONLY
     def test_uname_oserror_fallback(self) -> None:
         """uname 在 registry 异常时回退默认值。"""
 
