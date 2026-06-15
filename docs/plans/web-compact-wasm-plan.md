@@ -1,6 +1,6 @@
 # Web 简化数据 + 浏览器计算（WASM）+ 多段反推 — 实施计划
 
-**状态**：阶段 1 代码已完成（2026-06-15）；磁盘 `compact --apply` 仍由人类本地执行  
+**状态**：阶段 1–2 代码已完成（2026-06-15）；磁盘 `compact --apply` 仍由人类本地执行  
 **关联**：[`search-perf-and-json-compaction-plan.md`](search-perf-and-json-compaction-plan.md)（磁盘 compact）、[`adr/0026-multi-segment-curve-blueprint.md`](../adr/0026-multi-segment-curve-blueprint.md)（N 段反推）、[`PythonAnywhere-部署指南.md`](../PythonAnywhere-部署指南.md)
 
 ---
@@ -23,7 +23,7 @@
 | 磁盘 compact JSON | 工具已有；`--apply` 未执行 | 同上 | MED |
 | 计算引擎 | Python DAG ✅ | FastAPI `/api/compute/*`；**无 WASM** ❌ | HIGH |
 | 全量搜索 | 本地多进程 ✅ | PA 受限 + 下载 `local-backend.zip` ❌ | HIGH |
-| N 段反推 | `CurveBlueprint` + AK/终末地 adapter ✅ | `/api/data/inverse` 仍 90/9/12 旧 API ❌ | MED |
+| N 段反推 | `CurveBlueprint` + AK/终末地 adapter ✅ | `/inverse/segment` + `/inverse/milestones` ✅；legacy `/inverse` 兼容 ✅ | OK |
 | 前端曲线烘焙 | N/A | 无 TS 版 `floor_linear` ❌ | MED |
 | PWA 离线 | N/A | 仅缓存静态 + API，不含计算 ❌ | LOW |
 
@@ -56,10 +56,10 @@
 
 | ID | 任务 | 产出 | 依赖 |
 |----|------|------|------|
-| 2.1 | 新端点 `POST /api/data/inverse/segment`：`blueprint_key` + `segment_key` + `values[]` | 调用 `SegmentCurveEngine.fit_by_key` | 无 |
-| 2.2 | 新端点 `POST /api/data/inverse/milestones`（AK）：干员里程碑 → `fit_operator_growth_params` | 与 `compact_arknights_operators` 同逻辑 | 无 |
-| 2.3 | 旧 `/api/data/inverse` 保留为兼容层（内部转调 `EndfieldInverseAdapter`） | 现有 Designer 不 break | 2.1 |
-| 2.4 | 测试：`framework/tests/inverse/*` + `web/backend/tests` 覆盖新端点 | CI 绿 | 2.1–2.3 |
+| 2.1 | 新端点 `POST /api/data/inverse/segment`：`blueprint_key` + `segment_key` + `values[]` | 调用 `SegmentCurveEngine.fit_by_key` | ✅ |
+| 2.2 | 新端点 `POST /api/data/inverse/milestones`（AK）：干员里程碑 → `fit_operator_growth_params` | 与 `compact_arknights_operators` 同逻辑 | ✅ |
+| 2.3 | 旧 `/api/data/inverse` 保留为兼容层（内部转调 `EndfieldInverseAdapter`） | 现有 Designer 不 break | ✅ |
+| 2.4 | 测试：`framework/tests/inverse/*` + `web/backend/tests` 覆盖新端点 | CI 绿 | ✅ `test_inverse_api.py` |
 | 2.5 | Designer **可选**：反推页增加「段 key / 段长」高级模式（ADR-0026 非目标，可后置） | UI | 2.1 |
 
 ---

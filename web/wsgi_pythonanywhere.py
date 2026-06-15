@@ -848,6 +848,8 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             delete_equipment,
             delete_weapon,
             inverse_formula_payload,
+            inverse_milestones_payload,
+            inverse_segment_payload,
             update_character,
             update_equipment,
             update_weapon,
@@ -858,10 +860,43 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             update_entity_row,
         )
 
+        if path == "/api/data/inverse/segment" and method == "POST":
+            raw = _read_body(environ)
+            payload = json.loads(raw.decode("utf-8"))
+            return _json(
+                start_response,
+                inverse_segment_payload(
+                    game=payload.get("game", "endfield"),
+                    blueprint_id=payload["blueprint_id"],
+                    segment_key=payload["segment_key"],
+                    values=payload["values"],
+                    rarity=int(payload.get("rarity", 6)),
+                    max_error=float(payload.get("max_error", 0.05)),
+                ),
+            )
+
+        if path == "/api/data/inverse/milestones" and method == "POST":
+            raw = _read_body(environ)
+            payload = json.loads(raw.decode("utf-8"))
+            return _json(
+                start_response,
+                inverse_milestones_payload(
+                    payload["operator"],
+                    max_error=float(payload.get("max_error", 0.05)),
+                ),
+            )
+
         if path == "/api/data/inverse" and method == "POST":
             raw = _read_body(environ)
             payload = json.loads(raw.decode("utf-8"))
-            return _json(start_response, inverse_formula_payload(payload["type"], payload["values"]))
+            return _json(
+                start_response,
+                inverse_formula_payload(
+                    payload["type"],
+                    payload["values"],
+                    max_error=float(payload.get("max_error", 0.05)),
+                ),
+            )
 
         raw = _read_body(environ)
         if method in ("POST", "PUT", "DELETE") and not raw and not sub.startswith("profiles/"):
