@@ -243,9 +243,7 @@ def build_loadout_state_from_web(
         spell_abnormal_counts=dict(body.get("spell_abnormal_counts") or {}),
         damage_component_mode=str(body.get("damage_component_mode", "skill_and_abnormal")),
         use_expected_crit=bool(body.get("use_expected_crit", False)),
-        include_conditional_equipment_crit=bool(
-            body.get("include_conditional_equipment_crit", False)
-        ),
+        include_conditional_equipment_crit=bool(body.get("include_conditional_equipment_crit", False)),
         extra_crit_rate=float(body.get("extra_crit_rate", 0.0)),
         extra_crit_damage=float(body.get("extra_crit_damage", 0.0)),
         enemy_defense=float(enemy["enemy_defense"]),
@@ -273,19 +271,7 @@ def build_adapter_context_from_loadout(
     """LoadoutState → DAG adapter context（ComputeSheet 求值）。"""
     from games.endfield.calc.dag_adapter.adapter import build_dag_context
 
-    bonuses = {
-        **loadout.weapon_skill_kwargs(),
-        "enemy_defense": loadout.enemy_defense,
-        "enemy_resistance": loadout.enemy_resistance,
-        "ignore_resistance": loadout.ignore_resistance,
-        "imbalance_vulnerability_coeff": loadout.imbalance_vulnerability_coeff,
-        "is_unbalanced": loadout.is_unbalanced,
-        "is_true_damage": loadout.is_true_damage,
-        "combo_stacks": loadout.combo_stacks,
-        "break_defense_stacks": loadout.break_defense_stacks,
-        "attached_effect_multiplier": loadout.attached_effect_multiplier,
-        "corrosion_duration_seconds": loadout.corrosion_duration_seconds,
-    }
+    bonuses = dict(loadout.weapon_skill_kwargs())
     ctx = build_dag_context(
         loadout.char_data,
         loadout.weapon_data,
@@ -300,6 +286,17 @@ def build_adapter_context_from_loadout(
     ui["skill_2_level"] = s2
     ui["skill_3_level"] = s3
     ui["calc_mode"] = layout_calc_mode
+    ui["敌人防御"] = float(loadout.enemy_defense)
+    ui["敌人抗性"] = float(loadout.enemy_resistance)
+    ui["无视抗性"] = float(loadout.ignore_resistance)
+    ui["失衡易伤系数"] = float(loadout.imbalance_vulnerability_coeff)
+    ui["是否失衡"] = bool(loadout.is_unbalanced)
+    ui["是否真实伤害"] = bool(loadout.is_true_damage)
+    ui["连击层数"] = int(loadout.combo_stacks)
+    ui["破防层数"] = int(loadout.break_defense_stacks)
+    ui["附带效果倍率"] = float(loadout.attached_effect_multiplier)
+    ui["腐蚀计时(秒)"] = float(loadout.corrosion_duration_seconds)
+    ctx.setdefault("enemy", {})["防御"] = float(loadout.enemy_defense)
     return ctx
 
 

@@ -27,9 +27,19 @@ class SearchRequest(BaseModel):
     damage_type: str = Field(description="伤害类型")
     weapon_scope_label: str = Field(default="同类型", description="武器搜索范围标签")
     equipment_scope_label: str = Field(default="全部", description="装备搜索范围标签")
-    all_weapons: list[dict[str, Any]] = Field(description="全部武器候选列表")
+    all_weapons: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="武器候选列表（省略时服务端按 scope 从 catalog 加载）",
+    )
+    weapon_candidate_names: list[str] | None = Field(
+        default=None,
+        description="可选武器名称白名单（在 scope 过滤后再约束）",
+    )
     current_weapon: dict[str, Any] = Field(description="当前选定武器")
-    equipment_catalog: dict[str, list[dict[str, Any]]] = Field(description="装备目录")
+    equipment_catalog: dict[str, list[dict[str, Any]]] | None = Field(
+        default=None,
+        description="装备目录（省略时服务端按 equipment_scope_label 加载）",
+    )
     fixed_loadout: dict[str, Any] | None = Field(default=None, description="固定配装字段")
     fixed_equipment_names: dict[str, str | None] = Field(default_factory=dict, description="固定装备名称")
     weapon_skill_values: dict[str, Any] = Field(default_factory=dict, description="武器技能值")
@@ -80,11 +90,13 @@ class EstimateRequest(BaseModel):
 
     equipment_scope_label: str = "全部"
 
-    all_weapons: list[dict[str, Any]]
+    all_weapons: list[dict[str, Any]] | None = None
+
+    weapon_candidate_names: list[str] | None = None
 
     current_weapon: dict[str, Any]
 
-    equipment_catalog: dict[str, list[dict[str, Any]]]
+    equipment_catalog: dict[str, list[dict[str, Any]]] | None = None
 
     fixed_loadout: dict[str, Any] | None = None
 
@@ -138,16 +150,43 @@ class EstimateRequest(BaseModel):
 
 
 def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
-    """归一化技能字段与固定配装字典（与 GUI 桌面端保持一致）。"""
+    """归一化技能字段、实体引用与 catalog（与 GUI 桌面端保持一致）。"""
+    from api.entity_refs import resolve_character_ref, resolve_weapon_ref
+    from api.search_catalog import resolve_equipment_catalog, weapon_rows_for_search
+
     from games.endfield.data_loading.web_search_bridge import (
         enrich_search_request_fields,
         resolve_search_fixed_loadout,
     )
-    from web.backend.data_materialize import prepare_character_for_compute, prepare_weapon_for_compute
 
-    char_data = prepare_character_for_compute(req.char_data)
-    current_weapon = prepare_weapon_for_compute(req.current_weapon)
-    normalized = req.model_copy(update={"char_data": char_data, "current_weapon": current_weapon})
+    char_data = resolve_character_ref(
+        req.char_data,
+        char_level=int(req.char_level),
+        trust_level=int(req.trust_level),
+    )
+    current_weapon = resolve_weapon_ref(req.current_weapon, weapon_level=int(req.weapon_level))
+    all_weapons = weapon_rows_for_search(
+        req.all_weapons,
+        char_data=char_data,
+        current_weapon=current_weapon,
+        weapon_scope_label=str(req.weapon_scope_label),
+        char_level=int(req.char_level),
+        weapon_level=int(req.weapon_level),
+        trust_level=int(req.trust_level),
+        weapon_candidate_names=getattr(req, "weapon_candidate_names", None),
+    )
+    equipment_catalog = resolve_equipment_catalog(
+        req.equipment_catalog,
+        equipment_scope_label=str(req.equipment_scope_label),
+    )
+    normalized = req.model_copy(
+        update={
+            "char_data": char_data,
+            "current_weapon": current_weapon,
+            "all_weapons": all_weapons,
+            "equipment_catalog": equipment_catalog,
+        }
+    )
     enriched = normalized.model_copy(update=enrich_search_request_fields(normalized))
     fixed = resolve_search_fixed_loadout(enriched)
     return enriched, fixed

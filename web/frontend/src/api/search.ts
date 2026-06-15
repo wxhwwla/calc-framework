@@ -142,9 +142,12 @@ export interface SearchRequest {
   damage_type: string;
   weapon_scope_label: string;
   equipment_scope_label: string;
-  all_weapons: Record<string, unknown>[];
+  /** @deprecated 省略时服务端按 scope 从 catalog 加载 */
+  all_weapons?: Record<string, unknown>[];
+  weapon_candidate_names?: string[];
   current_weapon: Record<string, unknown>;
-  equipment_catalog: Record<string, Record<string, unknown>[]>;
+  /** @deprecated 省略时服务端按 equipment_scope_label 加载 */
+  equipment_catalog?: Record<string, Record<string, unknown>[]>;
   fixed_loadout?: Record<string, unknown> | null;
   fixed_equipment_names?: Record<string, string | null>;
   weapon_skill_values?: Record<string, number>;

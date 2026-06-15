@@ -1,6 +1,6 @@
 # Web 简化数据 + 浏览器计算（WASM）+ 多段反推 — 实施计划
 
-**状态**：阶段 1–2 代码已完成（2026-06-15）；磁盘 `compact --apply` 仍由人类本地执行  
+**状态**：阶段 1–4.1 代码已完成（2026-06-15）；AK `compact --apply` 需本地 parsed 数据  
 **关联**：[`search-perf-and-json-compaction-plan.md`](search-perf-and-json-compaction-plan.md)（磁盘 compact）、[`adr/0026-multi-segment-curve-blueprint.md`](../adr/0026-multi-segment-curve-blueprint.md)（N 段反推）、[`PythonAnywhere-部署指南.md`](../PythonAnywhere-部署指南.md)
 
 ---
@@ -20,8 +20,8 @@
 | 能力 | 桌面 / Python 框架 | Web 现状 | 严重度 |
 |------|-------------------|----------|--------|
 | `成长参数` 双读 | `data_loading/curve_materialize.py` ✅ | `web/backend/api/data.py` 直接 `load_json` ❌ | MED |
-| 磁盘 compact JSON | 工具已有；`--apply` 未执行 | 同上 | MED |
-| 计算引擎 | Python DAG ✅ | FastAPI `/api/compute/*`；**无 WASM** ❌ | HIGH |
+| 磁盘 compact JSON | 工具已有；终末地 `--apply` 已执行 | ✅ 2026-06-15 |
+| 计算引擎 | Python DAG ✅ | FastAPI + **TS 曲线 POC** + `VITE_CALC_BACKEND` | MED |
 | 全量搜索 | 本地多进程 ✅ | PA 受限 + 下载 `local-backend.zip` ❌ | HIGH |
 | N 段反推 | `CurveBlueprint` + AK/终末地 adapter ✅ | `/inverse/segment` + `/inverse/milestones` ✅；legacy `/inverse` 兼容 ✅ | OK |
 | 前端曲线烘焙 | N/A | 无 TS 版 `floor_linear` ❌ | MED |
@@ -68,9 +68,9 @@
 
 | ID | 任务 | 产出 | 依赖 |
 |----|------|------|------|
-| 3.1 | 定义 `WebEntityRef`：`{ name, 成长参数?, level, trust_level? }` 替代整包 JSON | OpenAPI / TS 类型 | 阶段 1 |
-| 3.2 | 搜索 `SearchRequest` 改为传武器 **name 列表** + 服务端 catalog，而非 `all_weapons` 全量 | POST 体积下降 | 1.1 |
-| 3.3 | 前端 `ComputePage` / `loadout.ts` 适配新协议 | 前端 | 3.1–3.2 |
+| 3.1 | 定义 `WebEntityRef`：`{ name, 成长参数?, level, trust_level? }` 替代整包 JSON | OpenAPI / TS 类型 | ✅ |
+| 3.2 | 搜索 `SearchRequest` 改为传武器 **name 列表** + 服务端 catalog，而非 `all_weapons` 全量 | POST 体积下降 | ✅ |
+| 3.3 | 前端 `ComputePage` / `loadout.ts` 适配新协议 | 前端 | ✅ |
 
 ---
 
@@ -80,9 +80,9 @@
 
 | ID | 任务 | 选项 | 产出 |
 |----|------|------|------|
-| 4.0 | **选型 ADR** | A) Pyodide 打包 Python 计算栈；B) Rust/TS 重写 DAG+公式；C) 混合（TS 烘焙 + WASM 轻量 DAG） | `docs/adr/00xx-web-wasm-calc.md` |
-| 4.1 | POC：单快照 `evaluate-loadout` 与 Python 同输入 golden ≤ 1e-6 | 依 4.0 | `web/wasm/` 或 `web/frontend/src/calc/` |
-| 4.2 | 前端开关：`calc_backend=wasm|api`（默认 api，POC 通过后 wasm） | 特性开关 | 4.1 |
+| 4.0 | **选型 ADR** | A) Pyodide 打包 Python 计算栈；B) Rust/TS 重写 DAG+公式；C) 混合（TS 烘焙 + WASM 轻量 DAG） | ✅ ADR-0027 |
+| 4.1 | POC：单快照 `evaluate-loadout` 与 Python 同输入 golden ≤ 1e-6 | 依 4.0 | ✅ golden + TS 曲线 |
+| 4.2 | 前端开关：`calc_backend=wasm|api`（默认 api，POC 通过后 wasm） | 特性开关 | ✅ `VITE_CALC_BACKEND` |
 | 4.3 | 体积与冷启动预算：首包 ≤ ? MB，FCP 可接受 | 文档 | 4.1 |
 
 **非目标（阶段 4）**：全量搜索 WASM、SQLite 续跑进浏览器。

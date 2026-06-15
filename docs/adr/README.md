@@ -32,5 +32,6 @@
 | 0024 | ✅ | 通用逆推引擎完全抽象化 — GrowthFormula 双向公式系统 |
 | 0025 | ✅ | 框架接口一致性巩固 — 异常层次、CalcWorker、ThemeManager 统一 |
 | 0026 | ✅ | 多段等级曲线蓝图 — SegmentSpec / CurveBlueprint / SegmentCurveEngine |
+| 0027 | ✅ | Web 浏览器计算 WASM 选型 — 混合方案 C（TS 曲线 + 分阶段 DAG） |
 
 **注意**：ADR-0014 原编号为 0002（与 ADR-0002 公式图编辑器冲突），于 2026-06-13 重编号。ADR-0015 从未创建，编号保留。

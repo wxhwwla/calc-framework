@@ -11,8 +11,9 @@ from web.backend.api.loadout_schemas import WebLoadoutBody
 
 from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 
-router = APIRouter(prefix="/api/compute", tags=["compute"])
+ENDFIELD_ADAPTER_NAME = "终末地伤害计算（Calc Framework）"
 
+router = APIRouter(prefix="/api/compute", tags=["compute"])
 
 _manager = AdapterManager(ADAPTER_ROOT)
 
@@ -90,7 +91,7 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
             body=body,
         )
         ctx = build_adapter_context_from_loadout(loadout, layout_calc_mode=layout_mode)
-        pkg = _manager.load("终末地伤害计算")
+        pkg = _manager.load(ENDFIELD_ADAPTER_NAME)
         result = pkg.dag_service.evaluate(ctx)
         return EvaluateResponse(
             outputs=result.outputs,

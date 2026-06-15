@@ -58,11 +58,23 @@ class WebLoadoutBody(BaseModel):
 
     @model_validator(mode="after")
     def _materialize_curve_entities(self) -> WebLoadoutBody:
-        """含 ``成长参数`` 的请求体在计算前物化为运行时数组。"""
-        from web.backend.data_materialize import prepare_character_for_compute, prepare_weapon_for_compute
+        """含 ``成长参数`` 或仅名称的实体在计算前物化。"""
+        from api.entity_refs import resolve_character_ref, resolve_weapon_ref
 
-        object.__setattr__(self, "char_data", prepare_character_for_compute(self.char_data))
-        object.__setattr__(self, "weapon_data", prepare_weapon_for_compute(self.weapon_data))
+        object.__setattr__(
+            self,
+            "char_data",
+            resolve_character_ref(
+                self.char_data,
+                char_level=int(self.char_level),
+                trust_level=int(self.trust_level),
+            ),
+        )
+        object.__setattr__(
+            self,
+            "weapon_data",
+            resolve_weapon_ref(self.weapon_data, weapon_level=int(self.weapon_level)),
+        )
         return self
 
     def to_loadout_dict(self) -> dict[str, Any]:

@@ -142,7 +142,7 @@ async def ai_recommend(req: AiRecommendRequest):
         from calc_framework.config.manager import AdapterManager
 
         manager = AdapterManager(ADAPTER_ROOT)
-        pkg = manager.load("终末地伤害计算")
+        pkg = manager.load("终末地伤害计算（Calc Framework）")
         if pkg and pkg.dag_service:
             # 构建基本上下文跑一次 DAG 作为基线
 

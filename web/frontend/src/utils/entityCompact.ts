@@ -20,6 +20,14 @@ function hasGrowthParams(entity: Record<string, unknown>): boolean {
   return typeof growth === "object" && growth !== null && Object.keys(growth as object).length > 0;
 }
 
+export interface WebEntityRef {
+  名称: string;
+  成长参数?: Record<string, unknown>;
+  等级?: number;
+  trust_level?: number;
+  [key: string]: unknown;
+}
+
 export type EntityDataFormat = "compact" | "runtime" | "raw";
 
 export function compactEntityForTransport(

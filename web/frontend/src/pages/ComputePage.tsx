@@ -55,7 +55,6 @@ import { logOperation, exportLogsAsJson } from "../utils/operationLog";
 import { useComputeStore } from "../store/computeStore";
 import { fetchLayout, fetchVariables } from "../api/layout";
 import type { DamageSnapshot } from "../api/compute";
-import { fetchWeapons } from "../api/data";
 
 const DamageChart = lazy(() => import("../components/calculator/DamageChart"));
 
@@ -111,7 +110,6 @@ export default function ComputePage() {
   const [calcMode, setCalcMode] = useState("zone_snapshot");
   const [damageSnapshot, setDamageSnapshot] = useState<DamageSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
-  const [allWeapons, setAllWeapons] = useState<any[]>([]);
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
   const [manualBuffDialogOpen, setManualBuffDialogOpen] = useState(false);
   const [manualBuffStore, setManualBuffStore] = useState<ManualBuffStore>({});
@@ -130,7 +128,6 @@ export default function ComputePage() {
   useEffect(() => {
     fetchLayout().then(setLayout).catch(() => {});
     fetchVariables().then(setVariables).catch(() => {});
-    fetchWeapons().then(setAllWeapons).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -314,11 +311,7 @@ export default function ComputePage() {
   const loadoutPayload = makeLoadoutPayload();
   const searchParams = loadoutPayload
     ? {
-        ...buildSearchRequestFromLoadout(loadoutPayload, {
-          all_weapons: allWeapons as Record<string, unknown>[],
-          current_weapon: (weaponData ?? {}) as Record<string, unknown>,
-          equipment_catalog: equipmentCatalog as Record<string, Record<string, unknown>[]>,
-        }),
+        ...buildSearchRequestFromLoadout(loadoutPayload),
         top_n: searchSettings.topN,
         max_workers: searchSettings.workers,
       }
