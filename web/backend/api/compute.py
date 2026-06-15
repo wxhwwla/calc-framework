@@ -72,9 +72,8 @@ class PresetExportRequest(WebLoadoutBody):
     pass
 
 
-@router.post("/evaluate-loadout", response_model=EvaluateResponse)
-def evaluate_loadout(req: LoadoutPreviewRequest):
-    """经 LoadoutState 构建 context 后求值（与桌面确认路径对齐）。"""
+def _build_loadout_context(req: LoadoutPreviewRequest) -> dict[str, Any]:
+    """WebLoadoutBody → DAG adapter context。"""
     from games.endfield.data_loading.web_loadout_bridge import (
         build_adapter_context_from_loadout,
         build_loadout_state_from_web,
@@ -84,13 +83,19 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
     layout_mode = str(body.get("calc_mode") or body.get("calculation_mode") or "zone_snapshot")
     if layout_mode.endswith("_search"):
         layout_mode = "zone_snapshot"
+    loadout = build_loadout_state_from_web(
+        char_data=req.char_data,
+        weapon_data=req.weapon_data,
+        body=body,
+    )
+    return build_adapter_context_from_loadout(loadout, layout_calc_mode=layout_mode)
+
+
+@router.post("/evaluate-loadout", response_model=EvaluateResponse)
+def evaluate_loadout(req: LoadoutPreviewRequest):
+    """经 LoadoutState 构建 context 后求值（与桌面确认路径对齐）。"""
     try:
-        loadout = build_loadout_state_from_web(
-            char_data=req.char_data,
-            weapon_data=req.weapon_data,
-            body=body,
-        )
-        ctx = build_adapter_context_from_loadout(loadout, layout_calc_mode=layout_mode)
+        ctx = _build_loadout_context(req)
         pkg = _manager.load(ENDFIELD_ADAPTER_NAME)
         result = pkg.dag_service.evaluate(ctx)
         return EvaluateResponse(
@@ -98,6 +103,21 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
             node_values={k: v for k, v in result.node_values.items()},
             execution_order=result.execution_order,
         )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+class LoadoutContextResponse(BaseModel):
+    context: dict[str, Any]
+
+
+@router.post("/loadout-context", response_model=LoadoutContextResponse)
+def loadout_context(req: LoadoutPreviewRequest):
+    """返回配装 DAG 求值上下文（供浏览器 wasm 本地求值）。"""
+    try:
+        return LoadoutContextResponse(context=_build_loadout_context(req))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:

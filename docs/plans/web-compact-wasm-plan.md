@@ -1,6 +1,6 @@
 # Web 简化数据 + 浏览器计算（WASM）+ 多段反推 — 实施计划
 
-**状态**：阶段 1–4.1 代码已完成（2026-06-15）；AK `compact --apply` 需本地 parsed 数据  
+**状态**：阶段 1–4.2 代码已完成（2026-06-15）；AK `compact --apply` 需本地 parsed 数据  
 **关联**：[`search-perf-and-json-compaction-plan.md`](search-perf-and-json-compaction-plan.md)（磁盘 compact）、[`adr/0026-multi-segment-curve-blueprint.md`](../adr/0026-multi-segment-curve-blueprint.md)（N 段反推）、[`PythonAnywhere-部署指南.md`](../PythonAnywhere-部署指南.md)
 
 ---

@@ -255,6 +255,7 @@ def _handle_layout_compute(environ, start_response):
             compare,
             evaluate_loadout,
             evaluate_payload,
+            loadout_context,
             loadout_preview,
             loadout_snapshot,
             preset_export,
@@ -287,6 +288,10 @@ def _handle_layout_compute(environ, start_response):
 
             if path == "/api/compute/evaluate-loadout":
                 result = evaluate_loadout(LoadoutPreviewRequest(**payload))
+                return _json(start_response, result.model_dump())
+
+            if path == "/api/compute/loadout-context":
+                result = loadout_context(LoadoutPreviewRequest(**payload))
                 return _json(start_response, result.model_dump())
 
             if path == "/api/compute/preview":

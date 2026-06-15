@@ -26,8 +26,8 @@ Web 阶段 1–3 已完成：`成长参数` compact 下发、搜索 POST 瘦身�
 
 | 子阶段 | 范围 | 产出 |
 |--------|------|------|
-| **4.1**（当前） | `floor_linear` 曲线物化 TS 实现 + golden 夹具 + `calc_backend` 开关 | 公式层与 Python 对齐；canonical loadout golden |
-| **4.2** | TS `CallNode` 展开 + 块级 DAG 求值（无 Pyodide） | 浏览器内 `evaluate-loadout` 全输出 |
+| **4.1**（已完成） | `floor_linear` 曲线物化 TS 实现 + golden 夹具 + `calc_backend` 开关 | 公式层与 Python 对齐；canonical loadout golden |
+| **4.2**（已完成） | TS `CallNode` 展开 + DAG 拓扑求值 + `loadout-context` API | 浏览器内 `evaluate-loadout` 全输出（任意配装） |
 | **4.3** | 可选 Rust WASM 加速热点 / Worker 并行 | 体积与冷启动优化 |
 
 **明确拒绝（4.1）**：
@@ -52,11 +52,11 @@ flowchart TB
   end
   FE --> FLAG
   FLAG -->|api 默认| API
-  FLAG -->|wasm 4.1| MAT
-  MAT -->|4.1 canonical golden| GOLD[golden/canonical_loadout.json]
-  MAT --> DAG
-  DAG -->|4.2 全量| OUT[outputs]
-  FLAG -->|4.1 非 canonical 回退| API
+  FLAG -->|wasm| MAT
+  MAT --> CTX["/api/compute/loadout-context"]
+  CTX --> DAG
+  DAG --> OUT[outputs]
+  FLAG -->|失败回退| API
 ```
 
 ### 3.1 Golden 契约
@@ -92,8 +92,8 @@ flowchart TB
 
 **负面**
 
-- 4.1 `wasm` 模式对非 canonical 配装仍回退 API（文档须写明）。
-- 短期内存在 TS/Python 双实现（曲线层），需 golden 守护。
+- 4.2 `wasm` 模式对任意配装本地求值；context 仍依赖 API（4.2b 可端口离线 context）。
+- 短期内存在 TS/Python 双实现（曲线 + DAG 层），需 golden 守护。
 
 ---
 

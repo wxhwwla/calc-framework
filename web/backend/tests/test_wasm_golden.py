@@ -63,6 +63,41 @@ class TestWasmGolden(unittest.TestCase):
         if "基础攻击" in ctx_weapon:
             self.assertAlmostEqual(baked, float(ctx_weapon["基础攻击"]), delta=0.1)
 
+    def test_loadout_context_endpoint(self) -> None:
+        from api.admin import RateLimitMiddleware
+        from fastapi.testclient import TestClient
+
+        from web.backend.main import app
+
+        RateLimitMiddleware.enabled = False
+        client = TestClient(app)
+        payload = self.golden["payload"]
+        resp = client.post("/api/compute/loadout-context", json=payload)
+        self.assertEqual(resp.status_code, 200, resp.text)
+        ctx = resp.json().get("context") or {}
+        golden_ctx = self.golden.get("context") or {}
+        weapon = ctx.get("weapon") or {}
+        golden_weapon = golden_ctx.get("weapon") or {}
+        if "基础攻击" in golden_weapon:
+            self.assertAlmostEqual(
+                float(weapon["基础攻击"]),
+                float(golden_weapon["基础攻击"]),
+                delta=0.1,
+            )
+
+    def test_python_dag_eval_matches_golden(self) -> None:
+        from api.adapter_assets import get_adapter_dag
+        from calc_framework.dag.engine import evaluate_graph
+        from calc_framework.dag.graph_types import validate_graph
+
+        dag_dict = get_adapter_dag("endfield")
+        graph = validate_graph(dag_dict)
+        ctx = self.golden.get("context") or {}
+        result = evaluate_graph(graph, ctx)
+        for key, expected in self.golden["outputs"].items():
+            self.assertIn(key, result.outputs)
+            self.assertAlmostEqual(float(result.outputs[key]), float(expected), places=4, msg=key)
+
     def test_node_verify_script(self) -> None:
         script = _REPO / "web" / "wasm" / "verify_golden.mjs"
         if not script.is_file():
