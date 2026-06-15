@@ -1,0 +1,295 @@
+# 全库文档化改进计划
+
+> 制定日期：2026-06-16
+> 状态：📋 计划阶段
+
+---
+
+## 1. 现状总览
+
+### 1.1 评估方法
+
+对仓库所有 Python 子包的模块级文档字符串（docstring）、函数/类级 docstring、README 文件、`__all__` 导出声明进行全量扫描。
+
+### 1.2 量化结果
+
+| 维度 | 覆盖率 | 评估 |
+|------|:------:|:----:|
+| **模块级 docstring** | ~98% | ✅ 优秀 |
+| **函数/类级 docstring** | 10%~77% | ⚠️ 子包间差异大 |
+| **README 文件** | 主要目录有 | ❌ `web/` 缺失 |
+| **`__all__` 声明** | 大部分有 | ⚠️ ~18 个包是空桩 |
+
+### 1.3 各子包函数/类级 docstring 覆盖率
+
+| 优先级 | 子包 | 覆盖率 | 文件数 | 函数/类数 | 缺口评估 |
+|:------:|------|:------:|:-----:|:---------:|:--------:|
+| **P0** | `games/endfield/calc/` | **9.7%** | 117 | 483 | 🔴 严重不足 — 核心计算引擎 |
+| **P1** | `games/endfield/gui/` | **32.1%** | 74 | 427 | 🔴 偏低 — Qt widget 方法缺说明 |
+| **P2** | `web/backend/` | **40.6%** | 44 | 522 | 🟠 偏低 — API 路由和模型缺说明 |
+| **P3** | `framework/src/calc_framework/` | **50.6%** | 109 | 895 | 🟡 中等 — DAG 引擎等核心模块 |
+| **P4** | `games/endfield/data_loading/` | **59.1%** | 13 | 93 | 🟡 中等 |
+| **P5** | `scripts/` | **76.6%** | 22 | 128 | ✅ 较好 |
+| **P6** | `tools/` | **77.0%** | 154 | 931 | ✅ 较好 |
+
+---
+
+## 2. 目标定义
+
+### 2.1 量化目标
+
+| 指标 | 当前 | 目标 |
+|------|:----:|:----:|
+| 模块级 docstring 覆盖率 | ~98% | ≥99% |
+| `calc/` 函数/类级 docstring | 9.7% | ≥60% |
+| `gui/` 函数/类级 docstring | 32.1% | ≥50% |
+| `web/backend/` 函数/类级 docstring | 40.6% | ≥60% |
+| `framework/` 函数/类级 docstring | 50.6% | ≥65% |
+| 整体函数/类级 docstring | ~45% | ≥60% |
+| 缺少 README 的目录 | 1 个（`web/`） | 0 个 |
+| `__all__` 空桩包 | ~18 个 | ≤5 个 |
+
+### 2.2 质量标准
+
+所有新增/补写的 docstring 必须符合以下标准（来自 `docs/代码结构规范.md` §16）：
+
+**Google 风格（中文）**：
+
+```
+def function_name(param1: type, param2: type) -> return_type:
+    """功能描述。
+
+    详细说明（如适用）。
+
+    参数:
+        param1: 参数说明
+        param2: 参数说明
+
+    返回:
+        返回值说明
+
+    Raises:
+        SomeError: 何时抛出
+    """
+```
+
+**必须写**：
+- 公共 API（跨模块 import、`__all__` 导出）
+- FastAPI 路由与 Pydantic 模型
+- 长函数（函数体不含 docstring 约 ≥ 40 行）
+- 核心数据类（dataclass、TypedDict）
+
+**可不写**：
+- 模块内 `_` 前缀短 helper
+- ≤3 行有效代码的 trivial wrapper
+- 名称已自解释的私有小函数
+
+**模块 docstring 位置**：`# SPDX-License-Identifier` 之后、第一个 import 之前。
+
+---
+
+## 3. 任务分解
+
+### 阶段 A：修复既有的 docstring 错误 🐛
+
+| ID | 文件 | 问题 | 修复方式 |
+|:--:|------|------|---------|
+| A-1 | `games/endfield/calc/damage/execute.py:30,35` | docstring 写在 return 之后（死代码） | 移到 def 下一行 |
+| A-2 | `games/endfield/calc/damage/execute.py:10,19` | 模块级常量缺少说明 | 加 docstring / 注释 |
+| A-3 | 全库扫描 | 搜索 docstring 在 return 之后的模式 | `(?<=return).*"""..."""` 正则扫描 |
+
+**预估工作量**：~0.5 天
+
+---
+
+### 阶段 B：补充 `calc/` 子包 docstring 🔴 最高优先级
+
+`games/endfield/calc/` 子包（117 个文件、483 个函数/类）仅有 9.7% 的 docstring 覆盖率。
+
+按子模块拆分：
+
+| 子模块 | 文件数 | 函数/类数 | 当前覆盖率 | 目标 | 预估工时 |
+|--------|:-----:|:---------:|:----------:|:----:|:--------:|
+| **`calc/dag_adapter/`** — DAG 桥接（核心链路） | ~10 | ~50 | ~15% | ≥70% | 1 天 |
+| **`calc/damage/`** — 伤害乘区引擎 | ~15 | ~80 | ~10% | ≥65% | 1.5 天 |
+| **`calc/loadout/`** — 配装搜索 | ~20 | ~90 | ~5% | ≥60% | 2 天 |
+| **`calc/search/`** — 搜索框架 | ~25 | ~100 | ~10% | ≥60% | 2 天 |
+| **`calc/multiplicative_zones/`** — 15 乘区 | ~10 | ~50 | ~10% | ≥65% | 1 天 |
+| **`calc/skills/`** — 技能系统 | ~10 | ~40 | ~8% | ≥60% | 1 天 |
+| **`calc/core/`** — 核心工具（曲线/查询等） | ~10 | ~30 | ~15% | ≥60% | 0.5 天 |
+| **`calc/manual_buff/`** — 手动 Buff | ~5 | ~15 | ~10% | ≥60% | 0.5 天 |
+| **`calc/zone_snapshot/`** — 乘区快照 | ~5 | ~15 | ~10% | ≥60% | 0.5 天 |
+| **`calc/survival/`** — 生存估算 | ~3 | ~10 | ~20% | ≥60% | 0.5 天 |
+| **`calc/equipment/`** — 装备词条/剪枝 | ~4 | ~8 | ~15% | ≥60% | 0.5 天 |
+
+**小计**：~11 天
+
+---
+
+### 阶段 C：补充 `gui/` 子包 docstring 🟠
+
+`games/endfield/gui/`（74 个文件、427 个函数/类）覆盖率 32.1%。
+
+| 子模块 | 说明 | 优先级 | 预估工时 |
+|--------|------|:------:|:--------:|
+| `gui/app/` — 应用状态/确认编排/预设管理 | 核心逻辑，方法多 | P1 | 2 天 |
+| `gui/controls/` — 控件（固定配装/多技能/搜索/敌人面板等） | 交互密集 | P1 | 2 天 |
+| `gui/presentation/` — 展示文案/预览/仪表盘 | 数据展示 | P2 | 1 天 |
+| `gui/panels/` — 选择面板 | 用户选择交互 | P2 | 1 天 |
+| `gui/shell/` — 主窗口 App | 顶层编排 | P1 | 1 天 |
+| `gui/shared/` — 弹窗/字体/图表主题 | 公用工具 | P2 | 0.5 天 |
+| `gui/layout/` — 布局常量 | 配置常量 | P3 | 0.5 天 |
+
+**小计**：~8 天
+
+---
+
+### 阶段 D：补充 `web/backend/` docstring 🟠
+
+`web/backend/`（44 个文件、522 个函数/类）覆盖率 40.6%。
+
+| 模块 | 说明 | 优先级 | 预估工时 |
+|------|------|:------:|:--------:|
+| `api/compute.py` — 计算 API | FastAPI 路由 + Pydantic 模型 | P1 | 0.5 天 |
+| `api/search.py` — 搜索 API | 搜索请求/响应模型 | P1 | 0.5 天 |
+| `api/data.py` — 数据 API | 角色/武器/装备 CRUD | P1 | 0.5 天 |
+| `api/adapters.py` — 适配器 API | 适配器查询 | P2 | 0.5 天 |
+| `api/layout.py` — 布局 API | UI 布局接口 | P2 | 0.5 天 |
+| `api/survival.py` — 生存 API | 生存估算接口 | P2 | 0.5 天 |
+| `api/manual_buff.py` — 手动 Buff API | Buff 微调接口 | P2 | 0.5 天 |
+| `api/admin.py` — 管理 API | Key/用量管理 | P2 | 0.5 天 |
+| `api/hub.py` — Hub API | 配置包市场 | P3 | 0.5 天 |
+| `api/generator.py` — 生成器 API | 适配器生成 | P3 | 0.5 天 |
+| `api/ai.py` — AI 配装 API | 智能配装 | P3 | 0.5 天 |
+| `main.py` / `asgi.py` — 入口 | 服务器配置 | P2 | 0.5 天 |
+
+**小计**：~6 天
+
+---
+
+### 阶段 E：补充 `framework/` docstring 🟡
+
+`framework/src/calc_framework/`（109 个文件、895 个函数/类）覆盖率 50.6%。
+
+| 模块 | 当前覆盖率 | 目标 | 预估工时 |
+|------|:---------:|:----:|:--------:|
+| `dag/` — DAG 引擎核心 | ~55% | ≥75% | 2 天 |
+| `search/` — 搜索/枚举引擎 | ~50% | ≥70% | 1.5 天 |
+| `ui/` — UI 层（ComputeSheet/Viewer） | ~40% | ≥60% | 2 天 |
+| `graph_editor/` — 图编辑器 | ~35% | ≥55% | 1.5 天 |
+| `inverse/` — 逆推引擎 | ~65% | ≥75% | 1 天 |
+| `config/` — 适配器管理 | ~70% | ≥80% | 0.5 天 |
+| `data/` — 数据层 | ~60% | ≥75% | 0.5 天 |
+| `plugin/` — 插件系统 | ~55% | ≥70% | 0.5 天 |
+| `publish/` — 发布系统 | ~60% | ≥75% | 0.5 天 |
+| `dev_toolkit/` — 开发者工具箱 | ~50% | ≥65% | 1 天 |
+
+**小计**：~11 天
+
+---
+
+### 阶段 F：补 README 📄
+
+| ID | 路径 | 当前状态 | 任务 | 预估工时 |
+|:--:|------|:--------:|------|:--------:|
+| F-1 | `web/README.md` | ❌ 缺失 | 创建 README，说明前后端架构、构建方式、开发流程 | 0.5 天 |
+| F-2 | `web/frontend/README.md` | ❌ 缺失（可选） | 可选：创建 React 前端 README | 0.5 天 |
+| F-3 | `web/backend/README.md` | ❌ 缺失（可选） | 可选：创建 FastAPI 后端 README | 0.5 天 |
+
+---
+
+### 阶段 G：补 `__all__` 空桩 📦
+
+约 18 个包的 `__all__` 是空 `list[str] = []`，应补充实际导出符号。
+
+| ID | 路径 | 当前 | 任务 | 预估工时 |
+|:--:|------|:----:|------|:--------:|
+| G-1 | `games/endfield/calc/core/__init__.py` | 空桩 | 补实际导出 | 0.3 天 |
+| G-2 | `games/endfield/calc/damage/__init__.py` | 空桩 | 补实际导出 | 0.3 天 |
+| G-3 | `games/endfield/calc/equipment/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-4 | `games/endfield/calc/loadout/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-5 | `games/endfield/calc/multi_skill/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-6 | `games/endfield/calc/search/evaluate/__init__.py` | 空桩 | 补实际导出 | 0.3 天 |
+| G-7 | `games/endfield/calc/search/run/__init__.py` | 空桩 | 补实际导出 | 0.3 天 |
+| G-8 | `games/endfield/calc/search/plan/__init__.py` | 空桩 | 补实际导出 | 0.3 天 |
+| G-9 | `games/endfield/calc/skills/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-10 | `games/endfield/gui/shared/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-11 | `games/endfield/gui/legal/__init__.py` | 空桩 | 补实际导出或删 | 0.1 天 |
+| G-12 | `games/endfield/gui/controls/multi_skill/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-13 | `games/endfield/gui/layout/__init__.py` | 空桩 | 补实际导出 | 0.1 天 |
+| G-14 | `games/endfield/gui/presentation/total_damage_panel.py` | 缺模块 docstring | 补模块 docstring | 0.1 天 |
+| G-15 | `web/backend/__init__.py` | 空桩 | 补实际导出 | 0.3 天 |
+| G-16 | `web/backend/hub/__init__.py` | 空桩 | 补实际导出 | 0.2 天 |
+| G-17 | `scripts/__init__.py` | 空桩 | 补实际导出 | 0.1 天 |
+| G-18 | `scripts/tools/__init__.py` | 空桩 | 补实际导出或删 | 0.1 天 |
+
+**小计**：~3.5 天
+
+---
+
+## 4. 总体计划
+
+### 4.1 执行顺序
+
+```
+阶段 A（修复 docstring 错误）→ 风险最低，先排除
+    │
+    ▼
+阶段 B（calc/ 补 docstring）→ 最大缺口，最多时间
+    │
+    ▼
+阶段 C（gui/ 补 docstring）→ 次大缺口
+    │
+    ▼
+阶段 E（framework/ 补 docstring）→ 框架核心
+    │
+    ▼
+阶段 D（web/backend/ 补 docstring）→ API 层
+    │
+    ▼
+阶段 G（补 __all__）→ 批量可并行
+    │
+    ▼
+阶段 F（补 README）→ 收尾
+```
+
+### 4.2 预估总工时
+
+| 阶段 | 描述 | 预估工时 |
+|:----:|------|:--------:|
+| A | 修复既有 docstring 错误 | ~0.5 天 |
+| B | 补充 `calc/` docstring | ~11 天 |
+| C | 补充 `gui/` docstring | ~8 天 |
+| D | 补充 `web/backend/` docstring | ~6 天 |
+| E | 补充 `framework/` docstring | ~11 天 |
+| F | 补 README | ~0.5 天 |
+| G | 补 `__all__` 空桩 | ~3.5 天 |
+| **合计** | | **~40.5 天** |
+
+> 注：这是单人全速工作的粗估。实际执行中：
+> - 简单文件可批量并行处理
+> - 部分文件可能已有基本注释，补成 docstring 格式即可
+> - 模块级 docstring 已基本完备，节省了大量工作
+
+### 4.3 执行策略
+
+1. **按模块批次执行**：每次处理一个子模块的所有文件，避免上下文切换
+2. **先扫关键路径**：先补最核心的计算链路（dag_adapter → damage → loadout/search）
+3. **优先补公共 API**：`__all__` 导出的函数、跨模块引用的函数优先
+4. **trivial wrapper 跳过**：≤3 行的简单包装函数不写 docstring
+5. **5 文件一批**：每次补 5 个文件的 docstring 后让用户确认进度
+6. **测试保障**：补完后运行该模块的测试，确保不破坏任何逻辑
+
+---
+
+## 5. 验收标准
+
+- [ ] 阶段 A：Scan 工具确认无 docstring 在 return 之后
+- [ ] 阶段 B：`calc/` 函数/类 docstring 覆盖率 ≥60%
+- [ ] 阶段 C：`gui/` 函数/类 docstring 覆盖率 ≥50%
+- [ ] 阶段 D：`web/backend/` 函数/类 docstring 覆盖率 ≥60%
+- [ ] 阶段 E：`framework/` 函数/类 docstring 覆盖率 ≥65%
+- [ ] 阶段 F：`web/README.md` 已创建并描述前后端架构
+- [ ] 阶段 G：所有 `__init__.py` 的 `__all__` 填写实际导出符号
+- [ ] 全库测试通过（`pytest` 全量）
+- [ ] `ruff check` 零新增错误

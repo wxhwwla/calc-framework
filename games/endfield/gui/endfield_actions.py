@@ -45,8 +45,8 @@ def _ensure_adapter():
         _adapter_pkg = AdapterPackage(str(_FRAMEWORK_ADAPTER))
         layout_path = _FRAMEWORK_ADAPTER / "ui" / "layout.json"
         _adapter_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
-    return _adapter_pkg, _adapter_layout
     """ensure adapter。"""
+    return _adapter_pkg, _adapter_layout
 
 
 class ActionsMixin:
@@ -114,8 +114,8 @@ class ActionsMixin:
         )
         if loadout is None:
             return None
-        return DisplayRequest(loadout=loadout, equipment_catalog={}, preview_weapon_candidates=())
         """build request。"""
+        return DisplayRequest(loadout=loadout, equipment_catalog={}, preview_weapon_candidates=())
 
     def _on_confirm(self) -> None:
         if getattr(self, "_confirm_in_progress", False):
@@ -353,8 +353,8 @@ class ActionsMixin:
 
         def _read_counts():
             dock = self.control_dock
-            return dock.read_skill_counts(), dock.read_physical_abnormal_counts(), dock.read_spell_abnormal_counts()
             """read counts。"""
+            return dock.read_skill_counts(), dock.read_physical_abnormal_counts(), dock.read_spell_abnormal_counts()
 
         dialog = QtManualBuffDialog(
             cast(QWidget, self),

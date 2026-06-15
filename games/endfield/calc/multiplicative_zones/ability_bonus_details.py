@@ -134,6 +134,7 @@ def calculate_ability_bonus_with_details(
     if weapon:
 
         def _resolve_level(attr_name: str) -> int:
+            """根据属性名查找对应特殊技能等级。"""
             if attr_name == sa1_name:
                 return sa1_level
             elif attr_name == sa2_name:
@@ -141,13 +142,13 @@ def calculate_ability_bonus_with_details(
             elif attr_name == sa3_name:
                 return sa3_level
             return 1
-            """resolve level。"""
 
         def _should_skip(attr_name: str) -> bool:
-            return bool(attr_name == sa3_name and sa3_name and sa3_level == 0)
             """should skip。"""
+            return bool(attr_name == sa3_name and sa3_name and sa3_level == 0)
 
         def _classify(attr_name: str) -> str:
+            """将效果名分类为内部类型（main_flat/sub_flat/main_pct/sub_pct/both_pct）。"""
             if attr_name == "主能力值+":
                 return "main_flat"
             if attr_name == "副能力值+":
@@ -163,7 +164,6 @@ def calculate_ability_bonus_with_details(
             if attr_name == "全能力+":
                 return "both_pct"
             return ""
-            """classify。"""
 
         # 1. 从 normal_skills 列表中获取加成
         for skill in weapon.get("normal_skills", []):

@@ -11,8 +11,8 @@ CORROSION_INITIAL_RES_SHRED: tuple[float, ...] = (3.6, 4.8, 6.0, 7.2)
 
 
 def _level_index(calc_level: int) -> int:
-    return min(max(1, int(calc_level)), 4) - 1
     """level index。"""
+    return min(max(1, int(calc_level)), 4) - 1
 
 
 def conductive_spell_vulnerability(
@@ -114,7 +114,9 @@ def build_spell_attached_effects(
             corrosion_total_resistance_shred,
         )
 
-        duration = float(corrosion_duration_seconds) if corrosion_duration_seconds is not None else CORROSION_DURATION_SEC  # noqa: E501
+        duration = (
+            float(corrosion_duration_seconds) if corrosion_duration_seconds is not None else CORROSION_DURATION_SEC
+        )
         shred = corrosion_total_resistance_shred(
             calc_level,
             elapsed_seconds=duration,
@@ -129,5 +131,5 @@ def build_spell_attached_effects(
                 raw_text=f"全属性抗性-{shred:.2f}",
             )
         )
-    return out
     """build spell attached effects。"""
+    return out

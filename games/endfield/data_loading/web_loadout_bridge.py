@@ -30,8 +30,8 @@ def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:
             )
         if parsed:
             out[str(key)] = parsed
-    return out
     """parse manual buffs。"""
+    return out
 
 
 def _weapon_selection_from_web(
@@ -88,8 +88,8 @@ def _enemy_fields(body: dict[str, Any]) -> dict[str, Any]:
     for key in ENEMY_PARAM_FIELDS:
         if key in body:
             enemy[key] = body[key]
-    return enemy
     """enemy fields。"""
+    return enemy
 
 
 def _find_equipment_row(
@@ -124,8 +124,8 @@ def resolve_fixed_loadout_selection(
             return item
         if isinstance(item, str) and item:
             return _find_equipment_row(item, catalog_key, equipment_catalog)
-        return None
         """slot value。"""
+        return None
 
     return FixedLoadoutSelection(
         chest=_slot_value("chest", "chest"),

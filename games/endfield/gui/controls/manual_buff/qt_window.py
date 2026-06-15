@@ -40,8 +40,8 @@ def _format_key_label(key: str) -> str:
     parts = key.rsplit(":", 1)
     if len(parts) == 2:
         return f"{parts[0]} 第{parts[1]}次"
-    return key
     """format key label。"""
+    return key
 
 
 class QtManualBuffDialog(QDialog):

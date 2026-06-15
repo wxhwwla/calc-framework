@@ -73,6 +73,17 @@ class EndfieldContextLoader(DataContextLoader):
     """
 
     def build_context(self, **kwargs: Any) -> dict[str, Any]:
+        """从原始角色/武器数据构建 DAG 求值上下文。
+
+        委托现有的属性乘区/能力值加成/最终攻击力引擎做预处理，
+        然后将中间结果填入框架 DataContext。
+
+        Args:
+            kwargs: 含 character/weapon/char_level/weapon_level/trust_level/bonuses_kwargs 等。
+
+        Returns:
+            DataContext 兼容的嵌套字典，可直接传入 DAGService.evaluate()。
+        """
         char = kwargs["character"]
         weapon = kwargs.get("weapon")
         char_level = kwargs.get("char_level", 1)
@@ -174,7 +185,6 @@ class EndfieldContextLoader(DataContextLoader):
                 "武器精炼附加攻击力加成": refine_bonus["附加攻击力+"],
             },
         )
-        """build context。"""
 
 
 def _run_existing_engines(
@@ -188,6 +198,14 @@ def _run_existing_engines(
     equipment_stat_bonus: dict[str, Any] | None = None,
     equipment_attack_percent: float = 0.0,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """运行现有的属性乘区/能力值加成/最终攻击力引擎，返回预处理结果。
+
+    使用旧引擎（非 DAG 引擎）做重型预处理（装备词条解析、武器技能分类等），
+    将结果返回给 ``EndfieldContextLoader.build_context`` 填入标准化 DataContext。
+
+    Returns:
+        (属性乘区结果dict, 能力值加成结果dict, 最终攻击力结果dict)
+    """
     from games.endfield.calc.multiplicative_zones.ability_bonus_details import (
         calculate_ability_bonus_with_details,
     )
@@ -225,4 +243,3 @@ def _run_existing_engines(
         **bonuses_kwargs,
     )
     return attr, ability, final
-    """run existing engines。"""

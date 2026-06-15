@@ -304,14 +304,15 @@ def _ensure_dag() -> AdapterPackage:
 
 
 def _generate_dag_json() -> None:
+    """生成终末地 DAG JSON 并保存到框架配置目录。"""
     from games.endfield.calc.dag_adapter.config import generate, save_dag
 
     g = generate()
     save_dag(g)
-    """generate dag json。"""
 
 
 def _write_default_meta() -> None:
+    """写入默认 meta.json，供 DAG 适配器首次加载使用。"""
     import json
 
     (_ADAPTER_DIR / "meta.json").write_text(
@@ -328,4 +329,3 @@ def _write_default_meta() -> None:
         ),
         encoding="utf-8",
     )
-    """write default meta。"""

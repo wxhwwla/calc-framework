@@ -11,10 +11,7 @@ from games.endfield.calc.manual_buff.physical import (
 )
 from games.endfield.calc.manual_buff.spell_params import SPELL_ABNORMAL_PARAM_ROWS
 
-ABNORMAL_MATRIX_HINT = (
-    "列 L0–L4 对应计算异常等级 1–5（消耗层数）；"
-    "倒地/击飞仅 L0–L1。填入各档触发次数。"
-)
+ABNORMAL_MATRIX_HINT = "列 L0–L4 对应计算异常等级 1–5（消耗层数）；倒地/击飞仅 L0–L1。填入各档触发次数。"
 
 
 @dataclass(frozen=True)
@@ -57,8 +54,8 @@ def spell_abnormal_matrix_specs() -> tuple[AbnormalMatrixRowSpec, ...]:
 
 
 def matrix_column_labels(*, max_ui_level: int = 4) -> tuple[str, ...]:
-    return tuple(ui_level_column_label(i) for i in range(max_ui_level + 1))
     """matrix column labels。"""
+    return tuple(ui_level_column_label(i) for i in range(max_ui_level + 1))
 
 
 def read_abnormal_matrix_counts(

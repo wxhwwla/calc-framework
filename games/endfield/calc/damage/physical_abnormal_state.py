@@ -97,13 +97,13 @@ def ordered_rotation_keys(
         return []
 
     def sort_key(key: str) -> tuple[int, int, str]:
+        """轮转顺序排序键。"""
         skill_type, seg_idx = parse_segment_key(key)
         try:
             order = SKILL_TYPE_ORDER.index(skill_type)
         except ValueError:
             order = 99
         return (order, seg_idx, key)
-        """sort key。"""
 
     if preferred_order:
         keys = [k for k in preferred_order if k in active]
@@ -136,7 +136,5 @@ def build_rotation_hit_index(
     """(段键, 段内 1-based 次数) → 全局 1-based 命中序号。"""
     return {
         (key, occurrence): global_hit
-        for key, occurrence, global_hit in iter_rotation_hits(
-            skill_counts, preferred_order=preferred_order
-        )
+        for key, occurrence, global_hit in iter_rotation_hits(skill_counts, preferred_order=preferred_order)
     }

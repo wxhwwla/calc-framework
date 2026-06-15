@@ -207,8 +207,8 @@ class QtControlDock(BuilderMixin, QWidget):
         def _make_tool_btn(text: str) -> QPushButton:
             b = self._make_btn(text, _SECONDARY_BTN_HEIGHT)
             ms_lay.addWidget(b)
-            return b
             """make tool btn。"""
+            return b
 
         self._export_btn = _make_tool_btn("导出配装 (.json)")
         self._import_btn = _make_tool_btn("导入配装 (.json)")
@@ -300,8 +300,8 @@ class QtControlDock(BuilderMixin, QWidget):
             for row in catalog.get(catalog_key) or []:
                 if str(row.get("名称") or "") == name:
                     return row
-            return None
             """pick。"""
+            return None
 
         return FixedLoadoutSelection(
             chest=_pick(0, "chest"),

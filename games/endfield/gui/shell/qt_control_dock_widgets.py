@@ -80,8 +80,8 @@ class ComboRow(QWidget):
         """初始化实例。"""
 
     def current(self) -> str:
-        return self.combo.currentText()
         """current。"""
+        return self.combo.currentText()
 
     """ComboRow。"""
 
@@ -116,8 +116,8 @@ def build_abnormal_matrix(
             grid.addWidget(edit, i, j + 1)
             row_edits.append(edit)
         edits_by_row[row_name] = row_edits
-    return w, edits_by_row
     """build abnormal matrix。"""
+    return w, edits_by_row
 
 
 def build_manual_abnormal_matrix(
@@ -178,5 +178,5 @@ def read_abnormal_edits(
                 total += 0
         if i < len(keys):
             result[keys[i]] = total
-    return result
     """read abnormal edits。"""
+    return result

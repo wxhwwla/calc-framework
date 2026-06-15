@@ -42,8 +42,8 @@ def _make_slider(vmin: int, vmax: int, val: int) -> QSlider:
     s.setMaximum(vmax)
     s.setValue(val)
     s.setStyleSheet(_SLIDER_STYLE)
-    return s
     """make slider。"""
+    return s
 
 
 def _make_val_lbl(text: str, font: QFont) -> QLabel:
@@ -52,8 +52,8 @@ def _make_val_lbl(text: str, font: QFont) -> QLabel:
     lbl.setStyleSheet(_VALUE_STYLE)
     lbl.setFixedWidth(30)
     lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-    return lbl
     """make val lbl。"""
+    return lbl
 
 
 # ═══════════════════════════════════════════════════════
@@ -250,8 +250,8 @@ class QtSpecialAbilityPanel(QWidget):
                 break
             if key.endswith("+") and isinstance(weapon_data.get(key), list):
                 out.append(key)
-        return out[:3]
         """extract bonus attributes。"""
+        return out[:3]
 
     @staticmethod
     def _read_special_slots(weapon_data: dict[str, Any]) -> list[tuple]:
@@ -282,8 +282,8 @@ class QtSpecialAbilityPanel(QWidget):
                 result.append((available, name, 1, max_stack))
             else:
                 result.append((False, "", 1, 1))
-        return result
         """read special slots。"""
+        return result
 
     # ── 对外读取 ──────────────────────────────────
 
@@ -292,24 +292,24 @@ class QtSpecialAbilityPanel(QWidget):
         if not self._normal_rows[0]["row_w"].isHidden():
             txt = self._normal_rows[0]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
-        return ""
         """current special ability 1 name。"""
+        return ""
 
     @property
     def current_special_ability_2_name(self) -> str:
         if not self._normal_rows[1]["row_w"].isHidden():
             txt = self._normal_rows[1]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
-        return ""
         """current special ability 2 name。"""
+        return ""
 
     @property
     def current_special_ability_3_name(self) -> str:
         if not self._normal_rows[2]["row_w"].isHidden():
             txt = self._normal_rows[2]["name_lbl"].text()
             return txt.split("·", 1)[-1] if "·" in txt else ""
-        return ""
         """current special ability 3 name。"""
+        return ""
 
     def get_normal_skill_level(self, idx: int) -> int:
         if idx < 0 or idx > 2:
@@ -317,8 +317,8 @@ class QtSpecialAbilityPanel(QWidget):
         rd = self._normal_rows[idx]
         if not rd["row_w"].isHidden():
             return rd["slider"].value()
-        return 0
         """获取normal skill level。"""
+        return 0
 
     def get_special_skill_level(self, idx: int) -> int:
         if idx < 0 or idx > 1:
@@ -326,8 +326,8 @@ class QtSpecialAbilityPanel(QWidget):
         rd = self._special_rows[idx]
         if not rd["row_w"].isHidden():
             return rd["lvl_slider"].value()
-        return 1
         """获取special skill level。"""
+        return 1
 
     def get_special_skill_stack(self, idx: int) -> int:
         if idx < 0 or idx > 1:
@@ -335,24 +335,24 @@ class QtSpecialAbilityPanel(QWidget):
         rd = self._special_rows[idx]
         if not rd["row_w"].isHidden() and not rd["stk_slider"].isHidden():
             return rd["stk_slider"].value()
-        return 0
         """获取special skill stack。"""
+        return 0
 
     @property
     def current_weapon_special_name(self) -> str:
         rd = self._special_rows[0]
         if not rd["row_w"].isHidden():
             return rd["name_lbl"].text()
-        return ""
         """current weapon special name。"""
+        return ""
 
     @property
     def current_weapon_special_2_name(self) -> str:
         rd = self._special_rows[1]
         if not rd["row_w"].isHidden():
             return rd["name_lbl"].text()
-        return ""
         """current weapon special 2 name。"""
+        return ""
 
     def apply_skill_preset(self, level: int) -> None:
         clamped = max(1, min(level, 9))

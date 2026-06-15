@@ -33,8 +33,8 @@ def _resolve_enemy_eval(
 ) -> EnemyEvalParams:
     if enemy_eval is not None:
         return enemy_eval
-    return EnemyEvalParams.from_defense_only(enemy_defense)
     """resolve enemy eval。"""
+    return EnemyEvalParams.from_defense_only(enemy_defense)
 
 
 def build_single_skill_search_preview_lines(
@@ -327,5 +327,5 @@ def _build_single_skill_search_preview_lines_impl(
             lines.append(f"      技能 {score.final_damage:.1f} | 异常 {abnormal_total:.1f} | 合计 {merged:.1f}")
     if not result.top_results:
         lines.append("无可用结果，请检查装备数据。")
-    return lines
     """build single skill search preview lines impl。"""
+    return lines

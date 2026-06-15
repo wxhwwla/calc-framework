@@ -170,8 +170,8 @@ class BuilderMixin:
         outer = QVBoxLayout(col)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
-        return col
         """build col search。"""
+        return col
 
     def _build_col_multi(self) -> QWidget:
         col = QWidget()
@@ -279,8 +279,8 @@ class BuilderMixin:
         outer = QVBoxLayout(col)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
-        return col
         """build col multi。"""
+        return col
 
     def _build_segment_rows_fallback(self) -> None:
         """初始占位：3 个基础段次数输入。"""

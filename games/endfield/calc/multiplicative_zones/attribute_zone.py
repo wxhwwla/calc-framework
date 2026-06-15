@@ -31,8 +31,6 @@
 
 """
 
-
-
 import warnings
 from typing import Any
 
@@ -41,7 +39,6 @@ from .base_zone import BaseZone
 
 
 class AttributeMultiplierZone(BaseZone):
-
     """
 
     能力乘区基类
@@ -52,10 +49,7 @@ class AttributeMultiplierZone(BaseZone):
 
     """
 
-
-
     def __init__(self, attribute_name: str, base_value: float = 0.0):
-
         super().__init__(name=f"{attribute_name}乘区", description=f"{attribute_name}属性乘区")
 
         self.attribute_name = attribute_name
@@ -63,23 +57,15 @@ class AttributeMultiplierZone(BaseZone):
         self.set_params(**{attribute_name: base_value})
         """初始化实例。"""
 
-
-
     def calculate(self) -> float:
-
-        return self._params.get(self.attribute_name, 0.0)
         """执行计算。
-
-        返回:
-            计算结果。
+                返回:
+        计算结果。
         """
-
-
-
+        return self._params.get(self.attribute_name, 0.0)
 
 
 class AttributeZoneManager:
-
     """
 
     能力乘区管理器
@@ -100,25 +86,15 @@ class AttributeZoneManager:
 
     """
 
-
-
     ATTRIBUTES = ["力量", "敏捷", "智识", "意志"]
 
-
-
     def __init__(self):
-
         self._zones: dict[str, AttributeMultiplierZone] = {
-
             attr: AttributeMultiplierZone(attr) for attr in self.ATTRIBUTES
-
         }
         """初始化实例。"""
 
-
-
     def setup_from_data(self, character: dict[str, Any] | None, weapon: dict[str, Any] | None, level: int = 1) -> None:
-
         """
 
         从角色和武器数据设置乘区
@@ -136,115 +112,72 @@ class AttributeZoneManager:
         """
 
         if character is None:
-
             return
-
-
 
         self._setup_from_character(character, level)
 
         if weapon is not None:
-
             self._setup_from_weapon(character, weapon)
 
-
-
     def _setup_from_character(self, character: dict[str, Any], level: int) -> None:
-
         """从角色数据设置基础属性"""
 
         level_index = level - 1
 
-
-
         for attr in self.ATTRIBUTES:
-
             if attr in character and isinstance(character[attr], list):
-
                 attr_list = character[attr]
 
                 if 0 <= level_index < len(attr_list):
-
                     value = float(attr_list[level_index])
 
                 else:
-
                     value = 0.0
 
             else:
-
                 value = 0.0
 
             self._zones[attr].set_params(**{attr: value})
 
-
-
     def _setup_from_weapon(self, character: dict[str, Any], weapon: dict[str, Any]) -> None:
-
         """从武器数据添加属性加成（仅平值，百分比由 ability_bonus 链处理）"""
 
         main_attr = character.get("主能力", "")
 
         sub_attr = character.get("副能力", "")
 
-
-
         for attr in self.ATTRIBUTES:
-
             current_value = self._zones[attr]._params.get(attr, 0.0)
-
-
 
             # 从 normal_skills 列表中获取平值加成
 
             for skill in weapon.get("normal_skills", []):
-
                 if not isinstance(skill, dict):
-
                     continue
 
                 effect = skill.get("effect", "")
 
                 if (
-
                     effect == f"{attr}+"
-
                     or (attr == main_attr and effect == "主能力值+")
-
                     or (attr == sub_attr and effect == "副能力值+")
-
                 ):
-
                     current_value += self._get_weapon_bonus(skill.get("curve", []))
-
-
 
             # 从直接属性键中获取加成（向后兼容旧 schema）
 
             if f"{attr}+" in weapon:
-
                 current_value += self._get_weapon_bonus(weapon[f"{attr}+"])
 
-
-
             if attr == main_attr and "主能力值+" in weapon:
-
                 current_value += self._get_weapon_bonus(weapon["主能力值+"])
 
-
-
             if attr == sub_attr and "副能力值+" in weapon:
-
                 current_value += self._get_weapon_bonus(weapon["副能力值+"])
-
-
 
             self._zones[attr].set_params(**{attr: current_value})
 
-
-
     def _get_weapon_bonus(self, bonus_data, level: int = 1) -> float:
-
         """
 
         从武器加成数据中提取加成值（支持等级选择）
@@ -276,67 +209,45 @@ class AttributeZoneManager:
         """
 
         if isinstance(bonus_data, list) and len(bonus_data) > 0:
-
             level_index = level - 1
 
             if 0 <= level_index < len(bonus_data):
-
                 return float(bonus_data[level_index])
 
             return float(bonus_data[0])
 
-        elif isinstance(bonus_data, (int, float)):
-
+        elif isinstance(bonus_data, int | float):
             return float(bonus_data)
 
         return 0.0
 
-
-
     def get_zone(self, attribute: str) -> AttributeMultiplierZone:
-
         """获取指定属性的乘区"""
 
         return self._zones[attribute]
 
-
-
     def calculate_all(self) -> dict[str, float]:
-
         """计算所有属性乘区的值"""
 
         return {attr: zone.calculate() for attr, zone in self._zones.items()}
 
-
-
     def calculate_total(self) -> float:
-
         """计算所有属性乘区的总和"""
 
         return sum(zone.calculate() for zone in self._zones.values())
 
-
-
     def get_main_sub_info(self, character: dict[str, Any] | None) -> dict[str, str]:
-
         """获取角色的主能力和副能力信息"""
 
         if character is None:
-
             return {"主能力": "", "副能力": ""}
 
         return {"主能力": character.get("主能力", ""), "副能力": character.get("副能力", "")}
 
 
-
-
-
 def calculate_attribute_zones(
-
     character: dict[str, Any] | None, weapon: dict[str, Any] | None, level: int = 1
-
 ) -> dict[str, float]:
-
     """
 
     快捷函数：计算能力乘区
@@ -366,69 +277,36 @@ def calculate_attribute_zones(
     return manager.calculate_all()
 
 
-
-
-
 def calculate_attribute_zones_with_details(
-
     character: dict[str, Any] | None,
-
     weapon: dict[str, Any] | None,
-
     level: int = 1,
-
     sa1_name: str = "",
-
     sa1_level: int = 1,
-
     sa2_name: str = "",
-
     sa2_level: int = 1,
-
     sa3_name: str = "",
-
     sa3_level: int = 0,
-
     ws_name: str = "",
-
     ws_level: int = 1,
-
     ws_stack: int = 1,
-
     ws2_name: str = "",
-
     ws2_level: int = 1,
-
     ws2_stack: int = 1,
-
     trust_level: int = 0,
-
     normal_skill_1_name: str = "",
-
     normal_skill_1_level: int = 1,
-
     normal_skill_2_name: str = "",
-
     normal_skill_2_level: int = 1,
-
     normal_skill_3_name: str = "",
-
     normal_skill_3_level: int = 0,
-
     special_skill_1_name: str = "",
-
     special_skill_1_level: int = 1,
-
     special_skill_1_stack: int = 1,
-
     special_skill_2_name: str = "",
-
     special_skill_2_level: int = 1,
-
     special_skill_2_stack: int = 1,
-
 ) -> dict[str, dict[str, float]]:
-
     """
 
     快捷函数：计算能力乘区，返回详细信息
@@ -482,32 +360,19 @@ def calculate_attribute_zones_with_details(
     legacy_used = bool(sa1_name or sa2_name or sa3_name or ws_name or ws2_name)
 
     new_used = bool(
-
         normal_skill_1_name
-
         or normal_skill_2_name
-
         or normal_skill_3_name
-
         or special_skill_1_name
-
         or special_skill_2_name
-
     )
 
     if legacy_used and not new_used:
-
         warnings.warn(
-
             "参数 sa*/ws* 已弃用，请改用 normal_skill_* / special_skill_*。",
-
             DeprecationWarning,
-
             stacklevel=2,
-
         )
-
-
 
     manager = AttributeZoneManager()
 
@@ -535,93 +400,61 @@ def calculate_attribute_zones_with_details(
 
     ws2_stack = special_skill_2_stack if special_skill_2_name else ws2_stack
 
-
-
     level_index = level - 1
 
     main_attr = character.get("主能力", "") if character else ""
 
     sub_attr = character.get("副能力", "") if character else ""
 
-
-
     result = {}
 
-
-
     for attr in manager.ATTRIBUTES:
-
         base_value = 0.0
 
         if character and attr in character and isinstance(character[attr], list):
-
             attr_list = character[attr]
 
             if 0 <= level_index < len(attr_list):
-
                 base_value = float(attr_list[level_index])
-
-
 
         is_main = attr == main_attr
 
         is_sub = attr == sub_attr
 
-
-
         flat_bonus, pct_bonus = _compute_attr_weapon_bonus(
-
             attr=attr,
-
             attr_is_main=is_main,
-
             attr_is_sub=is_sub,
-
             weapon=weapon,
-
             manager=manager,
-
-            sa1_name=sa1_name, sa1_level=int(sa1_level),
-
-            sa2_name=sa2_name, sa2_level=int(sa2_level),
-
-            sa3_name=sa3_name, sa3_level=int(sa3_level),
-
-            ws_name=ws_name, ws_level=int(ws_level), ws_stack=int(ws_stack),
-
-            ws2_name=ws2_name, ws2_level=int(ws2_level), ws2_stack=int(ws2_stack),
-
-            main_attr=main_attr, sub_attr=sub_attr,
-
+            sa1_name=sa1_name,
+            sa1_level=int(sa1_level),
+            sa2_name=sa2_name,
+            sa2_level=int(sa2_level),
+            sa3_name=sa3_name,
+            sa3_level=int(sa3_level),
+            ws_name=ws_name,
+            ws_level=int(ws_level),
+            ws_stack=int(ws_stack),
+            ws2_name=ws2_name,
+            ws2_level=int(ws2_level),
+            ws2_stack=int(ws2_stack),
+            main_attr=main_attr,
+            sub_attr=sub_attr,
             trust_level=int(trust_level),
-
         )
 
-
-
         if is_main or is_sub:
-
             total = (base_value + flat_bonus) * (1.0 + pct_bonus / 100.0)
 
         else:
-
             total = base_value + flat_bonus
 
-
-
         result[attr] = {
-
             "base": base_value,
-
             "bonus": flat_bonus,
-
             "pct_bonus": pct_bonus,
-
             "total": total,
-
         }
 
-
-
     return result
-

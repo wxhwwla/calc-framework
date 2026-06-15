@@ -54,8 +54,8 @@ def _strip_wiki_markup(text: str) -> str:
     text = re.sub(r"\{\{color\|[^|]+\|([^}]+)\}\}", r"\1", text)
     text = re.sub(r"<BR\s*/?>", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", "", text)
-    return text.strip()
     """strip wiki markup。"""
+    return text.strip()
 
 
 def parse_skill(skill_data: dict[str, Any], level: int = 7) -> ParsedSkillInfo:
@@ -160,9 +160,7 @@ def _resolve_effective_mult(info: ParsedSkillInfo) -> None:
     """综合各种原始值确定 effective_multiplier。"""
     has_buff = info._atk_buff_pct > 0.0
     has_direct = info._direct_atk_mult > 1.0
-    has_equiv = info._equiv_damage_mult > 1.0 or (
-        info._equiv_damage_mult < 1.0 and info._equiv_damage_mult != 1.0
-    )
+    has_equiv = info._equiv_damage_mult > 1.0 or (info._equiv_damage_mult < 1.0 and info._equiv_damage_mult != 1.0)
 
     # 规则 1: 有 equivalent damage mult → 用它
     if has_equiv:

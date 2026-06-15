@@ -36,8 +36,8 @@ def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None
     def _name(item: dict | None) -> str | None:
         if not item:
             return None
-        return str(item.get("名称") or "") or None
         """name。"""
+        return str(item.get("名称") or "") or None
 
     return {
         "chest": _name(fixed.chest),

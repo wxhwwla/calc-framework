@@ -56,11 +56,12 @@ def normalize_spell_abnormal_counts(counts: dict[str, int] | None) -> dict[str, 
             key = f"{abnormal}:{level}"
             raw = 0 if counts is None else int(counts.get(key, 0))
             normalized[key] = max(0, raw)
-    return normalized
     """normalize spell abnormal counts。"""
+    return normalized
 
 
 def is_spell_abnormal_key(key: str) -> bool:
+    """判断是否为法术异常键（格式：{类型}:{等级}）。"""
     if ":" not in str(key):
         return False
     name, level = str(key).split(":", 1)
@@ -71,7 +72,6 @@ def is_spell_abnormal_key(key: str) -> bool:
     except (TypeError, ValueError):
         return False
     return lv in SPELL_ABNORMAL_LEVELS
-    """判断是否为spell abnormal key。"""
 
 
 def _spell_level_coeff(char_level: int) -> float:
@@ -82,8 +82,8 @@ def _spell_level_coeff(char_level: int) -> float:
 def _skill_multiplier(defn: SpellAbnormalDef, ui_level: int, *, char_level: int) -> float:
     calc_level = calc_level_from_ui(ui_level)
     base = base_multiplier_for_formula(defn.formula, calc_level=calc_level)
-    return base * _spell_level_coeff(char_level)
     """skill multiplier。"""
+    return base * _spell_level_coeff(char_level)
 
 
 def get_spell_abnormal_param_snapshot() -> dict[str, dict[str, object]]:
@@ -228,8 +228,8 @@ def format_spell_abnormal_breakdown_lines(
             if defn.event_kind == "爆发":
                 label = "爆发"
             lines.append(f"{indent}{abnormal}({label}) Lv{level}: 单次 {single:.1f} ×{count} = {total:.1f}")
-    return lines
     """format spell abnormal breakdown lines。"""
+    return lines
 
 
 def spell_abnormal_weighted_total(

@@ -103,8 +103,8 @@ def _expected_crit_context(
     )
     rate += er
     dmg += ed
-    return max(0.0, rate), max(0.0, dmg)
     """expected crit context。"""
+    return max(0.0, rate), max(0.0, dmg)
 
 
 def _evaluate_abnormal_damage(
@@ -193,8 +193,8 @@ def _evaluate_abnormal_damage(
     )
     merged = dict(physical_breakdown)
     merged.update(spell_breakdown)
-    return physical_total + spell_total, merged
     """evaluate abnormal damage。"""
+    return physical_total + spell_total, merged
 
 
 def make_loadout_task_evaluator(

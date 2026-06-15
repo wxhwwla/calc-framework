@@ -59,6 +59,7 @@ from ._subgraph_builders import (
 
 
 def _make_master_graph() -> DAGGraph:
+    """构建主 DAG 图：6 块架构（属性/攻击力/暴击/基础伤害/增益减益/环境乘区）。"""
     return DAGGraph(
         schema_version="dag-v1",
         name="终末地伤害公式（完整版）",
@@ -415,7 +416,6 @@ def _make_master_graph() -> DAGGraph:
             "武器精炼附加攻击力加成": DAGOutput(node="weapon_refine_add_atk", label="武器精炼附加攻击力加成"),
         },
     )
-    """make master graph。"""
 
 
 def generate() -> DAGGraph:

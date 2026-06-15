@@ -100,6 +100,7 @@ class _Label(QLabel):
         self.setFont(font)
         self.setStyleSheet(f"color: {_LABEL_COLOR};")
         """初始化实例。"""
+
     """Label。"""
 
 
@@ -350,8 +351,8 @@ class QtEnemyPanel(QWidget):
         """设置params。"""
 
     def current_enemy_id(self) -> str:
-        return self._id_by_label.get(self._enemy_combo.currentText(), "")
         """current enemy id。"""
+        return self._id_by_label.get(self._enemy_combo.currentText(), "")
 
     def set_enemy_combo_index(self, index: int) -> None:
         if 0 <= index < self._enemy_combo.count():

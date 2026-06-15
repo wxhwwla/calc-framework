@@ -220,5 +220,5 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
 
     @property
     def confirm_btn(self):
-        return self.control_dock.confirm_btn
         """confirm btn。"""
+        return self.control_dock.confirm_btn

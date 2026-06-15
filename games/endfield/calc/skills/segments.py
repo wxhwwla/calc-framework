@@ -224,10 +224,10 @@ def format_segment_count_label(counts: dict[str, int]) -> str:
 
 
 def _format_multiplier_percent(pct: float) -> str:
+    """格式化百分比的显示（整数 vs 小数不同格式）。"""
     if pct == int(pct):
         return f"{int(pct)}%"
     return f"{format(pct, 'g')}%"
-    """format multiplier percent。"""
 
 
 def segment_display_label(
@@ -243,10 +243,7 @@ def segment_display_label(
         base = f"{skill_type} 第{seg}段"
     else:
         display_text = _format_multiplier_percent(multiplier_percent)
-        if (
-            combat_multiplier_percent is not None
-            and abs(combat_multiplier_percent - multiplier_percent) > 0.05
-        ):
+        if combat_multiplier_percent is not None and abs(combat_multiplier_percent - multiplier_percent) > 0.05:
             combat_text = _format_multiplier_percent(combat_multiplier_percent)
             base = f"{skill_type} 第{seg}段 ({display_text}→{combat_text})"
         else:

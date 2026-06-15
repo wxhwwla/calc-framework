@@ -37,8 +37,8 @@ def _empty_list_cb() -> QComboBox:
 
     cb.setStyleSheet(_COMBO_STYLE)
 
-    return cb
     """empty list cb。"""
+    return cb
 
 
 _COMBO_STYLE = """

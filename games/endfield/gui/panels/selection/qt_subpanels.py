@@ -13,8 +13,6 @@ PySide6 选择面板子组件：信赖等级 / 技能等级。
 
 """
 
-
-
 from __future__ import annotations
 
 from typing import Any
@@ -50,17 +48,12 @@ _SLIDER_STYLE = """
 """
 
 
-
 _LABEL_STYLE = "color: #AAAAAA; padding: 2px 0;"
 
 _VALUE_STYLE = "color: #D1D1D1;"
 
 
-
-
-
 def _val_label(font: QFont) -> QLabel:
-
     lbl = QLabel("0")
 
     lbl.setFont(font)
@@ -71,15 +64,11 @@ def _val_label(font: QFont) -> QLabel:
 
     lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
-    return lbl
     """val label。"""
-
-
-
+    return lbl
 
 
 def _slider(vmin: int, vmax: int, val: int) -> QSlider:
-
     s = QSlider(Qt.Orientation.Horizontal)
 
     s.setMinimum(vmin)
@@ -90,11 +79,8 @@ def _slider(vmin: int, vmax: int, val: int) -> QSlider:
 
     s.setStyleSheet(_SLIDER_STYLE)
 
-    return s
     """slider。"""
-
-
-
+    return s
 
 
 # ═══════════════════════════════════════════════════════
@@ -104,30 +90,19 @@ def _slider(vmin: int, vmax: int, val: int) -> QSlider:
 # ═══════════════════════════════════════════════════════
 
 
-
-
-
 class QtTrustPanel(QWidget):
-
     """角色信赖等级滑块（0-4 级）。"""
 
-
-
     def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
-
         super().__init__(parent)
 
         self._level = 0
-
-
 
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(0, 0, 0, 0)
 
         layout.setSpacing(2)
-
-
 
         lbl = QLabel("信赖")
 
@@ -137,25 +112,17 @@ class QtTrustPanel(QWidget):
 
         layout.addWidget(lbl)
 
-
-
         row = QHBoxLayout()
 
         row.setContentsMargins(0, 0, 0, 0)
-
-
 
         self._val_lbl = _val_label(font)
 
         self._val_lbl.setText("0")
 
-
-
         self._slider = _slider(0, 4, 0)
 
         self._slider.valueChanged.connect(self._on_change)
-
-
 
         row.addWidget(self._slider, stretch=1)
 
@@ -164,28 +131,18 @@ class QtTrustPanel(QWidget):
         layout.addLayout(row)
         """初始化实例。"""
 
-
-
     def _on_change(self, value: int) -> None:
-
         self._level = value
 
         self._val_lbl.setText(str(value))
         """on change。"""
 
-
-
     @property
-
     def trust_level(self) -> int:
-
-        return self._level
         """trust level。"""
-
-
+        return self._level
 
     def reset(self) -> None:
-
         self._level = 0
 
         self._slider.setValue(0)
@@ -193,10 +150,7 @@ class QtTrustPanel(QWidget):
         self._val_lbl.setText("0")
         """重置为默认状态。"""
 
-
-
     def set_level(self, level: int) -> None:
-
         clamped = max(0, min(level, 4))
 
         self._level = clamped
@@ -207,9 +161,6 @@ class QtTrustPanel(QWidget):
         """设置level。"""
 
 
-
-
-
 # ═══════════════════════════════════════════════════════
 
 #  2. 技能等级（战技/连携/终结）
@@ -217,17 +168,10 @@ class QtTrustPanel(QWidget):
 # ═══════════════════════════════════════════════════════
 
 
-
-
-
 class QtSkillLevelPanel(QWidget):
-
     """角色战技/连携/终结技等级滑块（1-12 级）。"""
 
-
-
     def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
-
         super().__init__(parent)
 
         self._names: list[str] = ["战技", "连携技", "终结技"]
@@ -244,18 +188,13 @@ class QtSkillLevelPanel(QWidget):
 
         self._rows: list[QWidget] = []
 
-
-
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(0, 0, 0, 0)
 
         layout.setSpacing(2)
 
-
-
         for i, name in enumerate(self._names):
-
             name_lbl = QLabel(name)
 
             name_lbl.setFont(font)
@@ -266,35 +205,25 @@ class QtSkillLevelPanel(QWidget):
 
             self._name_labels.append(name_lbl)
 
-
-
             row_w = QWidget()
 
             row_layout = QHBoxLayout(row_w)
 
             row_layout.setContentsMargins(0, 0, 0, 0)
 
-
-
             val_lbl = _val_label(font)
 
             val_lbl.setText("1")
 
-
-
             slider = _slider(1, 12, 1)
 
             slider.valueChanged.connect(lambda v, idx=i: self._on_skill_change(idx, v))
-
-
 
             row_layout.addWidget(slider, stretch=1)
 
             row_layout.addWidget(val_lbl)
 
             layout.addWidget(row_w)
-
-
 
             self._sliders.append(slider)
 
@@ -303,23 +232,16 @@ class QtSkillLevelPanel(QWidget):
             self._rows.append(row_w)
         """初始化实例。"""
 
-
-
     def _on_skill_change(self, idx: int, value: int) -> None:
-
         self._levels[idx] = value
 
         self._value_labels[idx].setText(str(value))
         """on skill change。"""
 
-
-
     def refresh(self, char_data: dict[str, Any]) -> None:
-
         skill_keys = ["战技倍率", "连携技倍率", "终结技倍率"]
 
         for i, key in enumerate(skill_keys):
-
             data = char_data.get(key, [])
 
             has_data = len(data) >= 1
@@ -331,7 +253,6 @@ class QtSkillLevelPanel(QWidget):
             self._rows[i].setVisible(has_data)
 
             if has_data:
-
                 self._levels[i] = 1
 
                 self._sliders[i].setValue(1)
@@ -341,16 +262,11 @@ class QtSkillLevelPanel(QWidget):
         self.setVisible(any(self._has_data))
         """刷新界面状态。"""
 
-
-
     def apply_preset(self, level: int) -> None:
-
         clamped = max(1, min(level, 12))
 
         for i in range(3):
-
             if self._has_data[i]:
-
                 self._sliders[i].setValue(clamped)
 
                 self._levels[i] = clamped
@@ -358,14 +274,9 @@ class QtSkillLevelPanel(QWidget):
                 self._value_labels[i].setText(str(clamped))
         """应用preset。"""
 
-
-
     def apply_levels(self, s1: int, s2: int, s3: int) -> None:
-
         for idx, val in enumerate([s1, s2, s3]):
-
             if self._has_data[idx]:
-
                 self._sliders[idx].setValue(val)
 
                 self._levels[idx] = val
@@ -373,30 +284,17 @@ class QtSkillLevelPanel(QWidget):
                 self._value_labels[idx].setText(str(val))
         """应用levels。"""
 
-
-
     @property
-
     def skill_1_level(self) -> int:
-
-        return self._levels[0]
         """skill 1 level。"""
-
-
+        return self._levels[0]
 
     @property
-
     def skill_2_level(self) -> int:
-
-        return self._levels[1]
         """skill 2 level。"""
-
-
+        return self._levels[1]
 
     @property
-
     def skill_3_level(self) -> int:
-
-        return self._levels[2]
         """skill 3 level。"""
-
+        return self._levels[2]

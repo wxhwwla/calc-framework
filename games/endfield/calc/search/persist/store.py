@@ -55,8 +55,8 @@ class SearchRunStore(BaseSearchRunStore):
     """
 
     def _schema_sql(self) -> str:
-        return super()._schema_sql() + SCORES_CREATE_TABLE_SQL
         """schema sql。"""
+        return super()._schema_sql() + SCORES_CREATE_TABLE_SQL
 
     # ── scores ─────────────────────────────────────────
 
@@ -112,8 +112,8 @@ class SearchRunStore(BaseSearchRunStore):
         finally:
             conn.close()
 
-        return int(row["c"] if row else 0)
         """count score rows。"""
+        return int(row["c"] if row else 0)
 
     def count_processed(self, signature: str) -> int:
         conn = self._connect()
@@ -127,8 +127,8 @@ class SearchRunStore(BaseSearchRunStore):
         finally:
             conn.close()
 
-        return int(row["c"] if row else 0)
         """count processed。"""
+        return int(row["c"] if row else 0)
 
     def load_top_scores(self, signature: str, top_n: int) -> tuple[LoadoutScore, ...]:
         conn = self._connect()
