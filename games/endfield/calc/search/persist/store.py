@@ -16,10 +16,9 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any
 
 from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
-from utils.frozen_runtime import frozen_use_rust_batch
+from utils.frozen_runtime import frozen_use_rust_batch, frozen_use_search_job_batch
 from utils.search_diagnostics import get_search_logger, log_search_config, log_search_event
 
 from games.endfield.calc.core.top_n_tracker import TopNTracker
@@ -37,6 +36,7 @@ from games.endfield.calc.loadout.optimizer import (
 from ..evaluate.context import SearchEvalContext
 from ..evaluate.process_worker import ProcessWorkerPayload, evaluate_keyed_task_in_process
 from ..evaluate.task import make_loadout_task_evaluator
+from ..plan.job import SingleSkillSearchJob
 from ..run.cancel import SearchCancelToken
 from ..run.parallel import ParallelBackend, run_bounded_parallel
 from .schema import SCORES_CREATE_TABLE_SQL, PendingTaskStream, ResumeExecutionResult
@@ -226,7 +226,7 @@ def execute_search_with_resume(
     progress_callback: Callable[[dict], None] | None = None,
     search_eval: SearchEvalContext | None = None,
     task_evaluator: Callable[[OptimizerTask], LoadoutScore] | None = None,
-    search_job: Any | None = None,
+    search_job: SingleSkillSearchJob | None = None,
     parallel_backend: ParallelBackend = "auto",
 ) -> ResumeExecutionResult:
     """执行可续跑搜索：自动跳过已处理组合（流式任务，不物化全表）。"""
@@ -380,6 +380,26 @@ def execute_search_with_resume(
                 "process_evaluate": None,
             }
         )
+        _batch_size = 1000
+        if search_job is not None and total_combinations > _batch_size and frozen_use_search_job_batch():
+            from ..evaluate.task_batch import can_batch_search_job_eval, make_loadout_task_evaluator_batch
+
+            if can_batch_search_job_eval(search_job):
+                _job_batch_eval = make_loadout_task_evaluator_batch(
+                    search_job,
+                    crit_mode=config.crit_mode,
+                    search_eval=search_eval,
+                )
+
+                def _batch_eval_keyed(items: list[tuple[str, OptimizerTask]]) -> list[LoadoutScore]:
+                    return _job_batch_eval([task for _key, task in items])
+
+                parallel_kwargs.update(
+                    {
+                        "batch_size": _batch_size,
+                        "batch_evaluate": _batch_eval_keyed,
+                    }
+                )
 
     log_search_config(
         phase="resume",
@@ -388,6 +408,7 @@ def execute_search_with_resume(
         max_workers=max_workers,
         parallel_backend=backend,
         use_batch="batch_size" in parallel_kwargs,
+        use_job_batch="batch_size" in parallel_kwargs and search_job is not None,
         skipped=len(existing_keys),
         db_path=str(db_path),
     )

@@ -14,12 +14,13 @@ import sys
 import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, ThreadPoolExecutor, wait
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal, TypeVar, cast
 
 from calc_framework.search import SearchCancelToken, TopNTracker
 from utils.frozen_runtime import (
     describe_frozen_search_capabilities,
     frozen_allow_multi_workers,
+    frozen_use_batch_thread_pool,
     frozen_use_thread_pool,
 )
 from utils.search_diagnostics import get_search_logger, summarize_work_item
@@ -42,8 +43,17 @@ def _pyinstaller_frozen() -> bool:
     return bool(getattr(sys, "frozen", False))
 
 
+def _use_inline_executor(*, batch_mode: bool) -> bool:
+    """打包 exe 下是否顺序内联（phase 3–4 默认；phase 5 batch 可走 ThreadPool）。"""
+    if not _pyinstaller_frozen():
+        return False
+    if batch_mode and frozen_use_batch_thread_pool():
+        return False
+    return not (not batch_mode and frozen_use_thread_pool())
+
+
 def _resolve_max_workers(max_workers: int) -> int:
-    """打包 exe phase<2 时单线程；phase≥2 尊重 GUI 线程数。"""
+    """打包 exe phase<2 时单线程；phase 2/5 尊重 GUI 线程数。"""
     return frozen_allow_multi_workers(max_workers)
 
 
@@ -116,9 +126,24 @@ def run_bounded_parallel(
             backend = "thread"
         else:
             evaluate = process_evaluate
+    batch_mode = batch_size > 1 and batch_evaluate is not None
+    use_inline_single = _use_inline_executor(batch_mode=False)
+    use_inline_batch = _use_inline_executor(batch_mode=True)
+    executor_label = "inline"
+    if _pyinstaller_frozen():
+        if batch_mode and not use_inline_batch:
+            executor_label = "BatchThreadPool"
+        elif not batch_mode and not use_inline_single:
+            executor_label = "ThreadPool"
+        else:
+            executor_label = "inline"
+    elif backend == "process":
+        executor_label = "ProcessPool"
+    elif batch_mode or workers > 1:
+        executor_label = "ThreadPool"
     _search_log().info(
         "run_bounded_parallel | total=%s workers=%s (req=%s) backend=%s batch_size=%s "
-        "batch_eval=%s frozen=%s caps=%s executor=%s",
+        "batch_eval=%s frozen=%s caps=%s executor=%s batch_pool=%s",
         total,
         workers,
         max(1, int(max_workers)),
@@ -127,9 +152,8 @@ def run_bounded_parallel(
         batch_evaluate is not None,
         _pyinstaller_frozen(),
         describe_frozen_search_capabilities(),
-        "inline"
-        if (_pyinstaller_frozen() and not frozen_use_thread_pool())
-        else ("ProcessPool" if backend == "process" else "ThreadPool"),
+        executor_label,
+        batch_mode and not use_inline_batch,
     )
     max_inflight = max(workers * 4, 8)
     tracker: TopNTracker[R] | None = None
@@ -142,9 +166,8 @@ def run_bounded_parallel(
     processed = 0
     cancelled = False
     started_at = time.perf_counter()
-    use_inline = _pyinstaller_frozen() and not frozen_use_thread_pool()
 
-    def _report_progress() -> None:
+    def _report_progress(*, inline: bool) -> None:
         p = processed
         elapsed = max(1e-6, time.perf_counter() - started_at)
         speed = p / elapsed
@@ -165,11 +188,11 @@ def run_bounded_parallel(
                 p,
                 total,
                 speed,
-                "inline" if use_inline else "pool",
+                "inline" if inline else "pool",
             )
 
     # ── 批量化处理 ──
-    if batch_size > 1 and batch_evaluate is not None:
+    if batch_mode:
         batched_items = _make_batch_iter(work_items, batch_size)
 
         def _on_batch_result(batch: list[T], batch_results: list[R]) -> None:
@@ -183,7 +206,7 @@ def run_bounded_parallel(
                     all_results.append(result)
                 processed += 1
 
-        # 批量路径须与 backend 一致（勿因 process_payload 存在就强制多进程）
+        assert batch_evaluate is not None
         if backend == "process" and process_payload is not None:
             from ..evaluate.process_worker import evaluate_optimizer_batch_keyed_in_process
 
@@ -193,20 +216,20 @@ def run_bounded_parallel(
                 "initializer": init_process_worker,
                 "initargs": (process_payload,),
             }
-            _batch_eval_fn = evaluate_optimizer_batch_keyed_in_process
+            _batch_eval_fn: Callable[[Any], Any] = evaluate_optimizer_batch_keyed_in_process
         else:
             _batch_executor_cls = ThreadPoolExecutor
             _batch_executor_kwargs = {"max_workers": workers}
-            _batch_eval_fn = batch_evaluate
+            _batch_eval_fn = cast(Callable[[Any], Any], batch_evaluate)
 
-        if use_inline:
+        if use_inline_batch:
             _run_inline_loop(
                 work_iter=batched_items,
                 evaluate=_batch_eval_fn,
                 on_result=_on_batch_result,
                 get_processed=lambda: processed,
                 cancel_token=token,
-                report_progress=_report_progress,
+                report_progress=lambda: _report_progress(inline=True),
             )
         else:
             _run_parallel_loop(
@@ -248,14 +271,14 @@ def run_bounded_parallel(
                 all_results.append(result)
             processed += 1
 
-        if use_inline:
+        if use_inline_single:
             _run_inline_loop(
                 work_iter=work_iter,
                 evaluate=evaluate,
                 on_result=_on_single_result,
                 get_processed=lambda: processed,
                 cancel_token=token,
-                report_progress=_report_progress,
+                report_progress=lambda: _report_progress(inline=True),
             )
         else:
             _run_parallel_loop(

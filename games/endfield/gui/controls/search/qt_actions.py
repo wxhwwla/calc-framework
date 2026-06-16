@@ -103,6 +103,9 @@ class SearchWorker(QObject):
         slog = get_search_logger()
         config = optimizer_config_for_search_job(self._job, top_n=self._top_n)
 
+        from games.endfield.gui.controls.search.search_settings import get_cpu_parallel_info
+
+        cpu_info = get_cpu_parallel_info()
         log_search_config(
             phase="gui_worker",
             mode=self._mode_label,
@@ -110,6 +113,9 @@ class SearchWorker(QObject):
             max_workers=self._max_workers,
             top_n=self._top_n,
             workers_choice=self._workers_choice,
+            logical_processors=cpu_info.logical_processors,
+            physical_cores=cpu_info.physical_cores,
+            recommended_workers=cpu_info.recommended_workers,
             skill=getattr(self._job, "skill_label", ""),
             char=getattr(self._job, "char_data", {}).get("名称", ""),
         )

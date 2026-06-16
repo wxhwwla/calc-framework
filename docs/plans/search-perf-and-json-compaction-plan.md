@@ -1,6 +1,6 @@
 # 全量搜索加速 + JSON 曲线压缩 — 实施计划
 
-**状态**：阶段 A/B 代码与测试已完成（2026-06-15）；JSON 全库 `--apply`、全量搜索耗时验证由人类本地执行  
+**状态**：阶段 A/B 代码与测试已完成（2026-06-15）；**2026-06-16 更新**：PyInstaller exe 禁用 ProcessPool；Rust job 批量 + 单 worker 内联 batch 为默认（97w ~1min）。JSON 全库 `--apply`、全量搜索耗时验证由人类本地执行  
 **目标**：缩短装备全量遍历耗时；缩小 `characters.json` / `weapons.json` 体积并保持数值一致。
 
 ---
@@ -106,7 +106,9 @@ python tools/compact_game_json.py --apply     # 写回 JSON（需 git 备份）
 
 | 决策 | 选择 | 理由 |
 |------|------|------|
-| 搜索默认后端 | `process` | 用户痛点是 GIL |
+| 搜索默认后端（开发） | `process` | 绕 GIL |
+| **搜索默认后端（exe）** | **thread + 单 worker 内联 batch** | ProcessPool 闪退；多 worker batch 实测更慢 |
+| **桌面「自动」线程** | **1 worker** | Rust job 批量已摊销 FFI |
 | JSON 迁移时机 | 提供工具，**本批不自动 commit 全量 JSON** | 避免误 fit；用户本地 `--apply` |
 | Web 端 | 加载层烘焙后 API 仍返回数组 | 前端零改动 |
 | GPU | 不在本计划 | 依赖 B 完成后仍非搜索瓶颈 |
@@ -116,4 +118,4 @@ python tools/compact_game_json.py --apply     # 写回 JSON（需 git 备份）
 ## 待用户确认（可选）
 
 1. **JSON 迁移**：是否希望 Agent 在本仓库直接 `--apply` 并提交缩小后的 `characters.json`？（默认：仅工具 + 双读，人类决定何时 apply）
-2. **搜索默认线程**：桌面「自动」仍为 `逻辑核-1`；是否在 README 注明「多进程下建议选满核」？
+2. ~~**搜索默认线程**~~：已决 — exe/GUI「自动」= **1 worker**；实验多 worker 设 `CALC_SEARCH_BATCH_POOL=1`（见 `docs/错误集.md`）

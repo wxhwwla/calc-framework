@@ -118,6 +118,25 @@ class TestParallelBackendResolution(unittest.TestCase):
         pool_mock.assert_called_once()
         inline_mock.assert_not_called()
 
+    def test_frozen_uses_batch_pool_at_phase5(self) -> None:
+        from unittest.mock import patch
+
+        with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
+            with patch.object(parallel_mod, "frozen_use_batch_thread_pool", return_value=True):
+                with patch.object(parallel_mod, "frozen_allow_multi_workers", side_effect=lambda n: n):
+                    with patch.object(parallel_mod, "_run_inline_loop") as inline_mock:
+                        with patch.object(parallel_mod, "_run_parallel_loop") as pool_mock:
+                            parallel_mod.run_bounded_parallel(
+                                work_items=list(range(2000)),
+                                total=2000,
+                                evaluate=lambda x: x,
+                                max_workers=4,
+                                batch_size=1000,
+                                batch_evaluate=lambda batch: batch,
+                            )
+        pool_mock.assert_called_once()
+        inline_mock.assert_not_called()
+
 
 class TestProcessParallelIntegration(unittest.TestCase):
     def _run_search(self, *, parallel_backend: str, max_workers: int):

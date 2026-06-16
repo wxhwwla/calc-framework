@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from utils.frozen_runtime import frozen_use_rust_batch
+from utils.frozen_runtime import frozen_use_rust_batch, frozen_use_search_job_batch
 from utils.search_diagnostics import log_search_config
 
 from games.endfield.calc.damage.engine import DamageContext
@@ -28,6 +28,8 @@ from games.endfield.calc.search.evaluate.process_worker import (
     evaluate_optimizer_task_in_process,
 )
 from games.endfield.calc.search.evaluate.task import make_loadout_task_evaluator
+from games.endfield.calc.search.evaluate.task_batch import can_batch_search_job_eval, make_loadout_task_evaluator_batch
+from games.endfield.calc.search.plan.job import SingleSkillSearchJob
 from games.endfield.calc.search.run.cancel import SearchCancelToken
 from games.endfield.calc.search.run.parallel import ParallelBackend, run_bounded_parallel
 
@@ -46,7 +48,7 @@ def run_enumerated_optimizer_parallel(
     progress_callback: Callable[[dict], None] | None = None,
     search_eval: SearchEvalContext | None = None,
     task_evaluator: Callable[[tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]], LoadoutScore] | None = None,
-    search_job: Any | None = None,
+    search_job: SingleSkillSearchJob | None = None,
     parallel_backend: ParallelBackend = "auto",
     batch_size: int = _DEFAULT_BATCH_SIZE,
 ) -> tuple[tuple[LoadoutScore, ...], int, int, bool, tuple[str, ...]]:
@@ -97,10 +99,19 @@ def run_enumerated_optimizer_parallel(
 
     backend: ParallelBackend = "thread" if effective_evaluator is not None else parallel_backend
 
-    # ── Rust 批量化路径（仅裸 evaluate_task；有 search_job 时逐条评估） ──
-    use_batch = (
+    # ── Rust 批量化：裸 evaluate_task（phase≥4）或 search_job 单技能（phase≥3） ──
+    use_naked_batch = (
         batch_size > 1 and effective_evaluator is None and total_combinations > batch_size and frozen_use_rust_batch()
     )
+    use_job_batch = (
+        batch_size > 1
+        and search_job is not None
+        and effective_evaluator is not None
+        and total_combinations > batch_size
+        and frozen_use_search_job_batch()
+        and can_batch_search_job_eval(search_job)
+    )
+    use_batch = use_naked_batch or use_job_batch
 
     log_search_config(
         phase="memory",
@@ -109,9 +120,31 @@ def run_enumerated_optimizer_parallel(
         parallel_backend=backend,
         batch_size=batch_size,
         use_batch=use_batch,
+        use_job_batch=use_job_batch,
     )
 
-    if use_batch:
+    if use_job_batch:
+        assert search_job is not None
+        batch_eval = make_loadout_task_evaluator_batch(
+            search_job,
+            crit_mode=config.crit_mode,
+            search_eval=search_eval,
+        )
+        top_results, processed, cancelled = run_bounded_parallel(
+            work_items=tasks,
+            total=total_combinations,
+            evaluate=_thread_evaluator,
+            max_workers=max_workers,
+            cancel_token=cancel_token,
+            progress_callback=progress_callback,
+            top_n=config.top_n,
+            top_key=lambda score: score.final_damage,
+            parallel_backend=backend,
+            batch_size=batch_size,
+            batch_evaluate=batch_eval,
+            process_payload=process_payload,
+        )
+    elif use_naked_batch:
         batch_eval = evaluate_task_batch(
             base_context=base_context,
             crit_mode=config.crit_mode,

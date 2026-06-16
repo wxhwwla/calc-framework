@@ -365,8 +365,8 @@ def evaluate_search_damage_batch(param_list: list[dict]) -> list[Any]:
     def pluck(key: str):
         return [pp[key] for pp in preprocessed]
 
-    with _rust_call_lock:
-        rs_results = _rs.evaluate_search_damage_batch(
+    def _invoke_batch() -> list:
+        return _rs.evaluate_search_damage_batch(
             final_attacks=pluck("final_attack"),
             skill_multipliers=pluck("skill_multiplier"),
             skill_types=pluck("skill_type"),
@@ -389,6 +389,14 @@ def evaluate_search_damage_batch(param_list: list[dict]) -> list[Any]:
             crit_modes=pluck("crit_mode"),
             damage_pipelines=pluck("damage_pipeline"),
         )
+
+    from utils.frozen_runtime import rust_parallel_batch_enabled
+
+    if rust_parallel_batch_enabled():
+        rs_results = _invoke_batch()
+    else:
+        with _rust_call_lock:
+            rs_results = _invoke_batch()
 
     from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
 
