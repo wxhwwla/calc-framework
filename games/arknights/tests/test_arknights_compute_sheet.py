@@ -55,18 +55,42 @@ def test_create_and_evaluate_compute_sheet(qapp: QApplication, amiya_operator: d
     assert combo_index_to_skill_index(2) == 1
 
 
+def test_merge_atk_percent_bonus() -> None:
+    from games.arknights.gui.arknights_compute_sheet import merge_atk_percent_bonus
+
+    assert merge_atk_percent_bonus(10.0, 0.15) == pytest.approx(25.0)
+    assert merge_atk_percent_bonus(0.0, 0.0) == 0.0
+
+
+def test_layout_for_damage_app(qapp: QApplication) -> None:
+    from games.arknights.gui.arknights_compute_sheet import (
+        DAMAGE_APP_BONUS_VARS,
+        ensure_arknights_adapter,
+        layout_for_damage_app,
+    )
+
+    _, full_layout = ensure_arknights_adapter()
+    layout = layout_for_damage_app(full_layout)
+    all_vars: list[str] = []
+    for sec in layout.sections:
+        all_vars.extend(sec.variables)
+    for var in DAMAGE_APP_BONUS_VARS:
+        assert var in all_vars
+    assert "user_input.敌人防御" in all_vars
+    assert "user_input.信赖攻击" in all_vars
+
+
 def test_read_enemy_bonus_params(qapp: QApplication, amiya_operator: dict) -> None:
     from games.arknights.gui.arknights_compute_sheet import (
-        DAMAGE_APP_SHEET_SECTION_IDS,
         create_arknights_compute_sheet,
         ensure_arknights_adapter,
-        filter_layout,
+        layout_for_damage_app,
         populate_operator_context,
         read_enemy_bonus_params,
     )
 
     pkg, full_layout = ensure_arknights_adapter()
-    param_layout = filter_layout(full_layout, set(DAMAGE_APP_SHEET_SECTION_IDS))
+    param_layout = layout_for_damage_app(full_layout)
     sheet = create_arknights_compute_sheet(pkg.dag_service, param_layout)
     _ = sheet.widget
     populate_operator_context(sheet, amiya_operator, skill_multiplier=1.0, skill_level=7)

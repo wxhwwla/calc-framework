@@ -14,15 +14,19 @@ from calc_framework.config.adapter import AdapterPackage
 from calc_framework.dag.engine import DAGResult
 from calc_framework.dag.service import DAGService
 from calc_framework.ui.compute_sheet import ComputeSheet
-from calc_framework.ui.layout import Layout, load_layout_json
+from calc_framework.ui.layout import Layout, Section, load_layout_json
 from PySide6.QtWidgets import QCheckBox, QComboBox, QDoubleSpinBox, QPushButton, QSlider, QSpinBox, QWidget
 
 from games.arknights.calc.dag_adapter.loader import _get_num, _parse_potential_atk
 from games.arknights.calc.inverse.stats import resolve_stats_from_segments
 from utils.path_utils import get_resource_path
 
-# DamageApp 右栏仅挂载敌人 + 信赖/潜能（技能参数仍用手动控件）
+# DamageApp 右栏 ComputeSheet：额外加成(ATK%/伤害%) + 敌人 + 信赖/潜能（技能等级/倍率/连发仍手动）
 DAMAGE_APP_SHEET_SECTION_IDS: frozenset[str] = frozenset({"enemy", "extra_bonuses"})
+DAMAGE_APP_BONUS_VARS: tuple[str, ...] = (
+    "user_input.攻击力百分比加成",
+    "user_input.伤害加成",
+)
 
 _adapter_pkg: AdapterPackage | None = None
 _adapter_layout: Layout | None = None
@@ -47,6 +51,29 @@ def filter_layout(layout: Layout, section_ids: set[str]) -> Layout:
         schema_version=layout.schema_version,
         name=layout.name,
         description=layout.description,
+        sections=sections,
+    )
+
+
+def layout_for_damage_app(full_layout: Layout) -> Layout:
+    """DamageApp 右栏专用 layout：额外加成 + 敌人 + 信赖/潜能（与 Web 参数组一致）。"""
+    sections: list[Section] = [
+        Section(
+            id="extra_pct_bonus",
+            title="额外加成",
+            type="inputs",
+            variables=list(DAMAGE_APP_BONUS_VARS),
+            columns=2,
+        ),
+    ]
+    for sec_id in ("enemy", "extra_bonuses"):
+        sec = full_layout.find_section(sec_id)
+        if sec is not None:
+            sections.append(sec)
+    return Layout(
+        schema_version=full_layout.schema_version,
+        name=full_layout.name,
+        description=full_layout.description,
         sections=sections,
     )
 
@@ -89,17 +116,19 @@ ARKNIGHTS_USER_VARS: dict[str, Any] = {
         "source": "user_input",
         "type": "float",
         "default": 0.0,
-        "min": 0,
-        "max": 5.0,
-        "step": 0.01,
+        "min": -100,
+        "max": 200,
+        "step": 1,
+        "ui_control": {"widget": "spinbox", "step": 1},
     },
     "user_input.伤害加成": {
         "source": "user_input",
         "type": "float",
         "default": 0.0,
-        "min": -5.0,
-        "max": 5.0,
-        "step": 0.01,
+        "min": -100,
+        "max": 200,
+        "step": 1,
+        "ui_control": {"widget": "spinbox", "step": 1},
     },
     "user_input.物理穿透": {
         "source": "user_input",
@@ -225,16 +254,36 @@ def populate_operator_context(
     set_user_input_value(sheet, "user_input.潜能攻击", pot_atk)
 
 
-def read_enemy_bonus_params(sheet: ComputeSheet) -> dict[str, float]:
-    """从 ComputeSheet 读取敌人参数与信赖/潜能覆盖值。"""
+def merge_atk_percent_bonus(user_pct: float, atk_buff_hint: float) -> float:
+    """合并用户 ATK% 与技能解析 buff，与 Web ``handleCompute`` 一致（百分点制）。"""
+    return user_pct + atk_buff_hint * 100.0
+
+
+def read_compute_params_from_sheet(sheet: ComputeSheet) -> dict[str, float]:
+    """从 ComputeSheet 读取全部 DAG 计算参数（与 Web computeParams 字段对齐）。"""
     raw = sheet.read_user_inputs()
     return {
+        "atk_percent_bonus": float(raw.get("user_input.攻击力百分比加成", 0.0)),
+        "dmg_bonus": float(raw.get("user_input.伤害加成", 0.0)),
         "enemy_def": float(raw.get("user_input.敌人防御", 200.0)),
         "enemy_res": float(raw.get("user_input.敌人法术抗性", 50.0)),
         "def_penetration": float(raw.get("user_input.物理穿透", 0.0)),
         "res_penetration": float(raw.get("user_input.法术穿透", 0.0)),
         "trust_atk": float(raw.get("user_input.信赖攻击", 0.0)),
         "pot_atk": float(raw.get("user_input.潜能攻击", 0.0)),
+    }
+
+
+def read_enemy_bonus_params(sheet: ComputeSheet) -> dict[str, float]:
+    """从 ComputeSheet 读取敌人参数与信赖/潜能覆盖值（兼容旧调用）。"""
+    p = read_compute_params_from_sheet(sheet)
+    return {
+        "enemy_def": p["enemy_def"],
+        "enemy_res": p["enemy_res"],
+        "def_penetration": p["def_penetration"],
+        "res_penetration": p["res_penetration"],
+        "trust_atk": p["trust_atk"],
+        "pot_atk": p["pot_atk"],
     }
 
 

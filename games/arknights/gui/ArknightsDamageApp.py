@@ -39,13 +39,13 @@ from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, 
 from games.arknights.calc.dag_adapter.loader import _parse_potential_atk
 from games.arknights.calc.skill_parser import ParsedSkillInfo
 from games.arknights.gui.arknights_compute_sheet import (
-    DAMAGE_APP_SHEET_SECTION_IDS,
     create_arknights_compute_sheet,
     ensure_arknights_adapter,
-    filter_layout,
     hide_sheet_eval_button,
+    layout_for_damage_app,
+    merge_atk_percent_bonus,
     populate_operator_context,
-    read_enemy_bonus_params,
+    read_compute_params_from_sheet,
 )
 from games.arknights.gui.operator_combo import configure_operator_combobox
 from games.arknights.operator_catalog import (
@@ -106,7 +106,6 @@ class ArknightsDamageApp(QMainWindow):
             self._qapp.setStyleSheet(DARK_QSS)
 
         super().__init__()
-        """初始化实例。"""
         self.setWindowTitle("明日方舟 伤害计算器")
         self.setMinimumSize(1200, 720)
         self.resize(1366, 768)
@@ -118,8 +117,6 @@ class ArknightsDamageApp(QMainWindow):
 
         self._setup_menu()
         self._setup_ui()
-        """初始化实例。"""
-        """初始化实例。"""
 
     # ── 菜单 ──
 
@@ -355,25 +352,19 @@ class ArknightsDamageApp(QMainWindow):
         self._cond_check = QCheckBox("仅攻击到一人时（激活条件倍率）")
         self._cond_check.setVisible(False)
         spg.addWidget(self._cond_check, 4, 0, 1, 3)
+
+        self._total_mult_label = QLabel("总伤害倍率: 1.000x")
+        self._total_mult_label.setStyleSheet("color: #2B6CB6; font-size: 12px; font-weight: bold;")
+        spg.addWidget(self._total_mult_label, 5, 0, 1, 3)
+        self._mult_input.textChanged.connect(self._update_total_mult_label)
+        self._hit_spin.valueChanged.connect(self._update_total_mult_label)
         sl.addWidget(g_sp)
 
         pkg, full_layout = ensure_arknights_adapter()
-        param_layout = filter_layout(full_layout, set(DAMAGE_APP_SHEET_SECTION_IDS))
+        param_layout = layout_for_damage_app(full_layout)
         self._param_sheet = create_arknights_compute_sheet(pkg.dag_service, param_layout, parent=sw)
         hide_sheet_eval_button(self._param_sheet)
         sl.addWidget(self._param_sheet.widget)
-
-        # 额外加成（ATK%/伤害%；敌人/穿透/信赖/潜能在 ComputeSheet）
-        g_bn = QGroupBox("额外加成")
-        bng = QGridLayout(g_bn)
-        bng.addWidget(QLabel("攻击力%加成:"), 0, 0)
-        self._atk_bonus_input = QLineEdit("0")
-        bng.addWidget(self._atk_bonus_input, 0, 1)
-        bng.addWidget(QLabel("伤害倍率加成%:"), 1, 0)
-        self._dmg_bonus_input = QLineEdit("0")
-        bng.addWidget(self._dmg_bonus_input, 1, 1)
-        bng.setColumnStretch(1, 1)
-        sl.addWidget(g_bn)
 
         sl.addStretch()
         scr.setWidget(sw)
@@ -459,6 +450,15 @@ class ArknightsDamageApp(QMainWindow):
     # ═══════════════════════════════════════════
     #  信号处理
     # ═══════════════════════════════════════════
+
+    def _update_total_mult_label(self) -> None:
+        """更新总伤害倍率展示（与 Web 一致：技能倍率 × 连发数）。"""
+        try:
+            mult = float(self._mult_input.text() or "1.0")
+        except ValueError:
+            mult = 1.0
+        hits = self._hit_spin.value()
+        self._total_mult_label.setText(f"总伤害倍率: {mult * hits:.3f}x")
 
     def _set_skill_level(self, level: int) -> None:
         """技能等级快捷按钮 → 滑块。"""
@@ -590,6 +590,7 @@ class ArknightsDamageApp(QMainWindow):
 
         # 连发数
         self._hit_spin.setValue(info.hit_count)
+        self._update_total_mult_label()
         self._sync_param_sheet()
 
     def _update_detail(self) -> None:
@@ -674,13 +675,16 @@ class ArknightsDamageApp(QMainWindow):
 
             hit_count = self._hit_spin.value()
 
-            sheet_params = read_enemy_bonus_params(self._param_sheet)
+            sheet_params = read_compute_params_from_sheet(self._param_sheet)
             enemy_def = sheet_params["enemy_def"]
             enemy_res = sheet_params["enemy_res"]
             def_pen = sheet_params["def_penetration"]
             res_pen = sheet_params["res_penetration"]
-            atk_bonus = float(self._atk_bonus_input.text() or "0") / 100.0 + skill_info.atk_buff_hint
-            dmg_bonus = float(self._dmg_bonus_input.text() or "0") / 100.0
+            atk_bonus = merge_atk_percent_bonus(
+                sheet_params["atk_percent_bonus"],
+                skill_info.atk_buff_hint,
+            )
+            dmg_bonus = sheet_params["dmg_bonus"]
 
             result = compute_snapshot_with_dag(
                 operator=self._current_operator,
@@ -726,7 +730,7 @@ class ArknightsDamageApp(QMainWindow):
                 ("基础攻击力", f"{base_atk:.1f}"),
                 ("信赖加成", f"+{trust_atk:.1f}" if trust_atk > 0 else "0"),
                 ("潜能攻击", f"+{pot_atk:.1f}" if pot_atk > 0 else "0"),
-                (f"ATK%加成（{(atk_bonus * 100):.0f}%）", f"+{base_atk * atk_bonus:.1f}"),
+                (f"ATK%加成（{atk_bonus:.0f}%）", f"+{base_atk * atk_bonus / 100:.1f}"),
                 ("最终攻击力", f"{final_atk:.1f}"),
                 ("技能倍率", f"x{skill_mult:.2f}"),
                 ("连发数", f"x{hit_count}"),

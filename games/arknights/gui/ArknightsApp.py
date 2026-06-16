@@ -324,10 +324,10 @@ class ArknightsApp(QMainWindow):
             self._skill_info_box.setText("选择干员后显示技能信息")
             self._compute_result()
             return
-        skill_idx = self._skill_combo.currentIndex()
+        skill_index = combo_index_to_skill_index(self._skill_combo.currentIndex())
         level = self._skill_level_slider.value()
         try:
-            info = get_parsed_skill_info(self._operator_data, level=level, skill_index=skill_idx)
+            info = get_parsed_skill_info(self._operator_data, level=level, skill_index=skill_index)
             lines = [f"倍率: {info.multiplier}" if info.multiplier else "倍率: 待解析"]
             if info.attack_count and info.attack_count > 1:
                 lines.append(f"攻击次数: {info.attack_count}")
