@@ -136,15 +136,14 @@ def run_bounded_parallel(
         _run_parallel_loop(
             work_iter=batched_items,
             total=total,
-            evaluate=_batch_eval_fn,  # type: ignore[arg-type]
+            evaluate=_batch_eval_fn,
             on_result=_on_batch_result,
             max_inflight=max_inflight,
             executor_cls=_batch_executor_cls,
             executor_kwargs=_batch_executor_kwargs,
-            token=token,
+            get_processed=lambda: processed,
+            cancel_token=token,
             progress_callback=progress_callback,
-            all_results=all_results,
-            tracker=tracker,
             started_at=started_at,
         )
         cancelled = token.should_cancel(processed)
@@ -181,10 +180,9 @@ def run_bounded_parallel(
             max_inflight=max_inflight,
             executor_cls=executor_cls,
             executor_kwargs=executor_kwargs,
-            token=token,
+            get_processed=lambda: processed,
+            cancel_token=token,
             progress_callback=progress_callback,
-            all_results=all_results,
-            tracker=tracker,
             started_at=started_at,
         )
         cancelled = token.should_cancel(processed)
@@ -198,20 +196,22 @@ def run_bounded_parallel(
 def _run_parallel_loop(
     *,
     work_iter: Iterable[Any],
-    total: int,
     evaluate: Callable[[Any], Any],
     on_result: Callable[[Any, Any], None],
     max_inflight: int,
     executor_cls: type,
     executor_kwargs: dict,
-    token: SearchCancelToken,
+    get_processed: Callable[[], int],
+    cancel_token: SearchCancelToken,
     progress_callback: Callable[[dict], None] | None,
-    all_results: list | None,
-    tracker: TopNTracker | None,
+    total: int,
     started_at: float,
 ) -> None:
-    """内部循环：提交 → 等待完成 → 处理结果。"""
-    processed = 0
+    """内部循环：提交 → 等待完成 → 处理结果。
+
+    ``on_result`` 负责递增计数和更新 tracker；``get_processed`` 返回当前已处理数，
+    供本函数做取消检查和进度回调。``cancel_token`` 由调用方提供，本函数只读取。
+    """
     with executor_cls(**executor_kwargs) as executor:
         pending: dict[Future[Any], Any] = {}
 
@@ -223,7 +223,7 @@ def _run_parallel_loop(
 
         _submit_until_full()
         while pending:
-            if token.should_cancel(processed):
+            if cancel_token.should_cancel(get_processed()):
                 for future in pending:
                     future.cancel()
                 pending.clear()
@@ -239,21 +239,22 @@ def _run_parallel_loop(
                     continue
 
                 on_result(item, result)
+                p = get_processed()
 
                 elapsed = max(1e-6, time.perf_counter() - started_at)
-                speed = processed / elapsed
-                remain = max(0, int(total) - processed)
+                speed = p / elapsed
+                remain = max(0, int(total) - p)
                 eta = remain / speed if speed > 0 else 0.0
                 if progress_callback:
                     progress_callback(
                         {
-                            "processed": processed,
+                            "processed": p,
                             "total": int(total),
                             "speed_per_sec": speed,
                             "eta_seconds": eta,
                         }
                     )
-                if token.should_cancel(processed):
+                if cancel_token.should_cancel(p):
                     for pending_future in list(pending.keys()):
                         pending_future.cancel()
                     pending.clear()

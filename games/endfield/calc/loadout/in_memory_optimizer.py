@@ -84,8 +84,8 @@ def run_enumerated_optimizer_parallel(
 
     backend: ParallelBackend = "thread" if task_evaluator is not None else parallel_backend
 
-    # ── Rust 批量化路径 ──
-    use_batch = batch_size > 1 and task_evaluator is None
+    # ── Rust 批量化路径（仅搜索量 > batch_size 时启用，避免小搜索取消不生效） ──
+    use_batch = batch_size > 1 and task_evaluator is None and total_combinations > batch_size
 
     if use_batch:
         batch_eval = evaluate_task_batch(
