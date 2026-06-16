@@ -75,7 +75,8 @@ jobs:
         run: |
           pip install maturin
           cd extensions/rust_search
-          maturin develop --release
+          maturin build --release --out dist
+          pip install dist/rust_search-*.whl --force-reinstall --no-deps
       - name: Run tests
         run: python -m pytest games/endfield/tests/ framework/tests/ -q --tb=short
 
