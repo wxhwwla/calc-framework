@@ -30,7 +30,7 @@
     "react-i18next": "^17.0.8",
     "react-router-dom": "6.30.4",
     "sql.js": "^1.12.0",
-    "zustand": "^5.0.0"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
