@@ -10,10 +10,19 @@ function stripHtmlTags(html: string): string {
     return doc.body.textContent || "";
   }
   // 回退：在无 DOM 环境（测试）下用更严格的正则
-  return html
-    .replace(/<BR\s*\/?>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&[^;]+;/g, " ");
+  // 注意：输出仅用作 textContent，不用于 setHTML/innerHTML，XSS 风险可控
+  return (
+    html
+      // 先处理 BR 换行
+      .replace(/<BR\s*\/?>/gi, "\n")
+      // 移除所有 HTML 标签（含自闭合、注释）
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<[^>]*>/g, "")
+      // 移除 HTML 实体编码
+      .replace(/&[^;]+;/g, " ")
+      // 移除零宽字符和符号
+      .replace(/[​-‍﻿]/g, "")
+  );
 }
 
 export interface ParsedSkill {
