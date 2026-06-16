@@ -1,11 +1,12 @@
-/** 搜索后端：auto（默认，wasm+local 时走浏览器）| api | local */
+/** 搜索后端：local（默认，浏览器本地）| api | auto */
 
-export type SearchBackendMode = "auto" | "api" | "local";
+export type SearchBackendMode = "local" | "api" | "auto";
 
 export function getSearchBackendMode(): SearchBackendMode {
   const raw = (import.meta.env.VITE_SEARCH_BACKEND as string | undefined)?.trim().toLowerCase();
-  if (raw === "local" || raw === "api") return raw;
-  return "auto";
+  if (raw === "api") return "api";
+  if (raw === "auto") return "auto";
+  return "local";
 }
 
 /** @deprecated 使用 getSearchBackendMode */

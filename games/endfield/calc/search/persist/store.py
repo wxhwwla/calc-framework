@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
+from utils.search_diagnostics import get_search_logger, log_search_config, log_search_event
 
 from games.endfield.calc.core.top_n_tracker import TopNTracker
 from games.endfield.calc.damage.engine import DamageContext
@@ -34,6 +35,7 @@ from games.endfield.calc.loadout.optimizer import (
 
 from ..evaluate.context import SearchEvalContext
 from ..evaluate.process_worker import ProcessWorkerPayload, evaluate_keyed_task_in_process
+from ..evaluate.task import make_loadout_task_evaluator
 from ..run.cancel import SearchCancelToken
 from ..run.parallel import ParallelBackend, run_bounded_parallel
 from .schema import SCORES_CREATE_TABLE_SQL, PendingTaskStream, ResumeExecutionResult
@@ -258,9 +260,17 @@ def execute_search_with_resume(
 
     started_at = time.perf_counter()
 
+    effective_evaluator = task_evaluator
+    if effective_evaluator is None and search_job is not None:
+        effective_evaluator = make_loadout_task_evaluator(
+            search_job,
+            crit_mode=config.crit_mode,
+            search_eval=search_eval,
+        )
+
     def _evaluate(task: OptimizerTask) -> LoadoutScore:
-        if task_evaluator is not None:
-            return task_evaluator(task)
+        if effective_evaluator is not None:
+            return effective_evaluator(task)
 
         return evaluate_task(
             base_context=base_context,
@@ -268,7 +278,6 @@ def execute_search_with_resume(
             task=task,
             search_eval=search_eval,
         )
-        """evaluate。"""
 
     def _on_result(item: tuple[str, OptimizerTask], score: LoadoutScore) -> None:
         nonlocal processed_this_run
@@ -282,8 +291,11 @@ def execute_search_with_resume(
         processed_this_run += 1
 
         if len(processed_keys_buffer) >= PROCESSED_BATCH_SIZE:
-            store.mark_processed_batch(run_signature, processed_keys_buffer)
-
+            try:
+                store.mark_processed_batch(run_signature, processed_keys_buffer)
+            except Exception:
+                log_search_event("续跑写入 processed 失败", level=40)
+                get_search_logger().exception("mark_processed_batch 失败")
             processed_keys_buffer.clear()
         """on result。"""
 
@@ -314,29 +326,78 @@ def execute_search_with_resume(
         """progress。"""
 
     process_payload: ProcessWorkerPayload | None = None
-    if task_evaluator is None:
+    if effective_evaluator is None:
         process_payload = ProcessWorkerPayload(
             config=config,
             search_eval=search_eval,
             search_job=search_job,
             base_context=base_context if search_job is None else None,
         )
-    backend: ParallelBackend = "thread" if task_evaluator is not None else parallel_backend
+    backend: ParallelBackend = "thread" if effective_evaluator is not None else parallel_backend
 
     def _evaluate_keyed(item: tuple[str, OptimizerTask]) -> LoadoutScore:
         return _evaluate(item[1])
 
-    _, _processed_count, cancelled = run_bounded_parallel(
-        work_items=pending_iter,
+    parallel_kwargs: dict = {
+        "work_items": pending_iter,
+        "total": total_combinations,
+        "max_workers": max_workers,
+        "cancel_token": token,
+        "progress_callback": _progress,
+        "on_result": _on_result,
+        "parallel_backend": backend,
+        "process_payload": process_payload,
+    }
+
+    # Rust 批量仅用于裸 evaluate_task 路径（无 search_job / 自定义 evaluator）
+    if effective_evaluator is None:
+        from games.endfield.calc.loadout.optimizer.evaluate import evaluate_task_batch
+
+        _batch_size = 1000
+        _batch_eval = evaluate_task_batch(
+            base_context=base_context,
+            crit_mode=config.crit_mode,
+            search_eval=search_eval,
+        )
+
+        def _batch_eval_keyed(items: list[tuple[str, OptimizerTask]]) -> list[LoadoutScore]:
+            return _batch_eval([task for _key, task in items])
+
+        parallel_kwargs["evaluate"] = _evaluate_keyed
+        parallel_kwargs["process_evaluate"] = evaluate_keyed_task_in_process if process_payload else None
+        if total_combinations > _batch_size:
+            parallel_kwargs.update(
+                {
+                    "batch_size": _batch_size,
+                    "batch_evaluate": _batch_eval_keyed,
+                }
+            )
+    else:
+        parallel_kwargs.update(
+            {
+                "evaluate": _evaluate_keyed,
+                "process_evaluate": None,
+            }
+        )
+
+    log_search_config(
+        phase="resume",
+        run_signature=run_signature,
         total=total_combinations,
-        evaluate=_evaluate_keyed,
         max_workers=max_workers,
-        cancel_token=token,
-        progress_callback=_progress,
-        on_result=_on_result,
         parallel_backend=backend,
-        process_payload=process_payload,
-        process_evaluate=evaluate_keyed_task_in_process if process_payload else None,
+        use_batch="batch_size" in parallel_kwargs,
+        skipped=len(existing_keys),
+        db_path=str(db_path),
+    )
+
+    _, _processed_count, cancelled = run_bounded_parallel(**parallel_kwargs)
+
+    log_search_event(
+        "续跑完成 | processed_this_run=%s cancelled=%s top_n=%s",
+        processed_this_run,
+        cancelled,
+        len(top_tracker.results()) if hasattr(top_tracker, "results") else config.top_n,
     )
 
     if processed_keys_buffer:

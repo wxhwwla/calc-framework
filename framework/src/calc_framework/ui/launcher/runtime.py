@@ -158,6 +158,9 @@ def spawn_detached(argv: list[str], root: Path | None = None) -> subprocess.Pope
     base = root or repo_root()
     env = os.environ.copy()
 
+    if _is_frozen():
+        env.setdefault("RUST_SEARCH_FALLBACK", "1")
+
     if not _is_frozen():
         env["PYTHONPATH"] = build_pythonpath(base)
 

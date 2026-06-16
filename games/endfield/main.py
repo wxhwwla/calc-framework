@@ -22,6 +22,7 @@
 注意：GUI 后端为 PySide6。CustomTkinter 版已于 2026-05 移除。
 """
 
+import os
 import sys
 import threading
 import time
@@ -31,6 +32,11 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+# 打包 exe：须在 rust_bridge / evaluate 导入前设置
+from utils.frozen_runtime import apply_frozen_runtime_defaults
+
+apply_frozen_runtime_defaults()
 
 # Windows：在 platform.release() 等调用前规避 WMI 卡死（PyInstaller 兼容）
 from utils.platform_win32_patch import apply_platform_win32_patch
@@ -60,6 +66,14 @@ def main() -> None:
     3. 创建应用实例
     4. 启动主事件循环
     """
+    import multiprocessing
+
+    multiprocessing.freeze_support()
+
+    from utils.search_diagnostics import init_search_diagnostics
+
+    log_dir = init_search_diagnostics()
+
     # 启动后台线程预加载数据（不阻塞主界面）
     preload_thread = threading.Thread(target=preload_data, daemon=True)
     preload_thread.start()
@@ -70,9 +84,9 @@ def main() -> None:
     from games.endfield.framework_bridge import get_logger
     from games.endfield.framework_bridge import setup_logging as fw_setup_logging
 
-    log_dir = get_application_dir() / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    fw_setup_logging(log_file=str(log_dir / "app.log"))
+    frozen = getattr(sys, "frozen", False)
+    log_level = "INFO" if frozen else os.environ.get("CALC_FRAMEWORK_LOG_LEVEL", "WARNING")
+    fw_setup_logging(log_file=str(log_dir / "app.log"), level=log_level)
     _logger = get_logger(__name__)
     _logger.info("应用启动中…")
 

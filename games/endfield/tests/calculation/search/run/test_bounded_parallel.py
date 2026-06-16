@@ -55,6 +55,51 @@ class TestParallelBackendResolution(unittest.TestCase):
         )
         self.assertEqual(backend, "thread")
 
+    def test_frozen_exe_forces_thread_even_with_many_workers(self) -> None:
+        from unittest.mock import patch
+
+        payload = ProcessWorkerPayload(
+            config=OptimizerConfig(),
+            search_eval=None,
+            base_context=DamageContext(final_attack=1.0, skill_multiplier=1.0),
+        )
+        with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
+            backend = parallel_mod._resolve_parallel_backend(
+                max_workers=24,
+                parallel_backend="auto",
+                process_payload=payload,
+            )
+        self.assertEqual(backend, "thread")
+        with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
+            backend = parallel_mod._resolve_parallel_backend(
+                max_workers=24,
+                parallel_backend="process",
+                process_payload=payload,
+            )
+        self.assertEqual(backend, "thread")
+
+    def test_frozen_caps_workers_to_one(self) -> None:
+        from unittest.mock import patch
+
+        with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
+            self.assertEqual(parallel_mod._resolve_max_workers(24), 1)
+        self.assertEqual(parallel_mod._resolve_max_workers(4), 4)
+
+    def test_frozen_uses_inline_loop(self) -> None:
+        from unittest.mock import patch
+
+        with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
+            with patch.object(parallel_mod, "_run_inline_loop") as inline_mock:
+                with patch.object(parallel_mod, "_run_parallel_loop") as pool_mock:
+                    parallel_mod.run_bounded_parallel(
+                        work_items=[1, 2],
+                        total=2,
+                        evaluate=lambda x: x,
+                        max_workers=4,
+                    )
+        inline_mock.assert_called_once()
+        pool_mock.assert_not_called()
+
 
 class TestProcessParallelIntegration(unittest.TestCase):
     def _run_search(self, *, parallel_backend: str, max_workers: int):

@@ -8,11 +8,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeAlias, TypeGuard, cast
 
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.loadout.optimizer import LoadoutScore, OptimizerConfig, OptimizerTask, evaluate_task
 from games.endfield.calc.search.evaluate.context import SearchEvalContext
+
+KeyedOptimizerTask: TypeAlias = tuple[str, OptimizerTask]
+BatchKeyedItem: TypeAlias = KeyedOptimizerTask | OptimizerTask
+
+
+def _is_keyed_optimizer_task(item: BatchKeyedItem) -> TypeGuard[KeyedOptimizerTask]:
+    """续跑项 ``(combo_key, task)`` 的首元素为 str；裸 ``OptimizerTask`` 首元素为 ``WeaponCandidate``。"""
+    return isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], str)
+
 
 _evaluator: Any | None = None
 _batch_evaluator: Any | None = None
@@ -81,7 +90,22 @@ def evaluate_optimizer_batch_in_process(tasks: list[OptimizerTask]) -> list[Load
     return _batch_evaluator(tasks)
 
 
-def evaluate_keyed_task_in_process(item: tuple[str, OptimizerTask]) -> LoadoutScore:
+def _unwrap_batch_item(item: BatchKeyedItem) -> OptimizerTask:
+    """从续跑项 ``(combo_key, task)`` 或裸 ``OptimizerTask`` 取出 task。"""
+    if _is_keyed_optimizer_task(item):
+        return item[1]
+    return cast(OptimizerTask, item)
+
+
+def evaluate_optimizer_batch_keyed_in_process(
+    items: list[BatchKeyedItem],
+) -> list[LoadoutScore]:
+    """批量评估续跑项 ``(combo_key, task)`` 或裸 ``task``（子进程调用）。"""
+    tasks = [_unwrap_batch_item(item) for item in items]
+    return evaluate_optimizer_batch_in_process(tasks)
+
+
+def evaluate_keyed_task_in_process(item: KeyedOptimizerTask) -> LoadoutScore:
     """评估 ``(combo_key, task)`` 续跑项（子进程调用）。"""
     _key, task = item
     return evaluate_optimizer_task_in_process(task)

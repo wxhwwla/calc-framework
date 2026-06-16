@@ -1,8 +1,9 @@
-/** Context 来源：api（默认）| local（浏览器构建，无 loadout-context 请求） */
+/** Context 来源：local（默认，浏览器构建）| api（服务器构建） */
 
-export type CalcContextMode = "api" | "local";
+export type CalcContextMode = "local" | "api";
 
 export function getCalcContextMode(): CalcContextMode {
   const raw = (import.meta.env.VITE_CALC_CONTEXT as string | undefined)?.trim().toLowerCase();
-  return raw === "local" ? "local" : "api";
+  if (raw === "api") return "api";
+  return "local";
 }

@@ -7,11 +7,12 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any, cast
 
-from PySide6.QtCore import QThread
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
+from PySide6.QtCore import Qt, QThread
+from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
 
 from games.endfield.framework_bridge import get_logger
@@ -42,7 +43,7 @@ class ActionsSearchMixin:
         if secs > 0:
             mins = secs / 60
             if mins >= 60:
-                dock.estimate_output_label.setText(f"{mins/60:.1f}h")
+                dock.estimate_output_label.setText(f"{mins / 60:.1f}h")
             elif mins >= 1:
                 dock.estimate_output_label.setText(f"{mins:.0f}min")
             else:
@@ -55,7 +56,8 @@ class ActionsSearchMixin:
     def _build_search_job_inputs(self) -> Any:
         dock = self.control_dock
         loadout = read_loadout_from_panels(
-            self.char_panel, self.weapon_panel,
+            self.char_panel,
+            self.weapon_panel,
             calculation_mode=self._current_calc_mode,
             weapon_scope_label=dock.single_skill_scope_combo.currentText(),
             equipment_scope_label=dock.equipment_scope_combo.currentText(),
@@ -98,17 +100,22 @@ class ActionsSearchMixin:
             return
 
         output_dir = QFileDialog.getExistingDirectory(
-            cast(QWidget, self), "选择 MVP 搜索导出目录", str(default_search_output_root()),
+            cast(QWidget, self),
+            "选择 MVP 搜索导出目录",
+            str(default_search_output_root()),
         )
         export_root = allocate_search_run_directory(purpose="mvp_search") if not output_dir else Path(output_dir)
 
         cancel_token = SearchCancelToken()
         self._search_cancel_token = cancel_token
         worker = SearchWorker(
-            job, mode_label="最优搜索并导出", export_root=export_root,
+            job,
+            mode_label="最优搜索并导出",
+            export_root=export_root,
             top_n_choice=self.control_dock.read_top_n_choice(),
             workers_choice=self.control_dock.read_workers_choice(),
-            status_prefix="最优搜索状态", cancel_token=cancel_token,
+            status_prefix="最优搜索状态",
+            cancel_token=cancel_token,
         )
         self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
 
@@ -129,13 +136,16 @@ class ActionsSearchMixin:
 
         dock = self.control_dock
         estimate = estimate_single_skill_search(
-            job, max_workers=resolve_parallel_workers(dock.read_workers_choice()),
+            job,
+            max_workers=resolve_parallel_workers(dock.read_workers_choice()),
             top_n=resolve_top_n(dock.read_top_n_choice()),
         )
         self._search_estimated_total_seconds = estimate.estimated_seconds
         if estimate.estimated_seconds >= 120:
             reply = QMessageBox.question(
-                cast(QWidget, self), "确认全量遍历", f"{estimate.text}\n\n组合较多，是否仍要开始？",
+                cast(QWidget, self),
+                "确认全量遍历",
+                f"{estimate.text}\n\n组合较多，是否仍要开始？",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
@@ -147,21 +157,28 @@ class ActionsSearchMixin:
         export_root = allocate_search_run_directory(purpose="full_search")
         mode_label = "多技能加权全量遍历" if job.multi_skill_eval is not None else "单技能全量遍历"
         worker = SearchWorker(
-            job, mode_label=mode_label, export_root=export_root,
+            job,
+            mode_label=mode_label,
+            export_root=export_root,
             top_n_choice=dock.read_top_n_choice(),
             workers_choice=dock.read_workers_choice(),
-            status_prefix="全量遍历", cancel_token=cancel_token,
+            status_prefix="全量遍历",
+            cancel_token=cancel_token,
         )
         self._start_search_thread(worker, "全量遍历：计算中，请稍候。")
 
     # ── 搜索线程管理 ─────────────────────────────
 
     def _start_search_thread(self, worker: Any, status_running: str) -> None:
+        """启动搜索：打包 exe 在主线程同步跑（避免 QThread + native 崩溃）。"""
+        if getattr(sys, "frozen", False):
+            self._run_search_on_main_thread(worker, status_running)
+            return
         self._search_thread = QThread()
         worker.moveToThread(self._search_thread)
-        worker.progress.connect(self._on_search_progress)
-        worker.finished.connect(self._on_search_finished)
-        worker.error.connect(self._on_search_error)
+        worker.progress.connect(self._on_search_progress, Qt.ConnectionType.QueuedConnection)
+        worker.finished.connect(self._on_search_finished, Qt.ConnectionType.QueuedConnection)
+        worker.error.connect(self._on_search_error, Qt.ConnectionType.QueuedConnection)
         self._search_thread.started.connect(worker.run)
         self._search_thread.finished.connect(self._search_thread.deleteLater)
         self._search_thread.start()
@@ -170,21 +187,45 @@ class ActionsSearchMixin:
         self.control_dock.mvp_status_label.setVisible(True)
         self.control_dock.mvp_status_label.setText(status_running)
 
+    def _run_search_on_main_thread(self, worker: Any, status_running: str) -> None:
+        """打包 exe：阻塞主线程执行搜索，进度时 pump 事件循环。"""
+        self._search_thread = None
+        self._set_search_btns_enabled(False)
+        self.control_dock.search_cancel_btn.setEnabled(True)
+        self.control_dock.mvp_status_label.setVisible(True)
+        self.control_dock.mvp_status_label.setText(status_running)
+
+        def _progress_pump(text: str) -> None:
+            self._on_search_progress(text)
+            app = QApplication.instance()
+            if app is not None:
+                app.processEvents()
+
+        worker.progress.connect(_progress_pump, Qt.ConnectionType.DirectConnection)
+        worker.finished.connect(self._on_search_finished, Qt.ConnectionType.DirectConnection)
+        worker.error.connect(self._on_search_error, Qt.ConnectionType.DirectConnection)
+        worker.run()
+
     def _on_search_progress(self, text: str) -> None:
         self.control_dock.mvp_status_label.setText(text)
 
     def _on_search_finished(self, mode_label: str, job: Any, outcome: Any, export_paths: dict) -> None:
         self._search_cancel_token = None
-        self._search_thread.quit()
-        self._search_thread.wait()
+        thread = getattr(self, "_search_thread", None)
+        if thread is not None:
+            thread.quit()
+            thread.wait()
         damage_metric = "加权总伤" if job.multi_skill_eval is not None else "伤害"
         lines = build_search_results_report_lines(
-            mode_label=mode_label, skill_label=str(job.skill_label),
+            mode_label=mode_label,
+            skill_label=str(job.skill_label),
             scope_labels=(str(job.weapon_scope), str(job.equipment_scope)),
             processed_combinations=int(outcome.processed_combinations),
             total_combinations=int(outcome.total_combinations),
-            top_results=outcome.top_results, export_paths=export_paths,
-            cancelled=bool(outcome.cancelled), damage_metric=damage_metric,
+            top_results=outcome.top_results,
+            export_paths=export_paths,
+            cancelled=bool(outcome.cancelled),
+            damage_metric=damage_metric,
             segment_counts=(dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None),
             abnormal_counts=dict(job.physical_abnormal_counts or {}),
             spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
@@ -195,8 +236,11 @@ class ActionsSearchMixin:
         self.control_dock.mvp_status_label.setText(status)
         self._set_search_btns_enabled(True)
         dialog = QtSearchResultsDialog(
-            cast(QWidget, self), title=mode_label, lines=lines,
-            big_font=self.big_font, small_font=self.small_font,
+            cast(QWidget, self),
+            title=mode_label,
+            lines=lines,
+            big_font=self.big_font,
+            small_font=self.small_font,
             top_results=outcome.top_results,
             damage_metric=damage_metric,
             segment_counts=(dict(job.multi_skill_eval.skill_counts) if job.multi_skill_eval else None),
@@ -207,9 +251,10 @@ class ActionsSearchMixin:
 
     def _on_search_error(self, error_msg: str) -> None:
         self._search_cancel_token = None
-        if hasattr(self, "_search_thread") and self._search_thread:
-            self._search_thread.quit()
-            self._search_thread.wait()
+        thread = getattr(self, "_search_thread", None)
+        if thread is not None:
+            thread.quit()
+            thread.wait()
         self.control_dock.mvp_status_label.setText(f"搜索失败：{error_msg}")
         self._set_search_btns_enabled(True)
         QMessageBox.critical(cast(QWidget, self), "搜索失败", error_msg)

@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from utils.search_diagnostics import log_search_config
+
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.loadout.optimizer import (
     LoadoutScore,
@@ -24,6 +26,7 @@ from games.endfield.calc.search.evaluate.process_worker import (
     ProcessWorkerPayload,
     evaluate_optimizer_task_in_process,
 )
+from games.endfield.calc.search.evaluate.task import make_loadout_task_evaluator
 from games.endfield.calc.search.run.cancel import SearchCancelToken
 from games.endfield.calc.search.run.parallel import ParallelBackend, run_bounded_parallel
 
@@ -49,7 +52,8 @@ def run_enumerated_optimizer_parallel(
     """枚举全部配装任务并在内存中保留 TopN。
 
     新增 ``batch_size`` 参数（默认 1000）：>1 时启用 Rust 批量化加速。
-    批量化仅在 ``parallel_backend="thread"`` 时生效（多进程暂不支持）。
+    组合数 ≤ batch_size 时不批量（便于 cancel_after 精确取消）。
+    PyInstaller 冻结 exe（``sys.frozen``）下强制线程池，避免 ProcessPool 反复 spawn onefile。
 
     Returns:
         (top_results, total_combinations, processed_combinations, cancelled, warnings)
@@ -63,9 +67,17 @@ def run_enumerated_optimizer_parallel(
     if total_combinations == 0:
         return (), 0, 0, False, warnings
 
+    effective_evaluator = task_evaluator
+    if effective_evaluator is None and search_job is not None:
+        effective_evaluator = make_loadout_task_evaluator(
+            search_job,
+            crit_mode=config.crit_mode,
+            search_eval=search_eval,
+        )
+
     def _thread_evaluator(task):
-        if task_evaluator is not None:
-            return task_evaluator(task)
+        if effective_evaluator is not None:
+            return effective_evaluator(task)
         return evaluate_task(
             base_context=base_context,
             crit_mode=config.crit_mode,
@@ -74,7 +86,7 @@ def run_enumerated_optimizer_parallel(
         )
 
     process_payload: ProcessWorkerPayload | None = None
-    if task_evaluator is None:
+    if effective_evaluator is None:
         process_payload = ProcessWorkerPayload(
             config=config,
             search_eval=search_eval,
@@ -82,10 +94,19 @@ def run_enumerated_optimizer_parallel(
             base_context=base_context if search_job is None else None,
         )
 
-    backend: ParallelBackend = "thread" if task_evaluator is not None else parallel_backend
+    backend: ParallelBackend = "thread" if effective_evaluator is not None else parallel_backend
 
-    # ── Rust 批量化路径（仅搜索量 > batch_size 时启用，避免小搜索取消不生效） ──
-    use_batch = batch_size > 1 and task_evaluator is None and total_combinations > batch_size
+    # ── Rust 批量化路径（仅裸 evaluate_task；有 search_job 时逐条评估） ──
+    use_batch = batch_size > 1 and effective_evaluator is None and total_combinations > batch_size
+
+    log_search_config(
+        phase="memory",
+        total=total_combinations,
+        max_workers=max_workers,
+        parallel_backend=backend,
+        batch_size=batch_size,
+        use_batch=use_batch,
+    )
 
     if use_batch:
         batch_eval = evaluate_task_batch(

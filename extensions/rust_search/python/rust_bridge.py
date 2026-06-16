@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from typing import Any
 
 from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
@@ -32,6 +33,8 @@ if not os.environ.get("RUST_SEARCH_FALLBACK"):
         _HAS_RUST = True
     except ImportError:
         pass
+
+_rust_call_lock = threading.Lock()
 
 # ── 手动 buff 字段映射（与 search_evaluate.py 一致） ──────────────
 _CONTEXT_BUFF_MAP: dict[str, str] = {
@@ -199,29 +202,30 @@ def evaluate_search_damage(
     rust_effects = [(e.effect_type, float(e.value)) for e in known_effects]
 
     # 5. 调用 Rust
-    rs_result = _rs.evaluate_search_damage(
-        final_attack=final_attack,
-        skill_multiplier=skill_multiplier,
-        skill_type=skill_type,
-        is_true_damage=is_true_damage,
-        is_unbalanced=is_unbalanced,
-        enemy_defense=enemy_defense,
-        enemy_resistance=enemy_resistance,
-        ignore_resistance=ignore_resistance,
-        imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
-        crit_rate=crit_rate,
-        crit_damage=crit_damage,
-        damage_type_bonus=damage_type_bonus,
-        skill_type_bonus=skill_type_bonus,
-        imbalance_damage_bonus=imbalance_damage_bonus,
-        other_damage_bonus=other_damage_bonus,
-        combo_stacks=combo_stacks,
-        break_defense_stacks=break_defense_stacks,
-        base_damage_bonus=base_damage_bonus,
-        effects=rust_effects,
-        crit_mode=crit_mode,
-        damage_pipeline=damage_pipeline,
-    )
+    with _rust_call_lock:
+        rs_result = _rs.evaluate_search_damage(
+            final_attack=final_attack,
+            skill_multiplier=skill_multiplier,
+            skill_type=skill_type,
+            is_true_damage=is_true_damage,
+            is_unbalanced=is_unbalanced,
+            enemy_defense=enemy_defense,
+            enemy_resistance=enemy_resistance,
+            ignore_resistance=ignore_resistance,
+            imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
+            crit_rate=crit_rate,
+            crit_damage=crit_damage,
+            damage_type_bonus=damage_type_bonus,
+            skill_type_bonus=skill_type_bonus,
+            imbalance_damage_bonus=imbalance_damage_bonus,
+            other_damage_bonus=other_damage_bonus,
+            combo_stacks=combo_stacks,
+            break_defense_stacks=break_defense_stacks,
+            base_damage_bonus=base_damage_bonus,
+            effects=rust_effects,
+            crit_mode=crit_mode,
+            damage_pipeline=damage_pipeline,
+        )
 
     # 6. 转换为 Python DamageEvalResult 风格
     from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
@@ -361,29 +365,30 @@ def evaluate_search_damage_batch(param_list: list[dict]) -> list[Any]:
     def pluck(key: str):
         return [pp[key] for pp in preprocessed]
 
-    rs_results = _rs.evaluate_search_damage_batch(
-        final_attacks=pluck("final_attack"),
-        skill_multipliers=pluck("skill_multiplier"),
-        skill_types=pluck("skill_type"),
-        is_true_damages=pluck("is_true_damage"),
-        is_unbalanceds=pluck("is_unbalanced"),
-        enemy_defenses=pluck("enemy_defense"),
-        enemy_resistances=pluck("enemy_resistance"),
-        ignore_resistances=pluck("ignore_resistance"),
-        imbalance_vulnerability_coeffs=pluck("imbalance_vulnerability_coeff"),
-        crit_rates=pluck("crit_rate"),
-        crit_damages=pluck("crit_damage"),
-        damage_type_bonuses=pluck("damage_type_bonus"),
-        skill_type_bonuses=pluck("skill_type_bonus"),
-        imbalance_damage_bonuses=pluck("imbalance_damage_bonus"),
-        other_damage_bonuses=pluck("other_damage_bonus"),
-        combo_stacks_list=pluck("combo_stacks"),
-        break_defense_stacks_list=pluck("break_defense_stacks"),
-        base_damage_bonuses=pluck("base_damage_bonus"),
-        effects_batch=pluck("effects"),
-        crit_modes=pluck("crit_mode"),
-        damage_pipelines=pluck("damage_pipeline"),
-    )
+    with _rust_call_lock:
+        rs_results = _rs.evaluate_search_damage_batch(
+            final_attacks=pluck("final_attack"),
+            skill_multipliers=pluck("skill_multiplier"),
+            skill_types=pluck("skill_type"),
+            is_true_damages=pluck("is_true_damage"),
+            is_unbalanceds=pluck("is_unbalanced"),
+            enemy_defenses=pluck("enemy_defense"),
+            enemy_resistances=pluck("enemy_resistance"),
+            ignore_resistances=pluck("ignore_resistance"),
+            imbalance_vulnerability_coeffs=pluck("imbalance_vulnerability_coeff"),
+            crit_rates=pluck("crit_rate"),
+            crit_damages=pluck("crit_damage"),
+            damage_type_bonuses=pluck("damage_type_bonus"),
+            skill_type_bonuses=pluck("skill_type_bonus"),
+            imbalance_damage_bonuses=pluck("imbalance_damage_bonus"),
+            other_damage_bonuses=pluck("other_damage_bonus"),
+            combo_stacks_list=pluck("combo_stacks"),
+            break_defense_stacks_list=pluck("break_defense_stacks"),
+            base_damage_bonuses=pluck("base_damage_bonus"),
+            effects_batch=pluck("effects"),
+            crit_modes=pluck("crit_mode"),
+            damage_pipelines=pluck("damage_pipeline"),
+        )
 
     from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
 

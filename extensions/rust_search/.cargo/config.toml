@@ -1,0 +1,3 @@
+# 静态链接 MinGW 运行时，使 .pyd 不依赖外部 DLL
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-args=-static-libgcc -static-libstdc++"]

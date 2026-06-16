@@ -9,19 +9,40 @@
 
 from __future__ import annotations
 
+import logging
+import sys
 import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from typing import Any, Literal, TypeVar
 
 from calc_framework.search import SearchCancelToken, TopNTracker
+from utils.search_diagnostics import get_search_logger, summarize_work_item
 
 from ..evaluate.process_worker import ProcessWorkerPayload, init_process_worker
 
 T = TypeVar("T")
 R = TypeVar("R")
 
+
+def _search_log() -> logging.Logger:
+    return get_search_logger()
+
+
 ParallelBackend = Literal["auto", "thread", "process"]
+
+
+def _pyinstaller_frozen() -> bool:
+    """PyInstaller onefile 冻结模式（子进程会重跑 exe，不宜 ProcessPool）。"""
+    return bool(getattr(sys, "frozen", False))
+
+
+def _resolve_max_workers(max_workers: int) -> int:
+    """打包 exe 下单线程评估，避免 Rust FFI / 装备缓存与 ThreadPool 并发冲突。"""
+    workers = max(1, int(max_workers))
+    if _pyinstaller_frozen():
+        return 1
+    return workers
 
 
 def _resolve_parallel_backend(
@@ -31,6 +52,9 @@ def _resolve_parallel_backend(
     process_payload: ProcessWorkerPayload | None,
 ) -> Literal["thread", "process"]:
     if parallel_backend == "thread":
+        return "thread"
+    # 打包 exe：ProcessPool 在 Windows spawn 下会反复启动 onefile，易与 Qt/Rust 冲突崩溃
+    if _pyinstaller_frozen():
         return "thread"
     if parallel_backend == "process":
         return "process" if process_payload is not None else "thread"
@@ -79,7 +103,7 @@ def run_bounded_parallel(
     其余参数含义不变。
     """
     token = cancel_token or SearchCancelToken()
-    workers = max(1, int(max_workers))
+    workers = _resolve_max_workers(max_workers)
     backend = _resolve_parallel_backend(
         max_workers=workers,
         parallel_backend=parallel_backend,
@@ -90,6 +114,18 @@ def run_bounded_parallel(
             backend = "thread"
         else:
             evaluate = process_evaluate
+    _search_log().info(
+        "run_bounded_parallel | total=%s workers=%s (req=%s) backend=%s batch_size=%s "
+        "batch_eval=%s frozen=%s executor=%s",
+        total,
+        workers,
+        max(1, int(max_workers)),
+        backend,
+        batch_size,
+        batch_evaluate is not None,
+        _pyinstaller_frozen(),
+        "inline" if _pyinstaller_frozen() else ("ProcessPool" if backend == "process" else "ThreadPool"),
+    )
     max_inflight = max(workers * 4, 8)
     tracker: TopNTracker[R] | None = None
     all_results: list[R] | None = None
@@ -101,6 +137,31 @@ def run_bounded_parallel(
     processed = 0
     cancelled = False
     started_at = time.perf_counter()
+    use_inline = _pyinstaller_frozen()
+
+    def _report_progress() -> None:
+        p = processed
+        elapsed = max(1e-6, time.perf_counter() - started_at)
+        speed = p / elapsed
+        remain = max(0, int(total) - p)
+        eta = remain / speed if speed > 0 else 0.0
+        if progress_callback:
+            progress_callback(
+                {
+                    "processed": p,
+                    "total": int(total),
+                    "speed_per_sec": speed,
+                    "eta_seconds": eta,
+                }
+            )
+        if p > 0 and (p % 5000 == 0 or p == int(total)):
+            _search_log().info(
+                "并行进度 processed=%s/%s speed=%.1f/s backend_loop=%s",
+                p,
+                total,
+                speed,
+                "inline" if use_inline else "pool",
+            )
 
     # ── 批量化处理 ──
     if batch_size > 1 and batch_evaluate is not None:
@@ -117,9 +178,9 @@ def run_bounded_parallel(
                     all_results.append(result)
                 processed += 1
 
-        # 决定批量用 thread 还是 process
-        if process_payload is not None:
-            from ..evaluate.process_worker import evaluate_optimizer_batch_in_process
+        # 批量路径须与 backend 一致（勿因 process_payload 存在就强制多进程）
+        if backend == "process" and process_payload is not None:
+            from ..evaluate.process_worker import evaluate_optimizer_batch_keyed_in_process
 
             _batch_executor_cls: type[ProcessPoolExecutor] | type[ThreadPoolExecutor] = ProcessPoolExecutor
             _batch_executor_kwargs: dict = {
@@ -127,25 +188,35 @@ def run_bounded_parallel(
                 "initializer": init_process_worker,
                 "initargs": (process_payload,),
             }
-            _batch_eval_fn = evaluate_optimizer_batch_in_process
+            _batch_eval_fn = evaluate_optimizer_batch_keyed_in_process
         else:
             _batch_executor_cls = ThreadPoolExecutor
             _batch_executor_kwargs = {"max_workers": workers}
             _batch_eval_fn = batch_evaluate
 
-        _run_parallel_loop(
-            work_iter=batched_items,
-            total=total,
-            evaluate=_batch_eval_fn,
-            on_result=_on_batch_result,
-            max_inflight=max_inflight,
-            executor_cls=_batch_executor_cls,
-            executor_kwargs=_batch_executor_kwargs,
-            get_processed=lambda: processed,
-            cancel_token=token,
-            progress_callback=progress_callback,
-            started_at=started_at,
-        )
+        if use_inline:
+            _run_inline_loop(
+                work_iter=batched_items,
+                evaluate=_batch_eval_fn,
+                on_result=_on_batch_result,
+                get_processed=lambda: processed,
+                cancel_token=token,
+                report_progress=_report_progress,
+            )
+        else:
+            _run_parallel_loop(
+                work_iter=batched_items,
+                total=total,
+                evaluate=_batch_eval_fn,
+                on_result=_on_batch_result,
+                max_inflight=max_inflight,
+                executor_cls=_batch_executor_cls,
+                executor_kwargs=_batch_executor_kwargs,
+                get_processed=lambda: processed,
+                cancel_token=token,
+                progress_callback=progress_callback,
+                started_at=started_at,
+            )
         cancelled = token.should_cancel(processed)
     else:
         work_iter = iter(work_items)
@@ -172,25 +243,66 @@ def run_bounded_parallel(
                 all_results.append(result)
             processed += 1
 
-        _run_parallel_loop(
-            work_iter=work_iter,
-            total=total,
-            evaluate=evaluate,
-            on_result=_on_single_result,
-            max_inflight=max_inflight,
-            executor_cls=executor_cls,
-            executor_kwargs=executor_kwargs,
-            get_processed=lambda: processed,
-            cancel_token=token,
-            progress_callback=progress_callback,
-            started_at=started_at,
-        )
+        if use_inline:
+            _run_inline_loop(
+                work_iter=work_iter,
+                evaluate=evaluate,
+                on_result=_on_single_result,
+                get_processed=lambda: processed,
+                cancel_token=token,
+                report_progress=_report_progress,
+            )
+        else:
+            _run_parallel_loop(
+                work_iter=work_iter,
+                total=total,
+                evaluate=evaluate,
+                on_result=_on_single_result,
+                max_inflight=max_inflight,
+                executor_cls=executor_cls,
+                executor_kwargs=executor_kwargs,
+                get_processed=lambda: processed,
+                cancel_token=token,
+                progress_callback=progress_callback,
+                started_at=started_at,
+            )
         cancelled = token.should_cancel(processed)
 
     if tracker is not None:
         return tracker.results(), processed, cancelled
     assert all_results is not None
     return tuple(all_results), processed, cancelled
+
+
+def _run_inline_loop(
+    *,
+    work_iter: Iterable[Any],
+    evaluate: Callable[[Any], Any],
+    on_result: Callable[[Any, Any], None],
+    get_processed: Callable[[], int],
+    cancel_token: SearchCancelToken,
+    report_progress: Callable[[], None],
+) -> None:
+    """打包 exe 专用：在调用线程内顺序评估，避免 ThreadPool + Qt/Rust 跨线程崩溃。"""
+    heartbeat = 0
+    for item in work_iter:
+        if cancel_token.should_cancel(get_processed()):
+            break
+        try:
+            result = evaluate(item)
+        except Exception:
+            _search_log().exception(
+                "内联评估失败 item=%s",
+                summarize_work_item(item),
+            )
+            continue
+        on_result(item, result)
+        heartbeat += 1
+        report_progress()
+        if heartbeat % 1000 == 0:
+            _search_log().info("内联心跳 processed=%s", get_processed())
+        if cancel_token.should_cancel(get_processed()):
+            break
 
 
 def _run_parallel_loop(
@@ -235,6 +347,10 @@ def _run_parallel_loop(
                 try:
                     result = future.result()
                 except Exception:
+                    _search_log().exception(
+                        "并行评估失败 item=%s",
+                        summarize_work_item(item),
+                    )
                     _submit_until_full()
                     continue
 
@@ -253,6 +369,14 @@ def _run_parallel_loop(
                             "speed_per_sec": speed,
                             "eta_seconds": eta,
                         }
+                    )
+                if p > 0 and (p % 5000 == 0 or p == int(total)):
+                    _search_log().info(
+                        "并行进度 processed=%s/%s speed=%.1f/s backend_loop=%s",
+                        p,
+                        total,
+                        speed,
+                        executor_cls.__name__,
                     )
                 if cancel_token.should_cancel(p):
                     for pending_future in list(pending.keys()):

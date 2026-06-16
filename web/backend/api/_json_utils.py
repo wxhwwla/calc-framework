@@ -24,7 +24,15 @@ def load_json(path: Path) -> Any:
 
 # ── 路径常量 ──────────────────────────────────────────
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+import sys as _sys
+
+if getattr(_sys, "frozen", False):
+    # PyInstaller 冻结模式：_MEIPASS 是解压目录
+    _BASE_DIR = Path(_sys._MEIPASS)
+else:
+    _BASE_DIR = Path(__file__).resolve().parents[3]
+
+_REPO_ROOT = _BASE_DIR
 REPO_ROOT = _REPO_ROOT
 FRAMEWORK_SRC = _REPO_ROOT / "framework" / "src"
 ADAPTER_ROOT = _REPO_ROOT / "framework" / "adapters"

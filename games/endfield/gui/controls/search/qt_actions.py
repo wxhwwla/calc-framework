@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """PySide6 搜索线程与结果弹窗。"""
 
-
-
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -22,6 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from utils.search_diagnostics import get_search_logger, init_search_diagnostics, log_search_config
 
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.calc.manual_buff.physical import (
@@ -60,14 +59,8 @@ from games.endfield.gui.presentation.search_results_lines import (
 # ═══════════════════════════════════════════════════════
 
 
-
-
-
 class SearchWorker(QObject):
-
     """在 QThread 中执行全量遍历搜索。"""
-
-
 
     progress = Signal(str)
 
@@ -75,30 +68,17 @@ class SearchWorker(QObject):
 
     error = Signal(str)
 
-
-
     def __init__(
-
         self,
-
         job: SingleSkillSearchJob,
-
         *,
-
         mode_label: str,
-
         export_root: Path,
-
         top_n_choice: str,
-
         workers_choice: str,
-
         status_prefix: str,
-
         cancel_token: SearchCancelToken,
-
     ) -> None:
-
         super().__init__()
 
         self._job = job
@@ -111,25 +91,42 @@ class SearchWorker(QObject):
 
         self._max_workers = resolve_parallel_workers(workers_choice)
 
+        self._workers_choice = workers_choice
+
         self._status_prefix = status_prefix
 
         self._cancel_token = cancel_token
         """初始化实例。"""
 
-
-
     def run(self) -> None:
-
         """在 QThread 中执行全量遍历搜索，发射 progress/finished/error 信号。"""
-
+        init_search_diagnostics()
+        slog = get_search_logger()
         config = optimizer_config_for_search_job(self._job, top_n=self._top_n)
 
-
+        log_search_config(
+            phase="gui_worker",
+            mode=self._mode_label,
+            export_root=str(self._export_root),
+            max_workers=self._max_workers,
+            top_n=self._top_n,
+            workers_choice=self._workers_choice,
+            skill=getattr(self._job, "skill_label", ""),
+            char=getattr(self._job, "char_data", {}).get("名称", ""),
+        )
 
         def _progress(info: dict) -> None:
             processed = int(info.get("processed", 0))
             total = int(info.get("total", 0))
             speed = float(info.get("speed_per_sec", 0))
+            if processed > 0 and (processed % 5000 == 0 or processed == total):
+                slog.info(
+                    "GUI 搜索进度 processed=%s/%s speed=%.1f/s eta=%.0fs",
+                    processed,
+                    total,
+                    speed,
+                    float(info.get("eta_seconds", 0.0)),
+                )
             eta_seconds = float(info.get("eta_seconds", 0.0))
             estimated_total = (total / speed) if speed > 0 and total > 0 else 0
             text = format_search_progress_text(
@@ -142,33 +139,27 @@ class SearchWorker(QObject):
             self.progress.emit(text)
             """progress。"""
 
-
-
         try:
-
             outcome = run_exported_single_skill_search(
-
                 self._job,
-
                 export_root=self._export_root,
-
                 config=config,
-
                 max_workers=self._max_workers,
-
                 cancel_token=self._cancel_token,
-
                 progress_callback=_progress,
-
             )
 
         except Exception as exc:
-
+            slog.exception("GUI 搜索线程异常")
             self.error.emit(str(exc))
-
             return
 
-
+        slog.info(
+            "GUI 搜索完成 processed=%s total=%s cancelled=%s",
+            outcome.processed_combinations,
+            outcome.total_combinations,
+            outcome.cancelled,
+        )
 
         export_paths = export_paths_to_strings(outcome.exports or {})
 
@@ -176,12 +167,7 @@ class SearchWorker(QObject):
 
         export_paths["导出目录"] = str(outcome.export_dir)
 
-
-
         self.finished.emit(self._mode_label, self._job, outcome, export_paths)
-
-
-
 
 
 # ═══════════════════════════════════════════════════════
@@ -189,7 +175,6 @@ class SearchWorker(QObject):
 #  搜索弹窗
 
 # ═══════════════════════════════════════════════════════
-
 
 
 _DARK_BG = "#1E1E1E"
@@ -205,27 +190,15 @@ _SEG_FG = QColor("#9BB9E0")
 _ABNORMAL_FG = QColor("#C9A96E")
 
 
-
-
-
 def _build_tree_items(
-
     lines: list[str],
-
     top_results: Sequence[LoadoutScore] | None,
-
     *,
-
     damage_metric: str,
-
     segment_counts: dict[str, int] | None,
-
     abnormal_counts: dict[str, int] | None,
-
     spell_abnormal_counts: dict[str, int] | None,
-
 ) -> list[QTreeWidgetItem]:
-
     """构建搜索结果树节点。
 
 
@@ -236,12 +209,8 @@ def _build_tree_items(
 
     items: list[QTreeWidgetItem] = []
 
-
-
     if not top_results:
-
         for line in lines:
-
             item = QTreeWidgetItem([line])
 
             item.setFlags(Qt.ItemFlag.ItemIsEnabled)
@@ -250,26 +219,16 @@ def _build_tree_items(
 
         return items
 
-
-
     for idx, score in enumerate(top_results, start=1):
-
         loadout = score.loadout_names
 
         header_text = (
-
             f"第{idx}名: {score.weapon_name}  |  "
-
             f"{damage_metric} {score.final_damage:.1f}  |  "
-
             f"护甲 {loadout.get('chest', '')}  |  "
-
             f"护手 {loadout.get('gloves', '')}  |  "
-
             f"配件A {loadout.get('accessory_a', '')}  |  "
-
             f"配件B {loadout.get('accessory_b', '')}"
-
         )
 
         root = QTreeWidgetItem([header_text])
@@ -278,42 +237,24 @@ def _build_tree_items(
 
         root.setExpanded(idx <= 3)
 
-
-
         if score.segment_breakdown and (segment_counts or abnormal_counts):
-
-            base_skill_breakdown, physical_abnormal_breakdown = split_damage_breakdown(
-
-                score.segment_breakdown
-
-            )
+            base_skill_breakdown, physical_abnormal_breakdown = split_damage_breakdown(score.segment_breakdown)
 
             spell_abnormal_breakdown: dict[str, float] = {}
 
             skill_breakdown: dict[str, float] = {}
 
             for key, value in base_skill_breakdown.items():
-
                 if is_spell_abnormal_key(key):
-
                     spell_abnormal_breakdown[key] = value
 
                 else:
-
                     skill_breakdown[key] = value
 
-
-
             if skill_breakdown and segment_counts:
-
-                breakdown_lines = format_segment_breakdown_lines(
-
-                    skill_breakdown, segment_counts, indent=""
-
-                )
+                breakdown_lines = format_segment_breakdown_lines(skill_breakdown, segment_counts, indent="")
 
                 for b_line in breakdown_lines:
-
                     child = QTreeWidgetItem([b_line])
 
                     child.setForeground(0, _SEG_FG)
@@ -322,40 +263,24 @@ def _build_tree_items(
 
                     root.addChild(child)
 
-
-
-                weighted_total, _, skill_type_totals = aggregate_weighted_damage(
-
-                    skill_breakdown, segment_counts
-
-                )
+                weighted_total, _, skill_type_totals = aggregate_weighted_damage(skill_breakdown, segment_counts)
 
                 if len(skill_type_totals) > 1:
-
                     parts = [f"{k} {v:.1f}" for k, v in skill_type_totals.items()]
 
                     total_line = QTreeWidgetItem([f"加权合计: {weighted_total:.1f}（{' + '.join(parts)}）"])
 
                 else:
-
                     total_line = QTreeWidgetItem([f"加权合计: {weighted_total:.1f}"])
 
                 total_line.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
                 root.addChild(total_line)
 
-
-
             if physical_abnormal_breakdown and abnormal_counts:
-
-                ab_lines = format_abnormal_breakdown_lines(
-
-                    physical_abnormal_breakdown, abnormal_counts, indent=""
-
-                )
+                ab_lines = format_abnormal_breakdown_lines(physical_abnormal_breakdown, abnormal_counts, indent="")
 
                 for ab_line in ab_lines:
-
                     child = QTreeWidgetItem([ab_line])
 
                     child.setForeground(0, _ABNORMAL_FG)
@@ -364,18 +289,12 @@ def _build_tree_items(
 
                     root.addChild(child)
 
-
-
             if spell_abnormal_breakdown and spell_abnormal_counts:
-
                 sp_lines = format_spell_abnormal_breakdown_lines(
-
                     spell_abnormal_breakdown, spell_abnormal_counts, indent=""
-
                 )
 
                 for sp_line in sp_lines:
-
                     child = QTreeWidgetItem([sp_line])
 
                     child.setForeground(0, _ABNORMAL_FG)
@@ -384,52 +303,28 @@ def _build_tree_items(
 
                     root.addChild(child)
 
-
-
         items.append(root)
-
-
 
     return items
 
 
-
-
-
 class QtSearchResultsDialog(QDialog):
-
     """全量 / MVP 搜索结果展示弹窗（结构化树视图）。"""
 
-
-
     def __init__(
-
         self,
-
         parent: QWidget | None = None,
-
         *,
-
         title: str,
-
         lines: list[str],
-
         big_font: QFont,
-
         small_font: QFont,
-
         top_results: Sequence[LoadoutScore] | None = None,
-
         damage_metric: str = "伤害",
-
         segment_counts: dict[str, int] | None = None,
-
         abnormal_counts: dict[str, int] | None = None,
-
         spell_abnormal_counts: dict[str, int] | None = None,
-
     ) -> None:
-
         super().__init__(parent)
 
         self.setWindowTitle(title)
@@ -438,13 +333,9 @@ class QtSearchResultsDialog(QDialog):
 
         self.setMinimumSize(680, 480)
 
-
-
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(12, 12, 12, 12)
-
-
 
         tree = QTreeWidget()
 
@@ -514,40 +405,25 @@ class QtSearchResultsDialog(QDialog):
 
         tree.setRootIsDecorated(True)
 
-
-
         tree_items = _build_tree_items(
-
-            lines, top_results,
-
+            lines,
+            top_results,
             damage_metric=damage_metric,
-
             segment_counts=segment_counts,
-
             abnormal_counts=abnormal_counts,
-
             spell_abnormal_counts=spell_abnormal_counts,
-
         )
 
         for item in tree_items:
-
             tree.addTopLevelItem(item)
-
-
 
         layout.addWidget(tree, stretch=1)
 
-
-
         info_label = QPushButton(
-
             f"共 {len(top_results) if top_results else 0} 个结果  |  "
-
             f"前 {min(3, len(top_results) if top_results else 0)} 项已展开"
-
-            if top_results else ""
-
+            if top_results
+            else ""
         )
 
         info_label.setFont(small_font)
@@ -567,8 +443,6 @@ class QtSearchResultsDialog(QDialog):
         info_label.setEnabled(False)
 
         layout.addWidget(info_label)
-
-
 
         btn_row = QHBoxLayout()
 
@@ -600,4 +474,3 @@ class QtSearchResultsDialog(QDialog):
 
         layout.addLayout(btn_row)
         """初始化实例。"""
-

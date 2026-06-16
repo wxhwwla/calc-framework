@@ -39,15 +39,21 @@
 
 from __future__ import annotations
 
+import threading
 from collections import OrderedDict
 from collections.abc import Callable
 
-# ── 优先使用 Rust 加速版，不可用时降级到 Python ──
-try:
-    from extensions.rust_search.python.rust_bridge import evaluate_search_damage as _rs_eval
+from utils.frozen_runtime import use_rust_search_accel
 
-    evaluate_search_damage = _rs_eval
-except ImportError:
+# ── 优先使用 Rust 加速版；打包 exe 永不 import rust_bridge ──
+if use_rust_search_accel():
+    try:
+        from extensions.rust_search.python.rust_bridge import evaluate_search_damage as _rs_eval
+
+        evaluate_search_damage = _rs_eval
+    except ImportError:
+        from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+else:
     from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 
 from games.endfield.calc.damage.engine import CritMode, DamageContext
@@ -61,6 +67,7 @@ from .types import LoadoutScore, RuntimeEvalSnapshot, WeaponCandidate
 
 # ── 装备侧效果缓存（键=四件装备名元组，同一配装不同武器时复用） ──
 _loadout_cache: OrderedDict[tuple[str, str, str, str], tuple[list, dict[str, float], float]] = OrderedDict()
+_loadout_cache_lock = threading.Lock()
 _MAX_LOADOUT_CACHE = 16384
 
 
@@ -147,21 +154,22 @@ def build_runtime_eval_snapshot(
     weapon, (chest, glove, acc_a, acc_b) = task
     # 装备侧聚合结果缓存（同一配装不同武器复用，避免重复笛卡尔积级 build+aggregate）
     _ckey = (chest.get("名称", ""), glove.get("名称", ""), acc_a.get("名称", ""), acc_b.get("名称", ""))
-    cached = _loadout_cache.get(_ckey)
-    if cached is not None:
-        equip_effects, flat_stats, atk_percent = cached
-    else:
-        loadout = build_four_slot_loadout(
-            chest=chest,
-            gloves=glove,
-            accessory_a=acc_a,
-            accessory_b=acc_b,
-            allow_duplicate_accessory=True,
-        )
-        equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
-        if len(_loadout_cache) >= _MAX_LOADOUT_CACHE:
-            _loadout_cache.popitem(last=False)
-        _loadout_cache[_ckey] = (equip_effects, flat_stats, atk_percent)
+    with _loadout_cache_lock:
+        cached = _loadout_cache.get(_ckey)
+        if cached is not None:
+            equip_effects, flat_stats, atk_percent = cached
+        else:
+            loadout = build_four_slot_loadout(
+                chest=chest,
+                gloves=glove,
+                accessory_a=acc_a,
+                accessory_b=acc_b,
+                allow_duplicate_accessory=True,
+            )
+            equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+            if len(_loadout_cache) >= _MAX_LOADOUT_CACHE:
+                _loadout_cache.popitem(last=False)
+            _loadout_cache[_ckey] = (equip_effects, flat_stats, atk_percent)
     effects = list(weapon.effects) + equip_effects
     final_attack = weapon.final_attack
     # 全量搜索时按当前等级曲线重算 final_attack（含装备平铺与攻击%）
@@ -206,8 +214,23 @@ def evaluate_task_batch(
     """返回批量化评估闭包（收集 N 个任务 → Rust 批量评估 → 返回 N 个评分）。
 
     依赖 ``extensions.rust_search.python.rust_bridge.evaluate_search_damage_batch``。
-    Rust 扩展不可用时自动降级到逐任务评估。
+    Rust 扩展不可用时自动降级到逐任务评估；打包 exe 永不走 Rust 批量。
     """
+    if not use_rust_search_accel():
+
+        def _py_only_batch(tasks: list[OptimizerTask]) -> list[LoadoutScore]:
+            return [
+                evaluate_task(
+                    base_context=base_context,
+                    crit_mode=crit_mode,
+                    task=t,
+                    search_eval=search_eval,
+                )
+                for t in tasks
+            ]
+
+        return _py_only_batch
+
     # ── 尝试导入 Rust 批量函数 ──
     try:
         from extensions.rust_search.python.rust_bridge import evaluate_search_damage_batch as _batch_fn
@@ -236,21 +259,22 @@ def evaluate_task_batch(
 
             # 装备缓存（与 build_runtime_eval_snapshot 一致）
             _ckey = (chest.get("名称", ""), glove.get("名称", ""), acc_a.get("名称", ""), acc_b.get("名称", ""))
-            cached = _loadout_cache.get(_ckey)
-            if cached is not None:
-                equip_effects, flat_stats, atk_percent = cached
-            else:
-                loadout = build_four_slot_loadout(
-                    chest=chest,
-                    gloves=glove,
-                    accessory_a=acc_a,
-                    accessory_b=acc_b,
-                    allow_duplicate_accessory=True,
-                )
-                equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
-                if len(_loadout_cache) >= _MAX_LOADOUT_CACHE:
-                    _loadout_cache.popitem(last=False)
-                _loadout_cache[_ckey] = (equip_effects, flat_stats, atk_percent)
+            with _loadout_cache_lock:
+                cached = _loadout_cache.get(_ckey)
+                if cached is not None:
+                    equip_effects, flat_stats, atk_percent = cached
+                else:
+                    loadout = build_four_slot_loadout(
+                        chest=chest,
+                        gloves=glove,
+                        accessory_a=acc_a,
+                        accessory_b=acc_b,
+                        allow_duplicate_accessory=True,
+                    )
+                    equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+                    if len(_loadout_cache) >= _MAX_LOADOUT_CACHE:
+                        _loadout_cache.popitem(last=False)
+                    _loadout_cache[_ckey] = (equip_effects, flat_stats, atk_percent)
 
             effects = list(weapon.effects) + equip_effects
             final_attack = weapon.final_attack

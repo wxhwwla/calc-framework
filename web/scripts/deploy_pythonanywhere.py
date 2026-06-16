@@ -39,9 +39,7 @@ import os
 import re
 import subprocess
 import sys
-import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -56,7 +54,7 @@ _SCRIPTS_DIR = _REPO_ROOT / "web" / "scripts"
 _ZIP_PATH = _REPO_ROOT / "dist_pa.zip"
 _ARKNIGHTS_PARSED_ZIP = _REPO_ROOT / "dist_arknights_parsed.zip"
 _PA_UPLOAD_INTERVAL = 0.2  # Files API 限流，逐文件上传时的间隔（秒；并发模式下调低）
-_MAX_CONCURRENT_UPLOADS = 5  # 并发上传线程数（PA 免费版通常可承受 5-8 并发）
+_MAX_CONCURRENT_UPLOADS = 3  # 并发上传线程数（PA 免费版限流较严，3 并发 + 指数退避更稳）
 _CONFIG_PATH = Path.home() / ".pythonanywhere"
 
 # ── PythonAnywhere API ────────────────────────────────────────────────────────
@@ -175,7 +173,7 @@ def _upload_bytes_to_path(
     label: str,
     *,
     quiet: bool = False,
-    max_retries: int = 3,
+    max_retries: int = 5,
 ) -> bool:
     """通过 Files API 上传单个文件（含 429 重试）。"""
     username = config.get("username")
@@ -210,7 +208,7 @@ def _upload_bytes_to_path(
                 print(f"  [OK] {label} → {remote_path}")
             return True
         if (code in (-1, -2) or code == 429) and attempt + 1 < max_retries:
-            wait = 5 * (attempt + 1)
+            wait = min(5 * (2**attempt), 60)  # 指数退避: 5s, 10s, 20s, 40s, 60s...
             reason = "超时" if code == -2 else ("网络错误" if code == -1 else "限流")
             if not quiet:
                 print(f"  [RETRY] {label}: {reason} ({code})，{wait}s 后重试 ({attempt + 1}/{max_retries})...")
@@ -596,7 +594,7 @@ def _upload_single_dist_file(
     boundary = b"----pa-deploy-boundary"
     body_data = b""
 
-    for attempt in range(2):
+    for attempt in range(5):
         url = _pa_file_url(username, remote_path)
         body_parts = [
             b"--" + boundary,
@@ -617,10 +615,10 @@ def _upload_single_dist_file(
         )
         if code in (200, 201):
             return (arcname, len(file_data), True)
-        if (code in (-1, -2) or code == 429) and attempt < 1:
-            wait = 3
+        if (code in (-1, -2) or code == 429) and attempt + 1 < 5:
+            wait = min(5 * (2**attempt), 60)
             reason = "超时" if code == -2 else ("网络错误" if code == -1 else "限流")
-            print(f"  [RETRY] {arcname}: {reason} ({code})，{wait}s 后重试...")
+            print(f"  [RETRY] {arcname}: {reason} ({code})，{wait}s 后重试 ({attempt + 1}/5)...")
             time.sleep(wait)
 
     return (arcname, len(file_data), False)
@@ -661,44 +659,24 @@ def _upload_dist_files(config: dict) -> None:
     _upload_bytes_to_path(config, dist_base + warmup[0], warmup[1], "warmup", quiet=True, max_retries=5)
     entries = [e for e in entries if e[0] != warmup[0]]
     total = len(entries)
-    print(f"  剩余 {total} 个文件，并发 {_MAX_CONCURRENT_UPLOADS} 线程...")
+    print(f"  剩余 {total} 个文件，串行上传（每文件间隔 0.5s，避免限流）...")
     t0 = time.time()
-
-    # 心跳线程
-    heartbeat_stop = threading.Event()
-
-    def _heartbeat() -> None:
-        while not heartbeat_stop.wait(5):
-            elapsed = time.time() - t0
-            done = count + errors
-            tail = f"，{errors} 失败" if errors else ""
-            print(f"  [⏱ {elapsed:.0f}s] {done}/{total} 完成{tail}")
-
-    ticker = threading.Thread(target=_heartbeat, daemon=True)
-    ticker.start()
 
     count = 0
     errors = 0
-    with ThreadPoolExecutor(max_workers=_MAX_CONCURRENT_UPLOADS) as pool:
-        futures = {
-            pool.submit(
-                _upload_bytes_to_path, config, dist_base + arcname, data, arcname, quiet=True, max_retries=3
-            ): arcname
-            for arcname, data in entries
-        }
-        for f in as_completed(futures):
-            arcname = futures[f]
-            try:
-                if f.result():
-                    count += 1
-                else:
-                    errors += 1
-                    print(f"  [WARN] {arcname}: 上传失败")
-            except Exception as e:
-                errors += 1
-                print(f"  [ERR] {arcname}: {e}")
+    for arcname, data in entries:
+        elapsed = time.time() - t0
+        ok = _upload_bytes_to_path(config, dist_base + arcname, data, arcname, quiet=True, max_retries=5)
+        if ok:
+            count += 1
+        else:
+            errors += 1
+            print(f"  [WARN] {arcname}: 上传失败")
+        # 每 10 个文件或 5s 输出一次进度
+        if (count + errors) % 10 == 0 or time.time() - t0 > elapsed + 5:
+            print(f"  [⏱ {time.time() - t0:.0f}s] {count + errors}/{total} 完成")
+        time.sleep(0.5)  # 串行间隔，避免限流
 
-    heartbeat_stop.set()
     elapsed = time.time() - t0
     if errors:
         print(f"  [⏱ {elapsed:.0f}s] {count} 成功, {errors} 失败")
@@ -708,48 +686,26 @@ def _upload_dist_files(config: dict) -> None:
 
 # ── 上传后端 Python 文件 ─────────────────────────────────────────────────────
 def _parallel_upload(config: dict, tasks: list[tuple[bytes, str, str]]) -> tuple[int, int]:
-    """并发上传多个文件。tasks: [(file_data, remote_path, label), ...] 返回 (ok, err)。"""
+    """串行上传多个文件（避免 PA 限流）。tasks: [(file_data, remote_path, label), ...] 返回 (ok, err)。"""
     ok, err = 0, 0
     total = len(tasks)
     if not tasks:
         return ok, err
 
-    print(f"  共 {total} 个文件，并发 {_MAX_CONCURRENT_UPLOADS} 线程...")
+    print(f"  共 {total} 个文件，串行上传（间隔 0.5s）...")
     t0 = time.time()
 
-    # 心跳线程：每 3s 输出进度（长文件上传时不至看起来卡住）
-    heartbeat_stop = threading.Event()
+    for idx, (data, remote, label) in enumerate(tasks):
+        elapsed = time.time() - t0
+        status = _upload_bytes_to_path(config, remote, data, label, quiet=True, max_retries=5)
+        if status:
+            print(f"  [{idx + 1}/{total} OK] {label}")
+            ok += 1
+        else:
+            print(f"  [{idx + 1}/{total} ERR] {label}")
+            err += 1
+        time.sleep(0.5)
 
-    def _heartbeat() -> None:
-        while not heartbeat_stop.wait(3):
-            elapsed = time.time() - t0
-            done = ok + err
-            tail = f"，{err} 失败" if err else ""
-            print(f"  [⏱ {elapsed:.0f}s] {done}/{total} 完成{tail}")
-
-    ticker = threading.Thread(target=_heartbeat, daemon=True)
-    ticker.start()
-
-    with ThreadPoolExecutor(max_workers=_MAX_CONCURRENT_UPLOADS) as pool:
-        futures = {
-            pool.submit(_upload_bytes_to_path, config, remote, data, label, quiet=True): label
-            for data, remote, label in tasks
-        }
-        for f in as_completed(futures):
-            label = futures[f]
-            done = ok + err + 1  # +1 for the file just completing
-            try:
-                if f.result():
-                    print(f"  [{done}/{total} OK] {label}")
-                    ok += 1
-                else:
-                    print(f"  [{done}/{total} ERR] {label}")
-                    err += 1
-            except Exception as e:
-                print(f"  [{done}/{total} ERR] {label}: {e}")
-                err += 1
-
-    heartbeat_stop.set()
     elapsed = time.time() - t0
     print(f"  [⏱ {elapsed:.1f}s] 完成: {ok} 成功, {err} 失败")
     return ok, err
@@ -1878,6 +1834,9 @@ def main() -> None:
             _upload_dist_files(config)
         _upload_backend_files(config)
         _upload_generator_tools(config)
+        _upload_framework_src(config)  # ← framework/src/（calc_framework 模块）
+        _upload_framework_adapters(config)  # ← framework/adapters/（游戏适配器 meta/DAG）
+        _upload_game_data(config)  # ← games/endfield/data/（角色/武器/装备 JSON）
         _ensure_hub_storage(config)
         _upload_wsgi(config)
         if not args.backend_only:

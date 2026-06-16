@@ -227,8 +227,17 @@ def _build_target(
                 f"{base_dir / 'games' / 'endfield' / 'gui'};games/endfield/gui",
                 "--add-data",
                 f"{base_dir / 'games' / 'endfield' / 'calc'};games/endfield/calc",
-                "--add-data",
-                f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'};tools/arknights_scout/output/parsed",
+                *(
+                    [
+                        "--add-data",
+                        (
+                            f"{base_dir / 'tools' / 'arknights_scout' / 'output' / 'parsed'}"
+                            ";tools/arknights_scout/output/parsed"
+                        ),
+                    ]
+                    if (base_dir / "tools" / "arknights_scout" / "output" / "parsed").is_dir()
+                    else []
+                ),
                 "--add-data",
                 f"{base_dir / 'framework' / 'adapters'};framework/adapters",
                 "--add-data",
@@ -271,6 +280,12 @@ def _build_target(
                 "uvicorn.supervisors.statreload",
                 "--hidden-import",
                 "uvicorn.supervisors.watchgodreload",
+                "--hidden-import",
+                "rust_search",
+                "--hidden-import",
+                "extensions.rust_search.python.rust_bridge",
+                "--collect-submodules",
+                "extensions.rust_search",
             ]
         )
 

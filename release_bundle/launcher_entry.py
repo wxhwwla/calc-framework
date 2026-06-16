@@ -22,6 +22,7 @@ import argparse
 import os
 import sys
 import webbrowser
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -144,6 +145,14 @@ def main() -> None:
         # 路径设置优先
         _setup_paths()
 
+        from utils.frozen_runtime import apply_frozen_runtime_defaults
+
+        apply_frozen_runtime_defaults()
+
+        from utils.search_diagnostics import init_search_diagnostics
+
+        init_search_diagnostics()
+
         # 应用 Windows 兼容补丁
         try:
             from utils.platform_win32_patch import apply_platform_win32_patch
@@ -183,10 +192,21 @@ def main() -> None:
         import traceback
 
         error_msg = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-        # 尝试写入崩溃日志到 exe 同级目录
-        crash_log = Path(sys.executable).parent / "crash.log" if getattr(sys, "frozen", False) else Path("crash.log")
         try:
-            crash_log.write_text(error_msg, encoding="utf-8")
+            from utils.search_diagnostics import get_logs_dir
+
+            crash_log = get_logs_dir() / "crash.log"
+        except Exception:
+            crash_log = (
+                Path(sys.executable).parent / "logs" / "crash.log"
+                if getattr(sys, "frozen", False)
+                else Path("logs/crash.log")
+            )
+        try:
+            crash_log.parent.mkdir(parents=True, exist_ok=True)
+            with open(crash_log, "a", encoding="utf-8") as fh:
+                fh.write(f"\n=== launcher uncaught {datetime.now(timezone.utc).isoformat()} ===\n")
+                fh.write(error_msg)
         except Exception:
             pass
         print(f"\n!!! 启动失败: {exc}\n详情已写入: {crash_log}\n", file=sys.stderr)
@@ -194,4 +214,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # 须在 main() 之前：PyInstaller + ProcessPool 子进程 bootstrap
+    import multiprocessing as _mp
+
+    _mp.freeze_support()
     main()
