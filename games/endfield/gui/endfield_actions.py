@@ -129,14 +129,18 @@ class ActionsMixin:
             QMessageBox.warning(cast(QWidget, self), "无法计算", "无法读取配装数据。")
             return
         self._confirm_in_progress = True
-        self.confirm_btn.setEnabled(False)
-        self.confirm_btn.setText("计算中...")
-        self.status_label.setText("计算中...")
+        self._set_confirm_ui_computing()
         QApplication.processEvents()
         try:
             self._sync_evaluation(request)
             self.columns.refresh(request)
-            self._refresh_compute_sheet()
+            # 先恢复按钮：ComputeSheet 求值若卡住不应一直停在「计算中」
+            self._set_confirm_ui_confirmed()
+            QApplication.processEvents()
+            try:
+                self._refresh_compute_sheet()
+            except Exception as exc:
+                _logger.warning("乘区表刷新失败: %s", exc)
             try:
                 preset = request.loadout.to_loadout_preset()
                 label = f"{preset.char_name} / {preset.weapon_name}"
@@ -150,13 +154,16 @@ class ActionsMixin:
             except Exception as exc:
                 _logger.warning("快照刷新失败: %s", exc)
             self._update_total_damage_panel()
+        except Exception as exc:
+            _logger.exception("确认选择失败: %s", exc)
+            QMessageBox.warning(cast(QWidget, self), "确认失败", f"计算未完成：{exc}")
+            self._set_confirm_ui_pending()
         finally:
             self._confirm_in_progress = False
-        self.status_label.setText("就绪")
-        self.confirm_btn.setEnabled(True)
-        self.confirm_btn.setText("确认选择")
-        self.confirm_btn.setStyleSheet(self._confirm_btn_default_style)
-        self._refresh_search_estimate()
+            try:
+                self._refresh_search_estimate()
+            except Exception as exc:
+                _logger.warning("搜索预估刷新失败: %s", exc)
         """on confirm。"""
 
     def _sync_evaluation(self, request: Any) -> None:
@@ -588,6 +595,20 @@ class ActionsMixin:
 
     # ── 信号连接 ──────────────────────────────
 
+    def _connect_panel_extra_loadout_signals(self, panel: Any) -> None:
+        """信赖/技能/武器特殊能力变更时也标记待确认。"""
+        if panel.trust_panel is not None:
+            panel.trust_panel._slider.valueChanged.connect(self._on_loadout_changed)
+        if panel.skill_panel is not None:
+            for slider in panel.skill_panel._sliders:
+                slider.valueChanged.connect(self._on_loadout_changed)
+        if panel.special_panel is not None:
+            for rd in panel.special_panel._normal_rows:
+                rd["slider"].valueChanged.connect(self._on_loadout_changed)
+            for rd in panel.special_panel._special_rows:
+                rd["lvl_slider"].valueChanged.connect(self._on_loadout_changed)
+                rd["stk_slider"].valueChanged.connect(self._on_loadout_changed)
+
     def _connect_signals(self) -> None:
         self.char_panel.name_combo.currentTextChanged.connect(self._on_char_name_change)
 
@@ -597,7 +618,11 @@ class ActionsMixin:
             panel.name_combo.currentIndexChanged.connect(self._on_loadout_changed)
             panel.level_slider.valueChanged.connect(self._on_loadout_changed)
 
+        self._connect_panel_extra_loadout_signals(self.char_panel)
+        self._connect_panel_extra_loadout_signals(self.weapon_panel)
+
         self.control_dock.calc_mode_changed.connect(self._on_calc_mode_changed)
+        self.control_dock.loadout_pending.connect(self._on_loadout_changed)
 
         self.control_dock.mvp_search_btn.clicked.connect(self._on_mvp_search)
         self.control_dock.full_search_btn.clicked.connect(self._on_full_search)

@@ -12,8 +12,10 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from ...config.manager import _get_adapters_dir
 
@@ -27,6 +29,19 @@ _FULL_APP_SCRIPTS: dict[str, str] = {
 def _is_frozen() -> bool:
     """判断是否在 PyInstaller 冻结模式下运行。"""
     return getattr(sys, "frozen", False)
+
+
+def win32_subprocess_kwargs() -> dict[str, Any]:
+    """Windows 下启动 GUI 子进程时隐藏控制台。"""
+    if sys.platform != "win32":
+        return {}
+    startup = subprocess.STARTUPINFO()
+    startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startup.wShowWindow = subprocess.SW_HIDE  # type: ignore[attr-defined]
+    return {
+        "startupinfo": startup,
+        "creationflags": subprocess.CREATE_NO_WINDOW,  # type: ignore[attr-defined]
+    }
 
 
 def _frozen_exe_args() -> list[str]:
@@ -171,6 +186,43 @@ def spawn_detached(argv: list[str], root: Path | None = None) -> subprocess.Pope
         "cwd": str(base),
         "env": env,
     }
-    if sys.platform == "win32":
-        kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE  # type: ignore[attr-defined]
+    kwargs.update(win32_subprocess_kwargs())
     return subprocess.Popen(argv, **kwargs)  # type: ignore[return-value]
+
+
+def launch_adapter_in_process(entry: AdapterEntry, launcher: Any) -> bool:
+    """打包 exe 下同进程打开游戏窗口，避免 spawn 子 exe 闪控制台。
+
+    启动器窗口保持可见，便于切换游戏或再次打开其它适配器。
+    """
+    if not _is_frozen():
+        return False
+    game_window = getattr(launcher, "_embedded_game_window", None)
+    if game_window is not None:
+        with suppress(Exception):
+            game_window.close()
+        launcher._embedded_game_window = None
+
+    if entry.adapter_id == "endfield":
+        from games.endfield.gui.endfield_app import EndfieldApp
+
+        window = EndfieldApp(embedded=True)
+    elif entry.adapter_id == "arknights":
+        from games.arknights.gui.ArknightsDamageApp import ArknightsDamageApp
+
+        window = ArknightsDamageApp(embedded=True)
+    else:
+        return False
+
+    def _on_game_closed() -> None:
+        launcher._embedded_game_window = None
+        launcher.raise_()
+        launcher.activateWindow()
+
+    window.destroyed.connect(_on_game_closed)
+    launcher._embedded_game_window = window
+    if hasattr(window, "show_embedded"):
+        window.show_embedded()
+    else:
+        window.showMaximized()
+    return True

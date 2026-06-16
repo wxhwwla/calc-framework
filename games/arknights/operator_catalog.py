@@ -9,21 +9,35 @@ from pathlib import Path
 from typing import Any
 
 from games.arknights.calc.inverse.materialize import materialize_operator_entity
+from utils.path_utils import get_application_dir, get_resource_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PARSED_DIR = REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed"
-DEFAULT_ZIP_CANDIDATES = (
-    REPO_ROOT / "tools" / "arknights_scout" / "arknights_parsed.zip",
-    REPO_ROOT / "dist_arknights_parsed.zip",
-)
+STANDARD_OPERATORS_REL = "framework/adapters/arknights/data/operators_standard.json"
 SKIP_STEMS = frozenset({"_sync_summary", "operators"})
 MIN_PARSED_COUNT = 100
 STAR_TIERS = (6, 5, 4, 3, 2, 1)
 
 
-def find_zip_path(candidates: tuple[Path, ...] = DEFAULT_ZIP_CANDIDATES) -> Path | None:
+def default_parsed_dir() -> Path:
+    """干员 JSON 目录（开发=仓库；打包=exe 同级 tools/.../parsed）。"""
+    return get_application_dir() / "tools" / "arknights_scout" / "output" / "parsed"
+
+
+def default_zip_candidates() -> tuple[Path, ...]:
+    """干员压缩包候选路径（exe 旁优先，其次仓库根）。"""
+    app = get_application_dir()
+    return (
+        app / "tools" / "arknights_scout" / "arknights_parsed.zip",
+        app / "dist_arknights_parsed.zip",
+        REPO_ROOT / "tools" / "arknights_scout" / "arknights_parsed.zip",
+        REPO_ROOT / "dist_arknights_parsed.zip",
+    )
+
+
+def find_zip_path(candidates: tuple[Path, ...] | None = None) -> Path | None:
     """查找可用的压缩数据文件路径。"""
-    for path in candidates:
+    paths = candidates if candidates is not None else default_zip_candidates()
+    for path in paths:
         if path.is_file():
             return path
     return None
@@ -55,6 +69,10 @@ def filter_operator_index(
     search: str = "",
 ) -> list[dict[str, Any]]:
     """按星级 / 主职业(职业) / 副职业(分支) / 名称搜索词 筛选。"""
+    if profession in ("全部",):
+        profession = ""
+    if branch in ("全部", "全部分支"):
+        branch = ""
     all_stars = len(active_stars) >= len(STAR_TIERS)
     needle = search.strip()
     result: list[dict[str, Any]] = []
@@ -95,11 +113,40 @@ def _read_json_file(path: Path) -> dict[str, Any] | None:
         return None
 
 
+def _load_operators_standard_fallback() -> dict[str, dict[str, Any]]:
+    """打包未随 scout 数据时，回退 framework 标准干员库。"""
+    path = get_resource_path(STANDARD_OPERATORS_REL)
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    items: list[Any]
+    if isinstance(data, list):
+        items = data
+    elif isinstance(data, dict):
+        items = list(data.values())
+    else:
+        return {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("名称") or "").strip()
+        if not name:
+            continue
+        result[name] = materialize_operator_entity(item)
+    return result
+
+
 def load_operators_map(
-    parsed_dir: Path = DEFAULT_PARSED_DIR,
-    zip_candidates: tuple[Path, ...] = DEFAULT_ZIP_CANDIDATES,
+    parsed_dir: Path | None = None,
+    zip_candidates: tuple[Path, ...] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """加载全部干员 JSON；目录不完整时合并 zip。"""
+    """加载全部干员 JSON；目录不完整时合并 zip / 标准库。"""
+    parsed_dir = parsed_dir or default_parsed_dir()
+    zip_candidates = zip_candidates if zip_candidates is not None else default_zip_candidates()
     result: dict[str, dict[str, Any]] = {}
     if parsed_dir.is_dir():
         for f in sorted(parsed_dir.glob("*.json")):
@@ -114,20 +161,22 @@ def load_operators_map(
         return result
 
     zip_path = find_zip_path(zip_candidates)
-    if zip_path is None:
-        return result
+    if zip_path is not None:
+        with zipfile.ZipFile(zip_path) as zf:
+            for arc in zf.namelist():
+                if not arc.endswith(".json"):
+                    continue
+                stem = Path(arc).stem
+                if stem in SKIP_STEMS or stem in result:
+                    continue
+                try:
+                    data = json.loads(zf.read(arc).decode("utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    continue
+                name = str(data.get("名称") or stem)
+                result[name] = materialize_operator_entity(data)
 
-    with zipfile.ZipFile(zip_path) as zf:
-        for arc in zf.namelist():
-            if not arc.endswith(".json"):
-                continue
-            stem = Path(arc).stem
-            if stem in SKIP_STEMS or stem in result:
-                continue
-            try:
-                data = json.loads(zf.read(arc).decode("utf-8"))
-            except (json.JSONDecodeError, OSError):
-                continue
-            name = str(data.get("名称") or stem)
-            result[name] = materialize_operator_entity(data)
+    if len(result) < MIN_PARSED_COUNT:
+        for name, entity in _load_operators_standard_fallback().items():
+            result.setdefault(name, entity)
     return result

@@ -161,6 +161,13 @@ def stage_release_folder(
             if f.suffix == ".json":
                 shutil.copy2(f, parsed_dst)
 
+    # onefile 解压目录外再备一份标准干员库（parsed 未随包时 GUI 可加载）
+    std_src = project_root / "framework" / "adapters" / "arknights" / "data" / "operators_standard.json"
+    if std_src.is_file():
+        std_dst = release_root / "framework" / "adapters" / "arknights" / "data" / "operators_standard.json"
+        std_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(std_src, std_dst)
+
     # 许可文件
     for dest_rel, src_rel in LICENSE_FILES:
         src = repo_root / src_rel

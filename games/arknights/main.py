@@ -27,9 +27,9 @@ def main() -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     setup_logging(level="INFO", log_file=str(log_dir / "arknights.log"))
 
-    from games.arknights.gui.ArknightsApp import ArknightsApp
+    from games.arknights.gui.ArknightsDamageApp import ArknightsDamageApp
 
-    app = ArknightsApp()
+    app = ArknightsDamageApp()
     app.run()
 
 

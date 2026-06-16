@@ -41,6 +41,7 @@ from .runtime import (
     AdapterEntry,
     argv_for_adapter,
     argv_for_calcpack,
+    launch_adapter_in_process,
     list_adapter_entries,
     repo_root,
     spawn_detached,
@@ -289,8 +290,9 @@ class GameLauncherWindow(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
-            # 重启当前 exe
-            subprocess.Popen([sys.executable])
+            from .runtime import win32_subprocess_kwargs
+
+            subprocess.Popen([sys.executable], **win32_subprocess_kwargs())
             sys.exit(0)
 
     # ── 底部栏 ───────────────────────────────────────────
@@ -339,9 +341,7 @@ class GameLauncherWindow(QMainWindow):
         # 只显示有完整桌面计算器的游戏适配器
         entries = [e for e in list_adapter_entries() if e.has_full_app]
         if not entries:
-            self._adapter_layout.addWidget(
-                QLabel("未发现游戏适配包。请确认 framework/adapters/ 下存在游戏 meta.json。")
-            )
+            self._adapter_layout.addWidget(QLabel("未发现游戏适配包。请确认 framework/adapters/ 下存在游戏 meta.json。"))
         else:
             for entry in entries:
                 self._adapter_layout.addWidget(_AdapterCard(entry, self._launch_adapter))
@@ -352,6 +352,9 @@ class GameLauncherWindow(QMainWindow):
 
     def _launch_adapter(self, entry: AdapterEntry) -> None:
         try:
+            if launch_adapter_in_process(entry, self):
+                self._status.showMessage(f"已启动：{entry.name}", 5000)
+                return
             spawn_detached(argv_for_adapter(entry, self._root))
             self._status.showMessage(f"已启动：{entry.name}", 5000)
         except OSError as exc:

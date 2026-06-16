@@ -3,7 +3,8 @@
 """单片式 ArknightsApp — 明日方舟伤害计算主窗口。
 
 使用 ComputeSheet + layout.json 声明式面板，与终末地 EndfieldApp 架构对齐。
-左侧为干员选择面板（游戏特有），右侧为 ComputeSheet（框架通用）。
+**注意**：当前 launcher / main.py 默认使用功能完整的 `ArknightsDamageApp`（见
+``docs/plans/arknights-desktop-web-parity.md``）；本模块为 ComputeSheet 实验线，待双向绑定完成后再切换。
 """
 
 from __future__ import annotations
@@ -46,12 +47,13 @@ from calc_framework.ui.log_widget import LogWidget
 
 from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
 from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
-from games.arknights.operator_catalog import filter_operator_index, load_operators_map
+from games.arknights.operator_catalog import build_operator_index, filter_operator_index, load_operators_map
 from games.endfield.gui.legal.donation_qt import open_donation_dialog
+from utils.path_utils import get_resource_path
 
 _logger = get_logger("gui.arknights_app")
 
-_FRAMEWORK_ADAPTER = _CUR_FILE.parents[4] / "framework" / "adapters" / "arknights"
+_FRAMEWORK_ADAPTER = get_resource_path("framework/adapters/arknights")
 
 _adapter_pkg: AdapterPackage | None = None
 _adapter_layout = None
@@ -74,11 +76,18 @@ class ArknightsApp(QMainWindow):
     右侧为 ComputeSheet 声明式输入/输出面板（框架通用）。
     """
 
-    def __init__(self) -> None:
-        # QApplication 必须在任何 QWidget 创建之前初始化
-        self._qapp: QApplication = QApplication(sys.argv)
-        self._qapp.setStyle("Fusion")
-        self._apply_dark_style()
+    def __init__(self, *, embedded: bool = False) -> None:
+        self._embedded = embedded
+        existing = QApplication.instance()
+        if existing is None:
+            self._qapp: QApplication = QApplication(sys.argv)
+            self._owns_qapp = True
+        else:
+            self._qapp = existing
+            self._owns_qapp = False
+        if self._owns_qapp:
+            self._qapp.setStyle("Fusion")
+            self._apply_dark_style()
 
         super().__init__()
         """初始化实例。"""
@@ -219,10 +228,12 @@ class ArknightsApp(QMainWindow):
         self._filtered_operators: list[dict[str, Any]] = []
         try:
             self._all_operators = load_operators_map()
+            self._operator_index = build_operator_index(self._all_operators)
             self._filtered_operators = list(self._all_operators.values())
         except Exception as exc:
             _logger.warning("干员数据加载失败: %s", exc)
             self._all_operators = {}
+            self._operator_index = []
             self._filtered_operators = []
 
         self._filter_and_populate()
@@ -237,7 +248,7 @@ class ArknightsApp(QMainWindow):
         search = self._search_input.text().strip()
         try:
             self._filtered_operators = filter_operator_index(
-                list(self._all_operators.values()),
+                self._operator_index,
                 active_stars=set(selected_stars),
                 profession=prof,
                 branch=branch,
@@ -245,13 +256,15 @@ class ArknightsApp(QMainWindow):
             )
         except Exception as exc:
             _logger.warning("筛选失败: %s", exc)
-            self._filtered_operators = list(self._all_operators.values())
+            self._filtered_operators = list(self._operator_index)
 
         current_name = self._operator_combo.currentText() if self._operator_combo.count() > 0 else ""
         self._operator_combo.blockSignals(True)
         self._operator_combo.clear()
         for op in self._filtered_operators:
             self._operator_combo.addItem(op.get("名称", "?"))
+        if self._operator_combo.count() == 0:
+            self._operator_combo.addItem("（无干员数据）")
         idx = self._operator_combo.findText(current_name)
         if idx >= 0:
             self._operator_combo.setCurrentIndex(idx)
@@ -267,14 +280,25 @@ class ArknightsApp(QMainWindow):
         idx = self._operator_combo.currentIndex()
         if idx < 0 or idx >= len(self._filtered_operators):
             self._operator_data = None
+            if self._operator_combo.currentText() == "（无干员数据）":
+                self._detail_widget.setText(
+                    "未找到干员数据。请重新打包，或确认 exe 同目录存在 "
+                    "framework/adapters/arknights/data/operators_standard.json。"
+                )
+            else:
+                self._detail_widget.setText("请选择有效干员")
+            self._on_skill_changed()
+            return
+        entry = self._filtered_operators[idx]
+        name = str(entry.get("名称") or "")
+        self._operator_data = self._all_operators.get(name)
+        if self._operator_data is None:
             self._detail_widget.setText("请选择有效干员")
             self._on_skill_changed()
             return
-        self._operator_data = self._filtered_operators[idx]
-        name = self._operator_data.get("名称", "?")
         info_parts = [f"<b>{name}</b>"]
-        prof = self._operator_data.get("职业", "")
-        star = self._operator_data.get("星级", "")
+        prof = entry.get("职业", "")
+        star = entry.get("星级", "")
         info_parts.append(f"职业: {prof}  星级: {star}")
         atk = self._operator_data.get("攻击力", "?")
         info_parts.append(f"攻击力: {atk}")
@@ -522,7 +546,13 @@ class ArknightsApp(QMainWindow):
         """启动应用主循环。"""
         self.closeEvent = self._on_close
         self.showMaximized()
-        sys.exit(self._qapp.exec())
+        if self._owns_qapp:
+            sys.exit(self._qapp.exec())
+
+    def show_embedded(self) -> None:
+        """由启动器同进程拉起时仅显示窗口。"""
+        self.closeEvent = self._on_close
+        self.showMaximized()
 
     def _on_close(self, event: Any = None) -> None:
         """窗口关闭事件处理。"""

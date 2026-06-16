@@ -136,3 +136,74 @@ def apply_platform_win32_patch() -> None:
 
 def _windows_machine_from_env() -> str:
     return os.environ.get("PROCESSOR_ARCHITEW6432") or os.environ.get("PROCESSOR_ARCHITECTURE") or "AMD64"
+
+
+def get_physical_processor_count(*, logical_fallback: int = 1) -> int:
+    """通过 kernel32 统计物理核心数（不启动子进程、不访问 WMI）。
+
+    失败时返回 ``logical_fallback``（调用方通常传入 ``os.cpu_count()``）。
+    """
+    if sys.platform != "win32":
+        return max(1, logical_fallback)
+
+    from ctypes import POINTER, Structure, Union, WinDLL, byref, c_int, c_size_t, c_ulonglong, get_last_error, sizeof
+    from ctypes import wintypes as w
+
+    relation_processor_core = 0
+    ulong_ptr = c_size_t
+    ulonglong = c_ulonglong
+
+    class _ProcessorCore(Structure):
+        _fields_ = (("Flags", w.BYTE),)
+
+    class _NumaNode(Structure):
+        _fields_ = (("NodeNumber", w.DWORD),)
+
+    class _CacheDescriptor(Structure):
+        _fields_ = (
+            ("Level", w.BYTE),
+            ("Associativity", w.BYTE),
+            ("LineSize", w.WORD),
+            ("Size", w.DWORD),
+            ("Type", c_int),
+        )
+
+    class _ProcessorInfoUnion(Union):
+        _fields_ = (
+            ("ProcessorCore", _ProcessorCore),
+            ("NumaNode", _NumaNode),
+            ("Cache", _CacheDescriptor),
+            ("Reserved", ulonglong * 2),
+        )
+
+    class _SystemLogicalProcessorInformation(Structure):
+        _anonymous_ = ("Anonymous",)
+        _fields_ = (
+            ("ProcessorMask", ulong_ptr),
+            ("Relationship", c_int),
+            ("Anonymous", _ProcessorInfoUnion),
+        )
+
+    kernel32 = WinDLL("kernel32", use_last_error=True)
+    kernel32.GetLogicalProcessorInformation.argtypes = (
+        POINTER(_SystemLogicalProcessorInformation),
+        w.LPDWORD,
+    )
+    kernel32.GetLogicalProcessorInformation.restype = w.BOOL
+
+    buf_len = w.DWORD(0)
+    entry_size = sizeof(_SystemLogicalProcessorInformation)
+    kernel32.GetLogicalProcessorInformation(None, byref(buf_len))
+    if buf_len.value == 0:
+        return max(1, logical_fallback)
+
+    count = buf_len.value // entry_size
+    buffer = (_SystemLogicalProcessorInformation * count)()
+    if not kernel32.GetLogicalProcessorInformation(buffer, byref(buf_len)):
+        if get_last_error() != 0:
+            return max(1, logical_fallback)
+
+    physical = sum(1 for entry in buffer if entry.Relationship == relation_processor_core)
+    if physical <= 0:
+        return max(1, logical_fallback)
+    return physical

@@ -16,7 +16,7 @@ class CpuParallelInfo:
     """本机并行能力摘要（供 GUI 展示）。
 
     ``logical_processors`` 来自 ``os.cpu_count()``（Windows 上通常为逻辑线程数，含超线程）。
-    ``physical_cores`` 在 Windows 上尝试读取 WMI；失败时与逻辑数相同。
+    ``physical_cores`` 在 Windows 上通过 kernel32 统计；失败时与逻辑数相同。
     并行 worker 上限与「自动」推荐均基于 **逻辑处理器**（与 ThreadPool 语义一致）。
     """
 
@@ -45,26 +45,13 @@ def _detect_physical_cores(*, logical: int) -> int:
         return _physical_cores_cache
     physical = logical
     if sys.platform == "win32":
-        import subprocess
-
         try:
-            proc = subprocess.run(
-                [
-                    "powershell",
-                    "-NoProfile",
-                    "-Command",
-                    "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=8,
-                check=False,
-            )
-            if proc.returncode == 0:
-                n = int(proc.stdout.strip())
-                if n > 0:
-                    physical = n
-        except (OSError, ValueError, subprocess.SubprocessError):
+            from utils.platform_win32_patch import get_physical_processor_count
+
+            detected = get_physical_processor_count(logical_fallback=logical)
+            if detected > 0:
+                physical = detected
+        except (ImportError, OSError, ValueError):
             pass
     _physical_cores_cache = min(physical, logical)
     return _physical_cores_cache

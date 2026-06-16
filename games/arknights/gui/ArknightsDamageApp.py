@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 # 深色主题 QSS — 框架 ThemeManager 基础 + Arknights 特定覆盖
@@ -78,9 +79,21 @@ QHeaderView::section { border: 1px solid #464646; padding: 4px; }
 
 
 class ArknightsDamageApp(QMainWindow):
-    """明日方舟桌面伤害计算器 — 完整版。"""
+    """明日方舟桌面伤害计算器 — 完整版（与 Web 页面对齐）。"""
 
-    def __init__(self) -> None:
+    def __init__(self, *, embedded: bool = False) -> None:
+        self._embedded = embedded
+        existing = QApplication.instance()
+        if existing is None:
+            self._qapp: QApplication = QApplication(sys.argv)  # type: ignore[name-defined]
+            self._owns_qapp = True
+        else:
+            self._qapp = existing
+            self._owns_qapp = False
+        if self._owns_qapp:
+            self._qapp.setStyle("Fusion")
+            self._qapp.setStyleSheet(DARK_QSS)
+
         super().__init__()
         """初始化实例。"""
         self.setWindowTitle("明日方舟 伤害计算器")
@@ -726,29 +739,29 @@ class ArknightsDamageApp(QMainWindow):
             traceback.print_exc()
 
     def run(self) -> None:
-        """显示主窗口。"""
-        self.show()
+        """显示主窗口；独立启动时进入事件循环。"""
+        self.showMaximized()
+        if self._owns_qapp:
+            sys.exit(self._qapp.exec())
+
+    def show_embedded(self) -> None:
+        """由 launcher 同进程拉起时仅显示窗口。"""
+        self.showMaximized()
 
 
 def main() -> None:
     """启动明日方舟桌面伤害计算器（独立入口）。"""
-    import sys as _sys
     from pathlib import Path as _Path
 
-    _REPO_ROOT = _Path(__file__).resolve().parents[2] / ".." / ".."
+    _REPO_ROOT = _Path(__file__).resolve().parents[2].parent
     _FW_SRC = _REPO_ROOT / "framework" / "src"
-    if str(_FW_SRC) not in _sys.path:
-        _sys.path.insert(0, str(_FW_SRC))
-    if str(_REPO_ROOT) not in _sys.path:
-        _sys.path.insert(0, str(_REPO_ROOT))
-
-    app = QApplication(_sys.argv)
-    app.setStyle("Fusion")
-    app.setStyleSheet(DARK_QSS)
+    if str(_FW_SRC) not in sys.path:
+        sys.path.insert(0, str(_FW_SRC))
+    if str(_REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(_REPO_ROOT))
 
     window = ArknightsDamageApp()
     window.run()
-    _sys.exit(app.exec())
 
 
 if __name__ == "__main__":

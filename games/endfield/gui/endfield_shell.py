@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QSplitter,
@@ -28,6 +29,14 @@ from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
 from games.endfield.gui.shared.calc_mode_labels import calculation_mode_from_label
 from games.endfield.gui.shared.display_view.qt_columns import QtAttributeColumns
 from games.endfield.gui.shell.qt_control_dock import QtControlDock
+
+_CONFIRM_PENDING_STYLE = """
+    QPushButton { background-color: #7C3AED; color: white;
+                  border: none; border-radius: 4px;
+                  font-size: 14px; font-weight: bold; }
+    QPushButton:hover { background-color: #6D28D9; }
+    QPushButton:disabled { background-color: #444; color: #888; }
+"""
 
 
 class ShellMixin:
@@ -94,6 +103,21 @@ class ShellMixin:
         right_layout.setSpacing(6)
         right_layout.addWidget(sheet_scroll, stretch=1)
 
+        action_row = QHBoxLayout()
+        action_row.setSpacing(8)
+        self.calc_confirm_btn = QPushButton("确认选择")
+        self.calc_confirm_btn.setMinimumHeight(40)
+        self.calc_confirm_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.calc_confirm_btn.clicked.connect(self._on_confirm)
+        action_row.addWidget(self.calc_confirm_btn, stretch=2)
+
+        self.goto_adv_btn = QPushButton("前往高级页")
+        self.goto_adv_btn.setMinimumHeight(40)
+        self.goto_adv_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.goto_adv_btn.clicked.connect(lambda: self.tabs.setCurrentIndex(1))
+        action_row.addWidget(self.goto_adv_btn, stretch=1)
+        right_layout.addLayout(action_row)
+
         content_split.addWidget(right_wrapper)
         content_split.setSizes([400, 400])
 
@@ -129,24 +153,63 @@ class ShellMixin:
         self.tabs.addTab(adv_page, "高级页")
         """build adv page。"""
 
+    def _confirm_buttons(self) -> list[QPushButton]:
+        """计算页与高级页共用的确认按钮（状态同步）。"""
+        buttons: list[QPushButton] = []
+        if hasattr(self, "calc_confirm_btn"):
+            buttons.append(self.calc_confirm_btn)
+        if hasattr(self, "control_dock"):
+            buttons.append(self.control_dock.confirm_btn)
+        return buttons
+
+    def _set_confirm_ui_pending(self) -> None:
+        """配装变更后：两页确认按钮均显示待更新。"""
+        for btn in self._confirm_buttons():
+            btn.setEnabled(True)
+            btn.setText("确认选择（待更新）")
+            btn.setStyleSheet(_CONFIRM_PENDING_STYLE)
+        self.status_label.setText("待确认")
+
+    def _set_confirm_ui_computing(self) -> None:
+        """计算进行中。"""
+        for btn in self._confirm_buttons():
+            btn.setEnabled(False)
+            btn.setText("计算中...")
+        if hasattr(self, "status_label"):
+            self.status_label.setText("计算中...")
+
+    def _set_confirm_ui_confirmed(self) -> None:
+        """确认完成。"""
+        style = getattr(self, "_confirm_btn_default_style", _CONFIRM_PENDING_STYLE)
+        for btn in self._confirm_buttons():
+            btn.setEnabled(True)
+            btn.setText("已确认")
+            btn.setStyleSheet(style)
+        if hasattr(self, "status_label"):
+            self.status_label.setText("已确认")
+
     def _on_char_name_change(self) -> None:
         char_data = self.char_panel.get_selected_data()
         if not char_data:
             self.weapon_panel.update_data_list(list(self.all_weapons))
             self._rebuild_segment_rows()
+            self._on_loadout_changed()
             return
         char_weapon_type = char_data.get("武器", "")
         if not char_weapon_type:
             self.weapon_panel.update_data_list(list(self.all_weapons))
             self._rebuild_segment_rows()
+            self._on_loadout_changed()
             return
         filtered = [w for w in self.all_weapons if w.get("类型") == char_weapon_type]
         if not filtered:
             self.weapon_panel.update_data_list(list(self.all_weapons))
             self._rebuild_segment_rows()
+            self._on_loadout_changed()
             return
         self.weapon_panel.update_data_list(filtered)
         self._rebuild_segment_rows()
+        self._on_loadout_changed()
         """on char name change。"""
 
     def _rebuild_segment_rows(self) -> None:
@@ -166,15 +229,7 @@ class ShellMixin:
         """on calc mode changed。"""
 
     def _on_loadout_changed(self) -> None:
-        self.status_label.setText("待确认")
-        self.confirm_btn.setText("确认选择（待更新）")
-        self.confirm_btn.setStyleSheet("""
-            QPushButton { background-color: #7C3AED; color: white;
-                          border: none; border-radius: 4px;
-                          font-size: 14px; font-weight: bold; }
-            QPushButton:hover { background-color: #6D28D9; }
-            QPushButton:disabled { background-color: #444; color: #888; }
-        """)
+        self._set_confirm_ui_pending()
         self._rebuild_segment_rows()
         self._total_damage_panel.hide_damage()
         """on loadout changed。"""
@@ -183,6 +238,8 @@ class ShellMixin:
         dock = self.control_dock
 
         self._confirm_btn_default_style = dock.confirm_btn.styleSheet()
+        if hasattr(self, "calc_confirm_btn"):
+            self.calc_confirm_btn.setStyleSheet(self._confirm_btn_default_style)
 
         dock._enemy_panel.enemy_params_changed.connect(self._on_enemy_params_changed)
         initial_params = dock._enemy_panel.get_params()

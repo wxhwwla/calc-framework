@@ -75,11 +75,19 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         _ui_preferences: UI 偏好字典
     """
 
-    def __init__(self) -> None:
-        # QApplication 必须在任何 QWidget 创建之前初始化
-        self._qapp: QApplication = QApplication(sys.argv)
-        self._qapp.setStyle("Fusion")
-        self._apply_dark_style()
+    def __init__(self, *, embedded: bool = False) -> None:
+        # 嵌入启动器时复用已有 QApplication，避免二次 exec / 子进程闪窗
+        self._embedded = embedded
+        existing = QApplication.instance()
+        if existing is None:
+            self._qapp: QApplication = QApplication(sys.argv)
+            self._owns_qapp = True
+        else:
+            self._qapp = existing
+            self._owns_qapp = False
+        if self._owns_qapp:
+            self._qapp.setStyle("Fusion")
+            self._apply_dark_style()
 
         super().__init__()
 
@@ -132,8 +140,15 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         self._load_preferences()
         self.closeEvent = self._on_close
         self.showMaximized()
-        sys.exit(self._qapp.exec())
+        if self._owns_qapp:
+            sys.exit(self._qapp.exec())
         """执行主流程。"""
+
+    def show_embedded(self) -> None:
+        """由启动器同进程拉起时仅显示窗口（事件循环已在运行）。"""
+        self._load_preferences()
+        self.closeEvent = self._on_close
+        self.showMaximized()
 
     def _load_preferences(self) -> None:
         self._ui_preferences = load_ui_preferences()

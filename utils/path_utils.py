@@ -37,6 +37,14 @@ import sys
 from pathlib import Path
 
 
+def _meipass_dir() -> Path | None:
+    """PyInstaller onefile 解压目录（运行时资源实际所在位置）。"""
+    raw = getattr(sys, "_MEIPASS", None)
+    if not raw:
+        return None
+    return Path(raw)
+
+
 def _find_project_root() -> Path:
     """
 
@@ -126,11 +134,18 @@ def get_resource_path(relative_path: str) -> Path:
 
     app_dir = _get_app_dir()
 
-    primary_path = app_dir / relative_path
+    relative = Path(relative_path)
 
-    if primary_path.exists():
-        return primary_path
+    candidates: list[Path] = [
+        app_dir / relative,
+        app_dir / "_internal" / relative,
+    ]
+    meipass = _meipass_dir()
+    if meipass is not None:
+        candidates.append(meipass / relative)
 
-    internal_path = app_dir / "_internal" / relative_path
+    for path in candidates:
+        if path.exists():
+            return path
 
-    return internal_path if internal_path.exists() else primary_path
+    return candidates[0]

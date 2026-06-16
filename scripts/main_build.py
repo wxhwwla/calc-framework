@@ -152,10 +152,15 @@ def _build_target(
 
     entry = target_entry(target)
 
+    # 默认 --windowed（无控制台）；调试可设 ENDFIELD_BUILD_CONSOLE=1 保留 --console
+    use_console = os.getenv("ENDFIELD_BUILD_CONSOLE", "").strip().lower() in ("1", "true", "yes")
+    console_flag = "--console" if use_console else "--windowed"
+
     _logger.info("=" * 60)
     _logger.info("  [%s] %s", target, app_name)
     _logger.info("  入口: %s", entry)
     _logger.info("  输出: %s", release_root)
+    _logger.info("  PyInstaller: %s", console_flag)
     _logger.info("=" * 60)
 
     work_dir = tempfile.mkdtemp(prefix=f"build_{target}_", dir=base_dir)
@@ -170,7 +175,7 @@ def _build_target(
         "-m",
         "PyInstaller",
         "--onefile",
-        "--console",
+        console_flag,
         f"--name={app_name}",
         f"--distpath={tmp_dist}",
         f"--workpath={work_dir}",
