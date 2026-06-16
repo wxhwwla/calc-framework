@@ -1,0 +1,18 @@
+[package]
+name = "rust_search"
+version = "0.1.0"
+edition = "2021"
+description = "Rust 加速扩展 — Calc Framework 全量搜索热路径"
+authors = ["wxhwwla <wxhwwla@gmail.com>"]
+
+[lib]
+name = "rust_search"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23", features = ["extension-module"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3

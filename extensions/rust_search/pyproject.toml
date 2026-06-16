@@ -1,0 +1,9 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "rust_search"
+version = "0.1.0"
+description = "Rust 加速扩展 — Calc Framework 全量搜索热路径"
+requires-python = ">=3.10"

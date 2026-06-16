@@ -121,3 +121,7 @@ games/endfield/search_output/
 # BWIKI 侦察缓存（体积大、可本地重跑）
 tools/bwiki_scout/output/
 debug.log
+
+# Rust 构建产物（Cargo target 目录 + 锁文件）
+target/
+Cargo.lock
