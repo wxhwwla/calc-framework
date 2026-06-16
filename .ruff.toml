@@ -22,6 +22,7 @@ ignore = [
 [lint.per-file-ignores]
 "tests/*" = ["RUF", "N802", "N806", "SIM115"]
 "**/__init__.py" = ["F401"]
+"extensions/**/*.py" = ["N806", "E702", "E501", "F841"]
 "web/backend/_path_setup.py" = ["N806"]
 "web/backend/run_packaged_main.py" = ["N806"]
 "web/backend/main.py" = ["N806"]

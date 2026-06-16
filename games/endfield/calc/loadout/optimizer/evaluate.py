@@ -39,6 +39,9 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
+from collections.abc import Callable
+
 # ── 优先使用 Rust 加速版，不可用时降级到 Python ──
 try:
     from extensions.rust_search.python.rust_bridge import evaluate_search_damage as _rs_eval
@@ -55,6 +58,10 @@ from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loa
 from games.endfield.calc.search.evaluate.context import SearchEvalContext
 
 from .types import LoadoutScore, RuntimeEvalSnapshot, WeaponCandidate
+
+# ── 装备侧效果缓存（键=四件装备名元组，同一配装不同武器时复用） ──
+_loadout_cache: OrderedDict[tuple[str, str, str, str], tuple[list, dict[str, float], float]] = OrderedDict()
+_MAX_LOADOUT_CACHE = 16384
 
 
 def evaluate_task(
@@ -138,16 +145,23 @@ def build_runtime_eval_snapshot(
         RuntimeEvalSnapshot 对象
     """
     weapon, (chest, glove, acc_a, acc_b) = task
-    # 将 JSON 行转为带解析后效果的运行时四格结构
-    loadout = build_four_slot_loadout(
-        chest=chest,
-        gloves=glove,
-        accessory_a=acc_a,
-        accessory_b=acc_b,
-        allow_duplicate_accessory=True,
-    )
-    # 属性词条、套装三件套等 → DamageEffect + 平铺四维 + 攻击力%
-    equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+    # 装备侧聚合结果缓存（同一配装不同武器复用，避免重复笛卡尔积级 build+aggregate）
+    _ckey = (chest.get("名称", ""), glove.get("名称", ""), acc_a.get("名称", ""), acc_b.get("名称", ""))
+    cached = _loadout_cache.get(_ckey)
+    if cached is not None:
+        equip_effects, flat_stats, atk_percent = cached
+    else:
+        loadout = build_four_slot_loadout(
+            chest=chest,
+            gloves=glove,
+            accessory_a=acc_a,
+            accessory_b=acc_b,
+            allow_duplicate_accessory=True,
+        )
+        equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+        if len(_loadout_cache) >= _MAX_LOADOUT_CACHE:
+            _loadout_cache.popitem(last=False)
+        _loadout_cache[_ckey] = (equip_effects, flat_stats, atk_percent)
     effects = list(weapon.effects) + equip_effects
     final_attack = weapon.final_attack
     # 全量搜索时按当前等级曲线重算 final_attack（含装备平铺与攻击%）
@@ -178,3 +192,131 @@ def build_runtime_eval_snapshot(
         },
         originium_arts_strength=sum_originium_arts_strength(flat_stats),
     )
+
+
+OptimizerTask = tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]
+
+
+def evaluate_task_batch(
+    *,
+    base_context: DamageContext,
+    crit_mode: CritMode,
+    search_eval: SearchEvalContext | None = None,
+) -> Callable[[list[OptimizerTask]], list[LoadoutScore]]:
+    """返回批量化评估闭包（收集 N 个任务 → Rust 批量评估 → 返回 N 个评分）。
+
+    依赖 ``extensions.rust_search.python.rust_bridge.evaluate_search_damage_batch``。
+    Rust 扩展不可用时自动降级到逐任务评估。
+    """
+    # ── 尝试导入 Rust 批量函数 ──
+    try:
+        from extensions.rust_search.python.rust_bridge import evaluate_search_damage_batch as _batch_fn
+    except ImportError:
+
+        def _fallback_batch(tasks: list[OptimizerTask]) -> list[LoadoutScore]:
+            return [
+                evaluate_task(
+                    base_context=base_context,
+                    crit_mode=crit_mode,
+                    task=t,
+                    search_eval=search_eval,
+                )
+                for t in tasks
+            ]
+
+        return _fallback_batch
+
+    def _batch_eval(tasks: list[OptimizerTask]) -> list[LoadoutScore]:
+        """批量处理多个任务：预处理 → Rust 批量 → LoadoutScore。"""
+        batch_params: list[dict] = []
+
+        # ── 预处理每个任务（build_runtime_eval_snapshot 带缓存 D） ──
+        for task in tasks:
+            weapon, (chest, glove, acc_a, acc_b) = task
+
+            # 装备缓存（与 build_runtime_eval_snapshot 一致）
+            _ckey = (chest.get("名称", ""), glove.get("名称", ""), acc_a.get("名称", ""), acc_b.get("名称", ""))
+            cached = _loadout_cache.get(_ckey)
+            if cached is not None:
+                equip_effects, flat_stats, atk_percent = cached
+            else:
+                loadout = build_four_slot_loadout(
+                    chest=chest,
+                    gloves=glove,
+                    accessory_a=acc_a,
+                    accessory_b=acc_b,
+                    allow_duplicate_accessory=True,
+                )
+                equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+                if len(_loadout_cache) >= _MAX_LOADOUT_CACHE:
+                    _loadout_cache.popitem(last=False)
+                _loadout_cache[_ckey] = (equip_effects, flat_stats, atk_percent)
+
+            effects = list(weapon.effects) + equip_effects
+            final_attack = weapon.final_attack
+
+            if search_eval is not None:
+                weapon_data = search_eval.weapon_data_by_name.get(weapon.name)
+                if weapon_data is not None:
+                    details = final_attack_details_for_loadout(
+                        character=search_eval.char_data,
+                        weapon=weapon_data,
+                        char_level=search_eval.char_level,
+                        weapon_level=search_eval.weapon_level,
+                        trust_level=search_eval.trust_level,
+                        weapon_normal_levels=list(search_eval.weapon_normal_levels),
+                        weapon_special_states=list(search_eval.weapon_special_states),
+                        equipment_stat_bonus=flat_stats,
+                        equipment_attack_percent=atk_percent,
+                    )
+                    final_attack = float(details["final_attack"])
+
+            batch_params.append(
+                {
+                    "final_attack": final_attack,
+                    "skill_multiplier": base_context.skill_multiplier,
+                    "damage_type": base_context.damage_type,
+                    "skill_type": base_context.skill_type,
+                    "is_unbalanced": base_context.is_unbalanced,
+                    "is_true_damage": base_context.is_true_damage,
+                    "enemy_defense": base_context.enemy_defense,
+                    "enemy_resistance": base_context.enemy_resistance,
+                    "ignore_resistance": base_context.ignore_resistance,
+                    "imbalance_vulnerability_coeff": base_context.imbalance_vulnerability_coeff,
+                    "crit_rate": base_context.crit_rate,
+                    "crit_damage": base_context.crit_damage,
+                    "damage_type_bonus": base_context.damage_type_bonus,
+                    "skill_type_bonus": base_context.skill_type_bonus,
+                    "imbalance_damage_bonus": base_context.imbalance_damage_bonus,
+                    "other_damage_bonus": base_context.other_damage_bonus,
+                    "combo_stacks": base_context.combo_stacks,
+                    "break_defense_stacks": base_context.break_defense_stacks,
+                    "base_damage_bonus": base_context.base_damage_bonus,
+                    "effects": list(effects),
+                    "crit_mode": crit_mode,
+                    "damage_pipeline": "normal",
+                }
+            )
+
+        # ── Rust 批量评估 ──
+        rs_results = _batch_fn(batch_params)
+
+        # ── 构建 LoadoutScore 结果 ──
+        scores: list[LoadoutScore] = []
+        for task, fd in zip(tasks, rs_results):
+            weapon, (chest, glove, acc_a, acc_b) = task
+            scores.append(
+                LoadoutScore(
+                    weapon_name=weapon.name,
+                    final_damage=fd.final_damage if hasattr(fd, "final_damage") else fd,
+                    loadout_names={
+                        "chest": chest.get("名称", ""),
+                        "gloves": glove.get("名称", ""),
+                        "accessory_a": acc_a.get("名称", ""),
+                        "accessory_b": acc_b.get("名称", ""),
+                    },
+                )
+            )
+        return scores
+
+    return _batch_eval
