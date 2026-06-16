@@ -39,7 +39,14 @@
 
 from __future__ import annotations
 
-from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+# ── 优先使用 Rust 加速版，不可用时降级到 Python ──
+try:
+    from extensions.rust_search.python.rust_bridge import evaluate_search_damage as _rs_eval
+
+    evaluate_search_damage = _rs_eval
+except ImportError:
+    from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+
 from games.endfield.calc.damage.engine import CritMode, DamageContext
 from games.endfield.calc.damage.originium_arts import sum_originium_arts_strength
 from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers

@@ -13,7 +13,13 @@ from games.endfield.calc.dag_adapter.adapter import (
     compute_snapshot_with_dag,
     evaluate_attack_chain_via_dag,
 )
-from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult, evaluate_search_damage
+
+# ── 优先使用 Rust 加速版 evaluate_search_damage ──
+try:
+    from extensions.rust_search.python.rust_bridge import evaluate_search_damage
+except ImportError:
+    from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
+from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
 
 __all__ = [
     "DamageEvalResult",
