@@ -1,7 +1,7 @@
 # 明日方舟桌面端追赶 Web — 实施计划
 
 > 创建：2026-06-16  
-> 状态：**进行中**（Phase 1）
+> 状态：**Phase 2 已完成**（Phase 3 可选）
 
 ## 背景
 
@@ -17,7 +17,7 @@
 
 ## 阶段
 
-### Phase 1 — 恢复完整桌面入口（当前）
+### Phase 1 — 恢复完整桌面入口
 
 | 项 | 说明 | 状态 |
 |----|------|:----:|
@@ -25,14 +25,14 @@
 | 嵌入 | `ArknightsDamageApp(embedded=True)` + `show_embedded()` | ✅ |
 | 验收 | 干员筛选/详情/技能解析/连发/条件倍率/敌人参数/结果卡片+明细表 | 待人工 |
 
-### Phase 2 — 与 Web 细节对齐（后续）
+### Phase 2 — 与 Web 细节对齐
 
-| 项 | Web 参考 | 桌面待办 |
-|----|----------|----------|
-| 干员搜索 | Autocomplete | 已有可编辑 ComboBox，可加强模糊匹配 |
-| 技能等级显示 | Lv / 专精 | 已有 |
-| 信赖/潜能 | API 自动带入 | 桌面从 JSON 读取，核对 loader 是否写入 DAG |
-| i18n | react-i18n | 桌面暂中文（与终末地一致） |
+| 项 | Web 参考 | 桌面 | 状态 |
+|----|----------|------|:----:|
+| 干员搜索 | Autocomplete 子串 | `operator_combo.py` + QCompleter `MatchContains` | ✅ |
+| 技能等级 | Lv / 专精 + 快捷 Chip | 滑块 + Lv1-7 / 专1-3 按钮行 | ✅ |
+| 信赖/潜能 | API 自动带入 DAG | loader 写入；详情 + 乘区表展示潜能攻击 | ✅ |
+| i18n | react-i18n | 桌面中文（与终末地一致） | 跳过 |
 
 ### Phase 3 — ComputeSheet 双轨（可选，低优先级）
 
@@ -47,6 +47,7 @@
 ## 验证清单
 
 - [x] `pytest games/arknights/tests/test_damage_app_embedded.py`
+- [x] `pytest games/arknights/tests/test_operator_combo.py`
 - [ ] `python games/arknights/main.py` — 完整 UI
 - [ ] launcher → 明日方舟 — 嵌入无闪窗、启动器保持可见
 - [ ] 干员列表 ≥418（标准库）
@@ -55,10 +56,12 @@
 
 ## 涉及文件
 
-| 文件 | Phase 1 |
-|------|---------|
-| `games/arknights/main.py` | 改入口 |
-| `games/arknights/gui/ArknightsDamageApp.py` | embedded 模式 |
-| `framework/.../launcher/runtime.py` | 嵌入类名 |
-| `games/arknights/gui/ArknightsApp.py` | 文档注明暂缓 |
+| 文件 | Phase |
+|------|-------|
+| `games/arknights/main.py` | 1 |
+| `games/arknights/gui/ArknightsDamageApp.py` | 1–2 |
+| `games/arknights/gui/operator_combo.py` | 2 |
+| `games/arknights/operator_catalog.py` | 2（`DEFAULT_PARSED_DIR` 别名） |
+| `framework/.../launcher/runtime.py` | 1 |
+| `games/arknights/gui/ArknightsApp.py` | 暂缓 |
 | `docs/会话接续手册.md` | §4.186 |

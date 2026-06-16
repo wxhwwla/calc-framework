@@ -4,15 +4,20 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
 
 import pytest
 from PySide6.QtWidgets import QApplication
 
 
 @pytest.fixture(scope="module")
-def qapp() -> QApplication:
-    app = QApplication.instance() or QApplication(sys.argv)
-    yield app  # type: ignore[misc]
+def qapp() -> Iterator[QApplication]:
+    existing = QApplication.instance()
+    if isinstance(existing, QApplication):
+        app = existing
+    else:
+        app = QApplication(sys.argv)
+    yield app
 
 
 def test_damage_app_embedded_init(qapp: QApplication) -> None:

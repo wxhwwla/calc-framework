@@ -23,6 +23,10 @@ def default_parsed_dir() -> Path:
     return get_application_dir() / "tools" / "arknights_scout" / "output" / "parsed"
 
 
+# 兼容 tools/compact_arknights_operators 等脚本
+DEFAULT_PARSED_DIR = default_parsed_dir()
+
+
 def default_zip_candidates() -> tuple[Path, ...]:
     """干员压缩包候选路径（exe 旁优先，其次仓库根）。"""
     app = get_application_dir()

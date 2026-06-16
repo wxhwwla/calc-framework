@@ -36,7 +36,9 @@ from PySide6.QtWidgets import (
 )
 
 from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
+from games.arknights.calc.dag_adapter.loader import _parse_potential_atk
 from games.arknights.calc.skill_parser import ParsedSkillInfo
+from games.arknights.gui.operator_combo import configure_operator_combobox
 from games.arknights.operator_catalog import (
     STAR_TIERS,
     build_operator_index,
@@ -269,6 +271,11 @@ class ArknightsDamageApp(QMainWindow):
         self._det_trust.setStyleSheet("color: #68D391; font-size: 12px;")
         self._detail_lo.addWidget(self._det_trust)
 
+        self._det_potential = QLabel("")
+        self._det_potential.setWordWrap(True)
+        self._det_potential.setStyleSheet("color: #F6AD55; font-size: 12px;")
+        self._detail_lo.addWidget(self._det_potential)
+
         self._det_talent = QLabel("")
         self._det_talent.setWordWrap(True)
         self._det_talent.setStyleSheet("color: #B794F4; font-size: 12px;")
@@ -310,22 +317,35 @@ class ArknightsDamageApp(QMainWindow):
         self._lvl_label.setStyleSheet("color: #2B6CB6; font-weight: bold;")
         spg.addWidget(self._lvl_label, 0, 2)
 
-        spg.addWidget(QLabel("连发数:"), 1, 0)
+        chip_row = QHBoxLayout()
+        self._lvl_chip_btns: list[QPushButton] = []
+        for lv in range(1, 11):
+            chip_label = f"Lv.{lv}" if lv <= 7 else f"专{lv - 7}"
+            chip = QPushButton(chip_label)
+            chip.setCheckable(True)
+            chip.setFixedHeight(26)
+            chip.clicked.connect(lambda _checked=False, level=lv: self._set_skill_level(level))
+            chip_row.addWidget(chip)
+            self._lvl_chip_btns.append(chip)
+        spg.addLayout(chip_row, 1, 0, 1, 3)
+        self._sync_skill_level_chips(7)
+
+        spg.addWidget(QLabel("连发数:"), 2, 0)
         self._hit_spin = QSpinBox()
         self._hit_spin.setRange(1, 99)
         self._hit_spin.setValue(1)
-        spg.addWidget(self._hit_spin, 1, 1)
+        spg.addWidget(self._hit_spin, 2, 1)
 
-        spg.addWidget(QLabel("技能倍率:"), 2, 0)
+        spg.addWidget(QLabel("技能倍率:"), 3, 0)
         self._mult_input = QLineEdit("1.0")
-        spg.addWidget(self._mult_input, 2, 1)
+        spg.addWidget(self._mult_input, 3, 1)
         self._mult_auto_label = QLabel("")
         self._mult_auto_label.setStyleSheet("color: #888; font-size: 11px;")
-        spg.addWidget(self._mult_auto_label, 2, 2)
+        spg.addWidget(self._mult_auto_label, 3, 2)
 
         self._cond_check = QCheckBox("仅攻击到一人时（激活条件倍率）")
         self._cond_check.setVisible(False)
-        spg.addWidget(self._cond_check, 3, 0, 1, 3)
+        spg.addWidget(self._cond_check, 4, 0, 1, 3)
         sl.addWidget(g_sp)
 
         # 敌人参数
@@ -455,6 +475,17 @@ class ArknightsDamageApp(QMainWindow):
     #  信号处理
     # ═══════════════════════════════════════════
 
+    def _set_skill_level(self, level: int) -> None:
+        """技能等级快捷按钮 → 滑块。"""
+        self._lvl_slider.setValue(level)
+
+    def _sync_skill_level_chips(self, level: int) -> None:
+        """同步技能等级快捷按钮选中态。"""
+        for idx, chip in enumerate(self._lvl_chip_btns, start=1):
+            chip.blockSignals(True)
+            chip.setChecked(idx == level)
+            chip.blockSignals(False)
+
     def _sync_slider(self, slider: QSlider, text: str) -> None:
         """同步输入框数值到滑块（带信号阻塞防循环）。"""
         try:
@@ -494,12 +525,7 @@ class ArknightsDamageApp(QMainWindow):
         )
         names = [op["名称"] for op in filtered]
         current = self._op_combo.currentText()
-        self._op_combo.blockSignals(True)
-        self._op_combo.clear()
-        self._op_combo.addItems(names)
-        if current in names:
-            self._op_combo.setCurrentText(current)
-        self._op_combo.blockSignals(False)
+        configure_operator_combobox(self._op_combo, names, preserve=current)
         total = len(self._operator_index)
         self._op_count_label.setText(f"显示 {len(names)} / {total} 个干员")
 
@@ -543,6 +569,7 @@ class ArknightsDamageApp(QMainWindow):
         """技能等级滑块变化时更新标签和技能信息。"""
         label = f"Lv.{value}" if value <= 7 else f"专精{value - 7}"
         self._lvl_label.setText(label)
+        self._sync_skill_level_chips(value)
         self._on_skill_changed(self._skill_combo.currentIndex())
 
     def _apply_skill_info(self, info: ParsedSkillInfo) -> None:
@@ -614,6 +641,14 @@ class ArknightsDamageApp(QMainWindow):
             self._det_trust.show()
         else:
             self._det_trust.hide()
+
+        potentials = op.get("潜能", [])
+        pot_atk = _parse_potential_atk(potentials) if isinstance(potentials, list) else 0.0
+        if pot_atk > 0:
+            self._det_potential.setText(f"潜能攻击（满潜合计）：+{pot_atk:.0f}")
+            self._det_potential.show()
+        else:
+            self._det_potential.hide()
 
         talents = op.get("天赋", [])
         if talents:
@@ -694,9 +729,11 @@ class ArknightsDamageApp(QMainWindow):
             op = self._current_operator
             base_atk = float(op.get("基础属性", {}).get("攻击", 0))
             trust_atk = float(op.get("信赖加成", {}).get("攻击", 0) if op.get("信赖加成") else 0)
+            pot_atk = _parse_potential_atk(op.get("潜能", []) if isinstance(op.get("潜能"), list) else [])
             zone_rows = [
                 ("基础攻击力", f"{base_atk:.1f}"),
                 ("信赖加成", f"+{trust_atk:.1f}" if trust_atk > 0 else "0"),
+                ("潜能攻击", f"+{pot_atk:.1f}" if pot_atk > 0 else "0"),
                 (f"ATK%加成（{(atk_bonus * 100):.0f}%）", f"+{base_atk * atk_bonus:.1f}"),
                 ("最终攻击力", f"{final_atk:.1f}"),
                 ("技能倍率", f"x{skill_mult:.2f}"),
