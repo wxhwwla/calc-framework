@@ -16,11 +16,28 @@
 
 from .advanced import ExponentialFormulaFitter, PiecewiseFormulaFitter, ThresholdFormulaFitter
 from .base import FitResult, FloorFormulaFitter, FormulaFitter, GrowthParams
+from .curve import (
+    CurveBlueprint,
+    SegmentCurveEngine,
+    SegmentSpec,
+    expand_segment_linear,
+    single_segment_blueprint,
+)
 from .engine import InverseEngine
+from .materialize import (
+    GROWTH_PARAM_KEY,
+    blueprint_from_stored,
+    has_segment_storage,
+    materialize_entity_from_stored_segments,
+    merge_blueprint_segments,
+)
 from .registry import FormulaType, registry
 from .schema import GameInverseAdapter, InverseSchema
+from .segment_adapter import SegmentCurveAdapter
 
 __all__ = [
+    "GROWTH_PARAM_KEY",
+    "CurveBlueprint",
     "ExponentialFormulaFitter",
     "FitResult",
     "FloorFormulaFitter",
@@ -31,6 +48,15 @@ __all__ = [
     "InverseEngine",
     "InverseSchema",
     "PiecewiseFormulaFitter",
+    "SegmentCurveAdapter",
+    "SegmentCurveEngine",
+    "SegmentSpec",
     "ThresholdFormulaFitter",
+    "blueprint_from_stored",
+    "expand_segment_linear",
+    "has_segment_storage",
+    "materialize_entity_from_stored_segments",
+    "merge_blueprint_segments",
     "registry",
+    "single_segment_blueprint",
 ]

@@ -11,14 +11,11 @@
 
 """
 
-
-
 from abc import ABC, abstractmethod
 from typing import Any
 
 
 class BaseZone(ABC):
-
     """
 
     乘区基类（抽象类）
@@ -49,10 +46,7 @@ class BaseZone(ABC):
 
     """
 
-
-
     def __init__(self, name: str, description: str = ""):
-
         """
 
         初始化乘区
@@ -75,12 +69,8 @@ class BaseZone(ABC):
 
         self._params: dict[str, Any] = {}
 
-
-
     @abstractmethod
-
     def calculate(self) -> float:
-
         """
 
         计算该乘区的乘数
@@ -99,10 +89,7 @@ class BaseZone(ABC):
 
         pass
 
-
-
     def get_params(self) -> dict[str, Any]:
-
         """
 
         获取当前参数配置
@@ -117,10 +104,7 @@ class BaseZone(ABC):
 
         return self._params.copy()
 
-
-
     def set_params(self, **kwargs) -> None:
-
         """
 
         设置参数配置
@@ -141,54 +125,35 @@ class BaseZone(ABC):
 
         self._params.update(kwargs)
 
-
-
     def enable(self) -> None:
-
         """启用该乘区"""
 
         self.enabled = True
 
-
-
     def disable(self) -> None:
-
         """禁用该乘区（计算时返回 1.0）"""
 
         self.enabled = False
 
-
-
     def is_enabled(self) -> bool:
-
         """检查乘区是否启用"""
 
         return self.enabled
 
-
-
     def __repr__(self) -> str:
-
         """返回乘区的字符串表示"""
 
         status = "enabled" if self.enabled else "disabled"
 
         return f"<{self.__class__.__name__}: {self.name} ({status})>"
 
-
-
     def __str__(self) -> str:
-
         """返回乘区的可读字符串表示"""
 
         return f"{self.name}: {self.description}"
 
 
-
-
-
 class DefenseReductionZone(BaseZone):
-
     """敌方默认防御减伤区。
 
 
@@ -199,60 +164,37 @@ class DefenseReductionZone(BaseZone):
 
     """
 
-
-
     DEFAULT_DEFENSE = 100
 
-
-
     def __init__(self):
-
         super().__init__(
-
             name="敌方防御减伤区",
-
             description="敌方防御对伤害的减伤倍率，公式：100 / (防御 + 100)",
-
         )
 
         self.set_params(defense=self.DEFAULT_DEFENSE)
         """初始化实例。"""
 
-
-
     def calculate(self) -> float:
-
         defense = self._params.get("defense", self.DEFAULT_DEFENSE)
 
         if defense < 0:
-
             defense = 0
 
-        return 100.0 / (defense + 100.0)
         """执行计算。
-
-        返回:
-            计算结果。
+                返回:
+        计算结果。
         """
-
-
+        return 100.0 / (defense + 100.0)
 
     def get_defense(self) -> int:
-
-        return self._params.get("defense", self.DEFAULT_DEFENSE)
         """获取defense。"""
-
-
+        return self._params.get("defense", self.DEFAULT_DEFENSE)
 
     def set_defense(self, defense: int) -> None:
-
         self.set_params(defense=defense)
         """设置defense。"""
 
-
-
     def __str__(self) -> str:
-
-        return f"{self.name}: 防御={self.get_defense()}, 减伤倍率={self.calculate():.4f}"
         """返回该实例的字符串表示。"""
-
+        return f"{self.name}: 防御={self.get_defense()}, 减伤倍率={self.calculate():.4f}"

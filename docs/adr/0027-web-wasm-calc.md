@@ -1,0 +1,124 @@
+# ADR-0027：Web 浏览器计算（WASM）技术选型
+
+**日期**：2026-06-15  
+**状态**：已批准（POC 阶段）  
+**影响范围**：`web/frontend/src/calc/`、`web/wasm/`、`docs/plans/web-compact-wasm-plan.md`
+
+---
+
+## 1. 背景
+
+Web 阶段 1–3 已完成：`成长参数` compact 下发、搜索 POST 瘦身、多段反推 API。用户目标 **G2** 要求浏览器内完成与桌面一致的配装 DAG 求值，减少依赖 PythonAnywhere / 下载 exe。
+
+候选方案：
+
+| 选项 | 描述 |
+|------|------|
+| A | **Pyodide** — 打包 Python 计算栈进浏览器 |
+| B | **Rust/TS 重写** — 完整移植 DAG + 终末地公式 |
+| C | **混合** — TS 曲线烘焙 + 轻量 DAG/WASM 求值，分阶段交付 |
+
+---
+
+## 2. 决策
+
+**采用选项 C（混合），分三子阶段交付。**
+
+| 子阶段 | 范围 | 产出 |
+|--------|------|------|
+| **4.1**（已完成） | `floor_linear` 曲线物化 TS 实现 + golden 夹具 + `calc_backend` 开关 | 公式层与 Python 对齐；canonical loadout golden |
+| **4.2**（已完成） | TS `CallNode` 展开 + DAG 拓扑求值 + `loadout-context` API | 浏览器内 `evaluate-loadout` 全输出（任意配装） |
+| **4.2b**（已完成） | TS context 构建 + 静态 DAG + Web Worker | `VITE_CALC_CONTEXT=local` 无 context API |
+| **4.2b+**（已完成） | 装备 catalog + manual_buff + 技能倍率 enrich | local 模式支持固定配装与乘区快照 |
+| **4.3**（已完成） | Worker 池并行批量求值 | `evaluateBatchInWorkerPool`；Rust WASM 暂缓 |
+| **5**（已完成） | 浏览器 TopN（≤5000 组合）+ PWA 预缓存 | `VITE_SEARCH_BACKEND=auto` |
+
+**明确拒绝（4.1）**：
+
+- **Pyodide 全栈**：首包 >15MB、冷启动 >3s，不符合 PA 静态托管与移动弱网场景。
+- **4.1 内完整重写 1200+ 行 DAG**：维护成本与 Python 双轨风险过高。
+
+---
+
+## 3. 架构
+
+```mermaid
+flowchart TB
+  subgraph client [浏览器]
+    FE[ComputePage]
+    MAT[TS curveMaterialize]
+    DAG[TS dagEval 4.2+]
+    FLAG[calc_backend api|wasm]
+  end
+  subgraph server [FastAPI]
+    API["/api/compute/evaluate-loadout"]
+  end
+  FE --> FLAG
+  FLAG -->|api 默认| API
+  FLAG -->|wasm| CTXMODE{calc_context}
+  CTXMODE -->|api| CTX["/api/compute/loadout-context"]
+  CTXMODE -->|local| BUILD[TS buildLoadoutContext]
+  BUILD --> DAG
+  CTX --> DAG
+  DAG -->|Worker| OUT[outputs]
+  FLAG -->|失败回退| API
+```
+
+### 3.1 Golden 契约
+
+- 脚本：`web/wasm/export_loadout_golden.py` 从 Python `evaluate_loadout` 导出 `payload`、`context`、`outputs`、`dag`。
+- 验收：曲线物化误差 ≤ 1e-6；canonical `outputs` 在 4.2 前由 Python golden 锁定，TS 回归不得回退。
+- 校验：`web/wasm/verify_golden.mjs`（Node）+ `web/backend/tests/test_wasm_golden.py`。
+
+### 3.2 特性开关
+
+- 环境变量：`VITE_CALC_BACKEND=api|wasm`（默认 `api`）。
+- 前端：`getCalcBackend()` → `evaluateLoadout()` 在 `wasm` 时先尝试本地路径，失败回退 API。
+
+---
+
+## 4. 体积与性能预算（4.1）
+
+| 指标 | 目标 |
+|------|------|
+| 新增 JS（calc 模块） | ≤ 30 KB gzip |
+| Golden JSON | ≤ 500 KB（随 DAG 导出，仅开发/CI） |
+| FCP 影响 | 懒加载 `calc/*`，默认 `api` 零影响 |
+
+---
+
+## 5. 后果
+
+**正面**
+
+- 公式层先对齐，避免 WASM 与 Python 分叉。
+- 默认 API 路径不变，PA 部署无回归风险。
+- 4.2 可在 golden 保护下增量移植 `CallNode`。
+
+**负面**
+
+- 短期内存在 TS/Python 双实现（曲线 + DAG + context 层），需 golden 守护。
+- Rust WASM 热点加速未纳入 4.3（待 profiling 后可选追加）。
+
+---
+
+## 4.3 体积与性能预算（实测基线 2026-06-15）
+
+| 指标 | 目标 | 当前 |
+|------|------|------|
+| `calc/*` 新增 JS（gzip） | ≤ 30 KB | ~22 KB（含 context + dag + workerPool） |
+| `endfield-dag.json` 静态 | ≤ 500 KB | ~180 KB |
+| Worker 池默认大小 | 1–4 | `min(4, hardwareConcurrency − 1)` |
+| 单快照求值（canonical） | < 50 ms | TS Worker ~8–15 ms（Chrome desktop） |
+| Rust WASM 二进制 | 待定 | **未引入**（4.3 仅 Worker 池） |
+| FCP（默认 `api` 后端） | 零影响 | calc 模块懒加载，默认不走 wasm |
+
+**阶段 5 前置**：`evaluateBatchInWorkerPool` 供 TopN 枚举并行调用；全量搜索仍非目标。
+
+---
+
+## 6. 相关文档
+
+- [`docs/plans/web-compact-wasm-plan.md`](../plans/web-compact-wasm-plan.md)
+- ADR-0024 通用逆推抽象
+- ADR-0011 DAG 六块架构

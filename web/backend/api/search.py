@@ -27,9 +27,19 @@ class SearchRequest(BaseModel):
     damage_type: str = Field(description="伤害类型")
     weapon_scope_label: str = Field(default="同类型", description="武器搜索范围标签")
     equipment_scope_label: str = Field(default="全部", description="装备搜索范围标签")
-    all_weapons: list[dict[str, Any]] = Field(description="全部武器候选列表")
+    all_weapons: list[dict[str, Any]] | None = Field(
+        default=None,
+        description="武器候选列表（省略时服务端按 scope 从 catalog 加载）",
+    )
+    weapon_candidate_names: list[str] | None = Field(
+        default=None,
+        description="可选武器名称白名单（在 scope 过滤后再约束）",
+    )
     current_weapon: dict[str, Any] = Field(description="当前选定武器")
-    equipment_catalog: dict[str, list[dict[str, Any]]] = Field(description="装备目录")
+    equipment_catalog: dict[str, list[dict[str, Any]]] | None = Field(
+        default=None,
+        description="装备目录（省略时服务端按 equipment_scope_label 加载）",
+    )
     fixed_loadout: dict[str, Any] | None = Field(default=None, description="固定配装字段")
     fixed_equipment_names: dict[str, str | None] = Field(default_factory=dict, description="固定装备名称")
     weapon_skill_values: dict[str, Any] = Field(default_factory=dict, description="武器技能值")
@@ -80,11 +90,13 @@ class EstimateRequest(BaseModel):
 
     equipment_scope_label: str = "全部"
 
-    all_weapons: list[dict[str, Any]]
+    all_weapons: list[dict[str, Any]] | None = None
+
+    weapon_candidate_names: list[str] | None = None
 
     current_weapon: dict[str, Any]
 
-    equipment_catalog: dict[str, list[dict[str, Any]]]
+    equipment_catalog: dict[str, list[dict[str, Any]]] | None = None
 
     fixed_loadout: dict[str, Any] | None = None
 
@@ -136,15 +148,53 @@ class EstimateRequest(BaseModel):
 
     extra_crit_damage: float = 0.0
 
+    include_catalog: bool = Field(
+        default=False,
+        description="为浏览器本地 TopN 搜索返回武器列表与完整装备目录",
+    )
+
+    max_workers: int = Field(default=4, description="并行线程数（仅用于耗时预估）")
+
 
 def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
-    """归一化技能字段与固定配装字典（与 GUI 桌面端保持一致）。"""
+    """归一化技能字段、实体引用与 catalog（与 GUI 桌面端保持一致）。"""
+    from api.entity_refs import resolve_character_ref, resolve_weapon_ref
+    from api.search_catalog import resolve_equipment_catalog, weapon_rows_for_search
+
     from games.endfield.data_loading.web_search_bridge import (
         enrich_search_request_fields,
         resolve_search_fixed_loadout,
     )
 
-    enriched = req.model_copy(update=enrich_search_request_fields(req))
+    char_data = resolve_character_ref(
+        req.char_data,
+        char_level=int(req.char_level),
+        trust_level=int(req.trust_level),
+    )
+    current_weapon = resolve_weapon_ref(req.current_weapon, weapon_level=int(req.weapon_level))
+    all_weapons = weapon_rows_for_search(
+        req.all_weapons,
+        char_data=char_data,
+        current_weapon=current_weapon,
+        weapon_scope_label=str(req.weapon_scope_label),
+        char_level=int(req.char_level),
+        weapon_level=int(req.weapon_level),
+        trust_level=int(req.trust_level),
+        weapon_candidate_names=getattr(req, "weapon_candidate_names", None),
+    )
+    equipment_catalog = resolve_equipment_catalog(
+        req.equipment_catalog,
+        equipment_scope_label=str(req.equipment_scope_label),
+    )
+    normalized = req.model_copy(
+        update={
+            "char_data": char_data,
+            "current_weapon": current_weapon,
+            "all_weapons": all_weapons,
+            "equipment_catalog": equipment_catalog,
+        }
+    )
+    enriched = normalized.model_copy(update=enrich_search_request_fields(normalized))
     fixed = resolve_search_fixed_loadout(enriched)
     return enriched, fixed
 
@@ -163,6 +213,54 @@ class LoadoutResult(BaseModel):
     final_damage: float
 
     segment_breakdown: dict[str, float] | None = None
+
+
+class LoadoutComboItem(BaseModel):
+    """单条配装组合（score-batch 用）。"""
+
+    weapon_name: str
+    chest: str = ""
+    gloves: str = ""
+    accessory_a: str = ""
+    accessory_b: str = ""
+
+
+class ScoreBatchRequest(BaseModel):
+    """浏览器本地搜索 — 批量服务端评分（异常 parity）。"""
+
+    params: SearchRequest
+    loadouts: list[LoadoutComboItem] = Field(min_length=1, max_length=256)
+
+
+@router.post("/score-batch")
+async def score_search_batch(body: ScoreBatchRequest):
+    """对多条配装返回与桌面全量搜索一致的 final_damage（含异常 compose）。"""
+
+    try:
+        from games.endfield.calc.search.evaluate.batch_score import score_search_loadouts_batch
+        from games.endfield.calc.search.plan.controller import optimizer_config_for_search_job, prepare_search_job
+        from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
+
+    except ImportError:
+        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+
+    try:
+        req, fixed_loadout = _prepare_search_req(body.params)
+        inputs = build_search_job_inputs_from_request(req, fixed_loadout=fixed_loadout)
+        job, err = prepare_search_job(inputs)
+        if err or job is None:
+            raise HTTPException(status_code=400, detail=err or "作业组装失败")
+        config = optimizer_config_for_search_job(job, top_n=10)
+        scores = score_search_loadouts_batch(
+            job=job,
+            loadouts=[item.model_dump() for item in body.loadouts],
+            crit_mode=config.crit_mode,
+        )
+        return {"final_damage": scores}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"批量评分失败: {e}") from e
 
 
 @router.post("/estimate")
@@ -206,13 +304,17 @@ async def estimate_search(req: EstimateRequest):
 
         duration = estimate_search_duration(total_combinations=preview.total_combinations, max_workers=req.max_workers)
 
-        return {
+        payload: dict[str, Any] = {
             "total_combinations": preview.total_combinations,
             "weapon_count": preview.weapon_count,
             "loadout_combinations": preview.loadout_combinations,
             "estimated_seconds": duration.estimated_seconds,
             "warnings": list(preview.warnings),
         }
+        if getattr(req, "include_catalog", False):
+            payload["weapons"] = list(req.all_weapons or [])
+            payload["equipment_catalog"] = dict(req.equipment_catalog or {})
+        return payload
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"预估失败: {e}")

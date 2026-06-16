@@ -1,25 +1,30 @@
 # SPDX-License-Identifier: AGPL-3.0
 """
-终末地逆推适配器 — ``GameInverseAdapter`` 的具体实现。
+终末地逆推适配器 — 基于 ``SegmentCurveAdapter`` / ``CurveBlueprint``。
 
 将终末地的领域知识（90 级属性、9/12 级技能倍率、94 级去重）
-声明为 InverseSchema 配置，委托框架 InverseEngine 执行拟合。
+声明为曲线蓝图，委托框架 ``SegmentCurveEngine`` 执行拟合。
 
-旧 `api.py` / `attribute.py` / `skill.py` 的公开函数保留为向后兼容的薄封装，
-内部委托给本模块的 ``EndfieldInverseAdapter``。
+旧 `api.py` / `attribute.py` / `skill.py` 的公开函数保留为向后兼容的薄封装。
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 
 from calc_framework.inverse.base import FitResult
-from calc_framework.inverse.schema import GameInverseAdapter, InverseSchema
+from calc_framework.inverse.curve import CurveBlueprint
+from calc_framework.inverse.schema import InverseSchema
+from calc_framework.inverse.segment_adapter import SegmentCurveAdapter
 
-# ── 终末地数据去重工具 ──────────────────────────
+from games.endfield.calc.damage.inverse.blueprints import (
+    ENDFIELD_ATTRIBUTE_BLUEPRINT,
+    ENDFIELD_INVERSE_BLUEPRINTS,
+    ENDFIELD_SKILL_9_BLUEPRINT,
+    ENDFIELD_SKILL_12_BLUEPRINT,
+)
 
 _DUPLICATE_INDICES_94 = [20, 41, 62, 83]
-"""94 级数据中的重复位置（等级 20/40/60/80 各重复一次）。"""
 
 
 def remove_duplicates_94(data: Sequence[float]) -> list[float]:
@@ -29,45 +34,50 @@ def remove_duplicates_94(data: Sequence[float]) -> list[float]:
     return [data[i] for i in range(94) if i not in _DUPLICATE_INDICES_94]
 
 
-# ── 终末地逆推适配器 ────────────────────────────
+class EndfieldInverseAdapter(SegmentCurveAdapter):
+    """终末地逆推适配器（单段属性 90 + 技能 12/9）。"""
 
-
-class EndfieldInverseAdapter(GameInverseAdapter):
-    """终末地逆推适配器。
-
-    声明终末地的三种数据模式：
-    - 90 级属性成长
-    - 12 级技能倍率（10-12 级为特殊值）
-    - 9 级技能倍率（潜能/附加属性）
-    """
-
-    @property
-    def schemas(self) -> list[InverseSchema]:
-        return [
-            InverseSchema(
-                length=90,
-                label="属性成长 (1-90 级)",
-                search_options={
-                    "divisor_range": (1, 201),
-                    "growth_range": (1, 301),
-                    "offset_search_limit": 200,
-                },
-            ),
-            InverseSchema(
-                length=12,
-                label="技能倍率 (1-12 级，10-12 特殊值)",
-                special_indices=[9, 10, 11],
-            ),
-            InverseSchema(
-                length=9,
-                label="技能倍率 (1-9 级，无特殊值)",
-            ),
-        ]
+    def iter_blueprints(self) -> Iterable[CurveBlueprint]:
+        return ENDFIELD_INVERSE_BLUEPRINTS
 
     def default_formula(self) -> str:
         return "floor_linear"
 
-    # ── 后处理钩子 ───────────────────────────────
+    def fit_attribute_90(self, data: Sequence[float]) -> FitResult:
+        """拟合 90 级属性成长。"""
+        return self.curves.fit_by_key(data, ENDFIELD_ATTRIBUTE_BLUEPRINT, "attr_90")
+
+    def fit_skill_12(self, data: Sequence[float]) -> FitResult:
+        """拟合 12 级技能倍率（10–12 特殊值）。"""
+        return self.curves.fit_by_key(data, ENDFIELD_SKILL_12_BLUEPRINT, "skill_12")
+
+    def fit_skill_9(self, data: Sequence[float]) -> FitResult:
+        """拟合 9 级技能倍率。"""
+        return self.curves.fit_by_key(data, ENDFIELD_SKILL_9_BLUEPRINT, "skill_9")
+
+    def fit(self, data: Sequence[float]) -> FitResult:
+        """按长度匹配单段；多段同长时须 ``fit_with_key``。"""
+        matched = [s for s in self.schemas if len(data) == s.length]
+        if len(matched) == 1:
+            schema = matched[0]
+            if schema.key:
+                return self.fit_with_key(data, schema.key)
+            return self._fit_legacy_schema(schema, data)
+        if len(matched) > 1:
+            keys = ", ".join(s.key or s.label for s in matched)
+            raise ValueError(f"数据长度 {len(data)} 匹配多个 schema（{keys}），请使用 fit_with_key()。")
+        self.on_no_match(data)
+        raise RuntimeError("unreachable")
+
+    def _fit_legacy_schema(self, schema: InverseSchema, data: Sequence[float]) -> FitResult:
+        """无 key 的 schema 拟合并应用 ``fit_special_logic``。"""
+        base_data = schema.extract_base_data(data)
+        special_values = schema.extract_special_values(data)
+        options = schema.search_options or {}
+        result = self._engine.fit(base_data, formula_id=schema.formula_id, **options)
+        if special_values and result.params:
+            result.params["special_values"] = special_values
+        return self.fit_special_logic(schema, base_data, result, data)
 
     def fit_special_logic(
         self,
@@ -76,34 +86,31 @@ class EndfieldInverseAdapter(GameInverseAdapter):
         result: FitResult,
         original_data: Sequence[float],
     ) -> FitResult:
-        """技能倍率的特殊值后处理。
-
-        对于 12 级技能：前 9 级拟合，特殊值直接从原始数据提取。
-        对于 9 级技能（无特殊值）：若 9 级精确拟合失败，自动将第 9 级降级为特殊值重试。
-        """
-        # 12 级技能：正常处理（特殊值已在 fit() 中注入 params）
-        if schema.length == 12:
+        """9 级技能：第 9 级拟合失败时降级为 special 重试。"""
+        if schema.length == 12 or schema.key == "skill_12":
             return result
-
-        # 9 级技能：尝试降级第 9 级为特殊值
-        if schema.length == 9 and not result.is_exact and result.params:
+        if (schema.length == 9 or schema.key == "skill_9") and not result.is_exact and result.params:
             special_values = [original_data[8]]
             base_8 = original_data[:8]
             options = schema.search_options or {}
-
             retry_result = self._engine.fit(base_8, formula_id=schema.formula_id, **options)
             if retry_result.is_exact and retry_result.params:
                 retry_result.params["special_values"] = special_values
                 return retry_result
-
         return result
 
-    # ── 94 级去重支持 ───────────────────────────
+    def fit_with_key(self, data: Sequence[float], schema_key: str) -> FitResult:
+        result = super().fit_with_key(data, schema_key)
+        schema = next((s for s in self.schemas if s.key == schema_key), None)
+        if schema is None:
+            return result
+        base_data = schema.extract_base_data(data)
+        return self.fit_special_logic(schema, base_data, result, data)
 
     def fit_from_94(self, data: Sequence[float]) -> FitResult:
-        """从 94 级数据（含 4 个重复点）拟合 90 级属性公式。
+        """从 94 级数据（含重复点）拟合 90 级属性。"""
+        return self.fit_attribute_90(remove_duplicates_94(data))
 
-        自动去重后调用标准 90 级拟合。
-        """
-        clean = remove_duplicates_94(data)
-        return self.fit(clean)
+    def on_no_match(self, data: Sequence[float]) -> None:
+        supported = ", ".join(str(s.length) for s in self.schemas)
+        raise ValueError(f"不支持的数据长度: {len(data)}。支持的长度: {supported}")

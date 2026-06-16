@@ -21,6 +21,7 @@ class CalcPackViewerEventMixin:
     # _entity_selectors, _level_spin, _asset_temp_dir
 
     def _show_help(self) -> None:
+        """显示内置帮助对话框（F1）。"""
         from utils.gui.help_dialog import HelpDialog
 
         dialog = HelpDialog(build_viewer_help, self, title=tr("desktop.viewer.helpDialogTitle"))  # type: ignore[arg-type]
@@ -37,6 +38,7 @@ class CalcPackViewerEventMixin:
             self._status_label.setText(tr("desktop.viewer.themeSwitched", name=theme.get("name", key)))
 
     def _toggle_left_panel(self) -> None:
+        """切换左侧栏的显示/隐藏。"""
         if self._splitter is None:
             return
         sizes = self._splitter.sizes()
@@ -46,6 +48,7 @@ class CalcPackViewerEventMixin:
             self._splitter.setSizes([220, max(400, sizes[1] - 220), max(100, sizes[2])])
 
     def _toggle_right_panel(self) -> None:
+        """切换右侧栏的显示/隐藏。"""
         if self._splitter is None:
             return
         sizes = self._splitter.sizes()
@@ -55,10 +58,12 @@ class CalcPackViewerEventMixin:
             self._splitter.setSizes([max(100, sizes[0]), max(400, sizes[1] - 200), 200])
 
     def _show_plugin_manager_dialog(self) -> None:
+        """显示插件管理器对话框。"""
         dialog = PluginManagerDialog(self, self._status_label.setText)  # type: ignore[arg-type]
         dialog.exec()
 
     def _open_file(self) -> None:
+        """打开文件选择对话框加载 .calcpack。"""
         path, _ = QFileDialog.getOpenFileName(
             self,  # type: ignore[arg-type] — mixin, runtime is QMainWindow
             tr("desktop.viewer.menuOpenCalcpack"),
@@ -85,6 +90,7 @@ class CalcPackViewerEventMixin:
         self._status_label.setText(f"已求值 — {', '.join(selected) if selected else '自定义输入'} Lv.{lv}")
 
     def resizeEvent(self, event) -> None:  # noqa: N802
+        """窗口大小变化时自动调整侧栏布局。"""
         super().resizeEvent(event)
         if self._splitter is None:
             return

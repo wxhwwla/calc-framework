@@ -23,6 +23,7 @@ if str(_FRAMEWORK_SRC) not in sys.path:
 from typing import Any
 
 from calc_framework.ui.log_widget import LogWidget
+from calc_framework.ui.theme import ThemeManager
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
@@ -117,7 +118,6 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
 
         self.tabs: QTabWidget = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
-        self._style_tabs()
         main_layout.addWidget(self.tabs, stretch=1)
 
         self._build_calc_page()
@@ -153,15 +153,12 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         """on close。"""
 
     def _apply_dark_style(self) -> None:
-        self._qapp.setStyleSheet("""
-            QMainWindow { background-color: #1A1A1A; }
-            QWidget { background-color: #1A1A1A; }
-            QLabel { color: #D1D1D1; }
-        """)
-        """apply dark style。"""
-
-    def _style_tabs(self) -> None:
-        self.tabs.setStyleSheet("""
+        """通过框架 ThemeManager 应用深色主题 + 终末地特有样式覆盖。"""
+        self._theme_mgr = ThemeManager()
+        base_style = self._theme_mgr.stylesheet("dark")
+        self._qapp.setStyleSheet(
+            base_style
+            + """
             QTabWidget::pane {
                 border: 1px solid #464646;
                 border-radius: 16px;
@@ -186,8 +183,8 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
             QTabBar::tab:hover:!selected {
                 background-color: #333333;
             }
-        """)
-        """style tabs。"""
+        """
+        )
 
     def _setup_app_menu(self) -> None:
         menubar = self.menuBar()
@@ -223,5 +220,5 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
 
     @property
     def confirm_btn(self):
-        return self.control_dock.confirm_btn
         """confirm btn。"""
+        return self.control_dock.confirm_btn

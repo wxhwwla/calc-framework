@@ -95,8 +95,8 @@ def _human_size(path: Path) -> str:
     if size < 1024 * 1024:
         return f"{size / 1024:.1f}KB"
 
-    return f"{size / 1024 / 1024:.1f}MB"
     """human size。"""
+    return f"{size / 1024 / 1024:.1f}MB"
 
 
 def list_runs(db_path: Path) -> list[RunInfo]:
@@ -614,5 +614,5 @@ class SearchHistoryDialog(QDialog):
     def clipboard() -> QClipboard:
         from PySide6.QtWidgets import QApplication
 
-        return QApplication.clipboard()
         """clipboard。"""
+        return QApplication.clipboard()

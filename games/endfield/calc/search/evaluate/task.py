@@ -33,6 +33,7 @@ def _context_with_expected_crit(
     crit_rate: float,
     crit_damage: float,
 ) -> DamageContext:
+    """创建暴击期望模式下的伤害上下文（覆盖暴击率/伤害）。"""
     return DamageContext(
         final_attack=base.final_attack,
         skill_multiplier=base.skill_multiplier,
@@ -53,10 +54,13 @@ def _context_with_expected_crit(
         combo_stacks=base.combo_stacks,
         break_defense_stacks=base.break_defense_stacks,
     )
-    """context with expected crit。"""
 
 
-def _build_profile(job: SingleSkillSearchJob, search_eval: SearchEvalContext | None) -> PhysicalAbnormalProfile:
+def _build_profile(
+    job: SingleSkillSearchJob,
+    search_eval: SearchEvalContext | None,
+) -> PhysicalAbnormalProfile:
+    """从作业或搜索上下文构建物理异常 Profile。"""
     if search_eval is None:
         return PhysicalAbnormalProfile(
             damage_component_mode=job.damage_component_mode,
@@ -76,7 +80,6 @@ def _build_profile(job: SingleSkillSearchJob, search_eval: SearchEvalContext | N
         extra_crit_damage=float(search_eval.extra_crit_damage or job.extra_crit_damage),
         counts=dict(search_eval.physical_abnormal_counts or job.physical_abnormal_counts or {}),
     )
-    """build profile。"""
 
 
 def _expected_crit_context(
@@ -86,6 +89,7 @@ def _expected_crit_context(
     profile: PhysicalAbnormalProfile,
     search_eval: SearchEvalContext | None,
 ) -> tuple[float, float]:
+    """计算期望暴击模式下的暴击率和暴击伤害（含装备和武器暴击加成）。"""
     if not profile.use_expected_crit:
         return job.base_context.crit_rate, job.base_context.crit_damage
     rate = float(job.base_context.crit_rate) + float(profile.extra_crit_rate)
@@ -104,7 +108,6 @@ def _expected_crit_context(
     rate += er
     dmg += ed
     return max(0.0, rate), max(0.0, dmg)
-    """expected crit context。"""
 
 
 def _evaluate_abnormal_damage(
@@ -114,6 +117,7 @@ def _evaluate_abnormal_damage(
     profile: PhysicalAbnormalProfile,
     search_eval: SearchEvalContext | None,
 ) -> tuple[float, dict[str, float]]:
+    """评估物理异常 + 法术异常总伤害。"""
     physical_counts = profile.counts or {}
     spell_counts = (
         dict(search_eval.spell_abnormal_counts or job.spell_abnormal_counts or {})
@@ -123,10 +127,7 @@ def _evaluate_abnormal_damage(
     if not any(v > 0 for v in physical_counts.values()) and not any(v > 0 for v in spell_counts.values()):
         return 0.0, {}
     snapshot = build_runtime_eval_snapshot(task=task, search_eval=search_eval)
-    if search_eval is None:
-        char_level = 1
-    else:
-        char_level = max(1, int(search_eval.char_level))
+    char_level = max(1, int(search_eval.char_level)) if search_eval else 1
     crit_rate, crit_damage = _expected_crit_context(
         job=job,
         task=task,
@@ -194,7 +195,6 @@ def _evaluate_abnormal_damage(
     merged = dict(physical_breakdown)
     merged.update(spell_breakdown)
     return physical_total + spell_total, merged
-    """evaluate abnormal damage。"""
 
 
 def make_loadout_task_evaluator(
@@ -203,13 +203,23 @@ def make_loadout_task_evaluator(
     crit_mode: CritMode,
     search_eval: SearchEvalContext | None = None,
 ) -> Callable[[OptimizerTask], LoadoutScore]:
-    """根据作业是否含多技能配置返回对应 evaluate 闭包。"""
+    """根据作业是否含多技能配置返回对应 evaluate 闭包。
+
+    Args:
+        job: 单技能搜索作业
+        crit_mode: 暴击模式
+        search_eval: 搜索评估上下文（可选）
+
+    Returns:
+        接收 OptimizerTask 返回 LoadoutScore 的评估函数
+    """
     profile = _build_profile(job, search_eval)
     component_mode = profile.damage_component_mode
     multi = job.multi_skill_eval
     if multi is None:
 
         def _eval_single(task: OptimizerTask) -> LoadoutScore:
+            """单技能评估闭包。"""
             eval_context = job.base_context
             eval_crit_mode = crit_mode
             if profile.use_expected_crit:
@@ -251,13 +261,13 @@ def make_loadout_task_evaluator(
                 loadout_names=base_score.loadout_names,
                 segment_breakdown=breakdown or None,
             )
-            """eval single。"""
 
         return _eval_single
     scenarios = multi.scenarios
     counts = multi.skill_counts
 
     def _eval_multi(task: OptimizerTask) -> LoadoutScore:
+        """多技能加权评估闭包。"""
         eval_context = job.base_context
         eval_crit_mode = crit_mode
         if profile.use_expected_crit:
@@ -300,6 +310,5 @@ def make_loadout_task_evaluator(
             loadout_names=base_score.loadout_names,
             segment_breakdown=merged or None,
         )
-        """eval multi。"""
 
     return _eval_multi

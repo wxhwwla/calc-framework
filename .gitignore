@@ -2,6 +2,8 @@
 .idea/
 .trae/
 .vscode/
+.claude/
+.cursorrules
 *.swp
 *~
 
@@ -57,7 +59,6 @@ git_backup/snapshots/
 
 # 日志
 *.log
-debug.log
 
 # 一次性临时工具/扫描产物
 batch_docstring.py
@@ -80,6 +81,9 @@ Desktop.ini
 # 机器学习模型文件（体积大，应自行下载或通过 LFS 管理）
 yolov8n.pt
 
+# WASM 二进制（体积大，应通过 LFS 或按需下载）
+*.wasm
+
 # BWIKI 爬虫全量输出（可从源数据重生成）
 tools/arknights_scout/output/
 
@@ -88,6 +92,7 @@ games/arknights/data/operators_standard.json
 
 # Web 后端运行时数据
 web/backend/data/compute_history.json
+web/backend/data/search_history.json
 web/backend/api/.staging/
 
 # 压缩包
@@ -95,6 +100,9 @@ web/backend/api/.staging/
 
 # 性能基准测试产物
 .benchmarks/
+
+# 覆盖率报告
+coverage.xml
 
 # 构建临时目录
 build_local-backend_*/
@@ -112,3 +120,4 @@ games/endfield/search_output/
 
 # BWIKI 侦察缓存（体积大、可本地重跑）
 tools/bwiki_scout/output/
+debug.log

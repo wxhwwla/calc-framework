@@ -32,16 +32,16 @@ class ManualBuffEntry:
 
 
 def empty_buff_dict() -> dict[str, list[dict[str, str | float]]]:
-    return {}
     """empty buff dict。"""
+    return {}
 
 
 def get_buffs_for_key(
     store: dict[str, list[dict[str, str | float]]],
     key: str,
 ) -> list[dict[str, str | float]]:
-    return list(store.get(key, []))
     """获取buffs for key。"""
+    return list(store.get(key, []))
 
 
 def set_buffs_for_key(
@@ -71,8 +71,8 @@ def build_active_keys_from_counts(
         if ":" not in key:
             return 99
         kind, _rest = key.split(":", 1)
-        return segment_order.get(kind, 99)
         """segment rank。"""
+        return segment_order.get(kind, 99)
 
     sorted_skills = sorted(skill_counts.items(), key=lambda kv: _segment_rank(kv[0]))
     for segment_key, count in sorted_skills:

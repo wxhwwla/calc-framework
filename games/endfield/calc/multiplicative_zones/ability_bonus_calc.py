@@ -24,9 +24,9 @@ def _get_weapon_bonus(bonus_data, level: int = 1) -> float:
     """从武器加成数据中提取加成值（支持等级选择）"""
     if isinstance(bonus_data, list):
         level_index = level - 1
-        if 0 <= level_index < len(bonus_data) and isinstance(bonus_data[level_index], (int, float)):
+        if 0 <= level_index < len(bonus_data) and isinstance(bonus_data[level_index], int | float):
             return float(bonus_data[level_index])
-    elif isinstance(bonus_data, (int, float)):
+    elif isinstance(bonus_data, int | float):
         return float(bonus_data)
     return 0.0
 
@@ -184,6 +184,7 @@ def calculate_ability_bonus(
     if weapon:
 
         def _resolve_level(effect: str) -> int:
+            """根据效果名查找对应特殊技能等级。"""
             if effect == sa1_name:
                 return sa1_level
             elif effect == sa2_name:
@@ -191,11 +192,10 @@ def calculate_ability_bonus(
             elif effect == sa3_name:
                 return sa3_level
             return 1
-            """resolve level。"""
 
         def _should_skip(effect: str) -> bool:
-            return effect == sa3_name and sa3_level == 0
             """should skip。"""
+            return effect == sa3_name and sa3_level == 0
 
         def _classify(effect: str) -> str:
             if effect == "主能力值+":
@@ -213,7 +213,6 @@ def calculate_ability_bonus(
             if effect == "全能力+":
                 return "both_pct"
             return ""
-            """classify。"""
 
         # 1. 从 normal_skills 列表中获取加成
         for skill in weapon.get("normal_skills", []):

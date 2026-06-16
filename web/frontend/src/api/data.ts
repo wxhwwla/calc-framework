@@ -1,4 +1,8 @@
 import i18n from "../i18n/config";
+import type { EntityDataFormat } from "../utils/entityCompact";
+import { entityFormatQuery } from "../utils/entityCompact";
+
+export type { EntityDataFormat };
 
 const BASE = "/api/data";
 
@@ -48,14 +52,19 @@ export async function fetchCharacters(): Promise<CharacterSummary[]> {
   return r.json();
 }
 
-export async function fetchCharacter(name: string): Promise<Record<string, unknown>> {
-  const r = await fetch(`${BASE}/characters/${encodeURIComponent(name)}`);
+export async function fetchCharacter(
+  name: string,
+  format: EntityDataFormat = "runtime",
+): Promise<Record<string, unknown>> {
+  const r = await fetch(`${BASE}/characters/${encodeURIComponent(name)}${entityFormatQuery(format)}`);
   if (!r.ok) throw new Error(`${i18n.t("api.characterDetailGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
-export async function fetchCharactersFull(): Promise<Record<string, unknown>[]> {
-  const r = await fetch(`${BASE}/characters/detail/all`);
+export async function fetchCharactersFull(
+  format: EntityDataFormat = "compact",
+): Promise<Record<string, unknown>[]> {
+  const r = await fetch(`${BASE}/characters/detail/all${entityFormatQuery(format)}`);
   if (!r.ok) throw new Error(`${i18n.t("api.charactersFullGetFailed")}: ${r.statusText}`);
   return r.json();
 }
@@ -68,14 +77,19 @@ export async function fetchWeapons(): Promise<WeaponSummary[]> {
   return r.json();
 }
 
-export async function fetchWeapon(name: string): Promise<Record<string, unknown>> {
-  const r = await fetch(`${BASE}/weapons/${encodeURIComponent(name)}`);
+export async function fetchWeapon(
+  name: string,
+  format: EntityDataFormat = "runtime",
+): Promise<Record<string, unknown>> {
+  const r = await fetch(`${BASE}/weapons/${encodeURIComponent(name)}${entityFormatQuery(format)}`);
   if (!r.ok) throw new Error(`${i18n.t("api.weaponDetailGetFailed")}: ${r.statusText}`);
   return r.json();
 }
 
-export async function fetchWeaponsFull(): Promise<Record<string, unknown>[]> {
-  const r = await fetch(`${BASE}/weapons/detail/all`);
+export async function fetchWeaponsFull(
+  format: EntityDataFormat = "compact",
+): Promise<Record<string, unknown>[]> {
+  const r = await fetch(`${BASE}/weapons/detail/all${entityFormatQuery(format)}`);
   if (!r.ok) throw new Error(`${i18n.t("api.weaponsFullGetFailed")}: ${r.statusText}`);
   return r.json();
 }

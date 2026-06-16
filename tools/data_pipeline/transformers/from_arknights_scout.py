@@ -89,7 +89,6 @@ def _convert_operator(raw: dict[str, Any]) -> dict[str, Any]:
     base_stats = raw.get("基础属性", {})
     if base_stats:
         entity["基础属性"] = base_stats
-        # 同时平铺到顶层方便筛选
         if "hp" in base_stats:
             entity["生命上限"] = base_stats["hp"]
         if "atk" in base_stats:
@@ -98,6 +97,14 @@ def _convert_operator(raw: dict[str, Any]) -> dict[str, Any]:
             entity["防御力"] = base_stats["def"]
         if "res" in base_stats:
             entity["法术抗性"] = base_stats["res"]
+
+    ms = raw.get("属性里程碑") or base_stats.get("属性里程碑")
+    if ms:
+        entity["属性里程碑"] = ms
+
+    growth = raw.get("成长参数")
+    if growth:
+        entity["成长参数"] = growth
 
     # 信赖加成
     trust = raw.get("信赖加成", {})

@@ -12,8 +12,7 @@
 | 应用 | 命令 | 说明 |
 |------|------|------|
 | **伤害计算器** | `python games/endfield/main.py` | 选角色/武器 → 确认 → 看伤害乘区 |
-| **数据设计器** | `python games/endfield/designer_main.py` | 公式反推 / 数据浏览 / 数据编辑 |
-| **DAG 工具** | `python games/endfield/dag_main.py` | DAG JSON 生成与调试 |
+| **开发者工具箱** | `python scripts/main_dev_toolkit.py` | 公式反推 / 数据浏览 / 数据编辑 / DAG 工具集成 |
 
 打包后的 exe 路径同理（`Game Calc Platform.exe` / `开发者工具箱.exe`）。
 
@@ -124,11 +123,11 @@
 
 ---
 
-## 三、数据设计器
+## 三、开发者工具箱
 
-启动命令：`python games/endfield/designer_main.py`
+启动命令：`python scripts/main_dev_toolkit.py`
 
-三个页签：
+包含三个页签：
 
 ### 公式反推
 粘贴 90 级/技能 9-12 级的属性数值，自动反推成长公式参数。
@@ -147,10 +146,8 @@
 
 | 入口 | 命令 | 说明 |
 |------|------|------|
-| **根入口** | `python graph_editor_main.py` | 仓库根目录调用 |
 | **包入口** | `python -m calc_framework.graph_editor` | 框架包调用 |
-| **游戏入口** | `python games/endfield/graph_editor_main.py` | games 内调用 |
-| **打开已有文件** | 上述命令后加路径，如 `python graph_editor_main.py path/to/graph.json` | 启动即加载 |
+| **打开已有文件** | 上述命令后加路径，如 `python -m calc_framework.graph_editor path/to/graph.json` | 启动即加载 |
 
 ### 4.1 界面总览
 
@@ -281,13 +278,16 @@
 
 ## 五、DAG 工具
 
-启动命令：`python games/endfield/dag_main.py`
+DAG 生成与调试已集成到开发者工具箱：
 
-| 启动命令 | 命令 | 说明 |
-|------|------|------|
-| **DAG 生成** | `python games/endfield/dag_main.py` | 重新生成 `endfield_full.dag.json` |
-| **DAG 调试** | `python games/endfield/dag_main.py --debug` | 启动 DAG 分步调试器 |
-| **调试指定文件** | `python games/endfield/dag_main.py --debug [path]` | 调试指定 DAG JSON 文件 |
+```bash
+python scripts/main_dev_toolkit.py    # 打开 → 选择「DAG 调试」页签
+```
+
+也可通过框架直接使用 DAG 调试器 CLI：
+
+```bash
+python -m calc_framework.dag.debugger_cli --help
 
 ---
 
@@ -297,9 +297,9 @@
 
 | 数据 | 路径（相对于仓库根） |
 |------|---------------------|
-| 角色数据 | `games/endfield/character_weapon_equipment/character_data/characters.json` |
-| 武器数据 | `games/endfield/character_weapon_equipment/weapon_data/weapons.json` |
-| 装备数据 | `games/endfield/character_weapon_equipment/equipment_data/equipments.json` |
+| 角色数据 | `games/endfield/data/characters.json` |
+| 武器数据 | `games/endfield/data/weapons.json` |
+| 装备数据 | `games/endfield/data/equipments.json` |
 
 > 这些文件由 BWIKI 工具链同步或手动编辑，修改后程序自动刷新缓存。
 

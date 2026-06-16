@@ -262,7 +262,12 @@ def build_damage_snapshot(
         active_counts = counts
 
     weighted, segment_totals, skill_type_totals = _compute_weighted_with_buffs(
-        segment_damage, counts, manual_buffs, scenarios_list, final_attack, enemy_defense,
+        segment_damage,
+        counts,
+        manual_buffs,
+        scenarios_list,
+        final_attack,
+        enemy_defense,
         enemy_resistance=enemy_resistance,
         ignore_resistance=ignore_resistance,
         imbalance_vulnerability_coeff=imbalance_vulnerability_coeff,
@@ -323,5 +328,5 @@ def store_snapshot_on_app(app: Any, snapshot: DamageSnapshot) -> None:
 
 
 def get_snapshot_from_app(app: Any) -> DamageSnapshot | None:
-    return getattr(app, "_last_damage_snapshot", None)
     """获取snapshot from app。"""
+    return getattr(app, "_last_damage_snapshot", None)

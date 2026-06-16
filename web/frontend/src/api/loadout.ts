@@ -3,6 +3,8 @@ import type { MultiSkillSettings } from "../components/calculator/MultiSkillPane
 import type { CritAndAbnormalSettings } from "../components/calculator/CritAndAbnormalPanel";
 import type { FixedLoadoutSelection } from "../components/calculator/FixedLoadoutPanel";
 import type { EvaluateResult } from "./compute";
+import { compactEntityForTransport } from "../utils/entityCompact";
+import { evaluateLoadoutWithBackend } from "../calc/evaluateLoadoutWasm";
 
 export interface WebLoadoutPayload {
   char_data: Record<string, unknown>;
@@ -66,8 +68,8 @@ export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayl
   if (!ctx.charData || !ctx.weaponData) return null;
   const calculationMode = resolveCalculationMode(ctx.calcMode, ctx.multiSkill);
   return {
-    char_data: ctx.charData,
-    weapon_data: ctx.weaponData,
+    char_data: compactEntityForTransport(ctx.charData, "character"),
+    weapon_data: compactEntityForTransport(ctx.weaponData, "weapon"),
     char_level: ctx.charLevel,
     weapon_level: ctx.weaponLevel,
     trust_level: ctx.trustLevel,
@@ -101,13 +103,15 @@ export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayl
 }
 
 export async function evaluateLoadout(payload: WebLoadoutPayload): Promise<EvaluateResult> {
-  const r = await fetch("/api/compute/evaluate-loadout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+  return evaluateLoadoutWithBackend(payload, async () => {
+    const r = await fetch("/api/compute/evaluate-loadout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
   });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
 }
 
 export async function fetchLoadoutPreview(payload: WebLoadoutPayload): Promise<string[]> {
@@ -131,14 +135,9 @@ export async function fetchLoadoutSnapshot(payload: WebLoadoutPayload) {
   return r.json();
 }
 
-/** 将配装 payload 展平为搜索 API 请求体（技能/固定配装由服务端归一化） */
+/** 将配装 payload 展平为搜索 API 请求体（catalog 由服务端按 scope 加载） */
 export function buildSearchRequestFromLoadout(
   payload: WebLoadoutPayload,
-  extras: {
-    all_weapons: Record<string, unknown>[];
-    current_weapon: Record<string, unknown>;
-    equipment_catalog: Record<string, Record<string, unknown>[]>;
-  },
 ): Omit<SearchRequest, "top_n" | "max_workers"> {
   const ep = payload.enemy_params;
   return {
@@ -152,9 +151,7 @@ export function buildSearchRequestFromLoadout(
     damage_type: "物理",
     weapon_scope_label: payload.weapon_scope_label,
     equipment_scope_label: payload.equipment_scope_label,
-    all_weapons: extras.all_weapons,
-    current_weapon: extras.current_weapon,
-    equipment_catalog: extras.equipment_catalog,
+    current_weapon: payload.weapon_data,
     fixed_equipment_names: payload.fixed_equipment_names,
     weapon_skill_values: payload.weapon_skill_values,
     enemy_defense: ep.enemy_defense,

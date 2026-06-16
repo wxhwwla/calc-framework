@@ -100,8 +100,8 @@ def _apply_manual_buffs(
             combo_stacks=context.combo_stacks,
             break_defense_stacks=context.break_defense_stacks,
         )
-    return context, extra_effects
     """apply manual buffs。"""
+    return context, extra_effects
 
 
 def calculate_single_hit_damage(
@@ -133,11 +133,7 @@ def calculate_single_hit_damage(
     else:
         extra = []
 
-    all_effects = (
-        list(effects or [])
-        + extra
-        + list(damage_effects_from_break_defense(context.break_defense_stacks))
-    )
+    all_effects = list(effects or []) + extra + list(damage_effects_from_break_defense(context.break_defense_stacks))
     known_effects, unknown_effects, warnings = _collect_effects(context, all_effects)
 
     damage_bonus = (
@@ -228,8 +224,7 @@ def calculate_single_hit_damage(
         combo_bonus = 1.0
 
     zone_values = {
-        "基础伤害区": float(context.final_attack) * float(context.skill_multiplier)
-        + float(context.base_damage_bonus),
+        "基础伤害区": float(context.final_attack) * float(context.skill_multiplier) + float(context.base_damage_bonus),
         "暴击区": _resolve_crit_zone(context, crit_mode),
         "伤害加成区": damage_bonus,
         "伤害减免区": damage_reduction,

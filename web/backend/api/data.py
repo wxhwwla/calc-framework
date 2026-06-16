@@ -5,12 +5,23 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+
+from web.backend.data_materialize import (
+    DEFAULT_ENTITY_FORMAT,
+    EntityFormat,
+    format_character_entity,
+    format_entity_list,
+    format_weapon_entity,
+)
 
 from ._json_utils import ENDFIELD_DATA_ROOT, load_json
 
 router = APIRouter(prefix="/api/data", tags=["data"])
+
+_FORMAT_QUERY_DESC = "compact|runtime|raw"
+_CHARACTER_FORMAT_DESC = "compact=成长参数；runtime=烘焙；raw=原样"
 
 
 DATA_ROOT = ENDFIELD_DATA_ROOT
@@ -41,6 +52,22 @@ class InverseRequest(BaseModel):
 
     values: list[float]
 
+    max_error: float = 0.05
+
+
+class SegmentInverseRequest(BaseModel):
+    game: str = "endfield"
+    blueprint_id: str
+    segment_key: str
+    values: list[float]
+    rarity: int = 6
+    max_error: float = 0.05
+
+
+class MilestonesInverseRequest(BaseModel):
+    operator: dict[str, Any]
+    max_error: float = 0.05
+
 
 class InverseResponse(BaseModel):
     base: float
@@ -58,6 +85,24 @@ class InverseResponse(BaseModel):
     valid: bool
 
     details: str
+
+    max_error: float | None = None
+
+    params: dict[str, Any] | None = None
+
+
+class SegmentInverseResponse(InverseResponse):
+    game: str
+    blueprint_id: str
+    segment_key: str
+    length: int
+
+
+class MilestonesInverseResponse(BaseModel):
+    growth_params: dict[str, Any]
+    errors: list[str]
+    segment_count: int
+    skill_sp_count: int
 
 
 # ── 角色 ──────────────────────────────────────────────
@@ -84,22 +129,31 @@ async def list_characters():
     return result
 
 
-@router.get("/characters/{name}", summary="获取指定角色完整数据")
-async def get_character(name: str):
+@router.get("/characters/{name}", summary="获取指定角色数据（支持 format=compact|runtime|raw）")
+async def get_character(
+    name: str,
+    format: EntityFormat = Query(
+        DEFAULT_ENTITY_FORMAT,
+        description=_CHARACTER_FORMAT_DESC,
+    ),
+):
     name = name.strip()
 
     raw = load_json(CHARACTERS_PATH)
 
     for c in raw:
         if c.get("名称") == name:
-            return c
+            return format_character_entity(c, format)
 
     raise HTTPException(status_code=404, detail=f"角色 '{name}' 未找到")
 
 
-@router.get("/characters/detail/all", summary="获取所有角色完整数据")
-async def list_characters_full():
-    return load_json(CHARACTERS_PATH)
+@router.get("/characters/detail/all", summary="获取所有角色（支持 format）")
+async def list_characters_full(
+    format: EntityFormat = Query(DEFAULT_ENTITY_FORMAT, description=_FORMAT_QUERY_DESC),
+):
+    raw = load_json(CHARACTERS_PATH) or []
+    return format_entity_list(raw, format, kind="character")
 
 
 @router.post("/characters", summary="新增角色")
@@ -148,22 +202,28 @@ async def list_weapons():
     return result
 
 
-@router.get("/weapons/{name}", summary="获取指定武器完整数据")
-async def get_weapon(name: str):
+@router.get("/weapons/{name}", summary="获取指定武器数据（支持 format=compact|runtime|raw）")
+async def get_weapon(
+    name: str,
+    format: EntityFormat = Query(DEFAULT_ENTITY_FORMAT, description=_FORMAT_QUERY_DESC),
+):
     name = name.strip()
 
     raw = load_json(WEAPONS_PATH)
 
     for w in raw:
         if w.get("名称") == name:
-            return w
+            return format_weapon_entity(w, format)
 
     raise HTTPException(status_code=404, detail=f"武器 '{name}' 未找到")
 
 
-@router.get("/weapons/detail/all", summary="获取所有武器完整数据")
-async def list_weapons_full():
-    return load_json(WEAPONS_PATH)
+@router.get("/weapons/detail/all", summary="获取所有武器（支持 format）")
+async def list_weapons_full(
+    format: EntityFormat = Query(DEFAULT_ENTITY_FORMAT, description=_FORMAT_QUERY_DESC),
+):
+    raw = load_json(WEAPONS_PATH) or []
+    return format_entity_list(raw, format, kind="weapon")
 
 
 @router.post("/weapons", summary="新增武器")
@@ -297,13 +357,33 @@ async def data_summary():
 # ── 公式反推 ──────────────────────────────────────────
 
 
-@router.post("/inverse", summary="公式反推", response_model=InverseResponse)
+@router.post("/inverse", summary="公式反推（终末地 legacy）", response_model=InverseResponse)
 async def inverse_formula(req: InverseRequest):
-    from api.data_mutations import inverse_formula_payload
+    from api.inverse_payloads import inverse_formula_payload
 
-    result = inverse_formula_payload(req.type, req.values)
+    result = inverse_formula_payload(req.type, req.values, max_error=req.max_error)
+    return InverseResponse(**{k: v for k, v in result.items() if k in InverseResponse.model_fields})
 
-    return InverseResponse(**result)
+
+@router.post("/inverse/segment", summary="多段曲线单段反推", response_model=SegmentInverseResponse)
+async def inverse_segment(req: SegmentInverseRequest):
+    from api.inverse_payloads import inverse_segment_payload
+
+    return inverse_segment_payload(
+        game=req.game,
+        blueprint_id=req.blueprint_id,
+        segment_key=req.segment_key,
+        values=req.values,
+        rarity=req.rarity,
+        max_error=req.max_error,
+    )
+
+
+@router.post("/inverse/milestones", summary="明日方舟里程碑批量反推", response_model=MilestonesInverseResponse)
+async def inverse_milestones(req: MilestonesInverseRequest):
+    from api.inverse_payloads import inverse_milestones_payload
+
+    return inverse_milestones_payload(req.operator, max_error=req.max_error)
 
 
 # ── 多游戏 profile（对齐桌面 data_editor/profiles.py）────────────────

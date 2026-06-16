@@ -34,7 +34,7 @@ games/endfield/
 ├── please_read_me.py          # 项目说明文档（版本信息）
 ├── framework_bridge.py        # calc-framework 桥接层
 ├── _replace_imports.py        # 打包时 import 重写工具
-├── ui_preferences.json        # GUI 偏好持久化
+├── ui_preferences.json        # GUI 偏好持久化（运行时生成，已 gitignore）
 ├── calc/                      # 计算引擎
 │   ├── core/                  # 核心计算（配置、公式、数据生成）
 │   ├── dag_adapter/           # DAG 引擎适配器（桥接 calc-framework）
@@ -233,12 +233,13 @@ python tools/bwiki_scout/sync_operators.py --apply
 
 ### 公式反推工具
 
-1. 运行反推 GUI（需先 `pip install -e .`）：
+公式反推已集成到开发者工具箱：
+
 ```bash
-python scripts/inverse_formula_gui.py
+python scripts/main_dev_toolkit.py    # 打开 → 选择「公式反推」页签
 ```
 
-2. 输入数据格式：
+输入数据格式：
    - 支持整数和小数数据
    - 支持百分比格式（如 "8.9%"）
    - 90个数据点 → 属性成长
@@ -397,10 +398,12 @@ v1 与旧 `ws_*` 字段导入时自动归一（`loadout_preset.py`）。
 
 | 版本 | 日期 | 变更说明 |
 |------|------|----------|
-| v1.7.0 | 2024-XX-XX | 统一小数数据处理，新增荧光雷羽武器 |
-| v1.6.0 | 2024-XX-XX | 重构计算引擎，优化乘区系统 |
-| v1.5.0 | 2024-XX-XX | 添加公式反推功能 |
-| v1.0.0 | 2024-XX-XX | 初始版本 |
+| v3.26.x | 2026-06 | AI 配装推荐、SaaS API 层、审查机制升级、Pyright strict 零错误 |
+| v3.0–v3.25 | 2026-05~06 | DAG 引擎增量求值、Web 版三 GUI、Web i18n、桌面 i18n、自动更新、Calc Hub 市场、OCR 管线、生成器引擎、多段曲线蓝图 |
+| v2.0–v2.9 | 2026-04~05 | 通用框架巩固、逆推引擎抽象化、Pydantic 校验、PySide6 迁移、乘区解耦、跨品类验证、多主题 |
+| v1.0–v1.9 | 2025~2026-03 | 初始版本、基础乘区、全量搜索、装备词条、预设系统 |
+
+版本号统一在 `scripts/_version.py` 中的 `_VERSION` 变量维护。
 
 ---
 

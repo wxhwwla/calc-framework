@@ -59,6 +59,9 @@ class InverseSchema:
     length: int
     """期望的数据长度。"""
 
+    key: str = ""
+    """可选唯一键；同长度多模式时用于 ``fit_with_key`` 精确匹配。"""
+
     formula_id: str = "floor_linear"
     """使用的公式类型 ID。"""
 
@@ -192,28 +195,41 @@ class GameInverseAdapter(ABC):
         Raises:
             ValueError: 无匹配的 schema 时
         """
-        for schema in self.schemas:
-            if len(data) == schema.length:
-                base_data = schema.extract_base_data(data)
-                special_values = schema.extract_special_values(data)
-                options = schema.search_options or {}
-
-                result = self._engine.fit(
-                    base_data,
-                    formula_id=schema.formula_id,
-                    **options,
-                )
-
-                # 注入特殊值到 params
-                if special_values and result.params:
-                    result.params["special_values"] = special_values
-
-                # 游戏特定后处理
-                result = self.fit_special_logic(schema, base_data, result, data)
-                return result
-
+        matched = [s for s in self.schemas if len(data) == s.length]
+        if len(matched) == 1:
+            return self._fit_with_schema(matched[0], data)
+        if len(matched) > 1:
+            keys = ", ".join(s.key or s.label or str(s.length) for s in matched)
+            raise ValueError(f"数据长度 {len(data)} 匹配多个 schema（{keys}），请使用 fit_with_key() 指定 key。")
         self.on_no_match(data)
         raise RuntimeError("on_no_match 应已抛出异常")  # unreachable, satisfies type checker
+
+    def fit_with_key(self, data: Sequence[float], schema_key: str) -> FitResult:
+        """按 schema.key 精确匹配并拟合。"""
+        for schema in self.schemas:
+            if schema.key == schema_key:
+                if len(data) != schema.length:
+                    raise ValueError(f"schema '{schema_key}' 期望长度 {schema.length}，实际 {len(data)}")
+                return self._fit_with_schema(schema, data)
+        supported = ", ".join(s.key for s in self.schemas if s.key)
+        raise ValueError(f"未知 schema key: {schema_key}。已注册: {supported}")
+
+    def _fit_with_schema(self, schema: InverseSchema, data: Sequence[float]) -> FitResult:
+        """对单个 schema 执行拟合流程。"""
+        base_data = schema.extract_base_data(data)
+        special_values = schema.extract_special_values(data)
+        options = schema.search_options or {}
+
+        result = self._engine.fit(
+            base_data,
+            formula_id=schema.formula_id,
+            **options,
+        )
+
+        if special_values and result.params:
+            result.params["special_values"] = special_values
+
+        return self.fit_special_logic(schema, base_data, result, data)
 
     def compute(
         self,

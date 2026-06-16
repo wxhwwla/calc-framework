@@ -4,9 +4,9 @@
 from __future__ import annotations
 
 import json
-import os
+import re
 from datetime import datetime
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -135,18 +135,17 @@ async def submit_contribute(payload: dict[str, Any]):
 
     name = payload.get("名称", "unknown")
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_name = "".join(c if c.isalnum() or c in ("-_",) else "_" for c in name)
-    # 防止路径穿越：只取文件名部分（防止 safe_name 含路径分隔符残留）
-    safe_name = PurePath(safe_name).name
-    if not safe_name:
-        safe_name = "unnamed"
-    filename = f"contribute_{safe_name}_{ts}.json"
+    # 文件名只允许字母数字 + 下划线 + 连字符，杜绝路径穿越
+    safe_stem = re.sub(r"[^a-zA-Z0-9_-]", "_", str(name))[:64]
+    if not safe_stem:
+        safe_stem = "unnamed"
+    filename = f"contribute_{safe_stem}_{ts}.json"
 
     staging = _ensure_staging_dir()
-    # 路径穿越防护：先 resolve staging 基准，再构造文件名并 resolve，确认不越界
     staging_resolved = staging.resolve()
-    filepath = (staging / filename).resolve()
-    if not str(filepath).startswith(str(staging_resolved) + os.sep) and filepath != staging_resolved:
+    filepath = (staging_resolved / filename).resolve()
+    # 路径穿越防护：确认最终路径在 staging 目录内
+    if staging_resolved not in filepath.parents and filepath.parent != staging_resolved:
         raise HTTPException(status_code=400, detail="无效的文件名")
     meta = {
         "_meta": {

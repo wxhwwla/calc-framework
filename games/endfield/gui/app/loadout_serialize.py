@@ -33,11 +33,12 @@ def _resolve_selected_skill_for_search(
 
 
 def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None]:
+    """将固定配装转换为可序列化的名称字典。"""
+
     def _name(item: dict | None) -> str | None:
         if not item:
             return None
         return str(item.get("名称") or "") or None
-        """name。"""
 
     return {
         "chest": _name(fixed.chest),
@@ -45,7 +46,6 @@ def _fixed_equipment_names(fixed: FixedLoadoutSelection) -> dict[str, str | None
         "accessory_a": _name(fixed.accessory_a),
         "accessory_b": _name(fixed.accessory_b),
     }
-    """fixed equipment names。"""
 
 
 def _read_weapon_specials_from_panel(panel: Any) -> tuple[Any, ...]:

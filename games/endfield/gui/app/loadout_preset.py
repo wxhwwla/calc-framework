@@ -39,8 +39,8 @@ def _parse_enemy_params(raw: Any) -> dict[str, Any]:
     for key in allowed:
         if key in raw:
             result[key] = raw[key]
-    return result
     """parse enemy params。"""
+    return result
 
 
 def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:
@@ -62,8 +62,8 @@ def _parse_manual_buffs(raw: Any) -> dict[str, list[dict[str, str | float]]]:
             )
         if parsed:
             result[str(key)] = parsed
-    return result
     """parse manual buffs。"""
+    return result
 
 
 LEGACY_PRESET_SCHEMA = "endfield_loadout_preset_v1"
@@ -249,16 +249,16 @@ class LoadoutPreset:
 
 
 def export_preset_json(preset: LoadoutPreset, *, indent: int = 2) -> str:
-    return json.dumps(preset.to_dict(), ensure_ascii=False, indent=indent)
     """export preset json。"""
+    return json.dumps(preset.to_dict(), ensure_ascii=False, indent=indent)
 
 
 def import_preset_json(text: str) -> LoadoutPreset:
     data = json.loads(text)
     if not isinstance(data, dict):
         raise ValueError("预设必须是 JSON 对象")
-    return LoadoutPreset.from_dict(data)
     """import preset json。"""
+    return LoadoutPreset.from_dict(data)
 
 
 def import_presets_from_json_text(text: str) -> list[LoadoutPreset]:
@@ -279,8 +279,8 @@ def export_preset_batch_json(presets: Sequence[LoadoutPreset], *, indent: int = 
         "schema": BATCH_PRESET_SCHEMA,
         "presets": [p.to_dict() for p in presets],
     }
-    return json.dumps(payload, ensure_ascii=False, indent=indent)
     """export preset batch json。"""
+    return json.dumps(payload, ensure_ascii=False, indent=indent)
 
 
 _DAMAGE_COMPONENT_LABELS: dict[str, str] = {

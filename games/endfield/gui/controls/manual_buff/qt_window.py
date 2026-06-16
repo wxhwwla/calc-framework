@@ -37,11 +37,11 @@ _WINDOW_HEIGHT = 600
 
 
 def _format_key_label(key: str) -> str:
+    """格式化手动 buff 键名为可读标签。"""
     parts = key.rsplit(":", 1)
     if len(parts) == 2:
         return f"{parts[0]} 第{parts[1]}次"
     return key
-    """format key label。"""
 
 
 class QtManualBuffDialog(QDialog):

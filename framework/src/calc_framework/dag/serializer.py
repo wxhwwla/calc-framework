@@ -7,8 +7,6 @@
 
 模板引用（``"template"`` 字段）在加载时自动展开。"""
 
-
-
 from __future__ import annotations
 
 import json
@@ -35,40 +33,32 @@ from .templates import expand_template_refs
 
 
 def _variable_to_dict(var: DAGVariable) -> dict[str, Any]:
-
     """将 DAGVariable 序列化为字典。"""
     d: dict[str, Any] = {"type": var.type, "source": var.source}
 
     if var.description:
-
         d["description"] = var.description
 
     if var.default is not None:
-
         d["default"] = var.default
 
     if var.min is not None:
-
         d["min"] = var.min
 
     if var.max is not None:
-
         d["max"] = var.max
 
     return d
-
-
-
 
 
 def _ref_to_json(ref: str | NodeType) -> str | dict[str, Any]:
     """将节点引用（字符串节点名或内联节点）转为可 JSON 序列化的值。"""
     if isinstance(ref, str):
         return ref
+    """将节点序列化为字典。"""
     return _node_to_dict(ref)
 
 
-    """将节点序列化为字典。"""
 def _node_to_dict(node: NodeType) -> dict[str, Any]:
     base: dict[str, Any] = {}
     if isinstance(node, ConstNode):
@@ -106,19 +96,14 @@ def _node_to_dict(node: NodeType) -> dict[str, Any]:
         base["label"] = node.label
     if node.description:
         base["description"] = node.description
+    """将 DAGSubgraph 序列化为字典。"""
     return base
 
 
-
-
-
-    """将 DAGSubgraph 序列化为字典。"""
 def _subgraph_to_dict(sub: DAGSubgraph) -> dict[str, Any]:
-
     d: dict[str, Any] = {}
 
     if sub.description:
-
         d["description"] = sub.description
 
     d["parameters"] = {k: _variable_to_dict(v) for k, v in sub.parameters.items()}
@@ -130,31 +115,21 @@ def _subgraph_to_dict(sub: DAGSubgraph) -> dict[str, Any]:
     return d
 
 
-
-
-
 def dag_to_dict(graph: DAGGraph) -> dict[str, Any]:
-
     """将 DAGGraph 转换为可序列化的字典。"""
 
     d: dict[str, Any] = {
-
         "schema_version": graph.schema_version,
-
         "name": graph.name,
-
     }
 
     if graph.description:
-
         d["description"] = graph.description
 
     if graph.variables:
-
         d["variables"] = {k: _variable_to_dict(v) for k, v in graph.variables.items()}
 
     if graph.subgraphs:
-
         d["subgraphs"] = {k: _subgraph_to_dict(v) for k, v in graph.subgraphs.items()}
 
     d["nodes"] = {k: _node_to_dict(v) for k, v in graph.nodes.items()}
@@ -164,11 +139,7 @@ def dag_to_dict(graph: DAGGraph) -> dict[str, Any]:
     return d
 
 
-
-
-
 def dag_from_dict(raw: dict[str, Any]) -> DAGGraph:
-
     """从字典解析并校验 DAGGraph。
 
 
@@ -182,11 +153,7 @@ def dag_from_dict(raw: dict[str, Any]) -> DAGGraph:
     return validate_graph(raw)
 
 
-
-
-
 def load_dag(path: str | Path) -> DAGGraph:
-
     """从 JSON 文件加载 DAGGraph。"""
 
     text = Path(path).read_text(encoding="utf-8")
@@ -196,11 +163,7 @@ def load_dag(path: str | Path) -> DAGGraph:
     return dag_from_dict(raw)
 
 
-
-
-
 def save_dag(graph: DAGGraph, path: str | Path) -> None:
-
     """将 DAGGraph 保存为 JSON 文件。"""
 
     d = dag_to_dict(graph)
@@ -208,4 +171,3 @@ def save_dag(graph: DAGGraph, path: str | Path) -> None:
     text = json.dumps(d, ensure_ascii=False, indent=2)
 
     Path(path).write_text(text, encoding="utf-8")
-

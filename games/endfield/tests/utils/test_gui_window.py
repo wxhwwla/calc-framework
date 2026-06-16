@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
+import os
+import unittest
 from unittest.mock import MagicMock
 
 from utils.gui.window import (
@@ -12,19 +14,14 @@ from utils.gui.window import (
 
 
 class TestTryZoomedState:
-
     def test_success(self) -> None:
-
         win = MagicMock()
 
         assert _try_zoomed_state(win) is True
 
         win.state.assert_called_once_with("zoomed")
 
-
-
     def test_failure(self) -> None:
-
         win = MagicMock()
 
         win.state.side_effect = Exception("no zoom")
@@ -32,23 +29,15 @@ class TestTryZoomedState:
         assert _try_zoomed_state(win) is False
 
 
-
-
-
 class TestTryZoomedAttribute:
-
     def test_success(self) -> None:
-
         win = MagicMock()
 
         assert _try_zoomed_attribute(win) is True
 
         win.attributes.assert_called_once_with("-zoomed", True)
 
-
-
     def test_failure(self) -> None:
-
         win = MagicMock()
 
         win.attributes.side_effect = Exception("no attr")
@@ -56,13 +45,9 @@ class TestTryZoomedAttribute:
         assert _try_zoomed_attribute(win) is False
 
 
-
-
-
 class TestGeometryFillScreen:
-
+    @unittest.skipIf(os.environ.get("DISPLAY", "").startswith(":"), "xvfb 虚拟显示分辨率不固定")
     def test_normal_screen(self) -> None:
-
         win = MagicMock()
 
         win.winfo_screenwidth.return_value = 1920
@@ -75,10 +60,7 @@ class TestGeometryFillScreen:
 
         assert "1920" in args[0]
 
-
-
     def test_small_screen_skips(self) -> None:
-
         win = MagicMock()
 
         win.winfo_screenwidth.return_value = 320
@@ -89,10 +71,7 @@ class TestGeometryFillScreen:
 
         win.geometry.assert_not_called()
 
-
-
     def test_exception_does_not_crash(self) -> None:
-
         win = MagicMock()
 
         win.winfo_screenwidth.side_effect = Exception("no screen")
@@ -100,22 +79,12 @@ class TestGeometryFillScreen:
         _geometry_fill_screen(win)
 
 
-
-
-
 class TestApplyStartupMaximized:
-
     def test_calls_internal(self) -> None:
-
         win = MagicMock()
 
-
-
         def side_effect(fn):
-
             fn()
-
-
 
         win.after_idle.side_effect = side_effect
 
@@ -123,13 +92,9 @@ class TestApplyStartupMaximized:
 
         win.after_idle.assert_called_once()
 
-
-
     def test_after_idle_exception(self) -> None:
-
         win = MagicMock()
 
         win.after_idle.side_effect = Exception("no after_idle")
 
         apply_startup_maximized(win)
-

@@ -8,6 +8,8 @@ from typing import Any
 from calc_framework.data.context import make_context
 from calc_framework.data.loader import DataContextLoader
 
+from games.arknights.calc.inverse.stats import resolve_stats_from_segments
+
 
 class ArknightsContextLoader(DataContextLoader):
     """从明日方舟干员原始数据构建 DataContext。
@@ -51,10 +53,17 @@ class ArknightsContextLoader(DataContextLoader):
         trust_bonus = operator.get("信赖加成", {})
         potentials = operator.get("潜能", [])
 
-        base_atk = _get_num(base_stats, "atk")
-        base_def = _get_num(base_stats, "def")
-        _get_num(base_stats, "hp")
-        base_res = _get_num(base_stats, "res", 0.0)
+        elite = int(kwargs.get("elite", 2))
+        operator_level = kwargs.get("operator_level")
+        seg_stats = resolve_stats_from_segments(
+            operator,
+            elite=elite,
+            level=int(operator_level) if operator_level is not None else None,
+        )
+
+        base_atk = float(seg_stats["atk"]) if "atk" in seg_stats else _get_num(base_stats, "atk")
+        base_def = float(seg_stats["def"]) if "def" in seg_stats else _get_num(base_stats, "def")
+        base_res = float(seg_stats["res"]) if "res" in seg_stats else _get_num(base_stats, "res", 0.0)
         trust_atk = _get_num(trust_bonus, "攻击", 0.0)
         _get_num(trust_bonus, "防御", 0.0)
         _get_num(trust_bonus, "生命", 0.0)

@@ -125,6 +125,14 @@ class TestConvertOperator(unittest.TestCase):
         self.assertIn("信赖加成", result)
         self.assertEqual(result["信赖加成"]["攻击"], 70)
 
+    def test_growth_params_preserved(self) -> None:
+        raw = {
+            "名称": "能天使",
+            "成长参数": {"segments": [{"key": "e0.hp", "length": 50, "base": 711}]},
+        }
+        result = _convert_operator(raw)
+        self.assertEqual(result["成长参数"]["segments"][0]["key"], "e0.hp")
+
     def test_talents_preserved(self) -> None:
         raw = {
             "名称": "塞雷娅",

@@ -46,9 +46,12 @@ def _save_json(path: Path, data: dict) -> None:
 
 
 class ApiKeyInfo(BaseModel):
+    """API Key 信息（不包含完整 key）。"""
+
     key_prefix: str
+    """Key 前缀（前 8 位）。"""
     name: str = ""
-    tier: str = "free"  # free / pro / enterprise
+    tier: str = "free"
     rate_limit: int = Field(default=60, description="每分钟请求数")
     created_at: str = ""
     last_used: str = ""
@@ -56,12 +59,16 @@ class ApiKeyInfo(BaseModel):
 
 
 class CreateKeyRequest(BaseModel):
+    """创建 API Key 请求。"""
+
     name: str = Field(default="", description="密钥备注名")
     tier: str = Field(default="free", description="套餐: free/pro/enterprise")
 
 
 class CreateKeyResponse(BaseModel):
-    api_key: str  # 仅创建时返回完整 key
+    """创建 API Key 响应（仅创建时返回完整 key）。"""
+
+    api_key: str
     key_prefix: str
     name: str
     tier: str
@@ -71,7 +78,9 @@ _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
 
 def _hash_key(api_key: str) -> str:
-    return hashlib.sha3_256(api_key.encode()).hexdigest()
+    """对 API Key 做加盐哈希（防止彩虹表），salt 从 key 自身派生。"""
+    salt = hashlib.sha3_256(api_key[:16].encode()).digest()
+    return hashlib.sha3_256(salt + api_key.encode()).hexdigest()
 
 
 @router.post("/keys", response_model=CreateKeyResponse)

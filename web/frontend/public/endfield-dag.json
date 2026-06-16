@@ -1,0 +1,1236 @@
+{
+  "schema_version": "dag-v1",
+  "name": "终末地伤害公式（完整版）",
+  "description": "终末地 15 乘区完整伤害公式 DAG。6 块架构（ADR-0011）：属性块/攻击力块/暴击块/基础伤害块/增益减益块/环境乘区块。",
+  "variables": {
+    "character.基础攻击": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础攻击力"
+    },
+    "weapon.基础攻击": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器基础攻击力"
+    },
+    "weapon.攻击力+": {
+      "type": "float",
+      "source": "weapon",
+      "description": "攻击力+ 小数加成（0.15 = 15%）"
+    },
+    "weapon.附加攻击力+": {
+      "type": "float",
+      "source": "weapon",
+      "description": "附加攻击力+ 平值"
+    },
+    "equipment.攻击力平值": {
+      "type": "float",
+      "source": "equipment",
+      "description": "装备平铺攻击力",
+      "default": 0.0
+    },
+    "computed.主能力平值加算": {
+      "type": "float",
+      "source": "computed",
+      "description": "主能力平值全部来源"
+    },
+    "computed.副能力平值加算": {
+      "type": "float",
+      "source": "computed",
+      "description": "副能力平值全部来源"
+    },
+    "computed.主能力百分比": {
+      "type": "float",
+      "source": "computed",
+      "description": "主能力百分比加成"
+    },
+    "computed.副能力百分比": {
+      "type": "float",
+      "source": "computed",
+      "description": "副能力百分比加成"
+    },
+    "computed.技能倍率": {
+      "type": "float",
+      "source": "computed",
+      "description": "技能倍率"
+    },
+    "computed.伤害加成": {
+      "type": "float",
+      "source": "computed",
+      "description": "伤害加成区 = 1+类型+技能+失衡+其他"
+    },
+    "computed.伤害减免": {
+      "type": "float",
+      "source": "computed",
+      "description": "伤害减免区 = ∏(1-减免值)"
+    },
+    "computed.增幅": {
+      "type": "float",
+      "source": "computed",
+      "description": "增幅区 = 1+Σ增幅值"
+    },
+    "computed.虚弱": {
+      "type": "float",
+      "source": "computed",
+      "description": "虚弱区 = ∏(1-虚弱值)"
+    },
+    "computed.庇护": {
+      "type": "float",
+      "source": "computed",
+      "description": "庇护区 = 1-max(庇护值)"
+    },
+    "computed.脆弱": {
+      "type": "float",
+      "source": "computed",
+      "description": "脆弱区 = 1+Σ脆弱值"
+    },
+    "computed.易伤": {
+      "type": "float",
+      "source": "computed",
+      "description": "易伤区 = 1+Σ易伤值"
+    },
+    "computed.失衡易伤": {
+      "type": "float",
+      "source": "computed",
+      "description": "失衡易伤区"
+    },
+    "computed.抗性": {
+      "type": "float",
+      "source": "computed",
+      "description": "抗性区"
+    },
+    "computed.非主控减伤": {
+      "type": "float",
+      "source": "computed",
+      "description": "非主控减伤区"
+    },
+    "computed.连击增伤": {
+      "type": "float",
+      "source": "computed",
+      "description": "连击增伤区"
+    },
+    "computed.特殊乘区": {
+      "type": "float",
+      "source": "computed",
+      "description": "特殊乘区"
+    },
+    "character.暴击率": {
+      "type": "float",
+      "source": "character",
+      "description": "暴击率（小数，如 0.05 = 5%）",
+      "default": 0.05
+    },
+    "character.暴击伤害": {
+      "type": "float",
+      "source": "character",
+      "description": "暴击伤害（小数，如 0.5 = 50%）",
+      "default": 0.5
+    },
+    "enemy.防御": {
+      "type": "float",
+      "source": "enemy",
+      "description": "敌方防御值",
+      "default": 100
+    },
+    "character.力量": {
+      "type": "float",
+      "source": "character",
+      "description": "力量基础值",
+      "default": 0.0
+    },
+    "character.敏捷": {
+      "type": "float",
+      "source": "character",
+      "description": "敏捷基础值",
+      "default": 0.0
+    },
+    "character.智识": {
+      "type": "float",
+      "source": "character",
+      "description": "智识基础值",
+      "default": 0.0
+    },
+    "character.意志": {
+      "type": "float",
+      "source": "character",
+      "description": "意志基础值",
+      "default": 0.0
+    },
+    "computed.力量加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "力量加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.敏捷加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "敏捷加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.智识加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "智识加成值（武器技能）",
+      "default": 0.0
+    },
+    "computed.意志加成值": {
+      "type": "float",
+      "source": "computed",
+      "description": "意志加成值（武器技能）",
+      "default": 0.0
+    },
+    "character.基础生命值": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础生命值",
+      "default": 0.0
+    },
+    "character.基础防御力": {
+      "type": "float",
+      "source": "character",
+      "description": "角色基础防御力",
+      "default": 0.0
+    },
+    "weapon.精炼等级": {
+      "type": "int",
+      "source": "weapon",
+      "description": "武器精炼等级（1-9）",
+      "default": 1
+    },
+    "computed.武器精炼主能力值加成": {
+      "type": "float",
+      "source": "computed",
+      "description": "武器精炼主能力值+加成",
+      "default": 0.0
+    },
+    "computed.武器精炼附加攻击力加成": {
+      "type": "float",
+      "source": "computed",
+      "description": "武器精炼附加攻击力+加成",
+      "default": 0.0
+    },
+    "weapon.法术伤害+": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器法术伤害+加成（小数）",
+      "default": 0.0
+    },
+    "weapon.攻击力+平值": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器攻击力+平值加成",
+      "default": 0.0
+    },
+    "weapon.最大生命值+": {
+      "type": "float",
+      "source": "weapon",
+      "description": "武器最大生命值+加成",
+      "default": 0.0
+    }
+  },
+  "subgraphs": {
+    "ability_bonus": {
+      "description": "能力值加成 15%+6% 公式",
+      "parameters": {
+        "main_flat": {
+          "type": "float",
+          "source": "computed",
+          "description": "主能力平值"
+        },
+        "sub_flat": {
+          "type": "float",
+          "source": "computed",
+          "description": "副能力平值"
+        },
+        "main_pct": {
+          "type": "float",
+          "source": "computed",
+          "description": "主能力百分比"
+        },
+        "sub_pct": {
+          "type": "float",
+          "source": "computed",
+          "description": "副能力百分比"
+        }
+      },
+      "nodes": {
+        "const_100": {
+          "type": "const",
+          "value": 100.0
+        },
+        "const_1": {
+          "type": "const",
+          "value": 1.0
+        },
+        "const_0005": {
+          "type": "const",
+          "value": 0.005
+        },
+        "const_0002": {
+          "type": "const",
+          "value": 0.002
+        },
+        "n_main_pct_div": {
+          "type": "binary",
+          "op": "/",
+          "lhs": "main_pct",
+          "rhs": "const_100"
+        },
+        "n_main_mul": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "n_main_pct_div"
+        },
+        "n_main": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "main_flat",
+          "rhs": "n_main_mul",
+          "label": "主能力*(1+主能力%/100)"
+        },
+        "n_sub_pct_div": {
+          "type": "binary",
+          "op": "/",
+          "lhs": "sub_pct",
+          "rhs": "const_100"
+        },
+        "n_sub_mul": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "n_sub_pct_div"
+        },
+        "n_sub": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "sub_flat",
+          "rhs": "n_sub_mul",
+          "label": "副能力*(1+副能力%/100)"
+        },
+        "n_main_x_0005": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "n_main",
+          "rhs": "const_0005"
+        },
+        "n_sub_x_0002": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "n_sub",
+          "rhs": "const_0002"
+        },
+        "result": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "n_main_x_0005",
+          "rhs": "n_sub_x_0002",
+          "label": "能力值加成 = main*0.005 + sub*0.002"
+        }
+      },
+      "outputs": {
+        "能力值加成": {
+          "node": "result",
+          "label": "能力值加成",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "final_attack": {
+      "description": "最终攻击力 = 中间*(1+能力值加成)",
+      "parameters": {
+        "char_base_atk": {
+          "type": "float",
+          "source": "character",
+          "description": "角色基础攻击力"
+        },
+        "weapon_base_atk": {
+          "type": "float",
+          "source": "weapon",
+          "description": "武器基础攻击力"
+        },
+        "atk_bonus": {
+          "type": "float",
+          "source": "weapon",
+          "description": "攻击力+ 小数加成"
+        },
+        "additional_atk": {
+          "type": "float",
+          "source": "weapon",
+          "description": "附加攻击力+ 平值"
+        },
+        "equip_flat_atk": {
+          "type": "float",
+          "source": "equipment",
+          "description": "装备平铺攻击力"
+        },
+        "ability_bonus": {
+          "type": "float",
+          "source": "computed",
+          "description": "能力值加成"
+        }
+      },
+      "nodes": {
+        "const_1": {
+          "type": "const",
+          "value": 1.0
+        },
+        "n_base_atk": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "char_base_atk",
+          "rhs": "weapon_base_atk",
+          "label": "基础攻击力 = 角色+武器"
+        },
+        "n_add_one": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "atk_bonus"
+        },
+        "n_atk_bonus_part": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "n_add_one",
+          "rhs": "n_base_atk",
+          "label": "攻击加成攻击力 = 基础*(1+攻击力+)"
+        },
+        "n_add_atk_equip": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "additional_atk",
+          "rhs": "equip_flat_atk"
+        },
+        "n_mid_atk": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "n_atk_bonus_part",
+          "rhs": "n_add_atk_equip",
+          "label": "中间攻击力 = 攻击加成攻击力+附加+装备"
+        },
+        "n_ability_one": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "ability_bonus"
+        },
+        "result": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "n_mid_atk",
+          "rhs": "n_ability_one",
+          "label": "最终攻击力 = 中间*(1+能力值加成)"
+        }
+      },
+      "outputs": {
+        "最终攻击力": {
+          "node": "result",
+          "label": "最终攻击力",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "single_hit_damage": {
+      "description": "单段伤害 = 最终攻击力 * 技能倍率",
+      "parameters": {
+        "final_attack": {
+          "type": "float",
+          "source": "computed",
+          "description": "最终攻击力"
+        },
+        "skill_mult": {
+          "type": "float",
+          "source": "computed",
+          "description": "技能倍率"
+        }
+      },
+      "nodes": {
+        "result": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "final_attack",
+          "rhs": "skill_mult",
+          "label": "单段伤害 = 最终攻击力 * 技能倍率"
+        }
+      },
+      "outputs": {
+        "单段伤害": {
+          "node": "result",
+          "label": "单段伤害",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "crit_zone": {
+      "description": "暴击区 = 1 + 暴击率*(暴击伤害-1)",
+      "parameters": {
+        "crit_rate": {
+          "type": "float",
+          "source": "character",
+          "description": "暴击率"
+        },
+        "crit_damage": {
+          "type": "float",
+          "source": "character",
+          "description": "暴击伤害"
+        }
+      },
+      "nodes": {
+        "const_1": {
+          "type": "const",
+          "value": 1.0
+        },
+        "n_crit_dmg_minus_one": {
+          "type": "binary",
+          "op": "-",
+          "lhs": "crit_damage",
+          "rhs": "const_1"
+        },
+        "n_crit_part": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "crit_rate",
+          "rhs": "n_crit_dmg_minus_one"
+        },
+        "result": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_1",
+          "rhs": "n_crit_part",
+          "label": "暴击区 = 1 + 暴击率*(暴击伤害-1)"
+        }
+      },
+      "outputs": {
+        "暴击区": {
+          "node": "result",
+          "label": "暴击区",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "base_damage_block": {
+      "description": "基础伤害块 = 最终攻击力 * 技能倍率 * 暴击区",
+      "parameters": {
+        "final_attack": {
+          "type": "float",
+          "source": "computed",
+          "description": "最终攻击力"
+        },
+        "skill_mult": {
+          "type": "float",
+          "source": "computed",
+          "description": "技能倍率"
+        },
+        "crit_zone": {
+          "type": "float",
+          "source": "computed",
+          "description": "暴击区"
+        }
+      },
+      "nodes": {
+        "n_single_hit": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "final_attack",
+          "rhs": "skill_mult",
+          "label": "单段基础伤害"
+        },
+        "result": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "n_single_hit",
+          "rhs": "crit_zone",
+          "label": "暴击后伤害 = 单段基础 * 暴击区"
+        }
+      },
+      "outputs": {
+        "暴击后伤害": {
+          "node": "result",
+          "label": "暴击后伤害",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "buff_debuff_block": {
+      "description": "增益减益块：7 乘区连乘",
+      "parameters": {
+        "damage_after_crit": {
+          "type": "float",
+          "source": "computed",
+          "description": "暴击后伤害"
+        },
+        "zone_dmg_bonus": {
+          "type": "float",
+          "source": "computed",
+          "description": "伤害加成区"
+        },
+        "zone_dmg_reduc": {
+          "type": "float",
+          "source": "computed",
+          "description": "伤害减免区"
+        },
+        "zone_amp": {
+          "type": "float",
+          "source": "computed",
+          "description": "增幅区"
+        },
+        "zone_weak": {
+          "type": "float",
+          "source": "computed",
+          "description": "虚弱区"
+        },
+        "zone_shelter": {
+          "type": "float",
+          "source": "computed",
+          "description": "庇护区"
+        },
+        "zone_fragile": {
+          "type": "float",
+          "source": "computed",
+          "description": "脆弱区"
+        },
+        "zone_vuln": {
+          "type": "float",
+          "source": "computed",
+          "description": "易伤区"
+        }
+      },
+      "nodes": {
+        "n_6": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_vuln",
+          "rhs": "zone_fragile"
+        },
+        "n_5": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_shelter",
+          "rhs": "n_6"
+        },
+        "n_4": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_weak",
+          "rhs": "n_5"
+        },
+        "n_3": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_amp",
+          "rhs": "n_4"
+        },
+        "n_2": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_dmg_reduc",
+          "rhs": "n_3"
+        },
+        "mult": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_dmg_bonus",
+          "rhs": "n_2",
+          "label": "7 乘区连乘"
+        },
+        "result": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "damage_after_crit",
+          "rhs": "mult",
+          "label": "增益减益后伤害"
+        }
+      },
+      "outputs": {
+        "增益减益后伤害": {
+          "node": "result",
+          "label": "增益减益后伤害",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "environment_block": {
+      "description": "环境乘区块：防御减伤 * 失衡易伤 * 抗性 * 非主控减伤 * 连击增伤 * 特殊乘区",
+      "parameters": {
+        "damage_after_buff": {
+          "type": "float",
+          "source": "computed",
+          "description": "增益减益后伤害"
+        },
+        "enemy_defense": {
+          "type": "float",
+          "source": "enemy",
+          "description": "敌方防御值"
+        },
+        "zone_imbal": {
+          "type": "float",
+          "source": "computed",
+          "description": "失衡易伤区"
+        },
+        "zone_res": {
+          "type": "float",
+          "source": "computed",
+          "description": "抗性区"
+        },
+        "zone_ncr": {
+          "type": "float",
+          "source": "computed",
+          "description": "非主控减伤区"
+        },
+        "zone_combo": {
+          "type": "float",
+          "source": "computed",
+          "description": "连击增伤区"
+        },
+        "zone_special": {
+          "type": "float",
+          "source": "computed",
+          "description": "特殊乘区"
+        }
+      },
+      "nodes": {
+        "const_100": {
+          "type": "const",
+          "value": 100.0
+        },
+        "n_def_add": {
+          "type": "binary",
+          "op": "+",
+          "lhs": "const_100",
+          "rhs": "enemy_defense"
+        },
+        "defense_reduction": {
+          "type": "binary",
+          "op": "/",
+          "lhs": "const_100",
+          "rhs": "n_def_add",
+          "label": "防御减伤 = 100/(100+防)"
+        },
+        "n_env_6": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_special",
+          "rhs": "zone_combo"
+        },
+        "n_env_5": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_ncr",
+          "rhs": "n_env_6"
+        },
+        "n_env_4": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_res",
+          "rhs": "n_env_5"
+        },
+        "n_env_3": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "zone_imbal",
+          "rhs": "n_env_4"
+        },
+        "env_mult": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "defense_reduction",
+          "rhs": "n_env_3",
+          "label": "环境 6 乘区连乘"
+        },
+        "result": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "damage_after_buff",
+          "rhs": "env_mult",
+          "label": "最终伤害"
+        }
+      },
+      "outputs": {
+        "最终伤害": {
+          "node": "result",
+          "label": "最终伤害",
+          "format": "",
+          "is_primary": false
+        },
+        "防御区": {
+          "node": "defense_reduction",
+          "label": "防御区",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    }
+  },
+  "nodes": {
+    "char_atk": {
+      "type": "var",
+      "path": "character.基础攻击",
+      "label": "角色攻击"
+    },
+    "weapon_atk": {
+      "type": "var",
+      "path": "weapon.基础攻击",
+      "label": "武器攻击"
+    },
+    "atk_bonus": {
+      "type": "var",
+      "path": "weapon.攻击力+",
+      "label": "攻击力+"
+    },
+    "add_atk": {
+      "type": "var",
+      "path": "weapon.附加攻击力+",
+      "label": "附加攻击"
+    },
+    "equip_atk": {
+      "type": "var",
+      "path": "equipment.攻击力平值",
+      "label": "装备攻击"
+    },
+    "main_flat": {
+      "type": "var",
+      "path": "computed.主能力平值加算",
+      "label": "主能力平值"
+    },
+    "sub_flat": {
+      "type": "var",
+      "path": "computed.副能力平值加算",
+      "label": "副能力平值"
+    },
+    "main_pct": {
+      "type": "var",
+      "path": "computed.主能力百分比",
+      "label": "主能力%"
+    },
+    "sub_pct": {
+      "type": "var",
+      "path": "computed.副能力百分比",
+      "label": "副能力%"
+    },
+    "char_crit_rate": {
+      "type": "var",
+      "path": "character.暴击率",
+      "label": "暴击率"
+    },
+    "char_crit_dmg": {
+      "type": "var",
+      "path": "character.暴击伤害",
+      "label": "暴击伤害"
+    },
+    "enemy_def": {
+      "type": "var",
+      "path": "enemy.防御",
+      "label": "敌方防御"
+    },
+    "skill_mult": {
+      "type": "var",
+      "path": "computed.技能倍率",
+      "label": "技能倍率"
+    },
+    "zone_dmg_bonus": {
+      "type": "var",
+      "path": "computed.伤害加成",
+      "label": "伤害加成区"
+    },
+    "zone_dmg_reduc": {
+      "type": "var",
+      "path": "computed.伤害减免",
+      "label": "伤害减免区"
+    },
+    "zone_amp": {
+      "type": "var",
+      "path": "computed.增幅",
+      "label": "增幅区"
+    },
+    "zone_weak": {
+      "type": "var",
+      "path": "computed.虚弱",
+      "label": "虚弱区"
+    },
+    "zone_shelter": {
+      "type": "var",
+      "path": "computed.庇护",
+      "label": "庇护区"
+    },
+    "zone_fragile": {
+      "type": "var",
+      "path": "computed.脆弱",
+      "label": "脆弱区"
+    },
+    "zone_vuln": {
+      "type": "var",
+      "path": "computed.易伤",
+      "label": "易伤区"
+    },
+    "zone_imbal": {
+      "type": "var",
+      "path": "computed.失衡易伤",
+      "label": "失衡易伤区"
+    },
+    "zone_res": {
+      "type": "var",
+      "path": "computed.抗性",
+      "label": "抗性区"
+    },
+    "zone_ncr": {
+      "type": "var",
+      "path": "computed.非主控减伤",
+      "label": "非主控减伤区"
+    },
+    "zone_combo": {
+      "type": "var",
+      "path": "computed.连击增伤",
+      "label": "连击增伤区"
+    },
+    "zone_special": {
+      "type": "var",
+      "path": "computed.特殊乘区",
+      "label": "特殊乘区"
+    },
+    "char_base_hp": {
+      "type": "var",
+      "path": "character.基础生命值",
+      "label": "基础生命值"
+    },
+    "char_base_def": {
+      "type": "var",
+      "path": "character.基础防御力",
+      "label": "基础防御力"
+    },
+    "weapon_refine_lv": {
+      "type": "var",
+      "path": "weapon.精炼等级",
+      "label": "精炼等级"
+    },
+    "weapon_refine_main_attr": {
+      "type": "var",
+      "path": "computed.武器精炼主能力值加成",
+      "label": "精炼主能力值+"
+    },
+    "weapon_refine_add_atk": {
+      "type": "var",
+      "path": "computed.武器精炼附加攻击力加成",
+      "label": "精炼附加攻击+"
+    },
+    "weapon_spell_dmg": {
+      "type": "var",
+      "path": "weapon.法术伤害+",
+      "label": "法术伤害+"
+    },
+    "weapon_atk_flat": {
+      "type": "var",
+      "path": "weapon.攻击力+平值",
+      "label": "攻击力+平值"
+    },
+    "weapon_max_hp": {
+      "type": "var",
+      "path": "weapon.最大生命值+",
+      "label": "最大生命值+"
+    },
+    "char_attr_力量": {
+      "type": "var",
+      "path": "character.力量",
+      "label": "力量基础"
+    },
+    "char_attr_敏捷": {
+      "type": "var",
+      "path": "character.敏捷",
+      "label": "敏捷基础"
+    },
+    "char_attr_智识": {
+      "type": "var",
+      "path": "character.智识",
+      "label": "智识基础"
+    },
+    "char_attr_意志": {
+      "type": "var",
+      "path": "character.意志",
+      "label": "意志基础"
+    },
+    "comp_attr_力量_bonus": {
+      "type": "var",
+      "path": "computed.力量加成值",
+      "label": "力量加成"
+    },
+    "comp_attr_敏捷_bonus": {
+      "type": "var",
+      "path": "computed.敏捷加成值",
+      "label": "敏捷加成"
+    },
+    "comp_attr_智识_bonus": {
+      "type": "var",
+      "path": "computed.智识加成值",
+      "label": "智识加成"
+    },
+    "comp_attr_意志_bonus": {
+      "type": "var",
+      "path": "computed.意志加成值",
+      "label": "意志加成"
+    },
+    "attr_力量_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_力量",
+      "rhs": "comp_attr_力量_bonus",
+      "label": "力量最终值"
+    },
+    "attr_敏捷_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_敏捷",
+      "rhs": "comp_attr_敏捷_bonus",
+      "label": "敏捷最终值"
+    },
+    "attr_智识_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_智识",
+      "rhs": "comp_attr_智识_bonus",
+      "label": "智识最终值"
+    },
+    "attr_意志_total": {
+      "type": "binary",
+      "op": "+",
+      "lhs": "char_attr_意志",
+      "rhs": "comp_attr_意志_bonus",
+      "label": "意志最终值"
+    },
+    "block1_ability": {
+      "type": "call",
+      "subgraph": "ability_bonus",
+      "bindings": {
+        "main_flat": "main_flat",
+        "sub_flat": "sub_flat",
+        "main_pct": "main_pct",
+        "sub_pct": "sub_pct"
+      },
+      "label": "属性块-能力值加成"
+    },
+    "block2_attack": {
+      "type": "call",
+      "subgraph": "final_attack",
+      "bindings": {
+        "char_base_atk": "char_atk",
+        "weapon_base_atk": "weapon_atk",
+        "atk_bonus": "atk_bonus",
+        "additional_atk": "add_atk",
+        "equip_flat_atk": "equip_atk",
+        "ability_bonus": "block1_ability"
+      },
+      "label": "攻击力块"
+    },
+    "block3_crit": {
+      "type": "call",
+      "subgraph": "crit_zone",
+      "bindings": {
+        "crit_rate": "char_crit_rate",
+        "crit_damage": "char_crit_dmg"
+      },
+      "label": "暴击块"
+    },
+    "block4_base": {
+      "type": "call",
+      "subgraph": "base_damage_block",
+      "bindings": {
+        "final_attack": "block2_attack",
+        "skill_mult": "skill_mult",
+        "crit_zone": "block3_crit"
+      },
+      "label": "基础伤害块"
+    },
+    "block5_buff": {
+      "type": "call",
+      "subgraph": "buff_debuff_block",
+      "bindings": {
+        "damage_after_crit": "block4_base",
+        "zone_dmg_bonus": "zone_dmg_bonus",
+        "zone_dmg_reduc": "zone_dmg_reduc",
+        "zone_amp": "zone_amp",
+        "zone_weak": "zone_weak",
+        "zone_shelter": "zone_shelter",
+        "zone_fragile": "zone_fragile",
+        "zone_vuln": "zone_vuln"
+      },
+      "label": "增益减益块"
+    },
+    "block6_env": {
+      "type": "call",
+      "subgraph": "environment_block",
+      "bindings": {
+        "damage_after_buff": "block5_buff",
+        "enemy_defense": "enemy_def",
+        "zone_imbal": "zone_imbal",
+        "zone_res": "zone_res",
+        "zone_ncr": "zone_ncr",
+        "zone_combo": "zone_combo",
+        "zone_special": "zone_special"
+      },
+      "label": "环境乘区块"
+    }
+  },
+  "outputs": {
+    "能力值加成": {
+      "node": "block1_ability",
+      "label": "能力值加成",
+      "format": "",
+      "is_primary": false
+    },
+    "最终攻击力": {
+      "node": "block2_attack",
+      "label": "最终攻击力",
+      "format": "",
+      "is_primary": true
+    },
+    "最终伤害": {
+      "node": "block6_env",
+      "label": "最终伤害",
+      "format": "",
+      "is_primary": true
+    },
+    "暴击区": {
+      "node": "block3_crit",
+      "label": "暴击区",
+      "format": "",
+      "is_primary": false
+    },
+    "伤害加成区": {
+      "node": "zone_dmg_bonus",
+      "label": "伤害加成区",
+      "format": "",
+      "is_primary": false
+    },
+    "伤害减免区": {
+      "node": "zone_dmg_reduc",
+      "label": "伤害减免区",
+      "format": "",
+      "is_primary": false
+    },
+    "增幅区": {
+      "node": "zone_amp",
+      "label": "增幅区",
+      "format": "",
+      "is_primary": false
+    },
+    "虚弱区": {
+      "node": "zone_weak",
+      "label": "虚弱区",
+      "format": "",
+      "is_primary": false
+    },
+    "庇护区": {
+      "node": "zone_shelter",
+      "label": "庇护区",
+      "format": "",
+      "is_primary": false
+    },
+    "脆弱区": {
+      "node": "zone_fragile",
+      "label": "脆弱区",
+      "format": "",
+      "is_primary": false
+    },
+    "易伤区": {
+      "node": "zone_vuln",
+      "label": "易伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "防御区": {
+      "node": "block6_env.defense_reduction",
+      "label": "防御区",
+      "format": "",
+      "is_primary": false
+    },
+    "失衡易伤区": {
+      "node": "zone_imbal",
+      "label": "失衡易伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "抗性区": {
+      "node": "zone_res",
+      "label": "抗性区",
+      "format": "",
+      "is_primary": false
+    },
+    "非主控减伤区": {
+      "node": "zone_ncr",
+      "label": "非主控减伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "连击增伤区": {
+      "node": "zone_combo",
+      "label": "连击增伤区",
+      "format": "",
+      "is_primary": false
+    },
+    "特殊乘区": {
+      "node": "zone_special",
+      "label": "特殊乘区",
+      "format": "",
+      "is_primary": false
+    },
+    "基础伤害区": {
+      "node": "block4_base",
+      "label": "基础伤害区",
+      "format": "",
+      "is_primary": false
+    },
+    "力量最终值": {
+      "node": "attr_力量_total",
+      "label": "力量最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "敏捷最终值": {
+      "node": "attr_敏捷_total",
+      "label": "敏捷最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "智识最终值": {
+      "node": "attr_智识_total",
+      "label": "智识最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "意志最终值": {
+      "node": "attr_意志_total",
+      "label": "意志最终值",
+      "format": "",
+      "is_primary": false
+    },
+    "基础生命值": {
+      "node": "char_base_hp",
+      "label": "基础生命值",
+      "format": "",
+      "is_primary": false
+    },
+    "基础防御力": {
+      "node": "char_base_def",
+      "label": "基础防御力",
+      "format": "",
+      "is_primary": false
+    },
+    "武器精炼主能力值加成": {
+      "node": "weapon_refine_main_attr",
+      "label": "武器精炼主能力值加成",
+      "format": "",
+      "is_primary": false
+    },
+    "武器精炼附加攻击力加成": {
+      "node": "weapon_refine_add_atk",
+      "label": "武器精炼附加攻击力加成",
+      "format": "",
+      "is_primary": false
+    }
+  }
+}

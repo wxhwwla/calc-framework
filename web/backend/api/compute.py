@@ -11,8 +11,9 @@ from web.backend.api.loadout_schemas import WebLoadoutBody
 
 from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 
-router = APIRouter(prefix="/api/compute", tags=["compute"])
+ENDFIELD_ADAPTER_NAME = "终末地伤害计算（Calc Framework）"
 
+router = APIRouter(prefix="/api/compute", tags=["compute"])
 
 _manager = AdapterManager(ADAPTER_ROOT)
 
@@ -20,17 +21,23 @@ _DATA = ENDFIELD_DATA_ROOT
 
 
 class EvaluateRequest(BaseModel):
-    adapter: str
+    """DAG 求值请求。"""
 
+    adapter: str
+    """适配器名称。"""
     context: dict
+    """求值上下文（DataContext 兼容格式）。"""
 
 
 class EvaluateResponse(BaseModel):
+    """DAG 求值响应。"""
+
     outputs: dict[str, float]
-
+    """命名输出值（key 为输出名，value 为计算结果）。"""
     node_values: dict[str, float | str | None]
-
+    """所有节点的中间值（用于调试展示）。"""
     execution_order: list[str]
+    """节点执行顺序。"""
 
 
 def evaluate_payload(req: EvaluateRequest) -> EvaluateResponse:
@@ -71,9 +78,10 @@ class PresetExportRequest(WebLoadoutBody):
     pass
 
 
-@router.post("/evaluate-loadout", response_model=EvaluateResponse)
-def evaluate_loadout(req: LoadoutPreviewRequest):
-    """经 LoadoutState 构建 context 后求值（与桌面确认路径对齐）。"""
+def _build_loadout_context(req: LoadoutPreviewRequest) -> dict[str, Any]:
+    """WebLoadoutBody → DAG adapter context。"""
+    from api.search_catalog import resolve_equipment_catalog
+
     from games.endfield.data_loading.web_loadout_bridge import (
         build_adapter_context_from_loadout,
         build_loadout_state_from_web,
@@ -83,14 +91,30 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
     layout_mode = str(body.get("calc_mode") or body.get("calculation_mode") or "zone_snapshot")
     if layout_mode.endswith("_search"):
         layout_mode = "zone_snapshot"
-    try:
-        loadout = build_loadout_state_from_web(
-            char_data=req.char_data,
-            weapon_data=req.weapon_data,
-            body=body,
+    loadout = build_loadout_state_from_web(
+        char_data=req.char_data,
+        weapon_data=req.weapon_data,
+        body=body,
+    )
+    catalog = req.equipment_catalog
+    if catalog is None:
+        catalog = resolve_equipment_catalog(
+            None,
+            equipment_scope_label=str(body.get("equipment_scope_label") or "全部装备"),
         )
-        ctx = build_adapter_context_from_loadout(loadout, layout_calc_mode=layout_mode)
-        pkg = _manager.load("终末地伤害计算")
+    return build_adapter_context_from_loadout(
+        loadout,
+        layout_calc_mode=layout_mode,
+        equipment_catalog=catalog,
+    )
+
+
+@router.post("/evaluate-loadout", response_model=EvaluateResponse)
+def evaluate_loadout(req: LoadoutPreviewRequest):
+    """经 LoadoutState 构建 context 后求值（与桌面确认路径对齐）。"""
+    try:
+        ctx = _build_loadout_context(req)
+        pkg = _manager.load(ENDFIELD_ADAPTER_NAME)
         result = pkg.dag_service.evaluate(ctx)
         return EvaluateResponse(
             outputs=result.outputs,
@@ -103,57 +127,49 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+class LoadoutContextResponse(BaseModel):
+    context: dict[str, Any]
+
+
+@router.post("/loadout-context", response_model=LoadoutContextResponse)
+def loadout_context(req: LoadoutPreviewRequest):
+    """返回配装 DAG 求值上下文（供浏览器 wasm 本地求值）。"""
+    try:
+        return LoadoutContextResponse(context=_build_loadout_context(req))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 class SnapshotRequest(BaseModel):
+    """伤害快照计算请求（直接参数，不走 LoadoutState）。"""
+
     char_name: str
-
     weapon_name: str
-
     char_level: int = 90
-
     weapon_level: int = 90
-
     trust_level: int = 0
-
     skill_1_level: int = 8
-
     skill_2_level: int = 8
-
     skill_3_level: int = 8
-
     normal_skill_1_level: int = 1
-
     normal_skill_2_level: int = 1
-
     normal_skill_3_level: int = 0
-
     special_skill_1_level: int = 1
-
     special_skill_1_stack: int = 0
-
     special_skill_2_level: int = 1
-
     special_skill_2_stack: int = 0
-
     enemy_defense: float = 100.0
-
     enemy_resistance: float = 0.0
-
     ignore_resistance: float = 0.0
-
     imbalance_vulnerability_coeff: float = 1.3
-
     is_unbalanced: bool = False
-
     is_true_damage: bool = False
-
     combo_stacks: int = 0
-
     break_defense_stacks: int = 0
-
     damage_component_mode: str = "skill_and_abnormal"
-
     extra_crit_rate: float = 0.0
-
     extra_crit_damage: float = 0.0
 
 
@@ -243,7 +259,10 @@ def snapshot(req: SnapshotRequest):
 
 
 class CompareEntry(BaseModel):
+    """配装对比条目。"""
+
     label: str
+    """显示标签。"""
     char_name: str
     weapon_name: str
     char_level: int = 90
@@ -270,11 +289,14 @@ class CompareEntry(BaseModel):
 
 
 class CompareRequest(BaseModel):
+    """多方案配装对比请求。"""
+
     entries: list[CompareEntry]
 
 
 @router.post("/compare")
 def compare(req: CompareRequest):
+    """多方案配装对比，返回按总伤排序的结果列表。"""
     from games.endfield.data_loading.web_loadout_bridge import (
         build_loadout_state_from_web,
     )
@@ -356,6 +378,7 @@ def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
 
 @router.post("/snapshot-full")
 def loadout_snapshot(req: LoadoutSnapshotRequest) -> dict[str, Any]:
+    """通过 LoadoutState 计算完整伤害快照（与桌面确认路径对齐）。"""
     from games.endfield.data_loading.web_loadout_bridge import build_loadout_state_from_web
     from games.endfield.gui.app.loadout_evaluation import build_snapshot_from_loadout
 

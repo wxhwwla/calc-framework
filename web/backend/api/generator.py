@@ -314,9 +314,11 @@ async def ai_parse_formula(req: AIFormulaRequest):
     _validate_api_url(api_url)
 
     try:
-        # SSRF: api_url 已经 _validate_api_url 校验，确保仅允许 https 外网地址
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(api_url, json=payload, headers=headers)  # nosec: SSRF-checked
+        # SSRF: api_url 已经 _validate_api_url 校验；关闭跳转避免被重定向到内网
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=False) as client:
+            resp = await client.post(
+                api_url, json=payload, headers=headers
+            )  # nosem: SSRF-checked via _validate_api_url + follow_redirects=False
             resp.raise_for_status()
             data = resp.json()
     except httpx.ConnectError:
@@ -412,8 +414,10 @@ async def ai_test_connection(req: AITestRequest):
     api_url = safe_base + "/chat/completions"
 
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.post(api_url, json=payload, headers=headers)  # nosec: SSRF-checked via _validate_api_url
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+            resp = await client.post(
+                api_url, json=payload, headers=headers
+            )  # nosem: SSRF-checked via _validate_api_url + follow_redirects=False
             resp.raise_for_status()
             data = resp.json()
             return {"status": "ok", "model": data.get("model", "")}

@@ -108,8 +108,8 @@ def resolve_enemy_tier(enemy_id: str, *, default: str = DEFAULT_ENEMY_TIER) -> s
     if not (enemy_id or "").strip():
         return default
     row = get_plugin_registry().get_enemy(enemy_id.strip()) or {}
-    return str(row.get("enemy_tier") or row.get("等阶") or default)
     """resolve enemy tier。"""
+    return str(row.get("enemy_tier") or row.get("等阶") or default)
 
 
 def resolve_enemy_max_hp(enemy_id: str, *, default: float | None = None) -> float | None:
@@ -181,10 +181,8 @@ def _enemy_params_from_row(row: dict[str, Any]) -> dict[str, Any]:
             "imbalance_efficiency_bonus": float(
                 row.get("imbalance_efficiency_bonus", base["imbalance_efficiency_bonus"])
             ),
-            "break_defense_stacks": max(
-                0, min(4, int(row.get("break_defense_stacks", base["break_defense_stacks"])))
-            ),
+            "break_defense_stacks": max(0, min(4, int(row.get("break_defense_stacks", base["break_defense_stacks"])))),
         }
     )
-    return base
     """enemy params from row。"""
+    return base

@@ -22,10 +22,10 @@ _BINARY_ABNORMAL_TYPES = frozenset({"倒地", "击飞"})
 
 
 def abnormal_levels_for(abnormal: str) -> tuple[int, ...]:
+    """返回指定异常类型可用的等级范围（0/1 二元 vs 0-4 连续）。"""
     if abnormal in _BINARY_ABNORMAL_TYPES:
         return (0, 1)
     return (0, 1, 2, 3, 4)
-    """abnormal levels for。"""
 
 
 _CRIT_RATE_RE = re.compile(r"暴击率\+?\s*([+-]?\d+(?:\.\d+)?)\s*%")
@@ -46,6 +46,7 @@ class PhysicalAbnormalProfile:
 
 
 def _normalized_component_mode(mode: str) -> str:
+    """规范化伤害组件模式（技能/异常/技能+异常）。"""
     text = str(mode or "").strip()
     if text in ("skill_only", "abnormal_only", "skill_and_abnormal"):
         return text
@@ -56,7 +57,6 @@ def _normalized_component_mode(mode: str) -> str:
     if text in ("技能+异常", "技能＋异常"):
         return "skill_and_abnormal"
     return "skill_and_abnormal"
-    """normalized component mode。"""
 
 
 def normalize_abnormal_counts(counts: dict[str, int] | None) -> dict[str, int]:
@@ -66,8 +66,8 @@ def normalize_abnormal_counts(counts: dict[str, int] | None) -> dict[str, int]:
             key = f"{abnormal}:{level}"
             raw = 0 if counts is None else int(counts.get(key, 0))
             normalized[key] = max(0, raw)
-    return normalized
     """normalize abnormal counts。"""
+    return normalized
 
 
 def is_physical_abnormal_key(key: str) -> bool:
@@ -136,19 +136,19 @@ def format_abnormal_breakdown_lines(
 
 
 def _physical_level_coeff(char_level: int) -> float:
-    return 1.0 + (max(1, int(char_level)) - 1.0) / 392.0
     """physical level coeff。"""
+    return 1.0 + (max(1, int(char_level)) - 1.0) / 392.0
 
 
 def _effect_text(effect: DamageEffect) -> str:
     text = str(effect.raw_text or effect.effect_type or "").strip()
-    return text
     """effect text。"""
+    return text
 
 
 def _is_conditional_crit_text(text: str) -> bool:
-    return any(token in text for token in _CONDITIONAL_HINTS)
     """is conditional crit text。"""
+    return any(token in text for token in _CONDITIONAL_HINTS)
 
 
 def _extract_percent(text: str, pattern: re.Pattern[str]) -> float:
@@ -158,8 +158,8 @@ def _extract_percent(text: str, pattern: re.Pattern[str]) -> float:
     try:
         return float(match.group(1)) / 100.0
     except (TypeError, ValueError):
+        """extract percent。"""
         return 0.0
-    """extract percent。"""
 
 
 def extract_equipment_crit_bonus(
@@ -199,8 +199,8 @@ def extract_weapon_crit_bonus(weapon_data: dict | None, *, weapon_level: int) ->
         try:
             return float(raw) / 100.0
         except (TypeError, ValueError):
+            """read percent。"""
             return 0.0
-        """read percent。"""
 
     return _read_percent("暴击率+"), _read_percent("暴击伤害+")
 

@@ -108,6 +108,7 @@ class CalcPackViewerRenderMixin:
         self._status_label.setText(f"已加载 {name} ({len(self._variables)} 变量, {len(dag.outputs)} 输出)")
 
     def _rebuild_entity_selectors(self) -> None:
+        """重建实体选择下拉菜单和等级输入框。"""
         while self._entity_form.count():
             item = self._entity_form.takeAt(0)
             w = item.widget()
@@ -145,6 +146,7 @@ class CalcPackViewerRenderMixin:
             self._entity_form.addRow(f"{label}:", combo)
 
     def _rebuild_sheet(self) -> None:
+        """重建 ComputeSheet 控件（加载新 .calcpack 后调用）。"""
         while self._sheet_layout.count():
             item = self._sheet_layout.takeAt(0)
             w = item.widget()
@@ -187,6 +189,7 @@ class CalcPackViewerRenderMixin:
         self._compute_sheet.evaluate()
 
     def _is_var_in_input_sections(self, path: str) -> bool:
+        """检查 DAG 变量路径是否属于 layout.json 的 inputs 区域。"""
         if not self._layout:
             return False
         return any(sec.type == "inputs" and path in sec.variables for sec in self._layout.sections)
@@ -221,6 +224,7 @@ class CalcPackViewerRenderMixin:
         return ctx
 
     def _apply_theme(self) -> None:
+        """应用当前选中的主题样式。"""
         try:
             stylesheet = self._theme_manager.stylesheet()
             self.setStyleSheet(stylesheet)

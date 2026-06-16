@@ -16,5 +16,5 @@ def strength_hp_bonus(strength: float) -> float:
 
 
 def total_max_hp(strength: float, *, level: int = 1) -> float:
-    return base_hp_at_level(level) + strength_hp_bonus(strength)
     """total max hp。"""
+    return base_hp_at_level(level) + strength_hp_bonus(strength)

@@ -43,8 +43,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -53,9 +51,7 @@ from games.endfield.calc.damage.engine import DamageContext, DamageEffect
 
 
 @dataclass(frozen=True)
-
 class SkillScenario:
-
     """单个技能段场景定义。
 
 
@@ -78,8 +74,6 @@ class SkillScenario:
 
     """
 
-
-
     skill_name: str
 
     skill_multiplier: float
@@ -94,12 +88,8 @@ class SkillScenario:
 
     external_effects: tuple[DamageEffect, ...] = ()
 
-
-
     @property
-
     def scenario_key(self) -> str:
-
         """段级键，用于次数映射和伤害明细的键。
 
 
@@ -111,19 +101,14 @@ class SkillScenario:
         """
 
         if ":" in self.skill_name:
-
             return self.skill_name
 
         skill = self.skill_type or self.skill_name
 
         return f"{skill}:{self.segment_index}"
 
-
-
     @property
-
     def resolved_skill_type(self) -> str:
-
         """解析后的技能类型，用于装备加成匹配和伤害上下文。
 
 
@@ -135,17 +120,12 @@ class SkillScenario:
         """
 
         if ":" in self.skill_name:
-
             return self.skill_name.split(":", 1)[0]
 
         return self.skill_type or self.skill_name
 
-
-
     @property
-
     def resolved_segment_index(self) -> int:
-
         """解析后的段索引。
 
 
@@ -157,38 +137,24 @@ class SkillScenario:
         """
 
         if ":" in self.skill_name:
-
             try:
-
                 return max(1, int(self.skill_name.split(":", 1)[1]))
 
             except ValueError:
-
                 return 1
 
         return max(1, self.segment_index)
 
 
-
-
-
 def resolve_scenario_damage_type(scenario: SkillScenario, base_context: DamageContext) -> str:
-
+    """从场景或上下文中解析伤害类型（场景优先）。"""
     if scenario.damage_type:
-
         return scenario.damage_type
-
     return base_context.damage_type
-    """resolve scenario damage type。"""
-
-
-
 
 
 @dataclass(frozen=True)
-
 class MultiSkillConfig:
-
     """多技能次数加权配置。
 
 
@@ -209,8 +175,6 @@ class MultiSkillConfig:
 
     """
 
-
-
     top_n: int = 10
 
     selected_skill: str = "战技"
@@ -220,13 +184,8 @@ class MultiSkillConfig:
     crit_mode: str = "non_crit"
 
 
-
-
-
 @dataclass(frozen=True)
-
 class MultiSkillScore:
-
     """单条配装的多技能评分结果。
 
 
@@ -247,8 +206,6 @@ class MultiSkillScore:
 
     """
 
-
-
     weapon_name: str
 
     loadout_names: dict[str, str]
@@ -258,13 +215,8 @@ class MultiSkillScore:
     weighted_total_damage: float
 
 
-
-
-
 @dataclass(frozen=True)
-
 class MultiSkillResult:
-
     """多技能搜索结果汇总。
 
 
@@ -279,20 +231,14 @@ class MultiSkillResult:
 
     """
 
-
-
     top_results: tuple[MultiSkillScore, ...]
 
     skill_count_map: dict[str, int]
 
     total_combinations: int
 
-
-
     @property
-
     def weight_map(self) -> dict[str, float]:
-
         """兼容旧测试和调用方，将次数转换为 float 类型。
 
 
@@ -304,4 +250,3 @@ class MultiSkillResult:
         """
 
         return {name: float(count) for name, count in self.skill_count_map.items()}
-

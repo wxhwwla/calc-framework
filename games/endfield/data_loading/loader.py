@@ -46,6 +46,7 @@ from calc_framework.logging import get_logger
 from utils.path_utils import get_resource_path
 
 from games.endfield.data_loading import DataLoadingError
+from games.endfield.data_loading.curve_materialize import materialize_character_list, materialize_weapon_list
 
 logger = get_logger("endfield.data_loader")
 
@@ -119,8 +120,10 @@ def load_json_file(filepath: str, *, strict: bool = False) -> list[dict[str, Any
 
 # ── 懒加载器实例（框架 JsonDataLoader）─────────────────
 
-_character_loader = JsonDataLoader(lambda: load_json_file(CHARACTERS_JSON_PATH, strict=True))
-_weapon_loader = JsonDataLoader(lambda: load_json_file(WEAPONS_JSON_PATH, strict=True))
+_character_loader = JsonDataLoader(
+    lambda: materialize_character_list(load_json_file(CHARACTERS_JSON_PATH, strict=True))
+)
+_weapon_loader = JsonDataLoader(lambda: materialize_weapon_list(load_json_file(WEAPONS_JSON_PATH, strict=True)))
 _equipment_loader = JsonDataLoader(lambda: load_json_file(EQUIPMENTS_JSON_PATH, strict=True))
 
 

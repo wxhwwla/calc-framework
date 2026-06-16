@@ -40,8 +40,8 @@ def _default_preferences() -> dict[str, Any]:
 def _preferences_path(*, base_dir: Path | None = None) -> Path:
     root = base_dir if base_dir is not None else get_application_dir()
 
-    return root / UI_PREFERENCES_FILE
     """preferences path。"""
+    return root / UI_PREFERENCES_FILE
 
 
 def load_ui_preferences(*, base_dir: Path | None = None) -> dict[str, Any]:

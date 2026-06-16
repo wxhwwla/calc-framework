@@ -99,6 +99,66 @@ export async function saveSearchHistory(entry: SearchHistoryEntry): Promise<void
   if (!r.ok) throw new Error(`${i18n.t("api.searchHistorySaveFailed")}: ${r.statusText}`);
 }
 
+/** 由搜索参数与结果构建历史条目。 */
+export function buildSearchHistoryEntry(
+  params: Pick<SearchRequest, "char_data" | "current_weapon" | "skill_name">,
+  result: SearchResult,
+  options: { topN: number; elapsedSeconds: number; source?: string },
+): SearchHistoryEntry {
+  return {
+    char_name: String(params.char_data?.名称 ?? ""),
+    weapon_name: String(params.current_weapon?.名称 ?? ""),
+    skill_name: params.skill_name,
+    top_n: options.topN,
+    result_count: result.top_results.length,
+    total_combinations: result.total_combinations,
+    searched_combinations: result.searched_combinations,
+    elapsed_seconds: options.elapsedSeconds,
+    top_results: result.top_results,
+    saved_at: new Date().toISOString(),
+    search_source: options.source ?? "api",
+  };
+}
+
+/** 搜索完成后写入历史（失败静默，不阻断 UI）。 */
+export async function persistSearchHistory(
+  params: Pick<SearchRequest, "char_data" | "current_weapon" | "skill_name">,
+  result: SearchResult,
+  options: { topN: number; elapsedSeconds: number; source?: string },
+): Promise<void> {
+  if (result.cancelled || result.top_results.length === 0) {
+    return;
+  }
+  try {
+    await saveSearchHistory(buildSearchHistoryEntry(params, result, options));
+  } catch {
+    // 历史为辅助功能，离线或 PA 写入失败时不打断主流程
+  }
+}
+
+/** 导出搜索结果 JSON（对齐桌面 search_output 可读格式）。 */
+export function downloadSearchResultJson(
+  params: SearchRequest,
+  result: SearchResult,
+  source = "web",
+): void {
+  const payload = {
+    schema: "endfield-search-export-v1",
+    exported_at: new Date().toISOString(),
+    source,
+    params,
+    result,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  anchor.href = url;
+  anchor.download = `search-top${result.top_results.length}-${stamp}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchEnemyChoices(): Promise<EnemyInfo[]> {
   const r = await fetch(`${BASE}/enemies`);
   if (!r.ok) throw new Error(`${i18n.t("api.enemiesGetFailed")}: ${r.statusText}`);
@@ -121,6 +181,9 @@ export interface SearchEstimate {
   loadout_combinations: number;
   estimated_seconds: number;
   warnings: string[];
+  /** include_catalog=true 时由服务端返回 */
+  weapons?: Record<string, unknown>[];
+  equipment_catalog?: Record<string, Record<string, unknown>[]>;
 }
 
 export interface SearchResult {
@@ -142,9 +205,12 @@ export interface SearchRequest {
   damage_type: string;
   weapon_scope_label: string;
   equipment_scope_label: string;
-  all_weapons: Record<string, unknown>[];
+  /** @deprecated 省略时服务端按 scope 从 catalog 加载 */
+  all_weapons?: Record<string, unknown>[];
+  weapon_candidate_names?: string[];
   current_weapon: Record<string, unknown>;
-  equipment_catalog: Record<string, Record<string, unknown>[]>;
+  /** @deprecated 省略时服务端按 equipment_scope_label 加载 */
+  equipment_catalog?: Record<string, Record<string, unknown>[]>;
   fixed_loadout?: Record<string, unknown> | null;
   fixed_equipment_names?: Record<string, string | null>;
   weapon_skill_values?: Record<string, number>;
@@ -176,11 +242,15 @@ export interface SearchRequest {
 
 export async function estimateSearch(
   params: Omit<SearchRequest, "top_n" | "max_workers" | "extra_crit_rate" | "extra_crit_damage">,
+  options?: { includeCatalog?: boolean },
 ): Promise<SearchEstimate> {
   const r = await fetch(`${BASE}/estimate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      ...params,
+      include_catalog: options?.includeCatalog ?? false,
+    }),
   });
   if (!r.ok) {
     const text = await r.text();
@@ -200,6 +270,32 @@ export async function runSearch(params: SearchRequest): Promise<SearchResult> {
     throw new Error(`${i18n.t("api.searchRunFailed")}: ${text}`);
   }
   return r.json();
+}
+
+export interface LoadoutComboItem {
+  weapon_name: string;
+  chest: string;
+  gloves: string;
+  accessory_a: string;
+  accessory_b: string;
+}
+
+/** 浏览器本地搜索 — 批量服务端评分（异常 / compose_damage_total parity）。 */
+export async function scoreSearchBatch(
+  params: SearchRequest,
+  loadouts: LoadoutComboItem[],
+): Promise<number[]> {
+  const r = await fetch(`${BASE}/score-batch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ params, loadouts }),
+  });
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`${i18n.t("api.searchRunFailed")}: ${text}`);
+  }
+  const data = (await r.json()) as { final_damage?: number[] };
+  return Array.isArray(data.final_damage) ? data.final_damage : [];
 }
 
 export async function fetchEquipmentCatalog(

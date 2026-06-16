@@ -206,6 +206,12 @@ const en = {
     tableAccessoryA: "Acc. A",
     tableAccessoryB: "Acc. B",
     tableDamage: "Damage",
+    localSearchReady: "This workload can run Top-N search in the browser (WASM + worker pool) without a local exe.",
+    browserSearch: "Browser search",
+    localBackend: "Local search",
+    exportSearchOutput: "Export search_output",
+    exportSqlite: "Download search_runs.db",
+    largeCatalogWarning: "{{count}} combinations — full browser search may be slow; progress resumes locally.",
   },
 
   searchSettings: {

@@ -12,8 +12,8 @@ CORROSION_DR_CAP: tuple[float, ...] = (12.0, 16.0, 20.0, 24.0)
 
 
 def _level_index(calc_level: int) -> int:
-    return min(max(1, int(calc_level)), 4) - 1
     """level index。"""
+    return min(max(1, int(calc_level)), 4) - 1
 
 
 def corrosion_total_resistance_shred(

@@ -42,6 +42,8 @@ def build_dag_context(
     weapon_level: int,
     trust_level: int = 0,
     bonuses_kwargs: dict[str, Any] | None = None,
+    equipment_stat_bonus: dict[str, float] | None = None,
+    equipment_attack_percent: float = 0.0,
 ) -> dict[str, Any]:
     """从角色/武器数据构建 DAG 求值上下文（委托 EndfieldContextLoader）。"""
     loader = EndfieldContextLoader()
@@ -52,6 +54,8 @@ def build_dag_context(
         weapon_level=weapon_level,
         trust_level=trust_level,
         bonuses_kwargs=bonuses_kwargs or {},
+        equipment_stat_bonus=equipment_stat_bonus,
+        equipment_attack_percent=equipment_attack_percent,
     )
 
 
@@ -300,14 +304,15 @@ def _ensure_dag() -> AdapterPackage:
 
 
 def _generate_dag_json() -> None:
+    """生成终末地 DAG JSON 并保存到框架配置目录。"""
     from games.endfield.calc.dag_adapter.config import generate, save_dag
 
     g = generate()
     save_dag(g)
-    """generate dag json。"""
 
 
 def _write_default_meta() -> None:
+    """写入默认 meta.json，供 DAG 适配器首次加载使用。"""
     import json
 
     (_ADAPTER_DIR / "meta.json").write_text(
@@ -324,4 +329,3 @@ def _write_default_meta() -> None:
         ),
         encoding="utf-8",
     )
-    """write default meta。"""

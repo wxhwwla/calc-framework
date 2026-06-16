@@ -255,6 +255,7 @@ def _handle_layout_compute(environ, start_response):
             compare,
             evaluate_loadout,
             evaluate_payload,
+            loadout_context,
             loadout_preview,
             loadout_snapshot,
             preset_export,
@@ -287,6 +288,10 @@ def _handle_layout_compute(environ, start_response):
 
             if path == "/api/compute/evaluate-loadout":
                 result = evaluate_loadout(LoadoutPreviewRequest(**payload))
+                return _json(start_response, result.model_dump())
+
+            if path == "/api/compute/loadout-context":
+                result = loadout_context(LoadoutPreviewRequest(**payload))
                 return _json(start_response, result.model_dump())
 
             if path == "/api/compute/preview":
@@ -848,6 +853,8 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             delete_equipment,
             delete_weapon,
             inverse_formula_payload,
+            inverse_milestones_payload,
+            inverse_segment_payload,
             update_character,
             update_equipment,
             update_weapon,
@@ -858,10 +865,43 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             update_entity_row,
         )
 
+        if path == "/api/data/inverse/segment" and method == "POST":
+            raw = _read_body(environ)
+            payload = json.loads(raw.decode("utf-8"))
+            return _json(
+                start_response,
+                inverse_segment_payload(
+                    game=payload.get("game", "endfield"),
+                    blueprint_id=payload["blueprint_id"],
+                    segment_key=payload["segment_key"],
+                    values=payload["values"],
+                    rarity=int(payload.get("rarity", 6)),
+                    max_error=float(payload.get("max_error", 0.05)),
+                ),
+            )
+
+        if path == "/api/data/inverse/milestones" and method == "POST":
+            raw = _read_body(environ)
+            payload = json.loads(raw.decode("utf-8"))
+            return _json(
+                start_response,
+                inverse_milestones_payload(
+                    payload["operator"],
+                    max_error=float(payload.get("max_error", 0.05)),
+                ),
+            )
+
         if path == "/api/data/inverse" and method == "POST":
             raw = _read_body(environ)
             payload = json.loads(raw.decode("utf-8"))
-            return _json(start_response, inverse_formula_payload(payload["type"], payload["values"]))
+            return _json(
+                start_response,
+                inverse_formula_payload(
+                    payload["type"],
+                    payload["values"],
+                    max_error=float(payload.get("max_error", 0.05)),
+                ),
+            )
 
         raw = _read_body(environ)
         if method in ("POST", "PUT", "DELETE") and not raw and not sub.startswith("profiles/"):
@@ -979,7 +1019,14 @@ def _handle_data_api(environ, start_response):
 
     if sub == "characters/detail/all":
         d = _read_json(_DATA / "characters.json")
-        return _json(start_response, d) if d else _http_error(start_response, "not found", 404)
+        if not d:
+            return _http_error(start_response, "not found", 404)
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_entity_list, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
+        return _json(start_response, format_entity_list(d, fmt, kind="character"))
     if sub == "characters":
         raw = _read_json(_DATA / "characters.json") or []
         return _json(
@@ -999,14 +1046,26 @@ def _handle_data_api(environ, start_response):
     m = re.match(r"^characters/(.+)$", sub)
     if m:
         n = m.group(1).strip()
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_character_entity, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
         for c in _read_json(_DATA / "characters.json") or []:
             if c.get("名称") == n:
-                return _json(start_response, c)
+                return _json(start_response, format_character_entity(c, fmt))
         return _http_error(start_response, f"not found: {n}", 404)
 
     if sub == "weapons/detail/all":
         d = _read_json(_DATA / "weapons.json")
-        return _json(start_response, d) if d else _http_error(start_response, "not found", 404)
+        if not d:
+            return _http_error(start_response, "not found", 404)
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_entity_list, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
+        return _json(start_response, format_entity_list(d, fmt, kind="weapon"))
     if sub == "weapons":
         raw = _read_json(_DATA / "weapons.json") or []
         result = []
@@ -1020,9 +1079,14 @@ def _handle_data_api(environ, start_response):
     m = re.match(r"^weapons/(.+)$", sub)
     if m:
         n = m.group(1).strip()
+        from urllib.parse import parse_qs
+
+        from web.backend.data_materialize import format_weapon_entity, parse_entity_format
+
+        fmt = parse_entity_format(parse_qs(environ.get("QUERY_STRING", "")).get("format", [None])[0])
         for w in _read_json(_DATA / "weapons.json") or []:
             if w.get("名称") == n:
-                return _json(start_response, w)
+                return _json(start_response, format_weapon_entity(w, fmt))
         return _http_error(start_response, f"not found: {n}", 404)
 
     if sub == "equipments/detail/all":

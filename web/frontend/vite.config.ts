@@ -1,8 +1,14 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: "node",
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    setupFiles: [],
+  },
   plugins: [
     react(),
     VitePWA({
@@ -30,7 +36,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,json,svg,png,ico}"],
+        globPatterns: ["**/*.{js,css,html,json,svg,png,ico,wasm}"],
+        navigateFallback: "/index.html",
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
@@ -40,6 +47,28 @@ export default defineConfig({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24,
+              },
+            },
+          },
+          {
+            urlPattern: /\/endfield-dag\.json$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "calc-dag",
+              expiration: {
+                maxEntries: 2,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          {
+            urlPattern: /\/api\/data\/(characters|weapons|equipments)\/detail\/all/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "game-data-compact",
+              expiration: {
+                maxEntries: 6,
+                maxAgeSeconds: 60 * 60 * 24 * 7,
               },
             },
           },
