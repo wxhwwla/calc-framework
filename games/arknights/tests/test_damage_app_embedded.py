@@ -27,6 +27,7 @@ def test_damage_app_embedded_init(qapp: QApplication) -> None:
     assert win._embedded is True
     assert win._owns_qapp is False
     assert len(win._operator_index) >= 1
+    assert win._param_sheet is not None
 
 
 def test_damage_app_standalone_owns_qapp() -> None:

@@ -27,9 +27,17 @@ def main() -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     setup_logging(level="INFO", log_file=str(log_dir / "arknights.log"))
 
-    from games.arknights.gui.ArknightsDamageApp import ArknightsDamageApp
+    import os
 
-    app = ArknightsDamageApp()
+    gui_mode = os.environ.get("CALC_ARKNIGHTS_GUI", "").strip().lower()
+    if gui_mode in ("sheet", "computesheet", "app"):
+        from games.arknights.gui.ArknightsApp import ArknightsApp
+
+        app = ArknightsApp()
+    else:
+        from games.arknights.gui.ArknightsDamageApp import ArknightsDamageApp
+
+        app = ArknightsDamageApp()
     app.run()
 
 

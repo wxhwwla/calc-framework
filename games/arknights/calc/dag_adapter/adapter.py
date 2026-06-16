@@ -41,6 +41,8 @@ def compute_snapshot_with_dag(
     dmg_bonus: float = 0.0,
     def_penetration: float = 0.0,
     res_penetration: float = 0.0,
+    trust_atk_override: float | None = None,
+    pot_atk_override: float | None = None,
 ) -> SnapshotResult:
     """用 DAG 引擎计算干员伤害快照。
 
@@ -54,6 +56,8 @@ def compute_snapshot_with_dag(
         dmg_bonus: 伤害加成百分比（小数）
         def_penetration: 固定减防值
         res_penetration: 百分比减抗（小数）
+        trust_atk_override: 信赖攻击覆盖（None 时从干员数据读取）
+        pot_atk_override: 潜能攻击覆盖（None 时从干员数据解析）
 
     返回:
         SnapshotResult 包含输出变量和执行顺序
@@ -73,6 +77,8 @@ def compute_snapshot_with_dag(
         dmg_bonus=dmg_bonus,
         def_penetration=def_penetration,
         res_penetration=res_penetration,
+        trust_atk_override=trust_atk_override,
+        pot_atk_override=pot_atk_override,
     )
 
     result = pkg.dag_service.evaluate(ctx)

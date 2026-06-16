@@ -64,10 +64,18 @@ class ArknightsContextLoader(DataContextLoader):
         base_atk = float(seg_stats["atk"]) if "atk" in seg_stats else _get_num(base_stats, "atk")
         base_def = float(seg_stats["def"]) if "def" in seg_stats else _get_num(base_stats, "def")
         base_res = float(seg_stats["res"]) if "res" in seg_stats else _get_num(base_stats, "res", 0.0)
-        trust_atk = _get_num(trust_bonus, "攻击", 0.0)
-        _get_num(trust_bonus, "防御", 0.0)
-        _get_num(trust_bonus, "生命", 0.0)
-        pot_atk = _parse_potential_atk(potentials)
+
+        trust_override = kwargs.get("trust_atk_override")
+        if trust_override is not None:
+            trust_atk = float(trust_override)
+        else:
+            trust_atk = _get_num(trust_bonus, "攻击", 0.0)
+
+        pot_override = kwargs.get("pot_atk_override")
+        if pot_override is not None:
+            pot_atk = float(pot_override)
+        else:
+            pot_atk = _parse_potential_atk(potentials)
 
         return make_context(
             character={

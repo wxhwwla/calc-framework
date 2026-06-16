@@ -1,13 +1,12 @@
 # 明日方舟桌面端追赶 Web — 实施计划
 
 > 创建：2026-06-16  
-> 状态：**Phase 2 已完成**（Phase 3 可选）
+> 状态：**Phase 3 已完成**（ComputeSheet 双向绑定；默认入口仍为 DamageApp）
 
 ## 背景
 
 - **Web**：`web/frontend/src/pages/ArknightsComputePage.tsx` — 完整干员筛选、属性展示、技能解析、敌人/加成参数、乘区明细。
-- **桌面当前入口**：`games/arknights/gui/ArknightsApp.py` — 2026-06-02 框架对齐 MVP；ComputeSheet 未双向绑定，计算参数未接满。
-- **桌面完整版（仓库内）**：`games/arknights/gui/ArknightsDamageApp.py` — 与 Web 功能对齐，但未接入 launcher / `main.py`。
+- **桌面当前入口**：`games/arknights/main.py` → **`ArknightsDamageApp`**（与 Web 对齐）；`ArknightsApp` 为 ComputeSheet 声明式线，环境变量 `CALC_ARKNIGHTS_GUI=sheet` 可切换。
 
 **结论**：差距主要是 **入口选错了精简壳**，不是 DAG/数据层落后。计算内核两边共用 `compute_snapshot_with_dag` + `operator_catalog`。
 
@@ -34,10 +33,17 @@
 | 信赖/潜能 | API 自动带入 DAG | loader 写入；详情 + 乘区表展示潜能攻击 | ✅ |
 | i18n | react-i18n | 桌面中文（与终末地一致） | 跳过 |
 
-### Phase 3 — ComputeSheet 双轨（可选，低优先级）
+### Phase 3 — ComputeSheet 双轨 ✅
 
-- `ArknightsApp` + `layout.json` 保留为声明式实验线。
-- 待 Phase 1/2 稳定后，再决定是否把 DamageApp 右栏迁回 ComputeSheet（需双向绑定 + evaluated 信号）。
+| 项 | 说明 | 状态 |
+|----|------|:----:|
+| 共享模块 | `games/arknights/gui/arknights_compute_sheet.py` | ✅ |
+| 持久 sheet | `ArknightsApp` 单次创建 + `evaluated.connect` + 重接「计算」按钮 | ✅ |
+| skill_index | 左栏技能选择与 `get_parsed_skill_info` 对齐 | ✅ |
+| 可选入口 | `CALC_ARKNIGHTS_GUI=sheet` → `main.py` 启动 `ArknightsApp` | ✅ |
+| DamageApp 迁移 | 右栏敌人/信赖/潜能改用 ComputeSheet（技能参数仍手动） | ✅ |
+
+- `ArknightsApp` + `layout.json` 保留为声明式实验线；**默认仍为 DamageApp**。
 
 ## 非目标（本计划不做）
 
@@ -47,7 +53,7 @@
 ## 验证清单
 
 - [x] `pytest games/arknights/tests/test_damage_app_embedded.py`
-- [x] `pytest games/arknights/tests/test_operator_combo.py`
+- [x] `pytest games/arknights/tests/test_arknights_compute_sheet.py`
 - [ ] `python games/arknights/main.py` — 完整 UI
 - [ ] launcher → 明日方舟 — 嵌入无闪窗、启动器保持可见
 - [ ] 干员列表 ≥418（标准库）
@@ -63,5 +69,7 @@
 | `games/arknights/gui/operator_combo.py` | 2 |
 | `games/arknights/operator_catalog.py` | 2（`DEFAULT_PARSED_DIR` 别名） |
 | `framework/.../launcher/runtime.py` | 1 |
-| `games/arknights/gui/ArknightsApp.py` | 暂缓 |
+| `games/arknights/gui/ArknightsApp.py` | 3 |
+| `games/arknights/gui/arknights_compute_sheet.py` | 3 |
+| `games/arknights/main.py` | 3（`CALC_ARKNIGHTS_GUI`） |
 | `docs/会话接续手册.md` | §4.186 |

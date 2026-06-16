@@ -4,7 +4,8 @@
 
 使用 ComputeSheet + layout.json 声明式面板，与终末地 EndfieldApp 架构对齐。
 **注意**：当前 launcher / main.py 默认使用功能完整的 `ArknightsDamageApp`（见
-``docs/plans/arknights-desktop-web-parity.md``）；本模块为 ComputeSheet 实验线，待双向绑定完成后再切换。
+``docs/plans/arknights-desktop-web-parity.md``）；本模块为 ComputeSheet 声明式线，
+可通过 ``CALC_ARKNIGHTS_GUI=sheet`` 启动。
 """
 
 from __future__ import annotations
@@ -45,28 +46,26 @@ for p in [
 
 from calc_framework.ui.log_widget import LogWidget
 
-from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
-from games.arknights.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info
+from games.arknights.framework_bridge import ComputeSheet, get_logger
+from games.arknights.gui.arknights_compute_sheet import (
+    build_result_html,
+    combo_index_to_skill_index,
+    create_arknights_compute_sheet,
+    ensure_arknights_adapter,
+    mount_compute_sheet,
+    populate_operator_context,
+    wire_compute_button,
+)
 from games.arknights.operator_catalog import build_operator_index, filter_operator_index, load_operators_map
 from games.endfield.gui.legal.donation_qt import open_donation_dialog
-from utils.path_utils import get_resource_path
 
 _logger = get_logger("gui.arknights_app")
-
-_FRAMEWORK_ADAPTER = get_resource_path("framework/adapters/arknights")
-
-_adapter_pkg: AdapterPackage | None = None
-_adapter_layout = None
 
 
 def _ensure_adapter():
     """获取或初始化 DAG 适配器包和布局（惰性加载）。"""
-    global _adapter_pkg, _adapter_layout
-    if _adapter_pkg is None:
-        _adapter_pkg = AdapterPackage(str(_FRAMEWORK_ADAPTER))
-        layout_path = _FRAMEWORK_ADAPTER / "ui" / "layout.json"
-        _adapter_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
-    return _adapter_pkg, _adapter_layout
+    return ensure_arknights_adapter()
 
 
 class ArknightsApp(QMainWindow):
@@ -90,7 +89,6 @@ class ArknightsApp(QMainWindow):
             self._apply_dark_style()
 
         super().__init__()
-        """初始化实例。"""
 
         self.big_font: QFont = QFont()
         self.big_font.setPointSize(14)
@@ -112,32 +110,33 @@ class ArknightsApp(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         main_layout.addWidget(splitter)
 
+        right_scroll = QScrollArea()
+        right_scroll.setWidgetResizable(True)
+        self._compute_sheet_widget = QWidget()
+        self._compute_sheet_widget.setLayout(QVBoxLayout())
+        right_scroll.setWidget(self._compute_sheet_widget)
+
+        self._operator_data: dict[str, Any] | None = None
+        self._compute_sheet: ComputeSheet | None = None
+        self._result_summary = QLabel("")
+        self._result_summary.setTextFormat(Qt.TextFormat.RichText)
+        self._result_summary.setWordWrap(True)
+        self._result_summary.setStyleSheet("font-size: 14px; padding: 8px;")
+        self._donation_btn = QPushButton("☕ 打赏支持")
+        self._donation_btn.clicked.connect(lambda: open_donation_dialog(self))
+        self._init_compute_sheet()
+
         left_scroll = QScrollArea()
         left_scroll.setWidgetResizable(True)
         left_scroll.setMinimumWidth(320)
         left_panel = self._build_operator_panel()
         left_scroll.setWidget(left_panel)
         splitter.addWidget(left_scroll)
-
-        right_scroll = QScrollArea()
-        right_scroll.setWidgetResizable(True)
-        self._compute_sheet_widget = QWidget()
-        self._compute_sheet_widget.setLayout(QVBoxLayout())
-        right_scroll.setWidget(self._compute_sheet_widget)
         splitter.addWidget(right_scroll)
 
         splitter.setSizes([400, 600])
 
-        self._operator_data: dict[str, Any] | None = None
-        self._result_labels: dict[str, QLabel] = {}
-        self._zone_labels: dict[str, QLabel] = {}
-        self._donation_btn = QPushButton("☕ 打赏支持")
-        self._donation_btn.clicked.connect(lambda: open_donation_dialog(self))
-
-        # 菜单栏
         self._setup_menu()
-        """初始化实例。"""
-        """初始化实例。"""
 
     def _build_operator_panel(self) -> QWidget:
         """构建左侧干员选择面板，含筛选/搜索/技能选择。"""
@@ -240,6 +239,20 @@ class ArknightsApp(QMainWindow):
 
         return panel
 
+    def _init_compute_sheet(self) -> None:
+        """创建持久化 ComputeSheet 并挂载到右栏（Phase 3 双向绑定）。"""
+        pkg, layout = _ensure_adapter()
+        assert layout is not None
+        sheet = create_arknights_compute_sheet(pkg.dag_service, layout, parent=self)
+        sheet.evaluated.connect(self._on_compute_sheet_evaluated)
+        wire_compute_button(sheet, self._compute_result)
+        mount_compute_sheet(
+            self._compute_sheet_widget,
+            sheet,
+            extra_widgets=[self._result_summary, self._donation_btn],
+        )
+        self._compute_sheet = sheet
+
     def _filter_and_populate(self) -> None:
         """按星级/职业/分支/搜索词筛选干员并更新下拉列表。"""
         selected_stars = [i + 1 for i, cb in enumerate(self._star_checkboxes) if cb.isChecked()]
@@ -326,188 +339,33 @@ class ArknightsApp(QMainWindow):
         self._compute_result()
 
     def _compute_result(self) -> None:
-        """用 DAG 引擎执行伤害计算并更新结果。"""
-        if self._operator_data is None:
+        """同步干员/技能上下文后通过 ComputeSheet 求值。"""
+        if self._operator_data is None or self._compute_sheet is None:
+            self._result_summary.setText("")
             return
-        self._skill_combo.currentIndex()
         level = self._skill_level_slider.value()
+        skill_index = combo_index_to_skill_index(self._skill_combo.currentIndex())
         try:
-            result = compute_snapshot_with_dag(
+            info = get_parsed_skill_info(
                 self._operator_data,
+                level=level,
+                skill_index=skill_index,
+            )
+            populate_operator_context(
+                self._compute_sheet,
+                self._operator_data,
+                skill_multiplier=info.effective_multiplier,
                 skill_level=level,
             )
-            self._on_compute_result(result)
+            self._compute_sheet.evaluate()
         except Exception as exc:
             _logger.warning("计算失败: %s", exc)
 
-    def _on_compute_result(self, result: Any) -> None:
-        """接收到 DAG 计算结果后渲染 ComputeSheet 和结果表格。"""
-        pkg, layout = _ensure_adapter()
-        dag_service = pkg.dag_service
-
-        variables = dict(dag_service.dag.variables)
-        user_vars: dict[str, Any] = {
-            "user_input.技能倍率": {
-                "source": "user_input",
-                "type": "float",
-                "default": 1.0,
-                "min": 0.0,
-                "max": 10.0,
-                "step": 0.01,
-            },
-            "user_input.技能等级": {
-                "source": "user_input",
-                "type": "int",
-                "default": 7,
-                "min": 1,
-                "max": 10,
-                "step": 1,
-            },
-            "user_input.敌人防御": {
-                "source": "user_input",
-                "type": "float",
-                "default": 200.0,
-                "min": 0,
-                "max": 10000,
-                "step": 10,
-            },
-            "user_input.敌人法术抗性": {
-                "source": "user_input",
-                "type": "float",
-                "default": 50.0,
-                "min": 0,
-                "max": 100,
-                "step": 1,
-            },
-            "user_input.攻击力百分比加成": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 5.0,
-                "step": 0.01,
-            },
-            "user_input.伤害加成": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": -5.0,
-                "max": 5.0,
-                "step": 0.01,
-            },
-            "user_input.物理穿透": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 3000,
-                "step": 10,
-            },
-            "user_input.法术穿透": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 1.0,
-                "step": 0.01,
-            },
-            "user_input.信赖攻击": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0,
-                "min": 0,
-                "max": 500,
-                "step": 1,
-            },
-            "user_input.潜能攻击": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0,
-                "min": 0,
-                "max": 500,
-                "step": 1,
-            },
-        }
-        variables.update(user_vars)
-
-        user_context_overrides = {
-            "user_input.技能倍率": ("computed.技能倍率", ["override"]),
-            "user_input.技能等级": ("computed.技能等级", ["override"]),
-            "user_input.敌人防御": ("enemy.防御", ["override"]),
-            "user_input.敌人法术抗性": ("enemy.法术抗性", ["override"]),
-            "user_input.攻击力百分比加成": ("computed.攻击力百分比加成", ["override"]),
-            "user_input.伤害加成": ("computed.伤害加成", ["override"]),
-            "user_input.物理穿透": ("computed.物理穿透", ["override"]),
-            "user_input.法术穿透": ("computed.法术穿透", ["override"]),
-            "user_input.信赖攻击": ("character.信赖攻击", ["override"]),
-            "user_input.潜能攻击": ("character.潜能攻击", ["override"]),
-        }
-
-        assert layout is not None
-        compute_sheet = ComputeSheet(
-            dag_service,
-            layout,
-            variables,
-            base_context={},
-            user_context_overrides=user_context_overrides,
-        )
-
-        op = self._operator_data or {}
-        base_atk = float(op.get("攻击力", 0))
-        compute_sheet.set("character.攻击力", base_atk)
-
-        outputs = result.outputs if hasattr(result, "outputs") else {}
-        for out_name, val in outputs.items():
-            compute_sheet.set(out_name, val)  # direct DAG output override
-
-        compute_sheet.evaluate()
-
-        cw = self._compute_sheet_widget
-        old_layout = cw.layout()
-        if old_layout is not None:
-            while old_layout.count():
-                item = old_layout.takeAt(0)
-                if item.widget():
-                    item.widget().deleteLater()
-        new_layout = QVBoxLayout()
-        new_layout.setContentsMargins(0, 0, 0, 0)
-
-        sheet_widget = compute_sheet.widget
-
-        result_text = self._build_result_text(result)
-        result_label = QLabel(result_text)
-        result_label.setTextFormat(Qt.TextFormat.RichText)
-        result_label.setWordWrap(True)
-        result_label.setStyleSheet("font-size: 14px; padding: 8px;")
-
-        new_layout.addWidget(sheet_widget, stretch=1)
-        new_layout.addWidget(result_label)
-        new_layout.addWidget(self._donation_btn)
-        cw.setLayout(new_layout)
-
-    def _build_result_text(self, result: Any) -> str:
-        """将计算结果格式化为 HTML 表格字符串。"""
-        outputs = result.outputs if hasattr(result, "outputs") else {}
-        lines = ['<hr><table style="width:100%;border-collapse:collapse;">']
-        lines.append(
-            '<tr style="background:#2B6CB6;color:white;">'
-            '<td colspan="2" style="padding:6px 10px;font-weight:bold;font-size:15px;">'
-            "计算结果</td></tr>"
-        )
-        for name in ["最终攻击力", "物理伤害", "法术伤害", "真伤伤害"]:
-            val = outputs.get(name)
-            if val is not None:
-                lines.append(
-                    f'<tr><td style="padding:3px 10px;">{name}</td>'
-                    f'<td style="padding:3px 10px;text-align:right;font-weight:bold;">'
-                    f"{val:.2f}</td></tr>"
-                )
-        lines.append("</table>")
-        return "\n".join(lines)
-
     def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
-        """ComputeSheet 求值完成回调（预留）。"""
-        pass
+        """ComputeSheet 求值完成：更新底部结果摘要。"""
+        if result is None:
+            return
+        self._result_summary.setText(build_result_html(result))
 
     # ── 菜单栏 ──────────────────────────────────────────
 

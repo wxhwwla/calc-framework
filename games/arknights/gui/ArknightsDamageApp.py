@@ -38,6 +38,15 @@ from PySide6.QtWidgets import (
 from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
 from games.arknights.calc.dag_adapter.loader import _parse_potential_atk
 from games.arknights.calc.skill_parser import ParsedSkillInfo
+from games.arknights.gui.arknights_compute_sheet import (
+    DAMAGE_APP_SHEET_SECTION_IDS,
+    create_arknights_compute_sheet,
+    ensure_arknights_adapter,
+    filter_layout,
+    hide_sheet_eval_button,
+    populate_operator_context,
+    read_enemy_bonus_params,
+)
 from games.arknights.gui.operator_combo import configure_operator_combobox
 from games.arknights.operator_catalog import (
     STAR_TIERS,
@@ -348,31 +357,13 @@ class ArknightsDamageApp(QMainWindow):
         spg.addWidget(self._cond_check, 4, 0, 1, 3)
         sl.addWidget(g_sp)
 
-        # 敌人参数
-        g_en = QGroupBox("敌人参数")
-        eng = QGridLayout(g_en)
-        eng.addWidget(QLabel("防御力 (DEF):"), 0, 0)
-        self._def_input = QLineEdit("200")
-        self._def_slider = QSlider(Qt.Horizontal)
-        self._def_slider.setRange(0, 3000)
-        self._def_slider.setValue(200)
-        self._def_slider.valueChanged.connect(lambda v: self._def_input.setText(str(v)))
-        self._def_input.textChanged.connect(lambda t: self._sync_slider(self._def_slider, t))
-        eng.addWidget(self._def_input, 0, 1)
-        eng.addWidget(self._def_slider, 0, 2)
+        pkg, full_layout = ensure_arknights_adapter()
+        param_layout = filter_layout(full_layout, set(DAMAGE_APP_SHEET_SECTION_IDS))
+        self._param_sheet = create_arknights_compute_sheet(pkg.dag_service, param_layout, parent=sw)
+        hide_sheet_eval_button(self._param_sheet)
+        sl.addWidget(self._param_sheet.widget)
 
-        eng.addWidget(QLabel("法术抗性 (RES):"), 1, 0)
-        self._res_input = QLineEdit("50")
-        self._res_slider = QSlider(Qt.Horizontal)
-        self._res_slider.setRange(0, 100)
-        self._res_slider.setValue(50)
-        self._res_slider.valueChanged.connect(lambda v: self._res_input.setText(str(v)))
-        self._res_input.textChanged.connect(lambda t: self._sync_slider(self._res_slider, t))
-        eng.addWidget(self._res_input, 1, 1)
-        eng.addWidget(self._res_slider, 1, 2)
-        sl.addWidget(g_en)
-
-        # 额外加成
+        # 额外加成（ATK%/伤害%；敌人/穿透/信赖/潜能在 ComputeSheet）
         g_bn = QGroupBox("额外加成")
         bng = QGridLayout(g_bn)
         bng.addWidget(QLabel("攻击力%加成:"), 0, 0)
@@ -381,12 +372,6 @@ class ArknightsDamageApp(QMainWindow):
         bng.addWidget(QLabel("伤害倍率加成%:"), 1, 0)
         self._dmg_bonus_input = QLineEdit("0")
         bng.addWidget(self._dmg_bonus_input, 1, 1)
-        bng.addWidget(QLabel("防御穿透%:"), 2, 0)
-        self._def_pen_input = QLineEdit("0")
-        bng.addWidget(self._def_pen_input, 2, 1)
-        bng.addWidget(QLabel("法抗穿透%:"), 3, 0)
-        self._res_pen_input = QLineEdit("0")
-        bng.addWidget(self._res_pen_input, 3, 1)
         bng.setColumnStretch(1, 1)
         sl.addWidget(g_bn)
 
@@ -486,16 +471,19 @@ class ArknightsDamageApp(QMainWindow):
             chip.setChecked(idx == level)
             chip.blockSignals(False)
 
-    def _sync_slider(self, slider: QSlider, text: str) -> None:
-        """同步输入框数值到滑块（带信号阻塞防循环）。"""
-        try:
-            v = int(float(text))
-            if slider.minimum() <= v <= slider.maximum():
-                slider.blockSignals(True)
-                slider.setValue(v)
-                slider.blockSignals(False)
-        except (ValueError, TypeError):
-            pass
+    def _sync_param_sheet(self) -> None:
+        """干员/技能变化时同步 ComputeSheet 信赖与潜能。"""
+        if not self._current_operator:
+            return
+        level = self._lvl_slider.value()
+        si = self._skill_combo.currentIndex() - 1
+        info = get_parsed_skill_info(self._current_operator, level, si)
+        populate_operator_context(
+            self._param_sheet,
+            self._current_operator,
+            skill_multiplier=info.effective_multiplier,
+            skill_level=level,
+        )
 
     def _active_stars(self) -> set[int]:
         """获取当前勾选的所有星级。"""
@@ -602,6 +590,7 @@ class ArknightsDamageApp(QMainWindow):
 
         # 连发数
         self._hit_spin.setValue(info.hit_count)
+        self._sync_param_sheet()
 
     def _update_detail(self) -> None:
         """更新右侧干员详情面板（名称/属性/信赖/天赋）。"""
@@ -685,12 +674,13 @@ class ArknightsDamageApp(QMainWindow):
 
             hit_count = self._hit_spin.value()
 
-            enemy_def = float(self._def_input.text() or "0")
-            enemy_res = float(self._res_input.text() or "0")
+            sheet_params = read_enemy_bonus_params(self._param_sheet)
+            enemy_def = sheet_params["enemy_def"]
+            enemy_res = sheet_params["enemy_res"]
+            def_pen = sheet_params["def_penetration"]
+            res_pen = sheet_params["res_penetration"]
             atk_bonus = float(self._atk_bonus_input.text() or "0") / 100.0 + skill_info.atk_buff_hint
             dmg_bonus = float(self._dmg_bonus_input.text() or "0") / 100.0
-            def_pen = float(self._def_pen_input.text() or "0")
-            res_pen = float(self._res_pen_input.text() or "0") / 100.0
 
             result = compute_snapshot_with_dag(
                 operator=self._current_operator,
@@ -702,13 +692,15 @@ class ArknightsDamageApp(QMainWindow):
                 dmg_bonus=dmg_bonus,
                 def_penetration=def_pen,
                 res_penetration=res_pen,
+                trust_atk_override=sheet_params["trust_atk"],
+                pot_atk_override=sheet_params["pot_atk"],
             )
 
             outputs = result.outputs
             final_atk = outputs.get("最终攻击力", 0)
             phys = outputs.get("物理伤害", 0)
             magic = outputs.get("法术伤害", 0)
-            true_dmg = outputs.get("真实伤害", 0)
+            true_dmg = outputs.get("真伤伤害", 0)
 
             # 更新结果卡片
             self._result_cards["atk"].setText(f"{final_atk:.1f}")
@@ -728,8 +720,8 @@ class ArknightsDamageApp(QMainWindow):
             # 乘区明细表
             op = self._current_operator
             base_atk = float(op.get("基础属性", {}).get("攻击", 0))
-            trust_atk = float(op.get("信赖加成", {}).get("攻击", 0) if op.get("信赖加成") else 0)
-            pot_atk = _parse_potential_atk(op.get("潜能", []) if isinstance(op.get("潜能"), list) else [])
+            trust_atk = sheet_params["trust_atk"]
+            pot_atk = sheet_params["pot_atk"]
             zone_rows = [
                 ("基础攻击力", f"{base_atk:.1f}"),
                 ("信赖加成", f"+{trust_atk:.1f}" if trust_atk > 0 else "0"),
@@ -752,7 +744,7 @@ class ArknightsDamageApp(QMainWindow):
             if hit_count > 1:
                 zone_rows.append(("物理伤害（合计）", f"{phys * hit_count:.1f}"))
                 zone_rows.append(("法术伤害（合计）", f"{magic * hit_count:.1f}"))
-                zone_rows.append(("真实伤害（合计）", f"{true_dmg * hit_count:.1f}"))
+                zone_rows.append(("真伤伤害（合计）", f"{true_dmg * hit_count:.1f}"))
 
             self._result_table.setRowCount(len(zone_rows))
             for i, (k, v) in enumerate(zone_rows):
