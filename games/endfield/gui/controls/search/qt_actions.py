@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from utils.search_diagnostics import get_search_logger, init_search_diagnostics, log_search_config
+from utils.search_diagnostics import get_search_logger, log_search_config
 
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.calc.manual_buff.physical import (
@@ -100,7 +100,6 @@ class SearchWorker(QObject):
 
     def run(self) -> None:
         """在 QThread 中执行全量遍历搜索，发射 progress/finished/error 信号。"""
-        init_search_diagnostics()
         slog = get_search_logger()
         config = optimizer_config_for_search_job(self._job, top_n=self._top_n)
 

@@ -17,6 +17,11 @@ from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, Thr
 from typing import Any, Literal, TypeVar
 
 from calc_framework.search import SearchCancelToken, TopNTracker
+from utils.frozen_runtime import (
+    describe_frozen_search_capabilities,
+    frozen_allow_multi_workers,
+    frozen_use_thread_pool,
+)
 from utils.search_diagnostics import get_search_logger, summarize_work_item
 
 from ..evaluate.process_worker import ProcessWorkerPayload, init_process_worker
@@ -38,11 +43,8 @@ def _pyinstaller_frozen() -> bool:
 
 
 def _resolve_max_workers(max_workers: int) -> int:
-    """打包 exe 下单线程评估，避免 Rust FFI / 装备缓存与 ThreadPool 并发冲突。"""
-    workers = max(1, int(max_workers))
-    if _pyinstaller_frozen():
-        return 1
-    return workers
+    """打包 exe phase<2 时单线程；phase≥2 尊重 GUI 线程数。"""
+    return frozen_allow_multi_workers(max_workers)
 
 
 def _resolve_parallel_backend(
@@ -116,7 +118,7 @@ def run_bounded_parallel(
             evaluate = process_evaluate
     _search_log().info(
         "run_bounded_parallel | total=%s workers=%s (req=%s) backend=%s batch_size=%s "
-        "batch_eval=%s frozen=%s executor=%s",
+        "batch_eval=%s frozen=%s caps=%s executor=%s",
         total,
         workers,
         max(1, int(max_workers)),
@@ -124,7 +126,10 @@ def run_bounded_parallel(
         batch_size,
         batch_evaluate is not None,
         _pyinstaller_frozen(),
-        "inline" if _pyinstaller_frozen() else ("ProcessPool" if backend == "process" else "ThreadPool"),
+        describe_frozen_search_capabilities(),
+        "inline"
+        if (_pyinstaller_frozen() and not frozen_use_thread_pool())
+        else ("ProcessPool" if backend == "process" else "ThreadPool"),
     )
     max_inflight = max(workers * 4, 8)
     tracker: TopNTracker[R] | None = None
@@ -137,7 +142,7 @@ def run_bounded_parallel(
     processed = 0
     cancelled = False
     started_at = time.perf_counter()
-    use_inline = _pyinstaller_frozen()
+    use_inline = _pyinstaller_frozen() and not frozen_use_thread_pool()
 
     def _report_progress() -> None:
         p = processed

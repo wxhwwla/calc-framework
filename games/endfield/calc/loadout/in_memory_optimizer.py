@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from utils.frozen_runtime import frozen_use_rust_batch
 from utils.search_diagnostics import log_search_config
 
 from games.endfield.calc.damage.engine import DamageContext
@@ -97,7 +98,9 @@ def run_enumerated_optimizer_parallel(
     backend: ParallelBackend = "thread" if effective_evaluator is not None else parallel_backend
 
     # ── Rust 批量化路径（仅裸 evaluate_task；有 search_job 时逐条评估） ──
-    use_batch = batch_size > 1 and effective_evaluator is None and total_combinations > batch_size
+    use_batch = (
+        batch_size > 1 and effective_evaluator is None and total_combinations > batch_size and frozen_use_rust_batch()
+    )
 
     log_search_config(
         phase="memory",

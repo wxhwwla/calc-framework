@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
+from utils.frozen_runtime import frozen_use_rust_batch
 from utils.search_diagnostics import get_search_logger, log_search_config, log_search_event
 
 from games.endfield.calc.core.top_n_tracker import TopNTracker
@@ -365,7 +366,7 @@ def execute_search_with_resume(
 
         parallel_kwargs["evaluate"] = _evaluate_keyed
         parallel_kwargs["process_evaluate"] = evaluate_keyed_task_in_process if process_payload else None
-        if total_combinations > _batch_size:
+        if total_combinations > _batch_size and frozen_use_rust_batch():
             parallel_kwargs.update(
                 {
                     "batch_size": _batch_size,

@@ -152,6 +152,9 @@ def summarize_work_item(item: Any, *, max_len: int = 200) -> str:
 
 def _log_runtime_flags(logger: logging.Logger) -> None:
     """记录 Rust / 并行相关运行时标志。"""
+    from utils.frozen_runtime import describe_frozen_search_capabilities
+
+    logger.info("frozen_caps | %s", describe_frozen_search_capabilities())
     if os.environ.get("RUST_SEARCH_FALLBACK"):
         logger.info(
             "运行时 | rust_search=False rust_detail=RUST_SEARCH_FALLBACK=1 mp_start=%s",

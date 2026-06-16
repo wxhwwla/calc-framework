@@ -78,27 +78,45 @@ class TestParallelBackendResolution(unittest.TestCase):
             )
         self.assertEqual(backend, "thread")
 
-    def test_frozen_caps_workers_to_one(self) -> None:
+    def test_frozen_caps_workers_to_one_at_phase1(self) -> None:
         from unittest.mock import patch
 
         with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
-            self.assertEqual(parallel_mod._resolve_max_workers(24), 1)
-        self.assertEqual(parallel_mod._resolve_max_workers(4), 4)
+            with patch.object(parallel_mod, "frozen_allow_multi_workers", side_effect=lambda n: 1):
+                self.assertEqual(parallel_mod._resolve_max_workers(24), 1)
 
-    def test_frozen_uses_inline_loop(self) -> None:
+    def test_frozen_uses_inline_at_phase1(self) -> None:
         from unittest.mock import patch
 
         with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
-            with patch.object(parallel_mod, "_run_inline_loop") as inline_mock:
-                with patch.object(parallel_mod, "_run_parallel_loop") as pool_mock:
-                    parallel_mod.run_bounded_parallel(
-                        work_items=[1, 2],
-                        total=2,
-                        evaluate=lambda x: x,
-                        max_workers=4,
-                    )
+            with patch.object(parallel_mod, "frozen_use_thread_pool", return_value=False):
+                with patch.object(parallel_mod, "_run_inline_loop") as inline_mock:
+                    with patch.object(parallel_mod, "_run_parallel_loop") as pool_mock:
+                        parallel_mod.run_bounded_parallel(
+                            work_items=[1, 2],
+                            total=2,
+                            evaluate=lambda x: x,
+                            max_workers=4,
+                        )
         inline_mock.assert_called_once()
         pool_mock.assert_not_called()
+
+    def test_frozen_uses_pool_at_phase2(self) -> None:
+        from unittest.mock import patch
+
+        with patch.object(parallel_mod, "_pyinstaller_frozen", return_value=True):
+            with patch.object(parallel_mod, "frozen_use_thread_pool", return_value=True):
+                with patch.object(parallel_mod, "frozen_allow_multi_workers", side_effect=lambda n: n):
+                    with patch.object(parallel_mod, "_run_inline_loop") as inline_mock:
+                        with patch.object(parallel_mod, "_run_parallel_loop") as pool_mock:
+                            parallel_mod.run_bounded_parallel(
+                                work_items=[1, 2],
+                                total=2,
+                                evaluate=lambda x: x,
+                                max_workers=2,
+                            )
+        pool_mock.assert_called_once()
+        inline_mock.assert_not_called()
 
 
 class TestProcessParallelIntegration(unittest.TestCase):

@@ -7,13 +7,13 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any, cast
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
+from utils.frozen_runtime import frozen_use_qthread_search
 
 from games.endfield.framework_bridge import get_logger
 from games.endfield.gui.app.loadout_state import read_loadout_from_panels
@@ -171,15 +171,17 @@ class ActionsSearchMixin:
 
     def _start_search_thread(self, worker: Any, status_running: str) -> None:
         """启动搜索：打包 exe 在主线程同步跑（避免 QThread + native 崩溃）。"""
-        if getattr(sys, "frozen", False):
+        if not frozen_use_qthread_search():
             self._run_search_on_main_thread(worker, status_running)
             return
         self._search_thread = QThread()
+        self._search_worker = worker
         worker.moveToThread(self._search_thread)
         worker.progress.connect(self._on_search_progress, Qt.ConnectionType.QueuedConnection)
         worker.finished.connect(self._on_search_finished, Qt.ConnectionType.QueuedConnection)
         worker.error.connect(self._on_search_error, Qt.ConnectionType.QueuedConnection)
         self._search_thread.started.connect(worker.run)
+        self._search_thread.finished.connect(worker.deleteLater)
         self._search_thread.finished.connect(self._search_thread.deleteLater)
         self._search_thread.start()
         self._set_search_btns_enabled(False)
