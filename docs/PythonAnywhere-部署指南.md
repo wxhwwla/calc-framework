@@ -765,6 +765,9 @@ project = calc-framework
 | `CALC_ADMIN_TOKEN` | Web 管理 Token（≥32 字符随机串）；请求头 `X-Admin-Token` 携带，保护 `/api/admin/*` 与 `/api/data` 写操作 |
 | `CALC_API_KEY_PEPPER` | API Key scrypt 哈希 pepper（生产必配） |
 | `CALC_DEBUG` | 设为 `1`/`true` 时 API 错误响应返回 `str(exc)`；默认关闭（生产推荐） |
+| `CALC_DISABLE_RATE_LIMIT` | `1`/`true` 时关闭应用层限速（**多 worker 部署时配合 nginx 限速**） |
+
+**限速与多 Worker**：`RateLimitMiddleware` 使用进程内内存计数；**默认请单 worker 部署**。多 worker 时设置 `CALC_DISABLE_RATE_LIMIT=1` 并在反向代理层限速。详见 [`docs/Web后端限速与多Worker.md`](../Web后端限速与多Worker.md)。
 
 **管理接口认证**：在 PythonAnywhere Web App → Environment variables 中设置 `CALC_ADMIN_TOKEN`。调用管理 API 或修改游戏 JSON 时附加请求头：
 

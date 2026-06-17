@@ -84,6 +84,10 @@ npm run build       # → dist/
 
 ## 部署
 
+### 限速与 Worker 数
+
+应用层限速（`RateLimitMiddleware`）为**进程内内存**实现，默认 **单 worker** 即可。多 worker 时请设置 `CALC_DISABLE_RATE_LIMIT=1` 并在 nginx / 网关层限速。详见 [`docs/Web后端限速与多Worker.md`](../docs/Web后端限速与多Worker.md)。
+
 ### PythonAnywhere（WSGI）
 
 ```bash

@@ -5,6 +5,7 @@ try:
     from . import _path_setup  # sets sys.path for dev mode  # type: ignore[unused-import]
 except ImportError:
     import _path_setup  # noqa: F401  # fallback when run as top-level module  # type: ignore[unused-import]
+import os
 import sys
 from pathlib import Path
 
@@ -51,6 +52,34 @@ app.add_middleware(
 
 # 速率限制中间件（在所有路由之前）
 from api.admin import RateLimitMiddleware
+
+
+def _configure_rate_limit_middleware() -> None:
+    """按环境变量配置限速；多 worker 场景见 docs/Web后端限速与多Worker.md。"""
+    disable = os.environ.get("CALC_DISABLE_RATE_LIMIT", "").strip().lower()
+    if disable in {"1", "true", "yes", "on"}:
+        RateLimitMiddleware.enabled = False
+        logger.warning(
+            "RateLimitMiddleware 已禁用（CALC_DISABLE_RATE_LIMIT）；"
+            "请在反向代理层限速，见 docs/Web后端限速与多Worker.md"
+        )
+        return
+
+    for key in ("WEB_CONCURRENCY", "UVICORN_WORKERS", "CALC_WEB_WORKERS"):
+        raw = os.environ.get(key, "").strip()
+        if raw.isdigit() and int(raw) > 1:
+            logger.warning(
+                "检测到 %s=%s：内存限速与 usage 按进程独立，"
+                "有效限额约为 tier×worker；建议单 worker 或 "
+                "CALC_DISABLE_RATE_LIMIT=1 + 反向代理限速。"
+                "详见 docs/Web后端限速与多Worker.md",
+                key,
+                raw,
+            )
+            break
+
+
+_configure_rate_limit_middleware()
 
 app.add_middleware(RateLimitMiddleware)
 

@@ -206,8 +206,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     - 有效 key：按 tier 限速
     - 无效或无 key：默认 20 req/min（宽松，方便开发）
 
-    注意：usage/key 持久化通过 ``asyncio.to_thread`` 执行同步 I/O。
-    适用于单 worker 部署；多 worker 场景建议替换为 Redis 等外部存储。
+    注意：usage/key 持久化通过 ``asyncio.to_thread`` 执行同步 I/O；
+    滑动窗口在进程内存中，**仅对当前 worker 有效**。
+
+    部署说明：``docs/Web后端限速与多Worker.md``
+    - 单 worker（推荐）：默认行为
+    - 多 worker：设置 ``CALC_DISABLE_RATE_LIMIT=1`` 并在 nginx 等层限速
 
     测试时可通过 ``RateLimitMiddleware.enabled = False`` 全局禁用。
     """
