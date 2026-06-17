@@ -5,17 +5,18 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.logging import get_logger
+
 from .base import FormulaFitter
+
+logger = get_logger(__name__)
 
 
 class FormulaType:
-
     """公式类型描述符。
 
 
@@ -44,22 +45,13 @@ class FormulaType:
 
     """
 
-
-
     def __init__(
-
         self,
-
         id: str,
-
         name: str = "",
-
         description: str = "",
-
         fitter: FormulaFitter | None = None,
-
     ):
-
         self.id = id
 
         self.name = name or id
@@ -68,83 +60,46 @@ class FormulaType:
 
         self._fitter = fitter
 
-
-
     @property
-
     def fitter(self) -> FormulaFitter:
-
         """fitter。"""
         if self._fitter is None:
-
             raise ValueError(f"FormulaType {self.id} 未绑定 fitter")
 
         return self._fitter
 
-
-
     def to_dict(self) -> dict[str, Any]:
-
         meta = self.fitter.describe()
 
         return {
-
             "id": self.id,
-
             "name": self.name,
-
             "description": self.description or meta.get("description", ""),
-
             "param_names": meta.get("param_names", []),
-
             "param_descriptions": meta.get("param_descriptions", {}),
-
         }
 
 
-
-
-
 class Registry:
-
     """全局公式类型注册表。"""
 
-
-
     def __init__(self):
-
         self._types: dict[str, FormulaType] = {}
 
-
-
     def register(self, ft: FormulaType) -> None:
-
         self._types[ft.id] = ft
 
-
-
     def get(self, formula_id: str) -> FormulaType:
-
         if formula_id not in self._types:
-
             raise KeyError(f"未知公式类型: {formula_id!r}，可用: {list(self._types.keys())}")
 
         return self._types[formula_id]
 
-
-
     def list_types(self) -> list[FormulaType]:
-
         return list(self._types.values())
 
-
-
     def list_ids(self) -> list[str]:
-
         return list(self._types.keys())
-
-
-
 
 
 # 全局注册表
@@ -152,82 +107,57 @@ class Registry:
 registry = Registry()
 
 
-
 # ── 注册内置公式类型 ──────────────────────────
 
-registry.register(FormulaType(
-
-    id="floor_linear",
-
-    name="Floor 线性公式",
-
-    description="value = base + floor((growth * (lv - 1) + offset) / divisor)",
-
-))
-
+registry.register(
+    FormulaType(
+        id="floor_linear",
+        name="Floor 线性公式",
+        description="value = base + floor((growth * (lv - 1) + offset) / divisor)",
+    )
+)
 
 
 try:
-
     from calc_framework.inverse.base import FloorFormulaFitter
 
     registry.get("floor_linear")._fitter = FloorFormulaFitter()
 
-except ImportError:
-
-    pass
-
+except ImportError as exc:
+    logger.warning("无法注册 floor_linear 公式: %s", exc)
 
 
 # ── 注册高级公式类型 ──────────────────────────
 
 try:
-
     from calc_framework.inverse.advanced import ExponentialFormulaFitter, PiecewiseFormulaFitter, ThresholdFormulaFitter
 
+    registry.register(
+        FormulaType(
+            id="exponential",
+            name="指数公式",
+            description="value = base × growth^(level-1) + offset",
+            fitter=ExponentialFormulaFitter(),
+        )
+    )
 
+    registry.register(
+        FormulaType(
+            id="piecewise",
+            name="分段公式",
+            description="多段线性公式，自动检测断点",
+            fitter=PiecewiseFormulaFitter(),
+        )
+    )
 
-    registry.register(FormulaType(
+    registry.register(
+        FormulaType(
+            id="threshold",
+            name="阈值公式",
+            description="阈值前线性，阈值后切换到第二公式",
+            fitter=ThresholdFormulaFitter(),
+        )
+    )
 
-        id="exponential",
-
-        name="指数公式",
-
-        description="value = base × growth^(level-1) + offset",
-
-        fitter=ExponentialFormulaFitter(),
-
-    ))
-
-
-
-    registry.register(FormulaType(
-
-        id="piecewise",
-
-        name="分段公式",
-
-        description="多段线性公式，自动检测断点",
-
-        fitter=PiecewiseFormulaFitter(),
-
-    ))
-
-
-
-    registry.register(FormulaType(
-
-        id="threshold",
-
-        name="阈值公式",
-
-        description="阈值前线性，阈值后切换到第二公式",
-
-        fitter=ThresholdFormulaFitter(),
-
-    ))
-
-except ImportError:
-
-    pass
-
+except ImportError as exc:
+    logger.warning("无法注册高级公式类型 (exponential/piecewise/threshold): %s", exc)

@@ -36,8 +36,12 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from calc_framework.logging import get_logger
+
 from .base import FitResult, GrowthParams
 from .registry import registry
+
+logger = get_logger(__name__)
 
 
 class InverseEngine:
@@ -94,6 +98,7 @@ class InverseEngine:
         best_result: FitResult | None = None
         best_id = ""
         best_error = float("inf")
+        failures = 0
 
         for ft in registry.list_types():
             try:
@@ -103,7 +108,19 @@ class InverseEngine:
                     best_result = result
                     best_id = ft.id
             except Exception:
+                failures += 1
+                logger.debug(
+                    "fit_auto: 公式 %s 拟合失败，已跳过",
+                    ft.id,
+                    exc_info=True,
+                )
                 continue
+
+        if best_result is None and failures:
+            logger.warning(
+                "fit_auto: 全部 %d 个公式类型拟合失败",
+                failures,
+            )
 
         return (best_id, best_result) if best_result else None
 
