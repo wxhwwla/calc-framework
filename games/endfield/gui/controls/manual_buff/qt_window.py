@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -31,16 +32,32 @@ from games.endfield.calc.manual_buff.model import (
     set_buffs_for_key,
 )
 
-_WINDOW_TITLE = "额外加成微调"
 _WINDOW_WIDTH = 900
 _WINDOW_HEIGHT = 600
+
+_MANUAL_BUFF_ZONE_I18N: dict[str, str] = {
+    "crit_rate": "desktop.endfield.manualBuffZoneCritRate",
+    "crit_damage": "desktop.endfield.manualBuffZoneCritDamage",
+    "damage_bonus_type": "desktop.endfield.manualBuffZoneDamageType",
+    "damage_bonus_skill": "desktop.endfield.manualBuffZoneSkillType",
+    "damage_bonus_imbalance": "desktop.endfield.manualBuffZoneImbalance",
+    "damage_bonus_other": "desktop.endfield.manualBuffZoneOther",
+    "amplification": "desktop.endfield.manualBuffZoneAmplify",
+    "weakness": "desktop.endfield.manualBuffZoneWeakness",
+    "shelter": "desktop.endfield.manualBuffZoneShelter",
+    "fragile": "desktop.endfield.manualBuffZoneFragile",
+    "vulnerability": "desktop.endfield.manualBuffZoneVulnerability",
+    "damage_reduction": "desktop.endfield.manualBuffZoneReduction",
+    "combo_bonus": "desktop.endfield.manualBuffZoneCombo",
+    "special_zone": "desktop.endfield.manualBuffZoneSpecial",
+}
 
 
 def _format_key_label(key: str) -> str:
     """格式化手动 buff 键名为可读标签。"""
     parts = key.rsplit(":", 1)
     if len(parts) == 2:
-        return f"{parts[0]} 第{parts[1]}次"
+        return tr("desktop.endfield.manualBuffKeyNthFmt", segment=parts[0], n=parts[1])
     return key
 
 
@@ -60,7 +77,7 @@ class QtManualBuffDialog(QDialog):
         read_counts_callback,
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_WINDOW_TITLE)
+        self.setWindowTitle(tr("desktop.endfield.manualBuffTune"))
         self.resize(_WINDOW_WIDTH, _WINDOW_HEIGHT)
         self.setMinimumSize(700, 400)
 
@@ -83,12 +100,12 @@ class QtManualBuffDialog(QDialog):
         left_header = QWidget()
         hdr_lay = QHBoxLayout(left_header)
         hdr_lay.setContentsMargins(0, 0, 0, 0)
-        hdr = QLabel("段 / 异常")
+        hdr = QLabel(tr("desktop.endfield.manualBuffSegmentHeader"))
         hdr.setFont(self._big)
         hdr.setStyleSheet("color: #FF6B6B;")
         hdr_lay.addWidget(hdr)
         hdr_lay.addStretch()
-        refresh_btn = QPushButton("刷新")
+        refresh_btn = QPushButton(tr("common.refresh"))
         refresh_btn.setFont(self._small)
         refresh_btn.setStyleSheet(
             "color: #D1D1D1; background: transparent; border: 1px solid #464646; border-radius: 4px; padding: 2px 8px;"
@@ -110,13 +127,13 @@ class QtManualBuffDialog(QDialog):
         preset_row = QHBoxLayout()
         self._consumable_combo = QComboBox()
         self._consumable_combo.setFont(self._small)
-        self._consumable_combo.addItem("（选择消耗品预设）")
+        self._consumable_combo.addItem(tr("desktop.endfield.manualBuffConsumablePlaceholder"), "")
         from games.endfield.calc.manual_buff.consumable_presets import list_consumable_preset_names
 
         for name in list_consumable_preset_names():
-            self._consumable_combo.addItem(name)
+            self._consumable_combo.addItem(name, name)
         preset_row.addWidget(self._consumable_combo, stretch=1)
-        apply_preset_btn = QPushButton("应用到全部段")
+        apply_preset_btn = QPushButton(tr("desktop.endfield.manualBuffApplyAllSegments"))
         apply_preset_btn.setFont(self._small)
         apply_preset_btn.clicked.connect(self._apply_consumable_preset)
         preset_row.addWidget(apply_preset_btn)
@@ -136,7 +153,7 @@ class QtManualBuffDialog(QDialog):
         right_lay = QVBoxLayout(right)
         right_lay.setContentsMargins(12, 8, 12, 8)
 
-        self._right_header = QLabel("选择左侧项目进行编辑")
+        self._right_header = QLabel(tr("desktop.endfield.manualBuffSelectItem"))
         self._right_header.setFont(self._big)
         self._right_header.setStyleSheet("color: #4ECDC4;")
         right_lay.addWidget(self._right_header)
@@ -173,8 +190,8 @@ class QtManualBuffDialog(QDialog):
     def _apply_consumable_preset(self) -> None:
         from games.endfield.calc.manual_buff.consumable_presets import apply_consumable_preset_to_store
 
-        name = self._consumable_combo.currentText().strip()
-        if not name or name.startswith("（"):
+        name = str(self._consumable_combo.currentData() or "").strip()
+        if not name:
             return
         skill_counts, pab_counts, sab_counts = self._read_counts()
         count = apply_consumable_preset_to_store(
@@ -199,7 +216,7 @@ class QtManualBuffDialog(QDialog):
             spell_abnormal_counts=sab_counts,
         )
         if not keys:
-            item = QListWidgetItem("暂无已配置的段/异常次数\n请在高级页设置次数 > 0 后重试")
+            item = QListWidgetItem(tr("desktop.endfield.manualBuffEmptyKeys"))
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             item.setForeground(Qt.gray)
             self._key_list.addItem(item)
@@ -224,15 +241,15 @@ class QtManualBuffDialog(QDialog):
                 w.widget().setParent(None)
 
         if current is None:
-            self._right_header.setText("选择左侧项目进行编辑")
+            self._right_header.setText(tr("desktop.endfield.manualBuffSelectItem"))
             return
 
         key = current.data(Qt.ItemDataRole.UserRole)
         if not key:
-            self._right_header.setText("选择左侧项目进行编辑")
+            self._right_header.setText(tr("desktop.endfield.manualBuffSelectItem"))
             return
 
-        self._right_header.setText(f"{_format_key_label(key)} 的乘区微调")
+        self._right_header.setText(tr("desktop.endfield.manualBuffZoneTuneHeader", label=_format_key_label(key)))
         self._render_editor(key)
         """on key selected。"""
 
@@ -264,8 +281,13 @@ class QtManualBuffDialog(QDialog):
                 row_lay.setSpacing(6)
 
                 combo = QComboBox()
-                combo.addItems([label for label, _ in MANUAL_BUFF_ZONE_OPTIONS])
-                combo.setCurrentText(rd["effect_type"])
+                for label, zone_id in MANUAL_BUFF_ZONE_OPTIONS:
+                    i18n_key = _MANUAL_BUFF_ZONE_I18N.get(zone_id, "")
+                    display = tr(i18n_key) if i18n_key else label
+                    combo.addItem(display, label)
+                idx = combo.findData(rd["effect_type"])
+                if idx >= 0:
+                    combo.setCurrentIndex(idx)
                 combo.setFont(self._small)
                 combo.setStyleSheet("""
                     QComboBox { background: #2B2B2B; color: #D1D1D1;
@@ -314,7 +336,7 @@ class QtManualBuffDialog(QDialog):
                 del_btn.clicked.connect(lambda _, i=idx: (_remove_row(i), _commit()))
                 row_lay.addWidget(del_btn)
 
-                combo.currentTextChanged.connect(lambda _: _commit())
+                combo.currentIndexChanged.connect(lambda _: _commit())
                 spin.valueChanged.connect(lambda: _commit())
 
                 self._edit_lay.insertWidget(self._edit_lay.count() - 1, row)
@@ -340,7 +362,7 @@ class QtManualBuffDialog(QDialog):
                 combos = [c for c in children if isinstance(c, QComboBox)]
                 spins = [c for c in children if isinstance(c, QDoubleSpinBox)]
                 if combos and spins:
-                    et = combos[0].currentText().strip()
+                    et = str(combos[0].currentData() or "").strip()
                     val = spins[0].value()
                     if et:
                         result.append({"effect_type": et, "value": val / 100.0})
@@ -351,7 +373,7 @@ class QtManualBuffDialog(QDialog):
 
         _render_rows()
 
-        add_btn = QPushButton("+ 添加乘区")
+        add_btn = QPushButton(tr("desktop.endfield.manualBuffAddZone"))
         add_btn.setFont(self._small)
         add_btn.setStyleSheet("""
             QPushButton { background: #2d6a4f; color: white;

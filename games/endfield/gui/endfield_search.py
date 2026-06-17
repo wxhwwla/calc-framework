@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, cast
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from utils.app_paths import allocate_search_run_directory, default_search_output_root
@@ -92,16 +93,24 @@ class ActionsSearchMixin:
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
-            QMessageBox.warning(cast(QWidget, self), "MVP 搜索", "请先选择有效的角色和武器。")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.searchMvpTitle"),
+                tr("desktop.endfield.searchMvpNeedCharWeapon"),
+            )
             return
         job, err = prepare_search_job(inputs)
         if err or job is None:
-            QMessageBox.warning(cast(QWidget, self), "最优搜索", err or "无法准备搜索任务")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.searchOptTitle"),
+                err or tr("desktop.endfield.searchPrepareFailed"),
+            )
             return
 
         output_dir = QFileDialog.getExistingDirectory(
             cast(QWidget, self),
-            "选择 MVP 搜索导出目录",
+            tr("desktop.endfield.searchMvpExportDir"),
             str(default_search_output_root()),
         )
         export_root = allocate_search_run_directory(purpose="mvp_search") if not output_dir else Path(output_dir)
@@ -110,14 +119,14 @@ class ActionsSearchMixin:
         self._search_cancel_token = cancel_token
         worker = SearchWorker(
             job,
-            mode_label="最优搜索并导出",
+            mode_label=tr("desktop.endfield.searchOptExportMode"),
             export_root=export_root,
             top_n_choice=self.control_dock.read_top_n_choice(),
             workers_choice=self.control_dock.read_workers_choice(),
-            status_prefix="最优搜索状态",
+            status_prefix=tr("desktop.endfield.searchOptStatusPrefix"),
             cancel_token=cancel_token,
         )
-        self._start_search_thread(worker, "最优搜索状态：计算中，请稍候...")
+        self._start_search_thread(worker, tr("desktop.endfield.searchOptRunning"))
 
     def _on_full_search(self) -> None:
         from games.endfield.calc.search.plan.controller import prepare_search_job
@@ -127,11 +136,19 @@ class ActionsSearchMixin:
 
         inputs = self._build_search_job_inputs()
         if inputs is None:
-            QMessageBox.warning(cast(QWidget, self), "全量遍历", "请先选择有效的角色和武器。")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.searchFullTitle"),
+                tr("desktop.endfield.searchMvpNeedCharWeapon"),
+            )
             return
         job, err = prepare_search_job(inputs)
         if err or job is None:
-            QMessageBox.warning(cast(QWidget, self), "全量遍历", err or "无法准备搜索任务")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.searchFullTitle"),
+                err or tr("desktop.endfield.searchPrepareFailed"),
+            )
             return
 
         dock = self.control_dock
@@ -144,8 +161,8 @@ class ActionsSearchMixin:
         if estimate.estimated_seconds >= 120:
             reply = QMessageBox.question(
                 cast(QWidget, self),
-                "确认全量遍历",
-                f"{estimate.text}\n\n组合较多，是否仍要开始？",
+                tr("desktop.endfield.searchFullConfirmTitle"),
+                tr("desktop.endfield.searchFullConfirmMsg", estimate=estimate.text),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
@@ -155,17 +172,21 @@ class ActionsSearchMixin:
         cancel_token = SearchCancelToken()
         self._search_cancel_token = cancel_token
         export_root = allocate_search_run_directory(purpose="full_search")
-        mode_label = "多技能加权全量遍历" if job.multi_skill_eval is not None else "单技能全量遍历"
+        mode_label = (
+            tr("desktop.endfield.searchFullMultiMode")
+            if job.multi_skill_eval is not None
+            else tr("desktop.endfield.searchFullSingleMode")
+        )
         worker = SearchWorker(
             job,
             mode_label=mode_label,
             export_root=export_root,
             top_n_choice=dock.read_top_n_choice(),
             workers_choice=dock.read_workers_choice(),
-            status_prefix="全量遍历",
+            status_prefix=tr("desktop.endfield.searchFullStatusPrefix"),
             cancel_token=cancel_token,
         )
-        self._start_search_thread(worker, "全量遍历：计算中，请稍候。")
+        self._start_search_thread(worker, tr("desktop.endfield.searchFullRunning"))
 
     # ── 搜索线程管理 ─────────────────────────────
 
@@ -217,7 +238,11 @@ class ActionsSearchMixin:
         if thread is not None:
             thread.quit()
             thread.wait()
-        damage_metric = "加权总伤" if job.multi_skill_eval is not None else "伤害"
+        damage_metric = (
+            tr("desktop.endfield.searchWeightedDamage")
+            if job.multi_skill_eval is not None
+            else tr("desktop.endfield.searchDamage")
+        )
         lines = build_search_results_report_lines(
             mode_label=mode_label,
             skill_label=str(job.skill_label),
@@ -232,9 +257,27 @@ class ActionsSearchMixin:
             abnormal_counts=dict(job.physical_abnormal_counts or {}),
             spell_abnormal_counts=dict(job.spell_abnormal_counts or {}),
         )
-        suffix = "（已取消）" if outcome.cancelled else "：完成"
-        mode = "全量遍历" if "全量" in mode_label else "MVP搜索状态"
-        status = f"{mode}{suffix}（{outcome.processed_combinations}/{outcome.total_combinations}）"
+        suffix = (
+            tr("desktop.endfield.searchCancelledSuffix")
+            if outcome.cancelled
+            else tr("desktop.endfield.searchDoneSuffix")
+        )
+        full_modes = (
+            tr("desktop.endfield.searchFullMultiMode"),
+            tr("desktop.endfield.searchFullSingleMode"),
+        )
+        mode = (
+            tr("desktop.endfield.searchFullStatusMode")
+            if mode_label in full_modes
+            else tr("desktop.endfield.searchMvpStatusMode")
+        )
+        status = tr(
+            "desktop.endfield.searchStatusFmt",
+            mode=mode,
+            suffix=suffix,
+            processed=outcome.processed_combinations,
+            total=outcome.total_combinations,
+        )
         self.control_dock.mvp_status_label.setText(status)
         self._set_search_btns_enabled(True)
         dialog = QtSearchResultsDialog(
@@ -257,14 +300,18 @@ class ActionsSearchMixin:
         if thread is not None:
             thread.quit()
             thread.wait()
-        self.control_dock.mvp_status_label.setText(f"搜索失败：{error_msg}")
+        self.control_dock.mvp_status_label.setText(tr("desktop.endfield.searchFailedStatus", error=error_msg))
         self._set_search_btns_enabled(True)
-        QMessageBox.critical(cast(QWidget, self), "搜索失败", error_msg)
+        QMessageBox.critical(
+            cast(QWidget, self),
+            tr("desktop.endfield.searchFailedTitle"),
+            error_msg,
+        )
 
     def _on_cancel_search(self) -> None:
         if self._search_cancel_token is not None:
             self._search_cancel_token.cancel()
-            self.control_dock.mvp_status_label.setText("搜索状态：正在取消。")
+            self.control_dock.mvp_status_label.setText(tr("desktop.endfield.searchCancelling"))
 
     def _set_search_btns_enabled(self, enabled: bool) -> None:
         dock = self.control_dock

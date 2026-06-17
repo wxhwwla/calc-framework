@@ -31,6 +31,11 @@ _ENDFIELD_KEYS = (
     "desktop.endfield.searchBrowserEmpty",
     "desktop.endfield.ocrMainTitle",
     "desktop.endfield.ocrDownloadModel",
+    "desktop.endfield.survivalEstimate",
+    "desktop.endfield.enemyDefense",
+    "desktop.endfield.manualBuffTune",
+    "desktop.endfield.searchMvpTitle",
+    "desktop.endfield.searchFullTitle",
 )
 
 

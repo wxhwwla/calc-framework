@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -132,13 +133,13 @@ class QtEnemyPanel(QWidget):
         layout.setSpacing(4)
 
         # -- 插件敌人下拉 --
-        layout.addWidget(_Label("插件敌人", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyPluginLabel"), self._font))
         self._enemy_combo = QComboBox()
         self._enemy_combo.setStyleSheet(_COMBO_STYLE)
         layout.addWidget(self._enemy_combo)
 
         # -- 防御力 --
-        layout.addWidget(_Label("防御力", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyDefense"), self._font))
         self._defense_spin = QDoubleSpinBox()
         self._defense_spin.setStyleSheet(_SPINBOX_STYLE)
         self._defense_spin.setRange(0, 99999)
@@ -147,7 +148,7 @@ class QtEnemyPanel(QWidget):
         layout.addWidget(self._defense_spin)
 
         # -- 抗性 % --
-        layout.addWidget(_Label("抗性 (%)", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyResistance"), self._font))
         self._resistance_spin = QDoubleSpinBox()
         self._resistance_spin.setStyleSheet(_SPINBOX_STYLE)
         self._resistance_spin.setRange(-100, 100)
@@ -157,7 +158,7 @@ class QtEnemyPanel(QWidget):
         layout.addWidget(self._resistance_spin)
 
         # -- 无视抗性 % --
-        layout.addWidget(_Label("无视抗性 (%)", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyIgnoreResist"), self._font))
         self._ignore_resistance_spin = QDoubleSpinBox()
         self._ignore_resistance_spin.setStyleSheet(_SPINBOX_STYLE)
         self._ignore_resistance_spin.setRange(-100, 100)
@@ -167,7 +168,7 @@ class QtEnemyPanel(QWidget):
         layout.addWidget(self._ignore_resistance_spin)
 
         # -- 失衡易伤系数 --
-        layout.addWidget(_Label("失衡易伤系数", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyImbVuln"), self._font))
         self._imbalance_spin = QDoubleSpinBox()
         self._imbalance_spin.setStyleSheet(_SPINBOX_STYLE)
         self._imbalance_spin.setRange(0.1, 10.0)
@@ -177,31 +178,31 @@ class QtEnemyPanel(QWidget):
         layout.addWidget(self._imbalance_spin)
 
         # -- 失衡状态 --
-        self._unbalanced_cb = QCheckBox("失衡状态（启用失衡易伤乘区）")
+        self._unbalanced_cb = QCheckBox(tr("desktop.endfield.enemyUnbalanced"))
         self._unbalanced_cb.setFont(self._font)
         self._unbalanced_cb.setStyleSheet(_CHECKBOX_STYLE)
         self._unbalanced_cb.setChecked(DEFAULT_IS_UNBALANCED)
         layout.addWidget(self._unbalanced_cb)
 
-        self._true_damage_cb = QCheckBox("真实伤害（无视防御区）")
+        self._true_damage_cb = QCheckBox(tr("desktop.endfield.enemyTrueDamage"))
         self._true_damage_cb.setFont(self._font)
         self._true_damage_cb.setStyleSheet(_CHECKBOX_STYLE)
         self._true_damage_cb.setChecked(DEFAULT_IS_TRUE_DAMAGE)
         layout.addWidget(self._true_damage_cb)
 
-        layout.addWidget(_Label("敌人等阶", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyTier"), self._font))
         self._tier_combo = QComboBox()
         self._tier_combo.setStyleSheet(_COMBO_STYLE)
         self._tier_combo.addItems(list(ENEMY_TIERS))
         layout.addWidget(self._tier_combo)
 
-        layout.addWidget(_Label("连击层数 (0=不用层数表)", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyComboStacks"), self._font))
         self._combo_spin = QSpinBox()
         self._combo_spin.setRange(0, 4)
         self._combo_spin.setValue(DEFAULT_COMBO_STACKS)
         layout.addWidget(self._combo_spin)
 
-        layout.addWidget(_Label("附带效果倍率 (潜能等)", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyAttachedMult"), self._font))
         self._attached_mult_spin = QDoubleSpinBox()
         self._attached_mult_spin.setStyleSheet(_SPINBOX_STYLE)
         self._attached_mult_spin.setRange(0.1, 3.0)
@@ -210,7 +211,7 @@ class QtEnemyPanel(QWidget):
         self._attached_mult_spin.setValue(DEFAULT_ATTACHED_EFFECT_MULTIPLIER)
         layout.addWidget(self._attached_mult_spin)
 
-        layout.addWidget(_Label("腐蚀计时 (秒)", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyCorrosionSec"), self._font))
         self._corrosion_spin = QDoubleSpinBox()
         self._corrosion_spin.setStyleSheet(_SPINBOX_STYLE)
         self._corrosion_spin.setRange(0.0, 15.0)
@@ -218,7 +219,7 @@ class QtEnemyPanel(QWidget):
         self._corrosion_spin.setValue(DEFAULT_CORROSION_DURATION_SEC)
         layout.addWidget(self._corrosion_spin)
 
-        layout.addWidget(_Label("失衡效率加成", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyImbEffBonus"), self._font))
         self._imbalance_eff_spin = QDoubleSpinBox()
         self._imbalance_eff_spin.setStyleSheet(_SPINBOX_STYLE)
         self._imbalance_eff_spin.setRange(0.0, 1.0)
@@ -227,7 +228,7 @@ class QtEnemyPanel(QWidget):
         self._imbalance_eff_spin.setValue(DEFAULT_IMBALANCE_EFFICIENCY_BONUS)
         layout.addWidget(self._imbalance_eff_spin)
 
-        layout.addWidget(_Label("破防层数 (0–4，≠物理异常)", self._font))
+        layout.addWidget(_Label(tr("desktop.endfield.enemyBreakDefStacks"), self._font))
         self._break_defense_spin = QSpinBox()
         self._break_defense_spin.setRange(0, 4)
         self._break_defense_spin.setValue(DEFAULT_BREAK_DEFENSE_STACKS)
@@ -236,7 +237,7 @@ class QtEnemyPanel(QWidget):
         # -- 重置按钮 --
         reset_row = QHBoxLayout()
         reset_row.setContentsMargins(0, 4, 0, 0)
-        self._reset_btn = QPushButton("恢复默认")
+        self._reset_btn = QPushButton(tr("desktop.endfield.enemyResetDefault"))
         self._reset_btn.setFont(self._font)
         self._reset_btn.setStyleSheet(_BTN_RESET_STYLE)
         reset_row.addStretch()

@@ -169,7 +169,7 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `desktop.graphEditor.*` | 83 | 图编辑器完整 UI（菜单、工具栏、属性面板、节点编辑、帮助对话） |
 | `desktop.editor.*` | 30 | 布局编辑器（DAG加载、节管理、导出、预览） |
 | `desktop.debugger.*` | 12 | DAG 分步调试器（步骤控制、进度显示、示例图） |
-| `desktop.endfield.*` | 58 | 终末地计算页（shell、总伤、control_dock combo、对话框/OCR/搜索浏览器） |
+| `desktop.endfield.*` | 160 | 终末地桌面 GUI（计算/高级/对话框/OCR/搜索/survival/enemy/manual_buff） |
 
 ### 已集成 GUI 文件 (17 个)
 
@@ -196,6 +196,10 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `games/endfield/gui/controls/enhancement/qt_dialogs.py` | endfield 历史/对比/仪表盘 | ✅ 已集成 |
 | `games/endfield/gui/controls/ocr/detection_dialog.py` | endfield 截图识装 | ✅ 已集成 |
 | `games/endfield/gui/controls/search/qt_search_browser.py` | endfield 搜索历史 | ✅ 已集成 |
+| `games/endfield/gui/controls/survival/qt_survival_dialog.py` | endfield 处决/治疗 | ✅ 已集成 |
+| `games/endfield/gui/controls/manual_buff/qt_window.py` | endfield 手动 Buff | ✅ 已集成 |
+| `games/endfield/gui/controls/enemy/qt_enemy_panel.py` | endfield 敌方参数 | ✅ 已集成 |
+| `games/endfield/gui/endfield_search.py` | endfield 搜索消息/状态 | ✅ 已集成 |
 
 ### 待覆盖 (后续 PR)
 
