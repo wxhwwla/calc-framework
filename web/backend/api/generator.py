@@ -3,15 +3,13 @@
 
 from __future__ import annotations
 
-import ipaddress
 import json
-import socket
 import tempfile
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
+from api.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -209,62 +207,6 @@ def generate_adapter(req: GenerateRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# ── SSRF 防护 ──────────────────────────────────────
-
-_PRIVATE_NETWORKS = [
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.168.0.0/16"),
-    ipaddress.ip_network("127.0.0.0/8"),
-    ipaddress.ip_network("169.254.0.0/16"),
-    ipaddress.ip_network("::1/128"),
-    ipaddress.ip_network("fc00::/7"),
-    ipaddress.ip_network("fe80::/10"),
-]
-
-_LOCAL_HOSTNAMES = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
-
-
-def _validate_api_url(url: str) -> str:
-    """校验 API URL 防止 SSRF 攻击。
-
-    Raises:
-        HTTPException: URL 指向内网地址、使用非 http(s) 协议、或无法解析。
-    """
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise HTTPException(status_code=400, detail=f"不支持的协议: {parsed.scheme}，仅允许 http/https")
-
-    hostname = parsed.hostname or ""
-    if hostname in _LOCAL_HOSTNAMES:
-        raise HTTPException(status_code=400, detail=f"禁止访问内部地址: {hostname}")
-
-    # 如果是 IP 地址，检查是否在私有网段
-    try:
-        ip = ipaddress.ip_address(hostname)
-        for net in _PRIVATE_NETWORKS:
-            if ip in net:
-                raise HTTPException(status_code=400, detail=f"禁止访问内网地址: {hostname}")
-    except ValueError:
-        # 不是 IP 地址（是域名），尝试 DNS 解析（SSRF 防护：验证域名不指向内网）
-        try:
-            addrs = socket.getaddrinfo(hostname, 80, family=socket.AF_INET)
-            for addr in addrs:
-                ip_str = addr[4][0]
-                ip = ipaddress.ip_address(ip_str)
-                for net in _PRIVATE_NETWORKS:
-                    if ip in net:
-                        raise HTTPException(status_code=400, detail=f"域名 {hostname} 解析到内网地址 {ip_str}，已阻止")
-        except socket.gaierror:
-            # DNS 解析失败 — 阻止（SSRF 防护：无法验证目标地址安全）
-            raise HTTPException(
-                status_code=400,
-                detail=f"无法解析域名 {hostname}，请检查 API 地址是否正确",
-            )
-
-    return url.rstrip("/")
-
-
 @router.post("/ai/parse")
 async def ai_parse_formula(req: AIFormulaRequest):
     """用 AI 解析自然语言公式描述，返回结构化 DAG 数据。"""
@@ -308,19 +250,18 @@ async def ai_parse_formula(req: AIFormulaRequest):
         "response_format": {"type": "json_object"},
     }
 
-    safe_base = _validate_api_url(req.api_base)
-    api_url = safe_base + "/chat/completions"
-    # 二次验证：确保最终 URL 的 hostname 未被 SSRF 绕过
-    _validate_api_url(api_url)
-
+    safe_base = req.api_base
     try:
-        # SSRF: api_url 已经 _validate_api_url 校验；关闭跳转避免被重定向到内网
-        async with httpx.AsyncClient(timeout=60.0, follow_redirects=False) as client:
-            resp = await client.post(
-                api_url, json=payload, headers=headers
-            )  # nosem: SSRF-checked via _validate_api_url + follow_redirects=False
-            resp.raise_for_status()
-            data = resp.json()
+        resp = await post_chat_completions(
+            safe_base,
+            json_body=payload,
+            headers=headers,
+            timeout=60.0,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except HTTPException:
+        raise
     except httpx.ConnectError:
         raise HTTPException(status_code=502, detail="无法连接到 AI API，请检查 API 地址是否正确")
     except httpx.TimeoutException:
@@ -410,17 +351,17 @@ async def ai_test_connection(req: AITestRequest):
         "messages": [{"role": "user", "content": "回复 OK 表示连接正常"}],
         "max_tokens": 10,
     }
-    safe_base = _validate_api_url(req.api_base)
-    api_url = safe_base + "/chat/completions"
-
+    safe_base = req.api_base
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
-            resp = await client.post(
-                api_url, json=payload, headers=headers
-            )  # nosem: SSRF-checked via _validate_api_url + follow_redirects=False
-            resp.raise_for_status()
-            data = resp.json()
-            return {"status": "ok", "model": data.get("model", "")}
+        resp = await post_chat_completions(
+            safe_base,
+            json_body=payload,
+            headers=headers,
+            timeout=15.0,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return {"status": "ok", "model": data.get("model", "")}
     except Exception as e:
         from web.backend.bridge import get_logger
 

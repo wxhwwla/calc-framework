@@ -1,5 +1,20 @@
 /** 技能解析器（TypeScript 版）— 匹配 Python skill_parser 行为。 */
 
+/** 无 DOM 环境下迭代剥离 HTML（固定点，防止嵌套/多字符 bypass）。 */
+function stripHtmlTagsFallback(html: string): string {
+  let cur = html.replace(/<BR\s*\/?>/gi, "\n");
+  let prev = "";
+  while (prev !== cur) {
+    prev = cur;
+    cur = cur
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/&[^;]+;/g, " ")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "");
+  }
+  return cur;
+}
+
 /** 用 DOM 解析器安全剥离 HTML 标签，防止正则 bypass。 */
 function stripHtmlTags(html: string): string {
   if (typeof DOMParser !== "undefined") {
@@ -9,20 +24,8 @@ function stripHtmlTags(html: string): string {
     );
     return doc.body.textContent || "";
   }
-  // 回退：在无 DOM 环境（测试）下用更严格的正则
-  // 注意：输出仅用作 textContent，不用于 setHTML/innerHTML，XSS 风险可控
-  return (
-    html
-      // 先处理 BR 换行
-      .replace(/<BR\s*\/?>/gi, "\n")
-      // 移除所有 HTML 标签（含自闭合、注释）
-      .replace(/<!--[\s\S]*?-->/g, "")
-      .replace(/<[^>]*>/g, "")
-      // 移除 HTML 实体编码
-      .replace(/&[^;]+;/g, " ")
-      // 移除零宽字符和符号
-      .replace(/[​-‍﻿]/g, "")
-  );
+  // 回退：在无 DOM 环境（测试）下用迭代剥离
+  return stripHtmlTagsFallback(html);
 }
 
 export interface ParsedSkill {

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import secrets
 import time
 from collections import defaultdict
@@ -76,11 +77,30 @@ class CreateKeyResponse(BaseModel):
 
 _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
+# 生产环境必须设置 CALC_API_KEY_PEPPER（≥32 字符随机串）
+_API_KEY_PEPPER_ENV = "CALC_API_KEY_PEPPER"
+_DEV_PEPPER = b"calc-framework-dev-pepper-not-for-production"
+
+
+def _api_key_pepper() -> bytes:
+    """读取 API Key 哈希用 pepper。"""
+    raw = os.environ.get(_API_KEY_PEPPER_ENV, "").strip()
+    if raw:
+        return raw.encode("utf-8")
+    return _DEV_PEPPER
+
 
 def _hash_key(api_key: str) -> str:
-    """对 API Key 做加盐哈希（防止彩虹表），salt 从 key 自身派生。"""
-    salt = hashlib.sha3_256(api_key[:16].encode()).digest()
-    return hashlib.sha3_256(salt + api_key.encode()).hexdigest()
+    """使用 scrypt 哈希 API Key（敏感凭据，非快速摘要算法）。"""
+    return hashlib.scrypt(
+        api_key.encode("utf-8"),
+        salt=_api_key_pepper(),
+        n=2**14,
+        r=8,
+        p=1,
+        maxmem=0,
+        dklen=64,
+    ).hex()
 
 
 @router.post("/keys", response_model=CreateKeyResponse)

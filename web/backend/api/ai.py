@@ -7,7 +7,7 @@ import json
 import logging
 import re
 
-import httpx
+from api.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -19,9 +19,6 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 _CHARS_PATH = ENDFIELD_DATA_ROOT / "characters.json"
 _WEAPONS_PATH = ENDFIELD_DATA_ROOT / "weapons.json"
-
-# 复用 generator.py 的 SSRF 防护
-from api.generator import _validate_api_url
 
 _RECOMMEND_SYSTEM_PROMPT = """你是一个游戏伤害计算器的智能配装助手。用户会用自然语言描述他们的需求，你需要：
 
@@ -95,9 +92,6 @@ async def ai_recommend(req: AiRecommendRequest):
     # 如果有 API key，调用 AI 做意图理解
     if req.api_key.strip():
         try:
-            safe_base = _validate_api_url(req.api_base)
-            api_url = safe_base + "/chat/completions"
-
             char_info = f"角色: {req.character_name}"
             if weapon_data:
                 char_info += f", 当前武器: {req.weapon_name}"
@@ -106,32 +100,32 @@ async def ai_recommend(req: AiRecommendRequest):
                 f"{char_info}\n可用武器: {weapon_count} 把\n可用装备: {equipment_count} 件\n\n用户需求: {req.query}"
             )
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    api_url,
-                    json={
-                        "model": req.model,
-                        "messages": [
-                            {"role": "system", "content": _RECOMMEND_SYSTEM_PROMPT},
-                            {"role": "user", "content": user_msg},
-                        ],
-                        "temperature": 0.3,
-                        "response_format": {"type": "json_object"},
-                    },
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {req.api_key}",
-                    },
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                content = data["choices"][0]["message"]["content"]
+            resp = await post_chat_completions(
+                req.api_base,
+                json_body={
+                    "model": req.model,
+                    "messages": [
+                        {"role": "system", "content": _RECOMMEND_SYSTEM_PROMPT},
+                        {"role": "user", "content": user_msg},
+                    ],
+                    "temperature": 0.3,
+                    "response_format": {"type": "json_object"},
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {req.api_key}",
+                },
+                timeout=30.0,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
 
-                json_match = re.search(r"\{.*\}", content, re.DOTALL)
-                if json_match:
-                    parsed = json.loads(json_match.group())
-                    ai_intent = parsed.get("intent", "")
-                    ai_hint = parsed.get("search_hint", "")
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                ai_intent = parsed.get("intent", "")
+                ai_hint = parsed.get("search_hint", "")
         except Exception as exc:
             logger.warning("AI 意图理解失败: %s", exc)
             ai_intent = ""
@@ -268,37 +262,34 @@ async def ai_explain(req: ExplainRequest):
     user_msg = f"角色: {req.character_name}\n用户查询: {req.query}\n\n搜索结果:\n{results_text}"
 
     try:
-        safe_base = _validate_api_url(req.api_base)
-        api_url = safe_base + "/chat/completions"
+        resp = await post_chat_completions(
+            req.api_base,
+            json_body={
+                "model": req.model,
+                "messages": [
+                    {"role": "system", "content": _EXPLAIN_PROMPT},
+                    {"role": "user", "content": user_msg},
+                ],
+                "temperature": 0.5,
+                "response_format": {"type": "json_object"},
+            },
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {req.api_key}",
+            },
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"]
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                api_url,
-                json={
-                    "model": req.model,
-                    "messages": [
-                        {"role": "system", "content": _EXPLAIN_PROMPT},
-                        {"role": "user", "content": user_msg},
-                    ],
-                    "temperature": 0.5,
-                    "response_format": {"type": "json_object"},
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {req.api_key}",
-                },
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        if json_match:
+            parsed = json.loads(json_match.group())
+            return ExplainResponse(
+                explanation=parsed.get("explanation", ""),
+                suggestions=parsed.get("suggestions", []),
             )
-            resp.raise_for_status()
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
-
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
-            if json_match:
-                parsed = json.loads(json_match.group())
-                return ExplainResponse(
-                    explanation=parsed.get("explanation", ""),
-                    suggestions=parsed.get("suggestions", []),
-                )
     except Exception as e:
         top_info = (
             f"排名第一: {req.results[0].get('label', '?')} (伤害 {req.results[0].get('damage', 0)})"
@@ -381,41 +372,38 @@ async def ai_search(req: SearchRequest):
             item_list = "\n".join(f"- {n}" for n in names[:50])
             user_msg = f"数据列表:\n{item_list}\n\n用户查询: {req.query}"
 
-            safe_base = _validate_api_url(req.api_base)
-            api_url = safe_base + "/chat/completions"
+            resp = await post_chat_completions(
+                req.api_base,
+                json_body={
+                    "model": req.model,
+                    "messages": [
+                        {"role": "system", "content": _SEARCH_PROMPT},
+                        {"role": "user", "content": user_msg},
+                    ],
+                    "temperature": 0.1,
+                    "response_format": {"type": "json_object"},
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {req.api_key}",
+                },
+                timeout=30.0,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    api_url,
-                    json={
-                        "model": req.model,
-                        "messages": [
-                            {"role": "system", "content": _SEARCH_PROMPT},
-                            {"role": "user", "content": user_msg},
-                        ],
-                        "temperature": 0.1,
-                        "response_format": {"type": "json_object"},
-                    },
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {req.api_key}",
-                    },
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                content = data["choices"][0]["message"]["content"]
-
-                json_match = re.search(r"\{.*\}", content, re.DOTALL)
-                if json_match:
-                    parsed = json.loads(json_match.group())
-                    ai_matches = parsed.get("matches", [])
-                    # AI 结果排到最前
-                    ai_results = [it for m in ai_matches for it in items if it.get("名称") == m]
-                    existing_names = {r.get("名称") for r in results}
-                    for ar in ai_results:
-                        if ar.get("名称") not in existing_names:
-                            results.insert(0, {**ar, "_score": 99})
-                    ai_refined = True
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                ai_matches = parsed.get("matches", [])
+                # AI 结果排到最前
+                ai_results = [it for m in ai_matches for it in items if it.get("名称") == m]
+                existing_names = {r.get("名称") for r in results}
+                for ar in ai_results:
+                    if ar.get("名称") not in existing_names:
+                        results.insert(0, {**ar, "_score": 99})
+                ai_refined = True
         except Exception as exc:
             logger.warning("AI 搜索精排失败: %s", exc)
 
@@ -476,36 +464,33 @@ async def ai_chat(req: ConversationRequest):
         system_msg += f"\n当前选中的角色: {req.character_name}"
 
     try:
-        safe_base = _validate_api_url(req.api_base)
-        api_url = safe_base + "/chat/completions"
-
         messages = [{"role": "system", "content": system_msg}, *req.messages[-10:]]
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                api_url,
-                json={
-                    "model": req.model,
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "response_format": {"type": "json_object"},
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {req.api_key}",
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
+        resp = await post_chat_completions(
+            req.api_base,
+            json_body={
+                "model": req.model,
+                "messages": messages,
+                "temperature": 0.7,
+                "response_format": {"type": "json_object"},
+            },
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {req.api_key}",
+            },
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"]
 
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
-            if json_match:
-                parsed = json.loads(json_match.group())
-                return ConversationResponse(
-                    reply=parsed.get("reply", content),
-                    action=parsed.get("action", "none"),
-                )
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        if json_match:
+            parsed = json.loads(json_match.group())
+            return ConversationResponse(
+                reply=parsed.get("reply", content),
+                action=parsed.get("action", "none"),
+            )
     except Exception as e:
         return ConversationResponse(reply=f"AI 服务暂时不可用: {e}", action="none")
 

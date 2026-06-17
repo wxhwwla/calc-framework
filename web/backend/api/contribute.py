@@ -3,12 +3,11 @@
 
 from __future__ import annotations
 
-import json
-import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from api.safe_paths import build_contribute_filename, write_json_to_staging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -134,19 +133,9 @@ async def submit_contribute(payload: dict[str, Any]):
         )
 
     name = payload.get("名称", "unknown")
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # 文件名只允许字母数字 + 下划线 + 连字符，杜绝路径穿越
-    safe_stem = re.sub(r"[^a-zA-Z0-9_-]", "_", str(name))[:64]
-    if not safe_stem:
-        safe_stem = "unnamed"
-    filename = f"contribute_{safe_stem}_{ts}.json"
+    filename = build_contribute_filename(str(name))
 
     staging = _ensure_staging_dir()
-    staging_resolved = staging.resolve()
-    filepath = (staging_resolved / filename).resolve()
-    # 路径穿越防护：确认最终路径在 staging 目录内
-    if staging_resolved not in filepath.parents and filepath.parent != staging_resolved:
-        raise HTTPException(status_code=400, detail="无效的文件名")
     meta = {
         "_meta": {
             "submitted_at": datetime.now().isoformat(),
@@ -154,8 +143,7 @@ async def submit_contribute(payload: dict[str, Any]):
         }
     }
     record = {**meta, **payload}
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(record, f, ensure_ascii=False, indent=2)
+    write_json_to_staging(staging, filename, record)
 
     return SubmitResponse(
         message="提交成功",
