@@ -8,15 +8,21 @@ on:
     branches: [main, master, develop]
     paths:
       - "web/frontend/package-lock.json"
+      - "web/frontend/package.json"
+      - "requirements*.txt"
       - "games/*/pyproject.toml"
       - "framework/pyproject.toml"
       - ".github/workflows/security-audit.yml"
+      - ".secrets.baseline"
   pull_request:
     branches: [main, master, develop]
     paths:
       - "web/frontend/package-lock.json"
+      - "web/frontend/package.json"
+      - "requirements*.txt"
       - "games/*/pyproject.toml"
       - "framework/pyproject.toml"
+      - ".secrets.baseline"
   schedule:
     - cron: "0 8 * * 1"  # 每周一 8:00 UTC
 
@@ -37,11 +43,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run npm audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
+        run: npm audit --audit-level=moderate --registry=https://registry.npmjs.org/
 
   pip-audit:
-    name: pip-audit (framework)
+    name: pip-audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,17 +54,21 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install pip-audit
-        run: python -m pip install pip-audit
+        run: python -m pip install --upgrade pip pip-audit
+      - name: Audit Web requirements (Docker)
+        run: |
+          python -m pip install -r requirements.txt
+          pip-audit
       - name: Audit framework
         run: |
           cd framework
-          python -m pip install -e ".[dev]" 2>/dev/null || true
-          pip-audit || true
+          python -m pip install -e ".[dev]"
+          pip-audit
       - name: Audit endfield
         run: |
           cd games/endfield
-          python -m pip install -e ".[dev]" 2>/dev/null || true
-          pip-audit || true
+          python -m pip install -e ".[dev]"
+          pip-audit
 
   detect-secrets:
     name: detect-secrets
@@ -73,5 +82,5 @@ jobs:
           python-version: "3.12"
       - name: Install detect-secrets
         run: python -m pip install detect-secrets
-      - name: Scan for secrets
-        run: detect-secrets scan --all-files --exclude-files "package-lock\\.json|poetry\\.lock|.*\\.calcpack|.*\\.zip"
+      - name: Verify no new secrets vs baseline
+        run: python tools/generate_secrets_baseline.py verify

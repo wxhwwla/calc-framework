@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[3]
@@ -29,7 +30,7 @@ def client() -> TestClient:
 
 
 @pytest.fixture(autouse=True)
-def _clean_admin_env() -> None:
+def _clean_admin_env() -> Iterator[None]:
     remove_test_admin_token()
     yield
     remove_test_admin_token()

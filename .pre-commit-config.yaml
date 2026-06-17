@@ -40,10 +40,10 @@ repos:
       - id: text-unicode-replacement-char
         exclude: "docs/.*\\.md"
 
-  # detect-secrets — 待环境稳定后启用（CI security-audit.yml 已覆盖）
-  # - repo: https://github.com/Yelp/detect-secrets
-  #   rev: v1.5.0
-  #   hooks:
-  #     - id: detect-secrets
-  #       args: ["--baseline", ".secrets.baseline"]
-  #       exclude: "package-lock\\.json|poetry\\.lock|.*\\.calcpack|.*\\.zip"
+  # detect-secrets — 与 CI security-audit.yml 共用 baseline
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: "package-lock\\.json|poetry\\.lock|.*\\.calcpack|.*\\.zip|\\.tmp-audit-venv.*|\\.secrets\\.baseline"
