@@ -14,6 +14,7 @@
 - [P1：细节打磨](#p1细节打磨)
 - [架构与技术债务](#架构与技术债务)
 - [验证记录](#验证记录)
+- [外部缺陷报告核实（2026-06-17）](#外部缺陷报告核实2026-06-17)
 
 ---
 
@@ -201,6 +202,23 @@
 | PA 部署脚本优化（warmup + 5 并发 + 全链路验证） | ✅ 已完成 | 2026-06-13 | Agent |
 | 快速部署模式实现（--fast + /api/admin/deploy） | ✅ 已完成 | 2026-06-13 | Agent |
 | develop→main 合并（d99fa165，118 文件，9535 行新增） | ✅ 已完成 | 2026-06-13 | Agent |
+| 外部缺陷报告（Trae calc-framework-defects.html）逐项核实 | ⚠️ 见专文 | 2026-06-17 | Agent |
+| Web 后端覆盖率（api/ 目录） | ✅ **69%**（非报告声称 15%） | 2026-06-17 | Agent |
+| 管理 API 无认证（C1） | ❌ **待修复** Phase 0 | 2026-06-17 | Agent |
+| security-audit.yml 不阻断（C2） | ❌ **待修复** Phase 0 | 2026-06-17 | Agent |
+
+---
+
+## 外部缺陷报告核实（2026-06-17）
+
+Trae Work 生成的深度缺陷报告（基于 v3.26.13）已由 Agent 对照 **v3.27.16** 源码核实。
+
+| 文档 | 说明 |
+|------|------|
+| [`defect-audit-verification-2026-06-17.md`](defect-audit-verification-2026-06-17.md) | 核实总结：2 Critical 属实、High 10/12、报告过时项说明 |
+| [`.trae/plans/当前任务计划.md`](../../.trae/plans/当前任务计划.md) | 分步修复：Phase 0（安全/CI）→ Phase 4（生态） |
+
+**优先启动**：Phase 0 — Admin Token 认证 + security-audit CI 改造 + compute 异常泄露。
 
 ---
 
@@ -230,3 +248,4 @@
 | 2026-06-13 | PA 部署脚本优化：warmup + 5 并发上传 + 全链路部署验证 | Agent |
 | 2026-06-13 | develop→main 合并（d99fa165，118 文件，9535 行新增） | Agent |
 | 2026-06-13 | 文档全量更新：项目目标/改进路线图/i18n路线图/README/ARCHITECTURE/会话接续手册 六大文档同步至最新状态 | Agent |
+| 2026-06-17 | 外部缺陷报告核实专文 + 分步修复计划（Phase 0–4）；C1/C2 确认待修 | Agent |
