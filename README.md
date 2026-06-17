@@ -75,6 +75,7 @@ python scripts/main_launcher.py
 │   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba)
 ├── web/                          # React + FastAPI full-stack web app
 │   ├── backend/                  #   FastAPI backend (/api/*)
+│   │   └── api/                  #     routes + internal/ entity/ search_lib/ … (see docs §4.188)
 │   ├── frontend/                 #   React frontend (TypeScript + MUI + Vite)
 │   └── hub/                      #   Calc Hub — static marketplace
 ├── games/                        # Game adapter packages

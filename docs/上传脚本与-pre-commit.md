@@ -2,7 +2,7 @@
 
 > **谁应读**：维护者上传 GitHub 前；Agent 改 `scripts/tools/github_upload_module.py`、`scripts/_version.py`、`.pre-commit-config.yaml` 或帮用户排障上传失败时。  
 > **命令速查**：[`docs/操作指令集.md`](操作指令集.md) §5。  
-> **架构接缝**：[`docs/会话接续手册.md`](会话接续手册.md) §4.149–§4.155。
+> **架构接缝**：[`docs/会话接续手册.md`](会话接续手册.md) §4.149–§4.155、§4.187–§4.188（缺陷修复 / api 目录）。
 
 ---
 
@@ -163,6 +163,22 @@ fatal: pathspec '"docs/344/274/232/350/257/235/.../214.md"' did not match any fi
 **根因**：部分 doc（如 `docs/会话接续手册.md`）**工作区已改但未进 index**；commit 时 pre-commit hook 会 stash 未暂存改动，改文件后 rollback。
 
 **脚本防护**：pre-commit 通过后调用 `_refresh_staging_for_commit()`，合并 `change_paths` + 最新 porcelain + **所有 unstaged 改动** 再 `git add`。
+
+### 6.3 目录重构后旧路径「幽灵跟踪」（2026-06-17）
+
+**现象**：`Move-Item` / 手动移动后，新路径已提交，但 `git status` 长期显示 20+ 个 ` D web/backend/api/xxx.py`（**未暂存**删除）；仓库里新旧路径同时被 `git ls-files` 跟踪。
+
+**根因**：`_porcelain_paths` / `_stage_upload_changes` 只 `git add` **磁盘上仍存在**的文件；删除条目被跳过，从未 `git add -u`。
+
+**脚本防护**（Phase 3 Step 3.4 后）：
+
+| 函数 | 作用 |
+|------|------|
+| `_porcelain_deleted_paths()` | 从 porcelain 提取 `` D`` / ``MD`` 等待暂存删除（跳过 ``D `` 与 `.admin_data`/`.staging`） |
+| `_stage_deleted_tracked_paths()` | 对上述路径执行 `git add -u -- …` |
+| `_collect_change_paths()` | 变更列表**含**未暂存删除，便于「仅删旧文件」也能上传 |
+
+**一次性清理**（若改进前已遗留）：`git add -u web/backend/api/` 后 `--no-bump` 上传。
 
 `.ruff.toml` 的 `[lint.per-file-ignores]` 路径须与 **真实路径** 一致（如 `scripts/tools/devtool.py`，不是 `scripts/devtool.py`）。
 

@@ -158,5 +158,45 @@ class TestDualVersionReleaseMerge(unittest.TestCase):
             self.assertFalse(upload._should_merge_to_release(was_minor=False))
 
 
+class TestPorcelainDeletedPaths(unittest.TestCase):
+    def test_unstaged_deletion_detected(self):
+        porcelain = " D web/backend/api/auth.py\n"
+        self.assertEqual(
+            upload._porcelain_deleted_paths(porcelain),
+            ["web/backend/api/auth.py"],
+        )
+
+    def test_staged_deletion_skipped(self):
+        porcelain = "D  web/backend/api/auth.py\n"
+        self.assertEqual(upload._porcelain_deleted_paths(porcelain), [])
+
+    def test_modified_index_deleted_worktree(self):
+        porcelain = "MD web/backend/api/auth.py\n"
+        self.assertEqual(
+            upload._porcelain_deleted_paths(porcelain),
+            ["web/backend/api/auth.py"],
+        )
+
+    def test_skip_runtime_admin_data_deletion(self):
+        porcelain = " D web/backend/api/.admin_data/api_keys.json\n"
+        self.assertEqual(upload._porcelain_deleted_paths(porcelain), [])
+
+    def test_collect_change_paths_includes_deletions(self):
+        porcelain = " M web/backend/main.py\n D web/backend/api/auth.py\n"
+        with patch.object(upload, "run_git", return_value=(0, porcelain, "")):
+            paths = upload._collect_change_paths()
+        self.assertIn("web/backend/main.py", paths)
+        self.assertIn("web/backend/api/auth.py", paths)
+
+
+class TestStageDeletedTrackedPaths(unittest.TestCase):
+    def test_runs_git_add_u_for_deleted_paths(self):
+        porcelain = " D web/backend/api/auth.py\n"
+        with patch.object(upload, "run_git") as mock_git:
+            count = upload._stage_deleted_tracked_paths(porcelain=porcelain)
+        self.assertEqual(count, 1)
+        mock_git.assert_called_once_with(["add", "-u", "--", "web/backend/api/auth.py"])
+
+
 if __name__ == "__main__":
     unittest.main()

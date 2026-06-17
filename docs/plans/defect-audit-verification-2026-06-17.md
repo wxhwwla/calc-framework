@@ -1,8 +1,9 @@
 # 外部缺陷报告核实总结（2026-06-17）
 
 > **来源**：Trae Work 生成的 `calc-framework-defects.html`（分析日期 2026-06-16，基于 **v3.26.13**）。  
-> **核实对象**：本仓库当前代码 **v3.27.16**（2026-06-17 逐项对照源码 + 实测覆盖率）。  
-> **关联计划**：分步修复任务见 [`.trae/plans/当前任务计划.md`](../../.trae/plans/当前任务计划.md)。
+> **核实对象**：本仓库 **v3.27.16+**（2026-06-17 逐项对照源码 + 实测覆盖率）。  
+> **修复进度（2026-06-17）**：**Phase 0–3 ✅ 已全部完成**；Phase 4 长期项进行中。  
+> **接续文档**：[`docs/会话接续手册.md`](../会话接续手册.md) §4.187–§4.188。
 
 ---
 
@@ -103,36 +104,36 @@
 
 ## 6. 分步修复计划（总览）
 
-详细任务拆解、验收标准与 TDD 顺序见 [`.trae/plans/当前任务计划.md`](../../.trae/plans/当前任务计划.md)。
+**状态（2026-06-17）**：Phase **0–3 ✅ 已完成**；Phase **4 ⏳ 长期**。接续见 [`docs/会话接续手册.md`](../会话接续手册.md) §4.187。
 
-### Phase 0 — 安全与 CI（P0，1–2 天）
+### Phase 0 — 安全与 CI（P0）✅ **2026-06-17 已完成**
 
 1. **Admin 认证**：环境变量 `CALC_ADMIN_TOKEN` + `Depends(verify_admin_token)` 保护 `/api/admin/*` 与 `data.py` 全部写操作
 2. **安全 CI**：移除 `continue-on-error` / `|| true`；添加 `.secrets.baseline` + `detect-secrets audit --fail-on-unaudited`；扩展 workflow `paths` 含 `requirements*.txt`
 3. **异常泄露**：`compute.py` 生产模式返回通用错误，详细异常仅写日志
 
-### Phase 1 — 稳定性（P1，2–3 天）
+### Phase 1 — 稳定性（P1）✅ **2026-06-17 已完成**
 
 4. **静默吞异常**：H1/H2/H11 改为 `logger.warning/exception` + 可选 debug 计数
 5. **hash 确定性**：`block_cache.py` 改用 `hashlib.sha256`
 6. **requirements 文档化**：根 `requirements.txt` 顶部注释指向 `docs/依赖说明.md`；或拆 `requirements-web.txt` / `requirements-dev.txt`
 
-### Phase 2 — Web 后端可靠性（P2，3–5 天）
+### Phase 2 — Web 后端可靠性（P2）✅ **2026-06-17 已完成**
 
 7. **异步 I/O**：admin/data 文件读写迁 `asyncio.to_thread` 或 `aiofiles`
 8. **限速多 worker**：Redis 后端（可选）或文档明确「单 worker + 反向代理限速」
 9. **请求体限制**：Starlette `ContentSizeLimitMiddleware` 或 nginx 层限制
 10. **测试补强**：admin 认证、data 写保护、异常路径；目标 `api/` ≥75%
 
-### Phase 3 — 框架质量（P3，按需）
+### Phase 3 — 框架质量（P3，按需）✅ **2026-06-17 已完成**
 
-11. **异常层级**：`DAGError(CalcFrameworkError)`
-12. **BlockCache LRU/TTL**
-13. **inverse 搜索超时** + `_search` 早停配置
-14. **api/ 目录拆分**：27→≤20（ADR-0001）
-15. **Dockerfile**：非 root `USER`、 slim 复制范围
+11. ~~**异常层级**~~：`DAGError(CalcFrameworkError)` ✅
+12. ~~**BlockCache LRU/TTL**~~ ✅
+13. ~~**inverse 搜索超时** + `_search` 早停配置~~ ✅
+14. ~~**api/ 目录拆分**~~：27→≤20（ADR-0001）✅ → 见会话手册 §4.188
+15. ~~**Dockerfile**~~：非 root `USER`、 slim 复制范围 ✅
 
-### Phase 4 — 生态与文档（长期）
+### Phase 4 — 生态与文档（长期）⏳
 
 16. 明日方舟伤害/配装能力（见 `arknights-desktop-web-parity.md` 后续）
 17. ADR-0023 数据路径统一
@@ -144,11 +145,15 @@
 
 | 验证项 | 命令 / 方法 | 结果 | 日期 |
 |--------|-------------|:----:|:----:|
-| admin 无认证 | 源码 grep + 阅读路由 | ✅ 确认 | 2026-06-17 |
-| security-audit.yml | 阅读 workflow | ✅ 确认 | 2026-06-17 |
-| Web 后端覆盖率 | `pytest web/backend/tests --cov=api --cov-report=term` | **69%** | 2026-06-17 |
-| fit_auto / run_parallel 吞异常 | 源码 | ✅ 确认 | 2026-06-17 |
-| requirements.txt 6 项 | 读文件 | ✅ 确认 | 2026-06-17 |
+| Web 后端覆盖率 | `pytest web/backend/tests --cov=api --cov-report=term` | **75%**（Phase 2 目标达成） | 2026-06-17 |
+| inverse 搜索超时 | `framework/tests/inverse/test_search_limits.py` | ✅ 148 passed | 2026-06-17 |
+| api/ 目录宽度 | 根目录子项计数 | **20**（≤20） | 2026-06-17 |
+| Dockerfile 非 root | `grep USER Dockerfile` | `USER calcweb` | 2026-06-17 |
+| 上传脚本删除暂存 | `_stage_deleted_tracked_paths` | ✅ | 2026-06-17 |
+| admin 无认证 | 源码 grep + 阅读路由 | ✅ 已修复（Phase 0） | 2026-06-17 |
+| security-audit.yml | 阅读 workflow | ✅ 已修复（Phase 0） | 2026-06-17 |
+| fit_auto / run_parallel 吞异常 | 源码 | ✅ 已修复（Phase 1） | 2026-06-17 |
+| requirements 拆分 | 读文件 | ✅ requirements-web/dev | 2026-06-17 |
 
 ---
 

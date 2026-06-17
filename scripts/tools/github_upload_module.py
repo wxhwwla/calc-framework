@@ -570,16 +570,17 @@ def _normalize_change_path(raw: str) -> str:
 
 
 def _porcelain_paths(porcelain: str) -> list[str]:
-    """从 git status --porcelain 输出中提取文件路径列表。
-    跳过已删除（D）条目——这些已被 git rm --cached 从索引移除，不应重新 add。
+    """从 git status --porcelain 输出中提取「新增/修改」路径（不含删除）。
+
+    已跟踪文件的删除由 ``_porcelain_deleted_paths`` + ``_stage_deleted_tracked_paths`` 单独 ``git add -u``。
     """
     paths: list[str] = []
     for line in porcelain.splitlines():
         if len(line) < 4:
             continue
 
-        # XY status: X=staging, Y=working tree. 跳过 D (已删除)
-        if line[0] == "D" or line[0:2] in (" D", "DD"):
+        # XY status: X=staging, Y=working tree. 删除条目由 _porcelain_deleted_paths 处理
+        if line[1] == "D" or line[0:2] in ("D ", "DD"):
             continue
 
         rest = line[3:].strip()
@@ -594,11 +595,53 @@ def _porcelain_paths(porcelain: str) -> list[str]:
     return paths
 
 
+def _porcelain_deleted_paths(porcelain: str) -> list[str]:
+    """提取工作区已删除、但尚未暂存删除的已跟踪路径（`` D`` / ``MD`` 等）。
+
+    已暂存删除（``D ``）与 ``_should_skip_upload_path`` 路径不在此返回。
+    """
+    paths: list[str] = []
+    for line in porcelain.splitlines():
+        if len(line) < 4:
+            continue
+        x, y = line[0], line[1]
+        if y != "D":
+            continue
+        if x == "D":
+            continue
+        rest = line[3:].strip()
+        if " -> " in rest:
+            rest = rest.split(" -> ")[0].strip()
+        normalized = _normalize_change_path(rest)
+        if normalized and not _should_skip_upload_path(normalized):
+            paths.append(normalized)
+    return paths
+
+
+def _stage_deleted_tracked_paths(*, porcelain: str | None = None) -> int:
+    """暂存已跟踪文件在工作区的删除（Move-Item / 目录重构后的旧路径等）。"""
+    if porcelain is None:
+        _, porcelain, _ = run_git(
+            ["-c", "core.quotepath=false", "status", "--porcelain"],
+            capture_output=True,
+        )
+    to_stage = _porcelain_deleted_paths(porcelain)
+    if not to_stage:
+        return 0
+    print(f"[信息] git add -u（{len(to_stage)} 个已删除的旧路径）")
+    batch_size = 50
+    for i in range(0, len(to_stage), batch_size):
+        batch = to_stage[i : i + batch_size]
+        run_git(["add", "-u", "--", *batch])
+    return len(to_stage)
+
+
 def _collect_change_paths() -> list[str]:
-    """收集所有已变更文件的路径（排除已删除条目）。"""
+    """收集所有已变更文件的路径（含未暂存的已跟踪删除）。"""
     path_git = ["-c", "core.quotepath=false"]
     _, porcelain, _ = run_git([*path_git, "status", "--porcelain"], capture_output=True)
     paths = _porcelain_paths(porcelain)
+    paths.extend(_porcelain_deleted_paths(porcelain))
     # diff --diff-filter=d 排除已从索引删除的文件
     for diff_cmd in (
         ["diff", "--diff-filter=d", "--name-only"],
@@ -805,17 +848,18 @@ def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
         print("[错误] 无有效暂存路径")
         sys.exit(1)
     print(f"[信息] git add（{len(paths)} 个路径，非全仓库，分批进行）")
-    # 过滤已删除的文件（git add 不存在的文件会报错）
+    # 过滤已删除的文件（git add 不存在的文件会报错；删除由 git add -u 单独处理）
     paths = [p for p in paths if os.path.exists(os.path.join(_repo_root(), p))]
-    if not paths:
-        print("[错误] 全部路径对应的文件已不存在（可能已被删除）")
-        sys.exit(1)
-    # 分批 add 避免 Windows 命令行长度限制（CreateProcess 上限 ~8191 字符）
     batch_size = 50
-    for i in range(0, len(paths), batch_size):
-        batch = paths[i : i + batch_size]
-        run_git(["add", "--", *batch])
-    print(f"[信息] git add 完成（{len(paths)} 个路径，共 {(len(paths) + batch_size - 1) // batch_size} 批）")
+    if paths:
+        for i in range(0, len(paths), batch_size):
+            batch = paths[i : i + batch_size]
+            run_git(["add", "--", *batch])
+        print(f"[信息] git add 完成（{len(paths)} 个路径，共 {(len(paths) + batch_size - 1) // batch_size} 批）")
+    deleted_count = _stage_deleted_tracked_paths()
+    if not paths and not deleted_count:
+        print("[错误] 无有效暂存路径（无新增/修改，且无待暂存的已跟踪删除）")
+        sys.exit(1)
 
 
 def _pre_commit_installed() -> bool:
@@ -879,16 +923,17 @@ def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> 
     if added:
         print(f"[信息] 补暂存 {added} 个工作区改动（避免 commit hook stash 冲突）")
     print(f"[信息] git add（{len(merged)} 个路径，commit 前同步）")
-    # 过滤已删除的文件（git add 不存在的文件会报错）
+    # 过滤已删除的文件（git add 不存在的文件会报错；删除由 git add -u 单独处理）
     merged = [p for p in merged if os.path.exists(os.path.join(_repo_root(), p))]
-    if not merged:
-        print("[信息] 无有效文件需暂存，跳过 git add")
-        return
-    batch_size = 50
-    for i in range(0, len(merged), batch_size):
-        batch = merged[i : i + batch_size]
-        run_git(["add", "--", *batch])
-    print(f"[信息] commit 前同步完成（{len(merged)} 个路径，共 {(len(merged) + batch_size - 1) // batch_size} 批）")
+    if merged:
+        batch_size = 50
+        for i in range(0, len(merged), batch_size):
+            batch = merged[i : i + batch_size]
+            run_git(["add", "--", *batch])
+        print(f"[信息] commit 前同步完成（{len(merged)} 个路径，共 {(len(merged) + batch_size - 1) // batch_size} 批）")
+    else:
+        print("[信息] 无新增/修改文件需暂存")
+    _stage_deleted_tracked_paths()
 
 
 def _pre_commit_has_lint_errors(output: str) -> bool:

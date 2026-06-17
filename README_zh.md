@@ -75,6 +75,7 @@ python scripts/main_launcher.py
 │   └── adapters/                 #   游戏适配器 (endfield/arknights/card_rpg/fps/moba)
 ├── web/                          # [Web] React + FastAPI 全栈 Web 应用
 │   ├── backend/                  #   FastAPI 后端 (/api/*)
+│   │   └── api/                  #     路由 + internal/ entity/ search_lib/ 等（会话手册 §4.188）
 │   ├── frontend/                 #   React 前端 (TypeScript + MUI + Vite)
 │   └── hub/                      #   Calc Hub — 静态市场页面
 ├── games/                        # [游戏] 游戏适配包
