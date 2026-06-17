@@ -6,7 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+from utils.game_data_paths import (
+    ARKNIGHTS_OPERATORS_AGGREGATE,
+    ENDFIELD_ADAPTER_DATA_DIR,
+    REPO_ROOT as _PROJECT_ROOT,
+)
 
 
 @dataclass(frozen=True)
@@ -38,8 +42,8 @@ PROFILES: dict[str, DataProfile] = {
     ),
 }
 
-# 干员 JSON 默认路径（BWIKI 解析产物）
-ARKNIGHTS_OPERATORS_JSON = _PROJECT_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
+# 干员 JSON 默认路径（BWIKI 解析产物 aggregate）
+ARKNIGHTS_OPERATORS_JSON = ARKNIGHTS_OPERATORS_AGGREGATE
 
 ADAPTER_NAME_TO_PROFILE: dict[str, str] = {
     "终末地伤害计算": "endfield",
@@ -50,7 +54,7 @@ ADAPTER_NAME_TO_PROFILE: dict[str, str] = {
 def data_dir_for_profile(profile: DataProfile) -> Path:
     """各 profile 的数据文件目录。"""
     if profile.id == "endfield":
-        return profile.adapter_dir / "data"
+        return ENDFIELD_ADAPTER_DATA_DIR
     if profile.id == "arknights":
         return ARKNIGHTS_OPERATORS_JSON.parent
     return profile.adapter_dir / "data"

@@ -87,7 +87,7 @@
 |------|------|
 | **问题** | 明日方舟爬虫（`tools/arknights_scout/`）已爬取 420 干员的 JSON 数据，但**未接入 `tools/data_pipeline/` 的 EntitySchema 标准格式** |
 | **方案** | 编写 `tools/data_pipeline/transformers/from_arknights_scout.py`，将 arknights_scout 的 JSON 转换为 EntitySchema 格式 |
-| **完成情况** | 420/422 干员成功转换，16 个空技能干员（机器人等边缘用例）正常跳过。输出 `games/arknights/data/operators_standard.json`。12 个单元测试全部通过 |
+| **完成情况** | 420/422 干员成功转换；输出 `framework/adapters/arknights/data/operators_standard.json`（Step 4.3 统一路径） |
 
 ### 2. CI 覆盖率门槛偏低 ✅ 已提升（2026-06-13）
 
@@ -220,7 +220,7 @@ Trae Work 深度缺陷报告（v3.26.13）已核实并完成 **Phase 0–3** 修
 | [`defect-audit-verification-2026-06-17.md`](defect-audit-verification-2026-06-17.md) | 核实总结 + Phase 0–4 计划 |
 | [`docs/会话接续手册.md`](../会话接续手册.md) §4.187–§4.188 | 接续状态、api 目录结构 |
 
-**下一步**：Phase 4 生态（明日方舟 Web 能力、ADR-0023、代码签名/i18n 等）。
+**下一步**：Phase 4 生态 — 见 [`phase-4-ecosystem-plan.md`](phase-4-ecosystem-plan.md)（Step 4.1 数据路径对照表 ✅）。
 
 ---
 

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0
 """明日方舟 arknights_scout 输出 → 标准 EntitySchema 迁移器。
 
-将 tools/arknights_scout/output/parsed/ 下的单个干员 JSON
-合并转换为标准 EntitySchema 格式，输出到 games/arknights/data/。
+将 ``tools/arknights_scout/output/parsed/`` 下的单个干员 JSON
+合并转换为标准 EntitySchema 格式，输出到 ``framework/adapters/arknights/data/``。
 """
 
 from __future__ import annotations
@@ -18,10 +18,14 @@ _REPO = Path(__file__).resolve().parents[3]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
+from utils.game_data_paths import (
+    ARKNIGHTS_OPERATORS_STANDARD,
+    ARKNIGHTS_PARSED_DIR,
+)
 
-PARSED_DIR = _REPO / "tools" / "arknights_scout" / "output" / "parsed"
-OUTPUT_DIR = _REPO / "games" / "arknights" / "data"
-OUTPUT_FILE = OUTPUT_DIR / "operators_standard.json"
+PARSED_DIR = ARKNIGHTS_PARSED_DIR
+OUTPUT_DIR = ARKNIGHTS_OPERATORS_STANDARD.parent
+OUTPUT_FILE = ARKNIGHTS_OPERATORS_STANDARD
 
 
 def _build_skills(raw_operator: dict[str, Any]) -> list[dict[str, Any]]:

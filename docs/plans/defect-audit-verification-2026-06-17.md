@@ -135,8 +135,18 @@
 
 ### Phase 4 — 生态与文档（长期）⏳
 
-16. 明日方舟伤害/配装能力（见 `arknights-desktop-web-parity.md` 后续）
-17. ADR-0023 数据路径统一
+**实施计划**：[`phase-4-ecosystem-plan.md`](phase-4-ecosystem-plan.md)  
+**数据路径对照**：[`docs/数据路径对照表.md`](../数据路径对照表.md)
+
+| Step | 项 | 状态 |
+|:----:|-----|:----:|
+| 4.1 | 数据路径规范文档（M13 前置） | ✅ |
+| 4.2 | 明日方舟验收自动化探针 | ✅ |
+| 4.3 | ADR-0023 路径常量 + sync | ✅ |
+| 4.4–4.6 | i18n / 签名 / Web 扩展 | ⏳ |
+
+16. 明日方舟伤害/配装能力 — 桌面↔Web **计算对齐已完成**（`arknights-desktop-web-parity.md`）；人工验收 + 可选 Web 配装为后续
+17. ADR-0023 数据路径统一 — Step 4.1 文档化 ✅；Step 4.3 路径常量 + `sync_adapter_snapshots.py` ✅
 18. 代码签名、Desktop i18n、自动更新生产验证（见 `improvement-roadmap.md`）
 
 ---
@@ -154,6 +164,9 @@
 | security-audit.yml | 阅读 workflow | ✅ 已修复（Phase 0） | 2026-06-17 |
 | fit_auto / run_parallel 吞异常 | 源码 | ✅ 已修复（Phase 1） | 2026-06-17 |
 | requirements 拆分 | 读文件 | ✅ requirements-web/dev | 2026-06-17 |
+| Phase 4 Step 4.1 数据路径 | `docs/数据路径对照表.md` | ✅ | 2026-06-17 |
+| Phase 4 Step 4.2 干员探针 | `test_data_loading.py` | ✅ | 2026-06-17 |
+| Phase 4 Step 4.3 路径 sync | `game_data_paths` + `sync_adapter_snapshots` | ✅ | 2026-06-17 |
 
 ---
 

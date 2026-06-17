@@ -43,6 +43,11 @@ from typing import Any
 
 from calc_framework.data.json_loader import JsonDataLoader
 from calc_framework.logging import get_logger
+from utils.game_data_paths import (
+    ENDFIELD_CHARACTERS_JSON_REL,
+    ENDFIELD_EQUIPMENTS_JSON_REL,
+    ENDFIELD_WEAPONS_JSON_REL,
+)
 from utils.path_utils import get_resource_path
 
 from games.endfield.data_loading import DataLoadingError
@@ -66,9 +71,9 @@ class DataLoadError(DataLoadingError):
 
 
 # JSON 文件路径常量（相对于仓库根，由 get_resource_path 解析）
-CHARACTERS_JSON_PATH: str = "games/endfield/data/characters.json"
-WEAPONS_JSON_PATH: str = "games/endfield/data/weapons.json"
-EQUIPMENTS_JSON_PATH: str = "games/endfield/data/equipments.json"
+CHARACTERS_JSON_PATH: str = ENDFIELD_CHARACTERS_JSON_REL
+WEAPONS_JSON_PATH: str = ENDFIELD_WEAPONS_JSON_REL
+EQUIPMENTS_JSON_PATH: str = ENDFIELD_EQUIPMENTS_JSON_REL
 
 
 def load_json_file(filepath: str, *, strict: bool = False) -> list[dict[str, Any]]:

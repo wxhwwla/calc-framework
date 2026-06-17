@@ -175,7 +175,7 @@ def main() -> None:
     parser.add_argument(
         "--write-standard",
         action="store_true",
-        help="--apply 后额外生成 games/arknights/data/operators_standard.json",
+        help="--apply 后额外生成 framework/adapters/arknights/data/operators_standard.json",
     )
     args = parser.parse_args()
     raise SystemExit(

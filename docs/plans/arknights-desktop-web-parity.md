@@ -69,7 +69,7 @@
 
 - [ ] `python games/arknights/main.py` — 完整 UI
 - [ ] launcher → 明日方舟 — 嵌入无闪窗、启动器保持可见
-- [ ] 干员列表 ≥418（标准库）
+- [ ] 干员列表 ≥418（标准库） — **部分自动化**：`pytest -m real_data -k min_parsed` 断言 ≥ `MIN_PARSED_COUNT`（100）；完整 418 仍依赖 parsed 或标准库体量
 - [ ] 选干员 → 技能倍率/连发自动填充 → 开始计算 → 四卡片 + 乘区表
 - [ ] `pytest games/arknights/tests/` 全量（`test_growth_compact` 预存 import 问题除外）
 - [ ] 重新打包 `python scripts/main_build.py --target launcher`

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from games.arknights.operator_catalog import (
+    MIN_PARSED_COUNT,
     _read_json_file,
     build_operator_index,
     list_branches,
@@ -180,6 +181,10 @@ class TestDataIntegrity:
     def test_load_operators_map_all_values_are_dicts(self) -> None:
         for key, val in self.ops.items():
             assert isinstance(val, dict), f"Value for '{key}' is not a dict: {type(val)}"
+
+    def test_operator_count_meets_min_parsed_threshold(self) -> None:
+        """对应 parity 人工清单「干员列表 ≥418」的自动化下限（MIN_PARSED_COUNT）。"""
+        assert len(self.ops) >= MIN_PARSED_COUNT, f"expected ≥{MIN_PARSED_COUNT} operators, got {len(self.ops)}"
 
     def test_list_branches_non_empty(self) -> None:
         index = build_operator_index(self.ops)

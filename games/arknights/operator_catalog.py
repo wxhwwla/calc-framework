@@ -9,10 +9,11 @@ from pathlib import Path
 from typing import Any
 
 from games.arknights.calc.inverse.materialize import materialize_operator_entity
+from utils.game_data_paths import ARKNIGHTS_OPERATORS_STANDARD_REL
 from utils.path_utils import get_application_dir, get_resource_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-STANDARD_OPERATORS_REL = "framework/adapters/arknights/data/operators_standard.json"
+STANDARD_OPERATORS_REL = ARKNIGHTS_OPERATORS_STANDARD_REL
 SKIP_STEMS = frozenset({"_sync_summary", "operators"})
 MIN_PARSED_COUNT = 100
 STAR_TIERS = (6, 5, 4, 3, 2, 1)
