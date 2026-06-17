@@ -1,0 +1,51 @@
+# Docker 构建上下文排除（缩小 build context，配合 Dockerfile 精确 COPY）
+.git
+.github
+.venv
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+**/*.pyo
+**/.mypy_cache
+**/.ruff_cache
+
+# 文档与 Agent 计划
+docs/
+.trae/
+.cursor/
+*.md
+!web/frontend/README.md
+
+# 前端源码（dist 由多阶段 frontend-build 产出）
+web/frontend/node_modules
+web/frontend/src
+
+# 测试与 CI
+**/tests/
+framework/tests/
+.pytest_cache
+htmlcov/
+.coverage
+
+# 桌面 / 打包 / 开发脚本
+release_bundle/
+scripts/
+games/endfield/tests/
+games/arknights/tests/
+
+# 爬虫输出（gitignore；部署时可 volume 挂载 parsed/）
+tools/arknights_scout/output/
+
+# 大型开发工具（Web 镜像不 COPY，generator 在 Dockerfile 中单独 COPY）
+tools/bwiki_scout/
+tools/designer/
+tools/data_pipeline/
+tools/data_sandbox/
+tools/quality/
+tools/publish/
+
+# 临时与本地数据
+.tmp-*
+**/.admin_data/
+**/.staging/
+web/backend/api/data/*.json

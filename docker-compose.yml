@@ -5,3 +5,8 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    # 可选：Admin Token、明日方舟干员数据 volume
+    # environment:
+    #   CALC_ADMIN_TOKEN: "change-me"
+    # volumes:
+    #   - ./tools/arknights_scout/output/parsed:/app/tools/arknights_scout/output/parsed:ro
