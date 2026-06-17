@@ -1,0 +1,6 @@
+# Web 后端本地开发与 pytest/ruff（不含 framework / endfield）
+# 完整环境：pip install -e 'framework[dev]' -e 'games/endfield[dev]' -r requirements-dev.txt
+# 说明：docs/依赖说明.md §4
+-r requirements-web.txt
+pytest>=8.0.0
+ruff>=0.8.0
