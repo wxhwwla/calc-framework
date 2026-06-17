@@ -78,3 +78,29 @@ class TestContentSizeLimitMiddleware:
         mw = ContentSizeLimitMiddleware(app, default_max_bytes=1000)
         assert mw.max_bytes_for_path("/api/data/x") == 1000
         assert mw.max_bytes_for_path("/api/ocr/detect") == 5 * 1024 * 1024
+
+    def test_no_limit_when_default_and_paths_empty(self) -> None:
+        mw = ContentSizeLimitMiddleware(_build_app(), default_max_bytes=None, path_max_bytes={})
+        assert mw.max_bytes_for_path("/api/data/x") is None
+
+
+class TestNonHttpScope:
+    def test_non_http_scope_passes_through(self) -> None:
+        seen: list[str] = []
+
+        async def websocket_app(scope, receive, send):
+            seen.append(scope["type"])
+
+        mw = ContentSizeLimitMiddleware(websocket_app, default_max_bytes=10)
+
+        async def _run() -> None:
+            await mw(
+                {"type": "websocket", "path": "/"},
+                lambda: None,  # type: ignore[arg-type]
+                lambda message: None,  # type: ignore[arg-type]
+            )
+
+        import asyncio
+
+        asyncio.run(_run())
+        assert seen == ["websocket"]

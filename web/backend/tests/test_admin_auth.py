@@ -71,6 +71,31 @@ class TestAdminTokenAuth:
         resp = client.get("/api/admin/keys")
         assert resp.status_code == 401
 
+    def test_revoke_api_key(self, client: TestClient) -> None:
+        install_test_admin_token()
+        headers = admin_headers()
+        create = client.post("/api/admin/keys", json={"name": "revoke-me"}, headers=headers)
+        assert create.status_code == 200
+        prefix = create.json()["key_prefix"]
+
+        revoke = client.delete(f"/api/admin/keys/{prefix}", headers=headers)
+        assert revoke.status_code == 200
+        assert revoke.json()["count"] >= 1
+
+        listing = client.get("/api/admin/keys", headers=headers)
+        prefixes = [item["key_prefix"] for item in listing.json()]
+        assert prefix not in prefixes
+
+    def test_usage_stats_accessible_with_token(self, client: TestClient) -> None:
+        install_test_admin_token()
+        headers = admin_headers()
+        client.get("/api/health", headers=headers)
+        usage = client.get("/api/admin/usage", headers=headers)
+        assert usage.status_code == 200
+        body = usage.json()
+        assert "total_requests" in body
+        assert "by_endpoint" in body
+
 
 class TestDataWriteAuth:
     def test_delete_character_without_token_returns_401(self, client: TestClient) -> None:
