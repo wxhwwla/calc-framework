@@ -29,8 +29,8 @@ Phase 0–3 解决了安全、Web 可靠性、框架质量与 `api/` 目录约�
 | **4.4b** | Desktop i18n — 高级页 control_dock + builders | 中 | ✅ |
 | **4.4c** | Desktop i18n — 对话框 / OCR / 搜索浏览器等 | 中 | ✅ |
 | **4.4d** | Desktop i18n — survival / manual_buff / enemy / 搜索消息 | 中 | ✅ |
-| **4.5** | 代码签名 + 自动更新生产验证 | 高（需证书/环境） | 🔶 基础设施 ✅ / 证书验收 ⏳ |
-| **4.6** | 明日方舟 Web 扩展（配装/搜索，**非** parity 计划范围） | 高 | 📋 待规划 |
+| **4.5** | 代码签名 + 自动更新生产验证 | 高 | 🔶 更新基础设施 ✅；**签名暂缓（无预算）** |
+| **4.6** | 明日方舟 Web 扩展（配装/搜索，**非** parity 计划范围） | 高 | 📋 已写范围文档，待产品立项 |
 
 ---
 
@@ -150,17 +150,19 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 - `release.yml` — 生成 checksum + 可选 CI 签名
 - Runbook：[`phase-4-step-4.5-signing-runbook.md`](phase-4-step-4.5-signing-runbook.md)
 
-**待人工**：
-- OV/EV 证书采购与 SmartScreen 验收
-- 核心用户 Beta 端到端更新实测
+**待人工 / 预算**：
+- **Authenticode 签名**：暂不采购 OV/EV 证书（**无预算**）；SmartScreen 提示预期存在；代码保留待日后启用
+- 核心用户 Beta 端到端更新实测（不依赖证书）
 
 ---
 
-## Step 4.6 — 明日方舟 Web 扩展（远期）📋
+## Step 4.6 — 明日方舟 Web 扩展 📋
 
 **非** [`arknights-desktop-web-parity.md`](arknights-desktop-web-parity.md) 范围（该文档明确不做终末地式全量搜索/固定配装）。
 
-若产品需要，单独立项：Web 配装 schema、`/api/arknights/search` 等。
+**范围说明**：[`phase-4-step-4.6-arknights-web-scope.md`](phase-4-step-4.6-arknights-web-scope.md)（2026-06-17）
+
+若产品需要 Web 配装 schema、`/api/arknights/search` 等，按该文档单独立项；**当前不实施**。
 
 ---
 

@@ -1,7 +1,15 @@
 # Phase 4 Step 4.5 — 代码签名与自动更新生产验证
 
 > 创建：2026-06-17  
-> 状态：基础设施 ✅；OV/EV 证书采购与全链路人工验收 ⏳
+> 状态：自动更新基础设施 ✅；**代码签名暂不实施（无预算采购 OV/EV 证书）**
+
+---
+
+## 决策记录（2026-06-17）
+
+**Windows Authenticode 签名**：当前**不采购** OV/EV 证书（约 $200–500/年，项目暂无预算）。  
+用户首次运行未签名 exe 时仍可能出现 SmartScreen「更多信息 → 仍要运行」提示——属预期行为。  
+签名相关代码（`utils/code_sign.py`、`main_build.py --sign`、CI 可选步骤）**保留**，待有预算或赞助后再启用。
 
 ---
 
@@ -95,7 +103,8 @@ python -m pytest framework/tests/utils/test_checksums.py framework/tests/utils/t
 
 ---
 
-## 未完成（需人工）
+## 未完成（需人工 / 或等有预算）
 
-- OV/EV 证书采购与 CI Secret 配置
-- 核心用户 Beta 群端到端更新实测（见 `improvement-roadmap.md` §自动更新生产验证）
+- ~~OV/EV 证书采购~~ → **暂缓：无预算**（见上文决策记录）
+- SmartScreen 全绿验收 → 依赖证书，同上暂缓
+- 核心用户 Beta 群端到端更新实测（HTTPS + SHA256 链路可测，不依赖证书）

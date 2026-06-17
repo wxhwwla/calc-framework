@@ -149,7 +149,8 @@ class _UpdateDialog(QDialog):
     def _on_download(self) -> None:
         """开始下载并替换当前 exe。"""
         info = self._info
-        if not info.zip_url:
+        zip_url = info.zip_url
+        if not zip_url:
             return
 
         self._download_btn.setEnabled(False)
@@ -182,12 +183,12 @@ class _UpdateDialog(QDialog):
 
         def _do_update():
             success = download_and_replace(
-                info.zip_url,
+                zip_url,
                 exe_path,
                 _progress_cb,
                 _status_cb,
                 checksum_url=info.checksum_url,
-            )  # type: ignore[arg-type]
+            )
             if success:
                 QTimer.singleShot(0, self.accept)
                 # 弹出重启提示

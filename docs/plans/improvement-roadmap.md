@@ -45,6 +45,7 @@
 | **影响** | 新用户首次下载后需要点击"More info → Run anyway"，可能劝退非技术用户 |
 | **方案** | 购买 OV/EV 代码签名证书（如 Sectigo、DigiCert），签名 .exe 和 .msi |
 | **成本** | OV ~$200-300/年，EV ~$300-500/年 |
+| **项目现状（2026-06-17）** | **暂无预算采购证书**；签名脚本保留，SmartScreen 提示接受为预期；见 [`phase-4-step-4.5-signing-runbook.md`](phase-4-step-4.5-signing-runbook.md) |
 | **集成方式** | 在 `release.yml` 或 `main_build.py` 中 post-build 步骤调用 `signtool.exe` |
 | **依赖** | 无代码改动，仅 CI/build 脚本变更 |
 | **优先级建议** | 用户量增长后（~100+ 日活）可投入 |
