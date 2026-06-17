@@ -181,7 +181,13 @@ class _UpdateDialog(QDialog):
             )
 
         def _do_update():
-            success = download_and_replace(info.zip_url, exe_path, _progress_cb, _status_cb)  # type: ignore[arg-type]
+            success = download_and_replace(
+                info.zip_url,
+                exe_path,
+                _progress_cb,
+                _status_cb,
+                checksum_url=info.checksum_url,
+            )  # type: ignore[arg-type]
             if success:
                 QTimer.singleShot(0, self.accept)
                 # 弹出重启提示

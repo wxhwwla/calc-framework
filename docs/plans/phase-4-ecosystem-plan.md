@@ -29,7 +29,7 @@ Phase 0–3 解决了安全、Web 可靠性、框架质量与 `api/` 目录约�
 | **4.4b** | Desktop i18n — 高级页 control_dock + builders | 中 | ✅ |
 | **4.4c** | Desktop i18n — 对话框 / OCR / 搜索浏览器等 | 中 | ✅ |
 | **4.4d** | Desktop i18n — survival / manual_buff / enemy / 搜索消息 | 中 | ✅ |
-| **4.5** | 代码签名 + 自动更新生产验证 | 高（需证书/环境） | ⏳ |
+| **4.5** | 代码签名 + 自动更新生产验证 | 高（需证书/环境） | 🔶 基础设施 ✅ / 证书验收 ⏳ |
 | **4.6** | 明日方舟 Web 扩展（配装/搜索，**非** parity 计划范围） | 高 | 📋 待规划 |
 
 ---
@@ -141,10 +141,18 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 
 ---
 
-## Step 4.5 — 发布与签名 ⏳
+## Step 4.5 — 发布与签名 🔶
 
-- OV/EV 证书采购与 `scripts/main_build.py` 集成
-- `utils/updater.py` 生产环境 HTTPS + 签名校验实测
+**基础设施（2026-06-17）**：
+- `utils/code_sign.py` + `main_build.py --sign`
+- `utils/checksums.py` — Release `.sha256` 侧车
+- `auto_update.py` / `updater.py` — HTTPS + ZIP + SHA256 校验
+- `release.yml` — 生成 checksum + 可选 CI 签名
+- Runbook：[`phase-4-step-4.5-signing-runbook.md`](phase-4-step-4.5-signing-runbook.md)
+
+**待人工**：
+- OV/EV 证书采购与 SmartScreen 验收
+- 核心用户 Beta 端到端更新实测
 
 ---
 
@@ -167,6 +175,7 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 | Step 4.4b control_dock | `pytest games/endfield/tests/gui/test_i18n_combos.py` | ✅ | 2026-06-17 |
 | Step 4.4c 对话框/OCR/搜索 | `pytest framework/tests/ui/test_i18n_endfield.py` | ✅ | 2026-06-17 |
 | Step 4.4d survival/enemy/搜索 | `pytest framework/tests/ui/test_i18n_endfield.py` | ✅ | 2026-06-17 |
+| Step 4.5 签名/更新基础设施 | `pytest framework/tests/utils/test_checksums.py framework/tests/ui/launcher/test_auto_update.py` | ✅ | 2026-06-17 |
 
 ---
 

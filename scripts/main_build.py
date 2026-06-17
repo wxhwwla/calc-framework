@@ -367,6 +367,11 @@ def main() -> None:
 
     parser.add_argument("--no-bump", action="store_true", help="不通过 please_read_me 带版本号打包")
     parser.add_argument(
+        "--sign",
+        action="store_true",
+        help="打包后对 PE 执行 Authenticode 签名（需 CODE_SIGN_CERT_SHA1 或 CODE_SIGN_PFX_PATH）",
+    )
+    parser.add_argument(
         "--target",
         choices=["launcher", "toolkit", "all"],
         default="all",
@@ -399,6 +404,23 @@ def main() -> None:
             repo_root=base_dir,
             target=target,
         )
+
+        sign_enabled = args.sign or os.environ.get("CODE_SIGN_ENABLED", "").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        if sign_enabled:
+            os.environ.setdefault("CODE_SIGN_ENABLED", "1")
+            from utils.code_sign import resolve_code_sign_config, sign_release_tree
+
+            cfg = resolve_code_sign_config()
+            signed = sign_release_tree(release_root, cfg)
+            if cfg.enabled and signed:
+                _logger.info("  已签名 %d 个 PE 文件", len(signed))
+            elif sign_enabled:
+                _logger.warning("  ⚠ 代码签名已请求但未成功（检查 signtool/证书环境变量）")
 
         _logger.info("  发布目录: %s", release_root)
 

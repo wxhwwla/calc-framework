@@ -36,11 +36,15 @@ from typing import Any
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
+from utils.checksums import require_https_url
+
 GITHUB_OWNER = "wxhwwla"
 
 GITHUB_REPO = "calc-framework"
 
 RELEASE_API = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
+
+_LAUNCHER_ZIP_PREFIX = "GameCalcPlatform_v"
 
 
 _PROGRESS_CALLBACK = Callable[[int, int], None]
@@ -119,7 +123,14 @@ def check_update(current_version: str) -> UpdateInfo | None:
     if not assets:
         return None
 
-    target_asset = assets[0]
+    target_asset = None
+    for asset in assets:
+        name = asset.get("name", "")
+        if name.startswith(_LAUNCHER_ZIP_PREFIX) and name.endswith(".zip"):
+            target_asset = asset
+            break
+    if target_asset is None:
+        target_asset = assets[0]
 
     asset_name: str = target_asset.get("name", "release.zip")
 
@@ -127,7 +138,7 @@ def check_update(current_version: str) -> UpdateInfo | None:
 
     download_url: str = target_asset.get("browser_download_url", "")
 
-    if not download_url:
+    if not download_url or not require_https_url(download_url):
         return None
 
     release_notes: str = data.get("body", "")
@@ -174,6 +185,9 @@ def download_update(
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     dest = temp_dir / update.asset_name
+
+    if not require_https_url(update.download_url):
+        raise ValueError("更新下载 URL 必须使用 HTTPS")
 
     if status:
         status(f"正在下载 {update.asset_name} ({update.asset_size // 1024 // 1024} MB)...")

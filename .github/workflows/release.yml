@@ -124,6 +124,35 @@ jobs:
             Compress-Archive -Path "dist/配置包设计器/*" -DestinationPath "dist/${pack_zip}"
             Write-Host "Created: dist/${pack_zip}"
           }
+          # SHA256 侧车（自动更新校验）
+          Get-ChildItem dist/*.zip | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            $sidecar = "$($_.FullName).sha256"
+            Set-Content -Path $sidecar -Value $hash -NoNewline
+            Write-Host "Created: $sidecar"
+          }
+
+      - name: Code sign release PE (optional)
+        shell: pwsh
+        continue-on-error: true
+        env:
+          CODE_SIGN_ENABLED: ${{ secrets.CODE_SIGN_CERT_SHA1 != '' && '1' || '' }}
+          CODE_SIGN_CERT_SHA1: ${{ secrets.CODE_SIGN_CERT_SHA1 }}
+          CODE_SIGN_PFX_PATH: ${{ runner.temp }}/codesign.pfx
+          CODE_SIGN_PFX_PASSWORD: ${{ secrets.CODE_SIGN_PFX_PASSWORD }}
+        run: |
+          if (-not $env:CODE_SIGN_CERT_SHA1 -and -not $env:CODE_SIGN_PFX_PASSWORD) {
+            Write-Host "Skip code signing: no secrets configured"
+            exit 0
+          }
+          if ($env:CODE_SIGN_PFX_PASSWORD) {
+            $bytes = [Convert]::FromBase64String("${{ secrets.CODE_SIGN_PFX_BASE64 }}")
+            [IO.File]::WriteAllBytes($env:CODE_SIGN_PFX_PATH, $bytes)
+          }
+          $env:CODE_SIGN_ENABLED = "1"
+          if (Test-Path "dist/Game Calc Platform") {
+            python -c "from pathlib import Path; from utils.code_sign import sign_release_tree; print(len(sign_release_tree(Path('dist/Game Calc Platform'))))"
+          }
 
       - name: Build NSIS installer
         shell: pwsh
@@ -140,9 +169,13 @@ jobs:
           name: release-artifact
           path: |
             dist/GameCalcPlatform_v*.zip
+            dist/GameCalcPlatform_v*.zip.sha256
             dist/终末地伤害计算器_v*.zip
+            dist/终末地伤害计算器_v*.zip.sha256
             dist/数据设计器_v*.zip
+            dist/数据设计器_v*.zip.sha256
             dist/配置包设计器_v*.zip
+            dist/配置包设计器_v*.zip.sha256
             dist/GameCalcPlatform_Setup_v*.exe
 
   publish:
@@ -164,9 +197,13 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip
+            GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
             终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip
+            终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
             数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
+            数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
             配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
+            配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
             GameCalcPlatform_Setup_v${{ needs.verify-version.outputs.tag_version }}.exe
           generate_release_notes: true
           make_latest: true

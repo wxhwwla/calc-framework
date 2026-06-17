@@ -12,16 +12,23 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import shutil
 import tempfile
 import threading
 import time
+import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.request import Request, urlopen
+
+from utils.checksums import (
+    find_checksum_in_assets,
+    parse_sha256_sidecar_text,
+    require_https_url,
+    sha256_hex,
+)
 
 _REPO = "wxhwwla/calc-framework"
 _API_LATEST = f"https://api.github.com/repos/{_REPO}/releases/latest"
@@ -38,6 +45,8 @@ class ReleaseInfo:
     body: str  # Release notes (markdown)
     zip_url: str | None  # 启动器 ZIP 的下载 URL
     zip_size: int  # ZIP 文件大小（字节）
+    zip_name: str  # 启动器 ZIP 文件名
+    checksum_url: str | None  # 对应 .sha256 侧车 URL
     is_newer: bool  # 是否比本地版本更新
 
 
@@ -119,14 +128,23 @@ def fetch_latest_release(
 
     local_ver = _local_exe_version()
     asset = _find_launcher_asset(data)
+    zip_name = asset.get("name", "") if asset else ""
+    zip_url = asset.get("browser_download_url") if asset else None
+    if zip_url and not require_https_url(zip_url):
+        zip_url = None
+    checksum_url = find_checksum_in_assets(data.get("assets", []), zip_name) if zip_name else None
+    if checksum_url and not require_https_url(checksum_url):
+        checksum_url = None
 
     return ReleaseInfo(
         tag_name=tag_name,
         version=version,
         html_url=data.get("html_url", ""),
         body=data.get("body", ""),
-        zip_url=asset.get("browser_download_url") if asset else None,
+        zip_url=zip_url,
         zip_size=asset.get("size", 0) if asset else 0,
+        zip_name=zip_name,
+        checksum_url=checksum_url,
         is_newer=_is_newer(version, local_ver),
     )
 
@@ -145,6 +163,8 @@ def _download_with_progress(
         on_progress: (downloaded_bytes, total_bytes) 回调
         chunk_size: 每次读取的块大小
     """
+    if not require_https_url(url):
+        raise ValueError("下载 URL 必须使用 HTTPS")
     req = Request(url, headers={"User-Agent": "GameCalcPlatform/1.0"})
     with urlopen(req) as resp:
         total = int(resp.headers.get("Content-Length", 0))
@@ -162,14 +182,17 @@ def _download_with_progress(
 
 def _sha256_checksum(path: Path) -> str:
     """计算文件的 SHA256 哈希。"""
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        while True:
-            chunk = f.read(8192)
-            if not chunk:
-                break
-            h.update(chunk)
-    return h.hexdigest()
+    return sha256_hex(path)
+
+
+def _fetch_expected_sha256(checksum_url: str) -> str | None:
+    """从 Release 侧车资产读取期望 SHA256。"""
+    if not require_https_url(checksum_url):
+        return None
+    req = Request(checksum_url, headers={"User-Agent": "GameCalcPlatform/1.0"})
+    with urlopen(req, timeout=30) as resp:
+        text = resp.read().decode("utf-8", errors="replace")
+    return parse_sha256_sidecar_text(text)
 
 
 def download_and_replace(
@@ -177,6 +200,8 @@ def download_and_replace(
     exe_path: Path,
     on_progress: Callable[[int, int], None] | None = None,
     on_status: Callable[[str], None] | None = None,
+    *,
+    checksum_url: str | None = None,
 ) -> bool:
     """下载新版启动器 ZIP 并替换当前 exe。
 
@@ -189,6 +214,11 @@ def download_and_replace(
     Returns:
         是否成功替换
     """
+    if not require_https_url(zip_url):
+        if on_status:
+            on_status("更新失败: 下载 URL 必须使用 HTTPS")
+        return False
+
     if on_status:
         on_status("正在下载更新…")
 
@@ -210,11 +240,18 @@ def download_and_replace(
         if not zip_path.exists() or zip_path.stat().st_size == 0:
             raise RuntimeError("下载文件为空")
 
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            if zf.testzip() is not None:
+                raise RuntimeError("ZIP 完整性校验失败")
+
+        expected = _fetch_expected_sha256(checksum_url) if checksum_url else None
+        actual = _sha256_checksum(zip_path)
+        if expected and actual != expected:
+            raise RuntimeError("SHA256 校验失败")
+
         # 解压 ZIP
         if on_status:
             on_status("正在解压…")
-
-        import zipfile
 
         extract_dir = Path(tempfile.mkdtemp(prefix="gcp_extract_"))
         with zipfile.ZipFile(zip_path, "r") as zf:
