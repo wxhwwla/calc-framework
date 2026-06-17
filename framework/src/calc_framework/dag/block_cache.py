@@ -5,11 +5,24 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from typing import Any
 
 from .graph import _resolve_path
 from .schema import CallNode, ConstNode, DAGGraph, VarNode
+
+
+def _stable_hash_int(payload: bytes) -> int:
+    """SHA-256 摘要前 8 字节转 int，跨进程/重启稳定。"""
+    digest = hashlib.sha256(payload).digest()
+    return int.from_bytes(digest[:8], "big", signed=False)
+
+
+def _serialize_input_items(inputs: dict[str, float]) -> bytes:
+    """将输入字典序列化为稳定字节串（键序无关）。"""
+    parts = [f"{key}\0{value!r}".encode() for key, value in sorted(inputs.items())]
+    return b"\x1e".join(parts)
 
 
 @dataclass
@@ -50,8 +63,8 @@ class BlockCache:
 
 
 def _compute_input_hash(inputs: dict[str, float]) -> int:
-    """计算输入字典的哈希值。"""
-    return hash(tuple(sorted(inputs.items())))
+    """计算输入字典的稳定哈希值。"""
+    return _stable_hash_int(_serialize_input_items(inputs))
 
 
 def _compute_block_inputs(
@@ -77,7 +90,7 @@ def _compute_block_inputs(
                 if val is not None:
                     inputs[param_name] = float(val)
             elif isinstance(source_node, CallNode):
-                inputs[param_name] = hash(source_nid)
+                inputs[param_name] = _stable_hash_int(source_nid.encode("utf-8"))
         if inputs:
             result[nid] = inputs
     return result

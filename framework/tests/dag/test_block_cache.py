@@ -7,8 +7,10 @@ from calc_framework.dag.block_cache import (
     BlockCache,
     _build_block_membership,
     _compute_block_inputs,
+    _compute_input_hash,
     _get_primary_output_node,
     _resolve_block_outputs,
+    _stable_hash_int,
 )
 from calc_framework.dag.graph_types import DAGGraph, DAGOutput, DAGSubgraph
 from calc_framework.dag.node_types import CallNode, ConstNode, VarNode
@@ -78,6 +80,33 @@ class TestBlockCache:
         result = cache.get("b1", {})
         assert result is not None
         assert result["out"] == 1.0
+
+
+class TestStableInputHash:
+    def test_compute_input_hash_order_independent(self) -> None:
+        h1 = _compute_input_hash({"a": 1.0, "b": 2.0})
+        h2 = _compute_input_hash({"b": 2.0, "a": 1.0})
+        assert h1 == h2
+
+    def test_compute_input_hash_differs_for_different_inputs(self) -> None:
+        h1 = _compute_input_hash({"a": 1.0})
+        h2 = _compute_input_hash({"a": 2.0})
+        assert h1 != h2
+
+    def test_stable_hash_int_is_deterministic(self) -> None:
+        payload = b"call1"
+        assert _stable_hash_int(payload) == _stable_hash_int(payload)
+
+    def test_call_binding_uses_stable_hash(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "call1": CallNode(subgraph="inner", bindings={"a": "n1"}),
+                "call2": CallNode(subgraph="outer", bindings={"x": "call1"}),
+            }
+        )
+        result = _compute_block_inputs(graph, {})
+        expected = _stable_hash_int(b"call1")
+        assert result["call2"]["x"] == expected
 
 
 class TestComputeBlockInputs:
