@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -46,6 +47,14 @@ def _load_json(path: Path) -> dict:
 def _save_json(path: Path, data: dict) -> None:
     _ensure_data_dir()
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+async def _load_json_async(path: Path) -> dict:
+    return await asyncio.to_thread(_load_json, path)
+
+
+async def _save_json_async(path: Path, data: dict) -> None:
+    await asyncio.to_thread(_save_json, path, data)
 
 
 # ── API Key 管理 ──────────────────────────────────────
@@ -114,7 +123,7 @@ async def create_api_key(req: CreateKeyRequest):
     api_key = "cf_" + secrets.token_urlsafe(32)
     key_hash = _hash_key(api_key)
 
-    keys = _load_json(_KEYS_FILE)
+    keys = await _load_json_async(_KEYS_FILE)
     keys[key_hash] = {
         "key_prefix": api_key[:12],
         "name": req.name or f"Key-{len(keys) + 1}",
@@ -124,7 +133,7 @@ async def create_api_key(req: CreateKeyRequest):
         "last_used": "",
         "enabled": True,
     }
-    _save_json(_KEYS_FILE, keys)
+    await _save_json_async(_KEYS_FILE, keys)
 
     return CreateKeyResponse(
         api_key=api_key,
@@ -137,18 +146,18 @@ async def create_api_key(req: CreateKeyRequest):
 @router.get("/keys", response_model=list[ApiKeyInfo])
 async def list_api_keys():
     """列出所有 API Keys（不返回完整 key）。"""
-    keys = _load_json(_KEYS_FILE)
+    keys = await _load_json_async(_KEYS_FILE)
     return [ApiKeyInfo(**v) for v in keys.values()]
 
 
 @router.delete("/keys/{key_prefix}")
 async def revoke_api_key(key_prefix: str):
     """吊销指定 API Key。"""
-    keys = _load_json(_KEYS_FILE)
+    keys = await _load_json_async(_KEYS_FILE)
     to_delete = [h for h, v in keys.items() if v.get("key_prefix") == key_prefix]
     for h in to_delete:
         del keys[h]
-    _save_json(_KEYS_FILE, keys)
+    await _save_json_async(_KEYS_FILE, keys)
     return {"status": "revoked", "count": len(to_delete)}
 
 
@@ -166,8 +175,8 @@ class UsageStats(BaseModel):
 @router.get("/usage", response_model=UsageStats)
 async def get_usage_stats():
     """获取用量统计概览。"""
-    keys = _load_json(_KEYS_FILE)
-    usage = _load_json(_USAGE_FILE)
+    keys = await _load_json_async(_KEYS_FILE)
+    usage = await _load_json_async(_USAGE_FILE)
 
     active = sum(1 for v in keys.values() if v.get("enabled", True))
     by_tier: dict[str, int] = defaultdict(int)
@@ -197,7 +206,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     - 有效 key：按 tier 限速
     - 无效或无 key：默认 20 req/min（宽松，方便开发）
 
-    注意：当前使用同步文件 I/O 存储 usage/key 数据。
+    注意：usage/key 持久化通过 ``asyncio.to_thread`` 执行同步 I/O。
     适用于单 worker 部署；多 worker 场景建议替换为 Redis 等外部存储。
 
     测试时可通过 ``RateLimitMiddleware.enabled = False`` 全局禁用。
@@ -222,14 +231,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         if api_key:
             key_hash = _hash_key(api_key)
-            keys = _load_json(_KEYS_FILE)
+            keys = await _load_json_async(_KEYS_FILE)
             key_data = keys.get(key_hash)
             if key_data and key_data.get("enabled", True):
                 client_id = f"key:{key_data['key_prefix']}"
                 rate_limit = key_data.get("rate_limit", 30)
                 # 更新 last_used
                 key_data["last_used"] = datetime.now(timezone.utc).isoformat()
-                _save_json(_KEYS_FILE, keys)
+                await _save_json_async(_KEYS_FILE, keys)
 
         # 滑动窗口检查
         now = time.time()
@@ -246,13 +255,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         window.append(now)
 
         # 记录用量
-        self._record_usage(path)
+        await self._record_usage_async(path)
 
         return await call_next(request)
 
     @staticmethod
-    def _record_usage(path: str) -> None:
-        usage = _load_json(_USAGE_FILE)
+    async def _record_usage_async(path: str) -> None:
+        usage = await _load_json_async(_USAGE_FILE)
         timestamps = usage.get("request_timestamps", [])
         timestamps.append(time.time())
         # 只保留最近 1 小时
@@ -264,7 +273,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         by_endpoint[endpoint] = by_endpoint.get(endpoint, 0) + 1
         usage["by_endpoint"] = by_endpoint
 
-        _save_json(_USAGE_FILE, usage)
+        await _save_json_async(_USAGE_FILE, usage)
 
 
 __all__: list[str] = []

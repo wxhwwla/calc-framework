@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import json as _json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from api._json_utils import load_json, save_json
 from fastapi import HTTPException
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -91,21 +93,18 @@ def _load_entity_list(ent: EntityDef) -> list[dict[str, Any]]:
     if not ent.path.is_file():
         return []  # 数据文件尚未部署（如 PA 上未解压干员 zip），返回空列表
     try:
-        with open(ent.path, encoding="utf-8") as f:
-            data = _json.load(f)
+        data = load_json(ent.path)
     except _json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"JSON 解析失败: {ent.path.name}: {e}") from e
+    if data is None:
+        return []
     if not isinstance(data, list):
         raise HTTPException(status_code=500, detail=f"{ent.path.name} 根节点须为数组")
     return data
 
 
 def _save_entity_list(ent: EntityDef, data: list[dict[str, Any]]) -> None:
-    ent.path.parent.mkdir(parents=True, exist_ok=True)
-    import json
-
-    with open(ent.path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_json(ent.path, data)
 
 
 def _find_by_name(data: list[dict[str, Any]], name: str) -> int | None:
@@ -162,6 +161,24 @@ def delete_entity_row(profile_id: str, entity_key: str, name: str) -> dict[str, 
     raw.pop(idx)
     _save_entity_list(ent, raw)
     return {"message": "ok"}
+
+
+async def list_entity_rows_async(profile_id: str, entity_key: str, *, full: bool = False) -> list[dict[str, Any]]:
+    return await asyncio.to_thread(list_entity_rows, profile_id, entity_key, full=full)
+
+
+async def create_entity_row_async(profile_id: str, entity_key: str, payload: dict[str, Any]) -> dict[str, str]:
+    return await asyncio.to_thread(create_entity_row, profile_id, entity_key, payload)
+
+
+async def update_entity_row_async(
+    profile_id: str, entity_key: str, name: str, payload: dict[str, Any]
+) -> dict[str, str]:
+    return await asyncio.to_thread(update_entity_row, profile_id, entity_key, name, payload)
+
+
+async def delete_entity_row_async(profile_id: str, entity_key: str, name: str) -> dict[str, str]:
+    return await asyncio.to_thread(delete_entity_row, profile_id, entity_key, name)
 
 
 __all__: list[str] = []

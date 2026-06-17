@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0
 """JSON 工具函数与路径常量。"""
 
+from __future__ import annotations
+
+import asyncio
 import json
+import sys as _sys
 from pathlib import Path
 from typing import Any
 
@@ -22,9 +26,24 @@ def load_json(path: Path) -> Any:
         return None
 
 
-# ── 路径常量 ──────────────────────────────────────────
+def save_json(path: Path, data: Any) -> None:
+    """将对象写入 JSON 文件（同步）。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-import sys as _sys
+
+async def aload_json(path: Path) -> Any:
+    """在线程池中加载 JSON，避免阻塞事件循环。"""
+    return await asyncio.to_thread(load_json, path)
+
+
+async def asave_json(path: Path, data: Any) -> None:
+    """在线程池中写入 JSON，避免阻塞事件循环。"""
+    await asyncio.to_thread(save_json, path, data)
+
+
+# ── 路径常量 ──────────────────────────────────────────
 
 if getattr(_sys, "frozen", False):
     # PyInstaller 冻结模式：_MEIPASS 是解压目录

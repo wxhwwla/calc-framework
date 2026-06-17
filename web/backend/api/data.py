@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """游戏数据查询 API — 角色/武器/装备的 CRUD 路由 + 摘要统计 + 公式反推 + 多游戏 profile。"""
 
-import json
-from pathlib import Path
 from typing import Any
 
 from api.auth import verify_admin_token
@@ -17,7 +15,7 @@ from web.backend.data_materialize import (
     format_weapon_entity,
 )
 
-from ._json_utils import ENDFIELD_DATA_ROOT, load_json
+from ._json_utils import ENDFIELD_DATA_ROOT, aload_json
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
@@ -35,11 +33,6 @@ CHARACTERS_PATH = DATA_ROOT / "characters.json"
 WEAPONS_PATH = DATA_ROOT / "weapons.json"
 
 EQUIPMENTS_PATH = DATA_ROOT / "equipments.json"
-
-
-def _save_json(path: Path, data: list[dict[str, Any]]) -> None:
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 def _find_by_name(data: list[dict[str, Any]], name: str) -> int | None:
@@ -113,7 +106,7 @@ class MilestonesInverseResponse(BaseModel):
 
 @router.get("/characters", summary="获取所有角色列表（精简）")
 async def list_characters():
-    raw = load_json(CHARACTERS_PATH)
+    raw = await aload_json(CHARACTERS_PATH)
 
     result = []
 
@@ -142,7 +135,7 @@ async def get_character(
 ):
     name = name.strip()
 
-    raw = load_json(CHARACTERS_PATH)
+    raw = await aload_json(CHARACTERS_PATH)
 
     for c in raw:
         if c.get("名称") == name:
@@ -155,29 +148,29 @@ async def get_character(
 async def list_characters_full(
     format: EntityFormat = Query(DEFAULT_ENTITY_FORMAT, description=_FORMAT_QUERY_DESC),
 ):
-    raw = load_json(CHARACTERS_PATH) or []
+    raw = await aload_json(CHARACTERS_PATH) or []
     return format_entity_list(raw, format, kind="character")
 
 
 @router.post("/characters", summary="新增角色", dependencies=_ADMIN_WRITE)
 async def create_character(data: dict[str, Any]):
-    from api.data_mutations import create_character as _create
+    from api.data_profiles import create_entity_row_async
 
-    return _create(data)
+    return await create_entity_row_async("endfield", "characters", data)
 
 
 @router.put("/characters/{name}", summary="更新角色", dependencies=_ADMIN_WRITE)
 async def update_character(name: str, data: dict[str, Any]):
-    from api.data_mutations import update_character as _update
+    from api.data_profiles import update_entity_row_async
 
-    return _update(name, data)
+    return await update_entity_row_async("endfield", "characters", name, data)
 
 
 @router.delete("/characters/{name}", summary="删除角色", dependencies=_ADMIN_WRITE)
 async def delete_character(name: str):
-    from api.data_mutations import delete_character as _delete
+    from api.data_profiles import delete_entity_row_async
 
-    return _delete(name)
+    return await delete_entity_row_async("endfield", "characters", name)
 
 
 # ── 武器 ──────────────────────────────────────────────
@@ -185,7 +178,7 @@ async def delete_character(name: str):
 
 @router.get("/weapons", summary="获取所有武器列表（精简）")
 async def list_weapons():
-    raw = load_json(WEAPONS_PATH)
+    raw = await aload_json(WEAPONS_PATH)
 
     result = []
 
@@ -212,7 +205,7 @@ async def get_weapon(
 ):
     name = name.strip()
 
-    raw = load_json(WEAPONS_PATH)
+    raw = await aload_json(WEAPONS_PATH)
 
     for w in raw:
         if w.get("名称") == name:
@@ -225,29 +218,29 @@ async def get_weapon(
 async def list_weapons_full(
     format: EntityFormat = Query(DEFAULT_ENTITY_FORMAT, description=_FORMAT_QUERY_DESC),
 ):
-    raw = load_json(WEAPONS_PATH) or []
+    raw = await aload_json(WEAPONS_PATH) or []
     return format_entity_list(raw, format, kind="weapon")
 
 
 @router.post("/weapons", summary="新增武器", dependencies=_ADMIN_WRITE)
 async def create_weapon(data: dict[str, Any]):
-    from api.data_mutations import create_weapon as _create
+    from api.data_profiles import create_entity_row_async
 
-    return _create(data)
+    return await create_entity_row_async("endfield", "weapons", data)
 
 
 @router.put("/weapons/{name}", summary="更新武器", dependencies=_ADMIN_WRITE)
 async def update_weapon(name: str, data: dict[str, Any]):
-    from api.data_mutations import update_weapon as _update
+    from api.data_profiles import update_entity_row_async
 
-    return _update(name, data)
+    return await update_entity_row_async("endfield", "weapons", name, data)
 
 
 @router.delete("/weapons/{name}", summary="删除武器", dependencies=_ADMIN_WRITE)
 async def delete_weapon(name: str):
-    from api.data_mutations import delete_weapon as _delete
+    from api.data_profiles import delete_entity_row_async
 
-    return _delete(name)
+    return await delete_entity_row_async("endfield", "weapons", name)
 
 
 # ── 装备 ──────────────────────────────────────────────
@@ -255,7 +248,7 @@ async def delete_weapon(name: str):
 
 @router.get("/equipments", summary="获取所有装备列表（精简）")
 async def list_equipments():
-    raw = load_json(EQUIPMENTS_PATH)
+    raw = await aload_json(EQUIPMENTS_PATH)
 
     result = []
 
@@ -279,7 +272,7 @@ async def list_equipments():
 async def get_equipment(name: str):
     name = name.strip()
 
-    raw = load_json(EQUIPMENTS_PATH)
+    raw = await aload_json(EQUIPMENTS_PATH)
 
     for e in raw:
         if e.get("名称") == name:
@@ -290,28 +283,28 @@ async def get_equipment(name: str):
 
 @router.get("/equipments/detail/all", summary="获取所有装备完整数据")
 async def list_equipments_full():
-    return load_json(EQUIPMENTS_PATH)
+    return await aload_json(EQUIPMENTS_PATH)
 
 
 @router.post("/equipments", summary="新增装备", dependencies=_ADMIN_WRITE)
 async def create_equipment(data: dict[str, Any]):
-    from api.data_mutations import create_equipment as _create
+    from api.data_profiles import create_entity_row_async
 
-    return _create(data)
+    return await create_entity_row_async("endfield", "equipments", data)
 
 
 @router.put("/equipments/{name}", summary="更新装备", dependencies=_ADMIN_WRITE)
 async def update_equipment(name: str, data: dict[str, Any]):
-    from api.data_mutations import update_equipment as _update
+    from api.data_profiles import update_entity_row_async
 
-    return _update(name, data)
+    return await update_entity_row_async("endfield", "equipments", name, data)
 
 
 @router.delete("/equipments/{name}", summary="删除装备", dependencies=_ADMIN_WRITE)
 async def delete_equipment(name: str):
-    from api.data_mutations import delete_equipment as _delete
+    from api.data_profiles import delete_entity_row_async
 
-    return _delete(name)
+    return await delete_entity_row_async("endfield", "equipments", name)
 
 
 # ── 装备过滤与分类 ────────────────────────────────────
@@ -319,7 +312,7 @@ async def delete_equipment(name: str):
 
 @router.get("/equipments/set/{set_name}", summary="按套组名称过滤装备")
 async def get_equipment_by_set(set_name: str):
-    raw = load_json(EQUIPMENTS_PATH)
+    raw = await aload_json(EQUIPMENTS_PATH)
 
     result = [e for e in raw if e.get("所属套组") == set_name or e.get("套装") == set_name]
 
@@ -331,7 +324,7 @@ async def get_equipment_by_set(set_name: str):
 
 @router.get("/equipments/slot/{slot}", summary="按部位过滤装备")
 async def get_equipment_by_slot(slot: str):
-    raw = load_json(EQUIPMENTS_PATH)
+    raw = await aload_json(EQUIPMENTS_PATH)
 
     return [e for e in raw if e.get("部位") == slot]
 
@@ -341,11 +334,11 @@ async def get_equipment_by_slot(slot: str):
 
 @router.get("/summary", summary="数据摘要统计")
 async def data_summary():
-    chars = load_json(CHARACTERS_PATH)
+    chars = await aload_json(CHARACTERS_PATH) or []
 
-    weps = load_json(WEAPONS_PATH)
+    weps = await aload_json(WEAPONS_PATH) or []
 
-    equips = load_json(EQUIPMENTS_PATH)
+    equips = await aload_json(EQUIPMENTS_PATH) or []
 
     return {
         "characters_count": len(chars),
@@ -401,37 +394,37 @@ async def list_data_profiles():
 
 @router.get("/profiles/{profile_id}/{entity_key}", summary="按 profile 列出实体")
 async def list_profile_entity(profile_id: str, entity_key: str):
-    from api.data_profiles import list_entity_rows
+    from api.data_profiles import list_entity_rows_async
 
-    return list_entity_rows(profile_id, entity_key)
+    return await list_entity_rows_async(profile_id, entity_key)
 
 
 @router.get("/profiles/{profile_id}/{entity_key}/detail/all", summary="完整实体列表")
 async def list_profile_entity_full(profile_id: str, entity_key: str):
-    from api.data_profiles import list_entity_rows
+    from api.data_profiles import list_entity_rows_async
 
-    return list_entity_rows(profile_id, entity_key, full=True)
+    return await list_entity_rows_async(profile_id, entity_key, full=True)
 
 
 @router.post("/profiles/{profile_id}/{entity_key}", summary="新增实体", dependencies=_ADMIN_WRITE)
 async def create_profile_entity(profile_id: str, entity_key: str, data: dict[str, Any]):
-    from api.data_profiles import create_entity_row
+    from api.data_profiles import create_entity_row_async
 
-    return create_entity_row(profile_id, entity_key, data)
+    return await create_entity_row_async(profile_id, entity_key, data)
 
 
 @router.put("/profiles/{profile_id}/{entity_key}/{name}", summary="更新实体", dependencies=_ADMIN_WRITE)
 async def update_profile_entity(profile_id: str, entity_key: str, name: str, data: dict[str, Any]):
-    from api.data_profiles import update_entity_row
+    from api.data_profiles import update_entity_row_async
 
-    return update_entity_row(profile_id, entity_key, name, data)
+    return await update_entity_row_async(profile_id, entity_key, name, data)
 
 
 @router.delete("/profiles/{profile_id}/{entity_key}/{name}", summary="删除实体", dependencies=_ADMIN_WRITE)
 async def delete_profile_entity(profile_id: str, entity_key: str, name: str):
-    from api.data_profiles import delete_entity_row
+    from api.data_profiles import delete_entity_row_async
 
-    return delete_entity_row(profile_id, entity_key, name)
+    return await delete_entity_row_async(profile_id, entity_key, name)
 
 
 # ── DAG 验证（数据编辑器 → 跑 DAG 看结果对不对）─────────
@@ -527,10 +520,10 @@ def _build_dag_verify_context(entity: dict, entity_key: str, level: int) -> dict
 @router.post("/dag-verify", summary="DAG 验证 — 加载数据 → 跑 DAG 看计算结果", response_model=DagVerifyResponse)
 async def dag_verify(req: DagVerifyRequest):
     """用于数据编辑器验证：选中角色/武器 → 一键跑 DAG 查看乘区输出是否合理。"""
-    from api.data_profiles import get_entity, list_entity_rows
+    from api.data_profiles import get_entity, list_entity_rows_async
 
     get_entity(req.profile_id, req.entity_key)  # validate entity exists
-    rows = list_entity_rows(req.profile_id, req.entity_key, full=True)
+    rows = await list_entity_rows_async(req.profile_id, req.entity_key, full=True)
 
     entity = next((r for r in rows if r.get("名称") == req.entity_name), None)
     if entity is None:
@@ -600,9 +593,9 @@ _LEVEL_CURVE_FIELDS: dict[str, list[str]] = {
 @router.post("/validate", summary="数据校验 — 检查必填字段、等级曲线完整性", response_model=ValidateResponse)
 async def validate_data(req: ValidateRequest):
     """批量校验数据实体：检查必填字段、等级曲线长度等。"""
-    from api.data_profiles import list_entity_rows
+    from api.data_profiles import list_entity_rows_async
 
-    rows = list_entity_rows(req.profile_id, req.entity_key, full=True)
+    rows = await list_entity_rows_async(req.profile_id, req.entity_key, full=True)
     required = _REQUIRED_FIELDS.get(req.entity_key, ["名称"])
     curves = _LEVEL_CURVE_FIELDS.get(req.entity_key, [])
 

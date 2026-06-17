@@ -1,4 +1,4 @@
-# IDE / 编辑器
+﻿# IDE / 编辑器
 .idea/
 .trae/
 .vscode/
@@ -6,6 +6,9 @@
 .cursorrules
 *.swp
 *~
+
+# AI 技能（从 mattpocock/skills 安装）
+.agents/
 
 # Skills 锁文件
 skills-lock.json

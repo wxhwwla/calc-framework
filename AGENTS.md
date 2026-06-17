@@ -1,5 +1,12 @@
 # Agent Skills Configuration
 
+> **Note**: Skills installed via `npx skills` (`.agents/skills/`) are in `.gitignore`
+> and **not committed** to the repository. Run `npx skills@latest add mattpocock/skills`
+> to install them locally.
+>
+> **注意**：通过 `npx skills` 安装的 AI 技能（`.agents/skills/`）已在 `.gitignore` 中，
+> 不提交到仓库。运行 `npx skills@latest add mattpocock/skills` 安装。
+
 ## Session continuity (new conversations)
 
 **At the start of every new conversation** on this repo (unless the user only asks a one-off question unrelated to the codebase), read these two documents first:

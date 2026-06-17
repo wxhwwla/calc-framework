@@ -1,6 +1,8 @@
 # Calc Framework — 项目规则（完整版）
 
 > 本文件是 Claude Code 全局遵守的项目规则，整合自 `.trae/rules/project_rules.md` 和 `AGENTS.md`。每次新对话自动加载。
+>
+> ⚠️ 通过 `npx skills` 安装的 AI 技能（`.agents/skills/`）已在 `.gitignore` 中，**不提交到仓库**。新开发者运行 `npx skills@latest add mattpocock/skills` 安装。
 
 ---
 
