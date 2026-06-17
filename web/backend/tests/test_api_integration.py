@@ -1301,23 +1301,39 @@ class TestDataMutations(unittest.TestCase):
     """数据 CRUD 变更端点基础测试（只测路由可达性和 422 校验）。"""
 
     def setUp(self) -> None:
+        from web.backend.tests._admin_test_env import admin_headers, install_test_admin_token
+
+        install_test_admin_token()
         self.client = TestClient(app)
+        self._admin_headers = admin_headers()
+
+    def tearDown(self) -> None:
+        from web.backend.tests._admin_test_env import remove_test_admin_token
+
+        remove_test_admin_token()
 
     def test_create_character_empty_body_returns_422(self) -> None:
-        resp = self.client.post("/api/data/characters", json={})
+        resp = self.client.post("/api/data/characters", json={}, headers=self._admin_headers)
         self.assertIn(resp.status_code, (400, 422))
 
     def test_create_weapon_empty_body_returns_422(self) -> None:
-        resp = self.client.post("/api/data/weapons", json={})
+        resp = self.client.post("/api/data/weapons", json={}, headers=self._admin_headers)
         self.assertIn(resp.status_code, (400, 422))
 
     def test_create_equipment_empty_body_returns_422(self) -> None:
-        resp = self.client.post("/api/data/equipments", json={})
+        resp = self.client.post("/api/data/equipments", json={}, headers=self._admin_headers)
         self.assertIn(resp.status_code, (400, 422))
 
     def test_delete_nonexistent_character_returns_404(self) -> None:
-        resp = self.client.delete("/api/data/characters/NONEXISTENT_NAME_XYZ")
+        resp = self.client.delete(
+            "/api/data/characters/NONEXISTENT_NAME_XYZ",
+            headers=self._admin_headers,
+        )
         self.assertEqual(resp.status_code, 404)
+
+    def test_delete_without_admin_token_returns_401(self) -> None:
+        resp = self.client.delete("/api/data/characters/NONEXISTENT_NAME_XYZ")
+        self.assertEqual(resp.status_code, 401)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1329,7 +1345,16 @@ class TestDataProfiles(unittest.TestCase):
     """数据 profile 端点（多游戏 profile）。"""
 
     def setUp(self) -> None:
+        from web.backend.tests._admin_test_env import admin_headers, install_test_admin_token
+
+        install_test_admin_token()
         self.client = TestClient(app)
+        self._admin_headers = admin_headers()
+
+    def tearDown(self) -> None:
+        from web.backend.tests._admin_test_env import remove_test_admin_token
+
+        remove_test_admin_token()
 
     def test_list_profiles(self) -> None:
         resp = self.client.get("/api/data/profiles")
@@ -1357,7 +1382,11 @@ class TestDataProfiles(unittest.TestCase):
         profile_id = profiles[0].get("id", "")
         if not profile_id:
             self.skipTest("profile 缺少 id")
-        resp2 = self.client.post(f"/api/data/profiles/{profile_id}/characters", json={})
+        resp2 = self.client.post(
+            f"/api/data/profiles/{profile_id}/characters",
+            json={},
+            headers=self._admin_headers,
+        )
         self.assertIn(resp2.status_code, (400, 422))
 
 

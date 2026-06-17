@@ -762,6 +762,16 @@ project = calc-framework
 | `PA_API_TOKEN` | API Token |
 | `PA_PROJECT` | 项目目录名（默认 calc-framework） |
 | `PA_DOMAIN` | Web App 域名 |
+| `CALC_ADMIN_TOKEN` | Web 管理 Token（≥32 字符随机串）；请求头 `X-Admin-Token` 携带，保护 `/api/admin/*` 与 `/api/data` 写操作 |
+| `CALC_API_KEY_PEPPER` | API Key scrypt 哈希 pepper（生产必配） |
+
+**管理接口认证**：在 PythonAnywhere Web App → Environment variables 中设置 `CALC_ADMIN_TOKEN`。调用管理 API 或修改游戏 JSON 时附加请求头：
+
+```http
+X-Admin-Token: <你的 CALC_ADMIN_TOKEN>
+```
+
+未配置 `CALC_ADMIN_TOKEN` 时，写接口返回 **503**；已配置但 Token 错误返回 **401**。只读查询（GET `/api/data/characters` 等）无需 Token。
 
 ### 11.4 脚本解决了什么问题
 

@@ -13,12 +13,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Request
+from api.auth import verify_admin_token
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter(
+    prefix="/api/admin",
+    tags=["admin"],
+    dependencies=[Depends(verify_admin_token)],
+)
 
 # ── 持久化路径 ────────────────────────────────────────
 
@@ -205,9 +210,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> Any:
         if not self.enabled:
             return await call_next(request)
-        # 跳过管理端点自身和静态文件
+        # 跳过文档端点；/api/admin 已受 Token 保护且纳入限速统计
         path = request.url.path
-        if path.startswith("/api/admin") or path.startswith("/api/docs") or path.startswith("/api/redoc"):
+        if path.startswith("/api/docs") or path.startswith("/api/redoc"):
             return await call_next(request)
 
         api_key = request.headers.get("X-API-Key", "")

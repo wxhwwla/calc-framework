@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from api.auth import verify_admin_token
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from web.backend.data_materialize import (
@@ -19,6 +20,8 @@ from web.backend.data_materialize import (
 from ._json_utils import ENDFIELD_DATA_ROOT, load_json
 
 router = APIRouter(prefix="/api/data", tags=["data"])
+
+_ADMIN_WRITE = [Depends(verify_admin_token)]
 
 _FORMAT_QUERY_DESC = "compact|runtime|raw"
 _CHARACTER_FORMAT_DESC = "compact=成长参数；runtime=烘焙；raw=原样"
@@ -156,21 +159,21 @@ async def list_characters_full(
     return format_entity_list(raw, format, kind="character")
 
 
-@router.post("/characters", summary="新增角色")
+@router.post("/characters", summary="新增角色", dependencies=_ADMIN_WRITE)
 async def create_character(data: dict[str, Any]):
     from api.data_mutations import create_character as _create
 
     return _create(data)
 
 
-@router.put("/characters/{name}", summary="更新角色")
+@router.put("/characters/{name}", summary="更新角色", dependencies=_ADMIN_WRITE)
 async def update_character(name: str, data: dict[str, Any]):
     from api.data_mutations import update_character as _update
 
     return _update(name, data)
 
 
-@router.delete("/characters/{name}", summary="删除角色")
+@router.delete("/characters/{name}", summary="删除角色", dependencies=_ADMIN_WRITE)
 async def delete_character(name: str):
     from api.data_mutations import delete_character as _delete
 
@@ -226,21 +229,21 @@ async def list_weapons_full(
     return format_entity_list(raw, format, kind="weapon")
 
 
-@router.post("/weapons", summary="新增武器")
+@router.post("/weapons", summary="新增武器", dependencies=_ADMIN_WRITE)
 async def create_weapon(data: dict[str, Any]):
     from api.data_mutations import create_weapon as _create
 
     return _create(data)
 
 
-@router.put("/weapons/{name}", summary="更新武器")
+@router.put("/weapons/{name}", summary="更新武器", dependencies=_ADMIN_WRITE)
 async def update_weapon(name: str, data: dict[str, Any]):
     from api.data_mutations import update_weapon as _update
 
     return _update(name, data)
 
 
-@router.delete("/weapons/{name}", summary="删除武器")
+@router.delete("/weapons/{name}", summary="删除武器", dependencies=_ADMIN_WRITE)
 async def delete_weapon(name: str):
     from api.data_mutations import delete_weapon as _delete
 
@@ -290,21 +293,21 @@ async def list_equipments_full():
     return load_json(EQUIPMENTS_PATH)
 
 
-@router.post("/equipments", summary="新增装备")
+@router.post("/equipments", summary="新增装备", dependencies=_ADMIN_WRITE)
 async def create_equipment(data: dict[str, Any]):
     from api.data_mutations import create_equipment as _create
 
     return _create(data)
 
 
-@router.put("/equipments/{name}", summary="更新装备")
+@router.put("/equipments/{name}", summary="更新装备", dependencies=_ADMIN_WRITE)
 async def update_equipment(name: str, data: dict[str, Any]):
     from api.data_mutations import update_equipment as _update
 
     return _update(name, data)
 
 
-@router.delete("/equipments/{name}", summary="删除装备")
+@router.delete("/equipments/{name}", summary="删除装备", dependencies=_ADMIN_WRITE)
 async def delete_equipment(name: str):
     from api.data_mutations import delete_equipment as _delete
 
@@ -410,21 +413,21 @@ async def list_profile_entity_full(profile_id: str, entity_key: str):
     return list_entity_rows(profile_id, entity_key, full=True)
 
 
-@router.post("/profiles/{profile_id}/{entity_key}", summary="新增实体")
+@router.post("/profiles/{profile_id}/{entity_key}", summary="新增实体", dependencies=_ADMIN_WRITE)
 async def create_profile_entity(profile_id: str, entity_key: str, data: dict[str, Any]):
     from api.data_profiles import create_entity_row
 
     return create_entity_row(profile_id, entity_key, data)
 
 
-@router.put("/profiles/{profile_id}/{entity_key}/{name}", summary="更新实体")
+@router.put("/profiles/{profile_id}/{entity_key}/{name}", summary="更新实体", dependencies=_ADMIN_WRITE)
 async def update_profile_entity(profile_id: str, entity_key: str, name: str, data: dict[str, Any]):
     from api.data_profiles import update_entity_row
 
     return update_entity_row(profile_id, entity_key, name, data)
 
 
-@router.delete("/profiles/{profile_id}/{entity_key}/{name}", summary="删除实体")
+@router.delete("/profiles/{profile_id}/{entity_key}/{name}", summary="删除实体", dependencies=_ADMIN_WRITE)
 async def delete_profile_entity(profile_id: str, entity_key: str, name: str):
     from api.data_profiles import delete_entity_row
 
