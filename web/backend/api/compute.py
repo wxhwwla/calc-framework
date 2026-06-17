@@ -3,14 +3,12 @@
 
 from typing import Any
 
+from api.internal.errors import raise_http_from_exc
+from api.internal.json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
+from api.search_lib.loadout_schemas import WebLoadoutBody
 from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-from web.backend.api._errors import raise_http_from_exc
-from web.backend.api.loadout_schemas import WebLoadoutBody
-
-from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 
 ENDFIELD_ADAPTER_NAME = "终末地伤害计算（Calc Framework）"
 
@@ -81,7 +79,7 @@ class PresetExportRequest(WebLoadoutBody):
 
 def _build_loadout_context(req: LoadoutPreviewRequest) -> dict[str, Any]:
     """WebLoadoutBody → DAG adapter context。"""
-    from api.search_catalog import resolve_equipment_catalog
+    from api.search_lib.catalog import resolve_equipment_catalog
 
     from games.endfield.data_loading.web_loadout_bridge import (
         build_adapter_context_from_loadout,

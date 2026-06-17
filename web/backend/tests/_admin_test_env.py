@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 
-from api.auth import ADMIN_TOKEN_ENV, ADMIN_TOKEN_HEADER
+from api.internal.auth import ADMIN_TOKEN_ENV, ADMIN_TOKEN_HEADER
 
 TEST_ADMIN_TOKEN = "test-admin-token-32chars-minimum!!"
 

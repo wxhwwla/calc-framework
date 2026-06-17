@@ -16,8 +16,8 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
         sys.path.insert(0, _p)
 
 import pytest
-from api._errors import CALC_DEBUG_ENV
 from api.admin import RateLimitMiddleware
+from api.internal.errors import CALC_DEBUG_ENV
 from fastapi.testclient import TestClient
 
 from web.backend.main import app

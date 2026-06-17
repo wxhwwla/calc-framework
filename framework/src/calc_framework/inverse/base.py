@@ -20,10 +20,15 @@
 from __future__ import annotations
 
 import math
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
+
+from calc_framework.logging import get_logger
+
+_logger = get_logger(__name__)
 
 
 @dataclass
@@ -284,6 +289,9 @@ class FloorFormulaFitter(FormulaFitter):
                 "divisor_range": "除数搜索范围 (默认 1..500)",
                 "growth_range": "成长值搜索范围 (默认 1..1000)",
                 "offset_search_limit": "offset 搜索限制 (默认 500)",
+                "search_timeout_seconds": "搜索 wall-clock 超时（秒）；超时后返回当前最优近似解",
+                "early_stop_max_error": "每级平均误差阈值；达到后提前停止搜索",
+                "max_search_iterations": "搜索步数上限；超出后返回当前最优近似解",
             },
         }
 
@@ -319,7 +327,16 @@ class FloorFormulaFitter(FormulaFitter):
         # 2. 核心搜索
 
         result = self._search(
-            scaled_data, scaled_base, scale_factor, num_levels, divisor_range, growth_range, offset_search_limit
+            scaled_data,
+            scaled_base,
+            scale_factor,
+            num_levels,
+            divisor_range,
+            growth_range,
+            offset_search_limit,
+            search_timeout_seconds=options.get("search_timeout_seconds"),
+            early_stop_max_error=options.get("early_stop_max_error"),
+            max_search_iterations=options.get("max_search_iterations"),
         )
 
         if result is None:
@@ -491,6 +508,10 @@ class FloorFormulaFitter(FormulaFitter):
         divisor_range: tuple[int, int],
         growth_range: tuple[int, int],
         offset_search_limit: int,
+        *,
+        search_timeout_seconds: float | None = None,
+        early_stop_max_error: float | None = None,
+        max_search_iterations: int | None = None,
     ) -> FitResult | None:
         """核心搜索：先找精确解，再找近似最优解。"""
 
@@ -499,6 +520,14 @@ class FloorFormulaFitter(FormulaFitter):
         best_key: tuple[int, int, int] | None = None
 
         best_error = float("inf")
+
+        deadline: float | None = None
+        if search_timeout_seconds is not None and search_timeout_seconds > 0:
+            deadline = time.monotonic() + search_timeout_seconds
+
+        iterations = 0
+        search_stopped = False
+        stop_reason: str | None = None
 
         def _consider(growth: int, divisor: int, offset: int, error: float) -> None:
             """_consider。"""
@@ -521,16 +550,71 @@ class FloorFormulaFitter(FormulaFitter):
 
                 best_params = (growth, divisor, offset)
 
+        def _early_stop_satisfied() -> bool:
+            if early_stop_max_error is None or best_params is None:
+                return False
+            return best_error / num_levels <= early_stop_max_error
+
+        def _halt(reason: str) -> None:
+            nonlocal search_stopped, stop_reason
+            if search_stopped:
+                return
+            search_stopped = True
+            stop_reason = reason
+
+        def _poll() -> bool:
+            nonlocal iterations
+            if search_stopped:
+                return True
+            iterations += 1
+            if max_search_iterations is not None and iterations > max_search_iterations:
+                _halt("max_iterations")
+                return True
+            if deadline is not None and time.monotonic() >= deadline:
+                _halt("timeout")
+                return True
+            if _early_stop_satisfied():
+                _halt("early_stop")
+                return True
+            return False
+
+        def _finalize_best() -> FitResult | None:
+            if best_params is None or best_error >= num_levels * 0.1:
+                return None
+
+            growth, divisor, offset = best_params
+
+            if best_error < 0.001:
+                growth, divisor, offset = self._gcd_normalize(growth, divisor, offset, scaled_data, scaled_base)
+
+            return FitResult(
+                params={
+                    "base": self._restore_param(scaled_base / scale_factor, scale_factor),
+                    "growth": self._restore_param(growth / scale_factor, scale_factor),
+                    "divisor": divisor,
+                    "offset": self._restore_param(offset / scale_factor, scale_factor),
+                    "is_decimal": scale_factor > 1,
+                },
+                max_error=best_error / num_levels,
+                is_exact=best_error < 0.001,
+            )
+
         # 精确解
 
         for growth in range(*growth_range):
+            if _poll():
+                break
             for divisor in range(*divisor_range):
+                if _poll():
+                    break
                 valid, offset_lower, offset_upper = self._offset_bounds(scaled_data, scaled_base, growth, divisor, num_levels)
 
                 if not valid:
                     continue
 
                 for offset in range(offset_lower, offset_upper + 1):
+                    if _poll():
+                        break
                     error = sum(
                         abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
                         for lv in range(1, num_levels + 1)
@@ -550,55 +634,66 @@ class FloorFormulaFitter(FormulaFitter):
                             max_error=0.0,
                             is_exact=True,
                         )
+                else:
+                    continue
+                break
+            else:
+                continue
+            break
 
         # 近似解
 
-        for growth in range(*growth_range):
-            for divisor in range(*divisor_range):
-                total_offset = sum(
-                    (scaled_data[lv - 1] - scaled_base) * divisor - growth * (lv - 1) for lv in range(1, num_levels + 1)
-                )
+        if not search_stopped:
+            for growth in range(*growth_range):
+                if _poll():
+                    break
+                for divisor in range(*divisor_range):
+                    if _poll():
+                        break
+                    total_offset = sum(
+                        (scaled_data[lv - 1] - scaled_base) * divisor - growth * (lv - 1) for lv in range(1, num_levels + 1)
+                    )
 
-                offset = round(total_offset / num_levels)
+                    offset = round(total_offset / num_levels)
 
-                error = sum(
-                    abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
-                    for lv in range(1, num_levels + 1)
-                )
-
-                _consider(growth, divisor, int(offset), float(error))
-
-                valid, offset_lower, offset_upper = self._offset_bounds(scaled_data, scaled_base, growth, divisor, num_levels)
-
-                if not valid:
-                    continue
-
-                offset_end = min(offset_upper + 1, offset_lower + offset_search_limit)
-
-                for offset in range(offset_lower, offset_end):
                     error = sum(
                         abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
                         for lv in range(1, num_levels + 1)
                     )
 
+                    if _poll():
+                        break
                     _consider(growth, divisor, int(offset), float(error))
 
-        if best_params is None or best_error >= num_levels * 0.1:
-            return None
+                    valid, offset_lower, offset_upper = self._offset_bounds(scaled_data, scaled_base, growth, divisor, num_levels)
 
-        growth, divisor, offset = best_params
+                    if not valid:
+                        continue
 
-        if best_error < 0.001:
-            growth, divisor, offset = self._gcd_normalize(growth, divisor, offset, scaled_data, scaled_base)
+                    offset_end = min(offset_upper + 1, offset_lower + offset_search_limit)
 
-        return FitResult(
-            params={
-                "base": self._restore_param(scaled_base / scale_factor, scale_factor),
-                "growth": self._restore_param(growth / scale_factor, scale_factor),
-                "divisor": divisor,
-                "offset": self._restore_param(offset / scale_factor, scale_factor),
-                "is_decimal": scale_factor > 1,
-            },
-            max_error=best_error / num_levels,
-            is_exact=best_error < 0.001,
-        )
+                    for offset in range(offset_lower, offset_end):
+                        if _poll():
+                            break
+                        error = sum(
+                            abs(scaled_base + math.floor((growth * (lv - 1) + offset) / divisor) - scaled_data[lv - 1])
+                            for lv in range(1, num_levels + 1)
+                        )
+
+                        _consider(growth, divisor, int(offset), float(error))
+                    else:
+                        continue
+                    break
+                else:
+                    continue
+                break
+
+        if stop_reason is not None:
+            _logger.warning(
+                "inverse _search 提前停止: reason=%s iterations=%d best_error=%s",
+                stop_reason,
+                iterations,
+                best_error if best_params is not None else None,
+            )
+
+        return _finalize_best()

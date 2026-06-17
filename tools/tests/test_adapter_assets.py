@@ -11,7 +11,7 @@ _BACKEND = _REPO / "web" / "backend"
 if str(_BACKEND) not in sys.path:
     sys.path.insert(0, str(_BACKEND))
 
-from api.adapter_assets import (
+from api.adapter_lib.assets import (
     data_entity_summary,
     get_adapter_dag,
     get_adapter_layout,

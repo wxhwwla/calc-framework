@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from api.safe_http import post_chat_completions
+from api.internal.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 

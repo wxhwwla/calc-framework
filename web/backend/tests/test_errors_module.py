@@ -15,7 +15,7 @@ _BACKEND = _REPO / "web" / "backend"
 if str(_BACKEND) not in sys.path:
     sys.path.insert(0, str(_BACKEND))
 
-from api._errors import (
+from api.internal.errors import (
     CALC_DEBUG_ENV,
     calc_debug_enabled,
     http_exception_from_exc,

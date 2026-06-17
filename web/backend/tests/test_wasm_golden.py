@@ -86,7 +86,7 @@ class TestWasmGolden(unittest.TestCase):
             )
 
     def test_python_dag_eval_matches_golden(self) -> None:
-        from api.adapter_assets import get_adapter_dag
+        from api.adapter_lib.assets import get_adapter_dag
         from calc_framework.dag.engine import evaluate_graph
         from calc_framework.dag.graph_types import validate_graph
 
@@ -99,7 +99,7 @@ class TestWasmGolden(unittest.TestCase):
             self.assertAlmostEqual(float(result.outputs[key]), float(expected), places=4, msg=key)
 
     def test_loadout_context_computed_matches_golden(self) -> None:
-        from api.loadout_schemas import WebLoadoutBody
+        from api.search_lib.loadout_schemas import WebLoadoutBody
 
         from games.endfield.data_loading.web_loadout_bridge import (
             build_adapter_context_from_loadout,

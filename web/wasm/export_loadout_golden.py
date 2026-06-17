@@ -20,7 +20,7 @@ GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 def _find_working_payload():
     from api.admin import RateLimitMiddleware
     from api.compute import evaluate_loadout
-    from api.loadout_schemas import WebLoadoutBody
+    from api.search_lib.loadout_schemas import WebLoadoutBody
     from fastapi.testclient import TestClient
 
     from web.backend.data_materialize import compact_entity_for_transport
@@ -71,7 +71,7 @@ def _find_working_payload():
 
 
 def export_golden() -> Path:
-    from api.adapter_assets import get_adapter_dag
+    from api.adapter_lib.assets import get_adapter_dag
 
     from games.endfield.data_loading.web_loadout_bridge import (
         build_adapter_context_from_loadout,

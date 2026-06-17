@@ -17,8 +17,8 @@ for _p in (str(_FRAMEWORK_SRC), str(_REPO), str(_BACKEND)):
 import unittest
 
 from api.admin import RateLimitMiddleware
-from api.entity_refs import merge_entity_ref
-from api.search_catalog import resolve_equipment_catalog, weapon_rows_for_search
+from api.search_lib.catalog import resolve_equipment_catalog, weapon_rows_for_search
+from api.search_lib.entity_refs import merge_entity_ref
 from fastapi.testclient import TestClient
 
 from games.endfield.data_loading.loader import get_characters, get_weapons

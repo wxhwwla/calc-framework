@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from api.internal.json_utils import ADAPTER_ROOT
 from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -12,8 +13,6 @@ from games.arknights.operator_catalog import (
     build_operator_index,
     load_operators_map,
 )
-
-from ._json_utils import ADAPTER_ROOT
 
 router = APIRouter(prefix="/api/arknights", tags=["arknights"])
 
@@ -141,5 +140,6 @@ def get_operator(name: str):
 def compute_damage(req: ComputeRequest):
     """计算指定干员的技能伤害。"""
     return compute_damage_payload(req)
+
 
 __all__: list[str] = []

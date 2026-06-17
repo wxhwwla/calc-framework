@@ -245,6 +245,7 @@ def _handle_layout_compute(environ, start_response):
         return None
 
     try:
+        from api.adapter_lib.layout import get_dag_payload, get_layout_payload, get_variables_payload
         from api.compute import (
             CompareRequest,
             EvaluateRequest,
@@ -261,7 +262,6 @@ def _handle_layout_compute(environ, start_response):
             preset_export,
             snapshot_payload,
         )
-        from api.layout import get_dag_payload, get_layout_payload, get_variables_payload
         from fastapi import HTTPException
     except Exception as e:
         return _json(start_response, {"error": f"layout/compute import failed: {e}"}, "500 Internal Server Error")
@@ -406,7 +406,7 @@ def _handle_manual_buff(environ, start_response):
         return None
 
     try:
-        from api.manual_buff import (
+        from api.endfield.manual_buff import (
             ActiveKeysRequest,
             ApplyConsumableRequest,
             abnormal_matrix_specs,
@@ -454,7 +454,7 @@ def _handle_survival(environ, start_response):
         return None
 
     try:
-        from api.survival import SurvivalEstimateRequest, survival_estimate
+        from api.endfield.survival import SurvivalEstimateRequest, survival_estimate
     except Exception as e:
         return _json(start_response, {"error": f"survival import failed: {e}"}, "500 Internal Server Error")
 
@@ -642,7 +642,7 @@ def _handle_pack(environ, start_response):
         return None
 
     try:
-        from api.pack import (
+        from api.packaging.pack import (
             DEFAULT_THEME,
             ExportRequest,
             export_calcpack_bytes,
@@ -719,7 +719,7 @@ def _handle_adapters(environ, start_response):
 
         m = re.match(r"^/api/adapters/([^/]+)/(layout|dag|data-summary|pack-bundle)$", path)
         if m and method == "GET":
-            from api.adapter_assets import (
+            from api.adapter_lib.assets import (
                 data_entity_summary,
                 get_adapter_dag,
                 get_adapter_layout,
@@ -769,7 +769,7 @@ def _handle_history_and_download(environ, start_response):
 
     if path in ("/api/download/client", "/local-backend.zip") and method == "GET":
         try:
-            from api.download_client import build_client_download
+            from api.internal.download_client import build_client_download
 
             body, filename, ctype = build_client_download()
             return _bytes(
@@ -845,7 +845,7 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
     sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
 
     try:
-        from api.data_mutations import (
+        from api.entity.mutations import (
             create_character,
             create_equipment,
             create_weapon,
@@ -859,7 +859,7 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
             update_equipment,
             update_weapon,
         )
-        from api.data_profiles import (
+        from api.entity.profiles import (
             create_entity_row,
             delete_entity_row,
             update_entity_row,
@@ -985,19 +985,19 @@ def _handle_data_api(environ, start_response):
     sub = path[len("/api/data/") :]
 
     if sub == "profiles":
-        from api.data_profiles import profiles_metadata
+        from api.entity.profiles import profiles_metadata
 
         return _json(start_response, profiles_metadata())
 
     m = re.match(r"^profiles/([^/]+)/([^/]+)/detail/all$", sub)
     if m:
-        from api.data_profiles import list_entity_rows
+        from api.entity.profiles import list_entity_rows
 
         return _json(start_response, list_entity_rows(m.group(1), m.group(2), full=True))
 
     m = re.match(r"^profiles/([^/]+)/([^/]+)$", sub)
     if m:
-        from api.data_profiles import list_entity_rows
+        from api.entity.profiles import list_entity_rows
 
         return _json(start_response, list_entity_rows(m.group(1), m.group(2)))
 

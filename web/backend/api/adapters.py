@@ -4,17 +4,16 @@
 import json
 from pathlib import Path
 
-from api.adapter_assets import (
+from api.adapter_lib.assets import (
     data_entity_summary,
     get_adapter_dag,
     get_adapter_layout,
     get_pack_export_bundle,
 )
+from api.internal.json_utils import ADAPTER_ROOT
 from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-
-from ._json_utils import ADAPTER_ROOT
 
 router = APIRouter(prefix="/api/adapters", tags=["adapters"])
 
@@ -115,8 +114,7 @@ async def get_schema(name: str):
     if pkg.attr_schema is None:
         return AdapterSchemaResponse(attributes=[])
 
-    return AdapterSchemaResponse(
-        attributes=[AdapterAttrResponse(**a.to_dict()) for a in pkg.attr_schema.attributes]
-    )
+    return AdapterSchemaResponse(attributes=[AdapterAttrResponse(**a.to_dict()) for a in pkg.attr_schema.attributes])
+
 
 __all__: list[str] = []

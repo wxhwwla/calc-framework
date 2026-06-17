@@ -14,7 +14,7 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
 
 import asyncio
 
-from api._json_utils import aload_json, asave_json, load_json, save_json
+from api.internal.json_utils import aload_json, asave_json, load_json, save_json
 
 
 def test_asave_and_aload_roundtrip(tmp_path: Path) -> None:

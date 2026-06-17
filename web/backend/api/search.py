@@ -158,8 +158,8 @@ class EstimateRequest(BaseModel):
 
 def _prepare_search_req(req: SearchRequest | EstimateRequest) -> tuple[Any, Any]:
     """归一化技能字段、实体引用与 catalog（与 GUI 桌面端保持一致）。"""
-    from api.entity_refs import resolve_character_ref, resolve_weapon_ref
-    from api.search_catalog import resolve_equipment_catalog, weapon_rows_for_search
+    from api.search_lib.catalog import resolve_equipment_catalog, weapon_rows_for_search
+    from api.search_lib.entity_refs import resolve_character_ref, resolve_weapon_ref
 
     from games.endfield.data_loading.web_search_bridge import (
         enrich_search_request_fields,
@@ -587,7 +587,7 @@ async def run_search_stream(req: SearchRequest):
 
 
 # 搜索历史（文件持久化，最近 10 次）
-from api.persistent_store import load_list, save_list
+from api.internal.persistent_store import load_list, save_list
 
 _SEARCH_STORE_KEY = "search_history"
 _search_history: list[dict] = load_list(_SEARCH_STORE_KEY)

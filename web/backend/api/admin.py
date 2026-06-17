@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from api.auth import verify_admin_token
+from api.internal.auth import verify_admin_token
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware

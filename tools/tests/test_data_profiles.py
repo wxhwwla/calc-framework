@@ -4,12 +4,18 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 from fastapi import HTTPException
 
-from web.backend.api import data_profiles as dp
+_REPO = Path(__file__).resolve().parents[2]
+_BACKEND = _REPO / "web" / "backend"
+if str(_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_BACKEND))
+
+from api.entity import profiles as dp
 
 
 def test_profiles_metadata_includes_endfield_and_arknights():

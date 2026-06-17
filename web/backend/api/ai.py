@@ -7,13 +7,13 @@ import json
 import logging
 import re
 
-from api.safe_http import post_chat_completions
+from api.internal.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
+from api.internal.json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 

@@ -16,8 +16,8 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
 
 import pytest
 from api.admin import _hash_key
-from api.safe_http import ValidatedOutboundHost, validate_outbound_api_base
-from api.safe_paths import (
+from api.internal.safe_http import ValidatedOutboundHost, validate_outbound_api_base
+from api.internal.safe_paths import (
     build_contribute_filename,
     resolve_staging_file,
     write_json_to_staging,
@@ -75,12 +75,12 @@ class TestSafeHttp:
         assert exc.value.status_code == 400
 
     def test_openai_v1_url_rebuild(self) -> None:
-        with patch("api.safe_http._hostname_resolves_to_private"):
+        with patch("api.internal.safe_http._hostname_resolves_to_private"):
             host = validate_outbound_api_base("https://api.openai.com/v1")
         assert host.chat_completions_url() == "https://api.openai.com/v1/chat/completions"
 
     def test_empty_path_url_rebuild(self) -> None:
-        with patch("api.safe_http._hostname_resolves_to_private"):
+        with patch("api.internal.safe_http._hostname_resolves_to_private"):
             host = validate_outbound_api_base("https://api.deepseek.com")
         assert isinstance(host, ValidatedOutboundHost)
         assert host.chat_completions_url() == "https://api.deepseek.com/chat/completions"

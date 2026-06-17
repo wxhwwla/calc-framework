@@ -3,7 +3,7 @@
 
 from datetime import datetime, timezone
 
-from api.persistent_store import load_list, save_list
+from api.internal.persistent_store import load_list, save_list
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/history")
@@ -40,5 +40,6 @@ def list_history():
 def save_history(entry: dict):
     """保存一条计算历史记录。"""
     return save_history_payload(entry)
+
 
 __all__: list[str] = []

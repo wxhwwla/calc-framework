@@ -3,7 +3,8 @@
 
 from typing import Any
 
-from api.auth import verify_admin_token
+from api.internal.auth import verify_admin_token
+from api.internal.json_utils import ENDFIELD_DATA_ROOT, aload_json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
@@ -14,8 +15,6 @@ from web.backend.data_materialize import (
     format_entity_list,
     format_weapon_entity,
 )
-
-from ._json_utils import ENDFIELD_DATA_ROOT, aload_json
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
@@ -154,21 +153,21 @@ async def list_characters_full(
 
 @router.post("/characters", summary="新增角色", dependencies=_ADMIN_WRITE)
 async def create_character(data: dict[str, Any]):
-    from api.data_profiles import create_entity_row_async
+    from api.entity.profiles import create_entity_row_async
 
     return await create_entity_row_async("endfield", "characters", data)
 
 
 @router.put("/characters/{name}", summary="更新角色", dependencies=_ADMIN_WRITE)
 async def update_character(name: str, data: dict[str, Any]):
-    from api.data_profiles import update_entity_row_async
+    from api.entity.profiles import update_entity_row_async
 
     return await update_entity_row_async("endfield", "characters", name, data)
 
 
 @router.delete("/characters/{name}", summary="删除角色", dependencies=_ADMIN_WRITE)
 async def delete_character(name: str):
-    from api.data_profiles import delete_entity_row_async
+    from api.entity.profiles import delete_entity_row_async
 
     return await delete_entity_row_async("endfield", "characters", name)
 
@@ -224,21 +223,21 @@ async def list_weapons_full(
 
 @router.post("/weapons", summary="新增武器", dependencies=_ADMIN_WRITE)
 async def create_weapon(data: dict[str, Any]):
-    from api.data_profiles import create_entity_row_async
+    from api.entity.profiles import create_entity_row_async
 
     return await create_entity_row_async("endfield", "weapons", data)
 
 
 @router.put("/weapons/{name}", summary="更新武器", dependencies=_ADMIN_WRITE)
 async def update_weapon(name: str, data: dict[str, Any]):
-    from api.data_profiles import update_entity_row_async
+    from api.entity.profiles import update_entity_row_async
 
     return await update_entity_row_async("endfield", "weapons", name, data)
 
 
 @router.delete("/weapons/{name}", summary="删除武器", dependencies=_ADMIN_WRITE)
 async def delete_weapon(name: str):
-    from api.data_profiles import delete_entity_row_async
+    from api.entity.profiles import delete_entity_row_async
 
     return await delete_entity_row_async("endfield", "weapons", name)
 
@@ -288,21 +287,21 @@ async def list_equipments_full():
 
 @router.post("/equipments", summary="新增装备", dependencies=_ADMIN_WRITE)
 async def create_equipment(data: dict[str, Any]):
-    from api.data_profiles import create_entity_row_async
+    from api.entity.profiles import create_entity_row_async
 
     return await create_entity_row_async("endfield", "equipments", data)
 
 
 @router.put("/equipments/{name}", summary="更新装备", dependencies=_ADMIN_WRITE)
 async def update_equipment(name: str, data: dict[str, Any]):
-    from api.data_profiles import update_entity_row_async
+    from api.entity.profiles import update_entity_row_async
 
     return await update_entity_row_async("endfield", "equipments", name, data)
 
 
 @router.delete("/equipments/{name}", summary="删除装备", dependencies=_ADMIN_WRITE)
 async def delete_equipment(name: str):
-    from api.data_profiles import delete_entity_row_async
+    from api.entity.profiles import delete_entity_row_async
 
     return await delete_entity_row_async("endfield", "equipments", name)
 
@@ -355,7 +354,7 @@ async def data_summary():
 
 @router.post("/inverse", summary="公式反推（终末地 legacy）", response_model=InverseResponse)
 async def inverse_formula(req: InverseRequest):
-    from api.inverse_payloads import inverse_formula_payload
+    from api.entity.inverse_payloads import inverse_formula_payload
 
     result = inverse_formula_payload(req.type, req.values, max_error=req.max_error)
     return InverseResponse(**{k: v for k, v in result.items() if k in InverseResponse.model_fields})
@@ -363,7 +362,7 @@ async def inverse_formula(req: InverseRequest):
 
 @router.post("/inverse/segment", summary="多段曲线单段反推", response_model=SegmentInverseResponse)
 async def inverse_segment(req: SegmentInverseRequest):
-    from api.inverse_payloads import inverse_segment_payload
+    from api.entity.inverse_payloads import inverse_segment_payload
 
     return inverse_segment_payload(
         game=req.game,
@@ -377,7 +376,7 @@ async def inverse_segment(req: SegmentInverseRequest):
 
 @router.post("/inverse/milestones", summary="明日方舟里程碑批量反推", response_model=MilestonesInverseResponse)
 async def inverse_milestones(req: MilestonesInverseRequest):
-    from api.inverse_payloads import inverse_milestones_payload
+    from api.entity.inverse_payloads import inverse_milestones_payload
 
     return inverse_milestones_payload(req.operator, max_error=req.max_error)
 
@@ -387,42 +386,42 @@ async def inverse_milestones(req: MilestonesInverseRequest):
 
 @router.get("/profiles", summary="数据录入 profile 列表")
 async def list_data_profiles():
-    from api.data_profiles import profiles_metadata
+    from api.entity.profiles import profiles_metadata
 
     return profiles_metadata()
 
 
 @router.get("/profiles/{profile_id}/{entity_key}", summary="按 profile 列出实体")
 async def list_profile_entity(profile_id: str, entity_key: str):
-    from api.data_profiles import list_entity_rows_async
+    from api.entity.profiles import list_entity_rows_async
 
     return await list_entity_rows_async(profile_id, entity_key)
 
 
 @router.get("/profiles/{profile_id}/{entity_key}/detail/all", summary="完整实体列表")
 async def list_profile_entity_full(profile_id: str, entity_key: str):
-    from api.data_profiles import list_entity_rows_async
+    from api.entity.profiles import list_entity_rows_async
 
     return await list_entity_rows_async(profile_id, entity_key, full=True)
 
 
 @router.post("/profiles/{profile_id}/{entity_key}", summary="新增实体", dependencies=_ADMIN_WRITE)
 async def create_profile_entity(profile_id: str, entity_key: str, data: dict[str, Any]):
-    from api.data_profiles import create_entity_row_async
+    from api.entity.profiles import create_entity_row_async
 
     return await create_entity_row_async(profile_id, entity_key, data)
 
 
 @router.put("/profiles/{profile_id}/{entity_key}/{name}", summary="更新实体", dependencies=_ADMIN_WRITE)
 async def update_profile_entity(profile_id: str, entity_key: str, name: str, data: dict[str, Any]):
-    from api.data_profiles import update_entity_row_async
+    from api.entity.profiles import update_entity_row_async
 
     return await update_entity_row_async(profile_id, entity_key, name, data)
 
 
 @router.delete("/profiles/{profile_id}/{entity_key}/{name}", summary="删除实体", dependencies=_ADMIN_WRITE)
 async def delete_profile_entity(profile_id: str, entity_key: str, name: str):
-    from api.data_profiles import delete_entity_row_async
+    from api.entity.profiles import delete_entity_row_async
 
     return await delete_entity_row_async(profile_id, entity_key, name)
 
@@ -520,7 +519,7 @@ def _build_dag_verify_context(entity: dict, entity_key: str, level: int) -> dict
 @router.post("/dag-verify", summary="DAG 验证 — 加载数据 → 跑 DAG 看计算结果", response_model=DagVerifyResponse)
 async def dag_verify(req: DagVerifyRequest):
     """用于数据编辑器验证：选中角色/武器 → 一键跑 DAG 查看乘区输出是否合理。"""
-    from api.data_profiles import get_entity, list_entity_rows_async
+    from api.entity.profiles import get_entity, list_entity_rows_async
 
     get_entity(req.profile_id, req.entity_key)  # validate entity exists
     rows = await list_entity_rows_async(req.profile_id, req.entity_key, full=True)
@@ -533,9 +532,8 @@ async def dag_verify(req: DagVerifyRequest):
     if not adapter_name:
         raise HTTPException(status_code=400, detail=f"不支持的 profile: {req.profile_id}")
 
+    from api.internal.json_utils import ADAPTER_ROOT
     from calc_framework.config.manager import AdapterManager
-
-    from ._json_utils import ADAPTER_ROOT
 
     manager = AdapterManager(ADAPTER_ROOT)
     try:
@@ -593,7 +591,7 @@ _LEVEL_CURVE_FIELDS: dict[str, list[str]] = {
 @router.post("/validate", summary="数据校验 — 检查必填字段、等级曲线完整性", response_model=ValidateResponse)
 async def validate_data(req: ValidateRequest):
     """批量校验数据实体：检查必填字段、等级曲线长度等。"""
-    from api.data_profiles import list_entity_rows_async
+    from api.entity.profiles import list_entity_rows_async
 
     rows = await list_entity_rows_async(req.profile_id, req.entity_key, full=True)
     required = _REQUIRED_FIELDS.get(req.entity_key, ["名称"])

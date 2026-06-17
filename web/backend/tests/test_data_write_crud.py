@@ -16,7 +16,7 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
 
 import pytest  # noqa: I001
 from api.admin import RateLimitMiddleware
-from api.data_profiles import EntityDef, ProfileDef, PROFILES
+from api.entity.profiles import EntityDef, ProfileDef, PROFILES
 from fastapi.testclient import TestClient
 
 from web.backend.main import app

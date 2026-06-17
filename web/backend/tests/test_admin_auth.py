@@ -15,7 +15,7 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
 
 import pytest
 from api.admin import RateLimitMiddleware
-from api.auth import ADMIN_TOKEN_HEADER
+from api.internal.auth import ADMIN_TOKEN_HEADER
 from fastapi.testclient import TestClient
 
 from web.backend.main import app

@@ -9,23 +9,23 @@ import os
 import sys
 from pathlib import Path
 
+from api.adapter_lib.layout import router as layout_router
 from api.adapters import router as adapters_router
 from api.admin import router as admin_router
 from api.ai import router as ai_router
 from api.arknights import router as arknights_router
 from api.compute import router as compute_router
-from api.contribute import router as contribute_router
 from api.data import router as data_router
+from api.endfield.manual_buff import router as manual_buff_router
+from api.endfield.survival import router as survival_router
 from api.generator import router as generator_router
 from api.history import router as history_router
 from api.hub import router as hub_router
-from api.layout import router as layout_router
-from api.manual_buff import router as manual_buff_router
 from api.ocr import router as ocr_router
-from api.pack import router as pack_router
+from api.packaging.contribute import router as contribute_router
+from api.packaging.pack import router as pack_router
 from api.plugins import router as plugins_router
 from api.search import router as search_router
-from api.survival import router as survival_router
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
@@ -83,7 +83,7 @@ _configure_rate_limit_middleware()
 
 app.add_middleware(RateLimitMiddleware)
 
-from api.request_limits import ContentSizeLimitMiddleware, parse_max_body_bytes_env
+from api.internal.request_limits import ContentSizeLimitMiddleware, parse_max_body_bytes_env
 
 if os.environ.get("CALC_DISABLE_BODY_LIMIT", "").strip().lower() not in {"1", "true", "yes", "on"}:
     _default_body_limit = parse_max_body_bytes_env(os.environ.get("CALC_MAX_BODY_BYTES"))
@@ -185,7 +185,7 @@ async def health():
 @app.get("/api/download/client")
 def download_client():
     """下载本地搜索服务器（PyInstaller 打包，双击即可运行）。"""
-    from api.download_client import build_client_download
+    from api.internal.download_client import build_client_download
 
     content, filename, media_type = build_client_download()
     return Response(

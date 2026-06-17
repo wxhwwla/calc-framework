@@ -18,7 +18,7 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from api.request_limits import (  # noqa: I001
+from api.internal.request_limits import (  # noqa: I001
     ContentSizeLimitMiddleware,
     DEFAULT_MAX_BODY_BYTES,
     parse_max_body_bytes_env,
