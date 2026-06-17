@@ -7,6 +7,7 @@ from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from web.backend.api._errors import raise_http_from_exc
 from web.backend.api.loadout_schemas import WebLoadoutBody
 
 from ._json_utils import ADAPTER_ROOT, ENDFIELD_DATA_ROOT, load_json
@@ -45,14 +46,14 @@ def evaluate_payload(req: EvaluateRequest) -> EvaluateResponse:
     try:
         pkg = _manager.load(req.adapter)
     except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        raise_http_from_exc(e, status_code=404, public_message="适配器不存在")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise_http_from_exc(e, status_code=500)
 
     try:
         result = pkg.dag_service.evaluate(req.context)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise_http_from_exc(e, status_code=400)
 
     return EvaluateResponse(
         outputs=result.outputs,
@@ -122,9 +123,9 @@ def evaluate_loadout(req: LoadoutPreviewRequest):
             execution_order=result.execution_order,
         )
     except KeyError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=404)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=400)
 
 
 class LoadoutContextResponse(BaseModel):
@@ -137,9 +138,9 @@ def loadout_context(req: LoadoutPreviewRequest):
     try:
         return LoadoutContextResponse(context=_build_loadout_context(req))
     except KeyError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=404)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=400)
 
 
 class SnapshotRequest(BaseModel):
@@ -249,7 +250,7 @@ def snapshot_payload(req: SnapshotRequest) -> dict:
         )
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise_http_from_exc(e, status_code=400)
 
 
 @router.post("/snapshot")
@@ -373,7 +374,7 @@ def loadout_preview(req: LoadoutPreviewRequest) -> dict[str, list[str]]:
         lines = build_search_preview_lines(loadout, equipment_catalog=catalog)
         return {"lines": lines}
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=400)
 
 
 @router.post("/snapshot-full")
@@ -400,7 +401,7 @@ def loadout_snapshot(req: LoadoutSnapshotRequest) -> dict[str, Any]:
             selected_skill_label=result.selected_skill_label,
         )
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=400)
 
 
 @router.post("/preset-export")

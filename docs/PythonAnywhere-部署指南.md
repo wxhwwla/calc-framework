@@ -764,6 +764,7 @@ project = calc-framework
 | `PA_DOMAIN` | Web App 域名 |
 | `CALC_ADMIN_TOKEN` | Web 管理 Token（≥32 字符随机串）；请求头 `X-Admin-Token` 携带，保护 `/api/admin/*` 与 `/api/data` 写操作 |
 | `CALC_API_KEY_PEPPER` | API Key scrypt 哈希 pepper（生产必配） |
+| `CALC_DEBUG` | 设为 `1`/`true` 时 API 错误响应返回 `str(exc)`；默认关闭（生产推荐） |
 
 **管理接口认证**：在 PythonAnywhere Web App → Environment variables 中设置 `CALC_ADMIN_TOKEN`。调用管理 API 或修改游戏 JSON 时附加请求头：
 

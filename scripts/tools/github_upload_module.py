@@ -753,15 +753,51 @@ def _rel_repo_path(path: Path | str) -> str:
     return _normalize_change_path(str(path))
 
 
+# 运行时数据目录，不应进入版本库或上传暂存
+_UPLOAD_SKIP_PATH_MARKERS = ("/.admin_data/", "/.staging/")
+
+
+def _should_skip_upload_path(rel: str) -> bool:
+    """判断路径是否属于应跳过的运行时数据。"""
+    normalized = rel.replace("\\", "/")
+    return any(marker in normalized for marker in _UPLOAD_SKIP_PATH_MARKERS)
+
+
+def _unstage_skipped_runtime_paths() -> None:
+    """从暂存区移除误纳入的运行时数据路径（保留工作区文件）。"""
+    _, out, _ = run_git(
+        ["-c", "core.quotepath=false", "diff", "--cached", "--name-only"],
+        check=False,
+        capture_output=True,
+    )
+    to_reset: list[str] = []
+    for line in out.splitlines():
+        normalized = _normalize_change_path(line.strip())
+        if normalized and _should_skip_upload_path(normalized):
+            to_reset.append(normalized)
+    if not to_reset:
+        return
+    run_git(["reset", "HEAD", "--", *to_reset], check=False)
+    print(f"[信息] 已从暂存区移除 {len(to_reset)} 个运行时数据路径")
+
+
 def _stage_upload_changes(change_paths: list[str], version_path: Path) -> None:
     """只暂存本次上传相关路径，避免 git add . 把无关改动一并提交。"""
+    _unstage_skipped_runtime_paths()
     paths: list[str] = []
     seen: set[str] = set()
+    skipped: list[str] = []
     for raw in change_paths:
         rel = _rel_repo_path(raw)
-        if rel and rel not in seen:
-            seen.add(rel)
-            paths.append(rel)
+        if not rel or rel in seen:
+            continue
+        if _should_skip_upload_path(rel):
+            skipped.append(rel)
+            continue
+        seen.add(rel)
+        paths.append(rel)
+    if skipped:
+        print(f"[警告] 已跳过 {len(skipped)} 个运行时数据路径（勿提交）：" + ", ".join(sorted(skipped)))
     version_rel = _rel_repo_path(version_path)
     if version_rel not in seen:
         paths.append(version_rel)
@@ -820,23 +856,26 @@ def _unstaged_modified_paths() -> list[str]:
 
 def _refresh_staging_for_commit(change_paths: list[str], version_path: Path) -> None:
     """commit 前重新 git add，消除 index/工作区不一致，避免 commit hook stash 冲突。"""
+    _unstage_skipped_runtime_paths()
     merged: list[str] = []
     seen: set[str] = set()
     for raw in (*change_paths, *_collect_change_paths()):
         rel = _rel_repo_path(raw)
-        if rel and rel not in seen:
-            seen.add(rel)
-            merged.append(rel)
+        if not rel or rel in seen or _should_skip_upload_path(rel):
+            continue
+        seen.add(rel)
+        merged.append(rel)
     version_rel = _rel_repo_path(version_path)
     if version_rel not in seen:
         merged.append(version_rel)
     unstaged = _unstaged_modified_paths()
     added = 0
     for path in unstaged:
-        if path not in seen:
-            seen.add(path)
-            merged.append(path)
-            added += 1
+        if path in seen or _should_skip_upload_path(path):
+            continue
+        seen.add(path)
+        merged.append(path)
+        added += 1
     if added:
         print(f"[信息] 补暂存 {added} 个工作区改动（避免 commit hook stash 冲突）")
     print(f"[信息] git add（{len(merged)} 个路径，commit 前同步）")

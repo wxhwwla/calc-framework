@@ -94,6 +94,7 @@ games/arknights/data/operators_standard.json
 web/backend/data/compute_history.json
 web/backend/data/search_history.json
 web/backend/api/.staging/
+web/backend/api/.admin_data/
 
 # 压缩包
 *.zip

@@ -249,7 +249,7 @@ python github_upload_module.py --dry-run
 | 阶段 | 正常日志 | 说明 |
 |------|----------|------|
 | 同步 | `已与 origin/main 同步，跳过 pull` | 落后 0 不 stash |
-| 暂存 | `git add（N 个路径，非全仓库）` | 中文 doc 路径正确 |
+| 暂存 | `git add（N 个路径，非全仓库）` | 中文 doc 路径正确；**`.admin_data/` / `.staging/` 自动跳过**（见 §10.3） |
 | pre-commit 第 1 轮 | `ruff-format` / `trim trailing whitespace` / `mixed-line-ending` **Failed** | 含 `docs/会话接续手册.md` 时控制台可能乱码，**可忽略** |
 | pre-commit 第 2 轮 | 全部 Passed | `[信息] pre-commit 第 2 轮已通过` |
 | commit 前 | `commit 前 pre-commit` → 全部 Passed | `write_version` + `_refresh_staging` 后再跑一轮，避免 commit hook 换行 Failed |
@@ -287,6 +287,19 @@ python -m pytest games/endfield/tests/tools/test_upload_meta.py games/endfield/t
 
 框架核心的 130 行限制是针对 DAG/搜索/逆推等较长表达式的宽松阈值。pre-commit 会根据被检查文件的**所属包**自动选择正确的配置。向框架提交代码时注意不要超过 130 字符。
 
+### 10.3 运行时数据路径（`.admin_data` / `.staging`）
+
+Admin API Key 与用量统计写入 `web/backend/api/.admin_data/`（scrypt 哈希易被 `detect-secrets` 误判）。上传脚本在 `git add` 前会：
+
+1. 从暂存区 `git reset HEAD` 移除上述路径（若误纳入）
+2. 跳过将其加入本次 commit
+
+若目录**仍被 git 跟踪**（历史遗留），工作区会一直显示为已修改；一次性执行：
+
+```powershell
+git rm --cached -- web/backend/api/.admin_data/api_keys.json web/backend/api/.admin_data/usage.json
+```
+
 ---
 
-*最后更新：2026-06-13（新增 §10 pre-commit 版本更新记录：2048 KB 大文件限制 + 130 行长差异）*
+*最后更新：2026-06-17（§10.3 运行时数据路径跳过规则）*

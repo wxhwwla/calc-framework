@@ -12,7 +12,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BASELINE = REPO_ROOT / ".secrets.baseline"
-EXCLUDE = r"package-lock\.json|poetry\.lock|.*\.calcpack|.*\.zip|\.tmp-audit-venv.*|\.secrets\.baseline"
+EXCLUDE = (
+    r"package-lock\.json|poetry\.lock|.*\.calcpack|.*\.zip|"
+    r"\.tmp-audit-venv.*|\.secrets\.baseline|\.admin_data"
+)
 
 
 def _run_scan(*, update: bool) -> str:
