@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import hashlib
+import time
+from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any
 
@@ -31,35 +33,72 @@ class BlockCacheEntry:
 
     input_hash: int
     outputs: dict[str, float]
+    last_access: float
 
 
 class BlockCache:
     """块级缓存 — 跟踪每个块的输入签名和输出值。
 
     当块的输入值未变化时，跳过块内求值，直接使用缓存输出。
+
+    可选 ``max_entries``（LRU 淘汰）与 ``ttl_seconds``（过期后 ``get`` 视为未命中）。
+    默认两者均为 ``None``，与早期无界字典行为一致。
     """
 
-    def __init__(self) -> None:
-        self._blocks: dict[str, BlockCacheEntry] = {}
+    def __init__(
+        self,
+        *,
+        max_entries: int | None = None,
+        ttl_seconds: float | None = None,
+    ) -> None:
+        self._max_entries = max_entries
+        self._ttl_seconds = ttl_seconds
+        self._blocks: OrderedDict[str, BlockCacheEntry] = OrderedDict()
 
     def get(self, block_id: str, bound_inputs: dict[str, float]) -> dict[str, float] | None:
         sig = _compute_input_hash(bound_inputs)
         entry = self._blocks.get(block_id)
-        if entry is not None and entry.input_hash == sig:
-            return dict(entry.outputs)
-        return None
+        if entry is None or entry.input_hash != sig:
+            return None
+
+        now = time.monotonic()
+        if self._is_expired(entry, now):
+            del self._blocks[block_id]
+            return None
+
+        entry.last_access = now
+        self._blocks.move_to_end(block_id)
+        return dict(entry.outputs)
 
     def put(self, block_id: str, bound_inputs: dict[str, float], outputs: dict[str, float]) -> None:
+        now = time.monotonic()
         self._blocks[block_id] = BlockCacheEntry(
             input_hash=_compute_input_hash(bound_inputs),
             outputs=dict(outputs),
+            last_access=now,
         )
+        self._blocks.move_to_end(block_id)
+        self._evict_if_needed()
 
     def invalidate(self, block_id: str) -> None:
         self._blocks.pop(block_id, None)
 
     def invalidate_all(self) -> None:
         self._blocks.clear()
+
+    def __len__(self) -> int:
+        return len(self._blocks)
+
+    def _is_expired(self, entry: BlockCacheEntry, now: float) -> bool:
+        if self._ttl_seconds is None:
+            return False
+        return now - entry.last_access > self._ttl_seconds
+
+    def _evict_if_needed(self) -> None:
+        if self._max_entries is None:
+            return
+        while len(self._blocks) > self._max_entries:
+            self._blocks.popitem(last=False)
 
 
 def _compute_input_hash(inputs: dict[str, float]) -> int:

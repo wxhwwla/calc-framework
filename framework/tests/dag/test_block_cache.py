@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from calc_framework.dag.block_cache import (
     BlockCache,
     _build_block_membership,
@@ -80,6 +82,52 @@ class TestBlockCache:
         result = cache.get("b1", {})
         assert result is not None
         assert result["out"] == 1.0
+
+
+class TestBlockCacheEviction:
+    def test_lru_evicts_oldest_when_max_entries_exceeded(self) -> None:
+        cache = BlockCache(max_entries=2)
+        cache.put("b1", {"a": 1.0}, {"out": 1.0})
+        cache.put("b2", {"a": 2.0}, {"out": 2.0})
+        cache.put("b3", {"a": 3.0}, {"out": 3.0})
+        assert len(cache) == 2
+        assert cache.get("b1", {"a": 1.0}) is None
+        assert cache.get("b2", {"a": 2.0}) is not None
+        assert cache.get("b3", {"a": 3.0}) is not None
+
+    def test_get_promotes_entry_for_lru(self) -> None:
+        cache = BlockCache(max_entries=2)
+        cache.put("b1", {"a": 1.0}, {"out": 1.0})
+        cache.put("b2", {"a": 2.0}, {"out": 2.0})
+        assert cache.get("b1", {"a": 1.0}) is not None
+        cache.put("b3", {"a": 3.0}, {"out": 3.0})
+        assert cache.get("b2", {"a": 2.0}) is None
+        assert cache.get("b1", {"a": 1.0}) is not None
+
+    def test_ttl_expires_entry(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        clock = {"now": 100.0}
+        monkeypatch.setattr(
+            "calc_framework.dag.block_cache.time.monotonic",
+            lambda: clock["now"],
+        )
+        cache = BlockCache(ttl_seconds=30.0)
+        cache.put("b1", {"a": 1.0}, {"out": 1.0})
+        clock["now"] = 131.0
+        assert cache.get("b1", {"a": 1.0}) is None
+        assert len(cache) == 0
+
+    def test_get_refreshes_ttl(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        clock = {"now": 0.0}
+        monkeypatch.setattr(
+            "calc_framework.dag.block_cache.time.monotonic",
+            lambda: clock["now"],
+        )
+        cache = BlockCache(ttl_seconds=10.0)
+        cache.put("b1", {"a": 1.0}, {"out": 1.0})
+        clock["now"] = 8.0
+        assert cache.get("b1", {"a": 1.0}) is not None
+        clock["now"] = 15.0
+        assert cache.get("b1", {"a": 1.0}) is not None
 
 
 class TestStableInputHash:
