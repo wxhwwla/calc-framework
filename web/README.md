@@ -88,6 +88,10 @@ npm run build       # → dist/
 
 应用层限速（`RateLimitMiddleware`）为**进程内内存**实现，默认 **单 worker** 即可。多 worker 时请设置 `CALC_DISABLE_RATE_LIMIT=1` 并在 nginx / 网关层限速。详见 [`docs/Web后端限速与多Worker.md`](../docs/Web后端限速与多Worker.md)。
 
+### 请求体大小
+
+默认 JSON API 请求体上限 **1 MiB**（`ContentSizeLimitMiddleware`）。上传路径放宽：`/api/ocr/` 5 MiB、`/api/hub/` 15 MiB。环境变量 `CALC_MAX_BODY_BYTES` / `CALC_DISABLE_BODY_LIMIT`。nginx 可配置 `client_max_body_size` 作为外层限制。
+
 ### PythonAnywhere（WSGI）
 
 ```bash

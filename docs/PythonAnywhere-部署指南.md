@@ -766,6 +766,8 @@ project = calc-framework
 | `CALC_API_KEY_PEPPER` | API Key scrypt 哈希 pepper（生产必配） |
 | `CALC_DEBUG` | 设为 `1`/`true` 时 API 错误响应返回 `str(exc)`；默认关闭（生产推荐） |
 | `CALC_DISABLE_RATE_LIMIT` | `1`/`true` 时关闭应用层限速（**多 worker 部署时配合 nginx 限速**） |
+| `CALC_MAX_BODY_BYTES` | 默认 **1048576**（1 MiB）；`0`/`off` 取消全局上限（OCR/Hub 路径特例仍生效） |
+| `CALC_DISABLE_BODY_LIMIT` | `1`/`true` 时完全关闭 `ContentSizeLimitMiddleware` |
 
 **限速与多 Worker**：`RateLimitMiddleware` 使用进程内内存计数；**默认请单 worker 部署**。多 worker 时设置 `CALC_DISABLE_RATE_LIMIT=1` 并在反向代理层限速。详见 [`docs/Web后端限速与多Worker.md`](../Web后端限速与多Worker.md)。
 

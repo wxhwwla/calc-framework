@@ -83,6 +83,16 @@ _configure_rate_limit_middleware()
 
 app.add_middleware(RateLimitMiddleware)
 
+from api.request_limits import ContentSizeLimitMiddleware, parse_max_body_bytes_env
+
+if os.environ.get("CALC_DISABLE_BODY_LIMIT", "").strip().lower() not in {"1", "true", "yes", "on"}:
+    _default_body_limit = parse_max_body_bytes_env(os.environ.get("CALC_MAX_BODY_BYTES"))
+    app.add_middleware(ContentSizeLimitMiddleware, default_max_bytes=_default_body_limit)
+    logger.info(
+        "ContentSizeLimitMiddleware 已启用（默认 %s 字节；OCR/Hub 见 PATH_MAX_BODY_BYTES）",
+        _default_body_limit if _default_body_limit is not None else "无全局上限",
+    )
+
 app.include_router(admin_router)
 
 app.include_router(ai_router)
