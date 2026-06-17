@@ -283,13 +283,6 @@ def export_preset_batch_json(presets: Sequence[LoadoutPreset], *, indent: int = 
     return json.dumps(payload, ensure_ascii=False, indent=indent)
 
 
-_DAMAGE_COMPONENT_LABELS: dict[str, str] = {
-    "skill_only": "仅技能",
-    "abnormal_only": "仅异常",
-    "skill_and_abnormal": "技能+异常",
-}
-
-
 def apply_preset_to_panels(
     *,
     preset: LoadoutPreset,
@@ -300,8 +293,6 @@ def apply_preset_to_panels(
     shell: Any | None = None,
 ) -> None:
     """将 LoadoutPreset 写入 Qt 角色/武器/控制栏面板（导入预设与历史恢复共用）。"""
-    from games.endfield.gui.shared.calc_mode_labels import calculation_mode_label
-
     if preset.char_name:
         char_panel.select_by_name(preset.char_name)
     if preset.weapon_name:
@@ -320,15 +311,14 @@ def apply_preset_to_panels(
             special_states=list(preset.weapon_special_states),
         )
 
-    mode_label = calculation_mode_label(preset.calculation_mode)
-    idx = control_dock.calc_mode_menu.findText(mode_label)
+    idx = control_dock.calc_mode_menu.findData(preset.calculation_mode)
     if idx >= 0:
         control_dock.calc_mode_menu.setCurrentIndex(idx)
 
-    scope_idx = control_dock.single_skill_scope_combo.findText(preset.weapon_scope)
+    scope_idx = control_dock.single_skill_scope_combo.findData(preset.weapon_scope)
     if scope_idx >= 0:
         control_dock.single_skill_scope_combo.setCurrentIndex(scope_idx)
-    equip_idx = control_dock.equipment_scope_combo.findText(preset.equipment_scope)
+    equip_idx = control_dock.equipment_scope_combo.findData(preset.equipment_scope)
     if equip_idx >= 0:
         control_dock.equipment_scope_combo.setCurrentIndex(equip_idx)
 
@@ -341,13 +331,12 @@ def apply_preset_to_panels(
         if name:
             cb.setCurrentText(str(name))
         else:
-            from games.endfield.gui.shell.qt_control_dock_builders import _FIXED_SLOT_NONE_LABEL
+            from games.endfield.gui.shared.i18n_combos import FIXED_SLOT_NONE_LABEL, set_combo_by_internal
 
-            cb.setCurrentText(_FIXED_SLOT_NONE_LABEL)
+            set_combo_by_internal(cb, FIXED_SLOT_NONE_LABEL)
 
     control_dock.use_manual_skill_counts_cb.setChecked(bool(preset.use_manual_multi_skill_counts))
-    dc_label = _DAMAGE_COMPONENT_LABELS.get(preset.damage_component_mode, "技能+异常")
-    dc_idx = control_dock.damage_component_combo.findText(dc_label)
+    dc_idx = control_dock.damage_component_combo.findData(preset.damage_component_mode)
     if dc_idx >= 0:
         control_dock.damage_component_combo.setCurrentIndex(dc_idx)
     control_dock.use_expected_crit_cb.setChecked(bool(preset.use_expected_crit))

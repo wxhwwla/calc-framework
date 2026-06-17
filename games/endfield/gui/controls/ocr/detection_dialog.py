@@ -8,6 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -143,7 +144,7 @@ class _DetectionDialog(QDialog):
         self._on_apply = on_apply
         self._mapped_preset: dict[str, Any] | None = None
 
-        self.setWindowTitle("截图识装检测结果")
+        self.setWindowTitle(tr("desktop.endfield.ocrResultTitle"))
         self.setMinimumSize(750, 550)
         self.setStyleSheet("background-color: #1E1E1E; color: #D1D1D1;")
         _build_ui(self)
@@ -220,10 +221,10 @@ class _DetectionDialog(QDialog):
     def _on_download_model(self) -> None:
         """在后台线程下载 OCR 模型。"""
         self._download_btn.setEnabled(False)
-        self._download_btn.setText("下载中...")
+        self._download_btn.setText(tr("desktop.endfield.ocrDownloading"))
         self._download_progress.setVisible(True)
         self._download_progress.setValue(0)
-        msg = "正在下载 EasyOCR 模型...\n\n这可能需要几分钟，请耐心等待。\n模型将下载到用户目录的 .EasyOCR/model/ 下。"
+        msg = tr("desktop.endfield.ocrDownloadingMsg")
         self._result_text.setPlainText(msg)
         self._thread = _DownloadThread()
         self._thread.finished.connect(self._on_download_finished)
@@ -232,14 +233,20 @@ class _DetectionDialog(QDialog):
 
     def _on_download_finished(self, success: bool) -> None:
         self._download_btn.setEnabled(True)
-        self._download_btn.setText("下载 OCR 模型")
+        self._download_btn.setText(tr("desktop.endfield.ocrDownloadModel"))
         self._download_progress.setVisible(False)
         if success:
-            QMessageBox.information(self, "下载完成", "EasyOCR 模型已下载完成！\n现在可以正常使用截图识装功能。")
+            QMessageBox.information(
+                self,
+                tr("desktop.endfield.ocrDownloadComplete"),
+                tr("desktop.endfield.ocrDownloadCompleteMsg"),
+            )
             self._run_detection()
         else:
             QMessageBox.critical(
-                self, "下载失败", "模型下载失败。\n\n请尝试在终端手动运行:\n  python tools/ocr/download_models.py"
+                self,
+                tr("desktop.endfield.ocrDownloadFailed"),
+                tr("desktop.endfield.ocrDownloadFailedMsg"),
             )
         """on download finished。"""
 
@@ -300,7 +307,7 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     layout.setContentsMargins(16, 16, 16, 16)
     layout.setSpacing(8)
 
-    title = QLabel("截图识装 — 目标检测 + OCR 识别")
+    title = QLabel(tr("desktop.endfield.ocrMainTitle"))
     title_font = QFont()
     title_font.setPointSize(14)
     title.setFont(title_font)
@@ -331,7 +338,7 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     btn_layout = QHBoxLayout()
     btn_layout.setSpacing(8)
 
-    dialog._download_btn = QPushButton("下载 OCR 模型")
+    dialog._download_btn = QPushButton(tr("desktop.endfield.ocrDownloadModel"))
     dialog._download_btn.setMinimumHeight(36)
     dialog._download_btn.setStyleSheet("""
         QPushButton { background-color: transparent; color: #D1D1D1;
@@ -341,7 +348,7 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     dialog._download_btn.clicked.connect(dialog._on_download_model)
     btn_layout.addWidget(dialog._download_btn)
 
-    dialog._apply_btn = QPushButton("📥 填入计算器")
+    dialog._apply_btn = QPushButton(tr("desktop.endfield.ocrFillCalculator"))
     dialog._apply_btn.setMinimumHeight(36)
     dialog._apply_btn.setEnabled(False)
     dialog._apply_btn.setStyleSheet("""
@@ -355,7 +362,7 @@ def _build_ui(dialog: _DetectionDialog) -> None:
     dialog._apply_btn.clicked.connect(dialog._handle_apply)
     btn_layout.addWidget(dialog._apply_btn)
 
-    close_btn = QPushButton("关闭")
+    close_btn = QPushButton(tr("common.close"))
     close_btn.setMinimumHeight(36)
     close_btn.setStyleSheet("""
         QPushButton {

@@ -26,7 +26,8 @@ Phase 0–3 解决了安全、Web 可靠性、框架质量与 `api/` 目录约�
 | **4.2** | 明日方舟人工验收清单 → 自动化探针（`@pytest.mark.real_data`） | 低 | ✅ |
 | **4.3** | ADR-0023 数据路径迁移 — 路径常量 + `sync_adapter_snapshots.py` | 中 | ✅ |
 | **4.4** | Desktop i18n 逐控件 — 计算页首批（shell + 总伤面板） | 中 | ✅ |
-| **4.4b** | Desktop i18n — control_dock / 对话框等剩余 | 中 | ⏳ |
+| **4.4b** | Desktop i18n — 高级页 control_dock + builders | 中 | ✅ |
+| **4.4c** | Desktop i18n — 对话框 / OCR / 搜索浏览器等 | 中 | ✅ |
 | **4.5** | 代码签名 + 自动更新生产验证 | 高（需证书/环境） | ⏳ |
 | **4.6** | 明日方舟 Web 扩展（配装/搜索，**非** parity 计划范围） | 高 | 📋 待规划 |
 
@@ -97,15 +98,33 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 - `games/endfield/gui/presentation/total_damage_panel.py` — 总伤结算面板
 - `framework/tests/ui/test_i18n_endfield.py`
 
-**后续 4.4b**：`qt_control_dock`、搜索/增强对话框、OCR 等仍含硬编码中文。
+**后续 4.4d**（可选）：survival / manual_buff / enemy / endfield_search 内 QMessageBox 等仍含硬编码中文。
 
 ---
 
-## Step 4.4b — Desktop i18n 剩余控件 ⏳
+## Step 4.4b — 高级页 control_dock ✅
 
-见 [`improvement-roadmap.md`](improvement-roadmap.md) §2、`docs/plans/i18n-desktop.md`。
+**交付**（2026-06-17）：
 
-优先：`qt_control_dock.py`、`qt_dialogs.py`、designer 页签。
+- `games/endfield/gui/shared/i18n_combos.py` — combo 显示 `tr()` + itemData 保留中文 canonical
+- `qt_control_dock.py` / `qt_control_dock_builders.py` — 三列控制栏
+- `calc_mode_labels.py` — 计算模式 en/zh
+- `loadout_preset.py` — `findData` 恢复预设
+- `games/endfield/tests/gui/test_i18n_combos.py`
+
+---
+
+## Step 4.4c — 对话框 / OCR / 搜索浏览器 ✅
+
+**覆盖**：
+- `games/endfield/gui/controls/enhancement/qt_dialogs.py` — 历史/对比/仪表盘
+- `games/endfield/gui/controls/ocr/detection_dialog.py` — 截图识装
+- `games/endfield/gui/controls/search/qt_search_browser.py` — 搜索历史浏览器
+- `games/endfield/gui/controls/search/qt_actions.py` — 结果弹窗「关闭」
+
+**新增键**（`desktop.endfield.*`）：`dialog*`（20）、`searchBrowser*`（12）、`ocr*`（10）；复用 `common.refresh` / `common.close`。
+
+**后续 4.4d**（可选）：`qt_survival_dialog.py`、`manual_buff/qt_window.py`、`enemy/qt_enemy_panel.py`、`endfield_search.py` 内 QMessageBox 等。
 
 ---
 
@@ -132,6 +151,8 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 | Step 4.2 干员数量探针 | `pytest games/arknights/tests/test_data_loading.py -k min_parsed -m real_data` | ✅ | 2026-06-17 |
 | Step 4.3 路径常量 + sync | `pytest tools/tests/test_sync_adapter_snapshots.py` | ✅ | 2026-06-17 |
 | Step 4.4 计算页 i18n | `pytest framework/tests/ui/test_i18n_endfield.py` | ✅ | 2026-06-17 |
+| Step 4.4b control_dock | `pytest games/endfield/tests/gui/test_i18n_combos.py` | ✅ | 2026-06-17 |
+| Step 4.4c 对话框/OCR/搜索 | `pytest framework/tests/ui/test_i18n_endfield.py` | ✅ | 2026-06-17 |
 
 ---
 

@@ -24,6 +24,13 @@ _ENDFIELD_KEYS = (
     "desktop.endfield.weightedTotal",
     "desktop.endfield.skillInfo",
     "desktop.endfield.genericRow",
+    "desktop.endfield.dialogHistTitle",
+    "desktop.endfield.dialogCompareTitle",
+    "desktop.endfield.dialogDashboardTitle",
+    "desktop.endfield.searchBrowserTitle",
+    "desktop.endfield.searchBrowserEmpty",
+    "desktop.endfield.ocrMainTitle",
+    "desktop.endfield.ocrDownloadModel",
 )
 
 

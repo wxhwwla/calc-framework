@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -33,12 +34,20 @@ from games.endfield.gui.controls.search.search_settings import (
     get_cpu_parallel_info,
     resolve_parallel_workers,
 )
-from games.endfield.gui.shared.calc_mode_labels import CALC_MODE_LABELS, DEFAULT_CALC_MODE_LABEL
+from games.endfield.gui.shared.calc_mode_labels import (
+    calculation_mode_from_combo,
+    populate_calc_mode_combo,
+)
+from games.endfield.gui.shared.i18n_combos import (
+    FIXED_SLOT_NONE_LABEL,
+    combo_internal_value,
+    read_damage_component_mode,
+    set_combo_by_internal,
+)
 from games.endfield.gui.shell.qt_control_dock_builders import (
     _BTN_PRIMARY_STYLE,
     _BTN_SECONDARY_STYLE,
     _COMBO_STYLE,
-    _FIXED_SLOT_NONE_LABEL,
     _FIXED_SLOT_SPECS,
     _PRIMARY_BTN_HEIGHT,
     _SECONDARY_BTN_HEIGHT,
@@ -140,24 +149,24 @@ class QtControlDock(BuilderMixin, QWidget):
         lay.setContentsMargins(4, 4, 4, 4)
         lay.setSpacing(4)
 
-        lay.addWidget(SectionHeader("操作", self._big))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionActions"), self._big))
 
-        self.back_to_main_btn = self._make_btn("返回计算页", _SECONDARY_BTN_HEIGHT)
+        self.back_to_main_btn = self._make_btn(tr("desktop.endfield.backToCalc"), _SECONDARY_BTN_HEIGHT)
         if self._on_back_to_main:
             self.back_to_main_btn.clicked.connect(self._on_back_to_main)
         lay.addWidget(self.back_to_main_btn)
 
-        self.confirm_btn = self._make_btn("确认选择", _PRIMARY_BTN_HEIGHT, primary=True)
+        self.confirm_btn = self._make_btn(tr("desktop.endfield.confirmSelection"), _PRIMARY_BTN_HEIGHT, primary=True)
         if self._on_confirm:
             self.confirm_btn.clicked.connect(self._on_confirm)
         lay.addWidget(self.confirm_btn)
 
-        self.attribution_btn = self._make_btn("数据来源与许可", _SECONDARY_BTN_HEIGHT)
+        self.attribution_btn = self._make_btn(tr("desktop.endfield.dataAttribution"), _SECONDARY_BTN_HEIGHT)
         if self._on_attribution:
             self.attribution_btn.clicked.connect(self._on_attribution)
         lay.addWidget(self.attribution_btn)
 
-        self.donation_btn = self._make_btn("🤝 自愿捐赠", _SECONDARY_BTN_HEIGHT)
+        self.donation_btn = self._make_btn(tr("desktop.endfield.donate"), _SECONDARY_BTN_HEIGHT)
         if self._on_donation:
             self.donation_btn.clicked.connect(self._on_donation)
         else:
@@ -166,32 +175,34 @@ class QtControlDock(BuilderMixin, QWidget):
             self.donation_btn.clicked.connect(lambda: open_donation_dialog(self))
         lay.addWidget(self.donation_btn)
 
-        self.help_btn = self._make_btn("📖 使用说明", _SECONDARY_BTN_HEIGHT)
+        self.help_btn = self._make_btn(tr("desktop.endfield.helpUsage"), _SECONDARY_BTN_HEIGHT)
         if self._on_open_help:
             self.help_btn.clicked.connect(self._on_open_help)
         lay.addWidget(self.help_btn)
 
-        self.search_history_btn = self._make_btn("📂 搜索历史", _SECONDARY_BTN_HEIGHT)
+        self.search_history_btn = self._make_btn(tr("desktop.endfield.searchHistory"), _SECONDARY_BTN_HEIGHT)
         if self._on_search_history:
             self.search_history_btn.clicked.connect(self._on_search_history)
         lay.addWidget(self.search_history_btn)
 
         lay.addSpacing(8)
-        lay.addWidget(SectionHeader("乘区展示", self._big))
-        lay.addWidget(SmallLabel("计算模式", self._small))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionZones"), self._big))
+        lay.addWidget(SmallLabel(tr("desktop.endfield.calcModeLabel"), self._small))
 
         self.calc_mode_menu = QComboBox()
-        self.calc_mode_menu.addItems(list(CALC_MODE_LABELS))
-        self.calc_mode_menu.setCurrentText(DEFAULT_CALC_MODE_LABEL)
+        populate_calc_mode_combo(self.calc_mode_menu)
+        idx = self.calc_mode_menu.findData("zone_snapshot")
+        if idx >= 0:
+            self.calc_mode_menu.setCurrentIndex(idx)
         self.calc_mode_menu.currentTextChanged.connect(self._on_calc_mode_changed)
         self.calc_mode_menu.setStyleSheet(_COMBO_STYLE)
         lay.addWidget(self.calc_mode_menu)
 
         # 增强操作区域
         lay.addSpacing(8)
-        lay.addWidget(SectionHeader("工具与分享", self._big))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionTools"), self._big))
 
-        self._more_settings_btn = self._make_btn("更多设置 (展开)", _SECONDARY_BTN_HEIGHT)
+        self._more_settings_btn = self._make_btn(tr("desktop.endfield.moreSettingsExpand"), _SECONDARY_BTN_HEIGHT)
         self._more_settings_btn.clicked.connect(self._toggle_more_settings)
         lay.addWidget(self._more_settings_btn)
 
@@ -210,13 +221,13 @@ class QtControlDock(BuilderMixin, QWidget):
             """make tool btn。"""
             return b
 
-        self._export_btn = _make_tool_btn("导出配装 (.json)")
-        self._import_btn = _make_tool_btn("导入配装 (.json)")
-        self._compare_btn = _make_tool_btn("多方案对比")
-        self._dashboard_btn = _make_tool_btn("伤害仪表盘")
-        self._history_btn = _make_tool_btn("计算历史")
-        self._export_log_btn = _make_tool_btn("导出操作日志")
-        self._ocr_btn = _make_tool_btn("截图识装")
+        self._export_btn = _make_tool_btn(tr("desktop.endfield.exportPreset"))
+        self._import_btn = _make_tool_btn(tr("desktop.endfield.importPreset"))
+        self._compare_btn = _make_tool_btn(tr("desktop.endfield.comparePresets"))
+        self._dashboard_btn = _make_tool_btn(tr("desktop.endfield.damageDashboard"))
+        self._history_btn = _make_tool_btn(tr("desktop.endfield.calcHistory"))
+        self._export_log_btn = _make_tool_btn(tr("desktop.endfield.exportOpLog"))
+        self._ocr_btn = _make_tool_btn(tr("desktop.endfield.ocrDetect"))
         if self._on_ocr_detect:
             self._ocr_btn.clicked.connect(self._on_ocr_detect)
 
@@ -229,15 +240,25 @@ class QtControlDock(BuilderMixin, QWidget):
         """展开/折叠「更多设置」面板。"""
         visible = not self._more_settings_body.isVisible()
         self._more_settings_body.setVisible(visible)
-        self._more_settings_btn.setText("更多设置 (折叠)" if visible else "更多设置 (展开)")
+        self._more_settings_btn.setText(
+            tr("desktop.endfield.moreSettingsCollapse") if visible else tr("desktop.endfield.moreSettingsExpand")
+        )
 
-    def _on_calc_mode_changed(self, text: str) -> None:
-        """计算模式下拉变更：发射 calc_mode_changed 信号。"""
-        self.calc_mode_changed.emit(text)
+    def _on_calc_mode_changed(self, _text: str) -> None:
+        """计算模式下拉变更：发射内部 mode_id。"""
+        self.calc_mode_changed.emit(calculation_mode_from_combo(self.calc_mode_menu))
 
     def current_calc_mode(self) -> str:
-        """获取当前计算模式显示标签。"""
-        return self.calc_mode_menu.currentText()
+        """获取当前计算模式内部标识。"""
+        return calculation_mode_from_combo(self.calc_mode_menu)
+
+    def current_weapon_scope_label(self) -> str:
+        """武器候选范围（中文 canonical，供搜索/预设）。"""
+        return combo_internal_value(self.single_skill_scope_combo)
+
+    def current_equipment_scope_label(self) -> str:
+        """装备范围（中文 canonical）。"""
+        return combo_internal_value(self.equipment_scope_combo)
 
     # ── 列 2：全量搜索 ─────────────────────────────
 
@@ -272,18 +293,30 @@ class QtControlDock(BuilderMixin, QWidget):
 
         for i, (slot_key, _) in enumerate(_FIXED_SLOT_SPECS):
             cb = self.fixed_loadout_slots[i]
-            current = cb.currentText()
-
             catalog_key = "accessories" if slot_key in ("accessory_a", "accessory_b") else slot_key
             rows = list(catalog.get(catalog_key) or [])
             names = equipment_names_from_rows(rows)
 
+            prev_data = cb.currentData()
+            prev_text = cb.currentText()
+            if prev_data is not None and str(prev_data) != FIXED_SLOT_NONE_LABEL:
+                current = str(prev_data)
+            elif prev_text in names:
+                current = prev_text
+            elif prev_text in (FIXED_SLOT_NONE_LABEL, tr("desktop.endfield.fixedSlotNone")):
+                current = FIXED_SLOT_NONE_LABEL
+            else:
+                current = prev_text if prev_text in names else FIXED_SLOT_NONE_LABEL
+
             cb.blockSignals(True)
             cb.clear()
-            cb.addItem(_FIXED_SLOT_NONE_LABEL)
+            cb.addItem(tr("desktop.endfield.fixedSlotNone"), FIXED_SLOT_NONE_LABEL)
             for name in names:
                 cb.addItem(name)
-            cb.setCurrentText(current if current in names else _FIXED_SLOT_NONE_LABEL)
+            if current in names:
+                cb.setCurrentText(current)
+            else:
+                set_combo_by_internal(cb, FIXED_SLOT_NONE_LABEL)
             cb.blockSignals(False)
 
     def read_fixed_loadout_selection(
@@ -294,8 +327,9 @@ class QtControlDock(BuilderMixin, QWidget):
         from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 
         def _pick(i: int, catalog_key: str):
-            name = self.fixed_loadout_slots[i].currentText()
-            if name == _FIXED_SLOT_NONE_LABEL:
+            name_raw = self.fixed_loadout_slots[i].currentData()
+            name = str(name_raw) if name_raw is not None else self.fixed_loadout_slots[i].currentText()
+            if name == FIXED_SLOT_NONE_LABEL:
                 return None
             for row in catalog.get(catalog_key) or []:
                 if str(row.get("名称") or "") == name:
@@ -336,8 +370,7 @@ class QtControlDock(BuilderMixin, QWidget):
 
     def read_damage_component_mode(self) -> str:
         """读取伤害口径模式（skill_only / abnormal_only / skill_and_abnormal）。"""
-        mapping = {"仅技能": "skill_only", "仅异常": "abnormal_only", "技能+异常": "skill_and_abnormal"}
-        return mapping.get(self.damage_component_combo.currentText(), "skill_and_abnormal")
+        return read_damage_component_mode(self.damage_component_combo)
 
     def read_extra_crit_rate(self) -> float:
         """读取额外暴击率百分比。"""

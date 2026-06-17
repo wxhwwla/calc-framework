@@ -1,7 +1,7 @@
 # Desktop GUI i18n 多语言支持
 
 > **阶段 3**: 桌面 PySide6 应用国际化  
-> **状态**: 基础设施已完成（282 键 / 15 文件），待逐控件翻译 endfield_app / designer  
+> **状态**: 基础设施已完成；终末地计算/高级/对话框首批已接入（约 324 键 / 21 文件）
 > **日期**: 2026-06-13
 
 ---
@@ -169,7 +169,7 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `desktop.graphEditor.*` | 83 | 图编辑器完整 UI（菜单、工具栏、属性面板、节点编辑、帮助对话） |
 | `desktop.editor.*` | 30 | 布局编辑器（DAG加载、节管理、导出、预览） |
 | `desktop.debugger.*` | 12 | DAG 分步调试器（步骤控制、进度显示、示例图） |
-| `desktop.endfield.*` | 16 | 终末地计算页（shell 页签/确认按钮 + 总伤面板） |
+| `desktop.endfield.*` | 58 | 终末地计算页（shell、总伤、control_dock combo、对话框/OCR/搜索浏览器） |
 
 ### 已集成 GUI 文件 (17 个)
 
@@ -192,6 +192,10 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `theme.py` + `log_widget.py` | themeNames / log | ✅ 已集成 |
 | `games/endfield/gui/endfield_shell.py` | endfield 计算页 | ✅ 已集成 |
 | `games/endfield/gui/presentation/total_damage_panel.py` | endfield 总伤面板 | ✅ 已集成 |
+| `games/endfield/gui/shared/i18n_combos.py` + control_dock | endfield 高级页 | ✅ 已集成 |
+| `games/endfield/gui/controls/enhancement/qt_dialogs.py` | endfield 历史/对比/仪表盘 | ✅ 已集成 |
+| `games/endfield/gui/controls/ocr/detection_dialog.py` | endfield 截图识装 | ✅ 已集成 |
+| `games/endfield/gui/controls/search/qt_search_browser.py` | endfield 搜索历史 | ✅ 已集成 |
 
 ### 待覆盖 (后续 PR)
 

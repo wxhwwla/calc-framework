@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
@@ -453,7 +454,7 @@ class QtSearchResultsDialog(QDialog):
 
         btn_row.addStretch()
 
-        close_btn = QPushButton("关闭")
+        close_btn = QPushButton(tr("common.close"))
 
         close_btn.setFont(small_font)
 

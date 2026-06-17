@@ -27,7 +27,6 @@ from games.endfield.data_loading.loader import get_characters, get_weapons
 from games.endfield.framework_bridge import ComputeSheet
 from games.endfield.gui.panels.selection.qt_panel import QtSelectionPanel
 from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
-from games.endfield.gui.shared.calc_mode_labels import calculation_mode_from_label
 from games.endfield.gui.shared.display_view.qt_columns import QtAttributeColumns
 from games.endfield.gui.shell.qt_control_dock import QtControlDock
 
@@ -225,8 +224,8 @@ class ShellMixin:
         self.control_dock.rebuild_segment_rows(char_data, s1, s2, s3)
         """rebuild segment rows。"""
 
-    def _on_calc_mode_changed(self, label: str) -> None:
-        self._current_calc_mode = calculation_mode_from_label(label)
+    def _on_calc_mode_changed(self, mode_id: str) -> None:
+        self._current_calc_mode = mode_id
         self._on_loadout_changed()
         """on calc mode changed。"""
 

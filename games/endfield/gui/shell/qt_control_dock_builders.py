@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -25,6 +26,13 @@ from games.endfield.calc.manual_buff.abnormal_matrix import (
 from games.endfield.gui.controls.search.search_settings import (
     build_worker_option_labels,
 )
+from games.endfield.gui.shared.i18n_combos import (
+    DAMAGE_COMPONENT_OPTIONS,
+    EQUIPMENT_SCOPE_OPTIONS,
+    FIXED_SLOT_NONE_LABEL,
+    WEAPON_SCOPE_OPTIONS,
+    populate_i18n_combo,
+)
 from games.endfield.gui.shell.qt_control_dock_widgets import (
     HintLabel,
     SectionHeader,
@@ -33,12 +41,11 @@ from games.endfield.gui.shell.qt_control_dock_widgets import (
 )
 
 _FIXED_SLOT_SPECS: list[tuple[str, str]] = [
-    ("chest", "护甲"),
-    ("gloves", "护手"),
-    ("accessory_a", "配件A"),
-    ("accessory_b", "配件B"),
+    ("chest", "desktop.endfield.slotChest"),
+    ("gloves", "desktop.endfield.slotGloves"),
+    ("accessory_a", "desktop.endfield.slotAccessoryA"),
+    ("accessory_b", "desktop.endfield.slotAccessoryB"),
 ]
-_FIXED_SLOT_NONE_LABEL = "（不固定）"
 _SECTION_COLOR = "#FF6B6B"
 _LABEL_COLOR = "#CCCCCC"
 _HINT_COLOR = "#888888"
@@ -87,34 +94,34 @@ class BuilderMixin:
         lay = QVBoxLayout(body)
         lay.setContentsMargins(4, 4, 4, 4)
         lay.setSpacing(4)
-        lay.addWidget(SectionHeader("全量遍历", self._big))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionFullSearch"), self._big))
 
         self.single_skill_scope_combo = QComboBox()
-        self.single_skill_scope_combo.addItems(["当前武器", "同类型同星级", "同类型全部"])
+        populate_i18n_combo(self.single_skill_scope_combo, WEAPON_SCOPE_OPTIONS)
         self.single_skill_scope_combo.setStyleSheet(_COMBO_STYLE)
-        lay.addWidget(SmallLabel("武器候选范围", self._small))
+        lay.addWidget(SmallLabel(tr("desktop.endfield.weaponScopeLabel"), self._small))
         self.single_skill_scope_combo.currentTextChanged.connect(lambda _: self._mark_pending())
         lay.addWidget(self.single_skill_scope_combo)
 
         self.equipment_scope_combo = QComboBox()
-        self.equipment_scope_combo.addItems(["全部装备", "仅套装装备", "仅散件装备"])
+        populate_i18n_combo(self.equipment_scope_combo, EQUIPMENT_SCOPE_OPTIONS)
         self.equipment_scope_combo.setStyleSheet(_COMBO_STYLE)
-        lay.addWidget(SmallLabel("装备范围", self._small))
+        lay.addWidget(SmallLabel(tr("desktop.endfield.equipmentScopeLabel"), self._small))
         self.equipment_scope_combo.currentTextChanged.connect(lambda _: self._mark_pending())
         lay.addWidget(self.equipment_scope_combo)
 
-        lay.addWidget(SmallLabel("固定配装（0-4 件）", self._small))
+        lay.addWidget(SmallLabel(tr("desktop.endfield.fixedLoadoutTitle"), self._small))
         slots_grid = QHBoxLayout()
         slots_grid.setSpacing(4)
         self.fixed_loadout_slots.clear()
-        for _slot_key, slot_label in _FIXED_SLOT_SPECS:
+        for _slot_key, slot_i18n_key in _FIXED_SLOT_SPECS:
             row = QVBoxLayout()
             row.setSpacing(2)
-            slot_lbl = QLabel(slot_label)
+            slot_lbl = QLabel(tr(slot_i18n_key))
             slot_lbl.setStyleSheet(f"color: {_HINT_COLOR};")
             slot_lbl.setFont(self._small)
             cb = QComboBox()
-            cb.addItem(_FIXED_SLOT_NONE_LABEL)
+            cb.addItem(tr("desktop.endfield.fixedSlotNone"), FIXED_SLOT_NONE_LABEL)
             cb.setStyleSheet(_COMBO_STYLE)
             cb.currentTextChanged.connect(lambda _: self._mark_pending())
             row.addWidget(slot_lbl)
@@ -122,18 +129,20 @@ class BuilderMixin:
             slots_grid.addLayout(row)
             self.fixed_loadout_slots.append(cb)
         lay.addLayout(slots_grid)
-        lay.addWidget(HintLabel("选择装备名称固定该槽位，选「（不固定）」则遍历。", self._small))
+        lay.addWidget(HintLabel(tr("desktop.endfield.fixedSlotHint"), self._small))
 
-        self.mvp_search_btn = self._make_btn("最优搜索", _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE)
+        self.mvp_search_btn = self._make_btn(
+            tr("desktop.endfield.mvpSearch"), _SECONDARY_BTN_HEIGHT, primary=True, style=_BTN_PRIMARY_STYLE
+        )
         lay.addWidget(self.mvp_search_btn)
         self.full_search_btn = self._make_btn(
-            "全量遍历搜索",
+            tr("desktop.endfield.fullSearch"),
             _SECONDARY_BTN_HEIGHT,
             primary=True,
             style=_BTN_PRIMARY_STYLE,
         )
         lay.addWidget(self.full_search_btn)
-        self.search_cancel_btn = self._make_btn("取消搜索", _SECONDARY_BTN_HEIGHT)
+        self.search_cancel_btn = self._make_btn(tr("desktop.endfield.cancelSearch"), _SECONDARY_BTN_HEIGHT)
         self.search_cancel_btn.setEnabled(False)
         lay.addWidget(self.search_cancel_btn)
 
@@ -141,14 +150,14 @@ class BuilderMixin:
         self.search_workers_combo = QComboBox()
         self.search_workers_combo.addItems(build_worker_option_labels())
         self.search_workers_combo.setStyleSheet(_COMBO_STYLE)
-        param_row.addWidget(SmallLabel("并行线程", self._small))
+        param_row.addWidget(SmallLabel(tr("desktop.endfield.parallelWorkers"), self._small))
         param_row.addWidget(self.search_workers_combo, stretch=1)
         param_row.addSpacing(8)
         self.search_top_n_combo = QComboBox()
         self.search_top_n_combo.addItems(["3", "5", "10", "20", "50"])
         self.search_top_n_combo.setCurrentText("10")
         self.search_top_n_combo.setStyleSheet(_COMBO_STYLE)
-        param_row.addWidget(SmallLabel("前列条数", self._small))
+        param_row.addWidget(SmallLabel(tr("desktop.endfield.topNCount"), self._small))
         param_row.addWidget(self.search_top_n_combo, stretch=1)
         lay.addLayout(param_row)
 
@@ -158,10 +167,10 @@ class BuilderMixin:
         self._update_workers_hint()
         self.search_workers_combo.currentTextChanged.connect(lambda _: self._update_workers_hint())
 
-        self.search_estimate_label = HintLabel("预计组合数：—", self._small)
+        self.search_estimate_label = HintLabel(tr("desktop.endfield.estimateCombos"), self._small)
         self.search_estimate_label.setVisible(True)
         lay.addWidget(self.search_estimate_label)
-        self.mvp_status_label = HintLabel("搜索状态：未开始", self._small)
+        self.mvp_status_label = HintLabel(tr("desktop.endfield.searchStatusIdle"), self._small)
         self.mvp_status_label.setVisible(True)
         lay.addWidget(self.mvp_status_label)
 
@@ -184,9 +193,9 @@ class BuilderMixin:
         lay = QVBoxLayout(body)
         lay.setContentsMargins(4, 4, 4, 4)
         lay.setSpacing(4)
-        lay.addWidget(SectionHeader("多技能次数", self._big))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionMultiSkill"), self._big))
 
-        self.use_manual_skill_counts_cb = QCheckBox("使用手动次数")
+        self.use_manual_skill_counts_cb = QCheckBox(tr("desktop.endfield.useManualCounts"))
         self.use_manual_skill_counts_cb.setFont(self._small)
         self.use_manual_skill_counts_cb.setStyleSheet("color: #D1D1D1;")
         self.use_manual_skill_counts_cb.toggled.connect(lambda: self._mark_pending())
@@ -196,13 +205,13 @@ class BuilderMixin:
         self._segment_rows_lay = QVBoxLayout(self._segment_rows_container)
         self._segment_rows_lay.setContentsMargins(0, 0, 0, 0)
         self._segment_rows_lay.setSpacing(2)
-        self._segment_rows_lay.addWidget(SmallLabel("技能段数", self._small))
+        self._segment_rows_lay.addWidget(SmallLabel(tr("desktop.endfield.segmentCounts"), self._small))
         self._segment_count_edits_dict: dict[str, QLineEdit] = {}
         self._build_segment_rows_fallback()
         lay.addWidget(self._segment_rows_container)
 
         self._survival_btn = self._make_btn(
-            "处决/治疗估算",
+            tr("desktop.endfield.survivalEstimate"),
             _SECONDARY_BTN_HEIGHT,
             style="""
             QPushButton { background-color: #5a4a78; color: white; border-radius: 6px; }
@@ -212,7 +221,7 @@ class BuilderMixin:
         lay.addWidget(self._survival_btn)
 
         self._manual_buff_btn = self._make_btn(
-            "额外加成微调",
+            tr("desktop.endfield.manualBuffTune"),
             _SECONDARY_BTN_HEIGHT,
             style="""
             QPushButton { background-color: #2d6a4f; color: white; border-radius: 6px; }
@@ -221,20 +230,20 @@ class BuilderMixin:
         )
         lay.addWidget(self._manual_buff_btn)
 
-        lay.addWidget(SectionHeader("物理异常", self._big))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionPhysicalAbnormal"), self._big))
         lay.addWidget(HintLabel(ABNORMAL_MATRIX_HINT, self._small))
         self.damage_component_combo = QComboBox()
-        self.damage_component_combo.addItems(["仅技能", "仅异常", "技能+异常"])
+        populate_i18n_combo(self.damage_component_combo, DAMAGE_COMPONENT_OPTIONS)
         self.damage_component_combo.setStyleSheet(_COMBO_STYLE)
         cc_row = QHBoxLayout()
-        cc_row.addWidget(SmallLabel("伤害口径", self._small))
+        cc_row.addWidget(SmallLabel(tr("desktop.endfield.damageComponentLabel"), self._small))
         cc_row.addWidget(self.damage_component_combo)
         lay.addLayout(cc_row)
-        self.use_expected_crit_cb = QCheckBox("期望伤害模式")
+        self.use_expected_crit_cb = QCheckBox(tr("desktop.endfield.expectedCritMode"))
         self.use_expected_crit_cb.setFont(self._small)
         self.use_expected_crit_cb.setStyleSheet("color: #D1D1D1;")
         lay.addWidget(self.use_expected_crit_cb)
-        self.include_conditional_crit_cb = QCheckBox("装备条件暴击")
+        self.include_conditional_crit_cb = QCheckBox(tr("desktop.endfield.conditionalEquipCrit"))
         self.include_conditional_crit_cb.setFont(self._small)
         self.include_conditional_crit_cb.setStyleSheet("color: #D1D1D1;")
         lay.addWidget(self.include_conditional_crit_cb)
@@ -246,10 +255,10 @@ class BuilderMixin:
         self.extra_crit_damage_edit = QLineEdit("0")
         self.extra_crit_damage_edit.setStyleSheet(_ENTRY_STYLE)
         self.extra_crit_damage_edit.setFixedWidth(72)
-        crit_row.addWidget(SmallLabel("额外暴击率%", self._small))
+        crit_row.addWidget(SmallLabel(tr("desktop.endfield.extraCritRate"), self._small))
         crit_row.addWidget(self.extra_crit_rate_edit)
         crit_row.addSpacing(8)
-        crit_row.addWidget(SmallLabel("额外暴伤%", self._small))
+        crit_row.addWidget(SmallLabel(tr("desktop.endfield.extraCritDamage"), self._small))
         crit_row.addWidget(self.extra_crit_damage_edit)
         lay.addLayout(crit_row)
 
@@ -263,14 +272,14 @@ class BuilderMixin:
         )
         lay.addWidget(self._physical_abnormal_widget)
 
-        lay.addWidget(SectionHeader("法术异常", self._big))
+        lay.addWidget(SectionHeader(tr("desktop.endfield.sectionSpellAbnormal"), self._big))
         self._spell_abnormal_widget, self._spell_abnormal_edits = build_manual_abnormal_matrix(
             self._small,
             self._spell_abnormal_specs,
             column_labels=tuple(_abnormal_cols),
         )
         lay.addWidget(self._spell_abnormal_widget)
-        clear_btn = self._make_btn("清空全部异常次数", _SECONDARY_BTN_HEIGHT)
+        clear_btn = self._make_btn(tr("desktop.endfield.clearAllAbnormal"), _SECONDARY_BTN_HEIGHT)
         clear_btn.clicked.connect(self._clear_abnormal_counts)
         lay.addWidget(clear_btn)
 
@@ -288,7 +297,7 @@ class BuilderMixin:
         self._segment_count_edits_dict.clear()
         for i in range(3):
             row = QHBoxLayout()
-            lbl = QLabel(f"{skill_labels[i]} 次数:")
+            lbl = QLabel(tr("desktop.endfield.segmentCountLabel", skill=skill_labels[i]))
             lbl.setStyleSheet(f"color: {_LABEL_COLOR};")
             lbl.setFont(self._small)
             edit = QLineEdit("0")
@@ -313,7 +322,7 @@ class BuilderMixin:
             if item and item.widget():
                 item.widget().deleteLater()
 
-        self._segment_rows_lay.addWidget(SmallLabel("技能段数", self._small))
+        self._segment_rows_lay.addWidget(SmallLabel(tr("desktop.endfield.segmentCounts"), self._small))
         self._segment_count_edits_dict.clear()
 
         if not char_data:

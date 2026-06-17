@@ -13,6 +13,7 @@ _logger = logging.getLogger(__name__)
 from dataclasses import dataclass
 from pathlib import Path
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QClipboard, QColor, QFont
 from PySide6.QtWidgets import (
@@ -244,7 +245,7 @@ class SearchHistoryDialog(QDialog):
     ) -> None:
         super().__init__(parent)
 
-        self.setWindowTitle("搜索历史 — 快速搜装浏览")
+        self.setWindowTitle(tr("desktop.endfield.searchBrowserTitle"))
 
         self.resize(960, 720)
 
@@ -262,7 +263,7 @@ class SearchHistoryDialog(QDialog):
 
         top_row = QHBoxLayout()
 
-        title = QLabel("历史搜索记录（search_output/）")
+        title = QLabel(tr("desktop.endfield.searchBrowserHeading"))
 
         title.setFont(big_font)
 
@@ -272,7 +273,7 @@ class SearchHistoryDialog(QDialog):
 
         top_row.addStretch()
 
-        refresh_btn = QPushButton("刷新")
+        refresh_btn = QPushButton(tr("common.refresh"))
 
         refresh_btn.setFont(small_font)
 
@@ -296,7 +297,7 @@ class SearchHistoryDialog(QDialog):
 
         top_row.addWidget(refresh_btn)
 
-        copy_btn = QPushButton("复制全部")
+        copy_btn = QPushButton(tr("desktop.endfield.searchBrowserCopyAll"))
 
         copy_btn.setFont(small_font)
 
@@ -326,7 +327,13 @@ class SearchHistoryDialog(QDialog):
 
         self._tree.setFont(small_font)
 
-        self._tree.setHeaderLabels(["运行时间 / 签名", "状态 / 进度", "详情"])
+        self._tree.setHeaderLabels(
+            [
+                tr("desktop.endfield.searchBrowserColRun"),
+                tr("desktop.endfield.searchBrowserColStatus"),
+                tr("desktop.endfield.searchBrowserColDetails"),
+            ]
+        )
 
         self._tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
@@ -380,7 +387,7 @@ class SearchHistoryDialog(QDialog):
 
         btn_row.addStretch()
 
-        expand_btn = QPushButton("全部展开")
+        expand_btn = QPushButton(tr("desktop.endfield.searchBrowserExpandAll"))
 
         expand_btn.setFont(small_font)
 
@@ -404,7 +411,7 @@ class SearchHistoryDialog(QDialog):
 
         btn_row.addWidget(expand_btn)
 
-        collapse_btn = QPushButton("全部折叠")
+        collapse_btn = QPushButton(tr("desktop.endfield.searchBrowserCollapseAll"))
 
         collapse_btn.setFont(small_font)
 
@@ -428,7 +435,7 @@ class SearchHistoryDialog(QDialog):
 
         btn_row.addWidget(collapse_btn)
 
-        close_btn = QPushButton("关闭")
+        close_btn = QPushButton(tr("common.close"))
 
         close_btn.setFont(small_font)
 
@@ -463,7 +470,13 @@ class SearchHistoryDialog(QDialog):
         self._all_db_paths = scan_search_output()
 
         if not self._all_db_paths:
-            item = QTreeWidgetItem(["暂无搜索记录", "", "点击「全量遍历」或「MVP 导出」开始搜索"])
+            item = QTreeWidgetItem(
+                [
+                    tr("desktop.endfield.searchBrowserEmpty"),
+                    "",
+                    tr("desktop.endfield.searchBrowserEmptyHint"),
+                ]
+            )
 
             item.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
@@ -474,7 +487,9 @@ class SearchHistoryDialog(QDialog):
         for db_path in self._all_db_paths:
             db_name = f"{db_path.parent.name} ({_human_size(db_path)})"
 
-            db_item = QTreeWidgetItem([db_name, "", f"路径: {db_path.parent}"])
+            db_item = QTreeWidgetItem(
+                [db_name, "", tr("desktop.endfield.searchBrowserPathDetail", path=db_path.parent)]
+            )
 
             db_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
@@ -485,7 +500,7 @@ class SearchHistoryDialog(QDialog):
             runs = list_runs(db_path)
 
             if not runs:
-                empty = QTreeWidgetItem(["（无运行记录）", "", ""])
+                empty = QTreeWidgetItem([tr("desktop.endfield.searchBrowserNoRuns"), "", ""])
 
                 empty.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
