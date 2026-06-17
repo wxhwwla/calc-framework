@@ -293,6 +293,25 @@
       "calcResults": "Calculation Results"
     },
 
+    "endfield": {
+      "hintLoadZones": "Press \"Confirm Selection\" to load damage zone data",
+      "confirmSelection": "Confirm Selection",
+      "goAdvanced": "Advanced Page",
+      "tabCalc": "Calculator",
+      "tabAdvanced": "Advanced",
+      "confirmPending": "Confirm Selection (Update Pending)",
+      "pendingConfirm": "Pending Confirmation",
+      "computing": "Computing…",
+      "confirmed": "Confirmed",
+      "totalSettlement": "Total Damage Summary",
+      "totalEmptyHint": "Press \"Confirm Selection\" to view total damage summary",
+      "segmentRow": "  ├ Segment {index}: {single} × {count} = {total}{share}",
+      "subtotal": "  └ Subtotal: {total}",
+      "weightedTotal": "Weighted Total: {total}",
+      "skillInfo": "Skill: {name}",
+      "genericRow": "  {key}: {single} × {count} = {total}"
+    },
+
     "debugger": {
       "windowTitle": "DAG Step Debugger",
       "stepBtn": "Step (n)",

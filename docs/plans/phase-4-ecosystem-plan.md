@@ -25,7 +25,8 @@ Phase 0–3 解决了安全、Web 可靠性、框架质量与 `api/` 目录约�
 | **4.1** | 数据路径规范文档（[`数据路径对照表.md`](../数据路径对照表.md)） | 低 | ✅ |
 | **4.2** | 明日方舟人工验收清单 → 自动化探针（`@pytest.mark.real_data`） | 低 | ✅ |
 | **4.3** | ADR-0023 数据路径迁移 — 路径常量 + `sync_adapter_snapshots.py` | 中 | ✅ |
-| **4.4** | Desktop i18n 逐控件（282 键基础设施已有） | 中 | ⏳ |
+| **4.4** | Desktop i18n 逐控件 — 计算页首批（shell + 总伤面板） | 中 | ✅ |
+| **4.4b** | Desktop i18n — control_dock / 对话框等剩余 | 中 | ⏳ |
 | **4.5** | 代码签名 + 自动更新生产验证 | 高（需证书/环境） | ⏳ |
 | **4.6** | 明日方舟 Web 扩展（配装/搜索，**非** parity 计划范围） | 高 | 📋 待规划 |
 
@@ -87,11 +88,24 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 
 ---
 
-## Step 4.4 — Desktop i18n ⏳
+## Step 4.4 — Desktop i18n（计算页首批）✅
 
-见 [`improvement-roadmap.md`](improvement-roadmap.md) §2、`docs/会话接续手册.md` P1 项。
+**交付**（2026-06-17）：
 
-优先：`games/endfield/gui/` 计算页硬编码中文 → `tr()`。
+- `desktop.endfield.*` 16 键（zh-CN + en）
+- `games/endfield/gui/endfield_shell.py` — 页签、确认按钮、状态文案
+- `games/endfield/gui/presentation/total_damage_panel.py` — 总伤结算面板
+- `framework/tests/ui/test_i18n_endfield.py`
+
+**后续 4.4b**：`qt_control_dock`、搜索/增强对话框、OCR 等仍含硬编码中文。
+
+---
+
+## Step 4.4b — Desktop i18n 剩余控件 ⏳
+
+见 [`improvement-roadmap.md`](improvement-roadmap.md) §2、`docs/plans/i18n-desktop.md`。
+
+优先：`qt_control_dock.py`、`qt_dialogs.py`、designer 页签。
 
 ---
 
@@ -117,6 +131,7 @@ python tools/sync_adapter_snapshots.py --game arknights --apply
 | Step 4.1 文档 | 人工对照源码 | ✅ | 2026-06-17 |
 | Step 4.2 干员数量探针 | `pytest games/arknights/tests/test_data_loading.py -k min_parsed -m real_data` | ✅ | 2026-06-17 |
 | Step 4.3 路径常量 + sync | `pytest tools/tests/test_sync_adapter_snapshots.py` | ✅ | 2026-06-17 |
+| Step 4.4 计算页 i18n | `pytest framework/tests/ui/test_i18n_endfield.py` | ✅ | 2026-06-17 |
 
 ---
 

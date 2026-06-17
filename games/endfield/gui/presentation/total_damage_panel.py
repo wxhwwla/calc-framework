@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFrame,
@@ -101,7 +102,7 @@ class TotalDamagePanel(QWidget):
 
         layout.setSpacing(4)
 
-        header = _SectionHeader("总伤结算", self._big_font)
+        header = _SectionHeader(tr("desktop.endfield.totalSettlement"), self._big_font)
 
         layout.addWidget(header)
 
@@ -115,7 +116,7 @@ class TotalDamagePanel(QWidget):
 
         layout.addWidget(self._body)
 
-        self._empty_label = QLabel("按「确认选择」查看总伤结算")
+        self._empty_label = QLabel(tr("desktop.endfield.totalEmptyHint"))
 
         self._empty_label.setStyleSheet(f"color: {_DIM_COLOR}; font-size: 12px; padding: 8px 0;")
 
@@ -136,7 +137,7 @@ class TotalDamagePanel(QWidget):
                 w.deleteLater()
 
         if snapshot is None:
-            self._empty_label = QLabel("按「确认选择」查看总伤结算")
+            self._empty_label = QLabel(tr("desktop.endfield.totalEmptyHint"))
 
             self._empty_label.setStyleSheet(f"color: {_DIM_COLOR}; font-size: 12px; padding: 8px 0;")
 
@@ -210,12 +211,22 @@ class TotalDamagePanel(QWidget):
 
                 share_text = f" ({share:.1f}%)" if share > 0 else ""
 
-                row = _small_label(f"  ├ 第{key.split(':')[1]}段: {single:.1f} × {count} = {total:.1f}{share_text}")
+                seg_index = key.split(":")[1]
+                row = _small_label(
+                    tr(
+                        "desktop.endfield.segmentRow",
+                        index=seg_index,
+                        single=f"{single:.1f}",
+                        count=count,
+                        total=f"{total:.1f}",
+                        share=share_text,
+                    )
+                )
 
                 self._body_layout.addWidget(row)
 
             if st_total > 0:
-                sub = _small_label(f"  └ 小计: {st_total:.1f}", _SUBTOTAL_COLOR)
+                sub = _small_label(tr("desktop.endfield.subtotal", total=f"{st_total:.1f}"), _SUBTOTAL_COLOR)
 
                 self._body_layout.addWidget(sub)
 
@@ -226,7 +237,15 @@ class TotalDamagePanel(QWidget):
                 total = seg_totals.get(key, 0.0)
 
                 if count > 0:
-                    row = _small_label(f"  {key}: {single:.1f} × {count} = {total:.1f}")
+                    row = _small_label(
+                        tr(
+                            "desktop.endfield.genericRow",
+                            key=key,
+                            single=f"{single:.1f}",
+                            count=count,
+                            total=f"{total:.1f}",
+                        )
+                    )
 
                     self._body_layout.addWidget(row)
 
@@ -242,7 +261,7 @@ class TotalDamagePanel(QWidget):
 
         total_row.addWidget(total_icon)
 
-        total_text = QLabel(f"加权总伤: {weighted_total:,.1f}")
+        total_text = QLabel(tr("desktop.endfield.weightedTotal", total=f"{weighted_total:,.1f}"))
 
         total_font = QFont(self._big_font)
 
@@ -261,7 +280,7 @@ class TotalDamagePanel(QWidget):
         self._body_layout.addLayout(total_row)
 
         if selected_label:
-            info = _dim_label(f"技能: {selected_label}")
+            info = _dim_label(tr("desktop.endfield.skillInfo", name=selected_label))
 
             self._body_layout.addWidget(info)
 

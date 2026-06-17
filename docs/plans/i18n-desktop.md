@@ -169,8 +169,9 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `desktop.graphEditor.*` | 83 | 图编辑器完整 UI（菜单、工具栏、属性面板、节点编辑、帮助对话） |
 | `desktop.editor.*` | 30 | 布局编辑器（DAG加载、节管理、导出、预览） |
 | `desktop.debugger.*` | 12 | DAG 分步调试器（步骤控制、进度显示、示例图） |
+| `desktop.endfield.*` | 16 | 终末地计算页（shell 页签/确认按钮 + 总伤面板） |
 
-### 已集成 GUI 文件 (15 个)
+### 已集成 GUI 文件 (17 个)
 
 | 文件 | 所属模块 | 状态 |
 |------|----------|:--:|
@@ -189,6 +190,8 @@ SUPPORTED_LOCALES = ("zh-CN", "en", "ja")
 | `viewer.py` | viewer | ✅ 已集成 |
 | `plugin_manager.py` | pluginManager | ✅ 已集成 |
 | `theme.py` + `log_widget.py` | themeNames / log | ✅ 已集成 |
+| `games/endfield/gui/endfield_shell.py` | endfield 计算页 | ✅ 已集成 |
+| `games/endfield/gui/presentation/total_damage_panel.py` | endfield 总伤面板 | ✅ 已集成 |
 
 ### 待覆盖 (后续 PR)
 

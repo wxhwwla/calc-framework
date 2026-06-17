@@ -293,6 +293,25 @@
       "calcResults": "计算结果"
     },
 
+    "endfield": {
+      "hintLoadZones": "按「确认选择」加载乘区数据",
+      "confirmSelection": "确认选择",
+      "goAdvanced": "前往高级页",
+      "tabCalc": "计算页",
+      "tabAdvanced": "高级页",
+      "confirmPending": "确认选择（待更新）",
+      "pendingConfirm": "待确认",
+      "computing": "计算中…",
+      "confirmed": "已确认",
+      "totalSettlement": "总伤结算",
+      "totalEmptyHint": "按「确认选择」查看总伤结算",
+      "segmentRow": "  ├ 第{index}段: {single} × {count} = {total}{share}",
+      "subtotal": "  └ 小计: {total}",
+      "weightedTotal": "加权总伤: {total}",
+      "skillInfo": "技能: {name}",
+      "genericRow": "  {key}: {single} × {count} = {total}"
+    },
+
     "debugger": {
       "windowTitle": "DAG 分步调试器",
       "stepBtn": "单步执行 (n)",

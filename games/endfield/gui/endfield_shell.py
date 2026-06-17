@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
@@ -88,7 +89,8 @@ class ShellMixin:
         self._compute_sheet_widget: QWidget = QWidget()
         sheet_layout = QVBoxLayout(self._compute_sheet_widget)
         sheet_layout.setContentsMargins(0, 0, 0, 0)
-        sheet_layout.addWidget(QLabel("按「确认选择」加载乘区数据"))
+        self._sheet_hint_label = QLabel(tr("desktop.endfield.hintLoadZones"))
+        sheet_layout.addWidget(self._sheet_hint_label)
 
         self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
         sheet_layout.addWidget(self._total_damage_panel)
@@ -105,13 +107,13 @@ class ShellMixin:
 
         action_row = QHBoxLayout()
         action_row.setSpacing(8)
-        self.calc_confirm_btn = QPushButton("确认选择")
+        self.calc_confirm_btn = QPushButton(tr("desktop.endfield.confirmSelection"))
         self.calc_confirm_btn.setMinimumHeight(40)
         self.calc_confirm_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.calc_confirm_btn.clicked.connect(self._on_confirm)
         action_row.addWidget(self.calc_confirm_btn, stretch=2)
 
-        self.goto_adv_btn = QPushButton("前往高级页")
+        self.goto_adv_btn = QPushButton(tr("desktop.endfield.goAdvanced"))
         self.goto_adv_btn.setMinimumHeight(40)
         self.goto_adv_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.goto_adv_btn.clicked.connect(lambda: self.tabs.setCurrentIndex(1))
@@ -121,7 +123,7 @@ class ShellMixin:
         content_split.addWidget(right_wrapper)
         content_split.setSizes([400, 400])
 
-        self.tabs.addTab(calc_page, "计算页")
+        self.tabs.addTab(calc_page, tr("desktop.endfield.tabCalc"))
         """build calc page。"""
 
     def _build_adv_page(self) -> None:
@@ -144,13 +146,13 @@ class ShellMixin:
         self.control_dock.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         adv_layout.addWidget(self.control_dock, stretch=1)
 
-        self.status_label = QLabel("就绪")
+        self.status_label = QLabel(tr("common.ready"))
         self.status_label.setFont(self.small_font)
         self.status_label.setStyleSheet("color: #828282; padding: 4px 12px;")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         adv_layout.addWidget(self.status_label)
 
-        self.tabs.addTab(adv_page, "高级页")
+        self.tabs.addTab(adv_page, tr("desktop.endfield.tabAdvanced"))
         """build adv page。"""
 
     def _confirm_buttons(self) -> list[QPushButton]:
@@ -166,27 +168,27 @@ class ShellMixin:
         """配装变更后：两页确认按钮均显示待更新。"""
         for btn in self._confirm_buttons():
             btn.setEnabled(True)
-            btn.setText("确认选择（待更新）")
+            btn.setText(tr("desktop.endfield.confirmPending"))
             btn.setStyleSheet(_CONFIRM_PENDING_STYLE)
-        self.status_label.setText("待确认")
+        self.status_label.setText(tr("desktop.endfield.pendingConfirm"))
 
     def _set_confirm_ui_computing(self) -> None:
         """计算进行中。"""
         for btn in self._confirm_buttons():
             btn.setEnabled(False)
-            btn.setText("计算中...")
+            btn.setText(tr("desktop.endfield.computing"))
         if hasattr(self, "status_label"):
-            self.status_label.setText("计算中...")
+            self.status_label.setText(tr("desktop.endfield.computing"))
 
     def _set_confirm_ui_confirmed(self) -> None:
         """确认完成。"""
         style = getattr(self, "_confirm_btn_default_style", _CONFIRM_PENDING_STYLE)
         for btn in self._confirm_buttons():
             btn.setEnabled(True)
-            btn.setText("已确认")
+            btn.setText(tr("desktop.endfield.confirmed"))
             btn.setStyleSheet(style)
         if hasattr(self, "status_label"):
-            self.status_label.setText("已确认")
+            self.status_label.setText(tr("desktop.endfield.confirmed"))
 
     def _on_char_name_change(self) -> None:
         char_data = self.char_panel.get_selected_data()
