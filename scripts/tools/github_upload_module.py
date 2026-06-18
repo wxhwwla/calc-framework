@@ -1063,6 +1063,11 @@ def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None
                 print(f"[错误] 无法切换到 {RELEASE_BRANCH}，合并取消")
                 return
             run_git(["checkout", "-b", RELEASE_BRANCH, _remote_release_ref()])
+        # 归一化 CRLF 换行符差异，避免 .gitattributes (eol=lf) 导致文件被视为已修改
+        _, crlf_status, _ = run_git(["status", "--porcelain"], capture_output=True)
+        if crlf_status.strip():
+            run_git(["add", "--renormalize", "."])
+            run_git(["checkout", "--", "."])
         # 切分支后再次检查未暂存改动（切分支可能恢复 stash pop 遗留的冲突文件）
         _, after_checkout, _ = run_git(["status", "--porcelain"], capture_output=True)
         if after_checkout.strip():
