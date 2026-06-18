@@ -39,12 +39,27 @@ jobs:
         with:
           python-version: "3.12"
 
+      # ── Rust 缓存 ────────────────────────────────────
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "extensions/rust_search"
+
       - name: Run Rust tests
         run: |
           cd extensions/rust_search
           cargo test
+
+      # ── Python 缓存 ──────────────────────────────────
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml', 'web/backend/requirements.txt') }}
+          restore-keys: |
+            pip-
 
       - name: Install system deps for Qt6 (PySide6)
         run: |
