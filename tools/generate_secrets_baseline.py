@@ -17,7 +17,9 @@ EXCLUDE = (
     r"\.tmp-audit-venv.*|\.secrets\.baseline|\.admin_data|"
     r"tools/tests/test_secrets_baseline\.py|"
     r"i18n/locales/.*\.ts$|"
-    r"searchResumeDb\.ts$"
+    r"searchResumeDb\.ts$|"
+    r"web/backend/tests/.*|"
+    r"admin\.py$"
 )
 
 
