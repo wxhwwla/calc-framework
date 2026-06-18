@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.27.42"
+_VERSION = "3.27.43"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -146,10 +146,17 @@ def bump_minor(version: str) -> str:
 
 
 def _canonical_marker_header() -> str:
-    """返回 _version.py 顶部 UPLOAD_SUMMARY 标记区 canonical 文本。"""
+    """返回 _version.py 顶部 UPLOAD_SUMMARY 标记区 canonical 文本。
+
+    注意：此处使用硬编码字面量而非模块级变量 ``_SUMMARY_MARKER_BEGIN`` /
+    ``_SUMMARY_MARKER_END``，因为当标记区损坏时这些模块变量可能是
+    空字符串或未定义，使用它们会导致"修复"后仍然损坏。
+    """
+    _begin = "# --- BEGIN UPLOAD_SUMMARY ---"
+    _end = "# --- END UPLOAD_SUMMARY ---"
     return (
-        f'_SUMMARY_MARKER_BEGIN = "{_SUMMARY_MARKER_BEGIN}"\n'
-        f'_SUMMARY_MARKER_END = "{_SUMMARY_MARKER_END}"\n'
+        f'_SUMMARY_MARKER_BEGIN = "{_begin}"\n'
+        f'_SUMMARY_MARKER_END = "{_end}"\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
@@ -158,10 +165,12 @@ def _canonical_marker_header() -> str:
 
 
 def _markers_section_ok(text: str) -> bool:
-    """判断磁盘上的标记区是否完整且非空字符串。"""
+    """判断磁盘上的标记区是否完整且非空字符串。
+
+    使用硬编码值判断，避免模块变量为 ``""`` 时误判。
+    """
     required = (
-        f'_SUMMARY_MARKER_BEGIN = "{_SUMMARY_MARKER_BEGIN}"',
-        f'_SUMMARY_MARKER_END = "{_SUMMARY_MARKER_END}"',
+        "",
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",
