@@ -9,6 +9,9 @@ export default defineConfig({
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     setupFiles: [],
   },
+  esbuild: {
+    target: "es2021",
+  },
   plugins: [
     react(),
     VitePWA({
