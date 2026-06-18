@@ -24,3 +24,7 @@ RUN pip install pytest pytest-cov pytest-benchmark ruff
 
 # 验证安装
 RUN python --version && node --version && npm --version
+
+# 创建非 root 用户并降权
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

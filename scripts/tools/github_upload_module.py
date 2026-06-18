@@ -222,6 +222,12 @@ def _remote_url() -> str:
 
         path = REMOTE_HTTPS.removeprefix("https://")
 
+        masked_token = token[:4] + "..." + token[-4:] if len(token) > 8 else "****"
+        print(
+            f"[警告] Token 将以内嵌方式暴露在 git remote URL 中（可能被 ps 等工具捕获）。"
+            f" 建议改用 AUTH_MODE=ssh。 token={masked_token}"
+        )
+
         return f"https://wxhwwla:{token}@{path}"
 
     print(f"[错误] 未知 AUTH_MODE: {AUTH_MODE}")

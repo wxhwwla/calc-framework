@@ -832,14 +832,6 @@ def _handle_arknights(environ, start_response):
     return _http_error(start_response, "unknown arknights endpoint", 404)
 
 
-def _wsgi_http_error(start_response, exc) -> list:
-    from fastapi import HTTPException
-
-    if isinstance(exc, HTTPException):
-        return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
-    return _json(start_response, {"error": "服务器内部错误"}, "500 Internal Server Error")
-
-
 def _safe_error_response(start_response, exc: Exception) -> list:
     """日志记录异常并返回通用错误响应（不泄露内部信息）。"""
     logger.error("WSGI handler error: %s", exc, exc_info=exc)
@@ -984,7 +976,7 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _wsgi_http_error(start_response, e)
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown data write endpoint", 404)
 

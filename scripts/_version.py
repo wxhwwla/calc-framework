@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.3"
+_VERSION = "3.28.4"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -687,4 +687,29 @@ def get_exe_version() -> str:
 # - 修改 web/backend/api/entity/inverse_payloads.py
 # - 修改 web/backend/api/generator.py
 # - 修改 web/backend/api/ocr.py
+# - 修改 web/wsgi_pythonanywhere.py
+
+
+# TITLE: 更新 8 处文件
+# BODY:
+# - 变更 .github/workflows/framework-publish.yml
+# - 变更 docker/Dockerfile.ci
+# - 更新文档 docs/错误集.md
+# - 修改 framework/src/calc_framework/dag/subgraph.py
+# - 修改 framework/src/calc_framework/search/engine.py
+# - 修改 scripts/tools/github_upload_module.py
+# - 修改 web/backend/hub/storage.py
+# - 修改 web/wsgi_pythonanywhere.py
+
+
+# TITLE: 更新 9 处文件
+# BODY:
+# - 变更 .github/workflows/framework-publish.yml
+# - 变更 docker/Dockerfile.ci
+# - 更新文档 docs/错误集.md
+# - 修改 framework/src/calc_framework/dag/subgraph.py
+# - 修改 framework/src/calc_framework/search/engine.py
+# - 修改 scripts/_version.py
+# - 修改 scripts/tools/github_upload_module.py
+# - 修改 web/backend/hub/storage.py
 # - 修改 web/wsgi_pythonanywhere.py

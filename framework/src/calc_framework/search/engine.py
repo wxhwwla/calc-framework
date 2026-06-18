@@ -222,8 +222,6 @@ class SearchEngine(ABC, Generic[C, R]):
 
         def _progress(p):
             if progress_callback is not None:
-                processed_count + skipped  # type: ignore[unused-expression]
-
                 progress_callback(p)
 
         from .parallel import run_parallel as _run_parallel

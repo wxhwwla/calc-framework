@@ -5,7 +5,10 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import shutil
+
+logger = logging.getLogger(__name__)
 import sqlite3
 import zipfile
 from dataclasses import dataclass, field
@@ -251,7 +254,18 @@ def increment_download(pack_id: str) -> dict[str, Any] | None:
     return get_pack(pack_id)
 
 
+def _sanitize_id(id_str: str) -> str:
+    """防止路径穿越：只允许字母、数字、连字符、下划线。"""
+    import re as _re
+
+    sanitized = _re.sub(r"[^a-zA-Z0-9_-]", "", id_str)
+    if sanitized != id_str:
+        logger.warning("pack_id 包含非法字符，已净化: %r → %r", id_str, sanitized)
+    return sanitized
+
+
 def delete_pack(pack_id: str) -> bool:
+    pack_id = _sanitize_id(pack_id)
     conn = _ensure_db()
     cursor = conn.execute("DELETE FROM packs WHERE id = ?", [pack_id])
     deleted = cursor.rowcount > 0
@@ -271,6 +285,7 @@ def save_pack_file(pack_id: str, content: bytes, filename: str) -> Path:
     返回:
         保存后的文件路径。
     """
+    pack_id = _sanitize_id(pack_id)
     pack_dir = _PACKS_DIR / pack_id
     pack_dir.mkdir(parents=True, exist_ok=True)
     file_path = pack_dir / filename
@@ -279,6 +294,7 @@ def save_pack_file(pack_id: str, content: bytes, filename: str) -> Path:
 
 
 def get_pack_file_path(pack_id: str, filename: str) -> Path | None:
+    pack_id = _sanitize_id(pack_id)
     file_path = _PACKS_DIR / pack_id / filename
     if file_path.exists():
         return file_path
