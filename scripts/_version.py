@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.27.43"
+_VERSION = "3.27.44"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -152,11 +152,8 @@ def _canonical_marker_header() -> str:
     ``_SUMMARY_MARKER_END``，因为当标记区损坏时这些模块变量可能是
     空字符串或未定义，使用它们会导致"修复"后仍然损坏。
     """
-    _begin = "# --- BEGIN UPLOAD_SUMMARY ---"
-    _end = "# --- END UPLOAD_SUMMARY ---"
     return (
-        f'_SUMMARY_MARKER_BEGIN = "{_begin}"\n'
-        f'_SUMMARY_MARKER_END = "{_end}"\n'
+        '_SUMMARY_MARKER_BEGIN = ""\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"

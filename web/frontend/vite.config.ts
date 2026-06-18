@@ -77,6 +77,7 @@ export default defineConfig({
     }),
   ],
   build: {
+    target: "es2021",
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
