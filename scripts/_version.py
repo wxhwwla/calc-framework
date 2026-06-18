@@ -153,7 +153,8 @@ def _canonical_marker_header() -> str:
     空字符串或未定义，使用它们会导致"修复"后仍然损坏。
     """
     return (
-        '_SUMMARY_MARKER_BEGIN = ""\n'
+        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
+        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
