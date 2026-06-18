@@ -6,7 +6,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, UploadFile
+from api.internal.auth import verify_admin_token
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from hub.storage import (
     create_pack,
     delete_pack,
@@ -80,7 +81,7 @@ async def get_pack_endpoint(pack_id: str):
 
 
 @router.post("/packs", status_code=201)
-async def create_pack_endpoint(pack: PackCreate):
+async def create_pack_endpoint(pack: PackCreate, _admin: None = Depends(verify_admin_token)):
     result = create_pack(
         name=pack.name,
         version=pack.version,
@@ -97,7 +98,7 @@ async def create_pack_endpoint(pack: PackCreate):
 
 
 @router.put("/packs/{pack_id}")
-async def update_pack_endpoint(pack_id: str, update: PackUpdate):
+async def update_pack_endpoint(pack_id: str, update: PackUpdate, _admin: None = Depends(verify_admin_token)):
     kwargs = {k: v for k, v in update.model_dump().items() if v is not None}
     result = update_pack(pack_id, **kwargs)
     if result is None:
@@ -106,14 +107,14 @@ async def update_pack_endpoint(pack_id: str, update: PackUpdate):
 
 
 @router.delete("/packs/{pack_id}", status_code=204)
-async def delete_pack_endpoint(pack_id: str):
+async def delete_pack_endpoint(pack_id: str, _admin: None = Depends(verify_admin_token)):
     """删除配置包（含元数据、评分记录和文件）。"""
     if not delete_pack(pack_id):
         raise HTTPException(status_code=404, detail="包不存在")
 
 
 @router.post("/packs/{pack_id}/upload")
-async def upload_pack_file(pack_id: str, file: UploadFile):
+async def upload_pack_file(pack_id: str, file: UploadFile, _admin: None = Depends(verify_admin_token)):
     """上传 .calcpack 文件并关联到指定配置包。"""
     from hub.storage import validate_calcpack_archive
 
@@ -181,7 +182,7 @@ async def list_hub_adapters():
 
 
 @router.post("/upload")
-async def upload_hub_adapter(file: UploadFile):
+async def upload_hub_adapter(file: UploadFile, _admin: None = Depends(verify_admin_token)):
     """上传 .calcpack 适配器包（一步式：创建元数据+保存文件）。"""
     if not file.filename or not file.filename.endswith(".calcpack"):
         raise HTTPException(status_code=400, detail="仅支持 .calcpack 文件")
@@ -250,7 +251,7 @@ async def download_hub_adapter(adapter_id: str):
 
 
 @router.delete("/adapters/{adapter_id}")
-async def delete_hub_adapter(adapter_id: str):
+async def delete_hub_adapter(adapter_id: str, _admin: None = Depends(verify_admin_token)):
     """删除适配器。"""
     if not delete_pack(adapter_id):
         raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")

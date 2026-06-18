@@ -173,6 +173,12 @@ def _parse_sub_graph(source_graph: str) -> GraphDocument | None:
         return document_from_json(data)
 
     except Exception:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "子图 JSON 解析失败: source_graph=%r",
+            source_graph[:200],
+        )
         return None
 
 

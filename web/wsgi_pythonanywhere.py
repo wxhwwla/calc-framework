@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import gzip
 import json
+import os
 import re
+import secrets
 import sys
 from pathlib import Path
 from urllib.parse import parse_qs, unquote
@@ -835,12 +837,28 @@ def _wsgi_http_error(start_response, exc) -> list:
     return _json(start_response, {"error": str(exc)}, "500 Internal Server Error")
 
 
+def _verify_admin_token_wsgi(environ) -> str | None:
+    """WSGI 版管理 Token 校验（FastAPI 路由用 Depends，WSGI 只能手动校验）。"""
+    configured = os.environ.get("CALC_ADMIN_TOKEN", "").strip()
+    if not configured:
+        return "管理接口未配置，请联系管理员"
+    token = environ.get("HTTP_X_ADMIN_TOKEN", "").strip()
+    if not token:
+        return "缺少管理 Token"
+    if not secrets.compare_digest(token, configured):
+        return "管理 Token 无效"
+    return None
+
+
 def _handle_data_write(environ, start_response, path: str, method: str) -> list | None:
     """POST/PUT/DELETE /api/data/* 与公式反推（PA WSGI）。"""
     if not path.startswith("/api/data"):
         return None
     if method == "GET":
         return None
+    err = _verify_admin_token_wsgi(environ)
+    if err:
+        return _json(start_response, {"detail": err}, "401 Unauthorized")
 
     sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
 
