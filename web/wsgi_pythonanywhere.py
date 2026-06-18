@@ -14,12 +14,15 @@ from __future__ import annotations
 
 import gzip
 import json
+import logging
 import os
 import re
 import secrets
 import sys
 from pathlib import Path
 from urllib.parse import parse_qs, unquote
+
+logger = logging.getLogger(__name__)
 
 # ── 按账号修改 ─────────────────────────────────────────────────────────────
 PA_USERNAME = "wxhwwla"
@@ -236,7 +239,7 @@ def _post_json_handler(start_response, payload: dict, handler):
     except HTTPException as exc:
         return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def _handle_layout_compute(environ, start_response):
@@ -315,7 +318,7 @@ def _handle_layout_compute(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return None
 
@@ -396,7 +399,7 @@ def _handle_search_api(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown search endpoint", 404)
 
@@ -444,7 +447,7 @@ def _handle_manual_buff(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown manual-buff endpoint", 404)
 
@@ -469,7 +472,7 @@ def _handle_survival(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def _parse_multipart_file(environ) -> tuple[str, bytes]:
@@ -631,7 +634,7 @@ def _handle_hub(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown hub endpoint", 404)
 
@@ -679,7 +682,7 @@ def _handle_pack(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown pack endpoint", 404)
 
@@ -739,7 +742,7 @@ def _handle_adapters(environ, start_response):
             if action == "pack-bundle":
                 return _json(start_response, get_pack_export_bundle(aid))
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown adapters endpoint", 404)
 
@@ -766,7 +769,7 @@ def _handle_history_and_download(environ, start_response):
         except json.JSONDecodeError:
             return _http_error(start_response, "invalid JSON", 400)
         except Exception as e:
-            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+            return _safe_error_response(start_response, e)
         return _http_error(start_response, "method not allowed", 405)
 
     if path in ("/api/download/client", "/local-backend.zip") and method == "GET":
@@ -781,7 +784,7 @@ def _handle_history_and_download(environ, start_response):
                 extra_headers=[("Content-Disposition", f'attachment; filename="{filename}"')],
             )
         except Exception as e:
-            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+            return _safe_error_response(start_response, e)
 
     return None
 
@@ -824,7 +827,7 @@ def _handle_arknights(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown arknights endpoint", 404)
 
@@ -834,7 +837,13 @@ def _wsgi_http_error(start_response, exc) -> list:
 
     if isinstance(exc, HTTPException):
         return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
-    return _json(start_response, {"error": str(exc)}, "500 Internal Server Error")
+    return _json(start_response, {"error": "服务器内部错误"}, "500 Internal Server Error")
+
+
+def _safe_error_response(start_response, exc: Exception) -> list:
+    """日志记录异常并返回通用错误响应（不泄露内部信息）。"""
+    logger.error("WSGI handler error: %s", exc, exc_info=exc)
+    return _json(start_response, {"error": "服务器内部错误"}, "500 Internal Server Error")
 
 
 def _verify_admin_token_wsgi(environ) -> str | None:
@@ -1179,7 +1188,7 @@ def _handle_generator_api(environ, start_response):
                 "501 Not Implemented",
             )
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown generator endpoint", 404)
 
@@ -1230,7 +1239,7 @@ def _handle_admin_unpack(environ, start_response):
         subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return _json(start_response, {"ok": True, "status": "unpack started in background"})
     except Exception as e:
-        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def _handle_admin_deploy(environ, start_response):
@@ -1272,7 +1281,7 @@ def _handle_admin_deploy(environ, start_response):
         subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return _json(start_response, {"ok": True, "status": "deploy started"})
     except Exception as e:
-        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def application(environ, start_response):

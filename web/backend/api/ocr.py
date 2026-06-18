@@ -5,6 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 
+from api.internal.errors import raise_http_from_exc
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 router = APIRouter(prefix="/api/ocr", tags=["ocr"])
@@ -33,7 +34,7 @@ async def detect(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_http_from_exc(e, status_code=500)
 
 
 __all__: list[str] = []

@@ -10,6 +10,7 @@ from api.adapter_lib.assets import (
     get_adapter_layout,
     get_pack_export_bundle,
 )
+from api.internal.errors import raise_http_from_exc
 from api.internal.json_utils import ADAPTER_ROOT
 from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
@@ -109,7 +110,7 @@ async def get_schema(name: str):
     try:
         pkg = _manager.load(name)
     except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise_http_from_exc(e, status_code=404, public_message="适配器不存在")
 
     if pkg.attr_schema is None:
         return AdapterSchemaResponse(attributes=[])

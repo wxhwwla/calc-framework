@@ -3,7 +3,8 @@
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from api.internal.errors import raise_http_from_exc
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/survival", tags=["survival"])
@@ -62,7 +63,7 @@ def survival_estimate(req: SurvivalEstimateRequest) -> dict[str, Any]:
             life_steal_rate=req.life_steal_rate,
         )
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=400)
 
 
 __all__: list[str] = []

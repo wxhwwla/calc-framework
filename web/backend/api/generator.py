@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from api.internal.errors import raise_http_from_exc
 from api.internal.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -204,7 +205,7 @@ def generate_adapter(req: GenerateRequest):
                 "file_count": len(result),
             }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise_http_from_exc(e, status_code=400)
 
 
 @router.post("/ai/parse")
