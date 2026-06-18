@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+import contextlib
+import hashlib
+import json
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
@@ -76,6 +79,13 @@ class DAGState:
         self.evaluation_count = 0
 
 
+def _json_stable_hash(value: str) -> float:
+    """对字符串值生成稳定浮点哈希（用于扁平化上下文键）。"""
+    raw = json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    digest = hashlib.sha256(raw).digest()[:8]
+    return float(int.from_bytes(digest, "big"))
+
+
 def flatten_context(context: dict[str, Any]) -> dict[str, float]:
     """将嵌套上下文展平为点分隔路径 → 值的扁平字典。
 
@@ -95,23 +105,53 @@ def flatten_context(context: dict[str, Any]) -> dict[str, float]:
 
 
 def _flatten_impl(prefix: str, obj: Any, result: dict[str, float]) -> None:
-    """递归展平嵌套字典。"""
+    """递归展平嵌套字典。
+
+    支持的类型：
+    - ``dict``：递归展平子键
+    - ``int | float``：直接存储
+    - ``str | bool``：通过 JSON 序列化哈希为稳定数值键
+    - ``list | tuple``：递归展平每个元素
+    - ``None``：跳过
+    - 其他类型：尝试 ``float()`` 转换，失败则跳过并记录日志
+    """
     if isinstance(obj, dict):
         for key, val in obj.items():
             new_prefix = f"{prefix}.{key}" if prefix else key
-
             _flatten_impl(new_prefix, val, result)
 
     elif isinstance(obj, int | float):
         result[prefix] = float(obj)
 
+    elif isinstance(obj, str):
+        # 字符串通过 JSON 序列化生成稳定哈希键
+        result[prefix] = _json_stable_hash(obj)
+
+    elif isinstance(obj, bool):
+        result[prefix] = 1.0 if obj else 0.0
+
+    elif isinstance(obj, list | tuple):
+        for i, item in enumerate(obj):
+            item_prefix = f"{prefix}[{i}]"
+            _flatten_impl(item_prefix, item, result)
+
+    elif obj is None:
+        pass
+
+    else:
+        with contextlib.suppress(TypeError, ValueError):
+            result[prefix] = float(obj)
+
 
 def compute_context_hash(context: dict[str, Any]) -> int:
-    """计算上下文的稳定哈希，用于快速判断上下文是否变化。"""
+    """计算上下文的稳定哈希，用于快速判断上下文是否变化。
 
+    使用 hashlib.sha256 替代内置 ``hash()``，确保跨进程一致性。
+    """
     flat = flatten_context(context)
-
-    return hash(tuple(sorted(flat.items())))
+    serialized = json.dumps(flat, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    digest = hashlib.sha256(serialized).digest()
+    return int.from_bytes(digest[:8], "big")
 
 
 def find_changed_paths(

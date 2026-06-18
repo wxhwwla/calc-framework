@@ -33,8 +33,15 @@ class TestFlattenContext:
         assert result == {"a": 1.0}
 
     def test_skips_non_numeric(self) -> None:
+        """非数值类型（字符串、列表）生成稳定哈希键而非丢弃。"""
         result = flatten_context({"a": 1.0, "b": "hello", "c": [1, 2]})
-        assert result == {"a": 1.0}
+        # 数值键保持原值
+        assert result["a"] == 1.0
+        # 字符串键被哈希为稳定浮点值
+        assert isinstance(result["b"], float)
+        # 列表元素被递归展平
+        assert result["c[0]"] == 1.0
+        assert result["c[1]"] == 2.0
 
 
 class TestComputeContextHash:

@@ -26,13 +26,22 @@ from .sandbox_config import (
 
 logger = get_logger(__name__)
 
+# 沙箱表达式最大长度（防止 DoS）
+_MAX_EXPR_LENGTH = 4096
+
+# 数值积分最大分段数
+_MAX_INTEGRAL_N = 100_000
+
 
 def _integral_simpson(fn_name: str, a: float, b: float, n: float = 100.0) -> float:
-    """辛普森数值积分：在 [a,b] 上对名为 fn_name 的函数求定积分。"""
+    """辛普森数值积分：在 [a,b] 上对名为 fn_name 的函数求定积分。
+
+    ``n`` 最大为 ``_MAX_INTEGRAL_N``（防止 DoS）。
+    """
     fn = _GLOBAL_FUNCTIONS.get(fn_name) or _SAFE_BUILTINS.get(fn_name)
     if fn is None:
         raise DAGRuntimeError(f"积分函数 {fn_name!r} 未注册")
-    n_int = max(2, int(n))
+    n_int = max(2, min(int(n), _MAX_INTEGRAL_N))
     if n_int % 2 != 0:
         n_int += 1
     h = (b - a) / n_int
@@ -67,6 +76,8 @@ def _check_node(node: ast.AST) -> None:
             )
         for arg in node.args:
             _check_node(arg)
+        for kw in node.keywords:
+            _check_node(kw.value)
         return
 
     if tp not in _SAFE_NODE_TYPES:
@@ -98,12 +109,22 @@ def _check_node(node: ast.AST) -> None:
 
 
 def _eval_node(node: ast.AST, scope: dict[str, float]) -> Any:
-    """在给定 scope 中递归求值 AST 节点。"""
+    """在给定 scope 中递归求值 AST 节点。
+
+    字符串常量和布尔值会通过 _eval_node 传递（某些注册函数如
+    ``integral`` 需要字符串参数），但顶层 ``evaluate()`` 会
+    确保 DAG 表达式最终返回 float 类型。
+
+    Raises:
+        DAGRuntimeError: 变量缺失、除零、不支持的类型或运算符等。
+    """
     if isinstance(node, ast.Constant):
-        if isinstance(node.value, str):
-            return node.value
         if isinstance(node.value, int | float):
             return float(node.value)
+        if isinstance(node.value, str):
+            return node.value
+        if isinstance(node.value, bool):
+            return 1.0 if node.value else 0.0
         raise DAGRuntimeError(f"不支持的常量类型: {type(node.value).__name__}")
     if isinstance(node, ast.Name):
         val = scope.get(node.id)
@@ -139,7 +160,7 @@ def _eval_node(node: ast.AST, scope: dict[str, float]) -> Any:
             raise DAGRuntimeError(f"未注册的函数: {func_name}")
         try:
             return float(fn(*args))
-        except (ValueError, ZeroDivisionError) as e:
+        except (ValueError, ZeroDivisionError, TypeError) as e:
             raise DAGRuntimeError(f"函数 {func_name} 执行错误: {e}")
     if isinstance(node, ast.Expression):
         return _eval_node(node.body, scope)
@@ -150,12 +171,14 @@ def parse_expr(expr_str: str) -> ast.Expression:
     """解析表达式字符串为白名单校验过的 AST 树。
 
     Raises:
-        DAGCompileError: 表达式语法错误
+        DAGCompileError: 表达式语法错误或超长
         DAGSecurityError: 表达式使用了白名单外的语法
     """
     expr_str = expr_str.strip()
     if not expr_str:
         raise DAGCompileError("表达式为空")
+    if len(expr_str) > _MAX_EXPR_LENGTH:
+        raise DAGCompileError(f"表达式超长: {len(expr_str)} 字符（最大 {_MAX_EXPR_LENGTH}）")
     try:
         tree = ast.parse(expr_str, mode="eval")
     except SyntaxError as e:
@@ -178,9 +201,12 @@ def evaluate(tree: ast.Expression, scope: dict[str, float]) -> float:
         scope: 变量名 -> 浮点数的映射
 
     Returns:
-        表达式计算结果
+        表达式计算结果（始终为 float，字符串等非数值类型会触发错误）
 
     Raises:
-        DAGRuntimeError: 运行时错误（变量缺失、除零等）
+        DAGRuntimeError: 运行时错误（变量缺失、除零、非数值结果等）
     """
-    return _eval_node(tree, scope)
+    result = _eval_node(tree, scope)
+    if not isinstance(result, int | float):
+        raise DAGRuntimeError(f"表达式返回值不是数值类型: {type(result).__name__} ({result!r})")
+    return float(result)

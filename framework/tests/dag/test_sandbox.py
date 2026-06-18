@@ -209,8 +209,9 @@ class TestEdgeCases:
     """边界情况和错误路径。"""
 
     def test_str_constant(self) -> None:
-        """字符串常量被求值时返回原值。"""
-        assert evaluate(parse_expr("'hello'"), {}) == "hello"
+        """字符串常量作为顶层表达式时触发类型错误（DAG 表达式必须返回数值）。"""
+        with pytest.raises(DAGRuntimeError, match=r"数值"):
+            evaluate(parse_expr("'hello'"), {})
 
     def test_integral_function(self) -> None:
         """积分函数可用。"""
