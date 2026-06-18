@@ -224,8 +224,6 @@ class _BoolVar:
         self._value = bool(value)
 
 
-
-
 def ctk_available() -> bool:
     """已迁移至 PySide6，CTk 兼容别名在 qt_factory.py 中保留。"""
     return False

@@ -6,7 +6,7 @@
     {"name": "character.magic_resist", "type": "float", "source": "character", "default": 30, "description": "英雄魔抗"},
     {"name": "character.max_hp", "type": "float", "source": "character", "default": 500, "description": "英雄最大生命值"},
     {"name": "character.cooldown_reduction", "type": "float", "source": "character", "default": 0, "description": "冷却缩减(0~0.4)"},
-    {"name": "character.attack_speed_bonus", "type": "float", "source": "character", "default": 0, "description": "攻速加成%"}, 
+    {"name": "character.attack_speed_bonus", "type": "float", "source": "character", "default": 0, "description": "攻速加成%"},
     {"name": "character.crit_rate", "type": "float", "source": "character", "default": 0, "description": "暴击率"},
     {"name": "character.crit_dmg", "type": "float", "source": "character", "default": 1.75, "description": "暴击伤害倍率"},
     {"name": "character.lethality", "type": "float", "source": "character", "default": 0, "description": "穿甲(固定)"},

@@ -8,9 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-_VALID_UNARY_OPS = frozenset(
-    {"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"}
-)
+_VALID_UNARY_OPS = frozenset({"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"})
 
 _VALID_BINARY_OPS = frozenset({"+", "-", "*", "/", "^", "min", "max", "mod"})
 

@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """LoadoutEvaluation 快照测试。"""
 
-
-
 import unittest
 from unittest.mock import patch
 
@@ -17,103 +15,56 @@ from games.endfield.gui.app.loadout_state import LoadoutState
 
 
 class TestLoadoutEvaluation(unittest.TestCase):
-
     def test_effective_skill_counts_default_manual_off(self) -> None:
-
         state = LoadoutState(
-
             char_data={"名称": "A", "战技倍率": [[100]], "连携技倍率": [], "终结技倍率": []},
-
             weapon_data={"名称": "W", "基础攻击力": [100]},
-
             char_level=1,
-
             weapon_level=1,
-
             trust_level=0,
-
             skill_levels=(1, 0, 0),
-
             skill_name="战技",
-
             skill_type="战技",
-
             skill_multiplier=1.0,
-
             damage_type="物理",
-
             calculation_mode="zone_snapshot",
-
             weapon_scope_label="当前武器",
-
             equipment_scope_label="全部装备",
-
             fixed_loadout=FixedLoadoutSelection(),
-
             fixed_equipment_names={},
-
             use_manual_multi_skill_counts=False,
-
             manual_counts={"战技": 9, "连携技": 9, "终结技": 9},
-
             enemy_defense=100.0,
-
             weapon_specials=("", 0) * 5,
-
         )
 
         self.assertEqual(state.effective_skill_counts()["战技"], 1)
 
         self.assertEqual(state.effective_skill_counts()["连携技"], 0)
 
-
-
     @patch("games.endfield.gui.app.loadout_evaluation.build_damage_snapshot")
-
     @patch("games.endfield.gui.app.loadout_evaluation.sync_evaluation_cache")
-
     def test_build_snapshot_from_loadout(self, mock_sync, mock_build) -> None:
-
         state = LoadoutState(
-
             char_data={"名称": "A"},
-
             weapon_data={"名称": "W"},
-
             char_level=1,
-
             weapon_level=1,
-
             trust_level=0,
-
             skill_levels=(1, 0, 0),
-
             skill_name="战技",
-
             skill_type="战技",
-
             skill_multiplier=1.0,
-
             damage_type="物理",
-
             calculation_mode="zone_snapshot",
-
             weapon_scope_label="当前武器",
-
             equipment_scope_label="全部装备",
-
             fixed_loadout=FixedLoadoutSelection(),
-
             fixed_equipment_names={},
-
             use_manual_multi_skill_counts=False,
-
             manual_counts={"战技": 1, "连携技": 0, "终结技": 0},
-
             enemy_defense=50.0,
-
             weapon_specials=("", 0) * 5,
-
         )
 
         mock_build.return_value = object()
@@ -126,80 +77,42 @@ class TestLoadoutEvaluation(unittest.TestCase):
 
         self.assertEqual(mock_build.call_args.kwargs["enemy_defense"], 50.0)
 
-
-
     @patch("games.endfield.gui.app.loadout_evaluation.build_single_skill_search_preview_lines")
-
     @patch("games.endfield.gui.app.loadout_evaluation.sync_evaluation_cache")
-
     def test_build_search_preview_lines_single_skill(self, mock_sync, mock_preview) -> None:
-
         state = LoadoutState(
-
             char_data={"名称": "A"},
-
             weapon_data={"名称": "W"},
-
             char_level=1,
-
             weapon_level=1,
-
             trust_level=0,
-
             skill_levels=(1, 0, 0),
-
             skill_name="战技",
-
             skill_type="战技",
-
             skill_multiplier=1.0,
-
             damage_type="物理",
-
             calculation_mode="single_skill_search",
-
             weapon_scope_label="当前武器",
-
             equipment_scope_label="全部装备",
-
             fixed_loadout=FixedLoadoutSelection(),
-
             fixed_equipment_names={},
-
             use_manual_multi_skill_counts=False,
-
             manual_counts={"战技": 1, "连携技": 0, "终结技": 0},
-
             enemy_defense=80.0,
-
             weapon_specials=(
-
                 "攻击力+",
-
                 1,
-
                 "",
-
                 1,
-
                 "",
-
                 0,
-
                 "施放战技后，法术伤害+",
-
                 1,
-
                 1,
-
                 "",
-
                 1,
-
                 0,
-
             ),
-
         )
 
         catalog = {"chest": [], "gloves": [], "accessories": [{"名称": "x"}]}
@@ -221,18 +134,10 @@ class TestLoadoutEvaluation(unittest.TestCase):
         self.assertEqual(mock_preview.call_args.kwargs["normal_skill_1_name"], "攻击力+")
 
         self.assertEqual(
-
             mock_preview.call_args.kwargs["special_skill_1_name"],
-
             "施放战技后，法术伤害+",
-
         )
 
 
-
-
-
 if __name__ == "__main__":
-
     unittest.main()
-

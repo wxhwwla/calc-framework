@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """公式反推页签：从数值数据反向推导成长公式参数。"""
 
-
-
 from __future__ import annotations
 
 from PySide6.QtGui import QFont
@@ -21,18 +19,11 @@ _STYLE = """
 """
 
 
-
-
-
 class InverseTab(QWidget):
-
     def __init__(self, big_font: QFont, small_font: QFont) -> None:
-
         super().__init__()
 
         layout = QVBoxLayout(self)
-
-
 
         label = QLabel("公式反推")
 
@@ -42,8 +33,6 @@ class InverseTab(QWidget):
 
         layout.addWidget(label)
 
-
-
         hint = QLabel("输入 90 级属性 / 技能 9–12 级数据，自动反推成长公式参数。")
 
         hint.setFont(small_font)
@@ -52,8 +41,6 @@ class InverseTab(QWidget):
 
         layout.addWidget(hint)
 
-
-
         self.text_edit = QTextEdit()
 
         self.text_edit.setPlaceholderText("在此粘贴属性数值...")
@@ -61,8 +48,6 @@ class InverseTab(QWidget):
         self.text_edit.setStyleSheet(_STYLE)
 
         layout.addWidget(self.text_edit)
-
-
 
         btn = QPushButton("开始反推")
 
@@ -80,8 +65,6 @@ class InverseTab(QWidget):
 
         layout.addWidget(btn)
 
-
-
         self.result_edit = QTextEdit()
 
         self.result_edit.setReadOnly(True)
@@ -91,11 +74,8 @@ class InverseTab(QWidget):
         layout.addWidget(self.result_edit)
         """初始化实例。"""
 
-
-
     def _invert(self) -> None:
-
         self.result_edit.setPlainText("公式反推功能开发中，请直接在源码 calculation/damage/inverse/ 使用 Python API。")
         """invert。"""
-    """InverseTab。"""
 
+    """InverseTab。"""

@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """等级曲线烘焙：录入与 BWIKI 同步共用的唯一接缝。"""
 
-
-
 from __future__ import annotations
 
 from typing import Any
@@ -49,44 +47,30 @@ def bake_character_curves(
     attrs = generate_character_attributes(params)
 
     if sk1_dt:
-
         attrs["战技段伤害类型"] = list(sk1_dt)  # type: ignore[assignment]
 
     if sk2_dt:
-
         attrs["连携技段伤害类型"] = list(sk2_dt)  # type: ignore[assignment]
 
     if sk3_dt:
-
         attrs["终结技段伤害类型"] = list(sk3_dt)  # type: ignore[assignment]
 
     return attrs
 
 
-
-
-
 def bake_weapon_curves(
-
     *,
-
     base_atk: dict[str, Any],
-
     bonus_attrs: dict[str, dict[str, Any]] | None,
-
 ) -> dict[str, Any]:
-
     """由 seed / 反推参数生成武器基础攻击与 xxx+ 曲线字段。"""
 
     params: dict[str, Any] = {"基础攻击力": base_atk}
 
     if bonus_attrs:
-
         for key, p in bonus_attrs.items():
-
             attr = key if key.endswith("+") else f"{key}+"
 
             params[attr] = p
 
     return generate_weapon_attributes(params)
-

@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """Top-N 结果追踪器 — 保留评分最高的 N 条记录。"""
 
-
-
 from __future__ import annotations
 
 import heapq
@@ -12,11 +10,7 @@ from typing import Generic, TypeVar
 T = TypeVar("T")
 
 
-
-
-
 class TopNTracker(Generic[T]):
-
     """按 key_fn 保留最大的 top_n 条记录。
 
 
@@ -41,10 +35,7 @@ class TopNTracker(Generic[T]):
 
     """
 
-
-
     def __init__(self, top_n: int, *, key_fn: Callable[[T], float]) -> None:
-
         self._top_n = max(1, int(top_n))
 
         self._key_fn = key_fn
@@ -53,10 +44,7 @@ class TopNTracker(Generic[T]):
 
         self._seq = 0
 
-
-
     def offer(self, item: T) -> None:
-
         score = float(self._key_fn(item))
 
         self._seq += 1
@@ -64,36 +52,23 @@ class TopNTracker(Generic[T]):
         entry = (score, self._seq, item)
 
         if len(self._heap) < self._top_n:
-
             heapq.heappush(self._heap, entry)
 
             return
 
         if score > self._heap[0][0]:
-
             heapq.heapreplace(self._heap, entry)
 
-
-
     @property
-
     def top_n(self) -> int:
-
         """top_n。"""
         return self._top_n
 
-
-
     @property
-
     def count(self) -> int:
         """count。"""
 
         return len(self._heap)
 
-
-
     def results(self) -> tuple[T, ...]:
-
         return tuple(item for _score, _seq, item in sorted(self._heap, reverse=True))
-

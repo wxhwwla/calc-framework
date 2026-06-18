@@ -103,10 +103,7 @@ class ExponentialFormulaFitter(FormulaFitter):
         base = params["base"]
         growth = params["growth"]
         offset = params.get("offset", 0.0)
-        return [
-            round(base * (growth ** (lv - 1)) + offset, 4)
-            for lv in range(1, num_levels + 1)
-        ]
+        return [round(base * (growth ** (lv - 1)) + offset, 4) for lv in range(1, num_levels + 1)]
 
     def validate(
         self,

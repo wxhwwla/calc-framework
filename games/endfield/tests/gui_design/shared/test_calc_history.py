@@ -11,17 +11,12 @@ from games.endfield.gui.shared.calc_history import (
 
 
 class TestCalculationHistory:
-
     def test_empty_history(self) -> None:
-
         h = CalculationHistory(max_entries=5)
 
         assert h.list_entries() == ()
 
-
-
     def test_push_and_list(self) -> None:
-
         h = CalculationHistory(max_entries=5)
 
         e1 = HistoryEntry(label="a", summary="s1", preset_snapshot={"x": 1})
@@ -40,14 +35,10 @@ class TestCalculationHistory:
 
         assert entries[1].label == "a"
 
-
-
     def test_max_entries_enforced(self) -> None:
-
         h = CalculationHistory(max_entries=2)
 
         for i in range(5):
-
             h.push(HistoryEntry(label=str(i), summary="", preset_snapshot={}))
 
         assert len(h.list_entries()) == 2
@@ -56,10 +47,7 @@ class TestCalculationHistory:
 
         assert h.list_entries()[1].label == "3"
 
-
-
     def test_get_snapshot_out_of_bounds(self) -> None:
-
         h = CalculationHistory(max_entries=3)
 
         assert h.get_snapshot(0) is None
@@ -68,10 +56,7 @@ class TestCalculationHistory:
 
         assert h.get_snapshot(99) is None
 
-
-
     def test_get_snapshot_valid(self) -> None:
-
         h = CalculationHistory(max_entries=3)
 
         h.push(HistoryEntry(label="x", summary="s", preset_snapshot={"key": "val"}))
@@ -80,10 +65,7 @@ class TestCalculationHistory:
 
         assert snap == {"key": "val"}
 
-
-
     def test_get_snapshot_returns_copy(self) -> None:
-
         h = CalculationHistory(max_entries=3)
 
         inner = {"mutable": [1, 2]}
@@ -97,13 +79,8 @@ class TestCalculationHistory:
         assert "new" not in inner
 
 
-
-
-
 class TestGetAppCalculationHistory:
-
     def test_creates_if_missing(self) -> None:
-
         app = MagicMock(spec=[])
 
         history = get_app_calculation_history(app)
@@ -112,10 +89,7 @@ class TestGetAppCalculationHistory:
 
         assert history.list_entries() == ()
 
-
-
     def test_returns_existing(self) -> None:
-
         app = MagicMock(spec=[])
 
         h1 = get_app_calculation_history(app)
@@ -123,4 +97,3 @@ class TestGetAppCalculationHistory:
         h2 = get_app_calculation_history(app)
 
         assert h1 is h2
-

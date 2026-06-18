@@ -139,5 +139,6 @@ class TestComputeEdgeCases:
 
     def test_result_is_snapshot_result_type(self, amiya_operator: dict) -> None:
         from games.arknights.calc.dag_adapter.types import SnapshotResult
+
         result = compute_snapshot_with_dag(amiya_operator)
         assert isinstance(result, SnapshotResult)

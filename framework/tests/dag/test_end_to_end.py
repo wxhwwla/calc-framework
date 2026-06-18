@@ -26,8 +26,7 @@ class TestEndToEndAttackChain:
     公式: 最终攻击 = (角色基础 + 武器基础) × (1 + 攻击力+) + 能力值加成
     """
 
-    def _build_attack_doc(self, char_base: float, weapon_base: float, atk_pct: float,
-                          ability_bonus: float) -> GraphDocument:
+    def _build_attack_doc(self, char_base: float, weapon_base: float, atk_pct: float, ability_bonus: float) -> GraphDocument:
         return GraphDocument(
             name="攻击力链验证",
             external_variables={
@@ -38,18 +37,13 @@ class TestEndToEndAttackChain:
             },
             nodes=[
                 # 输入节点
-                GraphNode(id="char_atk", type="var", label="角色基础",
-                          config=NodeConfig(path="character.基础攻击")),
-                GraphNode(id="wp_atk", type="var", label="武器基础",
-                          config=NodeConfig(path="weapon.基础攻击")),
-                GraphNode(id="atk_pct", type="var", label="攻击力百分比",
-                          config=NodeConfig(path="weapon.攻击力+")),
-                GraphNode(id="abil", type="var", label="能力值加成",
-                          config=NodeConfig(path="computed.能力值加成")),
+                GraphNode(id="char_atk", type="var", label="角色基础", config=NodeConfig(path="character.基础攻击")),
+                GraphNode(id="wp_atk", type="var", label="武器基础", config=NodeConfig(path="weapon.基础攻击")),
+                GraphNode(id="atk_pct", type="var", label="攻击力百分比", config=NodeConfig(path="weapon.攻击力+")),
+                GraphNode(id="abil", type="var", label="能力值加成", config=NodeConfig(path="computed.能力值加成")),
                 # 计算节点
                 GraphNode(id="base_sum", type="binary", op="+", label="基础攻击和"),
-                GraphNode(id="one", type="const", label="1",
-                          config=NodeConfig(value=1.0)),
+                GraphNode(id="one", type="const", label="1", config=NodeConfig(value=1.0)),
                 GraphNode(id="one_plus_atkpct", type="binary", op="+", label="1+攻击力%"),
                 GraphNode(id="base_times_mod", type="binary", op="*", label="基础×系数"),
                 GraphNode(id="final_atk", type="binary", op="+", label="最终攻击"),
@@ -75,11 +69,13 @@ class TestEndToEndAttackChain:
     def test_attack_chain_direct(self) -> None:
         doc = self._build_attack_doc(500, 300, 0.15, 50)
         svc = dag_service_from_graph_document(doc)
-        res = svc.evaluate({
-            "character": {"基础攻击": 500},
-            "weapon": {"基础攻击": 300, "攻击力+": 0.15},
-            "computed": {"能力值加成": 50},
-        })
+        res = svc.evaluate(
+            {
+                "character": {"基础攻击": 500},
+                "weapon": {"基础攻击": 300, "攻击力+": 0.15},
+                "computed": {"能力值加成": 50},
+            }
+        )
         # (500+300) * (1+0.15) + 50 = 800*1.15 + 50 = 920+50 = 970
         assert abs(res.outputs["final_atk"] - 970.0) < 1e-9
 
@@ -94,11 +90,13 @@ class TestEndToEndAttackChain:
 
         try:
             svc = dag_service_from_graph_file(fname)
-            res = svc.evaluate({
-                "character": {"基础攻击": 1000},
-                "weapon": {"基础攻击": 200, "攻击力+": 0.20},
-                "computed": {"能力值加成": 100},
-            })
+            res = svc.evaluate(
+                {
+                    "character": {"基础攻击": 1000},
+                    "weapon": {"基础攻击": 200, "攻击力+": 0.20},
+                    "computed": {"能力值加成": 100},
+                }
+            )
             # (1000+200) * (1+0.20) + 100 = 1200*1.2 + 100 = 1440+100 = 1540
             assert abs(res.outputs["final_atk"] - 1540.0) < 1e-9
         finally:
@@ -144,12 +142,10 @@ class TestEndToEndDamageFormula:
                 GraphNode(id="bonus_var", type="var", config=NodeConfig(path="computed.dmg_bonus")),
                 GraphNode(id="reduce_var", type="var", config=NodeConfig(path="computed.dmg_reduce")),
                 GraphNode(id="def_var", type="var", config=NodeConfig(path="computed.def_mult")),
-
                 GraphNode(id="base_dmg", type="binary", op="*", label="基础伤害"),
                 GraphNode(id="bonus_mult", type="binary", op="*", label="伤害加成乘区"),
                 GraphNode(id="reduce_mult", type="binary", op="*", label="减免乘区"),
                 GraphNode(id="final_dmg", type="binary", op="*", label="最终伤害"),
-
                 GraphNode(id="one", type="const", config=NodeConfig(value=1.0)),
                 GraphNode(id="bonus_sum", type="binary", op="+", label="1+加成"),
                 GraphNode(id="reduce_neg", type="binary", op="-", label="1-减免"),
@@ -178,15 +174,17 @@ class TestEndToEndDamageFormula:
         )
 
         svc = dag_service_from_graph_document(doc)
-        res = svc.evaluate({
-            "computed": {
-                "atk": 1500.0,
-                "skill_mult": 2.5,
-                "dmg_bonus": 0.3,
-                "dmg_reduce": 0.1,
-                "def_mult": 0.5,
-            },
-        })
+        res = svc.evaluate(
+            {
+                "computed": {
+                    "atk": 1500.0,
+                    "skill_mult": 2.5,
+                    "dmg_bonus": 0.3,
+                    "dmg_reduce": 0.1,
+                    "def_mult": 0.5,
+                },
+            }
+        )
         # 1500*2.5 = 3750
         # 3750 * (1+0.3) = 4875
         # 4875 * (1-0.1) = 4387.5
@@ -299,10 +297,12 @@ class TestExtendedOps:
                 GraphEdge(from_node="val_e", from_port=0, to_node="ln_op", to_port=0),
                 GraphEdge(from_node="val_100", from_port=0, to_node="log10_op", to_port=0),
             ],
-            layout=GraphLayout(sections=[
-                SectionDef(id="r1", title="ln", output_nodes=["ln_op"]),
-                SectionDef(id="r2", title="log10", output_nodes=["log10_op"]),
-            ]),
+            layout=GraphLayout(
+                sections=[
+                    SectionDef(id="r1", title="ln", output_nodes=["ln_op"]),
+                    SectionDef(id="r2", title="log10", output_nodes=["log10_op"]),
+                ]
+            ),
         )
         svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
@@ -312,6 +312,7 @@ class TestExtendedOps:
     def test_sin_cos_tan(self) -> None:
         """sin(0)=0, cos(0)=1, tan(π/4)=1"""
         import math
+
         doc = GraphDocument(
             name="三角函数",
             nodes=[
@@ -326,11 +327,13 @@ class TestExtendedOps:
                 GraphEdge(from_node="val_0", from_port=0, to_node="cos_op", to_port=0),
                 GraphEdge(from_node="val_pi4", from_port=0, to_node="tan_op", to_port=0),
             ],
-            layout=GraphLayout(sections=[
-                SectionDef(id="r1", title="sin", output_nodes=["sin_op"]),
-                SectionDef(id="r2", title="cos", output_nodes=["cos_op"]),
-                SectionDef(id="r3", title="tan", output_nodes=["tan_op"]),
-            ]),
+            layout=GraphLayout(
+                sections=[
+                    SectionDef(id="r1", title="sin", output_nodes=["sin_op"]),
+                    SectionDef(id="r2", title="cos", output_nodes=["cos_op"]),
+                    SectionDef(id="r3", title="tan", output_nodes=["tan_op"]),
+                ]
+            ),
         )
         svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
@@ -341,6 +344,7 @@ class TestExtendedOps:
     def test_extended_ops_chain(self) -> None:
         """链式：ln(10) + sin(π/2) * cos(0)"""
         import math
+
         doc = GraphDocument(
             name="扩展链式",
             nodes=[
@@ -372,6 +376,7 @@ class TestExtendedOps:
     def test_asin_acos_atan(self) -> None:
         """asin(0)=0, acos(1)=0, atan(1)=π/4"""
         import math
+
         doc = GraphDocument(
             name="反三角",
             nodes=[
@@ -386,11 +391,13 @@ class TestExtendedOps:
                 GraphEdge(from_node="v1", to_node="acos_op"),
                 GraphEdge(from_node="v1", to_node="atan_op"),
             ],
-            layout=GraphLayout(sections=[
-                SectionDef(id="r1", title="asin", output_nodes=["asin_op"]),
-                SectionDef(id="r2", title="acos", output_nodes=["acos_op"]),
-                SectionDef(id="r3", title="atan", output_nodes=["atan_op"]),
-            ]),
+            layout=GraphLayout(
+                sections=[
+                    SectionDef(id="r1", title="asin", output_nodes=["asin_op"]),
+                    SectionDef(id="r2", title="acos", output_nodes=["acos_op"]),
+                    SectionDef(id="r3", title="atan", output_nodes=["atan_op"]),
+                ]
+            ),
         )
         svc = dag_service_from_graph_document(doc)
         res = svc.evaluate({})
@@ -406,20 +413,22 @@ class TestSandboxFunctions:
         from calc_framework.dag.engine import evaluate_graph
         from calc_framework.dag.schema import validate_graph
 
-        dag = validate_graph({
-            "schema_version": "dag-v1",
-            "name": "统计测试",
-            "nodes": {
-                "r_sum": {"type": "expr", "expr": "sum(1, 2, 3, 4, 5)", "inputs": {}},
-                "r_avg": {"type": "expr", "expr": "avg(10, 20, 30)", "inputs": {}},
-                "r_cnt": {"type": "expr", "expr": "count(1, 2, 3)", "inputs": {}},
-            },
-            "outputs": {
-                "o_sum": {"node": "r_sum", "label": "和"},
-                "o_avg": {"node": "r_avg", "label": "平均"},
-                "o_cnt": {"node": "r_cnt", "label": "数量"},
-            },
-        })
+        dag = validate_graph(
+            {
+                "schema_version": "dag-v1",
+                "name": "统计测试",
+                "nodes": {
+                    "r_sum": {"type": "expr", "expr": "sum(1, 2, 3, 4, 5)", "inputs": {}},
+                    "r_avg": {"type": "expr", "expr": "avg(10, 20, 30)", "inputs": {}},
+                    "r_cnt": {"type": "expr", "expr": "count(1, 2, 3)", "inputs": {}},
+                },
+                "outputs": {
+                    "o_sum": {"node": "r_sum", "label": "和"},
+                    "o_avg": {"node": "r_avg", "label": "平均"},
+                    "o_cnt": {"node": "r_cnt", "label": "数量"},
+                },
+            }
+        )
         res = evaluate_graph(dag, {})
         assert res.outputs["o_sum"] == 15.0
         assert res.outputs["o_avg"] == 20.0
@@ -434,16 +443,18 @@ class TestSandboxFunctions:
         clear_functions()
         register_function("square", lambda x: x * x)
 
-        dag = validate_graph({
-            "schema_version": "dag-v1",
-            "name": "积分测试",
-            "nodes": {
-                "r": {"type": "expr", "expr": "integral(\"square\", 0, 1, 100)", "inputs": {}},
-            },
-            "outputs": {
-                "o": {"node": "r", "label": "积分"},
-            },
-        })
+        dag = validate_graph(
+            {
+                "schema_version": "dag-v1",
+                "name": "积分测试",
+                "nodes": {
+                    "r": {"type": "expr", "expr": 'integral("square", 0, 1, 100)', "inputs": {}},
+                },
+                "outputs": {
+                    "o": {"node": "r", "label": "积分"},
+                },
+            }
+        )
         res = evaluate_graph(dag, {})
         # ∫₀¹ x² dx = [x³/3]₀¹ = 1/3
         assert abs(res.outputs["o"] - 1.0 / 3.0) < 1e-4

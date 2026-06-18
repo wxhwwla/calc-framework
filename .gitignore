@@ -76,6 +76,11 @@ ui_preferences.json
 .env.*
 git_key.txt
 
+# 个人快捷启动脚本和配置（不提交）
+打开 Claude Code.bat
+run_local_ci.ps1
+.actrc
+
 # 系统文件
 Thumbs.db
 Desktop.ini

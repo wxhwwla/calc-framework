@@ -7,8 +7,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,10 +14,9 @@ from typing import Any
 
 
 @dataclass
-
 class ControlSpec:
-
     """ControlSpec。"""
+
     label: str
 
     widget: str
@@ -37,30 +34,19 @@ class ControlSpec:
     description: str = ""
 
 
-
-
-
 def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
-
     ui_override = variable.get("ui_control", {})
 
     source = variable.get("source", "")
 
     var_type = variable.get("type", "float")
 
-
-
     label = path
 
     description = variable.get("description", "")
 
-
-
     if source not in ("user_input",):
-
         return ControlSpec(label=label, widget="none", description=description)
-
-
 
     widget = ui_override.get("widget")
 
@@ -68,53 +54,33 @@ def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
 
     options = ui_override.get("options")
 
-
-
     default = variable.get("default", 0)
 
     if default is None:
-
         default = 0 if var_type in ("float", "int") else ""
-
-
 
     min_val = variable.get("min")
 
     max_val = variable.get("max")
 
-
-
     if widget is None:
-
         if var_type == "bool":
-
             widget = "switch"
 
         elif var_type == "str":
-
             widget = "dropdown"
 
         elif (min_val is not None and max_val is not None) or ui_override.get("widget") == "slider":
-
             widget = "slider"
 
         else:
-
             widget = "spinbox"
 
-
-
     if step is None:
-
         step = 1 if var_type == "int" else 0.01
 
-
-
     if options is None and var_type == "str":
-
         options = variable.get("options", [])
-
-
 
     return ControlSpec(
         label=label,
@@ -138,4 +104,3 @@ def format_node_value(value: Any, format_spec: str | None = None) -> str:
         return f"{value:{format_spec}}"
     except (ValueError, TypeError):
         return str(value)
-

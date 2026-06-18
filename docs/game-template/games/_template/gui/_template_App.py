@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0
+# ruff: noqa: N999 — 模板文件使用 _template 前缀命名，是设计意图
 """TEMPLATE（{Game}）桌面 GUI — ComputeSheet 声明式面板示例。
 
 用法::
@@ -15,7 +16,6 @@ TODO:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -30,11 +30,7 @@ from PySide6.QtWidgets import (
 
 from ..framework_bridge import AdapterPackage, ComputeSheet, load_layout_json
 
-
-_ADAPTER_DIR = (
-    Path(__file__).resolve().parents[4]
-    / "framework" / "adapters" / "_template"
-)
+_ADAPTER_DIR = Path(__file__).resolve().parents[4] / "framework" / "adapters" / "_template"
 
 
 class TEMPLATEDamageApp(QMainWindow):
@@ -110,10 +106,7 @@ class TEMPLATEDamageApp(QMainWindow):
         variables = dict(self._dag_service.dag.variables) if self._dag_service.dag.variables else {}
 
         # 2. 筛选出 user_input 源变量（与 layout.json 中的 inputs 对应）
-        user_vars = {
-            k: v for k, v in variables.items()
-            if isinstance(v, dict) and v.get("source") == "user_input"
-        }
+        _user_vars = {k: v for k, v in variables.items() if isinstance(v, dict) and v.get("source") == "user_input"}
         # 或者直接逐一手动定义:
         # user_vars = {
         #     "user_input.技能倍率": {"type": "float", "default": 1.0, ...},
@@ -128,12 +121,12 @@ class TEMPLATEDamageApp(QMainWindow):
         #    右键是 DAG context 中的变量路径（character.* / enemy.* / computed.*）。
         user_context_overrides: dict[str, tuple[str, list[str]]] = {
             # ── 敌方参数 ────────────────────────────────────
-            "user_input.敌人防御":     ("enemy.防御", ["override"]),
-            "user_input.敌人抗性":     ("enemy.法术抗性", ["override"]),
+            "user_input.敌人防御": ("enemy.防御", ["override"]),
+            "user_input.敌人抗性": ("enemy.法术抗性", ["override"]),
             # ── 角色参数 ────────────────────────────────────
-            "user_input.技能等级":     ("computed.技能等级", ["override"]),
-            "user_input.攻击力加成":   ("computed.攻击力百分比加成", ["add"]),
-            "user_input.伤害加成":     ("computed.伤害加成", ["add"]),
+            "user_input.技能等级": ("computed.技能等级", ["override"]),
+            "user_input.攻击力加成": ("computed.攻击力百分比加成", ["add"]),
+            "user_input.伤害加成": ("computed.伤害加成", ["add"]),
             # TODO: 根据实际 DAG 变量调整以上映射
         }
 

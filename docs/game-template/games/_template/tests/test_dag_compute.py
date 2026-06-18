@@ -8,8 +8,6 @@ TODO:
 
 from __future__ import annotations
 
-import pytest
-
 from games._template.calc.dag_adapter import compute_snapshot_with_dag
 
 
@@ -20,7 +18,7 @@ class TestComputeSnapshot:
 
     def test_outputs_have_expected_keys(self, sample_character: dict) -> None:
         """TODO: 替换为实际的 DAG 输出变量名。"""
-        result = compute_snapshot_with_dag(sample_character)
+        _result = compute_snapshot_with_dag(sample_character)
         # assert "最终攻击力" in result
         # assert "物理伤害" in result
         pass  # 移除 pass 并启用上述断言

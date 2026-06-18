@@ -9,8 +9,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from typing import Any
@@ -22,7 +20,6 @@ from .theme_presets import _BUILTIN_THEMES
 
 
 def _build_stylesheet(theme: dict[str, Any]) -> str:
-
     """从主题字典生成 Qt 样式表。"""
 
     colors = theme.get("colors", {})
@@ -52,8 +49,6 @@ def _build_stylesheet(theme: dict[str, Any]) -> str:
     scrollbar = colors.get("scrollbar", "#555555")
 
     scrollbar_hover = colors.get("scrollbar_hover", "#777777")
-
-
 
     return f"""
 
@@ -398,70 +393,42 @@ def _build_stylesheet(theme: dict[str, Any]) -> str:
     """
 
 
-
-
-
 class ThemeManager:
-
     """主题管理器 — 管理内置主题和自定义主题，支持运行时切换。"""
 
-
-
     def __init__(self) -> None:
-
         self._themes: dict[str, dict[str, Any]] = {}
 
         self._current: str = "dark"
 
         for key, theme in _BUILTIN_THEMES.items():
-
             self._themes[key] = theme
 
-
-
     @property
-
     def theme_names(self) -> list[str]:
-
         """theme_names。"""
         return list(self._themes.keys())
 
-
-
     @property
-
     def current_name(self) -> str:
         """current_name。"""
 
         return self._current
 
-
-
     @property
     def current_display_name(self) -> str:
-
         theme = self._themes.get(self._current, {})
 
         return theme.get("name", self._current)
 
-
-
     def get_theme(self, name: str) -> dict[str, Any] | None:
-
         return self._themes.get(name)
 
-
-
     def register(self, name: str, theme: dict[str, Any]) -> None:
-
         self._themes[name] = theme
 
-
-
     def switch(self, name: str) -> str:
-
         if name not in self._themes:
-
             available = ", ".join(self._themes.keys())
 
             raise KeyError(f"未知主题 '{name}'，可用主题: {available}")
@@ -470,24 +437,17 @@ class ThemeManager:
 
         return _build_stylesheet(self._themes[name])
 
-
-
     def stylesheet(self, name: str | None = None) -> str:
-
         target = name or self._current
 
         theme = self._themes.get(target)
 
         if theme is None:
-
             theme = _BUILTIN_THEMES["dark"]
 
         return _build_stylesheet(theme)
 
-
-
     def apply_font(self, theme: dict[str, Any], widget: QWidget) -> None:
-
         font_cfg = theme.get("font", {})
 
         family = font_cfg.get("family", "")
@@ -495,8 +455,6 @@ class ThemeManager:
         size = font_cfg.get("size", 0)
 
         if family or size:
-
             font = QFont(family, size or 12)
 
             widget.setFont(font)
-

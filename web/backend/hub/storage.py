@@ -161,8 +161,17 @@ def create_pack(
     conn.execute(
         "INSERT INTO packs (id, name, version, description, author, tags, file_size, created_at, updated_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [pack.id, pack.name, pack.version, pack.description, pack.author,
-         json.dumps(pack.tags), pack.file_size, pack.created_at, pack.updated_at],
+        [
+            pack.id,
+            pack.name,
+            pack.version,
+            pack.description,
+            pack.author,
+            json.dumps(pack.tags),
+            pack.file_size,
+            pack.created_at,
+            pack.updated_at,
+        ],
     )
     conn.commit()
     conn.close()
@@ -172,9 +181,19 @@ def create_pack(
 def update_pack(pack_id: str, **kwargs: Any) -> dict[str, Any] | None:
     conn = _ensure_db()
     now = datetime.now(timezone.utc).isoformat()
-    fields = {k: v for k, v in kwargs.items() if k in {
-        "name", "version", "description", "author", "tags", "file_size",
-    }}
+    fields = {
+        k: v
+        for k, v in kwargs.items()
+        if k
+        in {
+            "name",
+            "version",
+            "description",
+            "author",
+            "tags",
+            "file_size",
+        }
+    }
     if not fields:
         conn.close()
         return get_pack(pack_id)

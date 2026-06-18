@@ -7,6 +7,7 @@ PyInstaller 打包入口 — 本地后端服务器
 
 本文件仅在 PyInstaller 打包后的 exe 中使用。
 """
+
 from __future__ import annotations
 
 import os

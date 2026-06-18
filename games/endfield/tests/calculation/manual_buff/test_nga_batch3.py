@@ -26,11 +26,19 @@ class TestNgaBatch3(unittest.TestCase):
     def test_potential_multiplier_on_conductive(self) -> None:
         ctx = DamageContext(final_attack=1000.0, enemy_defense=100.0)
         base, _ = evaluate_spell_abnormal_total(
-            context=ctx, crit_mode="non_crit", effects=[], counts={"电磁异常:0": 1}, char_level=90,
+            context=ctx,
+            crit_mode="non_crit",
+            effects=[],
+            counts={"电磁异常:0": 1},
+            char_level=90,
             attached_effect_multiplier=1.0,
         )
         boosted, _ = evaluate_spell_abnormal_total(
-            context=ctx, crit_mode="non_crit", effects=[], counts={"电磁异常:0": 1}, char_level=90,
+            context=ctx,
+            crit_mode="non_crit",
+            effects=[],
+            counts={"电磁异常:0": 1},
+            char_level=90,
             attached_effect_multiplier=1.33,
         )
         self.assertGreater(boosted, base)

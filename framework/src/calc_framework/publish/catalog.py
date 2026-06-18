@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """Catalog 生成器 — 生成社区分享平台的静态 HTML 目录。"""
 
-
-
 from __future__ import annotations
 
 import contextlib
@@ -14,7 +12,6 @@ from ..config.manager import discover_adapters
 from ..logging import get_logger
 
 logger = get_logger(__name__)
-
 
 
 CATALOG_HTML = """<!DOCTYPE html>
@@ -84,11 +81,7 @@ CATALOG_HTML = """<!DOCTYPE html>
 """
 
 
-
-
-
 def _build_card(name: str, meta: dict[str, Any]) -> str:
-
     """_build_card。"""
     tags = meta.get("tags", [])
 
@@ -99,8 +92,6 @@ def _build_card(name: str, meta: dict[str, Any]) -> str:
     author = meta.get("author", "未知")
 
     desc = meta.get("description", "")
-
-
 
     tag_html = "".join(f'<span class="tag">{t}</span>' for t in tags)
 
@@ -117,40 +108,26 @@ def _build_card(name: str, meta: dict[str, Any]) -> str:
 </div>"""
 
 
-
-
-
 def build_catalog(output_dir: str | Path | None = None) -> str:
-
     """构建适配器目录 HTML 并写入（可选）输出目录。"""
 
     adapters = discover_adapters()
 
     cards: list[str] = []
 
-
-
     for name, path in adapters.items():
-
         meta_path = path / "meta.json"
 
         meta: dict[str, Any] = {}
 
         with contextlib.suppress(Exception):
-
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
-
 
         cards.append(_build_card(name, meta))
 
-
-
     html = CATALOG_HTML.format(cards="\n".join(cards))
 
-
-
     if output_dir:
-
         out = Path(output_dir)
 
         out.mkdir(parents=True, exist_ok=True)
@@ -159,16 +136,10 @@ def build_catalog(output_dir: str | Path | None = None) -> str:
 
         logger.info("Catalog 已写入: %s", out / "index.html")
 
-
-
     return html
-
-
-
 
 
 def _format_json(data: Any) -> str:
     """_format_json。"""
 
     return json.dumps(data, ensure_ascii=False, indent=2)
-

@@ -78,11 +78,7 @@ class ComputeSheet(QObject):
         self._widget: QWidget | None = None
         self._output_labels: dict[str, QLabel] = {}
         self._input_widgets: dict[str, tuple[QWidget, ControlSpec]] = {}
-        self._output_formats: dict[str, str] = {
-            oid: odef.format
-            for oid, odef in dag_service.dag.outputs.items()
-            if odef.format
-        }
+        self._output_formats: dict[str, str] = {oid: odef.format for oid, odef in dag_service.dag.outputs.items() if odef.format}
 
     @property
     def widget(self) -> QWidget:
@@ -91,8 +87,7 @@ class ComputeSheet(QObject):
         return self._widget
 
     def evaluate(self) -> DAGResult:
-        logger.debug("ComputeSheet 求值开始: %d 个输出, %d 个变量",
-                      len(self._dag_service.dag.outputs), len(self._variables))
+        logger.debug("ComputeSheet 求值开始: %d 个输出, %d 个变量", len(self._dag_service.dag.outputs), len(self._variables))
         context = build_context(
             self._base_context,
             self._variables,
@@ -145,9 +140,7 @@ class ComputeSheet(QObject):
         root_layout.addStretch()
         return root
 
-    def _collect_input_items(
-        self, sec: Section
-    ) -> list[tuple[str, QLabel, QWidget | None, ControlSpec]]:
+    def _collect_input_items(self, sec: Section) -> list[tuple[str, QLabel, QWidget | None, ControlSpec]]:
         """收集 section 中的 input 项，用于响应式重排。"""
         items: list[tuple[str, QLabel, QWidget | None, ControlSpec]] = []
         for var_path in sec.variables:
@@ -195,11 +188,13 @@ class ComputeSheet(QObject):
             group = QGroupBox(sec.title)
             layout = QVBoxLayout(group)
             layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(DonationWidget(
-                text=cfg.get("text", "感谢使用！如果觉得有用，欢迎支持开发者。"),
-                image_path=cfg.get("image_path") or DONATION_IMAGE_PATH,
-                parent=group,
-            ))
+            layout.addWidget(
+                DonationWidget(
+                    text=cfg.get("text", "感谢使用！如果觉得有用，欢迎支持开发者。"),
+                    image_path=cfg.get("image_path") or DONATION_IMAGE_PATH,
+                    parent=group,
+                )
+            )
             return group
         group = QGroupBox(sec.title)
         layout = QVBoxLayout(group)

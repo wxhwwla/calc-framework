@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """自定义视图 — 中键平移、滚轮缩放、接收节点面板拖放。"""
 
-
-
 from __future__ import annotations
 
 from PySide6.QtCore import QPoint, Qt, Signal
@@ -11,17 +9,11 @@ from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QWidget
 
 
 class GraphView(QGraphicsView):
-
     """自定义视图：鼠标中键平移、滚轮缩放、接收节点面板拖放。"""
-
-
 
     node_drop_requested = Signal(str, float, float)
 
-
-
     def __init__(self, scene: QGraphicsScene, parent: QWidget | None = None) -> None:
-
         super().__init__(scene, parent)
 
         self._panning = False
@@ -48,12 +40,8 @@ class GraphView(QGraphicsView):
 
         self.setMouseTracking(False)
 
-
-
     def wheelEvent(self, event) -> None:  # noqa: N802
-
         if self._panning:
-
             event.ignore()
 
             return
@@ -61,19 +49,13 @@ class GraphView(QGraphicsView):
         factor = 1.15
 
         if event.angleDelta().y() > 0:
-
             self.scale(factor, factor)
 
         else:
-
             self.scale(1 / factor, 1 / factor)
 
-
-
     def mousePressEvent(self, event) -> None:  # noqa: N802
-
         if event.button() == Qt.MouseButton.MiddleButton:
-
             self._panning = True
 
             self._pan_start = event.pos()
@@ -90,12 +72,8 @@ class GraphView(QGraphicsView):
 
         super().mousePressEvent(event)
 
-
-
     def mouseMoveEvent(self, event) -> None:  # noqa: N802
-
         if self._panning:
-
             delta = event.pos() - self._pan_start
 
             self.horizontalScrollBar().setValue(self._pan_start_h - delta.x())
@@ -108,12 +86,8 @@ class GraphView(QGraphicsView):
 
         super().mouseMoveEvent(event)
 
-
-
     def mouseReleaseEvent(self, event) -> None:  # noqa: N802
-
         if event.button() == Qt.MouseButton.MiddleButton:
-
             self._panning = False
 
             self.setCursor(Qt.CursorShape.ArrowCursor)
@@ -124,28 +98,17 @@ class GraphView(QGraphicsView):
 
         super().mouseReleaseEvent(event)
 
-
-
     def dragEnterEvent(self, event) -> None:  # noqa: N802
-
         if event.mimeData().hasText():
-
             event.acceptProposedAction()
 
-
-
     def dragMoveEvent(self, event) -> None:  # noqa: N802
-
         event.acceptProposedAction()
 
-
-
     def dropEvent(self, event) -> None:  # noqa: N802
-
         type_id = event.mimeData().text()
 
         if not type_id:
-
             return
 
         viewport_pos = event.position().toPoint()

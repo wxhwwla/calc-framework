@@ -25,8 +25,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 import logging
@@ -41,21 +39,13 @@ _LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 _LOG_ENCODING = "utf-8"
 
 
-
 _LEVELS: dict[str, int] = {
-
     "DEBUG": logging.DEBUG,
-
     "INFO": logging.INFO,
-
     "WARNING": logging.WARNING,
-
     "ERROR": logging.ERROR,
-
     "CRITICAL": logging.CRITICAL,
-
 }
-
 
 
 _DEFAULT_LEVEL: str = "WARNING"
@@ -63,27 +53,16 @@ _DEFAULT_LEVEL: str = "WARNING"
 _ROOT_LOGGER_NAME: str = "calc_framework"
 
 
-
 _initialized: bool = False
 
 
-
-
-
 def setup_logging(
-
     level: str | int | None = None,
-
     log_file: str | None = None,
-
     console: bool = True,
-
     max_bytes: int = 5 * 1024 * 1024,
-
     backup_count: int = 3,
-
 ) -> None:
-
     """全局初始化框架日志系统。
 
 
@@ -113,18 +92,13 @@ def setup_logging(
     global _initialized
 
     if _initialized:
-
         return
 
     _initialized = True
 
-
-
     resolved_level = _resolve_level(level)
 
     resolved_file = log_file or os.environ.get("CALC_FRAMEWORK_LOG_FILE", "").strip() or None
-
-
 
     root = logging.getLogger(_ROOT_LOGGER_NAME)
 
@@ -132,14 +106,9 @@ def setup_logging(
 
     root.handlers.clear()
 
-
-
     formatter = logging.Formatter(_LOG_FORMAT, datefmt=_LOG_DATE_FORMAT)
 
-
-
     if console:
-
         handler = logging.StreamHandler(sys.stdout)
 
         handler.setLevel(resolved_level)
@@ -148,22 +117,14 @@ def setup_logging(
 
         root.addHandler(handler)
 
-
-
     if resolved_file:
-
         os.makedirs(os.path.dirname(resolved_file) or ".", exist_ok=True)
 
         handler = RotatingFileHandler(
-
             resolved_file,
-
             maxBytes=max_bytes,
-
             backupCount=backup_count,
-
             encoding=_LOG_ENCODING,
-
         )
 
         handler.setLevel(resolved_level)
@@ -172,16 +133,10 @@ def setup_logging(
 
         root.addHandler(handler)
 
-
-
     root.info("日志系统初始化完成 (level=%s, file=%s)", resolved_level, resolved_file or "(console only)")
 
 
-
-
-
 def get_logger(name: str) -> logging.Logger:
-
     """获取框架命名空间下的 logger。
 
 
@@ -207,11 +162,7 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(f"{_ROOT_LOGGER_NAME}.{name}")
 
 
-
-
-
 def set_level(level: str | int) -> None:
-
     """运行时动态修改日志级别。"""
 
     resolved = _LEVELS.get(level.upper(), level) if isinstance(level, str) else level
@@ -219,29 +170,20 @@ def set_level(level: str | int) -> None:
     logging.getLogger(_ROOT_LOGGER_NAME).setLevel(resolved)
 
 
-
-
-
 def _resolve_level(level: str | int | None) -> int:
-
     """_resolve_level。"""
     if level is not None:
-
         if isinstance(level, int):
-
             return level
 
         resolved = _LEVELS.get(level.upper())
 
         if resolved is not None:
-
             return resolved
 
     env = os.environ.get("CALC_FRAMEWORK_LOG_LEVEL", "").strip().upper()
 
     if env in _LEVELS:
-
         return _LEVELS[env]
 
     return _LEVELS[_DEFAULT_LEVEL]
-

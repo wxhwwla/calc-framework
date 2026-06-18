@@ -185,9 +185,7 @@ def build_search_job_inputs_from_request(
         current_weapon=dict(req.current_weapon),
         equipment_catalog=dict(req.equipment_catalog),
         fixed_loadout=fixed_loadout,
-        use_manual_multi_skill_counts=bool(
-            getattr(req, "use_manual_multi_skill_counts", False)
-        ),
+        use_manual_multi_skill_counts=bool(getattr(req, "use_manual_multi_skill_counts", False)),
         skill_1_level=int(getattr(req, "skill_1_level", 0)),
         skill_2_level=int(getattr(req, "skill_2_level", 0)),
         skill_3_level=int(getattr(req, "skill_3_level", 0)),
@@ -196,9 +194,7 @@ def build_search_job_inputs_from_request(
         spell_abnormal_counts=getattr(req, "spell_abnormal_counts", None),
         damage_component_mode=str(getattr(req, "damage_component_mode", "skill_and_abnormal")),
         use_expected_crit=bool(getattr(req, "use_expected_crit", False)),
-        include_conditional_equipment_crit=bool(
-            getattr(req, "include_conditional_equipment_crit", False)
-        ),
+        include_conditional_equipment_crit=bool(getattr(req, "include_conditional_equipment_crit", False)),
         extra_crit_rate=float(getattr(req, "extra_crit_rate", 0.0)),
         extra_crit_damage=float(getattr(req, "extra_crit_damage", 0.0)),
         weapon_normal_levels=normal_levels,

@@ -15,6 +15,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      pip-root:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "pip"
     directory: "/framework"
@@ -26,6 +30,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      pip-framework:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "pip"
     directory: "/games/endfield"
@@ -37,6 +45,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      pip-endfield:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   # Node.js 依赖（npm — Web 前端）
   - package-ecosystem: "npm"
@@ -49,6 +61,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      npm-frontend:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   # GitHub Actions 版本更新
   - package-ecosystem: "github-actions"
@@ -61,3 +77,6 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
+    groups:
+      gh-actions:
+        patterns: ["*"]

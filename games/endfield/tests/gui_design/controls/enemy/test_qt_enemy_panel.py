@@ -44,13 +44,15 @@ class TestQtEnemyPanel(unittest.TestCase):
         self.assertEqual(params["is_unbalanced"], DEFAULT_IS_UNBALANCED)
 
     def test_set_params_updates_values(self) -> None:
-        self.panel.set_params({
-            "enemy_defense": 500.0,
-            "enemy_resistance": 30.0,
-            "ignore_resistance": 10.0,
-            "imbalance_vulnerability_coeff": 1.5,
-            "is_unbalanced": True,
-        })
+        self.panel.set_params(
+            {
+                "enemy_defense": 500.0,
+                "enemy_resistance": 30.0,
+                "ignore_resistance": 10.0,
+                "imbalance_vulnerability_coeff": 1.5,
+                "is_unbalanced": True,
+            }
+        )
         params = self.panel.get_params()
         self.assertEqual(params["enemy_defense"], 500.0)
         self.assertEqual(params["enemy_resistance"], 30.0)
@@ -65,10 +67,12 @@ class TestQtEnemyPanel(unittest.TestCase):
         self.assertEqual(params["enemy_resistance"], DEFAULT_ENEMY_RESISTANCE)
 
     def test_reset_to_default(self) -> None:
-        self.panel.set_params({
-            "enemy_defense": 999.0,
-            "is_unbalanced": True,
-        })
+        self.panel.set_params(
+            {
+                "enemy_defense": 999.0,
+                "is_unbalanced": True,
+            }
+        )
         self.panel._reset_to_default()
         params = self.panel.get_params()
         self.assertEqual(params["enemy_defense"], DEFAULT_ENEMY_DEFENSE)
@@ -82,6 +86,7 @@ class TestQtEnemyPanel(unittest.TestCase):
     @patch("games.endfield.gui.controls.enemy.qt_enemy_panel.resolve_enemy_resistance", return_value=20.0)
     def test_enemy_combo_change_updates_params(self, mock_res, mock_def) -> None:
         from games.endfield.gui.controls.enemy.qt_enemy_panel import list_plugin_enemy_choices
+
         choices = list_plugin_enemy_choices()
         if choices:
             self.panel._on_enemy_combo_changed(choices[0][0])

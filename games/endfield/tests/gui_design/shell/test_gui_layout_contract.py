@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """主界面列布局契约测试。"""
 
-
-
 import unittest
 
 from games.endfield.gui.layout.gui_layout import (
@@ -22,9 +20,7 @@ from games.endfield.gui.layout.gui_layout import (
 
 
 class TestGuiLayoutContract(unittest.TestCase):
-
     def test_main_grid_five_columns_with_advanced_page_dock(self):
-
         """计算页五列 + 高级页三列 dock 常量；乘区固定宽。"""
 
         self.assertEqual(APP_COLUMN_WEIGHTS, (0, 0, 1, 1, 0))
@@ -48,10 +44,5 @@ class TestGuiLayoutContract(unittest.TestCase):
         self.assertEqual(CONTROL_DOCK_COLUMNSPAN, 4)
 
 
-
-
-
 if __name__ == "__main__":
-
     unittest.main()
-

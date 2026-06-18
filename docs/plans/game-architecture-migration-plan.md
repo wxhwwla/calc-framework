@@ -176,7 +176,7 @@ gui_design/                          gui/
 │   └── ...                          │   └── display.py
 ├── panels/                          ├── shared/               ← 保留
 ├── controls/                        ├── legal/                ← 保留
-├── presentation/                    └── ... 
+├── presentation/                    └── ...
 ├── shared/
 ├── legal/
 └── designer/
@@ -223,15 +223,15 @@ class GamePlugin(ABC):
 P0（对齐结构）
   └── 前置条件：无
   └── 后续：所有后续步骤依赖标准结构
-      
+
 P1（伤害公式迁移）
   └── 前置条件：P0 完成（至少目录对齐部分）
   └── 后续：P2（GUI 统一后使用纯 DAG 公式）
-      
+
 P2（GUI 统一）
   └── 前置条件：P1 至少完成阶段 1-2（DAG 公式可用）
   └── 后续：无
-      
+
 P3（框架插件）
   └── 前置条件：P0 完成
   └── 后续：无

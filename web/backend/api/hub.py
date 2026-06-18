@@ -61,8 +61,12 @@ async def list_packs_endpoint(
     limit: int = Query(default=20, ge=1, le=100),
 ):
     packs, total = list_packs(
-        search=search, tag=tag, sort=sort, order=order,
-        offset=offset, limit=limit,
+        search=search,
+        tag=tag,
+        sort=sort,
+        order=order,
+        offset=offset,
+        limit=limit,
     )
     return PackListResponse(packs=packs, total=total, offset=offset, limit=limit)
 
@@ -140,6 +144,7 @@ async def download_pack_file(pack_id: str, filename: str):
         raise HTTPException(status_code=404, detail="文件不存在")
     increment_download(pack_id)
     from fastapi.responses import FileResponse
+
     return FileResponse(
         path=str(file_path),
         filename=filename,
@@ -225,6 +230,7 @@ async def download_hub_adapter(adapter_id: str):
         raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")
 
     from hub.storage import _PACKS_DIR
+
     pack_dir = _PACKS_DIR / adapter_id
     if not pack_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"适配器文件不存在: {adapter_id}")
@@ -235,6 +241,7 @@ async def download_hub_adapter(adapter_id: str):
 
     increment_download(adapter_id)
     from fastapi.responses import FileResponse
+
     return FileResponse(
         path=str(calcpack_files[0]),
         filename=f"{pack.get('name', adapter_id)}_{pack.get('version', '0.1.0')}.calcpack",
@@ -248,5 +255,6 @@ async def delete_hub_adapter(adapter_id: str):
     if not delete_pack(adapter_id):
         raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")
     return {"message": f"适配器 '{adapter_id}' 已删除"}
+
 
 __all__: list[str] = []

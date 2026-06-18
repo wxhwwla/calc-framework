@@ -28,9 +28,12 @@ class PiecewiseFormulaFitter(FormulaFitter):
             "name": "piecewise",
             "description": "分段公式：多段线性，自动检测断点",
             "param_names": [
-                "base", "segments",
-                "segment_1_end", "segment_1_growth",
-                "segment_2_end", "segment_2_growth",
+                "base",
+                "segments",
+                "segment_1_end",
+                "segment_1_growth",
+                "segment_2_end",
+                "segment_2_growth",
             ],
             "param_descriptions": {
                 "base": "1 级基础值",

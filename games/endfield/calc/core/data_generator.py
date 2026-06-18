@@ -11,8 +11,6 @@
 
 """
 
-
-
 from typing import Any
 
 from games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve, calculate_skill_curve
@@ -21,21 +19,14 @@ from games.endfield.calc.damage.formula import calculate_bonus_attribute, calcul
 CHARACTER_NORMAL_ATTRS = ["力量", "敏捷", "智识", "意志", "基础攻击力", "基础生命值", "基础防御力"]
 
 
-
 # 角色技能属性列表
 
 CHARACTER_SKILL_ATTRS = ["战技倍率", "连携技倍率", "终结技倍率"]
 
 
-
-
-
 def generate_attributes(
-
     growth_params: dict[str, Any], mode: str = "character"
-
 ) -> dict[str, list[float] | list[list[float]]]:
-
     """
 
     根据成长参数配置生成属性（统一接口）
@@ -57,23 +48,16 @@ def generate_attributes(
     """
 
     if mode == "character":
-
         return generate_character_attributes(growth_params)
 
     elif mode == "weapon":
-
         return generate_weapon_attributes(growth_params)
 
     else:
-
         raise ValueError(f"不支持的生成模式: {mode}")
 
 
-
-
-
 def generate_character_attributes(growth_params: dict[str, Any]) -> dict[str, list[float] | list[list[float]]]:
-
     """
 
     根据成长参数配置生成角色所有属性
@@ -134,94 +118,56 @@ def generate_character_attributes(growth_params: dict[str, Any]) -> dict[str, li
 
     attributes: dict[str, list[float] | list[list[float]]] = {}
 
-
-
     for attr_name in CHARACTER_NORMAL_ATTRS:
-
         if attr_name in growth_params:
-
             params = growth_params[attr_name]
 
             attributes[attr_name] = calculate_growth_curve(
-
                 base=params.get("base", 0),
-
                 growth=params.get("growth", 0),
-
                 divisor=params.get("divisor", 1),
-
                 offset=params.get("offset", 0),
-
             )
 
-
-
     for attr_name in CHARACTER_SKILL_ATTRS:
-
         if attr_name in growth_params:
-
             segments = growth_params[attr_name]
 
             if isinstance(segments, list):
-
                 curves: list[list[float]] = []
 
                 for seg_params in segments:
-
                     special: list[float] | None = seg_params.get("special")
 
                     curves.append(
-
                         calculate_skill_curve(
-
                             base=seg_params.get("base", 0),
-
                             growth=seg_params.get("growth", 0),
-
                             divisor=seg_params.get("divisor", 1),
-
                             offset=seg_params.get("offset", 0),
-
                             special_values=special,
-
                         )
-
                     )
 
                 attributes[attr_name] = curves
 
             elif isinstance(segments, dict):
-
                 special: list[float] | None = segments.get("special")
 
                 attributes[attr_name] = [
-
                     calculate_skill_curve(
-
                         base=segments.get("base", 0),
-
                         growth=segments.get("growth", 0),
-
                         divisor=segments.get("divisor", 1),
-
                         offset=segments.get("offset", 0),
-
                         special_values=special,
-
                     )
-
                 ]
-
-
 
     return attributes
 
 
-
-
-
 def generate_weapon_attributes(growth_params: dict[str, Any]) -> dict[str, list[float] | list[list[float]]]:
-
     """
 
     根据成长参数配置生成武器所有属性
@@ -264,49 +210,28 @@ def generate_weapon_attributes(growth_params: dict[str, Any]) -> dict[str, list[
 
     attributes: dict[str, list[float] | list[list[float]]] = {}
 
-
-
     for attr_name, params in growth_params.items():
-
         if attr_name == "基础攻击力":
-
             attributes[attr_name] = calculate_growth_curve(
-
                 base=params.get("base", 0),
-
                 growth=params.get("growth", 0),
-
                 divisor=params.get("divisor", 1),
-
                 offset=params.get("offset", 0),
-
             )
 
         elif attr_name.endswith("+"):
-
             if isinstance(params.get("curve"), list):
-
                 attributes[attr_name] = [float(v) for v in params["curve"]]
 
             else:
-
                 special: list[float | int] | None = params.get("special")
 
                 attributes[attr_name] = calculate_bonus_attribute(
-
                     base=params.get("base", 0),
-
                     growth=params.get("growth", 0),
-
                     divisor=params.get("divisor", 1),
-
                     offset=params.get("offset", 0),
-
                     special=special,
-
                 )
 
-
-
     return attributes
-

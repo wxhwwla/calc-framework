@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """list_runs / list_scores SQLite 测试。"""
 
-
-
 from __future__ import annotations
 
 import sqlite3
@@ -17,7 +15,6 @@ from games.endfield.gui.controls.search.qt_search_browser import (
 
 
 def _make_db(path: Path) -> None:
-
     conn = sqlite3.connect(str(path))
 
     conn.executescript("""
@@ -79,23 +76,14 @@ def _make_db(path: Path) -> None:
     conn.close()
 
 
-
-
-
 class TestListRuns:
-
     def test_file_not_found(self) -> None:
-
         result = list_runs(Path("/nonexistent/test.db"))
 
         assert result == []
 
-
-
     def test_empty_db(self) -> None:
-
         with tempfile.TemporaryDirectory() as tmp:
-
             db = Path(tmp) / "empty.db"
 
             sqlite3.connect(str(db)).close()
@@ -104,12 +92,8 @@ class TestListRuns:
 
             assert result == []
 
-
-
     def test_with_data(self) -> None:
-
         with tempfile.TemporaryDirectory() as tmp:
-
             db = Path(tmp) / "test.db"
 
             _make_db(db)
@@ -118,24 +102,15 @@ class TestListRuns:
 
             assert len(result) >= 1
 
-
-
     def test_sqlite_error_returns_empty(self) -> None:
-
         result = list_runs(Path(__file__))
 
         assert result == []
 
 
-
-
-
 class TestListScores:
-
     def test_with_data(self) -> None:
-
         with tempfile.TemporaryDirectory() as tmp:
-
             db = Path(tmp) / "test.db"
 
             _make_db(db)
@@ -146,12 +121,8 @@ class TestListScores:
 
             assert result[0].weapon_name == "剑A"
 
-
-
     def test_no_scores(self) -> None:
-
         with tempfile.TemporaryDirectory() as tmp:
-
             db = Path(tmp) / "test.db"
 
             _make_db(db)
@@ -160,40 +131,25 @@ class TestListScores:
 
             assert result == []
 
-
-
     def test_file_not_found(self) -> None:
-
         result = list_scores(Path("/nonexistent/test.db"), "sig")
 
         assert result == []
 
-
-
     def test_sqlite_error_returns_empty(self) -> None:
-
         result = list_scores(Path(__file__), "sig")
 
         assert result == []
 
 
-
-
-
 class TestScanSearchOutput:
-
     def test_nonexistent_dir(self) -> None:
-
         result = scan_search_output(root=Path("/nonexistent"))
 
         assert result == []
 
-
-
     def test_with_db_file(self) -> None:
-
         with tempfile.TemporaryDirectory() as tmp:
-
             db_dir = Path(tmp) / "run_001"
 
             db_dir.mkdir()
@@ -205,4 +161,3 @@ class TestScanSearchOutput:
             result = scan_search_output(root=Path(tmp))
 
             assert len(result) >= 1
-

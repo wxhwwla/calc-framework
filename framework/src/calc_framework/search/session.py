@@ -25,8 +25,6 @@
 
 """
 
-
-
 from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
@@ -40,11 +38,7 @@ C = TypeVar("C")
 R = TypeVar("R")
 
 
-
-
-
 class SearchSession(Generic[C, R]):
-
     """搜索会话编排。
 
 
@@ -55,58 +49,34 @@ class SearchSession(Generic[C, R]):
 
     """
 
-
-
     def __init__(
-
         self,
-
         engine: SearchEngine[C, R],
-
         store: SearchRunStore | None = None,
-
     ) -> None:
-
         self._engine = engine
 
         self._store = store
 
-
-
     @property
-
     def engine(self) -> SearchEngine[C, R]:
-
         """engine。"""
         return self._engine
 
-
-
     @property
-
     def store(self) -> SearchRunStore | None:
         """store。"""
 
         return self._store
 
-
-
     def run(
-
         self,
-
         config: SearchConfig | None = None,
-
         *,
-
         cancel_token: SearchCancelToken | None = None,
-
         progress_callback: Any | None = None,
-
         run_signature: str | None = None,
-
     ) -> SearchResult[R]:
-
         """执行搜索会话。
 
 
@@ -127,19 +97,10 @@ class SearchSession(Generic[C, R]):
 
         run_store = self._store if run_signature is not None else None
 
-
-
         return self._engine.run(
-
             cfg,
-
             cancel_token=cancel,
-
             progress_callback=progress_callback,
-
             run_store=run_store,
-
             run_signature=run_signature,
-
         )
-

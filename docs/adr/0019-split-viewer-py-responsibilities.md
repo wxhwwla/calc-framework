@@ -74,10 +74,10 @@ def build_viewer_help() -> list[HelpSection]:
 ```python
 class PluginManagerDialog(QDialog):
     """插件管理器对话框 — 导入/打包/查看插件。"""
-    
+
     def __init__(self, parent=None, status_callback=None):
         ...
-    
+
     def _import_plugin(self) -> None: ...
     def _build_plugin(self) -> None: ...
 ```

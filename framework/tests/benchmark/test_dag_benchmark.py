@@ -20,7 +20,7 @@ def _large_linear_dag(node_count: int = 100) -> dict:
         nodes[f"add_{i}"] = {
             "type": "binary",
             "op": "+",
-            "lhs": "start" if i == 0 else f"add_{i-1}",
+            "lhs": "start" if i == 0 else f"add_{i - 1}",
             "rhs": "start",
         }
     last_key = f"add_{node_count - 3}" if node_count > 2 else "start"
@@ -85,7 +85,10 @@ class TestEndfieldBenchmark:
         from pathlib import Path
 
         from calc_framework.dag.serializer import dag_from_dict
-        dag_path = Path(__file__).resolve().parents[3] / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"  # noqa: E501
+
+        dag_path = (
+            Path(__file__).resolve().parents[3] / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
+        )  # noqa: E501
         dag_dict = json.loads(dag_path.read_text(encoding="utf-8"))
         g = dag_from_dict(dag_dict)
         ctx = {

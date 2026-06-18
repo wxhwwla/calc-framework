@@ -15,6 +15,7 @@
   http://localhost:8180  — 完整 Web 界面（含全量搜索）
   http://localhost:8180/api/docs  — API 文档（Swagger）
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,10 +32,9 @@ _DIST_DIR = _FRONTEND_DIR / "dist"
 
 
 def _run_npm(args: list[str], cwd: Path) -> None:
-    cmd = ["npm.cmd" if sys.platform == "win32" else "npm"] + args
+    cmd = [*("npm.cmd" if sys.platform == "win32" else "npm"), *args]
     print(f"  $ {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True,
-                            encoding="utf-8", errors="replace")
+    result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode != 0:
         print(result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout)
         print(result.stderr[-2000:] if len(result.stderr) > 2000 else result.stderr)
@@ -48,8 +48,7 @@ def main() -> None:
     )
     parser.add_argument("--port", type=int, default=8180, help="端口号（默认 8180）")
     parser.add_argument("--no-build", action="store_true", help="跳过前端构建检查")
-    parser.add_argument("--workers", type=int, default=0,
-                        help="搜索线程数（默认 0 = 自动使用所有逻辑核）")
+    parser.add_argument("--workers", type=int, default=0, help="搜索线程数（默认 0 = 自动使用所有逻辑核）")
     parser.add_argument("--host", default="127.0.0.1", help="监听地址（默认 127.0.0.1）")
     args = parser.parse_args()
 
@@ -75,15 +74,19 @@ def main() -> None:
     print(f"\n[2/3] 启动本地后端 → http://{args.host}:{args.port}")
     backend_dir = _REPO_ROOT / "backend"
     uvicorn_cmd = [
-        sys.executable, "-m", "uvicorn",
+        sys.executable,
+        "-m",
+        "uvicorn",
         "main:app",
-        "--host", args.host,
-        "--port", str(args.port),
+        "--host",
+        args.host,
+        "--port",
+        str(args.port),
         "--reload",
     ]
 
     print(f"  $ {' '.join(uvicorn_cmd)}")
-    print(f"\n[3/3] 在浏览器中打开...")
+    print("\n[3/3] 在浏览器中打开...")
     time.sleep(1)
     webbrowser.open(f"http://{args.host}:{args.port}")
 

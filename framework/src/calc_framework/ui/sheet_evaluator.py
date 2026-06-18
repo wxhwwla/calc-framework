@@ -152,16 +152,13 @@ def render_html(layout: Layout, output_labels: dict[str, QLabel]) -> str:
         parts.append(
             f'<tr style="background:#2B6CB6;color:white;">'
             f'<td colspan="2" style="padding:4px 8px;font-weight:bold;">'
-            f'{sec.title}</td></tr>'
+            f"{sec.title}</td></tr>"
         )
         for out_name in sec.outputs:
             label = output_labels.get(out_name)
             val = label.text() if label else "--"
             parts.append(
-                f"<tr>"
-                f'<td style="padding:2px 8px;">{out_name}</td>'
-                f'<td style="padding:2px 8px;text-align:right;">{val}</td>'
-                f"</tr>"
+                f'<tr><td style="padding:2px 8px;">{out_name}</td><td style="padding:2px 8px;text-align:right;">{val}</td></tr>'
             )
     parts.append("</table>")
     return "\n".join(parts)

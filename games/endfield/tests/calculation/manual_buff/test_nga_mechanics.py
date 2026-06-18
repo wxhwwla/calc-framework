@@ -51,7 +51,10 @@ class TestNgaMechanics(unittest.TestCase):
         ]
         normal = calculate_single_hit_damage(ctx, effects=effects, crit_mode="non_crit")
         abnormal = calculate_single_hit_damage(
-            ctx, effects=effects, crit_mode="non_crit", damage_pipeline="abnormal",
+            ctx,
+            effects=effects,
+            crit_mode="non_crit",
+            damage_pipeline="abnormal",
         )
         self.assertGreater(abnormal.final_damage, normal.final_damage)
         self.assertAlmostEqual(abnormal.zone_values["连击增伤区"], 1.0)
@@ -100,15 +103,20 @@ class TestNgaMechanics(unittest.TestCase):
         self.assertGreater(high, low)
         self.assertAlmostEqual(high / low, 2.0, places=2)
 
-
     def test_combo_stacks_use_layer_table(self) -> None:
-        ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="战技", combo_stacks=4)  # noqa: E501
+        ctx = DamageContext(
+            final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="战技", combo_stacks=4
+        )  # noqa: E501
         result = calculate_single_hit_damage(ctx, crit_mode="non_crit")
         self.assertAlmostEqual(result.zone_values["连击增伤区"], 1.75)
 
     def test_combo_stacks_ultimate_table(self) -> None:
         ctx = DamageContext(
-            final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, skill_type="终结技", combo_stacks=2,
+            final_attack=1000.0,
+            skill_multiplier=1.0,
+            enemy_defense=0.0,
+            skill_type="终结技",
+            combo_stacks=2,
         )
         result = calculate_single_hit_damage(ctx, crit_mode="non_crit")
         self.assertAlmostEqual(result.zone_values["连击增伤区"], 1.30)
@@ -116,10 +124,18 @@ class TestNgaMechanics(unittest.TestCase):
     def test_suijia_attached_vulnerability_increases_damage(self) -> None:
         ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=100.0)
         low, _ = evaluate_physical_abnormal_total(
-            context=ctx, crit_mode="non_crit", effects=[], counts={"碎甲:0": 1}, char_level=90,
+            context=ctx,
+            crit_mode="non_crit",
+            effects=[],
+            counts={"碎甲:0": 1},
+            char_level=90,
         )
         high, _ = evaluate_physical_abnormal_total(
-            context=ctx, crit_mode="non_crit", effects=[], counts={"碎甲:3": 1}, char_level=90,
+            context=ctx,
+            crit_mode="non_crit",
+            effects=[],
+            counts={"碎甲:3": 1},
+            char_level=90,
         )
         self.assertGreater(high, low)
 
@@ -128,10 +144,18 @@ class TestNgaMechanics(unittest.TestCase):
 
         ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=100.0, enemy_resistance=0.0)
         low, _ = evaluate_spell_abnormal_total(
-            context=ctx, crit_mode="non_crit", effects=[], counts={"电磁异常:0": 1}, char_level=90,
+            context=ctx,
+            crit_mode="non_crit",
+            effects=[],
+            counts={"电磁异常:0": 1},
+            char_level=90,
         )
         high, _ = evaluate_spell_abnormal_total(
-            context=ctx, crit_mode="non_crit", effects=[], counts={"电磁异常:3": 1}, char_level=90,
+            context=ctx,
+            crit_mode="non_crit",
+            effects=[],
+            counts={"电磁异常:3": 1},
+            char_level=90,
         )
         self.assertGreater(high, low)
 
@@ -165,10 +189,16 @@ class TestNgaMechanics(unittest.TestCase):
 
         ctx = DamageContext(final_attack=1000.0, skill_multiplier=1.0, enemy_defense=0.0, is_unbalanced=True)
         normal, mult_normal = calculate_execute_damage(
-            context=ctx, normal_attack_multiplier=1.0, enemy_tier="普通", crit_mode="non_crit",
+            context=ctx,
+            normal_attack_multiplier=1.0,
+            enemy_tier="普通",
+            crit_mode="non_crit",
         )
         elite, mult_elite = calculate_execute_damage(
-            context=ctx, normal_attack_multiplier=1.0, enemy_tier="精英", crit_mode="non_crit",
+            context=ctx,
+            normal_attack_multiplier=1.0,
+            enemy_tier="精英",
+            crit_mode="non_crit",
         )
         self.assertAlmostEqual(mult_normal, 1.0)
         self.assertAlmostEqual(mult_elite, 1.5)

@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0
 """总伤结算面板测试。"""
 
-
-
 from __future__ import annotations
 
 import unittest
@@ -15,11 +13,8 @@ from PySide6.QtWidgets import QApplication
 
 
 class _FakeSnapshot:
-
     def __init__(self, has_data: bool = True) -> None:
-
         if has_data:
-
             self.segment_damage = {"战技:1": 100.0, "连携技:1": 200.0}
 
             self.segment_counts = {"战技:1": 2, "连携技:1": 1}
@@ -35,7 +30,6 @@ class _FakeSnapshot:
             self.selected_skill_label = "全技能"
 
         else:
-
             self.segment_damage = {}
 
             self.segment_counts = {}
@@ -51,17 +45,10 @@ class _FakeSnapshot:
             self.selected_skill_label = ""
 
 
-
-
-
 class TestTotalDamagePanel(unittest.TestCase):
-
     @classmethod
-
     def setUpClass(cls) -> None:
-
         if not QApplication.instance():
-
             cls._app = QApplication([])
 
         cls._big_font = QFont()
@@ -72,50 +59,32 @@ class TestTotalDamagePanel(unittest.TestCase):
 
         cls._small_font.setPointSize(10)
 
-
-
     def setUp(self) -> None:
-
         self.panel = TotalDamagePanel(self._big_font, self._small_font)
 
-
-
     def test_initial_state_shows_empty_message(self) -> None:
-
         self.assertIsNotNone(self.panel)
 
-
-
     def test_update_from_snapshot_with_data(self) -> None:
-
         snap = _FakeSnapshot(has_data=True)
 
         self.panel.update_from_snapshot(snap)
 
         self.assertIsNotNone(self.panel)
 
-
-
     def test_update_from_snapshot_none(self) -> None:
-
         self.panel.update_from_snapshot(None)
 
         self.assertIsNotNone(self.panel)
 
-
-
     def test_update_from_snapshot_empty_data(self) -> None:
-
         snap = _FakeSnapshot(has_data=False)
 
         self.panel.update_from_snapshot(snap)
 
         self.assertIsNotNone(self.panel)
 
-
-
     def test_hide_damage_clears_panel(self) -> None:
-
         snap = _FakeSnapshot(has_data=True)
 
         self.panel.update_from_snapshot(snap)
@@ -124,25 +93,14 @@ class TestTotalDamagePanel(unittest.TestCase):
 
         self.assertIsNotNone(self.panel)
 
-
-
     def test_update_from_snapshot_missing_attrs(self) -> None:
-
         class _MinimalSnapshot:
-
             pass
-
-
 
         self.panel.update_from_snapshot(_MinimalSnapshot())
 
         self.assertIsNotNone(self.panel)
 
 
-
-
-
 if __name__ == "__main__":
-
     unittest.main()
-

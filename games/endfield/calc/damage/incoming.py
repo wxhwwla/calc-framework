@@ -31,7 +31,16 @@ def enemy_incoming_damage_to_operator(
 ) -> float:
     """敌人对干员伤害经敏捷(物理)/智识(法术)抗性后的估算值。"""
     dtype = str(damage_type or "物理")
-    if dtype.startswith("法术") or dtype in ("灼热", "电磁", "寒冷", "自然", "法术-灼热", "法术-电磁", "法术-寒冷", "法术-自然"):  # noqa: E501
+    if dtype.startswith("法术") or dtype in (
+        "灼热",
+        "电磁",
+        "寒冷",
+        "自然",
+        "法术-灼热",
+        "法术-电磁",
+        "法术-寒冷",
+        "法术-自然",
+    ):
         mult = operator_resistance_multiplier(intellect)
     else:
         mult = operator_resistance_multiplier(agility)

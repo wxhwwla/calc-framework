@@ -22,6 +22,7 @@ async def detect(file: UploadFile = File(...)):
 
         try:
             from games.endfield.gui.controls.ocr.ocr_detect import ocr_detect_from_file
+
             result = ocr_detect_from_file(tmp_path)
             return result
         except ImportError:
@@ -33,5 +34,6 @@ async def detect(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 __all__: list[str] = []

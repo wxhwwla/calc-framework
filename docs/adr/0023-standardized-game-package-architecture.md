@@ -84,7 +84,7 @@ framework/adapters/{game}/
 
 ```
 阶段 1（当前） → 阶段 2（对齐结构） → 阶段 3（纯 DAG）
-                                    
+
 games/endfield/                     games/endfield/
 ├── calc/                           ├── calc/
 │   ├── damage/         ← 保留       │   └── dag_adapter/  ← 保留

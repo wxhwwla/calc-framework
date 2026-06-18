@@ -48,19 +48,25 @@ class TestShouldUseCompactControlDock(unittest.TestCase):
 class TestControlDockLayoutNeedsUpdate(unittest.TestCase):
     def test_no_change_returns_false(self):
         result = control_dock_layout_needs_update(
-            1200, last_width=1200, last_compact=True,
+            1200,
+            last_width=1200,
+            last_compact=True,
         )
         self.assertFalse(result)
 
     def test_width_change_triggers_update(self):
         result = control_dock_layout_needs_update(
-            1300, last_width=1200, last_compact=False,
+            1300,
+            last_width=1200,
+            last_compact=False,
         )
         self.assertTrue(result)
 
     def test_compact_change_triggers_update(self):
         result = control_dock_layout_needs_update(
-            1400, last_width=1200, last_compact=False,
+            1400,
+            last_width=1200,
+            last_compact=False,
         )
         # 1400 < 1480 → compact=True
         self.assertTrue(result)

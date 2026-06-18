@@ -7,7 +7,6 @@
 `_GLOBAL_FUNCTIONS` 及函数注册 API。
 """
 
-
 from __future__ import annotations
 
 import ast
@@ -32,15 +31,17 @@ _SAFE_BUILTINS: dict[str, Any] = {
     # "integral" 由 sandbox.py 导入后添加（避免循环依赖）
 }
 
-_SAFE_NODE_TYPES: frozenset[type] = frozenset({
-    ast.Constant,
-    ast.Name,
-    ast.UnaryOp,
-    ast.BinOp,
-    ast.Call,
-    ast.Expression,
-    ast.Load,
-})
+_SAFE_NODE_TYPES: frozenset[type] = frozenset(
+    {
+        ast.Constant,
+        ast.Name,
+        ast.UnaryOp,
+        ast.BinOp,
+        ast.Call,
+        ast.Expression,
+        ast.Load,
+    }
+)
 
 _SAFE_UNARY_OPS: frozenset[type] = frozenset({ast.USub})
 
