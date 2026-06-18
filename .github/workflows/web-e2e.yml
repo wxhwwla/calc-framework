@@ -67,9 +67,19 @@ jobs:
           curl -s http://localhost:5173 -o /dev/null || (echo "Frontend failed to start"; exit 1)
 
       - name: 运行 Cypress E2E 测试
+        id: e2e
         working-directory: web/frontend
         continue-on-error: true
         run: npx cypress run --e2e --browser=electron
+
+      - name: 检查 E2E 测试结果
+        if: always()
+        run: |
+          if "${{ steps.e2e.outcome }}" == "failure"; then
+            echo "::warning::Cypress E2E 测试失败（步骤已设置 continue-on-error，未阻塞）"
+          else
+            echo "Cypress E2E 测试通过"
+          fi
 
       - name: 打印后端日志（调试用）
         if: always()

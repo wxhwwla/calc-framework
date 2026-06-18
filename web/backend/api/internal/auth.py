@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 import os
 import secrets
+import threading
 import time
 from collections import defaultdict
 
@@ -25,6 +26,7 @@ _BAN_WINDOW = 60
 """窗口大小（秒）。"""
 
 _lockout: dict[str, list[float]] = defaultdict(list)
+_lockout_lock = threading.Lock()
 """IP → 失败时间戳列表（进程内存，仅单 worker 有效）。"""
 
 

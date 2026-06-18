@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """计算历史 API（文件持久化，PA 重启不丢）。"""
 
+import threading
 from datetime import datetime, timezone
 
 from api.internal.persistent_store import load_list, save_list
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/api/history")
 MAX_HISTORY = 10
 _STORE_KEY = "compute_history"
 _history: list[dict] = load_list(_STORE_KEY)
+_history_lock = threading.Lock()
 
 
 def list_history_payload() -> list[dict]:
@@ -23,10 +25,11 @@ def save_history_payload(entry: dict) -> dict:
     global _history
     entry = dict(entry)
     entry["saved_at"] = datetime.now(timezone.utc).isoformat()
-    _history.append(entry)
-    while len(_history) > MAX_HISTORY:
-        _history.pop(0)
-    save_list(_STORE_KEY, _history)
+    with _history_lock:
+        _history.append(entry)
+        while len(_history) > MAX_HISTORY:
+            _history.pop(0)
+        save_list(_STORE_KEY, _history)
     return {"message": "ok", "index": len(_history) - 1}
 
 

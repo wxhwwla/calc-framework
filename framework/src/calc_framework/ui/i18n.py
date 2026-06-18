@@ -140,7 +140,7 @@ class DesktopTranslator:
         with self._lock:
             self._cache.clear()
 
-    def tr(self, key: str, **kwargs: Any) -> str:
+    def tr(self, key: str, /, **kwargs: Any) -> str:
         """翻译指定键。
 
         支持 ``**kwargs`` 用于插值，例如 ``tr("result.count", n=5)``。
@@ -211,7 +211,7 @@ def _get_translator() -> DesktopTranslator:
 # ── 公开 API 函数 ──────────────────────────────────────────
 
 
-def tr(key: str, **kwargs: Any) -> str:
+def tr(key: str, /, **kwargs: Any) -> str:
     """翻译字符串键。
 
     用法::

@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import threading
 import time
 from collections.abc import AsyncGenerator
 from typing import Any
@@ -595,6 +596,7 @@ from api.internal.persistent_store import load_list, save_list
 
 _SEARCH_STORE_KEY = "search_history"
 _search_history: list[dict] = load_list(_SEARCH_STORE_KEY)
+_search_history_lock = threading.Lock()
 
 
 def list_search_history():
@@ -605,10 +607,11 @@ def list_search_history():
 def save_search_history(entry: dict):
     """保存一次搜索记录。"""
     global _search_history
-    _search_history.append(entry)
-    while len(_search_history) > 10:
-        _search_history.pop(0)
-    save_list(_SEARCH_STORE_KEY, _search_history)
+    with _search_history_lock:
+        _search_history.append(entry)
+        while len(_search_history) > 10:
+            _search_history.pop(0)
+        save_list(_SEARCH_STORE_KEY, _search_history)
     return {"message": "ok"}
 
 

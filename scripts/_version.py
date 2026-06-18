@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.5"
+_VERSION = "3.28.6"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -168,7 +168,8 @@ def _markers_section_ok(text: str) -> bool:
     使用硬编码值判断，避免模块变量为 ``""`` 时误判。
     """
     required = (
-        "",
+        '_SUMMARY_MARKER_BEGIN = ""',
+        '_SUMMARY_MARKER_END = ""',
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",
@@ -721,3 +722,19 @@ def get_exe_version() -> str:
 # - 更新文档 docs/错误集.md
 # - 修改 framework/src/calc_framework/dag/block_cache.py
 # - 修改 framework/src/calc_framework/search/engine.py
+
+
+# TITLE: 更新 12 处文件
+# BODY:
+# - 变更 .github/workflows/security-audit.yml
+# - 变更 .github/workflows/web-e2e.yml
+# - 更新文档 docs/错误集.md
+# - 修改 framework/src/calc_framework/inverse/base.py
+# - 修改 framework/src/calc_framework/ui/i18n.py
+# - 修改 framework/tests/benchmark/__init__.py
+# - 修改 framework/tests/benchmark/test_dag_benchmark.py
+# - 修改 scripts/_version.py
+# - 修改 web/backend/api/history.py
+# - 修改 web/backend/api/internal/auth.py
+# - 修改 web/backend/api/search.py
+# - 修改 web/backend/main.py
