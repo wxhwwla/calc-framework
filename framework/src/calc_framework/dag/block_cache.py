@@ -33,6 +33,7 @@ class BlockCacheEntry:
 
     input_hash: int
     outputs: dict[str, float]
+    created_at: float
     last_access: float
 
 
@@ -75,6 +76,7 @@ class BlockCache:
         self._blocks[block_id] = BlockCacheEntry(
             input_hash=_compute_input_hash(bound_inputs),
             outputs=dict(outputs),
+            created_at=now,
             last_access=now,
         )
         self._blocks.move_to_end(block_id)
@@ -92,7 +94,7 @@ class BlockCache:
     def _is_expired(self, entry: BlockCacheEntry, now: float) -> bool:
         if self._ttl_seconds is None:
             return False
-        return now - entry.last_access > self._ttl_seconds
+        return now - entry.created_at > self._ttl_seconds
 
     def _evict_if_needed(self) -> None:
         if self._max_entries is None:
