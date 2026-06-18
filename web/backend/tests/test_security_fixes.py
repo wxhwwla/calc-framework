@@ -75,12 +75,14 @@ class TestSafeHttp:
         assert exc.value.status_code == 400
 
     def test_openai_v1_url_rebuild(self) -> None:
-        with patch("api.internal.safe_http._hostname_resolves_to_private"):
+        with patch("api.internal.safe_http._resolve_hostname", return_value="104.20.22.46"):
             host = validate_outbound_api_base("https://api.openai.com/v1")
         assert host.chat_completions_url() == "https://api.openai.com/v1/chat/completions"
+        assert host.resolved_ip == "104.20.22.46"
 
     def test_empty_path_url_rebuild(self) -> None:
-        with patch("api.internal.safe_http._hostname_resolves_to_private"):
+        with patch("api.internal.safe_http._resolve_hostname", return_value="104.20.22.46"):
             host = validate_outbound_api_base("https://api.deepseek.com")
         assert isinstance(host, ValidatedOutboundHost)
         assert host.chat_completions_url() == "https://api.deepseek.com/chat/completions"
+        assert host.resolved_ip == "104.20.22.46"

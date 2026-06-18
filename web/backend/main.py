@@ -21,6 +21,7 @@ from api.endfield.survival import router as survival_router
 from api.generator import router as generator_router
 from api.history import router as history_router
 from api.hub import router as hub_router
+from api.internal.csrf import CSRFSkipMiddleware
 from api.ocr import router as ocr_router
 from api.packaging.contribute import router as contribute_router
 from api.packaging.pack import router as pack_router
@@ -48,6 +49,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(CSRFSkipMiddleware)
 
 
 # 速率限制中间件（在所有路由之前）

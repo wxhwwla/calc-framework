@@ -26,8 +26,25 @@ def load_json(path: Path) -> Any:
         return None
 
 
+def _validate_path_no_traversal(path: Path) -> None:
+    """校验路径不含 ``..`` 或其他穿越标记。
+
+    此检查防止调用方使用 ``../etc/passwd`` 等路径穿越攻击。
+
+    Raises:
+        ValueError: 路径含 ``..`` 等穿越标记。
+    """
+    if ".." in str(path):
+        raise ValueError(f"禁止路径穿越: {path}")
+
+
 def save_json(path: Path, data: Any) -> None:
-    """将对象写入 JSON 文件（同步）。"""
+    """将对象写入 JSON 文件（同步）。
+
+    Raises:
+        ValueError: 路径含穿越标记。
+    """
+    _validate_path_no_traversal(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -39,7 +56,11 @@ async def aload_json(path: Path) -> Any:
 
 
 async def asave_json(path: Path, data: Any) -> None:
-    """在线程池中写入 JSON，避免阻塞事件循环。"""
+    """在线程池中写入 JSON，避免阻塞事件循环。
+
+    Raises:
+        ValueError: 路径含穿越标记。
+    """
     await asyncio.to_thread(save_json, path, data)
 
 

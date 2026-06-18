@@ -7,6 +7,7 @@ import time
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from api.internal.errors import raise_http_from_exc
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -260,7 +261,7 @@ async def score_search_batch(body: ScoreBatchRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"批量评分失败: {e}") from e
+        raise_http_from_exc(e, status_code=500, public_message="批量评分失败")
 
 
 @router.post("/estimate")
@@ -317,7 +318,7 @@ async def estimate_search(req: EstimateRequest):
         return payload
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"预估失败: {e}")
+        raise_http_from_exc(e, status_code=500, public_message="预估失败")
 
 
 @router.post("/run")
@@ -376,7 +377,7 @@ async def run_search(req: SearchRequest):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"搜索失败: {e}")
+        raise_http_from_exc(e, status_code=500, public_message="搜索失败")
 
 
 @router.get("/enemies")
@@ -434,7 +435,7 @@ async def get_equipment_catalog(scope: str = "全部装备"):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取装备目录失败: {e}")
+        raise_http_from_exc(e, status_code=500, public_message="获取装备目录失败")
 
 
 async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, None]:
@@ -523,8 +524,11 @@ async def _search_stream_generator(req: SearchRequest) -> AsyncGenerator[str, No
                 )
 
             except Exception as e:
+                from web.backend.bridge import get_logger
+
+                get_logger(__name__).warning("搜索执行异常: %s", e, exc_info=True)
                 asyncio.run_coroutine_threadsafe(
-                    queue.put({"type": "error", "message": str(e)}),
+                    queue.put({"type": "error", "message": "搜索过程中出现错误，请重试"}),
                     loop,
                 )
 

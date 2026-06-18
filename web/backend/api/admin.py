@@ -91,17 +91,27 @@ class CreateKeyResponse(BaseModel):
 
 _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
-# 生产环境必须设置 CALC_API_KEY_PEPPER（≥32 字符随机串）
+# 生产环境**必须**设置 CALC_API_KEY_PEPPER（≥32 字符随机串）
 _API_KEY_PEPPER_ENV = "CALC_API_KEY_PEPPER"
-_DEV_PEPPER = b"calc-framework-dev-pepper-not-for-production"
+# 不再提供硬编码回退 — 缺少环境变量时启动即失败
 
 
 def _api_key_pepper() -> bytes:
-    """读取 API Key 哈希用 pepper。"""
+    """读取 API Key 哈希用 pepper。
+
+    Raises:
+        RuntimeError: ``CALC_API_KEY_PEPPER`` 环境变量未设置。
+    """
     raw = os.environ.get(_API_KEY_PEPPER_ENV, "").strip()
-    if raw:
-        return raw.encode("utf-8")
-    return _DEV_PEPPER
+    if not raw:
+        raise RuntimeError(
+            f"安全配置缺失：环境变量 {_API_KEY_PEPPER_ENV} 未设置。\n"
+            f"请设置一个 ≥32 字符的随机字符串作为 API Key 哈希盐值。\n"
+            f"示例（PowerShell）：\n"
+            f"  $env:{_API_KEY_PEPPER_ENV} = '$(openssl rand -base64 32)'\n"
+            f"  或使用任意 ≥32 字符的随机字符串。"
+        )
+    return raw.encode("utf-8")
 
 
 def _hash_key(api_key: str) -> str:

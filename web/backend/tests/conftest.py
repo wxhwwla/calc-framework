@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -17,3 +18,7 @@ def _isolated_admin_runtime_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(admin, "_DATA_DIR", data_dir)
     monkeypatch.setattr(admin, "_KEYS_FILE", data_dir / "api_keys.json")
     monkeypatch.setattr(admin, "_USAGE_FILE", data_dir / "usage.json")
+
+    # 设置测试用环境变量
+    os.environ.setdefault("CALC_API_KEY_PEPPER", "test-pepper-16chars!" * 2)
+    os.environ.setdefault("CALC_DISABLE_CSRF", "1")
