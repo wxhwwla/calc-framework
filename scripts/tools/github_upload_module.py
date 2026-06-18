@@ -1063,6 +1063,12 @@ def _merge_work_into_release(*, meta, readme_path: Path, push_tag: bool) -> None
                 print(f"[错误] 无法切换到 {RELEASE_BRANCH}，合并取消")
                 return
             run_git(["checkout", "-b", RELEASE_BRANCH, _remote_release_ref()])
+        # 切分支后再次检查未暂存改动（切分支可能恢复 stash pop 遗留的冲突文件）
+        _, after_checkout, _ = run_git(["status", "--porcelain"], capture_output=True)
+        if after_checkout.strip():
+            run_git(["stash", "--include-untracked", "-m", "upload: auto-stash after checkout"])
+            if not stashed:
+                stashed = True
         run_git(["pull", "--rebase", "origin", RELEASE_BRANCH], timeout=300)
         run_git(
             [
