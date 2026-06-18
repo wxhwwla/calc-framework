@@ -55,11 +55,15 @@ jobs:
           sleep 5
           curl -s http://localhost:8180/api/layout -o /dev/null || (cat /tmp/uvicorn.log; echo "Backend failed to start"; exit 1)
 
-      - name: 启动前端 dev server
+      - name: Build frontend
+        working-directory: web/frontend
+        run: npx vite build
+
+      - name: 启动前端 preview server
         working-directory: web/frontend
         run: |
-          npx vite --port 5173 &
-          sleep 5
+          npx vite preview --port 5173 &
+          sleep 3
           curl -s http://localhost:5173 -o /dev/null || (echo "Frontend failed to start"; exit 1)
 
       - name: 运行 Cypress E2E 测试

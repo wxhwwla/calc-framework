@@ -12,6 +12,11 @@ export default defineConfig({
   esbuild: {
     target: "es2021",
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "es2021",
+    },
+  },
   plugins: [
     react(),
     VitePWA({
