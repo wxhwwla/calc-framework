@@ -507,6 +507,7 @@ def _handle_hub(environ, start_response):
     try:
         from hub.storage import (
             create_pack,
+            delete_pack,
             get_pack,
             get_pack_file_path,
             increment_download,
@@ -520,6 +521,12 @@ def _handle_hub(environ, start_response):
         return _json(start_response, {"error": f"hub import failed: {e}"}, "500 Internal Server Error")
 
     try:
+        # ── 写操作（POST/DELETE）需要管理员认证 ──
+        if method in ("POST", "DELETE"):
+            err = _verify_admin_token_wsgi(environ)
+            if err:
+                return _json(start_response, {"detail": err}, "401 Unauthorized")
+
         if path == "/api/hub/stats" and method == "GET":
             _packs, total = list_packs(limit=0)
             return _json(start_response, {"total_packs": total})
@@ -573,6 +580,25 @@ def _handle_hub(environ, start_response):
             if pack is None:
                 return _http_error(start_response, "包不存在", 404)
             return _json(start_response, pack)
+
+        if m and method == "PUT":
+            pack_id = m.group(1)
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+            update_pack(
+                pack_id,
+                name=str(payload.get("name", "")).strip() or None,
+                version=str(payload.get("version", "")).strip() or None,
+                description=str(payload.get("description", "")) or None,
+            )
+            return _json(start_response, {"status": "updated", "id": pack_id})
+
+        if m and method == "DELETE":
+            pack_id = m.group(1)
+            delete_pack(pack_id)
+            return _json(start_response, {"status": "deleted", "id": pack_id})
 
         m = re.match(r"^/api/hub/packs/([^/]+)/upload$", path)
         if m and method == "POST":
@@ -849,6 +875,50 @@ def _verify_admin_token_wsgi(environ) -> str | None:
     if not secrets.compare_digest(token, configured):
         return "管理 Token 无效"
     return None
+
+
+# ── WSGI 允许的来源（与 FastAPI cors.py / csrf.py 保持一致） ──
+_WSGI_ALLOWED_ORIGINS = frozenset(
+    {
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        # 生产环境可扩展：
+        # "https://wxhwwla.pythonanywhere.com",
+    }
+)
+
+
+def _check_csrf_wsgi(environ) -> str | None:
+    """WSGI 版 CSRF 校验 — 校验 Origin/Referer 头是否在允许来源中。
+
+    仅对非安全方法（POST/PUT/DELETE）且非已认证路径进行校验。
+    返回 None 表示通过，返回字符串表示错误信息。
+    """
+    if os.environ.get("CALC_DISABLE_CSRF", "").strip().lower() in ("1", "true", "yes", "on"):
+        return None
+
+    method = environ.get("REQUEST_METHOD", "GET").upper()
+    if method in ("GET", "HEAD", "OPTIONS"):
+        return None
+
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    # 已受 Token 认证保护的路径跳过 CSRF（双重认证无意义）
+    if any(path.startswith(p) for p in ("/api/admin", "/api/download", "/api/data")):
+        return None
+
+    origin = (environ.get("HTTP_ORIGIN", "") or "").strip().rstrip("/")
+    if origin:
+        if origin in _WSGI_ALLOWED_ORIGINS:
+            return None
+        return f"CSRF 校验失败：来源 {origin} 不被允许"
+
+    referer = (environ.get("HTTP_REFERER", "") or "").strip().rstrip("/")
+    if referer:
+        for allowed in _WSGI_ALLOWED_ORIGINS:
+            if referer.startswith(allowed):
+                return None
+
+    return "CSRF 校验失败：缺少 Origin/Referer 头或来源不被允许"
 
 
 def _handle_data_write(environ, start_response, path: str, method: str) -> list | None:
@@ -1188,7 +1258,7 @@ def _handle_generator_api(environ, start_response):
 def _handle_admin_unpack(environ, start_response):
     """管理端点：解压 dist.zip（POST 启动 / GET 查询状态）。
 
-    POST: 后台启动 unzip 子进程，立即返回。
+    POST: 后台启动 unzip 子进程，立即返回。需要管理 Token。
     GET: 返回解压状态（done/count/error）。
     """
     path = _fix_path(environ.get("PATH_INFO", ""))
@@ -1217,6 +1287,11 @@ def _handle_admin_unpack(environ, start_response):
     if method != "POST":
         return None
 
+    # ── POST 写操作需要管理 Token ──
+    err = _verify_admin_token_wsgi(environ)
+    if err:
+        return _json(start_response, {"detail": err}, "401 Unauthorized")
+
     if not zip_path.is_file():
         return _http_error(start_response, f"dist.zip not found: {zip_path}", 404)
 
@@ -1239,7 +1314,7 @@ def _handle_admin_deploy(environ, start_response):
 
     部署新版本只需两步：
       1. git push
-      2. curl -X POST https://xxx.pythonanywhere.com/api/admin/deploy
+      2. curl -X POST -H 'X-Admin-Token: xxx' https://xxx.pythonanywhere.com/api/admin/deploy
       3. 等待 2-3 分钟，在 PA Web 页面 Reload
     """
     path = _fix_path(environ.get("PATH_INFO", ""))
@@ -1262,6 +1337,11 @@ def _handle_admin_deploy(environ, start_response):
     if method != "POST":
         return None
 
+    # ── POST 写操作需要管理 Token ──
+    err = _verify_admin_token_wsgi(environ)
+    if err:
+        return _json(start_response, {"detail": err}, "401 Unauthorized")
+
     script = (
         f"cd {_BASE} && "
         f"git pull origin develop 2>&1 && "
@@ -1277,6 +1357,12 @@ def _handle_admin_deploy(environ, start_response):
 
 
 def application(environ, start_response):
+    # ── CSRF 校验（对所有非安全方法，例外路径跳过） ──
+    csrf_err = _check_csrf_wsgi(environ)
+    if csrf_err:
+        logger.warning("WSGI CSRF 拒绝: %s", csrf_err)
+        return _json(start_response, {"detail": csrf_err}, "403 Forbidden")
+
     for handler in (
         _handle_admin_deploy,
         _handle_donation,

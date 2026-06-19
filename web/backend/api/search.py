@@ -11,9 +11,26 @@ from typing import Any
 from api.internal.errors import raise_http_from_exc
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 router = APIRouter(prefix="/api/search", tags=["search"])
+
+_MAX_JSON_DEPTH = 10
+
+
+def _check_depth(value: object, depth: int = 0) -> None:
+    """递归检查 JSON 嵌套深度，超过 ``_MAX_JSON_DEPTH`` 时抛 ValueError。
+
+    防止攻击者通过深度嵌套的 JSON payload 导致 Pydantic 解析栈溢出。
+    """
+    if depth > _MAX_JSON_DEPTH:
+        raise ValueError(f"JSON 嵌套深度超过限制 ({_MAX_JSON_DEPTH})")
+    if isinstance(value, dict):
+        for v in value.values():
+            _check_depth(v, depth + 1)
+    elif isinstance(value, list):
+        for item in value:
+            _check_depth(item, depth + 1)
 
 
 class SearchRequest(BaseModel):
@@ -69,6 +86,13 @@ class SearchRequest(BaseModel):
     include_conditional_equipment_crit: bool = Field(default=False, description="是否计入条件触发暴击")
     extra_crit_rate: float = Field(default=0.0, description="额外暴击率")
     extra_crit_damage: float = Field(default=0.0, description="额外暴击伤害")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _limit_json_depth(cls, data: object) -> object:
+        """限制 JSON 嵌套深度，防止栈溢出/内存耗尽。"""
+        _check_depth(data)
+        return data
 
 
 class EstimateRequest(BaseModel):
