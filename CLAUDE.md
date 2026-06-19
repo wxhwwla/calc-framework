@@ -185,3 +185,69 @@ Agent 在 sandbox 中只能执行以下 Git **只读**命令：
 - Issue 通过 GitHub Issues 跟踪，Web 表单在 `.github/ISSUE_TEMPLATE/`（Bug 报告、功能建议）
 - 默认标签：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`
 - 见 `docs/agents/issue-tracker.md` 和 `docs/agents/triage-labels.md`
+
+---
+
+## 十一、测试执行规则
+
+### 所有测试必须在 Docker 容器内执行（通过 `act`）
+
+**本地环境（Windows + 非 Linux 系统）运行的测试结果不予采信**，原因：
+
+1. **CRLF vs LF** — Windows 默认 CRLF 换行符与 CI（Linux）的 LF 不一致，导致 `.gitattributes` 规则下的文件被误判为已修改
+2. **detect-secrets 指纹漂移** — 同一文件在 Windows 和 Linux 上生成的 secrets baseline 指纹不同，导致 security audit CI 误报
+3. **locale 差异** — i18n 测试在中文 Windows 上返回中文字符串，CI（en_US）返回英文，断言失败
+4. **路径格式** — Windows `\` 与 CI 的 `/` 路径分隔符差异导致快照测试失败
+5. **PyInstaller 打包行为** — Windows frozen exe 行为与 Linux CI 完全不同（多进程/spawn 模式）
+
+### 测试执行方式
+
+使用 `act`（本地 GitHub Actions runner）在 Docker 容器中执行 CI 工作流：
+
+```powershell
+# 推荐方式：使用自动检测脚本（代理端口 + 端口冲突处理）
+.\scripts\act.ps1 -j test -W .github/workflows/ci.yml
+.\scripts\act.ps1 -j test -W .github/workflows/framework-ci.yml
+.\scripts\act.ps1 -j test -W .github/workflows/web-ci.yml
+.\scripts\act.ps1 --list                              # 查看所有 job
+
+# 直接调用 act（代理端口固定时）
+act -j test -W .github/workflows/ci.yml
+```
+
+`scripts\act.ps1` 自动处理以下问题：
+- **代理端口检测**：扫描 `host.docker.internal` 上常见代理端口（6518/7890/7891/1080/10809/3128 等），取第一个可用端口
+- **端口冲突**：清理残留的 act 进程（避免 `listen tcp ... 34567: bind: only one usage`）
+- **临时配置**：生成独立 `.actrc`，不污染全局配置
+
+`act` 配置文件 `.actrc` 已预设 ghcr.io 镜像代理 + 系统代理，详见该文件。
+
+前置条件：Docker Desktop 须处于运行状态。
+
+### 代理端口变动处理
+
+本地代理工具（clash/v2ray 等）的 HTTP 端口可能动态变化。当 act 无法拉取 GitHub Actions（卡在 `git clone` 步骤）时：
+
+```powershell
+# 1. 找到你代理工具的 HTTP 端口（通常是 Mixin/Clash/V2Ray 的 HTTP 代理端口）
+# 2. 更新 .actrc 中的端口号
+#    或直接用 scripts\act.ps1（自动扫描）
+.\scripts\act.ps1 -j test -W .github/workflows/ci.yml
+```
+
+常见代理端口参考：clash（7890）、v2ray（10809）、Docker Desktop 内置（3128）。
+
+### 例外规则
+
+以下场景可本地直接运行测试（仅用于快速调试，最终以 `act` 结果为准）：
+- 修改 `_version.py` 或上传脚本相关的单元测试
+- 无环境依赖的纯逻辑测试（如 `test_errors.py`）
+- 测试 `act` 配置本身（`act --dryrun` 验证 workflow 语法）
+
+### 验证 CI 前务必复查
+
+本地改动提交前，**必须**通过 `act` 在 Docker 中跑通以下 CI（具体见 `.github/workflows/`）：
+1. `ci.yml` — Game CI（终末地层 + tools + Web 后端）
+2. `framework-ci.yml` — 框架核心 + 基准测试
+3. `web-ci.yml` — Web 前端 tsc + eslint + build
+4. `security-audit.yml` — detect-secrets + pip-audit + npm audit
