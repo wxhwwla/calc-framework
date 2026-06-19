@@ -521,8 +521,8 @@ def _handle_hub(environ, start_response):
         return _json(start_response, {"error": f"hub import failed: {e}"}, "500 Internal Server Error")
 
     try:
-        # ── 写操作（POST/DELETE）需要管理员认证 ──
-        if method in ("POST", "DELETE"):
+        # ── 写操作（POST/PUT/DELETE）需要管理员认证 ──
+        if method in ("POST", "PUT", "DELETE"):
             err = _verify_admin_token_wsgi(environ)
             if err:
                 return _json(start_response, {"detail": err}, "401 Unauthorized")

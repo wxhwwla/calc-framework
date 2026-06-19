@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, model_validator
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 _MAX_JSON_DEPTH = 10
+_MAX_HISTORY_ENTRY_BYTES = 1024 * 100  # 100KB 单条上限
 
 
 def _check_depth(value: object, depth: int = 0) -> None:
@@ -628,6 +629,16 @@ def list_search_history():
     return list(reversed(_search_history))
 
 
+def _validate_history_entry(entry: object) -> dict:
+    """校验搜索历史记录条目的基本合法性。"""
+    if not isinstance(entry, dict):
+        raise HTTPException(status_code=400, detail="历史记录必须是一个 JSON 对象")
+    raw = json.dumps(entry, ensure_ascii=False)
+    if len(raw.encode("utf-8")) > _MAX_HISTORY_ENTRY_BYTES:
+        raise HTTPException(status_code=413, detail=f"单条历史记录不能超过 {_MAX_HISTORY_ENTRY_BYTES // 1024}KB")
+    return dict(entry)
+
+
 def save_search_history(entry: dict):
     """保存一次搜索记录。"""
     global _search_history
@@ -648,7 +659,8 @@ def list_search_history_route():
 @router.post("/history")
 def save_search_history_route(entry: dict):
     """保存一次搜索记录。"""
-    return save_search_history(entry)
+    validated = _validate_history_entry(entry)
+    return save_search_history(validated)
 
 
 __all__: list[str] = []
