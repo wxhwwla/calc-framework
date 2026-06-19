@@ -1112,13 +1112,17 @@ class TestContributeAPI(unittest.TestCase):
         self.assertGreater(len(data["errors"]), 0)
 
     def test_contribute_submit_valid(self) -> None:
-        """提交有效数据应成功暂存。"""
+        """提交有效数据应成功暂存（需管理 Token）。"""
+        import os
+
+        os.environ["CALC_ADMIN_TOKEN"] = "test-admin-token-for-contribute"
         payload = {
             "名称": "提交测试角色",
             "星级": 5,
             "技能": [{"名称": "主动技", "标签": "主动", "百分比": True, "段": [{"倍率": [100]}]}],
         }
-        resp = self.client.post("/api/contribute/submit", json=payload)
+        headers = {"X-Admin-Token": "test-admin-token-for-contribute"}
+        resp = self.client.post("/api/contribute/submit", json=payload, headers=headers)
         if resp.status_code == 400:
             # 如果暂存目录不可写
             self.skipTest("暂存目录不可写")
@@ -1128,8 +1132,12 @@ class TestContributeAPI(unittest.TestCase):
         self.assertIn("message", data)
 
     def test_contribute_submit_invalid_returns_400(self) -> None:
+        import os
+
+        os.environ["CALC_ADMIN_TOKEN"] = "test-admin-token-for-contribute"
         payload = {"名称": "", "技能": []}
-        resp = self.client.post("/api/contribute/submit", json=payload)
+        headers = {"X-Admin-Token": "test-admin-token-for-contribute"}
+        resp = self.client.post("/api/contribute/submit", json=payload, headers=headers)
         self.assertEqual(resp.status_code, 400)
 
 

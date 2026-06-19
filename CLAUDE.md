@@ -216,13 +216,36 @@ act -j test -W .github/workflows/ci.yml
 ```
 
 `scripts\act.ps1` 自动处理以下问题：
-- **代理端口检测**：扫描 `host.docker.internal` 上常见代理端口（6518/7890/7891/1080/10809/3128 等），取第一个可用端口
+- **代理端口检测**：扫描 `host.docker.internal` 和 `127.0.0.1` 上常见代理端口（6518/7890/7891/1080/10809/3128 等），取第一个可用端口
 - **端口冲突**：清理残留的 act 进程（避免 `listen tcp ... 34567: bind: only one usage`）
-- **临时配置**：生成独立 `.actrc`，不污染全局配置
+- **代理不可用时降级**：无代理时以无代理模式运行（容器内直连可能超时）
 
 `act` 配置文件 `.actrc` 已预设 ghcr.io 镜像代理 + 系统代理，详见该文件。
 
-前置条件：Docker Desktop 须处于运行状态。
+前置条件：
+- Docker Desktop 须处于运行状态
+- 代理工具（Clash / V2Ray / AtlasVPN 等）须已启动，HTTP 代理端口对外可访问
+- `scripts\act.ps1` 会自动检测代理端口，若检测不到会给出提示
+
+### 已知限制：代理不可用时的表现
+
+当 Docker 容器内无 HTTP 代理时，以下操作会失败：
+1. **`pip install`** — 无法从 PyPI 下载包（`ProxyError: Connection refused`）
+2. **`act` 的 `git clone`** — GitHub Actions `setup-python` 等步骤会卡住或超时
+
+解决方案：
+```powershell
+# 1. 启动你的代理工具（Clash / V2Ray / 系统代理），确保 HTTP 代理端口开放
+# 2. 验证代理可用：
+curl -x http://host.docker.internal:端口 http://httpbin.org/ip
+
+# 3. 运行测试
+.\scripts\act.ps1 -- -j test -W .github/workflows/ci.yml
+
+# 备用方案：直接指定代理端口
+$env:HTTP_PROXY = "http://host.docker.internal:端口"
+.\scripts\act.ps1 -- -j test -W .github/workflows/ci.yml
+```
 
 ### 代理端口变动处理
 

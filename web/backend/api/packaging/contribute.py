@@ -5,10 +5,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
+from api.internal.auth import verify_admin_token
 from api.internal.safe_paths import build_contribute_filename, write_json_to_staging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/contribute", tags=["contribute"])
@@ -123,7 +124,7 @@ async def validate_contribute(payload: dict[str, Any]):
 
 
 @router.post("/submit", response_model=SubmitResponse)
-async def submit_contribute(payload: dict[str, Any]):
+async def submit_contribute(payload: dict[str, Any], _admin: Annotated[None, Depends(verify_admin_token)] = None):
     """将用户提交的数据暂存到服务器。"""
     errors = _validate_entity(payload)
     if errors:
