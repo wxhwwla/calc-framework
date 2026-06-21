@@ -112,7 +112,129 @@ Agent 在 sandbox 中只能执行以下 Git **只读**命令：
 
 ---
 
-## 六、严重程度标签
+## 六、技能推荐工作流
+
+本仓库安装了 `mattpocock/skills` 的 34 个技能（`.agents/skills/`）。Agent 应根据任务类型自动选用合适的技能。
+
+### 推荐路线
+
+#### 日常改代码
+```
+/review → 发现问题 → /tdd（红-绿-重构）→ /review 复审
+```
+
+#### 修 Bug
+```
+/diagnosing-bugs → 修复 → /review
+```
+
+#### 开发新功能
+```
+/grill-with-docs（需求厘清 + 生成 ADR）
+  → 复杂功能？→ /handoff 开新会话
+  → /prototype（快速验证设计）
+  → /tdd（先写测试再实现）
+  → /review
+```
+
+#### 代码库维护（建议每月一次）
+```
+/improve-codebase-architecture → 扫描改进机会
+/codebase-design → 设计新模块接口时
+```
+
+#### 架构决策
+```
+/decision-mapping → 面临模糊选择时
+/domain-modeling → 需要定义领域术语时
+```
+
+#### 文档编写
+```
+/edit-article → 编辑 README 等文档
+/writing-shape → 将零散笔记整理成文档
+```
+
+#### 改完代码后更新文档（必做，调用 `/edit-article`）
+
+每次修改代码后，必须调用 **`/edit-article`** 技能来更新文档。按以下清单检查并同步更新：
+
+```
+1. /.gitignore
+   └─ 调用 /edit-article 检查：新增产物/目录/临时文件是否应被忽略？
+
+2. 受影响的核心文档（调用 /edit-article 逐项处理）
+   ├─ docs/会话接续手册.md    — 文首日期、§3 目录、§4 近期完成
+   ├─ docs/操作指令集.md       — 新增命令/参数/流程
+   ├─ docs/错误集.md           — 新增 Bug 修复记录
+   ├─ docs/代码结构规范.md     — 目录超限记录
+   ├─ docs/框架适配新游戏指南.md — 新增适配包/API 变更
+   ├─ docs/制造游戏计算器完整流程.md — GUI 功能变化
+   ├─ README.md（根和各 games/*/）— 功能描述、目录列表
+   ├─ CONTEXT.md              — 新增术语
+   └─ CLAUDE.md               — 自身规则变更
+
+3. CI 配置（.github/workflows/*.yml）
+   └─ 手动检查：变更影响了测试/依赖/打包/代码结构？
+
+4. 其他配置文件
+   ├─ .editorconfig
+   ├─ .gitattributes
+   └─ 项目相关的其他 .yml / .json / .toml
+```
+
+**原则**：改代码和改文档应在同一次提交中完成，保持文档与代码一致。禁止只改代码不更新文档。
+
+### 文档的定义
+
+项目中除了业务代码（Python/TypeScript 逻辑、算法、计算引擎等）之外，**其他所有文件都算作文档**，包括但不限于：
+
+| 类别 | 举例 |
+|------|------|
+| Markdown 文档 | README、操作指令集、会话接续手册、错误集 等 |
+| 规则/约束文件 | CLAUDE.md、.cursorrules、AGENTS.md、project_rules.md |
+| 配置文件 | .gitignore、.editorconfig、.gitattributes、.actrc |
+| CI 配置 | .github/workflows/*.yml |
+| 项目元数据 | pyproject.toml、package.json、tsconfig.json |
+| 数据/术语 | CONTEXT.md、UBIQUITOUS_LANGUAGE.md |
+
+这些文件都属于"文档"范畴，需要使用 `/edit-article` 等文档技能来处理。
+
+### 技能选用原则
+
+- **停一步，先问"这个任务适合什么技能？"**：每次开始任务前，先判断当前任务匹配哪个技能，再调用技能去实现
+- **优先使用技能**：匹配到合适技能时，优先通过 `Skill` 工具调用，而不是手动编写
+- **不要强用**：没有合适技能时，照常手动工作
+- **自动判断**：Agent 根据任务类型自动判断是否调用技能，无需每次都问用户
+
+### 禁用技能
+
+| 技能 | 原因 |
+|------|------|
+| **`to-issues`** | 会向 GitHub 发送 Issue，造成"全是 AI 提的 Issue"的混淆，禁止使用 |
+
+---
+
+## 上下文管理
+
+### 对话轮数跟踪
+每条回复开头显示 `[Round n/50]` 标记，记录当前对话轮次。
+- n = 当前轮次（问答 + 工具调用计为一轮）
+- 达到 50 轮时提醒用户考虑开启新对话，但不强制
+- 用户明确说"总结一下，我要开启新对话"时，更新 `docs/会话接续手册.md` 后结束
+
+### 质量检测
+当出现以下情况时主动提醒用户：
+- 连续犯同一个错误
+- 遗漏已读过的规则或文件内容
+- 重复读取刚改过的文件
+
+### 新对话接续
+新对话开始时会读取 `docs/会话接续手册.md`，所以旧对话结束时只需更新该手册即可完成交接，无需额外文件。
+
+---
+
+## 七、严重程度标签
 
 所有诊断信息标注以下标签：
 

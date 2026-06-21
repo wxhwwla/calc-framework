@@ -60,3 +60,28 @@ Single-context layout: one CONTEXT.md + docs/adr/ at repo root. See `docs/agents
 2. Then implement with TDD (test-first, red-green-refactor)
 3. For non-risky operations (tests, code edits, dependency installs), auto-consent
 4. For high-risk operations (upload scripts, git push, destructive commands), ask user first
+
+### Skills workflow
+
+This repo has 34 skills installed from `mattpocock/skills` at `.agents/skills/`. See `.trae/rules/project_rules.md` §技能推荐工作流 for the full workflow guide.
+
+Key workflows:
+- **Update docs after code changes** → `.gitignore` + core docs + CI config + other config
+- **Daily coding** → review → tdd → review
+- **Bug fixing** → diagnosing-bugs → fix → review
+- **New features** → grill-with-docs → prototype → tdd → review
+- **Architecture** → decision-mapping / domain-modeling
+- **Documentation** → edit-article / writing-shape
+
+**Document definition**: Everything except business logic code (Python/TS logic, algorithms, calc engine) is "documentation" — config files, rules, CI configs, metadata. Use `/edit-article` for these.
+
+**Skill selection**: Before starting, pause and ask "what skill fits this task?".
+
+**Disabled**: `to-issues` (creates GitHub Issues, use only if explicitly requested).
+
+### Context management
+
+- Reply header shows `[Round n/50]` counter
+- Remind user at 50 rounds or on quality degradation (repeated errors, missed rules)
+- On "summarize, I want to start a new session": update `docs/会话接续手册.md` and end the conversation
+- New sessions read that doc for handover context

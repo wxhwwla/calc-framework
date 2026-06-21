@@ -257,3 +257,15 @@ cd games/endfield && pytest tests/ -q  # 1585 passed
 | **Third-Party** | [`NOTICES.md`](NOTICES.md) |
 
 Use or distribution constitutes acceptance of the applicable license.
+
+---
+
+## Project Info
+
+| Resource | Link |
+|----------|------|
+| **Changelog** | [`CHANGELOG.md`](CHANGELOG.md) |
+| **Security Policy** | [`SECURITY.md`](SECURITY.md) |
+| **Contributing** | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| **Code of Conduct** | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) |
+| **Architecture** | [`ARCHITECTURE.md`](ARCHITECTURE.md) / [`ARCHITECTURE_zh.md`](ARCHITECTURE_zh.md) |

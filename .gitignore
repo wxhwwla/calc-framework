@@ -10,6 +10,56 @@
 # AI 技能（从 mattpocock/skills 安装）
 .agents/
 
+# npx skills 安装时创建的 Agent 配置文件
+.adal/
+.aider-desk/
+.augment/
+.autohand/
+.bob/
+.codeartsdoer/
+.codebuddy/
+.codemaker/
+.codestudio/
+.commandcode/
+.continue/
+.cortex/
+.crush/
+.devin/
+.factory/
+.forge/
+.goose/
+.hermes/
+.iflow/
+.inferencesh/
+.jazz/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.lingma/
+.mcpjam/
+.moxby/
+.mux/
+.neovate/
+.ona/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.reasonix/
+.roo/
+.rovodev/
+.tabnine/
+.terramind/
+.tinycloud/
+.vibe/
+.windsurf/
+.zencoder/
+agent/
+data/
+skills/
+
 # Skills 锁文件
 skills-lock.json
 
