@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.11"
+_VERSION = "3.28.12"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -797,3 +797,8 @@ def get_exe_version() -> str:
 # - 更新文档 docs/会话接续手册.md
 # - 更新文档 docs/算法与架构.md
 # - 更新文档 docs/错误集.md
+
+
+# TITLE: 更新文档 docs/会话接续手册.md
+# BODY:
+# - 更新文档 docs/会话接续手册.md
