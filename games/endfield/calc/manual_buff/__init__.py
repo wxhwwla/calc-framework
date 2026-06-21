@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """手动场外 buff 包。"""
 
-from games.endfield.calc.manual_buff.model import (
+from .model import (
     MANUAL_BUFF_ZONE_OPTIONS,
     ManualBuffEntry,
     build_active_keys_from_counts,

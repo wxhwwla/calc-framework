@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.13"
+_VERSION = "3.28.14"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -807,3 +807,17 @@ def get_exe_version() -> str:
 # TITLE: 更新文档 docs/会话接续手册.md
 # BODY:
 # - 更新文档 docs/会话接续手册.md
+
+
+# TITLE: 更新 10 处文件
+# BODY:
+# - 修改 games/endfield/calc/__init__.py
+# - 修改 games/endfield/calc/dag_adapter/__init__.py
+# - 修改 games/endfield/calc/damage/__init__.py
+# - 修改 games/endfield/calc/equipment/__init__.py
+# - 修改 games/endfield/calc/loadout/__init__.py
+# - 修改 games/endfield/calc/manual_buff/__init__.py
+# - 修改 games/endfield/calc/search/__init__.py
+# - 修改 games/endfield/calc/survival/__init__.py
+# - 修改 games/endfield/calc/zone_snapshot/__init__.py
+# - 修改 games/endfield/gui/controls/survival/__init__.py

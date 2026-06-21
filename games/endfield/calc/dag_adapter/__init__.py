@@ -8,7 +8,7 @@
 迁移自 ``multiplicative_zones.dag``。
 """
 
-from games.endfield.calc.dag_adapter.adapter import (
+from .adapter import (
     build_dag_context,
     compute_snapshot_with_dag,
     evaluate_attack_chain_via_dag,
@@ -18,8 +18,8 @@ from games.endfield.calc.dag_adapter.adapter import (
 try:
     from extensions.rust_search.python.rust_bridge import evaluate_search_damage
 except ImportError:
-    from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
-from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
+    from .search_evaluate import evaluate_search_damage
+from .search_evaluate import DamageEvalResult
 
 __all__ = [
     "DamageEvalResult",

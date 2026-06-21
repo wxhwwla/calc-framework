@@ -13,7 +13,7 @@
 """
 
 # 配置模块
-from games.endfield.calc.core.config import (
+from .core.config import (
     CHARACTER_NORMAL_ATTRS,
     CHARACTER_SKILL_ATTRS,
     DEFAULT_GROWTH_PARAMS,
@@ -30,17 +30,17 @@ from games.endfield.calc.core.config import (
 )
 
 # 曲线烘焙（录入 / BWIKI 同步共用）
-from games.endfield.calc.core.curve_baker import bake_character_curves, bake_weapon_curves
+from .core.curve_baker import bake_character_curves, bake_weapon_curves
 
 # 数据生成器
-from games.endfield.calc.core.data_generator import (
+from .core.data_generator import (
     generate_attributes,
     generate_character_attributes,
     generate_weapon_attributes,
 )
 
 # 正向计算公式
-from games.endfield.calc.damage.formula import (
+from .damage.formula import (
     calculate_bonus_attribute,
     calculate_growth_curve,
     calculate_skill_curve,
@@ -51,7 +51,7 @@ from games.endfield.calc.damage.formula import (
 )
 
 # 反向推导公式
-from games.endfield.calc.damage.inverse import (
+from .damage.inverse import (
     fit_attribute_formula,
     fit_formula,
     fit_skill_formula,
@@ -64,7 +64,7 @@ from games.endfield.calc.damage.inverse import (
 )
 
 # 伤害乘区计算
-from games.endfield.calc.multiplicative_zones import (
+from .multiplicative_zones import (
     AbilityBonusZone,
     AttributeMultiplierZone,
     AttributeZoneManager,
