@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """标准数据契约 — 四层数据模型的 TypedDict 定义。

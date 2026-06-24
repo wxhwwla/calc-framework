@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """配装搜索 API — 工作量预估/全量搜索/SSE 流式搜索/敌人数值/装备目录/搜索历史。"""
 

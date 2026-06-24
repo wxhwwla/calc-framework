@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """WASM golden 回归 — Python 基准 + 曲线物化一致性。"""
 

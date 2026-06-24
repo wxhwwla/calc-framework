@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """确认刷新去重：避免最小化/失焦等触发整页重绘。"""
 

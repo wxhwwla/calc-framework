@@ -89,6 +89,30 @@ jobs:
       - name: Lint check (ruff)
         run: python -m ruff check games/endfield/ framework/src/ web/backend/ scripts/ extensions/
 
+      - name: Check Python encoding declaration
+        run: |
+          python -c "
+          import os, sys
+          errors = []
+          exclude = {'.git', 'node_modules', '.tmp-audit-venv','.venv','__pycache__','dist','build','.eggs'}
+          for root, dirs, files in os.walk('.'):
+              dirs[:] = [d for d in dirs if d not in exclude]
+              for f in files:
+                  if not f.endswith('.py'):
+                      continue
+                  path = os.path.join(root, f)
+                  with open(path, encoding='utf-8') as fh:
+                      line1 = fh.readline()
+                      line2 = fh.readline()
+                  if 'coding' not in line1 and 'coding' not in line2:
+                      errors.append(path)
+          if errors:
+              for e in errors:
+                  print('FAIL: {} missing coding'.format(e))
+              sys.exit(1)
+          print('All .py files have encoding declaration')
+          "
+
       - name: Run endfield tests
         run: xvfb-run python -m pytest games/endfield/tests/ -q --tb=short --cov=games.endfield --cov-report=term-missing --cov-report=xml
 

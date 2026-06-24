@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索用的多技能加权评分配置（与快速预览共用倍率/次数语义）。"""

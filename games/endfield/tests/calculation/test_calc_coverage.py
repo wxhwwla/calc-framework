@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """覆盖 character_stats、healing、execute、imbalance 等 calc 模块。"""
 

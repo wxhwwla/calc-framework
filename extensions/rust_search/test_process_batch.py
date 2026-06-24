@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Test process + batch integration via real search pipeline."""
 
 import sys

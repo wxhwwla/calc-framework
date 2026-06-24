@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """批量录入角色配置（与 add_character 库分离，避免 import 时执行）。"""

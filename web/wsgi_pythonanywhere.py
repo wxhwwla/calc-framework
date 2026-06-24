@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 PythonAnywhere WSGI 入口（免费套餐：WSGI + 同步 API，不用裸 FastAPI app）。

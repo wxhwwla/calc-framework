@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """AI 智能推荐 API — 自然语言搜装 + AI 解释结果。"""
 

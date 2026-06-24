@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 ".calcpack I/O 工具 — 加载/解压/资源提取 + 实体 context 构建。"
 

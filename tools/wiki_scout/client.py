@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """通用 MediaWiki 客户端 — 支持任何 MediaWiki API。"""
 

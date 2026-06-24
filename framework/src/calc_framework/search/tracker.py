@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Top-N 结果追踪器 — 保留评分最高的 N 条记录。"""
 

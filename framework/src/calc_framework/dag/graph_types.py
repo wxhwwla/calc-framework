@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 图结构类型定义：变量、输出、子图、全图。"""

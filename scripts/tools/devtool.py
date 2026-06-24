@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 终末地计算器 — 开发者工具箱 CLI

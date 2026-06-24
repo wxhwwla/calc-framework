@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 docs/ 目录加载说明书内容到 HelpSection。"""
 

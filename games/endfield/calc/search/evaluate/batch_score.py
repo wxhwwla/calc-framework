@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 浏览器本地搜索 — 批量配装评分（含异常 / compose_damage_total parity）。"""
 

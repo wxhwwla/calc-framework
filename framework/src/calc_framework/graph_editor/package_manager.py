@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """包管理器 — 加载 JSON/ZIP 包，注册复合节点类型。"""
 

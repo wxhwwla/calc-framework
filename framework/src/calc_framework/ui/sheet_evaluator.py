@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ComputeSheet 求值逻辑 — 读取 user_input → 构建 context → 解析 outputs。
 

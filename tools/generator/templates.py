@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """品类模板管理器 — 发现、列举、加载适配器模板。"""
 
 from __future__ import annotations

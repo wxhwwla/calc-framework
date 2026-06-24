@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """数据浏览页签 — 查看角色、武器、装备 JSON 数据。"""

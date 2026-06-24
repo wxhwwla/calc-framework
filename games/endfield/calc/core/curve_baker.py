@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """等级曲线烘焙：录入与 BWIKI 同步共用的唯一接缝。"""

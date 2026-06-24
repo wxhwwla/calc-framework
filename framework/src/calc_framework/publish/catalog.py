@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Catalog 生成器 — 生成社区分享平台的静态 HTML 目录。"""
 

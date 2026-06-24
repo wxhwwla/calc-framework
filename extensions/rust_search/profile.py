@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Profile the batch pipeline breakdown. Measures time per component."""
 
 import sys

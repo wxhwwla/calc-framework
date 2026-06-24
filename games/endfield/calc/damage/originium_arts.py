@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """源石技艺强度（异常伤害乘区，NGA PART 02 §2.4）。"""
 

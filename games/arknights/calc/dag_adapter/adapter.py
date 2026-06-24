@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 适配器：将 DAG 引擎接入明日方舟伤害计算。"""
 

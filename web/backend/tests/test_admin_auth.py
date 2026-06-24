@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Admin Token 认证测试（Phase 0 Step 0.1）。"""
 

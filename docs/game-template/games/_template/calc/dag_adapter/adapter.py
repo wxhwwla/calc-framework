@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 适配器 — 调用框架 DAG 引擎执行计算并返回 SnapshotResult。
 

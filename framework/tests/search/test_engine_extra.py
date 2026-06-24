@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """SearchEngine 额外路径测试 — 持久化、进度回调、自定义键。"""
 

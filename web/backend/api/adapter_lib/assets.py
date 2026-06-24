@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """按适配器 ID 加载 layout / DAG / 导出用 data_files（配置包设计器 Web 版）。"""
 

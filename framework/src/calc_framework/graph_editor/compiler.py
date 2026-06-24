@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """GraphCompiler — 将 graph_editor 的 GraphDocument 编译为 DAGGraph。"""
 

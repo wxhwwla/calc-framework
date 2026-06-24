@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 ``SegmentCurveAdapter`` — 基于 ``CurveBlueprint`` 的游戏逆推适配器基类。

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """左侧节点面板 — 按分类列出可用的节点类型，支持拖拽创建。"""
 

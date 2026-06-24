@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """敌人对干员造成伤害（NGA PART 01 §1.12、PART 02 §2.6 等）。"""
 

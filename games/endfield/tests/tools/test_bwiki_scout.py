@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """BWIKI 侦察模块测试（纯函数与离线 fixture，不访问网络）。"""

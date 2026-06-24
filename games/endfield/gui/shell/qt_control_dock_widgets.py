@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """高级页控制栏：小部件类与异常矩阵构建器。"""
 

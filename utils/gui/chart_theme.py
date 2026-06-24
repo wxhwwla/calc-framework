@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """matplotlib 图表主题：暗色系列配色（PySide6 Fusion Dark）。"""

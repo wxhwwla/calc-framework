@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 通用公式反推引擎 — SPI（Service Provider Interface）框架。

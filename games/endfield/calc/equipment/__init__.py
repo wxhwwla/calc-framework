@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """equipment 子包 — 装备数据链路、词条、显示修正与裁剪。"""
 

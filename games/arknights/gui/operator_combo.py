@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """干员下拉搜索（QCompleter 子串匹配，对齐 Web Autocomplete）。"""
 

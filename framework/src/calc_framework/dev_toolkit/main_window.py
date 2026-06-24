@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """开发者工具箱主窗口 — 左侧导航 + 右侧 QStackedWidget 内容区。"""
 

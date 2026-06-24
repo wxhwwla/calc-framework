@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """``成长参数`` 多段存储的检测与实体物化（加载层双读）。"""
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """属性声明 Schema — 让适配器声明自己的属性结构，自动构建 DataContext。

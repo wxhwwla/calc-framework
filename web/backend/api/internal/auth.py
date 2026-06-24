@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 后端管理 Token 认证 — 含暴力破解防护。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """技力与终结技能量（NGA PART 04 节选）。"""
 

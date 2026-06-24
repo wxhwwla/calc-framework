@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """单技能搜索会话 — 流式任务 + 有界并行（线程/多进程）。"""
 

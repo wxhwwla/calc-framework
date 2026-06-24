@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DataContext 类型定义与工厂函数 — 单元测试。"""
 

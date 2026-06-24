@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """武器有条件特殊能力字段：特殊能力1 / 特殊能力2（兼容旧 特殊能力）。"""

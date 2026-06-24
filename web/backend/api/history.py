@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """计算历史 API（文件持久化，PA 重启不丢）。"""
 

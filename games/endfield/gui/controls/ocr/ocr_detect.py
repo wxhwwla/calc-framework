@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """单张截图 OCR — 供 Web `/api/ocr/detect` 调用。"""
 

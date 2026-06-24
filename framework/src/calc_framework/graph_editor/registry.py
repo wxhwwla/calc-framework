@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """节点类型注册表 — 管理所有可用的节点定义。"""
 

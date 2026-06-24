@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web GET /api/search/enemies 与 EnemyEvalParams 字段对齐。"""
 

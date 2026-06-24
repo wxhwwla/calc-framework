@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 Wiki 属性里程碑批量反推 ``成长参数``。"""
 

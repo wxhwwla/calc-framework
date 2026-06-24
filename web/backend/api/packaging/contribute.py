@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据贡献 API — 校验和暂存用户提交的 EntitySchema 数据。"""
 

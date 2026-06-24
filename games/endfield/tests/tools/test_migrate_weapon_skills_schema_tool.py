@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """迁移脚本 tools/migrate_weapon_skills_schema.py 行为测试。"""

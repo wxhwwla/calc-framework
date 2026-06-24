@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """将层 A 运行时数据同步为层 B 适配器快照（ADR-0023 Step 4.3）。
 

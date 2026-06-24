@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """内置主题预设 — 亮色/暗色/高对比度主题数据。"""
 

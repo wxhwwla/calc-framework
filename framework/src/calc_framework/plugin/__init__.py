@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """插件模块化系统 — 可插拔的游戏机制组件。
 

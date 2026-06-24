@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """明日方舟 ``成长参数.segments[]`` 加载物化。"""
 

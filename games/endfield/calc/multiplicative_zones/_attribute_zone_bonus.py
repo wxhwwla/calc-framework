@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """武器属性平值/百分比加成计算辅助函数（提取自 attribute_zone.py）。"""

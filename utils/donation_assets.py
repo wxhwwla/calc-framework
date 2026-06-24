@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """捐赠二维码路径解析（无 Qt 依赖，GUI / Web / WSGI 共用）。"""
 

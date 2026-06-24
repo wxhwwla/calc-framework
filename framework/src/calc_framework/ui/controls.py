@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """控件推断 — 根据 DAG variables 声明推断对应的 UI 控件类型。
 

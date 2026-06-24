@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """本地搜索服务器 zip 下载（FastAPI + WSGI 共用）。"""
 

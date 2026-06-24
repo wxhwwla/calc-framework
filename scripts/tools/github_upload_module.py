@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Push this repo to GitHub over SSH and bump scripts/_version.py when needed."""
 
@@ -966,30 +967,44 @@ def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
         "仅 ruff-format / mixed-line-ending / ruff-lint 自动修正时第 1 轮 Failed 属正常；"
         "ruff-lint Failed 且仍有 remaining 为代码错误，不会靠重试解决"
     )
+    batch_size = 100  # Windows 命令行长度限制
+
     for attempt in range(1, rounds + 1):
         files = _staged_file_list()
         if not files:
             return True
-        print(f"[信息] pre-commit 检查（第 {attempt}/{rounds} 轮，{len(files)} 个文件）…")
-        proc = subprocess.run(
-            ["pre-commit", "run", "--files", *files],
-            cwd=_repo_root(),
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        output = (proc.stdout or "") + (proc.stderr or "")
-        if proc.stdout:
-            print(proc.stdout, end="")
-        if proc.stderr:
-            print(proc.stderr, end="", file=sys.stderr)
-        if proc.returncode == 0:
+        n = len(files)
+        n_batches = (n + batch_size - 1) // batch_size
+        print(f"[信息] pre-commit 检查（第 {attempt}/{rounds} 轮，{n} 个文件，{n_batches} 批）…")
+
+        all_ok = True
+        combined_output = ""
+
+        for batch_idx in range(0, n, batch_size):
+            batch = files[batch_idx : batch_idx + batch_size]
+            proc = subprocess.run(
+                ["pre-commit", "run", "--files"] + batch,
+                cwd=_repo_root(),
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            output = (proc.stdout or "") + (proc.stderr or "")
+            combined_output += output
+            if proc.stdout:
+                print(proc.stdout, end="")
+            if proc.stderr:
+                print(proc.stderr, end="", file=sys.stderr)
+            if proc.returncode != 0:
+                all_ok = False
+
+        if all_ok:
             if attempt > 1:
                 print(f"[信息] pre-commit 第 {attempt} 轮已通过")
             return True
-        if _pre_commit_has_lint_errors(output):
+        if _pre_commit_has_lint_errors(combined_output):
             print("[错误] ruff-lint 未通过（代码问题，非 format/换行），请按上方报错修复")
             return False
         if attempt < rounds:
@@ -997,7 +1012,9 @@ def _run_pre_commit_on_staged(*, rounds: int = 2) -> bool:
                 f"[信息] pre-commit 第 {attempt} 轮：钩子已自动修正格式/换行，已重新 git add，继续第 {attempt + 1} 轮…"
             )
         if files:
-            run_git(["add", "--", *files], check=False)
+            for batch_idx in range(0, len(files), batch_size):
+                batch = files[batch_idx : batch_idx + batch_size]
+                run_git(["add", "--", *batch], check=False)
     print("[错误] pre-commit 未通过，commit 已取消")
     print("[提示] 修复 ruff 等问题后重新运行 python github_upload_module.py（无需 --no-bump）")
     return False

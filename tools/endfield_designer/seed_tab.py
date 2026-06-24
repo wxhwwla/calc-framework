@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据录入页签 — 角色/武器表单式录入，无需写代码。"""
 

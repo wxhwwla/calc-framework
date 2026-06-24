@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据写接口认证与隔离 CRUD 测试（Phase 2 Step 2.4）。"""
 

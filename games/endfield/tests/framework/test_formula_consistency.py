@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 版 15 乘区函数 vs 本地引擎一致性测试。
 

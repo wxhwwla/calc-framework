@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """角色基础属性派生（NGA PART 04 §4.2）。"""
 

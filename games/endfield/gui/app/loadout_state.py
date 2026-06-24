@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 当前配装快照：从选择面板读取一次，供确认签名、预设、全量搜索共用。

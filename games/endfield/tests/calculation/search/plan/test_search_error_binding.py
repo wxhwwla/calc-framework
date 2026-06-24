@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """搜索失败回调须正确绑定异常文案（回归：except 变量被清除）。"""

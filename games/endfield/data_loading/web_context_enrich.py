@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 配装 context  enrichment：装备词条 + manual_buff + 额外暴击/技能倍率。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """简单伤害计算适配器 — DAG 表达式自定义函数。"""
 

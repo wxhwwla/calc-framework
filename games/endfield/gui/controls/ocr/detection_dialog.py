@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """截图识装检测对话框 — 选择截图文件夹 → TorchVision 检测 + OCR 识别 → 映射 → 填入计算器。"""
 

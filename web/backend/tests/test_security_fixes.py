@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """CodeQL / Dependabot 安全修复回归测试。"""
 

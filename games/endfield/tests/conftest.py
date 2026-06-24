@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """pytest 全局夹具：缓存清理、慢测/集成测分层、收集阶段跳过重型模块。"""
 

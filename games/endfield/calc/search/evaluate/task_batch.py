@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """search_job 路径 Rust 批量评估（摊销 FFI，与 make_loadout_task_evaluator 单技能 parity）。"""
 

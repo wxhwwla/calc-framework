@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ActionsMixin — 终末地伤害计算主窗口事件处理、计算、搜索与对话框。
 

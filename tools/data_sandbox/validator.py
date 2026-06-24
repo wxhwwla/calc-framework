@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Schema 校验器 — 使用 data_pipeline 的 schema_check 验证 JSON 数据。
 

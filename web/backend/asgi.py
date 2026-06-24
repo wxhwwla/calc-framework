@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """PythonAnywhere ASGI 入口 — 替代直接 uvicorn main:app"""
 

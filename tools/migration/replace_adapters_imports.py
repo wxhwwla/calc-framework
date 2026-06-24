@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Replace games.endfield -> games.endfield in all .py files outside calc-engine/ (moved to tools/)."""
 

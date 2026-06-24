@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """通用并行执行器 — 支持取消、进度回调、Top-N 追踪。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """AK 成长参数批量压缩与段曲线解析测试。"""
 

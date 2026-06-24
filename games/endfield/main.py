@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 终末地伤害计算器 - Calc Framework（通用游戏计算框架）游戏适配包

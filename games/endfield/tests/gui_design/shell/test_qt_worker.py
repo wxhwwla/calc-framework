@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """CalcWorker 单元测试（直接调用 _run 避免 QThread）。"""
 

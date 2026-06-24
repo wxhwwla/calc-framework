@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc-engine/ -> calc_engine/ in all text files (skip temp scripts and calc_engine/ dir itself)."""
 

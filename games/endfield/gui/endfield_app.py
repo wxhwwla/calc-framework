@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """EndfieldApp — 终末地伤害计算主窗口（主骨架）。
 

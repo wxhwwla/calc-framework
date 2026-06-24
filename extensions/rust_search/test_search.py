@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Quick search test to verify Python path works."""
 
 import os

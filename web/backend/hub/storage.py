@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Calc Hub 存储层：SQLite 存储包元数据 + 文件系统存储包文件。"""
 

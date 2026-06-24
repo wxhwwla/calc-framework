@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 后端入口 — FastAPI 应用实例 + 路由注册 + 全局中间件/异常处理器 / 静态文件挂载。"""
 

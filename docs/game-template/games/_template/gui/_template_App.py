@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 # ruff: noqa: N999 — 模板文件使用 _template 前缀命名，是设计意图
 """TEMPLATE（{Game}）桌面 GUI — ComputeSheet 声明式面板示例。

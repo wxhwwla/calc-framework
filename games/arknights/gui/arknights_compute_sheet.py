@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """明日方舟 ComputeSheet 工厂与上下文同步。
 

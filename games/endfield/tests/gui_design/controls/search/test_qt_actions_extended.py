@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """_build_tree_items 物理/法术异常分支 + SearchWorker/SearchResultsDialog 测试。"""
 

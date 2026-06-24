@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """配装最终攻击力求值：GUI 乘区快照与全量搜索共用 seam。"""

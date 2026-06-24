@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """帮助文档 — 菜单、操作、快捷键、文件、配置等说明。"""
 

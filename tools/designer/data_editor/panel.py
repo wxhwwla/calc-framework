@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据录入面板 — 按实体类型分 tab 展示，字段级查看/编辑。
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """连击增伤层数表（NGA PART 01 §1.14）。"""
 

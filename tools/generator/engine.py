@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """计算器生成引擎 — 基于模板 + 用户声明的变量/公式步骤/输出 → 生成完整适配器包文件。"""
 

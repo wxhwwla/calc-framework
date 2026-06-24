@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """pytest 配置：加入仓库根路径 + 控制台进度指示器。"""
 

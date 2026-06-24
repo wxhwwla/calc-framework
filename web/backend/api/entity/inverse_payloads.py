@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 多段逆推 payload — SegmentCurveEngine / AK 里程碑 / 终末地兼容层。"""
 

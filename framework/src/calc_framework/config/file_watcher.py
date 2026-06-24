@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """单文件监视器 — 通过 mtime 轮询检测文件变化。
 

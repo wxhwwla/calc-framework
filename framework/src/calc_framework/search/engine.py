@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """通用搜索引擎抽象 — SearchEngine ABC + SearchConfig。
 

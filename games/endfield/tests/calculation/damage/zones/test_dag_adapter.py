@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 适配器：将 DAG 引擎接入现有 zone_snapshot 计算链的测试。"""

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """手动 Buff / 异常状态矩阵 / 消耗品预设 API。"""
 

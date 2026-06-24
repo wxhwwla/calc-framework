@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """PySide6 增强工具弹窗：计算历史 / 多方案对比 / 伤害仪表盘。"""

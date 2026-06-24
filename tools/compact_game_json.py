@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """将 characters.json / weapons.json 中的等级数组压缩为 ``成长参数``。"""
 

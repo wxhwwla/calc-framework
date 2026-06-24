@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """出站 HTTP 安全封装 — SSRF 校验与固定路径重建。
 

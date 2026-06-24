@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """PySide6 模块冒烟测试：仅验证导入，不启动 QApplication。"""

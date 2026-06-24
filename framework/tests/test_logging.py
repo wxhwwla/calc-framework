@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """日志模块测试 — setup_logging, get_logger, set_level, _resolve_level。"""
 

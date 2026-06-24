@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """法术异常/爆发伤害计算（导电/腐蚀/燃烧/冻结 + 同属性爆发）。"""
 

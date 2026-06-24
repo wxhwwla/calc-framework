@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 数据设计器 — 多游戏 profile（对齐 tools/designer/data_editor/profiles.py）。"""
 

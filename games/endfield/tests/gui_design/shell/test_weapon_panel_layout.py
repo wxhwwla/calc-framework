@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """武器技能面板：标题格式与 bonus 属性提取顺序（无 GUI）。"""

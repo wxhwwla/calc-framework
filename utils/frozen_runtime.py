@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """PyInstaller 冻结 exe 运行时能力与分阶段恢复（须在 rust_bridge 导入前调用）。
 

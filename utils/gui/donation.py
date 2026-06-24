@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """共享捐赠组件 — 对话框 + 内嵌 widget。
 

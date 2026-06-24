@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """腐蚀持续降抗（NGA PART 02 §2.2）。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """SaaS 管理 API — API Key 管理 + 速率限制 + 用量统计。"""
 

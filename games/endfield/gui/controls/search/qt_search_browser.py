@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """历史搜索记录浏览对话框（search_output/ SQLite 快速搜装）。"""

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """布局编辑器 CLI — 从 DAG 编排 layout.json。
 

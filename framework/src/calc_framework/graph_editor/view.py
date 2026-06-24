@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """自定义视图 — 中键平移、滚轮缩放、接收节点面板拖放。"""
 

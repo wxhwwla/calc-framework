@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """变量 Schema 校验 — 根据 DAG 声明的变量检查 DataContext 的完整性。"""

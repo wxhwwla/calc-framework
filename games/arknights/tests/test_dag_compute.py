@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 计算端到端单元测试 — 使用真实 arknights DAG。
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """帮助文档内容 — 集中管理所有使用说明文本。"""
 

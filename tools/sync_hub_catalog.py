@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 framework/adapters 同步 web/hub/catalog.json 适配器条目（保留 samples 下载链）。"""
 

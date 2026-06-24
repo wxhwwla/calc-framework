@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据录入 ETL 工具链：将原始数据（CSV / 旧 JSON）转换为标准 schema。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 层实体格式化 — compact / runtime / raw 与计算前物化。"""
 

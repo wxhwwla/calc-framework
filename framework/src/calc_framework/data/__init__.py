@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据引擎子包 — DataContext、加载器接口、属性 Schema、变量校验。"""
 

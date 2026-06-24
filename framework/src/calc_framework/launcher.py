@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """游戏选择器启动器 — 命令行选择适配包并启动 ComputeSheet。"""
 

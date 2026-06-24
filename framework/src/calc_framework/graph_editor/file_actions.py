@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """文件操作 — 从编辑器中收集/加载状态，保存/打开 graph.json 文件。"""
 

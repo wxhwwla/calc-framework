@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Wiki Scout — 通用 Wiki 数据采集工具。
 

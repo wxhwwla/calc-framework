@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ShellMixin — 终末地伤害计算主窗口面板创建与布局。
 

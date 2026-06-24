@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Rust 搜索加速桥接层 — 无缝替代 Python evaluate_search_damage。
 

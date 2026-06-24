@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """敌方参数 → DamageContext 字段的统一接缝（预览/搜索/快照共用）。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """UI 布局生成器 — 从属性/输出列表生成 layout.json。"""
 
 from __future__ import annotations

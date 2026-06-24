@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """测试 DAG 计算基本流程 — 验证 compute_snapshot_with_dag 能否正常调用。
 

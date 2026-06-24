@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """主题管理器 — 多主题定义 + Qt 样式表渲染。
 

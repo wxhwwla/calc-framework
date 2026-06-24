@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 framework/adapters 导出示例 .calcpack（fps / moba / card_rpg / simple / multi-zone）。
 

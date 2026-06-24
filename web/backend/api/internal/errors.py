@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web API 异常响应安全封装 — 避免生产环境泄露内部路径与堆栈。"""
 

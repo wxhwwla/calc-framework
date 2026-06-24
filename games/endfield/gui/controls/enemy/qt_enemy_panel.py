@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """敌方参数面板 — 插件敌人下拉 + 防御/抗性/失衡参数微调。"""
 

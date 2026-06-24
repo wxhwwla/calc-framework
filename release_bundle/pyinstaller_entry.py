@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """在规避 WMI 卡死后启动 PyInstaller（供 ``build.py`` 子进程调用）。"""

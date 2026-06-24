@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据沙箱 CLI — 在隔离环境中测试自定义游戏数据的命令行工具。
 

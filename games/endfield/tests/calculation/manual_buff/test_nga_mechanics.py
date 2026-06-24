@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """NGA 机制导论对照回归（E1/E2/E4/E5/G1/G2）。"""
 

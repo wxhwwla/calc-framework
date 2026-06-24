@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索预估文案（无 CustomTkinter，供单测与 search_controls 共用）。"""

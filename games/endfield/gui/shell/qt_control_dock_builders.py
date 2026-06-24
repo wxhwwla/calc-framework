@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """高级页控制栏：搜索列与多技能列构建器（BuilderMixin）。"""
 

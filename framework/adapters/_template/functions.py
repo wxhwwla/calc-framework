@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 自定义函数 — DAG 表达式中通过 expr 节点调用的纯函数。
 

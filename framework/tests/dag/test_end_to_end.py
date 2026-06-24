@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """端到端验证：用真实伤害公式验证 GraphCompiler + DAGService 流水线。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """插件管理器对话框 — 导入/打包/查看插件。"""
 

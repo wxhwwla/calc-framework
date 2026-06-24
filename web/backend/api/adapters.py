@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """适配器元数据 API — 列表/元信息/layout/DAG/数据摘要/打包导出。"""
 

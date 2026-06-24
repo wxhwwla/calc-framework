@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """碰撞检测模块 — 检测 QGraphicsItem 之间的矩形重叠。

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """块级缓存端到端测试 — 使用真实 endfield_full.dag.json。"""
 

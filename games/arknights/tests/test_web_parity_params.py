@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """桌面/Web 参数语义对齐测试（DAG 百分点制）。"""
 

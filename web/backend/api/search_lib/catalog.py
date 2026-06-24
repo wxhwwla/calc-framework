@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """搜索请求 catalog 解析 — 服务端加载武器/装备，替代客户端全量 POST。"""
 

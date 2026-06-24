@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """GraphCompiler 测试：graph_editor 格式 → DAGGraph 格式。"""

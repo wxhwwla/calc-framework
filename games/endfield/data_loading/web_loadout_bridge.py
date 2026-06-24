@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 请求体 → LoadoutState（与桌面 GUI 共用预览/快照接缝）。"""
 

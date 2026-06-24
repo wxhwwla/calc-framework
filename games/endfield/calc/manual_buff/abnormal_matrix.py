@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """物理/法术异常手动次数矩阵规格（GUI ↔ 计算键 ``异常:L{n}``）。"""
 

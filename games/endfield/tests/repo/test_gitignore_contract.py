@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """仓库 .gitignore 应覆盖常见本地产物，且不含错误条目。"""

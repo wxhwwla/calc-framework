@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据加载测试 — load_operators_map 与数据完整性验证。"""
 

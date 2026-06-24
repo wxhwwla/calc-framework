@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """使用 concurrent.futures 并行评估多条配装方案（与全量搜索线程池语义一致）。"""

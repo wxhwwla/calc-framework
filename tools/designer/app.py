@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """开发者工具主窗口 — 三页签：数据录入 / 布局编辑 / 主题与导出。
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """测试 skill_parser — 技能倍率/连发数/条件/治疗/伤害类型解析。"""
 

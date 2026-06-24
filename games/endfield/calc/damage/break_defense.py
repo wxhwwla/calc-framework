@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """破防 debuff 与物理异常区分（NGA PART 02）。
 

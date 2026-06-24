@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """适配包热加载监视器 — 文件变化时自动重载。"""
 

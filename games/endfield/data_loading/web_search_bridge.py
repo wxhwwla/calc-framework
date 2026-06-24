@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 搜索请求归一化（与桌面 GUI SearchJobInputs 对齐）。"""
 

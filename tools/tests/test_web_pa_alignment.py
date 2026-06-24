@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
 from api.internal.download_client import build_client_download, find_local_backend_zip

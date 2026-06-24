@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 ``段曲线`` 解析干员指定精英/等级的基础属性。"""
 

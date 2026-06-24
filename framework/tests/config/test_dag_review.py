@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """终末地 15 乘区 DAG 完整性审查脚本。
 

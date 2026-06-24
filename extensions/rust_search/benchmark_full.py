@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """完整基准：Python vs Rust 单次 vs Rust 批量 + 缓存验证。"""
 
 import importlib

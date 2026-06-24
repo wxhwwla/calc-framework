@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """终末地伤害计算器 — 桌面 GUI 子包。
 

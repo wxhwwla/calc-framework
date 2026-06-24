@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """批量录入示例武器（与 add_weapon 库分离，避免 import 时执行）。"""

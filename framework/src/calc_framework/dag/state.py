@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 增量求值状态：跨求值调用追踪节点值变化。"""
 

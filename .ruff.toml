@@ -6,6 +6,8 @@ line-length = 120
 [lint]
 select = ["E", "F", "W", "I", "N", "UP", "SIM", "RUF"]
 ignore = [
+    "UP009",   # 保留 # -*- coding: utf-8 -*-（中文 Windows + PyInstaller 依赖此声明）
+    "RUF009",  # 允许 dataclass 默认值中的函数调用（字段始终是不可变）
     "RUF001",  # 允许中文全角字符
     "RUF002",  # 允许中文全角标点
     "RUF003",  # 允许注释使用中文全角标点

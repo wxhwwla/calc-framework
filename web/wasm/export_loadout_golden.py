@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """导出 evaluate-loadout golden 夹具（Python 基准 → TS/WASM 对照）。"""
 

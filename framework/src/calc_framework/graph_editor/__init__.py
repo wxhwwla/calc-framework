@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 图编辑器 — 可视化编辑、复合节点、包管理、编译导出。
 

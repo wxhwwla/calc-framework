@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """治疗量计算（NGA PART 04 §4.1）。"""
 

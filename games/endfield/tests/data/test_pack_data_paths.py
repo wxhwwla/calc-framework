@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """打包/开发模式下游戏数据路径可解析（打包冒烟的轻量替代）。"""

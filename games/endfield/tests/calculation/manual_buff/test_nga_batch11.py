@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """NGA 第十一批：EnemyEvalParams Web 接缝、逐 hit 破防、搜索请求组装。"""
 

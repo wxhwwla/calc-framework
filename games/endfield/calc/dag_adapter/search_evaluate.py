@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 桥接函数：搜索评估用 DAG 引擎替代本地引擎计算伤害。
 

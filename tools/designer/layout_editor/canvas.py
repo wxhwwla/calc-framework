@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """布局编辑器画布 — 拖拽式布局编辑 + 乘区变量映射。
 

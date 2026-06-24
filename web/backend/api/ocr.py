@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """OCR 图片识别 API — 上传截图后调用 OCR 引擎检测。"""
 

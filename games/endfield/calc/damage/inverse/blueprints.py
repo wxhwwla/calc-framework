@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """终末地逆推曲线蓝图（N=1 / 多技能段）。"""
 

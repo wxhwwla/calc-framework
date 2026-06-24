@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 ``属性里程碑`` 批量反推干员 ``成长参数.segments[]`` 并写回 parsed JSON。"""
 

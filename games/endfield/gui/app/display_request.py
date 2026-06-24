@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """确认刷新与右侧乘区展示的统一输入（LoadoutState + catalog + 武器候选）。"""

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """装备属性词条解析（面板词条 → 伤害效果 / 平铺属性）。"""
 

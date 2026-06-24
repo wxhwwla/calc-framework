@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索评估上下文（角色/武器/等级，供配装逐条重算面板）。"""

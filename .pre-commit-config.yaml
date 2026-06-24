@@ -40,6 +40,47 @@ repos:
       - id: text-unicode-replacement-char
         exclude: "docs/.*\\.md"
 
+  # ── 本地策略检查 ──
+  - repo: local
+    hooks:
+      - id: python-encoding-declaration
+        name: Check Python encoding declaration
+        entry: |
+          python -c "
+          import sys
+          errors = []
+          for f in sys.argv[1:]:
+              with open(f, encoding='utf-8') as fh:
+                  line1 = fh.readline()
+                  line2 = fh.readline()
+                  if 'coding' not in line1 and 'coding' not in line2:
+                      errors.append(f)
+          if errors:
+              for e in errors:
+                  print('{}: missing coding'.format(e))
+              sys.exit(1)
+          "
+        language: python
+        types: [python]
+
+      - id: python-line-count
+        name: Check Python file line count
+        entry: |
+          python -c "
+          import sys
+          for f in sys.argv[1:]:
+              with open(f, encoding='utf-8') as fh:
+                  n = len(fh.readlines())
+              if n > 400:
+                  print('[WARN] {}: {} lines (target <=400, harcap 500)'.format(f, n))
+          "
+        language: python
+        types: [python]
+        exclude: |
+          (?x)(
+            scripts/_version\.py
+          )
+
   # detect-secrets — 与 CI security-audit.yml 共用 baseline
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0

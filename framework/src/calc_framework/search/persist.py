@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """通用 SQLite 搜索持久化 — 续跑与去重恢复。
 

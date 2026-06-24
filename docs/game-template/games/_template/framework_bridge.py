@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """框架桥接入口 — 导入 calc-framework 核心模块。
 

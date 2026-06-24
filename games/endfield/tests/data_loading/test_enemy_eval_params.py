@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """覆盖 EnemyEvalParams 数据类和工厂方法。"""
 

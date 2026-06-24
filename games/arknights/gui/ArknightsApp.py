@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ruff: noqa: N999
 # SPDX-License-Identifier: AGPL-3.0
 """单片式 ArknightsApp — 明日方舟伤害计算主窗口。

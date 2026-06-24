@@ -58,7 +58,11 @@
 .zencoder/
 agent/
 data/
+!framework/**/data/
+!games/**/data/
+!web/**/data/
 skills/
+!games/**/skills/
 
 # Skills 锁文件
 skills-lock.json

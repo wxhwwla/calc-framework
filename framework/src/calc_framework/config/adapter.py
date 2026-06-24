@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """适配包加载器 — 从适配包目录读取 meta.json 并组装 DAG 服务。"""

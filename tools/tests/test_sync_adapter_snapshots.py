@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """game_data_paths 与 sync_adapter_snapshots 单元测试。"""
 

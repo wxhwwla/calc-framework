@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """干员目录加载与筛选（Web API / 桌面 GUI 共用）。"""
 

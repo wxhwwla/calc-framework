@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """打包模式下搜索导出目录应落在 exe 同级，而非系统临时目录。"""

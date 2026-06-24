@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """全量搜索多进程 worker — 模块级可 pickle 入口，供 ProcessPoolExecutor 使用。
 

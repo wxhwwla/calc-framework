@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """统一日志模块 — 集中配置格式、级别、输出目标。
 

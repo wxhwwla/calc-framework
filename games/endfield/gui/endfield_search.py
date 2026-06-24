@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ActionsSearchMixin — 终末地伤害计算搜索相关事件处理。
 

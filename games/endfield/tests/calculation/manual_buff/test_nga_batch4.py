@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """NGA 第四批：失衡节点/快速打进、干员承伤抗性。"""
 
