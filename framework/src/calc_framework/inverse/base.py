@@ -306,8 +306,17 @@ class FloorFormulaFitter(FormulaFitter):
         if num_levels is None:
             num_levels = len(data)
 
-        if num_levels < 2:
-            return FitResult(max_error=float("inf"), is_exact=False)
+        if num_levels == 0:
+            return FitResult(max_error=0.0, is_exact=False)
+
+        if num_levels == 1:
+            base = float(data[0])
+            return FitResult(
+                params={"base": base, "growth": 0.0, "divisor": 1, "offset": 0.0},
+                computed=[base],
+                max_error=0.0,
+                is_exact=True,
+            )
 
         divisor_range = options.get("divisor_range", (1, 501))
 

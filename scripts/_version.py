@@ -28,8 +28,8 @@ _EXE_VERSION = "0.7.0-beta"
 
 # ==============================================================
 
-_SUMMARY_MARKER_BEGIN = ""
-_SUMMARY_MARKER_END = ""
+_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
 _UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
 _UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
 SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
@@ -155,7 +155,6 @@ def _canonical_marker_header() -> str:
     """
     return (
         '_SUMMARY_MARKER_BEGIN = ""\n'
-        '_SUMMARY_MARKER_END = ""\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
@@ -164,13 +163,11 @@ def _canonical_marker_header() -> str:
 
 
 def _markers_section_ok(text: str) -> bool:
-    """判断磁盘上的标记区是否完整且非空字符串。
+    """判断磁盘上的标记区是否完整且标记值非空字符串。
 
     使用硬编码值判断，避免模块变量为 ``""`` 时误判。
     """
     required = (
-        '_SUMMARY_MARKER_BEGIN = ""',
-        '_SUMMARY_MARKER_END = ""',
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",

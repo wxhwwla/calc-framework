@@ -413,3 +413,34 @@ $env:HTTP_PROXY = "http://host.docker.internal:端口"
 2. `framework-ci.yml` — 框架核心 + 基准测试
 3. `web-ci.yml` — Web 前端 tsc + eslint + build
 4. `security-audit.yml` — detect-secrets + pip-audit + npm audit
+
+---
+
+## 十二、自动化测试框架（scripts/auto_test/）
+
+三层自动化测试框架，用于验证 Web 前端、桌面应用、打包后 exe 的功能完整性：
+
+```powershell
+# 安装依赖
+pip install -r scripts/auto_test/requirements.txt
+
+# 一键运行所有测试
+python scripts/auto_test/run_all.py
+
+# 只运行某一层
+python scripts/auto_test/web_test.py        # Web 测试（Cypress E2E）
+python scripts/auto_test/desktop_test.py    # 桌面应用测试（pywinauto）
+python scripts/auto_test/packaged_test.py   # 打包后 exe 测试
+
+# 跳过某一层
+python scripts/auto_test/run_all.py --skip-web
+python scripts/auto_test/run_all.py --skip-desktop
+python scripts/auto_test/run_all.py --skip-packaged
+python scripts/auto_test/run_all.py --skip-build
+```
+
+输出：
+- 截图：`scripts/auto_test/screenshots/{web,desktop,packaged}/`
+- 报告：`scripts/auto_test/screenshots/summary_report.md`
+
+详见 `scripts/auto_test/README.md` 和 `docs/会话接续手册.md` §7。

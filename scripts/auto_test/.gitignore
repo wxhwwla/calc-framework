@@ -1,0 +1,11 @@
+# 截图文件
+screenshots/*.png
+screenshots/**/*.png
+
+# 报告文件（可选保留）
+# screenshots/*.md
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo

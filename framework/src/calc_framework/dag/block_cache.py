@@ -95,7 +95,7 @@ class BlockCache:
     def _is_expired(self, entry: BlockCacheEntry, now: float) -> bool:
         if self._ttl_seconds is None:
             return False
-        return now - entry.created_at > self._ttl_seconds
+        return now - entry.last_access > self._ttl_seconds
 
     def _evict_if_needed(self) -> None:
         if self._max_entries is None:
