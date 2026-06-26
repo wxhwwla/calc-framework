@@ -9,10 +9,6 @@ use crate::zones;
 const COMBO_STACKS_SKILL: [f64; 4] = [0.30, 0.45, 0.60, 0.75];
 const COMBO_STACKS_ULTIMATE: [f64; 4] = [0.20, 0.30, 0.40, 0.50];
 
-/// 破防每层易伤（与 break_defense.py 一致）
-const BREAK_DEFENSE_PER_STACK: f64 = 0.08;
-const MAX_BREAK_DEFENSE_STACKS: i32 = 4;
-
 /// 伤害评估结果（浮点部分）。
 #[derive(Clone, Debug)]
 pub struct EvalResult {
@@ -57,12 +53,6 @@ fn combo_zone_multiplier(skill_type: &str, stacks: i32, flat_legacy_bonus: f64) 
     }
 }
 
-/// 破防层数 → 易伤值。
-fn vulnerability_from_break_defense(stacks: i32) -> f64 {
-    let s = stacks.max(0).min(MAX_BREAK_DEFENSE_STACKS);
-    BREAK_DEFENSE_PER_STACK * s as f64
-}
-
 /// 核心评估函数：接收预处理后的效果列表，累加乘区 → 连乘 → 返回各乘区值。
 ///
 /// # 参数说明
@@ -88,7 +78,7 @@ pub fn evaluate_search_damage(
     imbalance_damage_bonus: f64,
     other_damage_bonus: f64,
     combo_stacks: i32,
-    break_defense_stacks: i32,
+    _break_defense_stacks: i32, // 效果列表已包含破防易伤，此参数保留 API 兼容
     base_damage_bonus: f64,
     effects: &[(String, f64)],
     crit_mode: &str,
@@ -140,12 +130,7 @@ pub fn evaluate_search_damage(
         }
     }
 
-    // ---- 3. 破防层数 → 易伤 ----
-    if break_defense_stacks > 0 {
-        vulnerability += vulnerability_from_break_defense(break_defense_stacks);
-    }
-
-    // ---- 4. 庇护取 max ----
+    // ---- 3. 庇护取 max ----
     let shelter = 1.0 - shelter_max;
 
     // ---- 5. 连击增伤（abnormal pipeline 跳过） ----
@@ -319,12 +304,14 @@ mod tests {
 
     #[test]
     fn test_break_defense_vulnerability() {
+        // 破防易伤现在通过效果列表传入（Python 侧 damage_effects_from_break_defense）
+        let effects = eff(&[("易伤", 0.24)]); // 3 层 × 0.08
         let r = evaluate_search_damage(
             1000.0, 1.0, "战技", false, false,
             0.0, 0.0, 0.0, 1.3, 0.05, 0.5, 0.0, 0.0, 0.0, 0.0,
-            0, 3, 0.0, &[], "non_crit", "normal",
+            0, 0, 0.0, &effects, "non_crit", "normal",
         );
-        // 1000 * (1 + 0.08*3) = 1240
+        // 1000 * (1 + 0.24) = 1240
         assert!((r.final_damage - 1240.0).abs() < 1e-9);
     }
 

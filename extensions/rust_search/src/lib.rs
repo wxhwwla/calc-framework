@@ -10,6 +10,8 @@
 //! - **逐组合验证**：Python 与 Rust 版输出逐值对比，误差 ≤ 1e-9
 //! - **渐进式迁移**：先从纯算术的 15 乘区开始，逐步扩展
 
+mod batch_eval;
+mod effect_id;
 mod evaluate;
 mod inverse;
 mod zones;
@@ -299,12 +301,70 @@ fn fit_floor_formula_py(
     Ok(result.map(|r| (r.growth, r.divisor, r.offset, r.scale_factor, r.max_error, r.is_exact)))
 }
 
+/// SoA 批量评估：零 Python 循环，一次 FFI 调用处理 N 个任务。
+///
+/// 效果类型已预编译为整数 ID（由 Python 侧映射），Rust 内部用整数 match。
+/// 技能类型和暴击模式也已预编译为整数 ID。
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn evaluate_search_batch_soa(
+    final_attacks: Vec<f64>,
+    skill_multipliers: Vec<f64>,
+    skill_type_ids: Vec<u8>,
+    is_true_damages: Vec<bool>,
+    is_unbalanceds: Vec<bool>,
+    enemy_defenses: Vec<f64>,
+    enemy_resistances: Vec<f64>,
+    ignore_resistances: Vec<f64>,
+    imbalance_vulnerability_coeffs: Vec<f64>,
+    crit_rates: Vec<f64>,
+    crit_damages: Vec<f64>,
+    damage_type_bonuses: Vec<f64>,
+    skill_type_bonuses: Vec<f64>,
+    imbalance_damage_bonuses: Vec<f64>,
+    other_damage_bonuses: Vec<f64>,
+    combo_stacks_list: Vec<i32>,
+    break_defense_stacks_list: Vec<i32>,
+    base_damage_bonuses: Vec<f64>,
+    effect_ids_batch: Vec<Vec<u8>>,
+    effect_values_batch: Vec<Vec<f64>>,
+    crit_mode_ids: Vec<u8>,
+    is_abnormals: Vec<bool>,
+) -> PyResult<Vec<f64>> {
+    let input = batch_eval::BatchInput {
+        final_attacks: &final_attacks,
+        skill_multipliers: &skill_multipliers,
+        skill_type_ids: &skill_type_ids,
+        is_true_damages: &is_true_damages,
+        is_unbalanceds: &is_unbalanceds,
+        enemy_defenses: &enemy_defenses,
+        enemy_resistances: &enemy_resistances,
+        ignore_resistances: &ignore_resistances,
+        imbalance_vulnerability_coeffs: &imbalance_vulnerability_coeffs,
+        crit_rates: &crit_rates,
+        crit_damages: &crit_damages,
+        damage_type_bonuses: &damage_type_bonuses,
+        skill_type_bonuses: &skill_type_bonuses,
+        imbalance_damage_bonuses: &imbalance_damage_bonuses,
+        other_damage_bonuses: &other_damage_bonuses,
+        combo_stacks_list: &combo_stacks_list,
+        break_defense_stacks_list: &break_defense_stacks_list,
+        base_damage_bonuses: &base_damage_bonuses,
+        effect_ids_batch: &effect_ids_batch,
+        effect_values_batch: &effect_values_batch,
+        crit_mode_ids: &crit_mode_ids,
+        damage_pipelines: &is_abnormals,
+    };
+    Ok(batch_eval::evaluate_batch(&input))
+}
+
 /// Python 模块注册。
 #[pymodule]
 fn rust_search(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compute_15_zone_damage, m)?)?;
     m.add_function(wrap_pyfunction!(evaluate_search_damage, m)?)?;
     m.add_function(wrap_pyfunction!(evaluate_search_damage_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(evaluate_search_batch_soa, m)?)?;
     m.add_function(wrap_pyfunction!(fit_floor_formula_py, m)?)?;
     m.add_class::<PyDamageEvalResult>()?;
     Ok(())

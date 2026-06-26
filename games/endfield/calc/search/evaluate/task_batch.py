@@ -118,7 +118,7 @@ def make_loadout_task_evaluator_batch(
 
         return _fallback
 
-    from extensions.rust_search.python.rust_bridge import evaluate_search_damage_batch
+    from extensions.rust_search.python.rust_bridge import evaluate_search_batch_soa
 
     def _batch_eval(tasks: list[OptimizerTask]) -> list[LoadoutScore]:
         if not tasks:
@@ -133,7 +133,7 @@ def make_loadout_task_evaluator_batch(
             )
             for task in tasks
         ]
-        rs_results = evaluate_search_damage_batch(params)
+        rs_results = evaluate_search_batch_soa(params)
         scores: list[LoadoutScore] = []
         for task, rs in zip(tasks, rs_results):
             skill_damage = float(rs.final_damage if hasattr(rs, "final_damage") else rs)
