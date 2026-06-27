@@ -172,6 +172,10 @@ web/backend/api/.admin_data/
 # 性能基准测试产物
 .benchmarks/
 
+# 图编辑器诊断/测试脚本
+framework/packages/_test*.py
+framework/packages/_diag*.py
+
 # 覆盖率报告
 coverage.xml
 

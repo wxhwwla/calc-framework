@@ -1,0 +1,83 @@
+{
+  "schema_version": "calc-graph-v1",
+  "name": "未命名",
+  "description": "",
+  "external_variables": {},
+  "nodes": [
+    {
+      "id": "node_4b5aabbd",
+      "type": "binary",
+      "label": "二元运算",
+      "position": {
+        "x": -240.0,
+        "y": -320.0
+      },
+      "op": "*"
+    },
+    {
+      "id": "node_d69e9b24",
+      "type": "user_input",
+      "label": "输入2",
+      "position": {
+        "x": -440.0,
+        "y": -280.0
+      }
+    },
+    {
+      "id": "node_bc44c2bc",
+      "type": "user_input",
+      "label": "输入1",
+      "position": {
+        "x": -440.0,
+        "y": -360.0
+      },
+      "config": {
+        "default": 10.0
+      }
+    },
+    {
+      "id": "node_89f40416",
+      "type": "output",
+      "label": "输出标记",
+      "position": {
+        "x": -40.0,
+        "y": -320.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "",
+      "from_node": "node_bc44c2bc",
+      "from_port": 0,
+      "to_node": "node_4b5aabbd",
+      "to_port": 0
+    },
+    {
+      "id": "",
+      "from_node": "node_d69e9b24",
+      "from_port": 0,
+      "to_node": "node_4b5aabbd",
+      "to_port": 1
+    },
+    {
+      "id": "",
+      "from_node": "node_4b5aabbd",
+      "from_port": 0,
+      "to_node": "node_89f40416",
+      "to_port": 0
+    }
+  ],
+  "layout": {
+    "sections": [
+      {
+        "id": "outputs",
+        "title": "输出",
+        "output_nodes": [
+          "node_89f40416"
+        ],
+        "columns": 1
+      }
+    ]
+  }
+}

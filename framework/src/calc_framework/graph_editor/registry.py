@@ -288,11 +288,13 @@ def create_default_node(type_id: str, node_id: str | None = None) -> GraphNode:
     ct = _composite_registry.get(type_id)
 
     if ct is not None:
+        # 画布标签只显示子图名，不重复包名
+        graph_name = type_id.split("/", 1)[1] if "/" in type_id else ct.display_name
         return GraphNode(
             id=nid,
             type=cast(NodeType, "composite"),
             op=type_id,
-            label=ct.display_name,
+            label=graph_name,
             config=NodeConfig(
                 source_graph=ct.source_graph_json,
                 package_name=ct.package_name,

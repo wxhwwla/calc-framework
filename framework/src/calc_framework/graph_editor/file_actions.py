@@ -10,6 +10,7 @@ from pathlib import Path
 from calc_framework.ui.i18n import tr
 
 from .graph_editor_widget import GraphEditorWidget
+from .ports import PortDirection
 from .schema import (
     GraphDocument,
     GraphLayout,
@@ -54,15 +55,17 @@ def load_document(doc: GraphDocument, widget: GraphEditorWidget) -> None:
 
     for edge in doc.edges:
         src_ports = widget.node_ports(edge.from_node)
-
         tgt_ports = widget.node_ports(edge.to_node)
 
         if src_ports and tgt_ports:
-            from_port = min(edge.from_port, len(src_ports) - 1)
+            # from_port 是输出端口索引，to_port 是输入端口索引
+            src_outputs = [p for p in src_ports if p.direction == PortDirection.OUTPUT]
+            tgt_inputs = [p for p in tgt_ports if p.direction == PortDirection.INPUT]
 
-            to_port = min(edge.to_port, len(tgt_ports) - 1)
-
-            widget.add_wire(src_ports[from_port], tgt_ports[to_port])
+            if src_outputs and tgt_inputs:
+                from_idx = min(edge.from_port, len(src_outputs) - 1)
+                to_idx = min(edge.to_port, len(tgt_inputs) - 1)
+                widget.add_wire(src_outputs[from_idx], tgt_inputs[to_idx])
 
 
 def save_graph_file(doc: GraphDocument, path: Path) -> None:

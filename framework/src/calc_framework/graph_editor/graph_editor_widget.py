@@ -46,6 +46,7 @@ class GraphEditorWidget(QWidget):
     """
 
     node_changed = Signal()
+    subgraph_edit_requested = Signal(str, str)  # (node_id, source_graph)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -88,6 +89,11 @@ class GraphEditorWidget(QWidget):
         return self._scene
 
     def add_graph_node(self, node: GraphNode) -> NodeItem:
+        # user_input 节点自动命名为 输入1、输入2...
+        if node.type == "user_input" and node.label == "用户输入":
+            existing = [n for n in self.graph_nodes() if n.type == "user_input"]
+            node.label = f"输入{len(existing) + 1}"
+
         item = NodeItem(node)
 
         if node.type == "composite":
@@ -222,32 +228,10 @@ class GraphEditorWidget(QWidget):
     def _open_subgraph_editor(self, node_id: str, source_graph: str) -> None:
         if not source_graph:
             QMessageBox.information(self, tr("desktop.graphEditor.subGraphEditor"), tr("desktop.graphEditor.noSubGraphData"))
-
             return
 
-        dialog = SubGraphDialog(source_graph, self)
-
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            new_json = dialog.get_graph_json()
-
-            if new_json and new_json != source_graph:
-                # 更新节点配置
-
-                item = self.find_node_item(node_id)
-
-                if item is not None:
-                    item._config.source_graph = new_json
-
-                    # 重建端口
-
-                    for port in item._ports[:]:
-                        item.scene().removeItem(port)
-
-                    item._ports.clear()
-
-                    item._create_ports()
-
-                    self.node_changed.emit()
+        # 发射信号，由主窗口在新标签页中打开子图
+        self.subgraph_edit_requested.emit(node_id, source_graph)
 
 
 class SubGraphDialog(QDialog):

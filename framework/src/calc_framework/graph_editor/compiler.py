@@ -252,22 +252,21 @@ def _compile_single_node(node: GraphNode, port_inputs: dict[tuple[str, int], str
             raise ValueError(f"复合节点 {node.id} 的 source_graph 解析失败")
 
         # 构建绑定：子图的 user_input → 父图的输入
+        # 按 Y 坐标排序（从上到下），确保端口顺序与视觉顺序一致
+
+        user_inputs = sorted(
+            [n for n in sub_doc.nodes if n.type == "user_input"],
+            key=lambda n: n.position.get("y", 0),
+        )
 
         bindings: dict[str, str] = {}
 
-        input_idx = 0
+        for input_idx, sub_node in enumerate(user_inputs):
+            parent_input = port_inputs.get((node.id, input_idx), "")
+            bindings[sub_node.id] = parent_input
 
-        for sub_node in sub_doc.nodes:
-            if sub_node.type == "user_input":
-                # 父图的哪个节点连到了这个复合节点的 input_idx 端口？
-
-                parent_input = port_inputs.get((node.id, input_idx), "")
-
-                bindings[sub_node.id] = parent_input
-
-                input_idx += 1
-
-        sub_name = node.op or "sub"
+        # 用节点 ID 确保每个复合节点实例有唯一的子图名
+        sub_name = f"{node.op or 'sub'}_{node.id}"
 
         return CallNode(
             subgraph=sub_name,

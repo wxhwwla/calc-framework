@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """graph_editor 包入口 — 启动可视化公式图编辑器。"""
 
+import json
 import sys
 from pathlib import Path
 
@@ -100,10 +101,102 @@ def main() -> None:
 
     node_panel.node_created.connect(_on_node_created)
 
+    # 子图标签页追踪：node_id → tab_index（用于跳转到已打开的标签页）
+    _subgraph_tab_by_node: dict[str, int] = {}
+    # 反向追踪：tab_index → (parent_canvas, composite_node_id)
+    _subgraph_tabs: dict[int, tuple[GraphEditorWidget, str]] = {}
+
+    def _on_subgraph_tab_closed(index: int) -> None:
+        """关闭标签页时清理子图追踪记录。"""
+        if index in _subgraph_tabs:
+            _, node_id = _subgraph_tabs.pop(index)
+            _subgraph_tab_by_node.pop(node_id, None)
+
+    tab_manager.tabCloseRequested.connect(_on_subgraph_tab_closed)
+
+    def _open_subgraph_in_tab(node_id: str, source_graph: str) -> None:
+        """在新标签页中打开子图进行编辑。已打开则跳转。"""
+        canvas = _get_current_canvas()
+        if not canvas:
+            return
+
+        # 如果这个子图已经在某个标签页中打开，直接跳转
+        if node_id in _subgraph_tab_by_node:
+            existing_idx = _subgraph_tab_by_node[node_id]
+            if existing_idx < tab_manager.count():
+                tab_manager.setCurrentIndex(existing_idx)
+                return
+            # 标签页已关闭，清理记录
+            del _subgraph_tab_by_node[node_id]
+
+        # 获取复合节点的显示名（用画布上的 label，不是子图内部 name）
+        item = canvas.find_node_item(node_id)
+        sub_name = item._node_label if item else "子图"
+
+        # 加载子图
+        from .file_actions import load_document
+        from .serializer import document_from_json
+
+        try:
+            doc = document_from_json(json.loads(source_graph))
+        except Exception:
+            QMessageBox.warning(window, "子图编辑", "子图 JSON 解析失败")
+            return
+
+        state = tab_manager.new_tab()
+        load_document(doc, state.canvas)
+        tab_idx = tab_manager.currentIndex()
+        tab_manager.setTabText(tab_idx, f"🔧 {sub_name}")
+
+        # 记录关联
+        _subgraph_tab_by_node[node_id] = tab_idx
+        _subgraph_tabs[tab_idx] = (canvas, node_id)
+
+        # 连接新画布的信号
+        _connect_canvas_signals(state.canvas)
+
+    def _save_subgraph_tab() -> bool:
+        """保存子图标签页，更新父图中复合节点的 source_graph。"""
+        idx = tab_manager.currentIndex()
+        if idx not in _subgraph_tabs:
+            return False
+
+        parent_canvas, node_id = _subgraph_tabs[idx]
+        canvas = _get_current_canvas()
+        if not canvas:
+            return False
+
+        from .file_actions import collect_document
+        from .serializer import document_to_json
+
+        doc = collect_document(canvas)
+        new_json = document_to_json(doc)
+
+        # 更新父图中复合节点的 source_graph
+        item = parent_canvas.find_node_item(node_id)
+        if item is not None:
+            item._config.source_graph = new_json
+            # 重建端口
+            for port in item._ports[:]:
+                if port.scene():
+                    port.scene().removeItem(port)
+            item._ports.clear()
+            item._create_ports()
+            parent_canvas.node_changed.emit()
+
+        return True
+
+    _connected_canvases: set[int] = set()
+
     def _connect_canvas_signals(canvas: GraphEditorWidget) -> None:
-        """连接画布信号。"""
+        """连接画布信号（每个 canvas 只连接一次）。"""
+        canvas_id = id(canvas)
+        if canvas_id in _connected_canvases:
+            return
+        _connected_canvases.add(canvas_id)
         canvas.scene().selectionChanged.connect(lambda: _on_selection_changed())
         canvas.node_changed.connect(lambda: _update_preview())
+        canvas.subgraph_edit_requested.connect(_open_subgraph_in_tab)
 
     def _on_selection_changed() -> None:
         canvas = _get_current_canvas()
@@ -154,7 +247,62 @@ def main() -> None:
             prop.set_preview_value(f"{value}")
             return
 
-        # 对于计算节点，尝试求值
+        # 对于输出节点，追踪输入源的值
+        if graph_node.type == "output":
+            try:
+                doc = collect_document(canvas)
+                dag = compile_graph(doc)
+                if not dag.nodes:
+                    prop.set_preview_value("—")
+                    return
+                res = evaluate_graph(dag, {})
+                # 输出节点的值 = 其输入源节点的值
+                port_inputs = {}
+                for e in doc.edges:
+                    port_inputs[(e.to_node, e.to_port)] = e.from_node
+                source = port_inputs.get((node_id, 0))
+                if source:
+                    val = res.node_values.get(source)
+                    if val is not None:
+                        prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                    else:
+                        # 源可能是复合节点，值在 outputs 中
+                        val = res.outputs.get(source)
+                        if val is not None:
+                            prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                        else:
+                            prop.set_preview_value("—")
+                else:
+                    prop.set_preview_value("(未连接)")
+            except Exception as e:
+                prop.set_preview_value(f"错误: {str(e)[:60]}")
+            return
+
+        # 对于复合节点，尝试求值显示结果
+        if graph_node.type == "composite":
+            try:
+                doc = collect_document(canvas)
+                dag = compile_graph(doc)
+                if not dag.nodes:
+                    prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
+                    return
+                res = evaluate_graph(dag, {})
+                # 复合节点展开后，其子图输出节点的值在 node_values 中
+                # 键格式为 {node_id}.{子图内节点id}
+                # 通过子图 outputs 定位哪个展开节点是输出
+                for sub in dag.subgraphs.values():
+                    for out_def in sub.outputs.values():
+                        expanded_key = f"{node_id}.{out_def.node}"
+                        val = res.node_values.get(expanded_key)
+                        if val is not None:
+                            prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                            return
+                prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
+            except Exception:
+                prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
+            return
+
+        # 对于计算节点（binary/unary/condition），尝试求值
         try:
             doc = collect_document(canvas)
             dag = compile_graph(doc)
@@ -171,7 +319,7 @@ def main() -> None:
                 if val is not None:
                     prop.set_preview_value(f"{val:.6f}")
                 else:
-                    prop.set_preview_value("(无法计算)")
+                    prop.set_preview_value("—")
         except Exception as e:
             err_msg = str(e)
             if len(err_msg) > 60:
@@ -265,8 +413,12 @@ def main() -> None:
             prop.node_changed.connect(_on_node_config_changed)
 
     def _save_file() -> None:
-        """保存当前标签页。"""
+        """保存当前标签页。子图标签页会更新父图中的复合节点。"""
         idx = tab_manager.currentIndex()
+        if _save_subgraph_tab():
+            # 子图已更新到父节点，标记父标签页为已修改
+            QMessageBox.information(window, "保存", "子图已更新到父图中的复合节点")
+            return
         tab_manager.save_tab(idx)
 
     def _save_as_file() -> None:

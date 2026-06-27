@@ -136,9 +136,11 @@ class PackageTree(QTreeWidget):
             pkg_item.setFlags(pkg_item.flags() & ~Qt.ItemFlag.ItemIsDragEnabled)
 
             for tdef in tdefs:
-                # 子图节点（可拖拽）
+                # 子图节点（可拖拽）— 树形下只显示子图名，不重复包名
+                graph_name = tdef.type_id.split("/", 1)[1] if "/" in tdef.type_id else tdef.display_name
                 child = QTreeWidgetItem(pkg_item)
-                child.setText(0, tdef.display_name)
+                child.setText(0, graph_name)
+                child.setToolTip(0, tdef.display_name)
                 child.setData(0, _ROLE_TYPE_ID, tdef.type_id)
                 child.setFlags(child.flags() | Qt.ItemFlag.ItemIsDragEnabled)
 
