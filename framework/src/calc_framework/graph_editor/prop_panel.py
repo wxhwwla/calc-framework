@@ -264,7 +264,6 @@ class PropPanel(QWidget):
     def _on_label_changed(self, text: str) -> None:
         if self._current_node:
             self._current_node.label = text
-
             self.node_changed.emit(self._current_node.id)
 
     def _on_value_changed(self, value: float) -> None:

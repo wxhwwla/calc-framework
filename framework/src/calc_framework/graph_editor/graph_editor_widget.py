@@ -337,7 +337,7 @@ class SubGraphDialog(QDialog):
                 break
 
         if node_item is not None:
-            self._prop_panel.show_node(node_item)  # type: ignore[arg-type]
+            self._prop_panel.show_node(node_item.to_graph_node())
 
         else:
             self._prop_panel.show_node(None)

@@ -4,9 +4,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QMimeData, Qt, Signal
 from PySide6.QtGui import QColor, QDrag, QFont, QPixmap
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -15,6 +16,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QTabWidget,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -39,22 +42,26 @@ _NODE_TYPE_COLORS: dict[str, QColor] = {
     "output": QColor("#FF8C00"),
 }
 
+# 树节点数据角色
+_ROLE_TYPE_ID = Qt.ItemDataRole.UserRole + 1
+
 
 class DraggableTypeList(QWidget):
-    """一个分类下的节点类型列表。"""
+    """一个分类下的节点类型列表（非"包"分类使用）。"""
 
-    def __init__(self, entries: list[tuple[str, str, QColor]], parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        entries: list[tuple[str, str, QColor]],
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
 
         layout = QVBoxLayout(self)
-
         layout.setContentsMargins(4, 4, 4, 4)
-
         layout.setSpacing(2)
 
         for type_id, display_name, color in entries:
             item = _DraggableListItem(type_id, display_name, color, self)
-
             layout.addWidget(item)
 
         layout.addStretch()
@@ -69,27 +76,19 @@ class _DraggableListItem(QWidget):
         self._type_id = type_id
 
         layout = QHBoxLayout(self)
-
         layout.setContentsMargins(8, 6, 8, 6)
-
         layout.setSpacing(8)
 
         pix = QPixmap(12, 12)
-
         pix.fill(color)
 
         indicator = QLabel()
-
         indicator.setPixmap(pix)
-
         indicator.setFixedSize(12, 12)
-
         layout.addWidget(indicator)
 
         name_label = QLabel(display_name)
-
         name_label.setFont(QFont("Microsoft YaHei", 10))
-
         layout.addWidget(name_label)
 
         layout.addStretch()
@@ -100,40 +99,79 @@ class _DraggableListItem(QWidget):
 
     def mousePressEvent(self, event) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.LeftButton:
-            from PySide6.QtCore import QMimeData
-
             drag = QDrag(self)
-
             mime = QMimeData()
-
             mime.setText(self._type_id)
-
             drag.setMimeData(mime)
-
             drag.exec(Qt.DropAction.CopyAction)
+
+
+class PackageTree(QTreeWidget):
+    """包标签页的树形视图 — ZIP 包可展开/收起，子图可拖拽。"""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        self.setHeaderHidden(True)
+        self.setRootIsDecorated(True)
+        self.setIndentation(16)
+        self.setFont(QFont("Microsoft YaHei", 10))
+
+        # 启用拖拽
+        self.setDragEnabled(True)
+        self.setDragDropMode(QTreeWidget.DragDropMode.DragOnly)
+
+    def populate(self) -> None:
+        """从 PackageManager 加载包并填充树。"""
+        self.clear()
+
+        pm = get_package_manager()
+        packages = pm.loaded_packages()
+
+        for pkg_name, tdefs in packages.items():
+            # 包节点（可展开/收起）
+            pkg_item = QTreeWidgetItem(self)
+            pkg_item.setText(0, f"📦 {pkg_name}")
+            pkg_item.setFont(0, QFont("Microsoft YaHei", 10, QFont.Weight.Bold))
+            pkg_item.setFlags(pkg_item.flags() & ~Qt.ItemFlag.ItemIsDragEnabled)
+
+            for tdef in tdefs:
+                # 子图节点（可拖拽）
+                child = QTreeWidgetItem(pkg_item)
+                child.setText(0, tdef.display_name)
+                child.setData(0, _ROLE_TYPE_ID, tdef.type_id)
+                child.setFlags(child.flags() | Qt.ItemFlag.ItemIsDragEnabled)
+
+            pkg_item.setExpanded(True)
+
+    def mimeData(self, items: Sequence[QTreeWidgetItem]) -> QMimeData:  # noqa: N802
+        """支持从树拖拽子图到画布。"""
+        mime = QMimeData()
+        for item in items:
+            type_id = item.data(0, _ROLE_TYPE_ID)
+            if type_id:
+                mime.setText(type_id)
+                break
+        return mime
 
 
 class NodePanel(QTabWidget):
     """左侧节点面板，按分类展示所有可用节点类型。"""
 
     node_created = Signal(str)
-
     package_loaded = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self.setTabPosition(QTabWidget.TabPosition.North)
-
         self._build_tabs()
 
     def _build_tabs(self) -> None:
         self.clear()
 
         cats = get_nodes_by_category()
-
         colors = self._colors()
-
         order = ["输入", "基础", "输出", "包"]
 
         for cat_name in order:
@@ -141,87 +179,45 @@ class NodePanel(QTabWidget):
                 continue
 
             entries = cats[cat_name]
-
             items = [(e.type_id, e.display_name, colors.get(e.type_id, QColor("#888888"))) for e in entries]
 
-            tab = DraggableTypeList(items, self)
+            tab = self._create_package_tab(items) if cat_name == "包" else DraggableTypeList(items, self)
+            self.addTab(tab, cat_name)
 
-            _tab_key_map = {
-                "输入": "desktop.graphEditor.tabInput",
-                "基础": "desktop.graphEditor.tabBasic",
-                "输出": "desktop.graphEditor.tabOutput",
-                "包": "desktop.graphEditor.tabPackage",
+    def _create_package_tab(self, items: list[tuple[str, str, QColor]]) -> QWidget:
+        """创建"包"标签页 — 导入按钮 + 树形包列表。"""
+        container = QWidget(self)
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # 导入按钮
+        btn = QPushButton(tr("desktop.graphEditor.importPackageBtnText"))
+        btn.setFont(QFont("Microsoft YaHei", 10))
+        btn.setStyleSheet("""
+            QPushButton {
+                background: #094771;
+                color: white;
+                border: none;
+                padding: 6px;
+                border-radius: 4px;
             }
-            tab_label = (
-                tr(_tab_key_map.get(cat_name, f"desktop.graphEditor.tab_{cat_name}")) if cat_name in _tab_key_map else cat_name
-            )
+            QPushButton:hover {
+                background: #1068a0;
+            }
+        """)
+        btn.clicked.connect(self._on_import_package)
+        layout.addWidget(btn)
 
-            self.addTab(tab, tab_label)
+        # 树形包列表
+        self._package_tree = PackageTree(container)
+        self._package_tree.populate()
+        layout.addWidget(self._package_tree, 1)
 
-        # 包选项卡前面加一个带导入按钮的包装器
-
-        if "包" in cats:
-            pkg_idx = self.indexOf(self._find_tab(tr("desktop.graphEditor.tabPackage")))  # type: ignore[arg-type]
-
-            if pkg_idx >= 0:
-                old_widget = self.widget(pkg_idx)
-
-                wrapper = QWidget()
-
-                wrapper_layout = QVBoxLayout(wrapper)
-
-                wrapper_layout.setContentsMargins(0, 0, 0, 0)
-
-                wrapper_layout.setSpacing(0)
-
-                import_btn = QPushButton(tr("desktop.graphEditor.importPackageBtnText"))
-
-                import_btn.setFont(QFont("Microsoft YaHei", 10))
-
-                import_btn.setStyleSheet("""
-
-                    QPushButton {
-
-                        background: #094771;
-
-                        color: white;
-
-                        border: none;
-
-                        padding: 6px;
-
-                        border-radius: 4px;
-
-                    }
-
-                    QPushButton:hover {
-
-                        background: #1068a0;
-
-                    }
-
-                """)
-
-                import_btn.clicked.connect(self._on_import_package)
-
-                wrapper_layout.addWidget(import_btn)
-
-                wrapper_layout.addWidget(old_widget, 1)  # type: ignore[arg-type]
-
-                self.removeTab(pkg_idx)
-
-                self.insertTab(pkg_idx, wrapper, tr("desktop.graphEditor.tabPackage"))
-
-    def _find_tab(self, name: str) -> QWidget | None:
-        for i in range(self.count()):
-            if self.tabText(i) == name:
-                return self.widget(i)
-
-        return None
+        return container
 
     def refresh_package_tab(self) -> None:
         """重新加载包选项卡（导入后调用）。"""
-
         self._build_tabs()
 
     def _on_import_package(self) -> None:
@@ -236,7 +232,6 @@ class NodePanel(QTabWidget):
             return
 
         path = Path(path_str)
-
         pm = get_package_manager()
 
         try:
@@ -247,11 +242,9 @@ class NodePanel(QTabWidget):
                     QMessageBox.information(
                         self, tr("desktop.graphEditor.importResult"), tr("desktop.graphEditor.noValidJsonInZip")
                     )
-
                     return
 
                 names = [t.display_name for t in tdefs]
-
                 for t in tdefs:
                     register_composite_type(t)
 
@@ -268,7 +261,6 @@ class NodePanel(QTabWidget):
 
             else:
                 tdef = pm.load_json(path)
-
                 register_composite_type(tdef)
 
                 QMessageBox.information(
@@ -279,17 +271,14 @@ class NodePanel(QTabWidget):
 
         except Exception as e:
             QMessageBox.critical(self, tr("desktop.graphEditor.importFailed"), tr("desktop.graphEditor.loadFailed", error=e))
-
             return
 
         self.refresh_package_tab()
 
         # 自动切换到包选项卡
-
         for i in range(self.count()):
             if self.tabText(i) == tr("desktop.graphEditor.tabPackage"):
                 self.setCurrentIndex(i)
-
                 break
 
         self.package_loaded.emit()

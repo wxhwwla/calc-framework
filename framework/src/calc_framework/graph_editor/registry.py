@@ -168,9 +168,15 @@ def get_package_manager() -> PackageManager:
     global _package_manager
 
     if _package_manager is None:
-        _package_manager = PackageManager()
+        _package_manager = PackageManager(auto_discover=True)
 
     return _package_manager
+
+
+def set_package_manager(pm: PackageManager) -> None:
+    """设置全局包管理器（用于初始化时注入）。"""
+    global _package_manager
+    _package_manager = pm
 
 
 def register_composite_type(tdef: CompositeTypeDef) -> None:

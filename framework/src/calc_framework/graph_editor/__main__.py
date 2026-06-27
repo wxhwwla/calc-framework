@@ -37,11 +37,12 @@ def main() -> None:
     from .node_panel import NodePanel
     from .package_manager import PackageManager
     from .prop_panel import PropPanel
-    from .registry import create_default_node, register_composite_type
+    from .registry import create_default_node, register_composite_type, set_package_manager
     from .tab_manager import TabManager
 
     # 初始化 PackageManager 并自动发现子图包
     pm = PackageManager(auto_discover=True)
+    set_package_manager(pm)
     for tdefs in pm.loaded_packages().values():
         for tdef in tdefs:
             register_composite_type(tdef)
@@ -82,11 +83,14 @@ def main() -> None:
     # ── 辅助函数 ──
     def _get_current_canvas() -> GraphEditorWidget | None:
         """获取当前标签页的画布。"""
-        return tab_manager.current_canvas
+        try:
+            return tab_manager.current_canvas
+        except RuntimeError:
+            return None
 
     def _get_current_prop_panel() -> PropPanel | None:
         """获取当前标签页的属性面板。"""
-        return tab_manager.current_prop_panel
+        return prop_panel
 
     # ── 信号连接 ──
     def _on_node_created(type_id: str) -> None:
@@ -197,7 +201,7 @@ def main() -> None:
     initial_canvas = tab_manager.current_canvas
     if initial_canvas:
         _connect_canvas_signals(initial_canvas)
-        tab_manager.current_state.prop_panel.node_changed.connect(_on_node_config_changed)
+        prop_panel.node_changed.connect(_on_node_config_changed)
 
     # 标签页切换时重新连接信号
     def _on_tab_changed() -> None:
@@ -387,7 +391,17 @@ def main() -> None:
     toolbar.addSeparator()
     _tb(tr("desktop.graphEditor.evaluateBtn"), tr("desktop.graphEditor.evaluateTip"), _run_evaluate)
     toolbar.addSeparator()
-    _tb(tr("desktop.graphEditor.clearBtn"), tr("desktop.graphEditor.clearTip"), _new_file)
+
+    def _clear_canvas() -> None:
+        """清除当前画布的所有节点。"""
+        canvas = _get_current_canvas()
+        prop = _get_current_prop_panel()
+        if canvas:
+            canvas.clear_scene()
+        if prop:
+            prop.show_node(None)
+
+    _tb(tr("desktop.graphEditor.clearBtn"), tr("desktop.graphEditor.clearTip"), _clear_canvas)
 
     window.showMaximized()
     sys.exit(app.exec())
