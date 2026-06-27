@@ -424,6 +424,19 @@ def execute_search_with_resume(
         db_path=str(db_path),
     )
 
+    # 单线程模式下跳过锁开销
+    from games.endfield.calc.loadout.optimizer.evaluate import set_single_thread_mode, warmup_final_attack_cache
+
+    set_single_thread_mode(max_workers <= 1)
+
+    # 预热 final_attack 缓存（消除搜索时的缓存预热开销）
+    if search_eval is not None:
+        warmup_final_attack_cache(
+            weapons=weapons,
+            equipment_catalog=equipment_catalog,
+            search_eval=search_eval,
+        )
+
     _, _processed_count, cancelled = run_bounded_parallel(**parallel_kwargs)
 
     log_search_event(

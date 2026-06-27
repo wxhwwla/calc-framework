@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.18"
+_VERSION = "3.28.19"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13673,3 +13673,12 @@ def get_exe_version() -> str:
 # - 修改 web/backend/api/generator.py
 # - 修改 web/backend/api/hub.py
 # - 修改 web/backend/api/packaging/pack.py
+
+
+# TITLE: 更新 5 处文件
+# BODY:
+# - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
+# - 修改 games/endfield/calc/search/evaluate/task.py
+# - 修改 games/endfield/calc/search/evaluate/task_batch.py
+# - 修改 games/endfield/calc/search/persist/store.py
+# - 变更 web/backend/api/.admin_data/usage.json

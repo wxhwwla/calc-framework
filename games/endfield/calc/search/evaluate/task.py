@@ -11,6 +11,7 @@ from games.endfield.calc.damage.engine import CritMode, DamageContext
 from games.endfield.calc.loadout.optimizer import (
     LoadoutScore,
     OptimizerTask,
+    RuntimeEvalSnapshot,
     build_runtime_eval_snapshot,
     evaluate_task,
 )
@@ -117,6 +118,7 @@ def _evaluate_abnormal_damage(
     task: OptimizerTask,
     profile: PhysicalAbnormalProfile,
     search_eval: SearchEvalContext | None,
+    snapshot: RuntimeEvalSnapshot | None = None,
 ) -> tuple[float, dict[str, float]]:
     """评估物理异常 + 法术异常总伤害。"""
     physical_counts = profile.counts or {}
@@ -127,7 +129,8 @@ def _evaluate_abnormal_damage(
     )
     if not any(v > 0 for v in physical_counts.values()) and not any(v > 0 for v in spell_counts.values()):
         return 0.0, {}
-    snapshot = build_runtime_eval_snapshot(task=task, search_eval=search_eval)
+    if snapshot is None:
+        snapshot = build_runtime_eval_snapshot(task=task, search_eval=search_eval)
     char_level = max(1, int(search_eval.char_level)) if search_eval else 1
     crit_rate, crit_damage = _expected_crit_context(
         job=job,
