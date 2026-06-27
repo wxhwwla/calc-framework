@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.19"
+_VERSION = "3.28.20"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13681,4 +13681,35 @@ def get_exe_version() -> str:
 # - 修改 games/endfield/calc/search/evaluate/task.py
 # - 修改 games/endfield/calc/search/evaluate/task_batch.py
 # - 修改 games/endfield/calc/search/persist/store.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 11 处文件
+# BODY:
+# - 更新文档 docs/plans/rust-full-batch-plan.md
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 修改 extensions/rust_search/python/rust_bridge.py
+# - 变更 extensions/rust_search/src/full_batch.rs
+# - 变更 extensions/rust_search/src/lib.rs
+# - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
+# - 修改 games/endfield/calc/search/evaluate/effect_id_map.py
+# - 修改 games/endfield/calc/search/evaluate/full_batch_eval.py
+# - 修改 games/endfield/calc/search/evaluate/rust_batch_data.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 12 处文件
+# BODY:
+# - 更新文档 docs/plans/rust-full-batch-plan.md
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 修改 extensions/rust_search/python/rust_bridge.py
+# - 变更 extensions/rust_search/src/full_batch.rs
+# - 变更 extensions/rust_search/src/lib.rs
+# - 修改 games/endfield/calc/loadout/optimizer/evaluate.py
+# - 修改 games/endfield/calc/search/evaluate/effect_id_map.py
+# - 修改 games/endfield/calc/search/evaluate/full_batch_eval.py
+# - 修改 games/endfield/calc/search/evaluate/rust_batch_data.py
+# - 修改 scripts/_version.py
 # - 变更 web/backend/api/.admin_data/usage.json

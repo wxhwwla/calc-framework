@@ -123,12 +123,13 @@ def warmup_final_attack_cache(
     acc_b_list = equipment_catalog.get("accessory_b", [])
 
     if not chest_list or not gloves_list:
-        logger.warning("预热缓存：装备列表为空")
         return 0
 
     # 限制预热数量（避免内存爆炸）
-    max_chest = min(len(chest_list), 100)
-    max_gloves = min(len(gloves_list), 100)
+    max_chest = min(len(chest_list), 50)
+    max_gloves = min(len(gloves_list), 50)
+    max_acc_a = min(len(acc_a_list), 10)
+    max_acc_b = min(len(acc_b_list), 10)
 
     warmed = 0
     for weapon in weapons:
@@ -138,45 +139,46 @@ def warmup_final_attack_cache(
 
         for chest in chest_list[:max_chest]:
             for glove in gloves_list[:max_gloves]:
-                try:
-                    # 构建装备组合
-                    loadout = build_four_slot_loadout(
-                        chest=chest,
-                        gloves=glove,
-                        accessory_a=acc_a_list[0] if acc_a_list else {},
-                        accessory_b=acc_b_list[0] if acc_b_list else {},
-                        allow_duplicate_accessory=True,
-                    )
-                    _, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+                for acc_a in acc_a_list[:max_acc_a]:
+                    for acc_b in acc_b_list[:max_acc_b]:
+                        try:
+                            # 构建装备组合
+                            loadout = build_four_slot_loadout(
+                                chest=chest,
+                                gloves=glove,
+                                accessory_a=acc_a,
+                                accessory_b=acc_b,
+                                allow_duplicate_accessory=True,
+                            )
+                            _, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
 
-                    # 计算 final_attack
-                    _ckey = (
-                        chest.get("名称", ""),
-                        glove.get("名称", ""),
-                        acc_a_list[0].get("名称", "") if acc_a_list else "",
-                        acc_b_list[0].get("名称", "") if acc_b_list else "",
-                    )
-                    _akey = (weapon.name, _ckey[0], _ckey[1], _ckey[2], _ckey[3])
+                            # 计算 final_attack
+                            _ckey = (
+                                chest.get("名称", ""),
+                                glove.get("名称", ""),
+                                acc_a.get("名称", ""),
+                                acc_b.get("名称", ""),
+                            )
+                            _akey = (weapon.name, _ckey[0], _ckey[1], _ckey[2], _ckey[3])
 
-                    if _akey not in _final_attack_cache:
-                        details = final_attack_details_for_loadout(
-                            character=search_eval.char_data,
-                            weapon=weapon_data,
-                            char_level=search_eval.char_level,
-                            weapon_level=search_eval.weapon_level,
-                            trust_level=search_eval.trust_level,
-                            weapon_normal_levels=list(search_eval.weapon_normal_levels),
-                            weapon_special_states=list(search_eval.weapon_special_states),
-                            equipment_stat_bonus=flat_stats,
-                            equipment_attack_percent=atk_percent,
-                        )
-                        _final_attack_cache[_akey] = float(details["final_attack"])
-                        warmed += 1
-                except (ValueError, KeyError, TypeError):
-                    # 跳过无效的装备组合
-                    continue
+                            if _akey not in _final_attack_cache:
+                                details = final_attack_details_for_loadout(
+                                    character=search_eval.char_data,
+                                    weapon=weapon_data,
+                                    char_level=search_eval.char_level,
+                                    weapon_level=search_eval.weapon_level,
+                                    trust_level=search_eval.trust_level,
+                                    weapon_normal_levels=list(search_eval.weapon_normal_levels),
+                                    weapon_special_states=list(search_eval.weapon_special_states),
+                                    equipment_stat_bonus=flat_stats,
+                                    equipment_attack_percent=atk_percent,
+                                )
+                                _final_attack_cache[_akey] = float(details["final_attack"])
+                                warmed += 1
+                        except (ValueError, KeyError, TypeError):
+                            # 跳过无效的装备组合
+                            continue
 
-    logger.info("预热缓存完成: %d 条目", warmed)
     return warmed
 
 

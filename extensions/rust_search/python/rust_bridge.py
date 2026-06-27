@@ -630,3 +630,222 @@ def evaluate_search_batch_soa(param_list: list[dict]) -> list[Any]:
     from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
 
     return [DamageEvalResult(final_damage=fd, zone_values={}, warnings=(), unknown_effects=()) for fd in rs_results]
+
+
+def evaluate_search_batch_raw(
+    final_attacks: list[float],
+    skill_multipliers: list[float],
+    skill_type_ids: list[int],
+    is_true_damages: list[bool],
+    is_unbalanceds: list[bool],
+    enemy_defenses: list[float],
+    enemy_resistances: list[float],
+    ignore_resistances: list[float],
+    imbalance_vulnerability_coeffs: list[float],
+    crit_rates: list[float],
+    crit_damages: list[float],
+    damage_type_bonuses: list[float],
+    skill_type_bonuses: list[float],
+    imbalance_damage_bonuses: list[float],
+    other_damage_bonuses: list[float],
+    combo_stacks_list: list[int],
+    break_defense_stacks_list: list[int],
+    base_damage_bonuses: list[float],
+    effect_ids_batch: list[list[int]],
+    effect_values_batch: list[list[float]],
+    crit_mode_ids: list[int],
+    is_abnormals: list[bool],
+) -> list[float]:
+    """原始数组批量评估：零 Python dict 开销，一次 FFI 调用处理 N 个任务。
+
+    与 ``evaluate_search_batch_soa`` 相同的 Rust 内核，但接受原始数组参数，
+    避免 Python 侧构建和解析 dict 的开销。
+
+    Args:
+        各参数为长度 N 的列表，与 Rust 侧 BatchInput 字段一一对应。
+
+    Returns:
+        每个任务的最终伤害值列表
+    """
+    if not _HAS_RUST or not final_attacks:
+        return [0.0] * len(final_attacks)
+
+    from utils.frozen_runtime import rust_parallel_batch_enabled
+
+    if rust_parallel_batch_enabled():
+        rs_results = _rs.evaluate_search_batch_raw(
+            final_attacks,
+            skill_multipliers,
+            skill_type_ids,
+            is_true_damages,
+            is_unbalanceds,
+            enemy_defenses,
+            enemy_resistances,
+            ignore_resistances,
+            imbalance_vulnerability_coeffs,
+            crit_rates,
+            crit_damages,
+            damage_type_bonuses,
+            skill_type_bonuses,
+            imbalance_damage_bonuses,
+            other_damage_bonuses,
+            combo_stacks_list,
+            break_defense_stacks_list,
+            base_damage_bonuses,
+            effect_ids_batch,
+            effect_values_batch,
+            crit_mode_ids,
+            is_abnormals,
+        )
+    else:
+        with _rust_call_lock:
+            rs_results = _rs.evaluate_search_batch_raw(
+                final_attacks,
+                skill_multipliers,
+                skill_type_ids,
+                is_true_damages,
+                is_unbalanceds,
+                enemy_defenses,
+                enemy_resistances,
+                ignore_resistances,
+                imbalance_vulnerability_coeffs,
+                crit_rates,
+                crit_damages,
+                damage_type_bonuses,
+                skill_type_bonuses,
+                imbalance_damage_bonuses,
+                other_damage_bonuses,
+                combo_stacks_list,
+                break_defense_stacks_list,
+                base_damage_bonuses,
+                effect_ids_batch,
+                effect_values_batch,
+                crit_mode_ids,
+                is_abnormals,
+            )
+
+    return list(rs_results)
+
+
+def evaluate_full_batch(
+    weapon_names: list[str],
+    weapon_final_attacks: list[float],
+    weapon_effects: list[list[tuple[str, float]]],
+    equipment_chest_names: list[str],
+    equipment_gloves_names: list[str],
+    equipment_acc_a_names: list[str],
+    equipment_acc_b_names: list[str],
+    equipment_effects: list[list[tuple[str, float]]],
+    equipment_flat_stats: list[dict[str, float]],
+    equipment_atk_percents: list[float],
+    char_name: str,
+    char_level: int,
+    char_base_attack: float,
+    skill_multiplier: float,
+    damage_type: str,
+    skill_type: str,
+    is_unbalanced: bool,
+    is_true_damage: bool,
+    enemy_defense: float,
+    enemy_resistance: float,
+    ignore_resistance: float,
+    imbalance_vulnerability_coeff: float,
+    crit_rate: float,
+    crit_damage: float,
+    damage_type_bonus: float,
+    skill_type_bonus: float,
+    imbalance_damage_bonus: float,
+    other_damage_bonus: float,
+    combo_stacks: int,
+    break_defense_stacks: int,
+    base_damage_bonus: float,
+    top_n: int = 10,
+) -> list[tuple[str, float, dict[str, str]]]:
+    """全批量评估：Python 预处理 → Rust 完整评估 → 返回结果。
+
+    消除 Python 逐任务开销，实现 ~5 秒完成 97 万组合遍历。
+
+    Args:
+        各参数为预处理后的数据，详见 rust_batch_data.py。
+
+    Returns:
+        [(武器名, 最终伤害, {部位: 装备名})] 列表，按伤害降序排列。
+    """
+    if not _HAS_RUST or not weapon_names:
+        return []
+
+    from utils.frozen_runtime import rust_parallel_batch_enabled
+
+    if rust_parallel_batch_enabled():
+        rs_results = _rs.evaluate_full_batch_py(
+            weapon_names,
+            weapon_final_attacks,
+            weapon_effects,
+            equipment_chest_names,
+            equipment_gloves_names,
+            equipment_acc_a_names,
+            equipment_acc_b_names,
+            equipment_effects,
+            equipment_flat_stats,
+            equipment_atk_percents,
+            char_name,
+            char_level,
+            char_base_attack,
+            skill_multiplier,
+            damage_type,
+            skill_type,
+            is_unbalanced,
+            is_true_damage,
+            enemy_defense,
+            enemy_resistance,
+            ignore_resistance,
+            imbalance_vulnerability_coeff,
+            crit_rate,
+            crit_damage,
+            damage_type_bonus,
+            skill_type_bonus,
+            imbalance_damage_bonus,
+            other_damage_bonus,
+            combo_stacks,
+            break_defense_stacks,
+            base_damage_bonus,
+            top_n,
+        )
+    else:
+        with _rust_call_lock:
+            rs_results = _rs.evaluate_full_batch_py(
+                weapon_names,
+                weapon_final_attacks,
+                weapon_effects,
+                equipment_chest_names,
+                equipment_gloves_names,
+                equipment_acc_a_names,
+                equipment_acc_b_names,
+                equipment_effects,
+                equipment_flat_stats,
+                equipment_atk_percents,
+                char_name,
+                char_level,
+                char_base_attack,
+                skill_multiplier,
+                damage_type,
+                skill_type,
+                is_unbalanced,
+                is_true_damage,
+                enemy_defense,
+                enemy_resistance,
+                ignore_resistance,
+                imbalance_vulnerability_coeff,
+                crit_rate,
+                crit_damage,
+                damage_type_bonus,
+                skill_type_bonus,
+                imbalance_damage_bonus,
+                other_damage_bonus,
+                combo_stacks,
+                break_defense_stacks,
+                base_damage_bonus,
+                top_n,
+            )
+
+    return [(r[0], r[1], dict(r[2])) for r in rs_results]

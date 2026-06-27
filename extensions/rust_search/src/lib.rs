@@ -13,6 +13,7 @@
 mod batch_eval;
 mod effect_id;
 mod evaluate;
+mod full_batch;
 mod inverse;
 mod zones;
 
@@ -358,6 +359,175 @@ fn evaluate_search_batch_soa(
     Ok(batch_eval::evaluate_batch(&input))
 }
 
+/// 原始数组批量评估：零 Python dict 开销，一次 FFI 调用处理 N 个任务。
+///
+/// 与 `evaluate_search_batch_soa` 相同的 Rust 内核，但接受原始数组参数，
+/// 避免 Python 侧构建 dict 的开销。
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn evaluate_search_batch_raw(
+    final_attacks: Vec<f64>,
+    skill_multipliers: Vec<f64>,
+    skill_type_ids: Vec<u8>,
+    is_true_damages: Vec<bool>,
+    is_unbalanceds: Vec<bool>,
+    enemy_defenses: Vec<f64>,
+    enemy_resistances: Vec<f64>,
+    ignore_resistances: Vec<f64>,
+    imbalance_vulnerability_coeffs: Vec<f64>,
+    crit_rates: Vec<f64>,
+    crit_damages: Vec<f64>,
+    damage_type_bonuses: Vec<f64>,
+    skill_type_bonuses: Vec<f64>,
+    imbalance_damage_bonuses: Vec<f64>,
+    other_damage_bonuses: Vec<f64>,
+    combo_stacks_list: Vec<i32>,
+    break_defense_stacks_list: Vec<i32>,
+    base_damage_bonuses: Vec<f64>,
+    effect_ids_batch: Vec<Vec<u8>>,
+    effect_values_batch: Vec<Vec<f64>>,
+    crit_mode_ids: Vec<u8>,
+    is_abnormals: Vec<bool>,
+) -> PyResult<Vec<f64>> {
+    let input = batch_eval::BatchInput {
+        final_attacks: &final_attacks,
+        skill_multipliers: &skill_multipliers,
+        skill_type_ids: &skill_type_ids,
+        is_true_damages: &is_true_damages,
+        is_unbalanceds: &is_unbalanceds,
+        enemy_defenses: &enemy_defenses,
+        enemy_resistances: &enemy_resistances,
+        ignore_resistances: &ignore_resistances,
+        imbalance_vulnerability_coeffs: &imbalance_vulnerability_coeffs,
+        crit_rates: &crit_rates,
+        crit_damages: &crit_damages,
+        damage_type_bonuses: &damage_type_bonuses,
+        skill_type_bonuses: &skill_type_bonuses,
+        imbalance_damage_bonuses: &imbalance_damage_bonuses,
+        other_damage_bonuses: &other_damage_bonuses,
+        combo_stacks_list: &combo_stacks_list,
+        break_defense_stacks_list: &break_defense_stacks_list,
+        base_damage_bonuses: &base_damage_bonuses,
+        effect_ids_batch: &effect_ids_batch,
+        effect_values_batch: &effect_values_batch,
+        crit_mode_ids: &crit_mode_ids,
+        damage_pipelines: &is_abnormals,
+    };
+    Ok(batch_eval::evaluate_batch(&input))
+}
+
+/// 全批量评估 Python 包装函数。
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn evaluate_full_batch_py(
+    weapon_names: Vec<String>,
+    weapon_final_attacks: Vec<f64>,
+    weapon_effects: Vec<Vec<(String, f64)>>,
+    equipment_chest_names: Vec<String>,
+    equipment_gloves_names: Vec<String>,
+    equipment_acc_a_names: Vec<String>,
+    equipment_acc_b_names: Vec<String>,
+    equipment_effects: Vec<Vec<(String, f64)>>,
+    equipment_flat_stats: Vec<std::collections::HashMap<String, f64>>,
+    equipment_atk_percents: Vec<f64>,
+    char_name: String,
+    char_level: i32,
+    char_base_attack: f64,
+    skill_multiplier: f64,
+    damage_type: String,
+    skill_type: String,
+    is_unbalanced: bool,
+    is_true_damage: bool,
+    enemy_defense: f64,
+    enemy_resistance: f64,
+    ignore_resistance: f64,
+    imbalance_vulnerability_coeff: f64,
+    crit_rate: f64,
+    crit_damage: f64,
+    damage_type_bonus: f64,
+    skill_type_bonus: f64,
+    imbalance_damage_bonus: f64,
+    other_damage_bonus: f64,
+    combo_stacks: i32,
+    break_defense_stacks: i32,
+    base_damage_bonus: f64,
+    top_n: usize,
+) -> PyResult<Vec<(String, f64, std::collections::HashMap<String, String>)>> {
+    // 构建武器数据
+    let weapons: Vec<full_batch::WeaponData> = weapon_names
+        .into_iter()
+        .zip(weapon_final_attacks.into_iter())
+        .zip(weapon_effects.into_iter())
+        .map(|((name, final_attack), effects)| full_batch::WeaponData {
+            name,
+            final_attack,
+            effects,
+        })
+        .collect();
+
+    // 构建装备组合
+    let equipment_combos: Vec<full_batch::EquipmentCombo> = equipment_chest_names
+        .into_iter()
+        .zip(equipment_gloves_names.into_iter())
+        .zip(equipment_acc_a_names.into_iter())
+        .zip(equipment_acc_b_names.into_iter())
+        .zip(equipment_effects.into_iter())
+        .zip(equipment_flat_stats.into_iter())
+        .zip(equipment_atk_percents.into_iter())
+        .map(|((((((chest, gloves), acc_a), acc_b), effects), flat_stats), atk_percent)| {
+            full_batch::EquipmentCombo {
+                chest_name: chest,
+                gloves_name: gloves,
+                acc_a_name: acc_a,
+                acc_b_name: acc_b,
+                effects,
+                flat_stats,
+                atk_percent,
+            }
+        })
+        .collect();
+
+    // 构建角色数据
+    let char_data = full_batch::CharData {
+        name: char_name,
+        level: char_level,
+        base_attack: char_base_attack,
+        base_hp: 0.0,
+        base_defense: 0.0,
+    };
+
+    // 构建计算参数
+    let params = full_batch::CalcParams {
+        skill_multiplier,
+        damage_type,
+        skill_type,
+        is_unbalanced,
+        is_true_damage,
+        enemy_defense,
+        enemy_resistance,
+        ignore_resistance,
+        imbalance_vulnerability_coeff,
+        crit_rate,
+        crit_damage,
+        damage_type_bonus,
+        skill_type_bonus,
+        imbalance_damage_bonus,
+        other_damage_bonus,
+        combo_stacks,
+        break_defense_stacks,
+        base_damage_bonus,
+    };
+
+    // 执行全批量评估
+    let results = full_batch::evaluate_full_batch(&weapons, &equipment_combos, &char_data, &params, top_n);
+
+    // 转换为 Python 格式
+    Ok(results
+        .into_iter()
+        .map(|r| (r.weapon_name, r.final_damage, r.loadout_names))
+        .collect())
+}
+
 /// Python 模块注册。
 #[pymodule]
 fn rust_search(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -365,6 +535,8 @@ fn rust_search(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evaluate_search_damage, m)?)?;
     m.add_function(wrap_pyfunction!(evaluate_search_damage_batch, m)?)?;
     m.add_function(wrap_pyfunction!(evaluate_search_batch_soa, m)?)?;
+    m.add_function(wrap_pyfunction!(evaluate_search_batch_raw, m)?)?;
+    m.add_function(wrap_pyfunction!(evaluate_full_batch_py, m)?)?;
     m.add_function(wrap_pyfunction!(fit_floor_formula_py, m)?)?;
     m.add_class::<PyDamageEvalResult>()?;
     Ok(())
