@@ -69,6 +69,10 @@ def export_calcpack_bytes(req: ExportRequest) -> tuple[bytes, str]:
                 _write_json_in_zip(zf, f"data/{key}.json", records)
         if req.asset_files:
             for name, b64_content in req.asset_files.items():
+                # Zip Slip 防护：验证文件名不包含路径分隔符或 ..
+                if ".." in name or "/" in name or "\\" in name:
+                    logger.warning("资产文件名包含非法字符: %s", name)
+                    continue
                 try:
                     raw = base64.b64decode(b64_content)
                     zf.writestr(f"assets/{name}", raw)

@@ -430,7 +430,7 @@ class FloorFormulaFitter(FormulaFitter):
         """探测缩放因子。含真小数 → 10，纯整数 → 1。"""
 
         for x in data:
-            if isinstance(x, float) and x != int(x):
+            if isinstance(x, float) and abs(x - round(x)) > 1e-9:
                 return 10
 
         return 1

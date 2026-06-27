@@ -297,9 +297,10 @@ async def ai_explain(req: ExplainRequest):
             if req.results
             else "无结果"
         )
+        logger.warning("AI 解释失败: %s", e)
         return ExplainResponse(
             explanation=top_info,
-            suggestions=[f"AI 解释失败: {e}"],
+            suggestions=["AI 解释失败，请稍后重试"],
         )
 
     return ExplainResponse(explanation="", suggestions=[])

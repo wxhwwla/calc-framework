@@ -55,7 +55,7 @@ _BINARY_OPS: dict[str, Any] = {
     "+": op.add,
     "-": op.sub,
     "*": op.mul,
-    "/": op.truediv,
+    "/": lambda a, b: a / b if b != 0 else 0.0,
     "^": pow,
     "min": min,
     "max": max,

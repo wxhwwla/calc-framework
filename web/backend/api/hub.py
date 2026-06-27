@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from api.internal.auth import verify_admin_token
@@ -164,11 +163,10 @@ async def rate_pack_endpoint(pack_id: str, rate: RateRequest):
 
 @router.get("/stats")
 async def hub_stats():
-    """获取 Calc Hub 统计信息（总包数、数据库路径）。"""
+    """获取 Calc Hub 统计信息（总包数）。"""
     _packs, total = list_packs(limit=0)
     return {
         "total_packs": total,
-        "db_path": str(Path(__file__).resolve().parent.parent / "data" / "hub" / "catalog.db"),
     }
 
 

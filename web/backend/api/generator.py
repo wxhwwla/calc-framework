@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,8 @@ from api.internal.errors import raise_http_from_exc
 from api.internal.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/generator", tags=["generator"])
 
@@ -299,10 +302,12 @@ async def ai_parse_formula(req: AIFormulaRequest):
     if json_match:
         try:
             parsed = json.loads(json_match.group())
-        except json.JSONDecodeError as e:
-            raise HTTPException(status_code=502, detail=f"AI 返回的 JSON 格式无效: {e!s}。原始返回: {content[:200]}")
+        except json.JSONDecodeError:
+            logger.warning("AI 返回的 JSON 格式无效: %s", content[:200])
+            raise HTTPException(status_code=502, detail="AI 返回的 JSON 格式无效，请稍后重试")
     else:
-        raise HTTPException(status_code=502, detail=f"AI 返回内容中未找到 JSON 数据。原始返回: {content[:200]}")
+        logger.warning("AI 返回内容中未找到 JSON 数据: %s", content[:200])
+        raise HTTPException(status_code=502, detail="AI 返回内容中未找到 JSON 数据，请稍后重试")
 
     # 验证返回的数据结构
     variables = parsed.get("variables", [])

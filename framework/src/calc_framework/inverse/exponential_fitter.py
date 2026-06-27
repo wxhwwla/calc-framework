@@ -148,14 +148,12 @@ class ExponentialFormulaFitter(FormulaFitter):
 
         # 确保全部 > 0
         if any(y <= 0 for y in ys):
-            try:
-                # 尝试小偏移微调
-                min(y for y in ys if y > 0)
-                ys = [max(y, 1e-10) for y in ys]
-                if any(y <= 0 for y in ys):
-                    return None
-            except (ValueError, OverflowError):
+            # 存在非正数时，尝试小偏移微调
+            positive_ys = [y for y in ys if y > 0]
+            if not positive_ys:
+                # 全部非正数，无法取对数
                 return None
+            ys = [max(y, 1e-10) for y in ys]
 
         # 对数域线性回归：log(y) = log(base) + (lv-1) * log(growth)
         xs = [lv - 1 for lv in range(1, num_levels + 1)]

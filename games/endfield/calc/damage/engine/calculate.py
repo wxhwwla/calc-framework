@@ -239,7 +239,7 @@ def calculate_single_hit_damage(
 
     resistance = float(context.enemy_resistance) + resistance_change
     ignore_res = float(context.ignore_resistance) + resistance_extra
-    resistance_zone = 1.0 - resistance / 100.0 + ignore_res / 100.0
+    resistance_zone = max(0.0, 1.0 - resistance / 100.0 + ignore_res / 100.0)
 
     imbalance_coeff = (
         float(imbalance_coeff_override)
