@@ -298,7 +298,7 @@ class QtInspector:
             是否成功
         """
         try:
-            combobox.select(item_text)
+            combobox.select(item_text)  # type: ignore[reportCallIssue]
             time.sleep(wait)
             return True
         except Exception as e:

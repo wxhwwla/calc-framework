@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.16"
+_VERSION = "3.28.17"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -28,8 +28,8 @@ _EXE_VERSION = "0.7.0-beta"
 
 # ==============================================================
 
-_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
-_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_BEGIN = ""
+_SUMMARY_MARKER_END = ""
 _UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
 _UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
 SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
@@ -155,6 +155,7 @@ def _canonical_marker_header() -> str:
     """
     return (
         '_SUMMARY_MARKER_BEGIN = ""\n'
+        '_SUMMARY_MARKER_END = ""\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
@@ -167,13 +168,15 @@ def _markers_section_ok(text: str) -> bool:
 
     使用硬编码值判断，避免模块变量为 ``""`` 时误判。
     """
-    required = (
+    required_lines = (
+        '_SUMMARY_MARKER_BEGIN = ""',
+        '_SUMMARY_MARKER_END = ""',
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",
         "SUMMARY_END = _UPLOAD_SUMMARY_END",
     )
-    if any(line not in text for line in required):
+    if any(line not in text for line in required_lines):
         return False
     return (
         re.search(
@@ -13607,3 +13610,49 @@ def get_exe_version() -> str:
 # - 修改 web/scripts/deploy_pythonanywhere.py
 # - 修改 web/wasm/export_loadout_golden.py
 # - 修改 web/wsgi_pythonanywhere.py
+
+
+# TITLE: 更新 18 处文件
+# BODY:
+# - 变更 .gitignore
+# - 更新文档 docs/错误集.md
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/ui/launcher/auto_update.py
+# - 修改 games/endfield/calc/search/persist/store.py
+# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
+# - 修改 games/endfield/gui/endfield_search.py
+# - 修改 scripts/_version.py
+# - 修改 scripts/main_build.py
+# - 修改 tools/ocr/download_models.py
+# - 修改 tools/publish/plugin_pack.py
+# - 修改 utils/updater.py
+# - 变更 web/backend/api/.admin_data/usage.json
+# - 修改 web/backend/api/adapters.py
+# - 修改 web/backend/api/ai.py
+# - 修改 web/backend/api/generator.py
+# - 修改 web/backend/api/ocr.py
+# - 修改 web/backend/hub/storage.py
+
+
+# TITLE: 更新 20 处文件
+# BODY:
+# - 变更 .gitignore
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/ui/launcher/auto_update.py
+# - 修改 games/endfield/calc/search/persist/store.py
+# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
+# - 修改 games/endfield/gui/endfield_search.py
+# - 修改 scripts/_version.py
+# - 修改 scripts/auto_test/utils/qt_inspector.py
+# - 修改 scripts/main_build.py
+# - 修改 tools/ocr/download_models.py
+# - 修改 tools/publish/plugin_pack.py
+# - 修改 utils/updater.py
+# - 变更 web/backend/api/.admin_data/usage.json
+# - 修改 web/backend/api/adapters.py
+# - 修改 web/backend/api/ai.py
+# - 修改 web/backend/api/generator.py
+# - 修改 web/backend/api/ocr.py
+# - 修改 web/backend/hub/storage.py

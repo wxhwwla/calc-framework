@@ -12,10 +12,16 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 router = APIRouter(prefix="/api/ocr", tags=["ocr"])
 
 
+_ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"}
+
+
 @router.post("/detect")
 async def detect(file: UploadFile = File(...)):
     """OCR 截图检测 — 上传图片并返回识别结果。"""
-    suffix = Path(file.filename or "image.png").suffix or ".png"
+    suffix = Path(file.filename or "image.png").suffix.lower() or ".png"
+    if suffix not in _ALLOWED_IMAGE_EXTENSIONS:
+        allowed = ", ".join(_ALLOWED_IMAGE_EXTENSIONS)
+        raise HTTPException(status_code=400, detail=f"不支持的图片格式: {suffix}，允许: {allowed}")
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             content = await file.read()

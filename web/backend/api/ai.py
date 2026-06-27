@@ -122,7 +122,7 @@ async def ai_recommend(req: AiRecommendRequest):
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
 
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            json_match = re.search(r"\{[^{}]*\}", content)
             if json_match:
                 parsed = json.loads(json_match.group())
                 ai_intent = parsed.get("intent", "")
@@ -284,7 +284,7 @@ async def ai_explain(req: ExplainRequest):
         data = resp.json()
         content = data["choices"][0]["message"]["content"]
 
-        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        json_match = re.search(r"\{[^{}]*\}", content)
         if json_match:
             parsed = json.loads(json_match.group())
             return ExplainResponse(
@@ -394,7 +394,7 @@ async def ai_search(req: SearchRequest):
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
 
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            json_match = re.search(r"\{[^{}]*\}", content)
             if json_match:
                 parsed = json.loads(json_match.group())
                 ai_matches = parsed.get("matches", [])
@@ -485,7 +485,7 @@ async def ai_chat(req: ConversationRequest):
         data = resp.json()
         content = data["choices"][0]["message"]["content"]
 
-        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        json_match = re.search(r"\{[^{}]*\}", content)
         if json_match:
             parsed = json.loads(json_match.group())
             return ConversationResponse(

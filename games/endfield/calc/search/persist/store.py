@@ -14,9 +14,12 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
 from utils.frozen_runtime import frozen_use_rust_batch, frozen_use_search_job_batch
@@ -259,6 +262,13 @@ def execute_search_with_resume(
     processed_keys_buffer: list[str] = []
 
     top_tracker = TopNTracker(config.top_n, key_fn=lambda score: score.final_damage)
+
+    # 续跑时加载历史 TopN，避免覆盖之前运行的最优结果
+    previous_top = store.load_top_scores(run_signature, config.top_n)
+    for prev_score in previous_top:
+        top_tracker.offer(prev_score)
+    if previous_top:
+        logger.info("续跑加载历史 TopN: %d 条", len(previous_top))
 
     started_at = time.perf_counter()
 

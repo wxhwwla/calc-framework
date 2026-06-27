@@ -256,6 +256,11 @@ def download_and_replace(
 
         extract_dir = Path(tempfile.mkdtemp(prefix="gcp_extract_"))
         with zipfile.ZipFile(zip_path, "r") as zf:
+            # Zip Slip 防护：验证所有条目路径在目标目录内
+            for info in zf.infolist():
+                target_path = (extract_dir / info.filename).resolve()
+                if not str(target_path).startswith(str(extract_dir.resolve())):
+                    raise RuntimeError(f"Zip Slip 检测: {info.filename}")
             zf.extractall(extract_dir)
 
         # 查找 exe

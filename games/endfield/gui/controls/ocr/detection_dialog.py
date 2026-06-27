@@ -286,6 +286,11 @@ class _DownloadThread(QThread):
                     with open(zip_path, "wb") as f:
                         f.write(resp.read())
                     with zipfile.ZipFile(zip_path, "r") as zf:
+                        # Zip Slip 防护：验证所有条目路径在目标目录内
+                        for info in zf.infolist():
+                            target_path = (cache / info.filename).resolve()
+                            if not str(target_path).startswith(str(cache.resolve())):
+                                raise RuntimeError(f"Zip Slip 检测: {info.filename}")
                         zf.extractall(cache)
                     zip_path.unlink()
                 except Exception:

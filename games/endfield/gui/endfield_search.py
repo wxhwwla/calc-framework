@@ -39,7 +39,6 @@ class ActionsSearchMixin:
     def _refresh_search_estimate(self) -> None:
         dock = self.control_dock
         if dock.estimate_output_label is None:
-            dock.estimate_output_label.setText("")
             return
         secs = getattr(self, "_search_estimated_total_seconds", 0)
         if secs > 0:

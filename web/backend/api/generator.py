@@ -136,8 +136,15 @@ def get_templates():
 @router.get("/templates/{template_id}")
 def get_template_detail(template_id: str):
     """获取模板详情，包括文件结构预览。"""
+    import re
+
+    if not re.match(r"^[a-zA-Z0-9_-]+$", template_id):
+        raise HTTPException(status_code=400, detail=f"无效的模板 ID: {template_id}")
     adapters_dir = Path(__file__).resolve().parents[3] / "framework" / "adapters"
     d = adapters_dir / template_id
+    # 二次验证：解析后的路径必须在 adapters_dir 内
+    if not d.resolve().is_relative_to(adapters_dir.resolve()):
+        raise HTTPException(status_code=400, detail="路径穿越检测")
     if not d.is_dir():
         raise HTTPException(status_code=404, detail=f"模板不存在: {template_id}")
 
@@ -288,7 +295,7 @@ async def ai_parse_formula(req: AIFormulaRequest):
     # 尝试提取 JSON
     import re
 
-    json_match = re.search(r"\{.*\}", content, re.DOTALL)
+    json_match = re.search(r"\{[^{}]*\}", content)
     if json_match:
         try:
             parsed = json.loads(json_match.group())

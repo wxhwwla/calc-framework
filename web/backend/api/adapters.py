@@ -3,6 +3,7 @@
 """适配器元数据 API — 列表/元信息/layout/DAG/数据摘要/打包导出。"""
 
 import json
+import re
 from pathlib import Path
 
 from api.adapter_lib.assets import (
@@ -20,6 +21,19 @@ from pydantic import BaseModel, Field
 router = APIRouter(prefix="/api/adapters", tags=["adapters"])
 
 _manager = AdapterManager(ADAPTER_ROOT)
+
+_ADAPTER_ID_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+def _validate_adapter_id(adapter_id: str) -> str:
+    """校验 adapter_id，防止路径穿越。"""
+    if not _ADAPTER_ID_RE.match(adapter_id):
+        raise HTTPException(status_code=400, detail=f"无效的适配器 ID: {adapter_id}")
+    # 二次验证：解析后的路径必须在 ADAPTER_ROOT 内
+    resolved = (ADAPTER_ROOT / adapter_id).resolve()
+    if not resolved.is_relative_to(ADAPTER_ROOT.resolve()):
+        raise HTTPException(status_code=400, detail="路径穿越检测")
+    return adapter_id
 
 
 class AdapterInfoResponse(BaseModel):
@@ -77,6 +91,7 @@ async def list_adapters():
 
 @router.get("/{adapter_id}/meta", response_model=AdapterMetaResponse)
 async def get_adapter_meta(adapter_id: str):
+    adapter_id = _validate_adapter_id(adapter_id)
     meta_file = ADAPTER_ROOT / adapter_id / "meta.json"
     if not meta_file.is_file():
         raise HTTPException(status_code=404, detail=f"adapter not found: {adapter_id}")
@@ -86,28 +101,33 @@ async def get_adapter_meta(adapter_id: str):
 
 @router.get("/{adapter_id}/layout")
 async def get_adapter_layout_route(adapter_id: str):
+    adapter_id = _validate_adapter_id(adapter_id)
     return get_adapter_layout(adapter_id)
 
 
 @router.get("/{adapter_id}/dag")
 async def get_adapter_dag_route(adapter_id: str):
+    adapter_id = _validate_adapter_id(adapter_id)
     return get_adapter_dag(adapter_id)
 
 
 @router.get("/{adapter_id}/data-summary")
 async def get_adapter_data_summary(adapter_id: str):
     """获取适配器关联的游戏数据实体摘要（类型 / 条数 / 只读）。"""
+    adapter_id = _validate_adapter_id(adapter_id)
     return {"entities": data_entity_summary(adapter_id)}
 
 
 @router.get("/{adapter_id}/pack-bundle")
 async def get_adapter_pack_bundle(adapter_id: str):
     """获取适配器的完整打包导出内容（meta + layout + DAG + data_files）。"""
+    adapter_id = _validate_adapter_id(adapter_id)
     return get_pack_export_bundle(adapter_id)
 
 
 @router.get("/{name}/schema", response_model=AdapterSchemaResponse)
 async def get_schema(name: str):
+    name = _validate_adapter_id(name)
     try:
         pkg = _manager.load(name)
     except KeyError as e:

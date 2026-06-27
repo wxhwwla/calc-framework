@@ -205,6 +205,8 @@ def _build_target(
                 str(base_dir / "tools"),
                 "--add-data",
                 f"{base_dir / 'utils'};utils",
+                "--add-data",
+                f"{base_dir / 'framework' / 'src' / 'calc_framework' / 'ui' / 'i18n_data'};calc_framework/ui/i18n_data",
             ]
         )
     else:
@@ -246,6 +248,8 @@ def _build_target(
                 ),
                 "--add-data",
                 f"{base_dir / 'framework' / 'adapters'};framework/adapters",
+                "--add-data",
+                f"{base_dir / 'framework' / 'src' / 'calc_framework' / 'ui' / 'i18n_data'};calc_framework/ui/i18n_data",
                 "--add-data",
                 f"{base_dir / 'utils'};utils",
                 "--add-data",

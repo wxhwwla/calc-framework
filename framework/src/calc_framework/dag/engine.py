@@ -65,11 +65,11 @@ _BINARY_OPS: dict[str, Any] = {
 
 _UNARY_OPS: dict[str, Any] = {
     "neg": op.neg,
-    "floor": lambda x: float(int(x) if x >= 0 else int(x) - 1),
-    "ceil": lambda x: float(int(x) + 1 if x > int(x) else int(x)),
+    "floor": lambda x: float(math.floor(x)),
+    "ceil": lambda x: float(math.ceil(x)),
     "abs": abs,
-    "sqrt": lambda x: float(x**0.5),
-    "ln": math.log,
+    "sqrt": lambda x: float(math.sqrt(x)) if x >= 0 else float("nan"),
+    "ln": lambda x: math.log(x) if x > 0 else float("nan"),
     "log10": math.log10,
     "sin": math.sin,
     "cos": math.cos,

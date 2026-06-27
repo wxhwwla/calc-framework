@@ -122,6 +122,12 @@ batch_docstring.py
 scan_docstrings.py
 scan_report.json
 scripts/test_gui_*.py
+TEST_PLAN.md
+step*.py
+test_click*.py
+
+# 日志目录
+logs/
 
 # 运行时用户偏好（不应跟踪）
 ui_preferences.json
