@@ -155,7 +155,7 @@ class PropPanel(QWidget):
         elif node.type == "user_input":
             self._add_user_input_controls(node)
 
-        elif node.type in ("unary", "binary"):
+        elif node.type in ("unary", "binary", "condition"):
             self._add_op_controls(node)
 
     def _add_const_controls(self, node: GraphNode) -> None:

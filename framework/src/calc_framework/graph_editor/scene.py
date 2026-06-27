@@ -130,6 +130,20 @@ class GraphScene(QGraphicsScene):
                 target_port = port
 
             if target_port:
+                # 检查目标端口是否已被连接（每个输入端口只能有一个连接）
+                if self._is_input_port_connected(target_port):
+                    # 目标端口已被连接，不允许再连接
+                    self._wire_start_port = None
+                    event.accept()
+                    return
+
+                # 检查源端口是否已连接到其他端口（每个输出端口只能连接一个输入）
+                if self._is_output_port_connected(source_port):
+                    # 源端口已连接，不允许再连接
+                    self._wire_start_port = None
+                    event.accept()
+                    return
+
                 wire = WireItem(source_port, target_port)
 
                 self.addItem(wire)
@@ -150,6 +164,18 @@ class GraphScene(QGraphicsScene):
             return
 
         super().mouseReleaseEvent(event)
+
+    def _is_input_port_connected(self, port: PortItem) -> bool:
+        """检查输入端口是否已被连接。"""
+        return any(wire.target_port is port for wire in self._wires)
+
+    def _is_output_port_connected(self, port: PortItem) -> bool:
+        """检查输出端口是否已连接到某个输入端口。"""
+        return any(wire.source_port is port for wire in self._wires)
+
+    def _is_output_port_connected_to(self, source: PortItem, target: PortItem) -> bool:
+        """检查输出端口是否已连接到指定的输入端口。"""
+        return any(wire.source_port is source and wire.target_port is target for wire in self._wires)
 
         """_update_ghost。"""
 

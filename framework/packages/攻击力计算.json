@@ -1,0 +1,17 @@
+{
+  "schema_version": "calc-graph-v1",
+  "name": "攻击力计算",
+  "description": "基础攻击力 + 加成 = 总攻击力",
+  "nodes": [
+    {"id": "base_atk", "type": "user_input", "label": "基础攻击力", "config": {"default": 100, "min": 0, "max": 9999}, "position": {"x": 0, "y": 0}},
+    {"id": "bonus", "type": "user_input", "label": "加成值", "config": {"default": 0, "min": 0, "max": 9999}, "position": {"x": 0, "y": 80}},
+    {"id": "sum", "type": "binary", "op": "+", "label": "总和", "config": {}, "position": {"x": 200, "y": 40}},
+    {"id": "out", "type": "output", "label": "总攻击力", "config": {}, "position": {"x": 400, "y": 40}}
+  ],
+  "edges": [
+    {"id": "e1", "from_node": "base_atk", "from_port": 0, "to_node": "sum", "to_port": 0},
+    {"id": "e2", "from_node": "bonus", "from_port": 0, "to_node": "sum", "to_port": 1},
+    {"id": "e3", "from_node": "sum", "from_port": 0, "to_node": "out", "to_port": 0}
+  ],
+  "layout": {"sections": [{"id": "main", "title": "输出", "output_nodes": ["out"], "columns": 1}]}
+}

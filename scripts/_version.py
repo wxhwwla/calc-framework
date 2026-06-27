@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.20"
+_VERSION = "3.28.21"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13711,5 +13711,60 @@ def get_exe_version() -> str:
 # - 修改 games/endfield/calc/search/evaluate/effect_id_map.py
 # - 修改 games/endfield/calc/search/evaluate/full_batch_eval.py
 # - 修改 games/endfield/calc/search/evaluate/rust_batch_data.py
+# - 修改 scripts/_version.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 16 处文件
+# BODY:
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 变更 framework/examples/
+# - 变更 framework/packages/
+# - 变更 framework/scripts/
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/help_content.py
+# - 修改 framework/src/calc_framework/graph_editor/items.py
+# - 修改 framework/src/calc_framework/graph_editor/package_manager.py
+# - 修改 framework/src/calc_framework/graph_editor/prop_panel.py
+# - 修改 framework/src/calc_framework/graph_editor/registry.py
+# - 修改 framework/src/calc_framework/graph_editor/scene.py
+# - 修改 framework/test_chinese_path.py
+# - 修改 framework/test_framework_demo.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 31 处文件
+# BODY:
+# - 变更 .secrets.baseline
+# - 变更 docker/Dockerfile.ci
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 更新文档 framework/examples/my_first_calculator/README.md
+# - 变更 framework/examples/my_first_calculator/attr_schema.json
+# - 修改 framework/examples/my_first_calculator/build_calcpack.py
+# - 变更 framework/examples/my_first_calculator/formula.dag.json
+# - 修改 framework/examples/my_first_calculator/functions.py
+# - 变更 framework/examples/my_first_calculator/meta.json
+# - 变更 framework/examples/my_first_calculator/my_first_calculator.calcpack
+# - 修改 framework/examples/my_first_calculator/test_calculator.py
+# - 变更 framework/examples/my_first_calculator/ui/layout.json
+# - 更新文档 framework/packages/README.md
+# - 修改 framework/packages/build_package.py
+# - 变更 framework/packages/战斗计算包/伤害计算.json
+# - 变更 framework/packages/攻击力计算.json
+# - 修改 framework/scripts/build_test_zone_package.py
+# - 变更 framework/src/calc_framework/configs/endfield_full.dag.json
+# - 修改 framework/src/calc_framework/dag/engine.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/help_content.py
+# - 修改 framework/src/calc_framework/graph_editor/items.py
+# - 修改 framework/src/calc_framework/graph_editor/package_manager.py
+# - 修改 framework/src/calc_framework/graph_editor/prop_panel.py
+# - 修改 framework/src/calc_framework/graph_editor/registry.py
+# - 修改 framework/src/calc_framework/graph_editor/scene.py
+# - 修改 framework/test_chinese_path.py
+# - 修改 framework/test_framework_demo.py
 # - 修改 scripts/_version.py
 # - 变更 web/backend/api/.admin_data/usage.json

@@ -134,6 +134,12 @@ def _build_registry() -> Registry:
         out_count=1,
         in_labels=["条件", "真值", "假值"],
         out_labels=["结果"],
+        ops=[
+            ("if", "如果"),
+            ("max", "取最大值"),
+            ("min", "取最小值"),
+        ],
+        default_op="if",
     )
 
     r["output"] = NodeTypeDef(

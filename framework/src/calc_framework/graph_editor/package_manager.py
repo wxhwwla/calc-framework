@@ -9,10 +9,22 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from calc_framework.logging import get_logger
+
 from .schema import (
     GraphDocument,
 )
 from .serializer import document_from_json
+
+logger = get_logger(__name__)
+
+# 默认子图包目录
+# __file__ = framework/src/calc_framework/graph_editor/package_manager.py
+# parents[0] = graph_editor/
+# parents[1] = calc_framework/
+# parents[2] = src/
+# parents[3] = framework/
+_DEFAULT_PACKAGES_DIR = Path(__file__).resolve().parents[3] / "packages"
 
 
 @dataclass
@@ -67,10 +79,14 @@ class CompositeTypeDef:
 class PackageManager:
     """管理所有已加载的计算包。"""
 
-    def __init__(self) -> None:
+    def __init__(self, auto_discover: bool = True) -> None:
         self._packages: dict[str, list[CompositeTypeDef]] = {}
 
         self._type_map: dict[str, CompositeTypeDef] = {}
+
+        # 自动发现默认目录下的子图包
+        if auto_discover:
+            self._discover_default_packages()
 
     def loaded_packages(self) -> dict[str, list[CompositeTypeDef]]:
         """返回 {包名: [复合节点定义, ...]}"""
@@ -203,3 +219,66 @@ class PackageManager:
             self._packages[tdef.package_name].append(tdef)
 
         self._type_map[tdef.type_id] = tdef
+
+    def _discover_default_packages(self) -> None:
+        """自动发现默认目录下的子图包。"""
+
+        packages_dir = _DEFAULT_PACKAGES_DIR
+
+        if not packages_dir.is_dir():
+            logger.debug("默认子图包目录不存在: %s", packages_dir)
+            return
+
+        logger.info("自动发现子图包目录: %s", packages_dir)
+
+        # 扫描 .json 文件
+        for json_file in packages_dir.glob("*.json"):
+            try:
+                self.load_json(json_file)
+                logger.info("自动加载子图: %s", json_file.name)
+            except Exception as e:
+                logger.warning("加载子图失败 %s: %s", json_file.name, e)
+
+        # 扫描 .zip 文件
+        for zip_file in packages_dir.glob("*.zip"):
+            try:
+                self.load_zip(zip_file)
+                logger.info("自动加载子图包: %s", zip_file.name)
+            except Exception as e:
+                logger.warning("加载子图包失败 %s: %s", zip_file.name, e)
+
+    def discover_from_directory(self, directory: Path) -> int:
+        """从指定目录发现并加载子图包。
+
+        Args:
+            directory: 要扫描的目录路径
+
+        Returns:
+            加载的子图/子图包数量
+        """
+
+        if not directory.is_dir():
+            logger.warning("目录不存在: %s", directory)
+            return 0
+
+        count = 0
+
+        # 扫描 .json 文件
+        for json_file in directory.glob("*.json"):
+            try:
+                self.load_json(json_file)
+                logger.info("加载子图: %s", json_file.name)
+                count += 1
+            except Exception as e:
+                logger.warning("加载子图失败 %s: %s", json_file.name, e)
+
+        # 扫描 .zip 文件
+        for zip_file in directory.glob("*.zip"):
+            try:
+                self.load_zip(zip_file)
+                logger.info("加载子图包: %s", zip_file.name)
+                count += 1
+            except Exception as e:
+                logger.warning("加载子图包失败 %s: %s", zip_file.name, e)
+
+        return count

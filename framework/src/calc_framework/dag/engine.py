@@ -55,11 +55,11 @@ _BINARY_OPS: dict[str, Any] = {
     "+": op.add,
     "-": op.sub,
     "*": op.mul,
-    "/": lambda a, b: a / b if b != 0 else 0.0,
+    "/": op.truediv,  # 除零时抛出 ZeroDivisionError，由 _eval_single_node 捕获
     "^": pow,
     "min": min,
     "max": max,
-    "mod": lambda a, b: a % b if b != 0 else 0.0,
+    "mod": op.mod,  # 除零时抛出 ZeroDivisionError，由 _eval_single_node 捕获
 }
 
 

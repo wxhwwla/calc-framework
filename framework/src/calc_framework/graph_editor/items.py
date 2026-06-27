@@ -206,6 +206,28 @@ class NodeItem(QGraphicsRectItem):
     def ports(self) -> list[PortItem]:
         return self._ports
 
+    def update_label(self, new_label: str) -> None:
+        """更新节点标签并刷新显示。"""
+        self._node_label = new_label
+        # 更新显示文本
+        display = new_label
+        if self._node_op:
+            display = f"{new_label} [{self._node_op}]"
+        self._text.setText(display)
+
+    def update_op(self, new_op: str) -> None:
+        """更新节点操作并刷新显示。"""
+        self._node_op = new_op
+        # 更新显示文本
+        display = self._node_label
+        if new_op:
+            display = f"{self._node_label} [{new_op}]"
+        self._text.setText(display)
+
+    def update_config(self, config) -> None:
+        """更新节点配置。"""
+        self._config = config
+
     def to_graph_node(self) -> GraphNode:
         return GraphNode(
             id=self._node_id,

@@ -40,8 +40,15 @@ def main() -> None:
     )
     from .help_dialog import HelpDialog
     from .node_panel import NodePanel
+    from .package_manager import PackageManager
     from .prop_panel import PropPanel
-    from .registry import create_default_node
+    from .registry import create_default_node, register_composite_type
+
+    # 初始化 PackageManager 并自动发现子图包
+    pm = PackageManager(auto_discover=True)
+    for tdefs in pm.loaded_packages().values():
+        for tdef in tdefs:
+            register_composite_type(tdef)
 
     app = QApplication(sys.argv)
 
@@ -97,6 +104,30 @@ def main() -> None:
             prop_panel.set_preview_value("—")
             return
         node_id = node_items[0].node_id
+        graph_node = node_items[0].to_graph_node()
+
+        # 对于变量引用节点，显示引用路径
+        if graph_node.type == "var":
+            path = graph_node.config.path
+            if path:
+                prop_panel.set_preview_value(f"引用: {path}")
+            else:
+                prop_panel.set_preview_value("(未设置路径)")
+            return
+
+        # 对于用户输入节点，显示默认值
+        if graph_node.type == "user_input":
+            default = graph_node.config.default
+            prop_panel.set_preview_value(f"默认值: {default}")
+            return
+
+        # 对于常量节点，显示值
+        if graph_node.type == "const":
+            value = graph_node.config.value
+            prop_panel.set_preview_value(f"{value}")
+            return
+
+        # 对于计算节点，尝试求值
         try:
             doc = collect_document(canvas)
             dag = compile_graph(doc)
@@ -123,12 +154,13 @@ def main() -> None:
     def _on_node_config_changed(node_id: str) -> None:
         item = canvas.find_node_item(node_id)
         if item:
+            # 同步 label、op、config 修改到画布节点
+            if prop_panel._current_node and prop_panel._current_node.id == node_id:
+                item.update_label(prop_panel._current_node.label)
+                item.update_op(prop_panel._current_node.op)
+                item.update_config(prop_panel._current_node.config)
             item.update()
-        selected = canvas.scene().selectedItems()
-        if any(isinstance(it, NodeItem) and it.node_id == node_id for it in selected):
-            ni = canvas.find_node_item(node_id)
-            if ni:
-                prop_panel.show_node(ni.to_graph_node())
+        # 注意：不要在这里调用 show_node()，否则会导致输入框重建并丢失焦点
         _update_preview()
 
     prop_panel.node_changed.connect(_on_node_config_changed)
@@ -239,9 +271,13 @@ def main() -> None:
     help_action.triggered.connect(lambda: _show_help())
     help_menu.addAction(help_action)
 
-    from utils.gui.donation import append_donation_help_menu_action
+    # 捐赠菜单（可选，依赖项目特定的 utils 模块）
+    try:
+        from utils.gui.donation import append_donation_help_menu_action
 
-    append_donation_help_menu_action(help_menu, window)
+        append_donation_help_menu_action(help_menu, window)
+    except ImportError:
+        pass  # 捐赠功能不可用，跳过
 
     # ── 工具栏 ──
     toolbar = window.addToolBar(tr("desktop.graphEditor.commonOperations"))
