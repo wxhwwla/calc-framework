@@ -215,7 +215,7 @@ class NodeItem(QGraphicsRectItem):
             display = f"{new_label} [{self._node_op}]"
         self._text.setText(display)
 
-    def update_op(self, new_op: str) -> None:
+    def update_op(self, new_op: str | None) -> None:
         """更新节点操作并刷新显示。"""
         self._node_op = new_op
         # 更新显示文本

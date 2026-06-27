@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.21"
+_VERSION = "3.28.22"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13767,4 +13767,13 @@ def get_exe_version() -> str:
 # - 修改 framework/test_chinese_path.py
 # - 修改 framework/test_framework_demo.py
 # - 修改 scripts/_version.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 5 处文件
+# BODY:
+# - 更新文档 docs/会话接续手册.md
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/items.py
+# - 修改 framework/src/calc_framework/graph_editor/tab_manager.py
 # - 变更 web/backend/api/.admin_data/usage.json
