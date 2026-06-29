@@ -426,6 +426,46 @@ def main() -> None:
         idx = tab_manager.currentIndex()
         tab_manager.save_tab_as(idx)
 
+    def _export_dag() -> None:
+        """编译当前画布并导出为 .dag.json 文件。"""
+        canvas = _get_current_canvas()
+        if not canvas:
+            return
+
+        try:
+            doc = collect_document(canvas)
+            dag = compile_graph(doc)
+        except Exception as e:
+            QMessageBox.critical(window, tr("desktop.graphEditor.exportDagFailed"), str(e))
+            return
+
+        # 默认文件名：从当前标签页名称推断
+        tab_text = tab_manager.tabText(tab_manager.currentIndex()).replace("*", "").strip()
+        untitled = tr("desktop.graphEditor.untitled")
+        default_name = tab_text if tab_text and tab_text != untitled else "untitled"
+        default_path = f"{default_name}.dag.json"
+
+        path_str, _ = QFileDialog.getSaveFileName(
+            window,
+            tr("desktop.graphEditor.exportDag"),
+            default_path,
+            tr("desktop.graphEditor.exportDagFileFilter"),
+        )
+        if not path_str:
+            return
+
+        try:
+            from ..dag.serializer import save_dag
+
+            save_dag(dag, Path(path_str))
+            QMessageBox.information(
+                window,
+                tr("desktop.graphEditor.exportDagSuccess"),
+                tr("desktop.graphEditor.exportDagSuccessDetail", path=path_str),
+            )
+        except Exception as e:
+            QMessageBox.critical(window, tr("desktop.graphEditor.exportDagFailed"), str(e))
+
     new_action = QAction(tr("desktop.graphEditor.new"), window)
     new_action.setShortcut(QKeySequence.StandardKey.New)
     new_action.triggered.connect(lambda: _new_file())
@@ -445,6 +485,13 @@ def main() -> None:
     save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
     save_as_action.triggered.connect(lambda: _save_as_file())
     file_menu.addAction(save_as_action)
+
+    file_menu.addSeparator()
+
+    export_dag_action = QAction(tr("desktop.graphEditor.exportDag"), window)
+    export_dag_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
+    export_dag_action.triggered.connect(lambda: _export_dag())
+    file_menu.addAction(export_dag_action)
 
     # ── 帮助菜单 ──
     help_menu = menubar.addMenu(tr("common.help"))
@@ -542,6 +589,7 @@ def main() -> None:
     _tb(tr("desktop.graphEditor.resetViewBtn"), tr("desktop.graphEditor.resetViewTip"), _reset_zoom)
     toolbar.addSeparator()
     _tb(tr("desktop.graphEditor.evaluateBtn"), tr("desktop.graphEditor.evaluateTip"), _run_evaluate)
+    _tb(tr("desktop.graphEditor.exportDagBtn"), tr("desktop.graphEditor.exportDagTip"), _export_dag)
     toolbar.addSeparator()
 
     def _clear_canvas() -> None:

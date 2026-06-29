@@ -36,7 +36,7 @@ from ..errors import CalcFrameworkError
 AttrSource = Literal["character", "weapon", "equipment", "enemy", "computed"]
 AttrType = Literal["float", "int", "bool", "str", "percent"]
 
-VALID_SOURCES: set[str] = {"character", "weapon", "equipment", "enemy", "computed"}
+VALID_SOURCES: set[str] = {"character", "weapon", "equipment", "enemy", "computed", "user_input"}
 VALID_TYPES: set[str] = {"float", "int", "bool", "str", "percent"}
 
 

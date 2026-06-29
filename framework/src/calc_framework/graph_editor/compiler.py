@@ -62,6 +62,11 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
                 if sub_doc is not None:
                     sub_dag = compile_graph(sub_doc)
 
+                    # 合并内层子图的 subgraphs（递归展开）
+                    for inner_name, inner_sg in sub_dag.subgraphs.items():
+                        if inner_name not in subgraphs:
+                            subgraphs[inner_name] = inner_sg
+
                     # 提取参数（user_input 节点）
 
                     params: dict[str, DAGVariable] = {}
@@ -113,11 +118,15 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
     variables: dict[str, DAGVariable] = {}
 
     for path_str, raw in doc.external_variables.items():
-        variables[path_str] = DAGVariable(
-            type=str(raw.get("type", "float")),
-            source=str(raw.get("source", "computed")),
-            description=str(raw.get("description", "")),
-        )
+        if isinstance(raw, dict):
+            variables[path_str] = DAGVariable(
+                type=str(raw.get("type", "float")),
+                source=str(raw.get("source", "computed")),
+                description=str(raw.get("description", "")),
+            )
+        else:
+            # 兼容旧格式：值为字符串时视为 float computed 变量
+            variables[path_str] = DAGVariable(type="float", source="computed")
 
     for node in doc.nodes:
         if node.type == "var" and node.config.path and node.config.path not in variables:

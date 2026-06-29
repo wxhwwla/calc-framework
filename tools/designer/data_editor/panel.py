@@ -431,18 +431,14 @@ class DataEditorPanel(QWidget):
         self._init_dag()
 
     def sync_profile_from_adapter(self, adapter_name: str) -> None:
-        """sync_profile_from_adapter 实现。
-
-        Args:
-            adapter_name: 参数描述。
-
-        Returns:
-            返回值描述。
-        """
+        """根据适配器名称同步到对应的 profile。"""
         pid = ADAPTER_NAME_TO_PROFILE.get(adapter_name)
 
         if pid:
             self.set_profile(pid)
+        elif adapter_name in PROFILES:
+            # 直接用适配器名称作为 profile ID
+            self.set_profile(adapter_name)
 
     def get_profile_id(self) -> str:
         """get_profile_id 实现。"""
@@ -494,8 +490,8 @@ class DataEditorPanel(QWidget):
             if adapter_path.is_dir():
                 self._dag_pkg = AdapterPackage(str(adapter_path))
 
-        except Exception:
-            _logger.warning("加载 AdapterPackage 失败")
+        except Exception as exc:
+            _logger.warning("加载 AdapterPackage 失败: %s", exc)
             self._dag_pkg = None
 
     def _dag_verify(self) -> None:

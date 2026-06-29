@@ -13,6 +13,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -29,9 +30,261 @@ from .main_window import _register_page
 
 logger = get_logger(__name__)
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+
+def _find_repo_root() -> Path:
+    """从 pages.py 向上查找包含 framework/ 和 tools/ 的仓库根目录。"""
+    cur = Path(__file__).resolve().parent
+    for _ in range(6):
+        if (cur / "framework").is_dir() and (cur / "tools").is_dir():
+            return cur
+        cur = cur.parent
+    # 回退：parents[4]（framework/src/calc_framework/dev_toolkit/pages.py → 根）
+    return Path(__file__).resolve().parents[4]
+
+
+_REPO_ROOT = _find_repo_root()
+_REPO_ROOT_STR = str(_REPO_ROOT)
+
+# 确保仓库根目录在 sys.path 最前面（Qt 初始化可能修改 sys.path）
+if _REPO_ROOT_STR in sys.path:
+    sys.path.remove(_REPO_ROOT_STR)
+sys.path.insert(0, _REPO_ROOT_STR)
+
+
+def _ensure_repo_on_path() -> None:
+    """确保仓库根目录在 sys.path 最前面（防止 scripts/tools/ 遮蔽 tools/）。"""
+    # 移除所有旧的仓库根目录条目
+    while _REPO_ROOT_STR in sys.path:
+        sys.path.remove(_REPO_ROOT_STR)
+    # 插入到最前面
+    sys.path.insert(0, _REPO_ROOT_STR)
+
+
+# ═══════════════════════════════════════════════════════════════
+# 配置 — 新建适配器（从 DAG 文件创建完整适配器）
+# ═══════════════════════════════════════════════════════════════
+
+
+class _NewAdapterPage(QWidget):
+    """新建适配器页面 — 从 .dag.json 文件创建完整适配器包。
+
+    生成 meta.json + attr_schema.json + ui/layout.json + functions.py，
+    保存到 framework/adapters/<name>/，之后「数据编辑器」「布局编辑器」「导出打包」
+    都能识别并使用。
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        from PySide6.QtWidgets import (
+            QFormLayout,
+            QGroupBox,
+            QHBoxLayout,
+            QLineEdit,
+            QPushButton,
+            QTextEdit,
+        )
+
+        # ── DAG 文件选择 ──
+        dag_group = QGroupBox(tr("desktop.devToolkit.newAdapter.dagFile"))
+        dag_layout = QHBoxLayout(dag_group)
+        self._dag_path_edit = QLineEdit()
+        self._dag_path_edit.setPlaceholderText(tr("desktop.devToolkit.newAdapter.dagFileSelect"))
+        self._dag_path_edit.setReadOnly(True)
+        dag_layout.addWidget(self._dag_path_edit)
+        dag_btn = QPushButton("...")
+        dag_btn.setFixedWidth(40)
+        dag_btn.clicked.connect(self._select_dag_file)
+        dag_layout.addWidget(dag_btn)
+        layout.addWidget(dag_group)
+
+        # ── 适配器信息 ──
+        info_group = QGroupBox(tr("desktop.devToolkit.newAdapter.title"))
+        form = QFormLayout(info_group)
+        self._name_edit = QLineEdit()
+        self._name_edit.setPlaceholderText(tr("desktop.devToolkit.newAdapter.adapterNamePlaceholder"))
+        form.addRow(tr("desktop.devToolkit.newAdapter.adapterName"), self._name_edit)
+        self._game_edit = QLineEdit()
+        self._game_edit.setPlaceholderText(tr("desktop.devToolkit.newAdapter.gameNamePlaceholder"))
+        self._game_edit.setText("通用游戏")
+        form.addRow(tr("desktop.devToolkit.newAdapter.gameName"), self._game_edit)
+        self._desc_edit = QLineEdit()
+        self._desc_edit.setPlaceholderText(tr("desktop.devToolkit.newAdapter.descriptionPlaceholder"))
+        form.addRow(tr("desktop.devToolkit.newAdapter.description"), self._desc_edit)
+        layout.addWidget(info_group)
+
+        # ── 创建按钮 ──
+        self._create_btn = QPushButton(tr("desktop.devToolkit.newAdapter.createBtn"))
+        self._create_btn.clicked.connect(self._create_adapter)
+        layout.addWidget(self._create_btn)
+
+        # ── 结果 ──
+        self._result = QTextEdit()
+        self._result.setReadOnly(True)
+        self._result.setMaximumHeight(150)
+        layout.addWidget(self._result)
+
+        layout.addStretch()
+
+        self._dag_file: Path | None = None
+
+    def _select_dag_file(self) -> None:
+        path_str, _ = QFileDialog.getOpenFileName(
+            self,
+            tr("desktop.devToolkit.newAdapter.dagFileSelect"),
+            "",
+            tr("desktop.devToolkit.newAdapter.dagFileFilter"),
+        )
+        if path_str:
+            self._dag_file = Path(path_str)
+            self._dag_path_edit.setText(path_str)
+            # 自动填充名称
+            if not self._name_edit.text():
+                self._name_edit.setText(self._dag_file.stem)
+
+    def _create_adapter(self) -> None:
+        from calc_framework.dag.serializer import load_dag
+
+        if not self._dag_file:
+            QMessageBox.warning(self, tr("desktop.devToolkit.newAdapter.error"), tr("desktop.devToolkit.newAdapter.noDagFile"))
+            return
+
+        name = self._name_edit.text().strip()
+        if not name:
+            QMessageBox.warning(self, tr("desktop.devToolkit.newAdapter.error"), tr("desktop.devToolkit.newAdapter.noName"))
+            return
+
+        game = self._game_edit.text().strip() or "通用游戏"
+        desc = self._desc_edit.text().strip()
+
+        # 加载 DAG 验证
+        try:
+            dag = load_dag(self._dag_file)
+        except Exception as e:
+            QMessageBox.critical(
+                self, tr("desktop.devToolkit.newAdapter.error"), tr("desktop.devToolkit.newAdapter.dagLoadError", error=str(e))
+            )
+            return
+
+        # 生成适配器目录
+        safe_name = name.replace(" ", "_").replace("/", "_").replace("\\", "_")
+        adapter_dir = _REPO_ROOT / "framework" / "adapters" / safe_name
+        adapter_dir.mkdir(parents=True, exist_ok=True)
+        (adapter_dir / "ui").mkdir(exist_ok=True)
+
+        dag_filename = f"{safe_name}.dag.json"
+
+        # 1. 复制 DAG 文件
+        import shutil
+
+        shutil.copy2(self._dag_file, adapter_dir / dag_filename)
+
+        # 2. 生成 meta.json
+        import json
+
+        meta = {
+            "name": name,
+            "game": game,
+            "description": desc or dag.description or name,
+            "version": "1.0.0",
+            "schema_version": "dag-v1",
+            "entry_dag": dag_filename,
+            "ui_layout": "ui/layout.json",
+            "attr_schema": "attr_schema.json",
+        }
+        (adapter_dir / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # 3. 生成 attr_schema.json（从 DAG 变量推断，过滤 user_input）
+        valid_sources = {"character", "weapon", "equipment", "enemy", "computed"}
+        attrs = []
+        for var_path, var_def in dag.variables.items():
+            parts = var_path.split(".")
+            if len(parts) == 2:
+                source = var_def.source if var_def.source in valid_sources else "computed"
+                attrs.append(
+                    {
+                        "name": parts[1],
+                        "type": var_def.type if var_def.type in ("float", "int", "bool", "percent") else "float",
+                        "source": source,
+                        "default": var_def.default if var_def.default is not None else 0.0,
+                        "description": var_def.description or parts[1],
+                    }
+                )
+        (adapter_dir / "attr_schema.json").write_text(
+            json.dumps({"attributes": attrs}, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        # 3.5 创建 data/ 目录 + 空数据文件
+        data_dir = adapter_dir / "data"
+        data_dir.mkdir(exist_ok=True)
+        # 按 source 分组创建数据文件
+        source_groups: dict[str, list[str]] = {}
+        for var_path, var_def in dag.variables.items():
+            parts = var_path.split(".")
+            if len(parts) == 2 and var_def.source in valid_sources:
+                source_groups.setdefault(var_def.source, []).append(parts[1])
+        for source, fields in source_groups.items():
+            data_file = data_dir / f"{source}s.json"
+            if not data_file.exists():
+                data_file.write_text(json.dumps([], ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # 4. 生成 ui/layout.json（自动布局）
+        input_vars = [k for k, v in dag.variables.items() if v.source != "computed"]
+        output_names = list(dag.outputs.keys())
+        sections = []
+        if input_vars:
+            sections.append(
+                {
+                    "id": "inputs",
+                    "type": "inputs",
+                    "title": "输入参数",
+                    "variables": input_vars,
+                }
+            )
+        if output_names:
+            sections.append(
+                {
+                    "id": "outputs",
+                    "type": "outputs",
+                    "title": "计算结果",
+                    "outputs": output_names,
+                }
+            )
+        layout_data = {
+            "schema_version": "ui-v1",
+            "name": name,
+            "sections": sections,
+        }
+        (adapter_dir / "ui" / "layout.json").write_text(json.dumps(layout_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # 5. 生成空 functions.py
+        (adapter_dir / "functions.py").write_text(
+            f'# -*- coding: utf-8 -*-\n# SPDX-License-Identifier: AGPL-3.0\n"""{name} — 自定义函数。"""\n',
+            encoding="utf-8",
+        )
+
+        # 显示结果
+        files = [
+            f"  {safe_name}/meta.json",
+            f"  {safe_name}/{dag_filename}",
+            f"  {safe_name}/attr_schema.json",
+            f"  {safe_name}/ui/layout.json",
+            f"  {safe_name}/functions.py",
+        ]
+        self._result.setPlainText(
+            tr("desktop.devToolkit.newAdapter.successMsg", path=str(adapter_dir)) + "\n\n文件:\n" + "\n".join(files)
+        )
+
+        QMessageBox.information(
+            self,
+            tr("desktop.devToolkit.newAdapter.success"),
+            tr("desktop.devToolkit.newAdapter.successMsg", path=str(adapter_dir)),
+        )
+
+
+_register_page("new_adapter", _NewAdapterPage)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -47,6 +300,7 @@ class _DataEditorPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         try:
+            _ensure_repo_on_path()
             from tools.designer.data_editor.panel import DataEditorPanel
 
             self._panel = DataEditorPanel()
@@ -72,6 +326,7 @@ class _LayoutEditorPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         try:
+            _ensure_repo_on_path()
             from tools.designer.layout_editor.canvas import LayoutCanvasPanel
 
             self._panel = LayoutCanvasPanel()
@@ -97,6 +352,7 @@ class _ExportPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         try:
+            _ensure_repo_on_path()
             from tools.designer.theme_editor.panel import ThemePanel
 
             self._panel = ThemePanel()
@@ -110,140 +366,469 @@ _register_page("export_pack", _ExportPage)
 
 
 # ═══════════════════════════════════════════════════════════════
-# 开发 — 图编辑器
+# 开发 — 图编辑器（复用独立版核心组件）
 # ═══════════════════════════════════════════════════════════════
 
 
 class _GraphEditorPage(QWidget):
-    """图编辑器页面 — 包装 graph_editor（简化版，无循环导入）。"""
+    """图编辑器页面 — 复用独立版 graph_editor 的全部核心组件。
+
+    与 ``python -m calc_framework.graph_editor`` 功能一致，
+    包含标签页管理、复合节点、包管理器、导出 DAG 等全部特性。
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         try:
-            from PySide6.QtCore import Qt as _Qt
-            from PySide6.QtGui import QShortcut
+            import json
 
-            # ── 顶部工具栏 ──
+            from PySide6.QtCore import Qt as _Qt
+            from PySide6.QtGui import QKeySequence, QShortcut
             from PySide6.QtWidgets import (
                 QFileDialog,
                 QMessageBox,
                 QSplitter,
-                QToolBar,
                 QToolButton,
             )
 
             from calc_framework.dag.engine import evaluate_graph
             from calc_framework.graph_editor.compiler import compile_graph
-            from calc_framework.graph_editor.file_actions import (
-                collect_document,
-                load_document,
-                open_graph_file,
-                save_graph_file,
-            )
+            from calc_framework.graph_editor.file_actions import collect_document
             from calc_framework.graph_editor.graph_editor_widget import (
                 GraphEditorWidget,
                 NodeItem,
             )
+            from calc_framework.graph_editor.help_dialog import HelpDialog
             from calc_framework.graph_editor.node_panel import NodePanel
+            from calc_framework.graph_editor.package_manager import PackageManager
             from calc_framework.graph_editor.prop_panel import PropPanel
-            from calc_framework.graph_editor.registry import create_default_node
+            from calc_framework.graph_editor.registry import (
+                create_default_node,
+                register_composite_type,
+                set_package_manager,
+            )
+            from calc_framework.graph_editor.tab_manager import TabManager
 
-            toolbar = QToolBar(tr("desktop.graphEditor.commonOperations"))
-            toolbar.setMovable(False)
+            # ── 初始化包管理器（与独立版一致）──
+            pm = PackageManager(auto_discover=True)
+            set_package_manager(pm)
+            for tdefs in pm.loaded_packages().values():
+                for tdef in tdefs:
+                    register_composite_type(tdef)
 
-            def _tb(text: str, cb):
+            # ── 主内容区（左侧面板 + 标签页 + 右侧属性）──
+            mid_splitter = QSplitter(_Qt.Horizontal)
+
+            node_panel = NodePanel()
+            tab_manager = TabManager()
+            prop_panel = PropPanel()
+
+            mid_splitter.addWidget(node_panel)
+            mid_splitter.addWidget(tab_manager)
+            mid_splitter.addWidget(prop_panel)
+            mid_splitter.setStretchFactor(0, 0)
+            mid_splitter.setStretchFactor(1, 1)
+            mid_splitter.setStretchFactor(2, 0)
+            mid_splitter.setSizes([180, 900, 280])
+
+            layout.addWidget(mid_splitter)
+
+            # 创建初始标签页
+            tab_manager.new_tab()
+
+            # ── 辅助函数（与独立版一致）──
+            def _get_current_canvas() -> GraphEditorWidget | None:
+                try:
+                    return tab_manager.current_canvas
+                except RuntimeError:
+                    return None
+
+            def _get_current_prop_panel() -> PropPanel | None:
+                return prop_panel
+
+            # ── 子图标签页追踪 ──
+            _subgraph_tab_by_node: dict[str, int] = {}
+            _subgraph_tabs: dict[int, tuple[GraphEditorWidget, str]] = {}
+
+            def _on_subgraph_tab_closed(index: int) -> None:
+                if index in _subgraph_tabs:
+                    _, node_id = _subgraph_tabs.pop(index)
+                    _subgraph_tab_by_node.pop(node_id, None)
+
+            tab_manager.tabCloseRequested.connect(_on_subgraph_tab_closed)
+
+            def _open_subgraph_in_tab(node_id: str, source_graph: str) -> None:
+                canvas = _get_current_canvas()
+                if not canvas:
+                    return
+                if node_id in _subgraph_tab_by_node:
+                    existing_idx = _subgraph_tab_by_node[node_id]
+                    if existing_idx < tab_manager.count():
+                        tab_manager.setCurrentIndex(existing_idx)
+                        return
+                    del _subgraph_tab_by_node[node_id]
+
+                item = canvas.find_node_item(node_id)
+                sub_name = item._node_label if item else "子图"
+
+                from calc_framework.graph_editor.file_actions import load_document
+                from calc_framework.graph_editor.serializer import document_from_json
+
+                try:
+                    doc = document_from_json(json.loads(source_graph))
+                except Exception:
+                    QMessageBox.warning(self, "子图编辑", "子图 JSON 解析失败")
+                    return
+
+                state = tab_manager.new_tab()
+                load_document(doc, state.canvas)
+                tab_idx = tab_manager.currentIndex()
+                tab_manager.setTabText(tab_idx, f"🔧 {sub_name}")
+
+                _subgraph_tab_by_node[node_id] = tab_idx
+                _subgraph_tabs[tab_idx] = (canvas, node_id)
+                _connect_canvas_signals(state.canvas)
+
+            def _save_subgraph_tab() -> bool:
+                idx = tab_manager.currentIndex()
+                if idx not in _subgraph_tabs:
+                    return False
+                parent_canvas, node_id = _subgraph_tabs[idx]
+                canvas = _get_current_canvas()
+                if not canvas:
+                    return False
+
+                from calc_framework.graph_editor.serializer import document_to_json
+
+                doc = collect_document(canvas)
+                new_json = document_to_json(doc)
+
+                item = parent_canvas.find_node_item(node_id)
+                if item is not None:
+                    item._config.source_graph = new_json
+                    for port in item._ports[:]:
+                        if port.scene():
+                            port.scene().removeItem(port)
+                    item._ports.clear()
+                    item._create_ports()
+                    parent_canvas.node_changed.emit()
+                return True
+
+            _connected_canvases: set[int] = set()
+
+            def _connect_canvas_signals(canvas: GraphEditorWidget) -> None:
+                canvas_id = id(canvas)
+                if canvas_id in _connected_canvases:
+                    return
+                _connected_canvases.add(canvas_id)
+                canvas.scene().selectionChanged.connect(lambda: _on_selection_changed())
+                canvas.node_changed.connect(lambda: _update_preview())
+                canvas.subgraph_edit_requested.connect(_open_subgraph_in_tab)
+
+            # ── 信号（与独立版一致）──
+            def _on_node_created(type_id: str) -> None:
+                canvas = _get_current_canvas()
+                if canvas:
+                    canvas.add_graph_node(create_default_node(type_id))
+
+            node_panel.node_created.connect(_on_node_created)
+
+            def _on_selection_changed() -> None:
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if not canvas or not prop:
+                    return
+                selected = canvas.scene().selectedItems()
+                nodes = [it for it in selected if isinstance(it, NodeItem)]
+                if nodes:
+                    prop.show_node(nodes[0].to_graph_node())
+                else:
+                    prop.show_node(None)
+                _update_preview()
+
+            def _update_preview() -> None:
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if not canvas or not prop:
+                    return
+                selected = canvas.scene().selectedItems()
+                node_items = [it for it in selected if isinstance(it, NodeItem)]
+                if not node_items:
+                    prop.set_preview_value("—")
+                    return
+                node_id = node_items[0].node_id
+                graph_node = node_items[0].to_graph_node()
+
+                if graph_node.type == "var":
+                    path = graph_node.config.path
+                    prop.set_preview_value(f"引用: {path}" if path else "(未设置路径)")
+                    return
+                if graph_node.type == "user_input":
+                    prop.set_preview_value(f"默认值: {graph_node.config.default}")
+                    return
+                if graph_node.type == "const":
+                    prop.set_preview_value(f"{graph_node.config.value}")
+                    return
+
+                # 对于 output / composite / binary 等节点，尝试编译求值
+                try:
+                    doc = collect_document(canvas)
+                    dag = compile_graph(doc)
+                    if not dag.nodes:
+                        prop.set_preview_value("—")
+                        return
+                    res = evaluate_graph(dag, {})
+
+                    if graph_node.type == "output":
+                        port_inputs = {}
+                        for e in doc.edges:
+                            port_inputs[(e.to_node, e.to_port)] = e.from_node
+                        source = port_inputs.get((node_id, 0))
+                        if source:
+                            val = res.node_values.get(source)
+                            if val is not None:
+                                prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                                return
+                            val = res.outputs.get(source)
+                            if val is not None:
+                                prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                                return
+                        prop.set_preview_value("(未连接)" if source is None else "—")
+                        return
+
+                    if graph_node.type == "composite":
+                        for sub in dag.subgraphs.values():
+                            for out_def in sub.outputs.values():
+                                expanded_key = f"{node_id}.{out_def.node}"
+                                val = res.node_values.get(expanded_key)
+                                if val is not None:
+                                    prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                                    return
+                        prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
+                        return
+
+                    val = res.node_values.get(node_id)
+                    if val is not None:
+                        prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
+                    else:
+                        val = res.outputs.get(node_id)
+                        prop.set_preview_value(f"{val:.6f}" if val is not None else "—")
+                except Exception as e:
+                    prop.set_preview_value(f"错误: {str(e)[:60]}")
+
+            def _on_node_config_changed(node_id: str) -> None:
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if not canvas or not prop:
+                    return
+                item = canvas.find_node_item(node_id)
+                if item:
+                    if prop._current_node and prop._current_node.id == node_id:
+                        item.update_label(prop._current_node.label)
+                        item.update_op(prop._current_node.op)
+                        item.update_config(prop._current_node.config)
+                    item.update()
+                tab_manager.mark_modified(tab_manager.currentIndex())
+                _update_preview()
+
+            # 连接初始标签页的信号
+            initial_canvas = tab_manager.current_canvas
+            if initial_canvas:
+                _connect_canvas_signals(initial_canvas)
+                prop_panel.node_changed.connect(_on_node_config_changed)
+
+            def _on_tab_changed() -> None:
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if canvas and prop:
+                    _connect_canvas_signals(canvas)
+                    prop.node_changed.connect(_on_node_config_changed)
+
+            tab_manager.current_tab_changed.connect(_on_tab_changed)
+
+            # ── 删除 ──
+            def _delete_selected() -> None:
+                canvas = _get_current_canvas()
+                if canvas:
+                    for item in canvas.scene().selectedItems():
+                        if isinstance(item, NodeItem):
+                            canvas.remove_node(item.node_id)
+
+            delete_shortcut = QShortcut(QKeySequence(_Qt.Key.Key_Delete), self)
+            delete_shortcut.activated.connect(_delete_selected)
+
+            # ── 工具栏（与独立版一致）──
+            toolbar = QWidget()
+            toolbar.setStyleSheet("""
+                QToolButton {
+                    color: #cccccc; background: transparent;
+                    border: 1px solid transparent; border-radius: 4px;
+                    padding: 6px 12px; font-family: "Microsoft YaHei"; font-size: 13px;
+                }
+                QToolButton:hover { background: #2a2d2e; border-color: #094771; color: white; }
+                QToolButton:pressed { background: #094771; color: white; }
+            """)
+            from PySide6.QtWidgets import QHBoxLayout as _HBox
+
+            tb_layout = _HBox(toolbar)
+            tb_layout.setContentsMargins(2, 2, 2, 2)
+            tb_layout.setSpacing(4)
+
+            def _tb(text: str, tip: str, cb) -> None:
                 btn = QToolButton()
                 btn.setText(text)
+                btn.setToolTip(tip)
                 btn.clicked.connect(cb)
-                toolbar.addWidget(btn)
+                tb_layout.addWidget(btn)
 
-            # ── 主内容区 ──
-            splitter = QSplitter(_Qt.Horizontal)
-            self._node_panel = NodePanel()
-            self._canvas = GraphEditorWidget()
-            self._prop_panel = PropPanel()
-
-            splitter.addWidget(self._node_panel)
-            splitter.addWidget(self._canvas)
-            splitter.addWidget(self._prop_panel)
-            splitter.setStretchFactor(0, 0)
-            splitter.setStretchFactor(1, 3)
-            splitter.setStretchFactor(2, 1)
+            def _tb_sep() -> None:
+                sep = QWidget()
+                sep.setFixedWidth(1)
+                sep.setStyleSheet("background: #3c3c3c;")
+                tb_layout.addWidget(sep)
 
             # ── 文件操作 ──
-            current_file: list[Path | None] = [None]
+            def _new_file() -> None:
+                tab_manager.new_tab()
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if canvas and prop:
+                    _connect_canvas_signals(canvas)
+                    prop.node_changed.connect(_on_node_config_changed)
 
-            def _new_file():
-                self._canvas.clear_scene()
-                self._prop_panel.show_node(None)
-                current_file[0] = None
-
-            def _open_file():
+            def _open_file() -> None:
                 path_str, _ = QFileDialog.getOpenFileName(
                     self, tr("desktop.graphEditor.openGraph"), "", tr("desktop.graphEditor.graphFileFilter")
                 )
                 if not path_str:
                     return
                 path = Path(path_str)
-                try:
-                    doc = open_graph_file(path)
-                    load_document(doc, self._canvas)
-                    current_file[0] = path
-                except Exception as e:
-                    QMessageBox.critical(self, tr("desktop.graphEditor.openFailed"), str(e))
-
-            def _save_file():
-                if current_file[0] is None:
-                    path_str, _ = QFileDialog.getSaveFileName(self, tr("desktop.graphEditor.save"), "", "计算图文件 (*.json)")
-                    if not path_str:
+                for i in range(tab_manager.count()):
+                    state = tab_manager._states.get(i)
+                    if state and state.file_path == path:
+                        tab_manager.setCurrentIndex(i)
                         return
-                    current_file[0] = Path(path_str)
-                doc = collect_document(self._canvas)
+                tab_manager.new_tab(file_path=path)
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if canvas and prop:
+                    _connect_canvas_signals(canvas)
+                    prop.node_changed.connect(_on_node_config_changed)
+
+            def _save_file() -> None:
+                idx = tab_manager.currentIndex()
+                if _save_subgraph_tab():
+                    QMessageBox.information(self, "保存", "子图已更新到父图中的复合节点")
+                    return
+                tab_manager.save_tab(idx)
+
+            def _save_as_file() -> None:
+                idx = tab_manager.currentIndex()
+                tab_manager.save_tab_as(idx)
+
+            def _export_dag() -> None:
+                canvas = _get_current_canvas()
+                if not canvas:
+                    return
                 try:
-                    save_graph_file(doc, current_file[0])
+                    doc = collect_document(canvas)
+                    dag = compile_graph(doc)
                 except Exception as e:
-                    QMessageBox.critical(self, tr("desktop.graphEditor.saveFailed"), str(e))
-
-            def _delete_selected():
-                for item in self._canvas.scene().selectedItems():
-                    if isinstance(item, NodeItem):
-                        self._canvas.remove_node(item.node_id)
-
-            def _run_evaluate():
+                    QMessageBox.critical(self, tr("desktop.graphEditor.exportDagFailed"), str(e))
+                    return
+                tab_text = tab_manager.tabText(tab_manager.currentIndex()).replace("*", "").strip()
+                untitled = tr("desktop.graphEditor.untitled")
+                default_name = tab_text if tab_text and tab_text != untitled else "untitled"
+                default_path = f"{default_name}.dag.json"
+                path_str, _ = QFileDialog.getSaveFileName(
+                    self,
+                    tr("desktop.graphEditor.exportDag"),
+                    default_path,
+                    tr("desktop.graphEditor.exportDagFileFilter"),
+                )
+                if not path_str:
+                    return
                 try:
-                    doc = collect_document(self._canvas)
+                    from calc_framework.dag.serializer import save_dag
+
+                    save_dag(dag, Path(path_str))
+                    QMessageBox.information(
+                        self,
+                        tr("desktop.graphEditor.exportDagSuccess"),
+                        tr("desktop.graphEditor.exportDagSuccessDetail", path=path_str),
+                    )
+                except Exception as e:
+                    QMessageBox.critical(self, tr("desktop.graphEditor.exportDagFailed"), str(e))
+
+            def _run_evaluate() -> None:
+                canvas = _get_current_canvas()
+                if not canvas:
+                    return
+                try:
+                    doc = collect_document(canvas)
                     dag = compile_graph(doc)
                     res = evaluate_graph(dag, {})
-                    lines = [f"{k}: {v}" for k, v in res.outputs.items()]
-                    msg = "\n".join(lines) if lines else tr("desktop.graphEditor.evalNoOutput")
+                    output_lines = [f"{k}: {v}" for k, v in res.outputs.items()]
+                    node_lines = [f"{k}: {v}" for k, v in res.node_values.items()]
+                    msg = (
+                        tr("desktop.graphEditor.evalOutputResult") + "\n" + "\n".join(output_lines)
+                        if output_lines
+                        else tr("desktop.graphEditor.evalNoOutput")
+                    )
+                    msg += "\n\n" + tr("desktop.graphEditor.evalNodeValues") + "\n" + "\n".join(node_lines) if node_lines else ""
                     QMessageBox.information(self, tr("desktop.graphEditor.evalResult"), msg)
                 except Exception as e:
                     QMessageBox.critical(self, tr("desktop.graphEditor.evalFailed"), str(e))
 
-            _tb(tr("desktop.graphEditor.newBtn"), lambda: _new_file())
-            _tb(tr("desktop.graphEditor.openBtn"), lambda: _open_file())
-            _tb(tr("desktop.graphEditor.saveBtn"), lambda: _save_file())
-            _tb(tr("common.delete"), lambda: _delete_selected())
-            _tb(tr("desktop.graphEditor.evaluateBtn"), lambda: _run_evaluate())
-            _tb(tr("desktop.graphEditor.clearBtn"), lambda: _new_file())
+            def _show_help() -> None:
+                dialog = HelpDialog(self)
+                dialog.exec()
 
-            # ── 信号 ──
-            self._node_panel.node_created.connect(lambda type_id: self._canvas.add_graph_node(create_default_node(type_id)))
+            # ── 工具栏按钮 ──
+            _tb(tr("desktop.graphEditor.newBtn"), tr("desktop.graphEditor.newTip"), _new_file)
+            _tb(tr("desktop.graphEditor.openBtn"), tr("desktop.graphEditor.openTip"), _open_file)
+            _tb(tr("desktop.graphEditor.saveBtn"), tr("desktop.graphEditor.saveTip"), _save_file)
+            _tb_sep()
+            _tb(
+                tr("desktop.graphEditor.importPackageBtn"),
+                tr("desktop.graphEditor.importPackageTip"),
+                lambda: node_panel._on_import_package(),
+            )
+            _tb_sep()
+            _tb(tr("common.delete"), tr("desktop.graphEditor.deleteTip"), _delete_selected)
+            _tb_sep()
 
-            def _on_selection():
-                selected = self._canvas.scene().selectedItems()
-                nodes = [it for it in selected if isinstance(it, NodeItem)]
-                if nodes:
-                    self._prop_panel.show_node(nodes[0].to_graph_node())
-                else:
-                    self._prop_panel.show_node(None)
+            def _fit_all() -> None:
+                canvas = _get_current_canvas()
+                if canvas:
+                    canvas.fit_all()
 
-            self._canvas.scene().selectionChanged.connect(_on_selection)
+            def _reset_zoom() -> None:
+                canvas = _get_current_canvas()
+                if canvas:
+                    canvas.reset_zoom()
 
-            delete_shortcut = QShortcut(_Qt.Key.Key_Delete, self._canvas)
-            delete_shortcut.activated.connect(_delete_selected)
+            _tb(tr("desktop.graphEditor.fitViewBtn"), tr("desktop.graphEditor.fitViewTip"), _fit_all)
+            _tb(tr("desktop.graphEditor.resetViewBtn"), tr("desktop.graphEditor.resetViewTip"), _reset_zoom)
+            _tb_sep()
+            _tb(tr("desktop.graphEditor.evaluateBtn"), tr("desktop.graphEditor.evaluateTip"), _run_evaluate)
+            _tb(tr("desktop.graphEditor.exportDagBtn"), tr("desktop.graphEditor.exportDagTip"), _export_dag)
+            _tb_sep()
+
+            def _clear_canvas() -> None:
+                canvas = _get_current_canvas()
+                prop = _get_current_prop_panel()
+                if canvas:
+                    canvas.clear_scene()
+                if prop:
+                    prop.show_node(None)
+
+            _tb(tr("desktop.graphEditor.clearBtn"), tr("desktop.graphEditor.clearTip"), _clear_canvas)
+            _tb_sep()
+            _tb(tr("desktop.graphEditor.usageGuide"), tr("desktop.graphEditor.usageGuide"), _show_help)
+            tb_layout.addStretch()
 
             # ── 组装布局 ──
             inner = QWidget()
@@ -251,7 +836,7 @@ class _GraphEditorPage(QWidget):
             inner_layout.setContentsMargins(0, 0, 0, 0)
             inner_layout.setSpacing(0)
             inner_layout.addWidget(toolbar)
-            inner_layout.addWidget(splitter, stretch=1)
+            inner_layout.addWidget(mid_splitter, stretch=1)
             layout.addWidget(inner)
 
         except Exception as exc:
@@ -297,8 +882,10 @@ class _DebuggerPage(QWidget):
                     },
                 },
                 "nodes": {
-                    "add": {"type": "binary", "op": "+", "left": {"var": "a"}, "right": {"var": "b"}},
-                    "mul": {"type": "binary", "op": "*", "left": {"var": "a"}, "right": {"var": "b"}},
+                    "ref_a": {"type": "var", "path": "a"},
+                    "ref_b": {"type": "var", "path": "b"},
+                    "add": {"type": "binary", "op": "+", "lhs": "ref_a", "rhs": "ref_b"},
+                    "mul": {"type": "binary", "op": "*", "lhs": "ref_a", "rhs": "ref_b"},
                 },
                 "outputs": {
                     "sum": {"node": "add", "label": "A+B", "format": ".2f", "is_primary": True},
@@ -387,6 +974,8 @@ class _GeneratorPage(QWidget):
                 QSplitter,
                 QTextEdit,
             )
+
+            _ensure_repo_on_path()
             from tools.generator import GeneratorEngine
 
             self._engine = GeneratorEngine()
@@ -537,6 +1126,7 @@ class _OcrPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         try:
+            _ensure_repo_on_path()
             from tools.ocr.label import LabelTool
 
             self._tool = LabelTool()

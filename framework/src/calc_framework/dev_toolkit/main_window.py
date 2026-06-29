@@ -42,6 +42,7 @@ def _register_page(page_id: str, widget_class: type[QWidget]) -> None:
 
 # (page_id, label, group)
 _PAGE_DEFS: list[tuple[str, str | None, str | None]] = [
+    ("new_adapter", None, None),  # label/group via tr()
     ("data_editor", None, None),  # label/group via tr()
     ("layout_editor", None, None),
     ("export_pack", None, None),
@@ -59,6 +60,7 @@ _GROUP_CONFIG = [
     ("development", "desktop.devToolkit.groups.development"),
 ]
 _GROUP_PAGE_MAP = [
+    ("new_adapter", "config"),
     ("data_editor", "config"),
     ("layout_editor", "config"),
     ("export_pack", "config"),
@@ -70,6 +72,7 @@ _GROUP_PAGE_MAP = [
 ]
 
 _TAB_KEY_MAP = {
+    "new_adapter": "desktop.devToolkit.tabs.newAdapter",
     "data_editor": "desktop.devToolkit.tabs.dataEditor",
     "layout_editor": "desktop.devToolkit.tabs.layoutEditor",
     "export_pack": "desktop.devToolkit.tabs.exportPack",

@@ -1,0 +1,10 @@
+{
+  "name": "untitled.dag",
+  "game": "通用游戏",
+  "description": "untitled.dag",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "untitled.dag.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json"
+}

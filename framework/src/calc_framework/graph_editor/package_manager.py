@@ -121,6 +121,13 @@ class PackageManager:
 
         data = json.loads(graph_json)
 
+        # 跳过非 graph.json 格式文件（如 .dag.json）
+        if not isinstance(data, dict) or "nodes" not in data:
+            raise ValueError("不是 graph.json 格式（缺少 nodes 字段）")
+        nodes = data["nodes"]
+        if not isinstance(nodes, list):
+            raise ValueError(f"不是 graph.json 格式（nodes 应为列表，实际为 {type(nodes).__name__}）")
+
         doc = document_from_json(data)
 
         graph_name = path.stem

@@ -301,6 +301,9 @@ def _validate_references(
         refs = _collect_node_refs(node)
 
         for ref in refs:
+            if not ref:  # 空字符串表示未绑定的输入，跳过
+                continue
+
             if ref in nodes:
                 continue
 

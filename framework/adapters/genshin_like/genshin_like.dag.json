@@ -1,0 +1,94 @@
+{
+  "schema_version": "dag-v1",
+  "name": "动作RPG伤害公式（Genshin-Like）",
+  "description": "8乘区伤害公式：基础攻击 × 倍率 × 增伤 × 暴击 × 防御 × 抗性 × 反应 × 增幅",
+  "variables": {
+    "character.base_atk": {"type": "float", "source": "character", "default": 100, "description": "角色基础攻击力"},
+    "character.atk_percent": {"type": "float", "source": "character", "default": 0, "description": "角色攻击力%"},
+    "character.crit_rate": {"type": "float", "source": "character", "default": 0.05, "description": "暴击率"},
+    "character.crit_dmg": {"type": "float", "source": "character", "default": 0.5, "description": "暴击伤害"},
+    "character.elemental_bonus": {"type": "float", "source": "character", "default": 0, "description": "元素伤害加成"},
+    "character.elemental_mastery": {"type": "float", "source": "character", "default": 0, "description": "元素精通"},
+    "weapon.base_atk": {"type": "float", "source": "weapon", "default": 0, "description": "武器基础攻击力"},
+    "weapon.atk_percent": {"type": "float", "source": "weapon", "default": 0, "description": "武器攻击力%"},
+    "weapon.crit_rate": {"type": "float", "source": "weapon", "default": 0, "description": "武器暴击率"},
+    "weapon.crit_dmg": {"type": "float", "source": "weapon", "default": 0, "description": "武器暴击伤害"},
+    "weapon.dmg_bonus": {"type": "float", "source": "weapon", "default": 0, "description": "武器增伤"},
+    "enemy.level": {"type": "float", "source": "enemy", "default": 90, "description": "敌方等级"},
+    "enemy.def_base": {"type": "float", "source": "enemy", "default": 950, "description": "敌方基础防御力"},
+    "enemy.resistance": {"type": "float", "source": "enemy", "default": 0.1, "description": "敌方抗性"},
+    "user_input.skill_mult": {"type": "float", "source": "user_input", "default": 1.0, "description": "技能倍率"},
+    "user_input.is_crit": {"type": "bool", "source": "user_input", "default": false, "description": "是否暴击"},
+    "user_input.reaction_mult": {"type": "float", "source": "user_input", "default": 1.0, "description": "反应倍率"},
+    "user_input.amplifying_mult": {"type": "float", "source": "user_input", "default": 1.0, "description": "增幅倍率"}
+  },
+  "subgraphs": {},
+  "nodes": {
+    "var_char_atk": {"type": "var", "path": "character.base_atk", "label": "角色基础攻击"},
+    "var_char_atk_pct": {"type": "var", "path": "character.atk_percent", "label": "角色攻击%"},
+    "var_weapon_atk": {"type": "var", "path": "weapon.base_atk", "label": "武器基础攻击"},
+    "var_weapon_atk_pct": {"type": "var", "path": "weapon.atk_percent", "label": "武器攻击%"},
+    "var_crit_rate": {"type": "var", "path": "character.crit_rate", "label": "角色暴击率"},
+    "var_crit_dmg": {"type": "var", "path": "character.crit_dmg", "label": "角色暴击伤害"},
+    "var_weapon_crit_rate": {"type": "var", "path": "weapon.crit_rate", "label": "武器暴击率"},
+    "var_weapon_crit_dmg": {"type": "var", "path": "weapon.crit_dmg", "label": "武器暴击伤害"},
+    "var_elemental_bonus": {"type": "var", "path": "character.elemental_bonus", "label": "元素伤害加成"},
+    "var_weapon_dmg_bonus": {"type": "var", "path": "weapon.dmg_bonus", "label": "武器增伤"},
+    "var_enemy_def": {"type": "var", "path": "enemy.def_base", "label": "敌方防御力"},
+    "var_enemy_level": {"type": "var", "path": "enemy.level", "label": "敌方等级"},
+    "var_enemy_res": {"type": "var", "path": "enemy.resistance", "label": "敌方抗性"},
+    "var_skill_mult": {"type": "var", "path": "user_input.skill_mult", "label": "技能倍率"},
+    "var_is_crit": {"type": "var", "path": "user_input.is_crit", "label": "是否暴击"},
+    "var_reaction_mult": {"type": "var", "path": "user_input.reaction_mult", "label": "反应倍率"},
+    "var_amplifying_mult": {"type": "var", "path": "user_input.amplifying_mult", "label": "增幅倍率"},
+
+    "const_1": {"type": "const", "value": 1.0, "label": "1.0"},
+    "const_100": {"type": "const", "value": 100.0, "label": "100"},
+    "const_5": {"type": "const", "value": 5.0, "label": "5"},
+
+    "char_atk_pct_div": {"type": "binary", "op": "/", "lhs": "var_char_atk_pct", "rhs": "const_100", "label": "角色攻击%/100"},
+    "char_atk_mul": {"type": "binary", "op": "+", "lhs": "const_1", "rhs": "char_atk_pct_div", "label": "角色攻击乘区"},
+    "char_total_atk": {"type": "binary", "op": "*", "lhs": "var_char_atk", "rhs": "char_atk_mul", "label": "角色总攻击"},
+
+    "weapon_atk_pct_div": {"type": "binary", "op": "/", "lhs": "var_weapon_atk_pct", "rhs": "const_100", "label": "武器攻击%/100"},
+    "weapon_atk_mul": {"type": "binary", "op": "+", "lhs": "const_1", "rhs": "weapon_atk_pct_div", "label": "武器攻击乘区"},
+    "weapon_total_atk": {"type": "binary", "op": "*", "lhs": "var_weapon_atk", "rhs": "weapon_atk_mul", "label": "武器总攻击"},
+
+    "total_atk": {"type": "binary", "op": "+", "lhs": "char_total_atk", "rhs": "weapon_total_atk", "label": "总攻击力"},
+
+    "skill_damage": {"type": "binary", "op": "*", "lhs": "total_atk", "rhs": "var_skill_mult", "label": "技能伤害"},
+
+    "dmg_bonus_sum": {"type": "binary", "op": "+", "lhs": "var_elemental_bonus", "rhs": "var_weapon_dmg_bonus", "label": "增伤总和"},
+    "dmg_bonus_mul": {"type": "binary", "op": "+", "lhs": "const_1", "rhs": "dmg_bonus_sum", "label": "增伤乘区"},
+
+    "total_crit_rate": {"type": "binary", "op": "+", "lhs": "var_crit_rate", "rhs": "var_weapon_crit_rate", "label": "总暴击率"},
+    "total_crit_dmg": {"type": "binary", "op": "+", "lhs": "var_crit_dmg", "rhs": "var_weapon_crit_dmg", "label": "总暴击伤害"},
+    "crit_dmg_add": {"type": "binary", "op": "+", "lhs": "const_1", "rhs": "total_crit_dmg", "label": "暴击伤害乘数"},
+    "crit_mult": {"type": "condition", "cond": "var_is_crit", "true_val": "crit_dmg_add", "false_val": "const_1", "label": "暴击乘区"},
+
+    "level_factor": {"type": "binary", "op": "+", "lhs": "var_enemy_level", "rhs": "const_100", "label": "等级因子"},
+    "def_sum": {"type": "binary", "op": "+", "lhs": "var_enemy_def", "rhs": "level_factor", "label": "防御总和"},
+    "def_ratio": {"type": "binary", "op": "/", "lhs": "level_factor", "rhs": "def_sum", "label": "防御减免"},
+    "def_mult": {"type": "expr", "expr": "max(def_ratio, 0)", "inputs": {"def_ratio": "def_ratio"}, "label": "防御乘区"},
+
+    "res_mult": {"type": "binary", "op": "-", "lhs": "const_1", "rhs": "var_enemy_res", "label": "抗性乘区"},
+
+    "reaction_mul": {"type": "binary", "op": "*", "lhs": "var_reaction_mult", "rhs": "var_amplifying_mult", "label": "反应增幅乘区"},
+
+    "step1": {"type": "binary", "op": "*", "lhs": "skill_damage", "rhs": "dmg_bonus_mul", "label": "×增伤"},
+    "step2": {"type": "binary", "op": "*", "lhs": "step1", "rhs": "crit_mult", "label": "×暴击"},
+    "step3": {"type": "binary", "op": "*", "lhs": "step2", "rhs": "def_mult", "label": "×防御"},
+    "step4": {"type": "binary", "op": "*", "lhs": "step3", "rhs": "res_mult", "label": "×抗性"},
+    "final_damage": {"type": "binary", "op": "*", "lhs": "step4", "rhs": "reaction_mul", "label": "最终伤害"}
+  },
+  "outputs": {
+    "总攻击力": {"node": "total_atk", "label": "总攻击力", "is_primary": false},
+    "技能伤害": {"node": "skill_damage", "label": "技能伤害", "is_primary": false},
+    "增伤乘区": {"node": "dmg_bonus_mul", "label": "增伤乘区", "is_primary": false},
+    "暴击乘区": {"node": "crit_mult", "label": "暴击乘区", "is_primary": false},
+    "防御乘区": {"node": "def_mult", "label": "防御乘区", "is_primary": false},
+    "抗性乘区": {"node": "res_mult", "label": "抗性乘区", "is_primary": false},
+    "反应增幅": {"node": "reaction_mul", "label": "反应增幅", "is_primary": false},
+    "最终伤害": {"node": "final_damage", "label": "最终伤害", "is_primary": true}
+  }
+}

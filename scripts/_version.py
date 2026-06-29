@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.24"
+_VERSION = "3.28.25"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13830,4 +13830,61 @@ def get_exe_version() -> str:
 # - 修改 framework/src/calc_framework/graph_editor/items.py
 # - 修改 framework/src/calc_framework/graph_editor/node_panel.py
 # - 修改 framework/src/calc_framework/graph_editor/registry.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 22 处文件
+# BODY:
+# - 变更 framework/adapters/genshin_like/genshin_like.dag.json
+# - 变更 framework/adapters/untitled.dag/
+# - 变更 framework/examples/_debug_data.txt
+# - 变更 framework/examples/_debug_vars.txt
+# - 修改 framework/examples/_test_genshin.py
+# - 修改 framework/examples/_test_profiles.py
+# - 修改 framework/examples/_test_profiles2.py
+# - 修改 framework/examples/demo_compute.py
+# - 变更 framework/examples/untitled.dag.json
+# - 修改 framework/src/calc_framework/dag/graph_types.py
+# - 修改 framework/src/calc_framework/data/attr_schema.py
+# - 修改 framework/src/calc_framework/dev_toolkit/main_window.py
+# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/compiler.py
+# - 修改 framework/src/calc_framework/graph_editor/package_manager.py
+# - 变更 framework/src/calc_framework/ui/i18n_data/en.json
+# - 变更 framework/src/calc_framework/ui/i18n_data/zh-CN.json
+# - 修改 scripts/main_dev_toolkit.py
+# - 修改 tools/designer/data_editor/panel.py
+# - 修改 tools/designer/data_editor/profiles.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 27 处文件
+# BODY:
+# - 变更 framework/adapters/genshin_like/genshin_like.dag.json
+# - 变更 framework/adapters/untitled.dag/attr_schema.json
+# - 修改 framework/adapters/untitled.dag/functions.py
+# - 变更 framework/adapters/untitled.dag/meta.json
+# - 变更 framework/adapters/untitled.dag/ui/layout.json
+# - 变更 framework/adapters/untitled.dag/untitled.dag.dag.json
+# - 变更 framework/examples/_debug_data.txt
+# - 变更 framework/examples/_debug_vars.txt
+# - 修改 framework/examples/_test_genshin.py
+# - 修改 framework/examples/_test_profiles.py
+# - 修改 framework/examples/_test_profiles2.py
+# - 修改 framework/examples/demo_compute.py
+# - 变更 framework/examples/untitled.dag.json
+# - 修改 framework/src/calc_framework/dag/graph_types.py
+# - 修改 framework/src/calc_framework/data/attr_schema.py
+# - 修改 framework/src/calc_framework/dev_toolkit/main_window.py
+# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
+# - 修改 framework/src/calc_framework/graph_editor/__main__.py
+# - 修改 framework/src/calc_framework/graph_editor/compiler.py
+# - 修改 framework/src/calc_framework/graph_editor/package_manager.py
+# - 变更 framework/src/calc_framework/ui/i18n_data/en.json
+# - 变更 framework/src/calc_framework/ui/i18n_data/zh-CN.json
+# - 修改 scripts/_version.py
+# - 修改 scripts/main_dev_toolkit.py
+# - 修改 tools/designer/data_editor/panel.py
+# - 修改 tools/designer/data_editor/profiles.py
 # - 变更 web/backend/api/.admin_data/usage.json
