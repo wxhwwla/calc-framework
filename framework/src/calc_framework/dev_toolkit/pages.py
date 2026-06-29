@@ -225,7 +225,7 @@ class _NewAdapterPage(QWidget):
             parts = var_path.split(".")
             if len(parts) == 2 and var_def.source in valid_sources:
                 source_groups.setdefault(var_def.source, []).append(parts[1])
-        for source, fields in source_groups.items():
+        for source in source_groups:
             data_file = data_dir / f"{source}s.json"
             if not data_file.exists():
                 data_file.write_text(json.dumps([], ensure_ascii=False, indent=2), encoding="utf-8")
@@ -331,6 +331,12 @@ class _LayoutEditorPage(QWidget):
 
             self._panel = LayoutCanvasPanel()
             layout.addWidget(self._panel)
+
+            # 填充适配器下拉菜单
+            from calc_framework.config.manager import AdapterManager
+
+            mgr = AdapterManager()
+            self._panel.populate_adapters(mgr.names)
         except Exception as exc:
             logger.exception("加载布局编辑器失败")
             layout.addWidget(QLabel(tr("desktop.devToolkit.loadPageFailed", error=exc)))

@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.25"
+_VERSION = "3.28.26"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13887,4 +13887,32 @@ def get_exe_version() -> str:
 # - 修改 scripts/main_dev_toolkit.py
 # - 修改 tools/designer/data_editor/panel.py
 # - 修改 tools/designer/data_editor/profiles.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 10 处文件
+# BODY:
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 变更 framework/adapters/arknights/ui/layout.json
+# - 变更 framework/adapters/untitled.dag/
+# - 修改 framework/src/calc_framework/config/adapter.py
+# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
+# - 修改 framework/src/calc_framework/graph_editor/compiler.py
+# - 修改 scripts/_version.py
+# - 修改 tools/designer/layout_editor/canvas.py
+# - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 10 处文件
+# BODY:
+# - 更新文档 docs/会话接续手册.md
+# - 更新文档 docs/错误集.md
+# - 变更 framework/adapters/arknights/ui/layout.json
+# - 变更 framework/adapters/untitled.dag/data/characters_standard.json
+# - 修改 framework/src/calc_framework/config/adapter.py
+# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
+# - 修改 framework/src/calc_framework/graph_editor/compiler.py
+# - 修改 scripts/_version.py
+# - 修改 tools/designer/layout_editor/canvas.py
 # - 变更 web/backend/api/.admin_data/usage.json

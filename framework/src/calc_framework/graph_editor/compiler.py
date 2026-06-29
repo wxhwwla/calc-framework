@@ -45,6 +45,8 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
 
     subgraphs: dict[str, DAGSubgraph] = {}
 
+    promoted_vars: dict[str, DAGVariable] = {}  # 从子图提升的 user_input 变量
+
     for node in doc.nodes:
         if node.type == "output":
             continue
@@ -108,6 +110,28 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
                         outputs=sub_outputs,
                     )
 
+                    # 只提升未连线的 user_input 参数为顶层变量
+                    # 已连线的参数由上游节点提供值，不需要用户输入
+                    for param_id, param_var in params.items():
+                        if param_var.source != "user_input":
+                            continue
+                        if dag_n.bindings.get(param_id, ""):
+                            continue  # 已连线，跳过
+
+                        node_obj = sub_dag.nodes.get(param_id)
+                        node_label = getattr(node_obj, "label", "") or param_id
+                        var_path = _build_promoted_variable_path(sub_name, node_label)
+
+                        if var_path not in promoted_vars:
+                            promoted_vars[var_path] = DAGVariable(
+                                type=param_var.type,
+                                source="user_input",
+                                description=param_var.description or f"{sub_name}.{node_label}",
+                                default=param_var.default,
+                                min=param_var.min,
+                                max=param_var.max,
+                            )
+
             dag_nodes[node.id] = dag_n
 
         elif dag_n is not None:
@@ -131,6 +155,11 @@ def compile_graph(doc: GraphDocument) -> DAGGraph:
     for node in doc.nodes:
         if node.type == "var" and node.config.path and node.config.path not in variables:
             variables[node.config.path] = DAGVariable(type="float", source="computed")
+
+    # 合并从子图提升的 user_input 变量
+    for path, var in promoted_vars.items():
+        if path not in variables:
+            variables[path] = var
 
     # ── 4. 编译输出 ──
 
@@ -300,3 +329,29 @@ def dag_service_from_graph_file(path: str | Path) -> DAGService:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     doc = document_from_json(data)
     return dag_service_from_graph_document(doc)
+
+
+def _build_promoted_variable_path(sub_name: str, param_id: str) -> str:
+    """为提升的子图 user_input 参数构建可读的变量路径。
+
+    子图名格式如 ``@模拟计算/模拟计算_node_4674dc50``，
+    提取 ``/`` 后的描述部分作为前缀。
+
+    Args:
+        sub_name: 子图名称（如 ``@模拟计算/模拟计算_node_4674dc50``）
+        param_id: 参数节点 ID（如 ``node_d69e9b24``）
+
+    Returns:
+        变量路径（如 ``模拟计算.输入1``）
+    """
+    # 提取子图的可读名称部分
+    readable = sub_name.split("/", 1)[1] if "/" in sub_name else sub_name
+
+    # 去掉 _node_ 后面的 hash 部分
+    if "_node_" in readable:
+        readable = readable.split("_node_")[0]  # "模拟计算_node_xxx" → "模拟计算"
+
+    # 去掉开头的 @
+    readable = readable.lstrip("@")
+
+    return f"{readable}.{param_id}"

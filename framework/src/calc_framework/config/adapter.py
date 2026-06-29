@@ -23,6 +23,84 @@ logger = get_logger(__name__)
 _SUPPORTED_SCHEMA_VERSIONS = frozenset({"dag-v1"})
 
 
+def _promote_subgraph_user_inputs(dag: Any) -> None:
+    """将子图中未连线的 user_input 参数提升为顶层 variables。
+
+    子图 parameters 只在子图内部可见，但布局编辑器、ComputeSheet、Web API
+    等外部消费者需要从顶层 variables 中发现可输入的变量。
+
+    只有**未连线**的 user_input 参数才需要提升——已连线的参数由上游节点提供值。
+
+    递归检查所有层级的 CallNode（包括嵌套子图内的 CallNode）。
+
+    Args:
+        dag: DAGGraph 实例，会被原地修改
+    """
+    # 递归收集所有 CallNode 的绑定信息
+    # bindings[param_id] == "" 表示未连线，需要提升
+    call_bindings: dict[str, dict[str, str]] = {}  # {subgraph_name: {param_id: target}}
+
+    def _collect_bindings(nodes: dict) -> None:
+        for node in nodes.values():
+            if hasattr(node, "subgraph") and hasattr(node, "bindings"):
+                call_bindings[node.subgraph] = node.bindings
+
+    # 顶层 CallNode
+    _collect_bindings(dag.nodes)
+
+    # 嵌套子图内的 CallNode
+    for sub_sg in dag.subgraphs.values():
+        _collect_bindings(sub_sg.nodes)
+
+    for sub_name, sub_sg in dag.subgraphs.items():
+        bindings = call_bindings.get(sub_name, {})
+
+        for param_id, param_var in sub_sg.parameters.items():
+            if param_var.source != "user_input":
+                continue
+
+            # 已连线的参数由上游节点提供值，不需要用户输入
+            if bindings.get(param_id, ""):
+                continue
+
+            # 优先使用节点标签，回退到节点 ID
+            node_obj = sub_sg.nodes.get(param_id)
+            node_label = getattr(node_obj, "label", "") or param_id
+
+            var_path = _build_variable_path(sub_name, node_label)
+
+            if var_path not in dag.variables:
+                dag.variables[var_path] = type(param_var)(
+                    type=param_var.type,
+                    source="user_input",
+                    description=param_var.description or f"{sub_name}.{node_label}",
+                    default=param_var.default,
+                    min=param_var.min,
+                    max=param_var.max,
+                )
+                logger.debug("提升子图参数为顶层变量: %s → %s", f"{sub_name}.{node_label}", var_path)
+
+
+def _build_variable_path(sub_name: str, param_id: str) -> str:
+    """为提升的子图参数构建可读变量路径。
+
+    Args:
+        sub_name: 子图名称（如 ``@模拟计算/模拟计算_node_4674dc50``）
+        param_id: 参数节点 ID（如 ``node_d69e9b24``）
+
+    Returns:
+        变量路径（如 ``模拟计算.node_d69e9b24``）
+    """
+    readable = sub_name.split("/", 1)[1] if "/" in sub_name else sub_name
+
+    if "_node_" in readable:
+        readable = readable.split("_node_")[0]
+
+    readable = readable.lstrip("@")
+
+    return f"{readable}.{param_id}"
+
+
 class AdapterError(Exception):
     """适配器通用错误。"""
 
@@ -257,5 +335,9 @@ class AdapterPackage:
         data = json.loads(raw)
 
         dag = dag_from_dict(data)
+
+        # 提升子图 user_input 参数为顶层变量
+        # 子图 parameters 只在子图内部可见，布局编辑器/ComputeSheet/Web API 需要顶层 variables
+        _promote_subgraph_user_inputs(dag)
 
         return DAGService(dag)
