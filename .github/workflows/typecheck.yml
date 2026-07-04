@@ -1,0 +1,32 @@
+# Pyright 类型检查 CI
+# 对 Python 代码运行 pyright 静态类型分析
+
+name: Type Check
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  pyright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyright
+          pip install -e framework/
+          pip install -e "games/endfield/[dev]"
+
+      - name: Run pyright
+        run: pyright

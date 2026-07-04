@@ -8,7 +8,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from games.endfield.gui.controls.search.qt_search_browser import SearchHistoryDialog, _human_size
+from games.endfield.gui.controls.search.qt_search_browser import SearchHistoryDialog
+from games.endfield.gui.controls.search.search_history_data import human_size
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
@@ -24,10 +25,10 @@ def _app() -> QApplication | QCoreApplication:
 
 class TestHumanSize:
     def test_bytes(self) -> None:
-        assert _human_size(Path(__file__)).endswith("B")
+        assert human_size(Path(__file__)).endswith("B")
 
     def test_kilobytes(self) -> None:
-        size = _human_size(Path(__file__))
+        size = human_size(Path(__file__))
 
         assert "KB" in size or "B" in size
 

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, get_logger, load_layout_json
+from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, Layout, get_logger, load_layout_json
 from games.endfield.gui.app.loadout_evaluation import (
     refresh_damage_snapshot,
 )
@@ -35,18 +35,19 @@ _CUR_FILE = Path(__file__).resolve()
 _FRAMEWORK_ADAPTER = _CUR_FILE.parents[4] / "framework" / "adapters" / "endfield"
 
 _adapter_pkg: AdapterPackage | None = None
-_adapter_layout = None
+_adapter_layout: Layout | None = None
 
 _logger = get_logger("gui.endfield_actions")
 
 
-def _ensure_adapter():
+def _ensure_adapter() -> tuple[AdapterPackage, Layout]:
+    """确保适配器包和布局已加载（惰性初始化）。"""
     global _adapter_pkg, _adapter_layout
     if _adapter_pkg is None:
         _adapter_pkg = AdapterPackage(str(_FRAMEWORK_ADAPTER))
         layout_path = _FRAMEWORK_ADAPTER / "ui" / "layout.json"
         _adapter_layout = load_layout_json(layout_path.read_text(encoding="utf-8"))
-    """ensure adapter。"""
+    assert _adapter_pkg is not None and _adapter_layout is not None
     return _adapter_pkg, _adapter_layout
 
 
@@ -60,7 +61,7 @@ class ActionsMixin:
 
     # ── 敌方参数 ──────────────────────────────────
 
-    def _apply_enemy_params(self, params: dict) -> None:
+    def _apply_enemy_params(self, params: dict[str, Any]) -> None:
         self._enemy_defense = float(params.get("enemy_defense", 100.0))
         self._enemy_resistance = float(params.get("enemy_resistance", 0.0))
         self._ignore_resistance = float(params.get("ignore_resistance", 0.0))
@@ -73,11 +74,9 @@ class ActionsMixin:
         self._corrosion_duration_seconds = float(params.get("corrosion_duration_seconds", 15.0))
         self._imbalance_efficiency_bonus = float(params.get("imbalance_efficiency_bonus", 0.0))
         self._break_defense_stacks = max(0, min(4, int(params.get("break_defense_stacks", 0))))
-        """apply enemy params。"""
 
-    def _on_enemy_params_changed(self, params: dict) -> None:
+    def _on_enemy_params_changed(self, params: dict[str, Any]) -> None:
         self._apply_enemy_params(params)
-        """on enemy params changed。"""
 
     # ── 确认计算 / ComputeSheet ──────────────────
 
@@ -165,14 +164,12 @@ class ActionsMixin:
                 self._refresh_search_estimate()
             except Exception as exc:
                 _logger.warning("搜索预估刷新失败: %s", exc)
-        """on confirm。"""
 
     def _sync_evaluation(self, request: Any) -> None:
         try:
             _sync_eval_cache(request.loadout)
         except Exception as exc:
             _logger.warning("求值缓存同步失败: %s", exc)
-        """sync evaluation。"""
 
     def _refresh_compute_sheet(self) -> None:
         pkg, layout = _ensure_adapter()
@@ -306,7 +303,6 @@ class ActionsMixin:
             new_layout.addWidget(compute_sheet.widget, stretch=1)
             new_layout.addWidget(self._total_damage_panel)
             self._compute_sheet_widget.setLayout(new_layout)
-        """refresh compute sheet。"""
 
     def _populate_sheet(self, sheet: ComputeSheet) -> None:
         dock = self.control_dock
@@ -342,16 +338,13 @@ class ActionsMixin:
             return
         for key, value in loadout.to_compute_sheet_inputs().items():
             sheet.set(key, value)
-        """populate sheet。"""
 
     def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
         self._update_total_damage_panel()
-        """on compute sheet evaluated。"""
 
     def _update_total_damage_panel(self) -> None:
         snapshot = get_snapshot_from_app(self)
         self._total_damage_panel.update_from_snapshot(snapshot)
-        """update total damage panel。"""
 
     # ── 对话框 / 工具 / 信号 ─────────────────────
 
@@ -360,7 +353,6 @@ class ActionsMixin:
 
         def _read_counts():
             dock = self.control_dock
-            """read counts。"""
             return dock.read_skill_counts(), dock.read_physical_abnormal_counts(), dock.read_spell_abnormal_counts()
 
         dialog = QtManualBuffDialog(
@@ -374,10 +366,8 @@ class ActionsMixin:
         dialog.load_store(getattr(self, "_manual_buff_store", None))
         if dialog.exec():
             self._manual_buff_store = dialog.buff_store()
-        """on manual buff。"""
 
     def _on_survival_estimate(self) -> None:
-        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
         from games.endfield.gui.controls.survival import open_survival_estimate_dialog
 
         dock = self.control_dock
@@ -409,7 +399,6 @@ class ActionsMixin:
             return
         from games.endfield.data_loading.enemy_params import resolve_enemy_max_hp
 
-        dock = self.control_dock
         enemy_id = dock._enemy_panel.current_enemy_id()
         open_survival_estimate_dialog(
             self,
@@ -424,11 +413,9 @@ class ActionsMixin:
             weapon_skill_kwargs=loadout.weapon_skill_kwargs(),
             big_font=self.big_font,
         )
-        """on survival estimate。"""
 
     def _on_export_preset(self) -> None:
         from games.endfield.gui.app.loadout_preset import export_preset_json
-        from games.endfield.gui.app.loadout_state import read_loadout_from_panels
 
         dock = self.control_dock
         loadout = read_loadout_from_panels(
@@ -463,7 +450,6 @@ class ActionsMixin:
             return
         Path(path).write_text(export_preset_json(preset), encoding="utf-8")
         self.status_label.setText("预设已导出")
-        """on export preset。"""
 
     def _on_import_preset(self) -> None:
         from games.endfield.gui.app.loadout_preset import import_presets_from_json_text
@@ -480,7 +466,6 @@ class ActionsMixin:
             self.status_label.setText("预设已导入")
         except Exception as exc:
             QMessageBox.warning(cast(QWidget, self), "导入预设失败", str(exc))
-        """on import preset。"""
 
     def _apply_preset_to_qt_app(self, preset) -> None:
         from games.endfield.gui.app.loadout_preset import apply_preset_to_panels
@@ -493,7 +478,6 @@ class ActionsMixin:
             equipment_catalog=self._equipment_catalog,
             shell=self,
         )
-        """apply preset to qt app。"""
 
     def _on_compare_presets(self) -> None:
         from games.endfield.gui.controls.enhancement.qt_dialogs import QtCompareDialog
@@ -506,15 +490,12 @@ class ActionsMixin:
             weapon_panel=self.weapon_panel,
         )
         dialog.exec()
-        """on compare presets。"""
 
     def _on_attribution(self) -> None:
         QMessageBox.about(cast(QWidget, self), "数据来源与声明", SUMMARY_TEXT)
-        """on attribution。"""
 
     def _on_donation(self) -> None:
         open_donation_dialog(cast(QWidget, self))
-        """on donation。"""
 
     def _on_damage_dashboard(self) -> None:
         from games.endfield.gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
@@ -527,7 +508,6 @@ class ActionsMixin:
             snapshot=snapshot,
         )
         dialog.exec()
-        """on damage dashboard。"""
 
     def _on_calc_history(self) -> None:
         from games.endfield.gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
@@ -541,7 +521,6 @@ class ActionsMixin:
             apply_fn=self._apply_preset_to_qt_app,
         )
         dialog.exec()
-        """on calc history。"""
 
     def _on_export_log(self) -> None:
         from utils.operation_log import get_session_operation_log
@@ -556,7 +535,6 @@ class ActionsMixin:
             self.status_label.setText("操作日志已导出")
         except Exception as exc:
             QMessageBox.warning(cast(QWidget, self), "导出失败", str(exc))
-        """on export log。"""
 
     def _on_open_help(self) -> None:
         from utils.gui.help_calculator import build_calculator_help
@@ -564,13 +542,12 @@ class ActionsMixin:
 
         dialog = HelpDialog(build_calculator_help, cast(QWidget, self), title="终末地伤害计算器 使用说明")
         dialog.exec()
-        """on open help。"""
 
     def _on_ocr_detect(self) -> None:
         try:
             from games.endfield.gui.controls.ocr import open_ocr_detection_dialog
 
-            def _apply_ocr(preset_dict: dict) -> None:
+            def _apply_ocr(preset_dict: dict[str, Any]) -> None:
                 char_name = preset_dict.get("char_name", "")
                 weapon_name = preset_dict.get("weapon_name", "")
                 char_level = int(preset_dict.get("char_level", 1))
@@ -586,13 +563,11 @@ class ActionsMixin:
                     if trust_level and self.char_panel.trust_panel:
                         self.char_panel.trust_panel.set_level(min(trust_level, 4))
                     self._on_confirm()
-                """apply ocr。"""
 
             open_ocr_detection_dialog(cast(QWidget, self), on_apply=_apply_ocr)
         except Exception as exc:
             msg = f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install torchvision easyocr"
             QMessageBox.warning(cast(QWidget, self), "截图识装", msg)
-        """on ocr detect。"""
 
     # ── 信号连接 ──────────────────────────────
 
@@ -631,7 +606,6 @@ class ActionsMixin:
 
         self._connect_more_settings_btns()
         self._connect_search_estimate_triggers()
-        """connect signals。"""
 
     def _connect_more_settings_btns(self) -> None:
         dock = self.control_dock
@@ -647,4 +621,3 @@ class ActionsMixin:
             dock._history_btn.clicked.connect(self._on_calc_history)
         if hasattr(dock, "_export_log_btn") and dock._export_log_btn:
             dock._export_log_btn.clicked.connect(self._on_export_log)
-        """connect more settings btns。"""

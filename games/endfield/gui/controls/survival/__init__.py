@@ -6,8 +6,14 @@ from .qt_survival_dialog import (
     QtSurvivalEstimateDialog,
     open_survival_estimate_dialog,
 )
+from .survival_estimator import (
+    ExecuteResult,
+    estimate_execute,
+)
 
 __all__ = [
+    "ExecuteResult",
     "QtSurvivalEstimateDialog",
+    "estimate_execute",
     "open_survival_estimate_dialog",
 ]

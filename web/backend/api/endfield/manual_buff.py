@@ -45,7 +45,7 @@ def abnormal_matrix_specs() -> dict[str, Any]:
 
 
 @router.get("/consumable-presets")
-def list_consumable_presets() -> list[dict[str, object]]:
+def list_consumable_presets() -> list[dict[str, Any]]:
     """获取消耗品预设列表（名称 + 效果条目）。"""
     from games.endfield.calc.manual_buff.consumable_presets import (
         CONSUMABLE_PRESETS,

@@ -9,6 +9,7 @@ ComputeSheet 类的胶水代码，控件生成委托给 sheet_widgets，求值�
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from PySide6.QtCore import QObject, Qt, Signal
@@ -49,7 +50,7 @@ class ComputeSheet(QObject):
         self,
         dag_service: DAGService,
         layout: Layout,
-        variables: dict[str, DAGVariable],
+        variables: Mapping[str, DAGVariable | dict[str, Any]],
         base_context: dict[str, Any] | None = None,
         parent: QWidget | None = None,
         user_context_overrides: dict[str, tuple[str, list[str]]] | None = None,
@@ -72,7 +73,7 @@ class ComputeSheet(QObject):
         super().__init__(parent)
         self._dag_service = dag_service
         self._layout = layout
-        self._variables = variables
+        self._variables: dict[str, DAGVariable | dict[str, Any]] = dict(variables)
         self._base_context = base_context or {}
         self._user_context_overrides = user_context_overrides or {}
         self._context_overrides: dict[str, Any] = {}

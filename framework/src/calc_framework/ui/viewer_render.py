@@ -6,13 +6,14 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
     QMessageBox,
     QSpinBox,
+    QWidget,
 )
 
 from ..dag.schema import DAGVariable
@@ -23,7 +24,6 @@ from .layout import load_layout
 from .viewer_pack_utils import (
     _FALLBACK_DEFAULTS,
     _SOURCE_TO_DATA_FILE,
-    build_context_from_entity,
     extract_assets_from_calcpack,
     load_calcpack,
     resolve_asset_paths_in_layout,
@@ -33,14 +33,35 @@ from .viewer_pack_utils import (
 class CalcPackViewerRenderMixin:
     """CalcPackViewer 渲染与数据重建 Mixin。"""
 
-    # 被 Mixin 依赖的属性（由 CalcPackViewer 提供）：
-    # _loaded_data, _dag_service, _layout, _variables, _theme_manager,
-    # _data_files, _compute_sheet, _entity_selectors, _level_spin,
-    # _current_level, _entity_data, _splitter, _entity_group,
-    # _right_panel, _asset_temp_dir, _calcpack_path, _entity_form,
-    # _sheet_layout, _info_name, _info_game, _info_version,
-    # _info_vars, _info_outputs, _status_label, _progress,
-    # _sheet_container, _left_layout, _scroll
+    # Mixin 属性占位 — 由 CalcPackViewer 提供（Pylance 类型识别）
+    _loaded_data: dict[str, Any]
+    _dag_service: Any
+    _layout: Any
+    _variables: dict[str, Any]
+    _theme_manager: Any
+    _data_files: dict[str, list[Any]]
+    _compute_sheet: Any
+    _entity_selectors: dict[str, Any]
+    _level_spin: Any
+    _current_level: int
+    _entity_data: dict[str, dict[str, Any]]
+    _splitter: Any
+    _entity_group: Any
+    _right_panel: Any
+    _asset_temp_dir: Any
+    _calcpack_path: str | None
+    _entity_form: Any
+    _sheet_layout: Any
+    _info_name: Any
+    _info_game: Any
+    _info_version: Any
+    _info_vars: Any
+    _info_outputs: Any
+    _status_label: Any
+    _progress: Any
+    _sheet_container: Any
+    _left_layout: Any
+    _scroll: Any
 
     def load_calcpack(self, path: str | Path) -> None:
         """加载 .calcpack 文件并渲染 UI。"""
@@ -197,32 +218,20 @@ class CalcPackViewerRenderMixin:
 
     def _build_current_context(self) -> dict[str, Any]:
         """根据当前选中的实体和等级构建 DAG context，缺失变量使用 0.0。"""
-        ctx: dict[str, Any] = {}
+        from .viewer_evaluator import build_viewer_context
+
         level = self._level_spin.value() if self._level_spin else 90
-
+        # 从 Qt combo 提取当前选中名称 → {source_prefix: name}
+        selected: dict[str, str] = {}
         for source_prefix, combo in self._entity_selectors.items():
-            idx = combo.currentIndex()
-            if idx < 0:
-                continue
-            name = combo.currentText()
-            entity = self._entity_data.get(source_prefix, {}).get(name)
-            if entity:
-                ns = source_prefix
-                ns_ctx = build_context_from_entity(entity, ns, level)
-                ctx[ns] = ns_ctx
-
-        for path, var in self._variables.items():
-            parts = path.split(".", 1)
-            if len(parts) != 2:
-                continue
-            ns, key = parts
-            if ns not in ctx:
-                ctx[ns] = {}
-            if isinstance(ctx.get(ns), dict) and key not in ctx[ns]:
-                default = var.default if var.default is not None else _FALLBACK_DEFAULTS.get(key, 0.0)
-                ctx[ns][key] = default
-
-        return ctx
+            if combo.currentIndex() >= 0:
+                selected[source_prefix] = combo.currentText()
+        return build_viewer_context(
+            entity_selectors=selected,
+            entity_data=self._entity_data,
+            variables=self._variables,
+            level=level,
+        )
 
     def _apply_theme(self) -> None:
         """应用当前选中的主题样式。"""
@@ -231,6 +240,8 @@ class CalcPackViewerRenderMixin:
             self.setStyleSheet(stylesheet)
             theme = self._theme_manager.get_theme(self._theme_manager.current_name)
             if theme:
-                self._theme_manager.apply_font(theme, self)
+                from ._qt_backend import apply_font
+
+                apply_font(theme, cast(QWidget, self))
         except Exception:
             pass

@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.26"
+_VERSION = "3.28.27"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13916,3 +13916,78 @@ def get_exe_version() -> str:
 # - 修改 scripts/_version.py
 # - 修改 tools/designer/layout_editor/canvas.py
 # - 变更 web/backend/api/.admin_data/usage.json
+
+
+# TITLE: 更新 71 处文件
+# BODY:
+# - 变更 .github/workflows/typecheck.yml
+# - 更新文档 docs/decouple-plan.md
+# - 更新文档 docs/会话接续手册.md
+# - 变更 framework/src/calc_framework/configs/endfield_full.dag.json
+# - 修改 framework/src/calc_framework/dev_toolkit/adapter_creator.py
+# - 修改 framework/src/calc_framework/dev_toolkit/pages.py
+# - 修改 framework/src/calc_framework/ui/_qt_backend.py
+# - 修改 framework/src/calc_framework/ui/compute_sheet.py
+# - 修改 framework/src/calc_framework/ui/sheet_evaluator.py
+# - 修改 framework/src/calc_framework/ui/sheet_evaluator_core.py
+# - 修改 framework/src/calc_framework/ui/theme.py
+# - 修改 framework/src/calc_framework/ui/viewer.py
+# - 修改 framework/src/calc_framework/ui/viewer_evaluator.py
+# - 修改 framework/src/calc_framework/ui/viewer_events.py
+# - 修改 framework/src/calc_framework/ui/viewer_render.py
+# - 修改 games/arknights/gui/__init__.py
+# - 修改 games/arknights/gui/arknights_compute_sheet.py
+# - 修改 games/arknights/gui/arknights_sheet_config.py
+# - 修改 games/arknights/tests/test_operator_catalog_extended.py
+# - 修改 games/endfield/calc/core/result_export.py
+# - 修改 games/endfield/calc/manual_buff/spell.py
+# - 修改 games/endfield/framework_bridge.py
+# - 修改 games/endfield/gui/app/__init__.py
+# - 修改 games/endfield/gui/app/compute_sheet_variables.py
+# - 修改 games/endfield/gui/app/enemy_params_state.py
+# - 修改 games/endfield/gui/app/loadout_reader.py
+# - 修改 games/endfield/gui/app/search_controller.py
+# - 修改 games/endfield/gui/controls/enemy/__init__.py
+# - 修改 games/endfield/gui/controls/enemy/enemy_panel_model.py
+# - 修改 games/endfield/gui/controls/enemy/qt_enemy_panel.py
+# - 修改 games/endfield/gui/controls/enhancement/__init__.py
+# - 修改 games/endfield/gui/controls/enhancement/preset_compare_service.py
+# - 修改 games/endfield/gui/controls/ocr/detection_dialog.py
+# - 修改 games/endfield/gui/controls/ocr/ocr_pipeline.py
+# - 修改 games/endfield/gui/controls/search/__init__.py
+# - 修改 games/endfield/gui/controls/search/qt_actions.py
+# - 修改 games/endfield/gui/controls/search/qt_search_browser.py
+# - 修改 games/endfield/gui/controls/search/search_history_data.py
+# - 修改 games/endfield/gui/controls/search/search_worker_logic.py
+# - 修改 games/endfield/gui/controls/survival/__init__.py
+# - 修改 games/endfield/gui/controls/survival/qt_survival_dialog.py
+# - 修改 games/endfield/gui/controls/survival/survival_estimator.py
+# - 修改 games/endfield/gui/endfield_actions.py
+# - 修改 games/endfield/gui/endfield_search.py
+# - 修改 games/endfield/gui/endfield_shell.py
+# - 修改 games/endfield/gui/panels/selection/__init__.py
+# - 修改 games/endfield/gui/panels/selection/qt_ability_panel.py
+# - 修改 games/endfield/gui/panels/selection/qt_panel.py
+# - 修改 games/endfield/gui/panels/selection/selection_model.py
+# - 修改 games/endfield/gui/presentation/__init__.py
+# - 修改 games/endfield/gui/presentation/total_damage_display_data.py
+# - 修改 games/endfield/gui/presentation/total_damage_panel.py
+# - 修改 games/endfield/gui/shared/__init__.py
+# - 修改 games/endfield/gui/shared/display_view/__init__.py
+# - 修改 games/endfield/gui/shared/display_view/qt_columns.py
+# - 修改 games/endfield/gui/shared/display_view/zone_display_builder.py
+# - 修改 games/endfield/gui/shared/weapon_data_model.py
+# - 修改 games/endfield/gui/shared/weapon_filter.py
+# - 修改 games/endfield/gui/shell/__init__.py
+# - 修改 games/endfield/gui/shell/fixed_loadout_slots.py
+# - 修改 games/endfield/gui/shell/qt_control_dock.py
+# - 修改 games/endfield/gui/shell/qt_control_dock_builders.py
+# - 修改 games/endfield/tests/gui_design/controls/enemy/test_qt_enemy_panel.py
+# - 修改 games/endfield/tests/gui_design/controls/search/test_qt_search_browser_dialog.py
+# - 变更 pyrightconfig.json
+# - 修改 tools/check_pyside6_coupling.py
+# - 修改 tools/migrate_weapon_skills_schema.py
+# - 修改 tools/migration/migrate_weapon_skills_schema.py
+# - 变更 web/backend/api/.admin_data/usage.json
+# - 修改 web/backend/api/endfield/manual_buff.py
+# - 修改 web/backend/api/search.py

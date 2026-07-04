@@ -9,13 +9,21 @@
 - preview_lines：单/多技能快速预览
 - damage_snapshot：仪表盘与历史用伤害摘要
 - search_results_lines：全量遍历结果报告
+- total_damage_display_data：总伤显示数据分组/排序/百分比（纯 Python）
 """
 
-from . import damage_snapshot, display_lines, preview_lines, search_results_lines
+from . import (
+    damage_snapshot,
+    display_lines,
+    preview_lines,
+    search_results_lines,
+    total_damage_display_data,
+)
 
 __all__ = [
     "damage_snapshot",
     "display_lines",
     "preview_lines",
     "search_results_lines",
+    "total_damage_display_data",
 ]

@@ -45,11 +45,15 @@ from games.endfield.gui.shared.i18n_combos import (
     read_damage_component_mode,
     set_combo_by_internal,
 )
+from games.endfield.gui.shell.fixed_loadout_slots import (
+    FIXED_SLOT_SPECS,
+    lookup_equipment_in_catalog,
+    slot_to_catalog_key,
+)
 from games.endfield.gui.shell.qt_control_dock_builders import (
     _BTN_PRIMARY_STYLE,
     _BTN_SECONDARY_STYLE,
     _COMBO_STYLE,
-    _FIXED_SLOT_SPECS,
     _PRIMARY_BTN_HEIGHT,
     _SECONDARY_BTN_HEIGHT,
     BuilderMixin,
@@ -219,7 +223,6 @@ class QtControlDock(BuilderMixin, QWidget):
         def _make_tool_btn(text: str) -> QPushButton:
             b = self._make_btn(text, _SECONDARY_BTN_HEIGHT)
             ms_lay.addWidget(b)
-            """make tool btn。"""
             return b
 
         self._export_btn = _make_tool_btn(tr("desktop.endfield.exportPreset"))
@@ -292,9 +295,9 @@ class QtControlDock(BuilderMixin, QWidget):
         """从装备 catalog 填充四槽装备名称下拉。"""
         from games.endfield.data_loading.equipment_filters import equipment_names_from_rows
 
-        for i, (slot_key, _) in enumerate(_FIXED_SLOT_SPECS):
+        for i, (slot_key, _) in enumerate(FIXED_SLOT_SPECS):
             cb = self.fixed_loadout_slots[i]
-            catalog_key = "accessories" if slot_key in ("accessory_a", "accessory_b") else slot_key
+            catalog_key = slot_to_catalog_key(slot_key)
             rows = list(catalog.get(catalog_key) or [])
             names = equipment_names_from_rows(rows)
 
@@ -327,22 +330,19 @@ class QtControlDock(BuilderMixin, QWidget):
         """从四槽下拉读取 FixedLoadoutSelection。"""
         from games.endfield.calc.loadout.slot_search import FixedLoadoutSelection
 
-        def _pick(i: int, catalog_key: str):
+        def _pick(i: int, slot_key: str) -> dict[str, Any] | None:
             name_raw = self.fixed_loadout_slots[i].currentData()
             name = str(name_raw) if name_raw is not None else self.fixed_loadout_slots[i].currentText()
             if name == FIXED_SLOT_NONE_LABEL:
                 return None
-            for row in catalog.get(catalog_key) or []:
-                if str(row.get("名称") or "") == name:
-                    return row
-            """pick。"""
-            return None
+            result = lookup_equipment_in_catalog(catalog, slot_key, name)
+            return result.matched_row
 
         return FixedLoadoutSelection(
             chest=_pick(0, "chest"),
             gloves=_pick(1, "gloves"),
-            accessory_a=_pick(2, "accessories"),
-            accessory_b=_pick(3, "accessories"),
+            accessory_a=_pick(2, "accessory_a"),
+            accessory_b=_pick(3, "accessory_b"),
         )
 
     def read_skill_counts(self) -> dict[str, int]:

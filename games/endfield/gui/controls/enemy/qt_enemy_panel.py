@@ -30,19 +30,16 @@ from games.endfield.data_loading.enemy_params import (
     DEFAULT_CORROSION_DURATION_SEC,
     DEFAULT_ENEMY_DEFENSE,
     DEFAULT_ENEMY_RESISTANCE,
-    DEFAULT_ENEMY_TIER,
     DEFAULT_IGNORE_RESISTANCE,
     DEFAULT_IMBALANCE_EFFICIENCY_BONUS,
     DEFAULT_IMBALANCE_VULNERABILITY,
     DEFAULT_IS_TRUE_DAMAGE,
     DEFAULT_IS_UNBALANCED,
     list_plugin_enemy_choices,
-    resolve_enemy_defense,
-    resolve_enemy_resistance,
-    resolve_enemy_tier,
-    resolve_ignore_resistance,
-    resolve_imbalance_vulnerability,
-    resolve_is_unbalanced,
+)
+from games.endfield.gui.controls.enemy.enemy_panel_model import (
+    default_enemy_params,
+    resolve_enemy_params,
 )
 
 _LABEL_COLOR = "#CCCCCC"
@@ -101,9 +98,6 @@ class _Label(QLabel):
         super().__init__(text)
         self.setFont(font)
         self.setStyleSheet(f"color: {_LABEL_COLOR};")
-        """初始化实例。"""
-
-    """Label。"""
 
 
 class QtEnemyPanel(QWidget):
@@ -126,7 +120,6 @@ class QtEnemyPanel(QWidget):
         self._build_ui()
         self._connect_signals()
         self._populate_enemy_combo()
-        """初始化实例。"""
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -244,7 +237,6 @@ class QtEnemyPanel(QWidget):
         reset_row.addStretch()
         reset_row.addWidget(self._reset_btn)
         layout.addLayout(reset_row)
-        """build ui。"""
 
     def _connect_signals(self) -> None:
         self._enemy_combo.currentTextChanged.connect(self._on_enemy_combo_changed)
@@ -261,7 +253,6 @@ class QtEnemyPanel(QWidget):
         self._imbalance_eff_spin.valueChanged.connect(self._emit_params)
         self._break_defense_spin.valueChanged.connect(self._emit_params)
         self._reset_btn.clicked.connect(self._reset_to_default)
-        """connect signals。"""
 
     def _populate_enemy_combo(self) -> None:
         choices = list_plugin_enemy_choices()
@@ -271,40 +262,37 @@ class QtEnemyPanel(QWidget):
             self._id_by_label[label] = eid
         self._enemy_combo.clear()
         self._enemy_combo.addItems(labels)
-        """populate enemy combo。"""
 
     def _on_enemy_combo_changed(self, text: str) -> None:
         eid = self._id_by_label.get(text, "")
-        self._defense_spin.setValue(resolve_enemy_defense(eid))
-        self._resistance_spin.setValue(resolve_enemy_resistance(eid))
-        self._ignore_resistance_spin.setValue(resolve_ignore_resistance(eid))
-        self._imbalance_spin.setValue(resolve_imbalance_vulnerability(eid))
-        self._unbalanced_cb.setChecked(resolve_is_unbalanced(eid))
-        tier = resolve_enemy_tier(eid)
-        idx = self._tier_combo.findText(tier)
+        resolved = resolve_enemy_params(eid)
+        self._defense_spin.setValue(resolved.enemy_defense)
+        self._resistance_spin.setValue(resolved.enemy_resistance)
+        self._ignore_resistance_spin.setValue(resolved.ignore_resistance)
+        self._imbalance_spin.setValue(resolved.imbalance_vulnerability_coeff)
+        self._unbalanced_cb.setChecked(resolved.is_unbalanced)
+        idx = self._tier_combo.findText(resolved.enemy_tier)
         if idx >= 0:
             self._tier_combo.setCurrentIndex(idx)
         self._emit_params()
-        """on enemy combo changed。"""
 
     def _emit_params(self) -> None:
         self.enemy_params_changed.emit(self.get_params())
-        """emit params。"""
 
     def _reset_to_default(self) -> None:
-        self._defense_spin.setValue(DEFAULT_ENEMY_DEFENSE)
-        self._resistance_spin.setValue(DEFAULT_ENEMY_RESISTANCE)
-        self._ignore_resistance_spin.setValue(DEFAULT_IGNORE_RESISTANCE)
-        self._imbalance_spin.setValue(DEFAULT_IMBALANCE_VULNERABILITY)
-        self._unbalanced_cb.setChecked(DEFAULT_IS_UNBALANCED)
-        self._true_damage_cb.setChecked(DEFAULT_IS_TRUE_DAMAGE)
-        self._tier_combo.setCurrentText(DEFAULT_ENEMY_TIER)
-        self._combo_spin.setValue(DEFAULT_COMBO_STACKS)
-        self._attached_mult_spin.setValue(DEFAULT_ATTACHED_EFFECT_MULTIPLIER)
-        self._corrosion_spin.setValue(DEFAULT_CORROSION_DURATION_SEC)
-        self._imbalance_eff_spin.setValue(DEFAULT_IMBALANCE_EFFICIENCY_BONUS)
-        self._break_defense_spin.setValue(DEFAULT_BREAK_DEFENSE_STACKS)
-        """reset to default。"""
+        defaults = default_enemy_params()
+        self._defense_spin.setValue(defaults["enemy_defense"])
+        self._resistance_spin.setValue(defaults["enemy_resistance"])
+        self._ignore_resistance_spin.setValue(defaults["ignore_resistance"])
+        self._imbalance_spin.setValue(defaults["imbalance_vulnerability_coeff"])
+        self._unbalanced_cb.setChecked(defaults["is_unbalanced"])
+        self._true_damage_cb.setChecked(defaults["is_true_damage"])
+        self._tier_combo.setCurrentText(defaults["enemy_tier"])
+        self._combo_spin.setValue(defaults["combo_stacks"])
+        self._attached_mult_spin.setValue(defaults["attached_effect_multiplier"])
+        self._corrosion_spin.setValue(defaults["corrosion_duration_seconds"])
+        self._imbalance_eff_spin.setValue(defaults["imbalance_efficiency_bonus"])
+        self._break_defense_spin.setValue(defaults["break_defense_stacks"])
 
     def get_params(self) -> dict[str, Any]:
         return {
@@ -321,7 +309,6 @@ class QtEnemyPanel(QWidget):
             "imbalance_efficiency_bonus": float(self._imbalance_eff_spin.value()),
             "break_defense_stacks": int(self._break_defense_spin.value()),
         }
-        """获取params。"""
 
     def set_params(self, params: dict[str, Any]) -> None:
         if "enemy_defense" in params:
@@ -350,13 +337,11 @@ class QtEnemyPanel(QWidget):
             self._imbalance_eff_spin.setValue(float(params["imbalance_efficiency_bonus"]))
         if "break_defense_stacks" in params:
             self._break_defense_spin.setValue(max(0, min(4, int(params["break_defense_stacks"]))))
-        """设置params。"""
 
     def current_enemy_id(self) -> str:
-        """current enemy id。"""
+        """获取当前选中的敌人 ID。"""
         return self._id_by_label.get(self._enemy_combo.currentText(), "")
 
     def set_enemy_combo_index(self, index: int) -> None:
         if 0 <= index < self._enemy_combo.count():
             self._enemy_combo.setCurrentIndex(index)
-        """设置enemy combo index。"""

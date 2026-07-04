@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import unittest
+from typing import Any
 
 from games.arknights.operator_catalog import (
     STAR_TIERS,
@@ -14,7 +15,7 @@ from games.arknights.operator_catalog import (
 )
 
 
-def _make_ops() -> dict[str, dict[str, object]]:
+def _make_ops() -> dict[str, dict[str, Any]]:
     """创建一个小型干员数据集用于测试筛选。"""
     return {
         "能天使": {"名称": "能天使", "星级": 6, "职业": "狙击", "分支": "速射手"},

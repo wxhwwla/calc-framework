@@ -4,10 +4,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from .i18n import tr
 from .viewer_help_content import build_viewer_help
@@ -17,9 +17,14 @@ from .viewer_plugin_manager import PluginManagerDialog
 class CalcPackViewerEventMixin:
     """CalcPackViewer 事件处理 Mixin。"""
 
-    # 被 Mixin 依赖的属性（由 CalcPackViewer 提供）：
-    # _theme_manager, _status_label, _splitter, _compute_sheet,
-    # _entity_selectors, _level_spin, _asset_temp_dir
+    # Mixin 属性占位 — 由 CalcPackViewer 提供（Pylance 类型识别）
+    _theme_manager: Any
+    _status_label: Any
+    _splitter: Any
+    _compute_sheet: Any
+    _entity_selectors: Any
+    _level_spin: Any
+    _asset_temp_dir: Any
 
     def _show_help(self) -> None:
         """显示内置帮助对话框（F1）。"""
@@ -35,8 +40,11 @@ class CalcPackViewerEventMixin:
             self.setStyleSheet(stylesheet)
             theme = self._theme_manager.get_theme(key)
             if theme:
-                self._theme_manager.apply_font(theme, self)
-            self._status_label.setText(tr("desktop.viewer.themeSwitched", name=theme.get("name", key)))
+                from ._qt_backend import apply_font
+
+                apply_font(theme, cast(QWidget, self))
+            theme_name = theme.get("name", key) if theme else key
+            self._status_label.setText(tr("desktop.viewer.themeSwitched", name=theme_name))
 
     def _toggle_left_panel(self) -> None:
         """切换左侧栏的显示/隐藏。"""
@@ -83,14 +91,16 @@ class CalcPackViewerEventMixin:
         self._compute_sheet._base_context = context
         self._compute_sheet.evaluate()
 
-        selected = []
+        from .viewer_evaluator import build_entity_status_text
+
+        selected: dict[str, str] = {}
         for src, combo in self._entity_selectors.items():
             if combo.currentIndex() >= 0:
-                selected.append(f"{src}={combo.currentText()}")
+                selected[src] = combo.currentText()
         lv = self._level_spin.value() if self._level_spin else 90
-        self._status_label.setText(f"已求值 — {', '.join(selected) if selected else '自定义输入'} Lv.{lv}")
+        self._status_label.setText(build_entity_status_text(selected, selected, lv))
 
-    def resizeEvent(self, event) -> None:  # noqa: N802
+    def resizeEvent(self, event: Any) -> None:  # noqa: N802
         """窗口大小变化时自动调整侧栏布局。"""
         super().resizeEvent(event)
         if self._splitter is None:

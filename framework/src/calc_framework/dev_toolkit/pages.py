@@ -145,7 +145,8 @@ class _NewAdapterPage(QWidget):
                 self._name_edit.setText(self._dag_file.stem)
 
     def _create_adapter(self) -> None:
-        from calc_framework.dag.serializer import load_dag
+        """创建适配器包 — GUI 壳层，委托 adapter_creator 纯逻辑。"""
+        from .adapter_creator import AdapterScaffoldConfig, scaffold_adapter_directory
 
         if not self._dag_file:
             QMessageBox.warning(self, tr("desktop.devToolkit.newAdapter.error"), tr("desktop.devToolkit.newAdapter.noDagFile"))
@@ -159,128 +160,27 @@ class _NewAdapterPage(QWidget):
         game = self._game_edit.text().strip() or "通用游戏"
         desc = self._desc_edit.text().strip()
 
-        # 加载 DAG 验证
-        try:
-            dag = load_dag(self._dag_file)
-        except Exception as e:
-            QMessageBox.critical(
-                self, tr("desktop.devToolkit.newAdapter.error"), tr("desktop.devToolkit.newAdapter.dagLoadError", error=str(e))
-            )
+        config = AdapterScaffoldConfig(
+            name=name,
+            game=game,
+            description=desc,
+            dag_file=self._dag_file,
+            output_root=_REPO_ROOT / "framework" / "adapters",
+        )
+        result = scaffold_adapter_directory(config)
+        if not result.success:
+            QMessageBox.critical(self, tr("desktop.devToolkit.newAdapter.error"), result.error)
             return
 
-        # 生成适配器目录
-        safe_name = name.replace(" ", "_").replace("/", "_").replace("\\", "_")
-        adapter_dir = _REPO_ROOT / "framework" / "adapters" / safe_name
-        adapter_dir.mkdir(parents=True, exist_ok=True)
-        (adapter_dir / "ui").mkdir(exist_ok=True)
-
-        dag_filename = f"{safe_name}.dag.json"
-
-        # 1. 复制 DAG 文件
-        import shutil
-
-        shutil.copy2(self._dag_file, adapter_dir / dag_filename)
-
-        # 2. 生成 meta.json
-        import json
-
-        meta = {
-            "name": name,
-            "game": game,
-            "description": desc or dag.description or name,
-            "version": "1.0.0",
-            "schema_version": "dag-v1",
-            "entry_dag": dag_filename,
-            "ui_layout": "ui/layout.json",
-            "attr_schema": "attr_schema.json",
-        }
-        (adapter_dir / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-
-        # 3. 生成 attr_schema.json（从 DAG 变量推断，过滤 user_input）
-        valid_sources = {"character", "weapon", "equipment", "enemy", "computed"}
-        attrs = []
-        for var_path, var_def in dag.variables.items():
-            parts = var_path.split(".")
-            if len(parts) == 2:
-                source = var_def.source if var_def.source in valid_sources else "computed"
-                attrs.append(
-                    {
-                        "name": parts[1],
-                        "type": var_def.type if var_def.type in ("float", "int", "bool", "percent") else "float",
-                        "source": source,
-                        "default": var_def.default if var_def.default is not None else 0.0,
-                        "description": var_def.description or parts[1],
-                    }
-                )
-        (adapter_dir / "attr_schema.json").write_text(
-            json.dumps({"attributes": attrs}, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-
-        # 3.5 创建 data/ 目录 + 空数据文件
-        data_dir = adapter_dir / "data"
-        data_dir.mkdir(exist_ok=True)
-        # 按 source 分组创建数据文件
-        source_groups: dict[str, list[str]] = {}
-        for var_path, var_def in dag.variables.items():
-            parts = var_path.split(".")
-            if len(parts) == 2 and var_def.source in valid_sources:
-                source_groups.setdefault(var_def.source, []).append(parts[1])
-        for source in source_groups:
-            data_file = data_dir / f"{source}s.json"
-            if not data_file.exists():
-                data_file.write_text(json.dumps([], ensure_ascii=False, indent=2), encoding="utf-8")
-
-        # 4. 生成 ui/layout.json（自动布局）
-        input_vars = [k for k, v in dag.variables.items() if v.source != "computed"]
-        output_names = list(dag.outputs.keys())
-        sections = []
-        if input_vars:
-            sections.append(
-                {
-                    "id": "inputs",
-                    "type": "inputs",
-                    "title": "输入参数",
-                    "variables": input_vars,
-                }
-            )
-        if output_names:
-            sections.append(
-                {
-                    "id": "outputs",
-                    "type": "outputs",
-                    "title": "计算结果",
-                    "outputs": output_names,
-                }
-            )
-        layout_data = {
-            "schema_version": "ui-v1",
-            "name": name,
-            "sections": sections,
-        }
-        (adapter_dir / "ui" / "layout.json").write_text(json.dumps(layout_data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-        # 5. 生成空 functions.py
-        (adapter_dir / "functions.py").write_text(
-            f'# -*- coding: utf-8 -*-\n# SPDX-License-Identifier: AGPL-3.0\n"""{name} — 自定义函数。"""\n',
-            encoding="utf-8",
-        )
-
         # 显示结果
-        files = [
-            f"  {safe_name}/meta.json",
-            f"  {safe_name}/{dag_filename}",
-            f"  {safe_name}/attr_schema.json",
-            f"  {safe_name}/ui/layout.json",
-            f"  {safe_name}/functions.py",
-        ]
+        file_lines = [f"  {f}" for f in result.files]
         self._result.setPlainText(
-            tr("desktop.devToolkit.newAdapter.successMsg", path=str(adapter_dir)) + "\n\n文件:\n" + "\n".join(files)
+            tr("desktop.devToolkit.newAdapter.successMsg", path=str(result.adapter_dir)) + "\n\n文件:\n" + "\n".join(file_lines)
         )
-
         QMessageBox.information(
             self,
             tr("desktop.devToolkit.newAdapter.success"),
-            tr("desktop.devToolkit.newAdapter.successMsg", path=str(adapter_dir)),
+            tr("desktop.devToolkit.newAdapter.successMsg", path=str(result.adapter_dir)),
         )
 
 

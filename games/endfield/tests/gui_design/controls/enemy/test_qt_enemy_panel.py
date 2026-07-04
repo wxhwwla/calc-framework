@@ -83,8 +83,8 @@ class TestQtEnemyPanel(unittest.TestCase):
         eid = self.panel.current_enemy_id()
         self.assertIsInstance(eid, str)
 
-    @patch("games.endfield.gui.controls.enemy.qt_enemy_panel.resolve_enemy_defense", return_value=300.0)
-    @patch("games.endfield.gui.controls.enemy.qt_enemy_panel.resolve_enemy_resistance", return_value=20.0)
+    @patch("games.endfield.gui.controls.enemy.enemy_panel_model.resolve_enemy_defense", return_value=300.0)
+    @patch("games.endfield.gui.controls.enemy.enemy_panel_model.resolve_enemy_resistance", return_value=20.0)
     def test_enemy_combo_change_updates_params(self, mock_res, mock_def) -> None:
         from games.endfield.gui.controls.enemy.qt_enemy_panel import list_plugin_enemy_choices
 

@@ -25,14 +25,6 @@ from PySide6.QtWidgets import (
 from utils.search_diagnostics import get_search_logger, log_search_config
 
 from games.endfield.calc.loadout.optimizer import LoadoutScore
-from games.endfield.calc.manual_buff.physical import (
-    format_abnormal_breakdown_lines,
-    split_damage_breakdown,
-)
-from games.endfield.calc.manual_buff.spell import (
-    format_spell_abnormal_breakdown_lines,
-    is_spell_abnormal_key,
-)
 from games.endfield.calc.search.plan.controller import (
     optimizer_config_for_search_job,
 )
@@ -41,14 +33,15 @@ from games.endfield.calc.search.run.cancel import SearchCancelToken
 from games.endfield.calc.search.run.single_skill import (
     run_exported_single_skill_search,
 )
-from games.endfield.calc.skills.segments import (
-    aggregate_weighted_damage,
-    format_segment_breakdown_lines,
-)
 from games.endfield.gui.controls.search.search_settings import (
     format_search_progress_text,
     resolve_parallel_workers,
     resolve_top_n,
+)
+from games.endfield.gui.controls.search.search_worker_logic import (
+    SearchResultItem,
+    build_search_result_items,
+    format_search_result_summary,
 )
 from games.endfield.gui.presentation.search_results_lines import (
     export_paths_to_strings,
@@ -197,6 +190,20 @@ _SEG_FG = QColor("#9BB9E0")
 _ABNORMAL_FG = QColor("#C9A96E")
 
 
+def _node_to_item(node: SearchResultItem) -> QTreeWidgetItem:
+    """将 SearchResultItem 转换为 QTreeWidgetItem（递归）。"""
+    item = QTreeWidgetItem([node.text])
+    item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+    if node.color == "segment":
+        item.setForeground(0, _SEG_FG)
+    elif node.color == "abnormal":
+        item.setForeground(0, _ABNORMAL_FG)
+    for child_node in node.children:
+        child_item = _node_to_item(child_node)
+        item.addChild(child_item)
+    return item
+
+
 def _build_tree_items(
     lines: list[str],
     top_results: Sequence[LoadoutScore] | None,
@@ -208,109 +215,30 @@ def _build_tree_items(
 ) -> list[QTreeWidgetItem]:
     """构建搜索结果树节点。
 
-
-
     当提供 top_results 时生成结构化树；否则退化为纯文本 flat 列表。
-
+    数据处理委托给 search_worker_logic.build_search_result_items。
     """
-
     items: list[QTreeWidgetItem] = []
 
     if not top_results:
         for line in lines:
             item = QTreeWidgetItem([line])
-
             item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-
             items.append(item)
-
         return items
 
-    for idx, score in enumerate(top_results, start=1):
-        loadout = score.loadout_names
-
-        header_text = (
-            f"第{idx}名: {score.weapon_name}  |  "
-            f"{damage_metric} {score.final_damage:.1f}  |  "
-            f"护甲 {loadout.get('chest', '')}  |  "
-            f"护手 {loadout.get('gloves', '')}  |  "
-            f"配件A {loadout.get('accessory_a', '')}  |  "
-            f"配件B {loadout.get('accessory_b', '')}"
-        )
-
-        root = QTreeWidgetItem([header_text])
-
-        root.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsAutoTristate)
-
-        root.setExpanded(idx <= 3)
-
-        if score.segment_breakdown and (segment_counts or abnormal_counts):
-            base_skill_breakdown, physical_abnormal_breakdown = split_damage_breakdown(score.segment_breakdown)
-
-            spell_abnormal_breakdown: dict[str, float] = {}
-
-            skill_breakdown: dict[str, float] = {}
-
-            for key, value in base_skill_breakdown.items():
-                if is_spell_abnormal_key(key):
-                    spell_abnormal_breakdown[key] = value
-
-                else:
-                    skill_breakdown[key] = value
-
-            if skill_breakdown and segment_counts:
-                breakdown_lines = format_segment_breakdown_lines(skill_breakdown, segment_counts, indent="")
-
-                for b_line in breakdown_lines:
-                    child = QTreeWidgetItem([b_line])
-
-                    child.setForeground(0, _SEG_FG)
-
-                    child.setFlags(Qt.ItemFlag.ItemIsEnabled)
-
-                    root.addChild(child)
-
-                weighted_total, _, skill_type_totals = aggregate_weighted_damage(skill_breakdown, segment_counts)
-
-                if len(skill_type_totals) > 1:
-                    parts = [f"{k} {v:.1f}" for k, v in skill_type_totals.items()]
-
-                    total_line = QTreeWidgetItem([f"加权合计: {weighted_total:.1f}（{' + '.join(parts)}）"])
-
-                else:
-                    total_line = QTreeWidgetItem([f"加权合计: {weighted_total:.1f}"])
-
-                total_line.setFlags(Qt.ItemFlag.ItemIsEnabled)
-
-                root.addChild(total_line)
-
-            if physical_abnormal_breakdown and abnormal_counts:
-                ab_lines = format_abnormal_breakdown_lines(physical_abnormal_breakdown, abnormal_counts, indent="")
-
-                for ab_line in ab_lines:
-                    child = QTreeWidgetItem([ab_line])
-
-                    child.setForeground(0, _ABNORMAL_FG)
-
-                    child.setFlags(Qt.ItemFlag.ItemIsEnabled)
-
-                    root.addChild(child)
-
-            if spell_abnormal_breakdown and spell_abnormal_counts:
-                sp_lines = format_spell_abnormal_breakdown_lines(
-                    spell_abnormal_breakdown, spell_abnormal_counts, indent=""
-                )
-
-                for sp_line in sp_lines:
-                    child = QTreeWidgetItem([sp_line])
-
-                    child.setForeground(0, _ABNORMAL_FG)
-
-                    child.setFlags(Qt.ItemFlag.ItemIsEnabled)
-
-                    root.addChild(child)
-
-        items.append(root)
+    nodes = build_search_result_items(
+        list(top_results),
+        damage_metric=damage_metric,
+        segment_counts=segment_counts,
+        abnormal_counts=abnormal_counts,
+        spell_abnormal_counts=spell_abnormal_counts,
+    )
+    for node in nodes:
+        item = _node_to_item(node)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsAutoTristate)
+        item.setExpanded(node.expanded)
+        items.append(item)
 
     return items
 
@@ -426,12 +354,7 @@ class QtSearchResultsDialog(QDialog):
 
         layout.addWidget(tree, stretch=1)
 
-        info_label = QPushButton(
-            f"共 {len(top_results) if top_results else 0} 个结果  |  "
-            f"前 {min(3, len(top_results) if top_results else 0)} 项已展开"
-            if top_results
-            else ""
-        )
+        info_label = QPushButton(format_search_result_summary(list(top_results) if top_results else None))
 
         info_label.setFont(small_font)
 

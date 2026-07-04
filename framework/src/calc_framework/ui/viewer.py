@@ -86,7 +86,7 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._asset_temp_dir: tempfile.TemporaryDirectory | None = None
 
-        self._calcpack_path: str | None = calcpack_path
+        self._calcpack_path: str = calcpack_path or ""
 
         central = QWidget()
 

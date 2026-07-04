@@ -28,6 +28,7 @@ __all__ = [
     "app_selection",
     "app_window",
     "app_window_events",
+    "fixed_loadout_slots",
 ]
 
 _BACKEND: Literal["qt"] = "qt"

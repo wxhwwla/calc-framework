@@ -31,6 +31,15 @@ from PySide6.QtWidgets import (
 from .qt_ability_panel import QtSpecialAbilityPanel
 from .qt_panel_getters_mixin import PanelGettersMixin
 from .qt_subpanels import QtSkillLevelPanel, QtTrustPanel
+from .selection_model import (
+    extract_max_level,
+    extract_names,
+    extract_stars,
+    extract_types,
+    filter_by_star,
+    filter_by_type,
+    resolve_selected_entity,
+)
 
 
 def _empty_list_cb() -> QComboBox:
@@ -345,7 +354,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         """connect signals。"""
 
     def _init_values(self) -> None:
-        types = sorted({item["类型"] for item in self.data_list if "类型" in item})
+        types = extract_types(self.data_list)
 
         if types:
             self.type_combo.addItems(types)
@@ -387,9 +396,9 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
             return
 
-        filtered = [ch for ch in self.data_list if ch.get("类型") == sel_type]
+        filtered = filter_by_type(self.data_list, sel_type)
 
-        stars = sorted({str(ch["星级"]) for ch in filtered if "星级" in ch}, key=int)
+        stars = extract_stars(filtered)
 
         self.star_combo.clear()
 
@@ -406,9 +415,11 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
             return
 
-        filtered = [ch for ch in self.data_list if ch.get("类型") == sel_type and str(ch.get("星级", "")) == sel_star]
+        type_filtered = filter_by_type(self.data_list, sel_type)
 
-        names = [ch["名称"] for ch in filtered if "名称" in ch]
+        filtered = filter_by_star(type_filtered, sel_star)
+
+        names = extract_names(filtered)
 
         self.name_combo.clear()
 
@@ -421,10 +432,10 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
         if not name:
             return
 
-        entry = next((ch for ch in self.data_list if ch.get("名称") == name), None)
+        entry = resolve_selected_entity(self.data_list, name)
 
         if entry:
-            max_level = len(entry.get("等级", []))
+            max_level = extract_max_level(entry)
 
             if max_level > 0:
                 self.level_slider.setMaximum(max_level)
@@ -523,27 +534,28 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
     def select_by_name(self, name: str) -> bool:
         """按名称选择角色/武器（触发级联）。"""
 
-        for item in self.data_list:
-            if item.get("名称") == name:
-                item_type = item.get("类型", "")
+        entry = resolve_selected_entity(self.data_list, name)
 
-                item_star = str(item.get("星级", ""))
+        if entry:
+            item_type = entry.get("类型", "")
 
-                idx_type = self.type_combo.findText(item_type)
+            item_star = str(entry.get("星级", ""))
 
-                if idx_type >= 0:
-                    self.type_combo.setCurrentIndex(idx_type)
+            idx_type = self.type_combo.findText(item_type)
 
-                idx_star = self.star_combo.findText(item_star)
+            if idx_type >= 0:
+                self.type_combo.setCurrentIndex(idx_type)
 
-                if idx_star >= 0:
-                    self.star_combo.setCurrentIndex(idx_star)
+            idx_star = self.star_combo.findText(item_star)
 
-                idx_name = self.name_combo.findText(name)
+            if idx_star >= 0:
+                self.star_combo.setCurrentIndex(idx_star)
 
-                if idx_name >= 0:
-                    self.name_combo.setCurrentIndex(idx_name)
+            idx_name = self.name_combo.findText(name)
 
-                    return True
+            if idx_name >= 0:
+                self.name_combo.setCurrentIndex(idx_name)
+
+                return True
 
         return False

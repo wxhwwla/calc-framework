@@ -29,6 +29,7 @@ from games.endfield.framework_bridge import ComputeSheet
 from games.endfield.gui.panels.selection.qt_panel import QtSelectionPanel
 from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
 from games.endfield.gui.shared.display_view.qt_columns import QtAttributeColumns
+from games.endfield.gui.shared.weapon_filter import filter_weapons_for_character
 from games.endfield.gui.shell.qt_control_dock import QtControlDock
 
 _CONFIRM_PENDING_STYLE = """
@@ -192,23 +193,7 @@ class ShellMixin:
 
     def _on_char_name_change(self) -> None:
         char_data = self.char_panel.get_selected_data()
-        if not char_data:
-            self.weapon_panel.update_data_list(list(self.all_weapons))
-            self._rebuild_segment_rows()
-            self._on_loadout_changed()
-            return
-        char_weapon_type = char_data.get("武器", "")
-        if not char_weapon_type:
-            self.weapon_panel.update_data_list(list(self.all_weapons))
-            self._rebuild_segment_rows()
-            self._on_loadout_changed()
-            return
-        filtered = [w for w in self.all_weapons if w.get("类型") == char_weapon_type]
-        if not filtered:
-            self.weapon_panel.update_data_list(list(self.all_weapons))
-            self._rebuild_segment_rows()
-            self._on_loadout_changed()
-            return
+        filtered = filter_weapons_for_character(self.all_weapons, char_data)
         self.weapon_panel.update_data_list(filtered)
         self._rebuild_segment_rows()
         self._on_loadout_changed()

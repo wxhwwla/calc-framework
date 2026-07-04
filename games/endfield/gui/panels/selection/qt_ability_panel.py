@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from games.endfield.gui.shared.weapon_data_model import extract_bonus_attributes, read_special_slots
+
 _SLIDER_STYLE = """
     QSlider::groove:horizontal {
         background: #3A3A3A; height: 6px; border-radius: 3px;
@@ -227,62 +229,13 @@ class QtSpecialAbilityPanel(QWidget):
 
     @staticmethod
     def _extract_bonus_attributes(weapon_data: dict[str, Any]) -> list[str]:
-        normal_raw = weapon_data.get("normal_skills")
-        if isinstance(normal_raw, list):
-            out: list[str] = []
-            for item in normal_raw:
-                if not isinstance(item, dict):
-                    continue
-                effect = str(item.get("effect", "")).strip()
-                if effect:
-                    out.append(effect)
-            return out[:3]
-
-        keys = list(weapon_data.keys())
-        try:
-            start = keys.index("基础攻击力") + 1
-        except ValueError:
-            return []
-        special_keys = frozenset({"特殊能力", "特殊能力1", "特殊能力2"})
-        out = []
-        for key in keys[start:]:
-            if key in special_keys:
-                break
-            if key.endswith("+") and isinstance(weapon_data.get(key), list):
-                out.append(key)
-        """extract bonus attributes。"""
-        return out[:3]
+        """从武器数据中提取附加属性名称（委托 weapon_data_model）。"""
+        return extract_bonus_attributes(weapon_data)
 
     @staticmethod
     def _read_special_slots(weapon_data: dict[str, Any]) -> list[tuple]:
-        special_raw = weapon_data.get("special_skills")
-        if isinstance(special_raw, list):
-            slots: list[tuple] = []
-            for idx in range(2):
-                if idx < len(special_raw) and isinstance(special_raw[idx], dict):
-                    item = special_raw[idx]
-                    name = str(item.get("name", "")).strip()
-                    effect = str(item.get("effect", "")).strip()
-                    curve = item.get("curve")
-                    max_stack = max(1, int(item.get("max_stack", 1)))
-                    display_name = name or effect
-                    available = bool(display_name) and isinstance(curve, list) and len(curve) > 0
-                    slots.append((available, display_name, 1, max_stack))
-                else:
-                    slots.append((False, "", 1, 1))
-            return slots
-
-        result: list[tuple] = []
-        for key in ("特殊能力1", "特殊能力2"):
-            entry = weapon_data.get(key, {})
-            if isinstance(entry, dict):
-                name = entry.get("名称", "")
-                available = bool(name) and name != "无"
-                max_stack = int(entry.get("最多叠加层数", 1))
-                result.append((available, name, 1, max_stack))
-            else:
-                result.append((False, "", 1, 1))
-        return result
+        """从武器数据中读取特殊能力槽位（委托 weapon_data_model）。"""
+        return read_special_slots(weapon_data)
 
     # ── 对外读取 ──────────────────────────────────
 

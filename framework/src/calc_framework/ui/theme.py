@@ -2,20 +2,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """主题管理器 — 多主题定义 + Qt 样式表渲染。
 
-
-
 支持内置主题（light / dark）和从 .calcpack 加载的自定义主题。
 
 提供运行时切换能力。
 
+注意：``apply_font()`` 已移至 ``_qt_backend.py``，本模块为纯 Python，无 PySide6 依赖。
 """
 
 from __future__ import annotations
 
 from typing import Any
-
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QWidget
 
 from .theme_presets import _BUILTIN_THEMES
 
@@ -447,15 +443,3 @@ class ThemeManager:
             theme = _BUILTIN_THEMES["dark"]
 
         return _build_stylesheet(theme)
-
-    def apply_font(self, theme: dict[str, Any], widget: QWidget) -> None:
-        font_cfg = theme.get("font", {})
-
-        family = font_cfg.get("family", "")
-
-        size = font_cfg.get("size", 0)
-
-        if family or size:
-            font = QFont(family, size or 12)
-
-            widget.setFont(font)

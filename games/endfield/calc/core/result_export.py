@@ -10,6 +10,7 @@ import csv
 import json
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 
@@ -19,7 +20,7 @@ def _sorted_scores(scores: Iterable[LoadoutScore]) -> list[LoadoutScore]:
     return sorted(scores, key=lambda s: s.final_damage, reverse=True)
 
 
-def _score_to_row(score: LoadoutScore, rank: int) -> dict[str, object]:
+def _score_to_row(score: LoadoutScore, rank: int) -> dict[str, Any]:
     return {
         "rank": rank,
         "weapon_name": score.weapon_name,

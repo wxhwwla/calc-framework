@@ -415,7 +415,7 @@ def get_enemy_choices():
         list_plugin_enemy_choices,
     )
 
-    rows: list[dict[str, object]] = []
+    rows: list[dict[str, Any]] = []
     for label, enemy_id in list_plugin_enemy_choices():
         params = enemy_damage_context_overrides(enemy_id)
         rows.append(

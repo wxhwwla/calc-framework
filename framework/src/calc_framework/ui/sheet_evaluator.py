@@ -3,6 +3,9 @@
 """ComputeSheet 求值逻辑 — 读取 user_input → 构建 context → 解析 outputs。
 
 从 compute_sheet.py 拆分而来。
+
+纯逻辑函数（var_to_dict、build_context_from_values、render_html_from_values）
+已提取到 ``sheet_evaluator_core.py``，可被 Web/CLI/测试直接使用。
 """
 
 from __future__ import annotations
@@ -25,28 +28,30 @@ from ..dag.schema import DAGVariable
 from ..logging import get_logger
 from .controls import ControlSpec, format_node_value
 from .layout import Layout
+from .sheet_evaluator_core import (
+    build_context_from_values,
+    render_html_from_values,
+    var_to_dict,
+)
 
 logger = get_logger(__name__)
 
-
-def var_to_dict(var: DAGVariable | dict[str, Any]) -> dict[str, Any]:
-    """将 DAGVariable 或 dict 统一转换为 dict。"""
-    if isinstance(var, dict):
-        return var
-    return {
-        "type": var.type,
-        "source": var.source,
-        "description": var.description,
-        "default": var.default,
-        "min": var.min,
-        "max": var.max,
-    }
+# Re-export for backward compatibility
+__all__ = [
+    "build_context",
+    "build_context_from_values",
+    "read_input",
+    "render_html",
+    "render_html_from_values",
+    "update_outputs",
+    "var_to_dict",
+]
 
 
 def read_input(
     path: str,
     input_widgets: dict[str, tuple[QWidget, ControlSpec]],
-    variables: dict[str, DAGVariable],
+    variables: dict[str, DAGVariable | dict[str, Any]],
 ) -> Any:
     """从输入控件读取一个变量的当前值。"""
     entry = input_widgets.get(path)
@@ -80,7 +85,7 @@ def read_input(
 
 def build_context(
     base_context: dict[str, Any],
-    variables: dict[str, DAGVariable],
+    variables: dict[str, DAGVariable | dict[str, Any]],
     input_widgets: dict[str, tuple[QWidget, ControlSpec]],
     user_context_overrides: dict[str, tuple[str, list[str]]],
     context_overrides: dict[str, Any],
@@ -89,40 +94,23 @@ def build_context(
 
     合并 base_context + user_input 值 + user_context_overrides + context_overrides。
     """
-    context = dict(base_context)
-
-    user_values: dict[str, float] = {}
+    # 先用 read_input 从控件读取所有 user_input 值
+    user_values: dict[str, Any] = {}
     for path, var in variables.items():
         vd = var_to_dict(var)
         source = vd.get("source", "")
         if source == "user_input":
             value = read_input(path, input_widgets, variables)
-            parts = path.split(".", 1)
-            if len(parts) == 2:
-                context.setdefault(parts[0], {})[parts[1]] = value
             user_values[path] = value
 
-    for user_path, (target_path, merge_keys) in user_context_overrides.items():
-        uv = user_values.get(user_path)
-        if uv is None:
-            continue
-        parts = target_path.split(".", 1)
-        if len(parts) != 2:
-            continue
-        ns, key = parts
-        for mk in merge_keys:
-            if mk == "override":
-                context.setdefault(ns, {})[key] = uv
-            elif mk == "add":
-                current = context.get(ns, {}).get(key, 0.0)
-                context.setdefault(ns, {})[key] = current + uv
-
-    for path, value in context_overrides.items():
-        parts = path.split(".", 1)
-        if len(parts) == 2:
-            context.setdefault(parts[0], {})[parts[1]] = value
-
-    return context
+    # 委托给纯函数构建 context
+    return build_context_from_values(
+        base_context,
+        variables,
+        user_values,
+        user_context_overrides,
+        context_overrides,
+    )
 
 
 def update_outputs(
@@ -146,20 +134,14 @@ def update_outputs(
 
 def render_html(layout: Layout, output_labels: dict[str, QLabel]) -> str:
     """将当前输出面板渲染为 HTML 表格。"""
-    parts: list[str] = ['<table style="width:100%;border-collapse:collapse;">']
+    # 从 QLabel 提取文本值
+    output_values: dict[str, str] = {}
     for sec in layout.sections:
         if sec.type != "outputs":
             continue
-        parts.append(
-            f'<tr style="background:#2B6CB6;color:white;">'
-            f'<td colspan="2" style="padding:4px 8px;font-weight:bold;">'
-            f"{sec.title}</td></tr>"
-        )
         for out_name in sec.outputs:
             label = output_labels.get(out_name)
-            val = label.text() if label else "--"
-            parts.append(
-                f'<tr><td style="padding:2px 8px;">{out_name}</td><td style="padding:2px 8px;text-align:right;">{val}</td></tr>'
-            )
-    parts.append("</table>")
-    return "\n".join(parts)
+            output_values[out_name] = label.text() if label else "--"
+
+    # 委托给纯函数渲染 HTML
+    return render_html_from_values(layout, output_values)
