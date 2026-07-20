@@ -33,6 +33,14 @@ from games.endfield.calc.damage.formula import (  # pyright: ignore[reportMissin
 )
 
 
+def _calc_special_curve(sa: dict) -> list:
+    """计算特殊能力的成长曲线。"""
+    if "curve" in sa:
+        return sa.get("curve", [])
+    params = {k: v for k, v in sa.items() if k in ["base", "growth", "divisor", "offset", "special"]}
+    return calculate_bonus_attribute(max_level=9, **params)
+
+
 def add_weapon(
     name: str,
     weapon_type: str,
@@ -42,7 +50,10 @@ def add_weapon(
     | None = None,  # {"属性名+": {"base": int, "growth": int, "divisor": int, "offset": int, "special": list}}
     special_ability: dict
     | None = None,  # {"enabled": bool, "name": str, "curve": list} or {"enabled": bool, "name": str, "base": int/float, "growth": int/float, "divisor": int/float, "offset": int/float, "special": list}
+    special_1: dict | None = None,  # 同 special_ability 格式
+    special_2: dict | None = None,  # 同 special_ability 格式
     json_path: Path | None = None,
+    **_kwargs: object,  # 忽略其他未知参数
 ):
     """
 
@@ -70,59 +81,60 @@ def add_weapon(
 
     """
 
-    # 构建武器数据
+    # 构建武器数据（normal_skills / special_skills 格式）
 
     weapon = {
         "名称": name,
         "类型": weapon_type,
         "星级": star,
-        "等级": list(range(1, 91)),
         "潜能": list(range(0, 6)),
-        "基础攻击力": calculate_weapon_attack(**base_atk),
+        "normal_skills": [],
+        "special_skills": [],
+        "成长参数": {
+            "基础攻击力": base_atk,
+        },
+        "最大等级": 90,
     }
 
-    # 添加附加属性
+    # 添加附加属性 → normal_skills
 
+    zone = 1
     if bonus_attrs:
         for attr_name, params in bonus_attrs.items():
             if not attr_name.endswith("+"):
                 attr_name = attr_name + "+"
-
-            # 提取 special 字段（如果存在）
-
             special = params.get("special")
-
             other_params = {k: v for k, v in params.items() if k != "special"}
+            curve = calculate_bonus_attribute(special=special, **other_params)
+            weapon["normal_skills"].append(
+                {
+                    "zone": zone,
+                    "effect": attr_name,
+                    "curve": curve,
+                }
+            )
+            zone += 1
 
-            weapon[attr_name] = calculate_bonus_attribute(special=special, **other_params)
+    # 添加特殊能力 → special_skills
 
-    # 添加特殊能力
+    all_specials: list[dict] = []
+    for sa in (special_ability, special_1, special_2):
+        if sa and sa.get("enabled"):
+            all_specials.append(sa)
 
-    if special_ability and special_ability.get("enabled"):
-        # 支持两种格式：
-
-        # 1. 旧格式：{"curve": [值列表]}
-
-        # 2. 新格式：{"base": int/float, "growth": int/float, "divisor": int/float, "offset": int/float, "special": list}
-
-        if "curve" in special_ability:
-            # 旧格式：直接使用 curve 列表
-
-            curve = special_ability.get("curve", [])
-
-        else:
-            # 新格式：使用公式计算曲线
-
-            params = {
-                k: v for k, v in special_ability.items() if k in ["base", "growth", "divisor", "offset", "special"]
+    for idx, sa in enumerate(all_specials):
+        sa_name = sa.get("name", "")
+        curve = _calc_special_curve(sa)
+        weapon["special_skills"].append(
+            {
+                "zone": zone + idx,
+                "name": sa_name,
+                "condition": sa.get("condition", ""),
+                "effect": sa_name,
+                "curve": curve,
+                "max_stack": sa.get("max_stack", 1),
             }
-
-            curve = calculate_bonus_attribute(max_level=9, **params)
-
-        weapon["特殊能力"] = [True, special_ability.get("name", ""), curve]
-
-    else:
-        weapon["特殊能力"] = [False]
+        )
 
     # 读取现有数据
 
@@ -153,17 +165,20 @@ def add_weapon(
     with open(_json_path, "w", encoding="utf-8") as f:
         json.dump(weapons, f, ensure_ascii=False, indent=2)
 
+    # 计算基础攻击力用于显示
+    atk_curve = calculate_weapon_attack(**base_atk)
+    weapon["基础攻击力"] = atk_curve
+
     print(f"OK: 武器「{name}」已添加！")
-
     print(f"   类型: {weapon_type}  星级: {star}星")
-
-    print(f"   基础攻击力: {weapon['基础攻击力'][0]} - {weapon['基础攻击力'][-1]}")
+    print(f"   基础攻击力: {atk_curve[0]} - {atk_curve[-1]}")
 
     if bonus_attrs:
         print(f"   附加属性: {', '.join(bonus_attrs.keys())}")
 
-    if special_ability and special_ability.get("enabled"):
-        print(f"   特殊能力: {special_ability.get('name')}")
+    if all_specials:
+        for sa in all_specials:
+            print(f"   特殊能力: {sa.get('name')}")
 
     print(f"   当前武器总数: {len(weapons)}")
 

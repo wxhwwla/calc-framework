@@ -170,7 +170,9 @@ def compact_weapon(
             continue
         if not isinstance(values, list) or len(values) < 2:
             continue
-        fitted = _fit_normal_attr(adapter, values[:BONUS_LEVELS], max_error=max_error)
+        floats = [float(v) for v in values[:BONUS_LEVELS]]
+        result = adapter.fit(floats)
+        fitted = _storage_from_fit(result, max_error=max_error)
         if fitted is None:
             warnings.append(f"{name}.{key} 拟合失败，保留数组")
             continue

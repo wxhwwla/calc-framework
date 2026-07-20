@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.27"
+_VERSION = "3.29.0"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -13991,3 +13991,17 @@ def get_exe_version() -> str:
 # - 变更 web/backend/api/.admin_data/usage.json
 # - 修改 web/backend/api/endfield/manual_buff.py
 # - 修改 web/backend/api/search.py
+
+
+# TITLE: 更新 10 处文件
+# BODY:
+# - 更新 characters.json 角色数据
+# - 变更 games/endfield/data/data_version.json
+# - 变更 games/endfield/data/equipments.json
+# - 更新 weapons.json 武器数据
+# - 修改 tools/bwiki_scout/sync_all.py
+# - 修改 tools/compact_game_json.py
+# - 修改 tools/endfield_scripts/add_weapon.py
+# - 修改 tools/endfield_scripts/seed_characters.py
+# - 修改 tools/endfield_scripts/seed_weapons.py
+# - 变更 web/backend/api/.admin_data/usage.json

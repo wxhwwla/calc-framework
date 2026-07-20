@@ -23,6 +23,7 @@ _SEED_WEAPONS = [
         "special_1": {
             "enabled": True,
             "name": "施放战技后，法术伤害+",
+            "max_stack": 1,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
@@ -32,6 +33,7 @@ _SEED_WEAPONS = [
         "special_2": {
             "enabled": True,
             "name": "施放连携技后，法术伤害+",
+            "max_stack": 1,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
@@ -51,6 +53,7 @@ _SEED_WEAPONS = [
         "special_1": {
             "enabled": True,
             "name": "造成的伤害增加+",
+            "max_stack": 1,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
@@ -61,6 +64,7 @@ _SEED_WEAPONS = [
             "enabled": True,
             "name": "攻击力+",
             "curve": [12.0, 14.4, 16.9, 19.2, 21.6, 24.0, 26.4, 28.8, 33.6],
+            "max_stack": 1,
         },
     },
     {
@@ -73,15 +77,17 @@ _SEED_WEAPONS = [
             "源石技艺强度+": {"base": 8.0, "growth": 32, "divisor": 5, "offset": 0, "special": [62.0]},
             "最大生命值+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "全队灼热和电磁伤害+",
+            "max_stack": 1,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [22.4],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "O.B.J.轻芒",
@@ -93,16 +99,17 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 4.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [31.2]},
             "副能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "灼热和电磁伤害+",
+            "max_stack": 3,
             "base": 3.0,
             "growth": 0.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [8.4],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "O.B.J.迅极",
@@ -114,15 +121,17 @@ _SEED_WEAPONS = [
             "终结技充能效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0.0, "special": [37.1]},
             "攻击力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "自然伤害+",
+            "max_stack": 1,
             "base": 5.0,
             "growth": 9,
             "divisor": 8,
             "offset": 0,
             "special": [],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "O.B.J.重荷",
@@ -134,15 +143,17 @@ _SEED_WEAPONS = [
             "最大生命值+": {"base": 8.0, "growth": 6.4, "divisor": 1, "offset": 0.0, "special": [62.4]},
             "副能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "防御力+",
+            "max_stack": 1,
             "base": 18.0,
             "growth": 3.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [50.4],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "不知归",
@@ -154,14 +165,20 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "物理伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "技能恢复技力时物理伤害+",
+            "max_stack": 5,
             "base": 5.0,
             "growth": 9,
             "divisor": 8,
             "offset": 0,
             "special": [],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "其他干员获得物理伤害+",
+            "curve": [2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.5, 7.0],
             "max_stack": 5,
         },
     },
@@ -175,16 +192,17 @@ _SEED_WEAPONS = [
             "物理伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "终结技伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "下次终结技期间造成的物理伤害+",
+            "max_stack": 3,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
             "offset": 0.0,
             "special": [33.6],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "作品：众生",
@@ -196,16 +214,17 @@ _SEED_WEAPONS = [
             "法术伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "暴击率+": {"base": 3.0, "growth": 0.6, "divisor": 1, "offset": 0.0, "special": [8.4]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "攻击力+",
+            "max_stack": 2,
             "base": 7.5,
             "growth": 1.5,
             "divisor": 1,
             "offset": 0.0,
             "special": [21.0],
-            "max_stack": 2,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "作品：蚀迹",
@@ -217,14 +236,25 @@ _SEED_WEAPONS = [
             "自然伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "攻击力+": {"base": 7.0, "growth": 1.4, "divisor": 1, "offset": 0.0, "special": [19.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "其他干员获得法术伤害+",
+            "max_stack": 1,
             "base": 5.0,
             "growth": 9,
             "divisor": 8,
             "offset": 0,
             "special": [],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "其他干员获得额外法术伤害+",
+            "max_stack": 1,
+            "base": 2.0,
+            "growth": 0.4,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [5.6],
         },
     },
     {
@@ -237,14 +267,25 @@ _SEED_WEAPONS = [
             "终结技充能效率+": {"base": 6.0, "growth": 23.8, "divisor": 5, "offset": 0.0, "special": [46.4]},
             "自然伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "全队增加法术伤害+",
+            "max_stack": 1,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
             "offset": 0.0,
             "special": [33.6],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "额外增加法术伤害+",
+            "max_stack": 1,
+            "base": 3.5,
+            "growth": 0.7,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [9.8],
         },
     },
     {
@@ -257,16 +298,17 @@ _SEED_WEAPONS = [
             "暴击率+": {"base": 2.5, "growth": 2.0, "divisor": 1, "offset": 0.0, "special": [19.5]},
             "攻击力+": {"base": 7.0, "growth": 1.4, "divisor": 1, "offset": 0.0, "special": [19.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "终结技期间造成的伤害+",
+            "max_stack": 3,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
             "offset": 0.0,
             "special": [33.6],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "全自动骇新星",
@@ -297,16 +339,17 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "物理伤害+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "额外增加物理伤害+",
+            "max_stack": 3,
             "base": 10.0,
             "growth": 2,
             "divisor": 1,
             "offset": 0,
             "special": [28.0],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "十二问",
@@ -318,16 +361,17 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 4.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [31.2]},
             "副能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "攻击力+",
+            "max_stack": 2,
             "base": 7.5,
             "growth": 1.5,
             "divisor": 1,
             "offset": 0.0,
             "special": [21.0],
-            "max_stack": 2,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "古渠",
@@ -338,15 +382,17 @@ _SEED_WEAPONS = [
             "力量+": {"base": 16.0, "growth": 64, "divisor": 5, "offset": 0, "special": [124.0]},
             "源石技艺强度+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "物理伤害增加+",
+            "max_stack": 1,
             "base": 5.0,
             "growth": 9,
             "divisor": 8,
             "offset": 0,
             "special": [],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "同类相食",
@@ -357,15 +403,17 @@ _SEED_WEAPONS = [
             "主能力值+": {"base": 17.0, "growth": 68, "divisor": 5, "offset": 0, "special": [132.0]},
             "法术伤害+": {"base": 12.0, "growth": 2.4, "divisor": 1, "offset": 0.0, "special": [33.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "对应属性易伤+",
+            "max_stack": 1,
             "base": 10.0,
             "growth": 2,
             "divisor": 1,
             "offset": 0,
             "special": [28.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "向心之引",
@@ -377,16 +425,17 @@ _SEED_WEAPONS = [
             "电磁伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "连携技伤害+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "电磁伤害增加+",
+            "max_stack": 3,
             "base": 10.0,
             "growth": 2,
             "divisor": 1,
             "offset": 0,
             "special": [28.0],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "坚城铸造者",
@@ -398,15 +447,17 @@ _SEED_WEAPONS = [
             "终结技充能效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0.0, "special": [37.1]},
             "攻击力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "源石技艺强度+",
+            "max_stack": 1,
             "base": 25.0,
             "growth": 5,
             "divisor": 1,
             "offset": 0,
             "special": [70.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "塔尔11",
@@ -427,11 +478,21 @@ _SEED_WEAPONS = [
         "bonus_attrs": {
             "力量+": {"base": 20.0, "growth": 16, "divisor": 1, "offset": 0, "special": [156.0]},
             "最大生命值+": {"base": 10.0, "growth": 8, "divisor": 1, "offset": 0, "special": [78.0]},
-            "施加的'''护盾'''效果+": {"base": 24.0, "growth": 4.8, "divisor": 1, "offset": 0.0, "special": [67.2]},
         },
-        "special_ability": {
+        "special_1": {
+            "enabled": True,
+            "name": "护盾效果+",
+            "max_stack": 1,
+            "base": 24.0,
+            "growth": 4.8,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [67.2],
+        },
+        "special_2": {
             "enabled": True,
             "name": "额外获得护盾+",
+            "max_stack": 1,
             "base": 7.0,
             "growth": 1.4,
             "divisor": 1,
@@ -468,15 +529,25 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "电磁伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "战技'''消耗''' '''法术异常'''，战技电磁伤害+",
+            "max_stack": 2,
             "base": 20.0,
             "growth": 4,
             "divisor": 1,
             "offset": 0,
             "special": [56.0],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "施放终结技，战技电磁伤害+",
             "max_stack": 2,
+            "base": 40.0,
+            "growth": 8,
+            "divisor": 1,
+            "offset": 0,
+            "special": [112.0],
         },
     },
     {
@@ -489,15 +560,17 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "源石技艺强度+": {"base": 30.0, "growth": 6, "divisor": 1, "offset": 0, "special": [84.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "物理伤害+",
+            "max_stack": 1,
             "base": 36.0,
             "growth": 7.2,
             "divisor": 1,
             "offset": 0.0,
             "special": [100.8],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "寻路者道标",
@@ -528,15 +601,17 @@ _SEED_WEAPONS = [
             "终结技充能效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0.0, "special": [37.1]},
             "暴击率+": {"base": 3.0, "growth": 0.6, "divisor": 1, "offset": 0.0, "special": [8.4]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "攻击力+",
+            "max_stack": 1,
             "base": 15.0,
             "growth": 3,
             "divisor": 1,
             "offset": 0,
             "special": [42.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "工业零点一",
@@ -567,15 +642,17 @@ _SEED_WEAPONS = [
             "治疗效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0.0, "special": [37.1]},
             "主能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "额外回复+",
+            "max_stack": 1,
             "base": 60.0,
             "growth": 12,
             "divisor": 1,
             "offset": 0,
             "special": [168.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "悼亡诗",
@@ -587,15 +664,17 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 4.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [31.2]},
             "最大生命值+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "攻击力+",
+            "max_stack": 1,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [22.4],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "扶摇",
@@ -605,11 +684,21 @@ _SEED_WEAPONS = [
         "bonus_attrs": {
             "主能力值+": {"base": 17.0, "growth": 68, "divisor": 5, "offset": 0, "special": [132.0]},
             "暴击率+": {"base": 2.5, "growth": 2.0, "divisor": 1, "offset": 0.0, "special": [19.5]},
-            "战技和终结技造成的物理伤害+": {"base": 15.0, "growth": 3, "divisor": 1, "offset": 0, "special": [42.0]},
         },
-        "special_ability": {
+        "special_1": {
+            "enabled": True,
+            "name": "物理伤害+",
+            "max_stack": 1,
+            "base": 15.0,
+            "growth": 3,
+            "divisor": 1,
+            "offset": 0,
+            "special": [42.0],
+        },
+        "special_2": {
             "enabled": True,
             "name": "对'''失衡'''状态造成伤害+",
+            "max_stack": 1,
             "base": 35.0,
             "growth": 7,
             "divisor": 1,
@@ -627,16 +716,17 @@ _SEED_WEAPONS = [
             "终结技充能效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0.0, "special": [37.1]},
             "主能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "攻击力+",
+            "max_stack": 3,
             "base": 6.0,
             "growth": 1.2,
             "divisor": 1,
             "offset": 0.0,
             "special": [16.8],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "昔日精品",
@@ -648,15 +738,17 @@ _SEED_WEAPONS = [
             "最大生命值+": {"base": 10.0, "growth": 8, "divisor": 1, "offset": 0, "special": [78.0]},
             "治疗效率+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "回复生命值+",
+            "max_stack": 1,
             "base": 84.0,
             "growth": 84,
             "divisor": 5,
             "offset": 2,
             "special": [235.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "显赫声名",
@@ -668,15 +760,17 @@ _SEED_WEAPONS = [
             "物理伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "攻击力+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "'''消耗'''破防加攻+",
+            "max_stack": 1,
             "base": 5.0,
             "growth": 9,
             "divisor": 8,
             "offset": 0,
             "special": [],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "显锋",
@@ -707,16 +801,17 @@ _SEED_WEAPONS = [
             "寒冷伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "攻击力+": {"base": 7.0, "growth": 1.4, "divisor": 1, "offset": 0.0, "special": [19.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "寒冷和自然伤害+",
+            "max_stack": 2,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [22.4],
-            "max_stack": 2,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "楔子",
@@ -728,14 +823,25 @@ _SEED_WEAPONS = [
             "暴击率+": {"base": 2.5, "growth": 2.0, "divisor": 1, "offset": 0.0, "special": [19.5]},
             "法术伤害+": {"base": 12.0, "growth": 2.4, "divisor": 1, "offset": 0.0, "special": [33.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "施放战技时，法术伤害+",
+            "max_stack": 1,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [22.4],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "战技施加'''法术异常'''时，法术伤害+",
+            "max_stack": 1,
+            "base": 16.0,
+            "growth": 3.2,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [44.8],
         },
     },
     {
@@ -748,15 +854,17 @@ _SEED_WEAPONS = [
             "治疗效率+": {"base": 6.0, "growth": 23.8, "divisor": 5, "offset": 0.0, "special": [46.4]},
             "副能力+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "法术易伤+",
+            "max_stack": 1,
             "base": 10.0,
             "growth": 2,
             "divisor": 1,
             "offset": 0,
             "special": [28.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "浪潮",
@@ -805,16 +913,17 @@ _SEED_WEAPONS = [
             "意志+": {"base": 20.0, "growth": 16, "divisor": 1, "offset": 0, "special": [156.0]},
             "攻击力+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "全队攻击力+",
+            "max_stack": 2,
             "base": 5.0,
             "growth": 9,
             "divisor": 8,
             "offset": 0,
             "special": [],
-            "max_stack": 2,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "熔铸火焰",
@@ -826,15 +935,17 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "灼热伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "普通攻击伤害+",
+            "max_stack": 1,
             "base": 75.0,
             "growth": 15,
             "divisor": 1,
             "offset": 0,
             "special": [210.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "爆破单元",
@@ -846,15 +957,17 @@ _SEED_WEAPONS = [
             "源石技艺强度+": {"base": 10.0, "growth": 8, "divisor": 1, "offset": 0, "special": [78.0]},
             "副能力+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "法术易伤+",
+            "max_stack": 1,
             "base": 9.0,
             "growth": 1.8,
             "divisor": 1,
             "offset": 0.0,
             "special": [25.2],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "狼之绯",
@@ -866,15 +979,25 @@ _SEED_WEAPONS = [
             "暴击率+": {"base": 2.5, "growth": 2.0, "divisor": 1, "offset": 0.0, "special": [19.5]},
             "攻击力+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "每层'''狼血'''获得物理和灼热伤害+",
+            "max_stack": 16,
             "base": 1.0,
             "growth": 0.2,
             "divisor": 1,
             "offset": 0.0,
             "special": [2.8],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "满层'''狼血'''额外获得物理和灼热伤害+",
             "max_stack": 16,
+            "base": 24.0,
+            "growth": 4.8,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [67.2],
         },
     },
     {
@@ -887,15 +1010,17 @@ _SEED_WEAPONS = [
             "灼热伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "战技伤害+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "攻击力+",
+            "max_stack": 1,
             "base": 16.0,
             "growth": 3.2,
             "divisor": 1,
             "offset": 0.0,
             "special": [44.8],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "白夜新星",
@@ -907,14 +1032,25 @@ _SEED_WEAPONS = [
             "源石技艺强度+": {"base": 10.0, "growth": 8, "divisor": 1, "offset": 0, "special": [78.0]},
             "法术伤害+": {"base": 12.0, "growth": 2.4, "divisor": 1, "offset": 0.0, "special": [33.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "施加'''燃烧'''或'''导电'''后法术伤害+",
+            "max_stack": 1,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
             "offset": 0.0,
             "special": [33.6],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "源石技艺强度+",
+            "max_stack": 1,
+            "base": 25.0,
+            "growth": 5,
+            "divisor": 1,
+            "offset": 0,
+            "special": [70.0],
         },
     },
     {
@@ -925,17 +1061,21 @@ _SEED_WEAPONS = [
         "bonus_attrs": {
             "力量+": {"base": 20.0, "growth": 16, "divisor": 1, "offset": 0, "special": [156.0]},
             "暴击率+": {"base": 2.5, "growth": 2.0, "divisor": 1, "offset": 0.0, "special": [19.5]},
-            "装备者对敌人造成'''重击'''时，攻击力+": {
-                "base": 10.0,
-                "growth": 2,
-                "divisor": 1,
-                "offset": 0,
-                "special": [28.0],
-            },
         },
-        "special_ability": {
+        "special_1": {
+            "enabled": True,
+            "name": "造成'''重击'''时，攻击力+",
+            "max_stack": 1,
+            "base": 10.0,
+            "growth": 2,
+            "divisor": 1,
+            "offset": 0,
+            "special": [28.0],
+        },
+        "special_2": {
             "enabled": True,
             "name": "'''重击'''造成的失衡值+",
+            "max_stack": 1,
             "base": 12.0,
             "growth": 2.4,
             "divisor": 1,
@@ -953,15 +1093,17 @@ _SEED_WEAPONS = [
             "最大生命值+": {"base": 8.0, "growth": 6.4, "divisor": 1, "offset": 0.0, "special": [62.4]},
             "副能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "连携技的治疗效果+",
+            "max_stack": 1,
             "base": 20.0,
             "growth": 4,
             "divisor": 1,
             "offset": 0,
             "special": [56.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "艺术暴君",
@@ -973,16 +1115,17 @@ _SEED_WEAPONS = [
             "暴击率+": {"base": 2.5, "growth": 2.0, "divisor": 1, "offset": 0.0, "special": [19.5]},
             "寒冷伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "战技或连携技暴击后，寒冷伤害+",
+            "max_stack": 3,
             "base": 14.0,
             "growth": 2.8,
             "divisor": 1,
             "offset": 0.0,
             "special": [39.2],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "荧光雷羽",
@@ -1013,15 +1156,17 @@ _SEED_WEAPONS = [
             "终结技充能效率+": {"base": 4.8, "growth": 3.8, "divisor": 1, "offset": 0.0, "special": [37.1]},
             "主能力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "源石技艺强度+",
+            "max_stack": 1,
             "base": 25.0,
             "growth": 5,
             "divisor": 1,
             "offset": 0,
             "special": [70.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "落草",
@@ -1033,14 +1178,25 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "寒冷伤害+": {"base": 16.0, "growth": 3.2, "divisor": 1, "offset": 0.0, "special": [44.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "战技或连携技施加寒冷附着后，寒冷伤害+",
+            "max_stack": 1,
             "base": 20.0,
             "growth": 4,
             "divisor": 1,
             "offset": 0,
             "special": [56.0],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "受到的法术伤害+",
+            "max_stack": 1,
+            "base": 6.0,
+            "growth": 1.2,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [16.8],
         },
     },
     {
@@ -1051,11 +1207,21 @@ _SEED_WEAPONS = [
         "bonus_attrs": {
             "敏捷+": {"base": 20.0, "growth": 16, "divisor": 1, "offset": 0, "special": [156.0]},
             "物理伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
-            "对'''破防'''敌人额外造成伤害+": {"base": 20.0, "growth": 4, "divisor": 1, "offset": 0, "special": [56.0]},
         },
-        "special_ability": {
+        "special_1": {
+            "enabled": True,
+            "name": "对'''破防'''敌人额外造成伤害+",
+            "max_stack": 1,
+            "base": 20.0,
+            "growth": 4,
+            "divisor": 1,
+            "offset": 0,
+            "special": [56.0],
+        },
+        "special_2": {
             "enabled": True,
             "name": "战技施加'''破防'''时，全能力+",
+            "max_stack": 1,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
@@ -1073,14 +1239,25 @@ _SEED_WEAPONS = [
             "攻击力+": {"base": 5.0, "growth": 4, "divisor": 1, "offset": 0, "special": [39.0]},
             "所有技能伤害+": {"base": 20.0, "growth": 4, "divisor": 1, "offset": 0, "special": [56.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "战技造成附着获得寒冷伤害+",
+            "max_stack": 1,
             "base": 10.0,
             "growth": 2,
             "divisor": 1,
             "offset": 0,
             "special": [28.0],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "连携技打附着获得寒冷伤害+",
+            "max_stack": 1,
+            "base": 20.0,
+            "growth": 4,
+            "divisor": 1,
+            "offset": 0,
+            "special": [56.0],
         },
     },
     {
@@ -1093,15 +1270,17 @@ _SEED_WEAPONS = [
             "电磁伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "源石技艺强度+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "全队获得物理和电磁伤害+",
+            "max_stack": 1,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [22.4],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "逐鳞3.0",
@@ -1113,15 +1292,17 @@ _SEED_WEAPONS = [
             "寒冷伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "攻击力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "目标受到的寒冷伤害+",
+            "max_stack": 1,
             "base": 7.0,
             "growth": 1.4,
             "divisor": 1,
             "offset": 0.0,
             "special": [19.6],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "遗忘",
@@ -1133,14 +1314,25 @@ _SEED_WEAPONS = [
             "法术伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "暴击率+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "施放终结技获得法术伤害+",
+            "max_stack": 1,
             "base": 24.0,
             "growth": 4.8,
             "divisor": 1,
             "offset": 0.0,
             "special": [67.2],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "施放连携技获得法术伤害+",
+            "max_stack": 1,
+            "base": 12.0,
+            "growth": 2.4,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [33.6],
         },
     },
     {
@@ -1153,16 +1345,17 @@ _SEED_WEAPONS = [
             "物理伤害+": {"base": 4.4, "growth": 24.9, "divisor": 7, "offset": 0.6, "special": [34.7]},
             "攻击力+": {"base": 5.0, "growth": 9, "divisor": 8, "offset": 0, "special": []},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "造成'''物理异常'''时获得攻击力+",
+            "max_stack": 2,
             "base": 7.5,
             "growth": 1.5,
             "divisor": 1,
             "offset": 0.0,
             "special": [21.0],
-            "max_stack": 2,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "雾中微光",
@@ -1174,16 +1367,17 @@ _SEED_WEAPONS = [
             "电磁伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "攻击力+": {"base": 7.0, "growth": 1.4, "divisor": 1, "offset": 0.0, "special": [19.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "电磁伤害增加+",
+            "max_stack": 3,
             "base": 5.5,
             "growth": 1.1,
             "divisor": 1,
             "offset": 0.0,
             "special": [15.4],
-            "max_stack": 3,
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "领航者",
@@ -1195,14 +1389,25 @@ _SEED_WEAPONS = [
             "寒冷伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "暴击率+": {"base": 3.5, "growth": 0.7, "divisor": 1, "offset": 0.0, "special": [9.8]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "寒冷或自然伤害+",
+            "max_stack": 1,
             "base": 3.5,
             "growth": 0.7,
             "divisor": 1,
             "offset": 0.0,
             "special": [9.8],
+        },
+        "special_2": {
+            "enabled": True,
+            "name": "施加冻结或腐蚀时，暴击率+",
+            "max_stack": 1,
+            "base": 2.0,
+            "growth": 0.4,
+            "divisor": 1,
+            "offset": 0.0,
+            "special": [5.6],
         },
     },
     {
@@ -1215,15 +1420,17 @@ _SEED_WEAPONS = [
             "物理伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "攻击力+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "额外造成伤害+",
+            "max_stack": 1,
             "base": 120.0,
             "growth": 24,
             "divisor": 1,
             "offset": 0,
             "special": [336.0],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "骑士精神",
@@ -1235,15 +1442,17 @@ _SEED_WEAPONS = [
             "最大生命值+": {"base": 10.0, "growth": 8, "divisor": 1, "offset": 0, "special": [78.0]},
             "治疗效率+": {"base": 10.0, "growth": 2, "divisor": 1, "offset": 0, "special": [28.0]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "全队攻击力+",
+            "max_stack": 1,
             "base": 9.0,
             "growth": 1.8,
             "divisor": 1,
             "offset": 0.0,
             "special": [25.2],
         },
+        "special_2": {"enabled": False},
     },
     {
         "name": "黯色火炬",
@@ -1255,16 +1464,17 @@ _SEED_WEAPONS = [
             "灼热伤害+": {"base": 5.6, "growth": 31.1, "divisor": 7, "offset": 0.0, "special": [43.3]},
             "攻击力+": {"base": 7.0, "growth": 1.4, "divisor": 1, "offset": 0.0, "special": [19.6]},
         },
-        "special_ability": {
+        "special_1": {
             "enabled": True,
             "name": "灼热自然伤害增加+",
+            "max_stack": 2,
             "base": 8.0,
             "growth": 1.6,
             "divisor": 1,
             "offset": 0.0,
             "special": [22.4],
-            "max_stack": 2,
         },
+        "special_2": {"enabled": False},
     },
 ]
 
