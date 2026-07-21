@@ -188,7 +188,7 @@ def get_template_detail(template_id: str):
 def generate_adapter(req: GenerateRequest):
     """生成适配器包。"""
     if not _HAS_ENGINE:
-        raise HTTPException(status_code=500, detail="生成器引擎不可用")
+        raise HTTPException(status_code=503, detail="生成器引擎不可用")
 
     try:
         variables = [v.model_dump() for v in req.variables]

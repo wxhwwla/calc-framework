@@ -11,7 +11,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, HTTPException
+from api.internal.errors import raise_http_from_exc
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -93,7 +94,7 @@ async def export_calcpack(req: ExportRequest):
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"导出失败: {e}") from e
+        raise_http_from_exc(e, status_code=500, public_message="导出配置包失败")
 
 
 @router.post("/export/preview")
@@ -112,7 +113,7 @@ def export_preview(req: ExportRequest):
         return manifest
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"预览失败: {e}")
+        raise_http_from_exc(e, status_code=500, public_message="预览配置包失败")
 
 
 def _write_json_in_zip(zf: zipfile.ZipFile, arcname: str, data: Any) -> None:

@@ -35,7 +35,7 @@ def _read_json(path: Path) -> Any:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"JSON parse error: {path.name}: {e}") from e
+        raise HTTPException(status_code=422, detail=f"JSON 解析失败: {path.name}") from e
 
 
 def load_adapter_meta(adapter_id: str) -> dict[str, Any]:
@@ -74,14 +74,14 @@ def resolve_layout_path(adapter_id: str) -> Path:
 def get_adapter_layout(adapter_id: str) -> dict[str, Any]:
     data = _read_json(resolve_layout_path(adapter_id))
     if not isinstance(data, dict):
-        raise HTTPException(status_code=500, detail="layout root must be object")
+        raise HTTPException(status_code=422, detail="layout 根节点须为对象")
     return data
 
 
 def get_adapter_dag(adapter_id: str) -> dict[str, Any]:
     data = _read_json(resolve_dag_path(adapter_id))
     if not isinstance(data, dict):
-        raise HTTPException(status_code=500, detail="DAG root must be object")
+        raise HTTPException(status_code=422, detail="DAG 根节点须为对象")
     return data
 
 
@@ -91,7 +91,7 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
     if data is None:
         return []
     if not isinstance(data, list):
-        raise HTTPException(status_code=500, detail=f"{path.name} root must be array")
+        raise HTTPException(status_code=422, detail=f"{path.name} 根节点须为数组")
     return data
 
 

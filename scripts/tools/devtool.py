@@ -136,7 +136,7 @@ def _cmd_plugin(args: argparse.Namespace) -> int:
 def _cmd_check_origin(args: argparse.Namespace) -> int:
     """执行 AI 代码来源与版权检测。"""
     _add_path()
-    from tools.check_code_origin import main
+    from tools.quality.check_code_origin import main
 
     sys.argv = [sys.argv[0], *_sub_args()]
     main()

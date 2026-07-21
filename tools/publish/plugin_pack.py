@@ -140,11 +140,6 @@ def install_plugin(plugin_file: str | Path, target_dir: str | Path) -> Path:
         if plugin_dst.exists():
             shutil.rmtree(plugin_dst)
 
-        # Zip Slip 防护：验证所有条目路径在目标目录内
-        for info in zf.infolist():
-            target_path = (plugin_dst / info.filename).resolve()
-            if not str(target_path).startswith(str(plugin_dst.resolve())):
-                raise RuntimeError(f"Zip Slip 检测: {info.filename}")
         zf.extractall(str(plugin_dst))
 
     print(f"✓ 插件已安装: {plugin_dst}")

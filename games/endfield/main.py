@@ -99,7 +99,7 @@ def main() -> None:
 
     # 导入 GUI 模块
     from games.endfield.data_loading.plugin_registry import load_default_plugins
-    from gui.endfield_app import EndfieldApp as DamageCalculatorApp
+    from games.endfield.gui.endfield_app import EndfieldApp as DamageCalculatorApp
 
     if not getattr(sys, "frozen", False):
         _logger.info("正在创建主窗口…")

@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/contribute", tags=["contribute"])
 
-STAGING_DIR = Path(__file__).resolve().parent / ".staging"
+STAGING_DIR = Path(__file__).resolve().parent.parent.parent / ".data" / "staging"
 
 
 def _ensure_staging_dir() -> Path:

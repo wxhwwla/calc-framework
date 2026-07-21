@@ -92,7 +92,7 @@ async def uninstall_plugin(plugin_name: str, _admin: Annotated[None, Depends(ver
         reg.unregister(plugin_name)
         return {"status": "uninstalled", "name": plugin_name}
     except ImportError:
-        raise HTTPException(status_code=500, detail="插件系统不可用")
+        raise HTTPException(status_code=503, detail="插件系统不可用")
 
 
 __all__: list[str] = []

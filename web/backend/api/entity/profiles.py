@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from api.internal.errors import raise_http_from_exc
 from api.internal.json_utils import REPO_ROOT, load_json, save_json
 from fastapi import HTTPException
 
@@ -95,11 +96,11 @@ def _load_entity_list(ent: EntityDef) -> list[dict[str, Any]]:
     try:
         data = load_json(ent.path)
     except _json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"JSON 解析失败: {ent.path.name}: {e}") from e
+        raise_http_from_exc(e, status_code=422, public_message=f"JSON 解析失败: {ent.path.name}")
     if data is None:
         return []
     if not isinstance(data, list):
-        raise HTTPException(status_code=500, detail=f"{ent.path.name} 根节点须为数组")
+        raise HTTPException(status_code=422, detail=f"{ent.path.name} 根节点须为数组")
     return data
 
 

@@ -11,7 +11,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.migrate_weapon_skills_schema import migrate_file
+from tools.migration.migrate_weapon_skills_schema import migrate_file
 
 
 class TestMigrateWeaponSkillsSchemaTool(unittest.TestCase):

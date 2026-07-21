@@ -29,7 +29,7 @@ router = APIRouter(
 
 # ── 持久化路径 ────────────────────────────────────────
 
-_DATA_DIR = Path(__file__).resolve().parent / ".admin_data"
+_DATA_DIR = Path(__file__).resolve().parent.parent / ".data" / "admin"
 _KEYS_FILE = _DATA_DIR / "api_keys.json"
 _USAGE_FILE = _DATA_DIR / "usage.json"
 

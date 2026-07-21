@@ -14,7 +14,7 @@ _REPO = Path(__file__).resolve().parents[2]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-from tools.sync_adapter_snapshots import sync_arknights_snapshot, sync_endfield_snapshots
+from tools.data_pipeline.sync_adapter_snapshots import sync_arknights_snapshot, sync_endfield_snapshots
 from utils.game_data_paths import (
     ARKNIGHTS_OPERATORS_STANDARD,
     ARKNIGHTS_OPERATORS_STANDARD_REL,

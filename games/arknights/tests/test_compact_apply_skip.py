@@ -17,7 +17,7 @@ if str(_REPO) not in sys.path:
 class TestArknightsCompactApply(unittest.TestCase):
     def test_compact_skips_without_parsed_dir(self) -> None:
         from games.arknights.operator_catalog import DEFAULT_PARSED_DIR
-        from tools.compact_arknights_operators import compact_parsed_dir
+        from tools.data_pipeline.compact_arknights_operators import compact_parsed_dir
 
         if DEFAULT_PARSED_DIR.is_dir():
             self.skipTest("本地已有 parsed/，请人工执行 compact --apply")

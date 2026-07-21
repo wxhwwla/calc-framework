@@ -270,7 +270,7 @@ async def score_search_batch(body: ScoreBatchRequest):
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError:
-        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+        raise HTTPException(status_code=503, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
         req, fixed_loadout = _prepare_search_req(body.params)
@@ -304,7 +304,7 @@ async def estimate_search(req: EstimateRequest):
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError:
-        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+        raise HTTPException(status_code=503, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
         req, fixed_loadout = _prepare_search_req(req)
@@ -358,7 +358,7 @@ async def run_search(req: SearchRequest):
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError:
-        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+        raise HTTPException(status_code=503, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
         req, fixed_loadout = _prepare_search_req(req)

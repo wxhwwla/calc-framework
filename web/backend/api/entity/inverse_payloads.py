@@ -178,7 +178,7 @@ def inverse_formula_payload(
     try:
         adapter = EndfieldInverseAdapter()
     except ImportError as exc:
-        raise HTTPException(status_code=500, detail=f"逆推引擎导入失败: {exc}") from exc
+        raise_http_from_exc(exc, status_code=503, public_message="逆推引擎不可用")
 
     data = [float(x) for x in values]
     if type_ == "attribute":

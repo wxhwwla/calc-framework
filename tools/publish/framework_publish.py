@@ -95,7 +95,7 @@ def cmd_publish() -> None:
         sys.exit(1)
 
     _run(
-        [sys.executable, "-m", "twine", "upload", "dist/*"],
+        [sys.executable, "-m", "twine", "upload", "--username", "__token__", "--password", token, "dist/*"],
         FRAMEWORK_DIR,
     )
 

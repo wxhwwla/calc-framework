@@ -106,7 +106,7 @@ class PluginManagerDialog(QDialog):
         if not path:
             return
         try:
-            from tools.plugin_pack import install_plugin
+            from tools.publish.plugin_pack import install_plugin
 
             repo = Path(__file__).resolve().parents[3]
             target = repo / "web" / "hub" / "plugins"
@@ -124,7 +124,7 @@ class PluginManagerDialog(QDialog):
         if not dir_path:
             return
         try:
-            from tools.plugin_pack import build_plugin
+            from tools.publish.plugin_pack import build_plugin
 
             output, _ = QFileDialog.getSaveFileName(
                 self,

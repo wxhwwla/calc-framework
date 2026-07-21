@@ -23,7 +23,7 @@ from fastapi.testclient import TestClient
 from games.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
 from games.endfield.calc.damage.inverse.adapter import EndfieldInverseAdapter
 from games.endfield.data_loading.curve_materialize import GROWTH_PARAM_KEY, materialize_character_entity
-from tools.compact_game_json import compact_character
+from tools.data_pipeline.compact_game_json import compact_character
 from web.backend.data_materialize import (
     compact_entity_for_transport,
     format_character_entity,
