@@ -33,7 +33,7 @@ export default function EditorPage() {
   const [snackMsg, setSnackMsg] = useState("");
 
   const handleDoubleClick = useCallback(
-    (_event: React.MouseEvent, node: any) => {
+    (_event: React.MouseEvent, node: import("@xyflow/react").Node) => {
       setEditNodeId(node.id);
       setEditNodeData(node.data as DagNodeData);
       setEditDialogOpen(true);

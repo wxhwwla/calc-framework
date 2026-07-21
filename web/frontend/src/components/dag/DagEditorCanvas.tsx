@@ -12,6 +12,7 @@ import {
   type OnNodesDelete,
   type OnEdgesDelete,
   type Connection,
+  type ReactFlowInstance,
   SelectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -27,7 +28,7 @@ const DEFAULT_EDGE_OPTIONS = {
 };
 
 interface DagEditorCanvasProps {
-  onNodeDoubleClick?: (event: React.MouseEvent, node: any) => void;
+  onNodeDoubleClick?: (event: React.MouseEvent, node: Node) => void;
 }
 
 const isValidConnection = (connection: Edge | Connection): boolean => {
@@ -46,9 +47,9 @@ const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) 
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState(storeNodes);
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState(storeEdges);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const reactFlowInstance = useRef<any>(null);
+  const reactFlowInstance = useRef<ReactFlowInstance<Node<DagNodeData>> | null>(null);
 
-  const onInit = useCallback((instance: any) => {
+  const onInit = useCallback((instance: ReactFlowInstance<Node<DagNodeData>>) => {
     reactFlowInstance.current = instance;
   }, []);
 
@@ -150,7 +151,7 @@ const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) 
           <MiniMap
             style={{ background: "#1e1e1e" }}
             nodeColor={(n) => {
-              const t = (n.data as any)?.nodeType;
+              const t = n.data?.nodeType as string | undefined;
               switch (t) {
                 case "const": return "#4caf50";
                 case "var": return "#2196f3";

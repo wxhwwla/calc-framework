@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """将 games/endfield 包加入 sys.path（BWIKI 工具调用反推/录入用）。"""

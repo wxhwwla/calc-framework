@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """名称规范化，用于 Wiki 页面标题与本地 JSON「名称」对齐。"""

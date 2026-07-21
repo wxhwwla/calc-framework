@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """将 weapons.json 中旧 ``特殊能力`` 迁移为 ``特殊能力1`` / ``特殊能力2`` 占位。"""

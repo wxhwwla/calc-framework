@@ -104,7 +104,7 @@ export default function ComputePage() {
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [searchHistoryOpen, setSearchHistoryOpen] = useState(false);
-  const [historyEntry, setHistoryEntry] = useState<Record<string, unknown> | null>(null);
+  const [historyEntry, setHistoryEntry] = useState<import("../api/history").HistoryEntry | null>(null);
   const [skillLevels, setSkillLevels] = useState<Record<string, number>>({});
   const [weaponSkillValues, setWeaponSkillValues] = useState<Record<string, number>>({});
   const [calcMode, setCalcMode] = useState("zone_snapshot");
@@ -601,7 +601,7 @@ export default function ComputePage() {
           <Grid size={{ xs: 12, md: 7 }}>
             <SearchSettingsPanel settings={searchSettings} onChange={setSearchSettings} />
             <Paper sx={{ p: 3 }}>
-              <SearchPanel currentParams={(searchParams ?? {}) as any} />
+              {searchParams && <SearchPanel currentParams={searchParams} />}
             </Paper>
           </Grid>
         </Grid>
@@ -626,7 +626,7 @@ export default function ComputePage() {
       <CalcHistoryDialog
         open={historyDialogOpen}
         onClose={() => setHistoryDialogOpen(false)}
-        currentEntry={historyEntry as any}
+        currentEntry={historyEntry}
         onRestore={(entry) => {
           setSelectedChar(String(entry.char_name || ""));
           setSelectedWeapon(String(entry.weapon_name || ""));
