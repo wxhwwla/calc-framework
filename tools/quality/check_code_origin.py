@@ -144,7 +144,7 @@ LICENSE_PATTERNS: list[tuple[str, str, list[str]]] = [
     ),
 ]
 
-SPDX_PATTERN = re.compile(r"SPDX-License-Identifier:\s*(\S+)", re.IGNORECASE)
+SPDX_PATTERN = re.compile(r"SPDX-License-Identifier:\s*([A-Za-z0-9._-]+)", re.IGNORECASE)
 
 # 项目自身使用的 SPDX 标识符，不会被标记为第三方
 OWN_SPDX_IDS = frozenset({"AGPL-3.0", "AGPL-3.0-only", "AGPL-3.0-or-later"})
