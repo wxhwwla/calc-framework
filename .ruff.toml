@@ -17,3 +17,8 @@ ignore = [
 
 [lint.per-file-ignores]
 "scripts/auto_test/*" = ["I001", "SIM102"]
+"extensions/*" = ["N806", "F841"]
+"games/arknights/*" = ["N806", "N999", "SIM105", "SIM108"]
+"scripts/*" = ["SIM105", "SIM102", "SIM108", "RUF005"]
+"web/backend/*" = ["N806", "SIM102", "SIM105", "SIM108", "E501"]
+"games/arknights/gui/ArknightsApp.py" = ["RUF100"]

@@ -10,9 +10,11 @@ repos:
         name: ruff-lint
         args: [--fix, --exit-non-zero-on-fix]
         types_or: [python, pyi]
+        exclude: "scripts/_version\\.py"
       - id: ruff-format
         name: ruff-format
         types_or: [python, pyi]
+        exclude: "scripts/_version\\.py"
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
