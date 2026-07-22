@@ -29,8 +29,8 @@ jobs:
           python-version: "3.11"
 
       - name: Run static origin checks (license + suspicious + internal dup)
-        run: python tools/check_code_origin.py --ci --skip git-diff
+        run: python tools/quality/check_code_origin.py --ci --skip git-diff
 
       - name: Run git-diff checks for new/modified files
         if: github.event_name == 'pull_request'
-        run: python tools/check_code_origin.py --ci --skip license-header internal-dup suspicious --since origin/${{ github.base_ref }}
+        run: python tools/quality/check_code_origin.py --ci --skip license-header internal-dup suspicious --since origin/${{ github.base_ref }}

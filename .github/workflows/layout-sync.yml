@@ -17,7 +17,7 @@ on:
       - "framework/adapters/*/ui/layout.json"
       - "framework/adapters/*/dag/*.dag.json"
       - "framework/adapters/*/attr_schema.json"
-      - "tools/validate_layout_sync.py"
+      - "tools/quality/validate_layout_sync.py"
       - ".github/workflows/layout-sync.yml"
   pull_request:
     branches: [main, master, develop]
@@ -25,7 +25,7 @@ on:
       - "framework/adapters/*/ui/layout.json"
       - "framework/adapters/*/dag/*.dag.json"
       - "framework/adapters/*/attr_schema.json"
-      - "tools/validate_layout_sync.py"
+      - "tools/quality/validate_layout_sync.py"
 
 jobs:
   validate:
@@ -40,7 +40,7 @@ jobs:
           python-version: "3.12"
 
       - name: 运行 layout 结构一致性验证
-        run: python tools/validate_layout_sync.py
+        run: python tools/quality/validate_layout_sync.py
 
       - name: 验证前端 TypeScript 编译
         working-directory: web/frontend

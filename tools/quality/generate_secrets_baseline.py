@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 BASELINE = REPO_ROOT / ".secrets.baseline"
 EXCLUDE = (
     r"package-lock\.json|poetry\.lock|.*\.calcpack|.*\.zip|"

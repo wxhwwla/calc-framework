@@ -349,7 +349,7 @@ def main() -> None:
 
     skip_set = set(args.skip) if args.skip else set()
 
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(__file__).resolve().parents[2]
 
     # 收集文件
     if args.since:

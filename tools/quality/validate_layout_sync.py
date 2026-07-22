@@ -47,16 +47,10 @@ from typing import Any
 _VALID_SECTION_TYPES = frozenset({"inputs", "outputs", "widget"})
 
 
-ADAPTER_ROOT = Path(__file__).resolve().parent.parent / "framework" / "adapters" / "endfield"
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+ADAPTER_ROOT = _REPO_ROOT / "framework" / "adapters" / "endfield"
 
-DAG_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "framework"
-    / "src"
-    / "calc_framework"
-    / "configs"
-    / "endfield_full.dag.json"
-)
+DAG_PATH = _REPO_ROOT / "framework" / "src" / "calc_framework" / "configs" / "endfield_full.dag.json"
 
 LAYOUT_PATH = ADAPTER_ROOT / "ui" / "layout.json"
 
