@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.29.5"
+_VERSION = "3.29.6"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -154,8 +154,8 @@ def _canonical_marker_header() -> str:
     空字符串或未定义，使用它们会导致"修复"后仍然损坏。
     """
     return (
-        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
-        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
+        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"  # noqa: F841\n'
+        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"  # noqa: F841\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
@@ -169,7 +169,7 @@ def _markers_section_ok(text: str) -> bool:
     使用硬编码值判断，避免模块变量为 ``""`` 时误判。
     """
     required_lines = (
-        '_SUMMARY_MARKER_BEGIN = ""',
+        '_SUMMARY_MARKER_BEGIN = ""  # noqa: F841',
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",
@@ -324,10 +324,7 @@ def summarize_changes(paths: list[str]) -> tuple[str, list[str]]:
         else:
             bullets.append(f"变更 {p}")
 
-    if len(bullets) == 1:
-        title = bullets[0]
-    else:
-        title = f"更新 {len(unique)} 处文件"
+    title = bullets[0] if len(bullets) == 1 else f"更新 {len(unique)} 处文件"
     return title, bullets
 
 
