@@ -22,7 +22,7 @@ class TestLoaderErrors(unittest.TestCase):
             load_json_file("__missing_game_data_test__.json", strict=True)
 
     def test_get_weapons_raises_when_file_missing(self):
-        loader._weapons = None
+        loader.reload_weapons()
 
         with patch.object(loader, "WEAPONS_JSON_PATH", "__missing_weapons_test__.json"):
             with self.assertRaises(DataLoadError):

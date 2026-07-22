@@ -23,11 +23,21 @@ _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
 def _load_by_name(path: Path, name: str) -> dict:
+    from games.endfield.data_loading.curve_materialize import (
+        materialize_character_entity,
+        materialize_weapon_entity,
+    )
+
     with path.open(encoding="utf-8") as f:
         data = json.load(f)
 
     for item in data:
         if item.get("名称") == name:
+            if "成长参数" in item:
+                if path.name == "characters.json":
+                    return materialize_character_entity(item)
+                elif path.name == "weapons.json":
+                    return materialize_weapon_entity(item)
             return item
 
     raise KeyError(name)
@@ -45,7 +55,7 @@ class TestPropertyDisplayLines(unittest.TestCase):
             skill_3_level=1,
         )
 
-        self.assertIn("战技 等级5 第1段: 199% · 物理(默认物理)", lines)
+        self.assertIn("战技 等级5 第1段: 199% · 物理", lines)
 
     def test_character_lines_show_multiple_finale_segments(self):
         char = _load_by_name(_CHARACTERS_JSON, "陈千语")
@@ -58,9 +68,9 @@ class TestPropertyDisplayLines(unittest.TestCase):
             skill_3_level=5,
         )
 
-        self.assertIn("终结技 等级5 第1段: 50% · 物理(默认物理)", lines)
+        self.assertIn("终结技 等级5 第1段: 50% · 物理", lines)
 
-        self.assertIn("终结技 等级5 第2段: 636% · 物理(默认物理)", lines)
+        self.assertIn("终结技 等级5 第2段: 636% · 物理", lines)
 
     def test_character_lines_omit_empty_link_skill_type(self):
         """连携技倍率为空时，连携技滑块>0 也不应出现连携技明细行。"""

@@ -39,11 +39,21 @@ _EXPECTED_OUTPUT = _FRAMEWORK_DIR / "src" / "calc_framework" / "configs" / "endf
 
 
 def _load_by_name(path: Path, name: str) -> dict[str, Any]:
+    from games.endfield.data_loading.curve_materialize import (
+        materialize_character_entity,
+        materialize_weapon_entity,
+    )
+
     with path.open(encoding="utf-8") as f:
         data = json.load(f)
 
     for item in data:
         if item.get("名称") == name:
+            if "成长参数" in item:
+                if path.name == "characters.json":
+                    return materialize_character_entity(item)
+                elif path.name == "weapons.json":
+                    return materialize_weapon_entity(item)
             return item
 
     raise KeyError(name)

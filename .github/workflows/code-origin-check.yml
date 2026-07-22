@@ -2,6 +2,10 @@ name: Code Origin Check
 permissions:
   contents: read
 
+concurrency:
+  group: code-origin-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, master, develop]

@@ -6,16 +6,24 @@ name: Web CI
 permissions:
   contents: read
 
+concurrency:
+  group: web-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, master, develop]
     paths:
       - "web/**"
+      - "extensions/rust_search/**"
+      - "web/wasm-curve/**"
       - ".github/workflows/web-ci.yml"
   pull_request:
     branches: [main, master, develop]
     paths:
       - "web/**"
+      - "extensions/rust_search/**"
+      - "web/wasm-curve/**"
 
 jobs:
   frontend:
@@ -32,11 +40,16 @@ jobs:
           cache: "npm"
           cache-dependency-path: "web/frontend/package-lock.json"
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust wasm-curve
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "web/wasm-curve -> target"
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -62,8 +75,15 @@ jobs:
           TOTAL=$(du -sb dist/ | cut -f1)
           echo "Total: $((TOTAL / 1024)) KB"
           if [ $TOTAL -gt 3072000 ]; then
-            echo "⚠️ Warning: Total bundle > 3 MB"
+            echo "::warning::Total bundle > 3 MB ($((TOTAL / 1024)) KB)"
           fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: web/frontend/dist/
+          retention-days: 3
 
   backend:
     name: Backend (ruff + pytest)
@@ -76,6 +96,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-web-backend-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml', 'requirements-web.txt') }}
+          restore-keys: pip-web-backend-
 
       - name: Install system deps (EGL for PySide6)
         run: |
@@ -93,4 +120,4 @@ jobs:
         run: python -m ruff check web/backend/
 
       - name: Test backend API
-        run: python -m pytest web/backend/tests/ -q
+        run: python -m pytest web/backend/tests/ -q --tb=short

@@ -17,11 +17,15 @@ _CHARACTERS_JSON = DATA_DIR / "characters.json"
 
 
 def _load_by_name(name: str) -> dict:
+    from games.endfield.data_loading.curve_materialize import materialize_character_entity
+
     with _CHARACTERS_JSON.open(encoding="utf-8") as f:
         data = json.load(f)
 
     for item in data:
         if item.get("名称") == name:
+            if "成长参数" in item:
+                return materialize_character_entity(item)
             return item
 
     raise KeyError(name)

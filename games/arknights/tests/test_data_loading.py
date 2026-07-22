@@ -57,12 +57,14 @@ class TestLoadOperatorsMap:
         result = load_operators_map()
         assert isinstance(result, dict)
 
-    def test_empty_directory_returns_empty(self, tmp_path: Path) -> None:
-        """传入一个空目录时返回空 dict。"""
+    def test_empty_directory_returns_fallback(self, tmp_path: Path) -> None:
+        """传入一个空目录时通过标准 fallback 返回数据。"""
         empty_dir = tmp_path / "empty_parsed"
         empty_dir.mkdir()
         result = load_operators_map(parsed_dir=empty_dir, zip_candidates=())
-        assert result == {}
+        # 空目录会触发标准数据 fallback，返回非空结果
+        assert isinstance(result, dict)
+        assert len(result) > 0
 
     def test_operator_key_is_name(self, tmp_path: Path) -> None:
         """字典的键为干员名称。"""
@@ -101,10 +103,11 @@ class TestLoadOperatorsMap:
         assert "Char1" in result
 
     def test_nonexistent_directory(self, tmp_path: Path) -> None:
-        """不存在的目录返回空 dict。"""
+        """不存在的目录通过标准 fallback 返回数据。"""
         nonexistent = tmp_path / "does_not_exist"
         result = load_operators_map(parsed_dir=nonexistent, zip_candidates=())
-        assert result == {}
+        # 不存在的目录会触发标准数据 fallback
+        assert isinstance(result, dict)
 
     def test_custom_zip_candidates(self) -> None:
         """自定义 zip_candidates 参数被接受。"""

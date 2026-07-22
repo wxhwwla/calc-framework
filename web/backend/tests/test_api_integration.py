@@ -48,16 +48,25 @@ class TestHealthAndMeta(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data["status"], "ok")
-        self.assertIn("adapters_count", data)
-        self.assertIn("adapters", data)
 
     def test_health_lists_adapter_names(self) -> None:
-        """健康检查返回适配器显示名列表（非目录 ID）。"""
-        resp = self.client.get("/api/health")
-        data = resp.json()
-        self.assertGreaterEqual(data["adapters_count"], 1)
-        names = data["adapters"]
-        self.assertIn(ENDFIELD_ADAPTER_NAME, names)
+        """健康检查在 debug 模式下返回适配器显示名列表。"""
+        import os
+
+        old = os.environ.get("CALC_DEBUG")
+        try:
+            os.environ["CALC_DEBUG"] = "1"
+            resp = self.client.get("/api/health")
+            data = resp.json()
+            self.assertIn("adapters_count", data)
+            self.assertGreaterEqual(data["adapters_count"], 1)
+            names = data["adapters"]
+            self.assertIn(ENDFIELD_ADAPTER_NAME, names)
+        finally:
+            if old is None:
+                os.environ.pop("CALC_DEBUG", None)
+            else:
+                os.environ["CALC_DEBUG"] = old
 
 
 class TestAdaptersAPI(unittest.TestCase):
@@ -296,13 +305,28 @@ class TestErrorHandling(unittest.TestCase):
 class TestHubUploadAndDownload(unittest.TestCase):
     """Calc Hub 上传/下载/评分/统计/删除 完整流程。"""
 
+    _HUB_TOKEN = "test-hub-token"
+    _HEADERS = {"X-Admin-Token": _HUB_TOKEN}
+
     def setUp(self) -> None:
+        import os
+
+        self._old_token = os.environ.get("CALC_ADMIN_TOKEN")
+        os.environ["CALC_ADMIN_TOKEN"] = self._HUB_TOKEN
         self.client = TestClient(app)
+
+    def tearDown(self) -> None:
+        import os
+
+        if self._old_token is None:
+            os.environ.pop("CALC_ADMIN_TOKEN", None)
+        else:
+            os.environ["CALC_ADMIN_TOKEN"] = self._old_token
 
     # ── 创建 Pack ──────────────────────────────────────
     def test_create_pack_returns_201(self) -> None:
         payload = {"name": "Test Pack", "version": "1.0.0", "description": "集成测试创建包"}
-        resp = self.client.post("/api/hub/packs", json=payload)
+        resp = self.client.post("/api/hub/packs", json=payload, headers=self._HEADERS)
         self.assertEqual(resp.status_code, 201)
         data = resp.json()
         self.assertIn("id", data)
@@ -310,18 +334,20 @@ class TestHubUploadAndDownload(unittest.TestCase):
         self.assertEqual(data["version"], "1.0.0")
 
     def test_create_pack_missing_name_returns_422(self) -> None:
-        resp = self.client.post("/api/hub/packs", json={"version": "1.0.0"})
+        resp = self.client.post("/api/hub/packs", json={"version": "1.0.0"}, headers=self._HEADERS)
         self.assertEqual(resp.status_code, 422)
 
     def test_create_pack_minimal_fields(self) -> None:
         """只有 name + version（其他字段可选）也应成功。"""
-        resp = self.client.post("/api/hub/packs", json={"name": "Minimal", "version": "0.0.1"})
+        resp = self.client.post("/api/hub/packs", json={"name": "Minimal", "version": "0.0.1"}, headers=self._HEADERS)
         self.assertEqual(resp.status_code, 201)
 
     # ── 获取 / 列表 Pack ───────────────────────────────
     def test_get_pack_returns_200(self) -> None:
         """先创建再获取。"""
-        created = self.client.post("/api/hub/packs", json={"name": "FetchMe", "version": "1.0.0"})
+        created = self.client.post(
+            "/api/hub/packs", json={"name": "FetchMe", "version": "1.0.0"}, headers=self._HEADERS
+        )
         self.assertEqual(created.status_code, 201)
         pack_id = created.json()["id"]
         resp = self.client.get(f"/api/hub/packs/{pack_id}")
@@ -358,9 +384,11 @@ class TestHubUploadAndDownload(unittest.TestCase):
 
     # ── 评分 ───────────────────────────────────────────
     def test_rate_pack_returns_updated_rating(self) -> None:
-        created = self.client.post("/api/hub/packs", json={"name": "RateMe", "version": "1.0.0"})
+        created = self.client.post("/api/hub/packs", json={"name": "RateMe", "version": "1.0.0"}, headers=self._HEADERS)
         pack_id = created.json()["id"]
-        resp = self.client.post(f"/api/hub/packs/{pack_id}/rate", json={"score": 4, "comment": "不错"})
+        resp = self.client.post(
+            f"/api/hub/packs/{pack_id}/rate", json={"score": 4, "comment": "不错"}, headers=self._HEADERS
+        )
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertIn("rating", data)
@@ -368,7 +396,7 @@ class TestHubUploadAndDownload(unittest.TestCase):
         self.assertGreater(data["rating_count"], 0)
 
     def test_rate_nonexistent_pack_returns_404(self) -> None:
-        resp = self.client.post("/api/hub/packs/nonexistent/rate", json={"score": 3})
+        resp = self.client.post("/api/hub/packs/nonexistent/rate", json={"score": 3}, headers=self._HEADERS)
         self.assertEqual(resp.status_code, 404)
 
     # ── 统计 ───────────────────────────────────────────
@@ -381,29 +409,33 @@ class TestHubUploadAndDownload(unittest.TestCase):
 
     # ── 删除 ───────────────────────────────────────────
     def test_delete_pack_returns_204(self) -> None:
-        created = self.client.post("/api/hub/packs", json={"name": "DeleteMe", "version": "1.0.0"})
+        created = self.client.post(
+            "/api/hub/packs", json={"name": "DeleteMe", "version": "1.0.0"}, headers=self._HEADERS
+        )
         pack_id = created.json()["id"]
-        resp = self.client.delete(f"/api/hub/packs/{pack_id}")
+        resp = self.client.delete(f"/api/hub/packs/{pack_id}", headers=self._HEADERS)
         self.assertEqual(resp.status_code, 204)
         # 二次获取应 404
         resp2 = self.client.get(f"/api/hub/packs/{pack_id}")
         self.assertEqual(resp2.status_code, 404)
 
     def test_delete_nonexistent_pack_returns_404(self) -> None:
-        resp = self.client.delete("/api/hub/packs/nonexistent")
+        resp = self.client.delete("/api/hub/packs/nonexistent", headers=self._HEADERS)
         self.assertEqual(resp.status_code, 404)
 
     # ── 上传文件（需 .calcpack） ──────────────────────
     def test_upload_pack_file_without_file_returns_422(self) -> None:
         """不上传文件直接 POST upload 端点应返回 422。"""
-        created = self.client.post("/api/hub/packs", json={"name": "UploadTarget", "version": "1.0.0"})
+        created = self.client.post(
+            "/api/hub/packs", json={"name": "UploadTarget", "version": "1.0.0"}, headers=self._HEADERS
+        )
         pack_id = created.json()["id"]
-        resp = self.client.post(f"/api/hub/packs/{pack_id}/upload")
+        resp = self.client.post(f"/api/hub/packs/{pack_id}/upload", headers=self._HEADERS)
         self.assertEqual(resp.status_code, 422)
 
     def test_upload_pack_file_to_nonexistent_pack_returns_404(self) -> None:
         """尝试上传到不存在的包。"""
-        resp = self.client.post("/api/hub/packs/nonexistent/upload")
+        resp = self.client.post("/api/hub/packs/nonexistent/upload", headers=self._HEADERS)
         self.assertEqual(resp.status_code, 422)
 
 
@@ -1250,8 +1282,23 @@ class TestErrorHandlingExtended(unittest.TestCase):
 class TestHubListEndpoint(unittest.TestCase):
     """Hub 便捷端点：list / upload。"""
 
+    _HUB_TOKEN = "test-hub-token"
+    _HEADERS = {"X-Admin-Token": _HUB_TOKEN}
+
     def setUp(self) -> None:
+        import os
+
+        self._old_token = os.environ.get("CALC_ADMIN_TOKEN")
+        os.environ["CALC_ADMIN_TOKEN"] = self._HUB_TOKEN
         self.client = TestClient(app)
+
+    def tearDown(self) -> None:
+        import os
+
+        if self._old_token is None:
+            os.environ.pop("CALC_ADMIN_TOKEN", None)
+        else:
+            os.environ["CALC_ADMIN_TOKEN"] = self._old_token
 
     def test_hub_list_adapters(self) -> None:
         resp = self.client.get("/api/hub/list")
@@ -1262,7 +1309,7 @@ class TestHubListEndpoint(unittest.TestCase):
         self.assertIsInstance(data["adapters"], list)
 
     def test_hub_upload_without_file_returns_422(self) -> None:
-        resp = self.client.post("/api/hub/upload")
+        resp = self.client.post("/api/hub/upload", headers=self._HEADERS)
         self.assertEqual(resp.status_code, 422)
 
     def test_hub_download_nonexistent_returns_404(self) -> None:
@@ -1270,7 +1317,7 @@ class TestHubListEndpoint(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_hub_delete_adapter_nonexistent_returns_404(self) -> None:
-        resp = self.client.delete("/api/hub/adapters/nonexistent")
+        resp = self.client.delete("/api/hub/adapters/nonexistent", headers=self._HEADERS)
         self.assertEqual(resp.status_code, 404)
 
 

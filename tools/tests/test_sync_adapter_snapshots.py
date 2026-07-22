@@ -64,7 +64,7 @@ def test_sync_endfield_apply_to_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     (src / "weapons.json").write_text("[]", encoding="utf-8")
     (src / "equipments.json").write_text("[]", encoding="utf-8")
 
-    import tools.sync_adapter_snapshots as sync_mod
+    import tools.data_pipeline.sync_adapter_snapshots as sync_mod
 
     monkeypatch.setattr(sync_mod, "ENDFIELD_CHARACTERS_JSON", src / "characters.json")
     monkeypatch.setattr(sync_mod, "ENDFIELD_WEAPONS_JSON", src / "weapons.json")

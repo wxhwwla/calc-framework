@@ -14,7 +14,7 @@ _REPO = Path(__file__).resolve().parents[1]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-import tools.generate_secrets_baseline as baseline_mod
+import tools.quality.generate_secrets_baseline as baseline_mod
 
 
 def test_verify_passes_when_baseline_unchanged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -4,12 +4,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """upload_meta 版本与总结块测试"""
 
-import re
+import re  # noqa: I001
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts._version import ensure_summary_marker_assignments
+from scripts._version import (
+    _SUMMARY_MARKER_BEGIN as _REAL_BEGIN,
+    _SUMMARY_MARKER_END as _REAL_END,
+    ensure_summary_marker_assignments,
+)
 from scripts.upload_meta import (
     SUMMARY_BEGIN,
     SUMMARY_END,
@@ -71,7 +75,20 @@ class TestUploadMeta(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "please_read_me.py"
 
-            path.write_text('_VERSION = "1.0.0"\n', encoding="utf-8")
+            # 写入包含正确标记区的初始内容
+            path.write_text(
+                "# ==============================================================\n"
+                "\n"
+                '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
+                '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
+                "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
+                "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
+                "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
+                "SUMMARY_END = _UPLOAD_SUMMARY_END\n"
+                '_VERSION_PATTERN = re.compile(r"x")\n'
+                '_VERSION = "1.0.0"\n',
+                encoding="utf-8",
+            )
 
             write_summary_block(path, "更新武器数据", ["修改 weapons.json"])
 
@@ -177,13 +194,13 @@ _VERSION = "1.0.0"
 
             path.write_text(
                 f'UPLOAD_WORKFLOW = """\n'
-                f"说明 {SUMMARY_BEGIN} 标记\n"
+                f"说明 {_REAL_BEGIN} 标记\n"
                 f'"""\n'
                 f"def get_version():\n"
                 f'    return "1.0.0"\n'
-                f"\n{SUMMARY_BEGIN}\n"
+                f"\n{_REAL_BEGIN}\n"
                 f"# TITLE: t\n# BODY:\n# - a\n"
-                f"{SUMMARY_END}\n",
+                f"{_REAL_END}\n",
                 encoding="utf-8",
             )
 

@@ -6,6 +6,10 @@ name: Layout Sync
 permissions:
   contents: read
 
+concurrency:
+  group: layout-sync-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, master, develop]

@@ -51,13 +51,13 @@ from games.arknights.calc.dag_adapter.adapter import get_parsed_skill_info
 from games.arknights.framework_bridge import ComputeSheet, get_logger
 from games.arknights.gui.arknights_compute_sheet import (
     build_result_html,
-    combo_index_to_skill_index,
     create_arknights_compute_sheet,
     ensure_arknights_adapter,
     mount_compute_sheet,
     populate_operator_context,
     wire_compute_button,
 )
+from games.arknights.gui.arknights_sheet_config import combo_index_to_skill_index
 from games.arknights.operator_catalog import build_operator_index, filter_operator_index, load_operators_map
 from games.endfield.gui.legal.donation_qt import open_donation_dialog
 

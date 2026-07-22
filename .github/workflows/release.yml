@@ -7,6 +7,10 @@ name: Release
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   push:
     tags:
@@ -31,7 +35,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e framework
       - name: Install game package
-        run: python -m pip install -e games/endfield ".[dev]"
+        run: python -m pip install -e "games/endfield[dev]"
       - name: Check version consistency
         id: version
         shell: pwsh
@@ -70,7 +74,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e framework
-          python -m pip install -e games/endfield ".[dev]"
+          python -m pip install -e "games/endfield[dev]"
       - name: Install maturin and build Rust extension
         run: |
           pip install maturin
@@ -95,7 +99,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e framework
-          python -m pip install -e games/endfield ".[dev,build]"
+          python -m pip install -e "games/endfield[dev,build]"
       - name: Build release (launcher)
         run: python scripts/main_build.py --target launcher --no-bump
       - name: Package ZIP artifacts

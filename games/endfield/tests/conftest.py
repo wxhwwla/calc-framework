@@ -26,6 +26,16 @@ from games.endfield.calc.core.result_cache import reset_global_result_cache
 
 _INTEGRATION_FILES: frozenset[str] = frozenset()
 
+# 手动 GUI 测试（需要真实显示器，CI 中跳过）
+_MANUAL_GUI_FILES: frozenset[str] = frozenset(
+    {
+        "gui/manual/test_gui_controls.py",
+        "gui/manual/test_gui_interactions.py",
+        "gui/manual/test_gui_app.py",
+        "gui/manual/test_gui_app2.py",
+    }
+)
+
 _SLOW_FILES = frozenset(
     {
         "calculation/damage/engine/test_calculation.py",
@@ -43,17 +53,16 @@ def _markexpr(config: pytest.Config) -> str:
 
 def pytest_configure(config: pytest.Config) -> None:
     """当 ``-m 'not integration'`` 等时，收集阶段直接 --ignore 重型文件（避免 import PySide6）。"""
-    expr = _markexpr(config)
-    if not expr:
-        return
     tests_dir = Path(__file__).resolve().parent
     ignore: list[str] = list(config.option.ignore or [])
-    if "notintegration" in expr:
-        ignore.extend(str(tests_dir / name) for name in _INTEGRATION_FILES)
-    if "notrealdata" in expr:
-        pass
-    if "notslow" in expr:
-        ignore.extend(str(tests_dir / name) for name in _SLOW_FILES)
+    # 始终跳过手动 GUI 测试（需要真实显示器）
+    ignore.extend(str(tests_dir / name) for name in _MANUAL_GUI_FILES)
+    expr = _markexpr(config)
+    if expr:
+        if "notintegration" in expr:
+            ignore.extend(str(tests_dir / name) for name in _INTEGRATION_FILES)
+        if "notslow" in expr:
+            ignore.extend(str(tests_dir / name) for name in _SLOW_FILES)
     if ignore:
         config.option.ignore = ignore
 
@@ -100,18 +109,22 @@ _WEAPONS_JSON = DATA_DIR / "weapons.json"
 
 
 def load_character_by_name(name: str) -> dict[str, Any]:
+    from games.endfield.data_loading.curve_materialize import materialize_character_entity
+
     with _CHARACTERS_JSON.open(encoding="utf-8") as f:
         for row in json.load(f):
             if row.get("名称") == name:
-                return row
+                return materialize_character_entity(row)
     raise KeyError(name)
 
 
 def load_weapon_by_name(name: str) -> dict[str, Any]:
+    from games.endfield.data_loading.curve_materialize import materialize_weapon_entity
+
     with _WEAPONS_JSON.open(encoding="utf-8") as f:
         for row in json.load(f):
             if row.get("名称") == name:
-                return row
+                return materialize_weapon_entity(row)
     raise KeyError(name)
 
 

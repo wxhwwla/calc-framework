@@ -4,6 +4,10 @@ name: Framework PyPI Publish
 permissions:
   contents: read
 
+concurrency:
+  group: framework-publish
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
     inputs:
