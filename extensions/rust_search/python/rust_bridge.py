@@ -79,6 +79,37 @@ _CONTEXT_BUFF_MAP: dict[str, str] = {
     "其他伤害加成": "other_damage_bonus",
 }
 
+# ── 效果处理优化缓存 ──────────────────────────────────────────────
+# 作用域过滤器缓存：(damage_type, skill_type, is_unbalanced) → filter_fn
+_SCOPE_FILTER_CACHE: dict[tuple[str, str, bool], Any] = {}
+# 效果 ID 转换缓存：effects_tuple → (ids_list, values_list)
+_EFFECTS_ID_CACHE: dict[tuple, tuple[list[int], list[float]]] = {}
+
+
+def _build_scope_filter(ctx: Any) -> Any:
+    """构建作用域过滤器：预计算哪些 effect_type 通过 _match_scope 检查。
+
+    返回一个闭包，接受 DamageEffect 并返回 bool。
+    """
+    from games.endfield.calc.damage.engine.helpers import _match_scope
+    from games.endfield.calc.damage.engine.types import KNOWN_EFFECT_TYPES
+
+    # 缓存每种 effect_type 是否通过过滤
+    _type_pass_cache: dict[str, bool] = {}
+
+    def _filter(effect: Any) -> bool:
+        et = effect.effect_type
+        if et not in KNOWN_EFFECT_TYPES:
+            return False
+        cached = _type_pass_cache.get(et)
+        if cached is not None:
+            return cached
+        result = _match_scope(ctx, effect)
+        _type_pass_cache[et] = result
+        return result
+
+    return _filter
+
 
 def _apply_manual_buffs(
     *,
@@ -445,6 +476,11 @@ def _preprocess_for_rust_soa(
     - 效果类型映射为整数 ID（消除 Rust 侧字符串匹配）
     - 技能类型/暴击模式映射为整数 ID
     - damage_pipeline 映射为 bool（"abnormal" → True）
+
+    优化：
+    - 预计算作用域过滤器（同一批次内 damage_type/skill_type/is_unbalanced 恒定）
+    - 效果 ID 缓存（相同效果列表直接返回缓存结果）
+    - 跳过 DamageContext 构建（使用轻量级过滤替代）
     """
     if not _HAS_RUST:
         return None
@@ -472,6 +508,42 @@ def _preprocess_for_rust_soa(
     effect_values_batch: list[list[float]] = [[] for _ in range(n)]
     crit_mode_ids: list[int] = [0] * n
     is_abnormals: list[bool] = [False] * n
+
+    # ── 优化 1：预计算作用域过滤器 ──
+    # 同一批次内 damage_type/skill_type/is_unbalanced 恒定，只构建一次过滤器
+    _p0 = param_list[0]
+    _scope_dt = _p0.get("damage_type", "")
+    _scope_st = _p0.get("skill_type", "战技")
+    _scope_ub = _p0.get("is_unbalanced", False)
+    _scope_key = (_scope_dt, _scope_st, _scope_ub)
+    _scope_filter = _SCOPE_FILTER_CACHE.get(_scope_key)
+    if _scope_filter is None:
+        _ctx = DamageContext(
+            final_attack=0,
+            skill_multiplier=1,
+            damage_type=_scope_dt,
+            skill_type=_scope_st,
+            is_unbalanced=_scope_ub,
+            is_true_damage=False,
+            enemy_defense=0,
+            enemy_resistance=0,
+            ignore_resistance=0,
+            imbalance_vulnerability_coeff=1.3,
+            crit_rate=0,
+            crit_damage=0,
+            damage_type_bonus=0,
+            skill_type_bonus=0,
+            imbalance_damage_bonus=0,
+            other_damage_bonus=0,
+            combo_stacks=0,
+            break_defense_stacks=0,
+            base_damage_bonus=0,
+        )
+        _scope_filter = _build_scope_filter(_ctx)
+        _SCOPE_FILTER_CACHE[_scope_key] = _scope_filter
+
+    # ── 优化 2：预计算破防效果 ──
+    _break_defense_cache: dict[int, list[tuple[str, float]]] = {}
 
     for i, p in enumerate(param_list):
         # 提取参数
@@ -507,31 +579,36 @@ def _preprocess_for_rust_soa(
 
         # 合并效果列表
         effects = list(p.get("effects") or [])
-        all_effects = effects + extra_effects + list(damage_effects_from_break_defense(break_defense_stacks))
 
-        # 预处理效果 → _collect_effects
-        _ctx = DamageContext(
-            final_attack=p["final_attack"],
-            skill_multiplier=p["skill_multiplier"],
-            damage_type=p.get("damage_type", ""),
-            skill_type=p.get("skill_type", "战技"),
-            is_unbalanced=p.get("is_unbalanced", False),
-            is_true_damage=p.get("is_true_damage", False),
-            enemy_defense=p.get("enemy_defense", 100.0),
-            enemy_resistance=p.get("enemy_resistance", 0.0),
-            ignore_resistance=p.get("ignore_resistance", 0.0),
-            imbalance_vulnerability_coeff=p.get("imbalance_vulnerability_coeff", 1.3),
-            crit_rate=crit_rate,
-            crit_damage=crit_damage,
-            damage_type_bonus=damage_type_bonus,
-            skill_type_bonus=skill_type_bonus,
-            imbalance_damage_bonus=imbalance_damage_bonus,
-            other_damage_bonus=other_damage_bonus,
-            combo_stacks=combo_stacks,
-            break_defense_stacks=break_defense_stacks,
-            base_damage_bonus=p.get("base_damage_bonus", 0.0),
-        )
-        known_effects, _unknown, _warnings = _collect_effects(_ctx, all_effects)
+        # 预计算破防效果（按层数缓存）
+        bd = break_defense_stacks
+        if bd not in _break_defense_cache:
+            _break_defense_cache[bd] = list(damage_effects_from_break_defense(bd))
+        bd_effects = _break_defense_cache[bd]
+
+        all_effects = effects + extra_effects + bd_effects
+
+        # ── 优化 3：效果 ID 转换缓存 ──
+        effects_key = tuple(all_effects)
+        cached_ids = _EFFECTS_ID_CACHE.get(effects_key)
+        if cached_ids is not None:
+            effect_ids_batch[i] = cached_ids[0]
+            effect_values_batch[i] = cached_ids[1]
+        else:
+            # 使用预计算的过滤器（跳过 DamageContext 构建 + _collect_effects）
+            ids: list[int] = []
+            vals: list[float] = []
+            for e in all_effects:
+                if _scope_filter(e):
+                    eid = _EFFECT_ID_MAP.get(e.effect_type)
+                    if eid is not None:
+                        ids.append(eid)
+                        vals.append(float(e.value))
+            effect_ids_batch[i] = ids
+            effect_values_batch[i] = vals
+            # 缓存结果（限制大小避免内存膨胀）
+            if len(_EFFECTS_ID_CACHE) < 50000:
+                _EFFECTS_ID_CACHE[effects_key] = (ids, vals)
 
         # 填充 SoA 数组
         final_attacks[i] = p["final_attack"]
@@ -554,17 +631,6 @@ def _preprocess_for_rust_soa(
         base_damage_bonuses[i] = p.get("base_damage_bonus", 0.0)
         crit_mode_ids[i] = _CRIT_MODE_ID_MAP.get(p.get("crit_mode", "non_crit"), 0)
         is_abnormals[i] = p.get("damage_pipeline", "normal") == "abnormal"
-
-        # 效果 → 整数 ID
-        ids: list[int] = []
-        vals: list[float] = []
-        for e in known_effects:
-            eid = _EFFECT_ID_MAP.get(e.effect_type)
-            if eid is not None:
-                ids.append(eid)
-                vals.append(float(e.value))
-        effect_ids_batch[i] = ids
-        effect_values_batch[i] = vals
 
     return {
         "final_attacks": final_attacks,

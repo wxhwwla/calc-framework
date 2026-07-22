@@ -122,6 +122,14 @@ Write-Host "🚀 act $($passthruArgs -join ' ')" -ForegroundColor Cyan
 Write-Host "  代理: $PROXY_HOST`:$PROXY_PORT" -ForegroundColor Gray
 Write-Host ""
 
+# act 自身（Go 进程）也需要代理来 clone GitHub actions
+# --env 只影响容器内命令，不影响 act 自己的 git 操作
+if ($PROXY_PORT) {
+    $env:HTTPS_PROXY = "http://127.0.0.1:$PROXY_PORT"
+    $env:HTTP_PROXY = "http://127.0.0.1:$PROXY_PORT"
+    Write-Host "  act 进程代理: 127.0.0.1:$PROXY_PORT" -ForegroundColor Gray
+}
+
 & act @allArgs
 $exitCode = $LASTEXITCODE
 
