@@ -51,7 +51,7 @@ jobs:
           restore-keys: pip-lint-
 
       - name: Install ruff
-        run: python -m pip install ruff>=0.5
+        run: python -m pip install ruff==0.9.6
 
       - name: Lint check (ruff)
         run: python -m ruff check games/endfield/ games/arknights/ framework/src/ web/backend/ scripts/ extensions/
