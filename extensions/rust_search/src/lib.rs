@@ -419,6 +419,42 @@ fn evaluate_search_batch_raw(
 /// 全批量评估 Python 包装函数。
 #[pyfunction]
 #[allow(clippy::too_many_arguments)]
+#[pyo3(signature = (
+    weapon_names,
+    weapon_final_attacks,
+    weapon_effects,
+    equipment_chest_names,
+    equipment_gloves_names,
+    equipment_acc_a_names,
+    equipment_acc_b_names,
+    equipment_effects,
+    equipment_flat_stats,
+    equipment_atk_percents,
+    char_name,
+    char_level,
+    char_base_attack,
+    skill_multiplier,
+    damage_type,
+    skill_type,
+    is_unbalanced,
+    is_true_damage,
+    enemy_defense,
+    enemy_resistance,
+    ignore_resistance,
+    imbalance_vulnerability_coeff,
+    crit_rate,
+    crit_damage,
+    damage_type_bonus,
+    skill_type_bonus,
+    imbalance_damage_bonus,
+    other_damage_bonus,
+    combo_stacks,
+    break_defense_stacks,
+    base_damage_bonus,
+    top_n,
+    crit_mode = "non_crit",
+    damage_pipeline = "normal",
+))]
 fn evaluate_full_batch_py(
     weapon_names: Vec<String>,
     weapon_final_attacks: Vec<f64>,
@@ -452,6 +488,8 @@ fn evaluate_full_batch_py(
     break_defense_stacks: i32,
     base_damage_bonus: f64,
     top_n: usize,
+    crit_mode: &str,
+    damage_pipeline: &str,
 ) -> PyResult<Vec<(String, f64, std::collections::HashMap<String, String>)>> {
     // 构建武器数据
     let weapons: Vec<full_batch::WeaponData> = weapon_names
@@ -516,6 +554,8 @@ fn evaluate_full_batch_py(
         combo_stacks,
         break_defense_stacks,
         base_damage_bonus,
+        crit_mode: crit_mode.to_string(),
+        damage_pipeline: damage_pipeline.to_string(),
     };
 
     // 执行全批量评估

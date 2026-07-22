@@ -760,6 +760,8 @@ def evaluate_full_batch(
     break_defense_stacks: int,
     base_damage_bonus: float,
     top_n: int = 10,
+    crit_mode: str = "non_crit",
+    damage_pipeline: str = "normal",
 ) -> list[tuple[str, float, dict[str, str]]]:
     """全批量评估：Python 预处理 → Rust 完整评估 → 返回结果。
 
@@ -767,6 +769,8 @@ def evaluate_full_batch(
 
     Args:
         各参数为预处理后的数据，详见 rust_batch_data.py。
+        crit_mode: 暴击模式 "non_crit" / "always_crit" / "expected"
+        damage_pipeline: 伤害管线 "normal" / "abnormal"
 
     Returns:
         [(武器名, 最终伤害, {部位: 装备名})] 列表，按伤害降序排列。
@@ -774,78 +778,50 @@ def evaluate_full_batch(
     if not _HAS_RUST or not weapon_names:
         return []
 
+    # 构建公共参数列表
+    common_args = [
+        weapon_names,
+        weapon_final_attacks,
+        weapon_effects,
+        equipment_chest_names,
+        equipment_gloves_names,
+        equipment_acc_a_names,
+        equipment_acc_b_names,
+        equipment_effects,
+        equipment_flat_stats,
+        equipment_atk_percents,
+        char_name,
+        char_level,
+        char_base_attack,
+        skill_multiplier,
+        damage_type,
+        skill_type,
+        is_unbalanced,
+        is_true_damage,
+        enemy_defense,
+        enemy_resistance,
+        ignore_resistance,
+        imbalance_vulnerability_coeff,
+        crit_rate,
+        crit_damage,
+        damage_type_bonus,
+        skill_type_bonus,
+        imbalance_damage_bonus,
+        other_damage_bonus,
+        combo_stacks,
+        break_defense_stacks,
+        base_damage_bonus,
+        top_n,
+        crit_mode,
+        damage_pipeline,
+    ]
+
     from utils.frozen_runtime import rust_parallel_batch_enabled
 
     if rust_parallel_batch_enabled():
-        rs_results = _rs.evaluate_full_batch_py(
-            weapon_names,
-            weapon_final_attacks,
-            weapon_effects,
-            equipment_chest_names,
-            equipment_gloves_names,
-            equipment_acc_a_names,
-            equipment_acc_b_names,
-            equipment_effects,
-            equipment_flat_stats,
-            equipment_atk_percents,
-            char_name,
-            char_level,
-            char_base_attack,
-            skill_multiplier,
-            damage_type,
-            skill_type,
-            is_unbalanced,
-            is_true_damage,
-            enemy_defense,
-            enemy_resistance,
-            ignore_resistance,
-            imbalance_vulnerability_coeff,
-            crit_rate,
-            crit_damage,
-            damage_type_bonus,
-            skill_type_bonus,
-            imbalance_damage_bonus,
-            other_damage_bonus,
-            combo_stacks,
-            break_defense_stacks,
-            base_damage_bonus,
-            top_n,
-        )
+        rs_results = _rs.evaluate_full_batch_py(*common_args)
     else:
         with _rust_call_lock:
-            rs_results = _rs.evaluate_full_batch_py(
-                weapon_names,
-                weapon_final_attacks,
-                weapon_effects,
-                equipment_chest_names,
-                equipment_gloves_names,
-                equipment_acc_a_names,
-                equipment_acc_b_names,
-                equipment_effects,
-                equipment_flat_stats,
-                equipment_atk_percents,
-                char_name,
-                char_level,
-                char_base_attack,
-                skill_multiplier,
-                damage_type,
-                skill_type,
-                is_unbalanced,
-                is_true_damage,
-                enemy_defense,
-                enemy_resistance,
-                ignore_resistance,
-                imbalance_vulnerability_coeff,
-                crit_rate,
-                crit_damage,
-                damage_type_bonus,
-                skill_type_bonus,
-                imbalance_damage_bonus,
-                other_damage_bonus,
-                combo_stacks,
-                break_defense_stacks,
-                base_damage_bonus,
-                top_n,
-            )
+            rs_results = _rs.evaluate_full_batch_py(*common_args)
 
     return [(r[0], r[1], dict(r[2])) for r in rs_results]

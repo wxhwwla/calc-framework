@@ -117,7 +117,7 @@ Agent 在 sandbox 中只能执行以下 Git **只读**命令：
 4. **输出明确的任务总结** — 列出已完成项 + 未完成项 + 暂存区状态
 5. **向用户提问后续** — 如"需要上传 GitHub 吗？"
 
-**禁止**：修改代码后不同步更新相关文档和 CI；任务完成不做总结。
+**禁止**：修改代码后不同步更新相关文档和 CI；任务完成不做总结；本地环境运行测试并采信结果（必须通过 `act` 在 Docker 容器中验证，见 §11）。
 
 ### 默认开发流程
 
@@ -137,7 +137,7 @@ Agent 在 sandbox 中只能执行以下 Git **只读**命令：
 
 #### 日常改代码
 ```
-/review → 发现问题 → /tdd（红-绿-重构）→ /review 复审
+/review → 发现问题 → /tdd（红-绿-重构）→ /review 复审 → 通过 act 在 Docker 中验证 CI（§11）
 ```
 
 #### 修 Bug
@@ -399,13 +399,6 @@ $env:HTTP_PROXY = "http://host.docker.internal:端口"
 
 常见代理端口参考：clash（7890）、v2ray（10809）、Docker Desktop 内置（3128）。
 
-### 例外规则
-
-以下场景可本地直接运行测试（仅用于快速调试，最终以 `act` 结果为准）：
-- 修改 `_version.py` 或上传脚本相关的单元测试
-- 无环境依赖的纯逻辑测试（如 `test_errors.py`）
-- 测试 `act` 配置本身（`act --dryrun` 验证 workflow 语法）
-
 ### 验证 CI 前务必复查
 
 本地改动提交前，**必须**通过 `act` 在 Docker 中跑通以下 CI（具体见 `.github/workflows/`）：
@@ -413,6 +406,8 @@ $env:HTTP_PROXY = "http://host.docker.internal:端口"
 2. `framework-ci.yml` — 框架核心 + 基准测试
 3. `web-ci.yml` — Web 前端 tsc + eslint + build
 4. `security-audit.yml` — detect-secrets + pip-audit + npm audit
+
+**注意**：本地环境（Windows）运行的测试结果**仅用于快速调试**，**不得**作为验证依据。所有正式验证必须通过 `act` 在 Docker 容器中完成。
 
 ---
 

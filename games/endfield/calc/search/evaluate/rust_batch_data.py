@@ -67,6 +67,8 @@ class CalcParams:
     combo_stacks: int = 0
     break_defense_stacks: int = 0
     base_damage_bonus: float = 0.0
+    crit_mode: str = "non_crit"
+    damage_pipeline: str = "normal"
 
 
 @dataclass
@@ -236,6 +238,8 @@ def prepare_calc_params(
         combo_stacks=base_context.combo_stacks,
         break_defense_stacks=base_context.break_defense_stacks,
         base_damage_bonus=base_context.base_damage_bonus,
+        crit_mode=getattr(base_context, "crit_mode", "non_crit"),
+        damage_pipeline=getattr(base_context, "damage_pipeline", "normal"),
     )
 
 

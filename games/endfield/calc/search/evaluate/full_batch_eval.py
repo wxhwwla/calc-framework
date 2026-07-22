@@ -3,10 +3,12 @@
 """Rust 全批量评估集成。
 
 使用 Rust 全批量函数替代 Python 逐任务评估。
+将整个武器×装备组合的遍历循环移入 Rust，消除 Python 逐任务开销。
 """
 
 from __future__ import annotations
 
+from itertools import product
 from typing import Any
 
 from games.endfield.calc.loadout.optimizer import LoadoutScore
@@ -19,8 +21,13 @@ def evaluate_full_batch_rust(
     char_level: int,
     base_context: Any,
     top_n: int = 10,
+    *,
+    crit_mode: str = "non_crit",
+    damage_pipeline: str = "normal",
 ) -> list[LoadoutScore]:
     """使用 Rust 全批量函数评估所有配装组合。
+
+    将武器×装备的笛卡尔积遍历完全移入 Rust，Python 侧只做数据预处理。
 
     Args:
         weapons: 武器候选列表
@@ -29,6 +36,8 @@ def evaluate_full_batch_rust(
         char_level: 角色等级
         base_context: 基础伤害上下文
         top_n: 返回前 N 个结果
+        crit_mode: 暴击模式 "non_crit" / "always_crit" / "expected"
+        damage_pipeline: 伤害管线 "normal" / "abnormal"
 
     Returns:
         LoadoutScore 列表，按伤害降序排列
@@ -36,9 +45,9 @@ def evaluate_full_batch_rust(
     from extensions.rust_search.python.rust_bridge import evaluate_full_batch
 
     # 预处理武器数据
-    weapon_names = []
-    weapon_final_attacks = []
-    weapon_effects = []
+    weapon_names: list[str] = []
+    weapon_final_attacks: list[float] = []
+    weapon_effects: list[list[tuple[str, float]]] = []
     for weapon in weapons:
         weapon_names.append(weapon.name)
         weapon_final_attacks.append(weapon.final_attack)
@@ -49,53 +58,68 @@ def evaluate_full_batch_rust(
     from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
     from games.endfield.calc.equipment.system import build_four_slot_loadout
 
+    # 支持两种装备目录格式：
+    # 1. {"chest": [...], "gloves": [...], "accessory_a": [...], "accessory_b": [...]}
+    # 2. {"chest": [...], "gloves": [...], "accessories": [...]}（旧格式，自动拆分）
     chest_list = equipment_catalog.get("chest", [])
     gloves_list = equipment_catalog.get("gloves", [])
-    acc_list = equipment_catalog.get("accessories", [])
+    acc_a_list = equipment_catalog.get("accessory_a", [])
+    acc_b_list = equipment_catalog.get("accessory_b", [])
+
+    # 旧格式兼容：accessories → accessory_a × accessory_b 笛卡尔积
+    if not acc_a_list and not acc_b_list:
+        accessories = equipment_catalog.get("accessories", [])
+        if accessories:
+            acc_a_list = accessories
+            acc_b_list = accessories
 
     from utils.search_diagnostics import get_search_logger
 
     slog = get_search_logger()
-    slog.info("装备目录: chest=%d, gloves=%d, acc=%d", len(chest_list), len(gloves_list), len(acc_list))
+    slog.info(
+        "装备目录: chest=%d, gloves=%d, acc_a=%d, acc_b=%d",
+        len(chest_list),
+        len(gloves_list),
+        len(acc_a_list),
+        len(acc_b_list),
+    )
 
     if not chest_list or not gloves_list:
         slog.warning("装备目录为空，跳过 Rust 全批量评估")
         return []
 
-    equipment_chest_names = []
-    equipment_gloves_names = []
-    equipment_acc_a_names = []
-    equipment_acc_b_names = []
-    equipment_effects = []
-    equipment_flat_stats = []
-    equipment_atk_percents = []
+    # 构建装备组合的笛卡尔积
+    equipment_chest_names: list[str] = []
+    equipment_gloves_names: list[str] = []
+    equipment_acc_a_names: list[str] = []
+    equipment_acc_b_names: list[str] = []
+    equipment_effects: list[list[tuple[str, float]]] = []
+    equipment_flat_stats: list[dict[str, float]] = []
+    equipment_atk_percents: list[float] = []
 
-    for chest in chest_list:
-        for glove in gloves_list:
-            for acc_a in acc_list:
-                for acc_b in acc_list:
-                    try:
-                        loadout = build_four_slot_loadout(
-                            chest=chest,
-                            gloves=glove,
-                            accessory_a=acc_a,
-                            accessory_b=acc_b,
-                            allow_duplicate_accessory=True,
-                        )
-                        equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
+    for chest, glove, acc_a, acc_b in product(chest_list, gloves_list, acc_a_list, acc_b_list):
+        try:
+            loadout = build_four_slot_loadout(
+                chest=chest,
+                gloves=glove,
+                accessory_a=acc_a,
+                accessory_b=acc_b,
+                allow_duplicate_accessory=True,
+            )
+            equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
 
-                        equipment_chest_names.append(chest.get("名称", ""))
-                        equipment_gloves_names.append(glove.get("名称", ""))
-                        equipment_acc_a_names.append(acc_a.get("名称", ""))
-                        equipment_acc_b_names.append(acc_b.get("名称", ""))
+            equipment_chest_names.append(chest.get("名称", ""))
+            equipment_gloves_names.append(glove.get("名称", ""))
+            equipment_acc_a_names.append(acc_a.get("名称", ""))
+            equipment_acc_b_names.append(acc_b.get("名称", ""))
 
-                        effects = [(eff.effect_type, float(eff.value)) for eff in equip_effects]
-                        equipment_effects.append(effects)
-                        equipment_flat_stats.append(dict(flat_stats))
-                        equipment_atk_percents.append(float(atk_percent))
-                    except (ValueError, KeyError, TypeError):
-                        # 跳过无效的装备组合
-                        continue
+            effects = [(eff.effect_type, float(eff.value)) for eff in equip_effects]
+            equipment_effects.append(effects)
+            equipment_flat_stats.append(dict(flat_stats))
+            equipment_atk_percents.append(float(atk_percent))
+        except (ValueError, KeyError, TypeError):
+            # 跳过无效的装备组合
+            continue
 
     if not equipment_chest_names:
         slog.warning("装备组合为空，跳过 Rust 全批量评估")
@@ -109,11 +133,14 @@ def evaluate_full_batch_rust(
         base_attack = float(base_attack_raw)
 
     # 添加调试日志
+    total_combos = len(weapon_names) * len(equipment_chest_names)
     slog.info(
-        "Rust 全批量评估: %d 武器, %d 装备组合, 基础攻击=%.1f",
+        "Rust 全批量评估: %d 武器 × %d 装备组合 = %d 总组合, 基础攻击=%.1f, crit_mode=%s",
         len(weapon_names),
         len(equipment_chest_names),
+        total_combos,
         base_attack,
+        crit_mode,
     )
 
     # 调用 Rust 全批量函数
@@ -151,6 +178,8 @@ def evaluate_full_batch_rust(
         break_defense_stacks=base_context.break_defense_stacks,
         base_damage_bonus=base_context.base_damage_bonus,
         top_n=top_n,
+        crit_mode=crit_mode,
+        damage_pipeline=damage_pipeline,
     )
 
     slog.info("Rust evaluate_full_batch 返回 %d 个结果", len(results))
