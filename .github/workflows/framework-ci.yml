@@ -41,8 +41,7 @@ jobs:
 
       - name: Install system deps for Qt6 (PySide6)
         run: |
-          sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
-          sudo apt-get update -o Acquire::Retries=3 || sudo apt-get update
+          sudo apt-get update
           sudo apt-get install -y qt6-base-dev libegl-mesa0 libegl1 xvfb libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
       - name: Install dependencies
@@ -87,8 +86,7 @@ jobs:
 
       - name: Install system deps for Qt6
         run: |
-          sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
-          sudo apt-get update -o Acquire::Retries=3 || sudo apt-get update
+          sudo apt-get update
           sudo apt-get install -y qt6-base-dev libegl-mesa0 libegl1 xvfb libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
       - name: Install dependencies

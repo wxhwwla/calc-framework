@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.29.11"
+_VERSION = "3.29.12"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -28,7 +28,8 @@ _EXE_VERSION = "0.7.0-beta"
 
 # ==============================================================
 
-_SUMMARY_MARKER_BEGIN = ""
+_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
 _UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
 _UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
 SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
@@ -153,7 +154,8 @@ def _canonical_marker_header() -> str:
     空字符串或未定义，使用它们会导致"修复"后仍然损坏。
     """
     return (
-        '_SUMMARY_MARKER_BEGIN = ""\n'
+        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
+        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
@@ -183,6 +185,8 @@ def _markers_section_ok(text: str) -> bool:
             re.MULTILINE,
         )
         is None
+        and "_SUMMARY_MARKER_BEGIN" in text
+        and "_SUMMARY_MARKER_END" in text
     )
 
 
