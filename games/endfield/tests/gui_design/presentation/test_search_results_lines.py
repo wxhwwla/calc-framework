@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.gui.presentation.search_results_lines import (
     _format_top_result_line,
@@ -12,6 +13,10 @@ from games.endfield.gui.presentation.search_results_lines import (
     export_paths_to_strings,
     loadout_scores_from_payload,
 )
+
+
+def setUpModule() -> None:
+    set_locale("zh-CN")
 
 
 class TestFormatTopResultLine(unittest.TestCase):

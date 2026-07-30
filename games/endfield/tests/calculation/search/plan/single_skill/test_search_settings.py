@@ -6,6 +6,7 @@
 
 import unittest
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.controls.search.search_settings import (
     format_parallel_workers_help,
     format_search_progress_text,
@@ -16,6 +17,10 @@ from games.endfield.gui.controls.search.search_settings import (
 
 
 class TestSearchSettings(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_resolve_parallel_workers_auto_and_numeric(self):
         self.assertEqual(resolve_parallel_workers("自动 (7 线程)", cpu_count=8), 1)
 

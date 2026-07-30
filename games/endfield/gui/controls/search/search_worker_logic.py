@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.loadout.optimizer.types import LoadoutScore
 from games.endfield.calc.manual_buff.physical import (
     format_abnormal_breakdown_lines,
@@ -35,23 +37,27 @@ class SearchResultItem:
     expanded: bool = False
 
 
-def build_result_header(score: LoadoutScore, idx: int, *, damage_metric: str = "伤害") -> str:
+def build_result_header(score: LoadoutScore, idx: int, *, damage_metric: str | None = None) -> str:
     """为单个搜索结果构建头部文本。"""
+    metric = damage_metric if damage_metric is not None else tr("desktop.endfield.damageMetric")
     loadout = score.loadout_names
-    return (
-        f"第{idx}名: {score.weapon_name}  |  "
-        f"{damage_metric} {score.final_damage:.1f}  |  "
-        f"护甲 {loadout.get('chest', '')}  |  "
-        f"护手 {loadout.get('gloves', '')}  |  "
-        f"配件A {loadout.get('accessory_a', '')}  |  "
-        f"配件B {loadout.get('accessory_b', '')}"
+    return tr(
+        "desktop.endfield.searchResultHeader",
+        idx=idx,
+        weapon=score.weapon_name,
+        metric=metric,
+        damage=f"{score.final_damage:.1f}",
+        chest=loadout.get("chest", ""),
+        gloves=loadout.get("gloves", ""),
+        acc_a=loadout.get("accessory_a", ""),
+        acc_b=loadout.get("accessory_b", ""),
     )
 
 
 def build_search_result_items(
     top_results: list[LoadoutScore] | None,
     *,
-    damage_metric: str = "伤害",
+    damage_metric: str | None = None,
     segment_counts: dict[str, int] | None = None,
     abnormal_counts: dict[str, int] | None = None,
     spell_abnormal_counts: dict[str, int] | None = None,
@@ -64,10 +70,11 @@ def build_search_result_items(
     if not top_results:
         return []
 
+    metric = damage_metric if damage_metric is not None else tr("desktop.endfield.damageMetric")
     nodes: list[SearchResultItem] = []
 
     for idx, score in enumerate(top_results, start=1):
-        header_text = build_result_header(score, idx, damage_metric=damage_metric)
+        header_text = build_result_header(score, idx, damage_metric=metric)
         root = SearchResultItem(text=header_text, expanded=(idx <= 3))
 
         if score.segment_breakdown and (segment_counts or abnormal_counts):
@@ -113,9 +120,13 @@ def _add_breakdown_children(
         weighted_total, _, skill_type_totals = aggregate_weighted_damage(skill_breakdown, segment_counts)
         if len(skill_type_totals) > 1:
             parts = [f"{k} {v:.1f}" for k, v in skill_type_totals.items()]
-            total_text = f"加权合计: {weighted_total:.1f}（{' + '.join(parts)}）"
+            total_text = tr(
+                "desktop.endfield.weightedTotalWithParts",
+                total=f"{weighted_total:.1f}",
+                parts=" + ".join(parts),
+            )
         else:
-            total_text = f"加权合计: {weighted_total:.1f}"
+            total_text = tr("desktop.endfield.weightedSum", total=f"{weighted_total:.1f}")
         parent.children.append(SearchResultItem(text=total_text))
 
     if physical_abnormal_breakdown and abnormal_counts:
@@ -135,7 +146,11 @@ def format_search_result_summary(top_results: list[LoadoutScore] | None) -> str:
         return ""
     count = len(top_results)
     expanded = min(3, count)
-    return f"共 {count} 个结果  |  前 {expanded} 项已展开"
+    return tr(
+        "desktop.endfield.searchResultSummary",
+        count=count,
+        expanded=expanded,
+    )
 
 
 def format_search_progress(

@@ -6,10 +6,14 @@
 
 import unittest
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.controls.search.search_estimate_message import compose_search_estimate_message
 
 
 class TestSearchControls(unittest.TestCase):
+    def setUp(self) -> None:
+        set_locale("zh-CN")
+
     def test_compose_message_requires_selection(self) -> None:
         text = compose_search_estimate_message(
             has_char=False,

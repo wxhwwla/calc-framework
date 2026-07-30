@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.framework_bridge import get_logger
 
 __all__ = ["ImageDetail", "OcrPipelineResult", "format_detail_lines", "preset_summary", "run_pipeline"]
@@ -57,7 +59,7 @@ def run_pipeline(folder: str | Path, *, max_detail_images: int = 20) -> OcrPipel
         from tools.ocr.mapper import OcrMapper
         from tools.ocr.recognizer import OCRRecognizer
     except ImportError:
-        result.error = "导入失败: 请安装 torchvision 和 easyocr"
+        result.error = tr("desktop.endfield.ocrImportFailed")
         return result
 
     try:
@@ -131,49 +133,54 @@ def preset_summary(preset: dict[str, Any]) -> str:
     """从 preset_dict 生成可读摘要。"""
     parts = []
     if preset.get("char_name"):
-        parts.append(f"角色={preset['char_name']}")
+        parts.append(tr("desktop.endfield.ocrPresetChar", name=preset["char_name"]))
     if preset.get("weapon_name"):
-        parts.append(f"武器={preset['weapon_name']}")
+        parts.append(tr("desktop.endfield.ocrPresetWeapon", name=preset["weapon_name"]))
     if preset.get("char_level"):
-        parts.append(f"等级={preset['char_level']}")
+        parts.append(tr("desktop.endfield.ocrPresetLevel", level=preset["char_level"]))
     if preset.get("weapon_level"):
-        parts.append(f"武器等级={preset['weapon_level']}")
-    return "  ".join(parts) if parts else "空"
+        parts.append(tr("desktop.endfield.ocrPresetWeaponLevel", level=preset["weapon_level"]))
+    return "  ".join(parts) if parts else tr("desktop.endfield.ocrPresetEmpty")
 
 
 def format_detail_lines(result: OcrPipelineResult, folder: str | Path) -> list[str]:
     """将管道结果格式化为可读文本行（用于 GUI 显示）。"""
     lines: list[str] = []
-    lines.append(f"截图文件夹: {folder}")
+    lines.append(tr("desktop.endfield.ocrFolder", folder=folder))
 
     if result.error:
-        lines.append(f"[错误] {result.error}")
+        lines.append(tr("desktop.endfield.ocrErrorLine", error=result.error))
         return lines
 
-    lines.append(f"总图片数: {result.total_images}")
-    lines.append(f"总检测目标: {result.total_detections}")
-    lines.append(f"平均推理: {result.avg_inference_ms:.0f} ms/张")
+    lines.append(tr("desktop.endfield.ocrTotalImages", n=result.total_images))
+    lines.append(tr("desktop.endfield.ocrTotalDetections", n=result.total_detections))
+    lines.append(tr("desktop.endfield.ocrAvgInference", ms=f"{result.avg_inference_ms:.0f}"))
     lines.append("")
 
     for detail in result.image_details:
-        lines.append(f"── {detail.image_name} ──")
+        lines.append(tr("desktop.endfield.ocrImageHeader", name=detail.image_name))
         for d in detail.detections:
             coord = f"({d['x1']:.0f},{d['y1']:.0f},{d['x2']:.0f},{d['y2']:.0f})"
             lines.append(f"  [{d['confidence']:.2f}] {d['class_name']} {coord}")
         if detail.ocr_texts:
-            lines.append("  OCR:")
+            lines.append(tr("desktop.endfield.ocrTextsHeader"))
             for t in detail.ocr_texts:
                 lines.append(f"    [{t['confidence']:.2f}] {t['text']}")
         if detail.ocr_error:
-            lines.append(f"  OCR 失败: {detail.ocr_error}")
+            lines.append(tr("desktop.endfield.ocrFailed", error=detail.ocr_error))
         lines.append("")
 
     if result.total_images > len(result.image_details):
-        lines.append(f"... 还有 {result.total_images - len(result.image_details)} 张未显示")
+        lines.append(
+            tr(
+                "desktop.endfield.ocrMoreImages",
+                n=result.total_images - len(result.image_details),
+            )
+        )
 
     if result.mapped_preset:
-        lines.append(f"→ 识别: {preset_summary(result.mapped_preset)}")
+        lines.append(tr("desktop.endfield.ocrMapped", summary=preset_summary(result.mapped_preset)))
     else:
-        lines.append("\n→ 未能识别出角色和武器名称")
+        lines.append(tr("desktop.endfield.ocrUnmapped"))
 
     return lines

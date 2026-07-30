@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.equipment.system import build_equipment_catalog_from_local_rows
 from games.endfield.data_loading.loader import DataLoadError, get_equipments
 
@@ -152,14 +154,14 @@ def catalog_preview_status_lines(
 
     if not catalog_has_any_rows(catalog):
         return [
-            f"计算模式: {mode_label}",
-            "未加载到本地装备数据，请先执行 sync_equipments.py --apply。",
+            tr("desktop.endfield.modeWithLabel", label=mode_label),
+            tr("desktop.endfield.previewCatalogEmpty"),
         ]
 
     if not is_equipment_catalog_complete(catalog):
         return [
-            f"计算模式: {mode_label}",
-            "装备数据不完整（缺护甲/护手/配件），无法进行预览。",
+            tr("desktop.endfield.modeWithLabel", label=mode_label),
+            tr("desktop.endfield.previewCatalogIncomplete"),
         ]
 
     return None

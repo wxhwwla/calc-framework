@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.presentation.display.format import (
     _get_attribute_value,
     _skill_segment_display_value,
@@ -10,6 +11,10 @@ from games.endfield.gui.presentation.display.format import (
     format_weapon_bonus_display_value,
     weapon_bonus_display_uses_percent,
 )
+
+
+def setup_module() -> None:
+    set_locale("zh-CN")
 
 
 class TestWeaponBonusDisplayUsesPercent:

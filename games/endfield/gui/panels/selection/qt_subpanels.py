@@ -176,7 +176,11 @@ class QtSkillLevelPanel(QWidget):
     def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self._names: list[str] = ["战技", "连携技", "终结技"]
+        self._names: list[str] = [
+            tr("desktop.endfield.skillCombat"),
+            tr("desktop.endfield.skillCombo"),
+            tr("desktop.endfield.skillUltimate"),
+        ]
 
         self._levels: list[int] = [1, 1, 1]
 

@@ -9,6 +9,7 @@ import os
 import sys
 from dataclasses import dataclass
 
+from calc_framework.ui.i18n import tr
 from utils.frozen_runtime import frozen_allow_multi_workers, search_recommended_workers
 
 
@@ -76,10 +77,21 @@ def default_parallel_workers(*, cpu_count: int | None = None) -> int:
     return get_cpu_parallel_info(cpu_count=cpu_count).recommended_workers
 
 
+def _is_auto_workers_choice(text: str) -> bool:
+    """识别「自动」worker 选项（兼容中/英显示文案与旧测试字面量）。"""
+    t = (text or "").strip()
+    if not t:
+        return False
+    if t.startswith("自动"):
+        return True
+    lower = t.lower()
+    return lower == "auto" or lower.startswith("auto ") or lower.startswith("auto(")
+
+
 def build_worker_option_labels(*, cpu_count: int | None = None) -> list[str]:
     """生成并行线程下拉选项（不超过本机逻辑核数）。"""
     info = get_cpu_parallel_info(cpu_count=cpu_count)
-    labels = [f"自动 ({info.recommended_workers} 线程)"]
+    labels = [tr("desktop.endfield.parallelWorkersAuto", n=info.recommended_workers)]
     for n in (1, 2, 4, 8, 16, 32):
         if 1 <= n <= info.max_workers and str(n) not in labels:
             labels.append(str(n))
@@ -92,7 +104,7 @@ def resolve_parallel_workers(choice: str, *, cpu_count: int | None = None) -> in
     """将下拉选项解析为线程数（超过本机逻辑核数时自动压低）。"""
     info = get_cpu_parallel_info(cpu_count=cpu_count)
     text = (choice or "").strip()
-    if text.startswith("自动"):
+    if _is_auto_workers_choice(text):
         return info.recommended_workers
     try:
         workers = int(text)
@@ -107,14 +119,19 @@ def format_parallel_workers_help(
     selected_workers: int,
 ) -> str:
     """生成并行线程说明文案。"""
-    return (
-        f"本机：物理核心约 {info.physical_cores}，逻辑线程 {info.logical_processors}；"
-        f"当前将使用 {selected_workers} 个搜索 worker（硬上限 {info.max_workers}）。\n"
-        f"「自动」= {info.recommended_workers} worker。"
-    ) + (
-        " Rust 批量已摊销 FFI，默认单 worker 最快；多 worker 可能因 GIL/锁更慢。"
-        if info.recommended_workers == 1
-        else f" 实验多 worker（CALC_SEARCH_BATCH_POOL=1）；超过 {info.max_workers} 会自动压低。"
+    base = tr(
+        "desktop.endfield.parallelWorkersHelp",
+        physical=info.physical_cores,
+        logical=info.logical_processors,
+        selected=selected_workers,
+        max_workers=info.max_workers,
+        auto_n=info.recommended_workers,
+    )
+    if info.recommended_workers == 1:
+        return base + tr("desktop.endfield.parallelWorkersHelpSingle")
+    return base + tr(
+        "desktop.endfield.parallelWorkersHelpMulti",
+        max_workers=info.max_workers,
     )
 
 
@@ -150,11 +167,29 @@ def format_search_progress_text(
 ) -> str:
     """格式化状态栏进度文案。"""
     if total <= 0:
-        return f"{prefix}：准备中…"
+        return tr("desktop.endfield.searchProgressPreparing", prefix=prefix)
     if eta_seconds > 0:
         remain_text = format_duration_human(eta_seconds)
         if estimated_total_seconds and estimated_total_seconds > 0:
             total_text = format_duration_human(estimated_total_seconds)
-            return f"{prefix}：{processed}/{total}\n剩余 {remain_text}，总预计 {total_text}"
-        return f"{prefix}：{processed}/{total}\n剩余 {remain_text}"
-    return f"{prefix}：{processed}/{total}"
+            return tr(
+                "desktop.endfield.searchProgressWithTotalEta",
+                prefix=prefix,
+                processed=processed,
+                total=total,
+                remain=remain_text,
+                total_eta=total_text,
+            )
+        return tr(
+            "desktop.endfield.searchProgressWithEta",
+            prefix=prefix,
+            processed=processed,
+            total=total,
+            remain=remain_text,
+        )
+    return tr(
+        "desktop.endfield.searchProgressCounts",
+        prefix=prefix,
+        processed=processed,
+        total=total,
+    )

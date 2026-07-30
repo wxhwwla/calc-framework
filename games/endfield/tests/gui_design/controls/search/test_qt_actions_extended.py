@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.gui.controls.search.qt_actions import (
     QtSearchResultsDialog,
@@ -15,6 +16,10 @@ from games.endfield.gui.controls.search.qt_actions import (
 )
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
+
+
+def setup_module() -> None:
+    set_locale("zh-CN")
 
 
 def _app() -> QApplication | QCoreApplication:

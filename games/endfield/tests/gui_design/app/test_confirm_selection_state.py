@@ -6,10 +6,15 @@
 
 import unittest
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.presentation.display_lines import evaluate_display_state
 
 
 class TestConfirmSelectionState(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_both_valid_updates_zone(self):
         state = evaluate_display_state({"名称": "秋栗"}, {"名称": "坚城铸造者"})
 

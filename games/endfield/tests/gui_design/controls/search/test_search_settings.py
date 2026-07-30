@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.controls.search.search_settings import (
     CpuParallelInfo,
     build_worker_option_labels,
@@ -14,6 +15,10 @@ from games.endfield.gui.controls.search.search_settings import (
     resolve_parallel_workers,
     resolve_top_n,
 )
+
+
+def setup_module() -> None:
+    set_locale("zh-CN")
 
 
 class TestGetCpuParallelInfo:

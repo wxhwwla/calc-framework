@@ -10,6 +10,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.calc.manual_buff.physical import (
     abnormal_weighted_total,
@@ -28,19 +30,29 @@ def _format_top_result_line(
     rank: int,
     score: LoadoutScore,
     *,
-    damage_metric: str = "伤害",
+    damage_metric: str | None = None,
     segment_counts: dict[str, int] | None = None,
     abnormal_counts: dict[str, int] | None = None,
     spell_abnormal_counts: dict[str, int] | None = None,
 ) -> list[str]:
     loadout = score.loadout_names
+    metric = damage_metric if damage_metric is not None else tr("desktop.endfield.damageMetric")
 
     lines = [
-        f"第{rank}名: 武器 {score.weapon_name}  {damage_metric} {score.final_damage:.1f}",
-        f"       护甲 {loadout.get('chest', '')}  |  "
-        f"护手 {loadout.get('gloves', '')}  |  "
-        f"配件A {loadout.get('accessory_a', '')}  |  "
-        f"配件B {loadout.get('accessory_b', '')}",
+        tr(
+            "desktop.endfield.searchReportRankHeader",
+            rank=rank,
+            weapon=score.weapon_name,
+            metric=metric,
+            damage=f"{score.final_damage:.1f}",
+        ),
+        tr(
+            "desktop.endfield.searchReportLoadoutLine",
+            chest=loadout.get("chest", ""),
+            gloves=loadout.get("gloves", ""),
+            acc_a=loadout.get("accessory_a", ""),
+            acc_b=loadout.get("accessory_b", ""),
+        ),
     ]
 
     if score.segment_breakdown:
@@ -81,7 +93,12 @@ def _format_top_result_line(
         abnormal_total = abnormal_weighted_total(physical_abnormal_breakdown, abnormal_counts)
 
         if abnormal_total > 0:
-            lines.append(f"       物理异常合计: {abnormal_total:.1f}")
+            lines.append(
+                tr(
+                    "desktop.endfield.searchReportPhysicalAbnormalTotal",
+                    total=f"{abnormal_total:.1f}",
+                )
+            )
 
     if spell_abnormal_breakdown and spell_abnormal_counts:
         lines.extend(
@@ -95,7 +112,12 @@ def _format_top_result_line(
         spell_total = spell_abnormal_weighted_total(spell_abnormal_breakdown, spell_abnormal_counts)
 
         if spell_total > 0:
-            lines.append(f"       法术异常合计: {spell_total:.1f}")
+            lines.append(
+                tr(
+                    "desktop.endfield.searchReportSpellAbnormalTotal",
+                    total=f"{spell_total:.1f}",
+                )
+            )
 
     """format top result line。"""
     return lines
@@ -111,7 +133,7 @@ def build_search_results_report_lines(
     top_results: Sequence[LoadoutScore],
     export_paths: dict[str, str] | None = None,
     cancelled: bool = False,
-    damage_metric: str = "伤害",
+    damage_metric: str | None = None,
     segment_counts: dict[str, int] | None = None,
     abnormal_counts: dict[str, int] | None = None,
     spell_abnormal_counts: dict[str, int] | None = None,
@@ -119,37 +141,50 @@ def build_search_results_report_lines(
     """生成全量遍历结果报告（供弹窗与测试使用）。"""
 
     weapon_scope, equip_scope = scope_labels
+    metric = damage_metric if damage_metric is not None else tr("desktop.endfield.damageMetric")
 
     lines = [
         f"=== {mode_label} ===",
-        f"技能: {skill_label}",
+        tr("desktop.endfield.previewSkillLabel", label=skill_label),
     ]
 
     if weapon_scope:
-        lines.append(f"武器候选: {weapon_scope}")
+        lines.append(tr("desktop.endfield.searchReportWeaponScope", scope=weapon_scope))
 
     if equip_scope:
-        lines.append(f"装备范围: {equip_scope}")
+        lines.append(tr("desktop.endfield.previewEquipmentScope", scope=equip_scope))
 
-    lines.append(
-        f"组合进度: {processed_combinations}/{total_combinations}"
-        + ("（已取消，以下为目前已完成中的前列）" if cancelled else "")
-    )
+    if cancelled:
+        lines.append(
+            tr(
+                "desktop.endfield.searchReportProgressCancelled",
+                processed=processed_combinations,
+                total=total_combinations,
+            )
+        )
+    else:
+        lines.append(
+            tr(
+                "desktop.endfield.searchReportProgress",
+                processed=processed_combinations,
+                total=total_combinations,
+            )
+        )
 
     lines.append("")
 
     if not top_results:
-        lines.append("无可用前列结果，请检查装备数据或缩小候选范围。")
+        lines.append(tr("desktop.endfield.searchReportNoTop"))
 
     else:
-        lines.append("—— 前列配装 ——")
+        lines.append(tr("desktop.endfield.searchReportTopHeader"))
 
         for idx, score in enumerate(top_results, start=1):
             lines.extend(
                 _format_top_result_line(
                     idx,
                     score,
-                    damage_metric=damage_metric,
+                    damage_metric=metric,
                     segment_counts=segment_counts,
                     abnormal_counts=abnormal_counts,
                     spell_abnormal_counts=spell_abnormal_counts,
@@ -159,7 +194,7 @@ def build_search_results_report_lines(
     if export_paths:
         lines.append("")
 
-        lines.append("—— 导出文件 ——")
+        lines.append(tr("desktop.endfield.searchReportExportHeader"))
 
         for label, path in export_paths.items():
             if path:

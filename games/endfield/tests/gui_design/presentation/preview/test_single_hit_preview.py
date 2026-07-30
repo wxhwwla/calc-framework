@@ -8,6 +8,7 @@ import json
 import unittest
 from pathlib import Path
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.damage.engine import ZONE_ORDER
 from games.endfield.gui.presentation.display_lines import build_single_hit_damage_lines
 from games.endfield.tests.conftest import DATA_DIR
@@ -39,6 +40,10 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestSingleHitPreview(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_single_hit_preview_lines_include_mode_skill_and_damage(self):
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
 

@@ -83,7 +83,13 @@ class QtSpecialAbilityPanel(QWidget):
         # 3 条附加属性（普通技能）
         self._normal_rows: list[dict] = []
         for i in range(3):
-            rd = self._create_skill_row(layout, f"技能{i + 1}", 1, 9, font)
+            rd = self._create_skill_row(
+                layout,
+                tr("desktop.endfield.abilitySkillN", n=i + 1),
+                1,
+                9,
+                font,
+            )
             self._normal_rows.append(rd)
 
         # 分隔线
@@ -95,7 +101,11 @@ class QtSpecialAbilityPanel(QWidget):
         # 2 个特殊能力（等级 + 可选层数）
         self._special_rows: list[dict] = []
         for i in range(2):
-            rd = self._create_special_row(layout, f"特殊{i + 1}", font)
+            rd = self._create_special_row(
+                layout,
+                tr("desktop.endfield.abilitySpecialN", n=i + 1),
+                font,
+            )
             self._special_rows.append(rd)
 
         self._all_hidden()
@@ -195,7 +205,8 @@ class QtSpecialAbilityPanel(QWidget):
             rd["name_lbl"].setVisible(visible)
             rd["row_w"].setVisible(visible)
             if visible:
-                rd["name_lbl"].setText(f"{['第一', '第二', '第三'][i]}技能·{bonus[i]}")
+                ordinal = tr(f"desktop.endfield.abilityOrdinal{i + 1}")
+                rd["name_lbl"].setText(tr("desktop.endfield.abilitySkillBonusFmt", ordinal=ordinal, bonus=bonus[i]))
                 rd["slider"].setValue(1)
                 rd["val_lbl"].setText("1")
 

@@ -8,6 +8,7 @@ import json
 import unittest
 from pathlib import Path
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.presentation.preview_lines import build_multi_skill_search_preview_lines
 from games.endfield.tests.conftest import DATA_DIR
 
@@ -46,6 +47,10 @@ def _sample_catalog() -> dict:
 
 
 class TestMultiSkillSearchPreview(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_preview_lines_include_counts_and_top_result(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
 

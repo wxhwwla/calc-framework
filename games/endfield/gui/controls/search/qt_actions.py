@@ -255,7 +255,7 @@ class QtSearchResultsDialog(QDialog):
         big_font: QFont,
         small_font: QFont,
         top_results: Sequence[LoadoutScore] | None = None,
-        damage_metric: str = "伤害",
+        damage_metric: str | None = None,
         segment_counts: dict[str, int] | None = None,
         abnormal_counts: dict[str, int] | None = None,
         spell_abnormal_counts: dict[str, int] | None = None,
@@ -276,7 +276,7 @@ class QtSearchResultsDialog(QDialog):
 
         tree.setFont(small_font)
 
-        tree.setHeaderLabels(["搜索结果"])
+        tree.setHeaderLabels([tr("desktop.endfield.searchResultsHeader")])
 
         tree.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 

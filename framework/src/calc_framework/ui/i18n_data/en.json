@@ -5,7 +5,6 @@
     "launcher": "Calc Framework Launcher",
     "devToolkit": "Developer Toolkit"
   },
-
   "common": {
     "close": "Close",
     "ok": "OK",
@@ -51,7 +50,6 @@
     "ready": "Ready",
     "label": "Label"
   },
-
   "desktop": {
     "viewer": {
       "windowTitle": "CalcPack Viewer",
@@ -79,7 +77,6 @@
       "themeSwitched": "Theme switched to: {name}",
       "helpDialogTitle": "CalcPack Viewer Usage Guide"
     },
-
     "launcher": {
       "windowTitle": "Calc Framework Launcher v{version}",
       "selectAdapter": "Select a Game Adapter",
@@ -112,7 +109,6 @@
       "upToDate": "Up to date ({version})",
       "fullAppTitle": "Calc Framework — {adapter}"
     },
-
     "devToolkit": {
       "windowTitle": "Developer Toolkit v{version}",
       "sidebarTitle": "  Tools",
@@ -174,7 +170,6 @@
         "exportDoneMsg": "Exported {n} file(s) to:\n{out}"
       }
     },
-
     "pluginManager": {
       "windowTitle": "Plugin Manager ({n} registered)",
       "importPlugin": "Import .calcplugin…",
@@ -185,17 +180,14 @@
       "buildFailed": "Build failed: {error}",
       "noPlugins": "No plugins registered"
     },
-
     "log": {
       "panelTitle": "Log",
       "clear": "Clear"
     },
-
     "themeNames": {
       "dark": "Dark Theme",
       "light": "Light Theme"
     },
-
     "graphEditor": {
       "windowTitle": "Formula Graph Editor",
       "windowTitleFile": "Formula Graph Editor — {name}",
@@ -288,7 +280,6 @@
       "errorPrefix": "Error: {msg}",
       "importPackageBtnText": "+ Import Package"
     },
-
     "editor": {
       "windowTitle": "Layout Editor",
       "loadDag": "Load DAG",
@@ -321,7 +312,6 @@
       "inputParams": "Input Parameters",
       "calcResults": "Calculation Results"
     },
-
     "endfield": {
       "hintLoadZones": "Press \"Confirm Selection\" to load damage zone data",
       "confirmSelection": "Confirm Selection",
@@ -573,10 +563,116 @@
       "helpCalculatorTitle": "Endfield Damage Calculator — Help",
       "windowTitleFmt": "Endfield Damage Calculator v{version} — Calc Framework",
       "attributionAboutTitle": "Data Sources & Attribution",
-      "ocrLoadFailedMsg": "Failed to load OCR module:\n{error}\n\nInstall with: pip install torchvision easyocr"
+      "ocrLoadFailedMsg": "Failed to load OCR module:\n{error}\n\nInstall with: pip install torchvision easyocr",
+      "selectionType": "Type",
+      "selectionStar": "Rarity",
+      "selectionWeapon": "Weapon",
+      "selectionCharacter": "Character",
+      "selectionLevel": "Level",
+      "selectionNoData": "No data",
+      "skillCombat": "Battle Skill",
+      "skillCombo": "Combo Skill",
+      "skillUltimate": "Ultimate",
+      "abilitySkillN": "Skill {n}",
+      "abilitySpecialN": "Special {n}",
+      "abilityOrdinal1": "1st",
+      "abilityOrdinal2": "2nd",
+      "abilityOrdinal3": "3rd",
+      "abilitySkillBonusFmt": "{ordinal} skill · {bonus}",
+      "searchEstimateNeedSelection": "Est. combinations: select character and weapon first",
+      "searchEstimateWeaponsEmpty": "Est. combinations: no weapon candidates",
+      "searchEstimateUnavailable": "Est. combinations: unavailable",
+      "searchEstimateWithDetail": "Est. combinations: {detail}",
+      "parallelWorkersAuto": "Auto ({n} threads)",
+      "parallelWorkersHelp": "Host: ~{physical} physical cores, {logical} logical threads; using {selected} search workers (hard cap {max_workers}).\nAuto = {auto_n} workers.",
+      "parallelWorkersHelpSingle": " Rust batch amortizes FFI; single worker is usually fastest; more workers may be slower due to GIL/locks.",
+      "parallelWorkersHelpMulti": " Experimental multi-worker (CALC_SEARCH_BATCH_POOL=1); values above {max_workers} are capped.",
+      "searchProgressPreparing": "{prefix}: preparing…",
+      "searchProgressWithTotalEta": "{prefix}: {processed}/{total}\nRemaining {remain}, total ETA {total_eta}",
+      "searchProgressWithEta": "{prefix}: {processed}/{total}\nRemaining {remain}",
+      "searchProgressCounts": "{prefix}: {processed}/{total}",
+      "damageMetric": "Damage",
+      "searchResultHeader": "Rank #{idx}: {weapon}  |  {metric} {damage}  |  Chest {chest}  |  Gloves {gloves}  |  Acc A {acc_a}  |  Acc B {acc_b}",
+      "weightedTotalWithParts": "Weighted total: {total} ({parts})",
+      "weightedSum": "Weighted total: {total}",
+      "searchResultSummary": "{count} results  |  Top {expanded} expanded",
+      "searchResultsHeader": "Search Results",
+      "rankNth": "Rank #{idx}",
+      "copiedSnippet": "Copied: {text}…",
+      "copiedLoadoutCount": "Copied {n} loadouts",
+      "needValidCharacter": "Select a valid character",
+      "needValidWeapon": "Select a valid weapon",
+      "needValidCharWeaponShort": "Select a valid character and weapon",
+      "modeSingleSkillPreview": "Mode: single-skill search (quick preview)",
+      "modeMultiSkillPreview": "Mode: multi-skill search (quick preview)",
+      "modeSingleHit": "Mode: single-hit damage",
+      "modeSingleSkillPreviewLabel": "single-skill search (quick preview)",
+      "modeMultiSkillPreviewLabel": "multi-skill search (quick preview)",
+      "modeWithLabel": "Mode: {label}",
+      "previewCatalogMissing": "Error: equipment catalog missing; pass via GameDataFacade before preview.",
+      "previewCatalogEmpty": "No local equipment data; run sync_equipments.py --apply first.",
+      "previewCatalogIncomplete": "Incomplete equipment data (missing chest/gloves/accessories); preview unavailable.",
+      "previewCurrentWeapon": "Current weapon",
+      "previewAllEquipment": "All equipment",
+      "previewSkillLabel": "Skill: {label}",
+      "previewDamageType": "Damage type: {type}",
+      "previewCandidateScope": "Candidate scope: {scope}",
+      "previewEquipmentScope": "Equipment scope: {scope}",
+      "previewComboCount": "Preview combos: {n}",
+      "previewSampleNote": "Note: samples first 2 items per slot; use Full Search for exhaustive results.",
+      "previewModeSkillOnly": "Skill only",
+      "previewModeAbnormalOnly": "Abnormal only",
+      "previewModeSkillAndAbnormal": "Skill+Abnormal",
+      "previewCritOn": "On",
+      "previewCritOff": "Off",
+      "previewCaliber": "Caliber: {mode} | Expected crit: {crit}",
+      "previewAbnormalEstimateTotal": "Current-weapon abnormal estimate: {damage}",
+      "previewHint": "Hint: {warning}",
+      "previewRankSingleSkill": "Rank #{idx}: Weapon:{weapon} Dmg {damage} | Chest:{chest} Gloves:{gloves} AccA:{acc_a} AccB:{acc_b}",
+      "previewRankMultiSkill": "Rank #{idx}: Total {damage}",
+      "previewRankSkillAbnormalMerge": "      Skill {skill} | Abnormal {abnormal} | Sum {merged}",
+      "previewRankSkillAbnormalMergeMulti": "  Skill {skill} | Abnormal {abnormal} | Sum {merged}",
+      "previewNoResults": "No results; check equipment data.",
+      "previewSegmentDamageTypes": "Segment damage types:",
+      "previewDefaultCounts": "Default counts: selected skill {skill}×1, others ×0",
+      "previewManualCountsZero": "Manual counts cannot all be 0; set at least one > 0.",
+      "previewManualCounts": "Manual counts: {label}",
+      "previewNoSkillFallback": "No skill levels/multipliers; previewing Battle Skill at 100%.",
+      "searchReportRankHeader": "Rank #{rank}: Weapon {weapon}  {metric} {damage}",
+      "searchReportLoadoutLine": "       Chest {chest}  |  Gloves {gloves}  |  Acc A {acc_a}  |  Acc B {acc_b}",
+      "searchReportPhysicalAbnormalTotal": "       Physical abnormal total: {total}",
+      "searchReportSpellAbnormalTotal": "       Spell abnormal total: {total}",
+      "searchReportWeaponScope": "Weapon candidates: {scope}",
+      "searchReportProgress": "Progress: {processed}/{total}",
+      "searchReportProgressCancelled": "Progress: {processed}/{total} (cancelled; showing best so far)",
+      "searchReportNoTop": "No top results; check equipment data or narrow candidates.",
+      "searchReportTopHeader": "—— Top loadouts ——",
+      "searchReportExportHeader": "—— Exports ——",
+      "ocrImportFailed": "Import failed: install torchvision and easyocr",
+      "ocrNoText": "No text recognized",
+      "ocrPresetChar": "Char={name}",
+      "ocrPresetWeapon": "Weapon={name}",
+      "ocrPresetLevel": "Level={level}",
+      "ocrPresetWeaponLevel": "Weapon level={level}",
+      "ocrPresetEmpty": "Empty",
+      "ocrFolder": "Screenshot folder: {folder}",
+      "ocrErrorLine": "[Error] {error}",
+      "ocrTotalImages": "Images: {n}",
+      "ocrTotalDetections": "Detections: {n}",
+      "ocrAvgInference": "Avg inference: {ms} ms/image",
+      "ocrImageHeader": "── {name} ──",
+      "ocrTextsHeader": "  OCR:",
+      "ocrFailed": "  OCR failed: {error}",
+      "ocrMoreImages": "... {n} more images not shown",
+      "ocrMapped": "→ Mapped: {summary}",
+      "ocrUnmapped": "\n→ Could not identify character and weapon names"
     },
-
     "designer": {
+      "appName": "Data Designer",
+      "windowTitleFmt": "{name} v{version}",
+      "statusBarFmt": "{name} v{version} — data maintenance tool (no damage calculation)",
+      "dataEditorTab": "Data Editor",
+      "dataBrowserTab": "Data Browser",
       "inverseTitle": "Formula Inversion",
       "inverseHint": "Paste Lv.90 stats / skill Lv.9–12 data to infer growth formula parameters.",
       "inversePlaceholder": "Paste attribute values here...",
@@ -595,7 +691,6 @@
       "browserLoadFailed": "Load failed: {error}",
       "helpTitle": "Data Designer — Help"
     },
-
     "debugger": {
       "windowTitle": "DAG Step Debugger",
       "stepBtn": "Step (n)",

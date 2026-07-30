@@ -344,7 +344,9 @@ class SearchHistoryDialog(QDialog):
                 for idx, sc in enumerate(scores, start=1):
                     score_text = format_loadout_line(sc)
 
-                    child = QTreeWidgetItem([f"第{idx}名", f"{sc.final_damage:.1f}", score_text])
+                    child = QTreeWidgetItem(
+                        [tr("desktop.endfield.rankNth", idx=idx), f"{sc.final_damage:.1f}", score_text]
+                    )
 
                     child.setForeground(0, _SCORE_FG)
 
@@ -381,7 +383,7 @@ class SearchHistoryDialog(QDialog):
 
             cb.setText(text)
 
-            self._flash_status(f"已复制: {text[:60]}…")
+            self._flash_status(tr("desktop.endfield.copiedSnippet", text=text[:60]))
 
     def _copy_all(self) -> None:
         """复制全部可见内容到剪贴板。"""
@@ -426,7 +428,7 @@ class SearchHistoryDialog(QDialog):
 
         cb.setText(text)
 
-        self._flash_status(f"已复制 {len(all_scores)} 条配装")
+        self._flash_status(tr("desktop.endfield.copiedLoadoutCount", n=len(all_scores)))
 
     def _flash_status(self, msg: str) -> None:
         """在窗口标题栏闪烁提示。"""

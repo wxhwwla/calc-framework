@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.core.preview_cache import cached_preview, sync_confirm_dependencies
 from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult, evaluate_search_damage
 from games.endfield.calc.damage.engine import ZONE_ORDER
@@ -113,7 +115,7 @@ def build_single_hit_damage_lines(
     """构建单段伤害计算模式的展示行（带结果缓存）。"""
 
     if not char_data or not weapon_data:
-        return ["请选择有效角色和武器"]
+        return [tr("desktop.endfield.needValidCharWeaponShort")]
 
     sync_confirm_dependencies(
         char_data=char_data,
@@ -276,7 +278,7 @@ def _build_single_hit_damage_lines_impl(
     )
 
     header = [
-        "计算模式: 单段伤害计算",
+        tr("desktop.endfield.modeSingleHit"),
         f"技能: {skill.label}",
         f"伤害类型: {skill.damage_type_display}",
         f"技能倍率: {format_skill_multiplier_display_value(skill.multiplier * 100)}",

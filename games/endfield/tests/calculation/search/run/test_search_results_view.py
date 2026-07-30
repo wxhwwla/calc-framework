@@ -6,11 +6,16 @@
 
 import unittest
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.gui.presentation.search_results_lines import build_search_results_report_lines
 
 
 class TestSearchResultsReportLines(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_report_lists_progress_and_top_loadouts(self):
         lines = build_search_results_report_lines(
             mode_label="单技能全量遍历",

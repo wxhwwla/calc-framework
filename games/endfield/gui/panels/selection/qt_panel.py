@@ -162,7 +162,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         label_style = "color: #AAAAAA; padding: 2px 0;"
 
-        self._add_label(layout, "类型", label_style)
+        self._add_label(layout, tr("desktop.endfield.selectionType"), label_style)
 
         self.type_combo = _empty_list_cb()
 
@@ -170,7 +170,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         layout.addWidget(self.type_combo)
 
-        self._add_label(layout, "星级", label_style)
+        self._add_label(layout, tr("desktop.endfield.selectionStar"), label_style)
 
         self.star_combo = _empty_list_cb()
 
@@ -178,7 +178,11 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         layout.addWidget(self.star_combo)
 
-        name_text = "武器" if self.is_weapon_panel else "角色"
+        name_text = (
+            tr("desktop.endfield.selectionWeapon")
+            if self.is_weapon_panel
+            else tr("desktop.endfield.selectionCharacter")
+        )
 
         self._add_label(layout, name_text, label_style)
 
@@ -188,7 +192,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         layout.addWidget(self.name_combo)
 
-        self._add_label(layout, "等级", label_style)
+        self._add_label(layout, tr("desktop.endfield.selectionLevel"), label_style)
 
         level_row = QHBoxLayout()
 
@@ -361,7 +365,7 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
             self.type_combo.addItems(types)
 
         else:
-            self.type_combo.addItem("无数据")
+            self.type_combo.addItem(tr("desktop.endfield.selectionNoData"))
         """init values。"""
 
     def update_data_list(self, new_data: list[dict[str, Any]]) -> None:

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 
 def ocr_detect_from_file(image_path: str) -> dict[str, Any]:
     """识别单张截图中的角色/武器名（与桌面 mapper 一致）。"""
@@ -18,7 +20,12 @@ def ocr_detect_from_file(image_path: str) -> dict[str, Any]:
     ocr_result = ocr.recognize(image_path)
     texts = [(t.text, t.confidence, None) for t in ocr_result.texts]
     if not texts:
-        return {"char_name": None, "weapon_name": None, "texts": [], "message": "未识别到文字"}
+        return {
+            "char_name": None,
+            "weapon_name": None,
+            "texts": [],
+            "message": tr("desktop.endfield.ocrNoText"),
+        }
 
     mapped = mapper.map_texts(texts)  # type: ignore[arg-type]
     out: dict[str, Any] = {

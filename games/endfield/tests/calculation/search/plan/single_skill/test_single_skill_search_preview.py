@@ -10,6 +10,7 @@ import unittest
 from pathlib import Path
 
 import pytest
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.loadout.optimizer import WeaponCandidate
 from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 from games.endfield.gui.presentation.preview_lines import build_single_skill_search_preview_lines
@@ -60,6 +61,10 @@ def _sample_catalog() -> dict:
 
 
 class TestSingleSkillSearchPreview(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_preview_lines_include_top_result(self) -> None:
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
 

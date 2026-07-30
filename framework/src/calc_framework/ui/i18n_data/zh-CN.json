@@ -5,7 +5,6 @@
     "launcher": "游戏计算器启动器",
     "devToolkit": "开发者工具箱"
   },
-
   "common": {
     "close": "关闭",
     "ok": "确定",
@@ -51,7 +50,6 @@
     "ready": "就绪",
     "label": "标签"
   },
-
   "desktop": {
     "viewer": {
       "windowTitle": "计算包查看器",
@@ -79,7 +77,6 @@
       "themeSwitched": "主题切换为: {name}",
       "helpDialogTitle": "CalcPackViewer 使用说明"
     },
-
     "launcher": {
       "windowTitle": "游戏计算器启动器 v{version}",
       "selectAdapter": "选择游戏适配器",
@@ -112,7 +109,6 @@
       "upToDate": "已是最新版本 ({version})",
       "fullAppTitle": "游戏计算器 — {adapter}"
     },
-
     "devToolkit": {
       "windowTitle": "开发者工具箱 v{version}",
       "sidebarTitle": "  工具",
@@ -174,7 +170,6 @@
         "exportDoneMsg": "已导出 {n} 个文件到:\n{out}"
       }
     },
-
     "pluginManager": {
       "windowTitle": "插件管理器 ({n} 已注册)",
       "importPlugin": "导入 .calcplugin...",
@@ -185,17 +180,14 @@
       "buildFailed": "打包失败: {error}",
       "noPlugins": "暂无已注册插件"
     },
-
     "log": {
       "panelTitle": "日志",
       "clear": "清除"
     },
-
     "themeNames": {
       "dark": "暗色主题",
       "light": "亮色主题"
     },
-
     "graphEditor": {
       "windowTitle": "公式计算图编辑器",
       "windowTitleFile": "公式计算图编辑器 — {name}",
@@ -288,7 +280,6 @@
       "errorPrefix": "错误: {msg}",
       "importPackageBtnText": "+ 导入包"
     },
-
     "editor": {
       "windowTitle": "布局编辑器",
       "loadDag": "加载 DAG",
@@ -321,7 +312,6 @@
       "inputParams": "输入参数",
       "calcResults": "计算结果"
     },
-
     "endfield": {
       "hintLoadZones": "按「确认选择」加载乘区数据",
       "confirmSelection": "确认选择",
@@ -573,10 +563,116 @@
       "helpCalculatorTitle": "终末地伤害计算器 使用说明",
       "windowTitleFmt": "终末地伤害计算器 v{version} — Calc Framework",
       "attributionAboutTitle": "数据来源与声明",
-      "ocrLoadFailedMsg": "无法加载 OCR 模块：\n{error}\n\n请安装: pip install torchvision easyocr"
+      "ocrLoadFailedMsg": "无法加载 OCR 模块：\n{error}\n\n请安装: pip install torchvision easyocr",
+      "selectionType": "类型",
+      "selectionStar": "星级",
+      "selectionWeapon": "武器",
+      "selectionCharacter": "角色",
+      "selectionLevel": "等级",
+      "selectionNoData": "无数据",
+      "skillCombat": "战技",
+      "skillCombo": "连携技",
+      "skillUltimate": "终结技",
+      "abilitySkillN": "技能{n}",
+      "abilitySpecialN": "特殊{n}",
+      "abilityOrdinal1": "第一",
+      "abilityOrdinal2": "第二",
+      "abilityOrdinal3": "第三",
+      "abilitySkillBonusFmt": "{ordinal}技能·{bonus}",
+      "searchEstimateNeedSelection": "预计组合数：请先选择角色和武器",
+      "searchEstimateWeaponsEmpty": "预计组合数：当前武器候选为空",
+      "searchEstimateUnavailable": "预计组合数：无法预估",
+      "searchEstimateWithDetail": "预计组合数：{detail}",
+      "parallelWorkersAuto": "自动 ({n} 线程)",
+      "parallelWorkersHelp": "本机：物理核心约 {physical}，逻辑线程 {logical}；当前将使用 {selected} 个搜索 worker（硬上限 {max_workers}）。\n「自动」= {auto_n} worker。",
+      "parallelWorkersHelpSingle": " Rust 批量已摊销 FFI，默认单 worker 最快；多 worker 可能因 GIL/锁更慢。",
+      "parallelWorkersHelpMulti": " 实验多 worker（CALC_SEARCH_BATCH_POOL=1）；超过 {max_workers} 会自动压低。",
+      "searchProgressPreparing": "{prefix}：准备中…",
+      "searchProgressWithTotalEta": "{prefix}：{processed}/{total}\n剩余 {remain}，总预计 {total_eta}",
+      "searchProgressWithEta": "{prefix}：{processed}/{total}\n剩余 {remain}",
+      "searchProgressCounts": "{prefix}：{processed}/{total}",
+      "damageMetric": "伤害",
+      "searchResultHeader": "第{idx}名: {weapon}  |  {metric} {damage}  |  护甲 {chest}  |  护手 {gloves}  |  配件A {acc_a}  |  配件B {acc_b}",
+      "weightedTotalWithParts": "加权合计: {total}（{parts}）",
+      "weightedSum": "加权合计: {total}",
+      "searchResultSummary": "共 {count} 个结果  |  前 {expanded} 项已展开",
+      "searchResultsHeader": "搜索结果",
+      "rankNth": "第{idx}名",
+      "copiedSnippet": "已复制: {text}…",
+      "copiedLoadoutCount": "已复制 {n} 条配装",
+      "needValidCharacter": "请选择有效角色",
+      "needValidWeapon": "请选择有效武器",
+      "needValidCharWeaponShort": "请选择有效角色和武器",
+      "modeSingleSkillPreview": "计算模式: 单技能遍历(快速预览)",
+      "modeMultiSkillPreview": "计算模式: 多技能遍历(快速预览)",
+      "modeSingleHit": "计算模式: 单段伤害计算",
+      "modeSingleSkillPreviewLabel": "单技能遍历(快速预览)",
+      "modeMultiSkillPreviewLabel": "多技能遍历(快速预览)",
+      "modeWithLabel": "计算模式: {label}",
+      "previewCatalogMissing": "错误: 未提供装备 catalog，请通过 GameDataFacade 传入后再预览。",
+      "previewCatalogEmpty": "未加载到本地装备数据，请先执行 sync_equipments.py --apply。",
+      "previewCatalogIncomplete": "装备数据不完整（缺护甲/护手/配件），无法进行预览。",
+      "previewCurrentWeapon": "当前武器",
+      "previewAllEquipment": "全部装备",
+      "previewSkillLabel": "技能: {label}",
+      "previewDamageType": "伤害类型: {type}",
+      "previewCandidateScope": "候选范围: {scope}",
+      "previewEquipmentScope": "装备范围: {scope}",
+      "previewComboCount": "预览组合数: {n}",
+      "previewSampleNote": "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
+      "previewModeSkillOnly": "仅技能",
+      "previewModeAbnormalOnly": "仅异常",
+      "previewModeSkillAndAbnormal": "技能+异常",
+      "previewCritOn": "开",
+      "previewCritOff": "关",
+      "previewCaliber": "口径: {mode} | 期望伤害: {crit}",
+      "previewAbnormalEstimateTotal": "当前武器异常估算总伤: {damage}",
+      "previewHint": "提示: {warning}",
+      "previewRankSingleSkill": "第{idx}名: 武器:{weapon} 伤害 {damage} | 护甲:{chest} 护手:{gloves} 配件A:{acc_a} 配件B:{acc_b}",
+      "previewRankMultiSkill": "第{idx}名: 总伤 {damage}",
+      "previewRankSkillAbnormalMerge": "      技能 {skill} | 异常 {abnormal} | 合计 {merged}",
+      "previewRankSkillAbnormalMergeMulti": "  技能 {skill} | 异常 {abnormal} | 合计 {merged}",
+      "previewNoResults": "无可用结果，请检查装备数据。",
+      "previewSegmentDamageTypes": "段伤害类型:",
+      "previewDefaultCounts": "默认次数: 当前选中技能 {skill}×1，其它×0",
+      "previewManualCountsZero": "手动次数不能全为0，请至少设置一项 > 0。",
+      "previewManualCounts": "手动次数: {label}",
+      "previewNoSkillFallback": "未选择技能等级或无可用倍率，按战技 100% 预览。",
+      "searchReportRankHeader": "第{rank}名: 武器 {weapon}  {metric} {damage}",
+      "searchReportLoadoutLine": "       护甲 {chest}  |  护手 {gloves}  |  配件A {acc_a}  |  配件B {acc_b}",
+      "searchReportPhysicalAbnormalTotal": "       物理异常合计: {total}",
+      "searchReportSpellAbnormalTotal": "       法术异常合计: {total}",
+      "searchReportWeaponScope": "武器候选: {scope}",
+      "searchReportProgress": "组合进度: {processed}/{total}",
+      "searchReportProgressCancelled": "组合进度: {processed}/{total}（已取消，以下为目前已完成中的前列）",
+      "searchReportNoTop": "无可用前列结果，请检查装备数据或缩小候选范围。",
+      "searchReportTopHeader": "—— 前列配装 ——",
+      "searchReportExportHeader": "—— 导出文件 ——",
+      "ocrImportFailed": "导入失败: 请安装 torchvision 和 easyocr",
+      "ocrNoText": "未识别到文字",
+      "ocrPresetChar": "角色={name}",
+      "ocrPresetWeapon": "武器={name}",
+      "ocrPresetLevel": "等级={level}",
+      "ocrPresetWeaponLevel": "武器等级={level}",
+      "ocrPresetEmpty": "空",
+      "ocrFolder": "截图文件夹: {folder}",
+      "ocrErrorLine": "[错误] {error}",
+      "ocrTotalImages": "总图片数: {n}",
+      "ocrTotalDetections": "总检测目标: {n}",
+      "ocrAvgInference": "平均推理: {ms} ms/张",
+      "ocrImageHeader": "── {name} ──",
+      "ocrTextsHeader": "  OCR:",
+      "ocrFailed": "  OCR 失败: {error}",
+      "ocrMoreImages": "... 还有 {n} 张未显示",
+      "ocrMapped": "→ 识别: {summary}",
+      "ocrUnmapped": "\n→ 未能识别出角色和武器名称"
     },
-
     "designer": {
+      "appName": "数据设计器",
+      "windowTitleFmt": "{name} v{version}",
+      "statusBarFmt": "{name} v{version} —— 数据维护工具，不包含伤害计算功能",
+      "dataEditorTab": "数据编辑",
+      "dataBrowserTab": "数据浏览",
       "inverseTitle": "公式反推",
       "inverseHint": "输入 90 级属性 / 技能 9–12 级数据，自动反推成长公式参数。",
       "inversePlaceholder": "在此粘贴属性数值...",
@@ -595,7 +691,6 @@
       "browserLoadFailed": "加载失败: {error}",
       "helpTitle": "数据设计器 使用说明"
     },
-
     "debugger": {
       "windowTitle": "DAG 分步调试器",
       "stepBtn": "单步执行 (n)",

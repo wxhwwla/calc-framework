@@ -4,10 +4,14 @@
 
 from __future__ import annotations
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.controls.search.search_estimate_message import compose_search_estimate_message
 
 
 class TestComposeSearchEstimateMessage:
+    def setup_method(self) -> None:
+        set_locale("zh-CN")
+
     def test_no_char(self) -> None:
         msg = compose_search_estimate_message(
             has_char=False,

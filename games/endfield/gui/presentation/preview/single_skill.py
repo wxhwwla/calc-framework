@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.loadout.optimizer import (
@@ -74,7 +76,7 @@ def build_single_skill_search_preview_lines(
 ) -> list[str]:
     """构建单技能遍历模式的快速预览文案（带缓存）。"""
     if not char_data or not weapon_data:
-        return ["请选择有效角色和武器"]
+        return [tr("desktop.endfield.needValidCharWeaponShort")]
 
     resolved_enemy = _resolve_enemy_eval(enemy_defense, enemy_eval)
 
@@ -191,11 +193,14 @@ def _build_single_skill_search_preview_lines_impl(
 ) -> list[str]:
     if not preview_equipment_catalog:
         return [
-            "计算模式: 单技能遍历(快速预览)",
-            "错误: 未提供装备 catalog，请通过 GameDataFacade 传入后再预览。",
+            tr("desktop.endfield.modeSingleSkillPreview"),
+            tr("desktop.endfield.previewCatalogMissing"),
         ]
     catalog = preview_equipment_catalog
-    blocked = catalog_preview_status_lines(catalog, mode_label="单技能遍历(快速预览)")
+    blocked = catalog_preview_status_lines(
+        catalog,
+        mode_label=tr("desktop.endfield.modeSingleSkillPreviewLabel"),
+    )
     if blocked:
         return blocked
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
@@ -231,7 +236,7 @@ def _build_single_skill_search_preview_lines_impl(
     )
     candidates = preview_weapon_candidates or [
         WeaponCandidate(
-            name=str(weapon_data.get("名称", "当前武器")),
+            name=str(weapon_data.get("名称", tr("desktop.endfield.previewCurrentWeapon"))),
             final_attack=float(final["final_attack"]),
         )
     ]
@@ -255,20 +260,27 @@ def _build_single_skill_search_preview_lines_impl(
         ),
     )
     lines = [
-        "计算模式: 单技能遍历(快速预览)",
-        f"技能: {skill.label}",
-        f"伤害类型: {skill.damage_type_display}",
-        f"候选范围: {preview_scope_label or '当前武器'}",
-        f"装备范围: {preview_equipment_scope_label or '全部装备'}",
-        f"预览组合数: {result.total_combinations}",
-        "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
+        tr("desktop.endfield.modeSingleSkillPreview"),
+        tr("desktop.endfield.previewSkillLabel", label=skill.label),
+        tr("desktop.endfield.previewDamageType", type=skill.damage_type_display),
+        tr(
+            "desktop.endfield.previewCandidateScope",
+            scope=preview_scope_label or tr("desktop.endfield.previewCurrentWeapon"),
+        ),
+        tr(
+            "desktop.endfield.previewEquipmentScope",
+            scope=preview_equipment_scope_label or tr("desktop.endfield.previewAllEquipment"),
+        ),
+        tr("desktop.endfield.previewComboCount", n=result.total_combinations),
+        tr("desktop.endfield.previewSampleNote"),
     ]
     mode_text = {
-        "skill_only": "仅技能",
-        "abnormal_only": "仅异常",
-        "skill_and_abnormal": "技能+异常",
-    }.get(damage_component_mode, "技能+异常")
-    lines.append(f"口径: {mode_text} | 期望伤害: {'开' if use_expected_crit else '关'}")
+        "skill_only": tr("desktop.endfield.previewModeSkillOnly"),
+        "abnormal_only": tr("desktop.endfield.previewModeAbnormalOnly"),
+        "skill_and_abnormal": tr("desktop.endfield.previewModeSkillAndAbnormal"),
+    }.get(damage_component_mode, tr("desktop.endfield.previewModeSkillAndAbnormal"))
+    crit_text = tr("desktop.endfield.previewCritOn") if use_expected_crit else tr("desktop.endfield.previewCritOff")
+    lines.append(tr("desktop.endfield.previewCaliber", mode=mode_text, crit=crit_text))
     physical_total, physical_breakdown = evaluate_physical_abnormal_total(
         context=DamageContext(
             **resolved_enemy.damage_context_fields(
@@ -305,17 +317,24 @@ def _build_single_skill_search_preview_lines_impl(
     )
     abnormal_total = physical_total + spell_total
     if abnormal_total > 0:
-        lines.append(f"当前武器异常估算总伤: {abnormal_total:.1f}")
+        lines.append(tr("desktop.endfield.previewAbnormalEstimateTotal", damage=f"{abnormal_total:.1f}"))
         lines.extend(format_abnormal_breakdown_lines(physical_breakdown, physical_abnormal_counts, indent="  "))
         lines.extend(format_spell_abnormal_breakdown_lines(spell_breakdown, spell_abnormal_counts, indent="  "))
     if skill.warning:
-        lines.append(f"提示: {skill.warning}")
+        lines.append(tr("desktop.endfield.previewHint", warning=skill.warning))
     for idx, score in enumerate(result.top_results, start=1):
         loadout = score.loadout_names
         lines.append(
-            f"第{idx}名: 武器:{score.weapon_name} 伤害 {score.final_damage:.1f} | "
-            f"护甲:{loadout['chest']} 护手:{loadout['gloves']} "
-            f"配件A:{loadout['accessory_a']} 配件B:{loadout['accessory_b']}"
+            tr(
+                "desktop.endfield.previewRankSingleSkill",
+                idx=idx,
+                weapon=score.weapon_name,
+                damage=f"{score.final_damage:.1f}",
+                chest=loadout["chest"],
+                gloves=loadout["gloves"],
+                acc_a=loadout["accessory_a"],
+                acc_b=loadout["accessory_b"],
+            )
         )
         if abnormal_total > 0:
             merged = compose_damage_total(
@@ -323,8 +342,15 @@ def _build_single_skill_search_preview_lines_impl(
                 abnormal_damage=abnormal_total,
                 mode=damage_component_mode,
             )
-            lines.append(f"      技能 {score.final_damage:.1f} | 异常 {abnormal_total:.1f} | 合计 {merged:.1f}")
+            lines.append(
+                tr(
+                    "desktop.endfield.previewRankSkillAbnormalMerge",
+                    skill=f"{score.final_damage:.1f}",
+                    abnormal=f"{abnormal_total:.1f}",
+                    merged=f"{merged:.1f}",
+                )
+            )
     if not result.top_results:
-        lines.append("无可用结果，请检查装备数据。")
+        lines.append(tr("desktop.endfield.previewNoResults"))
     """build single skill search preview lines impl。"""
     return lines

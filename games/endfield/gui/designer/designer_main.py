@@ -32,8 +32,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-APP_NAME = "数据设计器"
-
 APP_VERSION = "1.0.0"
 
 
@@ -41,7 +39,8 @@ class DesignerApp(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}")
+        app_name = tr("desktop.designer.appName")
+        self.setWindowTitle(tr("desktop.designer.windowTitleFmt", name=app_name, version=APP_VERSION))
 
         self.setMinimumSize(900, 650)
 
@@ -67,11 +66,11 @@ class DesignerApp(QMainWindow):
 
         self.tabs = QTabWidget()
 
-        self.tabs.addTab(InverseTab(self.big_font, self.small_font), "公式反推")
+        self.tabs.addTab(InverseTab(self.big_font, self.small_font), tr("desktop.designer.inverseTitle"))
 
-        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), "数据编辑")
+        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), tr("desktop.designer.dataEditorTab"))
 
-        self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), "数据浏览")
+        self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), tr("desktop.designer.dataBrowserTab"))
 
         layout.addWidget(self.tabs, stretch=1)
 
@@ -79,7 +78,13 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.setContentsMargins(0, 4, 0, 0)
 
-        status = QLabel(f"{APP_NAME} v{APP_VERSION} —— 数据维护工具，不包含伤害计算功能")
+        status = QLabel(
+            tr(
+                "desktop.designer.statusBarFmt",
+                name=app_name,
+                version=APP_VERSION,
+            )
+        )
 
         status.setFont(self.small_font)
 

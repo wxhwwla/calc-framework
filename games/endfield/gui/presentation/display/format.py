@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.core.config import CHARACTER_NORMAL_ATTRS
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
@@ -92,10 +94,10 @@ def evaluate_display_state(
     }
 
     if not char_data:
-        state["char_message"] = "请选择有效角色"
+        state["char_message"] = tr("desktop.endfield.needValidCharacter")
 
     if not weapon_data:
-        state["weapon_message"] = "请选择有效武器"
+        state["weapon_message"] = tr("desktop.endfield.needValidWeapon")
 
     return state
 

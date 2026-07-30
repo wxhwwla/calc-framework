@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.core.preview_cache import cached_preview, sync_preview_dependencies
 from games.endfield.calc.damage.engine import DamageContext
 from games.endfield.calc.damage.physical_abnormal_state import format_break_defense_rotation_note
@@ -80,7 +82,7 @@ def build_multi_skill_search_preview_lines(
 ) -> list[str]:
     """构建多技能遍历模式的快速预览文案（带缓存）。"""
     if not char_data or not weapon_data:
-        return ["请选择有效角色和武器"]
+        return [tr("desktop.endfield.needValidCharWeaponShort")]
 
     resolved_enemy = _resolve_enemy_eval(enemy_defense, enemy_eval)
 
@@ -196,11 +198,14 @@ def _build_multi_skill_search_preview_lines_impl(
 ) -> list[str]:
     if not preview_equipment_catalog:
         return [
-            "计算模式: 多技能遍历(快速预览)",
-            "错误: 未提供装备 catalog，请通过 GameDataFacade 传入后再预览。",
+            tr("desktop.endfield.modeMultiSkillPreview"),
+            tr("desktop.endfield.previewCatalogMissing"),
         ]
     catalog = preview_equipment_catalog
-    blocked = catalog_preview_status_lines(catalog, mode_label="多技能遍历(快速预览)")
+    blocked = catalog_preview_status_lines(
+        catalog,
+        mode_label=tr("desktop.endfield.modeMultiSkillPreviewLabel"),
+    )
     if blocked:
         return blocked
     sampled_catalog = sample_equipment_catalog(catalog, per_slot=2)
@@ -216,7 +221,7 @@ def _build_multi_skill_search_preview_lines_impl(
     if not scenarios:
         scenarios = [SkillScenario(skill_name="战技", skill_multiplier=1.0, skill_type="战技")]
         selected_skill = "战技"
-        warning = "未选择技能等级或无可用倍率，按战技 100% 预览。"
+        warning = tr("desktop.endfield.previewNoSkillFallback")
     else:
         selected_skill = scenarios[0].resolved_skill_type
         warning = ""
@@ -244,13 +249,13 @@ def _build_multi_skill_search_preview_lines_impl(
         top_n=3,
         crit_mode="expected" if use_expected_crit else "non_crit",
     )
-    count_desc = f"默认次数: 当前选中技能 {selected_skill}×1，其它×0"
+    count_desc = tr("desktop.endfield.previewDefaultCounts", skill=selected_skill)
     if use_manual_counts:
         counts = normalize_manual_segment_counts(manual_counts or {}, scenarios)
         if all(v == 0 for v in counts.values()):
             return [
-                "计算模式: 多技能遍历(快速预览)",
-                "手动次数不能全为0，请至少设置一项 > 0。",
+                tr("desktop.endfield.modeMultiSkillPreview"),
+                tr("desktop.endfield.previewManualCountsZero"),
             ]
         active_counts = {k: v for k, v in counts.items() if v > 0}
         config = MultiSkillConfig(
@@ -261,7 +266,10 @@ def _build_multi_skill_search_preview_lines_impl(
         )
         from games.endfield.calc.skills.segments import format_segment_count_label
 
-        count_desc = f"手动次数: {format_segment_count_label(active_counts)}"
+        count_desc = tr(
+            "desktop.endfield.previewManualCounts",
+            label=format_segment_count_label(active_counts),
+        )
 
     from games.endfield.calc.damage.types import format_damage_type_display
 
@@ -282,7 +290,7 @@ def _build_multi_skill_search_preview_lines_impl(
         ),
         weapons=[
             WeaponCandidate(
-                name=str(weapon_data.get("名称", "当前武器")),
+                name=str(weapon_data.get("名称", tr("desktop.endfield.previewCurrentWeapon"))),
                 final_attack=float(final["final_attack"]),
             )
         ],
@@ -292,20 +300,24 @@ def _build_multi_skill_search_preview_lines_impl(
         character=char_data,
     )
     lines = [
-        "计算模式: 多技能遍历(快速预览)",
-        f"装备范围: {preview_equipment_scope_label or '全部装备'}",
-        f"预览组合数: {result.total_combinations}",
+        tr("desktop.endfield.modeMultiSkillPreview"),
+        tr(
+            "desktop.endfield.previewEquipmentScope",
+            scope=preview_equipment_scope_label or tr("desktop.endfield.previewAllEquipment"),
+        ),
+        tr("desktop.endfield.previewComboCount", n=result.total_combinations),
         count_desc,
-        "段伤害类型:",
+        tr("desktop.endfield.previewSegmentDamageTypes"),
         *segment_type_lines,
-        "说明: 当前仅采样每个部位前2件装备；全量遍历请点武器区「全量遍历(弹窗结果)」。",
+        tr("desktop.endfield.previewSampleNote"),
     ]
     mode_text = {
-        "skill_only": "仅技能",
-        "abnormal_only": "仅异常",
-        "skill_and_abnormal": "技能+异常",
-    }.get(damage_component_mode, "技能+异常")
-    lines.append(f"口径: {mode_text} | 期望伤害: {'开' if use_expected_crit else '关'}")
+        "skill_only": tr("desktop.endfield.previewModeSkillOnly"),
+        "abnormal_only": tr("desktop.endfield.previewModeAbnormalOnly"),
+        "skill_and_abnormal": tr("desktop.endfield.previewModeSkillAndAbnormal"),
+    }.get(damage_component_mode, tr("desktop.endfield.previewModeSkillAndAbnormal"))
+    crit_text = tr("desktop.endfield.previewCritOn") if use_expected_crit else tr("desktop.endfield.previewCritOff")
+    lines.append(tr("desktop.endfield.previewCaliber", mode=mode_text, crit=crit_text))
     if use_manual_counts and resolved_enemy.break_defense_stacks > 0:
         note = format_break_defense_rotation_note(
             resolved_enemy.break_defense_stacks,
@@ -349,27 +361,40 @@ def _build_multi_skill_search_preview_lines_impl(
     )
     abnormal_total = physical_total + spell_total
     if abnormal_total > 0:
-        lines.append(f"当前武器异常估算总伤: {abnormal_total:.1f}")
+        lines.append(tr("desktop.endfield.previewAbnormalEstimateTotal", damage=f"{abnormal_total:.1f}"))
         lines.extend(format_abnormal_breakdown_lines(physical_breakdown, physical_abnormal_counts, indent="  "))
         lines.extend(format_spell_abnormal_breakdown_lines(spell_breakdown, spell_abnormal_counts, indent="  "))
     if warning:
-        lines.append(f"提示: {warning}")
+        lines.append(tr("desktop.endfield.previewHint", warning=warning))
     for idx, score in enumerate(result.top_results, start=1):
         breakdown_lines = format_segment_breakdown_lines(
             score.skill_breakdown,
             result.skill_count_map,
             indent="  ",
         )
-        lines.append(f"第{idx}名: 总伤 {score.weighted_total_damage:.1f}")
+        lines.append(
+            tr(
+                "desktop.endfield.previewRankMultiSkill",
+                idx=idx,
+                damage=f"{score.weighted_total_damage:.1f}",
+            )
+        )
         if abnormal_total > 0:
             merged = compose_damage_total(
                 skill_damage=score.weighted_total_damage,
                 abnormal_damage=abnormal_total,
                 mode=damage_component_mode,
             )
-            lines.append(f"  技能 {score.weighted_total_damage:.1f} | 异常 {abnormal_total:.1f} | 合计 {merged:.1f}")
+            lines.append(
+                tr(
+                    "desktop.endfield.previewRankSkillAbnormalMergeMulti",
+                    skill=f"{score.weighted_total_damage:.1f}",
+                    abnormal=f"{abnormal_total:.1f}",
+                    merged=f"{merged:.1f}",
+                )
+            )
         lines.extend(breakdown_lines)
     if not result.top_results:
-        lines.append("无可用结果，请检查装备数据。")
+        lines.append(tr("desktop.endfield.previewNoResults"))
     """build multi skill search preview lines impl。"""
     return lines

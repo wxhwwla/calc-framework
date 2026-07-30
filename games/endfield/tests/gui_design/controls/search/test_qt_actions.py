@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import unittest
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.loadout.optimizer import LoadoutScore
 from games.endfield.gui.controls.search.qt_actions import _build_tree_items
 
 
 class TestBuildTreeItems(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_empty_results_flat_list(self) -> None:
         items = _build_tree_items(
             ["标题行", "内容行"],
