@@ -247,7 +247,35 @@ def execute_search_with_resume(
 
     store.ensure_run(run_signature, total_combinations)
 
+    from .full_batch_resume import completed_run_short_circuit, try_resume_via_full_batch
+
+    completed = completed_run_short_circuit(
+        store=store,
+        run_signature=run_signature,
+        total_combinations=total_combinations,
+        top_n=config.top_n,
+    )
+    if completed is not None:
+        return completed
+
     existing_keys = store.get_processed_keys(run_signature)
+
+    # 全新 run：优先尝试 Rust 全批量；部分续跑仍走下方 SoA 路径
+    if not existing_keys:
+        full_batch_result = try_resume_via_full_batch(
+            store=store,
+            run_signature=run_signature,
+            plan=plan,
+            config=config,
+            base_context=base_context,
+            search_eval=search_eval,
+            search_job=search_job,
+            task_evaluator=task_evaluator,
+            progress_callback=progress_callback,
+            cancel_token=cancel_token,
+        )
+        if full_batch_result is not None:
+            return full_batch_result
 
     pending_iter, pending_stream = _iter_pending_tasks(
         plan=plan,

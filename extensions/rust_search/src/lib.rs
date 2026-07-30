@@ -454,6 +454,7 @@ fn evaluate_search_batch_raw(
     top_n,
     crit_mode = "non_crit",
     damage_pipeline = "normal",
+    precomputed_final_attacks = Vec::new(),
 ))]
 fn evaluate_full_batch_py(
     weapon_names: Vec<String>,
@@ -490,6 +491,7 @@ fn evaluate_full_batch_py(
     top_n: usize,
     crit_mode: &str,
     damage_pipeline: &str,
+    precomputed_final_attacks: Vec<f64>,
 ) -> PyResult<Vec<(String, f64, std::collections::HashMap<String, String>)>> {
     // 构建武器数据
     let weapons: Vec<full_batch::WeaponData> = weapon_names
@@ -558,8 +560,20 @@ fn evaluate_full_batch_py(
         damage_pipeline: damage_pipeline.to_string(),
     };
 
-    // 执行全批量评估
-    let results = full_batch::evaluate_full_batch(&weapons, &equipment_combos, &char_data, &params, top_n);
+    // 执行全批量评估（预计算攻击力与 SoA/search_eval 对齐）
+    let precomputed = if precomputed_final_attacks.is_empty() {
+        None
+    } else {
+        Some(precomputed_final_attacks.as_slice())
+    };
+    let results = full_batch::evaluate_full_batch(
+        &weapons,
+        &equipment_combos,
+        &char_data,
+        &params,
+        top_n,
+        precomputed,
+    );
 
     // 转换为 Python 格式
     Ok(results

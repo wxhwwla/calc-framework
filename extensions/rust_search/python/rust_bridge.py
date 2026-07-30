@@ -828,6 +828,7 @@ def evaluate_full_batch(
     top_n: int = 10,
     crit_mode: str = "non_crit",
     damage_pipeline: str = "normal",
+    precomputed_final_attacks: list[float] | None = None,
 ) -> list[tuple[str, float, dict[str, str]]]:
     """全批量评估：Python 预处理 → Rust 完整评估 → 返回结果。
 
@@ -837,6 +838,8 @@ def evaluate_full_batch(
         各参数为预处理后的数据，详见 rust_batch_data.py。
         crit_mode: 暴击模式 "non_crit" / "always_crit" / "expected"
         damage_pipeline: 伤害管线 "normal" / "abnormal"
+        precomputed_final_attacks: 可选，长度=武器数×装备组合数的最终攻击力
+            （与 ``final_attack_details_for_loadout`` 对齐）；为空则走 Rust 简化公式。
 
     Returns:
         [(武器名, 最终伤害, {部位: 装备名})] 列表，按伤害降序排列。
@@ -880,6 +883,7 @@ def evaluate_full_batch(
         top_n,
         crit_mode,
         damage_pipeline,
+        list(precomputed_final_attacks or []),
     ]
 
     from utils.frozen_runtime import rust_parallel_batch_enabled

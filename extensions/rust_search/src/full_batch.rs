@@ -241,20 +241,34 @@ fn evaluate_single(
     base * crit * db * dr * amp * wk * sh * fr * vu * dff * imb * res * ncr * combo_bonus * sp
 }
 
-/// 全批量评估主入口
+/// 全批量评估主入口。
+///
+/// ``precomputed_final_attacks`` 若提供且长度为 ``weapons.len() * equipment_combos.len()``，
+/// 则按行优先（武器外层、装备内层）直接使用，跳过简化版 ``calculate_final_attack``。
+/// 这与 Python ``final_attack_details_for_loadout`` 对齐，避免双计角色基础攻。
 pub fn evaluate_full_batch(
     weapons: &[WeaponData],
     equipment_combos: &[EquipmentCombo],
     char_data: &CharData,
     params: &CalcParams,
     top_n: usize,
+    precomputed_final_attacks: Option<&[f64]>,
 ) -> Vec<LoadoutResult> {
     let mut results = Vec::new();
+    let n_equip = equipment_combos.len();
+    let use_precomputed = match precomputed_final_attacks {
+        Some(arr) => arr.len() == weapons.len() * n_equip && n_equip > 0,
+        None => false,
+    };
 
-    for weapon in weapons {
-        for equipment in equipment_combos {
-            // 1. 计算最终攻击力
-            let final_attack = calculate_final_attack(char_data, weapon, equipment);
+    for (wi, weapon) in weapons.iter().enumerate() {
+        for (ei, equipment) in equipment_combos.iter().enumerate() {
+            // 1. 最终攻击力：优先预计算（与 SoA/search_eval 同 seam）
+            let final_attack = if use_precomputed {
+                precomputed_final_attacks.unwrap()[wi * n_equip + ei]
+            } else {
+                calculate_final_attack(char_data, weapon, equipment)
+            };
 
             // 2. 合并效果列表
             let effects = merge_effects(&weapon.effects, &equipment.effects);
@@ -354,7 +368,7 @@ mod tests {
         let equipment = make_equipment("胸甲", "手套", "饰品A", "饰品B", vec![], std::collections::HashMap::new(), 0.0);
         let params = default_params();
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         assert_eq!(results.len(), 1);
         // final_attack = (500 + 500) * (1 + 0) = 1000
@@ -374,7 +388,7 @@ mod tests {
         params.crit_rate = 0.5;
         params.crit_damage = 0.8;
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // crit = 1 + 0.5 * 0.8 = 1.4
         // final = 2000 * 1.4 * 0.5 = 1400
@@ -389,7 +403,7 @@ mod tests {
         params.crit_mode = "always_crit".to_string();
         params.crit_damage = 0.8;
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // crit = 1 + 0.8 = 1.8
         // final = 2000 * 1.8 * 0.5 = 1800
@@ -403,7 +417,7 @@ mod tests {
         let equipment = make_equipment("胸甲", "手套", "饰品A", "饰品B", effects, std::collections::HashMap::new(), 0.0);
         let params = default_params();
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // dmg_bonus = 1.0 + 0.5 = 1.5
         // final = 2000 * 1.5 * 0.5 = 1500
@@ -418,7 +432,7 @@ mod tests {
         params.combo_stacks = 2;
         params.damage_pipeline = "abnormal".to_string();
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // abnormal 跳过连击增伤：2000 * 1.0 * 0.5 = 1000
         assert!((results[0].final_damage - 1000.0).abs() < 1e-6);
@@ -432,7 +446,7 @@ mod tests {
         params.enemy_defense = 0.0; // 防御=1.0，简化验证
         params.combo_stacks = 2;
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // combo_stacks=2, 战技: 1 + 0.45 = 1.45
         // final = 2000 * 1.45 = 2900
@@ -447,7 +461,7 @@ mod tests {
         params.is_true_damage = true;
         params.enemy_defense = 9999.0;
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // 真伤忽略防御：2000
         assert!((results[0].final_damage - 2000.0).abs() < 1e-6);
@@ -462,7 +476,7 @@ mod tests {
         params.enemy_defense = 0.0;
         params.is_unbalanced = true;
 
-        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10);
+        let results = evaluate_full_batch(&[weapon], &[equipment], &default_char(), &params, 10, None);
 
         // 失衡易伤系数覆盖: 2000 * 2.0 = 4000
         assert!((results[0].final_damage - 4000.0).abs() < 1e-6);
@@ -478,7 +492,7 @@ mod tests {
         let equipment = make_equipment("胸甲", "手套", "饰品A", "饰品B", vec![], std::collections::HashMap::new(), 0.0);
         let params = default_params();
 
-        let results = evaluate_full_batch(&weapons, &[equipment], &default_char(), &params, 2);
+        let results = evaluate_full_batch(&weapons, &[equipment], &default_char(), &params, 2, None);
 
         assert_eq!(results.len(), 2);
         // 武器B 最强 (600+500=1100), 武器A 次之 (500+500=1000), 武器C 最弱 (400+500=900)

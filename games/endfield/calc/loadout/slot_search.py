@@ -154,6 +154,34 @@ def _choices_for_slot(
     return list(catalog_items)
 
 
+def equipment_catalog_for_selection(
+    equipment_catalog: dict[str, list[dict]],
+    *,
+    selection: FixedLoadoutSelection,
+) -> dict[str, list[dict]]:
+    """将三槽 catalog + 固定选择展开为四槽显式列表（供 Rust 全批量）。
+
+    与 ``iter_loadout_combinations_for_selection`` 的候选集合一致：
+    固定槽仅含固定件；遍历槽为 catalog 全量（配件共用 ``accessories``）。
+    """
+    chests = list(equipment_catalog.get("chest") or [])
+    gloves = list(equipment_catalog.get("gloves") or [])
+    accessories = list(equipment_catalog.get("accessories") or [])
+
+    # 若调用方已给四槽显式列表，优先用其作为配件池
+    if not accessories:
+        accessories = list(equipment_catalog.get("accessory_a") or []) or list(
+            equipment_catalog.get("accessory_b") or []
+        )
+
+    return {
+        "chest": _choices_for_slot(chests, selection.chest),
+        "gloves": _choices_for_slot(gloves, selection.gloves),
+        "accessory_a": _choices_for_slot(accessories, selection.accessory_a),
+        "accessory_b": _choices_for_slot(accessories, selection.accessory_b),
+    }
+
+
 def count_loadout_combinations_for_selection(
     equipment_catalog: dict[str, list[dict]],
     *,

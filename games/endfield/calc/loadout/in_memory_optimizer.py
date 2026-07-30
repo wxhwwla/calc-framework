@@ -19,11 +19,16 @@ from games.endfield.calc.loadout.optimizer import (
     LoadoutScore,
     OptimizerConfig,
     WeaponCandidate,
+    build_optimizer_search_plan,
     enumerate_optimizer_tasks,
     evaluate_task,
 )
 from games.endfield.calc.loadout.optimizer.evaluate import evaluate_task_batch
 from games.endfield.calc.search.evaluate.context import SearchEvalContext
+from games.endfield.calc.search.evaluate.full_batch_eval import (
+    can_run_full_batch_search,
+    try_run_full_batch_from_plan,
+)
 from games.endfield.calc.search.evaluate.process_worker import (
     ProcessWorkerPayload,
     evaluate_optimizer_task_in_process,
@@ -62,6 +67,45 @@ def run_enumerated_optimizer_parallel(
     Returns:
         (top_results, total_combinations, processed_combinations, cancelled, warnings)
     """
+    # Tier-4 全批量：在枚举任务前先建 plan，以便复用固定配装与过滤后的目录
+    if can_run_full_batch_search(
+        search_eval=search_eval,
+        search_job=search_job,
+        task_evaluator=task_evaluator,
+    ):
+        assert search_eval is not None
+        plan = build_optimizer_search_plan(
+            weapons=weapons,
+            equipment_catalog=equipment_catalog,
+            config=config,
+        )
+        if plan.total_combinations > 0:
+            scores = try_run_full_batch_from_plan(
+                weapons=list(plan.weapons),
+                equipment_catalog=dict(plan.equipment_catalog),
+                config=config,
+                fixed_loadout=plan.fixed_loadout,
+                base_context=base_context,
+                search_eval=search_eval,
+                top_n=config.top_n,
+                progress_callback=progress_callback,
+                cancel_token=cancel_token,
+            )
+            if scores is not None:
+                log_search_config(
+                    phase="memory_full_batch",
+                    total=plan.total_combinations,
+                    max_workers=1,
+                    parallel_backend="full_batch",
+                    batch_size=plan.total_combinations,
+                    use_batch=True,
+                    use_job_batch=False,
+                    use_full_batch=True,
+                )
+                cancelled = bool(cancel_token is not None and getattr(cancel_token, "is_cancelled", False))
+                top = tuple(scores[: config.top_n])
+                return top, plan.total_combinations, plan.total_combinations, cancelled, plan.warnings
+
     tasks, total_combinations, _pruned, warnings = enumerate_optimizer_tasks(
         base_context=base_context,
         weapons=weapons,
