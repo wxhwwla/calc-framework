@@ -251,7 +251,7 @@ fn evaluate_search_damage_batch(
 }
 
 /// 伤害评估结果，与 Python `DamageEvalResult` 保持字段一致。
-#[pyclass(name = "DamageEvalResult")]
+#[pyclass(name = "DamageEvalResult", skip_from_py_object)]
 #[derive(Clone, Debug)]
 pub struct PyDamageEvalResult {
     #[pyo3(get)]

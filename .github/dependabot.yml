@@ -66,6 +66,22 @@ updates:
         patterns: ["*"]
         update-types: ["minor", "patch"]
 
+  # Rust 依赖（Cargo — rust_search 扩展）
+  - package-ecosystem: "cargo"
+    directory: "/extensions/rust_search"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      cargo-rust-search:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
   # GitHub Actions 版本更新
   - package-ecosystem: "github-actions"
     directory: "/"
