@@ -408,7 +408,7 @@ class TestFullBatchExpandedParity(unittest.TestCase):
         catalog, weapons, search_eval, base, _char = self._fixture()
         config = OptimizerConfig(top_n=5, prune_non_beneficial=False, warn_on_unfiltered=False)
 
-        os.environ.pop("CALC_RUST_FULL_BATCH", None)
+        os.environ["CALC_RUST_FULL_BATCH"] = "0"
         soa_top, soa_total, soa_processed, _, _ = run_enumerated_optimizer_parallel(
             base_context=base,
             weapons=weapons,

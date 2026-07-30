@@ -46,21 +46,45 @@ class TestCanRunFullBatchSearch(unittest.TestCase):
         os.environ.pop("CALC_RUST_FULL_BATCH", None)
         os.environ.pop("RUST_SEARCH_FALLBACK", None)
 
-    def test_off_by_default(self) -> None:
-        os.environ.pop("CALC_RUST_FULL_BATCH", None)
-        self.assertFalse(
-            can_run_full_batch_search(
-                search_eval=SearchEvalContext(
-                    char_data={"名称": "测", "基础攻击": [100]},
-                    char_level=90,
-                    weapon_level=90,
-                    trust_level=0,
-                    weapon_data_by_name={},
-                ),
-                search_job=None,
-                task_evaluator=None,
+    def test_opt_out_disables_gate(self) -> None:
+        os.environ["CALC_RUST_FULL_BATCH"] = "0"
+        with mock.patch(
+            "games.endfield.calc.search.evaluate.full_batch_eval._rust_full_batch_importable",
+            return_value=True,
+        ):
+            self.assertFalse(
+                can_run_full_batch_search(
+                    search_eval=SearchEvalContext(
+                        char_data={"名称": "测", "基础攻击": [100]},
+                        char_level=90,
+                        weapon_level=90,
+                        trust_level=0,
+                        weapon_data_by_name={},
+                    ),
+                    search_job=None,
+                    task_evaluator=None,
+                )
             )
-        )
+
+    def test_default_on_when_importable(self) -> None:
+        os.environ.pop("CALC_RUST_FULL_BATCH", None)
+        with mock.patch(
+            "games.endfield.calc.search.evaluate.full_batch_eval._rust_full_batch_importable",
+            return_value=True,
+        ):
+            self.assertTrue(
+                can_run_full_batch_search(
+                    search_eval=SearchEvalContext(
+                        char_data={"名称": "测", "基础攻击": [100]},
+                        char_level=90,
+                        weapon_level=90,
+                        trust_level=0,
+                        weapon_data_by_name={},
+                    ),
+                    search_job=None,
+                    task_evaluator=None,
+                )
+            )
 
     def test_requires_search_eval(self) -> None:
         os.environ["CALC_RUST_FULL_BATCH"] = "1"

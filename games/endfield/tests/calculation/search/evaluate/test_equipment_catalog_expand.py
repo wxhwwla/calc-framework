@@ -70,7 +70,7 @@ class TestResolveEquipmentSlotLists(unittest.TestCase):
 
 
 class TestUseRustFullBatchFlag(unittest.TestCase):
-    def test_flag_default_off(self) -> None:
+    def test_flag_default_on_opt_out_with_zero(self) -> None:
         import os
 
         from utils.frozen_runtime import use_rust_full_batch
@@ -78,6 +78,8 @@ class TestUseRustFullBatchFlag(unittest.TestCase):
         old = os.environ.pop("CALC_RUST_FULL_BATCH", None)
         old_fb = os.environ.pop("RUST_SEARCH_FALLBACK", None)
         try:
+            self.assertTrue(use_rust_full_batch())
+            os.environ["CALC_RUST_FULL_BATCH"] = "0"
             self.assertFalse(use_rust_full_batch())
             os.environ["CALC_RUST_FULL_BATCH"] = "1"
             self.assertTrue(use_rust_full_batch())

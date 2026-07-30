@@ -8,7 +8,7 @@
     RUST_SEARCH_FALLBACK=1      — 强制纯 Python（任意阶段均生效）
     CALC_SEARCH_BATCH_POOL=1    — 实验：batch ThreadPool 多 worker（默认关；实测常比单 worker 慢）
     CALC_RUST_PARALLEL_BATCH=0  — 关闭 Rust 批量 FFI 无锁并发
-    CALC_RUST_FULL_BATCH=1      — 实验：Tier-4 全批量（默认关；须目录展开 + parity）
+    CALC_RUST_FULL_BATCH=0      — 关闭 Tier-4 全批量（默认开；须 rust 含 evaluate_full_batch_py）
 
 阶段（逐步加回，默认 **3**）::
 
@@ -162,14 +162,20 @@ def rust_parallel_batch_enabled() -> bool:
 
 
 def use_rust_full_batch() -> bool:
-    """是否启用 Rust Tier-4 全批量路径（默认关；``CALC_RUST_FULL_BATCH=1`` 开启）。
+    """是否启用 Rust Tier-4 全批量路径（默认开；``CALC_RUST_FULL_BATCH=0`` 关闭）。
 
-    开启前须保证装备目录经 ``resolve_equipment_slot_lists`` 展开，
-    且与 SoA 路径做过伤害 parity。冻结 exe 下同样受 ``RUST_SEARCH_FALLBACK`` 约束。
+    仍受 ``RUST_SEARCH_FALLBACK`` / ``use_rust_search_accel`` 约束；
+    实际能否走全批量还取决于 ``can_run_full_batch_search``（含 ``evaluate_full_batch_py``）。
     """
     if _rust_fallback_forced() or not use_rust_search_accel():
         return False
-    return os.environ.get("CALC_RUST_FULL_BATCH", "").strip().lower() in ("1", "true", "yes")
+    raw = os.environ.get("CALC_RUST_FULL_BATCH", "").strip().lower()
+    if raw in ("0", "false", "no"):
+        return False
+    if raw in ("1", "true", "yes"):
+        return True
+    # 未设置：默认开启
+    return True
 
 
 def describe_frozen_search_capabilities() -> str:
