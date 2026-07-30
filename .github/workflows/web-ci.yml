@@ -51,8 +51,12 @@ jobs:
         with:
           workspaces: "web/wasm-curve -> target"
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install wasm-pack and binaryen (wasm-opt)
+        run: |
+          # binaryen 提供系统 wasm-opt，避免 wasm-pack 从 GitHub Releases 下载挂起（act/代理环境）
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build wasm-curve
         working-directory: web/wasm-curve
@@ -104,10 +108,16 @@ jobs:
           key: pip-web-backend-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml', 'requirements-web.txt') }}
           restore-keys: pip-web-backend-
 
-      - name: Install system deps (EGL for PySide6)
+      - name: Install system deps (Qt/EGL for PySide6)
         run: |
+          # 与 Game CI / Framework CI 对齐：act 镜像比 GitHub runner 瘦，缺任一 .so 都会在 import PySide6 时失败
           sudo apt-get update
-          sudo apt-get install -y libegl1 libegl-mesa0
+          sudo apt-get install -y \
+            libegl1 libegl-mesa0 libgl1 \
+            libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
+
 
       - name: Install dependencies
         run: |

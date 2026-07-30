@@ -35,10 +35,16 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install system deps (EGL for PySide6)
+      - name: Install system deps (Qt/EGL for PySide6)
         run: |
+          # 与 web-ci / Game CI 对齐，避免 act 镜像缺 PySide6 共享库
           sudo apt-get update
-          sudo apt-get install -y libegl1 libegl-mesa0
+          sudo apt-get install -y \
+            libegl1 libegl-mesa0 libgl1 \
+            libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
+
 
       - uses: actions/setup-node@v4
         with:

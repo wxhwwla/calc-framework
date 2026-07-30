@@ -19,6 +19,7 @@
 | `python tools/check_code_origin.py` | 轻量 AI 代码来源/版权检测 | 1 秒出结果，50 MB 内存 |
 | `python tools/generate_secrets_baseline.py generate` | 重建 `.secrets.baseline`（detect-secrets） | CI 与 pre-commit 共用 |
 | `python tools/generate_secrets_baseline.py verify` | 校验无新增密钥（Security Audit CI 同款） | 失败时需审查后 regenerate |
+| `python tools/quality/npm_audit_gate.py --cwd web/frontend` | npm audit 门禁（过滤已知误报） | Security Audit CI 同款 |
 | `python devtool.py check-origin` | 同上，通过 devtool 入口 | `--ci --skip git-diff` 等参数透明传递 |
 | `python -m tools.data_sandbox.sandbox --help` | 数据沙箱 CLI — 隔离测试自定义游戏数据 | 见下表 |
 
