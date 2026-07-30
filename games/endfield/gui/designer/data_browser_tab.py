@@ -10,9 +10,8 @@ import json
 import logging
 from pathlib import Path
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtGui import QFont
-
-_logger = logging.getLogger(__name__)
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -22,13 +21,20 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+_logger = logging.getLogger(__name__)
+
 _ROOT = Path(__file__).resolve().parents[4]
 _JSON_PATHS = {
-    "角色": _ROOT / "adapters" / "endfield" / "data" / "character_data" / "characters.json",
-    "武器": _ROOT / "adapters" / "endfield" / "data" / "weapon_data" / "weapons.json",
-    "装备": _ROOT / "adapters" / "endfield" / "data" / "equipments.json",
+    "character": _ROOT / "adapters" / "endfield" / "data" / "character_data" / "characters.json",
+    "weapon": _ROOT / "adapters" / "endfield" / "data" / "weapon_data" / "weapons.json",
+    "equipment": _ROOT / "adapters" / "endfield" / "data" / "equipments.json",
 }
 
+_KIND_LABEL_KEYS = (
+    ("character", "desktop.designer.kindCharacter"),
+    ("weapon", "desktop.designer.kindWeapon"),
+    ("equipment", "desktop.designer.kindEquipment"),
+)
 
 _STYLE = """
 
@@ -49,7 +55,7 @@ class DataBrowserTab(QWidget):
 
         row = QHBoxLayout()
 
-        label = QLabel("数据类型：")
+        label = QLabel(tr("desktop.designer.dataKindLabel"))
 
         label.setFont(small_font)
 
@@ -59,9 +65,10 @@ class DataBrowserTab(QWidget):
 
         self.kind_combo = QComboBox()
 
-        self.kind_combo.addItems(["角色", "武器", "装备"])
+        for kind_id, label_key in _KIND_LABEL_KEYS:
+            self.kind_combo.addItem(tr(label_key), kind_id)
 
-        self.kind_combo.currentTextChanged.connect(self._load)
+        self.kind_combo.currentIndexChanged.connect(self._load)
 
         row.addWidget(self.kind_combo)
 
@@ -78,13 +85,12 @@ class DataBrowserTab(QWidget):
         layout.addWidget(self.text_edit)
 
         self._load()
-        """初始化实例。"""
 
     def _load(self) -> None:
-        kind = self.kind_combo.currentText()
+        kind = self.kind_combo.currentData()
 
         try:
-            json_path = _JSON_PATHS.get(kind)
+            json_path = _JSON_PATHS.get(str(kind or ""))
 
             if json_path and json_path.is_file():
                 with json_path.open(encoding="utf-8") as f:
@@ -92,16 +98,15 @@ class DataBrowserTab(QWidget):
 
                 names = [item.get("名称", "?") for item in data]
 
-                text = f"共 {len(names)} 条\n" + "\n".join(f"  - {n}" for n in names)
+                text = (
+                    tr("desktop.designer.browserCountFmt", n=len(names)) + "\n" + "\n".join(f"  - {n}" for n in names)
+                )
 
             else:
-                text = "数据文件未找到"
+                text = tr("desktop.designer.browserFileMissing")
 
         except Exception as e:
             _logger.warning("JSON 数据加载失败: %s", e)
-            text = f"加载失败: {e}"
+            text = tr("desktop.designer.browserLoadFailed", error=str(e))
 
         self.text_edit.setPlainText(text)
-        """load。"""
-
-    """DataBrowserTab。"""

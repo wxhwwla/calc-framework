@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -105,7 +106,7 @@ class QtTrustPanel(QWidget):
 
         layout.setSpacing(2)
 
-        lbl = QLabel("信赖")
+        lbl = QLabel(tr("desktop.endfield.trustLabel"))
 
         lbl.setFont(font)
 

@@ -23,6 +23,7 @@ if str(_FRAMEWORK_SRC) not in sys.path:
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from calc_framework.ui.log_widget import LogWidget
 from calc_framework.ui.theme import ThemeManager
 from PySide6.QtCore import Qt
@@ -113,7 +114,7 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         self._imbalance_efficiency_bonus: float = 0.0
         self._break_defense_stacks: int = 0
 
-        self.setWindowTitle(f"终末地伤害计算器 v{get_exe_version()} — Calc Framework")
+        self.setWindowTitle(tr("desktop.endfield.windowTitleFmt", version=get_exe_version()))
         self.setMinimumSize(1024, 600)
         self.resize(1280, 720)
 
@@ -204,26 +205,24 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
 
     def _setup_app_menu(self) -> None:
         menubar = self.menuBar()
-        help_menu = menubar.addMenu("帮助(&H)")
-        help_action = QAction("使用说明(&U)", self)
+        help_menu = menubar.addMenu(tr("common.help") + "(&H)")
+        help_action = QAction(tr("desktop.endfield.helpUsage") + "(&U)", self)
         help_action.setShortcut(QKeySequence("F1"))
         help_action.triggered.connect(self._on_open_help)
         help_menu.addAction(help_action)
 
         # 调试菜单
-        debug_menu = menubar.addMenu("调试(&D)")
-        log_action = QAction("日志(&L)", self)
+        debug_menu = menubar.addMenu(tr("desktop.endfield.menuDebug"))
+        log_action = QAction(tr("desktop.endfield.menuLog"), self)
         log_action.triggered.connect(self._open_log_dialog)
         debug_menu.addAction(log_action)
-
-        """setup app menu。"""
 
     def _open_log_dialog(self) -> None:
         """打开日志查看对话框。"""
         from PySide6.QtWidgets import QDialog, QVBoxLayout
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("运行时日志")
+        dialog.setWindowTitle(tr("desktop.endfield.runtimeLogs"))
         dialog.resize(700, 400)
         layout = QVBoxLayout(dialog)
         log_widget = LogWidget(max_lines=5000)
@@ -232,7 +231,6 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         dialog.show()
         _logger.info("日志查看窗口已打开")
-        """open log dialog。"""
 
     @property
     def confirm_btn(self):

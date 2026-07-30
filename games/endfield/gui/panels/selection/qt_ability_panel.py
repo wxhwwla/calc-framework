@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -148,7 +149,7 @@ class QtSpecialAbilityPanel(QWidget):
         row_layout.addWidget(lvl_slider, stretch=3)
         row_layout.addWidget(lvl_val_lbl)
 
-        stk_lbl = QLabel("层")
+        stk_lbl = QLabel(tr("desktop.endfield.stackLabel"))
         stk_lbl.setFont(font)
         stk_lbl.setStyleSheet(_LABEL_STYLE)
 

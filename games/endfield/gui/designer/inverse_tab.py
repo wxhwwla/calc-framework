@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
@@ -26,7 +27,7 @@ class InverseTab(QWidget):
 
         layout = QVBoxLayout(self)
 
-        label = QLabel("公式反推")
+        label = QLabel(tr("desktop.designer.inverseTitle"))
 
         label.setFont(big_font)
 
@@ -34,7 +35,7 @@ class InverseTab(QWidget):
 
         layout.addWidget(label)
 
-        hint = QLabel("输入 90 级属性 / 技能 9–12 级数据，自动反推成长公式参数。")
+        hint = QLabel(tr("desktop.designer.inverseHint"))
 
         hint.setFont(small_font)
 
@@ -44,13 +45,13 @@ class InverseTab(QWidget):
 
         self.text_edit = QTextEdit()
 
-        self.text_edit.setPlaceholderText("在此粘贴属性数值...")
+        self.text_edit.setPlaceholderText(tr("desktop.designer.inversePlaceholder"))
 
         self.text_edit.setStyleSheet(_STYLE)
 
         layout.addWidget(self.text_edit)
 
-        btn = QPushButton("开始反推")
+        btn = QPushButton(tr("desktop.designer.inverseStart"))
 
         btn.setStyleSheet("""
 
@@ -76,7 +77,7 @@ class InverseTab(QWidget):
         """初始化实例。"""
 
     def _invert(self) -> None:
-        self.result_edit.setPlainText("公式反推功能开发中，请直接在源码 calculation/damage/inverse/ 使用 Python API。")
+        self.result_edit.setPlainText(tr("desktop.designer.inverseDevMsg"))
         """invert。"""
 
     """InverseTab。"""

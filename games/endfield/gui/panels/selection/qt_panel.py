@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -249,24 +250,24 @@ class QtSelectionPanel(PanelGettersMixin, QWidget):
 
         preset_row.setSpacing(4)
 
-        self._lvl80_btn = QPushButton("等级80")
+        self._lvl80_btn = QPushButton(tr("desktop.endfield.presetLevel80"))
 
-        self._lvl90_btn = QPushButton("等级90")
+        self._lvl90_btn = QPushButton(tr("desktop.endfield.presetLevel90"))
 
-        self._skill9_btn = QPushButton("技能9")
+        self._skill9_btn = QPushButton(tr("desktop.endfield.presetSkill9"))
 
-        self._skill12_btn = QPushButton("技能12")
+        self._skill12_btn = QPushButton(tr("desktop.endfield.presetSkill12"))
 
         preset_btns: list[QPushButton] = [self._lvl80_btn, self._lvl90_btn, self._skill9_btn, self._skill12_btn]
 
         if not self.is_weapon_panel:
-            self._trust4_btn = QPushButton("信赖4")
+            self._trust4_btn = QPushButton(tr("desktop.endfield.presetTrust4"))
 
             preset_btns.append(self._trust4_btn)
 
-        self._max_all_btn = QPushButton("满级")
+        self._max_all_btn = QPushButton(tr("desktop.endfield.presetMaxAll"))
 
-        self._min_all_btn = QPushButton("归零")
+        self._min_all_btn = QPushButton(tr("desktop.endfield.presetMinAll"))
 
         preset_btns.extend([self._max_all_btn, self._min_all_btn])
 

@@ -57,21 +57,9 @@ def evaluate_full_batch_rust(
     # 预处理装备组合
     from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
     from games.endfield.calc.equipment.system import build_four_slot_loadout
+    from games.endfield.calc.search.evaluate.rust_batch_data import resolve_equipment_slot_lists
 
-    # 支持两种装备目录格式：
-    # 1. {"chest": [...], "gloves": [...], "accessory_a": [...], "accessory_b": [...]}
-    # 2. {"chest": [...], "gloves": [...], "accessories": [...]}（旧格式，自动拆分）
-    chest_list = equipment_catalog.get("chest", [])
-    gloves_list = equipment_catalog.get("gloves", [])
-    acc_a_list = equipment_catalog.get("accessory_a", [])
-    acc_b_list = equipment_catalog.get("accessory_b", [])
-
-    # 旧格式兼容：accessories → accessory_a × accessory_b 笛卡尔积
-    if not acc_a_list and not acc_b_list:
-        accessories = equipment_catalog.get("accessories", [])
-        if accessories:
-            acc_a_list = accessories
-            acc_b_list = accessories
+    chest_list, gloves_list, acc_a_list, acc_b_list = resolve_equipment_slot_lists(equipment_catalog)
 
     from utils.search_diagnostics import get_search_logger
 
@@ -84,7 +72,7 @@ def evaluate_full_batch_rust(
         len(acc_b_list),
     )
 
-    if not chest_list or not gloves_list:
+    if not chest_list or not gloves_list or not acc_a_list or not acc_b_list:
         slog.warning("装备目录为空，跳过 Rust 全批量评估")
         return []
 

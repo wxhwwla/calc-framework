@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import sys
 
+from calc_framework.ui.i18n import tr
 from calc_framework.ui.theme import ThemeManager
 from games.endfield.gui.designer.data_browser_tab import DataBrowserTab
 from games.endfield.gui.designer.data_editor_tab import DataEditorTab
@@ -88,7 +89,7 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(status, stretch=1)
 
-        self.help_btn = QPushButton("📖 使用说明")
+        self.help_btn = QPushButton(tr("desktop.endfield.helpUsage"))
 
         self.help_btn.setFont(self.small_font)
 
@@ -112,7 +113,7 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(self.help_btn)
 
-        self.donation_btn = QPushButton("🤝 自愿捐赠")
+        self.donation_btn = QPushButton(tr("desktop.endfield.donate"))
 
         self.donation_btn.setFont(self.small_font)
 
@@ -145,7 +146,7 @@ class DesignerApp(QMainWindow):
         from utils.gui.help_designer import build_designer_help
         from utils.gui.help_dialog import HelpDialog
 
-        dialog = HelpDialog(build_designer_help, self, title="数据设计器 使用说明")
+        dialog = HelpDialog(build_designer_help, self, title=tr("desktop.designer.helpTitle"))
 
         dialog.exec()
         """open help。"""

@@ -141,6 +141,27 @@ class TestManualBuffInjection(unittest.TestCase):
 
         self.assertAlmostEqual(result.zone_values["伤害加成区"], 1.45)
 
+    def test_manual_buff_preserves_extra_context_fields(self):
+        """H8：手动 buff 不得丢弃 combo/break_defense 等新增字段。"""
+        from games.endfield.calc.damage.engine.calculate import _apply_manual_buffs
+
+        ctx = DamageContext(
+            final_attack=1000.0,
+            skill_multiplier=1.0,
+            enemy_defense=0.0,
+            combo_stacks=3,
+            break_defense_stacks=2,
+            base_damage_bonus=15.0,
+        )
+        new_ctx, _extra = _apply_manual_buffs(
+            ctx,
+            [{"effect_type": "暴击率", "value": 0.1}],
+        )
+        self.assertEqual(new_ctx.combo_stacks, 3)
+        self.assertEqual(new_ctx.break_defense_stacks, 2)
+        self.assertAlmostEqual(new_ctx.base_damage_bonus, 15.0)
+        self.assertAlmostEqual(new_ctx.crit_rate, ctx.crit_rate + 0.1)
+
 
 if __name__ == "__main__":
     unittest.main()

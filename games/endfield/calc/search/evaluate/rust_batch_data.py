@@ -80,6 +80,37 @@ class LoadoutResult:
     loadout_names: dict[str, str]
 
 
+def resolve_equipment_slot_lists(
+    equipment_catalog: dict[str, list[dict[str, Any]]],
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
+    """将装备目录规范为四槽列表 ``(chest, gloves, acc_a, acc_b)``。
+
+    支持两种输入：
+
+    1. 四槽显式：``accessory_a`` / ``accessory_b``
+    2. 三槽 canonical：``accessories`` — 展开为 A/B 共用同一列表（笛卡尔积由调用方生成）
+
+    若四槽键已有非空列表，优先使用四槽，忽略 ``accessories``。
+    """
+    chest_list = list(equipment_catalog.get("chest", []) or [])
+    gloves_list = list(equipment_catalog.get("gloves", []) or [])
+    acc_a_list = list(equipment_catalog.get("accessory_a", []) or [])
+    acc_b_list = list(equipment_catalog.get("accessory_b", []) or [])
+
+    if not acc_a_list and not acc_b_list:
+        accessories = list(equipment_catalog.get("accessories", []) or [])
+        if accessories:
+            acc_a_list = accessories
+            acc_b_list = accessories
+
+    return chest_list, gloves_list, acc_a_list, acc_b_list
+
+
 def prepare_weapon_data(
     weapons: list[Any],
     search_eval: Any,
@@ -117,11 +148,16 @@ def prepare_weapon_data(
 
 def prepare_equipment_combos(
     equipment_catalog: dict[str, list[dict[str, Any]]],
+    *,
+    allow_duplicate_accessory: bool = True,
 ) -> list[EquipmentCombo]:
     """预处理装备组合。
 
     Args:
-        equipment_catalog: 装备目录（按部位分组）
+        equipment_catalog: 装备目录。支持：
+            - ``chest`` / ``gloves`` / ``accessory_a`` / ``accessory_b``
+            - 或 ``chest`` / ``gloves`` / ``accessories``（配件单列表，展开为 A×B）
+        allow_duplicate_accessory: 是否允许两件同名配件
 
     Returns:
         预处理后的装备组合列表
@@ -129,12 +165,9 @@ def prepare_equipment_combos(
     from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
     from games.endfield.calc.equipment.system import build_four_slot_loadout
 
-    chest_list = equipment_catalog.get("chest", [])
-    gloves_list = equipment_catalog.get("gloves", [])
-    acc_a_list = equipment_catalog.get("accessory_a", [])
-    acc_b_list = equipment_catalog.get("accessory_b", [])
+    chest_list, gloves_list, acc_a_list, acc_b_list = resolve_equipment_slot_lists(equipment_catalog)
 
-    if not chest_list or not gloves_list:
+    if not chest_list or not gloves_list or not acc_a_list or not acc_b_list:
         return []
 
     result = []
@@ -148,14 +181,11 @@ def prepare_equipment_combos(
                             gloves=glove,
                             accessory_a=acc_a,
                             accessory_b=acc_b,
-                            allow_duplicate_accessory=True,
+                            allow_duplicate_accessory=allow_duplicate_accessory,
                         )
                         equip_effects, flat_stats, atk_percent = aggregate_loadout_modifiers(loadout)
 
-                        # 转换效果为元组列表
-                        effects = []
-                        for eff in equip_effects:
-                            effects.append((eff.effect_type, float(eff.value)))
+                        effects = [(eff.effect_type, float(eff.value)) for eff in equip_effects]
 
                         result.append(
                             EquipmentCombo(
@@ -169,7 +199,6 @@ def prepare_equipment_combos(
                             )
                         )
                     except (ValueError, KeyError, TypeError):
-                        # 跳过无效的装备组合
                         continue
 
     return result
@@ -253,4 +282,5 @@ __all__ = [
     "prepare_char_data",
     "prepare_equipment_combos",
     "prepare_weapon_data",
+    "resolve_equipment_slot_lists",
 ]

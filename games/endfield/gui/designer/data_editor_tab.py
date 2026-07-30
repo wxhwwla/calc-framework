@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
@@ -26,7 +27,7 @@ class DataEditorTab(QWidget):
 
         layout = QVBoxLayout(self)
 
-        label = QLabel("数据编辑（即将支持图形化操作）")
+        label = QLabel(tr("desktop.designer.dataEditorTitle"))
 
         label.setFont(big_font)
 
@@ -34,7 +35,7 @@ class DataEditorTab(QWidget):
 
         layout.addWidget(label)
 
-        hint = QLabel("当前版本请手动编辑 JSON 文件，保存后自动刷新缓存。")
+        hint = QLabel(tr("desktop.designer.dataEditorHint"))
 
         hint.setFont(small_font)
 
@@ -48,11 +49,11 @@ class DataEditorTab(QWidget):
 
         self.text_edit.setStyleSheet(_STYLE)
 
-        self.text_edit.setPlainText("选择上方数据浏览页签查看现有数据，在数据文件目录手动编辑 JSON。")
+        self.text_edit.setPlainText(tr("desktop.designer.dataEditorBody"))
 
         layout.addWidget(self.text_edit)
 
-        btn = QPushButton("刷新缓存")
+        btn = QPushButton(tr("desktop.designer.refreshCache"))
 
         btn.setStyleSheet("""
 

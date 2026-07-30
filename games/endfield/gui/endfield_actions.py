@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, cast
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -122,11 +123,19 @@ class ActionsMixin:
         char_data = self.char_panel.get_selected_data()
         weapon_data = self.weapon_panel.get_selected_data()
         if not char_data or not weapon_data:
-            QMessageBox.warning(cast(QWidget, self), "无法计算", "请选择有效的角色和武器。")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.cannotComputeTitle"),
+                tr("desktop.endfield.needValidCharWeapon"),
+            )
             return
         request = self._build_request()
         if request is None:
-            QMessageBox.warning(cast(QWidget, self), "无法计算", "无法读取配装数据。")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.cannotComputeTitle"),
+                tr("desktop.endfield.cannotReadLoadout"),
+            )
             return
         self._confirm_in_progress = True
         self._set_confirm_ui_computing()
@@ -156,7 +165,11 @@ class ActionsMixin:
             self._update_total_damage_panel()
         except Exception as exc:
             _logger.exception("确认选择失败: %s", exc)
-            QMessageBox.warning(cast(QWidget, self), "确认失败", f"计算未完成：{exc}")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.confirmFailedTitle"),
+                tr("desktop.endfield.confirmFailedMsg", error=str(exc)),
+            )
             self._set_confirm_ui_pending()
         finally:
             self._confirm_in_progress = False
@@ -395,7 +408,11 @@ class ActionsMixin:
             is_true_damage=self._is_true_damage,
         )
         if loadout is None:
-            QMessageBox.warning(cast(QWidget, self), "处决/治疗估算", "请先选择角色与武器。")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.survivalEstimate"),
+                tr("desktop.endfield.survivalNeedCharWeapon"),
+            )
             return
         from games.endfield.data_loading.enemy_params import resolve_enemy_max_hp
 
@@ -442,30 +459,48 @@ class ActionsMixin:
             is_true_damage=self._is_true_damage,
         )
         if loadout is None:
-            QMessageBox.warning(cast(QWidget, self), "导出预设", "无法读取配装数据。")
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.exportPresetTitle"),
+                tr("desktop.endfield.cannotReadLoadout"),
+            )
             return
         preset = loadout.to_loadout_preset()
-        path, _ = QFileDialog.getSaveFileName(cast(QWidget, self), "导出配装预设", "preset.json", "JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(
+            cast(QWidget, self),
+            tr("desktop.endfield.exportPresetDialog"),
+            "preset.json",
+            "JSON (*.json)",
+        )
         if not path:
             return
         Path(path).write_text(export_preset_json(preset), encoding="utf-8")
-        self.status_label.setText("预设已导出")
+        self.status_label.setText(tr("desktop.endfield.presetExported"))
 
     def _on_import_preset(self) -> None:
         from games.endfield.gui.app.loadout_preset import import_presets_from_json_text
 
-        path, _ = QFileDialog.getOpenFileName(cast(QWidget, self), "导入配装预设", "", "JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            cast(QWidget, self),
+            tr("desktop.endfield.importPresetDialog"),
+            "",
+            "JSON (*.json)",
+        )
         if not path:
             return
         try:
             text = Path(path).read_text(encoding="utf-8")
             preset = import_presets_from_json_text(text)
             if not preset:
-                raise ValueError("预设文件为空")
+                raise ValueError(tr("desktop.endfield.presetFileEmpty"))
             self._apply_preset_to_qt_app(preset[0])
-            self.status_label.setText("预设已导入")
+            self.status_label.setText(tr("desktop.endfield.presetImported"))
         except Exception as exc:
-            QMessageBox.warning(cast(QWidget, self), "导入预设失败", str(exc))
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.importPresetFailed"),
+                str(exc),
+            )
 
     def _apply_preset_to_qt_app(self, preset) -> None:
         from games.endfield.gui.app.loadout_preset import apply_preset_to_panels
@@ -492,7 +527,11 @@ class ActionsMixin:
         dialog.exec()
 
     def _on_attribution(self) -> None:
-        QMessageBox.about(cast(QWidget, self), "数据来源与声明", SUMMARY_TEXT)
+        QMessageBox.about(
+            cast(QWidget, self),
+            tr("desktop.endfield.attributionAboutTitle"),
+            SUMMARY_TEXT,
+        )
 
     def _on_donation(self) -> None:
         open_donation_dialog(cast(QWidget, self))
@@ -526,21 +565,32 @@ class ActionsMixin:
         from utils.operation_log import get_session_operation_log
 
         path, _ = QFileDialog.getSaveFileName(
-            cast(QWidget, self), "导出操作日志", "operation_log.json", "JSON (*.json)"
+            cast(QWidget, self),
+            tr("desktop.endfield.exportOpLog"),
+            "operation_log.json",
+            "JSON (*.json)",
         )
         if not path:
             return
         try:
             get_session_operation_log().export_to_file(Path(path))
-            self.status_label.setText("操作日志已导出")
+            self.status_label.setText(tr("desktop.endfield.opLogExported"))
         except Exception as exc:
-            QMessageBox.warning(cast(QWidget, self), "导出失败", str(exc))
+            QMessageBox.warning(
+                cast(QWidget, self),
+                tr("desktop.endfield.exportFailedTitle"),
+                str(exc),
+            )
 
     def _on_open_help(self) -> None:
         from utils.gui.help_calculator import build_calculator_help
         from utils.gui.help_dialog import HelpDialog
 
-        dialog = HelpDialog(build_calculator_help, cast(QWidget, self), title="终末地伤害计算器 使用说明")
+        dialog = HelpDialog(
+            build_calculator_help,
+            cast(QWidget, self),
+            title=tr("desktop.endfield.helpCalculatorTitle"),
+        )
         dialog.exec()
 
     def _on_ocr_detect(self) -> None:
@@ -566,8 +616,8 @@ class ActionsMixin:
 
             open_ocr_detection_dialog(cast(QWidget, self), on_apply=_apply_ocr)
         except Exception as exc:
-            msg = f"无法加载 OCR 模块：\n{exc}\n\n请安装: pip install torchvision easyocr"
-            QMessageBox.warning(cast(QWidget, self), "截图识装", msg)
+            msg = tr("desktop.endfield.ocrLoadFailedMsg", error=str(exc))
+            QMessageBox.warning(cast(QWidget, self), tr("desktop.endfield.ocrDetect"), msg)
 
     # ── 信号连接 ──────────────────────────────
 

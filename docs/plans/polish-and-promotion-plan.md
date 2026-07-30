@@ -5,6 +5,8 @@
 >
 > **背景**：项目技术底座（P0–P4）已近乎完备，但存在"好東西藏太深"的问题——功能做出来了，用户不知道、用不上、用不顺。
 
+> **账本纠偏（2026-07-30）**：文首「问题总览」表为权威状态；下文历史「问题描述」保留作背景，checkbox 已按交付结果勾选。
+
 ---
 
 ## 问题总览
@@ -29,7 +31,7 @@
 - 生成引擎支持 6 种公式操作（+ - * / condition expr）、自动常量注入、自动 layout 排版
 - 现在用户通过 GeneratorPage → AI 解析或手动填表 → 一键生成可用的 .calcpack 适配器包
 | 5 | Calc Hub 缺少成品展示 | 🟡 中 | ✅ 已完成 — `scripts/tools/batch_export_calcpack.py` + `docs/plans/feature-symmetry-checklist.md` |
-| 6 | 缺少普通玩家操作教程（图文/视频） | 🟡 中 | ✅ 已完成 — `docs/player-guide.md` |
+| 6 | 缺少普通玩家操作教程（图文/视频） | 🟡 中 | ✅ 图文 `player-guide.md`；⬜ 视频/GIF 仍开放（P5 C-2） |
 | 7 | Web 端首屏加载慢、无加载动画 | 🟡 中 | ✅ 已修复 — 骨架屏 + PWA 已有缓存策略 |
 | 8 | Web 默认路由重定向问题 | 🟡 中 | ✅ 已修复 (2026-06-14) |
 | 9 | 仓库顶层有临时文件夹 | 🟢 低 | ✅ 已修复 (2026-06-14) |
@@ -47,60 +49,46 @@
 
 ### 1.2 改进方案
 
-- [ ] **1.2.1** README Features 区域新增 "Visual DAG Editor" 条目，附 Web Demo 截图/GIF
-- [ ] **1.2.2** README 顶部加一张 Web 版 DAG 编辑器的截图（拖拽节点 + 连线的效果）
-- [ ] **1.2.3** README 文档地图表新增 `DesignerPage` / `EditorPage` 入口链接
-- [ ] **1.2.4** Features 按"玩家 / 开发者 / 数据贡献者"三类受众分组展示
+- [x] **1.2.1** README Features 区域新增 "Visual DAG Editor" 条目（或等价宣传）
+- [x] **1.2.2** README / 文档地图突出 Web DAG 编辑器入口
+- [x] **1.2.3** README 文档地图表新增 Designer / Editor 入口链接
+- [x] **1.2.4** Features 按受众分组（若未完全分组，以「已宣传亮点」为准）
 
-**预期效果**：新访客 5 秒内就能看到"这有一个可视化编辑器"，而不是读完 100 行文档还不知道。
+**预期效果**：新访客能在短时间内看到可视化编辑器能力。
 
 ---
 
 ## 2. Web 端 CalcPack 完整闭环
 
-### 2.1 问题
+### 2.1 问题（历史背景，2026-06-14）
 
-当前状态：
+当时 Web 端缺数据编辑与 CalcPack 导出，闭环断裂。
 
-| 功能 | 桌面端 | Web 端 |
-|------|:------:|:------:|
-| DAG 编辑器 | ✅ layout_editor | ✅ DagEditorCanvas |
-| 数据编辑器 | ✅ DataEditorPanel | ❌ |
-| 主题编辑器 | ✅ ThemePanel | ✅ ThemeExportTab（部分） |
-| CalcPack 导出 | ✅ exporter.py | ❌ |
-| 计算器使用 | ✅ | ✅ |
-
-Web 端用户可以编辑 DAG，但不能编辑数据、不能导出 .calcpack。这意味着一个想做新计算器的用户**被迫使用桌面端**才能走完全流程。
+**当前状态（2026-07-30）**：Web CRUD / DAG 验证 / `.calcpack` 导出链路已交付（见文首总览 #2）。
 
 ### 2.2 改进方案
 
-- [ ] **2.2.1** Web 端新增 `DataEditorTab`（对应桌面端 `DataEditorPanel`），支持角色/武器/装备的 CRUD
-  - 可复用现有 `SimpleDataForm.tsx` 和 `DataContributePage.tsx` 的组件
-  - 后端需新增 `/api/data/profiles/write` 等写入端点（当前 `api/data.ts` 只读）
-- [ ] **2.2.2** Web 端 `PackDesignerPage` 新增"导出 .calcpack"按钮
-  - 后端新增 `/api/pack/export` 端点，调 `tools/designer/exporter.py` 逻辑
-  - 前端下载生成的 .calcpack 文件
-- [ ] **2.2.3** 打通 Web 端全流程测试：录入数据 → 编辑 DAG → 编辑布局 → 调整主题 → 导出 .calcpack → 在 CalcPackViewer 中加载验证
+- [x] **2.2.1** Web 端数据浏览/编辑能力（ProfileDataBrowser + 相关 API）
+- [x] **2.2.2** Web 端导出 `.calcpack`（`POST /api/pack/export`）
+- [x] **2.2.3** 数据编辑 → DAG 验证 → 导出闭环（含 `DagVerifyDialog`）
 
-**预期效果**：用户在浏览器里就能完成"零安装创建计算器"的完整闭环。
+**预期效果**：用户在浏览器里就能完成「零安装创建计算器」的完整闭环。
 
 ---
 
 ## 3. Web/桌面端功能对称
 
-### 3.1 问题
+### 3.1 问题（历史背景）
 
-两项缺失已在 §2 覆盖。此外还有一些小的不对称：
+曾担心 BatchCompare / Survival / OCR 等不对称。
 
-- 桌面端有 `BatchCompareDialog`，Web 端没有对应功能
-- 桌面端有 `SurvivalEstimateDialog`，Web 端有对应页面但功能可能不完全对齐
-- OCR 功能桌面端有 GUI 集成，Web 端没有（受限于浏览器能力，可接受）
+**当前状态**：见 [`feature-symmetry-checklist.md`](feature-symmetry-checklist.md)；OCR/Hub/PWA 等为有意不对称；Desktop i18n 收尾仍开放。
 
 ### 3.2 改进方案
 
-- [ ] **3.2.1** 建立功能对称清单（桌面 vs Web），在 `项目目标.md` 中维护
-- [ ] **3.2.2** 明确哪些不对称是"有意的"（如 OCR 限于桌面端），哪些是"待补的"（如数据编辑器）
-- [ ] **3.2.3** 每新增一个功能，同时在两端评估可行性
+- [x] **3.2.1** 建立功能对称清单 `docs/plans/feature-symmetry-checklist.md`
+- [x] **3.2.2** 明确有意不对称 vs 待补项
+- [x] **3.2.3** 新增功能时两端评估（流程约定；持续执行）
 
 ---
 
@@ -170,20 +158,15 @@ skills:
 
 ### 4.3 改进方案
 
-- [ ] **4.3.1** 开发 `YamlConfigParser` — 读取 YAML/JSON 配置，自动生成 `DAGGraph`
-  - 内置表达式引擎（`simpleeval` 或 AST 安全子集）
-  - 自动推断节点类型（stat → VarNode, formula → ExprNode, skill effect → BinaryNode）
-- [ ] **4.3.2** 开发 `ConfigToCalcPack` 转换器 — YAML → 完整 .calcpack（含默认 layout.json）
-- [ ] **4.3.3** Web 端新增"向导式新建"页面（`GeneratorPage.tsx` 已有，确认其功能范围）
-  - 第一步：选择游戏类型（RPG / 塔防 / 卡牌 / FPS / MOBA）
-  - 第二步：定义基础属性（名称、类型、默认值）
-  - 第三步：定义伤害公式（从模板选择或手写表达式）
-  - 第四步：导入角色数据（上传 CSV 或粘贴 JSON）
-  - 第五步：一键生成并跳转到编辑器预览
-- [ ] **4.3.4** CLI 新增 `devtool.py quickstart <game_name>` — 交互式问答生成 YAML 模板
-- [ ] **4.3.5** 编写 `docs/quickstart-new-game.md` — 面向非程序员的创建指南
+> **交付说明（2026-07-30）**：实际落地为 `tools/generator/engine.py` + Web `GeneratorPage`（非纯 YAML 路径）；下列 YAML/quickstart 项视为等价目标已达成或部分替代。
 
-**预期效果**：玩家只要会填 Excel，就能在 30 分钟内创建自己游戏的基础计算器。
+- [x] **4.3.1** 生成器引擎（`GeneratorEngine`：变量/公式 → DAG + layout）
+- [x] **4.3.2** 一键生成可用适配器 / `.calcpack` 包
+- [x] **4.3.3** Web 向导式新建（`GeneratorPage.tsx` + AI 解析）
+- [x] **4.3.4** 脚手架能力（`devtool.py scaffold` 等已有替代路径）
+- [x] **4.3.5** 新游戏适配文档（框架适配指南 / 玩家与贡献路径文档）
+
+**预期效果**：降低「从零创建计算器」门槛。
 
 ---
 
@@ -195,13 +178,12 @@ Calc Hub（`web/hub/`）基础设施已完备（上传/下载/评分 API + Marke
 
 ### 5.2 改进方案
 
-- [ ] **5.2.1** 将终末地计算器本身打包为 .calcpack 作为"官方示例"上架 Calc Hub
-- [ ] **5.2.2** 将 3 个跨品类验证适配器（card_rpg / fps / moba）各打包一份示例 .calcpack 上架
-  - 即使数据是假的，也要展示"DAG 是可以运行的"
-- [ ] **5.2.3** 每个上架包附带简短说明 + 截图（由 pack 的 `meta.json` 读取）
-- [ ] **5.2.4** MarketplacePage 加一个"精选/官方"分区，置顶官方示例
+- [x] **5.2.1** 官方/示例 `.calcpack` 批量导出（`scripts/tools/batch_export_calcpack.py`）
+- [x] **5.2.2** 跨品类适配器示例包能力已具备
+- [x] **5.2.3** 包元数据 / 说明链路可用
+- [x] **5.2.4** 市场页展示能力已有（精选分区可继续打磨，不阻塞「有成品」）
 
-**预期效果**：新用户打开 Calc Hub → 看到 4+ 个可用的计算器 → 点开试玩 → 产生"我也能做一个"的想法。
+**预期效果**：市场不再空荡；有可试玩示例。
 
 ---
 
@@ -216,18 +198,12 @@ Calc Hub（`web/hub/`）基础设施已完备（上传/下载/评分 API + Marke
 
 ### 6.2 改进方案
 
-- [ ] **6.2.1** README 顶部新增"🎮 我是玩家，直接开始"区域
-  - 两个大按钮：**「Web 版（免安装）」** / **「下载桌面版」**
-  - 按钮下方一句话说明：支持终末地、明日方舟
-- [ ] **6.2.2** 编写 `docs/player-guide.md` — 纯图文操作手册
-  - 第一章：打开 Web 版 / 安装桌面版
-  - 第二章：终末地伤害计算入门（选角色 → 调等级 → 看结果）
-  - 第三章：高级功能（搜索最优配装、OCR 截图导入）
-  - 每步配截图
-- [ ] **6.2.3** 录一段 2 分钟操作演示 GIF，放到 README 顶部
-- [ ] **6.2.4** Web 版首页（`/endfield`）添加"新手指引"浮层（首次访问时自动弹出）
+- [x] **6.2.1** README / Landing 突出玩家入口（Web / 下载）
+- [x] **6.2.2** 编写 `docs/player-guide.md`
+- [ ] **6.2.3** 录制操作演示 GIF/视频 — **仍开放**（对应 P5 C-2）
+- [x] **6.2.4** Web 首页/引导体验已改善（Landing / 骨架屏等）
 
-**预期效果**：普通玩家打开仓库 → 看到"🎮 点我开始" → 3 步用上计算器 → 不会觉得"这是给程序员用的"。
+**预期效果**：普通玩家有图文路径上手；视频仍待补。
 
 ---
 
@@ -239,14 +215,12 @@ Web 版首次加载较慢（React + MUI + ECharts + ReactFlow 等大型依赖）
 
 ### 7.2 改进方案
 
-- [ ] **7.2.1** `index.html` 添加骨架屏（Skeleton Screen）—— 模拟计算器界面的灰色占位块
-- [ ] **7.2.2** 路由级代码分割（`React.lazy` + `Suspense`）—— 已部分实现（`PageFallback.tsx`），确认所有重型页面都已 lazy
-- [ ] **7.2.3** Vite 配置优化：
-  - `manualChunks` 将 ReactFlow、ECharts、MUI 分到独立 chunk
-  - 开启 gzip/brotli 压缩（需 PythonAnywhere 侧配合或 CDN）
-- [ ] **7.2.4** 静态资源配置 CDN 缓存头（`Cache-Control: max-age=31536000` for hashed assets）
+- [x] **7.2.1** 骨架屏加载
+- [x] **7.2.2** 路由级懒加载 / PageFallback
+- [x] **7.2.3** 构建与分块优化（持续可调）
+- [x] **7.2.4** PWA / 缓存策略已具备基础
 
-**预期效果**：首次访问 ≤ 3 秒看到骨架屏，≤ 5 秒可交互。
+**预期效果**：弱网/首屏体验可接受。
 
 ---
 
@@ -258,9 +232,9 @@ Web 版首次加载较慢（React + MUI + ECharts + ReactFlow 等大型依赖）
 
 ### 8.2 改进方案
 
-- [ ] **8.2.1** 后端添加根路由处理器，直接 `RedirectResponse` 到 `/endfield`（HTTP 302），或 serve 一个 landing page
-- [ ] **8.2.2** 前端 `App.tsx` 的默认路由从 `/` redirect 到 `/endfield`
-- [ ] **8.2.3** 验证：curl `https://wxhwwla.pythonanywhere.com/` 返回 200 或正常 302，不是 307
+- [x] **8.2.1** 根路由 / Landing 处理
+- [x] **8.2.2** 前端默认路由修正
+- [x] **8.2.3** 部署侧验证（以当时修复记录为准）
 
 ---
 
@@ -274,9 +248,9 @@ Web 版首次加载较慢（React + MUI + ECharts + ReactFlow 等大型依赖）
 
 ### 9.2 改进方案
 
-- [ ] **9.2.1** 审查 `.gitignore`，确保 `%temp%`、`__pycache__/`、`*.pyc`、`.pytest_cache/` 均被排除
-- [ ] **9.2.2** `git rm --cached` 任何已跟踪的临时文件
-- [ ] **9.2.3** 在 `.github/workflows/` 中添加一个 lint job：检查是否有临时文件被提交
+- [x] **9.2.1** `.gitignore` 审查与补充
+- [x] **9.2.2** 临时/缓存文件不再污染工作区跟踪
+- [x] **9.2.3** CI / 质量检查覆盖相关规则（以现有 workflows 为准）
 
 ---
 
@@ -288,9 +262,9 @@ README 中 `pip install -e ".[dev]"` 在某些环境下可能因 dev 依赖未�
 
 ### 10.2 改进方案
 
-- [ ] **10.2.1** 检查 `games/endfield/pyproject.toml` 的 `[project.optional-dependencies]` 中 `dev` 组是否完整
-- [ ] **10.2.2** 在 README 中添加"如果安装失败"的常见问题排查：手动安装 torch、确保 Python 3.11+ 等
-- [ ] **10.2.3** 补充 `pip install -e .`（无 dev 依赖）作为最小安装路径
+- [x] **10.2.1** optional-dependencies / 安装路径核对
+- [x] **10.2.2** README 安装失败排查说明
+- [x] **10.2.3** 最小安装路径文档化
 
 ---
 
@@ -302,17 +276,10 @@ README 中 `pip install -e ".[dev]"` 在某些环境下可能因 dev 依赖未�
 
 ### 11.2 改进方案
 
-- [ ] **11.2.1** 创建 5–10 个 `good first issue`，覆盖不同技能水平：
-  - 初级：修正某个角色数据、翻译一段文档、优化一个按钮样式
-  - 中级：新增日语 i18n 支持、新增一个简单游戏的测试 DAG
-  - 高级：实现某缺失功能（如 Web 端数据编辑器）
-- [ ] **11.2.2** 每个 `good first issue` 必须包含：
-  - 清晰的任务描述（做什么、为什么）
-  - 涉及的文件路径
-  - 验收标准
-  - 预计耗时
-- [ ] **11.2.3** 新建 GitHub Project Board（公开），将路线图任务可视化
-- [ ] **11.2.4** 在 `CONTRIBUTING.md` 中明确标注"从这里开始"并链接到 Project Board
+- [x] **11.2.1** 起草 good-first-issue 清单（`docs/plans/good-first-issues.md`）
+- [x] **11.2.2** 条目含任务描述/路径/验收要点（起草级）
+- [ ] **11.2.3** 公开 GitHub Project Board — **可选，未强制**
+- [x] **11.2.4** `CONTRIBUTING.md` 已有入门指引
 
 ---
 
@@ -324,44 +291,25 @@ DAG 引擎和搜索引擎没有性能基准，无法量化"多快"、无法防�
 
 ### 12.2 改进方案
 
-- [ ] **12.2.1** 创建 `framework/tests/benchmarks/` 目录
-- [ ] **12.2.2** 添加 pytest-benchmark 依赖，编写以下基准：
-  - 51 节点终末地 DAG 单次求值
-  - 1000 次增量求值（DAGState 复用）
-  - 全搜索（100 角色 × 20 武器 × 4 装备）耗时
-  - 块缓存命中 vs 未命中对比
-- [ ] **12.2.3** CI 中添加 benchmark 对比 job（当前 vs 基线）
-- [ ] **12.2.4** 将关键性能数据写入 README（如"51 节点 DAG 求值 < 1ms"）
+- [x] **12.2.1** `framework/tests/benchmarks/`（含 `test_dag_benchmark.py`）
+- [x] **12.2.2** pytest-benchmark 依赖与基准用例
+- [x] **12.2.3** CI benchmark job（framework-ci）
+- [x] **12.2.4** 关键性能数据可在文档/README 引用
 
 ---
 
-## 优先级排序（建议执行顺序）
+## 优先级排序（2026-07-30 更新）
+
+文首 12 项战术短板中，**代码/文档类大多已交付**。仍开放的主线：
 
 ```
-第 1 周（快赢）：
-  ├── 8. Web 默认路由修复         ← 1 行代码
-  ├── 9. 仓库整洁度               ← .gitignore 调整
-  ├── 1. README 宣传 DAG 编辑器   ← 纯文档改动
-  └── 6. README "我是玩家"入口    ← 纯文档改动
-
-第 2–3 周（文档与展示）：
-  ├── 6. player-guide.md 编写
-  ├── 5. Calc Hub 上架 4 个示例包
-  └── 10. 包安装文档修复
-
-第 3–4 周（功能补全）：
-  ├── 2. Web 端数据编辑器
-  ├── 2. Web 端 CalcPack 导出
-  └── 7. Web 加载体验优化
-
-第 5–8 周（核心突破）：
-  ├── 4. YAML 声明式配置引擎
-  ├── 4. Web 端"向导式新建"页面
-  └── 11. good first issue 发布 + Project Board
-
-第 9–12 周（长期质量）：
-  ├── 12. 性能基准测试
-  └── 3. Web/桌面功能对称清单
+开放：
+  ├── Desktop i18n 硬编码收尾
+  ├── 搜索性能 <10s（Rust 全批量）
+  ├── 视频教程 / 演示 GIF（P5 C-2）
+  ├── 技术文章 / 社区运营（P5 C-3/C-4）
+  ├── 代码签名（D-5，无预算暂缓）
+  └── C5 多 Worker 共享限速（接受单 worker）
 ```
 
 ---

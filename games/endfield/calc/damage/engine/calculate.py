@@ -38,6 +38,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
 from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 
@@ -90,28 +92,16 @@ def _apply_manual_buffs(
                 )
             )
     if overrides:
-        context = DamageContext(
-            final_attack=context.final_attack,
-            skill_multiplier=context.skill_multiplier,
-            damage_type=context.damage_type,
-            skill_type=context.skill_type,
-            is_unbalanced=context.is_unbalanced,
-            is_true_damage=context.is_true_damage,
-            enemy_defense=context.enemy_defense,
-            enemy_resistance=context.enemy_resistance,
-            ignore_resistance=context.ignore_resistance,
-            imbalance_vulnerability_coeff=context.imbalance_vulnerability_coeff,
+        # 用 replace 增量更新，避免新增 DamageContext 字段时静默丢失
+        context = replace(
+            context,
             crit_rate=context.crit_rate + overrides.get("crit_rate", 0.0),
             crit_damage=context.crit_damage + overrides.get("crit_damage", 0.0),
             damage_type_bonus=context.damage_type_bonus + overrides.get("damage_type_bonus", 0.0),
             skill_type_bonus=context.skill_type_bonus + overrides.get("skill_type_bonus", 0.0),
             imbalance_damage_bonus=context.imbalance_damage_bonus + overrides.get("imbalance_damage_bonus", 0.0),
             other_damage_bonus=context.other_damage_bonus + overrides.get("other_damage_bonus", 0.0),
-            base_damage_bonus=context.base_damage_bonus,
-            combo_stacks=context.combo_stacks,
-            break_defense_stacks=context.break_defense_stacks,
         )
-    """apply manual buffs。"""
     return context, extra_effects
 
 
