@@ -23,7 +23,7 @@ jobs:
       code_version: ${{ steps.version.outputs.code_version }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install framework
@@ -57,7 +57,7 @@ jobs:
         working-directory: .
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install Rust toolchain
@@ -88,7 +88,7 @@ jobs:
         working-directory: .
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install dependencies
