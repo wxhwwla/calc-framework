@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from calc_framework.ui.i18n import tr
+
 from utils.gui.help_dialog import HelpSection
 
 _DOCS_DIR = Path(__file__).resolve().parent.parent.parent / "docs"
@@ -122,7 +124,7 @@ def load_multi_category(
                 HelpSection(
                     category=cat,
                     title=cat,
-                    content="<h3>完整手册参考</h3><p>以下内容摘自 <code>docs/制造游戏计算器完整流程.md</code>。</p>",
+                    content=tr("common.helpManualIntroHtml"),
                     sub_sections=sections,
                 )
             )

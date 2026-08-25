@@ -6,18 +6,13 @@
 
 from __future__ import annotations
 
-
 import json
-
 from pathlib import Path
-
 from typing import Any
 
-
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
-
 from PySide6.QtGui import QFont
-
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -28,7 +23,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 _LABEL_STYLE = "color: #CCCCCC;"
 
@@ -122,7 +116,7 @@ class DataBrowserTab(QWidget):
 
         layout.setSpacing(8)
 
-        header = QLabel("数据浏览")
+        header = QLabel(tr("desktop.designer.dataBrowserTab"))
 
         header.setFont(self._big)
 
@@ -132,11 +126,13 @@ class DataBrowserTab(QWidget):
 
         top_row = QHBoxLayout()
 
-        top_row.addWidget(self._label("数据源"))
+        top_row.addWidget(self._label(tr("desktop.designer.dataSourceLabel")))
 
         self._source_combo = QComboBox()
 
-        self._source_combo.addItems(["角色数据", "武器数据", "装备数据"])
+        self._source_combo.addItem(tr("desktop.designer.sourceCharacter"), "character")
+        self._source_combo.addItem(tr("desktop.designer.sourceWeapon"), "weapon")
+        self._source_combo.addItem(tr("desktop.designer.sourceEquipment"), "equipment")
 
         self._source_combo.setStyleSheet(_COMBO_STYLE)
 
@@ -146,7 +142,7 @@ class DataBrowserTab(QWidget):
 
         top_row.addStretch()
 
-        self._refresh_btn = QPushButton("刷新")
+        self._refresh_btn = QPushButton(tr("common.refresh"))
 
         self._refresh_btn.setStyleSheet(_BTN_STYLE)
 
@@ -208,7 +204,7 @@ class DataBrowserTab(QWidget):
         except Exception as exc:
             self._all_data = []
 
-            self._count_label.setText(f"加载失败: {exc}")
+            self._count_label.setText(tr("desktop.designer.browserLoadFailed", error=exc))
 
             self._table.setRowCount(0)
 
@@ -216,7 +212,7 @@ class DataBrowserTab(QWidget):
 
             return
 
-        self._count_label.setText(f"共 {len(self._all_data)} 条记录")
+        self._count_label.setText(tr("desktop.designer.browserRecordCountFmt", n=len(self._all_data)))
 
         self._populate_table(columns)
 

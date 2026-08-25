@@ -6,12 +6,10 @@
 
 from __future__ import annotations
 
-
 import re
 
-
+from calc_framework.ui.i18n import tr
 from PySide6.QtGui import QFont, QTextCursor
-
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -22,9 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
 from games.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
-
 from games.endfield.calc.damage.inverse import (
     fit_attribute_formula,
     fit_skill_formula,
@@ -33,7 +29,6 @@ from games.endfield.calc.damage.inverse import (
     validate_attribute_formula,
     validate_skill_formula,
 )
-
 
 _SECTION_STYLE = "color: #FF6B6B; padding: 4px 0;"
 
@@ -128,7 +123,7 @@ class InverseTab(QWidget):
 
         layout.setSpacing(8)
 
-        header = QLabel("数值反推公式工具")
+        header = QLabel(tr("desktop.designer.inverseToolTitle"))
 
         header.setFont(self._big)
 
@@ -138,15 +133,16 @@ class InverseTab(QWidget):
 
         mode_row = QHBoxLayout()
 
-        mode_row.addWidget(self._make_label("数据类型"))
+        mode_row.addWidget(self._make_label(tr("desktop.designer.dataKindLabel")))
 
         self._mode_combo = QComboBox()
 
-        self._mode_combo.addItems(["属性数据（90级）", "技能倍率（9/12级）"])
+        self._mode_combo.addItem(tr("desktop.designer.inverseModeAttr"), "attr")
+        self._mode_combo.addItem(tr("desktop.designer.inverseModeSkill"), "skill")
 
         self._mode_combo.setStyleSheet(_COMBO_STYLE)
 
-        self._mode_combo.currentTextChanged.connect(self._update_hint)
+        self._mode_combo.currentIndexChanged.connect(self._update_hint)
 
         mode_row.addWidget(self._mode_combo)
 
@@ -164,7 +160,7 @@ class InverseTab(QWidget):
 
         self._input_edit.setStyleSheet(_INPUT_STYLE)
 
-        self._input_edit.setPlaceholderText("在此输入数值，空格或换行分隔…")
+        self._input_edit.setPlaceholderText(tr("desktop.designer.inverseInputPlaceholder"))
 
         self._input_edit.setMinimumHeight(120)
 
@@ -172,7 +168,7 @@ class InverseTab(QWidget):
 
         btn_row = QHBoxLayout()
 
-        self._clear_btn = QPushButton("清除输入")
+        self._clear_btn = QPushButton(tr("desktop.designer.clearInput"))
 
         self._clear_btn.setStyleSheet(_BTN_STYLE)
 
@@ -180,7 +176,7 @@ class InverseTab(QWidget):
 
         btn_row.addWidget(self._clear_btn)
 
-        self._sample_btn = QPushButton("示例数据")
+        self._sample_btn = QPushButton(tr("desktop.designer.sampleData"))
 
         self._sample_btn.setStyleSheet(_BTN_STYLE)
 
@@ -188,7 +184,7 @@ class InverseTab(QWidget):
 
         btn_row.addWidget(self._sample_btn)
 
-        self._dedup_btn = QPushButton("去重处理")
+        self._dedup_btn = QPushButton(tr("desktop.designer.dedupe"))
 
         self._dedup_btn.setStyleSheet(_BTN_STYLE)
 
@@ -198,7 +194,7 @@ class InverseTab(QWidget):
 
         btn_row2 = QHBoxLayout()
 
-        self._calc_btn = QPushButton("开始反推")
+        self._calc_btn = QPushButton(tr("desktop.designer.inverseStart"))
 
         self._calc_btn.setStyleSheet(_BTN_PRIMARY_STYLE)
 
@@ -206,7 +202,7 @@ class InverseTab(QWidget):
 
         btn_row2.addWidget(self._calc_btn)
 
-        self._validate_btn = QPushButton("验证公式")
+        self._validate_btn = QPushButton(tr("desktop.designer.validateFormula"))
 
         self._validate_btn.setStyleSheet(_BTN_STYLE)
 
@@ -214,7 +210,7 @@ class InverseTab(QWidget):
 
         btn_row2.addWidget(self._validate_btn)
 
-        self._curve_btn = QPushButton("生成曲线")
+        self._curve_btn = QPushButton(tr("desktop.designer.generateCurve"))
 
         self._curve_btn.setStyleSheet(_BTN_STYLE)
 
@@ -226,7 +222,7 @@ class InverseTab(QWidget):
 
         layout.addLayout(btn_row2)
 
-        result_header = QLabel("计算结果")
+        result_header = QLabel(tr("desktop.designer.calcResult"))
 
         result_header.setStyleSheet(_SECTION_STYLE)
 
@@ -254,15 +250,17 @@ class InverseTab(QWidget):
 
         return lbl
 
+    def _is_attr_mode(self) -> bool:
+        """当前是否为属性反推模式。"""
+        return self._mode_combo.currentData() == "attr"
+
     def _update_hint(self) -> None:
         """_update_hint 实现。"""
-        mode = self._mode_combo.currentText()
-
-        if "属性" in mode:
-            self._hint_label.setText("提示：输入90个属性数据（空格或换行分隔），支持整数和小数/百分比格式")
+        if self._is_attr_mode():
+            self._hint_label.setText(tr("desktop.designer.inverseHintAttr"))
 
         else:
-            self._hint_label.setText("提示：输入9或12个技能倍率数据（空格或换行分隔），支持整数和小数/百分比格式")
+            self._hint_label.setText(tr("desktop.designer.inverseHintSkill"))
 
     def _clear_input(self) -> None:
         """_clear_input 实现。"""
@@ -274,7 +272,7 @@ class InverseTab(QWidget):
         """_load_sample 实现。"""
         self._input_edit.clear()
 
-        if "属性" in self._mode_combo.currentText():
+        if self._is_attr_mode():
             sample = "34 38 41 45 48 52 55 59 62 65 69 72 76 79 83 86 90 93 96 100"
 
         else:
@@ -287,14 +285,14 @@ class InverseTab(QWidget):
         text = self._input_edit.toPlainText().strip()
 
         if not text:
-            raise ValueError("请输入数据")
+            raise ValueError(tr("desktop.designer.needInputData"))
 
         tokens = re.split(r"[\s,，]+", text)
 
         tokens = [t.strip() for t in tokens if t.strip()]
 
         if not tokens:
-            raise ValueError("未找到有效数据")
+            raise ValueError(tr("desktop.designer.noValidData"))
 
         result: list[float] = []
 
@@ -327,44 +325,47 @@ class InverseTab(QWidget):
 
                 self._input_edit.setPlainText(" ".join(map(str, clean)))
 
-                self._show_result("已去重处理：94个数据 → 90个数据")
+                self._show_result(tr("desktop.designer.dedupDone94to90"))
 
             else:
-                self._show_result(f"当前数据长度 {len(data)}，只有94个数据需要去重")
+                self._show_result(tr("desktop.designer.dedupOnly94", n=len(data)))
 
         except Exception as exc:
-            self._show_result(f"错误：{exc}")
+            self._show_result(tr("desktop.designer.errorPrefix", error=exc))
 
     def _calculate(self) -> None:
         """_calculate 实现。"""
         try:
             data = self._parse()
 
+            data_kind = (
+                tr("desktop.designer.dataKindAttr") if self._is_attr_mode() else tr("desktop.designer.dataKindSkill")
+            )
             lines: list[str] = [
-                f"输入数据长度: {len(data)}",
-                f"数据类型: {'属性数据' if '属性' in self._mode_combo.currentText() else '技能倍率'}",
+                tr("desktop.designer.inputLen", n=len(data)),
+                tr("desktop.designer.dataKindLine", kind=data_kind),
                 "-" * 50,
             ]
 
-            if "属性" in self._mode_combo.currentText():
+            if self._is_attr_mode():
                 if len(data) == 94:
                     data = remove_duplicates(data)
 
-                    lines.append("已自动去重: 94 → 90")
+                    lines.append(tr("desktop.designer.autoDedup94to90"))
 
                 if len(data) != 90:
-                    raise ValueError(f"属性数据需要90个值，当前{len(data)}个")
+                    raise ValueError(tr("desktop.designer.attrNeed90", n=len(data)))
 
                 base, growth, divisor, offset = fit_attribute_formula(data)
 
                 lines += [
-                    "计算结果:",
+                    tr("desktop.designer.calcResultColon"),
                     f"  base    = {base}",
                     f"  growth  = {growth}",
                     f"  divisor = {divisor}",
                     f"  offset  = {offset}",
                     "",
-                    "公式: base + floor((growth * (lv - 1) + offset) / divisor)",
+                    tr("desktop.designer.attrFormula"),
                 ]
 
             else:
@@ -375,10 +376,10 @@ class InverseTab(QWidget):
                     base, growth, divisor, offset, special = fit_skill_formula_no_special(data)
 
                 else:
-                    raise ValueError(f"技能数据需要9或12个值，当前{len(data)}个")
+                    raise ValueError(tr("desktop.designer.skillNeed9or12", n=len(data)))
 
                 lines += [
-                    "计算结果:",
+                    tr("desktop.designer.calcResultColon"),
                     f"  base    = {base}",
                     f"  growth  = {growth}",
                     f"  divisor = {divisor}",
@@ -389,14 +390,14 @@ class InverseTab(QWidget):
             self._show_result("\n".join(lines))
 
         except Exception as exc:
-            self._show_result(f"计算错误：{exc}")
+            self._show_result(tr("desktop.designer.calcErrorPrefix", error=exc))
 
     def _validate(self) -> None:
         """_validate 实现。"""
         try:
             data = self._parse()
 
-            if "属性" in self._mode_combo.currentText():
+            if self._is_attr_mode():
                 if len(data) == 94:
                     data = remove_duplicates(data)
 
@@ -404,39 +405,49 @@ class InverseTab(QWidget):
 
                 ok = validate_attribute_formula(base, growth, divisor, offset, data)
 
+                ok_text = tr("desktop.designer.formulaOk") if ok else tr("desktop.designer.formulaMismatch")
                 lines = [
-                    f"验证结果: {'✓ 公式正确' if ok else '✗ 公式不匹配'}",
-                    f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}",
+                    tr("desktop.designer.validateResultLine", result=ok_text),
+                    tr(
+                        "desktop.designer.paramsLine",
+                        base=base,
+                        growth=growth,
+                        divisor=divisor,
+                        offset=offset,
+                    ),
                 ]
 
             else:
-                if len(data) == 12:
-                    params = fit_skill_formula(data)
-
-                else:
-                    params = fit_skill_formula_no_special(data)
+                params = fit_skill_formula(data) if len(data) == 12 else fit_skill_formula_no_special(data)
 
                 base, growth, divisor, offset, special = params
 
                 ok = validate_skill_formula(base, growth, divisor, offset, special, data)
 
+                ok_text = tr("desktop.designer.formulaOk") if ok else tr("desktop.designer.formulaMismatch")
                 lines = [
-                    f"验证结果: {'✓ 公式正确' if ok else '✗ 公式不匹配'}",
-                    f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}",
-                    f"特殊值: {special}",
+                    tr("desktop.designer.validateResultLine", result=ok_text),
+                    tr(
+                        "desktop.designer.paramsLine",
+                        base=base,
+                        growth=growth,
+                        divisor=divisor,
+                        offset=offset,
+                    ),
+                    tr("desktop.designer.specialLine", special=special),
                 ]
 
             self._show_result("\n".join(lines))
 
         except Exception as exc:
-            self._show_result(f"验证错误：{exc}")
+            self._show_result(tr("desktop.designer.validateErrorPrefix", error=exc))
 
     def _generate_curve(self) -> None:
         """_generate_curve 实现。"""
         try:
             data = self._parse()
 
-            if "属性" in self._mode_combo.currentText():
+            if self._is_attr_mode():
                 if len(data) == 94:
                     data = remove_duplicates(data)
 
@@ -445,17 +456,23 @@ class InverseTab(QWidget):
                 curve = calculate_growth_curve(base, growth, divisor, offset)
 
                 lines = [
-                    "生成属性成长曲线（90级）:",
-                    f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}",
+                    tr("desktop.designer.genAttrCurveHeader"),
+                    tr(
+                        "desktop.designer.paramsLine",
+                        base=base,
+                        growth=growth,
+                        divisor=divisor,
+                        offset=offset,
+                    ),
                     "-" * 50,
                 ]
 
                 for lv in (1, 20, 40, 60, 80, 90):
-                    lines.append(f"等级{lv}: {curve[lv - 1]}")
+                    lines.append(tr("desktop.designer.levelValue", level=lv, value=curve[lv - 1]))
 
                 lines.append("")
 
-                lines.append("完整曲线（前10级）:")
+                lines.append(tr("desktop.designer.fullCurveFirst10"))
 
                 lines.append(", ".join(map(str, curve[:10])) + " …")
 
@@ -469,15 +486,21 @@ class InverseTab(QWidget):
                 curve = calculate_skill_curve(base, growth, divisor, offset, special)
 
                 lines = [
-                    f"生成技能倍率曲线（{len(curve)}级）:",
-                    f"参数: base={base}, growth={growth}, divisor={divisor}, offset={offset}",
-                    f"特殊值: {special}",
+                    tr("desktop.designer.genSkillCurveHeader", n=len(curve)),
+                    tr(
+                        "desktop.designer.paramsLine",
+                        base=base,
+                        growth=growth,
+                        divisor=divisor,
+                        offset=offset,
+                    ),
+                    tr("desktop.designer.specialLine", special=special),
                     "-" * 50,
-                    "完整曲线:",
+                    tr("desktop.designer.fullCurve"),
                     ", ".join(map(str, curve)),
                 ]
 
             self._show_result("\n".join(lines))
 
         except Exception as exc:
-            self._show_result(f"生成错误：{exc}")
+            self._show_result(tr("desktop.designer.genErrorPrefix", error=exc))

@@ -17,6 +17,7 @@ if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
 from calc_framework.logging import get_logger
+from calc_framework.ui.i18n import tr
 from calc_framework.ui.layout import Section, load_layout
 from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import (
@@ -100,17 +101,17 @@ class _ControlItem(QGraphicsRectItem):
         self._del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._del_btn.setVisible(False)
 
-    def hoverEnterEvent(self, event) -> None:
+    def hoverEnterEvent(self, event) -> None:  # noqa: N802
         """鼠标悬停时显示删除按钮。"""
         self._del_btn.setVisible(True)
         super().hoverEnterEvent(event)
 
-    def hoverLeaveEvent(self, event) -> None:
+    def hoverLeaveEvent(self, event) -> None:  # noqa: N802
         """鼠标离开时隐藏删除按钮。"""
         self._del_btn.setVisible(False)
         super().hoverLeaveEvent(event)
 
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event) -> None:  # noqa: N802
         """点击删除按钮时移除此控件。"""
         if event.button() == Qt.MouseButton.LeftButton:
             pos = event.pos()
@@ -331,34 +332,34 @@ class SectionEditDialog(QDialog):
 
     def __init__(self, title="", section_type="inputs", columns=2, widget_type="", parent=None):
         super().__init__(parent)
-        self.setWindowTitle("区块属性")
+        self.setWindowTitle(tr("desktop.packDesigner.sectionDialogTitle"))
         self._result: dict | None = None
         layout = QFormLayout(self)
 
         self._title_edit = QLineEdit(title)
-        layout.addRow("标题:", self._title_edit)
+        layout.addRow(tr("desktop.packDesigner.fieldTitle"), self._title_edit)
 
         self._type_combo = QComboBox()
         self._type_combo.addItems(["inputs", "outputs", "widget"])
         self._type_combo.setCurrentText(section_type)
         self._type_combo.currentTextChanged.connect(self._on_type_changed)
-        layout.addRow("类型:", self._type_combo)
+        layout.addRow(tr("desktop.packDesigner.fieldType"), self._type_combo)
 
         self._widget_type_combo = QComboBox()
         self._widget_type_combo.addItems(["donation"])
         self._widget_type_combo.setCurrentText(widget_type or "donation")
-        self._widget_type_label = QLabel("组件类型:")
+        self._widget_type_label = QLabel(tr("desktop.packDesigner.fieldWidgetType"))
         layout.addRow(self._widget_type_label, self._widget_type_combo)
 
         self._cols_spin = QSpinBox()
         self._cols_spin.setRange(1, 6)
         self._cols_spin.setValue(columns)
-        layout.addRow("列数:", self._cols_spin)
+        layout.addRow(tr("desktop.packDesigner.fieldColumns"), self._cols_spin)
 
         btns = QHBoxLayout()
-        ok_btn = QPushButton("确定")
+        ok_btn = QPushButton(tr("common.ok"))
         ok_btn.clicked.connect(self._accept)
-        cancel_btn = QPushButton("取消")
+        cancel_btn = QPushButton(tr("common.cancel"))
         cancel_btn.clicked.connect(self.reject)
         btns.addWidget(ok_btn)
         btns.addWidget(cancel_btn)
@@ -376,7 +377,7 @@ class SectionEditDialog(QDialog):
     def _accept(self) -> None:
         """_accept 实现。"""
         self._result = {
-            "title": self._title_edit.text() or "新 Section",
+            "title": self._title_edit.text() or tr("desktop.packDesigner.defaultSectionTitle"),
             "type": self._type_combo.currentText(),
             "columns": self._cols_spin.value(),
             "widget_type": self._widget_type_combo.currentText() if self._type_combo.currentText() == "widget" else "",
@@ -394,28 +395,28 @@ class DonationConfigDialog(QDialog):
 
     def __init__(self, text="", image_path="", parent=None):
         super().__init__(parent)
-        self.setWindowTitle("捐赠组件配置")
+        self.setWindowTitle(tr("desktop.packDesigner.donationDialogTitle"))
         self.setMinimumWidth(450)
         self._result: dict | None = None
 
         layout = QFormLayout(self)
 
-        self._text_edit = QLineEdit(text or "感谢使用！如果觉得有用，欢迎支持开发者。")
-        layout.addRow("描述文字:", self._text_edit)
+        self._text_edit = QLineEdit(text or tr("desktop.packDesigner.donationDefaultText"))
+        layout.addRow(tr("desktop.packDesigner.fieldDescription"), self._text_edit)
 
         path_layout = QHBoxLayout()
         self._path_edit = QLineEdit(image_path)
-        self._path_edit.setPlaceholderText("如: qr_code.png")
+        self._path_edit.setPlaceholderText(tr("desktop.packDesigner.donationImagePlaceholder"))
         path_layout.addWidget(self._path_edit, stretch=1)
-        browse_btn = QPushButton("浏览...")
+        browse_btn = QPushButton(tr("desktop.packDesigner.browse"))
         browse_btn.clicked.connect(self._browse_image)
         path_layout.addWidget(browse_btn)
-        layout.addRow("图片路径:", path_layout)
+        layout.addRow(tr("desktop.packDesigner.fieldImagePath"), path_layout)
 
         btns = QHBoxLayout()
-        ok_btn = QPushButton("确定")
+        ok_btn = QPushButton(tr("common.ok"))
         ok_btn.clicked.connect(self._accept)
-        cancel_btn = QPushButton("取消")
+        cancel_btn = QPushButton(tr("common.cancel"))
         cancel_btn.clicked.connect(self.reject)
         btns.addWidget(ok_btn)
         btns.addWidget(cancel_btn)
@@ -423,7 +424,12 @@ class DonationConfigDialog(QDialog):
 
     def _browse_image(self) -> None:
         """_browse_image 实现。"""
-        path, _ = QFileDialog.getOpenFileName(self, "选择捐赠图片", "", "图片 (*.png *.jpg *.jpeg *.bmp)")
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            tr("desktop.packDesigner.selectDonationImage"),
+            "",
+            tr("desktop.packDesigner.imageFilter"),
+        )
         if path:
             self._path_edit.setText(path)
 
@@ -444,7 +450,7 @@ class DonationConfigDialog(QDialog):
 class _DragListWidget(QListWidget):
     """支持拖拽文本的 QListWidget。"""
 
-    def mimeData(self, items):
+    def mimeData(self, items):  # noqa: N802
         """确保拖拽时提供文本 MIME 数据。"""
         from PySide6.QtCore import QMimeData
 
@@ -469,7 +475,7 @@ class _DropView(QGraphicsView):
         super().__init__(*args, **kwargs)
         self._zoom_factor = 1.0
 
-    def wheelEvent(self, event) -> None:
+    def wheelEvent(self, event) -> None:  # noqa: N802
         """Ctrl+滚轮缩放画布，普通滚轮平移。"""
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             delta = event.angleDelta().y()
@@ -516,18 +522,18 @@ class _DropView(QGraphicsView):
         """当前缩放比例。"""
         return self._zoom_factor
 
-    def keyPressEvent(self, event) -> None:
+    def keyPressEvent(self, event) -> None:  # noqa: N802
         """Delete 键删除选中项。"""
         if event.key() == Qt.Key.Key_Delete and self.delete_callback:
             self.delete_callback()
         else:
             super().keyPressEvent(event)
 
-    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # noqa: N802
         """禁用右键菜单。"""
         event.accept()
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         """按下中键时切换为拖拽模式（平移画布）。"""
         if event.button() == Qt.MouseButton.MiddleButton:
             self._saved_drag_mode = self.dragMode()
@@ -545,7 +551,7 @@ class _DropView(QGraphicsView):
         else:
             super().mousePressEvent(event)
 
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         """释放中键时恢复原来的拖拽模式。"""
         if event.button() == Qt.MouseButton.MiddleButton:
             fake = QMouseEvent(
@@ -561,19 +567,19 @@ class _DropView(QGraphicsView):
         else:
             super().mouseReleaseEvent(event)
 
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:  # noqa: N802
         if event.mimeData().hasText():
             event.acceptProposedAction()
         else:
             event.ignore()
 
-    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:  # noqa: N802
         if event.mimeData().hasText():
             event.acceptProposedAction()
         else:
             event.ignore()
 
-    def dropEvent(self, event: QDropEvent) -> None:
+    def dropEvent(self, event: QDropEvent) -> None:  # noqa: N802
         if self.drop_callback and event.mimeData().hasText():
             self.drop_callback(event.position(), event.mimeData().text())
             event.acceptProposedAction()
@@ -600,34 +606,34 @@ class LayoutCanvasPanel(QWidget):
 
         toolbar = QHBoxLayout()
 
-        add_section_btn = QPushButton("+ 添加区块")
+        add_section_btn = QPushButton(tr("desktop.packDesigner.addSection"))
         add_section_btn.clicked.connect(self._add_section)
         toolbar.addWidget(add_section_btn)
 
-        del_section_btn = QPushButton("删除选中")
+        del_section_btn = QPushButton(tr("desktop.packDesigner.deleteSelected"))
         del_section_btn.clicked.connect(self._delete_selected)
         toolbar.addWidget(del_section_btn)
 
-        donation_section_btn = QPushButton("+ 捐赠")
+        donation_section_btn = QPushButton(tr("desktop.packDesigner.addDonation"))
         donation_section_btn.setStyleSheet("QPushButton { color: #e74c3c; }")
         donation_section_btn.clicked.connect(self._add_donation_section)
         toolbar.addWidget(donation_section_btn)
 
-        toolbar.addWidget(QLabel("  适配器:"))
+        toolbar.addWidget(QLabel(tr("desktop.packDesigner.adapterLabel")))
         self._adapter_selector = QComboBox()
         self._adapter_selector.setMinimumWidth(160)
         self._adapter_selector.currentIndexChanged.connect(self._on_adapter_selected)
         toolbar.addWidget(self._adapter_selector)
 
-        clear_btn = QPushButton("清空画布")
+        clear_btn = QPushButton(tr("desktop.packDesigner.clearCanvas"))
         clear_btn.clicked.connect(self._clear_canvas)
         toolbar.addWidget(clear_btn)
 
-        preview_btn = QPushButton("渲染预览")
+        preview_btn = QPushButton(tr("desktop.packDesigner.renderPreview"))
         preview_btn.clicked.connect(self._open_preview)
         toolbar.addWidget(preview_btn)
 
-        save_btn = QPushButton("保存布局")
+        save_btn = QPushButton(tr("desktop.packDesigner.saveLayout"))
         save_btn.clicked.connect(self._save_layout)
         save_btn.setStyleSheet("QPushButton { font-weight: bold; }")
         toolbar.addWidget(save_btn)
@@ -640,7 +646,7 @@ class LayoutCanvasPanel(QWidget):
         left = QWidget()
         left_layout = QVBoxLayout(left)
 
-        left_layout.addWidget(QLabel("输入变量 (拖拽到画布)"))
+        left_layout.addWidget(QLabel(tr("desktop.packDesigner.inputVarsHint")))
         self._var_list = _DragListWidget()
         self._var_list.setDragEnabled(True)
         self._var_list.setAcceptDrops(False)
@@ -649,7 +655,7 @@ class LayoutCanvasPanel(QWidget):
         self._var_list.setStyleSheet("QListWidget::item { padding: 4px; }")
         left_layout.addWidget(self._var_list)
 
-        left_layout.addWidget(QLabel("乘区输出 (拖拽到画布)"))
+        left_layout.addWidget(QLabel(tr("desktop.packDesigner.outputVarsHint")))
         self._output_list = _DragListWidget()
         self._output_list.setDragEnabled(True)
         self._output_list.setAcceptDrops(False)
@@ -676,17 +682,17 @@ class LayoutCanvasPanel(QWidget):
 
         right = QWidget()
         self._right_layout = QVBoxLayout(right)
-        self._right_layout.addWidget(QLabel("属性"))
-        self._prop_group = QGroupBox("选中项")
+        self._right_layout.addWidget(QLabel(tr("desktop.packDesigner.propsHeading")))
+        self._prop_group = QGroupBox(tr("desktop.packDesigner.selectedItem"))
         prop_form = QFormLayout(self._prop_group)
-        self._prop_title = QLabel("（未选中）")
+        self._prop_title = QLabel(tr("desktop.packDesigner.noneSelected"))
         prop_form.addRow("", self._prop_title)
 
         # 重命名行
         rename_row = QHBoxLayout()
         self._rename_edit = QLineEdit()
-        self._rename_edit.setPlaceholderText("新标题...")
-        self._rename_btn = QPushButton("改名")
+        self._rename_edit.setPlaceholderText(tr("desktop.packDesigner.renamePlaceholder"))
+        self._rename_btn = QPushButton(tr("desktop.packDesigner.rename"))
         self._rename_btn.setFixedWidth(48)
         self._rename_btn.clicked.connect(self._rename_selected_section)
         rename_row.addWidget(self._rename_edit)
@@ -694,11 +700,11 @@ class LayoutCanvasPanel(QWidget):
         self._rename_widget = QWidget()
         self._rename_widget.setLayout(rename_row)
         self._rename_widget.setVisible(False)
-        prop_form.addRow("重命名:", self._rename_widget)
+        prop_form.addRow(tr("desktop.packDesigner.renameLabel"), self._rename_widget)
 
         self._prop_detail = QLabel("")
         self._prop_detail.setWordWrap(True)
-        prop_form.addRow("详情:", self._prop_detail)
+        prop_form.addRow(tr("desktop.packDesigner.detailLabel"), self._prop_detail)
         self._right_layout.addWidget(self._prop_group)
         self._right_layout.addStretch()
         splitter.addWidget(right)
@@ -709,11 +715,11 @@ class LayoutCanvasPanel(QWidget):
         # 缩放控件（放在 _view 创建之后，因为依赖 self._view）
         zoom_bar = QHBoxLayout()
         zoom_bar.addStretch()
-        zoom_bar.addWidget(QLabel("缩放:"))
+        zoom_bar.addWidget(QLabel(tr("desktop.packDesigner.zoomLabel")))
 
         zoom_out_btn = QPushButton("➖")
         zoom_out_btn.setFixedWidth(32)
-        zoom_out_btn.setToolTip("缩小 (Ctrl+滚轮↓)")
+        zoom_out_btn.setToolTip(tr("desktop.packDesigner.zoomOutTip"))
         zoom_out_btn.clicked.connect(lambda: self._view.set_zoom(self._view.zoom_factor * 0.8))
         zoom_bar.addWidget(zoom_out_btn)
 
@@ -725,19 +731,19 @@ class LayoutCanvasPanel(QWidget):
 
         zoom_in_btn = QPushButton("➕")
         zoom_in_btn.setFixedWidth(32)
-        zoom_in_btn.setToolTip("放大 (Ctrl+滚轮↑)")
+        zoom_in_btn.setToolTip(tr("desktop.packDesigner.zoomInTip"))
         zoom_in_btn.clicked.connect(lambda: self._view.set_zoom(self._view.zoom_factor * 1.2))
         zoom_bar.addWidget(zoom_in_btn)
 
-        zoom_reset_btn = QPushButton("重置")
+        zoom_reset_btn = QPushButton(tr("common.reset"))
         zoom_reset_btn.setFixedWidth(48)
-        zoom_reset_btn.setToolTip("重置缩放到 100%")
+        zoom_reset_btn.setToolTip(tr("desktop.packDesigner.zoomResetTip"))
         zoom_reset_btn.clicked.connect(self._view.reset_zoom)
         zoom_bar.addWidget(zoom_reset_btn)
         zoom_bar.addStretch()
         layout.addLayout(zoom_bar)
 
-        self._status_label = QLabel("就绪 — 选择适配器以加载变量 | Ctrl+滚轮缩放画布")
+        self._status_label = QLabel(tr("desktop.packDesigner.canvasReady"))
         layout.addWidget(self._status_label)
 
         self._scene.selectionChanged.connect(self._on_selection_changed)
@@ -773,9 +779,9 @@ class LayoutCanvasPanel(QWidget):
         sec_item.setPos(x, y)
         self._scene.addItem(sec_item)
         self._view.centerOn(sec_item)
-        self._status_label.setText(f"已添加 Section: {r['title']}")
+        self._status_label.setText(tr("desktop.packDesigner.statusAddedSection", title=r["title"]))
         self._emit_layout_changed()
-        print(f"[布局编辑器] 已添加 Section: {r['title']} ({r['type']}) at ({x:.0f}, {y:.0f})")
+        _logger.debug("added section %s (%s) at (%.0f, %.0f)", r["title"], r["type"], x, y)
 
     def _add_donation_section(self) -> None:
         """_add_donation_section 实现。"""
@@ -785,13 +791,20 @@ class LayoutCanvasPanel(QWidget):
         cfg = dialog.config_result
         self._section_id_counter += 1
         sid = f"widget_donation_{self._section_id_counter}"
-        sec_item = _SectionItem(sid, "自愿捐赠", "widget", 1, widget_type="donation", widget_config=cfg)
+        sec_item = _SectionItem(
+            sid,
+            tr("desktop.packDesigner.donationSectionTitle"),
+            "widget",
+            1,
+            widget_type="donation",
+            widget_config=cfg,
+        )
         x = 30 + (self._section_id_counter % 3) * 40
         y = 30 + (self._section_id_counter % 3) * 30
         sec_item.setPos(x, y)
         sec_item._resize_to_fit()
         self._scene.addItem(sec_item)
-        self._status_label.setText("已添加捐赠组件")
+        self._status_label.setText(tr("desktop.packDesigner.statusAddedDonation"))
         self._emit_layout_changed()
 
     def _delete_selected(self) -> None:
@@ -799,11 +812,11 @@ class LayoutCanvasPanel(QWidget):
         for item in self._scene.selectedItems():
             if isinstance(item, _SectionItem):
                 self._scene.removeItem(item)
-                self._status_label.setText(f"已删除 Section: {item.section_title}")
+                self._status_label.setText(tr("desktop.packDesigner.statusDeletedSection", title=item.section_title))
             elif isinstance(item, _ControlItem):
                 if item._parent_section:
                     item._parent_section.remove_control(item.var_name)
-                    self._status_label.setText(f"已删除变量: {item.var_name}")
+                    self._status_label.setText(tr("desktop.packDesigner.statusDeletedVar", name=item.var_name))
         self._on_canvas_changed()
 
     def _clear_canvas(self) -> None:
@@ -811,32 +824,40 @@ class LayoutCanvasPanel(QWidget):
         self._scene.clear()
         self._set_grid_background()
         self._section_id_counter = 0
-        self._status_label.setText("画布已清空")
+        self._status_label.setText(tr("desktop.packDesigner.statusCanvasCleared"))
         self._emit_layout_changed()
 
     def _on_drop_on_canvas(self, scene_pos: QPointF, text: str) -> None:
         """_on_drop_on_canvas 实现。"""
-        print(f"[拖放] 收到拖放: text={text}, pos=({scene_pos.x()}, {scene_pos.y()})")
+        _logger.debug("drop received text=%r pos=(%.1f, %.1f)", text, scene_pos.x(), scene_pos.y())
         var_name = text.split("  [")[0].strip()
         if not var_name:
-            print("[拖放] 变量名为空，忽略")
+            _logger.debug("drop ignored: empty var name")
             return
         scene_pt = self._view.mapToScene(int(scene_pos.x()), int(scene_pos.y()))
         sec_item = self._find_section_at(scene_pt)
         if sec_item is None:
-            print(f"[拖放] 未找到 Section，scene_pt=({scene_pt.x()}, {scene_pt.y()})")
+            _logger.debug("drop: no section at (%.1f, %.1f)", scene_pt.x(), scene_pt.y())
             QMessageBox.information(
-                self, "提示", "请先将变量拖拽到 Section 区块内。\n先点击左上角「+ 添加 Section」创建区块。"
+                self,
+                tr("common.info"),
+                tr("desktop.packDesigner.dropNeedSection"),
             )
             return
         for existing in sec_item._controls:
             if existing.var_name == var_name:
-                self._status_label.setText(f"变量已存在: {var_name}")
+                self._status_label.setText(tr("desktop.packDesigner.statusVarExists", name=var_name))
                 return
         sec_item.add_control(var_name, var_name)
-        self._status_label.setText(f"已添加变量: {var_name} → {sec_item.section_title}")
+        self._status_label.setText(
+            tr(
+                "desktop.packDesigner.statusAddedVar",
+                name=var_name,
+                section=sec_item.section_title,
+            )
+        )
         self._on_canvas_changed()
-        print(f"[拖放] 已添加变量: {var_name}")
+        _logger.debug("drop added var %s", var_name)
 
     def _find_section_at(self, scene_pt: QPointF) -> _SectionItem | None:
         """_find_section_at 实现。"""
@@ -854,26 +875,29 @@ class LayoutCanvasPanel(QWidget):
         """_on_selection_changed 实现。"""
         selected = self._scene.selectedItems()
         if not selected:
-            self._prop_title.setText("（未选中）")
+            self._prop_title.setText(tr("desktop.packDesigner.noneSelected"))
             self._prop_detail.setText("")
             self._rename_widget.setVisible(False)
             return
         item = selected[0]
         if isinstance(item, _SectionItem):
-            self._prop_title.setText(f"Section: {item.section_title}")
+            self._prop_title.setText(tr("desktop.packDesigner.propSectionTitle", title=item.section_title))
             self._rename_widget.setVisible(True)
             self._rename_edit.setText(item.section_title)
             # 详细信息：类型 + 控件列表
-            lines = [f"类型: {item.section_type}", f"控件数: {len(item._controls)}"]
+            lines = [
+                tr("desktop.packDesigner.propType", type=item.section_type),
+                tr("desktop.packDesigner.propControlCount", n=len(item._controls)),
+            ]
             if item._controls:
                 lines.append("---")
                 for c in item._controls:
                     lines.append(f"  {c.var_name}")
             self._prop_detail.setText("\n".join(lines))
         elif isinstance(item, _ControlItem):
-            self._prop_title.setText(f"控件: {item.var_name}")
+            self._prop_title.setText(tr("desktop.packDesigner.propControlTitle", name=item.var_name))
             self._rename_widget.setVisible(False)
-            self._prop_detail.setText(f"标签: {item._label}")
+            self._prop_detail.setText(tr("desktop.packDesigner.propLabel", label=item._label))
         else:
             self._prop_title.setText(type(item).__name__)
             self._rename_widget.setVisible(False)
@@ -891,7 +915,7 @@ class LayoutCanvasPanel(QWidget):
         sec._update_header()
         self._on_selection_changed()
         self._emit_layout_changed()
-        self._status_label.setText(f"已重命名: {new_title}")
+        self._status_label.setText(tr("desktop.packDesigner.statusRenamed", title=new_title))
 
     def _on_canvas_changed(self) -> None:
         """画布内容变化后刷新右侧面板和信号。"""
@@ -914,7 +938,7 @@ class LayoutCanvasPanel(QWidget):
         self._adapter_selector.blockSignals(True)
         current = self._adapter_selector.currentText()
         self._adapter_selector.clear()
-        self._adapter_selector.addItem("— 选择适配器 —")
+        self._adapter_selector.addItem(tr("desktop.packDesigner.selectAdapterPlaceholder"))
         for name in names:
             self._adapter_selector.addItem(name)
         idx = self._adapter_selector.findText(current)
@@ -952,11 +976,23 @@ class LayoutCanvasPanel(QWidget):
             if layout_path.is_file():
                 data = json.loads(layout_path.read_text(encoding="utf-8"))
                 self._load_layout_to_canvas(data)
-                self._status_label.setText(f"已加载 {name} — {len(pkg.dag_service.dag.variables)} 变量 + layout.json")
+                self._status_label.setText(
+                    tr(
+                        "desktop.packDesigner.statusLoadedWithLayout",
+                        name=name,
+                        n=len(pkg.dag_service.dag.variables),
+                    )
+                )
             else:
-                self._status_label.setText(f"已加载 {name} — {len(pkg.dag_service.dag.variables)} 变量，无 layout.json")
+                self._status_label.setText(
+                    tr(
+                        "desktop.packDesigner.statusLoadedNoLayout",
+                        name=name,
+                        n=len(pkg.dag_service.dag.variables),
+                    )
+                )
         except Exception as exc:
-            QMessageBox.warning(self, "加载失败", str(exc))
+            QMessageBox.warning(self, tr("desktop.packDesigner.loadFailed"), str(exc))
 
     def _load_layout_to_canvas(self, data: dict) -> None:
         """_load_layout_to_canvas 实现。"""
@@ -1014,7 +1050,7 @@ class LayoutCanvasPanel(QWidget):
     def _save_layout(self) -> None:
         """_save_layout 实现。"""
         if not self._adapter_name or self._adapter_selector.currentIndex() <= 0:
-            QMessageBox.information(self, "提示", "请先选择适配器")
+            QMessageBox.information(self, tr("common.info"), tr("desktop.packDesigner.needAdapter"))
             return
         from calc_framework.config.manager import AdapterManager
 
@@ -1026,7 +1062,7 @@ class LayoutCanvasPanel(QWidget):
         data = self._build_layout_data()
         path = ui_dir / "layout.json"
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        self._status_label.setText(f"布局已保存 → {path}")
+        self._status_label.setText(tr("desktop.packDesigner.statusLayoutSaved", path=path))
         self._emit_layout_changed()
 
     def _open_preview(self) -> None:
@@ -1036,14 +1072,14 @@ class LayoutCanvasPanel(QWidget):
 
         data = self._build_layout_data()
         if not data["sections"]:
-            QMessageBox.information(self, "提示", "画布为空，请先添加 Section 并拖入变量")
+            QMessageBox.information(self, tr("common.info"), tr("desktop.packDesigner.previewEmpty"))
             return
         if not self._dag_service:
-            QMessageBox.information(self, "提示", "请先选择适配器以加载 DAG")
+            QMessageBox.information(self, tr("common.info"), tr("desktop.packDesigner.previewNeedDag"))
             return
 
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"布局预览 — {self._adapter_name}")
+        dialog.setWindowTitle(tr("desktop.packDesigner.previewTitle", name=self._adapter_name))
         dialog.resize(900, 600)
         dl = QVBoxLayout(dialog)
         scroll = QScrollArea()
@@ -1065,8 +1101,8 @@ class LayoutCanvasPanel(QWidget):
             dl.addWidget(scroll)
             sheet.evaluate()
         except Exception as e:
-            dl.addWidget(QLabel(f"渲染失败: {e}"))
-        close_btn = QPushButton("关闭")
+            dl.addWidget(QLabel(tr("desktop.packDesigner.previewRenderFailed", error=e)))
+        close_btn = QPushButton(tr("common.close"))
         close_btn.clicked.connect(dialog.accept)
         dl.addWidget(close_btn)
         dialog.exec()

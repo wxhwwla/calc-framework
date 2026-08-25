@@ -4,14 +4,11 @@
 
 from __future__ import annotations
 
-
 from typing import Any
 
-
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
-
 from PySide6.QtGui import QFont
-
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -29,7 +26,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
 from games.endfield.data_loading.loader import (
     get_characters,
     get_equipments,
@@ -38,7 +34,6 @@ from games.endfield.data_loading.loader import (
     save_equipments,
     save_weapons,
 )
-
 
 _LABEL_STYLE = "color: #CCCCCC;"
 
@@ -214,7 +209,7 @@ class DataEditorTab(QWidget):
 
         layout.setSpacing(8)
 
-        header = QLabel("数据编辑")
+        header = QLabel(tr("desktop.designer.dataEditorTab"))
 
         header.setFont(self._big)
 
@@ -224,11 +219,13 @@ class DataEditorTab(QWidget):
 
         top_row = QHBoxLayout()
 
-        top_row.addWidget(self._label("数据类型"))
+        top_row.addWidget(self._label(tr("desktop.designer.dataKindLabel")))
 
         self._type_combo = QComboBox()
 
-        self._type_combo.addItems(["角色数据", "武器数据", "装备数据"])
+        self._type_combo.addItem(tr("desktop.designer.sourceCharacter"), "character")
+        self._type_combo.addItem(tr("desktop.designer.sourceWeapon"), "weapon")
+        self._type_combo.addItem(tr("desktop.designer.sourceEquipment"), "equipment")
 
         self._type_combo.setStyleSheet(_COMBO_STYLE)
 
@@ -238,24 +235,20 @@ class DataEditorTab(QWidget):
 
         top_row.addStretch()
 
-        for btn, style in [
-            ("新增", _BTN_STYLE),
-            ("编辑选中", _BTN_STYLE),
-            ("删除选中", _BTN_DANGER),
-        ]:
-            b = QPushButton(btn)
+        self._add_btn = QPushButton(tr("desktop.designer.addEntry"))
+        self._add_btn.setStyleSheet(_BTN_STYLE)
+        self._add_btn.clicked.connect(self._on_add)
+        top_row.addWidget(self._add_btn)
 
-            b.setStyleSheet(style)
+        self._edit_btn = QPushButton(tr("desktop.designer.editSelected"))
+        self._edit_btn.setStyleSheet(_BTN_STYLE)
+        self._edit_btn.clicked.connect(self._on_edit)
+        top_row.addWidget(self._edit_btn)
 
-            top_row.addWidget(b)
-
-            setattr(self, f"_{btn.replace(' ', '_')}_btn", b)
-
-        self._新增_btn.clicked.connect(self._on_add)
-
-        self._编辑选中_btn.clicked.connect(self._on_edit)
-
-        self._删除选中_btn.clicked.connect(self._on_delete)
+        self._delete_btn = QPushButton(tr("desktop.designer.deleteSelected"))
+        self._delete_btn.setStyleSheet(_BTN_DANGER)
+        self._delete_btn.clicked.connect(self._on_delete)
+        top_row.addWidget(self._delete_btn)
 
         layout.addLayout(top_row)
 
@@ -265,10 +258,7 @@ class DataEditorTab(QWidget):
 
         layout.addWidget(self._count_label)
 
-        hint = self._label(
-            "提示：选中行后点击「编辑选中」修改数据。"
-            "数组字段（等级曲线/基础攻击力等）以只读文本显示，可在 JSON 中编辑。"
-        )
+        hint = self._label(tr("desktop.designer.dataEditorHintLegacy"))
 
         hint.setStyleSheet("color: #888888; font-size: 11px;")
 
@@ -320,13 +310,13 @@ class DataEditorTab(QWidget):
         except Exception as exc:
             self._all_data = []
 
-            self._count_label.setText(f"加载失败: {exc}")
+            self._count_label.setText(tr("desktop.designer.browserLoadFailed", error=exc))
 
             self._table.setRowCount(0)
 
             return
 
-        self._count_label.setText(f"共 {len(self._all_data)} 条记录")
+        self._count_label.setText(tr("desktop.designer.browserRecordCountFmt", n=len(self._all_data)))
 
         self._populate_table()
 
@@ -359,7 +349,7 @@ class DataEditorTab(QWidget):
         rows = self._table.selectionModel().selectedRows()
 
         if not rows:
-            QMessageBox.information(self, "提示", "请先选中一行")
+            QMessageBox.information(self, tr("common.info"), tr("desktop.designer.selectRowFirst"))
 
             return None
 
@@ -382,7 +372,7 @@ class DataEditorTab(QWidget):
 
         self._populate_table()
 
-        self._count_label.setText(f"共 {len(self._all_data)} 条记录")
+        self._count_label.setText(tr("desktop.designer.browserRecordCountFmt", n=len(self._all_data)))
 
     def _on_edit(self) -> None:
         """_on_edit 实现。"""
@@ -411,12 +401,12 @@ class DataEditorTab(QWidget):
         if idx is None:
             return
 
-        name = self._all_data[idx].get("名称", f"条目 #{idx}")
+        name = self._all_data[idx].get("名称", tr("desktop.designer.entryNth", n=idx))
 
         reply = QMessageBox.question(
             self,
-            "确认删除",
-            f"确定要删除「{name}」吗？\n此操作不可撤销。",
+            tr("desktop.designer.confirmDeleteTitle"),
+            tr("desktop.designer.confirmDeleteMsg", name=name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -429,14 +419,14 @@ class DataEditorTab(QWidget):
 
         self._populate_table()
 
-        self._count_label.setText(f"共 {len(self._all_data)} 条记录")
+        self._count_label.setText(tr("desktop.designer.browserRecordCountFmt", n=len(self._all_data)))
 
     def _save(self) -> None:
         """_save 实现。"""
         saver = _SAVERS[self._data_type]
 
         if not saver(self._all_data):
-            QMessageBox.critical(self, "保存失败", "数据保存失败，请检查文件权限。")
+            QMessageBox.critical(self, tr("desktop.designer.saveFailTitle"), tr("desktop.designer.saveFailMsg"))
 
 
 class _EditDialog(QDialog):
@@ -451,7 +441,7 @@ class _EditDialog(QDialog):
     ) -> None:
         super().__init__()
 
-        self.setWindowTitle("编辑" if existing else "新增")
+        self.setWindowTitle(tr("common.edit") if existing else tr("desktop.designer.addEntry"))
 
         self.setMinimumWidth(420)
 
@@ -564,18 +554,14 @@ class _EditDialog(QDialog):
                 if length > 0:
                     first = val[0]
 
-                    if isinstance(first, list):
-                        sample = f"({len(first)} 项)"
-
-                    else:
-                        sample = f"[{first}...]"
+                    sample = f"({len(first)} 项)" if isinstance(first, list) else f"[{first}...]"
 
                 lines.append(f"  {key}: 数组({length}) {sample}")
 
         if not lines:
             return None
 
-        lbl = QLabel("只读字段（请在 JSON 文件中直接编辑）:\n" + "\n".join(lines))
+        lbl = QLabel(tr("desktop.designer.readonlyFieldsHeader") + "\n" + "\n".join(lines))
 
         lbl.setStyleSheet("color: #888888; font-size: 11px; padding: 8px 16px;")
 

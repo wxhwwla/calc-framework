@@ -23,6 +23,9 @@ python tools/bwiki_scout/scout.py
 
 # 调试：每类只拉 5 条
 python tools/bwiki_scout/scout.py --limit 5
+
+# 强制重拉（忽略本地 raw 缓存，用于 Wiki 数据已更新时）
+python tools/bwiki_scout/scout.py --refresh
 ```
 
 输出目录（**保存在本机**，已 gitignore，不进 GitHub）：`tools/bwiki_scout/output/`

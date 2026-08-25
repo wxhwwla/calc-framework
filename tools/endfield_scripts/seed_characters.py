@@ -6,7 +6,6 @@
 
 from tools.endfield_scripts.add_character import add_character
 
-
 _SEED_CHARACTERS = [
     {
         "name": "管理员",
@@ -272,6 +271,26 @@ _SEED_CHARACTERS = [
         "base_defense": {"base": 0.0, "growth": 1, "divisor": 90, "offset": 0},
     },
     {
+        "name": "弭弗",
+        "char_type": "近卫",
+        "star": 6,
+        "weapon": "双手剑",
+        "primary": "力量",
+        "secondary": "意志",
+        "sk1": [],
+        "sk2": [],
+        "sk3": [],
+        "sk1_dt": [],
+        "sk2_dt": [],
+        "sk3_dt": [],
+        "strength": {"base": 22.0, "growth": 100, "divisor": 59, "offset": 35},
+        "agility": {"base": 10.0, "growth": 27, "divisor": 29, "offset": 2},
+        "intellect": {"base": 9.0, "growth": 71, "divisor": 78, "offset": 69},
+        "will": {"base": 14.0, "growth": 27, "divisor": 23, "offset": 17},
+        "base_atk": {"base": 30.0, "growth": 195, "divisor": 61, "offset": 36},
+        "base_defense": {"base": 0.0, "growth": 1, "divisor": 90, "offset": 0},
+    },
+    {
         "name": "昼雪",
         "char_type": "重装",
         "star": 5,
@@ -342,8 +361,8 @@ _SEED_CHARACTERS = [
         "char_type": "近卫",
         "star": 6,
         "weapon": "单手剑",
-        "primary": "",
-        "secondary": "",
+        "primary": "敏捷",
+        "secondary": "智识",
         "sk1": [],
         "sk2": [],
         "sk3": [],

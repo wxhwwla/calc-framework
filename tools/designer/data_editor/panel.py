@@ -22,6 +22,7 @@ if _project_root not in sys.path:
 
 
 from calc_framework.logging import get_logger
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -104,7 +105,7 @@ class _EntityTab(QWidget):
 
         table_layout.addWidget(self._table)
 
-        self._count_label = QLabel("0 条")
+        self._count_label = QLabel(tr("desktop.packDesigner.rowCountFmt", n=0))
 
         table_layout.addWidget(self._count_label)
 
@@ -114,7 +115,7 @@ class _EntityTab(QWidget):
 
         self._detail_text = QTextEdit()
 
-        self._detail_text.setPlaceholderText("选中实体后显示结构化详情…")
+        self._detail_text.setPlaceholderText(tr("desktop.packDesigner.entityDetailPlaceholder"))
 
         self._detail_text.setReadOnly(True)
 
@@ -122,7 +123,12 @@ class _EntityTab(QWidget):
 
         self._skill_tree = QTreeWidget()
 
-        self._skill_tree.setHeaderLabels(["技能 / 段", "值"])
+        self._skill_tree.setHeaderLabels(
+            [
+                tr("desktop.packDesigner.skillTreeColSkill"),
+                tr("desktop.packDesigner.skillTreeColValue"),
+            ]
+        )
 
         self._skill_tree.setAlternatingRowColors(True)
 
@@ -203,7 +209,7 @@ class _EntityTab(QWidget):
 
         self._table.horizontalHeader().setStretchLastSection(True)
 
-        self._count_label.setText(f"{len(self._entities)} 条")
+        self._count_label.setText(tr("desktop.packDesigner.rowCountFmt", n=len(self._entities)))
 
     def _on_select(self, current: QTableWidgetItem | None, _previous: QTableWidgetItem | None) -> None:
         """_on_select 实现。"""
@@ -285,11 +291,7 @@ class _EntityTab(QWidget):
                 if dt:
                     seg_label += f" [{dt}]"
 
-                if len(rates) <= 10:
-                    seg_val = str(rates)
-
-                else:
-                    seg_val = f"[{len(rates)} 级] {rates[0]}~{rates[-1]}"
+                seg_val = str(rates) if len(rates) <= 10 else f"[{len(rates)} 级] {rates[0]}~{rates[-1]}"
 
                 QTreeWidgetItem(sk_item, [seg_label, seg_val])
 
@@ -338,7 +340,7 @@ class DataEditorPanel(QWidget):
 
         toolbar = QHBoxLayout()
 
-        toolbar.addWidget(QLabel("数据模板:"))
+        toolbar.addWidget(QLabel(tr("desktop.packDesigner.dataProfileLabel")))
 
         self._profile_combo = QComboBox()
 
@@ -349,31 +351,31 @@ class DataEditorPanel(QWidget):
 
         toolbar.addWidget(self._profile_combo)
 
-        refresh_btn = QPushButton("重新加载")
+        refresh_btn = QPushButton(tr("desktop.packDesigner.reload"))
 
         refresh_btn.clicked.connect(self._reload_all)
 
         toolbar.addWidget(refresh_btn)
 
-        save_btn = QPushButton("保存修改")
+        save_btn = QPushButton(tr("desktop.packDesigner.saveChanges"))
 
         save_btn.clicked.connect(self._save_current)
 
         toolbar.addWidget(save_btn)
 
-        validate_btn = QPushButton("校验")
+        validate_btn = QPushButton(tr("desktop.packDesigner.validate"))
 
         validate_btn.clicked.connect(self._validate_current)
 
         toolbar.addWidget(validate_btn)
 
-        import_btn = QPushButton("导入 JSON")
+        import_btn = QPushButton(tr("desktop.packDesigner.importJson"))
 
         import_btn.clicked.connect(self._import_json)
 
         toolbar.addWidget(import_btn)
 
-        self._dag_verify_btn = QPushButton("DAG 验证")
+        self._dag_verify_btn = QPushButton(tr("desktop.packDesigner.dagVerify"))
 
         self._dag_verify_btn.clicked.connect(self._dag_verify)
 
@@ -497,7 +499,11 @@ class DataEditorPanel(QWidget):
     def _dag_verify(self) -> None:
         """_dag_verify 实现。"""
         if self._dag_pkg is None:
-            QMessageBox.warning(self, "DAG 未加载", "终末地适配器未加载，请检查 framework/games/endfield/")
+            QMessageBox.warning(
+                self,
+                tr("desktop.packDesigner.dagNotLoadedTitle"),
+                tr("desktop.packDesigner.dagNotLoadedMsg"),
+            )
 
             return
 
@@ -514,7 +520,7 @@ class DataEditorPanel(QWidget):
         entity = tab.selected_entity
 
         if entity is None:
-            QMessageBox.information(self, "提示", "请先在角色列表中选择一个角色")
+            QMessageBox.information(self, tr("common.info"), tr("desktop.packDesigner.selectCharacterFirst"))
 
             return
 
@@ -593,10 +599,10 @@ class DataEditorPanel(QWidget):
             for node_id, val in node_items:
                 lines.append(f"  {node_id}: {val:.4f}" if isinstance(val, float) else f"  {node_id}: {val}")
 
-            QMessageBox.information(self, "DAG 验证", "\n".join(lines))
+            QMessageBox.information(self, tr("desktop.packDesigner.dagVerify"), "\n".join(lines))
 
         except Exception as e:
-            QMessageBox.critical(self, "DAG 求值失败", str(e))
+            QMessageBox.critical(self, tr("desktop.packDesigner.dagEvalFailed"), str(e))
 
     def _auto_load(self) -> None:
         """_auto_load 实现。"""
@@ -612,7 +618,9 @@ class DataEditorPanel(QWidget):
         """_reload_all 实现。"""
         self._auto_load()
 
-        QMessageBox.information(self, "重载完成", "已重新加载所有数据")
+        QMessageBox.information(
+            self, tr("desktop.packDesigner.reloadDoneTitle"), tr("desktop.packDesigner.reloadDoneMsg")
+        )
 
     def _save_current(self) -> None:
         """_save_current 实现。"""
@@ -636,10 +644,14 @@ class DataEditorPanel(QWidget):
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(tab.entities, f, ensure_ascii=False, indent=2)
 
-            QMessageBox.information(self, "保存成功", f"已保存到 {filepath}")
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.saveOkTitle"),
+                tr("desktop.packDesigner.saveOkMsg", path=filepath),
+            )
 
         except Exception as e:
-            QMessageBox.critical(self, "保存失败", str(e))
+            QMessageBox.critical(self, tr("desktop.packDesigner.saveFailTitle"), str(e))
 
     def _validate_current(self) -> None:
         """_validate_current 实现。"""
@@ -677,14 +689,27 @@ class DataEditorPanel(QWidget):
                 has_err = True
 
         if has_err:
-            QMessageBox.warning(self, "校验结果", "\n".join(lines) if lines else "有错误")
+            QMessageBox.warning(
+                self,
+                tr("desktop.packDesigner.validateResultTitle"),
+                "\n".join(lines) if lines else tr("desktop.packDesigner.validateHasErrors"),
+            )
 
         else:
-            QMessageBox.information(self, "校验通过", f"{len(entities)} 条数据合法")
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.validateOkTitle"),
+                tr("desktop.packDesigner.validateOkMsg", n=len(entities)),
+            )
 
     def _import_json(self) -> None:
         """_import_json 实现。"""
-        path, _ = QFileDialog.getOpenFileName(self, "导入 JSON", "", "JSON Files (*.json);;All Files (*)")
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            tr("desktop.packDesigner.importJson"),
+            "",
+            "JSON Files (*.json);;All Files (*)",
+        )
 
         if not path:
             return
@@ -702,10 +727,22 @@ class DataEditorPanel(QWidget):
             return
 
         if tab.load_from_file(path):
-            QMessageBox.information(self, "导入成功", f"已导入 {len(tab.entities)} 条到「{tab_name}」")
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.importOkTitle"),
+                tr(
+                    "desktop.packDesigner.importOkMsg",
+                    n=len(tab.entities),
+                    tab=tab_name,
+                ),
+            )
 
         else:
-            QMessageBox.warning(self, "导入失败", "文件格式错误或为空")
+            QMessageBox.warning(
+                self,
+                tr("desktop.packDesigner.importFailTitle"),
+                tr("desktop.packDesigner.importFailMsg"),
+            )
 
     def _update_status(self) -> None:
         """_update_status 实现。"""
@@ -714,7 +751,7 @@ class DataEditorPanel(QWidget):
         for tab_name, tab in self._tabs.items():
             counts.append(f"{tab_name}: {len(tab.entities)}")
 
-        self.setWindowTitle("数据编辑器 — " + " | ".join(counts))
+        self.setWindowTitle(tr("desktop.packDesigner.dataEditorTitleFmt", counts=" | ".join(counts)))
 
     def get_data_files(self) -> dict[str, list]:
         """get_data_files 实现。"""

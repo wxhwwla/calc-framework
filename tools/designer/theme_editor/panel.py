@@ -18,6 +18,7 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -78,14 +79,14 @@ class ThemePanel(QWidget):
         form = QFormLayout(content)
 
         self._font_family = QLineEdit("Microsoft YaHei")
-        form.addRow("字体:", self._font_family)
+        form.addRow(tr("desktop.packDesigner.fontFamily"), self._font_family)
 
         self._font_size = QSpinBox()
         self._font_size.setRange(8, 32)
         self._font_size.setValue(12)
-        form.addRow("字号:", self._font_size)
+        form.addRow(tr("desktop.packDesigner.fontSize"), self._font_size)
 
-        form.addRow(QLabel("--- 颜色 ---"))
+        form.addRow(QLabel(tr("desktop.packDesigner.colorsHeading")))
 
         self._color_inputs: dict[str, QLineEdit] = {}
         for key, default in self._theme["colors"].items():
@@ -96,68 +97,92 @@ class ThemePanel(QWidget):
         scroll.setWidget(content)
         layout.addWidget(scroll, stretch=1)
 
-        data_group = QGroupBox("包含数据")
+        data_group = QGroupBox(tr("desktop.packDesigner.includeData"))
         data_layout = QVBoxLayout(data_group)
-        self._data_label = QLabel("未加载数据")
+        self._data_label = QLabel(tr("desktop.packDesigner.noDataLoaded"))
         data_layout.addWidget(self._data_label)
 
-        self._dag_label = QLabel("未加载公式图")
+        self._dag_label = QLabel(tr("desktop.packDesigner.noDagLoaded"))
         data_layout.addWidget(self._dag_label)
 
-        self._layout_label = QLabel("未加载布局")
+        self._layout_label = QLabel(tr("desktop.packDesigner.noLayoutLoaded"))
         data_layout.addWidget(self._layout_label)
 
-        auto_btn = QPushButton("从其他面板同步数据")
+        auto_btn = QPushButton(tr("desktop.packDesigner.syncFromPanels"))
         auto_btn.clicked.connect(self._sync_from_shared)
         data_layout.addWidget(auto_btn)
 
-        load_data_btn = QPushButton("手动加载数据 JSON")
+        load_data_btn = QPushButton(tr("desktop.packDesigner.loadDataJson"))
         load_data_btn.clicked.connect(self._load_data)
         data_layout.addWidget(load_data_btn)
-        load_dag_btn = QPushButton("手动加载 DAG JSON")
+        load_dag_btn = QPushButton(tr("desktop.packDesigner.loadDagJson"))
         load_dag_btn.clicked.connect(self._load_dag)
         data_layout.addWidget(load_dag_btn)
-        load_layout_btn = QPushButton("手动加载 layout.json")
+        load_layout_btn = QPushButton(tr("desktop.packDesigner.loadLayoutJson"))
         load_layout_btn.clicked.connect(self._load_layout)
         data_layout.addWidget(load_layout_btn)
         layout.addWidget(data_group)
 
-        export_btn = QPushButton("导出 .calcpack")
+        export_btn = QPushButton(tr("desktop.packDesigner.exportCalcpack"))
         export_btn.setStyleSheet("QPushButton { padding: 12px; font-size: 14px; }")
         export_btn.clicked.connect(self._export)
         layout.addWidget(export_btn)
 
     def _load_dag(self) -> None:
         """_load_dag 实现。"""
-        path, _ = QFileDialog.getOpenFileName(self, "选择 DAG JSON", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(self, tr("desktop.packDesigner.selectDagJson"), "", "JSON Files (*.json)")
         if not path:
             return
         try:
             with open(path, encoding="utf-8") as f:
                 self._dag_data = json.load(f)
             node_count = len(self._dag_data.get("nodes", {}))
-            self._dag_label.setText(f"公式图: {os.path.basename(path)}（{node_count} 个节点）")
-            QMessageBox.information(self, "已加载", f"公式图: {path}")
+            self._dag_label.setText(
+                tr(
+                    "desktop.packDesigner.dagLoadedFmt",
+                    name=os.path.basename(path),
+                    n=node_count,
+                )
+            )
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.loadedTitle"),
+                tr("desktop.packDesigner.dagPathMsg", path=path),
+            )
         except Exception as e:
-            QMessageBox.critical(self, "失败", str(e))
+            QMessageBox.critical(self, tr("common.error"), str(e))
 
     def _load_layout(self) -> None:
         """_load_layout 实现。"""
-        path, _ = QFileDialog.getOpenFileName(self, "选择 layout.json", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("desktop.packDesigner.selectLayoutJson"), "", "JSON Files (*.json)"
+        )
         if not path:
             return
         try:
             with open(path, encoding="utf-8") as f:
                 self._layout_data = json.load(f)
             sections = self._layout_data.get("sections", [])
-            self._layout_label.setText(f"布局: {os.path.basename(path)}（{len(sections)} 个区块）")
-            QMessageBox.information(self, "已加载", f"布局: {path}")
+            self._layout_label.setText(
+                tr(
+                    "desktop.packDesigner.layoutLoadedFmt",
+                    name=os.path.basename(path),
+                    n=len(sections),
+                )
+            )
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.loadedTitle"),
+                tr("desktop.packDesigner.layoutPathMsg", path=path),
+            )
         except Exception as e:
-            QMessageBox.critical(self, "失败", str(e))
+            QMessageBox.critical(self, tr("common.error"), str(e))
 
     def _load_data(self) -> None:
         """_load_data 实现。"""
-        path, _ = QFileDialog.getOpenFileName(self, "选择数据 JSON", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("desktop.packDesigner.selectDataJson"), "", "JSON Files (*.json)"
+        )
         if not path:
             return
         try:
@@ -170,11 +195,12 @@ class ThemePanel(QWidget):
                 self._data_files[name] = [data]
             self._update_data_label()
         except Exception as e:
-            QMessageBox.critical(self, "失败", str(e))
+            QMessageBox.critical(self, tr("common.error"), str(e))
 
     def _update_data_label(self) -> None:
         """_update_data_label 实现。"""
-        self._data_label.setText(f"已加载: {', '.join(f'{k}({len(v)}条)' for k, v in self._data_files.items())}")
+        parts = [tr("desktop.packDesigner.dataFileCountFmt", name=k, n=len(v)) for k, v in self._data_files.items()]
+        self._data_label.setText(tr("desktop.packDesigner.dataLoadedFmt", files=", ".join(parts)))
 
     _shared_data_files: dict[str, list] = {}
     _shared_dag_data: dict | None = None
@@ -205,22 +231,29 @@ class ThemePanel(QWidget):
         if self._shared_dag_data and self._dag_data is None:
             self._dag_data = self._shared_dag_data
             self._dag_label.setText(
-                f"公式图: 来自适配器（{len(self._dag_data.get('nodes', {}))} 个节点）",
+                tr(
+                    "desktop.packDesigner.dagFromAdapterFmt",
+                    n=len(self._dag_data.get("nodes", {})),
+                ),
             )
             changed = True
         if self._shared_layout_data and self._layout_data is None:
             self._layout_data = self._shared_layout_data
             sections = self._layout_data.get("sections", [])
-            self._layout_label.setText(f"布局: 来自编辑器（{len(sections)} 个区块）")
+            self._layout_label.setText(tr("desktop.packDesigner.layoutFromEditorFmt", n=len(sections)))
             changed = True
         if changed:
-            QMessageBox.information(self, "同步完成", "已从其他面板同步数据")
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.syncDoneTitle"),
+                tr("desktop.packDesigner.syncDoneMsg"),
+            )
 
     def _build_theme(self) -> dict:
         """_build_theme 实现。"""
         return {
             "schema_version": "theme-v1",
-            "name": "自定义主题",
+            "name": tr("desktop.packDesigner.customThemeName"),
             "font": {
                 "family": self._font_family.text(),
                 "size": self._font_size.value(),
@@ -233,12 +266,12 @@ class ThemePanel(QWidget):
     def _read_meta(self) -> dict:
         """_read_meta 实现。"""
         meta = dict(self._adapter_meta)
-        meta.setdefault("name", "自定义计算配置")
-        meta.setdefault("game", "自定义")
+        meta.setdefault("name", tr("desktop.packDesigner.defaultMetaName"))
+        meta.setdefault("game", tr("desktop.packDesigner.defaultMetaGame"))
         meta.setdefault("version", "1.0.0")
         meta.setdefault("schema_version", "dag-v1")
         meta.setdefault("author", "")
-        meta.setdefault("description", "由配置包设计器导出")
+        meta.setdefault("description", tr("desktop.packDesigner.defaultMetaDesc"))
         meta.setdefault("entry_dag", "dag/formula.dag.json")
         meta.setdefault("ui_layout", "ui/layout.json")
         meta.setdefault("ui_theme", "ui/theme.json")
@@ -249,15 +282,23 @@ class ThemePanel(QWidget):
     def _export(self) -> None:
         """_export 实现。"""
         if not self._dag_data:
-            QMessageBox.warning(self, "缺少 DAG", "请先加载 DAG JSON")
+            QMessageBox.warning(
+                self,
+                tr("desktop.packDesigner.missingDagTitle"),
+                tr("desktop.packDesigner.missingDagMsg"),
+            )
             return
         if not self._layout_data:
-            QMessageBox.warning(self, "缺少布局", "请先加载 layout.json")
+            QMessageBox.warning(
+                self,
+                tr("desktop.packDesigner.missingLayoutTitle"),
+                tr("desktop.packDesigner.missingLayoutMsg"),
+            )
             return
 
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "导出 .calcpack",
+            tr("desktop.packDesigner.exportCalcpack"),
             "game.calcpack",
             "CalcPack (*.calcpack);;ZIP (*.zip);;All Files (*)",
         )
@@ -278,10 +319,14 @@ class ThemePanel(QWidget):
                 data_files=self._data_files,
                 asset_files=asset_files,
             )
-            QMessageBox.information(self, "导出成功", f"已写入:\n{result}")
+            QMessageBox.information(
+                self,
+                tr("desktop.packDesigner.exportOkTitle"),
+                tr("desktop.packDesigner.exportOkMsg", path=result),
+            )
             self.export_requested.emit(result)
         except Exception as e:
-            QMessageBox.critical(self, "导出失败", str(e))
+            QMessageBox.critical(self, tr("desktop.packDesigner.exportFailTitle"), str(e))
 
 
 def _collect_asset_files(layout_data: dict) -> dict[str, str]:

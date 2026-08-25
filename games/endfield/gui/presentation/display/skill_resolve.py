@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
 
 # 等级相关属性列表（需要根据等级从列表中提取对应值）
@@ -81,10 +83,14 @@ def resolve_selected_skill_for_damage(
         warning = ""
 
         if not explicit:
-            warning = "该段伤害类型未收录，按物理伤害计算。"
+            warning = tr("desktop.endfield.skillTypeUnlistedWarning")
 
         return SelectedSkillForDamage(
-            label=f"{skill_name} 等级{level} 第1段",
+            label=tr(
+                "desktop.endfield.skillSegmentLabel",
+                skill=skill_name,
+                level=level,
+            ),
             multiplier=float(value) / 100.0,
             warning=warning,
             damage_type=damage_type,
@@ -93,9 +99,9 @@ def resolve_selected_skill_for_damage(
         )
 
     return SelectedSkillForDamage(
-        label="默认普攻段",
+        label=tr("desktop.endfield.defaultNormalAttackSegment"),
         multiplier=1.0,
-        warning="未选择技能等级或无可用倍率，按 100% 计算。",
+        warning=tr("desktop.endfield.skillFallbackWarning"),
         damage_type="物理",
         damage_type_display=format_damage_type_display("物理", is_default=True),
         skill_type="战技",

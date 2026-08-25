@@ -22,21 +22,13 @@ BWIKI 侦察入口（阶段 C）。
 
 from __future__ import annotations
 
-
 import argparse
-
 import json
-
 import re
-
 import sys
-
 from datetime import datetime, timezone
-
 from pathlib import Path
-
 from typing import Any
-
 
 _SCRIPTS_ROOT = Path(__file__).resolve().parent.parent
 
@@ -45,7 +37,6 @@ if str(_SCRIPTS_ROOT) not in sys.path:
 
 
 from bwiki_scout.api import MediaWikiClient
-
 from bwiki_scout.config import (
     API_URL,
     CATEGORY_TITLES,
@@ -56,24 +47,18 @@ from bwiki_scout.config import (
     REQUEST_INTERVAL_SEC,
     USER_AGENT,
 )
-
+from bwiki_scout.detail_levels import (
+    build_operator_stats_diff,
+    operator_detail_titles,
+)
 from bwiki_scout.gallery import extract_gallery_entry_titles, merge_title_lists
-
 from bwiki_scout.json_scan import scan_pages_for_json
-
 from bwiki_scout.local_schema import (
     compare_name_sets,
     load_local_name_sets,
     summarize_local_schema,
 )
-
 from bwiki_scout.names import normalize_name_for_match
-
-from bwiki_scout.detail_levels import (
-    build_operator_stats_diff,
-    operator_detail_titles,
-)
-
 from bwiki_scout.report import (
     write_names_diff_report,
     write_sample_bundle,
@@ -81,7 +66,6 @@ from bwiki_scout.report import (
     write_stats_diff_report,
     write_summary_report,
 )
-
 from bwiki_scout.storage import load_page_bundle, save_page_bundle, write_manifest
 
 
@@ -142,8 +126,13 @@ def run_scout(
     client: MediaWikiClient | None = None,
     per_kind_limit: int | None = None,
     only_kind: str | None = None,
+    refresh: bool = False,
 ) -> dict[str, Any]:
-    """执行侦察：拉取列表、缓存原始页、生成报告。"""
+    """执行侦察：拉取列表、缓存原始页、生成报告。
+
+    Args:
+        refresh: 为 True 时忽略本地 raw 缓存，强制从 Wiki 重新拉取全部页面。
+    """
 
     output_root.mkdir(parents=True, exist_ok=True)
 
@@ -205,7 +194,7 @@ def run_scout(
         pending: list[str] = []
 
         for title in titles:
-            cached = load_page_bundle(raw_dir, title)
+            cached = None if refresh else load_page_bundle(raw_dir, title)
 
             if cached:
                 cache_hits += 1
@@ -237,7 +226,7 @@ def run_scout(
         pending_detail: list[str] = []
 
         for title in detail_titles:
-            cached = load_page_bundle(raw_dir, title)
+            cached = None if refresh else load_page_bundle(raw_dir, title)
 
             if cached:
                 cache_hits += 1
@@ -383,12 +372,19 @@ def main(argv: list[str] | None = None) -> int:
         help="仅拉取指定种类（operator / weapon / equipment）",
     )
 
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="忽略本地 raw 缓存，强制从 Wiki 重新拉取全部页面",
+    )
+
     args = parser.parse_args(argv)
 
     result = run_scout(
         output_root=args.output,
         per_kind_limit=args.limit,
         only_kind=args.only_kind,
+        refresh=args.refresh,
     )
 
     stats = result.get("cache_stats") or {}

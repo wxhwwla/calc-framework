@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.presentation.display.skill_resolve import (
     resolve_selected_skill_for_damage,
 )
+
+
+def setup_module() -> None:
+    set_locale("zh-CN")
 
 
 def _make_char_data() -> dict[str, Any]:

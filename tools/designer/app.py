@@ -27,6 +27,7 @@ if _project_root not in sys.path:
 
 from calc_framework.config.manager import AdapterManager
 from calc_framework.logging import get_logger
+from calc_framework.ui.i18n import tr
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -54,7 +55,7 @@ class DesignerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("配置包设计器")
+        self.setWindowTitle(tr("desktop.packDesigner.windowTitle"))
 
         self.resize(1200, 800)
 
@@ -72,15 +73,15 @@ class DesignerWindow(QMainWindow):
 
         self._theme_panel.export_requested.connect(self._on_export)
 
-        self._tabs.addTab(self._data_panel, "数据录入")
+        self._tabs.addTab(self._data_panel, tr("desktop.packDesigner.tabData"))
 
-        self._tabs.addTab(self._layout_panel, "布局编辑")
+        self._tabs.addTab(self._layout_panel, tr("desktop.packDesigner.tabLayout"))
 
-        self._tabs.addTab(self._theme_panel, "主题与导出")
+        self._tabs.addTab(self._theme_panel, tr("desktop.packDesigner.tabTheme"))
 
         self._status = QStatusBar()
 
-        self._status_label = QLabel("就绪")
+        self._status_label = QLabel(tr("common.ready"))
 
         self._status.addWidget(self._status_label)
 
@@ -98,9 +99,9 @@ class DesignerWindow(QMainWindow):
         """_setup_menu 实现。"""
         menubar = self.menuBar()
 
-        help_menu = menubar.addMenu("帮助(&H)")
+        help_menu = menubar.addMenu(tr("desktop.packDesigner.menuHelp"))
 
-        help_action = QAction("使用说明(&U)", self)
+        help_action = QAction(tr("desktop.packDesigner.menuUsage"), self)
 
         help_action.setShortcut(QKeySequence("F1"))
 
@@ -110,7 +111,7 @@ class DesignerWindow(QMainWindow):
 
         help_menu.addSeparator()
 
-        donation_action = QAction("自愿捐赠(&D)", self)
+        donation_action = QAction(tr("desktop.packDesigner.menuDonate"), self)
 
         donation_action.triggered.connect(lambda: open_donation_dialog(self))
 
@@ -118,7 +119,11 @@ class DesignerWindow(QMainWindow):
 
     def _show_help(self) -> None:
         """_show_help 实现。"""
-        dialog = HelpDialog(self._build_designer_help, self, title="配置包设计器 使用说明")
+        dialog = HelpDialog(
+            self._build_designer_help,
+            self,
+            title=tr("desktop.packDesigner.helpTitle"),
+        )
 
         dialog.exec()
 
@@ -127,7 +132,7 @@ class DesignerWindow(QMainWindow):
         """_build_designer_help 实现。"""
         docs = load_multi_category(
             {
-                "完整说明书": [
+                tr("desktop.packDesigner.helpCatManual"): [
                     "GUI ③：配置包设计器",
                     "数据结构与文件格式",
                 ],
@@ -135,92 +140,29 @@ class DesignerWindow(QMainWindow):
         )
         static_help = [
             HelpSection(
-                category="入门",
-                title="概述",
-                content="""\
-<h2>配置包设计器</h2>
-<p>配置包设计器用于创建和编辑 .calcpack 配置文件，包含数据、布局和主题的完整设计流程。<br>
-生成的 .calcpack 文件可以通过 CalcPackViewer 加载使用。</p>
-<p>详见 <code>docs/制造游戏计算器完整流程.md</code>。</p>""",
+                category=tr("desktop.packDesigner.helpCatIntro"),
+                title=tr("desktop.packDesigner.helpTitleOverview"),
+                content=tr("desktop.packDesigner.helpBodyOverview"),
             ),
-        ]
-        static_help += [
             HelpSection(
-                category="数据录入",
-                title="数据录入页签",
-                content="""\
-<h2>数据录入</h2>
-<p>提供标准化的数据录入界面，支持角色、武器、装备等实体的数据管理：</p>
-<ul>
-<li><b>角色数据</b> — 名称、类型、星级、能力值、基础属性、技能 JSON 等</li>
-<li><b>武器数据</b> — 名称、类型、星级、基础攻击力、附加属性、特殊能力等</li>
-<li><b>装备数据</b> — 装备属性、套装效果等</li>
-</ul>
-<h3>操作说明</h3>
-<ul>
-<li>填写表单后点击「保存」</li>
-<li>已保存的数据会传递到「主题与导出」页签，用于打包</li>
-<li>支持导入已有 JSON 数据进行编辑</li>
-</ul>""",
+                category=tr("desktop.packDesigner.helpCatData"),
+                title=tr("desktop.packDesigner.helpTitleDataTab"),
+                content=tr("desktop.packDesigner.helpBodyDataTab"),
             ),
-        ]
-        static_help += [
             HelpSection(
-                category="布局编辑",
-                title="布局编辑页签",
-                content="""\
-<h2>布局编辑</h2>
-<p>可视化编排 DAG 节点和布局，设计计算器的界面结构：</p>
-<ul>
-<li>从适配器列表选择目标游戏适配器</li>
-<li>加载 DAG 数据和布局模板</li>
-<li>拖拽编排节点位置</li>
-<li>网格吸附 + 碰撞检测辅助对齐</li>
-</ul>
-<h3>操作说明</h3>
-<ul>
-<li>选择适配器后自动加载数据</li>
-<li>编排完成后布局数据自动同步到导出页签</li>
-<li>支持实时预览编排效果</li>
-</ul>""",
+                category=tr("desktop.packDesigner.helpCatLayout"),
+                title=tr("desktop.packDesigner.helpTitleLayoutTab"),
+                content=tr("desktop.packDesigner.helpBodyLayoutTab"),
             ),
-        ]
-        static_help += [
             HelpSection(
-                category="主题与导出",
-                title="主题与导出页签",
-                content="""\
-<h2>主题与导出</h2>
-<h3>主题编辑</h3>
-<ul>
-<li><b>字体</b> — 选择界面字体和字号</li>
-<li><b>色板</b> — 编辑界面配色方案</li>
-<li>修改实时生效，可随时预览效果</li>
-</ul>
-<h3>导出 .calcpack</h3>
-<ol>
-<li>确认数据、布局、主题都已配置完成</li>
-<li>检查各页签数据是否已同步</li>
-<li>点击「导出」按钮</li>
-<li>选择导出路径，系统会打包为 .calcpack 文件</li>
-</ol>
-<p>.calcpack 文件生成后，可以用 CalcPackViewer 或启动器直接打开使用。</p>""",
+                category=tr("desktop.packDesigner.helpCatTheme"),
+                title=tr("desktop.packDesigner.helpTitleThemeTab"),
+                content=tr("desktop.packDesigner.helpBodyThemeTab"),
             ),
-        ]
-        static_help += [
             HelpSection(
-                category="常见问题",
-                title="常见问题",
-                content="""\
-<h2>使用技巧与常见问题</h2>
-<h3>数据同步</h3>
-<p>切换到「主题与导出」页签时，系统会自动同步其他页签的数据。<br>
-如果需要手动同步，可以切换页签触发。</p>
-<h3>常见问题</h3>
-<p><b>Q: 生成的 .calcpack 怎么用？</b><br>
-A: 用启动器或 CalcPackViewer 打开。</p>
-<p><b>Q: 数据格式有要求吗？</b><br>
-A: 系统使用标准四层 schema，数据录入界面会自动引导填写正确格式。</p>""",
+                category=tr("desktop.packDesigner.helpCatFaq"),
+                title=tr("desktop.packDesigner.helpTitleFaq"),
+                content=tr("desktop.packDesigner.helpBodyFaq"),
             ),
         ]
         return static_help + docs
@@ -244,7 +186,7 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
     def _on_layout_changed(self, layout_data: dict | None) -> None:
         """_on_layout_changed 实现。"""
         if layout_data:
-            self._status_label.setText("布局已更新 — 导出页签可同步最新数据")
+            self._status_label.setText(tr("desktop.packDesigner.statusLayoutUpdated"))
 
     def _auto_sync_to_theme(self) -> None:
         """切到导出页签时自动同步其他面板的数据。"""
@@ -271,9 +213,12 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
             count_parts = [f"{k}={len(v)}" for k, v in data_files.items()]
 
             self._status_label.setText(
-                f"已同步数据({', '.join(count_parts)}) + "
-                f"{'布局' if layout_data else '无布局'} + "
-                f"{'DAG' if dag_dict else '无DAG'}"
+                tr(
+                    "desktop.packDesigner.statusSynced",
+                    counts=", ".join(count_parts),
+                    layout=tr("desktop.packDesigner.hasLayout") if layout_data else tr("desktop.packDesigner.noLayout"),
+                    dag=tr("desktop.packDesigner.hasDag") if dag_dict else tr("desktop.packDesigner.noDag"),
+                )
             )
 
         self._theme_panel.set_shared_data(
@@ -297,18 +242,18 @@ A: 系统使用标准四层 schema，数据录入界面会自动引导填写正�
         """_update_status 实现。"""
         tab_name = self._tabs.tabText(self._tabs.currentIndex())
 
-        self._status_label.setText(f"当前页签: {tab_name}")
+        self._status_label.setText(tr("desktop.packDesigner.statusCurrentTab", tab=tab_name))
 
     def _on_export(self, path: str) -> None:
         """_on_export 实现。"""
-        self._status_label.setText(f"已导出 → {path}")
+        self._status_label.setText(tr("desktop.packDesigner.statusExported", path=path))
 
 
 def main() -> None:
     """CLI 入口。"""
     app = QApplication(sys.argv)
 
-    app.setApplicationName("配置包设计器")
+    app.setApplicationName(tr("desktop.packDesigner.windowTitle"))
 
     win = DesignerWindow()
 

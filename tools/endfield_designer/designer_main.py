@@ -20,14 +20,15 @@ PySide6 GUI，提供公式反推、数据浏览等功能。
 
 from __future__ import annotations
 
-
 import sys
 
-
+from calc_framework.ui.i18n import tr
+from endfield_designer.data_browser_tab import DataBrowserTab
+from endfield_designer.data_editor_tab import DataEditorTab
+from endfield_designer.inverse_tab import InverseTab
+from endfield_designer.seed_tab import SeedTab
 from PySide6.QtCore import Qt
-
 from PySide6.QtGui import QFont
-
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -40,20 +41,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-
-from endfield_designer.data_browser_tab import DataBrowserTab
-
-from endfield_designer.data_editor_tab import DataEditorTab
-
-from endfield_designer.inverse_tab import InverseTab
-
-from endfield_designer.seed_tab import SeedTab
-
-
 from utils.gui.donation import open_donation_dialog
-
-
-APP_NAME = "数据设计器"
 
 APP_VERSION = "1.0.0"
 
@@ -64,7 +52,13 @@ class DesignerApp(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}")
+        self.setWindowTitle(
+            tr(
+                "desktop.designer.windowTitleFmt",
+                name=tr("desktop.designer.appName"),
+                version=APP_VERSION,
+            )
+        )
 
         self.setMinimumSize(900, 650)
 
@@ -90,13 +84,13 @@ class DesignerApp(QMainWindow):
 
         self.tabs = QTabWidget()
 
-        self.tabs.addTab(InverseTab(self.big_font, self.small_font), "公式反推")
+        self.tabs.addTab(InverseTab(self.big_font, self.small_font), tr("desktop.designer.inverseTitle"))
 
-        self.tabs.addTab(SeedTab(self.big_font, self.small_font), "数据录入")
+        self.tabs.addTab(SeedTab(self.big_font, self.small_font), tr("desktop.designer.seedTab"))
 
-        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), "数据编辑")
+        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), tr("desktop.designer.dataEditorTab"))
 
-        self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), "数据浏览")
+        self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), tr("desktop.designer.dataBrowserTab"))
 
         layout.addWidget(self.tabs, stretch=1)
 
@@ -104,7 +98,7 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.setContentsMargins(0, 4, 0, 0)
 
-        self._bwiki_btn = QPushButton("从 BWIKI 同步数据")
+        self._bwiki_btn = QPushButton(tr("desktop.designer.bwikiSync"))
 
         self._bwiki_btn.setFont(self.small_font)
 
@@ -124,7 +118,7 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addStretch()
 
-        donation_btn = QPushButton("自愿捐赠")
+        donation_btn = QPushButton(tr("desktop.endfield.donate"))
 
         donation_btn.setFont(self.small_font)
 
@@ -142,7 +136,13 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(donation_btn)
 
-        status = QLabel(f"{APP_NAME} v{APP_VERSION} — 数据维护工具，不包含伤害计算功能")
+        status = QLabel(
+            tr(
+                "desktop.designer.statusBarFmt",
+                name=tr("desktop.designer.appName"),
+                version=APP_VERSION,
+            )
+        )
 
         status.setFont(self.small_font)
 
@@ -163,32 +163,38 @@ class DesignerApp(QMainWindow):
             from tools.bwiki_scout.sync_all import main as bwiki_main
 
         except ImportError:
-            QMessageBox.critical(self, "同步失败", "BWIKI 同步模块未安装")
+            QMessageBox.critical(self, tr("desktop.designer.bwikiFailTitle"), tr("desktop.designer.bwikiNotInstalled"))
 
             return
 
         self._bwiki_btn.setEnabled(False)
 
-        self._bwiki_btn.setText("同步中...")
+        self._bwiki_btn.setText(tr("desktop.designer.bwikiSyncing"))
 
         try:
             result = bwiki_main()
 
             if result == 0:
-                QMessageBox.information(self, "BWIKI 同步", "数据同步完成！\n可在「数据浏览」页签查看最新数据。")
+                QMessageBox.information(self, tr("desktop.designer.bwikiTitle"), tr("desktop.designer.bwikiOkMsg"))
 
             else:
                 QMessageBox.warning(
-                    self, "BWIKI 同步", f"同步完成，但有警告（返回值: {result}）。\n可在命令行查看详情。"
+                    self,
+                    tr("desktop.designer.bwikiTitle"),
+                    tr("desktop.designer.bwikiWarnMsg", code=result),
                 )
 
         except Exception as e:
-            QMessageBox.critical(self, "同步失败", f"BWIKI 同步出错:\n{e}")
+            QMessageBox.critical(
+                self,
+                tr("desktop.designer.bwikiFailTitle"),
+                tr("desktop.designer.bwikiErrorMsg", error=e),
+            )
 
         finally:
             self._bwiki_btn.setEnabled(True)
 
-            self._bwiki_btn.setText("从 BWIKI 同步数据")
+            self._bwiki_btn.setText(tr("desktop.designer.bwikiSync"))
 
     def _apply_dark_style(self) -> None:
         """_apply_dark_style 实现。"""

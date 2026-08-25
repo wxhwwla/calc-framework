@@ -59,19 +59,26 @@ def format_fifteen_zone_damage_lines(
         if show_running_product:
             running *= zone_value
 
-            lines.append(f"{zone_name}: {zone_value:.4f}  (累计: {running:.4f})")
+            lines.append(
+                tr(
+                    "desktop.endfield.zoneWithRunning",
+                    zone=zone_name,
+                    value=f"{zone_value:.4f}",
+                    running=f"{running:.4f}",
+                )
+            )
 
         else:
-            lines.append(f"{zone_name}: {zone_value:.4f}")
+            lines.append(tr("desktop.endfield.zoneValue", zone=zone_name, value=f"{zone_value:.4f}"))
 
-    lines.append(f"最终伤害: {result.final_damage:.1f}")
+    lines.append(tr("desktop.endfield.finalDamageLine", damage=f"{result.final_damage:.1f}"))
 
     if result.warnings:
         for warning in result.warnings:
-            lines.append(f"提示: {warning}")
+            lines.append(tr("desktop.endfield.previewHint", warning=warning))
 
     if result.unknown_effects:
-        lines.append(f"未识别效果数: {len(result.unknown_effects)}")
+        lines.append(tr("desktop.endfield.unknownEffectsCount", n=len(result.unknown_effects)))
 
     return lines
 
@@ -279,15 +286,21 @@ def _build_single_hit_damage_lines_impl(
 
     header = [
         tr("desktop.endfield.modeSingleHit"),
-        f"技能: {skill.label}",
-        f"伤害类型: {skill.damage_type_display}",
-        f"技能倍率: {format_skill_multiplier_display_value(skill.multiplier * 100)}",
-        f"最终攻击力(基础伤害区): {final['final_attack']:.1f}",
-        "暴击模式: 不暴击",
+        tr("desktop.endfield.previewSkillLabel", label=skill.label),
+        tr("desktop.endfield.previewDamageType", type=skill.damage_type_display),
+        tr(
+            "desktop.endfield.skillMultiplierLine",
+            value=format_skill_multiplier_display_value(skill.multiplier * 100),
+        ),
+        tr(
+            "desktop.endfield.finalAttackBaseZone",
+            attack=f"{final['final_attack']:.1f}",
+        ),
+        tr("desktop.endfield.critModeNonCrit"),
     ]
 
     if skill.warning:
-        header.append(f"提示: {skill.warning}")
+        header.append(tr("desktop.endfield.previewHint", warning=skill.warning))
 
     return format_fifteen_zone_damage_lines(
         result,

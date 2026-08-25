@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
+
 from games.endfield.calc.damage.types import format_damage_type_display, resolve_segment_damage_type
 from games.endfield.calc.skills.segments import CHARACTER_SKILL_TYPES
 from games.endfield.calc.skills.special_fields import (
@@ -35,7 +37,6 @@ WEAPON_FLAT_BONUS_ATTRS: frozenset[str] = frozenset({"附加攻击力+", "主能
 
 
 from .format import (
-    NO_DAMAGE_MULTIPLIER_TEXT,
     _get_attribute_value,
     _skill_segment_display_value,
     format_weapon_bonus_display_value,
@@ -69,7 +70,14 @@ def build_character_skill_damage_type_lines(
 
             type_display = format_damage_type_display(damage_type, is_default=not explicit)
 
-            lines.append(f"{skill_type} 第{segment_index}段: {type_display}")
+            lines.append(
+                tr(
+                    "desktop.endfield.charDamageTypeLine",
+                    skill=skill_type,
+                    seg=segment_index,
+                    type=type_display,
+                )
+            )
 
     return lines
 
@@ -100,7 +108,7 @@ def build_character_skill_lines(
             display_value = _skill_segment_display_value(segment, skill_level)
 
             if display_value is None:
-                value_text = NO_DAMAGE_MULTIPLIER_TEXT
+                value_text = tr("desktop.endfield.noDamageMultiplier")
 
             else:
                 value_text = display_value
@@ -109,7 +117,16 @@ def build_character_skill_lines(
 
             type_display = format_damage_type_display(damage_type, is_default=not explicit)
 
-            lines.append(f"{skill_type} 等级{skill_level} 第{segment_index}段: {value_text} · {type_display}")
+            lines.append(
+                tr(
+                    "desktop.endfield.charSkillLine",
+                    skill=skill_type,
+                    level=skill_level,
+                    seg=segment_index,
+                    value=value_text,
+                    type=type_display,
+                )
+            )
 
     return lines
 
@@ -133,7 +150,7 @@ def build_character_attribute_lines(
         value = _get_attribute_value(char_data, level, attr_name)
 
         if value:
-            lines.append(f"{attr_name}: {value}")
+            lines.append(tr("desktop.endfield.attrLine", name=attr_name, value=value))
 
     if skill_1_level or skill_2_level or skill_3_level:
         type_lines = build_character_skill_damage_type_lines(
@@ -144,7 +161,7 @@ def build_character_attribute_lines(
         )
 
         if type_lines:
-            lines.append("--- 技能段伤害类型 ---")
+            lines.append(tr("desktop.endfield.skillDamageTypeSection"))
 
             lines.extend(type_lines)
 
@@ -225,7 +242,7 @@ def build_weapon_attribute_lines(
     base_attack = _get_attribute_value(weapon_data, weapon_level, "基础攻击力")
 
     if base_attack:
-        lines.append(f"基础攻击力: {base_attack}")
+        lines.append(tr("desktop.endfield.attrLine", name="基础攻击力", value=base_attack))
 
     schema = read_weapon_skills_schema(weapon_data)
 
@@ -265,11 +282,11 @@ def build_weapon_attribute_lines(
             is_first_skill=(attr_name == sa1_name),
         )
 
-        lines.append(f"{attr_name}: {display_value}")
+        lines.append(tr("desktop.endfield.attrLine", name=attr_name, value=display_value))
 
-    for slot_idx, pick_level, pick_stack, pick_name, label in (
-        (0, ws_level, ws_stack, ws_name, "特殊一"),
-        (1, ws2_level, ws2_stack, ws2_name, "特殊二"),
+    for slot_idx, pick_level, pick_stack, pick_name, label_key in (
+        (0, ws_level, ws_stack, ws_name, "desktop.endfield.weaponSpecialOne"),
+        (1, ws2_level, ws2_stack, ws2_name, "desktop.endfield.weaponSpecialTwo"),
     ):
         if not pick_name or pick_name in bonus_attrs:
             continue
@@ -303,6 +320,13 @@ def build_weapon_attribute_lines(
                 is_first_skill=False,
             )
 
-        lines.append(f"{pick_name}({label}): {display_value}")
+        lines.append(
+            tr(
+                "desktop.endfield.weaponSpecialLine",
+                name=pick_name,
+                label=tr(label_key),
+                value=display_value,
+            )
+        )
 
     return lines

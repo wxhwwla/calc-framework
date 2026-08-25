@@ -8,6 +8,7 @@ import json
 import unittest
 from pathlib import Path
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.calc.skills.special_fields import read_weapon_skills_schema
 from games.endfield.gui.presentation.display_lines import (
     build_character_attribute_lines,
@@ -44,6 +45,10 @@ def _load_by_name(path: Path, name: str) -> dict:
 
 
 class TestPropertyDisplayLines(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_character_lines_include_war_skill_at_selected_level(self):
         char = _load_by_name(_CHARACTERS_JSON, "秋栗")
 

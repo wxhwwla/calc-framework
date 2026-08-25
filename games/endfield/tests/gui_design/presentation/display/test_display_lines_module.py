@@ -6,10 +6,15 @@
 
 import unittest
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.presentation import display_lines
 
 
 class TestDisplayLinesModule(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        set_locale("zh-CN")
+
     def test_module_has_no_customtkinter_import(self) -> None:
         from games.endfield.gui.presentation import display_lines as display_lines_impl
 
