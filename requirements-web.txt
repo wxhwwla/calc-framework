@@ -1,7 +1,7 @@
 # Web / Docker 运行时依赖（权威清单）
 # 完整说明：docs/依赖说明.md §4
 # 桌面 GUI / 打包：cd games/endfield && pip install -e ".[dev]"
-fastapi>=0.115.0
+fastapi>=0.141.1
 uvicorn[standard]>=0.34.0
 pydantic>=2.0.0
 httpx>=0.28.0
