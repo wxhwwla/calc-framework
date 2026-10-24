@@ -4,7 +4,7 @@
 >
 > 基于 [`docs/项目目标.md`](../项目目标.md) 的长远愿景和 [`docs/会话接续手册.md`](../会话接续手册.md) 的当前状态综合分析。
 >
-> **最后账本纠偏**：2026-07-30（与代码/错误集修复记录对齐；勿再采信文中过时的「全中文 / 后端无测试 / 审计均未修复」表述）。
+> **最后账本纠偏**：2026-10-24（覆盖率门槛、i18n 键数、目录宽度、Rust 默认开等与仓库文件对齐；勿再采信文中过时的「CI fail-under=75/80」「全中文」「Rust 已回退」表述）。
 
 ---
 
@@ -99,7 +99,7 @@
 | **问题** | `games/endfield/` 的 CI 覆盖率门槛为 `--fail-under=40`（当前实际 ~64%），`framework/` 全量 ~73% |
 | **影响** | 覆盖率降低不影响 CI 通过，长期可能下滑 |
 | **方案** | 提升门槛：endfield 40→75，framework 增加 --fail-under=80 |
-| **完成情况** | 2026-06-13: endfield CI 门槛从 65→75（ci.yml + pyproject.toml）；framework CI 新增 --cov-fail-under=80（framework-ci.yml）；framework pyproject.toml 添加 fail_under=80 |
+| **完成情况（代码实况 2026-10-24）** | **Workflow**：`ci.yml` `--cov-fail-under=60`；`framework-ci.yml` `--cov-fail-under=65`。**包配置**：`games/endfield/pyproject.toml` `fail_under=75`；`framework/pyproject.toml` `fail_under=80`。二者不一致——以 workflow 为 CI 门禁，pyproject 为本地/工具目标 |
 
 ### 3. Web 后端测试覆盖 ✅ 已完成（2026-06-09）
 
@@ -166,17 +166,16 @@
 | 独立入口清理 | ✅ 已完成 | `scripts/` 仅 3 个有效入口（§4.140–4.148） |
 | `_version.py` 统一 | ✅ 已完成 | 版本唯一源头（§4.144） |
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
-| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 749 行（超 400 目标，低于 500 硬顶） |
-| 目录宽度 | ⚠️ 硬顶 | `tools/` 20、`scripts/` 20（ADR-0001 硬顶）；`web/backend/api/` 已收敛 |
-| `games.endfield` 覆盖率 | 🟢 ~85% | CI 门槛 75%（ci.yml + pyproject.toml） ✅ |
-| `framework` 覆盖率 | 🟢 | CI 门槛 80%（framework-ci.yml + pyproject.toml） ✅ |
-| Desktop GUI i18n | 🟡 进行中 | UI 控件字面量已清零；对话框等次要文案可继续 |
-| Web i18n | 🟢 已完成 | ~500+ 键 |
+| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 等大文件仍需盯（目标 ≤400 / 硬顶 500） |
+| 目录宽度 | 🟢 贴顶 | 2026-10-24：`tools/`/`scripts/`/`api/` = **19**（ADR-0001 硬顶 20） |
+| CI 覆盖门槛 | ⚠️ 双轨 | **workflow** Game 60 / Framework 65；**pyproject** 75 / 80 — CI 以 workflow 为准 |
+| Desktop GUI i18n | 🟢 基本完成 | `i18n_data` **1046** 键；边角/docs 摘录仍开放 |
+| Web i18n | 🟢 已完成 | locales 约 **890** 条目/语言 |
 | PA 部署脚本 | 🟢 已完成 | warmup + 并发上传 + 全链路 |
 | 快速部署模式 | 🟢 已完成 | `--fast` + `/api/admin/deploy` |
 | `web/backend` 覆盖率 | 🟢 | 集成测试已补；历史「~15%」描述作废 |
 | Web E2E 测试 | 🟢 | 多 spec / 40+ 用例已补；历史「仅 2 个 spec」作废 |
-| 全量搜索性能 | 🟡 | ~30s，目标 `<10s`（Rust 全批量规划中） |
+| 全量搜索性能 | 🟡 | Tier-4 **默认开启**；历史基线 ~30–34s；目标 `<10s` 待实机确认 |
 
 ---
 
@@ -254,5 +253,6 @@ Trae Work 深度缺陷报告（v3.26.13）已核实并完成 **Phase 0–3** 修
 | 2026-06-13 | PA 部署脚本优化：warmup + 5 并发上传 + 全链路部署验证 | Agent |
 | 2026-06-13 | develop→main 合并（d99fa165，118 文件，9535 行新增） | Agent |
 | 2026-07-30 | 进度账本统一纠偏：错误集/审计报告2/项目目标/improvement-roadmap/对称清单/polish 计划与代码现状对齐；手册 §8 表格修复 | Agent |
+| 2026-10-24 | 再校对：版本 3.29.21、数据 27/75/163@1.1.0、i18n 1046/~890、CI 门槛双轨、Rust 默认开；会话手册精简；历史计划迁入 `docs/archive/` | Agent |
 | 2026-06-17 | 外部缺陷报告 Phase 0–3 全部完成；api 子包、Docker 非 root、上传脚本 git add -u | Agent |
 | 2026-06-17 | 外部缺陷报告核实专文 + 分步修复计划（Phase 0–4）；C1/C2 确认待修 | Agent |

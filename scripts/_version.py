@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.29.21"
+_VERSION = "3.29.22"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -28,7 +28,8 @@ _EXE_VERSION = "0.7.0-beta"
 
 # ==============================================================
 
-_SUMMARY_MARKER_BEGIN = ""
+_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
+_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
 _UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
 _UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
 SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
@@ -152,8 +153,10 @@ def _canonical_marker_header() -> str:
     ``_SUMMARY_MARKER_END``，因为当标记区损坏时这些模块变量可能是
     空字符串或未定义，使用它们会导致"修复"后仍然损坏。
     """
+    # 必须同时写出 BEGIN + END 定义行；缺 END 会触发 F821 / 安装 NameError（见错误集）。
     return (
-        '_SUMMARY_MARKER_BEGIN = ""\n'
+        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
+        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
@@ -164,7 +167,7 @@ def _canonical_marker_header() -> str:
 def _markers_section_ok(text: str) -> bool:
     """判断磁盘上的标记区是否完整且标记值非空字符串。
 
-    使用硬编码值判断，避免模块变量为 ``""`` 时误判。
+    使用硬编码非空字面量判断，避免模块变量为 ``""`` 或缺 END 时误判为 OK。
     """
     required_lines = (
         '_SUMMARY_MARKER_BEGIN = ""',

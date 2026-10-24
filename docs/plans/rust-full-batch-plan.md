@@ -2,7 +2,7 @@
 
 > **目标**：将整个搜索评估循环移到 Rust，消除 Python 逐任务开销，实现 ~5 秒完成 97 万组合遍历。
 
-**当前状态（2026-07-30）**：Tier-4 **默认开启**（`CALC_RUST_FULL_BATCH=0` 关闭）。目录展开 + 内存/续跑 + search_eval 预计算 + 扩大 parity / act 已通过。旧扩展无全批量符号时自动回退 SoA。
+**当前状态（2026-10-24 校对）**：Tier-4 **默认开启**（`utils/frozen_runtime.use_rust_full_batch()`；`CALC_RUST_FULL_BATCH=0` 关闭）。目录展开 + 内存/续跑 + search_eval 预计算 + 扩大 parity 已合入。旧扩展无全批量符号时自动回退 SoA。大规模是否稳定 `<10s` **仍待实机观察**（本文件内 30–34s 为历史基线，非本次新测）。
 
 ---
 

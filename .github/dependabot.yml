@@ -1,5 +1,9 @@
 # Dependabot 自动化依赖更新
 # docs: https://docs.github.com/code-security/dependabot
+#
+# 仓库分支策略：远程仅长期保留 main + develop。
+# Dependabot 开出的分支审完即合/关并删除，勿堆积（见 docs/上传脚本与-pre-commit.md）。
+# open-pull-requests-limit 刻意压低，避免一次冒出十几条 bot 分支。
 
 version: 2
 updates:
@@ -9,7 +13,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
@@ -24,7 +28,7 @@ updates:
     directory: "/framework"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
@@ -39,7 +43,7 @@ updates:
     directory: "/games/endfield"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
@@ -55,7 +59,7 @@ updates:
     directory: "/web/frontend"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
@@ -71,7 +75,7 @@ updates:
     directory: "/extensions/rust_search"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
@@ -87,6 +91,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "ci"

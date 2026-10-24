@@ -17,12 +17,24 @@
 | `python github_upload_module.py --minor` | 第二位 +1；commit 前备份 `.git` → `git_backup/snapshots/` |
 | `python github_upload_module.py --tag` | 次版本上传时合并 main 后打 `v{_EXE_VERSION}` 标签 |
 
-**分支策略（2026-06-03 起）**：
+**分支策略（2026-06-03 起；2026-10-24 强化）**：
 
 | 分支 | 用途 |
 |------|------|
 | **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
 | **`main`** | 仅当 **输入 M（次版本号）** 时，脚本自动 `develop → main` 合并推送（`--minor` 或交互式输入 `M`） |
+
+远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：PR 审完即合或关，并删除远程分支；禁止堆积。清理示例：
+
+```powershell
+# 列出非 main/develop 的远程分支
+git fetch --prune
+git branch -r | Select-String -NotMatch 'origin/(main|develop)$|HEAD'
+
+# 删除（确认后）
+git push origin --delete dependabot/...
+# 或关闭 PR：gh pr close <n> --comment "清理 bot 分支"
+```
 
 发 **main 正式版** 前须在同一提交中：上传 bump `_VERSION` + 手动改 `_EXE_VERSION` + 可选 `--tag`。
 
