@@ -1,16 +1,25 @@
 /** 技能解析器（TypeScript 版）— 匹配 Python skill_parser 行为。 */
 
-/** 无 DOM 环境下迭代剥离 HTML（固定点，防止嵌套/多字符 bypass）。 */
+/** 无 DOM 环境下迭代剥离 HTML（固定点 + 拒绝残留危险标记）。 */
 function stripHtmlTagsFallback(html: string): string {
   let cur = html.replace(/<BR\s*\/?>/gi, "\n");
   let prev = "";
+  // 多轮剥离，直到稳定；再丢弃未闭合注释与 script 开标记
+  // （应对 CodeQL js/incomplete-multi-character-sanitization）
   while (prev !== cur) {
     prev = cur;
     cur = cur
       .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<!--[\s\S]*/g, "")
+      .replace(/<script\b[\s\S]*?<\/script>/gi, "")
+      .replace(/<\/?script\b[^>]*>/gi, "")
       .replace(/<[^>]*>/g, "")
       .replace(/&[^;]+;/g, " ")
       .replace(/[\u200B-\u200D\uFEFF]/g, "");
+  }
+  // 仍含危险残留则整段清空，避免「半剥离」注入
+  if (/<!--|<script/i.test(cur)) {
+    return "";
   }
   return cur;
 }

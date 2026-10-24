@@ -89,31 +89,22 @@ GitHub 上传与版本号（仓库根目录执行: python github_upload_module.p
 
 3. 升级幅度
 
-   - 默认 Patch：1.8.1 → 1.8.2（第三位 +1）
+   - 默认 Patch：第三位 +1（不再交互询问 P/M）
 
-   - Minor（大改动）：1.8.1 → 1.9.0（第二位 +1，第三位归零）
-
-     · 交互：运行脚本时输入 M 或 minor
-
-     · 非交互：python github_upload_module.py --minor
+   - Minor：python github_upload_module.py --minor（第二位 +1，第三位归零）
 
    - 不涨版本：python github_upload_module.py --no-bump
 
+   - MAJOR：仅手动改 scripts/_version.py 中的 _VERSION
 
-4. 提交说明（临时写在 _version.py 最下面）
 
-   - 上传前：脚本根据 git 改动自动生成 # --- UPLOAD_SUMMARY --- 块（勿手删标记行）。
+4. 提交说明（内存生成，不写回 `_version.py`）
 
-   - commit 消息格式：
+   - 上传脚本根据 git 改动调用 `summarize_changes()` 生成 commit 消息。
 
-       v3.11.21: 一句话标题
+   - 格式：`v3.29.25: 一句话标题` + 可选 `- 条目` 列表。
 
-       - 修改 xxx
-       - 更新 weapons.json ...
-
-   - push 成功后：脚本删除该总结块（_VERSION 保留）。
-
-   - push 失败：总结块保留，版本不回滚；修好网络后可只 push 或 --no-bump 再传。
+   - 版本：默认 patch +1；需要 minor 时加 `--minor`；`--no-bump` 跳过递增。
 
 
 5. 发布标签（Tag）

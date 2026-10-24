@@ -98,7 +98,7 @@ class TestGitPathNormalization(unittest.TestCase):
 
 
 class TestRollbackUploadDraft(unittest.TestCase):
-    def test_rollback_restores_version_and_removes_summary(self):
+    def test_rollback_restores_version(self):
         import tempfile
 
         from scripts import upload_meta as meta
@@ -106,24 +106,10 @@ class TestRollbackUploadDraft(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "_version.py"
             path.write_text(
-                """# ==============================================================
-
-_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
-_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
-_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
-_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
-SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
-SUMMARY_END = _UPLOAD_SUMMARY_END
-_VERSION_PATTERN = re.compile(
-    r'^(_VERSION\\s*=\\s*["\\'])([^"\\']+)(["\\'])',
-    re.MULTILINE,
-)
-_VERSION = "1.0.0"
-""",
+                '_VERSION = "1.0.0"\n_EXE_VERSION = "0.1.0-beta"\n',
                 encoding="utf-8",
             )
             meta.write_version(path, "1.0.1")
-            meta.write_summary_block(path, "t", ["a"])
             upload._rollback_upload_draft(
                 path,
                 meta,
@@ -131,7 +117,6 @@ _VERSION = "1.0.0"
                 restore_version=True,
             )
             self.assertEqual(meta.read_version(path), "1.0.0")
-            self.assertNotIn("# TITLE: t", path.read_text(encoding="utf-8"))
 
 
 class TestDualVersionReleaseMerge(unittest.TestCase):

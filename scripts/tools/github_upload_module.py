@@ -52,10 +52,6 @@ def _import_upload_meta():
     from scripts._path_setup import ensure_root
 
     ensure_root()
-    from scripts._version import ensure_summary_marker_assignments, please_read_me_path
-
-    if ensure_summary_marker_assignments(please_read_me_path()):
-        print("[信息] 已修复 _version.py 内 SUMMARY_BEGIN/SUMMARY_END 常量")
     from scripts import upload_meta
 
     return upload_meta
@@ -774,23 +770,15 @@ def signing_status_message(cfg: SigningConfig) -> str:
 
 
 def _ask_bump_kind(*, minor_flag: bool, no_bump: bool) -> str | None:
-    """交互询问或根据 flags 确定版本升级类型。"""
+    """确定版本升级类型。
+
+    默认 **patch**（第三位 +1）。仅 ``--minor`` 时升 minor。
+    不再交互询问，避免非 TTY / 管道输入 EOF；需要 minor 时由人类显式传参。
+    """
     if no_bump:
         return None
-
     if minor_flag:
         return "minor"
-
-    if sys.stdin.isatty():
-        print("版本升级: [P]atch 第三位+1 (回车默认) / [M]inor 第二位+1")
-
-        choice = input("> ").strip().lower()
-
-        if choice in ("m", "minor"):
-            return "minor"
-
-        return "patch"
-
     return "patch"
 
 
@@ -1126,12 +1114,10 @@ def _rollback_upload_draft(
     saved_version: str,
     restore_version: bool,
 ) -> None:
-    """上传在 commit 前失败时撤销总结块与（可选）已写入的版本号。"""
-    meta.remove_summary_block(readme_path)
+    """上传在 commit 前失败时（可选）回滚已写入的版本号。"""
     if restore_version:
         meta.write_version(readme_path, saved_version)
         print(f"[信息] 已回滚 _VERSION → {saved_version}")
-    print("[信息] 已移除 _version.py 底部 UPLOAD_SUMMARY 块")
 
 
 def _commit_with_message(message: str) -> None:
@@ -1389,15 +1375,8 @@ def commit_and_push(
             return
 
         title, bullets = meta.summarize_changes(change_paths)
-
-        meta.write_summary_block(readme_path, title, bullets)
-
-        print(f"[信息] 已写入上传总结至 {readme_path.name} 底部")
-
-        from scripts._version import ensure_summary_marker_assignments
-
-        if ensure_summary_marker_assignments(readme_path):
-            print("[信息] 已修复 _version.py 内 SUMMARY_BEGIN/SUMMARY_END 常量")
+        commit_msg = meta.build_commit_message(version_for_msg, title, bullets)
+        print(f"[信息] 提交说明：{title}（{len(bullets)} 条，内存生成，不写回 _version.py）")
 
         _stage_upload_changes(change_paths, readme_path)
 
@@ -1417,26 +1396,6 @@ def commit_and_push(
 
         print("[信息] commit 前 pre-commit（含版本号写入 / 未暂存改动同步后）…")
         if not _run_pre_commit_on_staged():
-            _rollback_upload_draft(
-                readme_path,
-                meta,
-                saved_version=saved_version,
-                restore_version=version_planned_bump,
-            )
-            sys.exit(1)
-
-        title_read, bullets_read = meta.read_summary_for_commit(readme_path)
-
-        commit_msg = meta.build_commit_message(version_for_msg, title_read, bullets_read)
-
-        # 摘要已读入 commit 消息，从磁盘删除并重新暂存以免进入仓库历史
-        meta.remove_summary_block(readme_path)
-        print(f"[信息] 已删除 {readme_path.name} 底部 UPLOAD_SUMMARY 块")
-        run_git(["add", _version_file_relpath(readme_path)])
-
-        # 删块后可能触发换行符修正，再跑一轮 pre-commit
-        print("[信息] 删块后 pre-commit（修换行符）…")
-        if not _run_pre_commit_on_staged(rounds=2):
             _rollback_upload_draft(
                 readme_path,
                 meta,
@@ -1496,7 +1455,7 @@ def commit_and_push(
                     push_tag=push_tag,
                 )
             elif push_tag:
-                print("[信息] --tag 已跳过：仅次版本上传时合并并打标签，请使用 --minor 或输入 M")
+                print("[信息] --tag 已跳过：仅次版本上传时合并并打标签，请使用 --minor")
         except subprocess.CalledProcessError:
             print(f"[警告] {WORK_BRANCH} 已推送，但合并 {RELEASE_BRANCH} 失败，请人工处理 merge")
             raise

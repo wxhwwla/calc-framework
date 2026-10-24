@@ -12,9 +12,9 @@
 |------|------|
 | `python github_upload_module.py --check` | 仅自检（rebase/merge/断历史），不 commit/push |
 | `python github_upload_module.py --dry-run` | **预览模式**：展示将要执行的变更文件、版本递增计划，不实际修改/推送 |
-| `python github_upload_module.py` | 提交并 push 到 **`develop`**；仅 patch bump `_VERSION` |
+| `python github_upload_module.py` | 提交并 push 到 **`develop`**；**默认 patch** bump `_VERSION`（不再询问 P/M） |
 | `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump） |
-| `python github_upload_module.py --minor` | 第二位 +1；commit 前备份 `.git` → `git_backup/snapshots/` |
+| `python github_upload_module.py --minor` | 第二位 +1（需人类明确要求时使用）；commit 前备份 `.git` → `git_backup/snapshots/` |
 | `python github_upload_module.py --tag` | 次版本上传时合并 main 后打 `v{_EXE_VERSION}` 标签 |
 
 **分支策略（2026-06-03 起；2026-10-24 强化）**：
@@ -22,7 +22,7 @@
 | 分支 | 用途 |
 |------|------|
 | **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
-| **`main`** | 仅当 **输入 M（次版本号）** 时，脚本自动 `develop → main` 合并推送（`--minor` 或交互式输入 `M`） |
+| **`main`** | 仅当 **`--minor`（次版本号）** 时，脚本自动 `develop → main` 合并推送 |
 
 远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：PR 审完即合或关，并删除远程分支；禁止堆积。清理示例：
 
@@ -98,34 +98,20 @@ python github_upload_module.py
 
 ---
 
-## 4. `scripts/_version.py` 总结标记（`[SEV-HIGH]`）
+## 4. `scripts/_version.py` 版本唯一源头（2026-10-24 起）
 
-| 常量 | 正确写法（模块级） |
-|------|-------------------|
-| `SUMMARY_BEGIN` | `SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN` |
-| `SUMMARY_END` | `SUMMARY_END = _UPLOAD_SUMMARY_END` |
+| 常量 | 含义 | 谁改 |
+|------|------|------|
+| `_VERSION` | pip / 提交用语义化版本 | 上传脚本默认 **patch +1**；`--minor` 时第二位 +1；MAJOR 仅手动 |
+| `_EXE_VERSION` | 窗口标题 / exe 用户可见 | **仅手动**；改后须重打包 |
 
-字符串值均为 `"# --- BEGIN UPLOAD_SUMMARY ---"` / `"# --- END UPLOAD_SUMMARY ---"`（由 `_UPLOAD_SUMMARY_*` 定义）。
-
-**禁止** `SUMMARY_BEGIN = ""` 或缺少 `SUMMARY_END =` 行 → `ruff-lint` F821/F822（`__all__` 导出未定义名），上传 commit 被取消。
-
-### 4.1 易误判：文档同批 ≠ 文档致错（§4.155）
-
-上传总结常同时列出 `docs/*.md` 与 `scripts/_version.py`。pre-commit 报 **`F822 SUMMARY_END`** 时，根因几乎总在 **`_version.py` 顶部两行赋值**，与 md 正文无关。勿把「刚补了文档就 Failed」理解成 markdown 或 pre-commit 误伤文档。
-
-### 4.2 实现与防护（2026-06-04 §4.155 加固）
-
-| 机制 | 作用 |
-|------|------|
-| `_UPLOAD_SUMMARY_BEGIN/END` | 读写**底部**总结块，不依赖顶部赋值是否被写坏 |
-| `_summary_markers_need_repair()` | 检测空字符串、缺行、非 canonical 赋值 |
-| `ensure_summary_marker_assignments()` | 用 `[\r\n]+` regex 整行替换（**CRLF 须一次匹配两行**，旧 `\n` -only 会只删第一行） |
-| 调用时机 | import 时；`write_version` 写盘后；`write_summary_block` 开头；上传脚本 **`git add` 前** |
+**已移除** `UPLOAD_SUMMARY` / `SUMMARY_*` / `ensure_summary_marker_assignments` 整套机制（多次 F821/空标记回归）。提交说明由 `summarize_changes()` **内存生成**，不写回 `_version.py`。
 
 业务逻辑在 `scripts/tools/github_upload_module.py`；根/`scripts/` 下文件仅为 **subprocess 重导向**（禁止 `import *` 包装）。
 
-版本号在 **pre-commit 通过后** 才写入 `_version.py`；pre-commit 或 commit 失败时脚本自动回滚 `_VERSION` 与底部总结块，**修复后直接重跑上传脚本即可**（无需 `--no-bump`）。  
-仅当 **commit 已成功、push 失败** 或 **显式跳过 bump** 时用 `--no-bump`。
+版本号在 **pre-commit 通过后** 才写入 `_version.py`；pre-commit 或 commit 失败时脚本自动回滚 `_VERSION`，**修复后直接重跑上传脚本即可**（无需 `--no-bump`）。  
+仅当 **commit 已成功、push 失败** 或 **显式跳过 bump** 时用 `--no-bump`。  
+需要升 minor 时：`python github_upload_module.py --minor`（不再交互询问 P/M）。
 
 ---
 
