@@ -15,7 +15,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.29.22"
+_VERSION = "3.29.23"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -155,8 +155,7 @@ def _canonical_marker_header() -> str:
     """
     # 必须同时写出 BEGIN + END 定义行；缺 END 会触发 F821 / 安装 NameError（见错误集）。
     return (
-        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
-        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
+        '_SUMMARY_MARKER_BEGIN = ""\n'
         "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
         "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
         "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"

@@ -830,7 +830,10 @@ class _ViewerPage(QWidget):
             from calc_framework.ui.viewer import CalcPackViewer
 
             self._viewer = CalcPackViewer()
-            layout.addWidget(self._viewer.centralWidget())
+            # centralWidget() 在尚未 setCentralWidget 时可为 None（pyright reportArgumentType）
+            central = self._viewer.centralWidget()
+            if central is not None:
+                layout.addWidget(central)
 
             # 给一个加载按钮
             btn_layout = QHBoxLayout()

@@ -208,7 +208,7 @@ def _build_tree_items(
     lines: list[str],
     top_results: Sequence[LoadoutScore] | None,
     *,
-    damage_metric: str,
+    damage_metric: str | None,
     segment_counts: dict[str, int] | None,
     abnormal_counts: dict[str, int] | None,
     spell_abnormal_counts: dict[str, int] | None,
@@ -227,9 +227,10 @@ def _build_tree_items(
             items.append(item)
         return items
 
+    metric = damage_metric if damage_metric is not None else tr("desktop.endfield.damageMetric")
     nodes = build_search_result_items(
         list(top_results),
-        damage_metric=damage_metric,
+        damage_metric=metric,
         segment_counts=segment_counts,
         abnormal_counts=abnormal_counts,
         spell_abnormal_counts=spell_abnormal_counts,
