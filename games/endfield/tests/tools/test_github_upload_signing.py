@@ -118,6 +118,22 @@ class TestRollbackUploadDraft(unittest.TestCase):
             )
             self.assertEqual(meta.read_version(path), "1.0.0")
 
+    def test_push_failure_after_commit_keeps_working_tree_version(self):
+        """commit 已成功时 push 失败不得把工作区 _VERSION 写回旧值。"""
+        import tempfile
+
+        from scripts import upload_meta as meta
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "_version.py"
+            path.write_text(
+                '_VERSION = "3.30.0"\n_EXE_VERSION = "0.7.0-beta"\n',
+                encoding="utf-8",
+            )
+            # 模拟：HEAD/工作区已是 bump 后版本；push 失败处理不得降级
+            upload._advise_push_failure_after_commit(bumped_and_committed=True)
+            self.assertEqual(meta.read_version(path), "3.30.0")
+
 
 class TestDualVersionReleaseMerge(unittest.TestCase):
     def setUp(self):

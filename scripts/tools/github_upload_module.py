@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
-"""Push this repo to GitHub over SSH and bump scripts/_version.py when needed."""
+"""推送本仓库到 GitHub（SSH），并按规则更新 scripts/_version.py。
+
+提交说明由 summarize_changes 内存生成（无 UPLOAD_SUMMARY 磁盘块）。
+commit 成功后若 push 失败：保留工作区与 HEAD 的新版本，用 --no-bump 补推。
+"""
 
 from __future__ import annotations
 
@@ -1120,6 +1124,17 @@ def _rollback_upload_draft(
         print(f"[信息] 已回滚 _VERSION → {saved_version}")
 
 
+def _advise_push_failure_after_commit(*, bumped_and_committed: bool) -> None:
+    """commit 已成功但 push 失败：不改写工作区版本。
+
+    旧逻辑会把 `_VERSION` 写回 bump 前值，造成工作区落后于 HEAD，
+    随后 `--no-bump` 补推时盘面脏。现改为保留 HEAD 版本，仅提示补推。
+    """
+    if bumped_and_committed:
+        print("[信息] 推送失败；本地 commit 已含新版本，工作区不回滚 _VERSION")
+    print("[警告] 推送未成功；本地 commit 已保留，修复后请 python github_upload_module.py --no-bump 仅补推")
+
+
 def _commit_with_message(message: str) -> None:
     """使用指定消息执行 git commit。"""
     cfg = resolve_signing_config()
@@ -1434,16 +1449,9 @@ def commit_and_push(
 
     except subprocess.CalledProcessError:
         push_succeeded = False
-
-        # 推送失败：回滚已写入的版本号（如果版本被递增了）
-        if version_planned_bump and created_commit:
-            print("[信息] 推送失败，回滚 _VERSION 到推送前状态…")
-            meta.write_version(readme_path, saved_version)
-            print(f"[信息] 已回滚 _VERSION → {saved_version}")
-            print("[信息] 版本号已恢复到推送前值，修复后可重新运行上传脚本")
-
-        print("[警告] 推送未成功；本地 commit 已保留，修复后请 python github_upload_module.py --no-bump 仅补推")
-
+        _advise_push_failure_after_commit(
+            bumped_and_committed=bool(version_planned_bump and created_commit),
+        )
         raise
 
     if push_succeeded:

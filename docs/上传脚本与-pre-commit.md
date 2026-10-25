@@ -50,8 +50,8 @@ git push origin --delete dependabot/...
 | 仅 `git add` 变更路径 | 不用 `git add .`，避免 CRLF 全仓库脏改动被一并提交 |
 | 落后 0 时跳过 pull/stash | 已与 `origin/main` 同步时不 pull，避免 Windows 上无意义的 stash |
 | pre-commit 最多 2 轮 | 见 §3 |
-| push 成功删总结块 | 失败则保留 `_version.py` 底部块；**pre-commit/commit 失败会自动回滚 bump 与总结块** |
-| push 失败 | **自动回滚 `_VERSION`** 到推送前值；本地 commit 保留，修复后 `--no-bump` 补推 |
+| pre-commit/commit 失败 | **自动回滚** 已写入的 `_VERSION`（commit 尚未成功） |
+| push 失败（commit 已成功） | **不**回滚工作区 `_VERSION`（与 HEAD 一致）；本地 commit 保留，`--no-bump` 补推 |
 | PowerShell 红色 Git 输出 | Git 写 stderr，非失败；看末尾 `[完成]` / exit code |
 
 ---
@@ -199,7 +199,7 @@ fatal: pathspec '"docs/344/274/232/350/257/235/.../214.md"' did not match any fi
 - 默认 **人类** 执行 `python github_upload_module.py`；Agent 不得主动 upload
 - sandbox 内 **禁止** `git rm` / `git reset` / `git checkout HEAD --` 等写操作（见 `.cursorrules`）
 - 改上传逻辑只改 `scripts/tools/github_upload_module.py`
-- 上传失败排障顺序：`--check` → **`ruff-lint` 行** Failed → **`F822 SUMMARY_*` 查 `_version.py` 顶部**（非 doc 问题）→ pathspec `344/274/...` → 修复后重跑；**push 失败** 用 `--no-bump`
+- 上传失败排障顺序：`--check` → **`ruff-lint` 行** Failed → pathspec / CRLF → 修复后重跑；**push 失败**（commit 已成功）用 `--no-bump`（UPLOAD_SUMMARY 已移除，勿再查 `SUMMARY_*`）
 
 ---
 
