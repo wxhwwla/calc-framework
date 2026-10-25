@@ -30,8 +30,8 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -46,14 +46,14 @@ jobs:
             libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: "web/frontend/package-lock.json"
 
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: pip-e2e-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml', 'requirements-web.txt') }}
@@ -110,7 +110,7 @@ jobs:
 
       - name: 上传 Cypress 截图（测试失败时）
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-screenshots
           path: web/frontend/cypress/screenshots/
@@ -118,7 +118,7 @@ jobs:
 
       - name: 上传 Cypress 视频（如有）
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-videos
           path: web/frontend/cypress/videos/
