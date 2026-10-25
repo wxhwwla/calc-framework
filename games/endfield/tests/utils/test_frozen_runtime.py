@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """frozen_runtime 单元测试。"""
 
@@ -97,6 +98,15 @@ class TestFrozenRuntime(unittest.TestCase):
                 clear=True,
             ):
                 self.assertFalse(fr.use_rust_search_accel())
+
+    def test_full_batch_default_on_and_opt_out(self) -> None:
+        with patch.object(sys, "frozen", False, create=True):
+            with patch.dict(os.environ, {}, clear=True):
+                self.assertTrue(fr.use_rust_full_batch())
+            with patch.dict(os.environ, {"CALC_RUST_FULL_BATCH": "0"}, clear=True):
+                self.assertFalse(fr.use_rust_full_batch())
+            with patch.dict(os.environ, {"RUST_SEARCH_FALLBACK": "1"}, clear=True):
+                self.assertFalse(fr.use_rust_full_batch())
 
 
 if __name__ == "__main__":

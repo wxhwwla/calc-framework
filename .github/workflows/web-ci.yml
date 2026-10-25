@@ -6,16 +6,24 @@ name: Web CI
 permissions:
   contents: read
 
+concurrency:
+  group: web-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, master, develop]
     paths:
       - "web/**"
+      - "extensions/rust_search/**"
+      - "web/wasm-curve/**"
       - ".github/workflows/web-ci.yml"
   pull_request:
     branches: [main, master, develop]
     paths:
       - "web/**"
+      - "extensions/rust_search/**"
+      - "web/wasm-curve/**"
 
 jobs:
   frontend:
@@ -32,14 +40,23 @@ jobs:
           cache: "npm"
           cache-dependency-path: "web/frontend/package-lock.json"
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Cache Rust wasm-curve
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "web/wasm-curve -> target"
+
+      - name: Install wasm-pack and binaryen (wasm-opt)
+        run: |
+          # binaryen 提供系统 wasm-opt，避免 wasm-pack 从 GitHub Releases 下载挂起（act/代理环境）
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build wasm-curve
         working-directory: web/wasm-curve
@@ -62,8 +79,15 @@ jobs:
           TOTAL=$(du -sb dist/ | cut -f1)
           echo "Total: $((TOTAL / 1024)) KB"
           if [ $TOTAL -gt 3072000 ]; then
-            echo "⚠️ Warning: Total bundle > 3 MB"
+            echo "::warning::Total bundle > 3 MB ($((TOTAL / 1024)) KB)"
           fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: web/frontend/dist/
+          retention-days: 3
 
   backend:
     name: Backend (ruff + pytest)
@@ -77,10 +101,23 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install system deps (EGL for PySide6)
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-web-backend-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml', 'requirements-web.txt') }}
+          restore-keys: pip-web-backend-
+
+      - name: Install system deps (Qt/EGL for PySide6)
         run: |
+          # 与 Game CI / Framework CI 对齐：act 镜像比 GitHub runner 瘦，缺任一 .so 都会在 import PySide6 时失败
           sudo apt-get update
-          sudo apt-get install -y libegl1 libegl-mesa0
+          sudo apt-get install -y \
+            libegl1 libegl-mesa0 libgl1 \
+            libxcb-cursor0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
+
 
       - name: Install dependencies
         run: |
@@ -93,4 +130,4 @@ jobs:
         run: python -m ruff check web/backend/
 
       - name: Test backend API
-        run: python -m pytest web/backend/tests/ -q
+        run: python -m pytest web/backend/tests/ -q --tb=short

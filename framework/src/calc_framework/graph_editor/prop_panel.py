@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """属性面板 — 编辑选中节点的配置参数。"""
 
@@ -154,7 +155,7 @@ class PropPanel(QWidget):
         elif node.type == "user_input":
             self._add_user_input_controls(node)
 
-        elif node.type in ("unary", "binary"):
+        elif node.type in ("unary", "binary", "condition"):
             self._add_op_controls(node)
 
     def _add_const_controls(self, node: GraphNode) -> None:
@@ -263,7 +264,6 @@ class PropPanel(QWidget):
     def _on_label_changed(self, text: str) -> None:
         if self._current_node:
             self._current_node.label = text
-
             self.node_changed.emit(self._current_node.id)
 
     def _on_value_changed(self, value: float) -> None:

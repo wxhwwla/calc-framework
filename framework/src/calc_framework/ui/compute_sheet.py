@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ComputeSheet QWidget — 声明式计算表组件。
 
@@ -8,6 +9,7 @@ ComputeSheet 类的胶水代码，控件生成委托给 sheet_widgets，求值�
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from PySide6.QtCore import QObject, Qt, Signal
@@ -48,7 +50,7 @@ class ComputeSheet(QObject):
         self,
         dag_service: DAGService,
         layout: Layout,
-        variables: dict[str, DAGVariable],
+        variables: Mapping[str, DAGVariable | dict[str, Any]],
         base_context: dict[str, Any] | None = None,
         parent: QWidget | None = None,
         user_context_overrides: dict[str, tuple[str, list[str]]] | None = None,
@@ -71,18 +73,14 @@ class ComputeSheet(QObject):
         super().__init__(parent)
         self._dag_service = dag_service
         self._layout = layout
-        self._variables = variables
+        self._variables: dict[str, DAGVariable | dict[str, Any]] = dict(variables)
         self._base_context = base_context or {}
         self._user_context_overrides = user_context_overrides or {}
         self._context_overrides: dict[str, Any] = {}
         self._widget: QWidget | None = None
         self._output_labels: dict[str, QLabel] = {}
         self._input_widgets: dict[str, tuple[QWidget, ControlSpec]] = {}
-        self._output_formats: dict[str, str] = {
-            oid: odef.format
-            for oid, odef in dag_service.dag.outputs.items()
-            if odef.format
-        }
+        self._output_formats: dict[str, str] = {oid: odef.format for oid, odef in dag_service.dag.outputs.items() if odef.format}
 
     @property
     def widget(self) -> QWidget:
@@ -91,8 +89,7 @@ class ComputeSheet(QObject):
         return self._widget
 
     def evaluate(self) -> DAGResult:
-        logger.debug("ComputeSheet 求值开始: %d 个输出, %d 个变量",
-                      len(self._dag_service.dag.outputs), len(self._variables))
+        logger.debug("ComputeSheet 求值开始: %d 个输出, %d 个变量", len(self._dag_service.dag.outputs), len(self._variables))
         context = build_context(
             self._base_context,
             self._variables,
@@ -145,9 +142,7 @@ class ComputeSheet(QObject):
         root_layout.addStretch()
         return root
 
-    def _collect_input_items(
-        self, sec: Section
-    ) -> list[tuple[str, QLabel, QWidget | None, ControlSpec]]:
+    def _collect_input_items(self, sec: Section) -> list[tuple[str, QLabel, QWidget | None, ControlSpec]]:
         """收集 section 中的 input 项，用于响应式重排。"""
         items: list[tuple[str, QLabel, QWidget | None, ControlSpec]] = []
         for var_path in sec.variables:
@@ -195,11 +190,13 @@ class ComputeSheet(QObject):
             group = QGroupBox(sec.title)
             layout = QVBoxLayout(group)
             layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(DonationWidget(
-                text=cfg.get("text", "感谢使用！如果觉得有用，欢迎支持开发者。"),
-                image_path=cfg.get("image_path") or DONATION_IMAGE_PATH,
-                parent=group,
-            ))
+            layout.addWidget(
+                DonationWidget(
+                    text=cfg.get("text", "感谢使用！如果觉得有用，欢迎支持开发者。"),
+                    image_path=cfg.get("image_path") or DONATION_IMAGE_PATH,
+                    parent=group,
+                )
+            )
             return group
         group = QGroupBox(sec.title)
         layout = QVBoxLayout(group)

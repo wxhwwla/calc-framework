@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """明日方舟逆推适配器 — ``SegmentCurveAdapter`` + 动态/静态 ``CurveBlueprint``。"""
 

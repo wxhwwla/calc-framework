@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """
@@ -49,11 +49,9 @@ from bwiki_scout.wiki_sync import (
 )
 
 
-_SEED_CHAR_PATH = (
-    Path(__file__).resolve().parent.parent.parent / "games" / "endfield" / "scripts" / "seed_characters.py"
-)
+_SEED_CHAR_PATH = Path(__file__).resolve().parent.parent / "endfield_scripts" / "seed_characters.py"
 
-_SEED_WEAPON_PATH = Path(__file__).resolve().parent.parent.parent / "games" / "endfield" / "scripts" / "seed_weapons.py"
+_SEED_WEAPON_PATH = Path(__file__).resolve().parent.parent / "endfield_scripts" / "seed_weapons.py"
 
 
 def _print_part(title: str, result: dict) -> None:

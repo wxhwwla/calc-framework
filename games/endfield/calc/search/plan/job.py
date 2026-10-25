@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """单技能全量搜索作业（无头组装，供 GUI / 测试复用）。"""
 

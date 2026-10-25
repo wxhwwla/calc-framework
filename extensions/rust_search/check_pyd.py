@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Check if the Rust .pyd loads correctly from a MEI directory."""
 
 import sys

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 多段逆推 payload — SegmentCurveEngine / AK 里程碑 / 终末地兼容层。"""
 
@@ -5,6 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from api.internal.errors import raise_http_from_exc
 from calc_framework.inverse.curve import GROWTH_PARAM_SEGMENTS_KEY, CurveBlueprint, SegmentCurveEngine
 from fastapi import HTTPException
 
@@ -132,7 +134,7 @@ def inverse_segment_payload(
     try:
         result = engine.fit_segment(data, spec)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise_http_from_exc(exc, status_code=400)
     out = fit_result_to_inverse_response(result, max_error=max_error, original=data)
     out.update(
         {
@@ -176,7 +178,7 @@ def inverse_formula_payload(
     try:
         adapter = EndfieldInverseAdapter()
     except ImportError as exc:
-        raise HTTPException(status_code=500, detail=f"逆推引擎导入失败: {exc}") from exc
+        raise_http_from_exc(exc, status_code=503, public_message="逆推引擎不可用")
 
     data = [float(x) for x in values]
     if type_ == "attribute":

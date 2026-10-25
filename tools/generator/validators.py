@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """适配器包验证器 — 检查生成的适配器文件是否正确。"""
 
 from __future__ import annotations

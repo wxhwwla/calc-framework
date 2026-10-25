@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """为 scripts/ 目录下的入口脚本提供项目根路径设置。
 
@@ -10,6 +11,7 @@
     ensure_root()
 
 """
+
 import sys
 from pathlib import Path
 

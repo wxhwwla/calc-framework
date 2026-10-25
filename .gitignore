@@ -10,6 +10,60 @@
 # AI 技能（从 mattpocock/skills 安装）
 .agents/
 
+# npx skills 安装时创建的 Agent 配置文件
+.adal/
+.aider-desk/
+.augment/
+.autohand/
+.bob/
+.codeartsdoer/
+.codebuddy/
+.codemaker/
+.codestudio/
+.commandcode/
+.continue/
+.cortex/
+.crush/
+.devin/
+.factory/
+.forge/
+.goose/
+.hermes/
+.iflow/
+.inferencesh/
+.jazz/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.lingma/
+.mcpjam/
+.moxby/
+.mux/
+.neovate/
+.ona/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.reasonix/
+.roo/
+.rovodev/
+.tabnine/
+.terramind/
+.tinycloud/
+.vibe/
+.windsurf/
+.zencoder/
+agent/
+data/
+!framework/**/data/
+!games/**/data/
+!web/**/data/
+skills/
+!games/**/skills/
+
 # Skills 锁文件
 skills-lock.json
 
@@ -56,6 +110,12 @@ games/endfield/终末地伤害计算器.exe
 
 # 上传脚本临时文件
 .git-upload-msg.txt
+.tmp-*
+tmp_*.py
+.tmp-npm-audit.json
+tmp_parse_audit.py
+tmp_list_alerts.py
+tmp_lock_versions.py
 
 # 本地 .git 快照（Minor 上传前自动备份，勿提交）
 git_backup/snapshots/
@@ -67,6 +127,13 @@ git_backup/snapshots/
 batch_docstring.py
 scan_docstrings.py
 scan_report.json
+scripts/test_gui_*.py
+TEST_PLAN.md
+step*.py
+test_click*.py
+
+# 日志目录
+logs/
 
 # 运行时用户偏好（不应跟踪）
 ui_preferences.json
@@ -75,6 +142,11 @@ ui_preferences.json
 .env
 .env.*
 git_key.txt
+
+# 个人快捷启动脚本和配置（不提交）
+打开 Claude Code.bat
+run_local_ci.ps1
+.actrc
 
 # 系统文件
 Thumbs.db
@@ -99,12 +171,17 @@ web/backend/data/search_history.json
 web/backend/api/.staging/
 web/backend/api/packaging/.staging/
 web/backend/api/.admin_data/
+web/backend/.data/
 
 # 压缩包
 *.zip
 
 # 性能基准测试产物
 .benchmarks/
+
+# 图编辑器诊断/测试脚本
+framework/packages/_test*.py
+framework/packages/_diag*.py
 
 # 覆盖率报告
 coverage.xml

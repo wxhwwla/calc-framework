@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 单段伤害引擎（15 乘区链）。
@@ -37,13 +38,25 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from games.endfield.calc.damage.break_defense import damage_effects_from_break_defense
 from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
 
 from .helpers import _clamp, _collect_effects, _resolve_crit_zone
 from .types import ZONE_ORDER, CritMode, DamageContext, DamageEffect, DamageResult
 
+_logger = __import__("logging").getLogger(__name__)
+
 DamagePipeline = str
+
+# 上下文buff字段 → 效果类型名称的映射，用于检测重复叠加
+_CONTEXT_BONUS_EFFECT_TYPES: dict[str, str] = {
+    "damage_type_bonus": "伤害类型伤害加成",
+    "skill_type_bonus": "技能类型伤害加成",
+    "imbalance_damage_bonus": "失衡伤害加成",
+    "other_damage_bonus": "其他伤害加成",
+}
 
 _CONTEXT_BUFF_MAP: dict[str, str] = {
     "暴击率": "crit_rate",
@@ -79,28 +92,16 @@ def _apply_manual_buffs(
                 )
             )
     if overrides:
-        context = DamageContext(
-            final_attack=context.final_attack,
-            skill_multiplier=context.skill_multiplier,
-            damage_type=context.damage_type,
-            skill_type=context.skill_type,
-            is_unbalanced=context.is_unbalanced,
-            is_true_damage=context.is_true_damage,
-            enemy_defense=context.enemy_defense,
-            enemy_resistance=context.enemy_resistance,
-            ignore_resistance=context.ignore_resistance,
-            imbalance_vulnerability_coeff=context.imbalance_vulnerability_coeff,
+        # 用 replace 增量更新，避免新增 DamageContext 字段时静默丢失
+        context = replace(
+            context,
             crit_rate=context.crit_rate + overrides.get("crit_rate", 0.0),
             crit_damage=context.crit_damage + overrides.get("crit_damage", 0.0),
             damage_type_bonus=context.damage_type_bonus + overrides.get("damage_type_bonus", 0.0),
             skill_type_bonus=context.skill_type_bonus + overrides.get("skill_type_bonus", 0.0),
             imbalance_damage_bonus=context.imbalance_damage_bonus + overrides.get("imbalance_damage_bonus", 0.0),
             other_damage_bonus=context.other_damage_bonus + overrides.get("other_damage_bonus", 0.0),
-            base_damage_bonus=context.base_damage_bonus,
-            combo_stacks=context.combo_stacks,
-            break_defense_stacks=context.break_defense_stacks,
         )
-    """apply manual buffs。"""
     return context, extra_effects
 
 
@@ -136,13 +137,30 @@ def calculate_single_hit_damage(
     all_effects = list(effects or []) + extra + list(damage_effects_from_break_defense(context.break_defense_stacks))
     known_effects, unknown_effects, warnings = _collect_effects(context, all_effects)
 
-    damage_bonus = (
-        1.0
-        + float(context.damage_type_bonus)
-        + float(context.skill_type_bonus)
-        + float(context.imbalance_damage_bonus)
-        + float(context.other_damage_bonus)
-    )
+    # 四种伤害加成分别追踪，传递给 DAG 时保留类型区分
+    damage_type_bonus_total = 1.0 + float(context.damage_type_bonus)
+    skill_type_bonus_total = 0.0 + float(context.skill_type_bonus)
+    imbalance_damage_bonus_total = 0.0 + float(context.imbalance_damage_bonus)
+    other_damage_bonus_total = 0.0 + float(context.other_damage_bonus)
+
+    # ── 检测上下文与 effects 是否重复叠加同类型加成 ──
+    _context_nonzero_bonus_fields = {
+        ctx_field for ctx_field in _CONTEXT_BONUS_EFFECT_TYPES if getattr(context, ctx_field, 0.0) != 0.0
+    }
+    _seen_overlap_effect_types: set[str] = set()
+    if effects and _context_nonzero_bonus_fields:
+        _context_effect_types = {
+            eff_type for ctx, eff_type in _CONTEXT_BONUS_EFFECT_TYPES.items() if ctx in _context_nonzero_bonus_fields
+        }
+        for eff in effects:
+            if eff.effect_type in _context_effect_types:
+                _seen_overlap_effect_types.add(eff.effect_type)
+        if _seen_overlap_effect_types:
+            _logger.warning(
+                "效果可能与上下文重复叠加: %s（检查是否同源 buff 被传入两次）",
+                ", ".join(sorted(_seen_overlap_effect_types)),
+            )
+
     damage_reduction = 1.0
     amplification = 1.0
     weakness = 1.0
@@ -173,13 +191,14 @@ def calculate_single_hit_damage(
             vulnerability += value
         elif effect.effect_type == "连击增伤" and damage_pipeline != "abnormal":
             combo_bonus += value
-        elif (
-            effect.effect_type == "伤害类型伤害加成"
-            or effect.effect_type == "技能类型伤害加成"
-            or effect.effect_type == "失衡伤害加成"
-            or effect.effect_type == "其他伤害加成"
-        ):
-            damage_bonus += value
+        elif effect.effect_type == "伤害类型伤害加成":
+            damage_type_bonus_total += value
+        elif effect.effect_type == "技能类型伤害加成":
+            skill_type_bonus_total += value
+        elif effect.effect_type == "失衡伤害加成":
+            imbalance_damage_bonus_total += value
+        elif effect.effect_type == "其他伤害加成":
+            other_damage_bonus_total += value
         elif effect.effect_type == "无视抗性":
             resistance_extra += value
         elif effect.effect_type == "抗性":
@@ -210,7 +229,7 @@ def calculate_single_hit_damage(
 
     resistance = float(context.enemy_resistance) + resistance_change
     ignore_res = float(context.ignore_resistance) + resistance_extra
-    resistance_zone = 1.0 - resistance / 100.0 + ignore_res / 100.0
+    resistance_zone = max(0.0, 1.0 - resistance / 100.0 + ignore_res / 100.0)
 
     imbalance_coeff = (
         float(imbalance_coeff_override)
@@ -223,10 +242,14 @@ def calculate_single_hit_damage(
         non_control_reduction = 1.0
         combo_bonus = 1.0
 
+    # 汇总 4 种伤害加成用于展示
+    damage_bonus_total = (
+        damage_type_bonus_total + skill_type_bonus_total + imbalance_damage_bonus_total + other_damage_bonus_total
+    )
     zone_values = {
         "基础伤害区": float(context.final_attack) * float(context.skill_multiplier) + float(context.base_damage_bonus),
         "暴击区": _resolve_crit_zone(context, crit_mode),
-        "伤害加成区": damage_bonus,
+        "伤害加成区": damage_bonus_total,
         "伤害减免区": damage_reduction,
         "增幅区": amplification,
         "虚弱区": weakness,
@@ -253,7 +276,10 @@ def calculate_single_hit_damage(
         crit_rate=_clamp(float(context.crit_rate), 0.0, 1.0),
         crit_damage=float(context.crit_damage),
         crit_mode=crit_mode,
-        damage_type_bonus=damage_bonus - 1.0,
+        damage_type_bonus=damage_type_bonus_total - 1.0,
+        skill_type_bonus=skill_type_bonus_total,
+        imbalance_damage_bonus=imbalance_damage_bonus_total,
+        other_damage_bonus=other_damage_bonus_total,
         damage_reduction=1.0 - damage_reduction,
         amplification=amplification - 1.0,
         weakness=1.0 - weakness,

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """帮助对话框 — 在 GUI 内打开结构化的使用说明。"""
 

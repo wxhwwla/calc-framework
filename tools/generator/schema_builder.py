@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """attr_schema 生成器 — 从属性列表生成 attr_schema.json。"""
 
 from __future__ import annotations

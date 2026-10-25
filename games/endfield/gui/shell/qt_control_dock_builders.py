@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """高级页控制栏：搜索列与多技能列构建器（BuilderMixin）。"""
 
 from __future__ import annotations
 
 from calc_framework.ui.i18n import tr
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -11,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
@@ -83,6 +86,15 @@ _BTN_SECONDARY_STYLE = """
 
 
 class BuilderMixin:
+    # Mixin 属性/方法占位 — 由 QtControlDock 提供（Pylance 类型识别）
+    _big: QFont
+    _small: QFont
+
+    def _make_btn(self, text: str, height: int, *, primary: bool = False, style: str | None = None) -> QPushButton: ...
+    def _mark_pending(self) -> None: ...
+    def _update_workers_hint(self) -> None: ...
+    def _clear_abnormal_counts(self) -> None: ...
+
     def _build_col_search(self) -> QWidget:
         col = QWidget()
         col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

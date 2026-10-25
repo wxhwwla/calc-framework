@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """等级曲线物化 — 从 ``成长参数`` 烘焙运行时数组（加载层双读）。"""
 

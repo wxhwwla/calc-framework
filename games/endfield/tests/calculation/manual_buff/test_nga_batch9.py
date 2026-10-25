@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """NGA 第九批：破防状态机、敌人生命插件、承伤/失衡 GUI。"""
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """增量同步状态管理 — 追踪 BWIKI 缓存内容变更，只同步有差异的条目。
 

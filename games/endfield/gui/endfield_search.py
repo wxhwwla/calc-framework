@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ActionsSearchMixin — 终末地伤害计算搜索相关事件处理。
 
@@ -38,19 +39,11 @@ class ActionsSearchMixin:
     def _refresh_search_estimate(self) -> None:
         dock = self.control_dock
         if dock.estimate_output_label is None:
-            dock.estimate_output_label.setText("")
             return
+        from games.endfield.gui.app.search_controller import format_search_duration
+
         secs = getattr(self, "_search_estimated_total_seconds", 0)
-        if secs > 0:
-            mins = secs / 60
-            if mins >= 60:
-                dock.estimate_output_label.setText(f"{mins / 60:.1f}h")
-            elif mins >= 1:
-                dock.estimate_output_label.setText(f"{mins:.0f}min")
-            else:
-                dock.estimate_output_label.setText(f"{secs:.0f}s")
-        else:
-            dock.estimate_output_label.setText("N/A")
+        dock.estimate_output_label.setText(format_search_duration(secs))
 
     # ── 搜索任务构建 ─────────────────────────────
 
@@ -158,7 +151,9 @@ class ActionsSearchMixin:
             top_n=resolve_top_n(dock.read_top_n_choice()),
         )
         self._search_estimated_total_seconds = estimate.estimated_seconds
-        if estimate.estimated_seconds >= 120:
+        from games.endfield.gui.app.search_controller import should_warn_search_combinations
+
+        if should_warn_search_combinations(estimate.estimated_seconds):
             reply = QMessageBox.question(
                 cast(QWidget, self),
                 tr("desktop.endfield.searchFullConfirmTitle"),

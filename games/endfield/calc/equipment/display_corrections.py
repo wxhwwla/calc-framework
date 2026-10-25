@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """装备面板显示值 → 实战数值校正（NGA PART 05 附表节选）。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """异常附带效果（导电法术易伤、碎甲物理易伤、腐蚀减抗，NGA PART 02）。"""
 

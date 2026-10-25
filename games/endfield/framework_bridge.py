@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """框架桥接层 — GUI 只通过此模块导入 calc_framework。
 
@@ -8,11 +9,12 @@
 from calc_framework.config.adapter import AdapterPackage
 from calc_framework.logging import get_logger, setup_logging
 from calc_framework.ui.compute_sheet import ComputeSheet
-from calc_framework.ui.layout import load_layout_json
+from calc_framework.ui.layout import Layout, load_layout_json
 
 __all__ = [
     "AdapterPackage",
     "ComputeSheet",
+    "Layout",
     "get_logger",
     "load_layout_json",
     "setup_logging",

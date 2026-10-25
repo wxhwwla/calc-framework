@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 PySide6 武器特殊能力面板（独立子面板）。
@@ -10,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -20,6 +22,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from games.endfield.gui.shared.weapon_data_model import extract_bonus_attributes, read_special_slots
 
 _SLIDER_STYLE = """
     QSlider::groove:horizontal {
@@ -79,7 +83,13 @@ class QtSpecialAbilityPanel(QWidget):
         # 3 条附加属性（普通技能）
         self._normal_rows: list[dict] = []
         for i in range(3):
-            rd = self._create_skill_row(layout, f"技能{i + 1}", 1, 9, font)
+            rd = self._create_skill_row(
+                layout,
+                tr("desktop.endfield.abilitySkillN", n=i + 1),
+                1,
+                9,
+                font,
+            )
             self._normal_rows.append(rd)
 
         # 分隔线
@@ -91,7 +101,11 @@ class QtSpecialAbilityPanel(QWidget):
         # 2 个特殊能力（等级 + 可选层数）
         self._special_rows: list[dict] = []
         for i in range(2):
-            rd = self._create_special_row(layout, f"特殊{i + 1}", font)
+            rd = self._create_special_row(
+                layout,
+                tr("desktop.endfield.abilitySpecialN", n=i + 1),
+                font,
+            )
             self._special_rows.append(rd)
 
         self._all_hidden()
@@ -145,7 +159,7 @@ class QtSpecialAbilityPanel(QWidget):
         row_layout.addWidget(lvl_slider, stretch=3)
         row_layout.addWidget(lvl_val_lbl)
 
-        stk_lbl = QLabel("层")
+        stk_lbl = QLabel(tr("desktop.endfield.stackLabel"))
         stk_lbl.setFont(font)
         stk_lbl.setStyleSheet(_LABEL_STYLE)
 
@@ -191,7 +205,8 @@ class QtSpecialAbilityPanel(QWidget):
             rd["name_lbl"].setVisible(visible)
             rd["row_w"].setVisible(visible)
             if visible:
-                rd["name_lbl"].setText(f"{['第一', '第二', '第三'][i]}技能·{bonus[i]}")
+                ordinal = tr(f"desktop.endfield.abilityOrdinal{i + 1}")
+                rd["name_lbl"].setText(tr("desktop.endfield.abilitySkillBonusFmt", ordinal=ordinal, bonus=bonus[i]))
                 rd["slider"].setValue(1)
                 rd["val_lbl"].setText("1")
 
@@ -226,62 +241,13 @@ class QtSpecialAbilityPanel(QWidget):
 
     @staticmethod
     def _extract_bonus_attributes(weapon_data: dict[str, Any]) -> list[str]:
-        normal_raw = weapon_data.get("normal_skills")
-        if isinstance(normal_raw, list):
-            out: list[str] = []
-            for item in normal_raw:
-                if not isinstance(item, dict):
-                    continue
-                effect = str(item.get("effect", "")).strip()
-                if effect:
-                    out.append(effect)
-            return out[:3]
-
-        keys = list(weapon_data.keys())
-        try:
-            start = keys.index("基础攻击力") + 1
-        except ValueError:
-            return []
-        special_keys = frozenset({"特殊能力", "特殊能力1", "特殊能力2"})
-        out = []
-        for key in keys[start:]:
-            if key in special_keys:
-                break
-            if key.endswith("+") and isinstance(weapon_data.get(key), list):
-                out.append(key)
-        """extract bonus attributes。"""
-        return out[:3]
+        """从武器数据中提取附加属性名称（委托 weapon_data_model）。"""
+        return extract_bonus_attributes(weapon_data)
 
     @staticmethod
     def _read_special_slots(weapon_data: dict[str, Any]) -> list[tuple]:
-        special_raw = weapon_data.get("special_skills")
-        if isinstance(special_raw, list):
-            slots: list[tuple] = []
-            for idx in range(2):
-                if idx < len(special_raw) and isinstance(special_raw[idx], dict):
-                    item = special_raw[idx]
-                    name = str(item.get("name", "")).strip()
-                    effect = str(item.get("effect", "")).strip()
-                    curve = item.get("curve")
-                    max_stack = max(1, int(item.get("max_stack", 1)))
-                    display_name = name or effect
-                    available = bool(display_name) and isinstance(curve, list) and len(curve) > 0
-                    slots.append((available, display_name, 1, max_stack))
-                else:
-                    slots.append((False, "", 1, 1))
-            return slots
-
-        result: list[tuple] = []
-        for key in ("特殊能力1", "特殊能力2"):
-            entry = weapon_data.get(key, {})
-            if isinstance(entry, dict):
-                name = entry.get("名称", "")
-                available = bool(name) and name != "无"
-                max_stack = int(entry.get("最多叠加层数", 1))
-                result.append((available, name, 1, max_stack))
-            else:
-                result.append((False, "", 1, 1))
-        return result
+        """从武器数据中读取特殊能力槽位（委托 weapon_data_model）。"""
+        return read_special_slots(weapon_data)
 
     # ── 对外读取 ──────────────────────────────────
 

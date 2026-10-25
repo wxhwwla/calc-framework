@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """一键批量导出：将 framework/adapters/ 下所有适配器打包为 .calcpack 示例文件。
 

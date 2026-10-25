@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """CSRF 保护中间件 — 基于 Origin/Referer 校验 + SameSite Cookie 策略。
 

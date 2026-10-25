@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """从武器主页 wikitext 解析成长数据并反推 seed 参数。"""

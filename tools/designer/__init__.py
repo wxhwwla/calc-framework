@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """开发者工具 — 生成 .calcpack 配置包的独立 GUI。
 
@@ -9,3 +10,5 @@
 - 主题编辑（字体/色板）
 - 导出 .calcpack（ZIP 包）
 """
+
+__all__: list[str] = []

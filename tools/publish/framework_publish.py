@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """
@@ -94,7 +95,7 @@ def cmd_publish() -> None:
         sys.exit(1)
 
     _run(
-        [sys.executable, "-m", "twine", "upload", "dist/*"],
+        [sys.executable, "-m", "twine", "upload", "--username", "__token__", "--password", token, "dist/*"],
         FRAMEWORK_DIR,
     )
 

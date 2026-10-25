@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """开发者工具箱 — 统一入口，整合所有框架开发工具。"""
 

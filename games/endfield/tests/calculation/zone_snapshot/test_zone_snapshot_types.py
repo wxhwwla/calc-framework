@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """覆盖 zone_snapshot/types.py 数据类及其方法。"""
 

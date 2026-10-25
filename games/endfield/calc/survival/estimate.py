@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """处决/治疗/失衡/技力估算（GUI 与 Web 共用）。"""
 

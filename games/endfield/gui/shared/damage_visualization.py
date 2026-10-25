@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """伤害构成可视化（matplotlib 嵌入 GUI，可选依赖）。"""

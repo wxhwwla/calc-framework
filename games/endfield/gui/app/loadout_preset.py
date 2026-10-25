@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """配装预设 JSON 导入/导出（与 GUI 状态解耦，便于单测）。"""
 

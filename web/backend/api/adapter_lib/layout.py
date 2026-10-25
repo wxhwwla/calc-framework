@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """布局/属性/DAG JSON 读取与校验 API — 供前端渲染计算面板。"""
 

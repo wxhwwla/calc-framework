@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 适配器：将 DAG 引擎接入 zone_snapshot 计算链。
 
@@ -19,10 +20,10 @@ from typing import Any
 from calc_framework.config.adapter import AdapterPackage
 from calc_framework.logging import get_logger
 
-_logger = get_logger(__name__)
-
 from games.endfield.calc.dag_adapter.loader import EndfieldContextLoader
 from games.endfield.calc.zone_snapshot.types import ZoneDisplayLine
+
+_logger = get_logger(__name__)
 
 _FRAMEWORK_DIR = Path(__file__).resolve().parents[4] / "framework"
 _SRC_DIR = _FRAMEWORK_DIR / "src"

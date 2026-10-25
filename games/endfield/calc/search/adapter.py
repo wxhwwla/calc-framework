@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """终末地搜索引擎适配器 — 实现 framework SearchEngine 接口。
 

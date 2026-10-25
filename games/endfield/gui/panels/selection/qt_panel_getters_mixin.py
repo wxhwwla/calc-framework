@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """选择面板读取接口 Mixin（从 QtSelectionPanel 抽离以控制文件长度）。"""

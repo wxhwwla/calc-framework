@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """自动更新模块 — 检查 GitHub Release → 下载 → 校验 → 替换。
 
@@ -24,6 +25,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import shutil
 import subprocess
 import sys
@@ -37,6 +39,8 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 from utils.checksums import require_https_url
+
+logger = logging.getLogger(__name__)
 
 GITHUB_OWNER = "wxhwwla"
 
@@ -287,6 +291,12 @@ def extract_and_replace(
 
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
+            # Zip Slip 防护：验证所有条目路径在目标目录内
+            for info in zf.infolist():
+                target_path = (extract_dir / info.filename).resolve()
+                if not str(target_path).startswith(str(extract_dir.resolve())):
+                    logger.warning("Zip Slip 检测: %s", info.filename)
+                    return False
             zf.extractall(extract_dir)
 
     except (zipfile.BadZipFile, OSError):

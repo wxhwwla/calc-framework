@@ -7,6 +7,10 @@ name: Release
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   push:
     tags:
@@ -31,7 +35,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e framework
       - name: Install game package
-        run: python -m pip install -e games/endfield ".[dev]"
+        run: python -m pip install -e "games/endfield[dev]"
       - name: Check version consistency
         id: version
         shell: pwsh
@@ -70,7 +74,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e framework
-          python -m pip install -e games/endfield ".[dev]"
+          python -m pip install -e "games/endfield[dev]"
       - name: Install maturin and build Rust extension
         run: |
           pip install maturin
@@ -95,7 +99,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e framework
-          python -m pip install -e games/endfield ".[dev,build]"
+          python -m pip install -e "games/endfield[dev,build]"
       - name: Build release (launcher)
         run: python scripts/main_build.py --target launcher --no-bump
       - name: Package ZIP artifacts
@@ -140,18 +144,24 @@ jobs:
           CODE_SIGN_CERT_SHA1: ${{ secrets.CODE_SIGN_CERT_SHA1 }}
           CODE_SIGN_PFX_PATH: ${{ runner.temp }}/codesign.pfx
           CODE_SIGN_PFX_PASSWORD: ${{ secrets.CODE_SIGN_PFX_PASSWORD }}
+          CODE_SIGN_PFX_BASE64: ${{ secrets.CODE_SIGN_PFX_BASE64 }}
         run: |
           if (-not $env:CODE_SIGN_CERT_SHA1 -and -not $env:CODE_SIGN_PFX_PASSWORD) {
             Write-Host "Skip code signing: no secrets configured"
             exit 0
           }
           if ($env:CODE_SIGN_PFX_PASSWORD) {
-            $bytes = [Convert]::FromBase64String("${{ secrets.CODE_SIGN_PFX_BASE64 }}")
+            $bytes = [Convert]::FromBase64String($env:CODE_SIGN_PFX_BASE64)
             [IO.File]::WriteAllBytes($env:CODE_SIGN_PFX_PATH, $bytes)
           }
           $env:CODE_SIGN_ENABLED = "1"
           if (Test-Path "dist/Game Calc Platform") {
             python -c "from pathlib import Path; from utils.code_sign import sign_release_tree; print(len(sign_release_tree(Path('dist/Game Calc Platform'))))"
+          }
+          # 签名完成后清理证书文件
+          if (Test-Path $env:CODE_SIGN_PFX_PATH) {
+            Remove-Item $env:CODE_SIGN_PFX_PATH -Force
+            Write-Host "Cleaned up PFX certificate file"
           }
 
       - name: Build NSIS installer

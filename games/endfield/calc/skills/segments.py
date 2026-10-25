@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 技能段场景：从角色 JSON 读取各段倍率，并规范化手动次数键。

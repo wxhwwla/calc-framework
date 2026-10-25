@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 沙箱表达式求值器 — 白名单配置。
@@ -6,7 +7,6 @@
 存放 `_SAFE_BUILTINS`、`_SAFE_NODE_TYPES`、`_SAFE_UNARY_OPS`、`_SAFE_BIN_OPS`、
 `_GLOBAL_FUNCTIONS` 及函数注册 API。
 """
-
 
 from __future__ import annotations
 
@@ -32,15 +32,17 @@ _SAFE_BUILTINS: dict[str, Any] = {
     # "integral" 由 sandbox.py 导入后添加（避免循环依赖）
 }
 
-_SAFE_NODE_TYPES: frozenset[type] = frozenset({
-    ast.Constant,
-    ast.Name,
-    ast.UnaryOp,
-    ast.BinOp,
-    ast.Call,
-    ast.Expression,
-    ast.Load,
-})
+_SAFE_NODE_TYPES: frozenset[type] = frozenset(
+    {
+        ast.Constant,
+        ast.Name,
+        ast.UnaryOp,
+        ast.BinOp,
+        ast.Call,
+        ast.Expression,
+        ast.Load,
+    }
+)
 
 _SAFE_UNARY_OPS: frozenset[type] = frozenset({ast.USub})
 

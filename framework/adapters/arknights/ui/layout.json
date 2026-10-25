@@ -9,10 +9,9 @@
       "title": "技能参数",
       "columns": 2,
       "variables": [
-        "user_input.技能倍率",
-        "user_input.技能等级",
-        "user_input.攻击力百分比加成",
-        "user_input.伤害加成"
+        "computed.技能倍率",
+        "computed.攻击力百分比加成",
+        "computed.伤害加成"
       ]
     },
     {
@@ -21,10 +20,10 @@
       "title": "敌方参数",
       "columns": 2,
       "variables": [
-        "user_input.敌人防御",
-        "user_input.敌人法术抗性",
-        "user_input.物理穿透",
-        "user_input.法术穿透"
+        "enemy.防御",
+        "enemy.法术抗性",
+        "computed.物理穿透",
+        "computed.法术穿透"
       ]
     },
     {
@@ -33,8 +32,8 @@
       "title": "额外增益",
       "columns": 2,
       "variables": [
-        "user_input.信赖攻击",
-        "user_input.潜能攻击"
+        "character.信赖攻击",
+        "character.潜能攻击"
       ]
     },
     {

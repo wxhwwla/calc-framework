@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Calc Hub 存储层：SQLite 存储包元数据 + 文件系统存储包文件。"""
 
@@ -5,7 +6,10 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import shutil
+
+logger = logging.getLogger(__name__)
 import sqlite3
 import zipfile
 from dataclasses import dataclass, field
@@ -161,8 +165,17 @@ def create_pack(
     conn.execute(
         "INSERT INTO packs (id, name, version, description, author, tags, file_size, created_at, updated_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [pack.id, pack.name, pack.version, pack.description, pack.author,
-         json.dumps(pack.tags), pack.file_size, pack.created_at, pack.updated_at],
+        [
+            pack.id,
+            pack.name,
+            pack.version,
+            pack.description,
+            pack.author,
+            json.dumps(pack.tags),
+            pack.file_size,
+            pack.created_at,
+            pack.updated_at,
+        ],
     )
     conn.commit()
     conn.close()
@@ -172,9 +185,19 @@ def create_pack(
 def update_pack(pack_id: str, **kwargs: Any) -> dict[str, Any] | None:
     conn = _ensure_db()
     now = datetime.now(timezone.utc).isoformat()
-    fields = {k: v for k, v in kwargs.items() if k in {
-        "name", "version", "description", "author", "tags", "file_size",
-    }}
+    fields = {
+        k: v
+        for k, v in kwargs.items()
+        if k
+        in {
+            "name",
+            "version",
+            "description",
+            "author",
+            "tags",
+            "file_size",
+        }
+    }
     if not fields:
         conn.close()
         return get_pack(pack_id)
@@ -232,7 +255,38 @@ def increment_download(pack_id: str) -> dict[str, Any] | None:
     return get_pack(pack_id)
 
 
+def _sanitize_id(id_str: str) -> str:
+    """防止路径穿越：只允许字母、数字、连字符、下划线。"""
+    import re as _re
+
+    sanitized = _re.sub(r"[^a-zA-Z0-9_-]", "", id_str)
+    if sanitized != id_str:
+        logger.warning("pack_id 包含非法字符，已净化: %r → %r", id_str, sanitized)
+    return sanitized
+
+
+def _sanitize_filename(filename: str) -> str:
+    """防止路径穿越：净化文件名，只保留基本名称。
+
+    - 移除目录分隔符和 .. 序列
+    - 只允许字母、数字、连字符、下划线、点
+    - 验证解析后的路径在预期目录内
+    """
+    import re as _re
+
+    # 只取基本名称，移除所有目录成分
+    base = Path(filename).name
+    # 进一步净化：只允许安全字符
+    sanitized = _re.sub(r"[^a-zA-Z0-9._-]", "_", base)
+    if not sanitized or sanitized in (".", ".."):
+        sanitized = "unnamed.bin"
+    if sanitized != filename:
+        logger.warning("filename 包含非法字符，已净化: %r → %r", filename, sanitized)
+    return sanitized
+
+
 def delete_pack(pack_id: str) -> bool:
+    pack_id = _sanitize_id(pack_id)
     conn = _ensure_db()
     cursor = conn.execute("DELETE FROM packs WHERE id = ?", [pack_id])
     deleted = cursor.rowcount > 0
@@ -252,15 +306,27 @@ def save_pack_file(pack_id: str, content: bytes, filename: str) -> Path:
     返回:
         保存后的文件路径。
     """
+    pack_id = _sanitize_id(pack_id)
+    filename = _sanitize_filename(filename)
     pack_dir = _PACKS_DIR / pack_id
     pack_dir.mkdir(parents=True, exist_ok=True)
     file_path = pack_dir / filename
+    # 二次验证：解析后的路径必须在 pack_dir 内
+    if not file_path.resolve().is_relative_to(pack_dir.resolve()):
+        raise ValueError(f"路径穿越检测: {filename}")
     file_path.write_bytes(content)
     return file_path
 
 
 def get_pack_file_path(pack_id: str, filename: str) -> Path | None:
+    pack_id = _sanitize_id(pack_id)
+    filename = _sanitize_filename(filename)
     file_path = _PACKS_DIR / pack_id / filename
+    # 二次验证：解析后的路径必须在 pack_dir 内
+    pack_dir = _PACKS_DIR / pack_id
+    if not file_path.resolve().is_relative_to(pack_dir.resolve()):
+        logger.warning("路径穿越检测: pack_id=%r, filename=%r", pack_id, filename)
+        return None
     if file_path.exists():
         return file_path
     return None

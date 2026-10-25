@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """
@@ -230,6 +231,11 @@ def main() -> None:
 
         try:
             with zipfile.ZipFile(zip_path, "r") as zf:
+                # Zip Slip 防护：验证所有条目路径在目标目录内
+                for info in zf.infolist():
+                    target_path = (_EASYOCR_CACHE / info.filename).resolve()
+                    if not str(target_path).startswith(str(_EASYOCR_CACHE.resolve())):
+                        raise RuntimeError(f"Zip Slip 检测: {info.filename}")
                 zf.extractall(_EASYOCR_CACHE)
 
             zip_path.unlink()

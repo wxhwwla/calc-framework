@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """SQLite 续跑与去重恢复。
@@ -13,9 +14,12 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
 from utils.frozen_runtime import frozen_use_rust_batch, frozen_use_search_job_batch
@@ -243,7 +247,35 @@ def execute_search_with_resume(
 
     store.ensure_run(run_signature, total_combinations)
 
+    from .full_batch_resume import completed_run_short_circuit, try_resume_via_full_batch
+
+    completed = completed_run_short_circuit(
+        store=store,
+        run_signature=run_signature,
+        total_combinations=total_combinations,
+        top_n=config.top_n,
+    )
+    if completed is not None:
+        return completed
+
     existing_keys = store.get_processed_keys(run_signature)
+
+    # 全新 run：优先尝试 Rust 全批量；部分续跑仍走下方 SoA 路径
+    if not existing_keys:
+        full_batch_result = try_resume_via_full_batch(
+            store=store,
+            run_signature=run_signature,
+            plan=plan,
+            config=config,
+            base_context=base_context,
+            search_eval=search_eval,
+            search_job=search_job,
+            task_evaluator=task_evaluator,
+            progress_callback=progress_callback,
+            cancel_token=cancel_token,
+        )
+        if full_batch_result is not None:
+            return full_batch_result
 
     pending_iter, pending_stream = _iter_pending_tasks(
         plan=plan,
@@ -258,6 +290,13 @@ def execute_search_with_resume(
     processed_keys_buffer: list[str] = []
 
     top_tracker = TopNTracker(config.top_n, key_fn=lambda score: score.final_damage)
+
+    # 续跑时加载历史 TopN，避免覆盖之前运行的最优结果
+    previous_top = store.load_top_scores(run_signature, config.top_n)
+    for prev_score in previous_top:
+        top_tracker.offer(prev_score)
+    if previous_top:
+        logger.info("续跑加载历史 TopN: %d 条", len(previous_top))
 
     started_at = time.perf_counter()
 
@@ -412,6 +451,19 @@ def execute_search_with_resume(
         skipped=len(existing_keys),
         db_path=str(db_path),
     )
+
+    # 单线程模式下跳过锁开销
+    from games.endfield.calc.loadout.optimizer.evaluate import set_single_thread_mode, warmup_final_attack_cache
+
+    set_single_thread_mode(max_workers <= 1)
+
+    # 预热 final_attack 缓存（消除搜索时的缓存预热开销）
+    if search_eval is not None:
+        warmup_final_attack_cache(
+            weapons=weapons,
+            equipment_catalog=equipment_catalog,
+            search_eval=search_eval,
+        )
 
     _, _processed_count, cancelled = run_bounded_parallel(**parallel_kwargs)
 

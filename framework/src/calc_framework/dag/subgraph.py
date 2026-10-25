@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """子图展开：将 call 节点内联为普通节点。"""
@@ -114,8 +115,13 @@ def expand_subgraphs(graph: DAGGraph) -> DAGGraph:
     ref_map: dict[str, str] = {}
 
     changed = True
+    depth = 0
+    max_expand_depth = 100
 
     while changed:
+        depth += 1
+        if depth > max_expand_depth:
+            raise RuntimeError(f"子图展开超过最大深度 {max_expand_depth}，检测到可能的循环引用")
         changed = False
 
         call_items = [(nid, node) for nid, node in expanded.nodes.items() if isinstance(node, CallNode)]

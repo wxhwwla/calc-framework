@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """TEMPLATE（{Game}）DAG 适配器 — 数据加载与 DAG 计算入口。
 

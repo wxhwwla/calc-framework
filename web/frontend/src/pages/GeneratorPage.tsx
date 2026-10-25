@@ -59,8 +59,9 @@ export default function GeneratorPage() {
     try {
       const detail = await fetchTemplateDetail(id);
       setTemplateDetail(detail);
-    } catch (e: any) {
-      setError(t('generator.loadTemplateDetailFailed') + ': ' + e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(t('generator.loadTemplateDetailFailed') + ': ' + msg);
     }
   };
 
@@ -84,8 +85,9 @@ export default function GeneratorPage() {
       });
       setResult(res);
       setActiveStep(3);
-    } catch (e: any) {
-      setError(t('generator.generateFailed') + ': ' + e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(t('generator.generateFailed') + ': ' + msg);
       setActiveStep(1);
     } finally {
       setGenerating(false);
@@ -106,21 +108,21 @@ export default function GeneratorPage() {
   };
 
   /** 编辑变量 */
-  const updateVar = (i: number, field: keyof VarRow, value: any) => {
+  const updateVar = (i: number, field: keyof VarRow, value: string | number | boolean) => {
     setEditableVars(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
   };
   const removeVar = (i: number) => setEditableVars(prev => prev.filter((_, idx) => idx !== i));
   const addVar = () => setEditableVars(prev => [...prev, { name: '', type: 'number', source: 'input', default: 0, description: '' }]);
 
   /** 编辑步骤 */
-  const updateStep = (i: number, field: keyof StepRow, value: any) => {
+  const updateStep = (i: number, field: keyof StepRow, value: string | number | boolean) => {
     setEditableSteps(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
   };
   const removeStep = (i: number) => setEditableSteps(prev => prev.filter((_, idx) => idx !== i));
   const addStep = () => setEditableSteps(prev => [...prev, { id: '', op: 'multiply', lhs: '', rhs: '', expr: '', label: '', cond: '', true_val: '', false_val: '' }]);
 
   /** 编辑输出 */
-  const updateOut = (i: number, field: keyof OutRow, value: any) => {
+  const updateOut = (i: number, field: keyof OutRow, value: string | number | boolean) => {
     setEditableOutputs(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
   };
   const removeOut = (i: number) => setEditableOutputs(prev => prev.filter((_, idx) => idx !== i));

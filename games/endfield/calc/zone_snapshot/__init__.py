@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 乘区快照：生产入口与展示类型。
@@ -6,8 +7,8 @@
 拆分自 ``multiplicative_zones.zone_snapshot``，消除与 ``dag_adapter/`` 之间的包级循环。
 """
 
-from games.endfield.calc.zone_snapshot.compute import compute_multiplicative_zone_snapshot
-from games.endfield.calc.zone_snapshot.types import (
+from .compute import compute_multiplicative_zone_snapshot
+from .types import (
     MultiplicativeZoneSelection,
     WeaponBonusSelection,
     ZoneDisplayLine,

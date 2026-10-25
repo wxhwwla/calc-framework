@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """明日方舟 Desktop GUI 伤害计算器。
 
@@ -43,10 +44,10 @@ from games.arknights.gui.arknights_compute_sheet import (
     ensure_arknights_adapter,
     hide_sheet_eval_button,
     layout_for_damage_app,
-    merge_atk_percent_bonus,
     populate_operator_context,
     read_compute_params_from_sheet,
 )
+from games.arknights.gui.arknights_sheet_config import merge_atk_percent_bonus
 from games.arknights.gui.operator_combo import configure_operator_combobox
 from games.arknights.operator_catalog import (
     STAR_TIERS,

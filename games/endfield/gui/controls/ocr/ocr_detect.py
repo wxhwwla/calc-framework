@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """单张截图 OCR — 供 Web `/api/ocr/detect` 调用。"""
 
 from __future__ import annotations
 
 from typing import Any
+
+from calc_framework.ui.i18n import tr
 
 
 def ocr_detect_from_file(image_path: str) -> dict[str, Any]:
@@ -17,7 +20,12 @@ def ocr_detect_from_file(image_path: str) -> dict[str, Any]:
     ocr_result = ocr.recognize(image_path)
     texts = [(t.text, t.confidence, None) for t in ocr_result.texts]
     if not texts:
-        return {"char_name": None, "weapon_name": None, "texts": [], "message": "未识别到文字"}
+        return {
+            "char_name": None,
+            "weapon_name": None,
+            "texts": [],
+            "message": tr("desktop.endfield.ocrNoText"),
+        }
 
     mapped = mapper.map_texts(texts)  # type: ignore[arg-type]
     out: dict[str, Any] = {

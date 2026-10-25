@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
-"""
-项目版本号与上传元数据 — 版本信息唯一源头。
+"""项目版本号 — 唯一源头。
 
 此文件是 `_VERSION` 和 `_EXE_VERSION` 的唯一定义处。
 `scripts/please_read_me.py` / `upload_meta.py` / `version.py` 均从此模块导入。
+
+上传脚本默认对业务改动做 **patch**（第三位 +1）；**minor** 仅当显式传入
+``--minor``（或人类明确要求）时执行。MAJOR 只允许手动改本文件。
+
+历史上曾用 UPLOAD_SUMMARY 标记块写入本文件再读出做 commit 消息，反复触发
+F821 / 空标记回归；已彻底移除。提交说明由 ``summarize_changes`` 内存生成。
 """
 
 from __future__ import annotations
@@ -14,7 +20,7 @@ from pathlib import Path
 
 # ==================== 版本常量（唯一源头） ====================
 
-_VERSION = "3.28.0"
+_VERSION = "3.30.0"
 """项目与 pip 包版本（pyproject.toml 通过 dynamic 读取）。
 
 上传脚本在有「业务改动」并 push 成功时自动递增（默认第三位 +1）。
@@ -27,12 +33,6 @@ _EXE_VERSION = "0.7.0-beta"
 
 # ==============================================================
 
-_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"
-_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"
-_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN
-_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END
-SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN
-SUMMARY_END = _UPLOAD_SUMMARY_END
 _VERSION_PATTERN = re.compile(
     r'^(_VERSION\s*=\s*["\'])([^"\']+)(["\'])',
     re.MULTILINE,
@@ -43,12 +43,7 @@ _EXE_VERSION_PATTERN = re.compile(
     re.MULTILINE,
 )
 
-# 标记区尾部锚点：匹配标记区之后的首行内容
-_MARKER_SECTION_ANCHOR_TAIL = re.compile(r"^_VERSION_PATTERN", re.MULTILINE)
-
 __all__ = [
-    "SUMMARY_BEGIN",
-    "SUMMARY_END",
     "_EXE_VERSION",
     "_EXE_VERSION_PATTERN",
     "_VERSION",
@@ -57,25 +52,20 @@ __all__ = [
     "bump_minor",
     "bump_patch",
     "classify_changed_paths",
-    "ensure_summary_marker_assignments",
     "format_semver",
     "get_exe_version",
     "get_version",
     "parse_semver",
     "please_read_me_path",
     "read_exe_version",
-    "read_summary_for_commit",
     "read_version",
-    "remove_summary_block",
-    "strip_summary_block",
     "summarize_changes",
-    "write_summary_block",
     "write_version",
 ]
 
 
 def please_read_me_path(repo_root: Path | None = None) -> Path:
-    """返回 _version.py 的路径（版本唯一源头）。
+    """返回 `_version.py` 的路径（版本唯一源头）。
 
     历史说明：旧名为 `please_read_me_path`，因版本常量原在
     `please_read_me.py` 中。现常量已迁移到此文件，但函数名
@@ -99,7 +89,7 @@ def format_semver(major: int, minor: int, patch: int) -> str:
 
 
 def read_version(path: Path | None = None) -> str:
-    """从 _version.py 读取 _VERSION。"""
+    """从 `_version.py` 读取 `_VERSION`。"""
     path = path or please_read_me_path()
     text = path.read_text(encoding="utf-8")
     match = _VERSION_PATTERN.search(text)
@@ -109,7 +99,7 @@ def read_version(path: Path | None = None) -> str:
 
 
 def read_exe_version(path: Path | None = None) -> str:
-    """从 _version.py 读取 _EXE_VERSION。"""
+    """从 `_version.py` 读取 `_EXE_VERSION`。"""
     path = path or please_read_me_path()
     text = path.read_text(encoding="utf-8")
     match = _EXE_VERSION_PATTERN.search(text)
@@ -119,7 +109,7 @@ def read_exe_version(path: Path | None = None) -> str:
 
 
 def write_version(path: Path | None, new_version: str) -> None:
-    """将新版本号写入 _version.py 的 _VERSION。"""
+    """将新版本号写入 `_version.py` 的 `_VERSION`。"""
     path = path or please_read_me_path()
     text = path.read_text(encoding="utf-8")
     if not _VERSION_PATTERN.search(text):
@@ -130,7 +120,6 @@ def write_version(path: Path | None, new_version: str) -> None:
         count=1,
     )
     path.write_text(updated, encoding="utf-8")
-    ensure_summary_marker_assignments(path)
 
 
 def bump_patch(version: str) -> str:
@@ -145,130 +134,6 @@ def bump_minor(version: str) -> str:
     return format_semver(major, minor + 1, 0)
 
 
-def _canonical_marker_header() -> str:
-    """返回 _version.py 顶部 UPLOAD_SUMMARY 标记区 canonical 文本。
-
-    注意：此处使用硬编码字面量而非模块级变量 ``_SUMMARY_MARKER_BEGIN`` /
-    ``_SUMMARY_MARKER_END``，因为当标记区损坏时这些模块变量可能是
-    空字符串或未定义，使用它们会导致"修复"后仍然损坏。
-    """
-    return (
-        '_SUMMARY_MARKER_BEGIN = "# --- BEGIN UPLOAD_SUMMARY ---"\n'
-        '_SUMMARY_MARKER_END = "# --- END UPLOAD_SUMMARY ---"\n'
-        "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN\n"
-        "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END\n"
-        "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN\n"
-        "SUMMARY_END = _UPLOAD_SUMMARY_END\n"
-    )
-
-
-def _markers_section_ok(text: str) -> bool:
-    """判断磁盘上的标记区是否完整且非空字符串。
-
-    使用硬编码值判断，避免模块变量为 ``""`` 时误判。
-    """
-    required = (
-        "",
-        "_UPLOAD_SUMMARY_BEGIN = _SUMMARY_MARKER_BEGIN",
-        "_UPLOAD_SUMMARY_END = _SUMMARY_MARKER_END",
-        "SUMMARY_BEGIN = _UPLOAD_SUMMARY_BEGIN",
-        "SUMMARY_END = _UPLOAD_SUMMARY_END",
-    )
-    if any(line not in text for line in required):
-        return False
-    return (
-        re.search(
-            r'^_(?:UPLOAD_SUMMARY|SUMMARY_MARKER)_(?:BEGIN|END)\s*=\s*""\s*(?:\r)?$',
-            text,
-            re.MULTILINE,
-        )
-        is None
-    )
-
-
-def ensure_summary_marker_assignments(path: Path | None = None) -> bool:
-    """修正 _version.py 顶部 UPLOAD_SUMMARY 标记区（防止空字符串或缺行）。"""
-    path = path or please_read_me_path()
-    text = path.read_text(encoding="utf-8")
-    if _markers_section_ok(text):
-        return False
-    anchor = "# ==============================================================\n\n"
-    idx = text.find(anchor)
-    if idx == -1:
-        return False
-    head_end = idx + len(anchor)
-    tail = text[head_end:]
-    cut = _MARKER_SECTION_ANCHOR_TAIL.search(tail)
-    if not cut:
-        return False
-    updated = text[:head_end] + _canonical_marker_header() + tail[cut.start() :]
-    if updated == text:
-        return False
-    path.write_text(updated, encoding="utf-8")
-    return True
-
-
-def strip_summary_block(text: str) -> str:
-    """从文本中移除 UPLOAD_SUMMARY 标记块。"""
-    begin_marker = _SUMMARY_MARKER_BEGIN
-    end_marker = _SUMMARY_MARKER_END
-    begin = text.rfind(begin_marker)
-    if begin == -1:
-        return text.rstrip() + "\n"
-    end = text.find(end_marker, begin)
-    if end == -1:
-        return text.rstrip() + "\n"
-    end += len(end_marker)
-    return (text[:begin] + text[end:]).rstrip() + "\n"
-
-
-def write_summary_block(path: Path, title: str, bullets: list[str]) -> None:
-    """将上传总结写入 _version.py 底部。"""
-    ensure_summary_marker_assignments(path)
-    text = strip_summary_block(path.read_text(encoding="utf-8"))
-    lines = [
-        "",
-        _SUMMARY_MARKER_BEGIN,
-        f"# TITLE: {title}",
-        "# BODY:",
-    ]
-    for item in bullets:
-        lines.append(f"# - {item}")
-    lines.append(_SUMMARY_MARKER_END)
-    lines.append("")
-    path.write_text(text + "\n".join(lines), encoding="utf-8")
-
-
-def remove_summary_block(path: Path) -> None:
-    """从 _version.py 中移除 UPLOAD_SUMMARY 标记块。"""
-    text = path.read_text(encoding="utf-8")
-    path.write_text(strip_summary_block(text), encoding="utf-8")
-
-
-def read_summary_for_commit(path: Path) -> tuple[str, list[str]]:
-    """从 _version.py 解析 UPLOAD_SUMMARY 块的内容。"""
-    text = path.read_text(encoding="utf-8")
-    begin = text.rfind(_UPLOAD_SUMMARY_BEGIN)
-    end = text.find(_UPLOAD_SUMMARY_END, begin)
-    if begin == -1 or end == -1:
-        raise ValueError("_version.py 中缺少 UPLOAD_SUMMARY 标记块")
-    block = text[begin:end]
-    title = "Update"
-    bullets: list[str] = []
-    in_body = False
-    for raw in block.splitlines():
-        line = raw.strip()
-        if line.startswith("# TITLE:"):
-            title = line[len("# TITLE:") :].strip()
-        elif line.startswith("# BODY:"):
-            in_body = True
-        elif in_body and line.startswith("# -"):
-            bullets.append(line[3:].strip())
-        elif in_body and line.startswith("#") and not line.startswith("# ---"):
-            bullets.append(line.lstrip("# ").strip())
-    return title, bullets
-
-
 def build_commit_message(version: str, title: str, bullets: list[str]) -> str:
     """构建 git commit 消息字符串。"""
     first = f"v{version}: {title}"
@@ -278,7 +143,7 @@ def build_commit_message(version: str, title: str, bullets: list[str]) -> str:
 
 
 def classify_changed_paths(paths: list[str], package_dir_name: str = "games/endfield") -> bool:
-    """判断变更路径列表中是否包含业务代码改动（非 _version.py 自身）。"""
+    """判断变更路径列表中是否包含业务代码改动（非 `_version.py` 自身）。"""
     prefix = f"{package_dir_name}/"
     readme_names = {
         f"{prefix}_version.py",
@@ -302,7 +167,7 @@ def classify_changed_paths(paths: list[str], package_dir_name: str = "games/endf
 
 
 def summarize_changes(paths: list[str]) -> tuple[str, list[str]]:
-    """生成变更摘要信息（标题 + 更改列表）。"""
+    """生成变更摘要（标题 + 条目），仅用于 commit 消息，不写回磁盘。"""
     unique = sorted({p.replace("\\", "/") for p in paths if p.strip()})
     if not unique:
         return "维护性更新", ["无文件列表（请检查 git status）"]
@@ -322,10 +187,7 @@ def summarize_changes(paths: list[str]) -> tuple[str, list[str]]:
         else:
             bullets.append(f"变更 {p}")
 
-    if len(bullets) == 1:
-        title = bullets[0]
-    else:
-        title = f"更新 {len(unique)} 处文件"
+    title = bullets[0] if len(bullets) == 1 else f"更新 {len(unique)} 处文件"
     return title, bullets
 
 

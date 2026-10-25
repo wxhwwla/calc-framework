@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """报告生成器 — 生成包含校验结果 + 测试结果 + 差异摘要的 Markdown 报告。
 

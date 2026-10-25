@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 桥接函数：搜索评估用 DAG 引擎替代本地引擎计算伤害。
 
@@ -40,6 +41,7 @@ class DamageEvalResult:
     zone_values: dict[str, float]
     warnings: tuple[str, ...] = ()
     unknown_effects: tuple[dict[str, str], ...] = ()
+
 
 # 手动 buff 中直加类型 → DamageContext 字段名映射
 _CONTEXT_BUFF_MAP: dict[str, str] = {
@@ -155,11 +157,7 @@ def evaluate_search_damage(
     else:
         extra_effects = []
 
-    all_effects = (
-        list(effects or [])
-        + extra_effects
-        + list(damage_effects_from_break_defense(break_defense_stacks))
-    )
+    all_effects = list(effects or []) + extra_effects + list(damage_effects_from_break_defense(break_defense_stacks))
 
     # 用轻量上下文对象做效果过滤（只需 damage_type / skill_type / is_unbalanced）
     _ctx = DamageContext(
@@ -240,7 +238,8 @@ def evaluate_search_damage(
         combo_bonus = 1.0
     else:
         combo_bonus = combo_zone_multiplier(
-            skill_type, combo_stacks,
+            skill_type,
+            combo_stacks,
             flat_legacy_bonus=max(0.0, combo_bonus_flat),
         )
 

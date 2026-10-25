@@ -1,12 +1,13 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Calc Hub 在线市场 API。"""
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, UploadFile
+from api.internal.auth import verify_admin_token
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from hub.storage import (
     create_pack,
     delete_pack,
@@ -61,8 +62,12 @@ async def list_packs_endpoint(
     limit: int = Query(default=20, ge=1, le=100),
 ):
     packs, total = list_packs(
-        search=search, tag=tag, sort=sort, order=order,
-        offset=offset, limit=limit,
+        search=search,
+        tag=tag,
+        sort=sort,
+        order=order,
+        offset=offset,
+        limit=limit,
     )
     return PackListResponse(packs=packs, total=total, offset=offset, limit=limit)
 
@@ -76,7 +81,7 @@ async def get_pack_endpoint(pack_id: str):
 
 
 @router.post("/packs", status_code=201)
-async def create_pack_endpoint(pack: PackCreate):
+async def create_pack_endpoint(pack: PackCreate, _admin: None = Depends(verify_admin_token)):
     result = create_pack(
         name=pack.name,
         version=pack.version,
@@ -93,7 +98,7 @@ async def create_pack_endpoint(pack: PackCreate):
 
 
 @router.put("/packs/{pack_id}")
-async def update_pack_endpoint(pack_id: str, update: PackUpdate):
+async def update_pack_endpoint(pack_id: str, update: PackUpdate, _admin: None = Depends(verify_admin_token)):
     kwargs = {k: v for k, v in update.model_dump().items() if v is not None}
     result = update_pack(pack_id, **kwargs)
     if result is None:
@@ -102,14 +107,14 @@ async def update_pack_endpoint(pack_id: str, update: PackUpdate):
 
 
 @router.delete("/packs/{pack_id}", status_code=204)
-async def delete_pack_endpoint(pack_id: str):
+async def delete_pack_endpoint(pack_id: str, _admin: None = Depends(verify_admin_token)):
     """删除配置包（含元数据、评分记录和文件）。"""
     if not delete_pack(pack_id):
         raise HTTPException(status_code=404, detail="包不存在")
 
 
 @router.post("/packs/{pack_id}/upload")
-async def upload_pack_file(pack_id: str, file: UploadFile):
+async def upload_pack_file(pack_id: str, file: UploadFile, _admin: None = Depends(verify_admin_token)):
     """上传 .calcpack 文件并关联到指定配置包。"""
     from hub.storage import validate_calcpack_archive
 
@@ -140,6 +145,7 @@ async def download_pack_file(pack_id: str, filename: str):
         raise HTTPException(status_code=404, detail="文件不存在")
     increment_download(pack_id)
     from fastapi.responses import FileResponse
+
     return FileResponse(
         path=str(file_path),
         filename=filename,
@@ -157,11 +163,10 @@ async def rate_pack_endpoint(pack_id: str, rate: RateRequest):
 
 @router.get("/stats")
 async def hub_stats():
-    """获取 Calc Hub 统计信息（总包数、数据库路径）。"""
+    """获取 Calc Hub 统计信息（总包数）。"""
     _packs, total = list_packs(limit=0)
     return {
         "total_packs": total,
-        "db_path": str(Path(__file__).resolve().parent.parent / "data" / "hub" / "catalog.db"),
     }
 
 
@@ -176,7 +181,7 @@ async def list_hub_adapters():
 
 
 @router.post("/upload")
-async def upload_hub_adapter(file: UploadFile):
+async def upload_hub_adapter(file: UploadFile, _admin: None = Depends(verify_admin_token)):
     """上传 .calcpack 适配器包（一步式：创建元数据+保存文件）。"""
     if not file.filename or not file.filename.endswith(".calcpack"):
         raise HTTPException(status_code=400, detail="仅支持 .calcpack 文件")
@@ -225,6 +230,7 @@ async def download_hub_adapter(adapter_id: str):
         raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")
 
     from hub.storage import _PACKS_DIR
+
     pack_dir = _PACKS_DIR / adapter_id
     if not pack_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"适配器文件不存在: {adapter_id}")
@@ -235,6 +241,7 @@ async def download_hub_adapter(adapter_id: str):
 
     increment_download(adapter_id)
     from fastapi.responses import FileResponse
+
     return FileResponse(
         path=str(calcpack_files[0]),
         filename=f"{pack.get('name', adapter_id)}_{pack.get('version', '0.1.0')}.calcpack",
@@ -243,10 +250,11 @@ async def download_hub_adapter(adapter_id: str):
 
 
 @router.delete("/adapters/{adapter_id}")
-async def delete_hub_adapter(adapter_id: str):
+async def delete_hub_adapter(adapter_id: str, _admin: None = Depends(verify_admin_token)):
     """删除适配器。"""
     if not delete_pack(adapter_id):
         raise HTTPException(status_code=404, detail=f"适配器不存在: {adapter_id}")
     return {"message": f"适配器 '{adapter_id}' 已删除"}
+
 
 __all__: list[str] = []

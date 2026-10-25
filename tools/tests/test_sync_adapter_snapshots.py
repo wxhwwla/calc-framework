@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """game_data_paths 与 sync_adapter_snapshots 单元测试。"""
 
@@ -13,7 +14,7 @@ _REPO = Path(__file__).resolve().parents[2]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
-from tools.sync_adapter_snapshots import sync_arknights_snapshot, sync_endfield_snapshots
+from tools.data_pipeline.sync_adapter_snapshots import sync_arknights_snapshot, sync_endfield_snapshots
 from utils.game_data_paths import (
     ARKNIGHTS_OPERATORS_STANDARD,
     ARKNIGHTS_OPERATORS_STANDARD_REL,
@@ -63,7 +64,7 @@ def test_sync_endfield_apply_to_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     (src / "weapons.json").write_text("[]", encoding="utf-8")
     (src / "equipments.json").write_text("[]", encoding="utf-8")
 
-    import tools.sync_adapter_snapshots as sync_mod
+    import tools.data_pipeline.sync_adapter_snapshots as sync_mod
 
     monkeypatch.setattr(sync_mod, "ENDFIELD_CHARACTERS_JSON", src / "characters.json")
     monkeypatch.setattr(sync_mod, "ENDFIELD_WEAPONS_JSON", src / "weapons.json")

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 后端管理 Token 认证 — 含暴力破解防护。"""
 
@@ -6,6 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import secrets
+import threading
 import time
 from collections import defaultdict
 
@@ -25,6 +27,7 @@ _BAN_WINDOW = 60
 """窗口大小（秒）。"""
 
 _lockout: dict[str, list[float]] = defaultdict(list)
+_lockout_lock = threading.Lock()
 """IP → 失败时间戳列表（进程内存，仅单 worker 有效）。"""
 
 

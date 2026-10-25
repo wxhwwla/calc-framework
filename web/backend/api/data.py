@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """游戏数据查询 API — 角色/武器/装备的 CRUD 路由 + 摘要统计 + 公式反推 + 多游戏 profile。"""
 
 from typing import Any
 
 from api.internal.auth import verify_admin_token
+from api.internal.errors import raise_http_from_exc
 from api.internal.json_utils import ENDFIELD_DATA_ROOT, aload_json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -539,7 +541,7 @@ async def dag_verify(req: DagVerifyRequest):
     try:
         pkg = manager.load(adapter_name)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"加载适配器失败: {e}")
+        raise_http_from_exc(e, status_code=500, public_message="加载适配器失败")
 
     context = _build_dag_verify_context(entity, req.entity_key, req.level)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """ComputeSheet 控件生成 — 为 layout.json 每个控件类型创建对应 Qt 控件。
 

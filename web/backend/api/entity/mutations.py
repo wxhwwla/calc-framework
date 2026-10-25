@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """游戏 JSON 数据 CURD 操作 — 角色/武器/装备增删改 + 公式反推（FastAPI 与 WSGI 共用）。"""
 

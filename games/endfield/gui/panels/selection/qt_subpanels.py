@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """
@@ -17,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -104,7 +106,7 @@ class QtTrustPanel(QWidget):
 
         layout.setSpacing(2)
 
-        lbl = QLabel("信赖")
+        lbl = QLabel(tr("desktop.endfield.trustLabel"))
 
         lbl.setFont(font)
 
@@ -174,7 +176,11 @@ class QtSkillLevelPanel(QWidget):
     def __init__(self, font: QFont, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self._names: list[str] = ["战技", "连携技", "终结技"]
+        self._names: list[str] = [
+            tr("desktop.endfield.skillCombat"),
+            tr("desktop.endfield.skillCombo"),
+            tr("desktop.endfield.skillUltimate"),
+        ]
 
         self._levels: list[int] = [1, 1, 1]
 

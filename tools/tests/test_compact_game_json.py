@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """compact_game_json 单元测试。"""
 
@@ -16,7 +17,7 @@ if str(_REPO) not in sys.path:
 from games.endfield.calc.damage.formula import calculate_growth_curve, calculate_skill_curve
 from games.endfield.calc.damage.inverse.adapter import EndfieldInverseAdapter
 from games.endfield.data_loading.curve_materialize import materialize_character_entity, materialize_weapon_entity
-from tools.compact_game_json import compact_character, compact_weapon
+from tools.data_pipeline.compact_game_json import compact_character, compact_weapon
 
 
 def _linear_90(base: int, growth: int, divisor: int) -> list[float]:

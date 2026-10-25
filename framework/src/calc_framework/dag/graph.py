@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 图算法：拓扑排序与节点工具函数。"""
@@ -41,6 +42,8 @@ def topological_sort(graph: DAGGraph) -> list[str]:
             if ref in adj:
                 adj[ref].append(nid)
                 in_degree[nid] += 1
+            else:
+                logger.warning("节点 %s 引用了不存在的依赖节点 %s", nid, ref)
 
     orig_in_degree = dict(in_degree)
     queue: deque[str] = deque(nid for nid, deg in in_degree.items() if deg == 0)

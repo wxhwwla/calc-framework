@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """数据设计器——主入口。
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import sys
 
+from calc_framework.ui.i18n import tr
 from calc_framework.ui.theme import ThemeManager
 from games.endfield.gui.designer.data_browser_tab import DataBrowserTab
 from games.endfield.gui.designer.data_editor_tab import DataEditorTab
@@ -30,8 +32,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-APP_NAME = "数据设计器"
-
 APP_VERSION = "1.0.0"
 
 
@@ -39,7 +39,8 @@ class DesignerApp(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}")
+        app_name = tr("desktop.designer.appName")
+        self.setWindowTitle(tr("desktop.designer.windowTitleFmt", name=app_name, version=APP_VERSION))
 
         self.setMinimumSize(900, 650)
 
@@ -65,11 +66,11 @@ class DesignerApp(QMainWindow):
 
         self.tabs = QTabWidget()
 
-        self.tabs.addTab(InverseTab(self.big_font, self.small_font), "公式反推")
+        self.tabs.addTab(InverseTab(self.big_font, self.small_font), tr("desktop.designer.inverseTitle"))
 
-        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), "数据编辑")
+        self.tabs.addTab(DataEditorTab(self.big_font, self.small_font), tr("desktop.designer.dataEditorTab"))
 
-        self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), "数据浏览")
+        self.tabs.addTab(DataBrowserTab(self.big_font, self.small_font), tr("desktop.designer.dataBrowserTab"))
 
         layout.addWidget(self.tabs, stretch=1)
 
@@ -77,7 +78,13 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.setContentsMargins(0, 4, 0, 0)
 
-        status = QLabel(f"{APP_NAME} v{APP_VERSION} —— 数据维护工具，不包含伤害计算功能")
+        status = QLabel(
+            tr(
+                "desktop.designer.statusBarFmt",
+                name=app_name,
+                version=APP_VERSION,
+            )
+        )
 
         status.setFont(self.small_font)
 
@@ -87,7 +94,7 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(status, stretch=1)
 
-        self.help_btn = QPushButton("📖 使用说明")
+        self.help_btn = QPushButton(tr("desktop.endfield.helpUsage"))
 
         self.help_btn.setFont(self.small_font)
 
@@ -111,7 +118,7 @@ class DesignerApp(QMainWindow):
 
         bottom_bar.addWidget(self.help_btn)
 
-        self.donation_btn = QPushButton("🤝 自愿捐赠")
+        self.donation_btn = QPushButton(tr("desktop.endfield.donate"))
 
         self.donation_btn.setFont(self.small_font)
 
@@ -144,7 +151,7 @@ class DesignerApp(QMainWindow):
         from utils.gui.help_designer import build_designer_help
         from utils.gui.help_dialog import HelpDialog
 
-        dialog = HelpDialog(build_designer_help, self, title="数据设计器 使用说明")
+        dialog = HelpDialog(build_designer_help, self, title=tr("desktop.designer.helpTitle"))
 
         dialog.exec()
         """open help。"""

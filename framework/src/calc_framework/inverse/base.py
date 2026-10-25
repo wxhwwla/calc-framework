@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 
@@ -305,8 +306,17 @@ class FloorFormulaFitter(FormulaFitter):
         if num_levels is None:
             num_levels = len(data)
 
-        if num_levels < 2:
-            return FitResult(max_error=0)
+        if num_levels == 0:
+            return FitResult(max_error=0.0, is_exact=False)
+
+        if num_levels == 1:
+            base = float(data[0])
+            return FitResult(
+                params={"base": base, "growth": 0.0, "divisor": 1, "offset": 0.0},
+                computed=[base],
+                max_error=0.0,
+                is_exact=True,
+            )
 
         divisor_range = options.get("divisor_range", (1, 501))
 
@@ -420,7 +430,7 @@ class FloorFormulaFitter(FormulaFitter):
         """探测缩放因子。含真小数 → 10，纯整数 → 1。"""
 
         for x in data:
-            if isinstance(x, float) and x != int(x):
+            if isinstance(x, float) and abs(x - round(x)) > 1e-9:
                 return 10
 
         return 1

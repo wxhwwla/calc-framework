@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """GitHub 上传 — 重导向到 scripts/tools/github_upload_module.py。"""
 

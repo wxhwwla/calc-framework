@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 后端入口 — FastAPI 应用实例 + 路由注册 + 全局中间件/异常处理器 / 静态文件挂载。"""
 
@@ -173,12 +174,16 @@ _health_mgr = AdapterManager(_ADAPTER_ROOT)
 
 @app.get("/api/health")
 async def health():
-    return {
-        "status": "ok",
-        "framework_version": "1.0.0",
-        "adapters_count": len(_health_mgr.available_adapters),
-        "adapters": list(_health_mgr.available_adapters.keys()),
-    }
+    """健康检查端点（生产环境不泄露适配器详情）。"""
+    import os as _os
+
+    if _os.environ.get("CALC_DEBUG", "").strip().lower() in ("1", "true", "yes", "on"):
+        return {
+            "status": "ok",
+            "adapters_count": len(_health_mgr.available_adapters),
+            "adapters": list(_health_mgr.available_adapters.keys()),
+        }
+    return {"status": "ok"}
 
 
 # ── 客户端下载 ────────────────────────────────────────────────────────────────

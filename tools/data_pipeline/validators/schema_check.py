@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """标准 schema 校验器 — 检查 EntitySchema 的完整性和合法性。"""

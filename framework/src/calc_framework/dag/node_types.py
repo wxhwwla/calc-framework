@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 节点类型定义。"""
@@ -8,9 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-_VALID_UNARY_OPS = frozenset(
-    {"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"}
-)
+_VALID_UNARY_OPS = frozenset({"neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan", "asin", "acos", "atan"})
 
 _VALID_BINARY_OPS = frozenset({"+", "-", "*", "/", "^", "min", "max", "mod"})
 

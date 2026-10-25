@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """干员目录筛选扩展测试。"""
 
 from __future__ import annotations
 
 import unittest
+from typing import Any
 
 from games.arknights.operator_catalog import (
     STAR_TIERS,
@@ -13,7 +15,7 @@ from games.arknights.operator_catalog import (
 )
 
 
-def _make_ops() -> dict[str, dict[str, object]]:
+def _make_ops() -> dict[str, dict[str, Any]]:
     """创建一个小型干员数据集用于测试筛选。"""
     return {
         "能天使": {"名称": "能天使", "星级": 6, "职业": "狙击", "分支": "速射手"},

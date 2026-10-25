@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """配装搜索 API — 工作量预估/全量搜索/SSE 流式搜索/敌人数值/装备目录/搜索历史。"""
 
 import asyncio
 import json
+import threading
 import time
 from collections.abc import AsyncGenerator
 from typing import Any
@@ -10,9 +12,27 @@ from typing import Any
 from api.internal.errors import raise_http_from_exc
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 router = APIRouter(prefix="/api/search", tags=["search"])
+
+_MAX_JSON_DEPTH = 10
+_MAX_HISTORY_ENTRY_BYTES = 1024 * 100  # 100KB 单条上限
+
+
+def _check_depth(value: object, depth: int = 0) -> None:
+    """递归检查 JSON 嵌套深度，超过 ``_MAX_JSON_DEPTH`` 时抛 ValueError。
+
+    防止攻击者通过深度嵌套的 JSON payload 导致 Pydantic 解析栈溢出。
+    """
+    if depth > _MAX_JSON_DEPTH:
+        raise ValueError(f"JSON 嵌套深度超过限制 ({_MAX_JSON_DEPTH})")
+    if isinstance(value, dict):
+        for v in value.values():
+            _check_depth(v, depth + 1)
+    elif isinstance(value, list):
+        for item in value:
+            _check_depth(item, depth + 1)
 
 
 class SearchRequest(BaseModel):
@@ -68,6 +88,13 @@ class SearchRequest(BaseModel):
     include_conditional_equipment_crit: bool = Field(default=False, description="是否计入条件触发暴击")
     extra_crit_rate: float = Field(default=0.0, description="额外暴击率")
     extra_crit_damage: float = Field(default=0.0, description="额外暴击伤害")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _limit_json_depth(cls, data: object) -> object:
+        """限制 JSON 嵌套深度，防止栈溢出/内存耗尽。"""
+        _check_depth(data)
+        return data
 
 
 class EstimateRequest(BaseModel):
@@ -243,7 +270,7 @@ async def score_search_batch(body: ScoreBatchRequest):
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError:
-        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+        raise HTTPException(status_code=503, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
         req, fixed_loadout = _prepare_search_req(body.params)
@@ -277,7 +304,7 @@ async def estimate_search(req: EstimateRequest):
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError:
-        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+        raise HTTPException(status_code=503, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
         req, fixed_loadout = _prepare_search_req(req)
@@ -331,7 +358,7 @@ async def run_search(req: SearchRequest):
         from games.endfield.data_loading.enemy_eval_params import build_search_job_inputs_from_request
 
     except ImportError:
-        raise HTTPException(status_code=500, detail="搜索引擎加载失败，请确认完整项目环境已安装")
+        raise HTTPException(status_code=503, detail="搜索引擎加载失败，请确认完整项目环境已安装")
 
     try:
         req, fixed_loadout = _prepare_search_req(req)
@@ -388,7 +415,7 @@ def get_enemy_choices():
         list_plugin_enemy_choices,
     )
 
-    rows: list[dict[str, object]] = []
+    rows: list[dict[str, Any]] = []
     for label, enemy_id in list_plugin_enemy_choices():
         params = enemy_damage_context_overrides(enemy_id)
         rows.append(
@@ -595,6 +622,7 @@ from api.internal.persistent_store import load_list, save_list
 
 _SEARCH_STORE_KEY = "search_history"
 _search_history: list[dict] = load_list(_SEARCH_STORE_KEY)
+_search_history_lock = threading.Lock()
 
 
 def list_search_history():
@@ -602,13 +630,24 @@ def list_search_history():
     return list(reversed(_search_history))
 
 
+def _validate_history_entry(entry: object) -> dict:
+    """校验搜索历史记录条目的基本合法性。"""
+    if not isinstance(entry, dict):
+        raise HTTPException(status_code=400, detail="历史记录必须是一个 JSON 对象")
+    raw = json.dumps(entry, ensure_ascii=False)
+    if len(raw.encode("utf-8")) > _MAX_HISTORY_ENTRY_BYTES:
+        raise HTTPException(status_code=413, detail=f"单条历史记录不能超过 {_MAX_HISTORY_ENTRY_BYTES // 1024}KB")
+    return dict(entry)
+
+
 def save_search_history(entry: dict):
     """保存一次搜索记录。"""
     global _search_history
-    _search_history.append(entry)
-    while len(_search_history) > 10:
-        _search_history.pop(0)
-    save_list(_SEARCH_STORE_KEY, _search_history)
+    with _search_history_lock:
+        _search_history.append(entry)
+        while len(_search_history) > 10:
+            _search_history.pop(0)
+        save_list(_SEARCH_STORE_KEY, _search_history)
     return {"message": "ok"}
 
 
@@ -621,7 +660,8 @@ def list_search_history_route():
 @router.post("/history")
 def save_search_history_route(entry: dict):
     """保存一次搜索记录。"""
-    return save_search_history(entry)
+    validated = _validate_history_entry(entry)
+    return save_search_history(validated)
 
 
 __all__: list[str] = []

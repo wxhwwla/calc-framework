@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 指数公式拟合器。
@@ -103,10 +104,7 @@ class ExponentialFormulaFitter(FormulaFitter):
         base = params["base"]
         growth = params["growth"]
         offset = params.get("offset", 0.0)
-        return [
-            round(base * (growth ** (lv - 1)) + offset, 4)
-            for lv in range(1, num_levels + 1)
-        ]
+        return [round(base * (growth ** (lv - 1)) + offset, 4) for lv in range(1, num_levels + 1)]
 
     def validate(
         self,
@@ -150,14 +148,12 @@ class ExponentialFormulaFitter(FormulaFitter):
 
         # 确保全部 > 0
         if any(y <= 0 for y in ys):
-            try:
-                # 尝试小偏移微调
-                min(y for y in ys if y > 0)
-                ys = [max(y, 1e-10) for y in ys]
-                if any(y <= 0 for y in ys):
-                    return None
-            except (ValueError, OverflowError):
+            # 存在非正数时，尝试小偏移微调
+            positive_ys = [y for y in ys if y > 0]
+            if not positive_ys:
+                # 全部非正数，无法取对数
                 return None
+            ys = [max(y, 1e-10) for y in ys]
 
         # 对数域线性回归：log(y) = log(base) + (lv-1) * log(growth)
         xs = [lv - 1 for lv in range(1, num_levels + 1)]

@@ -3,6 +3,8 @@
 > 本文档记录项目当前的不完善之处，按优先级分类，供后续开发参考。
 >
 > 基于 [`docs/项目目标.md`](../项目目标.md) 的长远愿景和 [`docs/会话接续手册.md`](../会话接续手册.md) 的当前状态综合分析。
+>
+> **最后账本纠偏**：2026-10-24（覆盖率门槛、i18n 键数、目录宽度、Rust 默认开等与仓库文件对齐；勿再采信文中过时的「CI fail-under=75/80」「全中文」「Rust 已回退」表述）。
 
 ---
 
@@ -27,9 +29,10 @@
 | 展示层（用户框架） | ~95% | ✅ CalcPackViewer、终末地方舟 GUI、Web 端均正常工作 | 无显著差距 |
 
 **核心结论**：引擎、GUI、Web 三端功能完整可用，架构质量良好。当前主要缺口集中在：
-1. **发布流程**（代码签名、自动更新生产验证）
-2. **生态建设**（更多游戏 ETL 链路、i18n、测试覆盖）
-3. **持续维护**（目录宽度监控、覆盖率保持）
+1. **发布流程**（代码签名暂缓、自动更新生产验证）
+2. **性能与 i18n 收尾**（搜索 `<10s`、Desktop 硬编码 `tr()`）
+3. **持续维护**（目录宽度硬顶、覆盖率保持、文档账本一致性）
+4. **运营宣传**（视频/文章/社区，非代码）
 
 ---
 
@@ -54,11 +57,10 @@
 
 | 项目 | 说明 |
 |------|------|
-| **问题** | 所有 GUI（PySide6 + Web React）和文档仅中文，无 en/ja 等多语言支持 |
-| **影响** | 项目面向全球开发者（GitHub 英文社区），中文仅限中文用户群 |
-| **方案** | 桌面端：`QM` 文件（PySide6 官方 i18n）；Web 端：`react-i18next` 或 `react-intl` |
-| **工作量** | 桌面端 ~2 周（提取 ~300 条字符串 + 翻译）；Web 端 ~2 周（~500 条 + 翻译）；文档 ~1 周 |
-| **优先级建议** | 有英文贡献者 / 用户非中文需求时启动，不必提前投入 |
+| **问题（历史）** | 早期 GUI/文档仅中文 |
+| **现状（2026-07-30）** | **Web** ✅ ~500+ 键双语；**Desktop** 🟡 `DesktopTranslator` + JSON ~517 键 + 首批控件/`tr()`，`games/endfield/gui` 仍有大量硬编码中文 |
+| **方案** | 继续逐控件替换为 `tr()`；不强制上 Qt Linguist |
+| **优先级建议** | Desktop 收尾为开放 P1；ja 等语言等有需求再开 |
 
 ### 3. 自动更新生产验证
 
@@ -97,7 +99,7 @@
 | **问题** | `games/endfield/` 的 CI 覆盖率门槛为 `--fail-under=40`（当前实际 ~64%），`framework/` 全量 ~73% |
 | **影响** | 覆盖率降低不影响 CI 通过，长期可能下滑 |
 | **方案** | 提升门槛：endfield 40→75，framework 增加 --fail-under=80 |
-| **完成情况** | 2026-06-13: endfield CI 门槛从 65→75（ci.yml + pyproject.toml）；framework CI 新增 --cov-fail-under=80（framework-ci.yml）；framework pyproject.toml 添加 fail_under=80 |
+| **完成情况（代码实况 2026-10-24）** | **Workflow**：`ci.yml` `--cov-fail-under=60`；`framework-ci.yml` `--cov-fail-under=65`。**包配置**：`games/endfield/pyproject.toml` `fail_under=75`；`framework/pyproject.toml` `fail_under=80`。二者不一致——以 workflow 为 CI 门禁，pyproject 为本地/工具目标 |
 
 ### 3. Web 后端测试覆盖 ✅ 已完成（2026-06-09）
 
@@ -164,16 +166,16 @@
 | 独立入口清理 | ✅ 已完成 | `scripts/` 仅 3 个有效入口（§4.140–4.148） |
 | `_version.py` 统一 | ✅ 已完成 | 版本唯一源头（§4.144） |
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
-| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 749 行（超 400 目标，低于 500 硬顶） |
-| 目录宽度 | ⚠️ 持续监控 | `scripts/` 17 项接近 20 上限 |
-| `games.endfield` 覆盖率 | 🟢 ~85% | CI 门槛 75%（ci.yml + pyproject.toml） ✅ |
-| `framework` 覆盖率 | 🟢 ~73% | CI 门槛 80%（framework-ci.yml + pyproject.toml） ✅ |
-| Desktop GUI i18n | 🟡 阶段3 | DesktopTranslator 基础设施完成（282键/15文件），待逐控件翻译 |
-| Web i18n | 🟢 已完成 | ~500+ 键，81 组件 + 17 API 文件全部转换，tsc 零错误 |
-| PA 部署脚本 | 🟢 已完成 | warmup 优化 + 5 并发上传 + 全链路验证 |
-| 快速部署模式 | 🟢 已完成 | `--fast` 标志 + `/api/admin/deploy` 端点：git push 后服务器自部署，~3 分钟 |
-| `web/backend` 覆盖率 | 🔴 ~15% | 基本无后端测试 |
-| Web E2E 测试 | 🔴 少量 | 仅 2 个 spec 文件 |
+| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 等大文件仍需盯（目标 ≤400 / 硬顶 500） |
+| 目录宽度 | 🟢 贴顶 | 2026-10-24：`tools/`/`scripts/`/`api/` = **19**（ADR-0001 硬顶 20） |
+| CI 覆盖门槛 | ⚠️ 双轨 | **workflow** Game 60 / Framework 65；**pyproject** 75 / 80 — CI 以 workflow 为准 |
+| Desktop GUI i18n | 🟢 基本完成 | `i18n_data` **1046** 键；边角/docs 摘录仍开放 |
+| Web i18n | 🟢 已完成 | locales 约 **890** 条目/语言 |
+| PA 部署脚本 | 🟢 已完成 | warmup + 并发上传 + 全链路 |
+| 快速部署模式 | 🟢 已完成 | `--fast` + `/api/admin/deploy` |
+| `web/backend` 覆盖率 | 🟢 | 集成测试已补；历史「~15%」描述作废 |
+| Web E2E 测试 | 🟢 | 多 spec / 40+ 用例已补；历史「仅 2 个 spec」作废 |
+| 全量搜索性能 | 🟡 | Tier-4 **默认开启**；历史基线 ~30–34s；目标 `<10s` 待实机确认 |
 
 ---
 
@@ -250,6 +252,7 @@ Trae Work 深度缺陷报告（v3.26.13）已核实并完成 **Phase 0–3** 修
 | 2026-06-13 | Desktop i18n 阶段3 基础设施：DesktopTranslator 模块 + 282 翻译键 + 15 GUI 文件（graph_editor/editor/dev_toolkit/dag_debugger/launcher） | Agent |
 | 2026-06-13 | PA 部署脚本优化：warmup + 5 并发上传 + 全链路部署验证 | Agent |
 | 2026-06-13 | develop→main 合并（d99fa165，118 文件，9535 行新增） | Agent |
-| 2026-06-13 | 文档全量更新：项目目标/改进路线图/i18n路线图/README/ARCHITECTURE/会话接续手册 六大文档同步至最新状态 | Agent |
+| 2026-07-30 | 进度账本统一纠偏：错误集/审计报告2/项目目标/improvement-roadmap/对称清单/polish 计划与代码现状对齐；手册 §8 表格修复 | Agent |
+| 2026-10-24 | 再校对：版本 3.29.21、数据 27/75/163@1.1.0、i18n 1046/~890、CI 门槛双轨、Rust 默认开；会话手册精简；历史计划迁入 `docs/archive/` | Agent |
 | 2026-06-17 | 外部缺陷报告 Phase 0–3 全部完成；api 子包、Docker 非 root、上传脚本 git add -u | Agent |
 | 2026-06-17 | 外部缺陷报告核实专文 + 分步修复计划（Phase 0–4）；C1/C2 确认待修 | Agent |

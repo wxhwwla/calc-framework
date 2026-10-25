@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """终末地 GUI 下拉框：显示文案 i18n + itemData 保留中文内部标识。"""
 

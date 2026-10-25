@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """.calcpack 导出器 — 将内存中的适配包数据打包为 ZIP 文件。

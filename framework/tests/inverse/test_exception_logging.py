@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """静默吞异常修复 — fit_auto / run_parallel 日志测试。"""
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """读取本地 characters.json / weapons.json 的 schema 与名称列表。"""

@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 from __future__ import annotations
 
+from calc_framework.ui.i18n import set_locale
 from games.endfield.gui.controls.search.search_settings import (
     CpuParallelInfo,
     build_worker_option_labels,
@@ -15,8 +17,18 @@ from games.endfield.gui.controls.search.search_settings import (
 )
 
 
+def setup_module() -> None:
+    set_locale("zh-CN")
+
+
 class TestGetCpuParallelInfo:
-    def test_with_explicit_count(self) -> None:
+    def test_with_explicit_count(self, monkeypatch) -> None:
+        # 清除全局物理核心缓存，确保测试隔离
+        import games.endfield.gui.controls.search.search_settings as mod
+
+        mod._physical_cores_cache = None
+        monkeypatch.setenv("CALC_PHYSICAL_CORES", "8")
+
         info = get_cpu_parallel_info(cpu_count=8)
 
         assert info.logical_processors == 8
@@ -28,6 +40,9 @@ class TestGetCpuParallelInfo:
         assert info.max_workers == 8
 
         assert info.logical_cores == 8
+
+        # 清理缓存
+        mod._physical_cores_cache = None
 
     def test_minimum_one(self) -> None:
         info = get_cpu_parallel_info(cpu_count=0)

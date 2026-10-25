@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """通用搜索引擎抽象 — SearchEngine ABC + SearchConfig。
 
@@ -35,6 +36,7 @@
 
 from __future__ import annotations
 
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
@@ -201,6 +203,7 @@ class SearchEngine(ABC, Generic[C, R]):
         tracker = TopNTracker[R](config.top_n, key_fn=self.score_key)
 
         processed_buf: list[str] = []
+        _buf_lock = threading.Lock()
 
         processed_count = 0
 
@@ -213,17 +216,16 @@ class SearchEngine(ABC, Generic[C, R]):
 
             tracker.offer(result)
 
-            processed_buf.append(key)
+            with _buf_lock:
+                processed_buf.append(key)
 
-            if len(processed_buf) >= PROCESSED_BATCH_SIZE:
-                run_store.mark_processed_batch(run_signature, processed_buf)
+                if len(processed_buf) >= PROCESSED_BATCH_SIZE:
+                    run_store.mark_processed_batch(run_signature, processed_buf)
 
-                processed_buf.clear()
+                    processed_buf.clear()
 
         def _progress(p):
             if progress_callback is not None:
-                processed_count + skipped  # type: ignore[unused-expression]
-
                 progress_callback(p)
 
         from .parallel import run_parallel as _run_parallel

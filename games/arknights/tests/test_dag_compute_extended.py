@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 计算扩展测试 — 边界条件、极端参数、组合场景。
 

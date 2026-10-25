@@ -98,6 +98,8 @@ line-length = 120
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "SIM", "RUF"]
 ignore = [
+    "UP009",   # 保留 # -*- coding: utf-8 -*-（中文 Windows + PyInstaller）
+    "RUF009",  # 允许 dataclass 默认值中的函数调用
     "RUF001",  # 允许中文全角字符（项目UI使用中文）
     "RUF002",  # 允许中文全角标点（项目文档使用中文）
     "RUF003",  # 允许注释使用中文全角标点

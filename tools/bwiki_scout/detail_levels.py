@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """解析干员「详细数据」子页 wikitext（干员/逐级等级 模板）。"""

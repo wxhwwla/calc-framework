@@ -20,6 +20,25 @@ describe("skillParser stripHtmlTags fallback", () => {
     };
     const parsed = parseSkill(skill, 1);
     expect(parsed.description).not.toMatch(/<[^>]+>/);
+    expect(parsed.description).not.toMatch(/<!--|<script/i);
     expect(parsed.description).toContain("攻击力");
+  });
+
+  it("未闭合注释不残留注入点", () => {
+    const skill: ArknightsSkill = {
+      name: "注释",
+      sp_type: "AUTO",
+      trigger: "AUTO",
+      levels: [
+        {
+          description: "<!-- 未闭合攻击力120%的物理伤害",
+          sp_cost: 0,
+          init_sp: 0,
+          duration: "0",
+        },
+      ],
+    };
+    const parsed = parseSkill(skill, 1);
+    expect(parsed.description).not.toMatch(/<!--/);
   });
 });

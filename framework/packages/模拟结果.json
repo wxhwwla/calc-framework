@@ -1,0 +1,73 @@
+{
+  "schema_version": "calc-graph-v1",
+  "name": "未命名",
+  "description": "",
+  "external_variables": {},
+  "nodes": [
+    {
+      "id": "node_098ae7be",
+      "type": "output",
+      "label": "输出标记",
+      "position": {
+        "x": 0.0,
+        "y": -360.0
+      }
+    },
+    {
+      "id": "node_4674dc50",
+      "type": "composite",
+      "label": "模拟计算",
+      "position": {
+        "x": -200.0,
+        "y": -360.0
+      },
+      "op": "@模拟计算/模拟计算",
+      "config": {
+        "source_graph": "{\n  \"schema_version\": \"calc-graph-v1\",\n  \"name\": \"未命名\",\n  \"description\": \"\",\n  \"external_variables\": {},\n  \"nodes\": [\n    {\n      \"id\": \"node_4b5aabbd\",\n      \"type\": \"binary\",\n      \"label\": \"二元运算\",\n      \"position\": {\n        \"x\": -240.0,\n        \"y\": -320.0\n      },\n      \"op\": \"*\"\n    },\n    {\n      \"id\": \"node_d69e9b24\",\n      \"type\": \"user_input\",\n      \"label\": \"输入2\",\n      \"position\": {\n        \"x\": -440.0,\n        \"y\": -280.0\n      }\n    },\n    {\n      \"id\": \"node_bc44c2bc\",\n      \"type\": \"user_input\",\n      \"label\": \"输入1\",\n      \"position\": {\n        \"x\": -440.0,\n        \"y\": -360.0\n      },\n      \"config\": {\n        \"default\": 10.0\n      }\n    },\n    {\n      \"id\": \"node_89f40416\",\n      \"type\": \"output\",\n      \"label\": \"输出标记\",\n      \"position\": {\n        \"x\": -40.0,\n        \"y\": -320.0\n      }\n    }\n  ],\n  \"edges\": [\n    {\n      \"id\": \"\",\n      \"from_node\": \"node_bc44c2bc\",\n      \"from_port\": 0,\n      \"to_node\": \"node_4b5aabbd\",\n      \"to_port\": 0\n    },\n    {\n      \"id\": \"\",\n      \"from_node\": \"node_d69e9b24\",\n      \"from_port\": 0,\n      \"to_node\": \"node_4b5aabbd\",\n      \"to_port\": 1\n    },\n    {\n      \"id\": \"\",\n      \"from_node\": \"node_4b5aabbd\",\n      \"from_port\": 0,\n      \"to_node\": \"node_89f40416\",\n      \"to_port\": 0\n    }\n  ],\n  \"layout\": {\n    \"sections\": [\n      {\n        \"id\": \"outputs\",\n        \"title\": \"输出\",\n        \"output_nodes\": [\n          \"node_89f40416\"\n        ],\n        \"columns\": 1\n      }\n    ]\n  }\n}",
+        "package_name": "模拟计算"
+      }
+    },
+    {
+      "id": "node_5d2db787",
+      "type": "composite",
+      "label": "模拟输出",
+      "position": {
+        "x": -400.0,
+        "y": -320.0
+      },
+      "op": "@模拟输出/模拟输出",
+      "config": {
+        "source_graph": "{\n  \"schema_version\": \"calc-graph-v1\",\n  \"name\": \"未命名\",\n  \"description\": \"\",\n  \"external_variables\": {},\n  \"nodes\": [\n    {\n      \"id\": \"node_0ed73df0\",\n      \"type\": \"output\",\n      \"label\": \"输出标记\",\n      \"position\": {\n        \"x\": -80.0,\n        \"y\": -200.0\n      }\n    },\n    {\n      \"id\": \"node_422a5d0f\",\n      \"type\": \"binary\",\n      \"label\": \"二元运算\",\n      \"position\": {\n        \"x\": -280.0,\n        \"y\": -200.0\n      },\n      \"op\": \"-\"\n    },\n    {\n      \"id\": \"node_2b9691a6\",\n      \"type\": \"user_input\",\n      \"label\": \"输入2\",\n      \"position\": {\n        \"x\": -480.0,\n        \"y\": -160.0\n      },\n      \"config\": {\n        \"default\": 20.0\n      }\n    },\n    {\n      \"id\": \"node_d9bcb754\",\n      \"type\": \"user_input\",\n      \"label\": \"输入1\",\n      \"position\": {\n        \"x\": -480.0,\n        \"y\": -240.0\n      },\n      \"config\": {\n        \"default\": 100.0\n      }\n    }\n  ],\n  \"edges\": [\n    {\n      \"id\": \"\",\n      \"from_node\": \"node_d9bcb754\",\n      \"from_port\": 0,\n      \"to_node\": \"node_422a5d0f\",\n      \"to_port\": 0\n    },\n    {\n      \"id\": \"\",\n      \"from_node\": \"node_2b9691a6\",\n      \"from_port\": 0,\n      \"to_node\": \"node_422a5d0f\",\n      \"to_port\": 1\n    },\n    {\n      \"id\": \"\",\n      \"from_node\": \"node_422a5d0f\",\n      \"from_port\": 0,\n      \"to_node\": \"node_0ed73df0\",\n      \"to_port\": 0\n    }\n  ],\n  \"layout\": {\n    \"sections\": [\n      {\n        \"id\": \"outputs\",\n        \"title\": \"输出\",\n        \"output_nodes\": [\n          \"node_0ed73df0\"\n        ],\n        \"columns\": 1\n      }\n    ]\n  }\n}",
+        "package_name": "模拟输出"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "",
+      "from_node": "node_5d2db787",
+      "from_port": 0,
+      "to_node": "node_4674dc50",
+      "to_port": 1
+    },
+    {
+      "id": "",
+      "from_node": "node_4674dc50",
+      "from_port": 0,
+      "to_node": "node_098ae7be",
+      "to_port": 0
+    }
+  ],
+  "layout": {
+    "sections": [
+      {
+        "id": "outputs",
+        "title": "输出",
+        "output_nodes": [
+          "node_098ae7be"
+        ],
+        "columns": 1
+      }
+    ]
+  }
+}

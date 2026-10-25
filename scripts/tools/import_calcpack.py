@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """CalcPack 导入工具 — 将 .calcpack 文件导入到框架适配器目录。
 

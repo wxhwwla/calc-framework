@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """FloorFormulaFitter 递减曲线（负 growth）测试。"""
 

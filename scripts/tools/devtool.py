@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 终末地计算器 — 开发者工具箱 CLI
@@ -135,7 +136,7 @@ def _cmd_plugin(args: argparse.Namespace) -> int:
 def _cmd_check_origin(args: argparse.Namespace) -> int:
     """执行 AI 代码来源与版权检测。"""
     _add_path()
-    from tools.check_code_origin import main
+    from tools.quality.check_code_origin import main
 
     sys.argv = [sys.argv[0], *_sub_args()]
     main()

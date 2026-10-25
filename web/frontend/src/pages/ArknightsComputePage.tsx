@@ -41,7 +41,7 @@ export default function ArknightsComputePage() {
       setParsedSkill(parseAutoAttack());
       return;
     }
-    const skills: ArknightsSkill[] = (operatorDetail as any).技能 ?? [];
+    const skills: ArknightsSkill[] = operatorDetail.技能 ?? [];
     const idx = skillIndex - 1;
     if (idx >= skills.length) {
       setParsedSkill(parseAutoAttack());
@@ -101,7 +101,7 @@ export default function ArknightsComputePage() {
 
           {operatorDetail && !detailLoading && (
             <Paper sx={{ p: 2, mt: 2 }}>
-              <ArknightsAttributeDisplay operator={operatorDetail as any} />
+              <ArknightsAttributeDisplay operator={operatorDetail} />
             </Paper>
           )}
         </Grid>
@@ -121,7 +121,7 @@ export default function ArknightsComputePage() {
                     onChange={(e) => setSkillIndex(e.target.value as number)}
                   >
                     {skillNames.map((n, i) => {
-                      const skills: ArknightsSkill[] = (operatorDetail as any)?.技能 ?? [];
+                      const skills: ArknightsSkill[] = operatorDetail?.技能 ?? [];
                       const disabled = i > 0 && (i - 1) >= skills.length;
                       return <MenuItem key={i} value={i} disabled={disabled}>{n}</MenuItem>;
                     })}
@@ -308,8 +308,8 @@ export default function ArknightsComputePage() {
                   <Table size="small" sx={{ maxWidth: 500 }}>
                     <TableBody>
                       {[
-                        [t("arknights.baseAttack"), String(Math.round((operatorDetail as any)?.基础属性?.攻击 ?? 0))],
-                        [t("arknights.trustBonus"), `+${Math.round((operatorDetail as any)?.信赖加成?.攻击 ?? 0)}`],
+                        [t("arknights.baseAttack"), String(Math.round(operatorDetail?.基础属性?.攻击 ?? 0))],
+                        [t("arknights.trustBonus"), `+${Math.round(operatorDetail?.信赖加成?.攻击 ?? 0)}`],
                         [t("arknights.finalAttack"), String(Math.round(computeResult.final_atk))],
                         [t("arknights.skillMultiplier"), `x${effectiveMult.toFixed(2)}`],
                         [t("arknights.hitCount"), `x${hitCount}`],

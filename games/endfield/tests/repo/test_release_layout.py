@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """发布目录布局：exe 与游戏数据分文件，供打包脚本与 path_utils 共用约定。"""

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 通用反推引擎 — 拟合 / 正向计算 / 验证三合一入口。

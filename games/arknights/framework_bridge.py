@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """框架桥接层 — GUI 只通过此模块导入 calc_framework。
 

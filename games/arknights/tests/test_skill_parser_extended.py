@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """技能解析器扩展测试 — 边界条件、变形描述、数据健壮性。"""
 

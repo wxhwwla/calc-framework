@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """各游戏 JSON 与适配器快照路径常量（ADR-0023 / Phase 4 Step 4.3）。
 

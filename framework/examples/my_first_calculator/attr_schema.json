@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "attributes": [
+    {
+      "name": "ATK",
+      "display_name": "攻击力",
+      "category": "character",
+      "type": "float",
+      "default": 100,
+      "min": 0,
+      "max": 9999
+    },
+    {
+      "name": "crit_dmg",
+      "display_name": "暴击伤害",
+      "category": "character",
+      "type": "float",
+      "default": 0.5,
+      "min": 0,
+      "max": 10.0
+    },
+    {
+      "name": "DEF",
+      "display_name": "防御力",
+      "category": "enemy",
+      "type": "float",
+      "default": 50,
+      "min": 0,
+      "max": 9999
+    }
+  ]
+}

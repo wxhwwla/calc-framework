@@ -1,0 +1,147 @@
+{
+  "schema_version": "dag-v1",
+  "name": "未命名",
+  "subgraphs": {
+    "@模拟计算/模拟计算_node_4674dc50": {
+      "parameters": {
+        "node_d69e9b24": {
+          "type": "float",
+          "source": "user_input",
+          "default": 0.0,
+          "min": 0.0,
+          "max": 100.0
+        },
+        "node_bc44c2bc": {
+          "type": "float",
+          "source": "user_input",
+          "default": 10.0,
+          "min": 0.0,
+          "max": 100.0
+        }
+      },
+      "nodes": {
+        "node_4b5aabbd": {
+          "type": "binary",
+          "op": "*",
+          "lhs": "node_bc44c2bc",
+          "rhs": "node_d69e9b24",
+          "label": "二元运算"
+        },
+        "node_d69e9b24": {
+          "type": "user_input",
+          "default": 0.0,
+          "min": 0.0,
+          "max": 100.0,
+          "step": 1.0,
+          "label": "输入2"
+        },
+        "node_bc44c2bc": {
+          "type": "user_input",
+          "default": 10.0,
+          "min": 0.0,
+          "max": 100.0,
+          "step": 1.0,
+          "label": "输入1"
+        }
+      },
+      "outputs": {
+        "node_89f40416": {
+          "node": "node_4b5aabbd",
+          "label": "输出标记",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "@模拟输出/模拟输出_node_5d2db787": {
+      "parameters": {
+        "node_2b9691a6": {
+          "type": "float",
+          "source": "user_input",
+          "default": 20.0,
+          "min": 0.0,
+          "max": 100.0
+        },
+        "node_d9bcb754": {
+          "type": "float",
+          "source": "user_input",
+          "default": 100.0,
+          "min": 0.0,
+          "max": 100.0
+        }
+      },
+      "nodes": {
+        "node_422a5d0f": {
+          "type": "binary",
+          "op": "-",
+          "lhs": "node_d9bcb754",
+          "rhs": "node_2b9691a6",
+          "label": "二元运算"
+        },
+        "node_2b9691a6": {
+          "type": "user_input",
+          "default": 20.0,
+          "min": 0.0,
+          "max": 100.0,
+          "step": 1.0,
+          "label": "输入2"
+        },
+        "node_d9bcb754": {
+          "type": "user_input",
+          "default": 100.0,
+          "min": 0.0,
+          "max": 100.0,
+          "step": 1.0,
+          "label": "输入1"
+        }
+      },
+      "outputs": {
+        "node_0ed73df0": {
+          "node": "node_422a5d0f",
+          "label": "输出标记",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    },
+    "@模拟结果/模拟结果_node_c77970b5": {
+      "parameters": {},
+      "nodes": {
+        "node_4674dc50": {
+          "type": "call",
+          "subgraph": "@模拟计算/模拟计算_node_4674dc50",
+          "bindings": {
+            "node_bc44c2bc": "",
+            "node_d69e9b24": "node_5d2db787"
+          },
+          "label": "模拟计算"
+        },
+        "node_5d2db787": {
+          "type": "call",
+          "subgraph": "@模拟输出/模拟输出_node_5d2db787",
+          "bindings": {
+            "node_d9bcb754": "",
+            "node_2b9691a6": ""
+          },
+          "label": "模拟输出"
+        }
+      },
+      "outputs": {
+        "node_098ae7be": {
+          "node": "node_4674dc50",
+          "label": "输出标记",
+          "format": "",
+          "is_primary": false
+        }
+      }
+    }
+  },
+  "nodes": {
+    "node_c77970b5": {
+      "type": "call",
+      "subgraph": "@模拟结果/模拟结果_node_c77970b5",
+      "label": "模拟结果"
+    }
+  },
+  "outputs": {}
+}

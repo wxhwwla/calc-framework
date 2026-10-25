@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """子图展开单元测试。"""
 # pyright: reportCallIssue=false

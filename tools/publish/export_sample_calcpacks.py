@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 framework/adapters 导出示例 .calcpack（fps / moba / card_rpg / simple / multi-zone）。
 
@@ -15,6 +16,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 _REPO = Path(__file__).resolve().parents[1]
 if str(_REPO) not in sys.path:
@@ -27,7 +29,7 @@ OUTPUT_DIR = _REPO / "web" / "hub" / "samples"
 SAMPLE_IDS = ("fps", "moba", "card_rpg", "simple", "multi-zone")
 
 
-def _load_json(path: Path) -> dict | list:
+def _load_json(path: Path) -> dict[str, Any] | list[Any]:
     """_load_json 实现。"""
     return json.loads(path.read_text(encoding="utf-8"))
 

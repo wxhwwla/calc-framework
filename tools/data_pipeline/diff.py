@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """数据差异比较引擎 — 对比两个标准 EntitySchema 列表，输出差异详情。
 

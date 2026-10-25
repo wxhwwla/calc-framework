@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """检测页面内容中是否引用 JSON 资源。"""

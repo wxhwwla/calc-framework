@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 PythonAnywhere WSGI 入口（免费套餐：WSGI + 同步 API，不用裸 FastAPI app）。
@@ -14,10 +15,15 @@ from __future__ import annotations
 
 import gzip
 import json
+import logging
+import os
 import re
+import secrets
 import sys
 from pathlib import Path
 from urllib.parse import parse_qs, unquote
+
+logger = logging.getLogger(__name__)
 
 # ── 按账号修改 ─────────────────────────────────────────────────────────────
 PA_USERNAME = "wxhwwla"
@@ -234,7 +240,7 @@ def _post_json_handler(start_response, payload: dict, handler):
     except HTTPException as exc:
         return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def _handle_layout_compute(environ, start_response):
@@ -313,7 +319,7 @@ def _handle_layout_compute(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return None
 
@@ -394,7 +400,7 @@ def _handle_search_api(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown search endpoint", 404)
 
@@ -442,7 +448,7 @@ def _handle_manual_buff(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown manual-buff endpoint", 404)
 
@@ -467,7 +473,7 @@ def _handle_survival(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def _parse_multipart_file(environ) -> tuple[str, bytes]:
@@ -502,6 +508,7 @@ def _handle_hub(environ, start_response):
     try:
         from hub.storage import (
             create_pack,
+            delete_pack,
             get_pack,
             get_pack_file_path,
             increment_download,
@@ -515,6 +522,12 @@ def _handle_hub(environ, start_response):
         return _json(start_response, {"error": f"hub import failed: {e}"}, "500 Internal Server Error")
 
     try:
+        # ── 写操作（POST/PUT/DELETE）需要管理员认证 ──
+        if method in ("POST", "PUT", "DELETE"):
+            err = _verify_admin_token_wsgi(environ)
+            if err:
+                return _json(start_response, {"detail": err}, "401 Unauthorized")
+
         if path == "/api/hub/stats" and method == "GET":
             _packs, total = list_packs(limit=0)
             return _json(start_response, {"total_packs": total})
@@ -568,6 +581,25 @@ def _handle_hub(environ, start_response):
             if pack is None:
                 return _http_error(start_response, "包不存在", 404)
             return _json(start_response, pack)
+
+        if m and method == "PUT":
+            pack_id = m.group(1)
+            raw = _read_body(environ)
+            if not raw:
+                return _http_error(start_response, "empty body", 400)
+            payload = json.loads(raw.decode("utf-8"))
+            update_pack(
+                pack_id,
+                name=str(payload.get("name", "")).strip() or None,
+                version=str(payload.get("version", "")).strip() or None,
+                description=str(payload.get("description", "")) or None,
+            )
+            return _json(start_response, {"status": "updated", "id": pack_id})
+
+        if m and method == "DELETE":
+            pack_id = m.group(1)
+            delete_pack(pack_id)
+            return _json(start_response, {"status": "deleted", "id": pack_id})
 
         m = re.match(r"^/api/hub/packs/([^/]+)/upload$", path)
         if m and method == "POST":
@@ -629,7 +661,7 @@ def _handle_hub(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown hub endpoint", 404)
 
@@ -677,7 +709,7 @@ def _handle_pack(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown pack endpoint", 404)
 
@@ -737,7 +769,7 @@ def _handle_adapters(environ, start_response):
             if action == "pack-bundle":
                 return _json(start_response, get_pack_export_bundle(aid))
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown adapters endpoint", 404)
 
@@ -764,7 +796,7 @@ def _handle_history_and_download(environ, start_response):
         except json.JSONDecodeError:
             return _http_error(start_response, "invalid JSON", 400)
         except Exception as e:
-            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+            return _safe_error_response(start_response, e)
         return _http_error(start_response, "method not allowed", 405)
 
     if path in ("/api/download/client", "/local-backend.zip") and method == "GET":
@@ -779,7 +811,7 @@ def _handle_history_and_download(environ, start_response):
                 extra_headers=[("Content-Disposition", f'attachment; filename="{filename}"')],
             )
         except Exception as e:
-            return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+            return _safe_error_response(start_response, e)
 
     return None
 
@@ -822,17 +854,72 @@ def _handle_arknights(environ, start_response):
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown arknights endpoint", 404)
 
 
-def _wsgi_http_error(start_response, exc) -> list:
-    from fastapi import HTTPException
+def _safe_error_response(start_response, exc: Exception) -> list:
+    """日志记录异常并返回通用错误响应（不泄露内部信息）。"""
+    logger.error("WSGI handler error: %s", exc, exc_info=exc)
+    return _json(start_response, {"error": "服务器内部错误"}, "500 Internal Server Error")
 
-    if isinstance(exc, HTTPException):
-        return _json(start_response, {"detail": exc.detail}, f"{exc.status_code} Error")
-    return _json(start_response, {"error": str(exc)}, "500 Internal Server Error")
+
+def _verify_admin_token_wsgi(environ) -> str | None:
+    """WSGI 版管理 Token 校验（FastAPI 路由用 Depends，WSGI 只能手动校验）。"""
+    configured = os.environ.get("CALC_ADMIN_TOKEN", "").strip()
+    if not configured:
+        return "管理接口未配置，请联系管理员"
+    token = environ.get("HTTP_X_ADMIN_TOKEN", "").strip()
+    if not token:
+        return "缺少管理 Token"
+    if not secrets.compare_digest(token, configured):
+        return "管理 Token 无效"
+    return None
+
+
+# ── WSGI 允许的来源（与 FastAPI cors.py / csrf.py 保持一致） ──
+_WSGI_ALLOWED_ORIGINS = frozenset(
+    {
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        # 生产环境可扩展：
+        # "https://wxhwwla.pythonanywhere.com",
+    }
+)
+
+
+def _check_csrf_wsgi(environ) -> str | None:
+    """WSGI 版 CSRF 校验 — 校验 Origin/Referer 头是否在允许来源中。
+
+    仅对非安全方法（POST/PUT/DELETE）且非已认证路径进行校验。
+    返回 None 表示通过，返回字符串表示错误信息。
+    """
+    if os.environ.get("CALC_DISABLE_CSRF", "").strip().lower() in ("1", "true", "yes", "on"):
+        return None
+
+    method = environ.get("REQUEST_METHOD", "GET").upper()
+    if method in ("GET", "HEAD", "OPTIONS"):
+        return None
+
+    path = _fix_path(environ.get("PATH_INFO", ""))
+    # 已受 Token 认证保护的路径跳过 CSRF（双重认证无意义）
+    if any(path.startswith(p) for p in ("/api/admin", "/api/download", "/api/data")):
+        return None
+
+    origin = (environ.get("HTTP_ORIGIN", "") or "").strip().rstrip("/")
+    if origin:
+        if origin in _WSGI_ALLOWED_ORIGINS:
+            return None
+        return f"CSRF 校验失败：来源 {origin} 不被允许"
+
+    referer = (environ.get("HTTP_REFERER", "") or "").strip().rstrip("/")
+    if referer:
+        for allowed in _WSGI_ALLOWED_ORIGINS:
+            if referer.startswith(allowed):
+                return None
+
+    return "CSRF 校验失败：缺少 Origin/Referer 头或来源不被允许"
 
 
 def _handle_data_write(environ, start_response, path: str, method: str) -> list | None:
@@ -841,6 +928,9 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
         return None
     if method == "GET":
         return None
+    err = _verify_admin_token_wsgi(environ)
+    if err:
+        return _json(start_response, {"detail": err}, "401 Unauthorized")
 
     sub = path[len("/api/data/") :] if path.startswith("/api/data/") else ""
 
@@ -957,7 +1047,7 @@ def _handle_data_write(environ, start_response, path: str, method: str) -> list 
     except json.JSONDecodeError:
         return _http_error(start_response, "invalid JSON", 400)
     except Exception as e:
-        return _wsgi_http_error(start_response, e)
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown data write endpoint", 404)
 
@@ -1161,7 +1251,7 @@ def _handle_generator_api(environ, start_response):
                 "501 Not Implemented",
             )
     except Exception as e:
-        return _json(start_response, {"error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
     return _http_error(start_response, "unknown generator endpoint", 404)
 
@@ -1169,7 +1259,7 @@ def _handle_generator_api(environ, start_response):
 def _handle_admin_unpack(environ, start_response):
     """管理端点：解压 dist.zip（POST 启动 / GET 查询状态）。
 
-    POST: 后台启动 unzip 子进程，立即返回。
+    POST: 后台启动 unzip 子进程，立即返回。需要管理 Token。
     GET: 返回解压状态（done/count/error）。
     """
     path = _fix_path(environ.get("PATH_INFO", ""))
@@ -1198,6 +1288,11 @@ def _handle_admin_unpack(environ, start_response):
     if method != "POST":
         return None
 
+    # ── POST 写操作需要管理 Token ──
+    err = _verify_admin_token_wsgi(environ)
+    if err:
+        return _json(start_response, {"detail": err}, "401 Unauthorized")
+
     if not zip_path.is_file():
         return _http_error(start_response, f"dist.zip not found: {zip_path}", 404)
 
@@ -1212,7 +1307,7 @@ def _handle_admin_unpack(environ, start_response):
         subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return _json(start_response, {"ok": True, "status": "unpack started in background"})
     except Exception as e:
-        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def _handle_admin_deploy(environ, start_response):
@@ -1220,7 +1315,7 @@ def _handle_admin_deploy(environ, start_response):
 
     部署新版本只需两步：
       1. git push
-      2. curl -X POST https://xxx.pythonanywhere.com/api/admin/deploy
+      2. curl -X POST -H 'X-Admin-Token: xxx' https://xxx.pythonanywhere.com/api/admin/deploy
       3. 等待 2-3 分钟，在 PA Web 页面 Reload
     """
     path = _fix_path(environ.get("PATH_INFO", ""))
@@ -1243,6 +1338,11 @@ def _handle_admin_deploy(environ, start_response):
     if method != "POST":
         return None
 
+    # ── POST 写操作需要管理 Token ──
+    err = _verify_admin_token_wsgi(environ)
+    if err:
+        return _json(start_response, {"detail": err}, "401 Unauthorized")
+
     script = (
         f"cd {_BASE} && "
         f"git pull origin develop 2>&1 && "
@@ -1254,10 +1354,16 @@ def _handle_admin_deploy(environ, start_response):
         subprocess.Popen(["bash", "-c", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return _json(start_response, {"ok": True, "status": "deploy started"})
     except Exception as e:
-        return _json(start_response, {"ok": False, "error": str(e)}, "500 Internal Server Error")
+        return _safe_error_response(start_response, e)
 
 
 def application(environ, start_response):
+    # ── CSRF 校验（对所有非安全方法，例外路径跳过） ──
+    csrf_err = _check_csrf_wsgi(environ)
+    if csrf_err:
+        logger.warning("WSGI CSRF 拒绝: %s", csrf_err)
+        return _json(start_response, {"detail": csrf_err}, "403 Forbidden")
+
     for handler in (
         _handle_admin_deploy,
         _handle_donation,

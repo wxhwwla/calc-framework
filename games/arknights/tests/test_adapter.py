@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """测试 adapter.py — get_parsed_skill_info 与 compute_snapshot_with_dag 组合。"""
 

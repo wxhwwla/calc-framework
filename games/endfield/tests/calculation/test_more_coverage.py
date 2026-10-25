@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """覆盖 survival/estimate, core/data_generator, formula 未覆盖函数。"""
 

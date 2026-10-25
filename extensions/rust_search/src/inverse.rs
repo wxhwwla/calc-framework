@@ -10,6 +10,7 @@ pub struct FitResult {
     pub growth: i64,
     pub divisor: i64,
     pub offset: i64,
+    #[allow(dead_code)]
     pub scaled_base: i64,
     pub scale_factor: i64,
     pub max_error: f64,

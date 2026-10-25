@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 LoadoutState 的构造/工厂函数：从 GUI 面板或 App 实例读取配装快照。

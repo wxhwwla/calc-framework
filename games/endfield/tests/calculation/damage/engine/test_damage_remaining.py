@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """覆盖 corrosion / enemy_growth / combo_bonus / abnormal_attached / originium_arts / physical_abnormal_state。"""
 

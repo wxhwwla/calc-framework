@@ -1,5 +1,9 @@
 # Dependabot 自动化依赖更新
 # docs: https://docs.github.com/code-security/dependabot
+#
+# 仓库分支策略：远程仅长期保留 main + develop。
+# Dependabot 开出的分支审完即合/关并删除，勿堆积（见 docs/上传脚本与-pre-commit.md）。
+# open-pull-requests-limit 刻意压低，避免一次冒出十几条 bot 分支。
 
 version: 2
 updates:
@@ -9,55 +13,91 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      pip-root:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "pip"
     directory: "/framework"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      pip-framework:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "pip"
     directory: "/games/endfield"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      pip-endfield:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   # Node.js 依赖（npm — Web 前端）
   - package-ecosystem: "npm"
     directory: "/web/frontend"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      npm-frontend:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # Rust 依赖（Cargo — rust_search 扩展）
+  - package-ecosystem: "cargo"
+    directory: "/extensions/rust_search"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      cargo-rust-search:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   # GitHub Actions 版本更新
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "ci"
     commit-message:
       prefix: "ci"
       include: "scope"
+    groups:
+      gh-actions:
+        patterns: ["*"]

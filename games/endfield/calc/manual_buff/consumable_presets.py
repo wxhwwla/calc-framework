@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """消耗品临时加成预设（NGA PART 05 节选，映射为手动 buff 条目）。"""
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """端到端集成测试 — 使用真实解析 JSON 数据验证 DAG 计算正确性。
 

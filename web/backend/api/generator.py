@@ -1,17 +1,22 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """AI 计算器生成器 API。"""
 
 from __future__ import annotations
 
 import json
+import logging
 import tempfile
 from pathlib import Path
 from typing import Any
 
 import httpx
+from api.internal.errors import raise_http_from_exc
 from api.internal.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/generator", tags=["generator"])
 
@@ -134,8 +139,15 @@ def get_templates():
 @router.get("/templates/{template_id}")
 def get_template_detail(template_id: str):
     """获取模板详情，包括文件结构预览。"""
+    import re
+
+    if not re.match(r"^[a-zA-Z0-9_-]+$", template_id):
+        raise HTTPException(status_code=400, detail=f"无效的模板 ID: {template_id}")
     adapters_dir = Path(__file__).resolve().parents[3] / "framework" / "adapters"
     d = adapters_dir / template_id
+    # 二次验证：解析后的路径必须在 adapters_dir 内
+    if not d.resolve().is_relative_to(adapters_dir.resolve()):
+        raise HTTPException(status_code=400, detail="路径穿越检测")
     if not d.is_dir():
         raise HTTPException(status_code=404, detail=f"模板不存在: {template_id}")
 
@@ -176,7 +188,7 @@ def get_template_detail(template_id: str):
 def generate_adapter(req: GenerateRequest):
     """生成适配器包。"""
     if not _HAS_ENGINE:
-        raise HTTPException(status_code=500, detail="生成器引擎不可用")
+        raise HTTPException(status_code=503, detail="生成器引擎不可用")
 
     try:
         variables = [v.model_dump() for v in req.variables]
@@ -204,7 +216,7 @@ def generate_adapter(req: GenerateRequest):
                 "file_count": len(result),
             }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise_http_from_exc(e, status_code=400)
 
 
 @router.post("/ai/parse")
@@ -286,14 +298,16 @@ async def ai_parse_formula(req: AIFormulaRequest):
     # 尝试提取 JSON
     import re
 
-    json_match = re.search(r"\{.*\}", content, re.DOTALL)
+    json_match = re.search(r"\{[^{}]*\}", content)
     if json_match:
         try:
             parsed = json.loads(json_match.group())
-        except json.JSONDecodeError as e:
-            raise HTTPException(status_code=502, detail=f"AI 返回的 JSON 格式无效: {e!s}。原始返回: {content[:200]}")
+        except json.JSONDecodeError:
+            logger.warning("AI 返回的 JSON 格式无效: %s", content[:200])
+            raise HTTPException(status_code=502, detail="AI 返回的 JSON 格式无效，请稍后重试")
     else:
-        raise HTTPException(status_code=502, detail=f"AI 返回内容中未找到 JSON 数据。原始返回: {content[:200]}")
+        logger.warning("AI 返回内容中未找到 JSON 数据: %s", content[:200])
+        raise HTTPException(status_code=502, detail="AI 返回内容中未找到 JSON 数据，请稍后重试")
 
     # 验证返回的数据结构
     variables = parsed.get("variables", [])

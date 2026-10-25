@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """画布上的节点图形项。"""
 
@@ -131,13 +132,7 @@ class NodeItem(QGraphicsRectItem):
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
         self._text = QGraphicsSimpleTextItem(self)
-
-        display = self._node_label
-
-        if self._node_op:
-            display = f"{self._node_label} [{self._node_op}]"
-
-        self._text.setText(display)
+        self._text.setText(self._format_display())
 
         self._text.setFont(_FONT)
 
@@ -205,6 +200,26 @@ class NodeItem(QGraphicsRectItem):
     def ports(self) -> list[PortItem]:
         return self._ports
 
+    def _format_display(self) -> str:
+        """格式化节点显示文本。复合节点不显示 op（type_id 太长）。"""
+        if self._node_type == "composite" or not self._node_op:
+            return self._node_label
+        return f"{self._node_label} [{self._node_op}]"
+
+    def update_label(self, new_label: str) -> None:
+        """更新节点标签并刷新显示。"""
+        self._node_label = new_label
+        self._text.setText(self._format_display())
+
+    def update_op(self, new_op: str | None) -> None:
+        """更新节点操作并刷新显示。"""
+        self._node_op = new_op
+        self._text.setText(self._format_display())
+
+    def update_config(self, config) -> None:
+        """更新节点配置。"""
+        self._config = config
+
     def to_graph_node(self) -> GraphNode:
         return GraphNode(
             id=self._node_id,
@@ -233,18 +248,20 @@ def _composite_port_labels(source_graph: str) -> tuple[list[str], list[str]]:
 
         nodes = data.get("nodes", [])
 
-        for n in nodes:
-            ntype = n.get("type", "")
+        # 按 Y 坐标排序（从上到下），确保端口顺序与视觉顺序一致
+        user_inputs = sorted(
+            [n for n in nodes if n.get("type") == "user_input"],
+            key=lambda n: n.get("position", {}).get("y", 0),
+        )
+        outputs = [n for n in nodes if n.get("type") == "output"]
 
-            if ntype == "user_input":
-                label = n.get("label", "") or n.get("id", tr("desktop.graphEditor.nodeTypeInput"))
+        for n in user_inputs:
+            label = n.get("label", "") or n.get("id", tr("desktop.graphEditor.nodeTypeInput"))
+            in_labels.append(label)
 
-                in_labels.append(label)
-
-            elif ntype == "output":
-                label = n.get("label", "") or n.get("id", tr("desktop.graphEditor.nodeTypeOutput"))
-
-                out_labels.append(label)
+        for n in outputs:
+            label = n.get("label", "") or n.get("id", tr("desktop.graphEditor.nodeTypeOutput"))
+            out_labels.append(label)
 
     except Exception:
         pass

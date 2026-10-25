@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """AK 成长参数批量压缩与段曲线解析测试。"""
 
@@ -12,7 +13,7 @@ from calc_framework.inverse.curve import GROWTH_PARAM_SEGMENTS_KEY
 
 from games.arknights.calc.dag_adapter.loader import ArknightsContextLoader
 from games.arknights.calc.inverse.stats import resolve_stats_from_segments
-from tools.compact_arknights_operators import compact_operator, compact_parsed_dir
+from tools.data_pipeline.compact_arknights_operators import compact_operator, compact_parsed_dir
 
 
 @pytest.fixture

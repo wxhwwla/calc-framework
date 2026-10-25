@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 后端 JSON 文件持久化（PA WSGI 进程重启后仍保留）。"""
 

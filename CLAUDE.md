@@ -48,6 +48,10 @@
 - Agent **不得**直接执行 `git push`
 - 工作就绪后，告知用户应执行的命令和当前暂存区状态，由用户运行上传脚本
 
+### 远程分支策略（仅 `main` + `develop`）
+
+远程**只保留** `develop`（日常）与 `main`（正式版）。`dependabot/*` 等机器人分支不得长期堆积：审完即合/关，并删除远程分支。发现多余 bot 分支应主动清理。详见 `.trae/rules/project_rules.md`「远程分支策略」与 `docs/上传脚本与-pre-commit.md`。
+
 ### 推送（上传）
 
 - **默认由人类执行上传**。Agent **不得**运行上传脚本，除非用户在**当前对话中明确要求**（如"帮我上传""执行上传脚本"）。
@@ -100,19 +104,138 @@ Agent 在 sandbox 中只能执行以下 Git **只读**命令：
 4. **输出明确的任务总结** — 列出已完成项 + 未完成项 + 暂存区状态
 5. **向用户提问后续** — 如"需要上传 GitHub 吗？"
 
-**禁止**：修改代码后不同步更新相关文档和 CI；任务完成不做总结。
+**禁止**：修改代码后不同步更新相关文档和 CI；任务完成不做总结；本地环境运行测试并采信结果（必须通过 `act` 在 Docker 容器中验证，见 §11）。
 
 ### 默认开发流程
 
 功能实现/Bug 修复/代码变更默认走 `design-then-build`：
 1. 先与用户沟通厘清设计
-2. 再以 TDD 方式实现（测试先行，红-绿-重构）
+2. **必须以 TDD 方式实现**（测试先行，红-绿-重构；必做，不可跳过）
 3. 低风险操作可自动同意
 4. 高风险操作（上传脚本、`git push`、破坏性命令）必须先问用户
 
 ---
 
-## 六、严重程度标签
+## 六、技能推荐工作流
+
+本仓库安装了 `mattpocock/skills` 的 34 个技能（`.agents/skills/`）。Agent 应根据任务类型自动选用合适的技能。
+
+### 推荐路线
+
+#### 日常改代码（TDD 必做）
+```
+/tdd（红-绿-重构，必做）→ 通过 act 在 Docker 中验证 CI（§11）
+（可选：/review）
+```
+
+#### 修 Bug（TDD 必做）
+```
+/diagnosing-bugs → /tdd 修复（必做）
+（可选：/review）
+```
+
+#### 开发新功能（TDD 必做）
+```
+/grill-with-docs（需求厘清 + 生成 ADR）
+  → 复杂功能？→ /handoff 开新会话
+  → /prototype（快速验证设计）
+  → /tdd（先写测试再实现，必做）
+（可选：/review）
+```
+
+#### 代码库维护（建议每月一次）
+```
+/improve-codebase-architecture → 扫描改进机会
+/codebase-design → 设计新模块接口时
+```
+
+#### 架构决策
+```
+/decision-mapping → 面临模糊选择时
+/domain-modeling → 需要定义领域术语时
+```
+
+#### 文档编写
+```
+/edit-article → 编辑 README 等文档
+/writing-shape → 将零散笔记整理成文档
+```
+
+#### 改完代码后更新文档（必做，调用 `/edit-article`）
+
+每次修改代码后，必须调用 **`/edit-article`** 技能来更新文档。按以下清单检查并同步更新：
+
+```
+1. /.gitignore
+   └─ 调用 /edit-article 检查：新增产物/目录/临时文件是否应被忽略？
+
+2. 受影响的核心文档（调用 /edit-article 逐项处理）
+   ├─ docs/会话接续手册.md    — 文首日期、§3 目录、§4 近期完成
+   ├─ docs/操作指令集.md       — 新增命令/参数/流程
+   ├─ docs/错误集.md           — 新增 Bug 修复记录
+   ├─ docs/代码结构规范.md     — 目录超限记录
+   ├─ docs/框架适配新游戏指南.md — 新增适配包/API 变更
+   ├─ docs/制造游戏计算器完整流程.md — GUI 功能变化
+   ├─ README.md（根和各 games/*/）— 功能描述、目录列表
+   ├─ CONTEXT.md              — 新增术语
+   └─ CLAUDE.md               — 自身规则变更
+
+3. CI 配置（.github/workflows/*.yml）
+   └─ 手动检查：变更影响了测试/依赖/打包/代码结构？
+
+4. 其他配置文件
+   ├─ .editorconfig
+   ├─ .gitattributes
+   └─ 项目相关的其他 .yml / .json / .toml
+```
+
+**原则**：改代码和改文档应在同一次提交中完成，保持文档与代码一致。禁止只改代码不更新文档。
+
+### 文档的定义
+
+项目中除了业务代码（Python/TypeScript 逻辑、算法、计算引擎等）之外，**其他所有文件都算作文档**，包括但不限于：
+
+| 类别 | 举例 |
+|------|------|
+| Markdown 文档 | README、操作指令集、会话接续手册、错误集 等 |
+| 规则/约束文件 | CLAUDE.md、.cursorrules、AGENTS.md、project_rules.md |
+| 配置文件 | .gitignore、.editorconfig、.gitattributes、.actrc |
+| CI 配置 | .github/workflows/*.yml |
+| 项目元数据 | pyproject.toml、package.json、tsconfig.json |
+| 数据/术语 | CONTEXT.md、UBIQUITOUS_LANGUAGE.md |
+
+这些文件都属于"文档"范畴，需要使用 `/edit-article` 等文档技能来处理。
+
+### 技能选用原则
+
+- **停一步，先问"这个任务适合什么技能？"**：每次开始任务前，先判断当前任务匹配哪个技能，再调用技能去实现
+- **优先使用技能**：匹配到合适技能时，优先通过 `Skill` 工具调用，而不是手动编写
+- **不要强用**：没有合适技能时，照常手动工作
+- **自动判断**：Agent 根据任务类型自动判断是否调用技能，无需每次都问用户
+
+### 禁用技能
+
+| 技能 | 原因 |
+|------|------|
+| **`to-issues`** | 会向 GitHub 发送 Issue，造成"全是 AI 提的 Issue"的混淆，禁止使用 |
+
+---
+
+## 上下文管理
+
+### 新对话接续
+- 用户明确说「总结一下，我要开启新对话」时，更新 `docs/会话接续手册.md` 后结束
+- 新对话开始时会读取该手册，旧对话结束前更新它即可完成交接
+
+### 质量检测
+当出现以下情况时主动提醒用户：
+- 连续犯同一个错误
+- 遗漏已读过的规则或文件内容
+- 重复读取刚改过的文件
+
+---
+
+## 七、严重程度标签
 
 所有诊断信息标注以下标签：
 
@@ -185,3 +308,118 @@ Agent 在 sandbox 中只能执行以下 Git **只读**命令：
 - Issue 通过 GitHub Issues 跟踪，Web 表单在 `.github/ISSUE_TEMPLATE/`（Bug 报告、功能建议）
 - 默认标签：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`
 - 见 `docs/agents/issue-tracker.md` 和 `docs/agents/triage-labels.md`
+
+---
+
+## 十一、测试执行规则
+
+### 所有测试必须在 Docker 容器内执行（通过 `act`）
+
+**本地环境（Windows + 非 Linux 系统）运行的测试结果不予采信**，原因：
+
+1. **CRLF vs LF** — Windows 默认 CRLF 换行符与 CI（Linux）的 LF 不一致，导致 `.gitattributes` 规则下的文件被误判为已修改
+2. **detect-secrets 指纹漂移** — 同一文件在 Windows 和 Linux 上生成的 secrets baseline 指纹不同，导致 security audit CI 误报
+3. **locale 差异** — i18n 测试在中文 Windows 上返回中文字符串，CI（en_US）返回英文，断言失败
+4. **路径格式** — Windows `\` 与 CI 的 `/` 路径分隔符差异导致快照测试失败
+5. **PyInstaller 打包行为** — Windows frozen exe 行为与 Linux CI 完全不同（多进程/spawn 模式）
+
+### 测试执行方式
+
+使用 `act`（本地 GitHub Actions runner）在 Docker 容器中执行 CI 工作流：
+
+```powershell
+# 推荐方式：使用自动检测脚本（代理端口 + 端口冲突处理）
+.\scripts\act.ps1 -j test -W .github/workflows/ci.yml
+.\scripts\act.ps1 -j test -W .github/workflows/framework-ci.yml
+.\scripts\act.ps1 -j test -W .github/workflows/web-ci.yml
+.\scripts\act.ps1 --list                              # 查看所有 job
+
+# 直接调用 act（代理端口固定时）
+act -j test -W .github/workflows/ci.yml
+```
+
+`scripts\act.ps1` 自动处理以下问题：
+- **代理端口检测**：扫描 `host.docker.internal` 和 `127.0.0.1` 上常见代理端口（6518/7890/7891/1080/10809/3128 等），取第一个可用端口
+- **端口冲突**：清理残留的 act 进程（避免 `listen tcp ... 34567: bind: only one usage`）
+- **代理不可用时降级**：无代理时以无代理模式运行（容器内直连可能超时）
+
+`act` 配置文件 `.actrc` 已预设 ghcr.io 镜像代理 + 系统代理，详见该文件。
+
+前置条件：
+- Docker Desktop 须处于运行状态
+- 代理工具（Clash / V2Ray / AtlasVPN 等）须已启动，HTTP 代理端口对外可访问
+- `scripts\act.ps1` 会自动检测代理端口，若检测不到会给出提示
+
+### 已知限制：代理不可用时的表现
+
+当 Docker 容器内无 HTTP 代理时，以下操作会失败：
+1. **`pip install`** — 无法从 PyPI 下载包（`ProxyError: Connection refused`）
+2. **`act` 的 `git clone`** — GitHub Actions `setup-python` 等步骤会卡住或超时
+
+解决方案：
+```powershell
+# 1. 启动你的代理工具（Clash / V2Ray / 系统代理），确保 HTTP 代理端口开放
+# 2. 验证代理可用：
+curl -x http://host.docker.internal:端口 http://httpbin.org/ip
+
+# 3. 运行测试
+.\scripts\act.ps1 -- -j test -W .github/workflows/ci.yml
+
+# 备用方案：直接指定代理端口
+$env:HTTP_PROXY = "http://host.docker.internal:端口"
+.\scripts\act.ps1 -- -j test -W .github/workflows/ci.yml
+```
+
+### 代理端口变动处理
+
+本地代理工具（clash/v2ray 等）的 HTTP 端口可能动态变化。当 act 无法拉取 GitHub Actions（卡在 `git clone` 步骤）时：
+
+```powershell
+# 1. 找到你代理工具的 HTTP 端口（通常是 Mixin/Clash/V2Ray 的 HTTP 代理端口）
+# 2. 更新 .actrc 中的端口号
+#    或直接用 scripts\act.ps1（自动扫描）
+.\scripts\act.ps1 -j test -W .github/workflows/ci.yml
+```
+
+常见代理端口参考：clash（7890）、v2ray（10809）、Docker Desktop 内置（3128）。
+
+### 验证 CI 前务必复查
+
+本地改动提交前，**必须**通过 `act` 在 Docker 中跑通以下 CI（具体见 `.github/workflows/`）：
+1. `ci.yml` — Game CI（终末地层 + tools + Web 后端）
+2. `framework-ci.yml` — 框架核心 + 基准测试
+3. `web-ci.yml` — Web 前端 tsc + eslint + build
+4. `security-audit.yml` — detect-secrets + pip-audit + npm audit
+
+**注意**：本地环境（Windows）运行的测试结果**仅用于快速调试**，**不得**作为验证依据。所有正式验证必须通过 `act` 在 Docker 容器中完成。
+
+---
+
+## 十二、自动化测试框架（scripts/auto_test/）
+
+三层自动化测试框架，用于验证 Web 前端、桌面应用、打包后 exe 的功能完整性：
+
+```powershell
+# 安装依赖
+pip install -r scripts/auto_test/requirements.txt
+
+# 一键运行所有测试
+python scripts/auto_test/run_all.py
+
+# 只运行某一层
+python scripts/auto_test/web_test.py        # Web 测试（Cypress E2E）
+python scripts/auto_test/desktop_test.py    # 桌面应用测试（pywinauto）
+python scripts/auto_test/packaged_test.py   # 打包后 exe 测试
+
+# 跳过某一层
+python scripts/auto_test/run_all.py --skip-web
+python scripts/auto_test/run_all.py --skip-desktop
+python scripts/auto_test/run_all.py --skip-packaged
+python scripts/auto_test/run_all.py --skip-build
+```
+
+输出：
+- 截图：`scripts/auto_test/screenshots/{web,desktop,packaged}/`
+- 报告：`scripts/auto_test/screenshots/summary_report.md`
+
+详见 `scripts/auto_test/README.md` 和 `docs/会话接续手册.md` §7。

@@ -1,0 +1,13 @@
+{
+  "name": "我的第一个计算器",
+  "game": "示例游戏",
+  "description": "一个简单的伤害计算示例",
+  "version": "1.0.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "formula.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {
+    "clamp": "functions.py"
+  }
+}

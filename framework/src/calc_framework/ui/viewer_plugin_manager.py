@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """插件管理器对话框 — 导入/打包/查看插件。"""
 
@@ -72,9 +73,7 @@ class PluginManagerDialog(QDialog):
         if not plugins:
             layout.addWidget(
                 QLabel(
-                    "暂无已注册的插件。\n"
-                    "点击「导入 .calcplugin」安装一个插件，"
-                    "或「打包插件目录」将源码目录打包为 .calcplugin。"
+                    "暂无已注册的插件。\n点击「导入 .calcplugin」安装一个插件，或「打包插件目录」将源码目录打包为 .calcplugin。"
                 )
             )
         else:
@@ -107,7 +106,7 @@ class PluginManagerDialog(QDialog):
         if not path:
             return
         try:
-            from tools.plugin_pack import install_plugin
+            from tools.publish.plugin_pack import install_plugin
 
             repo = Path(__file__).resolve().parents[3]
             target = repo / "web" / "hub" / "plugins"
@@ -125,7 +124,7 @@ class PluginManagerDialog(QDialog):
         if not dir_path:
             return
         try:
-            from tools.plugin_pack import build_plugin
+            from tools.publish.plugin_pack import build_plugin
 
             output, _ = QFileDialog.getSaveFileName(
                 self,

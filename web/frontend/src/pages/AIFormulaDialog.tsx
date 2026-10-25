@@ -59,8 +59,9 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
         sessionStorage.setItem('ai_api_base', apiBase);
         sessionStorage.setItem('ai_model', model);
       }
-    } catch (e: any) {
-      setTestResult({ status: 'error', message: e.message });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setTestResult({ status: 'error', message: msg });
     } finally {
       setTesting(false);
     }
@@ -95,11 +96,12 @@ export default function AIFormulaDialog({ open, onClose, templateId, onApply }: 
       if (res.validation_warnings?.length) {
         setShowRaw(true);
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
       // 尝试解析后端返回的 detail 字段
       try {
-        const parsed = JSON.parse(e.message);
+        const parsed = JSON.parse(msg);
         if (parsed.detail) setError(parsed.detail);
       } catch { /* 已经是纯文本错误 */ }
     } finally {

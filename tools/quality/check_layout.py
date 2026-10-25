@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """仓库布局门禁：目录子项数 ≤20（目标 ≤15）、业务 .py 文件行数 ≤500。
 

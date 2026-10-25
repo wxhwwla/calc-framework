@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """游戏选择器启动器 — 命令行选择适配包并启动 ComputeSheet。"""
 
@@ -51,8 +52,8 @@ def cli_selector() -> str | None:
 
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
             desc = meta.get("description", "")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("无法读取适配器 meta.json (%s): %s", meta_path, exc)
         print(f"  [{i}] {name}" + (f" — {desc}" if desc else ""))
 
     print("\n  [q] 退出\n")

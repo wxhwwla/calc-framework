@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """DAG 节点构建器 — 从公式描述生成 DAG JSON。"""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Web 实体引用 — 名称 + 可选 ``成长参数``，服务端可补全 catalog。"""
 

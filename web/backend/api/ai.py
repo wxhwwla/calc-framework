@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """AI 智能推荐 API — 自然语言搜装 + AI 解释结果。"""
 
@@ -121,7 +122,7 @@ async def ai_recommend(req: AiRecommendRequest):
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
 
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            json_match = re.search(r"\{[^{}]*\}", content)
             if json_match:
                 parsed = json.loads(json_match.group())
                 ai_intent = parsed.get("intent", "")
@@ -283,7 +284,7 @@ async def ai_explain(req: ExplainRequest):
         data = resp.json()
         content = data["choices"][0]["message"]["content"]
 
-        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        json_match = re.search(r"\{[^{}]*\}", content)
         if json_match:
             parsed = json.loads(json_match.group())
             return ExplainResponse(
@@ -296,9 +297,10 @@ async def ai_explain(req: ExplainRequest):
             if req.results
             else "无结果"
         )
+        logger.warning("AI 解释失败: %s", e)
         return ExplainResponse(
             explanation=top_info,
-            suggestions=[f"AI 解释失败: {e}"],
+            suggestions=["AI 解释失败，请稍后重试"],
         )
 
     return ExplainResponse(explanation="", suggestions=[])
@@ -393,7 +395,7 @@ async def ai_search(req: SearchRequest):
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
 
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            json_match = re.search(r"\{[^{}]*\}", content)
             if json_match:
                 parsed = json.loads(json_match.group())
                 ai_matches = parsed.get("matches", [])
@@ -484,7 +486,7 @@ async def ai_chat(req: ConversationRequest):
         data = resp.json()
         content = data["choices"][0]["message"]["content"]
 
-        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        json_match = re.search(r"\{[^{}]*\}", content)
         if json_match:
             parsed = json.loads(json_match.group())
             return ConversationResponse(

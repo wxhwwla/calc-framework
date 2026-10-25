@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Replace calc_engine/endfield/ filesystem paths in non-.md files (excluding adapters/ dir)."""
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 块级缓存机制。"""
@@ -33,6 +34,7 @@ class BlockCacheEntry:
 
     input_hash: int
     outputs: dict[str, float]
+    created_at: float
     last_access: float
 
 
@@ -75,6 +77,7 @@ class BlockCache:
         self._blocks[block_id] = BlockCacheEntry(
             input_hash=_compute_input_hash(bound_inputs),
             outputs=dict(outputs),
+            created_at=now,
             last_access=now,
         )
         self._blocks.move_to_end(block_id)

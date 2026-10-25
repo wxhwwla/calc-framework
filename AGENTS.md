@@ -33,6 +33,7 @@ Before changing code or pushing to GitHub, read the human operation guide: [`doc
 - Version bumps for `_VERSION` must go through the upload script so `please_read_me.py` and commit messages stay consistent.
 - Upload script may **GPG/SSH-sign** commits when configured; unconfigured commits may lack GitHub **Verified** badge.
 - **Mandatory:** [`docs/上传脚本与-pre-commit.md`](docs/上传脚本与-pre-commit.md) — pre-commit two-round behavior, `_version` SUMMARY markers, stash/CRLF, `--no-bump` retry, **ruff-lint line-only detection**, **Windows 中文 pathspec（禁止 Path(porcelain)）**.
+- **Remote branches:** only **`main`** + **`develop`** may remain long-term. Delete `dependabot/*` (and similar bot) branches after merge/close; do not let them pile up. See project_rules「远程分支策略」.
 
 ### Pulling from GitHub (agents)
 
@@ -57,6 +58,30 @@ Single-context layout: one CONTEXT.md + docs/adr/ at repo root. See `docs/agents
 
 **When the user requests feature implementation, bug fixes, or code changes**, default to the `design-then-build` workflow:
 1. First interview the user to clarify the design (grill-me style)
-2. Then implement with TDD (test-first, red-green-refactor)
+2. **Must implement with TDD** (test-first, red-green-refactor; required, do not skip)
 3. For non-risky operations (tests, code edits, dependency installs), auto-consent
 4. For high-risk operations (upload scripts, git push, destructive commands), ask user first
+
+### Skills workflow
+
+This repo has 34 skills installed from `mattpocock/skills` at `.agents/skills/`. See `.trae/rules/project_rules.md` §技能推荐工作流 for the full workflow guide.
+
+Key workflows:
+- **Update docs after code changes** → `.gitignore` + core docs + CI config + other config
+- **Daily coding** → **tdd（必做）**；可选 review
+- **Bug fixing** → diagnosing-bugs → **tdd 修复（必做）**；可选 review
+- **New features** → grill-with-docs → prototype → **tdd（必做）**；可选 review
+- **Architecture** → decision-mapping / domain-modeling
+- **Documentation** → edit-article / writing-shape
+
+**Document definition**: Everything except business logic code (Python/TS logic, algorithms, calc engine) is "documentation" — config files, rules, CI configs, metadata. Use `/edit-article` for these.
+
+**Skill selection**: Before starting, pause and ask "what skill fits this task?".
+
+**Disabled**: `to-issues` (creates GitHub Issues, use only if explicitly requested).
+
+### Context management
+
+- On "summarize, I want to start a new session": update `docs/会话接续手册.md` and end the conversation
+- New sessions read that doc for handover context
+- Remind user on quality degradation (repeated errors, missed rules)

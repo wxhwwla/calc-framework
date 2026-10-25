@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """法术异常/爆发伤害计算（导电/腐蚀/燃烧/冻结 + 同属性爆发）。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from games.endfield.calc.dag_adapter.search_evaluate import evaluate_search_damage
 from games.endfield.calc.damage.abnormal_attached import build_spell_attached_effects
@@ -86,7 +88,7 @@ def _skill_multiplier(defn: SpellAbnormalDef, ui_level: int, *, char_level: int)
     return base * _spell_level_coeff(char_level)
 
 
-def get_spell_abnormal_param_snapshot() -> dict[str, dict[str, object]]:
+def get_spell_abnormal_param_snapshot() -> dict[str, dict[str, Any]]:
     """返回当前法术异常参数快照（供测试/校验）。"""
     return {
         item.key: {

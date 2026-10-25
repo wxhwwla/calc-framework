@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 计算端到端单元测试 — 使用真实 arknights DAG。
 
@@ -139,5 +140,6 @@ class TestComputeEdgeCases:
 
     def test_result_is_snapshot_result_type(self, amiya_operator: dict) -> None:
         from games.arknights.calc.dag_adapter.types import SnapshotResult
+
         result = compute_snapshot_with_dag(amiya_operator)
         assert isinstance(result, SnapshotResult)

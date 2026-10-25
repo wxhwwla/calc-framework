@@ -96,7 +96,7 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
         // 无 API key：直接调推荐
         await handleQuickRecommend(msg);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(String(e));
       setChat((prev) => [...prev, { role: "ai", content: t("ai.error", "出错了，请稍后重试") }]);
     } finally {
@@ -142,7 +142,7 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
       const data = await r.json();
       const text = data.explanation + (data.suggestions?.length ? "\n\n💡 " + data.suggestions.join("\n💡 ") : "");
       setChat((prev) => [...prev, { role: "ai", content: text }]);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setLoading(false);
@@ -164,15 +164,15 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
       });
       if (!r.ok) throw new Error(await r.text());
       const data = await r.json();
-      const items = data.results?.slice(0, 10) || [];
+      const items: Record<string, unknown>[] = data.results?.slice(0, 10) || [];
       const summary = items.length > 0
-        ? `${t("ai.found", "找到")} ${items.length} ${t("common.items")}:\n` + items.map((it: any) => `• ${it["名称"]} (${it["星级"] || ""}⭐ ${it["类型"] || ""})`).join("\n")
+        ? `${t("ai.found", "找到")} ${items.length} ${t("common.items")}:\n` + items.map((it) => `• ${it["名称"]} (${it["星级"] || ""}⭐ ${it["类型"] || ""})`).join("\n")
         : t("ai.notFound", "未找到匹配项");
       setChat((prev) => [...prev, {
         role: "ai",
         content: summary + (data.ai_refined ? `\n\n🤖 AI ${t("ai.refined", "精排")}` : ""),
       }]);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setLoading(false);

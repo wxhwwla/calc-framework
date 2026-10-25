@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """将缓存 wikitext 解析为结构化 JSON，写入 parsed/ 目录。"""
 

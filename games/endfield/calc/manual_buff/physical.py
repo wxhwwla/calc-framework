@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """物理异常（倒地/击飞/碎甲/猛击）加权伤害计算。"""
 

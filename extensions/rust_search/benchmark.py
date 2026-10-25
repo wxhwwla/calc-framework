@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Rust 搜索加速 — 性能基准测试。
 
 用法: python extensions/rust_search/benchmark.py [--ci]

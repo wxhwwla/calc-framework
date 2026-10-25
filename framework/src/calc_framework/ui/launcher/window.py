@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """统一启动器 GUI（ADR-0012 Phase 1-3）。
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 版 15 乘区函数 vs 本地引擎一致性测试。
 
@@ -211,9 +212,7 @@ class TestFormulaConsistency:
         ]
         local = calculate_single_hit_damage(ctx, effects=effects)
         dag_val = compute_15_zone_damage(**_dag_kwargs(ctx, effects=effects))
-        assert abs(local.final_damage - dag_val) < 0.001, (
-            f"local={local.final_damage:.4f} dag={dag_val:.4f}"
-        )
+        assert abs(local.final_damage - dag_val) < 0.001, f"local={local.final_damage:.4f} dag={dag_val:.4f}"
 
     def test_multi_amplification_effects(self) -> None:
         """多个增幅效果累加。"""
@@ -239,6 +238,4 @@ class TestFormulaConsistency:
         local_damage = local.final_damage
 
         dag_val = compute_15_zone_damage(**_dag_kwargs(ctx, effects=[]))
-        assert abs(local_damage - dag_val) < 0.001, (
-            "未知效果不应影响伤害结果"
-        )
+        assert abs(local_damage - dag_val) < 0.001, "未知效果不应影响伤害结果"

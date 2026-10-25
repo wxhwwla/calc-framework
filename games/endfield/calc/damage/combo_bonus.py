@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """连击增伤层数表（NGA PART 01 §1.14）。"""
 
@@ -15,11 +16,7 @@ def combo_bonus_rate(skill_type: str, stacks: int) -> float:
     if stacks <= 0:
         return 0.0
     idx = min(int(stacks), 4) - 1
-    table = (
-        COMBO_BONUS_BY_STACKS_ULTIMATE
-        if skill_type == "终结技"
-        else COMBO_BONUS_BY_STACKS_SKILL
-    )
+    table = COMBO_BONUS_BY_STACKS_ULTIMATE if skill_type == "终结技" else COMBO_BONUS_BY_STACKS_SKILL
     return float(table[idx])
 
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """本地 JSON schema 扫描与 wiki/local 名称对比。"""
 

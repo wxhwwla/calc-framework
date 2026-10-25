@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """{Game} DataContext 加载器 — 继承 calc_framework.data.loader.DataContextLoader。
 

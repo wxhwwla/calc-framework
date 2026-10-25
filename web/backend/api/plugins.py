@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """插件管理 API — 列出/安装/卸载插件。"""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from api.internal.auth import verify_admin_token
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/plugins", tags=["plugins"])
@@ -74,8 +78,8 @@ async def install_plugin(plugin_name: str = ""):
 
 
 @router.delete("/{plugin_name}")
-async def uninstall_plugin(plugin_name: str):
-    """卸载插件（仅限非内置插件）。"""
+async def uninstall_plugin(plugin_name: str, _admin: Annotated[None, Depends(verify_admin_token)] = None):
+    """卸载插件（仅限非内置插件）。需要管理 Token。"""
     try:
         from calc_framework.plugin.registry import get_registry
 
@@ -88,7 +92,7 @@ async def uninstall_plugin(plugin_name: str):
         reg.unregister(plugin_name)
         return {"status": "uninstalled", "name": plugin_name}
     except ImportError:
-        raise HTTPException(status_code=500, detail="插件系统不可用")
+        raise HTTPException(status_code=503, detail="插件系统不可用")
 
 
 __all__: list[str] = []

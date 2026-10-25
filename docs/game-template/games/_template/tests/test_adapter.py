@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """测试 DataContextLoader 输出格式 — 验证 loader 返回的上下文结构正确。
 

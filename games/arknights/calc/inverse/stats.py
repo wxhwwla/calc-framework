@@ -1,12 +1,16 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """从 ``段曲线`` 解析干员指定精英/等级的基础属性。"""
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from games.arknights.calc.inverse.materialize import materialize_operator_entity
 from games.arknights.calc.inverse.segments import STAT_KEYS, elite_segment_key, segment_length
+
+logger = logging.getLogger(__name__)
 
 
 def resolve_stats_from_segments(
@@ -35,6 +39,7 @@ def resolve_stats_from_segments(
     rarity = int(operator.get("星级", 6))
     seg_len = segment_length(rarity, elite)
     if seg_len <= 0:
+        logger.warning("干员 %s 星级=%d 精英=%d 无有效段长度", operator.get("名称", "?"), rarity, elite)
         return {}
 
     seg_key = elite_segment_key(elite)

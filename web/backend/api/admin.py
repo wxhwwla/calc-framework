@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """SaaS 管理 API — API Key 管理 + 速率限制 + 用量统计。"""
 
@@ -28,7 +29,7 @@ router = APIRouter(
 
 # ── 持久化路径 ────────────────────────────────────────
 
-_DATA_DIR = Path(__file__).resolve().parent / ".admin_data"
+_DATA_DIR = Path(__file__).resolve().parent.parent / ".data" / "admin"
 _KEYS_FILE = _DATA_DIR / "api_keys.json"
 _USAGE_FILE = _DATA_DIR / "usage.json"
 

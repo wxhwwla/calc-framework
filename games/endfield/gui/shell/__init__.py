@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """
 GUI 壳层：主窗口与应用生命周期。
@@ -27,6 +28,7 @@ __all__ = [
     "app_selection",
     "app_window",
     "app_window_events",
+    "fixed_loadout_slots",
 ]
 
 _BACKEND: Literal["qt"] = "qt"

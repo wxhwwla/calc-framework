@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 
-# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """
@@ -30,6 +30,7 @@ import json
 import sys
 
 from pathlib import Path
+from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -71,7 +72,7 @@ def migrate_file(
     weapons_json: Path,
     only_names: set[str] | None = None,
     dry_run: bool = True,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """迁移 weapons.json 中的字段到新武器技能 schema。
 
     Args:

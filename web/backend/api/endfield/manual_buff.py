@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """手动 Buff / 异常状态矩阵 / 消耗品预设 API。"""
 
@@ -44,7 +45,7 @@ def abnormal_matrix_specs() -> dict[str, Any]:
 
 
 @router.get("/consumable-presets")
-def list_consumable_presets() -> list[dict[str, object]]:
+def list_consumable_presets() -> list[dict[str, Any]]:
     """获取消耗品预设列表（名称 + 效果条目）。"""
     from games.endfield.calc.manual_buff.consumable_presets import (
         CONSUMABLE_PRESETS,

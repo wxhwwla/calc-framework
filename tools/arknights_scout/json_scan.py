@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """扫描已缓存的 wikitext 中是否含 JSON。"""
 

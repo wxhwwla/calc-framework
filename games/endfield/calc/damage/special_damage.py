@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """特殊伤害类型辅助（NGA PART 01 §1.16 等）。"""
 

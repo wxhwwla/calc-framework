@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """SegmentCurveAdapter 与物化 helpers 测试。"""
 

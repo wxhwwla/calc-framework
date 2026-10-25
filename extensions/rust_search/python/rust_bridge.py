@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """Rust 搜索加速桥接层 — 无缝替代 Python evaluate_search_damage。
 
@@ -36,6 +37,38 @@ if not os.environ.get("RUST_SEARCH_FALLBACK"):
 
 _rust_call_lock = threading.Lock()
 
+# ── 效果类型 → 整数 ID 映射（与 effect_id.rs 一致） ─────────────
+_EFFECT_ID_MAP: dict[str, int] = {
+    "伤害减免": 0,
+    "增幅": 1,
+    "虚弱": 2,
+    "庇护": 3,
+    "脆弱": 4,
+    "易伤": 5,
+    "连击增伤": 6,
+    "伤害类型伤害加成": 7,
+    "技能类型伤害加成": 7,
+    "失衡伤害加成": 7,
+    "其他伤害加成": 7,
+    "无视抗性": 8,
+    "抗性": 9,
+    "防御": 10,
+    "失衡易伤系数": 11,
+    "非主控减伤": 12,
+    "特殊乘区": 13,
+}
+
+# ── 技能类型 → 整数 ID ─────────────────────────────────────────
+_SKILL_TYPE_ID_MAP: dict[str, int] = {
+    "终结技": 1,
+}
+
+# ── 暴击模式 → 整数 ID ─────────────────────────────────────────
+_CRIT_MODE_ID_MAP: dict[str, int] = {
+    "always_crit": 1,
+    "expected": 2,
+}
+
 # ── 手动 buff 字段映射（与 search_evaluate.py 一致） ──────────────
 _CONTEXT_BUFF_MAP: dict[str, str] = {
     "暴击率": "crit_rate",
@@ -45,6 +78,37 @@ _CONTEXT_BUFF_MAP: dict[str, str] = {
     "失衡伤害加成": "imbalance_damage_bonus",
     "其他伤害加成": "other_damage_bonus",
 }
+
+# ── 效果处理优化缓存 ──────────────────────────────────────────────
+# 作用域过滤器缓存：(damage_type, skill_type, is_unbalanced) → filter_fn
+_SCOPE_FILTER_CACHE: dict[tuple[str, str, bool], Any] = {}
+# 效果 ID 转换缓存：effects_tuple → (ids_list, values_list)
+_EFFECTS_ID_CACHE: dict[tuple, tuple[list[int], list[float]]] = {}
+
+
+def _build_scope_filter(ctx: Any) -> Any:
+    """构建作用域过滤器：预计算哪些 effect_type 通过 _match_scope 检查。
+
+    返回一个闭包，接受 DamageEffect 并返回 bool。
+    """
+    from games.endfield.calc.damage.engine.helpers import _match_scope
+    from games.endfield.calc.damage.engine.types import KNOWN_EFFECT_TYPES
+
+    # 缓存每种 effect_type 是否通过过滤
+    _type_pass_cache: dict[str, bool] = {}
+
+    def _filter(effect: Any) -> bool:
+        et = effect.effect_type
+        if et not in KNOWN_EFFECT_TYPES:
+            return False
+        cached = _type_pass_cache.get(et)
+        if cached is not None:
+            return cached
+        result = _match_scope(ctx, effect)
+        _type_pass_cache[et] = result
+        return result
+
+    return _filter
 
 
 def _apply_manual_buffs(
@@ -234,7 +298,7 @@ def evaluate_search_damage(
         final_damage=rs_result.final_damage,
         zone_values=dict(rs_result.zone_values),
         warnings=tuple(str(w) for w in warnings),
-        unknown_effects=tuple({"effect_type": str(u[0]), "source": str(u[1])} for u in unknown_effects),
+        unknown_effects=tuple(u for u in unknown_effects),
     )
 
 
@@ -401,3 +465,433 @@ def evaluate_search_damage_batch(param_list: list[dict]) -> list[Any]:
     from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
 
     return [DamageEvalResult(final_damage=fd, zone_values={}, warnings=(), unknown_effects=()) for fd in rs_results]
+
+
+def _preprocess_for_rust_soa(
+    param_list: list[dict],
+) -> dict[str, list] | None:
+    """批量预处理 → SoA 格式的 flat lists。返回 None 表示降级。
+
+    与 _preprocess_for_rust 逻辑一致，但：
+    - 效果类型映射为整数 ID（消除 Rust 侧字符串匹配）
+    - 技能类型/暴击模式映射为整数 ID
+    - damage_pipeline 映射为 bool（"abnormal" → True）
+
+    优化：
+    - 预计算作用域过滤器（同一批次内 damage_type/skill_type/is_unbalanced 恒定）
+    - 效果 ID 缓存（相同效果列表直接返回缓存结果）
+    - 跳过 DamageContext 构建（使用轻量级过滤替代）
+    """
+    if not _HAS_RUST:
+        return None
+
+    n = len(param_list)
+    final_attacks: list[float] = [0.0] * n
+    skill_multipliers: list[float] = [0.0] * n
+    skill_type_ids: list[int] = [0] * n
+    is_true_damages: list[bool] = [False] * n
+    is_unbalanceds: list[bool] = [False] * n
+    enemy_defenses: list[float] = [100.0] * n
+    enemy_resistances: list[float] = [0.0] * n
+    ignore_resistances: list[float] = [0.0] * n
+    imbalance_vulnerability_coeffs: list[float] = [1.3] * n
+    crit_rates: list[float] = [0.05] * n
+    crit_damages: list[float] = [0.5] * n
+    damage_type_bonuses: list[float] = [0.0] * n
+    skill_type_bonuses: list[float] = [0.0] * n
+    imbalance_damage_bonuses: list[float] = [0.0] * n
+    other_damage_bonuses: list[float] = [0.0] * n
+    combo_stacks_list: list[int] = [0] * n
+    break_defense_stacks_list: list[int] = [0] * n
+    base_damage_bonuses: list[float] = [0.0] * n
+    effect_ids_batch: list[list[int]] = [[] for _ in range(n)]
+    effect_values_batch: list[list[float]] = [[] for _ in range(n)]
+    crit_mode_ids: list[int] = [0] * n
+    is_abnormals: list[bool] = [False] * n
+
+    # ── 优化 1：预计算作用域过滤器 ──
+    # 同一批次内 damage_type/skill_type/is_unbalanced 恒定，只构建一次过滤器
+    _p0 = param_list[0]
+    _scope_dt = _p0.get("damage_type", "")
+    _scope_st = _p0.get("skill_type", "战技")
+    _scope_ub = _p0.get("is_unbalanced", False)
+    _scope_key = (_scope_dt, _scope_st, _scope_ub)
+    _scope_filter = _SCOPE_FILTER_CACHE.get(_scope_key)
+    if _scope_filter is None:
+        _ctx = DamageContext(
+            final_attack=0,
+            skill_multiplier=1,
+            damage_type=_scope_dt,
+            skill_type=_scope_st,
+            is_unbalanced=_scope_ub,
+            is_true_damage=False,
+            enemy_defense=0,
+            enemy_resistance=0,
+            ignore_resistance=0,
+            imbalance_vulnerability_coeff=1.3,
+            crit_rate=0,
+            crit_damage=0,
+            damage_type_bonus=0,
+            skill_type_bonus=0,
+            imbalance_damage_bonus=0,
+            other_damage_bonus=0,
+            combo_stacks=0,
+            break_defense_stacks=0,
+            base_damage_bonus=0,
+        )
+        _scope_filter = _build_scope_filter(_ctx)
+        _SCOPE_FILTER_CACHE[_scope_key] = _scope_filter
+
+    # ── 优化 2：预计算破防效果 ──
+    _break_defense_cache: dict[int, list[tuple[str, float]]] = {}
+
+    for i, p in enumerate(param_list):
+        # 提取参数
+        crit_rate = p.get("crit_rate", 0.05)
+        crit_damage = p.get("crit_damage", 0.5)
+        damage_type_bonus = p.get("damage_type_bonus", 0.0)
+        skill_type_bonus = p.get("skill_type_bonus", 0.0)
+        imbalance_damage_bonus = p.get("imbalance_damage_bonus", 0.0)
+        other_damage_bonus = p.get("other_damage_bonus", 0.0)
+        combo_stacks = p.get("combo_stacks", 0)
+        break_defense_stacks = p.get("break_defense_stacks", 0)
+
+        # 处理 manual_buffs
+        manual_buffs = p.get("manual_buffs")
+        if manual_buffs:
+            overrides, extra_effects = _apply_manual_buffs(
+                manual_buffs=manual_buffs,
+                crit_rate=crit_rate,
+                crit_damage=crit_damage,
+                damage_type_bonus=damage_type_bonus,
+                skill_type_bonus=skill_type_bonus,
+                imbalance_damage_bonus=imbalance_damage_bonus,
+                other_damage_bonus=other_damage_bonus,
+            )
+            crit_rate = overrides["crit_rate"]
+            crit_damage = overrides["crit_damage"]
+            damage_type_bonus = overrides["damage_type_bonus"]
+            skill_type_bonus = overrides["skill_type_bonus"]
+            imbalance_damage_bonus = overrides["imbalance_damage_bonus"]
+            other_damage_bonus = overrides["other_damage_bonus"]
+        else:
+            extra_effects = []
+
+        # 合并效果列表
+        effects = list(p.get("effects") or [])
+
+        # 预计算破防效果（按层数缓存）
+        bd = break_defense_stacks
+        if bd not in _break_defense_cache:
+            _break_defense_cache[bd] = list(damage_effects_from_break_defense(bd))
+        bd_effects = _break_defense_cache[bd]
+
+        all_effects = effects + extra_effects + bd_effects
+
+        # ── 优化 3：效果 ID 转换缓存 ──
+        effects_key = tuple(all_effects)
+        cached_ids = _EFFECTS_ID_CACHE.get(effects_key)
+        if cached_ids is not None:
+            effect_ids_batch[i] = cached_ids[0]
+            effect_values_batch[i] = cached_ids[1]
+        else:
+            # 使用预计算的过滤器（跳过 DamageContext 构建 + _collect_effects）
+            ids: list[int] = []
+            vals: list[float] = []
+            for e in all_effects:
+                if _scope_filter(e):
+                    eid = _EFFECT_ID_MAP.get(e.effect_type)
+                    if eid is not None:
+                        ids.append(eid)
+                        vals.append(float(e.value))
+            effect_ids_batch[i] = ids
+            effect_values_batch[i] = vals
+            # 缓存结果（限制大小避免内存膨胀）
+            if len(_EFFECTS_ID_CACHE) < 50000:
+                _EFFECTS_ID_CACHE[effects_key] = (ids, vals)
+
+        # 填充 SoA 数组
+        final_attacks[i] = p["final_attack"]
+        skill_multipliers[i] = p["skill_multiplier"]
+        skill_type_ids[i] = _SKILL_TYPE_ID_MAP.get(p.get("skill_type", "战技"), 0)
+        is_true_damages[i] = p.get("is_true_damage", False)
+        is_unbalanceds[i] = p.get("is_unbalanced", False)
+        enemy_defenses[i] = p.get("enemy_defense", 100.0)
+        enemy_resistances[i] = p.get("enemy_resistance", 0.0)
+        ignore_resistances[i] = p.get("ignore_resistance", 0.0)
+        imbalance_vulnerability_coeffs[i] = p.get("imbalance_vulnerability_coeff", 1.3)
+        crit_rates[i] = crit_rate
+        crit_damages[i] = crit_damage
+        damage_type_bonuses[i] = damage_type_bonus
+        skill_type_bonuses[i] = skill_type_bonus
+        imbalance_damage_bonuses[i] = imbalance_damage_bonus
+        other_damage_bonuses[i] = other_damage_bonus
+        combo_stacks_list[i] = combo_stacks
+        break_defense_stacks_list[i] = break_defense_stacks
+        base_damage_bonuses[i] = p.get("base_damage_bonus", 0.0)
+        crit_mode_ids[i] = _CRIT_MODE_ID_MAP.get(p.get("crit_mode", "non_crit"), 0)
+        is_abnormals[i] = p.get("damage_pipeline", "normal") == "abnormal"
+
+    return {
+        "final_attacks": final_attacks,
+        "skill_multipliers": skill_multipliers,
+        "skill_type_ids": skill_type_ids,
+        "is_true_damages": is_true_damages,
+        "is_unbalanceds": is_unbalanceds,
+        "enemy_defenses": enemy_defenses,
+        "enemy_resistances": enemy_resistances,
+        "ignore_resistances": ignore_resistances,
+        "imbalance_vulnerability_coeffs": imbalance_vulnerability_coeffs,
+        "crit_rates": crit_rates,
+        "crit_damages": crit_damages,
+        "damage_type_bonuses": damage_type_bonuses,
+        "skill_type_bonuses": skill_type_bonuses,
+        "imbalance_damage_bonuses": imbalance_damage_bonuses,
+        "other_damage_bonuses": other_damage_bonuses,
+        "combo_stacks_list": combo_stacks_list,
+        "break_defense_stacks_list": break_defense_stacks_list,
+        "base_damage_bonuses": base_damage_bonuses,
+        "effect_ids_batch": effect_ids_batch,
+        "effect_values_batch": effect_values_batch,
+        "crit_mode_ids": crit_mode_ids,
+        "is_abnormals": is_abnormals,
+    }
+
+
+def evaluate_search_batch_soa(param_list: list[dict]) -> list[Any]:
+    """SoA 批量评估：一次 FFI 调用处理 N 个任务（零 Python 循环）。
+
+    与 ``evaluate_search_damage_batch`` 功能一致，但使用 SoA 格式
+    消除 per-task FFI 开销和字符串匹配。
+
+    Args:
+        param_list: ``evaluate_search_damage`` 参数字典列表
+
+    Returns:
+        ``DamageEvalResult`` 列表
+    """
+    if not _HAS_RUST or not param_list:
+        from games.endfield.calc.dag_adapter.search_evaluate import (
+            evaluate_search_damage as _py_eval,
+        )
+
+        return [_py_eval(**p) for p in param_list]
+
+    soa = _preprocess_for_rust_soa(param_list)
+    if soa is None:
+        from games.endfield.calc.dag_adapter.search_evaluate import (
+            evaluate_search_damage as _py_eval,
+        )
+
+        return [_py_eval(**p) for p in param_list]
+
+    from utils.frozen_runtime import rust_parallel_batch_enabled
+
+    if rust_parallel_batch_enabled():
+        rs_results = _rs.evaluate_search_batch_soa(**soa)
+    else:
+        with _rust_call_lock:
+            rs_results = _rs.evaluate_search_batch_soa(**soa)
+
+    from games.endfield.calc.dag_adapter.search_evaluate import DamageEvalResult
+
+    return [DamageEvalResult(final_damage=fd, zone_values={}, warnings=(), unknown_effects=()) for fd in rs_results]
+
+
+def evaluate_search_batch_raw(
+    final_attacks: list[float],
+    skill_multipliers: list[float],
+    skill_type_ids: list[int],
+    is_true_damages: list[bool],
+    is_unbalanceds: list[bool],
+    enemy_defenses: list[float],
+    enemy_resistances: list[float],
+    ignore_resistances: list[float],
+    imbalance_vulnerability_coeffs: list[float],
+    crit_rates: list[float],
+    crit_damages: list[float],
+    damage_type_bonuses: list[float],
+    skill_type_bonuses: list[float],
+    imbalance_damage_bonuses: list[float],
+    other_damage_bonuses: list[float],
+    combo_stacks_list: list[int],
+    break_defense_stacks_list: list[int],
+    base_damage_bonuses: list[float],
+    effect_ids_batch: list[list[int]],
+    effect_values_batch: list[list[float]],
+    crit_mode_ids: list[int],
+    is_abnormals: list[bool],
+) -> list[float]:
+    """原始数组批量评估：零 Python dict 开销，一次 FFI 调用处理 N 个任务。
+
+    与 ``evaluate_search_batch_soa`` 相同的 Rust 内核，但接受原始数组参数，
+    避免 Python 侧构建和解析 dict 的开销。
+
+    Args:
+        各参数为长度 N 的列表，与 Rust 侧 BatchInput 字段一一对应。
+
+    Returns:
+        每个任务的最终伤害值列表
+    """
+    if not _HAS_RUST or not final_attacks:
+        return [0.0] * len(final_attacks)
+
+    from utils.frozen_runtime import rust_parallel_batch_enabled
+
+    if rust_parallel_batch_enabled():
+        rs_results = _rs.evaluate_search_batch_raw(
+            final_attacks,
+            skill_multipliers,
+            skill_type_ids,
+            is_true_damages,
+            is_unbalanceds,
+            enemy_defenses,
+            enemy_resistances,
+            ignore_resistances,
+            imbalance_vulnerability_coeffs,
+            crit_rates,
+            crit_damages,
+            damage_type_bonuses,
+            skill_type_bonuses,
+            imbalance_damage_bonuses,
+            other_damage_bonuses,
+            combo_stacks_list,
+            break_defense_stacks_list,
+            base_damage_bonuses,
+            effect_ids_batch,
+            effect_values_batch,
+            crit_mode_ids,
+            is_abnormals,
+        )
+    else:
+        with _rust_call_lock:
+            rs_results = _rs.evaluate_search_batch_raw(
+                final_attacks,
+                skill_multipliers,
+                skill_type_ids,
+                is_true_damages,
+                is_unbalanceds,
+                enemy_defenses,
+                enemy_resistances,
+                ignore_resistances,
+                imbalance_vulnerability_coeffs,
+                crit_rates,
+                crit_damages,
+                damage_type_bonuses,
+                skill_type_bonuses,
+                imbalance_damage_bonuses,
+                other_damage_bonuses,
+                combo_stacks_list,
+                break_defense_stacks_list,
+                base_damage_bonuses,
+                effect_ids_batch,
+                effect_values_batch,
+                crit_mode_ids,
+                is_abnormals,
+            )
+
+    return list(rs_results)
+
+
+def evaluate_full_batch(
+    weapon_names: list[str],
+    weapon_final_attacks: list[float],
+    weapon_effects: list[list[tuple[str, float]]],
+    equipment_chest_names: list[str],
+    equipment_gloves_names: list[str],
+    equipment_acc_a_names: list[str],
+    equipment_acc_b_names: list[str],
+    equipment_effects: list[list[tuple[str, float]]],
+    equipment_flat_stats: list[dict[str, float]],
+    equipment_atk_percents: list[float],
+    char_name: str,
+    char_level: int,
+    char_base_attack: float,
+    skill_multiplier: float,
+    damage_type: str,
+    skill_type: str,
+    is_unbalanced: bool,
+    is_true_damage: bool,
+    enemy_defense: float,
+    enemy_resistance: float,
+    ignore_resistance: float,
+    imbalance_vulnerability_coeff: float,
+    crit_rate: float,
+    crit_damage: float,
+    damage_type_bonus: float,
+    skill_type_bonus: float,
+    imbalance_damage_bonus: float,
+    other_damage_bonus: float,
+    combo_stacks: int,
+    break_defense_stacks: int,
+    base_damage_bonus: float,
+    top_n: int = 10,
+    crit_mode: str = "non_crit",
+    damage_pipeline: str = "normal",
+    precomputed_final_attacks: list[float] | None = None,
+) -> list[tuple[str, float, dict[str, str]]]:
+    """全批量评估：Python 预处理 → Rust 完整评估 → 返回结果。
+
+    消除 Python 逐任务开销，实现 ~5 秒完成 97 万组合遍历。
+
+    Args:
+        各参数为预处理后的数据，详见 rust_batch_data.py。
+        crit_mode: 暴击模式 "non_crit" / "always_crit" / "expected"
+        damage_pipeline: 伤害管线 "normal" / "abnormal"
+        precomputed_final_attacks: 可选，长度=武器数×装备组合数的最终攻击力
+            （与 ``final_attack_details_for_loadout`` 对齐）；为空则走 Rust 简化公式。
+
+    Returns:
+        [(武器名, 最终伤害, {部位: 装备名})] 列表，按伤害降序排列。
+    """
+    if not _HAS_RUST or not weapon_names:
+        return []
+
+    # 构建公共参数列表
+    common_args = [
+        weapon_names,
+        weapon_final_attacks,
+        weapon_effects,
+        equipment_chest_names,
+        equipment_gloves_names,
+        equipment_acc_a_names,
+        equipment_acc_b_names,
+        equipment_effects,
+        equipment_flat_stats,
+        equipment_atk_percents,
+        char_name,
+        char_level,
+        char_base_attack,
+        skill_multiplier,
+        damage_type,
+        skill_type,
+        is_unbalanced,
+        is_true_damage,
+        enemy_defense,
+        enemy_resistance,
+        ignore_resistance,
+        imbalance_vulnerability_coeff,
+        crit_rate,
+        crit_damage,
+        damage_type_bonus,
+        skill_type_bonus,
+        imbalance_damage_bonus,
+        other_damage_bonus,
+        combo_stacks,
+        break_defense_stacks,
+        base_damage_bonus,
+        top_n,
+        crit_mode,
+        damage_pipeline,
+        list(precomputed_final_attacks or []),
+    ]
+
+    from utils.frozen_runtime import rust_parallel_batch_enabled
+
+    if rust_parallel_batch_enabled():
+        rs_results = _rs.evaluate_full_batch_py(*common_args)
+    else:
+        with _rust_call_lock:
+            rs_results = _rs.evaluate_full_batch_py(*common_args)
+
+    return [(r[0], r[1], dict(r[2])) for r in rs_results]

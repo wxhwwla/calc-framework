@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 图结构类型定义：变量、输出、子图、全图。"""
@@ -300,6 +301,9 @@ def _validate_references(
         refs = _collect_node_refs(node)
 
         for ref in refs:
+            if not ref:  # 空字符串表示未绑定的输入，跳过
+                continue
+
             if ref in nodes:
                 continue
 

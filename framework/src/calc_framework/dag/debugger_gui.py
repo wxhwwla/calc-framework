@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
 """DAG 分步调试器 GUI — PySide6 可视化逐步执行界面。
 
