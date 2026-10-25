@@ -24,16 +24,16 @@
 | **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
 | **`main`** | 仅当 **`--minor`（次版本号）** 时，脚本自动 `develop → main` 合并推送 |
 
-远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：PR 审完即合或关，并删除远程分支；禁止堆积。清理示例：
+远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：**禁止堆积**。
+
+自 2026-10-25 起 `.github/dependabot.yml` 全部 `open-pull-requests-limit: 0`（仍写 Security 告警，**不再开 PR/分支**）。若仍冒出 bot 分支，立刻关 PR 并删分支：
 
 ```powershell
-# 列出非 main/develop 的远程分支
 git fetch --prune
 git branch -r | Select-String -NotMatch 'origin/(main|develop)$|HEAD'
-
-# 删除（确认后）
+gh pr list --state open
+gh pr close <n> --delete-branch
 git push origin --delete dependabot/...
-# 或关闭 PR：gh pr close <n> --comment "清理 bot 分支"
 ```
 
 发 **main 正式版** 前须在同一提交中：上传 bump `_VERSION` + 手动改 `_EXE_VERSION` + 可选 `--tag`。
