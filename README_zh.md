@@ -108,8 +108,11 @@ python scripts/main_launcher.py
 # 终末地计算器
 cd games/endfield
 pip install -e ".[dev]"
+cd ../..
 python -m games.endfield.main
 ```
+
+> wheel 安装：先安装本仓库的 `framework`（本地 wheel 或 editable，≥ 0.3.1），再安装 `games/endfield` wheel；旧 PyPI 框架包缺少 `calc_framework.ui.i18n`。
 
 ```powershell
 # 开发者工具箱

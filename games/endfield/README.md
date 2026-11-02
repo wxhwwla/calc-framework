@@ -107,11 +107,11 @@ games/endfield/
 - 运行时：`PySide6` + `matplotlib`（见 `pyproject.toml`）
 - 开发：`[dev]` → pytest；打包：`[build]` → PyInstaller
 
-首次安装：`pip install -e .`（或 `pip install -e ".[dev]"`）。缺依赖时 `main.py` 会警告但不会自动 pip。
+首次安装：先在仓库根安装本地框架 `pip install -e framework/`，再在本包 `pip install -e ".[dev]"`。缺依赖时 `main.py` 会警告但不会自动 pip。
 
 ### 版本号
 
-- `_VERSION`：位于 `scripts/_version.py`，日常由上传脚本在有业务改动并 push 成功时自动递增；`pyproject.toml` 通过 `dynamic` 从 `please_read_me._VERSION` 读取。
+- `_VERSION`：位于 `scripts/_version.py`，日常由上传脚本在有业务改动并 push 成功时自动递增；`pyproject.toml` 通过 `dynamic` 从 `scripts._version._VERSION` 读取。
 - `_EXE_VERSION`：位于 `scripts/_version.py`，仅重新打包 exe 前手动修改；**改后必须重新 `python scripts/main_build.py`**，旧 `dist/` 内 exe 不会自动更新。
 - 完整流程说明：`scripts/_version.py` 内的 `UPLOAD_WORKFLOW` 常量，或 `python scripts/please_read_me.py` 打印帮助。
 
@@ -132,11 +132,15 @@ python github_upload_module.py --no-bump    # 提交推送但不改 _VERSION
 ### 安装依赖
 
 ```bash
+cd <仓库根>
+pip install -e framework/          # 先装本地框架（≥ 0.3.1）
 cd games/endfield
 pip install -e ".[dev]"
 ```
 
 （`[dev]` 含 pytest；`[build]` 含 PyInstaller。仅 GUI：`pip install -e .`；要打包：`pip install -e ".[build]"`。）
+
+> wheel 安装同理：先安装本仓库 framework wheel，再安装 `games/endfield` wheel；PyPI 旧版 `calc-framework 0.3.0` 缺 `calc_framework.ui.i18n`。
 
 ### 运行测试
 
@@ -148,6 +152,10 @@ python -m pytest tests/ -q
 ### 运行项目
 
 ```bash
+# 从仓库根运行（推荐；包已安装）
+python -m games.endfield.main
+
+# 或在 games/endfield 目录直接运行
 python main.py
 ```
 

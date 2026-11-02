@@ -17,7 +17,9 @@ _GAMES_ENDDIR = _CUR_FILE.parents[1]  # games/endfield/
 if str(_GAMES_ENDDIR) not in sys.path:
     sys.path.insert(0, str(_GAMES_ENDDIR))
 
-_FRAMEWORK_SRC = _CUR_FILE.parents[4] / "framework" / "src"
+from utils.path_utils import get_resource_path
+
+_FRAMEWORK_SRC = get_resource_path("framework/src")
 if str(_FRAMEWORK_SRC) not in sys.path:
     sys.path.insert(0, str(_FRAMEWORK_SRC))
 

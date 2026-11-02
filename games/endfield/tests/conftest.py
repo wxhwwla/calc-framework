@@ -42,6 +42,7 @@ _SLOW_FILES = frozenset(
         "calculation/damage/zones/test_inverse_refactored.py",
         "calculation/damage/engine/test_scaling_mode.py",
         "calculation/damage/engine/test_decimal_scaling.py",
+        "repo/test_wheel_packaging.py",
         "tools/test_wiki_sync.py",
     }
 )
@@ -67,7 +68,7 @@ def pytest_configure(config: pytest.Config) -> None:
         config.option.ignore = ignore
 
 
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:  # noqa: ARG001
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """为慢测模块自动打 slow 标记（全量收集时生效）。"""
     tests_dir = Path(__file__).resolve().parent
     for item in items:

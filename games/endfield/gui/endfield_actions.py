@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from utils.path_utils import get_resource_path
 
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, Layout, get_logger, load_layout_json
 from games.endfield.gui.app.loadout_evaluation import (
@@ -32,8 +33,7 @@ from games.endfield.gui.legal.donation_qt import open_donation_dialog
 from games.endfield.gui.presentation.damage_snapshot import get_snapshot_from_app
 from games.endfield.gui.shared.calc_history import HistoryEntry, get_app_calculation_history
 
-_CUR_FILE = Path(__file__).resolve()
-_FRAMEWORK_ADAPTER = _CUR_FILE.parents[4] / "framework" / "adapters" / "endfield"
+_FRAMEWORK_ADAPTER = get_resource_path("framework/adapters/endfield")
 
 _adapter_pkg: AdapterPackage | None = None
 _adapter_layout: Layout | None = None
@@ -146,10 +146,13 @@ class ActionsMixin:
             # 先恢复按钮：ComputeSheet 求值若卡住不应一直停在「计算中」
             self._set_confirm_ui_confirmed()
             QApplication.processEvents()
+            compute_sheet_error: Exception | None = None
             try:
                 self._refresh_compute_sheet()
             except Exception as exc:
-                _logger.warning("乘区表刷新失败: %s", exc)
+                # 乘区表是文档声明的核心输出：失败必须可见，不能只写日志
+                compute_sheet_error = exc
+                _logger.exception("乘区表刷新失败: %s", exc)
             try:
                 preset = request.loadout.to_loadout_preset()
                 label = f"{preset.char_name} / {preset.weapon_name}"
@@ -163,6 +166,13 @@ class ActionsMixin:
             except Exception as exc:
                 _logger.warning("快照刷新失败: %s", exc)
             self._update_total_damage_panel()
+            if compute_sheet_error is not None:
+                self._set_confirm_ui_pending()
+                QMessageBox.warning(
+                    cast(QWidget, self),
+                    tr("desktop.endfield.confirmFailedTitle"),
+                    tr("desktop.endfield.confirmFailedMsg", error=str(compute_sheet_error)),
+                )
         except Exception as exc:
             _logger.exception("确认选择失败: %s", exc)
             QMessageBox.warning(

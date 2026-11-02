@@ -115,11 +115,16 @@ cd framework
 pip install -e ".[dev]"
 cd ..
 
-# 3. Install game adapter + launch
+# 3. Install game adapter
 cd games/endfield
 pip install -e ".[dev]"
+cd ../..
+
+# 4. Launch from the repository root
 python -m games.endfield.main
 ```
+
+> Wheel install: install this repository's framework first (local wheel or editable, ≥ 0.3.1), then the `games/endfield` wheel. Older PyPI framework builds lack `calc_framework.ui.i18n`.
 
 <details>
 <summary>Troubleshooting</summary>

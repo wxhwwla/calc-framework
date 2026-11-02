@@ -37,13 +37,77 @@ class ActionsSearchMixin:
     # ── 搜索耗时估算 ─────────────────────────────
 
     def _refresh_search_estimate(self) -> None:
-        dock = self.control_dock
-        if dock.estimate_output_label is None:
+        """按当前控件重新计算预计组合数/耗时，并写入实际预估标签。"""
+        label = getattr(self.control_dock, "search_estimate_label", None)
+        if label is None:
             return
-        from games.endfield.gui.app.search_controller import format_search_duration
+        label.setText(self._compose_search_estimate_text())
 
-        secs = getattr(self, "_search_estimated_total_seconds", 0)
-        dock.estimate_output_label.setText(format_search_duration(secs))
+    def _compose_search_estimate_text(self) -> str:
+        from games.endfield.gui.controls.search.search_estimate_message import compose_search_estimate_message
+
+        char_selected = bool(self.char_panel.get_selected_data())
+        weapon_selected = bool(self.weapon_panel.get_selected_data())
+        if not char_selected or not weapon_selected:
+            return compose_search_estimate_message(
+                has_char=char_selected,
+                has_weapon=weapon_selected,
+                catalog_err=None,
+                weapons_empty=False,
+                job_error=None,
+                estimate_text=None,
+            )
+        try:
+            inputs = self._build_search_job_inputs()
+            if inputs is None:
+                return compose_search_estimate_message(
+                    has_char=True,
+                    has_weapon=True,
+                    catalog_err=None,
+                    weapons_empty=False,
+                    job_error=None,
+                    estimate_text=None,
+                )
+            from games.endfield.calc.search.plan.controller import prepare_search_job
+
+            job, err = prepare_search_job(inputs)
+            if err or job is None:
+                return compose_search_estimate_message(
+                    has_char=True,
+                    has_weapon=True,
+                    catalog_err=None,
+                    weapons_empty=False,
+                    job_error=err or tr("desktop.endfield.searchPrepareFailed"),
+                    estimate_text=None,
+                )
+            from games.endfield.calc.search.run.single_skill import estimate_single_skill_search
+            from games.endfield.gui.controls.search.search_settings import resolve_parallel_workers, resolve_top_n
+
+            dock = self.control_dock
+            estimate = estimate_single_skill_search(
+                job,
+                max_workers=resolve_parallel_workers(dock.read_workers_choice()),
+                top_n=resolve_top_n(dock.read_top_n_choice()),
+            )
+            self._search_estimated_total_seconds = estimate.estimated_seconds
+            return compose_search_estimate_message(
+                has_char=True,
+                has_weapon=True,
+                catalog_err=None,
+                weapons_empty=False,
+                job_error=None,
+                estimate_text=estimate.text,
+            )
+        except Exception as exc:
+            _logger.warning("搜索预估计算失败: %s", exc)
+            return compose_search_estimate_message(
+                has_char=True,
+                has_weapon=True,
+                catalog_err=None,
+                weapons_empty=False,
+                job_error=str(exc),
+                estimate_text=None,
+            )
 
     # ── 搜索任务构建 ─────────────────────────────
 
@@ -330,3 +394,5 @@ class ActionsSearchMixin:
         dock.equipment_scope_combo.currentTextChanged.connect(self._refresh_search_estimate)
         dock.search_workers_combo.currentTextChanged.connect(self._refresh_search_estimate)
         dock.search_top_n_combo.currentTextChanged.connect(self._refresh_search_estimate)
+        for combo in dock.fixed_loadout_slots:
+            combo.currentTextChanged.connect(self._refresh_search_estimate)
