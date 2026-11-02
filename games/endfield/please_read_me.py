@@ -121,9 +121,9 @@ USAGE_INFO = """
     1. 运行方式：
         python main.py
 
-    2. 打包方式（产出 dist/终末地伤害计算器/ 文件夹，exe 与 JSON 分开放置）：
-        pip install -e ".[build]"
-        python build.py
+    2. 打包方式（仓库根目录执行，产出 dist/Game Calc Platform/ 与 dist/开发者工具箱/）：
+        python scripts/main_build.py --target launcher   # 统一启动器（含终末地入口）
+        python scripts/main_build.py --target toolkit    # 独立开发者工具箱
         全量/MVP 搜索导出在 exe 同级 search_output/（见 发布说明.txt）
 
     3. 操作流程：

@@ -747,38 +747,59 @@ class TestSearchExtended(unittest.TestCase):
 
     def test_search_catalog_default(self) -> None:
         resp = self.client.get("/api/search/catalog")
-        self.assertIn(resp.status_code, (200, 500))
-        if resp.status_code == 200:
-            data = resp.json()
-            self.assertIsInstance(data, dict)
-            # 目录 key 是部位名称
-            for key, entries in data.items():
-                self.assertIsInstance(key, str)
-                self.assertIsInstance(entries, list)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIsInstance(data, dict)
+        self.assertGreater(len(data), 0)
+        # 目录 key 是部位名称
+        for key, entries in data.items():
+            self.assertIsInstance(key, str)
+            self.assertIsInstance(entries, list)
+            for entry in entries:
+                self.assertIn("名称", entry)
+                self.assertIn("部位", entry)
 
     def test_search_catalog_with_scope(self) -> None:
         resp = self.client.get("/api/search/catalog?scope=全部装备")
-        self.assertIn(resp.status_code, (200, 500))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsInstance(resp.json(), dict)
 
     def test_search_history_roundtrip(self) -> None:
-        """POST 保存搜索记录后 GET 可查到。"""
+        """POST 保存搜索记录后 GET 可查到，且不改写受跟踪的持久化文件。"""
+        from unittest.mock import patch
+
+        from api import search as search_api
+        from api.internal.persistent_store import _path
+
+        store_path = _path("search_history")
+        before = store_path.stat().st_mtime_ns if store_path.is_file() else None
+
         entry = {
             "char_name": "陈千语",
             "timestamp": "2026-06-13T00:00:00",
             "test": True,
         }
-        resp_post = self.client.post("/api/search/history", json=entry)
-        self.assertEqual(resp_post.status_code, 200)
-        self.assertEqual(resp_post.json(), {"message": "ok"})
+        with (
+            patch.object(search_api, "_search_history", []),
+            patch.object(search_api, "save_list") as save_list,
+        ):
+            resp_post = self.client.post("/api/search/history", json=entry)
+            self.assertEqual(resp_post.status_code, 200)
+            self.assertEqual(resp_post.json(), {"message": "ok"})
 
-        resp_get = self.client.get("/api/search/history")
-        self.assertEqual(resp_get.status_code, 200)
-        data = resp_get.json()
-        self.assertIsInstance(data, list)
-        self.assertTrue(
-            any(e.get("char_name") == "陈千语" and e.get("test") is True for e in data),
-            "刚写入的搜索历史记录应可读回",
-        )
+            resp_get = self.client.get("/api/search/history")
+            self.assertEqual(resp_get.status_code, 200)
+            data = resp_get.json()
+            self.assertIsInstance(data, list)
+            self.assertTrue(
+                any(e.get("char_name") == "陈千语" and e.get("test") is True for e in data),
+                "刚写入的搜索历史记录应可读回",
+            )
+            save_list.assert_called_once()
+            self.assertEqual(save_list.call_args.args[0], "search_history")
+
+        after = store_path.stat().st_mtime_ns if store_path.is_file() else None
+        self.assertEqual(after, before, "测试不得改写受跟踪的 search_history.json")
 
     def test_search_estimate(self) -> None:
         """工作量预估端点（需要完整数据以构建搜索作业）。"""

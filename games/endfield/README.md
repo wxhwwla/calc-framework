@@ -1,7 +1,7 @@
 # 终末地伤害计算器 — Calc Framework（通用游戏计算框架）适配包
 
 > 本文件为 **Python 包目录** `[包]` 下的详细说明。  
-> GitHub 首页与速览见仓库根 [**README.md**](../README.md)；日常命令见 [**操作指令集**](../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../docs/算法与架构.md)；通用框架见 [**framework/**](../framework/)。
+> GitHub 首页与速览见仓库根 [**README.md**](../../README.md)；日常命令见 [**操作指令集**](../../docs/操作指令集.md)；术语见 [**CONTEXT.md**](../../CONTEXT.md)；算法细节见 [**docs/算法与架构.md**](../../docs/算法与架构.md)；通用框架见 [**framework/**](../../framework/)。
 
 > PySide6 GUI，支持乘区计算、全量搜索、配装对比
 
@@ -85,12 +85,12 @@ games/endfield/
 
 | 路径 | 说明 |
 |------|------|
-| [`framework/`](../framework/) | **通用计算框架 calc-framework**：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器（独立 pip 包） |
-| [`tools/`](../tools/README.md) | BWIKI 侦察、数据管线、OCR 等；在 `[根]` 执行 |
-| [`scripts/`](../scripts/) | 入口脚本：启动器（`main_launcher.py`）、打包（`main_build.py`）、开发者工具箱 |
-| [`docs/`](../docs/README.md) | 操作指令集、许可、算法文档 |
-| [`web/`](../web/) | Web 版（React 前端 + FastAPI 后端） |
-| [`utils/`](../utils/) | 共享工具库（路径、字体、窗口、更新器等） |
+| [`framework/`](../../framework/) | **通用计算框架 calc-framework**：DAG 引擎 + 数据引擎 + 声明式 UI + 布局编辑器（独立 pip 包） |
+| [`tools/`](../../tools/README.md) | BWIKI 侦察、数据管线、OCR 等；在 `[根]` 执行 |
+| [`scripts/`](../../scripts/) | 入口脚本：启动器（`main_launcher.py`）、打包（`main_build.py`）、开发者工具箱 |
+| [`docs/`](../../docs/README.md) | 操作指令集、许可、算法文档 |
+| [`web/`](../../web/) | Web 版（React 前端 + FastAPI 后端） |
+| [`utils/`](../../utils/) | 共享工具库（路径、字体、窗口、更新器等） |
 
 ---
 
@@ -118,14 +118,14 @@ games/endfield/
 ### GitHub 上传（仓库根目录）
 
 ```bash
-python github_upload_module.py              # 默认 patch：1.8.1 → 1.8.2
-python github_upload_module.py --minor        # 大改动：1.8.1 → 1.9.0
+python github_upload_module.py              # 默认 patch：3.30.3 → 3.30.4
+python github_upload_module.py --minor      # 大改动：3.30.3 → 3.31.0
 python github_upload_module.py --no-bump    # 提交推送但不改 _VERSION
 ```
 
-上传前脚本会根据改动在 `please_read_me.py` **底部**生成临时总结块，commit 消息读取该块（`v版本: 标题` + 列表）；**push 成功后**自动删除总结块。失败则保留总结便于重试。
+提交说明由 `summarize_changes` 从本次改动**内存生成**（不再写 `please_read_me.py` 总结块），格式为 `v版本: 标题` + 改动列表。
 
-若本机已配置 Git 提交签名（`commit.gpgsign` 或 `user.signingkey`），脚本会在 commit 时自动签名，便于 GitHub 显示 **Verified**；未配置会打印设置提示（见 [`docs/操作指令集.md`](../docs/操作指令集.md) §1.5）。
+若本机已配置 Git 提交签名（`commit.gpgsign` 或 `user.signingkey`），脚本会在 commit 时自动签名，便于 GitHub 显示 **Verified**；未配置会打印设置提示（见 [`docs/操作指令集.md`](../../docs/操作指令集.md) §1.5）。
 
 **从远程覆盖本地（危险）**：在 `[根]` 运行 `python github_download_module.py`，须输入确认词 **`覆盖本地`**；会丢弃未提交与未跟踪文件。详见操作指令集 §5.2。
 
@@ -163,12 +163,13 @@ python main.py
 
 ```bash
 pip install -e ".[build]"
-python scripts/main_build.py --target calculator
+python scripts/main_build.py --target launcher   # 统一启动器
+python scripts/main_build.py --target toolkit    # 独立开发者工具箱
 ```
 
-打包前会检查 PyInstaller 与 matplotlib；Windows 上通过 `pyinstaller_entry` 规避 WMI 卡死；各 GUI 子模块 import CTk 前亦打补丁。默认 20 分钟超时 + 15 秒心跳（见 `docs/操作指令集.md` §7）。产物内仪表盘无需用户另装 matplotlib。
+打包前会检查 PyInstaller 与 matplotlib；Windows 上通过 `pyinstaller_entry` 规避 WMI 卡死。默认 20 分钟超时 + 15 秒心跳（见 `docs/操作指令集.md` §7）。产物内仪表盘无需用户另装 matplotlib。
 
-产物为 **`dist/终末地伤害计算器/` 文件夹**（onedir）：exe 与 `characters.json` / `weapons.json`、`DATA_LICENSE` 等同目录分发，符合软件与数据许可分离。请整夹分发，勿只发 exe。详见 [`docs/操作指令集.md`](../docs/操作指令集.md) §7。
+产物为 **onefile exe**：`dist/Game Calc Platform/Game Calc Platform.exe`（启动器）与数据文件同目录分发，符合软件与数据许可分离。请整夹分发，勿只发 exe。详见 [`docs/操作指令集.md`](../../docs/操作指令集.md) §7。
 
 ### 数据加载约定
 
@@ -186,7 +187,7 @@ python scripts/main_build.py --target calculator
 
 ### GUI 使用说明（详细）
 
-完整的 GUI 操作文档见 **[docs/GUI使用说明.md](../docs/GUI使用说明.md)**，涵盖：
+完整的 GUI 操作文档见 **[docs/GUI使用说明.md](../../docs/GUI使用说明.md)**，涵盖：
 
 - 计算页：角色/武器选择、属性展示、乘区计算
 - 高级页：全量搜索、多技能加权、异常矩阵
@@ -218,11 +219,11 @@ python scripts/main_build.py --target calculator
 - 角色或武器无效时，仅对应属性列显示提示，且不刷新乘区。
 - 武器属性列数值规则：按词条名区分展示——`附加攻击力+`、四维+、主/副能力+ 等为**固定整数**；`攻击力+`、*伤害+、*率+、充能效率 带 `%`（与 `display_lines.weapon_bonus_display_uses_percent` 一致）。
 
-术语与列号说明见仓库根目录 [`CONTEXT.md`](../CONTEXT.md)。
+术语与列号说明见仓库根目录 [`CONTEXT.md`](../../CONTEXT.md)。
 
 ### 数据来源与许可
 
-武器列下方 **「数据来源与许可」** 打开简略说明，可跳转 `LICENSE`、`DATA_LICENSE`、BWIKI、CC 与完整文档 [`docs/数据来源与许可.md`](../docs/数据来源与许可.md)。
+武器列下方 **「数据来源与许可」** 打开简略说明，可跳转 `LICENSE`、`DATA_LICENSE`、BWIKI、CC 与完整文档 [`docs/数据来源与许可.md`](../../docs/数据来源与许可.md)。
 
 ### BWIKI 数据侦察与同步（`[根]` / `tools/bwiki_scout/`）
 
@@ -237,7 +238,7 @@ python tools/bwiki_scout/sync_weapons.py       # 预览：武器攻击与词条�
 python tools/bwiki_scout/sync_operators.py --apply
 ```
 
-完整字段映射与模块说明见 [`tools/bwiki_scout/README.md`](../tools/bwiki_scout/README.md)、[`docs/操作指令集.md`](../docs/操作指令集.md) §9。
+完整字段映射与模块说明见 [`tools/bwiki_scout/README.md`](../../tools/bwiki_scout/README.md)、[`docs/操作指令集.md`](../../docs/操作指令集.md) §9。
 
 ### 公式反推工具
 
@@ -297,7 +298,7 @@ result = calculated / scale_factor
 
 #### `calc/damage/` — 伤害计算引擎
 
-核心伤害计算与反向公式拟合。详见 [`docs/算法与架构.md`](../docs/算法与架构.md)。
+核心伤害计算与反向公式拟合。详见 [`docs/算法与架构.md`](../../docs/算法与架构.md)。
 
 #### `calc/multiplicative_zones/` — 15 乘区实现
 
@@ -333,7 +334,7 @@ python -m pytest tests/ -v
 
 ## 📦 数据格式
 
-仓库内 JSON 为**中文键**、**数组曲线**，运行时经 `data.loader` 读取。详见 [`CONTEXT.md`](../CONTEXT.md) 与 `tests/test_game_data_contract.py`。
+仓库内 JSON 为**中文键**、**数组曲线**，运行时经 `data.loader` 读取。详见 [`CONTEXT.md`](../../CONTEXT.md) 与 `tests/test_game_data_contract.py`。
 
 ### 角色数据 (`characters.json`)
 
@@ -440,9 +441,9 @@ python tools/endfield_scripts/seed_weapons.py
 
 ## 📄 许可证与数据来源
 
-- **软件**：[`LICENSE`](../LICENSE)（AGPL-3.0 或商业许可）
-- **数据**：[`DATA_LICENSE`](../DATA_LICENSE)（商用不可用本仓库 JSON）
-- **说明**：[`docs/数据来源与许可.md`](../docs/数据来源与许可.md) · [`合规自查清单`](../docs/合规自查清单.md)
+- **软件**：[`LICENSE`](../../LICENSE)（AGPL-3.0 或商业许可）
+- **数据**：[`DATA_LICENSE`](../../DATA_LICENSE)（商用不可用本仓库 JSON）
+- **说明**：[`docs/数据来源与许可.md`](../../docs/数据来源与许可.md) · [`合规自查清单`](../../docs/合规自查清单.md)
 - **GUI**：「数据来源与许可」按钮
 
 ---
@@ -453,7 +454,7 @@ python tools/endfield_scripts/seed_weapons.py
 |------|------|
 | **报告 Bug** | GitHub **Issues → New issue → Bug 报告**（请填复现步骤与窗口标题中的版本号） |
 | **功能建议** | 同上，选 **功能建议** |
-| **文档** | 人类操作见 [`docs/操作指令集.md`](../docs/操作指令集.md)；Agent 见 [`docs/会话接续手册.md`](../docs/会话接续手册.md) |
+| **文档** | 人类操作见 [`docs/操作指令集.md`](../../docs/操作指令集.md)；Agent 见 [`docs/会话接续手册.md`](../../docs/会话接续手册.md) |
 | **代码贡献** | Fork 后 PR；大改动请先开 Issue 讨论 |
 
-Issue 模板与 `gh` 用法：[`docs/agents/issue-tracker.md`](../docs/agents/issue-tracker.md)。
+Issue 模板与 `gh` 用法：[`docs/agents/issue-tracker.md`](../../docs/agents/issue-tracker.md)。

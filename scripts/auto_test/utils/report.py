@@ -62,6 +62,17 @@ class TestReport:
     scenarios: list[TestScenario] = field(default_factory=list)
     start_time: float | None = None
     end_time: float | None = None
+    infra_failed: bool = False
+    infra_error: str = ""
+
+    def mark_infra_failed(self, message: str) -> None:
+        """标记基础设施失败（启动失败、无场景配置等）。
+
+        Args:
+            message: 面向报告阅读者的失败说明。
+        """
+        self.infra_failed = True
+        self.infra_error = message
 
     @property
     def duration(self) -> float:
@@ -82,6 +93,11 @@ class TestReport:
         return sum(1 for s in self.scenarios if s.status == "failed")
 
     @property
+    def incomplete_scenarios(self) -> list[TestScenario]:
+        """没有执行任何步骤的场景（未真正跑起来）。"""
+        return [s for s in self.scenarios if s.total_count == 0]
+
+    @property
     def total_steps(self) -> int:
         return sum(s.total_count for s in self.scenarios)
 
@@ -92,6 +108,21 @@ class TestReport:
     @property
     def failed_steps(self) -> int:
         return sum(s.failed_count for s in self.scenarios)
+
+    @property
+    def success(self) -> bool:
+        """只有基础设施正常、至少执行一个场景且全部通过才算成功。"""
+        return (
+            not self.infra_failed
+            and self.total_scenarios > 0
+            and self.failed_scenarios == 0
+            and not self.incomplete_scenarios
+        )
+
+    @property
+    def exit_code(self) -> int:
+        """进程退出码：成功 0，其余 1。"""
+        return 0 if self.success else 1
 
     def to_markdown(self) -> str:
         """生成 Markdown 格式的报告。"""
@@ -107,6 +138,9 @@ class TestReport:
         lines.append("")
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
+        lines.append(f"| 基础设施 | {'❌ 失败' if self.infra_failed else '✅ 正常'} |")
+        if self.infra_error:
+            lines.append(f"| 基础设施错误 | {self.infra_error} |")
         lines.append(f"| 场景总数 | {self.total_scenarios} |")
         lines.append(f"| 通过场景 | {self.passed_scenarios} |")
         lines.append(f"| 失败场景 | {self.failed_scenarios} |")
@@ -192,3 +226,29 @@ class TestReport:
         output_path.write_text(content, encoding="utf-8")
 
         return output_path
+
+
+def any_report_failed(reports: dict[str, TestReport | None]) -> bool:
+    """判断多层测试中是否有任何一层未成功。
+
+    Args:
+        reports: 测试层名称 → 报告；``None`` 表示显式跳过。
+
+    Returns:
+        True 表示至少一层基础设施失败、0 场景或存在失败场景。
+    """
+    return any(report is not None and not report.success for report in reports.values())
+
+
+def check_required_steps(scenario: TestScenario, required: list[str]) -> list[str]:
+    """返回场景中未执行的必要步骤名称。
+
+    Args:
+        scenario: 已执行完毕的测试场景。
+        required: 配置中声明的必要步骤名称。
+
+    Returns:
+        缺失的步骤名称列表；为空表示全部执行。
+    """
+    executed = {step.name for step in scenario.steps}
+    return [name for name in required if name not in executed]

@@ -107,34 +107,17 @@ jobs:
         run: |
           $version = "${{ needs.verify-version.outputs.tag_version }}"
           # 主产物：启动器（单 exe，含所有游戏+工具）
-          if (Test-Path "dist/Game Calc Platform") {
-            $launcher_zip = "GameCalcPlatform_v${version}.zip"
-            Compress-Archive -Path "dist/Game Calc Platform/*" -DestinationPath "dist/${launcher_zip}"
-            Write-Host "Created: dist/${launcher_zip}"
+          if (-not (Test-Path "dist/Game Calc Platform")) {
+            Write-Error "未找到启动器产物 dist/Game Calc Platform，无法发布"
+            exit 1
           }
-          # 过渡期：继续打包旧分体目标（供仍需独立 exe 的用户）
-          if (Test-Path "dist/终末地伤害计算器") {
-            $name = "终末地伤害计算器_v${version}.zip"
-            Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}"
-            Write-Host "Created: dist/${name}"
-          }
-          if (Test-Path "dist/数据设计器") {
-            $designer_zip = "数据设计器_v${version}.zip"
-            Compress-Archive -Path "dist/数据设计器/*" -DestinationPath "dist/${designer_zip}"
-            Write-Host "Created: dist/${designer_zip}"
-          }
-          if (Test-Path "dist/配置包设计器") {
-            $pack_zip = "配置包设计器_v${version}.zip"
-            Compress-Archive -Path "dist/配置包设计器/*" -DestinationPath "dist/${pack_zip}"
-            Write-Host "Created: dist/${pack_zip}"
-          }
+          $launcher_zip = "GameCalcPlatform_v${version}.zip"
+          Compress-Archive -Path "dist/Game Calc Platform/*" -DestinationPath "dist/${launcher_zip}"
+          Write-Host "Created: dist/${launcher_zip}"
           # SHA256 侧车（自动更新校验）
-          Get-ChildItem dist/*.zip | ForEach-Object {
-            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
-            $sidecar = "$($_.FullName).sha256"
-            Set-Content -Path $sidecar -Value $hash -NoNewline
-            Write-Host "Created: $sidecar"
-          }
+          $hash = (Get-FileHash "dist/${launcher_zip}" -Algorithm SHA256).Hash.ToLower()
+          Set-Content -Path "dist/${launcher_zip}.sha256" -Value $hash -NoNewline
+          Write-Host "Created: dist/${launcher_zip}.sha256"
 
       - name: Code sign release PE (optional)
         shell: pwsh
@@ -164,11 +147,14 @@ jobs:
             Write-Host "Cleaned up PFX certificate file"
           }
 
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+
       - name: Build NSIS installer
         shell: pwsh
         run: |
           python scripts/devtool.py installer build --version "${{ needs.verify-version.outputs.tag_version }}"
-        continue-on-error: true
 
       - name: List dist artifacts
         shell: pwsh
@@ -177,15 +163,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: release-artifact
+          if-no-files-found: error
           path: |
             dist/GameCalcPlatform_v*.zip
             dist/GameCalcPlatform_v*.zip.sha256
-            dist/终末地伤害计算器_v*.zip
-            dist/终末地伤害计算器_v*.zip.sha256
-            dist/数据设计器_v*.zip
-            dist/数据设计器_v*.zip.sha256
-            dist/配置包设计器_v*.zip
-            dist/配置包设计器_v*.zip.sha256
             dist/GameCalcPlatform_Setup_v*.exe
 
   publish:
@@ -208,13 +189,7 @@ jobs:
           files: |
             GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip
             GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
-            终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip
-            终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
-            数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
-            数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
-            配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
-            配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
             GameCalcPlatform_Setup_v${{ needs.verify-version.outputs.tag_version }}.exe
           generate_release_notes: true
           make_latest: true
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true

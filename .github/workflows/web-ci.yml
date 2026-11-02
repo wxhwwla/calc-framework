@@ -56,7 +56,12 @@ jobs:
           # binaryen 提供系统 wasm-opt，避免 wasm-pack 从 GitHub Releases 下载挂起（act/代理环境）
           sudo apt-get update
           sudo apt-get install -y binaryen
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          # 本地 act 镜像可能已预装 wasm-pack；已安装时跳过联网安装脚本
+          if command -v wasm-pack >/dev/null 2>&1; then
+            echo "wasm-pack already installed: $(wasm-pack --version)"
+          else
+            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          fi
 
       - name: Build wasm-curve
         working-directory: web/wasm-curve
@@ -66,7 +71,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: ESLint check
-        run: npx eslint "src/**/*.{ts,tsx}" --max-warnings 50
+        run: npm run lint
 
       - name: Production build
         run: npx vite build

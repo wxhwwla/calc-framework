@@ -20,7 +20,13 @@ from PySide6.QtWidgets import (
 )
 from utils.path_utils import get_resource_path
 
+from games.endfield.data_loading.web_loadout_bridge import build_adapter_context_from_loadout
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, Layout, get_logger, load_layout_json
+from games.endfield.gui.app.compute_sheet_variables import (
+    ENDFIELD_USER_CONTEXT_OVERRIDES,
+    ENDFIELD_USER_INPUT_VARIABLES,
+    apply_endfield_sheet_context,
+)
 from games.endfield.gui.app.loadout_evaluation import (
     refresh_damage_snapshot,
 )
@@ -112,6 +118,7 @@ class ActionsMixin:
             attached_effect_multiplier=self._attached_effect_multiplier,
             corrosion_duration_seconds=self._corrosion_duration_seconds,
             imbalance_efficiency_bonus=self._imbalance_efficiency_bonus,
+            break_defense_stacks=self._break_defense_stacks,
         )
         if loadout is None:
             return None
@@ -148,7 +155,7 @@ class ActionsMixin:
             QApplication.processEvents()
             compute_sheet_error: Exception | None = None
             try:
-                self._refresh_compute_sheet()
+                self._refresh_compute_sheet(request.loadout)
             except Exception as exc:
                 # 乘区表是文档声明的核心输出：失败必须可见，不能只写日志
                 compute_sheet_error = exc
@@ -194,122 +201,56 @@ class ActionsMixin:
         except Exception as exc:
             _logger.warning("求值缓存同步失败: %s", exc)
 
-    def _refresh_compute_sheet(self) -> None:
+    def _refresh_compute_sheet(self, loadout: Any | None = None) -> None:
+        """用已确认的配装刷新乘区表。
+
+        Args:
+            loadout: 本次确认的配装快照；缺省时重新读取面板（兼容旧调用）。
+        """
+        if loadout is None:
+            request = self._build_request()
+            if request is None:
+                raise RuntimeError("无法读取当前配装")
+            loadout = request.loadout
+
         pkg, layout = _ensure_adapter()
         dag_service = pkg.dag_service
 
-        variables = dict(dag_service.dag.variables)
-        user_vars: dict[str, Any] = {
-            "user_input.敌人防御": {
-                "source": "user_input",
-                "type": "float",
-                "default": 100.0,
-                "min": 0,
-                "max": 99999,
-                "step": 10.0,
-            },
-            "user_input.敌人等阶": {"source": "user_input", "type": "str", "default": "普通"},
-            "user_input.敌人抗性": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": -100,
-                "max": 100,
-                "step": 1.0,
-            },
-            "user_input.无视抗性": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": -100,
-                "max": 100,
-                "step": 1.0,
-            },
-            "user_input.失衡易伤系数": {
-                "source": "user_input",
-                "type": "float",
-                "default": 1.3,
-                "min": 0.1,
-                "max": 10.0,
-                "step": 0.05,
-            },
-            "user_input.是否失衡": {"source": "user_input", "type": "bool", "default": False},
-            "user_input.是否真实伤害": {"source": "user_input", "type": "bool", "default": False},
-            "user_input.连击层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.额外暴击率": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 1.0,
-                "step": 0.01,
-            },
-            "user_input.额外暴击伤害": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 5.0,
-                "step": 0.01,
-            },
-            "user_input.额外伤害加成": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 5.0,
-                "step": 0.01,
-            },
-            "user_input.附带效果倍率": {
-                "source": "user_input",
-                "type": "float",
-                "default": 1.0,
-                "min": 0.1,
-                "max": 3.0,
-                "step": 0.05,
-            },
-            "user_input.破防层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.失衡效率加成": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 1.0,
-                "step": 0.05,
-            },
-            "user_input.腐蚀计时(秒)": {
-                "source": "user_input",
-                "type": "float",
-                "default": 15.0,
-                "min": 0.0,
-                "max": 15.0,
-                "step": 0.5,
-            },
-        }
-        variables.update(user_vars)
+        variables: dict[str, Any] = dict(dag_service.dag.variables)
+        variables.update(ENDFIELD_USER_INPUT_VARIABLES)
 
-        user_context_overrides = {
-            "user_input.敌人防御": ("enemy.防御", ["override"]),
-            "user_input.敌人抗性": ("computed.抗性", ["add"]),
-            "user_input.无视抗性": ("computed.无视抗性", ["override"]),
-            "user_input.失衡易伤系数": ("computed.失衡易伤", ["override"]),
-            "user_input.是否失衡": ("computed.失衡状态", ["override"]),
-            "user_input.是否真实伤害": ("computed.真实伤害", ["override"]),
-            "user_input.连击层数": ("computed.连击层数", ["override"]),
-            "user_input.额外暴击率": ("character.暴击率", ["add"]),
-            "user_input.额外暴击伤害": ("character.暴击伤害", ["add"]),
-            "user_input.额外伤害加成": ("computed.伤害加成", ["add"]),
-        }
+        base_context = build_adapter_context_from_loadout(
+            loadout,
+            equipment_catalog=getattr(self, "_equipment_catalog", None),
+        )
+        base_context.setdefault("user_input", {})["敌人等阶"] = getattr(loadout, "enemy_tier", "普通")
+        # enrich_adapter_context 已把额外暴击叠加进 character；这里先移除，
+        # 由输入控件统一叠加一次，避免刷新时重复计算。
+        character = base_context.setdefault("character", {})
+        character["暴击率"] = float(character.get("暴击率", 0.05)) - float(
+            getattr(loadout, "extra_crit_rate", 0.0) or 0.0
+        )
+        character["暴击伤害"] = float(character.get("暴击伤害", 0.5)) - float(
+            getattr(loadout, "extra_crit_damage", 0.0) or 0.0
+        )
+
+        def _transform(context: dict[str, Any], user_values: dict[str, Any]) -> dict[str, Any]:
+            return apply_endfield_sheet_context(
+                context,
+                user_values,
+                skill_type=str(getattr(loadout, "skill_type", "") or ""),
+                use_expected_crit=bool(getattr(loadout, "use_expected_crit", False)),
+            )
 
         assert layout is not None
         compute_sheet = ComputeSheet(
             dag_service,
             layout,
             variables,
-            base_context={},
-            user_context_overrides=user_context_overrides,
+            base_context=base_context,
+            user_context_overrides=ENDFIELD_USER_CONTEXT_OVERRIDES,
+            context_transform=_transform,
         )
-        self._populate_sheet(compute_sheet)
         compute_sheet.evaluated.connect(self._on_compute_sheet_evaluated)
         compute_sheet.evaluate()
 
@@ -326,41 +267,6 @@ class ActionsMixin:
             new_layout.addWidget(compute_sheet.widget, stretch=1)
             new_layout.addWidget(self._total_damage_panel)
             self._compute_sheet_widget.setLayout(new_layout)
-
-    def _populate_sheet(self, sheet: ComputeSheet) -> None:
-        dock = self.control_dock
-        loadout = read_loadout_from_panels(
-            self.char_panel,
-            self.weapon_panel,
-            calculation_mode=self._current_calc_mode,
-            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
-            equipment_scope_label=dock.equipment_scope_combo.currentText(),
-            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
-            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
-            manual_counts=dock.read_skill_counts(),
-            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
-            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
-            damage_component_mode=dock.read_damage_component_mode(),
-            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
-            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
-            extra_crit_rate=dock.read_extra_crit_rate(),
-            extra_crit_damage=dock.read_extra_crit_damage(),
-            enemy_defense=self._enemy_defense,
-            enemy_resistance=self._enemy_resistance,
-            ignore_resistance=self._ignore_resistance,
-            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
-            is_unbalanced=self._is_unbalanced,
-            is_true_damage=self._is_true_damage,
-            enemy_tier=self._enemy_tier,
-            combo_stacks=self._combo_stacks,
-            attached_effect_multiplier=self._attached_effect_multiplier,
-            corrosion_duration_seconds=self._corrosion_duration_seconds,
-            imbalance_efficiency_bonus=self._imbalance_efficiency_bonus,
-        )
-        if loadout is None:
-            return
-        for key, value in loadout.to_compute_sheet_inputs().items():
-            sheet.set(key, value)
 
     def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
         self._update_total_damage_panel()

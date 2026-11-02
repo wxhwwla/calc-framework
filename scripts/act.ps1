@@ -91,7 +91,11 @@ if (-not $PROXY_PORT) {
     $actEnvArgs = @(
         "--env", "HTTP_PROXY=http://${PROXY_HOST}:${PROXY_PORT}",
         "--env", "HTTPS_PROXY=http://${PROXY_HOST}:${PROXY_PORT}",
+        # apt 只认小写 http_proxy/https_proxy；缺了会在 apt-get update 卡住重试
+        "--env", "http_proxy=http://${PROXY_HOST}:${PROXY_PORT}",
+        "--env", "https_proxy=http://${PROXY_HOST}:${PROXY_PORT}",
         "--env", "NO_PROXY=localhost,127.0.0.1,.local,${PROXY_HOST}",
+        "--env", "no_proxy=localhost,127.0.0.1,.local,${PROXY_HOST}",
         "--env", "NODE_TLS_REJECT_UNAUTHORIZED=0",
         "--env", "PIP_CERT=/etc/ssl/certs/ca-certificates.crt",
         "--env", "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt"

@@ -100,8 +100,8 @@ export default function ProfileDataBrowser({ profileId }: Props) {
     }
   };
 
-  const columns = entity?.columns ?? [];
-  const fields = entity?.fields ?? [];
+  const columns = useMemo(() => entity?.columns ?? [], [entity]);
+  const fields = useMemo(() => entity?.fields ?? [], [entity]);
 
   // 判断当前实体有哪些可过滤字段
   const filterableFields = useMemo(() => {

@@ -127,15 +127,16 @@ python -m pytest tests/test_mvp_pipeline.py tests/test_search_settings.py -q
 ## 6. 打包发布
 
 ```powershell
-cd games/endfield
-python build.py
+# 仓库根目录执行
+python scripts/main_build.py --target launcher   # 统一启动器（含终末地入口）
 ```
 
-产出 `dist/终末地伤害计算器/` 须整夹分发，内含：
+产出 `dist/Game Calc Platform/` 须整夹分发，内含：
 
-- `终末地伤害计算器.exe`
-- `character_weapon_equipment/**`（含 **`equipments.json`**）
-- `发布说明.txt`（含 `search_output/`、并行线程说明）
+- `Game Calc Platform.exe`（单文件，内含启动器与各游戏 GUI）
+- `games/endfield/data/**`（含 **`equipments.json`**）
+- `tools/arknights_scout/output/parsed/**`、`framework/adapters/arknights/data/**`
+- `发布说明.txt`、`LICENSE`、`DATA_LICENSE`、`NOTICES.md`
 - 首次搜索后生成 **`search_output/`**（与 exe 同级）
 
 详见 [`操作指令集.md`](操作指令集.md) §7、[`数据来源与许可.md`](数据来源与许可.md) §七。

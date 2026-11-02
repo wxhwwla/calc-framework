@@ -101,6 +101,20 @@ class TestInferControl:
 
         assert spec.widget == "none"
 
+    def test_top_level_step_used_when_ui_control_missing(self):
+        var = {
+            "type": "float",
+            "source": "user_input",
+            "default": 100,
+            "min": 0,
+            "max": 99999,
+            "step": 10.0,
+        }
+
+        spec = infer_control("敌人防御", var)
+
+        assert spec.step == 10.0
+
     def test_ui_control_override(self):
         var = {
             "type": "float",

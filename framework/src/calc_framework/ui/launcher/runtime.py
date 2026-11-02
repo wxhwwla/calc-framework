@@ -191,6 +191,14 @@ def spawn_detached(argv: list[str], root: Path | None = None) -> subprocess.Pope
     return subprocess.Popen(argv, **kwargs)  # type: ignore[return-value]
 
 
+def _restore_launcher_after_game_closed(launcher: Any) -> None:
+    """游戏窗口销毁后恢复启动器；启动器可能已先关闭，忽略 Qt 已删除对象。"""
+    with suppress(RuntimeError):
+        launcher._embedded_game_window = None
+        launcher.raise_()
+        launcher.activateWindow()
+
+
 def launch_adapter_in_process(entry: AdapterEntry, launcher: Any) -> bool:
     """打包 exe 下同进程打开游戏窗口，避免 spawn 子 exe 闪控制台。
 
@@ -215,12 +223,7 @@ def launch_adapter_in_process(entry: AdapterEntry, launcher: Any) -> bool:
     else:
         return False
 
-    def _on_game_closed() -> None:
-        launcher._embedded_game_window = None
-        launcher.raise_()
-        launcher.activateWindow()
-
-    window.destroyed.connect(_on_game_closed)
+    window.destroyed.connect(lambda: _restore_launcher_after_game_closed(launcher))
     launcher._embedded_game_window = window
     if hasattr(window, "show_embedded"):
         window.show_embedded()

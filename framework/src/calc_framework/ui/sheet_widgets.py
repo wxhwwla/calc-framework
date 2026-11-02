@@ -81,6 +81,14 @@ def make_slider(spec: ControlSpec) -> QWidget:
     return slider
 
 
+def _decimals_for_step(step: float) -> int:
+    """按步长推导小数位数（0.01 → 2，0.5 → 1，整步长 → 0）。"""
+    text = f"{float(step):g}"
+    if "." not in text:
+        return 0
+    return len(text.split(".", 1)[1])
+
+
 def make_spinbox(spec: ControlSpec) -> QWidget:
     """根据 spec 创建 QSpinBox 或 QDoubleSpinBox 控件。"""
     if isinstance(spec.default, int) or spec.step == 1:
@@ -89,9 +97,9 @@ def make_spinbox(spec: ControlSpec) -> QWidget:
         box.setSingleStep(int(spec.step))
     else:
         box = QDoubleSpinBox()
-        box.setValue(float(spec.default))
         box.setSingleStep(spec.step)
-        box.setDecimals(max(0, -int(spec.step).bit_length() if spec.step < 1 else 2))
+        box.setDecimals(_decimals_for_step(spec.step))
+        box.setValue(float(spec.default))
     if spec.min_val is not None:
         box.setMinimum(spec.min_val)  # type: ignore[reportArgumentType]
     if spec.max_val is not None:

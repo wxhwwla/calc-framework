@@ -22,7 +22,7 @@ export default function AdapterSelector() {
     if (adapters.length === 0) {
       loadAdapters();
     }
-  }, []);
+  }, [adapters.length, loadAdapters]);
 
   return (
     <Box sx={{ mb: 3 }}>

@@ -769,7 +769,7 @@ project = calc-framework
 | `CALC_MAX_BODY_BYTES` | 默认 **1048576**（1 MiB）；`0`/`off` 取消全局上限（OCR/Hub 路径特例仍生效） |
 | `CALC_DISABLE_BODY_LIMIT` | `1`/`true` 时完全关闭 `ContentSizeLimitMiddleware` |
 
-**限速与多 Worker**：`RateLimitMiddleware` 使用进程内内存计数；**默认请单 worker 部署**。多 worker 时设置 `CALC_DISABLE_RATE_LIMIT=1` 并在反向代理层限速。详见 [`docs/Web后端限速与多Worker.md`](../Web后端限速与多Worker.md)。
+**限速与多 Worker**：`RateLimitMiddleware` 使用进程内内存计数；**默认请单 worker 部署**。多 worker 时设置 `CALC_DISABLE_RATE_LIMIT=1` 并在反向代理层限速。详见 [`Web后端限速与多Worker.md`](Web后端限速与多Worker.md)。
 
 **管理接口认证**：在 PythonAnywhere Web App → Environment variables 中设置 `CALC_ADMIN_TOKEN`。调用管理 API 或修改游戏 JSON 时附加请求头：
 

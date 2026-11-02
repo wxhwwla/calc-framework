@@ -34,7 +34,7 @@ from config import (
 )
 
 from utils.qt_inspector import QtInspector
-from utils.report import TestReport, TestScenario, TestStep
+from utils.report import TestReport, TestScenario, TestStep, check_required_steps
 
 logging.basicConfig(
     level=logging.INFO,
@@ -124,6 +124,17 @@ class DesktopTestRunner:
             self._test_designer(scenario)
         else:
             logger.warning("未知场景: %s", scenario.name)
+            scenario.steps.append(TestStep(name="执行场景", status="failed", message=f"未知场景: {scenario.name}"))
+
+        missing = check_required_steps(scenario, scenario_config.get("steps", []))
+        if missing:
+            scenario.steps.append(
+                TestStep(
+                    name="必要步骤未执行",
+                    status="failed",
+                    message="、".join(missing),
+                )
+            )
 
         scenario.end_time = time.time()
         scenario.status = "passed" if scenario.failed_count == 0 else "failed"
@@ -309,17 +320,22 @@ class DesktopTestRunner:
 
         # 启动应用
         if not self.start_app():
+            self.report.mark_infra_failed("桌面应用启动失败，未执行任何测试场景")
             self.report.end_time = time.time()
             return self.report
 
-        # 运行测试场景
-        scenarios_config = TEST_SCENARIOS.get("desktop", [])
-        for config in scenarios_config:
-            scenario = self.run_scenario(config)
-            self.report.scenarios.append(scenario)
+        try:
+            # 运行测试场景
+            scenarios_config = TEST_SCENARIOS.get("desktop", [])
+            if not scenarios_config:
+                self.report.mark_infra_failed("未配置桌面测试场景")
+            for config in scenarios_config:
+                scenario = self.run_scenario(config)
+                self.report.scenarios.append(scenario)
+        finally:
+            # 停止应用
+            self.stop_app()
 
-        # 停止应用
-        self.stop_app()
         self.report.end_time = time.time()
 
         return self.report
@@ -337,12 +353,15 @@ def main() -> None:
     # 输出摘要
     print("\n" + "=" * 60)
     print(f"测试完成: {report.passed_scenarios}/{report.total_scenarios} 场景通过")
+    if report.infra_failed:
+        print(f"基础设施失败: {report.infra_error}")
+    if report.total_scenarios == 0:
+        print("警告: 未执行任何测试场景")
     print(f"报告已保存: {report_path}")
     print("=" * 60)
 
-    # 返回退出码
-    if report.failed_scenarios > 0:
-        sys.exit(1)
+    # 返回退出码：启动失败、0 场景、失败场景都会返回非零
+    sys.exit(report.exit_code)
 
 
 if __name__ == "__main__":

@@ -69,6 +69,7 @@ class _StubApp(ActionsMixin):
         self.confirmed_calls = 0
         self.pending_calls = 0
         self.last_synced_request: object | None = None
+        self.last_refresh_loadout: object | None = None
 
     def _build_request(self) -> _Request:
         return _Request()
@@ -76,7 +77,8 @@ class _StubApp(ActionsMixin):
     def _sync_evaluation(self, request: object) -> None:
         self.last_synced_request = request
 
-    def _refresh_compute_sheet(self) -> None:
+    def _refresh_compute_sheet(self, loadout: object | None = None) -> None:
+        self.last_refresh_loadout = loadout
         if self._compute_sheet_error is not None:
             raise self._compute_sheet_error
 
@@ -124,6 +126,18 @@ class TestConfirmCoreFailureVisibility(unittest.TestCase):
         self.assertFalse(warning.called, "正常路径不应弹错误")
         self.assertEqual(app.confirmed_calls, 1)
         self.assertEqual(app.pending_calls, 0)
+
+    def test_confirm_passes_confirmed_loadout_to_compute_sheet(self) -> None:
+        app = _StubApp(compute_sheet_error=None)
+
+        self._run_confirm(app)
+
+        assert app.last_synced_request is not None
+        self.assertIs(
+            app.last_refresh_loadout,
+            app.last_synced_request.loadout,
+            "乘区表必须使用本次确认的 LoadoutState，而不是重新读取面板",
+        )
 
 
 if __name__ == "__main__":

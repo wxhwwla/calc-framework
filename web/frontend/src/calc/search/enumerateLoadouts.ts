@@ -53,7 +53,8 @@ export function countLoadoutCombinations(
   allowDuplicateAccessory = true,
 ): number {
   let n = 0;
-  for (const _ of iterateLoadoutCombinations(catalog, fixed, allowDuplicateAccessory)) {
+  const iterator = iterateLoadoutCombinations(catalog, fixed, allowDuplicateAccessory);
+  while (!iterator.next().done) {
     n += 1;
   }
   return n;

@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from calc_framework.ui.launcher.runtime import (
+    _restore_launcher_after_game_closed,
     argv_for_adapter,
     argv_for_calcpack,
     argv_for_tool,
@@ -54,3 +55,43 @@ class TestLauncherRuntime:
         pack.write_text("{}", encoding="utf-8")
         argv = argv_for_calcpack(pack)
         assert argv[-1] == str(pack.resolve())
+
+
+class TestRestoreLauncherAfterGameClosed:
+    def test_restores_live_launcher(self) -> None:
+        class _LiveLauncher:
+            _embedded_game_window = object()
+
+            def __init__(self) -> None:
+                self.raised = False
+                self.activated = False
+
+            def raise_(self) -> None:
+                self.raised = True
+
+            def activateWindow(self) -> None:
+                self.activated = True
+
+        launcher = _LiveLauncher()
+
+        _restore_launcher_after_game_closed(launcher)
+
+        assert launcher._embedded_game_window is None
+        assert launcher.raised
+        assert launcher.activated
+
+    def test_ignores_already_deleted_qt_object(self) -> None:
+        class _DeletedLauncher:
+            _embedded_game_window = object()
+
+            def raise_(self) -> None:
+                raise RuntimeError("libshiboken: Internal C++ object (GameLauncherWindow) already deleted.")
+
+            def activateWindow(self) -> None:
+                raise AssertionError("已销毁的窗口不应再被激活")
+
+        launcher = _DeletedLauncher()
+
+        _restore_launcher_after_game_closed(launcher)
+
+        assert launcher._embedded_game_window is None

@@ -178,7 +178,7 @@ cd web/frontend && npm install && npm run dev
 - **Plugin System**: Registry pattern + 3 built-in plugins (crit/dodge/distance) + `.calcplugin` format
 - **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
-- **i18n**: Web (react-i18next, ~500+ keys, 98 files) + Desktop (DesktopTranslator, 282 keys, 15 files, en/zh-CN)
+- **i18n**: Web (react-i18next, ~890 entries per language) + Desktop (DesktopTranslator, 1046 keys per language, en/zh-CN)
 - **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing
 - **SaaS API**: API Key management + rate limiting + usage statistics
 
@@ -231,10 +231,10 @@ result = adapter.fit(data)  # auto-match by data length
 
 ```powershell
 # Framework tests
-cd framework && pytest tests/ -q     # 1160 passed
+cd framework && pytest tests/ -q
 
 # Endfield tests (full suite)
-cd games/endfield && pytest tests/ -q  # 1585 passed
+cd games/endfield && pytest tests/ -q
 ```
 
 [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)

@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -129,14 +130,33 @@ class TestEndfieldDAGIntegration:
         return dag
 
     @pytest.fixture(scope="class")
-    def adapter_pkg(self, generated_dag):
+    def generated_dag_path(self, generated_dag, tmp_path_factory):
+        """把生成的 DAG 写入临时目录，避免改写仓库内受跟踪文件。"""
         from games.endfield.calc.dag_adapter.config import save_dag
 
-        save_dag(generated_dag)
+        before_mtime = _EXPECTED_OUTPUT.stat().st_mtime_ns
+        path = tmp_path_factory.mktemp("endfield_dag") / "endfield_full.dag.json"
 
-        assert _EXPECTED_OUTPUT.exists(), f"输出文件不存在: {_EXPECTED_OUTPUT}"
+        save_dag(generated_dag, path)
 
-        return AdapterPackage(_ADAPTER_DIR)
+        assert path.exists(), f"临时 DAG 输出不存在: {path}"
+
+        assert _EXPECTED_OUTPUT.stat().st_mtime_ns == before_mtime, "测试不得改写仓库内 DAG 配置"
+
+        return path
+
+    @pytest.fixture(scope="class")
+    def adapter_pkg(self, generated_dag_path, tmp_path_factory):
+        """复制适配器目录并替换为本次生成的 DAG，不污染仓库文件。"""
+        adapter_dir = tmp_path_factory.mktemp("endfield_adapter") / "endfield"
+
+        shutil.copytree(_ADAPTER_DIR, adapter_dir, ignore=shutil.ignore_patterns("__pycache__"))
+
+        meta = json.loads((adapter_dir / "meta.json").read_text(encoding="utf-8"))
+
+        shutil.copyfile(generated_dag_path, adapter_dir / meta["entry_dag"])
+
+        return AdapterPackage(adapter_dir)
 
     @pytest.fixture(scope="class")
     def context(self):
@@ -156,8 +176,8 @@ class TestEndfieldDAGIntegration:
             trust_level=0,
         )
 
-    def test_dag_json_is_valid(self, adapter_pkg):
-        raw = json.loads(_EXPECTED_OUTPUT.read_text(encoding="utf-8"))
+    def test_dag_json_is_valid(self, generated_dag_path):
+        raw = json.loads(generated_dag_path.read_text(encoding="utf-8"))
 
         assert raw["schema_version"] == "dag-v1"
 
@@ -371,14 +391,10 @@ class TestEndfieldDAGIntegration:
             f"DAG: {dag_damage}, Existing: {existing.final_damage}"
         )
 
-    def test_attribute_zones_output(self, context):
+    def test_attribute_zones_output(self, adapter_pkg, context):
         """验证属性乘区 DAG 输出 力量/敏捷/智识/意志 最终值。"""
 
-        from calc_framework.config.adapter import AdapterPackage
-
-        pkg = AdapterPackage(_ADAPTER_DIR)
-
-        result = pkg.dag_service.evaluate(dict(context))
+        result = adapter_pkg.dag_service.evaluate(dict(context))
 
         for attr_name in ("力量", "敏捷", "智识", "意志"):
             output_key = f"{attr_name}最终值"

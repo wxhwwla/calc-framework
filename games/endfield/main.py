@@ -5,17 +5,17 @@
 终末地伤害计算器 - Calc Framework（通用游戏计算框架）游戏适配包
 
 项目结构说明（详见包内 README.md、docs/会话接续手册.md）：
-├── main.py                    # 本文件：启动 GUI（PySide6 版）
-├── gui/endfield_app.py  # 主窗口（双页签：计算页 / 高级页）
-├── data/loader.py             # 角色、武器、装备 JSON 统一加载
-├── data/game_data_facade.py   # 应用级数据门面（GUI / 对比 / 搜索）
-├── calculation/               # 乘区、单段伤害、装备词条、全量搜索流水线
-└── character_weapon_equipment/  # characters.json / weapons.json / equipments.json
+├── main.py                  # 本文件：启动 GUI（PySide6 版）
+├── gui/endfield_app.py      # 主窗口（双页签：计算页 / 高级页）
+├── data_loading/loader.py   # 角色、武器、装备 JSON 统一加载
+├── data_loading/facade.py   # 应用级数据门面（GUI / 对比 / 搜索）
+├── calc/                    # 乘区、单段伤害、装备词条、全量搜索流水线
+└── data/                    # characters.json / weapons.json / equipments.json
 
 功能说明：
 1. 角色 / 武器 / 装备选择与属性、乘区展示
-2. 单段伤害、乘区快照、多技能预览、全量遍历（单技能或手动次数加权，实验）
-3. 完整敌方参数面板、总伤结算 UI 等仍为后续功能
+2. 单段伤害、乘区快照、多技能预览、全量遍历（单技能或手动次数加权）
+3. 敌方参数面板、伤害仪表盘、计算历史与多方案对比
 
 使用方式：
     python main.py

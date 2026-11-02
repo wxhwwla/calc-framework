@@ -41,7 +41,7 @@
 
 ## 快速开始
 
-详见 [`docs/quickstart.md`](docs/quickstart.md)。
+详见 [`docs/quickstart.md`](../docs/quickstart.md)。
 
 ```python
 from calc_framework.config.adapter import AdapterPackage
@@ -386,5 +386,5 @@ python -c "from calc_framework.publish import build_catalog; build_catalog('dist
 
 ```bash
 cd framework
-python -m pytest tests/ -q    # 293 passed
+python -m pytest tests/ -q
 ```

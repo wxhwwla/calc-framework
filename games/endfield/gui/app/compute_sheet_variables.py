@@ -9,6 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from games.endfield.calc.damage.break_defense import vulnerability_bonus_from_break_defense
+from games.endfield.calc.damage.combo_bonus import combo_zone_multiplier
+
 # 用户输入变量定义（user_input 源）
 # 键格式：user_input.<中文变量名>
 ENDFIELD_USER_INPUT_VARIABLES: dict[str, dict[str, Any]] = {
@@ -99,19 +102,78 @@ ENDFIELD_USER_INPUT_VARIABLES: dict[str, dict[str, Any]] = {
     },
 }
 
-# 用户输入 → DAG context 映射
-# 键：user_input 变量路径
-# 值：(目标 DAG context 路径, 合并方式列表)
-# 合并方式："override" = 覆盖, "add" = 累加
-ENDFIELD_USER_CONTEXT_OVERRIDES: dict[str, tuple[str, list[str]]] = {
-    "user_input.敌人防御": ("enemy.防御", ["override"]),
-    "user_input.敌人抗性": ("computed.抗性", ["add"]),
-    "user_input.无视抗性": ("computed.无视抗性", ["override"]),
-    "user_input.失衡易伤系数": ("computed.失衡易伤", ["override"]),
-    "user_input.是否失衡": ("computed.失衡状态", ["override"]),
-    "user_input.是否真实伤害": ("computed.真实伤害", ["override"]),
-    "user_input.连击层数": ("computed.连击层数", ["override"]),
-    "user_input.额外暴击率": ("character.暴击率", ["add"]),
-    "user_input.额外暴击伤害": ("character.暴击伤害", ["add"]),
-    "user_input.额外伤害加成": ("computed.伤害加成", ["add"]),
-}
+# 用户输入 → DAG context 的直接映射。
+# 敌人抗性/失衡/真实伤害/连击/破防等需要换算为乘区值，统一由
+# ``apply_endfield_sheet_context`` 处理；这里只保留无需换算的直写项。
+ENDFIELD_USER_CONTEXT_OVERRIDES: dict[str, tuple[str, list[str]]] = {}
+
+
+def _as_float(values: dict[str, Any], key: str, default: float) -> float:
+    """读取数值，缺失或非法时返回默认值（0 是合法值）。"""
+    raw = values.get(key, default)
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _as_int(values: dict[str, Any], key: str, default: int) -> int:
+    """读取整数，缺失或非法时返回默认值。"""
+    raw = values.get(key, default)
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def apply_endfield_sheet_context(
+    context: dict[str, Any],
+    user_values: dict[str, Any],
+    *,
+    skill_type: str = "",
+    use_expected_crit: bool = True,
+) -> dict[str, Any]:
+    """把 ComputeSheet 的原始敌人输入换算为 DAG 需要的乘区值。
+
+    ComputeSheet 的 ``user_context_overrides`` 只能覆盖/累加，无法表达
+    “百分比抗性 → 抗性区乘数”这类派生关系。本函数作为 ``context_transform``
+    在 context 合并完成后执行。
+
+    Args:
+        context: 已合并 base_context 与用户输入的 DAG context。
+        user_values: ``ComputeSheet.read_user_inputs()`` 的返回值。
+        skill_type: 当前选中技能类型（战技/连携技/终结技），用于连击层数表。
+        use_expected_crit: 是否按期望暴击计算；否则暴击区固定为 1。
+
+    Returns:
+        处理后的 context（原地修改并返回）。
+    """
+    computed = context.setdefault("computed", {})
+    character = context.setdefault("character", {})
+    enemy = context.setdefault("enemy", {})
+
+    extra_crit_rate = _as_float(user_values, "user_input.额外暴击率", 0.0)
+    extra_crit_damage = _as_float(user_values, "user_input.额外暴击伤害", 0.0)
+    crit_rate = _as_float(character, "暴击率", 0.05) + extra_crit_rate
+    character["暴击伤害"] = _as_float(character, "暴击伤害", 0.5) + extra_crit_damage
+    character["暴击率"] = crit_rate if use_expected_crit else 0.0
+
+    enemy_resistance = _as_float(user_values, "user_input.敌人抗性", 0.0)
+    ignore_resistance = _as_float(user_values, "user_input.无视抗性", 0.0)
+    computed["抗性"] = 1.0 - enemy_resistance / 100.0 + ignore_resistance / 100.0
+
+    is_unbalanced = bool(user_values.get("user_input.是否失衡", False))
+    imbalance_coeff = _as_float(user_values, "user_input.失衡易伤系数", 1.3)
+    computed["失衡易伤"] = imbalance_coeff if is_unbalanced else 1.0
+
+    is_true_damage = bool(user_values.get("user_input.是否真实伤害", False))
+    enemy["防御"] = 0.0 if is_true_damage else _as_float(user_values, "user_input.敌人防御", 100.0)
+
+    combo_stacks = _as_int(user_values, "user_input.连击层数", 0)
+    computed["连击增伤"] = combo_zone_multiplier(skill_type, combo_stacks)
+
+    break_stacks = _as_int(user_values, "user_input.破防层数", 0)
+    computed["易伤"] = _as_float(computed, "易伤", 1.0) + vulnerability_bonus_from_break_defense(break_stacks)
+
+    computed["伤害加成"] = _as_float(computed, "伤害加成", 1.0) + _as_float(user_values, "user_input.额外伤害加成", 0.0)
+    return context

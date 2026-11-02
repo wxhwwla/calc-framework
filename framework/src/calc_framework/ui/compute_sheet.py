@@ -9,7 +9,7 @@ ComputeSheet 类的胶水代码，控件生成委托给 sheet_widgets，求值�
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from PySide6.QtCore import QObject, Qt, Signal
@@ -36,6 +36,9 @@ from .sheet_widgets import _ResponsiveGroupBox, create_control
 
 logger = get_logger(__name__)
 
+# 后处理钩子：(合并后的 context, 当前 user_input 值) -> context
+ContextTransform = Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]]
+
 
 class ComputeSheet(QObject):
     """声明式计算表主控制器。
@@ -54,6 +57,7 @@ class ComputeSheet(QObject):
         base_context: dict[str, Any] | None = None,
         parent: QWidget | None = None,
         user_context_overrides: dict[str, tuple[str, list[str]]] | None = None,
+        context_transform: ContextTransform | None = None,
     ):
         """user_context_overrides: {user_input_var_path: (target_dotted_path, [merge_keys])}
 
@@ -69,6 +73,12 @@ class ComputeSheet(QObject):
 
             → 将 user_input 值加到 character.暴击率上
 
+        context_transform: 可选的求值后处理钩子。在 base_context、user_input
+        值和覆盖规则全部合并之后调用，用于把原始输入换算成派生的乘区值
+        （例如百分比抗性 → 抗性区乘数）。返回值作为最终 DAG context。
+
+        base_context 中同名的 ``user_input.*`` 值会作为输入控件的初始值，
+        避免重新确认后控件与已确认配装不一致。
         """
         super().__init__(parent)
         self._dag_service = dag_service
@@ -76,6 +86,7 @@ class ComputeSheet(QObject):
         self._variables: dict[str, DAGVariable | dict[str, Any]] = dict(variables)
         self._base_context = base_context or {}
         self._user_context_overrides = user_context_overrides or {}
+        self._context_transform = context_transform
         self._context_overrides: dict[str, Any] = {}
         self._widget: QWidget | None = None
         self._output_labels: dict[str, QLabel] = {}
@@ -97,6 +108,8 @@ class ComputeSheet(QObject):
             self._user_context_overrides,
             self._context_overrides,
         )
+        if self._context_transform is not None:
+            context = self._context_transform(context, self.read_user_inputs())
         result = self._dag_service.evaluate(context)
         _do_update_outputs(result, self._layout, self._output_labels, self._output_formats)
         self.evaluated.emit(result)
@@ -142,6 +155,15 @@ class ComputeSheet(QObject):
         root_layout.addStretch()
         return root
 
+    def _base_context_value(self, path: str) -> Any:
+        """按点分路径读取 base_context 中的值；缺失时返回 None。"""
+        node: Any = self._base_context
+        for part in path.split("."):
+            if not isinstance(node, Mapping) or part not in node:
+                return None
+            node = node[part]
+        return node
+
     def _collect_input_items(self, sec: Section) -> list[tuple[str, QLabel, QWidget | None, ControlSpec]]:
         """收集 section 中的 input 项，用于响应式重排。"""
         items: list[tuple[str, QLabel, QWidget | None, ControlSpec]] = []
@@ -151,6 +173,10 @@ class ComputeSheet(QObject):
             spec = infer_control(var_path, var)
             if spec.widget == "none":
                 continue
+            if var.get("source") == "user_input":
+                seeded = self._base_context_value(var_path)
+                if seeded is not None:
+                    spec.default = seeded
             label = QLabel(spec.label)
             label.setToolTip(spec.description)
             widget = create_control(spec)

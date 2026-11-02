@@ -2,8 +2,10 @@
 screenshots/*.png
 screenshots/**/*.png
 
-# 报告文件（可选保留）
-# screenshots/*.md
+# 报告与乘区表（测试产物，不提交）
+screenshots/*.md
+screenshots/**/*.md
+screenshots/**/*.txt
 
 # Python 缓存
 __pycache__/

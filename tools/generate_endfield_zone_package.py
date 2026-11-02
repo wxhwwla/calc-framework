@@ -28,13 +28,9 @@
 
 from __future__ import annotations
 
-
 import json
-
 import zipfile
-
 from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -70,6 +66,8 @@ def _id() -> str:
 
 def _reset_counter() -> None:
     """重置节点 ID 计数器。"""
+
+    _counter[0] = 0
 
 
 def _graph(
@@ -656,19 +654,22 @@ def _ensure_ascii_for_json(obj: object) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2)
 
 
-def main() -> None:
-    """CLI 入口：生成终末地 15 乘区计算包 ZIP 文件。"""
+def build_package(zip_path: Path) -> Path:
+    """把 15 个乘区子图与顶层链图写入指定 ZIP 文件。
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    Args:
+        zip_path: 输出 ZIP 路径（父目录不存在时自动创建）。
 
-    zip_path = OUTPUT_DIR / f"{PACKAGE_NAME}.zip"
+    Returns:
+        实际写入的 ZIP 路径。
+    """
+
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         # ── 逐个写入乘区 JSON ──
 
         print("生成 15 个乘区子图...")
-
-        zone_files: list[str] = []
 
         for builder in ALL_ZONE_BUILDERS:
             zone_name, zone_desc, graph = builder()
@@ -676,8 +677,6 @@ def main() -> None:
             filename = f"{zone_name}.json"
 
             zf.writestr(filename, _ensure_ascii_for_json(graph))
-
-            zone_files.append(filename)
 
             print(f"  ✓ {zone_name} — {zone_desc}")
 
@@ -692,6 +691,14 @@ def main() -> None:
         zf.writestr(chain_filename, _ensure_ascii_for_json(chain))
 
         print(f"  ✓ {chain_filename}")
+
+    return zip_path
+
+
+def main() -> None:
+    """CLI 入口：生成终末地 15 乘区计算包 ZIP 文件。"""
+
+    zip_path = build_package(OUTPUT_DIR / f"{PACKAGE_NAME}.zip")
 
     print(f"\n✅ 包已生成: {zip_path}")
 

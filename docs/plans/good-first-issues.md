@@ -131,7 +131,7 @@ README.md 中部分中文内容在英文版中缺失或为机器翻译。逐段�
 
 1. 将每个任务复制为独立的 GitHub Issue
 2. 添加标签 `good first issue`（初级/中级）或 `help wanted`（高级）
-3. 在 Issue 正文开头标注：**"👋 欢迎贡献！请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)"**
+3. 在 Issue 正文开头标注：**"👋 欢迎贡献！请先阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md)"**
 4. 如果有贡献者在 Issue 下留言表示认领，及时回复确认
 
 ---

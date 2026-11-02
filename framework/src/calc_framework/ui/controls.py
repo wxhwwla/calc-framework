@@ -51,7 +51,7 @@ def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
 
     widget = ui_override.get("widget")
 
-    step = ui_override.get("step")
+    step = ui_override.get("step", variable.get("step"))
 
     options = ui_override.get("options")
 

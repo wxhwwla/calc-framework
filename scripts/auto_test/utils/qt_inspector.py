@@ -16,7 +16,50 @@ from typing import Any
 from pywinauto import Application
 from pywinauto.controls.uiawrapper import UIAWrapper
 
+from .window_match import WindowEntry, match_window
+
 logger = logging.getLogger(__name__)
+
+
+def _enum_top_level_windows() -> list[WindowEntry]:
+    """用 Win32 EnumWindows 枚举可见顶层窗口。
+
+    UIA 逐个窗口读取标题时，只要有一个无关窗口的 provider 挂起，
+    整个枚举就会阻塞数十秒。Win32 API 不受影响。
+
+    Returns:
+        ``(hwnd, 标题, 类名)`` 列表。
+    """
+    import win32gui
+
+    windows: list[WindowEntry] = []
+
+    def _callback(hwnd: int, _extra: object) -> bool:
+        if win32gui.IsWindowVisible(hwnd):
+            title = win32gui.GetWindowText(hwnd)
+            if title:
+                windows.append((hwnd, title, win32gui.GetClassName(hwnd)))
+        return True
+
+    win32gui.EnumWindows(_callback, None)
+    return windows
+
+
+def find_visible_window(
+    title: str,
+    *,
+    class_name: str | None = None,
+) -> WindowEntry | None:
+    """查找当前可见的顶层窗口（Win32，不触发 UIA）。
+
+    Args:
+        title: 标题子串。
+        class_name: 可选的精确类名过滤。
+
+    Returns:
+        匹配的 ``(hwnd, 标题, 类名)``；未找到时返回 ``None``。
+    """
+    return match_window(_enum_top_level_windows(), title, class_name=class_name)
 
 
 @dataclass
@@ -79,23 +122,24 @@ class QtInspector:
             是否连接成功
         """
         self._window_title = window_title
-        start_time = time.time()
+        deadline = time.monotonic() + timeout
 
-        while time.time() - start_time < timeout:
+        while time.monotonic() < deadline:
             try:
-                # 使用 UIA 后端连接
-                self._app = Application(backend="uia").connect(
-                    title_re=f".*{window_title}.*",
-                    timeout=5,
+                entry = match_window(
+                    _enum_top_level_windows(),
+                    window_title,
+                    class_name=class_name,
                 )
-                self._main_window = self._app.window(title_re=f".*{window_title}.*")
-
-                if self._main_window.exists():
-                    logger.info("已连接到窗口: %s", window_title)
+                if entry is not None:
+                    hwnd, text, _ = entry
+                    self._app = Application(backend="uia").connect(handle=hwnd)
+                    self._main_window = self._app.window(handle=hwnd)
+                    logger.info("已连接到窗口: %s (%s)", window_title, text)
                     return True
             except Exception as e:
                 logger.debug("等待窗口出现... (%s)", e)
-                time.sleep(1)
+            time.sleep(1)
 
         logger.error("超时：未找到窗口 '%s'", window_title)
         return False
@@ -220,7 +264,19 @@ class QtInspector:
         Returns:
             是否成功
         """
+        # 优先用 UIA Invoke：不依赖窗口是否在前台，避免鼠标点到被遮挡的位置
         try:
+            control.invoke()
+            time.sleep(wait)
+            return True
+        except Exception as e:
+            logger.debug("UIA Invoke 失败，回退 click_input: %s", e)
+
+        try:
+            try:
+                self._main_window.set_focus()
+            except Exception:
+                pass
             control.click_input()
             time.sleep(wait)
             return True

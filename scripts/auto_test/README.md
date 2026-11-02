@@ -54,18 +54,20 @@ python scripts/auto_test/packaged_test.py   # 打包后测试
 - 检查功能完整性
 
 ### 第 3 层：打包后 exe
-- 运行 `scripts/main_build.py --target calculator`
-- 启动 dist/ 下的 exe
-- 同样用 pywinauto 测试
-- 检查打包后是否正常
+- 运行 `scripts/main_build.py --target launcher`
+- 直接启动 `Game Calc Platform.exe`（不带参数），验证启动器 → 自动拉起终末地链路
+- 等待启动器与终末地真实窗口，记录启动耗时
+- 点击「确认选择」，等待按钮变为「已确认」后读取乘区表
+- 乘区表内容输出到 `screenshots/packaged/zone_table.txt`
 
 ## 输出
 
 - 截图：`scripts/auto_test/screenshots/`
-- 报告：`scripts/auto_test/screenshots/report.md`
+- 报告：`scripts/auto_test/screenshots/summary_report.md`（分层报告在 `screenshots/{web,desktop,packaged}/report.md`）
 
 ## 注意事项
 
 1. **桌面测试需要显示器** — pywinauto 需要实际的 GUI 环境
 2. **首次运行需安装 Cypress** — `cd web/frontend && npx cypress install`
 3. **打包测试耗时较长** — PyInstaller 打包可能需要 5-10 分钟
+4. **不要用不读取的管道承接 exe 输出** — 冻结版 windowed exe 仍会向 stdout 写 INFO 日志；`subprocess.PIPE` 写满后 UI 线程会阻塞在 logging 锁上，窗口变成「未响应」。`packaged_test.py` 使用 `DEVNULL`，应用日志见 `logs/`

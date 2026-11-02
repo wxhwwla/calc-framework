@@ -39,7 +39,7 @@ export default function SearchBrowserDialog({ open, onClose, adapter, context }:
       const data = await r.json();
       const hits: SearchHit[] = Array.isArray(data) ? data : data.results ?? [];
       setResults(hits);
-    } catch (e) {
+    } catch {
       setResults([]);
     } finally {
       setLoading(false);
