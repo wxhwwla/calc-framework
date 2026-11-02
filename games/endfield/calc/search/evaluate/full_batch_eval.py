@@ -36,6 +36,33 @@ def _rust_full_batch_importable() -> bool:
     return hasattr(_rs, "evaluate_full_batch_py")
 
 
+def _scope_effect_filter(base_context: Any) -> Any:
+    """构造与 ``rust_bridge`` 同语义的作用域过滤器。
+
+    全批量把效果压平成 ``(type, value)`` 会丢失 ``damage_types`` /
+    ``skill_types`` / ``require_unbalanced``；这里先按当前上下文过滤，
+    避免把终结技/其他伤害类型的效果错误计入战技搜索。
+    """
+    from games.endfield.calc.damage.engine.helpers import _match_scope
+    from games.endfield.calc.damage.engine.types import KNOWN_EFFECT_TYPES
+
+    cache: dict[tuple[Any, ...], bool] = {}
+
+    def _keep(effect: Any) -> bool:
+        effect_type = effect.effect_type
+        if effect_type not in KNOWN_EFFECT_TYPES:
+            return False
+        key = (effect_type, effect.damage_types, effect.skill_types, effect.require_unbalanced)
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+        result = _match_scope(base_context, effect)
+        cache[key] = result
+        return result
+
+    return _keep
+
+
 def _has_active_abnormal_counts(search_eval: SearchEvalContext | None) -> bool:
     if search_eval is None:
         return False
@@ -122,13 +149,15 @@ def evaluate_full_batch_rust(
     from games.endfield.calc.equipment.affix import aggregate_loadout_modifiers
     from games.endfield.calc.equipment.system import build_four_slot_loadout
 
+    scope_keep = _scope_effect_filter(base_context)
+
     weapon_names: list[str] = []
     weapon_final_attacks: list[float] = []
     weapon_effects: list[list[tuple[str, float]]] = []
     for weapon in weapons:
         weapon_names.append(weapon.name)
         weapon_final_attacks.append(weapon.final_attack)
-        effects = [(eff.effect_type, float(eff.value)) for eff in weapon.effects]
+        effects = [(eff.effect_type, float(eff.value)) for eff in weapon.effects if scope_keep(eff)]
         weapon_effects.append(effects)
 
     chest_list, gloves_list, acc_a_list, acc_b_list = resolve_equipment_slot_lists(equipment_catalog)
@@ -170,7 +199,7 @@ def evaluate_full_batch_rust(
             equipment_acc_a_names.append(acc_a.get("名称", ""))
             equipment_acc_b_names.append(acc_b.get("名称", ""))
 
-            effects = [(eff.effect_type, float(eff.value)) for eff in equip_effects]
+            effects = [(eff.effect_type, float(eff.value)) for eff in equip_effects if scope_keep(eff)]
             equipment_effects.append(effects)
             equipment_flat_stats.append(dict(flat_stats))
             equipment_atk_percents.append(float(atk_percent))

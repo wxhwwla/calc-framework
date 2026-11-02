@@ -94,18 +94,19 @@ def _build_scope_filter(ctx: Any) -> Any:
     from games.endfield.calc.damage.engine.helpers import _match_scope
     from games.endfield.calc.damage.engine.types import KNOWN_EFFECT_TYPES
 
-    # 缓存每种 effect_type 是否通过过滤
-    _type_pass_cache: dict[str, bool] = {}
+    # 按「类型 + 作用域」缓存：同一类型的不同效果可能限定不同技能/伤害类型
+    _scope_pass_cache: dict[tuple[Any, ...], bool] = {}
 
     def _filter(effect: Any) -> bool:
         et = effect.effect_type
         if et not in KNOWN_EFFECT_TYPES:
             return False
-        cached = _type_pass_cache.get(et)
+        key = (et, effect.damage_types, effect.skill_types, effect.require_unbalanced)
+        cached = _scope_pass_cache.get(key)
         if cached is not None:
             return cached
         result = _match_scope(ctx, effect)
-        _type_pass_cache[et] = result
+        _scope_pass_cache[key] = result
         return result
 
     return _filter

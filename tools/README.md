@@ -15,6 +15,7 @@
 | 命令 | 用途 | 说明 |
 |------|------|------|
 | `python tools/quality/check_layout.py` | 仓库布局门禁（目录宽度、文件行数） | 见 `check_layout.py` |
+| `python -m tools.quality.search_benchmark` | 搜索性能基准（固定 973,728 组合） | Rust 开/关耗时、内存、TopN、取消/续跑；见 [P3-01 结果](../docs/P3-01-搜索性能基准结果.md) |
 | `python tools/quality/run_scancode.py` | 权威许可证/版权扫描（逐个目录，16 进程） | 输出 `scan_report.json` |
 | `python tools/quality/check_code_origin.py` | 轻量 AI 代码来源/版权检测 | 1 秒出结果，50 MB 内存 |
 | `python tools/quality/generate_secrets_baseline.py generate` | 重建 `.secrets.baseline`（detect-secrets） | CI 与 pre-commit 共用 |

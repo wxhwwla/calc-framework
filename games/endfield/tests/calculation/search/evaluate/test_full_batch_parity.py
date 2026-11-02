@@ -443,5 +443,172 @@ class TestFullBatchExpandedParity(unittest.TestCase):
             self.assertAlmostEqual(a.final_damage, b.final_damage, places=4)
 
 
+@unittest.skipUnless(_full_batch_symbol_available(), "rust_search 无 evaluate_full_batch_py")
+class TestFullBatchScopedEffectParity(unittest.TestCase):
+    """装备效果的作用域（技能类型/伤害类型）必须与 evaluate_task 一致。"""
+
+    def tearDown(self) -> None:
+        os.environ.pop("CALC_RUST_FULL_BATCH", None)
+        os.environ.pop("RUST_SEARCH_FALLBACK", None)
+
+    def test_out_of_scope_skill_effect_is_ignored(self) -> None:
+        from games.endfield.calc.equipment.system import build_runtime_equipment_from_local_record
+        from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
+
+        def eq(name: str, kind: str, effects: list[str]) -> dict:
+            return build_runtime_equipment_from_local_record(
+                {
+                    "名称": name,
+                    "装备种类": kind,
+                    "套装": "测",
+                    "效果": effects,
+                    "三件套效果": [],
+                    "属性词条": [],
+                }
+            )
+
+        # 该效果只作用于终结技，基准技能为战技 → 两条路径都应忽略它
+        catalog = {
+            "chest": [eq("胸终", "护甲", ["终结技伤害加成100%"])],
+            "gloves": [eq("手", "护手", [])],
+            "accessories": [eq("件", "配件", [])],
+        }
+        char = {"名称": "测角", "基础攻击力": [150.0] * 90}
+        weapon_data = {"名称": "测武", "类型": "单手剑", "基础攻击力": [250.0] * 90}
+        bare = final_attack_details_for_loadout(
+            character=char,
+            weapon=weapon_data,
+            char_level=90,
+            weapon_level=90,
+        )
+        weapons = [WeaponCandidate(name="测武", final_attack=float(bare["final_attack"]))]
+        search_eval = SearchEvalContext(
+            char_data=char,
+            char_level=90,
+            weapon_level=90,
+            trust_level=0,
+            weapon_data_by_name={"测武": weapon_data},
+        )
+        base = DamageContext(
+            final_attack=0.0,
+            skill_multiplier=2.0,
+            skill_type="战技",
+            damage_type="物理",
+            enemy_defense=100.0,
+            crit_rate=0.0,
+            crit_damage=0.5,
+        )
+        config = OptimizerConfig(top_n=5, prune_non_beneficial=False, warn_on_unfiltered=False)
+        tasks = list(
+            enumerate_optimizer_tasks(
+                base_context=base,
+                weapons=weapons,
+                equipment_catalog=catalog,
+                config=config,
+            )[0]
+        )
+        self.assertEqual(len(tasks), 1)
+
+        ref = evaluate_task(
+            base_context=base,
+            crit_mode="non_crit",
+            task=tasks[0],
+            search_eval=search_eval,
+        )
+        batch = evaluate_full_batch_rust(
+            weapons=weapons,
+            equipment_catalog=catalog,
+            char_data=char,
+            char_level=90,
+            base_context=base,
+            top_n=1,
+            crit_mode="non_crit",
+            allow_duplicate_accessory=True,
+            search_eval=search_eval,
+        )
+
+        self.assertEqual(len(batch), 1)
+        self.assertAlmostEqual(batch[0].final_damage, ref.final_damage, places=4)
+
+    def test_mixed_scope_effects_are_filtered_per_effect(self) -> None:
+        """同一效果类型的不同作用域必须逐个判断，不能按类型缓存整体结果。"""
+        from games.endfield.calc.equipment.system import build_runtime_equipment_from_local_record
+        from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
+
+        def eq(name: str, kind: str, effects: list[str]) -> dict:
+            return build_runtime_equipment_from_local_record(
+                {
+                    "名称": name,
+                    "装备种类": kind,
+                    "套装": "测",
+                    "效果": effects,
+                    "三件套效果": [],
+                    "属性词条": [],
+                }
+            )
+
+        catalog = {
+            "chest": [eq("胸终", "护甲", ["终结技伤害加成100%"])],
+            "gloves": [eq("手战", "护手", ["战技伤害加成50%"])],
+            "accessories": [eq("件", "配件", [])],
+        }
+        char = {"名称": "测角", "基础攻击力": [150.0] * 90}
+        weapon_data = {"名称": "测武", "类型": "单手剑", "基础攻击力": [250.0] * 90}
+        bare = final_attack_details_for_loadout(
+            character=char,
+            weapon=weapon_data,
+            char_level=90,
+            weapon_level=90,
+        )
+        weapons = [WeaponCandidate(name="测武", final_attack=float(bare["final_attack"]))]
+        search_eval = SearchEvalContext(
+            char_data=char,
+            char_level=90,
+            weapon_level=90,
+            trust_level=0,
+            weapon_data_by_name={"测武": weapon_data},
+        )
+        base = DamageContext(
+            final_attack=0.0,
+            skill_multiplier=2.0,
+            skill_type="战技",
+            damage_type="物理",
+            enemy_defense=100.0,
+            crit_rate=0.0,
+            crit_damage=0.5,
+        )
+        config = OptimizerConfig(top_n=5, prune_non_beneficial=False, warn_on_unfiltered=False)
+        tasks = list(
+            enumerate_optimizer_tasks(
+                base_context=base,
+                weapons=weapons,
+                equipment_catalog=catalog,
+                config=config,
+            )[0]
+        )
+        self.assertEqual(len(tasks), 1)
+
+        ref = evaluate_task(
+            base_context=base,
+            crit_mode="non_crit",
+            task=tasks[0],
+            search_eval=search_eval,
+        )
+        batch = evaluate_full_batch_rust(
+            weapons=weapons,
+            equipment_catalog=catalog,
+            char_data=char,
+            char_level=90,
+            base_context=base,
+            top_n=1,
+            crit_mode="non_crit",
+            allow_duplicate_accessory=True,
+            search_eval=search_eval,
+        )
+
+        self.assertEqual(len(batch), 1)
+        self.assertAlmostEqual(batch[0].final_damage, ref.final_damage, places=4)
+
+
 if __name__ == "__main__":
     unittest.main()
