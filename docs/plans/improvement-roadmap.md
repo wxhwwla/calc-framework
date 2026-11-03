@@ -166,7 +166,7 @@
 | 独立入口清理 | ✅ 已完成 | `scripts/` 仅 3 个有效入口（§4.140–4.148） |
 | `_version.py` 统一 | ✅ 已完成 | 版本唯一源头（§4.144） |
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
-| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 等大文件仍需盯（目标 ≤400 / 硬顶 500） |
+| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py`（590 → 327）、`ArknightsDamageApp.py`（802 → 234）、`dev_toolkit/pages.py`（1048 → 35，拆为 5 个页面模块）与 `graph_editor/__main__.py`（611 → 392，拆入 `app/` 子包）已拆分；其余 >500 行文件继续盯（目标 ≤400 / 硬顶 500） |
 | 目录宽度 | 🟢 贴顶 | 2026-10-24：`tools/`/`scripts/`/`api/` = **19**（ADR-0001 硬顶 20） |
 | CI 覆盖门槛 | ⚠️ 双轨 | **workflow** Game 60 / Framework 65；**pyproject** 75 / 80 — CI 以 workflow 为准 |
 | Desktop GUI i18n | 🟢 基本完成 | `i18n_data` **1046** 键；边角/docs 摘录仍开放 |

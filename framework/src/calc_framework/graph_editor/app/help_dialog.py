@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from calc_framework.ui.i18n import tr
 
-from .help_content import HelpSection, build_help_tree
+from ..help_content import HelpSection, build_help_tree
 
 
 class HelpDialog(QDialog):

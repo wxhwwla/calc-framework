@@ -68,7 +68,8 @@ games/endfield/
 │   ├── shared/                # 共享模块（属性列、计算历史、配装对比）
 │   ├── shell/                 # 主窗口 & 控制栏
 │   ├── endfield_app.py        # 主应用窗口
-│   ├── endfield_actions.py    # 操作编排
+│   ├── endfield_actions.py    # 操作编排（计算/信号）
+│   ├── endfield_actions_dialogs.py # 对话框/预设/工具动作
 │   ├── endfield_search.py     # 搜索集成
 │   └── endfield_shell.py      # Shell 启动
 ├── tests/                     # pytest 单元测试

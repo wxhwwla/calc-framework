@@ -4,7 +4,7 @@
 
 from calc_framework.ui.i18n import tr
 
-from .help_content import HelpSection
+from ..help_content import HelpSection
 
 
 def _operations() -> HelpSection:
