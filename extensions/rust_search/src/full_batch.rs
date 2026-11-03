@@ -35,21 +35,16 @@ pub struct EquipmentCombo {
     pub atk_percent: f64,
 }
 
-/// 角色数据
+/// 角色数据（全批量仅使用基础攻击力）
 #[derive(Clone, Debug)]
 pub struct CharData {
-    pub name: String,
-    pub level: i32,
     pub base_attack: f64,
-    pub base_hp: f64,
-    pub base_defense: f64,
 }
 
 /// 计算参数
 #[derive(Clone, Debug)]
 pub struct CalcParams {
     pub skill_multiplier: f64,
-    pub damage_type: String,
     pub skill_type: String,
     pub is_unbalanced: bool,
     pub is_true_damage: bool,
@@ -64,7 +59,6 @@ pub struct CalcParams {
     pub imbalance_damage_bonus: f64,
     pub other_damage_bonus: f64,
     pub combo_stacks: i32,
-    pub break_defense_stacks: i32,
     pub base_damage_bonus: f64,
     /// 暴击模式："non_crit" / "always_crit" / "expected"
     pub crit_mode: String,
@@ -305,7 +299,6 @@ mod tests {
     fn default_params() -> CalcParams {
         CalcParams {
             skill_multiplier: 2.0,
-            damage_type: "物理".to_string(),
             skill_type: "战技".to_string(),
             is_unbalanced: false,
             is_true_damage: false,
@@ -320,7 +313,6 @@ mod tests {
             imbalance_damage_bonus: 0.0,
             other_damage_bonus: 0.0,
             combo_stacks: 0,
-            break_defense_stacks: 0,
             base_damage_bonus: 0.0,
             crit_mode: "non_crit".to_string(),
             damage_pipeline: "normal".to_string(),
@@ -328,13 +320,7 @@ mod tests {
     }
 
     fn default_char() -> CharData {
-        CharData {
-            name: "测试角色".to_string(),
-            level: 90,
-            base_attack: 500.0,
-            base_hp: 10000.0,
-            base_defense: 500.0,
-        }
+        CharData { base_attack: 500.0 }
     }
 
     fn make_weapon(name: &str, final_attack: f64, effects: Vec<(String, f64)>) -> WeaponData {

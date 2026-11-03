@@ -493,6 +493,9 @@ fn evaluate_full_batch_py(
     damage_pipeline: &str,
     precomputed_final_attacks: Vec<f64>,
 ) -> PyResult<Vec<(String, f64, std::collections::HashMap<String, String>)>> {
+    // 这些 FFI 参数为兼容 Python 调用方而保留；全批量计算不使用。
+    let _ = (char_name, char_level, damage_type, break_defense_stacks);
+
     // 构建武器数据
     let weapons: Vec<full_batch::WeaponData> = weapon_names
         .into_iter()
@@ -529,17 +532,12 @@ fn evaluate_full_batch_py(
 
     // 构建角色数据
     let char_data = full_batch::CharData {
-        name: char_name,
-        level: char_level,
         base_attack: char_base_attack,
-        base_hp: 0.0,
-        base_defense: 0.0,
     };
 
     // 构建计算参数
     let params = full_batch::CalcParams {
         skill_multiplier,
-        damage_type,
         skill_type,
         is_unbalanced,
         is_true_damage,
@@ -554,7 +552,6 @@ fn evaluate_full_batch_py(
         imbalance_damage_bonus,
         other_damage_bonus,
         combo_stacks,
-        break_defense_stacks,
         base_damage_bonus,
         crit_mode: crit_mode.to_string(),
         damage_pipeline: damage_pipeline.to_string(),

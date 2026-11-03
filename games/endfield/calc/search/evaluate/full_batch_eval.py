@@ -101,28 +101,73 @@ def _precompute_final_attacks_for_batch(
     equipment_atk_percents: list[float],
     search_eval: SearchEvalContext,
 ) -> list[float] | None:
-    """按武器×装备顺序预计算最终攻击力；缺武器数据时返回 None（回退 SoA）。"""
+    """按武器×装备顺序预计算最终攻击力；缺武器数据时返回 None（回退 SoA）。
+
+    最终攻击力只依赖装备的 ``攻击力``、角色主/副能力值、``攻击力%`` 四个数
+    （其余装备词条不参与）。大量装备组合共享同一签名，因此按
+    ``(攻击力, 主能力, 副能力, 攻击力%)`` 记忆化，避免重复走完整乘区链；
+    武器技能选用状态也只解析一次。缓存按武器分隔，防止跨武器复用结果。
+    """
     from games.endfield.calc.loadout.attack_eval import final_attack_details_for_loadout
+
+    char_data = search_eval.char_data
+    main_attr = char_data.get("主能力", "")
+    sub_attr = char_data.get("副能力", "")
+    weapon_normal_levels = list(search_eval.weapon_normal_levels)
+    weapon_special_states = list(search_eval.weapon_special_states)
 
     attacks: list[float] = []
     for weapon in weapons:
         weapon_data = search_eval.weapon_data_by_name.get(weapon.name)
         if weapon_data is None:
             return None
+        skill_kwargs = _weapon_skill_kwargs(
+            weapon_data,
+            weapon_normal_levels=weapon_normal_levels,
+            weapon_special_states=weapon_special_states,
+        )
+        cache: dict[tuple[float, float, float, float], float] = {}
         for flat_stats, atk_percent in zip(equipment_flat_stats, equipment_atk_percents):
+            signature = (
+                float(flat_stats.get("攻击力", 0.0)),
+                float(flat_stats.get(main_attr, 0.0)) if main_attr else 0.0,
+                float(flat_stats.get(sub_attr, 0.0)) if sub_attr else 0.0,
+                float(atk_percent),
+            )
+            cached = cache.get(signature)
+            if cached is not None:
+                attacks.append(cached)
+                continue
             details = final_attack_details_for_loadout(
-                character=search_eval.char_data,
+                character=char_data,
                 weapon=weapon_data,
                 char_level=search_eval.char_level,
                 weapon_level=search_eval.weapon_level,
                 trust_level=search_eval.trust_level,
-                weapon_normal_levels=list(search_eval.weapon_normal_levels),
-                weapon_special_states=list(search_eval.weapon_special_states),
+                skill_calculation_kwargs=skill_kwargs,
                 equipment_stat_bonus=flat_stats,
                 equipment_attack_percent=atk_percent,
             )
-            attacks.append(float(details["final_attack"]))
+            final_attack = float(details["final_attack"])
+            cache[signature] = final_attack
+            attacks.append(final_attack)
     return attacks
+
+
+def _weapon_skill_kwargs(
+    weapon_data: dict[str, Any],
+    *,
+    weapon_normal_levels: list[int],
+    weapon_special_states: list[dict[str, int]],
+) -> dict[str, Any]:
+    """解析武器技能选用状态为乘区关键字参数（每把武器一次）。"""
+    from games.endfield.calc.skills.weapon_selection import WeaponSkillSelection
+
+    return WeaponSkillSelection.from_preset_view(
+        weapon_data,
+        weapon_normal_levels=weapon_normal_levels,
+        weapon_special_states=weapon_special_states,
+    ).calculation_kwargs()
 
 
 def evaluate_full_batch_rust(
