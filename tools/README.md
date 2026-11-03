@@ -8,6 +8,7 @@
 |--------|------|----------|
 | `data_sandbox/` | 数据沙箱 — 隔离测试自定义游戏数据 | 见下表 |
 | `bwiki_scout/` | BWIKI 侦察、对比、同步到本地 JSON/seed | 见下表 |
+| `wiki_scout/` | 模块化 Wiki 数据采集（华法琳 / 无尽的拉格朗日） | `python -m tools.wiki_scout list` |
 | `audit/` | 一次性审计 Issue 脚本 | `.\tools\audit\create_audit_issues.ps1` |
 | `calc_mcp/` | MCP 计算器构建服务器（供宿主 AI 调用） | `python -m tools.calc_mcp --project-dir .` |
 
@@ -51,5 +52,21 @@
 
 - 缓存目录：`tools/bwiki_scout/output/`（已 gitignore，勿提交）
 - 详细说明：[bwiki_scout/README.md](bwiki_scout/README.md)、[CACHE.md](bwiki_scout/CACHE.md)
+
+**`wiki_scout/` 常用命令**（均在 `[根]` 执行）：
+
+| 命令 | 说明 |
+|------|------|
+| `python -m tools.wiki_scout list` | 列出已注册数据源 |
+| `python -m tools.wiki_scout run all` | 抓取并解析全部数据源 |
+| `python -m tools.wiki_scout run warfarin --limit 5` | 华法琳 Wiki：终末地干员/武器/装备 |
+| `python -m tools.wiki_scout run wjdlglr` | 无尽的拉格朗日 Wiki：225 艘舰船及武器 |
+| `python -m tools.wiki_scout fetch <provider> --refresh` | 仅抓取原始响应（写入 `raw.json`） |
+| `python -m tools.wiki_scout parse <provider>` | 仅解析已有 `raw.json`（离线） |
+
+- 产物：`tools/wiki_scout/output/<provider>/{raw.json,<provider>.json}`（已 gitignore）
+- 新增数据源：`providers/` 下继承 `BaseProvider`（`fetch` + `parse`），用 `@register_provider` 注册，并在 `providers/__init__.py` 导入
+- 测试：`python -m pytest tools/tests -q -k wiki_scout`
+- 字段口径与扩展说明：[wiki_scout/README.md](wiki_scout/README.md)
 
 GitHub 上传/下载脚本仍在 `[根]`：`github_upload_module.py`、`github_download_module.py`。

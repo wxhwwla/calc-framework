@@ -1,0 +1,248 @@
+{
+  "operators": [
+    {
+      "slug": "lifeng",
+      "id": "chr_0015_lifeng",
+      "name": "黎风",
+      "rarity": 6,
+      "charTypeId": "Physical",
+      "profession": "近卫",
+      "professionId": 0,
+      "weaponType": 5,
+      "label": "6★ 近卫 干员"
+    },
+    {
+      "slug": "endministrator",
+      "id": "chr_0003_endminf",
+      "name": "管理员",
+      "rarity": 6,
+      "charTypeId": "Physical",
+      "profession": "近卫",
+      "professionId": 0,
+      "weaponType": 1,
+      "label": "6★ 近卫 干员"
+    },
+    {
+      "slug": "chen-qianyu",
+      "id": "chr_0005_chen",
+      "name": "陈千语",
+      "rarity": 5,
+      "charTypeId": "Physical",
+      "profession": "近卫",
+      "professionId": 0,
+      "weaponType": 1,
+      "label": "5★ 近卫 干员"
+    }
+  ],
+  "weapons": [
+    {
+      "id": "wpn_claym_0003",
+      "slug": "industry-01",
+      "name": "工业零点一",
+      "iconId": "wpn_claym_0003",
+      "rarity": 4,
+      "weaponType": 3,
+      "weaponTags": [
+        "attr_str",
+        "attr_atk",
+        "tactic"
+      ]
+    },
+    {
+      "id": "wpn_lance_0004",
+      "slug": "chimeric-justice",
+      "name": "嵌合正义",
+      "iconId": "wpn_lance_0004",
+      "rarity": 5,
+      "weaponType": 5,
+      "weaponTags": [
+        "attr_str",
+        "attr_usp",
+        "break"
+      ]
+    },
+    {
+      "id": "wpn_lance_0008",
+      "slug": "aggeloslayer",
+      "name": "天使杀手",
+      "iconId": "wpn_lance_0008",
+      "rarity": 4,
+      "weaponType": 5,
+      "weaponTags": [
+        "attr_will",
+        "attr_magicdam",
+        "tactic"
+      ]
+    }
+  ],
+  "gear": [
+    {
+      "slug": "item_equip_t0_parts_tundra01_body_01",
+      "id": "item_equip_t0_parts_tundra01_body_01",
+      "name": "简易护甲",
+      "iconId": "item_equip_t0_parts_tundra01_body_01",
+      "rarity": 1,
+      "minWearLv": 10,
+      "partType": 0,
+      "suitID": "",
+      "displayBaseAttrModifier": {
+        "attrIndex": 0,
+        "attrType": 3,
+        "attrValue": 8,
+        "compositeAttr": "",
+        "enhanceGuaranteeTimesRuleId": "",
+        "enhancedAttrIndex": 0,
+        "enhancedAttrValues": [],
+        "modifierType": 5,
+        "packAttrType": ""
+      },
+      "displayAttrModifiers": [
+        {
+          "attrIndex": 1,
+          "attrType": 39,
+          "attrValue": 15,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 1,
+          "enhancedAttrValues": [],
+          "modifierType": 5,
+          "packAttrType": "Str"
+        },
+        {
+          "attrIndex": 2,
+          "attrType": 40,
+          "attrValue": 10,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 2,
+          "enhancedAttrValues": [],
+          "modifierType": 5,
+          "packAttrType": "Agi"
+        },
+        {
+          "attrIndex": 3,
+          "attrType": 1,
+          "attrValue": 46.3273721859878,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 3,
+          "enhancedAttrValues": [],
+          "modifierType": 7,
+          "packAttrType": "MaxHp"
+        }
+      ]
+    },
+    {
+      "slug": "item_equip_t0_parts_tundra01_body_02",
+      "id": "item_equip_t0_parts_tundra01_body_02",
+      "name": "简易护服",
+      "iconId": "item_equip_t0_parts_tundra01_body_02",
+      "rarity": 1,
+      "minWearLv": 10,
+      "partType": 0,
+      "suitID": "",
+      "displayBaseAttrModifier": {
+        "attrIndex": 0,
+        "attrType": 3,
+        "attrValue": 8,
+        "compositeAttr": "",
+        "enhanceGuaranteeTimesRuleId": "",
+        "enhancedAttrIndex": 0,
+        "enhancedAttrValues": [],
+        "modifierType": 5,
+        "packAttrType": ""
+      },
+      "displayAttrModifiers": [
+        {
+          "attrIndex": 1,
+          "attrType": 41,
+          "attrValue": 15,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 1,
+          "enhancedAttrValues": [],
+          "modifierType": 5,
+          "packAttrType": "Wisd"
+        },
+        {
+          "attrIndex": 2,
+          "attrType": 42,
+          "attrValue": 10,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 2,
+          "enhancedAttrValues": [],
+          "modifierType": 5,
+          "packAttrType": "Will"
+        },
+        {
+          "attrIndex": 3,
+          "attrType": 1,
+          "attrValue": 46.3273721859878,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 3,
+          "enhancedAttrValues": [],
+          "modifierType": 7,
+          "packAttrType": "MaxHp"
+        }
+      ]
+    },
+    {
+      "slug": "item_equip_t0_parts_tundra01_hand_01",
+      "id": "item_equip_t0_parts_tundra01_hand_01",
+      "name": "简易手甲",
+      "iconId": "item_equip_t0_parts_tundra01_hand_01",
+      "rarity": 1,
+      "minWearLv": 10,
+      "partType": 1,
+      "suitID": "",
+      "displayBaseAttrModifier": {
+        "attrIndex": 0,
+        "attrType": 3,
+        "attrValue": 6,
+        "compositeAttr": "",
+        "enhanceGuaranteeTimesRuleId": "",
+        "enhancedAttrIndex": 0,
+        "enhancedAttrValues": [],
+        "modifierType": 5,
+        "packAttrType": ""
+      },
+      "displayAttrModifiers": [
+        {
+          "attrIndex": 1,
+          "attrType": 39,
+          "attrValue": 11,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 1,
+          "enhancedAttrValues": [],
+          "modifierType": 5,
+          "packAttrType": "Str"
+        },
+        {
+          "attrIndex": 2,
+          "attrType": 40,
+          "attrValue": 7,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 2,
+          "enhancedAttrValues": [],
+          "modifierType": 5,
+          "packAttrType": "Agi"
+        },
+        {
+          "attrIndex": 3,
+          "attrType": 1,
+          "attrValue": 77.21228697664634,
+          "compositeAttr": "",
+          "enhanceGuaranteeTimesRuleId": "",
+          "enhancedAttrIndex": 3,
+          "enhancedAttrValues": [],
+          "modifierType": 7,
+          "packAttrType": "MaxHp"
+        }
+      ]
+    }
+  ]
+}

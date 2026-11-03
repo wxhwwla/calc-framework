@@ -91,7 +91,7 @@ Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [
 │   ├── endfield/                 #   Endfield damage calculator (calc + gui + data + tests)
 │   └── arknights/                #   Arknights calculator (DAG + GUI + tests)
 ├── docs/                         # Project documentation
-├── tools/                        # Dev tools (BWIKI scout, data pipeline, OCR, designer, calc_mcp)
+├── tools/                        # Dev tools (BWIKI/wiki_scout, data pipeline, OCR, designer, calc_mcp)
 ├── scripts/                      # Entry scripts (launcher, build, dev toolkit)
 ├── release_bundle/               # Release layout config
 ├── installer/                    # NSIS installer
