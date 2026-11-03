@@ -1,0 +1,49 @@
+# ADR-0028：MCP 计算器构建服务器
+
+- 状态：已接受
+- 日期：2026-11-03
+- 相关：ADR-0006（CalcPack 与设计器）、ADR-0023（标准游戏包架构）
+
+## 背景
+
+开发者克隆本仓库后，希望让宿主 AI（Claude Code / Cursor 等）直接调用框架现有的生成器、脚手架、校验和打包能力，复刻一个与本项目类似的游戏计算器。现有构建链全部是纯 Python，但缺少一个供 AI 使用的稳定接口。
+
+## 决策
+
+1. 新增仓库级 MCP 服务器 `tools/calc_mcp/`，通过 stdio 启动：
+
+   ```powershell
+   pip install -r requirements-mcp.txt
+   python -m tools.calc_mcp --project-dir .
+   ```
+
+2. **包名使用 `tools.calc_mcp` 而不是 `tools.mcp`**。本仓库的测试 `conftest.py` 会把 `tools/` 加入 `sys.path`，若子目录名为 `mcp`，会遮蔽官方 `mcp` SDK 的顶层包，导致 `import mcp` 解析到本仓库目录。改名后彻底消除冲突。
+
+3. 首版只提供 **13 个确定性工具**，不调用任何 LLM：
+
+   | 分类 | 工具 |
+   |---|---|
+   | 发现 | `list_templates`、`describe_schemas`、`read_guide`、`list_adapters` |
+   | 文件 | `list_adapter_files`、`read_adapter_file`、`write_adapter_file` |
+   | 构建 | `scaffold_adapter`、`generate_adapter` |
+   | 验证 | `validate_adapter`、`smoke_test_adapter` |
+   | 打包 | `export_calcpack`、`import_calcpack` |
+
+4. 所有文件操作限制在 `--project-dir` 内：拒绝绝对路径、`..`、反斜杠、NUL 与越界符号链接；`adapter_id` 仅允许 `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`；写入默认不覆盖。
+
+5. `tools/calc_mcp/**` 及其依赖链必须保持 **PySide6-free**，由 `tools/quality/check_pyside6_coupling.py` 的 `DECOUPLED_DIRS` 守护。为此把脚手架逻辑从 `calc_framework.dev_toolkit.adapter_creator` 迁移到 `calc_framework.config.scaffold`，原模块保留 re-export shim。
+
+6. 输出物为 **适配器包 + `.calcpack`**；首版不生成完整 GUI 工程、搜索枚举或生存分析。
+
+## 备选方案
+
+- **pip 包分发**：需要把生成器/导出器拆成独立包，成本高；仓库体积仅约 10 MB，克隆成本低，暂不做。
+- **HTTP/SSE 传输**：首版面向本地开发者，stdio 无鉴权面，部署最简单；远程场景后再评估。
+- **MCP 内调用 LLM**：现有 `/api/generator/ai/parse` 的 JSON 提取不稳定；自然语言理解交给宿主 AI，MCP 只做确定性操作。
+
+## 后果
+
+- 新增依赖文件 `requirements-mcp.txt`（`mcp>=1.2,<2`），CI 的 lint/test/typecheck/pip-audit 均已接入。
+- `smoke_test_adapter` 会执行适配包内的 `functions.py`，仅可用于开发者自己的本地适配包；工具描述和文档均明确提示。
+- 生成器只支持 `+ - * /`、`condition`、`expr` 六种步骤；复杂公式（`unary`/`call`/子图）通过 `scaffold_adapter` 提交完整 DAG。
+- `tools/` 目录达到 20 个直接子项硬顶，后续扩展需先整理目录。

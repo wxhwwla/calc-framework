@@ -28,7 +28,10 @@ from .sandbox_config import (
 logger = get_logger(__name__)
 
 # 沙箱表达式最大长度（防止 DoS）
-_MAX_EXPR_LENGTH = 4096
+MAX_EXPR_LENGTH = 4096
+
+# 向后兼容的私有别名
+_MAX_EXPR_LENGTH = MAX_EXPR_LENGTH
 
 # 数值积分最大分段数
 _MAX_INTEGRAL_N = 100_000

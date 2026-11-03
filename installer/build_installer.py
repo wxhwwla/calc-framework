@@ -143,6 +143,10 @@ def build_installer(
 
     cmd = [
         makensis,
+        # NSI 脚本为 UTF-8 无 BOM；不显式指定时 makensis 按系统 ACP 读取，
+        # 中文 Windows（GBK）会报 Bad text encoding，CI（CP1252）会乱码。
+        "-INPUTCHARSET",
+        "UTF8",
         f"/DVERSION={version}",
         f"/DAPP_ROOT={dist_dir}",
         f"/DOUTPUT={output_path}",

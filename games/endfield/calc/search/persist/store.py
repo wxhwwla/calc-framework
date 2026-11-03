@@ -21,7 +21,6 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-from calc_framework.search.persist import SearchRunStore as BaseSearchRunStore
 from utils.frozen_runtime import frozen_use_rust_batch, frozen_use_search_job_batch
 from utils.search_diagnostics import get_search_logger, log_search_config, log_search_event
 
@@ -43,138 +42,12 @@ from ..evaluate.task import make_loadout_task_evaluator
 from ..plan.job import SingleSkillSearchJob
 from ..run.cancel import SearchCancelToken
 from ..run.parallel import ParallelBackend, run_bounded_parallel
-from .schema import SCORES_CREATE_TABLE_SQL, PendingTaskStream, ResumeExecutionResult
+from .schema import PendingTaskStream, ResumeExecutionResult
+from .store_records import SearchRunStore
 
 # 续跑进度批量写入条数
 
 PROCESSED_BATCH_SIZE = 500
-
-
-class SearchRunStore(BaseSearchRunStore):
-    """搜索任务 SQLite 存储（终末地扩展）。
-
-
-
-    继承框架基础表（``runs`` / ``processed``），增加 ``scores`` 表
-
-    用于持久化 Top-N 配装得分。
-
-    """
-
-    def _schema_sql(self) -> str:
-        """schema sql。"""
-        return super()._schema_sql() + SCORES_CREATE_TABLE_SQL
-
-    # ── scores ─────────────────────────────────────────
-
-    def replace_top_scores(self, signature: str, scores: tuple[LoadoutScore, ...]) -> None:
-        """仅持久化 TopN 得分（结束时写入）。"""
-
-        conn = self._connect()
-
-        try:
-            conn.execute("DELETE FROM scores WHERE signature=?", (signature,))
-
-            for index, score in enumerate(scores):
-                combo_key = f"top-{index}"
-
-                conn.execute(
-                    """
-
-                    INSERT OR REPLACE INTO scores(
-
-                        signature, combo_key, weapon_name, final_damage,
-
-                        chest, gloves, accessory_a, accessory_b
-
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-
-                    """,
-                    (
-                        signature,
-                        combo_key,
-                        score.weapon_name,
-                        float(score.final_damage),
-                        score.loadout_names.get("chest", ""),
-                        score.loadout_names.get("gloves", ""),
-                        score.loadout_names.get("accessory_a", ""),
-                        score.loadout_names.get("accessory_b", ""),
-                    ),
-                )
-
-            conn.commit()
-
-        finally:
-            conn.close()
-
-    def count_score_rows(self, signature: str) -> int:
-        conn = self._connect()
-
-        try:
-            row = conn.execute(
-                "SELECT COUNT(*) AS c FROM scores WHERE signature=?",
-                (signature,),
-            ).fetchone()
-
-        finally:
-            conn.close()
-
-        """count score rows。"""
-        return int(row["c"] if row else 0)
-
-    def count_processed(self, signature: str) -> int:
-        conn = self._connect()
-
-        try:
-            row = conn.execute(
-                "SELECT COUNT(*) AS c FROM processed WHERE signature=?",
-                (signature,),
-            ).fetchone()
-
-        finally:
-            conn.close()
-
-        """count processed。"""
-        return int(row["c"] if row else 0)
-
-    def load_top_scores(self, signature: str, top_n: int) -> tuple[LoadoutScore, ...]:
-        conn = self._connect()
-
-        try:
-            rows = conn.execute(
-                """
-
-                SELECT weapon_name, final_damage, chest, gloves, accessory_a, accessory_b
-
-                FROM scores
-
-                WHERE signature=?
-
-                ORDER BY final_damage DESC
-
-                LIMIT ?
-
-                """,
-                (signature, max(1, int(top_n))),
-            ).fetchall()
-
-        finally:
-            conn.close()
-
-        return tuple(
-            LoadoutScore(
-                weapon_name=row["weapon_name"],
-                final_damage=float(row["final_damage"]),
-                loadout_names={
-                    "chest": row["chest"],
-                    "gloves": row["gloves"],
-                    "accessory_a": row["accessory_a"],
-                    "accessory_b": row["accessory_b"],
-                },
-            )
-            for row in rows
-        )
-        """load top scores。"""
 
 
 def _iter_pending_tasks(
@@ -214,7 +87,6 @@ def _task_key(task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]]) -> st
             str(acc_b.get("名称", "")),
         ]
     )
-    """task key。"""
 
 
 def execute_search_with_resume(
@@ -322,7 +194,7 @@ def execute_search_with_resume(
     def _on_result(item: tuple[str, OptimizerTask], score: LoadoutScore) -> None:
         nonlocal processed_this_run
 
-        key, _task = item
+        key = item[0]
 
         top_tracker.offer(score)
 
@@ -401,7 +273,7 @@ def execute_search_with_resume(
         )
 
         def _batch_eval_keyed(items: list[tuple[str, OptimizerTask]]) -> list[LoadoutScore]:
-            return _batch_eval([task for _key, task in items])
+            return _batch_eval([item[1] for item in items])
 
         parallel_kwargs["evaluate"] = _evaluate_keyed
         parallel_kwargs["process_evaluate"] = evaluate_keyed_task_in_process if process_payload else None
@@ -431,7 +303,7 @@ def execute_search_with_resume(
                 )
 
                 def _batch_eval_keyed(items: list[tuple[str, OptimizerTask]]) -> list[LoadoutScore]:
-                    return _job_batch_eval([task for _key, task in items])
+                    return _job_batch_eval([item[1] for item in items])
 
                 parallel_kwargs.update(
                     {
@@ -465,7 +337,7 @@ def execute_search_with_resume(
             search_eval=search_eval,
         )
 
-    _, _processed_count, cancelled = run_bounded_parallel(**parallel_kwargs)
+    _, _, cancelled = run_bounded_parallel(**parallel_kwargs)
 
     log_search_event(
         "续跑完成 | processed_this_run=%s cancelled=%s top_n=%s",

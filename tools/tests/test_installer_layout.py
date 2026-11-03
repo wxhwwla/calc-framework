@@ -75,3 +75,30 @@ def test_build_installer_fails_when_output_missing(tmp_path: Path, monkeypatch) 
     monkeypatch.setattr(build_installer.subprocess, "run", lambda *_, **__: _Result())
 
     assert build_installer.build_installer(tmp_path, "1.0.0") == 1
+
+
+def test_build_installer_passes_utf8_input_charset(tmp_path: Path, monkeypatch) -> None:
+    """NSI 脚本为 UTF-8 无 BOM，必须显式告知 makensis，避免 ACP 误读。
+
+    中文 Windows 的 ACP 为 GBK、CI 为 CP1252，两者都无法正确解析 UTF-8
+    中文，表现为 ``Bad text encoding`` 或安装包内文字乱码。
+    """
+    _make_launcher_only_dist(tmp_path)
+    monkeypatch.setattr(build_installer, "_ensure_nsis", lambda: "makensis")
+
+    captured: dict[str, list[str]] = {}
+
+    class _Result:
+        returncode = 0
+
+    def _fake_run(cmd: list[str], **_: object) -> _Result:
+        captured["cmd"] = cmd
+        (tmp_path / "GameCalcPlatform_Setup_v1.0.0.exe").write_bytes(b"MZ")
+        return _Result()
+
+    monkeypatch.setattr(build_installer.subprocess, "run", _fake_run)
+
+    assert build_installer.build_installer(tmp_path, "1.0.0") == 0
+    cmd = captured["cmd"]
+    assert "-INPUTCHARSET" in cmd
+    assert cmd[cmd.index("-INPUTCHARSET") + 1] == "UTF8"

@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import secrets
+import threading
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -33,6 +34,10 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / ".data" / "admin"
 _KEYS_FILE = _DATA_DIR / "api_keys.json"
 _USAGE_FILE = _DATA_DIR / "usage.json"
 
+# 用量统计是「读-改-写」，并发请求会互相覆盖并写出半截 JSON；
+# 用线程锁串行化整段操作（to_thread 中执行，不会阻塞事件循环）。
+_USAGE_WRITE_LOCK = threading.Lock()
+
 
 def _ensure_data_dir() -> None:
     _DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -40,14 +45,21 @@ def _ensure_data_dir() -> None:
 
 def _load_json(path: Path) -> dict:
     _ensure_data_dir()
-    if path.exists():
+    if not path.exists():
+        return {}
+    try:
         return json.loads(path.read_text(encoding="utf-8"))
-    return {}
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        # 统计文件损坏不应拖垮所有请求（曾导致限流中间件对每个请求返回 500）
+        return {}
 
 
 def _save_json(path: Path, data: dict) -> None:
     _ensure_data_dir()
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    # 先写临时文件再原子替换，避免读者看到写了一半的内容
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
 
 
 async def _load_json_async(path: Path) -> dict:
@@ -275,20 +287,26 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
     @staticmethod
+    def _record_usage_sync(path: str) -> None:
+        """同步完成读-改-写，供线程池调用（由 ``_USAGE_WRITE_LOCK`` 串行化）。"""
+        with _USAGE_WRITE_LOCK:
+            usage = _load_json(_USAGE_FILE)
+            timestamps = usage.get("request_timestamps", [])
+            timestamps.append(time.time())
+            # 只保留最近 1 小时
+            now = time.time()
+            usage["request_timestamps"] = [t for t in timestamps if now - t < 3600]
+
+            by_endpoint = usage.get("by_endpoint", {})
+            endpoint = path.split("?")[0]
+            by_endpoint[endpoint] = by_endpoint.get(endpoint, 0) + 1
+            usage["by_endpoint"] = by_endpoint
+
+            _save_json(_USAGE_FILE, usage)
+
+    @staticmethod
     async def _record_usage_async(path: str) -> None:
-        usage = await _load_json_async(_USAGE_FILE)
-        timestamps = usage.get("request_timestamps", [])
-        timestamps.append(time.time())
-        # 只保留最近 1 小时
-        now = time.time()
-        usage["request_timestamps"] = [t for t in timestamps if now - t < 3600]
-
-        by_endpoint = usage.get("by_endpoint", {})
-        endpoint = path.split("?")[0]
-        by_endpoint[endpoint] = by_endpoint.get(endpoint, 0) + 1
-        usage["by_endpoint"] = by_endpoint
-
-        await _save_json_async(_USAGE_FILE, usage)
+        await asyncio.to_thread(RateLimitMiddleware._record_usage_sync, path)
 
 
 __all__: list[str] = []

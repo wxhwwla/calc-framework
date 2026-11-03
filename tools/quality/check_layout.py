@@ -5,8 +5,8 @@
 
 用法（仓库根目录）::
 
-    python tools/check_layout.py
-    python tools/check_layout.py --max-lines 400
+    python tools/quality/check_layout.py
+    python tools/quality/check_layout.py --max-lines 400
 """
 
 from __future__ import annotations
@@ -15,10 +15,19 @@ import argparse
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 PKG = REPO / "games" / "endfield"
 SKIP_DIR_NAMES = frozenset({"__pycache__", ".pytest_cache", "dist", ".venv", "build"})
 SKIP_FILE_SUFFIXES = (".pyc",)
+
+# 见 docs/代码结构规范.md §5「豁免表」；路径相对 games/endfield/
+EXEMPT_RELATIVE_PATHS = frozenset(
+    {
+        "calc/multiplicative_zones/final_attack_zone.py",
+        "tests/calculation/test_multiplicative_zones.py",
+        "tests/tools/test_bwiki_scout.py",
+    }
+)
 
 
 def _iter_check_dirs(root: Path) -> list[Path]:
@@ -85,6 +94,8 @@ def check_file_length(*, max_lines: int, hard_max: int = 500) -> list[str]:
         if any(part in SKIP_DIR_NAMES for part in path.parts):
             continue
         if path.parts[-2:] == ("scripts", path.name) and path.name.startswith("seed_"):
+            continue
+        if path.relative_to(PKG).as_posix() in EXEMPT_RELATIVE_PATHS:
             continue
         try:
             count = sum(1 for _ in path.open(encoding="utf-8"))

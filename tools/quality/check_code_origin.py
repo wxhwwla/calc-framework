@@ -23,7 +23,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 # 常见开源许可证的标识符和关键词
 LICENSE_PATTERNS: list[tuple[str, str, list[str]]] = [
     (
@@ -228,6 +227,7 @@ SOURCE_DIRS = [
     "tools/data_pipeline",
     "tools/designer",
     "tools/audit",
+    "tools/calc_mcp",
     "tools/tests",
     "scripts",
     "utils",

@@ -232,7 +232,7 @@ export default function CharacterSelector({
         </FormControl>
       </Box>
 
-      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+      <FormControl fullWidth size="small" sx={{ mb: 2 }} data-testid="char-select">
         <InputLabel>{t("common.name")}</InputLabel>
         <Select
           value={selectedChar}
@@ -287,7 +287,7 @@ export default function CharacterSelector({
         </FormControl>
       </Box>
 
-      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+      <FormControl fullWidth size="small" sx={{ mb: 2 }} data-testid="weapon-select">
         <InputLabel>{t("common.name")}</InputLabel>
         <Select
           value={selectedWeapon}

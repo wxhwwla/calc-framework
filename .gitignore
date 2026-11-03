@@ -108,6 +108,9 @@ dist-types/
 终末地伤害计算器.exe
 games/endfield/终末地伤害计算器.exe
 
+# MCP 服务器临时工作区
+.calc-mcp/
+
 # 上传脚本临时文件
 .git-upload-msg.txt
 .tmp-*

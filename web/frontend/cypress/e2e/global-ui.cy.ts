@@ -11,12 +11,13 @@ describe("全局 UI 元素 GlobalUI", () => {
   });
 
   it("页脚存在 GitHub 链接", () => {
-    cy.contains("GitHub").should("be.visible");
+    // 页脚链接文本是仓库名（wxhwwla/calc-framework），需按 href 断言
+    cy.get('footer a[href*="github.com"]').its("length").should("be.gte", 1);
   });
 
   it("响应式：窄屏下布局自适应", () => {
     cy.viewport(900, 800);
-    cy.contains("角色选择").should("be.visible");
+    cy.contains("角色 / 武器选择").should("be.visible");
   });
 
   it("响应式：手机屏下布局紧凑可用", () => {
@@ -47,7 +48,7 @@ describe("全局 UI 元素 GlobalUI", () => {
   it("AI 配装对话框可以打开（选中角色后）", () => {
     cy.visit("/compute");
     // AI 按钮只在选中角色后才显示 — 验证页面加载无报错即可
-    cy.contains("角色选择").should("be.visible");
+    cy.contains("角色 / 武器选择").should("be.visible");
     cy.get("body").should("be.visible");
   });
 });

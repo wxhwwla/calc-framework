@@ -60,7 +60,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install pip-audit
-        run: python -m pip install --upgrade pip pip-audit
+        # 一并升级 setuptools，避免 runner 自带旧版本被判为漏洞
+        run: python -m pip install --upgrade pip setuptools pip-audit
       - name: Audit Web requirements (Docker)
         run: |
           python -m pip install -r requirements.txt
@@ -74,6 +75,10 @@ jobs:
         run: |
           cd games/endfield
           python -m pip install -e ".[dev]"
+          pip-audit
+      - name: Audit MCP dependencies
+        run: |
+          python -m pip install -r requirements-mcp.txt
           pip-audit
 
   detect-secrets:

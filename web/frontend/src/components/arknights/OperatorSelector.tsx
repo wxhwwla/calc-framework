@@ -178,7 +178,7 @@ export default function OperatorSelector({
       </Stack>
 
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
-        {t('arknights.pageTitle')}
+        {t('operatorSelector.title')}
       </Typography>
       <Autocomplete
         options={filteredNames}

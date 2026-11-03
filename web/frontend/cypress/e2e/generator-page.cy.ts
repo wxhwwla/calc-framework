@@ -16,16 +16,19 @@ describe("生成器页 GeneratorPage", () => {
 
   it("显示步骤导航", () => {
     cy.contains("选择模板").should("be.visible");
-    cy.contains("配置公式").should("be.visible");
-    cy.contains("生成计算器").should("be.visible");
+    cy.contains("填写游戏信息").should("be.visible");
+    cy.contains("预览与生成").should("be.visible");
+    cy.contains("导出").should("be.visible");
   });
 
   it("显示模板列表", () => {
     cy.contains("简单伤害计算").should("be.visible");
   });
 
-  it("显示公式输入区域", () => {
-    cy.contains("公式描述").should("be.visible");
+  it("选择模板后显示游戏信息表单", () => {
+    cy.contains("简单伤害计算").click();
+    cy.contains("下一步").click();
+    cy.contains("游戏名称").should("be.visible");
   });
 
   it("选择模板后进入下一步", () => {

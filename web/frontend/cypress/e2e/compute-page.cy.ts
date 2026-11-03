@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { selectFirstLoadout } from "../support/helpers";
+
 describe("计算页 ComputePage", () => {
   beforeEach(() => {
     cy.visit("/compute");
@@ -16,19 +18,23 @@ describe("计算页 ComputePage", () => {
   });
 
   it("默认显示计算页内容", () => {
-    cy.contains("角色选择").should("be.visible");
+    cy.contains("角色 / 武器选择").should("be.visible");
+    cy.contains("敌方参数").should("be.visible");
   });
 
   it("切换到高级页显示搜索面板", () => {
+    selectFirstLoadout();
     cy.contains("高级页").click();
     cy.contains("全量搜索").should("be.visible");
     cy.contains("预估").should("be.visible");
-    cy.contains("开始搜索").should("be.visible");
+    cy.contains("结果条数").should("be.visible");
+    cy.contains("并行线程").should("be.visible");
   });
 
   it("高级页有结果条数和并行线程输入", () => {
+    selectFirstLoadout();
     cy.contains("高级页").click();
-    cy.get('input[type="number"]').first().should("be.visible");
+    cy.get('input[type="number"]').its("length").should("be.gte", 2);
   });
 
   it("通过侧边栏导航可访问", () => {

@@ -38,6 +38,7 @@ jobs:
           python -m pip install pyright
           python -m pip install -e 'framework[dev,ui]'
           python -m pip install -e 'games/endfield[dev]'
+          python -m pip install -r requirements-mcp.txt
 
       - name: Run pyright
         run: pyright

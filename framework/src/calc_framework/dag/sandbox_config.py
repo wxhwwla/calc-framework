@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import ast
+import inspect
 import math
 from typing import Any
 
@@ -74,6 +75,38 @@ def clear_functions() -> None:
 def list_functions() -> list[str]:
     """返回所有可用函数名列表（内置 + 自定义）。"""
     return sorted(_SAFE_BUILTINS) + sorted(_GLOBAL_FUNCTIONS)
+
+
+def list_function_specs() -> list[dict[str, str]]:
+    """返回内置与自定义函数的名称、签名和摘要。
+
+    会先导入 ``calc_framework.dag.sandbox``，确保 ``integral`` 已完成注册。
+
+    Returns:
+        按「内置优先、同类按名称排序」排列的函数描述列表，每项包含
+        ``name``、``kind``（``builtin`` / ``custom``）、``signature``、``description``。
+    """
+    import calc_framework.dag.sandbox as _sandbox
+
+    _ = _sandbox.MAX_EXPR_LENGTH  # 触发 integral 注入
+
+    specs: list[dict[str, str]] = []
+    for kind, funcs in (("builtin", _SAFE_BUILTINS), ("custom", _GLOBAL_FUNCTIONS)):
+        for name in sorted(funcs):
+            fn = funcs[name]
+            try:
+                signature = str(inspect.signature(fn))
+            except (TypeError, ValueError):
+                signature = ""
+            specs.append(
+                {
+                    "name": name,
+                    "kind": kind,
+                    "signature": signature,
+                    "description": inspect.getdoc(fn) or "",
+                }
+            )
+    return specs
 
 
 def _all_allowed_names() -> frozenset[str]:

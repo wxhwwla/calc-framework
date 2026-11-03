@@ -26,9 +26,14 @@ from .node_types import (
     _collect_node_refs,
 )
 
-_VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
+VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
 
-_VALID_VAR_SOURCES = frozenset({"character", "weapon", "equipment", "enemy", "user_input", "computed"})
+VALID_VAR_SOURCES = frozenset({"character", "weapon", "equipment", "enemy", "user_input", "computed"})
+
+# 向后兼容的私有别名
+_VALID_VAR_TYPES = VALID_VAR_TYPES
+
+_VALID_VAR_SOURCES = VALID_VAR_SOURCES
 
 
 @dataclass

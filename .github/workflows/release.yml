@@ -85,7 +85,7 @@ jobs:
         run: python -m pytest games/endfield/tests/ framework/tests/ -q --tb=short
 
   build:
-    needs: test
+    needs: [test, verify-version]
     runs-on: windows-latest
     defaults:
       run:

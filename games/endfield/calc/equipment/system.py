@@ -2,85 +2,56 @@
 # -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
-"""装备数据链路与四格装配。"""
+"""装备数据链路与四格装配。
+
+P2-07 拆分：种类常量/部位推断迁至 ``equipment_kinds.py``，效果文本解析迁至
+``equipment_effects.py``；本模块继续再导出这些符号，既有导入路径不变。
+"""
 
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from games.endfield.calc.damage.engine import DamageEffect
-from games.endfield.calc.damage.types import infer_equipment_damage_types
 
-_PERCENT_RE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*%")
-
-
-# 与 BWIKI「装备种类」一致：护甲 / 护手 / 配件
-
-EQUIPMENT_KIND_ARMOR = "护甲"
-
-EQUIPMENT_KIND_GLOVES = "护手"
-
-EQUIPMENT_KIND_ACCESSORY = "配件"
-
-
-_SLOT_ALIASES = {
-    EQUIPMENT_KIND_ARMOR: EQUIPMENT_KIND_ARMOR,
-    EQUIPMENT_KIND_GLOVES: EQUIPMENT_KIND_GLOVES,
-    EQUIPMENT_KIND_ACCESSORY: EQUIPMENT_KIND_ACCESSORY,
-    "胸甲": EQUIPMENT_KIND_ARMOR,
-}
-
-
-# BWIKI 同步失败或旧数据：按名称关键词回退推断装备种类
-
-_NAME_SLOT_KEYWORDS: tuple[tuple[str, str], ...] = (
-    ("轻甲", EQUIPMENT_KIND_ARMOR),
-    ("重甲", EQUIPMENT_KIND_ARMOR),
-    ("护甲", EQUIPMENT_KIND_ARMOR),
-    ("罩衣", EQUIPMENT_KIND_ARMOR),
-    ("夹克", EQUIPMENT_KIND_ARMOR),
-    ("背心", EQUIPMENT_KIND_ARMOR),
-    ("甲片", EQUIPMENT_KIND_ARMOR),
-    ("外骨骼", EQUIPMENT_KIND_ARMOR),
-    ("胸甲", EQUIPMENT_KIND_ARMOR),
-    ("护手", EQUIPMENT_KIND_GLOVES),
-    ("手套", EQUIPMENT_KIND_GLOVES),
-    ("护腕", EQUIPMENT_KIND_GLOVES),
-    ("手甲", EQUIPMENT_KIND_GLOVES),
-    ("雷达", EQUIPMENT_KIND_ACCESSORY),
-    ("短刃", EQUIPMENT_KIND_ACCESSORY),
-    ("刺刃", EQUIPMENT_KIND_ACCESSORY),
-    ("芯片", EQUIPMENT_KIND_ACCESSORY),
-    ("戒指", EQUIPMENT_KIND_ACCESSORY),
-    ("项链", EQUIPMENT_KIND_ACCESSORY),
-    ("胸针", EQUIPMENT_KIND_ACCESSORY),
-    ("徽章", EQUIPMENT_KIND_ACCESSORY),
-    ("手环", EQUIPMENT_KIND_ACCESSORY),
-    ("臂环", EQUIPMENT_KIND_ACCESSORY),
-    ("瞄具", EQUIPMENT_KIND_ACCESSORY),
-    ("工具组", EQUIPMENT_KIND_ACCESSORY),
-    ("储能", EQUIPMENT_KIND_ACCESSORY),
-    ("测温镜", EQUIPMENT_KIND_ACCESSORY),
-    ("电力匣", EQUIPMENT_KIND_ACCESSORY),
-    ("净芯", EQUIPMENT_KIND_ACCESSORY),
-    ("滤芯", EQUIPMENT_KIND_ACCESSORY),
-    ("图鉴", EQUIPMENT_KIND_ACCESSORY),
+from .equipment_effects import (
+    _infer_damage_types,
+    _parse_effect_keys,
+    _parse_effect_text,
+    _parse_percent_value,
+)
+from .equipment_kinds import (
+    EQUIPMENT_KIND_ACCESSORY,
+    EQUIPMENT_KIND_ARMOR,
+    EQUIPMENT_KIND_GLOVES,
+    _normalize_slot,
+    equipment_kind,
+    infer_equipment_slot,
 )
 
-
-def equipment_kind(record: dict[str, Any]) -> str:
-    """读取装备种类（优先 Wiki 字段「装备种类」，兼容旧字段「部位」）。"""
-
-    raw = str(record.get("装备种类") or record.get("部位") or "").strip()
-
-    if raw in _SLOT_ALIASES:
-        return _SLOT_ALIASES[raw]
-
-    return raw
+__all__ = [
+    "EQUIPMENT_KIND_ACCESSORY",
+    "EQUIPMENT_KIND_ARMOR",
+    "EQUIPMENT_KIND_GLOVES",
+    "FourSlotLoadout",
+    "_infer_damage_types",
+    "_normalize_slot",
+    "_parse_effect_keys",
+    "_parse_effect_text",
+    "_parse_percent_value",
+    "build_equipment_catalog_from_local_rows",
+    "build_equipment_catalog_from_runtime",
+    "build_four_slot_loadout",
+    "build_runtime_equipment_from_local_record",
+    "build_runtime_equipment_from_wiki_draft",
+    "collect_loadout_effects",
+    "equipment_kind",
+    "infer_equipment_slot",
+    "load_equipment_catalog_from_wiki_draft",
+]
 
 
 @dataclass(frozen=True)
@@ -94,118 +65,6 @@ class FourSlotLoadout:
     accessory_a: dict[str, Any]
 
     accessory_b: dict[str, Any]
-
-
-def _parse_percent_value(text: str) -> float:
-    """从文本中解析百分比数值（如 "15%" → 0.15）。"""
-    m = _PERCENT_RE.search(text)
-    if not m:
-        return 0.0
-    return float(m.group(1)) / 100.0
-
-
-def _infer_damage_types(text: str) -> tuple[str, ...]:
-    """infer damage types。"""
-    return infer_equipment_damage_types(text)
-
-
-def _parse_effect_text(text: str, *, source: str) -> DamageEffect:
-    from games.endfield.calc.equipment.affix import parse_equipment_affix_line
-
-    affix_effects, _ = parse_equipment_affix_line(text, source=source)
-
-    if affix_effects:
-        return affix_effects[0]
-
-    value = _parse_percent_value(text)
-
-    if "易伤" in text:
-        return DamageEffect("易伤", value=value, source=source, raw_text=text, damage_types=_infer_damage_types(text))
-
-    if "脆弱" in text:
-        return DamageEffect("脆弱", value=value, source=source, raw_text=text, damage_types=_infer_damage_types(text))
-
-    if "虚弱" in text:
-        return DamageEffect("虚弱", value=value, source=source, raw_text=text)
-
-    if "庇护" in text:
-        return DamageEffect("庇护", value=value, source=source, raw_text=text)
-
-    if "伤害减免" in text:
-        return DamageEffect(
-            "伤害减免", value=value, source=source, raw_text=text, damage_types=_infer_damage_types(text)
-        )
-
-    if "连击增伤" in text:
-        return DamageEffect("连击增伤", value=value, source=source, raw_text=text)
-
-    if "增幅" in text:
-        return DamageEffect("增幅", value=value, source=source, raw_text=text, damage_types=_infer_damage_types(text))
-
-    if "伤害+" in text or "伤害加成" in text:
-        damage_types = _infer_damage_types(text)
-
-        effect_type = "伤害类型伤害加成" if damage_types else "其他伤害加成"
-
-        return DamageEffect(
-            effect_type,
-            value=value,
-            source=source,
-            raw_text=text,
-            damage_types=damage_types,
-        )
-
-    """parse effect text。"""
-    return DamageEffect(text.strip(), value=value, source=source, raw_text=text)
-
-
-def _normalize_slot(slot_raw: str) -> str:
-    """规范化装备部位名（支持别名映射）。"""
-    slot = (slot_raw or "").strip()
-
-    if slot in _SLOT_ALIASES:
-        return _SLOT_ALIASES[slot]
-
-    raise ValueError(f"不支持的装备部位：{slot_raw}")
-
-
-def infer_equipment_slot(record: dict[str, Any]) -> str:
-    """从记录推断装备种类；优先显式字段，否则按名称关键词。"""
-
-    slot_raw = equipment_kind(record)
-
-    if slot_raw in _SLOT_ALIASES:
-        return _SLOT_ALIASES[slot_raw]
-
-    type_raw = str(record.get("类型") or "").strip()
-
-    if type_raw in _SLOT_ALIASES:
-        return _SLOT_ALIASES[type_raw]
-
-    name = str(record.get("名称") or "").strip()
-
-    for keyword, slot in _NAME_SLOT_KEYWORDS:
-        if keyword in name:
-            return slot
-
-    return ""
-
-
-def _parse_effect_keys(params: dict[str, Any], prefix: str, source: str) -> list[DamageEffect]:
-    effects: list[DamageEffect] = []
-
-    for idx in range(1, 10):
-        key = f"{prefix}{idx}"
-
-        text = str(params.get(key, "")).strip()
-
-        if not text:
-            continue
-
-        effects.append(_parse_effect_text(text, source=source))
-
-    """parse effect keys。"""
-    return effects
 
 
 def build_runtime_equipment_from_wiki_draft(record: dict[str, Any]) -> dict[str, Any]:

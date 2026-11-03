@@ -9,6 +9,7 @@
 | `data_sandbox/` | 数据沙箱 — 隔离测试自定义游戏数据 | 见下表 |
 | `bwiki_scout/` | BWIKI 侦察、对比、同步到本地 JSON/seed | 见下表 |
 | `audit/` | 一次性审计 Issue 脚本 | `.\tools\audit\create_audit_issues.ps1` |
+| `calc_mcp/` | MCP 计算器构建服务器（供宿主 AI 调用） | `python -m tools.calc_mcp --project-dir .` |
 
 **仓库维护工具**（直接在 `[根]` 执行）：
 

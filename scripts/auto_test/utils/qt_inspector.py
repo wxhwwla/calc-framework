@@ -38,7 +38,7 @@ def _enum_top_level_windows() -> list[WindowEntry]:
         if win32gui.IsWindowVisible(hwnd):
             title = win32gui.GetWindowText(hwnd)
             if title:
-                windows.append((hwnd, title, win32gui.GetClassName(hwnd)))
+                windows.append((hwnd, title, win32gui.GetClassName(hwnd) or ""))
         return True
 
     win32gui.EnumWindows(_callback, None)

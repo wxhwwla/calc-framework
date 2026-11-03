@@ -18,6 +18,11 @@ from calc_framework.config.adapter import (
     InvalidMetaError,
 )
 from calc_framework.config.manager import AdapterManager, discover_adapters
+from calc_framework.config.scaffold import (
+    AdapterScaffoldConfig,
+    ScaffoldResult,
+    scaffold_adapter_directory,
+)
 from calc_framework.config.watcher import AdapterWatcher
 
 __all__ = [
@@ -25,7 +30,10 @@ __all__ = [
     "AdapterManager",
     "AdapterNotFoundError",
     "AdapterPackage",
+    "AdapterScaffoldConfig",
     "AdapterWatcher",
     "InvalidMetaError",
+    "ScaffoldResult",
     "discover_adapters",
+    "scaffold_adapter_directory",
 ]

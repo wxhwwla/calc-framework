@@ -42,6 +42,15 @@ cd calc-framework
 python scripts/main_launcher.py
 ```
 
+**Or let your AI build the calculator:** the repo ships a Model Context Protocol server that exposes the DAG generator, scaffolder, validator, and `.calcpack` packer as deterministic tools.
+
+```bash
+pip install -r requirements-mcp.txt
+python -m tools.calc_mcp --project-dir .
+```
+
+Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [操作指令集 §2.4](docs/操作指令集.md) and [ADR-0028](docs/adr/0028-mcp-builder-server.md).
+
 > 🏗 [Quick Start ↓](#quick-start) · [Create a Calculator](docs/制造游戏计算器完整流程.md)
 
 </td>
@@ -82,7 +91,7 @@ python scripts/main_launcher.py
 │   ├── endfield/                 #   Endfield damage calculator (calc + gui + data + tests)
 │   └── arknights/                #   Arknights calculator (DAG + GUI + tests)
 ├── docs/                         # Project documentation
-├── tools/                        # Dev tools (BWIKI scout, data pipeline, OCR, designer)
+├── tools/                        # Dev tools (BWIKI scout, data pipeline, OCR, designer, calc_mcp)
 ├── scripts/                      # Entry scripts (launcher, build, dev toolkit)
 ├── release_bundle/               # Release layout config
 ├── installer/                    # NSIS installer
@@ -180,6 +189,7 @@ cd web/frontend && npm install && npm run dev
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 - **i18n**: Web (react-i18next, ~890 entries per language) + Desktop (DesktopTranslator, 1046 keys per language, en/zh-CN)
 - **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing
+- **MCP Builder Server**: `tools/calc_mcp/` exposes 13 deterministic tools (templates, schemas, guides, generate, scaffold, validate, smoke-test, pack/import) so a host AI can build a new game calculator end-to-end from a cloned repo
 - **SaaS API**: API Key management + rate limiting + usage statistics
 
 ### Web Version

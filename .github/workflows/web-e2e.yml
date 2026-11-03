@@ -71,6 +71,10 @@ jobs:
         run: npm ci
 
       - name: 启动后端 API 服务
+        env:
+          # E2E 单个页面会发起十余个 API 请求，匿名限流 20 次/分钟会立刻返回 429，
+          # 导致页面数据加载失败、用例大面积超时。限流属于部署层，测试中关闭。
+          CALC_DISABLE_RATE_LIMIT: "1"
         run: |
           cd web/backend
           uvicorn main:app --port 8180 > /tmp/uvicorn.log 2>&1 &

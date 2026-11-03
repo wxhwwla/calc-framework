@@ -19,7 +19,10 @@ i18n
       escapeValue: false, // React already escapes
     },
     detection: {
-      order: ["navigator", "htmlTag"],
+      // localStorage 必须排在 navigator 之前：用户手动切换的语言会被缓存，
+      // 但原先的顺序从不读取缓存，刷新后总被浏览器语言覆盖。
+      // Cypress E2E 也依赖它把界面固定为 zh-CN（electron 不支持 --lang 启动参数）。
+      order: ["localStorage", "navigator", "htmlTag"],
       caches: ["localStorage"],
     },
   });

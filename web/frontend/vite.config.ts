@@ -2,6 +2,10 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+// sql.js 引用了 Node 内置模块，但相关分支在浏览器不会执行；
+// 别名到空模块以消除 Vite 的浏览器兼容性警告（/ 开头由 Vite 按项目根解析）。
+const emptyShim = "/src/shims/empty-module.ts";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -16,6 +20,13 @@ export default defineConfig({
     esbuildOptions: {
       target: "es2021",
     },
+  },
+  resolve: {
+    alias: [
+      { find: /^fs$/, replacement: emptyShim },
+      { find: /^path$/, replacement: emptyShim },
+      { find: /^crypto$/, replacement: emptyShim },
+    ],
   },
   plugins: [
     react(),

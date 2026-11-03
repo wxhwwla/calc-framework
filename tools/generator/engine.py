@@ -89,20 +89,40 @@ class GeneratorEngine:
             formula_steps=[...],
             outputs=[...],
         )
-        # files = {"meta.json": ..., "dag/formula.dag.json": ..., ...}
+        # files = {"meta.json": ..., "dag/<name>.dag.json": ..., ...}
     """
+
+    def __init__(self, adapters_dir: str | Path | None = None) -> None:
+        """初始化生成引擎。
+
+        Args:
+            adapters_dir: 模板根目录；默认使用仓库的 ``framework/adapters/``。
+        """
+        self._adapters_dir = Path(adapters_dir) if adapters_dir else _ADAPTERS_DIR
 
     def generate(
         self,
-        template_id: str,
-        game_name: str,
+        template_id: str | None = None,
+        game_name: str = "",
         *,
         variables: list[dict] | None = None,
         formula_steps: list[dict] | None = None,
         outputs: list[dict] | None = None,
         output_dir: str | None = None,
     ) -> dict[str, str]:
-        """生成适配器包的所有文件，返回 {相对路径: 文件内容}。"""
+        """生成适配器包的所有文件，返回 {相对路径: 文件内容}。
+
+        Args:
+            template_id: 模板目录名；为 None 时使用通用默认值，不复制模板函数。
+            game_name: 游戏/计算器名称。
+            variables: 变量声明列表。
+            formula_steps: 公式步骤列表。
+            outputs: 输出声明列表。
+            output_dir: 保留参数（当前不写盘，由调用方负责）。
+
+        Returns:
+            相对路径到文件内容的映射；没有公式步骤时返回空字典。
+        """
         vars_ = [VarDef(**v) if isinstance(v, dict) else v for v in (variables or [])]
         steps = [StepDef(**s) if isinstance(s, dict) else s for s in (formula_steps or [])]
         outs = [OutputDef(**o) if isinstance(o, dict) else o for o in (outputs or [])]
@@ -110,7 +130,7 @@ class GeneratorEngine:
         if not steps:
             return {}
 
-        template = self._load_template(template_id)
+        template = self._load_template(template_id) if template_id else {}
 
         dag_json = self._build_dag(game_name, vars_, steps, outs)
         layout_json = self._build_layout(game_name, vars_, steps, outs)
@@ -125,7 +145,7 @@ class GeneratorEngine:
             "description": f"自动生成的计算器: {game_name}",
             "version": "0.1.0",
             "schema_version": template.get("schema_version", "dag-v1"),
-            "entry_dag": dag_filename,
+            "entry_dag": "dag/" + dag_filename,
             "ui_layout": "ui/layout.json",
             "attr_schema": "attr_schema.json",
             "functions": template.get("functions", {}),
@@ -149,7 +169,7 @@ class GeneratorEngine:
     # ── 内部实现 ────────────────────────────────────
 
     def _load_template(self, template_id: str) -> dict[str, Any]:
-        d = _ADAPTERS_DIR / template_id
+        d = self._adapters_dir / template_id
         if not d.is_dir():
             raise ValueError(f"模板不存在: {template_id}")
         meta_fp = d / "meta.json"

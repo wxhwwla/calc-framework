@@ -26,7 +26,8 @@ describe("数据贡献页 DataContributePage", () => {
 
   it("通过侧边栏导航可访问", () => {
     cy.contains("数据贡献").should("be.visible");
-    cy.get('nav').contains("数据贡献").should("exist");
+    // 侧边栏由 MUI Drawer 渲染，并非语义化 <nav>
+    cy.get('[class*="MuiDrawer-paper"]').contains("数据贡献").should("exist");
   });
 
   it("点击新增按钮打开表单", () => {
