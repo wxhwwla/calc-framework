@@ -23,6 +23,7 @@ from .compute_sheet import ComputeSheet
 from .layout import load_layout
 from .viewer_pack_utils import (
     _FALLBACK_DEFAULTS,
+    _SOURCE_DISPLAY_NAMES,
     _SOURCE_TO_DATA_FILE,
     extract_assets_from_calcpack,
     load_calcpack,
@@ -164,7 +165,7 @@ class CalcPackViewerRenderMixin:
             self._entity_selectors[source_prefix] = combo
             self._entity_data[source_prefix] = {n: e for n, e in zip(names, entities)}
 
-            label = {"character": "角色", "weapon": "武器", "equipment": "装备"}.get(source_prefix, source_prefix)
+            label = _SOURCE_DISPLAY_NAMES.get(source_prefix, source_prefix)
             self._entity_form.addRow(f"{label}:", combo)
 
     def _rebuild_sheet(self) -> None:

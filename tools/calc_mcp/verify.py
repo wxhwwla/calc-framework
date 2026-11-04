@@ -11,8 +11,10 @@ from typing import Any
 from calc_framework.config.adapter import AdapterPackage
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.data.attr_schema import AttributeSchema
+from calc_framework.data.entity_sources import DATA_STEM_SOURCE
 from calc_framework.ui.layout import load_layout
 
+from tools.generator.data_files import NAME_KEY
 from tools.quality.validate_layout_sync import validate_layout
 
 from .safety import ProjectScope, ScopeError
@@ -95,6 +97,7 @@ def validate_adapter(scope: ProjectScope, adapter_id: str) -> dict[str, Any]:
             errors.append(_issue("ATTR_SCHEMA_INVALID", f"attr_schema 校验失败: {exc}", "attr_schema.json"))
 
     _check_functions(target, meta, errors, warnings)
+    _check_data_files(target, meta, errors, warnings)
     if not errors:
         _check_adapter_package(target, errors)
 
@@ -255,6 +258,79 @@ def _check_functions(
             continue
         if not path.is_file():
             errors.append(_issue("FILE_MISSING", f"函数文件不存在: {ref}", ref))
+
+
+def _check_data_files(
+    target: Path,
+    meta: dict[str, Any],
+    errors: list[dict[str, str]],
+    warnings: list[dict[str, str]],
+) -> None:
+    """校验 ``data/*.json`` 与 ``meta.entry_data`` 引用。
+
+    查看器只识别 ``DATA_STEM_SOURCE`` 中的约定文件名，并按 ``名称`` 建立实体下拉。
+    对约定文件，缺失/重复名称会导致实体无法选择或选择错位，因此按错误上报；
+    空文件仅告警。非约定文件（如适配包自用的 ``*_standard.json``）只做格式提示，
+    不影响校验结果。
+    """
+    data_dir = target / "data"
+    if data_dir.is_dir():
+        for path in sorted(data_dir.glob("*.json")):
+            label = path.relative_to(target).as_posix()
+            recognized = path.stem in DATA_STEM_SOURCE
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                issue = _issue("DATA_INVALID", f"数据文件解析失败: {exc}", label)
+                target_list = errors if recognized else warnings
+                target_list.append(issue)
+                continue
+            if not isinstance(payload, list):
+                issue = _issue("DATA_INVALID", "数据文件必须是记录数组", label)
+                target_list = errors if recognized else warnings
+                target_list.append(issue)
+                continue
+            if not recognized:
+                warnings.append(_issue("DATA_UNKNOWN", f"数据文件 {label} 没有对应的实体来源，查看器会忽略", label))
+                continue
+            if not payload:
+                warnings.append(_issue("DATA_EMPTY", "数据文件为空列表，查看器不会显示该来源的实体选择", label))
+            else:
+                _check_data_records(payload, label, errors)
+
+    _check_entry_data(target, meta, errors)
+
+
+def _check_data_records(records: list[Any], label: str, errors: list[dict[str, str]]) -> None:
+    seen: set[str] = set()
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            errors.append(_issue("DATA_INVALID", f"第 {index + 1} 条记录必须是对象", label))
+            continue
+        name = record.get(NAME_KEY)
+        if not isinstance(name, str) or not name.strip():
+            errors.append(_issue("DATA_INVALID", f"第 {index + 1} 条记录缺少非空字符串 {NAME_KEY!r}", label))
+            continue
+        if name in seen:
+            errors.append(_issue("DATA_INVALID", f"{NAME_KEY} 重复: {name!r}", label))
+        seen.add(name)
+
+
+def _check_entry_data(target: Path, meta: dict[str, Any], errors: list[dict[str, str]]) -> None:
+    refs = meta.get("entry_data")
+    if refs is None:
+        return
+    if not isinstance(refs, list) or not all(isinstance(ref, str) for ref in refs):
+        errors.append(_issue("META_INVALID", "meta.json 的 entry_data 必须是字符串数组", "meta.json"))
+        return
+    for ref in refs:
+        try:
+            path = _safe_join(target, ref)
+        except VerifyError as exc:
+            errors.append(_issue("FILE_MISSING", str(exc), ref))
+            continue
+        if not path.is_file():
+            errors.append(_issue("FILE_MISSING", f"entry_data 引用的文件不存在: {ref}", ref))
 
 
 def _check_adapter_package(target: Path, errors: list[dict[str, str]]) -> None:

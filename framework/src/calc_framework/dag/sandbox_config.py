@@ -5,7 +5,7 @@
 """DAG 沙箱表达式求值器 — 白名单配置。
 
 存放 `_SAFE_BUILTINS`、`_SAFE_NODE_TYPES`、`_SAFE_UNARY_OPS`、`_SAFE_BIN_OPS`、
-`_GLOBAL_FUNCTIONS` 及函数注册 API。
+`_SAFE_COMPARE_OPS`、`_SAFE_BOOL_OPS`、`_GLOBAL_FUNCTIONS` 及函数注册 API。
 """
 
 from __future__ import annotations
@@ -40,14 +40,21 @@ _SAFE_NODE_TYPES: frozenset[type] = frozenset(
         ast.UnaryOp,
         ast.BinOp,
         ast.Call,
+        ast.Compare,
+        ast.BoolOp,
+        ast.IfExp,
         ast.Expression,
         ast.Load,
     }
 )
 
-_SAFE_UNARY_OPS: frozenset[type] = frozenset({ast.USub})
+_SAFE_UNARY_OPS: frozenset[type] = frozenset({ast.USub, ast.Not})
 
 _SAFE_BIN_OPS: frozenset[type] = frozenset({ast.Add, ast.Sub, ast.Mult, ast.Div})
+
+_SAFE_COMPARE_OPS: frozenset[type] = frozenset({ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Eq, ast.NotEq})
+
+_SAFE_BOOL_OPS: frozenset[type] = frozenset({ast.And, ast.Or})
 
 _GLOBAL_FUNCTIONS: dict[str, Any] = {}
 

@@ -1,0 +1,50 @@
+{
+  "schema_version": "ui-v1",
+  "name": "无尽的拉格朗日 武器输出计算表",
+  "description": "理论输出口径：攻击周期 = 冷却 + 持续时间 + 去程 + 回程；命中率按单发折算。",
+  "sections": [
+    {
+      "id": "weapon",
+      "type": "inputs",
+      "title": "武器参数",
+      "variables": [
+        "user_input.atk",
+        "user_input.attack_count",
+        "user_input.hit_rate",
+        "user_input.mounts",
+        "user_input.cooldown",
+        "user_input.duration",
+        "user_input.outbound",
+        "user_input.inbound"
+      ]
+    },
+    {
+      "id": "target",
+      "type": "inputs",
+      "title": "目标参数",
+      "variables": [
+        "user_input.enemy_hp",
+        "user_input.firepower"
+      ]
+    },
+    {
+      "id": "outputs",
+      "type": "outputs",
+      "title": "计算结果",
+      "outputs": [
+        "齐射总伤害",
+        "攻击周期(秒)",
+        "理论DPS",
+        "击杀时间(秒)"
+      ]
+    },
+    {
+      "id": "detail",
+      "type": "outputs",
+      "title": "补充口径",
+      "outputs": [
+        "官方火力击杀时间(秒)"
+      ]
+    }
+  ]
+}

@@ -61,6 +61,10 @@ def _add_data(scope: ProjectScope, adapter: str) -> None:
         json.dumps([{"名称": "测试角色", "基础攻击": 100}], ensure_ascii=False),
         encoding="utf-8",
     )
+    (data_dir / "enemies.json").write_text(
+        json.dumps([{"名称": "测试敌人", "防御": 10}], ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 def test_export_writes_pack_with_attr_schema_and_subgraphs(scope: ProjectScope, adapter: str) -> None:
@@ -85,6 +89,7 @@ def test_export_writes_pack_with_attr_schema_and_subgraphs(scope: ProjectScope, 
         "attr_schema.json",
         "dag/subgraphs/scale.dag.json",
         "data/characters.json",
+        "data/enemies.json",
     } <= names
     assert meta["entry_dag"] == "dag/formula.dag.json"
     assert meta["ui_layout"] == "ui/layout.json"
@@ -122,6 +127,7 @@ def test_import_roundtrip(scope: ProjectScope, adapter: str) -> None:
     assert result["validation"]["valid"] is True
     assert (scope.adapter_dir("demo_copy") / "attr_schema.json").is_file()
     assert (scope.adapter_dir("demo_copy") / "data" / "characters.json").is_file()
+    assert (scope.adapter_dir("demo_copy") / "data" / "enemies.json").is_file()
 
     package = AdapterPackage(scope.adapter_dir("demo_copy"))
     evaluated = package.dag_service.evaluate({"user_input": {"atk": 10}})

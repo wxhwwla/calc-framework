@@ -81,7 +81,7 @@ Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [
 [repo root]/
 ├── framework/                    # calc-framework — generic pip package
 │   ├── src/calc_framework/       #   DAG engine, inverse engine, data, UI, search, plugin
-│   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba)
+│   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba, wjdlglr)
 ├── web/                          # React + FastAPI full-stack web app
 │   ├── backend/                  #   FastAPI backend (/api/*)
 │   │   └── api/                  #     routes + internal/ entity/ search_lib/ … (see docs §4.188)
@@ -185,7 +185,7 @@ cd web/frontend && npm install && npm run dev
 - **Search Engine**: Top-N enumeration, parallel execution, cancel tokens, SQLite persistence
 - **ComputeSheet**: Declarative UI — consumes `layout.json` + DAG variables → auto-renders controls
 - **Plugin System**: Registry pattern + 3 built-in plugins (crit/dodge/distance) + `.calcplugin` format
-- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters
+- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters, plus an MCP-generated wjdlglr (17 nodes) adapter
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 - **i18n**: Web (react-i18next, ~890 entries per language) + Desktop (DesktopTranslator, 1046 keys per language, en/zh-CN)
 - **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing

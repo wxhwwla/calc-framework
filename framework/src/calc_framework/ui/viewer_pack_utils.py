@@ -9,21 +9,21 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from calc_framework.data.entity_sources import (
+    DATA_STEM_SOURCE,
+    SOURCE_DATA_STEMS,
+    SOURCE_DISPLAY_NAMES,
+)
+
 _VARIABLE_FIELD_MAP: dict[str, str] = {
     "基础攻击力": "基础攻击",
 }
 
-_SOURCE_TO_DATA_FILE: dict[str, str] = {
-    "character": "characters",
-    "weapon": "weapons",
-    "equipment": "equipments",
-}
+_SOURCE_TO_DATA_FILE: dict[str, str] = dict(SOURCE_DATA_STEMS)
 
-_DATA_FILE_TO_SOURCE: dict[str, str] = {
-    "characters": "character",
-    "weapons": "weapon",
-    "equipments": "equipment",
-}
+_DATA_FILE_TO_SOURCE: dict[str, str] = dict(DATA_STEM_SOURCE)
+
+_SOURCE_DISPLAY_NAMES: dict[str, str] = dict(SOURCE_DISPLAY_NAMES)
 
 _FALLBACK_DEFAULTS: dict[str, float] = {
     "技能倍率": 1.0,

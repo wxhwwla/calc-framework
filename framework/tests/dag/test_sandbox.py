@@ -97,17 +97,14 @@ class TestRejectedOperations:
         with pytest.raises(DAGSecurityError):
             parse_expr("2 ** 3")
 
-    def test_comparison_rejected(self) -> None:
-        with pytest.raises(DAGSecurityError):
-            parse_expr("a > b")
+    def test_comparison_allowed(self) -> None:
+        assert evaluate(parse_expr("a > b"), {"a": 2.0, "b": 1.0}) == pytest.approx(1.0)
 
-    def test_boolean_and_rejected(self) -> None:
-        with pytest.raises(DAGSecurityError):
-            parse_expr("a and b")
+    def test_boolean_and_allowed(self) -> None:
+        assert evaluate(parse_expr("a and b"), {"a": 1.0, "b": 2.0}) == pytest.approx(2.0)
 
-    def test_ternary_rejected(self) -> None:
-        with pytest.raises(DAGSecurityError):
-            parse_expr("1 if a else 2")
+    def test_ternary_allowed(self) -> None:
+        assert evaluate(parse_expr("1 if a else 2"), {"a": 1.0}) == pytest.approx(1.0)
 
     def test_attribute_rejected(self) -> None:
         with pytest.raises(DAGSecurityError):

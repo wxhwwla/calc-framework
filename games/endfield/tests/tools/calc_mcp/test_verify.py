@@ -104,6 +104,57 @@ def test_validate_adapter_reports_layout_errors(scope: ProjectScope, adapter: st
     assert any("missing_output" in item["message"] for item in result["errors"])
 
 
+def test_validate_adapter_reports_data_file_missing_name(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    data_path = tmp_path / "framework" / "adapters" / adapter / "data" / "enemies.json"
+    data_path.write_text(json.dumps([{"def": 10}], ensure_ascii=False), encoding="utf-8")
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is False
+    assert any(item["code"] == "DATA_INVALID" and "名称" in item["message"] for item in result["errors"])
+
+
+def test_validate_adapter_reports_duplicate_entity_names(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    data_path = tmp_path / "framework" / "adapters" / adapter / "data" / "enemies.json"
+    data_path.write_text(json.dumps([{"名称": "Boss"}, {"名称": "Boss"}], ensure_ascii=False), encoding="utf-8")
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is False
+    assert any(item["code"] == "DATA_INVALID" and "重复" in item["message"] for item in result["errors"])
+
+
+def test_validate_adapter_warns_empty_data_file(scope: ProjectScope, adapter: str) -> None:
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is True
+    assert any(item["code"] == "DATA_EMPTY" for item in result["warnings"])
+
+
+def test_validate_adapter_ignores_unrecognized_data_file_records(
+    scope: ProjectScope, adapter: str, tmp_path: Path
+) -> None:
+    data_path = tmp_path / "framework" / "adapters" / adapter / "data" / "operators_standard.json"
+    data_path.write_text(json.dumps([{"名称": "同名"}, {"名称": "同名"}], ensure_ascii=False), encoding="utf-8")
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is True
+    assert any(item["code"] == "DATA_UNKNOWN" for item in result["warnings"])
+
+
+def test_validate_adapter_reports_missing_entry_data(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    meta_path = tmp_path / "framework" / "adapters" / adapter / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["entry_data"] = ["data/missing.json"]
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is False
+    assert any(item["code"] == "FILE_MISSING" and "missing.json" in item["message"] for item in result["errors"])
+
+
 def test_smoke_test_uses_defaults(scope: ProjectScope, adapter: str) -> None:
     result = smoke_test_adapter(scope, adapter)
 

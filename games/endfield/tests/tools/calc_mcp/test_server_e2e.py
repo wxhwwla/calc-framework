@@ -8,6 +8,7 @@ import asyncio
 import json
 import os
 import sys
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -98,6 +99,7 @@ async def _scenario(project_dir: Path) -> None:
                         {"id": "damage", "op": "sub", "lhs": "raw", "rhs": "def"},
                     ],
                     "outputs": [{"name": "damage", "node": "damage", "label": "伤害"}],
+                    "data_files": {"enemy": [{"名称": "测试敌人", "def": 10}]},
                 },
             )
             assert generated["adapter_id"] == "demo"
@@ -108,15 +110,22 @@ async def _scenario(project_dir: Path) -> None:
             smoke = await _call(
                 session,
                 "smoke_test_adapter",
-                {"adapter_id": "demo", "context": {"user_input": {"atk": 50}}},
+                {
+                    "adapter_id": "demo",
+                    "context": {"user_input": {"atk": 50}, "enemy": {"def": 10}},
+                },
             )
             assert smoke["outputs"]["damage"] == 90.0
 
             files = await _call(session, "list_adapter_files", {"adapter_id": "demo"})
-            assert "meta.json" in {item["path"] for item in files["files"]}
+            paths = {item["path"] for item in files["files"]}
+            assert "meta.json" in paths
+            assert "data/enemies.json" in paths
 
             meta_file = await _call(session, "read_adapter_file", {"adapter_id": "demo", "path": "meta.json"})
-            assert json.loads(meta_file["content"])["name"] == "演示计算器"
+            meta_content = json.loads(meta_file["content"])
+            assert meta_content["name"] == "演示计算器"
+            assert meta_content["entry_data"] == ["data/enemies.json"]
 
             written = await _call(
                 session,
@@ -131,6 +140,8 @@ async def _scenario(project_dir: Path) -> None:
                 {"adapter_id": "demo", "output_path": "dist/demo.calcpack"},
             )
             assert exported["size_bytes"] > 0
+            with zipfile.ZipFile(project_dir / "dist" / "demo.calcpack") as pack:
+                assert "data/enemies.json" in pack.namelist()
 
             imported = await _call(
                 session,
@@ -138,6 +149,7 @@ async def _scenario(project_dir: Path) -> None:
                 {"calcpack_path": "dist/demo.calcpack", "adapter_id": "demo_copy"},
             )
             assert imported["validation"]["valid"] is True
+            assert (project_dir / "framework" / "adapters" / "demo_copy" / "data" / "enemies.json").is_file()
 
             revalidated = await _call(session, "validate_adapter", {"adapter_id": "demo_copy"})
             assert revalidated["valid"] is True

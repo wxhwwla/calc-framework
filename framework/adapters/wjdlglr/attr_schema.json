@@ -1,0 +1,72 @@
+{
+  "attributes": [
+    {
+      "name": "atk",
+      "type": "float",
+      "source": "user_input",
+      "description": "单发伤害",
+      "default": 65.0
+    },
+    {
+      "name": "attack_count",
+      "type": "float",
+      "source": "user_input",
+      "description": "攻击次数（工作次数×弹药数）",
+      "default": 4.0
+    },
+    {
+      "name": "hit_rate",
+      "type": "float",
+      "source": "user_input",
+      "description": "命中率（0-1，按单发折算）",
+      "default": 0.9
+    },
+    {
+      "name": "mounts",
+      "type": "float",
+      "source": "user_input",
+      "description": "挂载数",
+      "default": 3.0
+    },
+    {
+      "name": "cooldown",
+      "type": "float",
+      "source": "user_input",
+      "description": "冷却时间（秒）",
+      "default": 7.0
+    },
+    {
+      "name": "duration",
+      "type": "float",
+      "source": "user_input",
+      "description": "持续时间（秒）",
+      "default": 16.0
+    },
+    {
+      "name": "outbound",
+      "type": "float",
+      "source": "user_input",
+      "description": "去程时间（秒）"
+    },
+    {
+      "name": "inbound",
+      "type": "float",
+      "source": "user_input",
+      "description": "回程时间（秒）"
+    },
+    {
+      "name": "enemy_hp",
+      "type": "float",
+      "source": "user_input",
+      "description": "目标血量",
+      "default": 10000.0
+    },
+    {
+      "name": "firepower",
+      "type": "float",
+      "source": "user_input",
+      "description": "官方对舰火力（可选，用于击杀时间）",
+      "default": 851.0
+    }
+  ]
+}

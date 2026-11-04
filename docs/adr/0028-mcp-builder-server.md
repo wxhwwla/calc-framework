@@ -47,3 +47,15 @@
 - `smoke_test_adapter` 会执行适配包内的 `functions.py`，仅可用于开发者自己的本地适配包；工具描述和文档均明确提示。
 - 生成器只支持 `+ - * /`、`condition`、`expr` 六种步骤；复杂公式（`unary`/`call`/子图）通过 `scaffold_adapter` 提交完整 DAG。
 - `tools/` 目录达到 20 个直接子项硬顶，后续扩展需先整理目录。
+
+## 修订 2026-11-04：三项能力增强
+
+实测生成「无尽的拉格朗日」计算器后（见 `docs/会话接续手册.md` §4.248 缺口 ①②④），在不改变工具数量与 `.calcpack` 格式的前提下增强：
+
+1. **`expr` 沙箱支持控制流**：新增比较 `< <= > >= == !=`、布尔 `and/or/not`（短路、返回操作数）与三元 `a if cond else b`（只求值选中分支，死分支仍做静态白名单校验）；链式比较左值只求一次。`in` / `not in` / `is` / `is not`、属性访问、lambda、容器字面量继续拒绝。护甲减免、分档公式不再必须写 `functions.py`。
+2. **未绑定实体源变量自动转为可编辑输入**：`generate_adapter` 把未出现在 `data_files` 中（或对应列表为空）的 `character` / `weapon` / `equipment` / `enemy` 变量改写为 `user_input.<name>`，layout 按**原始 source** 分组（输入/角色/武器/装备/目标参数）；`computed` 不重映射；`source="input"` 别名归一为 `user_input`。UI 层零改动。
+3. **`generate_adapter.data_files`**：按 `character` / `weapon` / `equipment` / `enemy` 键接收记录数组，写入 `data/characters.json` / `weapons.json` / `equipments.json` / `enemies.json`；记录须含非空 `名称`、同文件不重复、≤512 KiB（UTF-8 字节）；非空路径写入 `meta.entry_data`。仅**非空记录列表**视为绑定：绑定来源的变量保留命名空间，由 CalcPackViewer 实体下拉注入，不出现在输入区；空列表按未绑定处理并在 warnings 中提示。查看器补齐 `enemy` 映射（标签「敌人」），脚手架数据文件名由 `enemys.json` 修正为 `enemies.json` 且不再生成 `computeds.json`。
+
+**未采纳**：`.calcpack` 携带并执行 `functions.py`——包内 Python 无签名/信任机制，等同任意代码执行；若将来需要，先单独立 ADR 定义信任边界。
+
+**兼容性**：显式按 `enemy.*` 等命名空间传 context 的旧调用方会因变量重映射而失配；`validate_adapter` 对已绑定来源变量缺失 layout 的提示属预期噪音。

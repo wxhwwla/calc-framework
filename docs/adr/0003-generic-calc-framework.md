@@ -35,7 +35,7 @@
 | 14 | 变量声明 | 独立 `variables` 区 | GUI 编辑器数据源 + 精确错误信息 |
 | 15 | 输出定义 | 引用风格指向普通节点 | 一个节点可被多个输出复用 |
 | 16 | 子图支持 | 第一版就做 | `call` 节点 + `subgraphs` 配置区 |
-| 17 | AST 白名单 | `+ - * /`、`floor/ceil/abs/sqrt/min/max` | 拒绝比较/三目/`**`/函数调用/属性访问 |
+| 17 | AST 白名单 | `+ - * /`、`floor/ceil/abs/sqrt/min/max`；2026-11-04 起增加比较/布尔/三元（见 §4.2） | 拒绝 `**`/`in`/`is`/属性访问/函数调用 |
 
 ---
 
@@ -424,9 +424,9 @@ AST 沙箱使用 Python 内置的 `ast` 模块将用户提供的表达式字符�
 | 数字 | `Num` / `Constant`（整数、浮点数） | — |
 | 变量 | `Name`（由 `inputs` 映射注入值） | — |
 | 二元运算 | `Add` `Sub` `Mult` `Div` | `Pow`（使用 `binary` 节点的 `"^"` 代替） |
-| 比较 | — | `Compare` `Eq` `NotEq` `Lt` `Gt` `LtE` `GtE` `Is` `IsNot` `In` `NotIn` |
-| 布尔/条件 | — | `BoolOp` `IfExp` `And` `Or` `Not` |
-| 一元运算 | `USub`（负号） | `UAdd` `Not` `Invert` |
+| 比较 | `Compare` + `Lt` `LtE` `Gt` `GtE` `Eq` `NotEq`（2026-11-04 起） | `Is` `IsNot` `In` `NotIn` |
+| 布尔/条件 | `BoolOp` + `And` `Or`、`IfExp`（2026-11-04 起） | — |
+| 一元运算 | `USub`（负号）、`Not` | `UAdd` `Invert` |
 | 内置函数调用 | `floor` `ceil` `abs` `sqrt` `min` `max` | 其他所有（含 `open` `exec` `eval` `getattr` `setattr` `__import__` `type` `isinstance` 等） |
 | 属性访问 | — | `Attribute` |
 | 下标/切片 | — | `Subscript` `Slice` |
@@ -435,6 +435,14 @@ AST 沙箱使用 Python 内置的 `ast` 模块将用户提供的表达式字符�
 | 类定义 | — | `ClassDef` |
 | 导入 | — | `Import` `ImportFrom` |
 | 其他 | — | `Yield` `YieldFrom` `Await` `Starred` `NamedExpr` `FormattedValue` `JoinedStr` |
+
+**新增节点语义（2026-11-04）**：
+
+- 比较返回 `True`/`False`，`evaluate()` 最终转为 `1.0`/`0.0`；比较两侧类型不兼容（如 `1 < 'a'`）抛 `DAGRuntimeError`。
+- 链式比较（`a < b < c`）左值只求一次，逐对短路。
+- `and`/`or` 按 Python 语义短路并返回操作数（不强制布尔化）；`not` 返回布尔值。
+- `IfExp` 只求值选中分支，但 `test`/`body`/`orelse` 三支在解析期都做白名单校验，死分支不能藏禁用语法。
+- 新增节点必须在 `_check_node` 中**显式递归**其子树；仅把类型加入集合不足以阻止嵌套绕过。
 
 ### 4.3 实现架构
 

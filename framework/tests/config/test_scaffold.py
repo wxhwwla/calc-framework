@@ -26,6 +26,7 @@ def _write_dag(path: Path) -> Path:
                 "variables": {
                     "user_input.atk": {"type": "float", "source": "user_input", "default": 100, "description": "攻击"},
                     "enemy.def": {"type": "float", "source": "enemy", "default": 10, "description": "防御"},
+                    "computed.bonus": {"type": "float", "source": "computed", "default": 5, "description": "加成"},
                 },
                 "nodes": {
                     "atk": {"type": "var", "path": "user_input.atk"},
@@ -74,6 +75,11 @@ def test_scaffold_creates_adapter_package(tmp_path: Path) -> None:
     layout = json.loads((result.adapter_dir / "ui" / "layout.json").read_text(encoding="utf-8"))
     assert layout["schema_version"] == "ui-v1"
     assert layout["sections"][0]["variables"] == ["user_input.atk", "enemy.def"]
+
+    data_dir = result.adapter_dir / "data"
+    assert (data_dir / "enemies.json").exists()
+    assert not (data_dir / "enemys.json").exists()
+    assert not (data_dir / "computeds.json").exists()
 
 
 def test_scaffold_rejects_invalid_adapter_id(tmp_path: Path) -> None:

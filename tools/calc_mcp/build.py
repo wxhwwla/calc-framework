@@ -32,6 +32,7 @@ def generate_adapter(
     variables: list[dict[str, Any]] | None = None,
     formula_steps: list[dict[str, Any]] | None = None,
     outputs: list[dict[str, Any]] | None = None,
+    data_files: dict[str, list[dict[str, Any]]] | None = None,
     dry_run: bool = False,
     overwrite: bool = False,
 ) -> dict[str, Any]:
@@ -46,6 +47,8 @@ def generate_adapter(
         variables: 变量声明。
         formula_steps: 公式步骤。
         outputs: 输出声明。
+        data_files: 实体数据文件声明；提供非空记录列表的来源视为绑定，
+            其变量保留命名空间；未绑定或空列表来源的变量自动改写为 ``user_input``。
         dry_run: 为 True 时只返回文件内容，不写盘。
         overwrite: 是否允许覆盖已存在目录中的文件。
 
@@ -58,7 +61,12 @@ def generate_adapter(
     target = scope.adapter_dir(adapter_id)
     _check_target(target, overwrite)
 
-    spec = normalize_spec(variables=variables, formula_steps=formula_steps, outputs=outputs)
+    spec = normalize_spec(
+        variables=variables,
+        formula_steps=formula_steps,
+        outputs=outputs,
+        data_files=data_files,
+    )
     engine = GeneratorEngine(adapters_dir=scope.adapters_dir)
     try:
         files = engine.generate(
@@ -67,6 +75,7 @@ def generate_adapter(
             variables=[item.to_generator_dict() for item in spec.variables],
             formula_steps=[item.to_generator_dict() for item in spec.steps],
             outputs=[item.to_generator_dict() for item in spec.outputs],
+            data_files=spec.data_files or None,
         )
     except (ValueError, KeyError, TypeError) as exc:
         raise BuildError(f"生成失败: {exc}") from exc

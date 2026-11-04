@@ -130,3 +130,32 @@ def test_empty_steps_rejected() -> None:
 
     with pytest.raises(SpecError, match="公式步骤"):
         normalize_spec(**data)
+
+
+def test_data_files_normalized_and_warn_on_binding() -> None:
+    data = _base(data_files={"enemy": [{"名称": "Boss", "def": 10}]})
+
+    spec = normalize_spec(**data)
+
+    assert spec.data_files == {"enemy": [{"名称": "Boss", "def": 10}]}
+    assert any("已绑定" in warning for warning in spec.warnings)
+
+
+def test_unbound_source_produces_remap_warning() -> None:
+    spec = normalize_spec(**_base())
+
+    assert any("改写为 user_input" in warning for warning in spec.warnings)
+
+
+def test_invalid_data_files_source_rejected() -> None:
+    data = _base(data_files={"user_input": []})
+
+    with pytest.raises(SpecError, match="data_files"):
+        normalize_spec(**data)
+
+
+def test_data_files_record_without_name_rejected() -> None:
+    data = _base(data_files={"enemy": [{"def": 1}]})
+
+    with pytest.raises(SpecError, match="名称"):
+        normalize_spec(**data)

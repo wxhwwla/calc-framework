@@ -11,6 +11,7 @@ import pytest
 from calc_framework.config.adapter import AdapterPackage
 from tools.calc_mcp.build import BuildError, generate_adapter, scaffold_adapter
 from tools.calc_mcp.safety import ProjectScope
+from tools.calc_mcp.spec import SpecError
 
 
 @pytest.fixture
@@ -112,6 +113,58 @@ def test_generate_adapter_uses_template_functions(scope: ProjectScope, tmp_path:
     assert "functions.py" in result["files"]
     meta = json.loads((tmp_path / "framework" / "adapters" / "demo" / "meta.json").read_text(encoding="utf-8"))
     assert meta["functions"] == {"double": "functions.py"}
+
+
+def test_generate_adapter_with_data_files_binds_source(scope: ProjectScope, tmp_path: Path) -> None:
+    result = generate_adapter(
+        scope,
+        adapter_id="demo",
+        variables=[
+            {"name": "atk", "type": "float", "source": "weapon", "default": 1},
+            {"name": "mult", "type": "float", "source": "user_input", "default": 1},
+        ],
+        formula_steps=[{"id": "damage", "op": "*", "lhs": "atk", "rhs": "mult"}],
+        outputs=[{"name": "damage", "node": "damage"}],
+        data_files={"weapon": [{"名称": "测试剑", "atk": 65}]},
+    )
+
+    adapter_dir = tmp_path / "framework" / "adapters" / "demo"
+    assert result["ok"] is True
+    assert (adapter_dir / "data" / "weapons.json").is_file()
+    meta = json.loads((adapter_dir / "meta.json").read_text(encoding="utf-8"))
+    assert meta["entry_data"] == ["data/weapons.json"]
+    assert any("weapon" in warning for warning in result["warnings"])
+
+    pkg = AdapterPackage(adapter_dir)
+    evaluated = pkg.dag_service.evaluate({"weapon": {"atk": 65}, "user_input": {"mult": 2}})
+    assert evaluated.outputs["damage"] == pytest.approx(130.0)
+
+
+def test_generate_adapter_dry_run_includes_data_files(scope: ProjectScope, tmp_path: Path) -> None:
+    result = generate_adapter(
+        scope,
+        adapter_id="demo",
+        variables=_variables(),
+        formula_steps=_steps(),
+        outputs=_outputs(),
+        data_files={"enemy": [{"名称": "Boss", "def": 10}]},
+        dry_run=True,
+    )
+
+    assert "data/enemies.json" in result["files"]
+    assert not (tmp_path / "framework" / "adapters" / "demo").exists()
+
+
+def test_generate_adapter_rejects_invalid_data_files(scope: ProjectScope) -> None:
+    with pytest.raises(SpecError, match="data_files"):
+        generate_adapter(
+            scope,
+            adapter_id="demo",
+            variables=_variables(),
+            formula_steps=_steps(),
+            outputs=_outputs(),
+            data_files={"characters": [{"名称": "x"}]},
+        )
 
 
 def _raw_dag() -> dict:

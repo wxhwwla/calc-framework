@@ -82,6 +82,25 @@ def test_describe_schemas_exposes_node_and_step_rules() -> None:
     assert {"sqrt", "integral"} <= function_names
 
 
+def test_describe_schemas_exposes_data_files_and_expression_operators() -> None:
+    result = describe_schemas()
+
+    data_files = result["data_files"]
+    assert data_files["allowed_sources"] == ["character", "weapon", "equipment", "enemy"]
+    assert data_files["files"]["enemy"] == "data/enemies.json"
+    assert data_files["max_bytes_per_file"] == 512 * 1024
+    assert "非空" in data_files["binding_rule"]
+    assert "名称" in data_files["validation_rule"]
+
+    operators = result["expression_operators"]
+    assert set(operators["comparison"]) == {"<", "<=", ">", ">=", "==", "!="}
+    assert set(operators["boolean"]) == {"and", "or", "not"}
+    assert "三元" in operators["ternary"]
+
+    assert result["layout"]["section_types"] == ["inputs", "outputs", "widget"]
+    assert result["layout"]["widget_types"] == ["donation"]
+
+
 def test_read_guide_returns_content(scope: ProjectScope) -> None:
     result = read_guide(scope, "overview")
 

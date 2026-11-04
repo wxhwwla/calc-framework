@@ -148,8 +148,13 @@ def scaffold_adapter_directory(config: AdapterScaffoldConfig) -> ScaffoldResult:
         parts = var_path.split(".")
         if len(parts) == 2 and var_def.source in valid_sources:
             source_groups.setdefault(var_def.source, []).append(parts[1])
+    from calc_framework.data.entity_sources import SOURCE_DATA_STEMS
+
     for source in source_groups:
-        data_file = data_dir / f"{source}s.json"
+        stem = SOURCE_DATA_STEMS.get(source)
+        if stem is None:
+            continue
+        data_file = data_dir / f"{stem}.json"
         if not data_file.exists():
             data_file.write_text(json.dumps([], ensure_ascii=False, indent=2), encoding="utf-8")
 

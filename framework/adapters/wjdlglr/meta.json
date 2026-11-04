@@ -1,0 +1,11 @@
+{
+  "name": "无尽的拉格朗日 武器输出计算器",
+  "game": "无尽的拉格朗日",
+  "description": "基于 wiki_scout 抓取的武器字段计算理论输出与击杀时间（MCP 生成）",
+  "version": "0.1.0",
+  "schema_version": "dag-v1",
+  "entry_dag": "dag/wjdlglr.dag.json",
+  "ui_layout": "ui/layout.json",
+  "attr_schema": "attr_schema.json",
+  "functions": {}
+}

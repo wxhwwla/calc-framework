@@ -25,6 +25,11 @@ _INSTRUCTIONS = """\
 
 注意：
 - formula_steps 引用变量 name、步骤 id 或数字字面量，不要写 user_input.atk。
+- expr 支持 + - * /、比较（< <= > >= == !=）、and/or/not、三元 a if cond else b；
+  不支持 in/is/lambda/属性访问。
+- generate_adapter.data_files 可提供 character/weapon/equipment/enemy 实体记录
+  （每条含非空字符串 名称）；提供非空记录列表的来源视为绑定，其变量保留命名空间
+  并由查看器实体下拉提供；未绑定或空列表来源的变量自动改写为 user_input 输入。
 - 写文件默认不覆盖，需要覆盖时显式传 overwrite=true。
 - smoke_test_adapter 会执行适配包内的 functions.py，仅用于本地开发者适配包。
 """

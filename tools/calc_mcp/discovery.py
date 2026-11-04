@@ -11,6 +11,8 @@ from typing import Any
 from calc_framework.dag.graph_types import VALID_VAR_SOURCES, VALID_VAR_TYPES
 from calc_framework.dag.sandbox_config import list_function_specs
 
+from tools.generator.data_files import DATA_FILE_BY_SOURCE, MAX_DATA_FILE_BYTES
+
 from .safety import ProjectScope, ScopeError
 
 _GUIDE_MAX_BYTES = 60_000
@@ -75,7 +77,7 @@ _NODE_SCHEMAS: list[dict[str, Any]] = [
         "type": "expr",
         "description": "白名单表达式求值",
         "fields": {
-            "expr": "string（必填），可用 + - * /、数学函数",
+            "expr": "string（必填），可用 + - * /、比较、and/or/not、三元、数学函数",
             "inputs": "对象 {表达式变量名: 节点 id}",
         },
     },
@@ -103,6 +105,32 @@ _FORMULA_STEP_SCHEMA: dict[str, Any] = {
     "reference_rule": (
         "lhs/rhs/cond/true_val/false_val 以及 input_map 的值必须引用变量 name、步骤 id 或数字字面量"
         "（例如 'atk'、'damage'、'2'），不要填写 'user_input.atk' 这类完整路径"
+    ),
+}
+
+_EXPRESSION_OPERATORS: dict[str, Any] = {
+    "arithmetic": ["+", "-", "*", "/"],
+    "comparison": ["<", "<=", ">", ">=", "==", "!="],
+    "boolean": ["and", "or", "not"],
+    "ternary": "三元 a if cond else b（cond 为真取 a，否则取 b）",
+    "short_circuit": "and/or 按 Python 语义短路并返回操作数；三元只求值选中分支",
+    "rejected": ["in", "not in", "is", "is not", "**", "~", "属性访问", "lambda", "列表/字典/集合"],
+}
+
+_DATA_FILE_SCHEMA: dict[str, Any] = {
+    "allowed_sources": list(DATA_FILE_BY_SOURCE),
+    "files": dict(DATA_FILE_BY_SOURCE),
+    "record_rule": "每条记录必须是以字符串为键的对象，且含非空字符串 '名称'；同一文件内 '名称' 不得重复",
+    "max_bytes_per_file": MAX_DATA_FILE_BYTES,
+    "binding_rule": (
+        "data_files 中提供非空记录列表的来源视为已绑定：其变量保留 source 命名空间、"
+        "由查看器实体下拉提供，不出现在输入区；未绑定或列表为空的来源，"
+        "其变量自动改写为 user_input.*（空列表会在 warnings 中提示）"
+    ),
+    "meta_rule": "生成器会把非空数据文件路径写入 meta.entry_data",
+    "validation_rule": (
+        "validate_adapter 校验 data/*.json：记录须含非空 '名称' 且同文件不重复；"
+        "空文件与无法映射到实体来源的文件名仅告警；meta.entry_data 引用的文件必须存在"
     ),
 }
 
@@ -198,9 +226,12 @@ def describe_schemas() -> dict[str, Any]:
             "note": "node 可引用变量 name 或步骤 id；为空时默认等于 name",
         },
         "expression_functions": list_function_specs(),
+        "expression_operators": _EXPRESSION_OPERATORS,
+        "data_files": _DATA_FILE_SCHEMA,
         "layout": {
             "schema_version": "ui-v1",
-            "section_types": ["inputs", "outputs", "donation", "text", "table"],
+            "section_types": ["inputs", "outputs", "widget"],
+            "widget_types": ["donation"],
             "note": "scaffold_adapter 会自动生成基础 layout，可用 write_adapter_file 微调",
         },
     }

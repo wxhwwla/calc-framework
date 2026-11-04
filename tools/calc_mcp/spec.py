@@ -15,6 +15,8 @@ from typing import Any
 from calc_framework.dag.graph_types import VALID_VAR_SOURCES, VALID_VAR_TYPES
 from calc_framework.dag.sandbox import MAX_EXPR_LENGTH
 
+from tools.generator.data_files import DataFileError, binding_warnings, normalize_data_files
+
 _SOURCE_ALIASES = {
     "input": "user_input",
     "userinput": "user_input",
@@ -126,6 +128,7 @@ class AdapterSpec:
     variables: list[VariableSpec]
     steps: list[StepSpec]
     outputs: list[OutputSpec]
+    data_files: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
 
 
@@ -134,19 +137,21 @@ def normalize_spec(
     variables: list[dict[str, Any]] | None = None,
     formula_steps: list[dict[str, Any]] | None = None,
     outputs: list[dict[str, Any]] | None = None,
+    data_files: dict[str, Any] | None = None,
 ) -> AdapterSpec:
-    """归一化并校验变量/步骤/输出声明。
+    """归一化并校验变量/步骤/输出/数据文件声明。
 
     Args:
         variables: 变量声明列表。
         formula_steps: 公式步骤列表。
         outputs: 输出声明列表；为空时自动以最后一步生成「最终结果」。
+        data_files: 实体数据文件声明，键仅允许 character/weapon/equipment/enemy。
 
     Returns:
         归一化后的 :class:`AdapterSpec`。
 
     Raises:
-        SpecError: 字段缺失、类型非法、引用悬空或 id 冲突。
+        SpecError: 字段缺失、类型非法、引用悬空、id 冲突或 data_files 非法。
     """
     warnings: list[str] = []
     var_specs = _normalize_variables(variables or [], warnings)
@@ -171,7 +176,20 @@ def normalize_spec(
         if out.node not in known_refs:
             raise SpecError(f"输出 {out.name!r} 引用了不存在的节点: {out.node!r}")
 
-    return AdapterSpec(variables=var_specs, steps=step_specs, outputs=out_specs, warnings=warnings)
+    try:
+        normalized_data_files, data_warnings = normalize_data_files(data_files)
+    except DataFileError as exc:
+        raise SpecError(f"data_files 无效: {exc}") from exc
+    warnings.extend(data_warnings)
+    warnings.extend(binding_warnings((var.source for var in var_specs), normalized_data_files))
+
+    return AdapterSpec(
+        variables=var_specs,
+        steps=step_specs,
+        outputs=out_specs,
+        data_files=normalized_data_files,
+        warnings=warnings,
+    )
 
 
 def safe_node_id(name: str) -> str:

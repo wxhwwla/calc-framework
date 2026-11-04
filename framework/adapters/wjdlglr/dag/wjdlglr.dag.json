@@ -1,0 +1,211 @@
+{
+  "schema_version": "dag-v1",
+  "name": "无尽的拉格朗日 武器理论输出",
+  "description": "武器理论输出公式：齐射伤害 = 单发伤害 × 攻击次数 × 命中率 × 挂载数；DPS = 齐射伤害 / (冷却 + 持续时间 + 去程 + 回程)。",
+  "variables": {
+    "user_input.atk": {
+      "type": "float",
+      "source": "user_input",
+      "default": 65.0,
+      "description": "单发伤害"
+    },
+    "user_input.attack_count": {
+      "type": "float",
+      "source": "user_input",
+      "default": 4.0,
+      "description": "攻击次数（工作次数×弹药数）"
+    },
+    "user_input.hit_rate": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.9,
+      "description": "命中率（0-1，按单发折算）"
+    },
+    "user_input.mounts": {
+      "type": "float",
+      "source": "user_input",
+      "default": 3.0,
+      "description": "挂载数"
+    },
+    "user_input.cooldown": {
+      "type": "float",
+      "source": "user_input",
+      "default": 7.0,
+      "description": "冷却时间（秒）"
+    },
+    "user_input.duration": {
+      "type": "float",
+      "source": "user_input",
+      "default": 16.0,
+      "description": "持续时间（秒）"
+    },
+    "user_input.outbound": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "去程时间（秒）"
+    },
+    "user_input.inbound": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "回程时间（秒）"
+    },
+    "user_input.enemy_hp": {
+      "type": "float",
+      "source": "user_input",
+      "default": 10000.0,
+      "description": "目标血量"
+    },
+    "user_input.firepower": {
+      "type": "float",
+      "source": "user_input",
+      "default": 851.0,
+      "description": "官方对舰火力（可选，用于击杀时间）"
+    }
+  },
+  "subgraphs": {},
+  "nodes": {
+    "atk": {
+      "type": "var",
+      "path": "user_input.atk",
+      "label": "单发伤害"
+    },
+    "attack_count": {
+      "type": "var",
+      "path": "user_input.attack_count",
+      "label": "攻击次数（工作次数×弹药数）"
+    },
+    "hit_rate": {
+      "type": "var",
+      "path": "user_input.hit_rate",
+      "label": "命中率（0-1，按单发折算）"
+    },
+    "mounts": {
+      "type": "var",
+      "path": "user_input.mounts",
+      "label": "挂载数"
+    },
+    "cooldown": {
+      "type": "var",
+      "path": "user_input.cooldown",
+      "label": "冷却时间（秒）"
+    },
+    "duration": {
+      "type": "var",
+      "path": "user_input.duration",
+      "label": "持续时间（秒）"
+    },
+    "outbound": {
+      "type": "var",
+      "path": "user_input.outbound",
+      "label": "去程时间（秒）"
+    },
+    "inbound": {
+      "type": "var",
+      "path": "user_input.inbound",
+      "label": "回程时间（秒）"
+    },
+    "enemy_hp": {
+      "type": "var",
+      "path": "user_input.enemy_hp",
+      "label": "目标血量"
+    },
+    "firepower": {
+      "type": "var",
+      "path": "user_input.firepower",
+      "label": "官方对舰火力（可选，用于击杀时间）"
+    },
+    "cycle": {
+      "type": "expr",
+      "expr": "cooldown + duration + outbound + inbound",
+      "inputs": {
+        "cooldown": "cooldown",
+        "duration": "duration",
+        "outbound": "outbound",
+        "inbound": "inbound"
+      },
+      "label": "攻击周期 = 冷却 + 持续时间 + 去程 + 回程"
+    },
+    "volley": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "atk",
+      "rhs": "attack_count",
+      "label": "单挂载齐射伤害"
+    },
+    "eff_volley": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "volley",
+      "rhs": "hit_rate",
+      "label": "命中折算后齐射伤害"
+    },
+    "total_volley": {
+      "type": "binary",
+      "op": "*",
+      "lhs": "eff_volley",
+      "rhs": "mounts",
+      "label": "全挂载齐射总伤害"
+    },
+    "dps": {
+      "type": "expr",
+      "expr": "total_volley / max(cycle, 0.001)",
+      "inputs": {
+        "total_volley": "total_volley",
+        "cycle": "cycle"
+      },
+      "label": "理论 DPS = 齐射总伤害 / 攻击周期"
+    },
+    "ttk": {
+      "type": "expr",
+      "expr": "enemy_hp / max(dps, 0.000001)",
+      "inputs": {
+        "enemy_hp": "enemy_hp",
+        "dps": "dps"
+      },
+      "label": "击杀时间 = 目标血量 / 理论 DPS"
+    },
+    "official_ttk": {
+      "type": "expr",
+      "expr": "enemy_hp / max(firepower, 0.000001)",
+      "inputs": {
+        "enemy_hp": "enemy_hp",
+        "firepower": "firepower"
+      },
+      "label": "官方对舰火力口径击杀时间"
+    }
+  },
+  "outputs": {
+    "齐射总伤害": {
+      "node": "total_volley",
+      "label": "齐射总伤害",
+      "format": "",
+      "is_primary": true
+    },
+    "攻击周期(秒)": {
+      "node": "cycle",
+      "label": "攻击周期(秒)",
+      "format": "",
+      "is_primary": true
+    },
+    "理论DPS": {
+      "node": "dps",
+      "label": "理论DPS",
+      "format": "",
+      "is_primary": true
+    },
+    "击杀时间(秒)": {
+      "node": "ttk",
+      "label": "击杀时间(秒)",
+      "format": "",
+      "is_primary": true
+    },
+    "官方火力击杀时间(秒)": {
+      "node": "official_ttk",
+      "label": "官方火力击杀时间(秒)",
+      "format": "",
+      "is_primary": false
+    }
+  }
+}

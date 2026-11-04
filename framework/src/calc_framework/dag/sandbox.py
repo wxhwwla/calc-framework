@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import ast
+import operator
 from typing import Any
 
 from calc_framework.logging import get_logger
@@ -15,7 +16,9 @@ from .errors import DAGCompileError, DAGRuntimeError, DAGSecurityError
 from .sandbox_config import (
     _GLOBAL_FUNCTIONS,
     _SAFE_BIN_OPS,
+    _SAFE_BOOL_OPS,
     _SAFE_BUILTINS,
+    _SAFE_COMPARE_OPS,
     _SAFE_NODE_TYPES,
     _SAFE_UNARY_OPS,
     _all_allowed_names,
@@ -35,6 +38,16 @@ _MAX_EXPR_LENGTH = MAX_EXPR_LENGTH
 
 # 数值积分最大分段数
 _MAX_INTEGRAL_N = 100_000
+
+# 比较运算符 -> 求值函数
+_COMPARE_FUNCS: dict[type, Any] = {
+    ast.Lt: operator.lt,
+    ast.LtE: operator.le,
+    ast.Gt: operator.gt,
+    ast.GtE: operator.ge,
+    ast.Eq: operator.eq,
+    ast.NotEq: operator.ne,
+}
 
 
 def _integral_simpson(fn_name: str, a: float, b: float, n: float = 100.0) -> float:
@@ -108,6 +121,31 @@ def _check_node(node: ast.AST) -> None:
             )
         _check_node(node.left)
         _check_node(node.right)
+    elif tp is ast.Compare:
+        for op in node.ops:
+            if type(op) not in _SAFE_COMPARE_OPS:
+                logger.warning("安全违规: 禁止的比较运算符 %s", type(op).__name__)
+                raise DAGSecurityError(
+                    f"禁止的比较运算符: {type(op).__name__}",
+                    offending_node=type(op).__name__,
+                )
+        _check_node(node.left)
+        for comparator in node.comparators:
+            _check_node(comparator)
+    elif tp is ast.BoolOp:
+        if type(node.op) not in _SAFE_BOOL_OPS:
+            logger.warning("安全违规: 禁止的布尔运算符 %s", type(node.op).__name__)
+            raise DAGSecurityError(
+                f"禁止的布尔运算符: {type(node.op).__name__}",
+                offending_node=type(node.op).__name__,
+            )
+        for value in node.values:
+            _check_node(value)
+    elif tp is ast.IfExp:
+        # 死分支也必须通过静态校验，保证运行期不会触发未验证代码
+        _check_node(node.test)
+        _check_node(node.body)
+        _check_node(node.orelse)
     elif tp is ast.Expression:
         _check_node(node.body)
 
@@ -139,6 +177,8 @@ def _eval_node(node: ast.AST, scope: dict[str, float]) -> Any:
         operand = _eval_node(node.operand, scope)
         if isinstance(node.op, ast.USub):
             return -operand
+        if isinstance(node.op, ast.Not):
+            return not operand
         raise DAGRuntimeError(f"不支持的一元运算符: {type(node.op).__name__}")
     if isinstance(node, ast.BinOp):
         lhs = _eval_node(node.left, scope)
@@ -155,6 +195,32 @@ def _eval_node(node: ast.AST, scope: dict[str, float]) -> Any:
         except ZeroDivisionError:
             raise DAGRuntimeError("除零错误")
         raise DAGRuntimeError(f"不支持的二元运算符: {type(node.op).__name__}")
+    if isinstance(node, ast.Compare):
+        left = _eval_node(node.left, scope)
+        try:
+            for op, comparator in zip(node.ops, node.comparators, strict=True):
+                right = _eval_node(comparator, scope)
+                if not _COMPARE_FUNCS[type(op)](left, right):
+                    return False
+                left = right
+        except TypeError as e:
+            raise DAGRuntimeError(f"比较运算类型不匹配: {e}")
+        return True
+    if isinstance(node, ast.BoolOp):
+        is_and = isinstance(node.op, ast.And)
+        result: Any = 0.0
+        for value in node.values:
+            result = _eval_node(value, scope)
+            if is_and:
+                if not result:
+                    return result
+            elif result:
+                return result
+        return result
+    if isinstance(node, ast.IfExp):
+        if _eval_node(node.test, scope):
+            return _eval_node(node.body, scope)
+        return _eval_node(node.orelse, scope)
     if isinstance(node, ast.Call):
         func_name = node.func.id
         args = [_eval_node(a, scope) for a in node.args]
