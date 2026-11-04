@@ -167,6 +167,99 @@ def test_generate_adapter_rejects_invalid_data_files(scope: ProjectScope) -> Non
         )
 
 
+def test_generate_adapter_with_entity_selectors(scope: ProjectScope, tmp_path: Path) -> None:
+    result = generate_adapter(
+        scope,
+        adapter_id="demo",
+        variables=[{"name": "def", "type": "float", "source": "enemy", "default": 10}],
+        formula_steps=[{"id": "damage", "op": "*", "lhs": "def", "rhs": "2"}],
+        outputs=[{"name": "damage", "node": "damage"}],
+        data_files={"enemy": [{"名称": "Boss", "种类": "精英", "def": 10}]},
+        entity_selectors=[
+            {
+                "source": "enemy",
+                "steps": [{"field": "种类", "label": "种类"}, {"field": "名称", "label": "敌人"}],
+            }
+        ],
+    )
+
+    adapter_dir = tmp_path / "framework" / "adapters" / "demo"
+    meta = json.loads((adapter_dir / "meta.json").read_text(encoding="utf-8"))
+    assert result["ok"] is True
+    assert meta["entity_selectors"][0]["source"] == "enemy"
+    assert meta["entity_selectors"][0]["data_file"] == "enemies"
+
+
+def test_generate_adapter_with_entity_detail_and_rules(scope: ProjectScope, tmp_path: Path) -> None:
+    result = generate_adapter(
+        scope,
+        adapter_id="demo",
+        variables=_variables(),
+        formula_steps=_steps(),
+        outputs=_outputs(),
+        data_files={"enemy": [{"名称": "Boss", "等级": 10, "def": 10}]},
+        entity_detail={
+            "source": "enemy",
+            "title": "敌人数据",
+            "sections": [{"fields": [{"field": "等级", "label": "等级"}]}],
+        },
+        entity_input_rules=[
+            {
+                "source": "enemy",
+                "field": "def",
+                "equals": 10,
+                "disable": ["user_input.atk"],
+                "reason": "演示",
+            }
+        ],
+    )
+
+    adapter_dir = tmp_path / "framework" / "adapters" / "demo"
+    meta = json.loads((adapter_dir / "meta.json").read_text(encoding="utf-8"))
+    assert result["ok"] is True
+    assert meta["entity_detail"]["source"] == "enemy"
+    assert meta["entity_input_rules"][0]["disable"] == ["user_input.atk"]
+
+
+def test_generate_adapter_rejects_invalid_entity_detail(scope: ProjectScope) -> None:
+    with pytest.raises(SpecError, match="entity_detail"):
+        generate_adapter(
+            scope,
+            adapter_id="demo",
+            variables=_variables(),
+            formula_steps=_steps(),
+            outputs=_outputs(),
+            data_files={"enemy": [{"名称": "Boss", "def": 10}]},
+            entity_detail={"source": "enemy", "sections": [{"fields": [{"field": "不存在"}]}]},
+        )
+
+
+def test_generate_adapter_rejects_invalid_entity_input_rules(scope: ProjectScope) -> None:
+    with pytest.raises(SpecError, match="entity_input_rules"):
+        generate_adapter(
+            scope,
+            adapter_id="demo",
+            variables=_variables(),
+            formula_steps=_steps(),
+            outputs=_outputs(),
+            data_files={"enemy": [{"名称": "Boss", "def": 10}]},
+            entity_input_rules=[{"source": "enemy", "field": "def", "equals": 10, "disable": ["user_input.missing"]}],
+        )
+
+
+def test_generate_adapter_rejects_invalid_entity_selectors(scope: ProjectScope) -> None:
+    with pytest.raises(SpecError, match="entity_selectors"):
+        generate_adapter(
+            scope,
+            adapter_id="demo",
+            variables=_variables(),
+            formula_steps=_steps(),
+            outputs=_outputs(),
+            data_files={"enemy": [{"名称": "Boss", "def": 10}]},
+            entity_selectors=[{"source": "enemy", "steps": [{"field": "名称", "bad": 1}]}],
+        )
+
+
 def _raw_dag() -> dict:
     return {
         "schema_version": "dag-v1",

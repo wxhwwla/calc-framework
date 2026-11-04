@@ -103,7 +103,7 @@ def test_fetch_skips_failed_pages_and_reports_them() -> None:
     assert parsed["舰船"][0]["类型"] == "护卫舰"
 
 
-def test_utility_weapon_has_no_attack_count() -> None:
+def test_utility_weapon_has_no_attack_count_and_is_friendly() -> None:
     raw = {
         "pages": [],
         "chunks": [
@@ -120,8 +120,67 @@ def test_utility_weapon_has_no_attack_count() -> None:
 
     assert weapon["武器类型"] == "子系统平台"
     assert weapon["武器作用"] == "维修"
+    assert weapon["友方作用"] is True
     assert weapon["攻击次数"] is None
     assert weapon["单发伤害"] is None
+
+
+def test_attack_weapon_is_not_friendly() -> None:
+    out = WjdlglrProvider().parse(_raw_bundle())
+    at021 = next(ship for ship in out["舰船"] if ship["id"] == "12501")
+
+    assert at021["武器"][0]["友方作用"] is False
+
+
+def test_aircraft_requires_mothership_but_is_not_mothership() -> None:
+    out = WjdlglrProvider().parse(_raw_bundle())
+    ships = {ship["id"]: ship for ship in out["舰船"]}
+
+    assert ships["12501"]["是否母舰"] is False
+    assert ships["12501"]["需要母舰"] is True
+    assert ships["40801"]["是否母舰"] is False
+    assert ships["40801"]["需要母舰"] is False
+
+
+def test_ship_with_docks_is_mothership() -> None:
+    raw = {
+        "pages": [{"title": "航母", "wikitext": "{{新舰船/基础数据|类型=航空母舰}}"}],
+        "chunks": [
+            {
+                "text": (
+                    'Object.assign(window.__ETW_DATA,{"601":{"ship":'
+                    '{"name":"航母","base":{"hp":10}},"systems":[],"weps":{},'
+                    '"docks":{"1":{"name":"战机"}}}});'
+                )
+            }
+        ],
+    }
+    ship = WjdlglrProvider().parse(raw)["舰船"][0]
+
+    assert ship["是否母舰"] is True
+    assert ship["需要母舰"] is False
+
+
+def test_te_ship_without_page_type_uses_name_to_detect_mothership_need() -> None:
+    raw = {
+        "pages": [],
+        "chunks": [
+            {
+                "text": (
+                    "Object.assign(window.__ETW_DATA,{"
+                    '"1":{"ship":{"name":"理智A101-TE-战斗攻击机","base":{},"systems":[],"weps":{},"docks":{}}},'
+                    '"2":{"ship":{"name":"野火-TE-鱼雷艇","base":{},"systems":[],"weps":{},"docks":{}}},'
+                    '"3":{"ship":{"name":"V055火炮-TE","base":{},"systems":[],"weps":{},"docks":{}}}'
+                    "});"
+                )
+            }
+        ],
+    }
+    ships = {ship["名称"]: ship for ship in WjdlglrProvider().parse(raw)["舰船"]}
+
+    assert ships["理智A101-TE-战斗攻击机"]["需要母舰"] is True
+    assert ships["野火-TE-鱼雷艇"]["需要母舰"] is True
+    assert ships["V055火炮-TE"]["需要母舰"] is False
 
 
 def test_parse_ship_page_strips_html_comments() -> None:
@@ -181,6 +240,51 @@ def test_weapon_fields_include_hit_table_and_travel_times() -> None:
     assert weapon["去程时间(毫秒)"] == 8000
     assert weapon["回程时间(毫秒)"] == 4000
     assert weapon["命中率"][0] == {"优先级": 3, "目标": "战机", "命中率": 22}
+
+
+def test_weapon_affix_parses_crit_stats() -> None:
+    out = WjdlglrProvider().parse(_raw_bundle())
+    at021 = next(ship for ship in out["舰船"] if ship["id"] == "12501")
+    weapon = at021["武器"][0]
+
+    assert weapon["暴击率"] == 15.0
+    assert weapon["暴击伤害"] == 170.0
+    assert weapon["暴击目标"] == "舰船"
+    assert weapon["防空暴击"] is False
+
+
+def test_weapon_without_crit_affix_has_empty_crit_stats() -> None:
+    out = WjdlglrProvider().parse(_raw_bundle())
+    lancer = next(ship for ship in out["舰船"] if ship["id"] == "40801")
+    weapon = lancer["武器"][0]
+
+    assert weapon["暴击率"] is None
+    assert weapon["暴击伤害"] is None
+    assert weapon["暴击目标"] == ""
+    assert weapon["防空暴击"] is None
+
+
+def test_anti_air_crit_affix_targets_aircraft() -> None:
+    raw = {
+        "pages": [],
+        "chunks": [
+            {
+                "text": (
+                    "Object.assign(window.__ETW_DATA,{"
+                    '"888":{"ship":{"name":"防空舰","base":{},"systems":[]},'
+                    '"weps":{"88801":{"mod":"防空炮","typ":1,"act":2}},'
+                    '"affix":{"88801":[{"n":"防空暴击","d":"有25%概率对舰载机目标额外造成100%暴击伤害"}]}}}'
+                    "});"
+                )
+            }
+        ],
+    }
+    weapon = WjdlglrProvider().parse(raw)["舰船"][0]["武器"][0]
+
+    assert weapon["暴击率"] == 25.0
+    assert weapon["暴击伤害"] == 100.0
+    assert weapon["暴击目标"] == "舰载机"
+    assert weapon["防空暴击"] is True
 
 
 def test_non_aircraft_weapon_has_no_travel_times() -> None:

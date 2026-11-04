@@ -62,6 +62,8 @@
       "labelVersion": "版本:",
       "labelVariables": "变量:",
       "labelOutputs": "输出:",
+      "labelDescription": "说明:",
+      "hintText": "在最左列选择舰船种类、舰船与武器；无关的输入会自动灰显，灰显项悬停可查看原因。",
       "unknown": "—",
       "menuFile": "文件",
       "menuOpenCalcpack": "打开 .calcpack...",

@@ -114,6 +114,27 @@ class TestComputeSheetBuild:
         assert "暴击区" in sheet._output_labels
 
 
+class TestComputeSheetInputLabels:
+    def test_input_label_uses_description(self, dag_service, layout, qapp):
+        """输入项标签优先显示 DAG 描述，而非英文变量路径。"""
+        from PySide6.QtWidgets import QLabel
+
+        sheet = ComputeSheet(
+            dag_service=dag_service,
+            layout=layout,
+            variables=dag_service.dag.variables,
+            base_context={"character": {"基础攻击": 500}, "computed": {"最终攻击力": 1000}},
+        )
+
+        widget = sheet.widget
+        texts = [label.text() for label in widget.findChildren(QLabel)]
+
+        assert "暴击率加成百分比" in texts
+        assert "技能倍率" in texts
+        assert "user.暴击率" not in texts
+        assert "user.倍率" not in texts
+
+
 class TestComputeSheetBaseContextSeeding:
     def test_user_input_widgets_seeded_from_base_context(self, dag_service, layout, qapp):
         sheet = ComputeSheet(
@@ -203,6 +224,115 @@ class TestComputeSheetContextTransform:
         result = sheet.evaluate()
 
         assert result.outputs["单段伤害"] == pytest.approx(1010.0 * 2.0 * 1.1)
+
+
+class TestOutputColumns:
+    def test_output_section_honours_configured_columns(self, dag_service, qapp):
+        from PySide6.QtWidgets import QGroupBox
+
+        layout_data = json.loads(LAYOUT_JSON)
+        layout_data["sections"][1]["outputs"] = ["单段伤害", "暴击区", "单段伤害", "暴击区"]
+        layout_data["sections"][1]["columns"] = 2
+        layout = load_layout_json(json.dumps(layout_data))
+
+        sheet = ComputeSheet(
+            dag_service=dag_service,
+            layout=layout,
+            variables=dag_service.dag.variables,
+            base_context={"character": {"基础攻击": 500}, "computed": {"最终攻击力": 1000}},
+        )
+
+        widget = sheet.widget
+        group = next(g for g in widget.findChildren(QGroupBox) if g.title() == "计算结果")
+        grid = group.layout().itemAt(0).layout()
+
+        assert grid.itemAtPosition(0, 0) is not None
+        assert grid.itemAtPosition(0, 2) is not None
+        assert grid.itemAtPosition(0, 4) is None
+
+
+class TestComputeSheetTabs:
+    @staticmethod
+    def _tabbed_layout():
+        layout_data = json.loads(LAYOUT_JSON)
+        layout_data["sections"][0]["tab"] = "计算"
+        layout_data["sections"][1]["tab"] = "乘区明细"
+        return load_layout_json(json.dumps(layout_data))
+
+    def test_sections_are_grouped_into_tabs(self, dag_service, qapp):
+        from PySide6.QtWidgets import QGroupBox, QTabWidget
+
+        sheet = ComputeSheet(
+            dag_service=dag_service,
+            layout=self._tabbed_layout(),
+            variables=dag_service.dag.variables,
+            base_context={"character": {"基础攻击": 500}, "computed": {"最终攻击力": 1000}},
+        )
+
+        tabs = sheet.widget.findChild(QTabWidget)
+        assert tabs is not None
+        assert tabs.count() == 2
+        assert tabs.tabText(0) == "计算"
+        assert tabs.tabText(1) == "乘区明细"
+        first_titles = {group.title() for group in tabs.widget(0).findChildren(QGroupBox)}
+        second_titles = {group.title() for group in tabs.widget(1).findChildren(QGroupBox)}
+        assert first_titles == {"输入参数"}
+        assert second_titles == {"计算结果"}
+
+    def test_outputs_on_second_tab_still_update(self, dag_service, qapp):
+        sheet = ComputeSheet(
+            dag_service=dag_service,
+            layout=self._tabbed_layout(),
+            variables=dag_service.dag.variables,
+            base_context={"character": {"基础攻击": 500}, "computed": {"最终攻击力": 1000}},
+        )
+
+        sheet.widget
+        result = sheet.evaluate()
+
+        assert result.outputs["暴击区"] == pytest.approx(1.0)
+        assert sheet._output_labels["暴击区"].text() == "1.0000"
+
+    def test_layout_without_tabs_has_no_tab_widget(self, dag_service, layout, qapp):
+        from PySide6.QtWidgets import QTabWidget
+
+        sheet = ComputeSheet(
+            dag_service=dag_service,
+            layout=layout,
+            variables=dag_service.dag.variables,
+            base_context={"character": {"基础攻击": 500}, "computed": {"最终攻击力": 1000}},
+        )
+
+        assert sheet.widget.findChild(QTabWidget) is None
+
+
+class TestInputEnablement:
+    def test_set_input_enabled_toggles_widget_and_label(self, dag_service, layout, qapp):
+        from PySide6.QtWidgets import QLabel
+
+        sheet = ComputeSheet(
+            dag_service=dag_service,
+            layout=layout,
+            variables=dag_service.dag.variables,
+            base_context={"character": {"基础攻击": 500}, "computed": {"最终攻击力": 1000}},
+        )
+
+        widget = sheet.widget
+        control = sheet._input_widgets["user.暴击率"][0]
+
+        assert control.isEnabled()
+
+        sheet.set_input_enabled("user.暴击率", False, reason="不需要")
+
+        assert not control.isEnabled()
+        assert control.toolTip() == "不需要"
+        labels = [label for label in widget.findChildren(QLabel) if label.text() == "暴击率加成百分比"]
+        assert labels and not labels[0].isEnabled()
+
+        sheet.set_input_enabled("user.暴击率", True)
+
+        assert control.isEnabled()
+        assert control.toolTip() == ""
 
 
 class TestComputeSheetEvaluate:

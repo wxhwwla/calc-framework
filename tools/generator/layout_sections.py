@@ -100,17 +100,24 @@ def build_layout(
     }
 
 
+_ATTR_TYPES: frozenset[str] = frozenset({"float", "int", "bool", "str", "percent"})
+
+
 def build_attr_schema(variables: list[VarDef], effective_sources: dict[str, str]) -> dict[str, Any]:
-    """构建 attr_schema，``source`` 写入变量生成后的实际来源。"""
+    """构建 attr_schema，``source`` 写入变量生成后的实际来源。
+
+    变量类型原样保留（float/int/bool/str/percent），并始终写入 ``default``；
+    省略 0 默认值会让 ``AttributeSchema.validate`` 把该属性当成必填项。
+    """
     attrs = []
     for v in variables:
-        entry: dict[str, Any] = {
-            "name": v.name,
-            "type": "percent" if v.type in ("percent", "bool") else "float",
-            "source": effective_sources[v.name],
-            "description": v.description,
-        }
-        if v.default != 0:
-            entry["default"] = v.default
-        attrs.append(entry)
+        attrs.append(
+            {
+                "name": v.name,
+                "type": v.type if v.type in _ATTR_TYPES else "float",
+                "source": effective_sources[v.name],
+                "default": v.default,
+                "description": v.description,
+            }
+        )
     return {"attributes": attrs}

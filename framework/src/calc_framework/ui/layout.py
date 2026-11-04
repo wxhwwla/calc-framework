@@ -46,6 +46,8 @@ class Section:
 
     widget_config: dict[str, Any] = field(default_factory=dict)
 
+    tab: str = ""
+
 
 @dataclass
 class Layout:
@@ -97,6 +99,8 @@ def _validate(data: dict[str, Any]) -> None:
 
     seen_ids: set[str] = set()
 
+    tab_presence: list[bool] = []
+
     for sec in data["sections"]:
         if not isinstance(sec, dict):
             raise LayoutValidationError("每个 section 必须为对象")
@@ -119,6 +123,16 @@ def _validate(data: dict[str, Any]) -> None:
         if not isinstance(sec.get("title"), str) or not sec["title"]:
             raise LayoutValidationError(f"section {section_id} 缺少 title")
 
+        has_tab = "tab" in sec
+
+        tab_presence.append(has_tab)
+
+        if has_tab:
+            tab = sec.get("tab")
+
+            if not isinstance(tab, str) or not tab.strip():
+                raise LayoutValidationError(f"section {section_id} 的 tab 必须是非空字符串")
+
         if sec_type == "inputs" and not isinstance(sec.get("variables"), list):
             raise LayoutValidationError(f"inputs section {section_id} 缺少 variables 列表")
 
@@ -133,7 +147,8 @@ def _validate(data: dict[str, Any]) -> None:
                     f"widget section {section_id} 的 widget_type 必须为 {'/'.join(VALID_WIDGET_TYPES)}，收到: {widget_type}"
                 )
 
-    """_build_sections。"""
+    if any(tab_presence) and not all(tab_presence):
+        raise LayoutValidationError("schema 的 tab 必须全部指定或全部省略")
 
 
 def _build_sections(raw: list[dict[str, Any]]) -> list[Section]:
@@ -150,6 +165,7 @@ def _build_sections(raw: list[dict[str, Any]]) -> list[Section]:
                 columns=sec.get("columns", 2),
                 widget_type=sec.get("widget_type", ""),
                 widget_config=sec.get("widget_config", {}),
+                tab=str(sec.get("tab", "")).strip(),
             )
         )
 

@@ -90,7 +90,15 @@ async def _scenario(project_dir: Path) -> None:
                     "game": "演示游戏",
                     "template_id": "simple",
                     "variables": [
-                        {"name": "atk", "type": "float", "source": "user_input", "default": 100},
+                        {
+                            "name": "atk",
+                            "type": "float",
+                            "source": "user_input",
+                            "default": 100,
+                            "min": 0,
+                            "max": 1000,
+                            "ui_control": {"suffix": "点", "step": 1},
+                        },
                         {"name": "mult", "type": "float", "source": "user_input", "default": 2},
                         {"name": "def", "type": "float", "source": "enemy", "default": 10},
                     ],
@@ -99,7 +107,16 @@ async def _scenario(project_dir: Path) -> None:
                         {"id": "damage", "op": "sub", "lhs": "raw", "rhs": "def"},
                     ],
                     "outputs": [{"name": "damage", "node": "damage", "label": "伤害"}],
-                    "data_files": {"enemy": [{"名称": "测试敌人", "def": 10}]},
+                    "data_files": {"enemy": [{"名称": "测试敌人", "种类": "精英", "def": 10}]},
+                    "entity_selectors": [
+                        {
+                            "source": "enemy",
+                            "steps": [
+                                {"field": "种类", "label": "种类"},
+                                {"field": "名称", "label": "敌人"},
+                            ],
+                        }
+                    ],
                 },
             )
             assert generated["adapter_id"] == "demo"
@@ -126,6 +143,13 @@ async def _scenario(project_dir: Path) -> None:
             meta_content = json.loads(meta_file["content"])
             assert meta_content["name"] == "演示计算器"
             assert meta_content["entry_data"] == ["data/enemies.json"]
+            assert meta_content["entity_selectors"][0]["data_file"] == "enemies"
+
+            dag_file = await _call(session, "read_adapter_file", {"adapter_id": "demo", "path": "dag/demo.dag.json"})
+            atk_var = json.loads(dag_file["content"])["variables"]["user_input.atk"]
+            assert atk_var["min"] == 0
+            assert atk_var["max"] == 1000
+            assert atk_var["ui_control"] == {"suffix": "点", "step": 1}
 
             written = await _call(
                 session,

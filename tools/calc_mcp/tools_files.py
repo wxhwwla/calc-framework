@@ -68,7 +68,7 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
         content: str,
         overwrite: bool = False,
     ) -> dict[str, Any]:
-        """Write a UTF-8 text file inside an adapter package (max 512 KiB).
+        """Write a UTF-8 text file inside an adapter package (max 2 MiB).
 
         扩展名白名单：.json/.py/.md/.txt/.csv/.yaml/.yml。默认不覆盖已有文件。
         """

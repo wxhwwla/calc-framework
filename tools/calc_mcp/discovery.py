@@ -117,6 +117,65 @@ _EXPRESSION_OPERATORS: dict[str, Any] = {
     "rejected": ["in", "not in", "is", "is not", "**", "~", "属性访问", "lambda", "列表/字典/集合"],
 }
 
+_VARIABLE_UI_SCHEMA: dict[str, Any] = {
+    "fields": ["min", "max", "ui_control"],
+    "min_max_rule": "min/max 是可选的数值范围，只对 float/int 生效；省略时控件不设业务上限",
+    "ui_control": {
+        "suffix": "字符串，显示在数值后的单位或百分号，例如 '%'",
+        "step": "正数，控件的单步增量",
+        "widget": ["spinbox", "slider", "switch", "dropdown"],
+        "options": "非空字符串数组；提供时控件默认切换为 dropdown",
+    },
+    "percent_rule": (
+        "百分比输入建议 type=float、default 使用 0-100 的数值，并在表达式中除以 100；"
+        "加 ui_control.suffix='%' 显示百分号"
+    ),
+}
+
+_ENTITY_SELECTOR_SCHEMA: dict[str, Any] = {
+    "item_fields": ["source", "data_file", "steps"],
+    "source_rule": "source 必须是 character/weapon/equipment/enemy，且 data_files 中该来源有非空记录",
+    "data_file_rule": "可选，默认取来源的约定文件名（不含 data/ 与 .json），例如 weapon → weapons",
+    "step_fields": ["field", "label", "display_field"],
+    "rules": [
+        "steps 必须是非空数组，按顺序逐级过滤记录",
+        "field/display_field 必须能在该来源的记录中找到非空值",
+        "最后一级的 field 必须是 '名称'，其值作为实体标识注入 DAG 命名空间",
+        "同一来源只能出现一次",
+    ],
+}
+
+_ENTITY_DETAIL_SCHEMA: dict[str, Any] = {
+    "item_fields": ["source", "title", "sections"],
+    "source_rule": "source 必须已绑定非空 data_files",
+    "section_fields": ["title", "columns", "fields"],
+    "field_fields": ["field", "label", "format"],
+    "rules": [
+        "sections 与每节的 fields 都必须是非空数组",
+        "field 必须在该来源记录中存在（至少一条记录有非空值）",
+        "columns 为 1-3 的整数，默认 1",
+        "format 为可选的 Python 数值格式串，例如 '.1f'",
+        "查看器在左侧面板显示当前实体的字段明细",
+    ],
+}
+
+_ENTITY_INPUT_RULE_SCHEMA: dict[str, Any] = {
+    "item_fields": ["source", "field", "equals", "disable", "reason"],
+    "disable_rule": (
+        "disable 是非空的 user_input.* 路径数组，且必须是生成后仍为 user_input 的变量；"
+        "实体记录缺少 field 或值为空时规则不命中，对应输入保持可编辑"
+    ),
+    "reason_rule": "可选说明，禁用后显示为控件与标签的悬停提示",
+    "example": {
+        "source": "weapon",
+        "field": "needs_mothership",
+        "equals": 0,
+        "disable": ["user_input.mothership_flight_bonus"],
+        "reason": "该舰船不需要母舰",
+    },
+    "validation_rule": "validate_adapter 会把非法详情面板报为 ENTITY_DETAIL_INVALID，非法规则报为 INPUT_RULE_INVALID",
+}
+
 _DATA_FILE_SCHEMA: dict[str, Any] = {
     "allowed_sources": list(DATA_FILE_BY_SOURCE),
     "files": dict(DATA_FILE_BY_SOURCE),
@@ -218,6 +277,7 @@ def describe_schemas() -> dict[str, Any]:
             "sources": sorted(VALID_VAR_SOURCES),
             "source_descriptions": dict(_SOURCE_DESCRIPTIONS),
             "path_rule": "变量以 source.name 作为 DAG 路径，例如 user_input.atk",
+            "ui_fields": _VARIABLE_UI_SCHEMA,
         },
         "nodes": _NODE_SCHEMAS,
         "formula_steps": _FORMULA_STEP_SCHEMA,
@@ -228,10 +288,25 @@ def describe_schemas() -> dict[str, Any]:
         "expression_functions": list_function_specs(),
         "expression_operators": _EXPRESSION_OPERATORS,
         "data_files": _DATA_FILE_SCHEMA,
+        "entity_selectors": _ENTITY_SELECTOR_SCHEMA,
+        "entity_detail": _ENTITY_DETAIL_SCHEMA,
+        "entity_input_rules": _ENTITY_INPUT_RULE_SCHEMA,
         "layout": {
             "schema_version": "ui-v1",
             "section_types": ["inputs", "outputs", "widget"],
             "widget_types": ["donation"],
+            "section_fields": [
+                "id",
+                "type",
+                "title",
+                "variables",
+                "outputs",
+                "columns",
+                "widget_type",
+                "widget_config",
+                "tab",
+            ],
+            "tab_rule": "tab 必须为所有 section 统一指定非空字符串，或全部省略；指定后查看器按首次出现顺序渲染为分页",
             "note": "scaffold_adapter 会自动生成基础 layout，可用 write_adapter_file 微调",
         },
     }

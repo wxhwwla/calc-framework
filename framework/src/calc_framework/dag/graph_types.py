@@ -52,6 +52,8 @@ class DAGVariable:
 
     max: float | None = None
 
+    ui_control: dict[str, Any] = field(default_factory=dict)
+
 
 @dataclass
 class DAGOutput:
@@ -112,6 +114,7 @@ def _parse_variable(raw: dict[str, Any], var_path: str, *, allow_no_source: bool
     if not isinstance(source, str) or source not in _VALID_VAR_SOURCES:
         raise DAGCompileError(f"变量 {var_path} 的 source 无效: {source!r}")
 
+    ui_control_raw = raw.get("ui_control")
     return DAGVariable(
         type=typ,
         source=source,
@@ -119,6 +122,7 @@ def _parse_variable(raw: dict[str, Any], var_path: str, *, allow_no_source: bool
         default=raw.get("default"),
         min=raw.get("min"),
         max=raw.get("max"),
+        ui_control=ui_control_raw if isinstance(ui_control_raw, dict) else {},
     )
 
 

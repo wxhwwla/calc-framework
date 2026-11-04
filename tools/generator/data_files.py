@@ -16,8 +16,9 @@ DATA_FILE_BY_SOURCE: dict[str, str] = {
     "enemy": "data/enemies.json",
 }
 
-# 单个数据文件上限（与 ProjectScope.write_text 的兜底限制一致）
-MAX_DATA_FILE_BYTES = 512 * 1024
+# 单个数据文件上限（与 ProjectScope.write_text 的兜底限制一致）。
+# 571 条「舰船 × 武器」记录约 484 KB，留出扩展余量；预提交单文件上限为 2048 KB。
+MAX_DATA_FILE_BYTES = 2 * 1024 * 1024
 
 # 查看器用于识别实体的名称字段
 NAME_KEY = "名称"

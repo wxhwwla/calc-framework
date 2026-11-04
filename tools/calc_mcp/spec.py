@@ -12,10 +12,22 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from calc_framework.config.entity_meta import (
+    EntityMetaError,
+    normalize_entity_detail,
+    normalize_entity_input_rules,
+)
 from calc_framework.dag.graph_types import VALID_VAR_SOURCES, VALID_VAR_TYPES
 from calc_framework.dag.sandbox import MAX_EXPR_LENGTH
 
-from tools.generator.data_files import DataFileError, binding_warnings, normalize_data_files
+from tools.generator.data_files import (
+    DataFileError,
+    binding_warnings,
+    bound_entity_sources,
+    normalize_data_files,
+)
+from tools.generator.selectors import SelectorError, normalize_entity_selectors
+from tools.generator.variable_ui import VariableUiError, normalize_variable_ui
 
 _SOURCE_ALIASES = {
     "input": "user_input",
@@ -57,6 +69,9 @@ class VariableSpec:
     source: str = "user_input"
     default: float | bool | int | str = 0
     description: str = ""
+    min_value: float | int | None = None
+    max_value: float | int | None = None
+    ui_control: dict[str, Any] = field(default_factory=dict)
 
     def to_generator_dict(self) -> dict[str, Any]:
         """转换为 ``GeneratorEngine`` 接受的字典。"""
@@ -66,6 +81,9 @@ class VariableSpec:
             "source": self.source,
             "default": self.default,
             "description": self.description,
+            "min": self.min_value,
+            "max": self.max_value,
+            "ui_control": dict(self.ui_control),
         }
 
 
@@ -129,6 +147,9 @@ class AdapterSpec:
     steps: list[StepSpec]
     outputs: list[OutputSpec]
     data_files: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    entity_selectors: list[dict[str, Any]] = field(default_factory=list)
+    entity_detail: dict[str, Any] | None = None
+    entity_input_rules: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 
@@ -138,23 +159,33 @@ def normalize_spec(
     formula_steps: list[dict[str, Any]] | None = None,
     outputs: list[dict[str, Any]] | None = None,
     data_files: dict[str, Any] | None = None,
+    entity_selectors: list[dict[str, Any]] | None = None,
+    entity_detail: dict[str, Any] | None = None,
+    entity_input_rules: list[dict[str, Any]] | None = None,
 ) -> AdapterSpec:
-    """归一化并校验变量/步骤/输出/数据文件声明。
+    """归一化并校验变量/步骤/输出/数据文件/级联选择器/实体增强声明。
 
     Args:
-        variables: 变量声明列表。
+        variables: 变量声明列表；可含 ``min``/``max``/``ui_control``。
         formula_steps: 公式步骤列表。
         outputs: 输出声明列表；为空时自动以最后一步生成「最终结果」。
         data_files: 实体数据文件声明，键仅允许 character/weapon/equipment/enemy。
+        entity_selectors: 查看器级联选择器声明，依赖非空 data_files。
+        entity_detail: 查看器实体详情面板声明，字段必须存在于已绑定数据文件。
+        entity_input_rules: 条件禁用输入规则；disable 只能引用有效的
+            ``user_input.*`` 变量。
 
     Returns:
         归一化后的 :class:`AdapterSpec`。
 
     Raises:
-        SpecError: 字段缺失、类型非法、引用悬空、id 冲突或 data_files 非法。
+        SpecError: 字段缺失、类型非法、引用悬空、id 冲突或数据/选择器/实体增强非法。
     """
     warnings: list[str] = []
-    var_specs = _normalize_variables(variables or [], warnings)
+    try:
+        var_specs = _normalize_variables(variables or [], warnings)
+    except VariableUiError as exc:
+        raise SpecError(str(exc)) from exc
     step_specs = _normalize_steps(formula_steps or [], warnings)
 
     if not var_specs:
@@ -183,11 +214,37 @@ def normalize_spec(
     warnings.extend(data_warnings)
     warnings.extend(binding_warnings((var.source for var in var_specs), normalized_data_files))
 
+    try:
+        normalized_selectors = normalize_entity_selectors(entity_selectors, normalized_data_files)
+    except SelectorError as exc:
+        raise SpecError(f"entity_selectors 无效: {exc}") from exc
+
+    try:
+        normalized_detail = normalize_entity_detail(entity_detail, normalized_data_files)
+    except EntityMetaError as exc:
+        raise SpecError(f"entity_detail 无效: {exc}") from exc
+
+    bound_sources = bound_entity_sources(normalized_data_files)
+    user_input_paths = [
+        f"user_input.{var.name}" for var in var_specs if _effective_source(var.source, bound_sources) == "user_input"
+    ]
+    try:
+        normalized_rules = normalize_entity_input_rules(
+            entity_input_rules,
+            data_files=normalized_data_files,
+            user_input_paths=user_input_paths,
+        )
+    except EntityMetaError as exc:
+        raise SpecError(f"entity_input_rules 无效: {exc}") from exc
+
     return AdapterSpec(
         variables=var_specs,
         steps=step_specs,
         outputs=out_specs,
         data_files=normalized_data_files,
+        entity_selectors=normalized_selectors,
+        entity_detail=normalized_detail,
+        entity_input_rules=normalized_rules,
         warnings=warnings,
     )
 
@@ -197,6 +254,13 @@ def safe_node_id(name: str) -> str:
     return name.strip().replace(" ", "_").replace(".", "_").lower() or "unnamed"
 
 
+def _effective_source(source: str, bound_sources: frozenset[str]) -> str:
+    """与 ``GeneratorEngine._effective_sources`` 一致的生成后来源。"""
+    if source in ("user_input", "computed") or source in bound_sources:
+        return source
+    return "user_input"
+
+
 def _normalize_variables(raw_items: list[dict[str, Any]], warnings: list[str]) -> list[VariableSpec]:
     specs: list[VariableSpec] = []
     seen_paths: set[str] = set()
@@ -204,7 +268,12 @@ def _normalize_variables(raw_items: list[dict[str, Any]], warnings: list[str]) -
     for index, raw in enumerate(raw_items):
         if not isinstance(raw, dict):
             raise SpecError(f"variables[{index}] 必须是对象")
-        data = _filter_known(raw, {"name", "type", "source", "default", "description"}, f"variables[{index}]", warnings)
+        data = _filter_known(
+            raw,
+            {"name", "type", "source", "default", "description", "min", "max", "ui_control"},
+            f"variables[{index}]",
+            warnings,
+        )
 
         name = str(data.get("name", "")).strip()
         if not _NAME_RE.match(name):
@@ -225,6 +294,16 @@ def _normalize_variables(raw_items: list[dict[str, Any]], warnings: list[str]) -
             raise SpecError(f"变量路径重复: {path!r}")
         seen_paths.add(path)
 
+        min_value, max_value, ui_control = normalize_variable_ui(
+            name=name,
+            var_type=var_type,
+            source=source,
+            min_value=data.get("min"),
+            max_value=data.get("max"),
+            ui_control=data.get("ui_control"),
+            warnings=warnings,
+        )
+
         default = data.get("default", 0)
         specs.append(
             VariableSpec(
@@ -233,6 +312,9 @@ def _normalize_variables(raw_items: list[dict[str, Any]], warnings: list[str]) -
                 source=source,
                 default=0 if default is None else default,
                 description=str(data.get("description", "")),
+                min_value=min_value,
+                max_value=max_value,
+                ui_control=ui_control,
             )
         )
 

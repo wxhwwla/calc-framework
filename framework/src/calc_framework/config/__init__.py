@@ -17,6 +17,13 @@ from calc_framework.config.adapter import (
     AdapterPackage,
     InvalidMetaError,
 )
+from calc_framework.config.entity_meta import (
+    EntityMetaError,
+    format_detail_value,
+    normalize_entity_detail,
+    normalize_entity_input_rules,
+    rule_matches,
+)
 from calc_framework.config.manager import AdapterManager, discover_adapters
 from calc_framework.config.scaffold import (
     AdapterScaffoldConfig,
@@ -32,8 +39,13 @@ __all__ = [
     "AdapterPackage",
     "AdapterScaffoldConfig",
     "AdapterWatcher",
+    "EntityMetaError",
     "InvalidMetaError",
     "ScaffoldResult",
     "discover_adapters",
+    "format_detail_value",
+    "normalize_entity_detail",
+    "normalize_entity_input_rules",
+    "rule_matches",
     "scaffold_adapter_directory",
 ]

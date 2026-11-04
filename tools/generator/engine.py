@@ -16,6 +16,7 @@ from tools.generator.data_files import (
     serialize_data_file,
 )
 from tools.generator.layout_sections import build_attr_schema, build_layout
+from tools.generator.selectors import normalize_entity_selectors
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ADAPTERS_DIR = _REPO_ROOT / "framework" / "adapters"
@@ -54,8 +55,11 @@ class VarDef:
     name: str
     type: str = "float"
     source: str = "user_input"
-    default: float | bool = 0
+    default: float | bool | int | str = 0
     description: str = ""
+    min: float | int | None = None
+    max: float | int | None = None
+    ui_control: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -117,6 +121,9 @@ class GeneratorEngine:
         formula_steps: list[dict] | None = None,
         outputs: list[dict] | None = None,
         data_files: dict[str, list[dict]] | None = None,
+        entity_selectors: list[dict] | None = None,
+        entity_detail: dict | None = None,
+        entity_input_rules: list[dict] | None = None,
         output_dir: str | None = None,
     ) -> dict[str, str]:
         """生成适配器包的所有文件，返回 {相对路径: 文件内容}。
@@ -124,12 +131,16 @@ class GeneratorEngine:
         Args:
             template_id: 模板目录名；为 None 时使用通用默认值，不复制模板函数。
             game_name: 游戏/计算器名称。
-            variables: 变量声明列表。
+            variables: 变量声明列表；可含 ``min``/``max``/``ui_control``。
             formula_steps: 公式步骤列表。
             outputs: 输出声明列表。
             data_files: 实体数据文件声明，键仅允许 character/weapon/equipment/enemy；
                 仅非空记录列表视为绑定，绑定来源的变量保留原命名空间、其值由实体选择提供；
                 空列表按未绑定处理，对应变量改写为 user_input。
+            entity_selectors: 级联选择器声明，写入 ``meta.entity_selectors``；
+                依赖非空 data_files，末级 field 必须为 ``名称``。
+            entity_detail: 实体详情面板声明，写入 ``meta.entity_detail``。
+            entity_input_rules: 条件禁用输入规则，写入 ``meta.entity_input_rules``。
             output_dir: 保留参数（当前不写盘，由调用方负责）。
 
         Returns:
@@ -145,6 +156,7 @@ class GeneratorEngine:
         template = self._load_template(template_id) if template_id else {}
 
         normalized_data_files, _data_warnings = normalize_data_files(data_files)
+        normalized_selectors = normalize_entity_selectors(entity_selectors, normalized_data_files)
         effective_sources = self._effective_sources(vars_, bound_entity_sources(normalized_data_files))
         dag_json = self._build_dag(game_name, vars_, steps, outs, effective_sources)
         layout_json = build_layout(game_name, vars_, effective_sources, outs)
@@ -170,6 +182,12 @@ class GeneratorEngine:
         ]
         if entry_data:
             meta["entry_data"] = entry_data
+        if normalized_selectors:
+            meta["entity_selectors"] = normalized_selectors
+        if entity_detail:
+            meta["entity_detail"] = entity_detail
+        if entity_input_rules:
+            meta["entity_input_rules"] = entity_input_rules
 
         files: dict[str, str] = {
             "meta.json": json.dumps(meta, ensure_ascii=False, indent=2),
@@ -217,12 +235,19 @@ class GeneratorEngine:
         for v in variables:
             source = effective_sources[v.name]
             var_path = f"{source}.{v.name}"
-            dag_vars[var_path] = {
+            var_entry: dict[str, Any] = {
                 "type": v.type,
                 "source": source,
                 "default": v.default,
                 "description": v.description,
             }
+            if v.min is not None:
+                var_entry["min"] = v.min
+            if v.max is not None:
+                var_entry["max"] = v.max
+            if v.ui_control:
+                var_entry["ui_control"] = dict(v.ui_control)
+            dag_vars[var_path] = var_entry
             node_id = self._safe_id(v.name)
             dag_nodes[node_id] = {
                 "type": "var",

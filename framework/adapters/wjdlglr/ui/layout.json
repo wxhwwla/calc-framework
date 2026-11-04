@@ -1,49 +1,78 @@
 {
   "schema_version": "ui-v1",
   "name": "无尽的拉格朗日 武器输出计算表",
-  "description": "理论输出口径：攻击周期 = 冷却 + 持续时间 + 去程 + 回程；命中率按单发折算。",
+  "description": "先按「舰船种类 → 舰船 → 武器」三级下拉选择（属性来自 Wiki），再填写编组数量与各类加成（百分比）。命中率按 16 种目标舰种分别修正；维修/驻防/增益类武器命中率固定 100%，命中表中缺失的目标按 0 处理。能量武器使用能量护甲，实弹/辅助武器使用物理护甲。",
   "sections": [
     {
-      "id": "weapon",
+      "id": "inputs",
       "type": "inputs",
-      "title": "武器参数",
+      "title": "编组与飞行、冷却、持续加成",
+      "tab": "计算",
       "variables": [
-        "user_input.atk",
-        "user_input.attack_count",
-        "user_input.hit_rate",
-        "user_input.mounts",
-        "user_input.cooldown",
-        "user_input.duration",
-        "user_input.outbound",
-        "user_input.inbound"
+        "user_input.fleet_count",
+        "user_input.self_flight_bonus",
+        "user_input.mothership_flight_bonus",
+        "user_input.self_cooldown_bonus",
+        "user_input.mothership_cooldown_bonus",
+        "user_input.self_duration_bonus",
+        "user_input.mothership_duration_bonus"
       ]
     },
     {
-      "id": "target",
+      "id": "combat",
       "type": "inputs",
-      "title": "目标参数",
+      "title": "暴击加成、伤害与护甲",
+      "tab": "计算",
       "variables": [
-        "user_input.enemy_hp",
-        "user_input.firepower"
+        "user_input.bonus_crit_rate",
+        "user_input.crit_multiplier_bonus",
+        "user_input.damage_bonus",
+        "user_input.physical_armor",
+        "user_input.energy_armor"
       ]
     },
     {
       "id": "outputs",
       "type": "outputs",
-      "title": "计算结果",
+      "title": "最终每分钟伤害（按目标舰种，已乘命中率）",
+      "columns": 3,
+      "tab": "计算",
       "outputs": [
-        "齐射总伤害",
-        "攻击周期(秒)",
-        "理论DPS",
-        "击杀时间(秒)"
+        "最终每分钟伤害_战机",
+        "最终每分钟伤害_护航艇",
+        "最终每分钟伤害_无人机",
+        "最终每分钟伤害_登陆舰(作业态)",
+        "最终每分钟伤害_护卫舰",
+        "最终每分钟伤害_驱逐舰",
+        "最终每分钟伤害_巡洋舰",
+        "最终每分钟伤害_战列巡洋舰",
+        "最终每分钟伤害_战列舰",
+        "最终每分钟伤害_航空母舰",
+        "最终每分钟伤害_支援舰",
+        "最终每分钟伤害_小型工程舰",
+        "最终每分钟伤害_中型工程舰",
+        "最终每分钟伤害_大型工程舰",
+        "最终每分钟伤害_大本营船",
+        "最终每分钟伤害_基地"
       ]
     },
     {
-      "id": "detail",
+      "id": "intermediate",
       "type": "outputs",
-      "title": "补充口径",
+      "title": "乘区明细",
+      "columns": 2,
+      "tab": "乘区明细",
       "outputs": [
-        "官方火力击杀时间(秒)"
+        "发射数",
+        "飞行时间(秒)",
+        "冷却与持续时间(秒)",
+        "每分钟平均发射数",
+        "暴击增伤倍率",
+        "暴击增伤倍率(对空)",
+        "甲后单发",
+        "最终单发",
+        "最终单发(对空)",
+        "满命中每分钟伤害"
       ]
     }
   ]

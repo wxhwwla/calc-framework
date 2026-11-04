@@ -1,11 +1,218 @@
 {
   "name": "无尽的拉格朗日 武器输出计算器",
   "game": "无尽的拉格朗日",
-  "description": "基于 wiki_scout 抓取的武器字段计算理论输出与击杀时间（MCP 生成）",
-  "version": "0.1.0",
+  "description": "基于八乘区口径计算武器每分钟发射数与 16 种目标舰种的最终每分钟伤害（武器属性、暴击与命中率来自 Wiki 数据，维修/驻防/增益按 100% 命中）。能量武器使用能量护甲，实弹/辅助武器使用物理护甲；不需要母舰的舰船自动灰显母舰加成。",
+  "version": "0.6.0",
   "schema_version": "dag-v1",
   "entry_dag": "dag/wjdlglr.dag.json",
   "ui_layout": "ui/layout.json",
   "attr_schema": "attr_schema.json",
+  "entry_data": [
+    "data/weapons.json"
+  ],
+  "entity_selectors": [
+    {
+      "source": "weapon",
+      "data_file": "weapons",
+      "steps": [
+        {
+          "field": "舰船分类",
+          "label": "舰船种类"
+        },
+        {
+          "field": "舰船",
+          "label": "舰船"
+        },
+        {
+          "field": "名称",
+          "label": "武器",
+          "display_field": "武器标签"
+        }
+      ]
+    }
+  ],
+  "entity_detail": {
+    "source": "weapon",
+    "title": "武器数据",
+    "sections": [
+      {
+        "title": "基础",
+        "columns": 1,
+        "fields": [
+          {
+            "field": "舰船",
+            "label": "舰船"
+          },
+          {
+            "field": "舰船类型",
+            "label": "舰船类型"
+          },
+          {
+            "field": "武器",
+            "label": "武器"
+          },
+          {
+            "field": "武器作用",
+            "label": "武器作用"
+          },
+          {
+            "field": "damage_type",
+            "label": "伤害类型"
+          },
+          {
+            "field": "base_damage",
+            "label": "基础单发"
+          },
+          {
+            "field": "crit_rate",
+            "label": "暴击率（%）"
+          },
+          {
+            "field": "crit_damage",
+            "label": "暴击伤害（%）"
+          },
+          {
+            "field": "crit_target",
+            "label": "暴击目标"
+          }
+        ]
+      },
+      {
+        "title": "武器参数",
+        "columns": 2,
+        "fields": [
+          {
+            "field": "weapon_count",
+            "label": "武器数量"
+          },
+          {
+            "field": "ammo_count",
+            "label": "弹药数"
+          },
+          {
+            "field": "attack_runs",
+            "label": "攻击次数"
+          },
+          {
+            "field": "base_cooldown",
+            "label": "基础冷却(秒)"
+          },
+          {
+            "field": "base_duration",
+            "label": "基础持续(秒)"
+          },
+          {
+            "field": "outbound",
+            "label": "去程(秒)"
+          },
+          {
+            "field": "inbound",
+            "label": "回程(秒)"
+          }
+        ]
+      },
+      {
+        "title": "命中率（%）",
+        "columns": 2,
+        "fields": [
+          {
+            "field": "hit_fighter",
+            "label": "战机"
+          },
+          {
+            "field": "hit_escort",
+            "label": "护航艇"
+          },
+          {
+            "field": "hit_drone",
+            "label": "无人机"
+          },
+          {
+            "field": "hit_landing",
+            "label": "登陆舰(作业态)"
+          },
+          {
+            "field": "hit_frigate",
+            "label": "护卫舰"
+          },
+          {
+            "field": "hit_destroyer",
+            "label": "驱逐舰"
+          },
+          {
+            "field": "hit_cruiser",
+            "label": "巡洋舰"
+          },
+          {
+            "field": "hit_battlecruiser",
+            "label": "战列巡洋舰"
+          },
+          {
+            "field": "hit_battleship",
+            "label": "战列舰"
+          },
+          {
+            "field": "hit_carrier",
+            "label": "航空母舰"
+          },
+          {
+            "field": "hit_support",
+            "label": "支援舰"
+          },
+          {
+            "field": "hit_engineering_small",
+            "label": "小型工程舰"
+          },
+          {
+            "field": "hit_engineering_medium",
+            "label": "中型工程舰"
+          },
+          {
+            "field": "hit_engineering_large",
+            "label": "大型工程舰"
+          },
+          {
+            "field": "hit_base_ship",
+            "label": "大本营船"
+          },
+          {
+            "field": "hit_base",
+            "label": "基地"
+          }
+        ]
+      }
+    ]
+  },
+  "entity_input_rules": [
+    {
+      "source": "weapon",
+      "field": "needs_mothership",
+      "equals": 0,
+      "disable": [
+        "user_input.mothership_flight_bonus",
+        "user_input.mothership_cooldown_bonus",
+        "user_input.mothership_duration_bonus"
+      ],
+      "reason": "该舰船不需要母舰"
+    },
+    {
+      "source": "weapon",
+      "field": "is_energy",
+      "equals": 1,
+      "disable": [
+        "user_input.physical_armor"
+      ],
+      "reason": "能量武器使用能量护甲"
+    },
+    {
+      "source": "weapon",
+      "field": "is_energy",
+      "equals": 0,
+      "disable": [
+        "user_input.energy_armor"
+      ],
+      "reason": "实弹/辅助武器使用物理护甲"
+    }
+  ],
   "functions": {}
 }

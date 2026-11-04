@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QLabel,
     QPushButton,
+    QSizePolicy,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -91,6 +93,7 @@ class ComputeSheet(QObject):
         self._widget: QWidget | None = None
         self._output_labels: dict[str, QLabel] = {}
         self._input_widgets: dict[str, tuple[QWidget, ControlSpec]] = {}
+        self._input_labels: dict[str, QLabel] = {}
         self._output_formats: dict[str, str] = {oid: odef.format for oid, odef in dag_service.dag.outputs.items() if odef.format}
 
     @property
@@ -128,6 +131,26 @@ class ComputeSheet(QObject):
         """向 DAG context 设置一个变量值。"""
         self._context_overrides[key] = value
 
+    def set_input_enabled(self, path: str, enabled: bool, reason: str = "") -> None:
+        """启用或禁用某个输入控件（并同步其标签）。
+
+        Args:
+            path: ``user_input.*`` 变量路径。
+            enabled: ``False`` 时灰显控件并在悬停提示中说明原因。
+            reason: 禁用原因；为空时使用控件原有描述。
+        """
+        entry = self._input_widgets.get(path)
+        if entry is None:
+            return
+        widget, spec = entry
+        widget.setEnabled(enabled)
+        widget.setToolTip("" if enabled else reason or spec.description)
+
+        label = self._input_labels.get(path)
+        if label is not None:
+            label.setEnabled(enabled)
+            label.setToolTip(spec.description if enabled else reason or spec.description)
+
     def render_html(self) -> str:
         """将当前输出面板渲染为 HTML 表格。"""
         return _do_render_html(self._layout, self._output_labels)
@@ -140,20 +163,54 @@ class ComputeSheet(QObject):
         root_layout = QVBoxLayout(root)
         root_layout.setContentsMargins(0, 0, 0, 0)
 
-        for sec in self._layout.sections:
-            if sec.type == "inputs":
-                root_layout.addWidget(self._build_input_section(sec))
-            elif sec.type == "outputs":
-                root_layout.addWidget(self._build_output_section(sec))
-            elif sec.type == "widget":
-                root_layout.addWidget(self._build_widget_section(sec))
+        if any(sec.tab for sec in self._layout.sections):
+            root_layout.addWidget(self._build_tabs(), 1)
+        else:
+            for sec in self._layout.sections:
+                widget = self._build_section(sec)
+                if widget is not None:
+                    root_layout.addWidget(widget)
+            root_layout.addStretch()
 
         eval_btn = QPushButton("计算")
         eval_btn.clicked.connect(self.evaluate)
         root_layout.addWidget(eval_btn)
 
-        root_layout.addStretch()
         return root
+
+    def _build_tabs(self) -> QTabWidget:
+        """按 section.tab 分组渲染为 QTabWidget，保持布局中首次出现的页序。"""
+        tabs = QTabWidget()
+        pages: dict[str, QWidget] = {}
+        page_layouts: dict[str, QVBoxLayout] = {}
+
+        for sec in self._layout.sections:
+            page = pages.get(sec.tab)
+            if page is None:
+                page = QWidget()
+                page_layout = QVBoxLayout(page)
+                page_layout.setContentsMargins(0, 0, 0, 0)
+                pages[sec.tab] = page
+                page_layouts[sec.tab] = page_layout
+                tabs.addTab(page, sec.tab)
+
+            widget = self._build_section(sec)
+            if widget is not None:
+                page_layouts[sec.tab].addWidget(widget)
+
+        for page_layout in page_layouts.values():
+            page_layout.addStretch()
+
+        return tabs
+
+    def _build_section(self, sec: Section) -> QWidget | None:
+        if sec.type == "inputs":
+            return self._build_input_section(sec)
+        if sec.type == "outputs":
+            return self._build_output_section(sec)
+        if sec.type == "widget":
+            return self._build_widget_section(sec)
+        return None
 
     def _base_context_value(self, path: str) -> Any:
         """按点分路径读取 base_context 中的值；缺失时返回 None。"""
@@ -177,7 +234,9 @@ class ComputeSheet(QObject):
                 seeded = self._base_context_value(var_path)
                 if seeded is not None:
                     spec.default = seeded
-            label = QLabel(spec.label)
+            # 优先用 DAG 描述作可见标签；英文变量名（如 user_input.fleet_count）
+            # 直接显示路径对用户不友好。
+            label = QLabel(spec.description or spec.label)
             label.setToolTip(spec.description)
             widget = create_control(spec)
             items.append((var_path, label, widget, spec))
@@ -185,9 +244,10 @@ class ComputeSheet(QObject):
 
     def _build_input_section(self, sec: Section) -> QWidget:
         items = self._collect_input_items(sec)
-        for var_path, _, widget, spec in items:
+        for var_path, label, widget, spec in items:
             if widget is not None:
                 self._input_widgets[var_path] = (widget, spec)
+                self._input_labels[var_path] = label
         container = _ResponsiveGroupBox(sec.title, items)
         container._on_resized()
         return container
@@ -197,12 +257,20 @@ class ComputeSheet(QObject):
         layout = QVBoxLayout(group)
         grid = QGridLayout()
 
+        columns = max(1, sec.columns)
         for i, out_name in enumerate(sec.outputs):
-            label = QLabel(out_name)
+            output_def = self._dag_service.dag.outputs.get(out_name)
+            display = (output_def.label if output_def is not None else "") or out_name
+            label = QLabel(display)
+            label.setToolTip(out_name)
+            # 标签与数值不参与最小宽度计算，输出网格才能收进可视区而不产生横向滚动。
+            label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
             value_label = QLabel("--")
+            value_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
             value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            grid.addWidget(label, i, 0)
-            grid.addWidget(value_label, i, 1)
+            row, column = divmod(i, columns)
+            grid.addWidget(label, row, column * 2)
+            grid.addWidget(value_label, row, column * 2 + 1)
             self._output_labels[out_name] = value_label
 
         layout.addLayout(grid)

@@ -57,6 +57,9 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
         game: str = "",
         template_id: str | None = None,
         data_files: dict[str, list[dict[str, Any]]] | None = None,
+        entity_selectors: list[dict[str, Any]] | None = None,
+        entity_detail: dict[str, Any] | None = None,
+        entity_input_rules: list[dict[str, Any]] | None = None,
         dry_run: bool = False,
         overwrite: bool = False,
     ) -> dict[str, Any]:
@@ -66,12 +69,33 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
         步骤 ``id`` 或数字字面量（不要写 ``user_input.atk``）。``expr`` 支持
         比较（``< <= > >= == !=``）、布尔（``and/or/not``）与三元（``a if cond else b``）。
 
+        变量可带 ``min``/``max``（仅 float/int）与 ``ui_control``：
+        ``suffix``（如 ``"%"``）、``step``（正数）、``widget``
+        （spinbox/slider/switch/dropdown）、``options``（字符串数组，自动用 dropdown）。
+
         ``data_files`` 可提供 character/weapon/equipment/enemy 四类实体记录，
         写入约定路径 ``data/{characters,weapons,equipments,enemies}.json``；
         每条记录必须含非空字符串 ``名称``，且变量 ``name`` 应与记录字段名一致。
         提供非空记录列表的来源视为已绑定：其变量保留 source 命名空间、由查看器
         实体下拉提供，不出现在输入区；未绑定或列表为空的来源，其变量自动改写为
         ``user_input.*``（空列表会在 warnings 中提示）。
+
+        ``entity_selectors`` 把普通实体下拉改为多级级联，每项形如
+        ``{"source": "weapon", "data_file": "weapons", "steps": [{"field": "舰船分类",
+        "label": "舰船种类"}, {"field": "名称", "label": "武器", "display_field": "武器标签"}]}``；
+        来源必须已绑定非空 data_files，步骤字段必须存在，末级 field 必须为 ``名称``。
+
+        ``entity_detail`` 在查看器最左侧显示选中实体的字段明细，形如
+        ``{"source": "weapon", "title": "武器数据", "sections": [{"title": "基础",
+        "columns": 2, "fields": [{"field": "舰船", "label": "舰船"}]}]}``；
+        source 必须已绑定数据，field 必须在该来源记录中存在。
+
+        ``entity_input_rules`` 按实体字段值禁用无关输入，形如
+        ``{"source": "weapon", "field": "needs_mothership", "equals": 0,
+        "disable": ["user_input.mothership_flight_bonus"], "reason": "该舰船不需要母舰"}``；
+        disable 只能引用生成后仍为 user_input 的变量路径。字段缺失的实体不会命中规则，
+        对应输入保持可编辑。
+
         ``dry_run=true`` 只预览文件内容，不写盘。
         """
         return build.generate_adapter(
@@ -84,6 +108,9 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
             formula_steps=formula_steps,
             outputs=outputs,
             data_files=data_files,
+            entity_selectors=entity_selectors,
+            entity_detail=entity_detail,
+            entity_input_rules=entity_input_rules,
             dry_run=dry_run,
             overwrite=overwrite,
         )

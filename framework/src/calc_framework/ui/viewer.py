@@ -54,9 +54,11 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self.setWindowTitle(tr("desktop.viewer.windowTitle"))
 
-        self.resize(1100, 750)
+        self.resize(1400, 900)
 
         self._loaded_data: dict[str, Any] = {}
+
+        self._meta: dict[str, Any] = {}
 
         self._dag_service: DAGService | None = None
 
@@ -72,6 +74,8 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._entity_selectors: dict[str, QComboBox] = {}
 
+        self._cascade_combos: dict[str, list[QComboBox]] = {}
+
         self._level_spin: QSpinBox | None = None
 
         self._current_level: int = 90
@@ -81,6 +85,12 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
         self._splitter: QSplitter | None = None
 
         self._entity_group: QGroupBox | None = None
+
+        self._detail_group: QGroupBox | None = None
+
+        self._detail_value_labels: dict[str, QLabel] = {}
+
+        self._detail_layout: QVBoxLayout | None = None
 
         self._right_panel: QWidget | None = None
 
@@ -112,7 +122,21 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._left_layout.addWidget(self._entity_group)
 
-        self._left_layout.addStretch()
+        self._detail_container = QWidget()
+
+        self._detail_layout = QVBoxLayout(self._detail_container)
+
+        self._detail_layout.setContentsMargins(0, 0, 0, 0)
+
+        self._detail_scroll = QScrollArea()
+
+        self._detail_scroll.setObjectName("detailScroll")
+
+        self._detail_scroll.setWidgetResizable(True)
+
+        self._detail_scroll.setWidget(self._detail_container)
+
+        self._left_layout.addWidget(self._detail_scroll, 1)
 
         splitter.addWidget(left)
 
@@ -158,13 +182,25 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         info_form.addRow(tr("desktop.viewer.labelOutputs"), self._info_outputs)
 
+        self._info_description = QLabel(tr("desktop.viewer.unknown"))
+
+        self._info_description.setWordWrap(True)
+
+        info_form.addRow(tr("desktop.viewer.labelDescription"), self._info_description)
+
         self._right_layout.addWidget(self._info_group)
+
+        self._info_hint = QLabel(tr("desktop.viewer.hintText"))
+
+        self._info_hint.setWordWrap(True)
+
+        self._right_layout.addWidget(self._info_hint)
 
         self._right_layout.addStretch()
 
         splitter.addWidget(right)
 
-        splitter.setSizes([220, 580, 200])
+        splitter.setSizes([320, 760, 300])
 
         self._splitter = splitter
 

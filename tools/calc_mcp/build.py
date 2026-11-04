@@ -33,6 +33,9 @@ def generate_adapter(
     formula_steps: list[dict[str, Any]] | None = None,
     outputs: list[dict[str, Any]] | None = None,
     data_files: dict[str, list[dict[str, Any]]] | None = None,
+    entity_selectors: list[dict[str, Any]] | None = None,
+    entity_detail: dict[str, Any] | None = None,
+    entity_input_rules: list[dict[str, Any]] | None = None,
     dry_run: bool = False,
     overwrite: bool = False,
 ) -> dict[str, Any]:
@@ -44,11 +47,14 @@ def generate_adapter(
         display_name: 显示名称。
         game: 游戏名称。
         template_id: 可选模板目录名。
-        variables: 变量声明。
+        variables: 变量声明；可含 ``min``/``max``/``ui_control``。
         formula_steps: 公式步骤。
         outputs: 输出声明。
         data_files: 实体数据文件声明；提供非空记录列表的来源视为绑定，
             其变量保留命名空间；未绑定或空列表来源的变量自动改写为 ``user_input``。
+        entity_selectors: 级联选择器声明；来源必须已绑定非空数据文件。
+        entity_detail: 查看器详情面板声明；字段必须存在于已绑定数据文件。
+        entity_input_rules: 条件禁用输入规则；disable 只能引用 ``user_input.*``。
         dry_run: 为 True 时只返回文件内容，不写盘。
         overwrite: 是否允许覆盖已存在目录中的文件。
 
@@ -66,6 +72,9 @@ def generate_adapter(
         formula_steps=formula_steps,
         outputs=outputs,
         data_files=data_files,
+        entity_selectors=entity_selectors,
+        entity_detail=entity_detail,
+        entity_input_rules=entity_input_rules,
     )
     engine = GeneratorEngine(adapters_dir=scope.adapters_dir)
     try:
@@ -76,6 +85,9 @@ def generate_adapter(
             formula_steps=[item.to_generator_dict() for item in spec.steps],
             outputs=[item.to_generator_dict() for item in spec.outputs],
             data_files=spec.data_files or None,
+            entity_selectors=spec.entity_selectors or None,
+            entity_detail=spec.entity_detail,
+            entity_input_rules=spec.entity_input_rules or None,
         )
     except (ValueError, KeyError, TypeError) as exc:
         raise BuildError(f"生成失败: {exc}") from exc

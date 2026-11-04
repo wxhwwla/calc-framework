@@ -16,6 +16,18 @@ from tools.generator.data_files import (
     normalize_data_files,
     serialize_data_file,
 )
+from tools.generator.selectors import SelectorError, normalize_entity_selectors
+
+_SELECTOR_RECORDS = {
+    "weapon": [
+        {
+            "名称": "速射炮",
+            "舰船分类": ["护卫舰", "驱逐舰"],
+            "舰船": "测试舰",
+            "武器标签": "速射炮·短",
+        }
+    ]
+}
 
 
 def test_none_returns_empty() -> None:
@@ -116,3 +128,71 @@ def test_binding_warnings_empty_file_is_unbound() -> None:
     assert "为空" in joined
     assert "未绑定" in joined
     assert "已绑定" not in joined
+
+
+def test_entity_selectors_none_returns_empty() -> None:
+    assert normalize_entity_selectors(None, {}) == []
+
+
+def test_entity_selectors_normalized() -> None:
+    raw = [
+        {
+            "source": "weapon",
+            "data_file": "data/weapons.json",
+            "steps": [
+                {"field": "舰船分类", "label": "舰船种类"},
+                {"field": "舰船"},
+                {"field": "名称", "label": "武器", "display_field": "武器标签"},
+            ],
+        }
+    ]
+
+    assert normalize_entity_selectors(raw, _SELECTOR_RECORDS) == [
+        {
+            "source": "weapon",
+            "data_file": "weapons",
+            "steps": [
+                {"field": "舰船分类", "label": "舰船种类"},
+                {"field": "舰船"},
+                {"field": "名称", "label": "武器", "display_field": "武器标签"},
+            ],
+        }
+    ]
+
+
+def test_entity_selectors_default_data_file() -> None:
+    raw = [{"source": "weapon", "steps": [{"field": "名称"}]}]
+
+    assert normalize_entity_selectors(raw, _SELECTOR_RECORDS)[0]["data_file"] == "weapons"
+
+
+@pytest.mark.parametrize(
+    ("raw", "match"),
+    [
+        ("weapon", "数组"),
+        ([{"source": "magic", "steps": [{"field": "名称"}]}], "source"),
+        ([{"source": "weapon", "steps": []}], "steps"),
+        (
+            [
+                {"source": "weapon", "steps": [{"field": "名称"}]},
+                {"source": "weapon", "steps": [{"field": "名称"}]},
+            ],
+            "重复",
+        ),
+        ([{"source": "weapon", "steps": [{"field": "舰船"}]}], "最后一级"),
+        ([{"source": "weapon", "steps": [{"field": "不存在"}, {"field": "名称"}]}], "不存在"),
+        ([{"source": "weapon", "steps": [{"field": "名称", "display_field": "不存在"}]}], "不存在"),
+        ([{"source": "weapon", "data_file": "characters", "steps": [{"field": "名称"}]}], "data_file"),
+        ([{"source": "weapon", "steps": [{"field": "名称", "bad": 1}]}], "未知字段"),
+    ],
+)
+def test_entity_selectors_invalid_rejected(raw: object, match: str) -> None:
+    with pytest.raises(SelectorError, match=match):
+        normalize_entity_selectors(raw, _SELECTOR_RECORDS)
+
+
+def test_entity_selectors_require_bound_data() -> None:
+    raw = [{"source": "weapon", "steps": [{"field": "名称"}]}]
+
+    with pytest.raises(SelectorError, match="data_files"):
+        normalize_entity_selectors(raw, {"weapon": []})

@@ -11,6 +11,9 @@
 - `fa` = 去程时间（出击飞行），`fb` = 回程时间（返航飞行）。
 - 攻击次数 = `at`（工作次数）× `rep`（弹药数）。
 - `cd` 冷却、`dur` 持续时间、`lock` 锁定时间、`iv` 攻击间隔，单位均为毫秒。
+- 舰船 `docks` 非空 → `是否母舰`；类型为战机/护航艇/无人机 → `需要母舰`
+  （无页面类型的 TE 舰船按名称关键词兜底）。
+- 武器作用为维修/驻防/增益（`act` 4/5/6）→ `友方作用=True`，命中率按 100% 处理。
 """
 
 from __future__ import annotations
@@ -53,6 +56,26 @@ _WEAPON_ACTIONS = {
     8: "无动作",
     9: "操作",
 }
+
+# 维修/驻防/增益作用于友方，命中率按 100% 处理。
+_FRIENDLY_ACTIONS = frozenset({4, 5, 6})
+# 页面类型缺失的 TE 舰船用名称兜底判断是否需要母舰。
+_AIRCRAFT_NAME_KEYWORDS = (
+    "战机",
+    "战斗机",
+    "攻击机",
+    "轰炸机",
+    "侦察机",
+    "拦截机",
+    "护航艇",
+    "鱼雷艇",
+    "导弹艇",
+    "炮艇",
+    "无人机",
+)
+
+# 舰船 affix 中的暴击词条，例如「有20%概率对目标额外造成150%暴击伤害」。
+_CRIT_PATTERN = re.compile(r"有\s*(\d+(?:\.\d+)?)\s*%\s*概率对(.+?)额外造成\s*(\d+(?:\.\d+)?)\s*%\s*暴击伤害")
 
 
 @register_provider
@@ -241,6 +264,17 @@ def _newer_version(current: str, candidate: str) -> str:
     return candidate if int(candidate) > int(current) else current
 
 
+def _needs_mothership(name: str, ship_type: str | None) -> bool:
+    """判断舰船是否只能由母舰搭载出战。
+
+    页面类型可靠时只认战机/护航艇/无人机；TE 舰船缺页面类型，
+    退化为按名称关键词判断（登陆舰自带动力，不算需要母舰）。
+    """
+    if ship_type:
+        return any(keyword in ship_type for keyword in ("战机", "护航艇", "无人机"))
+    return any(keyword in name for keyword in _AIRCRAFT_NAME_KEYWORDS)
+
+
 def _build_ship(
     ship_id: str,
     ship: dict[str, Any],
@@ -250,17 +284,26 @@ def _build_ship(
     ship_data = ship.get("ship") or {}
     base = ship_data.get("base") or {}
     systems = {str(system.get("id")): system.get("name") for system in ship.get("systems") or []}
-    weapons = [_build_weapon(raw, systems) for raw in (ship.get("weps") or {}).values()]
+    affix = ship.get("affix") or {}
+    weapons = [
+        _build_weapon(raw, systems, affix.get(str(weapon_id)) or [])
+        for weapon_id, raw in (ship.get("weps") or {}).items()
+    ]
     weapons.sort(key=lambda weapon: (weapon["系统ID"], weapon["名称"] or ""))
 
     command = meta.get("指挥值")
     if isinstance(command, str) and command.isdigit():
         command = int(command)
 
+    name = ship_data.get("name") or meta.get("名称") or title
+    ship_type = meta.get("类型")
+
     return {
         "id": ship_id,
-        "名称": ship_data.get("name") or meta.get("名称") or title,
-        "类型": meta.get("类型"),
+        "名称": name,
+        "类型": ship_type,
+        "是否母舰": bool(ship.get("docks")),
+        "需要母舰": _needs_mothership(name, ship_type),
         "稀有度": meta.get("稀有度"),
         "所属": meta.get("所属"),
         "武器类型": meta.get("武器类型"),
@@ -283,6 +326,7 @@ def _build_ship(
 def _build_weapon(
     raw: dict[str, Any],
     systems: dict[str, str],
+    affix_entries: list[Any] | None = None,
 ) -> dict[str, Any]:
     at_raw = raw.get("at")
     rep_raw = raw.get("rep")
@@ -295,6 +339,7 @@ def _build_weapon(
     action = _as_int(raw.get("act"))
     type_raw = raw.get("typ")
     action_raw = raw.get("act")
+    crit_rate, crit_damage, crit_target, crit_vs_air = _crit_stats(affix_entries)
 
     return {
         "名称": raw.get("mod"),
@@ -302,8 +347,13 @@ def _build_weapon(
         "系统": systems.get(system_id, ""),
         "武器类型": _WEAPON_TYPES.get(weapon_type, f"类型{type_raw}" if type_raw is not None else ""),
         "武器作用": _WEAPON_ACTIONS.get(action, f"作用{action_raw}" if action_raw is not None else ""),
+        "友方作用": action in _FRIENDLY_ACTIONS,
         "挂载数": raw.get("n"),
         "单发伤害": _to_float(raw.get("atk")),
+        "暴击率": crit_rate,
+        "暴击伤害": crit_damage,
+        "暴击目标": crit_target,
+        "防空暴击": crit_vs_air,
         "攻击次数": attack_runs * ammo if has_attack else None,
         "工作次数": raw.get("at"),
         "弹药数": raw.get("rep"),
@@ -323,6 +373,33 @@ def _build_weapon(
         ],
         "内载无人机": [{"名称": unit.get("nm"), "数量": unit.get("k")} for unit in sub_units if isinstance(unit, dict)],
     }
+
+
+def _crit_stats(entries: list[Any] | None) -> tuple[float | None, float | None, str, bool | None]:
+    """从武器 affix 词条中提取暴击率、暴击伤害与作用目标。
+
+    Args:
+        entries: ``ship["affix"][weapon_id]`` 的词条列表。
+
+    Returns:
+        ``(暴击率, 暴击伤害, 暴击目标, 是否防空暴击)``；没有暴击词条时
+        前三项为 ``(None, None, "")``、最后一项为 ``None``。
+    """
+    for entry in entries or []:
+        if not isinstance(entry, dict):
+            continue
+        match = _CRIT_PATTERN.search(str(entry.get("d") or ""))
+        if not match:
+            continue
+        target = match.group(2).strip()
+        vs_air = "舰载机" in target
+        return (
+            float(match.group(1)),
+            float(match.group(3)),
+            "舰载机" if vs_air else "舰船",
+            vs_air,
+        )
+    return None, None, "", None
 
 
 def _to_float(value: Any) -> float | None:

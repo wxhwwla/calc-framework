@@ -155,6 +155,110 @@ def test_validate_adapter_reports_missing_entry_data(scope: ProjectScope, adapte
     assert any(item["code"] == "FILE_MISSING" and "missing.json" in item["message"] for item in result["errors"])
 
 
+def _write_selector_data(tmp_path: Path, adapter: str) -> None:
+    data_dir = tmp_path / "framework" / "adapters" / adapter / "data"
+    data_dir.mkdir(exist_ok=True)
+    (data_dir / "enemies.json").write_text(
+        json.dumps([{"名称": "Boss", "种类": "精英", "def": 2}], ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+def _write_selector_meta(tmp_path: Path, adapter: str, selector: dict) -> None:
+    meta_path = tmp_path / "framework" / "adapters" / adapter / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["entity_selectors"] = [selector]
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+
+
+def test_validate_adapter_accepts_entity_selectors(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    _write_selector_data(tmp_path, adapter)
+    _write_selector_meta(
+        tmp_path,
+        adapter,
+        {"source": "enemy", "steps": [{"field": "种类"}, {"field": "名称"}]},
+    )
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is True, result["errors"]
+
+
+def test_validate_adapter_reports_invalid_entity_selectors(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    _write_selector_data(tmp_path, adapter)
+    _write_selector_meta(
+        tmp_path,
+        adapter,
+        {"source": "enemy", "steps": [{"field": "不存在"}, {"field": "名称"}]},
+    )
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is False
+    assert any(item["code"] == "SELECTOR_INVALID" for item in result["errors"])
+
+
+def _write_entity_meta(tmp_path: Path, adapter: str, **entries: object) -> None:
+    meta_path = tmp_path / "framework" / "adapters" / adapter / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta.update(entries)
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+
+
+def test_validate_adapter_accepts_entity_detail_and_input_rules(
+    scope: ProjectScope, adapter: str, tmp_path: Path
+) -> None:
+    _write_selector_data(tmp_path, adapter)
+    _write_entity_meta(
+        tmp_path,
+        adapter,
+        entity_detail={
+            "source": "enemy",
+            "sections": [{"fields": [{"field": "def", "label": "防御"}]}],
+        },
+        entity_input_rules=[
+            {
+                "source": "enemy",
+                "field": "def",
+                "equals": 2,
+                "disable": ["user_input.atk"],
+            }
+        ],
+    )
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is True, result["errors"]
+
+
+def test_validate_adapter_reports_invalid_entity_detail(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    _write_selector_data(tmp_path, adapter)
+    _write_entity_meta(
+        tmp_path,
+        adapter,
+        entity_detail={"source": "enemy", "sections": [{"fields": [{"field": "不存在"}]}]},
+    )
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is False
+    assert any(item["code"] == "ENTITY_DETAIL_INVALID" for item in result["errors"])
+
+
+def test_validate_adapter_reports_invalid_entity_input_rules(scope: ProjectScope, adapter: str, tmp_path: Path) -> None:
+    _write_selector_data(tmp_path, adapter)
+    _write_entity_meta(
+        tmp_path,
+        adapter,
+        entity_input_rules=[{"source": "enemy", "field": "def", "equals": 2, "disable": ["user_input.missing"]}],
+    )
+
+    result = validate_adapter(scope, adapter)
+
+    assert result["valid"] is False
+    assert any(item["code"] == "INPUT_RULE_INVALID" for item in result["errors"])
+
+
 def test_smoke_test_uses_defaults(scope: ProjectScope, adapter: str) -> None:
     result = smoke_test_adapter(scope, adapter)
 

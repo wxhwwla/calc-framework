@@ -88,7 +88,7 @@ def test_describe_schemas_exposes_data_files_and_expression_operators() -> None:
     data_files = result["data_files"]
     assert data_files["allowed_sources"] == ["character", "weapon", "equipment", "enemy"]
     assert data_files["files"]["enemy"] == "data/enemies.json"
-    assert data_files["max_bytes_per_file"] == 512 * 1024
+    assert data_files["max_bytes_per_file"] == 2 * 1024 * 1024
     assert "非空" in data_files["binding_rule"]
     assert "名称" in data_files["validation_rule"]
 
@@ -97,8 +97,29 @@ def test_describe_schemas_exposes_data_files_and_expression_operators() -> None:
     assert set(operators["boolean"]) == {"and", "or", "not"}
     assert "三元" in operators["ternary"]
 
+    ui_fields = result["variables"]["ui_fields"]
+    assert set(ui_fields["ui_control"]["widget"]) == {"spinbox", "slider", "switch", "dropdown"}
+    assert "min" in ui_fields["min_max_rule"]
+
+    selectors = result["entity_selectors"]
+    assert selectors["item_fields"] == ["source", "data_file", "steps"]
+    assert any("名称" in rule for rule in selectors["rules"])
+
+    detail = result["entity_detail"]
+    assert detail["item_fields"] == ["source", "title", "sections"]
+    assert "field" in detail["field_fields"]
+    assert result["entity_input_rules"]["item_fields"] == [
+        "source",
+        "field",
+        "equals",
+        "disable",
+        "reason",
+    ]
+    assert "user_input" in result["entity_input_rules"]["disable_rule"]
+
     assert result["layout"]["section_types"] == ["inputs", "outputs", "widget"]
     assert result["layout"]["widget_types"] == ["donation"]
+    assert "tab" in result["layout"]["section_fields"]
 
 
 def test_read_guide_returns_content(scope: ProjectScope) -> None:

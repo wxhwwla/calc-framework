@@ -61,6 +61,10 @@ data/
 !framework/**/data/
 !games/**/data/
 !web/**/data/
+
+# Wiki 爬虫原始输出（可重新抓取）
+tools/wiki_scout/output/*
+!tools/wiki_scout/output/.gitkeep
 skills/
 !games/**/skills/
 

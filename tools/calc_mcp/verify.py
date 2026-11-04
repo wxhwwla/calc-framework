@@ -9,12 +9,18 @@ from pathlib import Path
 from typing import Any
 
 from calc_framework.config.adapter import AdapterPackage
+from calc_framework.config.entity_meta import (
+    EntityMetaError,
+    normalize_entity_detail,
+    normalize_entity_input_rules,
+)
 from calc_framework.dag.serializer import dag_from_dict
 from calc_framework.data.attr_schema import AttributeSchema
 from calc_framework.data.entity_sources import DATA_STEM_SOURCE
 from calc_framework.ui.layout import load_layout
 
 from tools.generator.data_files import NAME_KEY
+from tools.generator.selectors import SelectorError, normalize_entity_selectors
 from tools.quality.validate_layout_sync import validate_layout
 
 from .safety import ProjectScope, ScopeError
@@ -97,7 +103,9 @@ def validate_adapter(scope: ProjectScope, adapter_id: str) -> dict[str, Any]:
             errors.append(_issue("ATTR_SCHEMA_INVALID", f"attr_schema 校验失败: {exc}", "attr_schema.json"))
 
     _check_functions(target, meta, errors, warnings)
-    _check_data_files(target, meta, errors, warnings)
+    data_records = _check_data_files(target, meta, errors, warnings)
+    _check_entity_selectors(meta, data_records, errors)
+    _check_entity_meta(meta, data_records, dag_raw, errors)
     if not errors:
         _check_adapter_package(target, errors)
 
@@ -265,14 +273,18 @@ def _check_data_files(
     meta: dict[str, Any],
     errors: list[dict[str, str]],
     warnings: list[dict[str, str]],
-) -> None:
+) -> dict[str, list[Any]]:
     """校验 ``data/*.json`` 与 ``meta.entry_data`` 引用。
 
     查看器只识别 ``DATA_STEM_SOURCE`` 中的约定文件名，并按 ``名称`` 建立实体下拉。
     对约定文件，缺失/重复名称会导致实体无法选择或选择错位，因此按错误上报；
     空文件仅告警。非约定文件（如适配包自用的 ``*_standard.json``）只做格式提示，
     不影响校验结果。
+
+    Returns:
+        ``{实体来源: 记录列表}``，供 ``entity_selectors`` 字段校验复用。
     """
+    records_by_source: dict[str, list[Any]] = {}
     data_dir = target / "data"
     if data_dir.is_dir():
         for path in sorted(data_dir.glob("*.json")):
@@ -293,12 +305,55 @@ def _check_data_files(
             if not recognized:
                 warnings.append(_issue("DATA_UNKNOWN", f"数据文件 {label} 没有对应的实体来源，查看器会忽略", label))
                 continue
+            records_by_source[DATA_STEM_SOURCE[path.stem]] = payload
             if not payload:
                 warnings.append(_issue("DATA_EMPTY", "数据文件为空列表，查看器不会显示该来源的实体选择", label))
             else:
                 _check_data_records(payload, label, errors)
 
     _check_entry_data(target, meta, errors)
+    return records_by_source
+
+
+def _check_entity_selectors(
+    meta: dict[str, Any],
+    records_by_source: dict[str, list[Any]],
+    errors: list[dict[str, str]],
+) -> None:
+    """校验 ``meta.entity_selectors`` 的结构、数据绑定与末级 ``名称`` 字段。"""
+    raw = meta.get("entity_selectors")
+    if raw is None:
+        return
+    try:
+        normalize_entity_selectors(raw, records_by_source)
+    except SelectorError as exc:
+        errors.append(_issue("SELECTOR_INVALID", f"entity_selectors 校验失败: {exc}", "meta.json"))
+
+
+def _check_entity_meta(
+    meta: dict[str, Any],
+    records_by_source: dict[str, list[Any]],
+    dag_raw: dict[str, Any] | None,
+    errors: list[dict[str, str]],
+) -> None:
+    """校验 ``meta.entity_detail`` 与 ``meta.entity_input_rules``。"""
+    try:
+        normalize_entity_detail(meta.get("entity_detail"), records_by_source)
+    except EntityMetaError as exc:
+        errors.append(_issue("ENTITY_DETAIL_INVALID", f"entity_detail 校验失败: {exc}", "meta.json"))
+
+    variables = (dag_raw or {}).get("variables", {}) or {}
+    user_input_paths = [
+        path for path, spec in variables.items() if isinstance(spec, dict) and spec.get("source") == "user_input"
+    ]
+    try:
+        normalize_entity_input_rules(
+            meta.get("entity_input_rules"),
+            data_files=records_by_source,
+            user_input_paths=user_input_paths,
+        )
+    except EntityMetaError as exc:
+        errors.append(_issue("INPUT_RULE_INVALID", f"entity_input_rules 校验失败: {exc}", "meta.json"))
 
 
 def _check_data_records(records: list[Any], label: str, errors: list[dict[str, str]]) -> None:

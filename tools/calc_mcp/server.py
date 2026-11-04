@@ -30,6 +30,13 @@ _INSTRUCTIONS = """\
 - generate_adapter.data_files 可提供 character/weapon/equipment/enemy 实体记录
   （每条含非空字符串 名称）；提供非空记录列表的来源视为绑定，其变量保留命名空间
   并由查看器实体下拉提供；未绑定或空列表来源的变量自动改写为 user_input 输入。
+- 变量可带 min/max 与 ui_control（suffix/step/widget/options）；百分比输入用
+  type=float + ui_control.suffix="%"，并在表达式中除以 100。
+- generate_adapter.entity_selectors 可把实体下拉改为多级级联（如 舰船种类→舰船→武器）；
+  来源须已绑定非空 data_files，末级 field 必须为 名称。
+- generate_adapter.entity_detail 可在查看器最左侧显示当前实体字段明细；字段必须存在于
+  已绑定数据文件。generate_adapter.entity_input_rules 可按实体字段禁用无关输入
+  （例如不需要母舰时灰显母舰加成），disable 只能引用 user_input.* 变量。
 - 写文件默认不覆盖，需要覆盖时显式传 overwrite=true。
 - smoke_test_adapter 会执行适配包内的 functions.py，仅用于本地开发者适配包。
 """

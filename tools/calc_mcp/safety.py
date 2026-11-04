@@ -12,6 +12,8 @@ import os
 import re
 from pathlib import Path
 
+from tools.generator.data_files import MAX_DATA_FILE_BYTES
+
 _ADAPTER_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _WINDOWS_DRIVE_RE = re.compile(r"^[A-Za-z]:")
 _ALLOWED_SUFFIXES = frozenset({".json", ".py", ".md", ".txt", ".csv", ".yaml", ".yml"})
@@ -125,7 +127,7 @@ class ProjectScope:
         content: str,
         *,
         overwrite: bool,
-        max_bytes: int = 512 * 1024,
+        max_bytes: int = MAX_DATA_FILE_BYTES,
     ) -> int:
         """写入项目内文本文件（UTF-8 无 BOM）。
 

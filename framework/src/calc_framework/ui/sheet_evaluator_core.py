@@ -30,6 +30,7 @@ def var_to_dict(var: DAGVariable | dict[str, Any]) -> dict[str, Any]:
         "default": var.default,
         "min": var.min,
         "max": var.max,
+        "ui_control": var.ui_control,
     }
 
 

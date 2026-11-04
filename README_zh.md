@@ -161,7 +161,7 @@ cd web/frontend && npm install && npm run dev
 - **ComputeSheet**：声明式 UI — 消费 `layout.json` + DAG 变量 → 自动渲染控件
 - **插件系统**：注册表模式 + 3 内置插件（暴击/闪避/距离衰减）+ `.calcplugin` 格式
 - **AI 配装**：自然语言配装推荐 + 多轮对话 + 语义搜索 + AI 公式解析
-- **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点)、wjdlglr (17 节点，MCP 生成) 适配器均通过
+- **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点)、wjdlglr (65 节点，八乘区 + 16 种目标命中率，三级舰船/武器联动选择、武器明细面板、能量/实弹护甲选择) 适配器均通过
 - **主题管理**：暗色/亮色/高对比度，动态 QSS 生成；Web 端暗/亮切换
 - **SaaS API**：API Key 管理 + 速率限制 + 用量统计
 

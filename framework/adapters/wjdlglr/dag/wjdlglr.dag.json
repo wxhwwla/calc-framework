@@ -1,209 +1,964 @@
 {
   "schema_version": "dag-v1",
-  "name": "无尽的拉格朗日 武器理论输出",
-  "description": "武器理论输出公式：齐射伤害 = 单发伤害 × 攻击次数 × 命中率 × 挂载数；DPS = 齐射伤害 / (冷却 + 持续时间 + 去程 + 回程)。",
+  "name": "无尽的拉格朗日 武器理论输出（八乘区 + 目标命中率）",
+  "description": "八乘区口径：武器属性与命中率来自 Wiki 数据；最终每分钟伤害按 16 种目标舰种分别乘以命中率。",
   "variables": {
-    "user_input.atk": {
+    "weapon.weapon_count": {
       "type": "float",
-      "source": "user_input",
-      "default": 65.0,
-      "description": "单发伤害"
+      "source": "weapon",
+      "default": 1.0,
+      "description": "该舰船该种武器数量（Wiki 挂载数）"
     },
-    "user_input.attack_count": {
+    "weapon.ammo_count": {
       "type": "float",
-      "source": "user_input",
-      "default": 4.0,
-      "description": "攻击次数（工作次数×弹药数）"
+      "source": "weapon",
+      "default": 1.0,
+      "description": "弹药数（Wiki rep）"
     },
-    "user_input.hit_rate": {
+    "weapon.attack_runs": {
       "type": "float",
-      "source": "user_input",
-      "default": 0.9,
-      "description": "命中率（0-1，按单发折算）"
+      "source": "weapon",
+      "default": 1.0,
+      "description": "攻击次数（Wiki at 工作次数）"
     },
-    "user_input.mounts": {
+    "weapon.outbound": {
       "type": "float",
-      "source": "user_input",
-      "default": 3.0,
-      "description": "挂载数"
-    },
-    "user_input.cooldown": {
-      "type": "float",
-      "source": "user_input",
-      "default": 7.0,
-      "description": "冷却时间（秒）"
-    },
-    "user_input.duration": {
-      "type": "float",
-      "source": "user_input",
-      "default": 16.0,
-      "description": "持续时间（秒）"
-    },
-    "user_input.outbound": {
-      "type": "float",
-      "source": "user_input",
+      "source": "weapon",
       "default": 0.0,
       "description": "去程时间（秒）"
     },
-    "user_input.inbound": {
+    "weapon.inbound": {
       "type": "float",
-      "source": "user_input",
+      "source": "weapon",
       "default": 0.0,
       "description": "回程时间（秒）"
     },
-    "user_input.enemy_hp": {
+    "weapon.base_cooldown": {
       "type": "float",
-      "source": "user_input",
-      "default": 10000.0,
-      "description": "目标血量"
+      "source": "weapon",
+      "default": 0.0,
+      "description": "基础冷却时间（秒）"
     },
-    "user_input.firepower": {
+    "weapon.base_duration": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "基础持续时间（秒）"
+    },
+    "weapon.base_damage": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "基础单发伤害"
+    },
+    "weapon.crit_rate": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "武器自带暴击率（%）"
+    },
+    "weapon.crit_damage": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "武器自带暴击伤害（%）"
+    },
+    "weapon.crit_vs_air": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "暴击仅对舰载机生效（1=防空暴击）"
+    },
+    "weapon.needs_mothership": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "是否需要母舰（1=战机/护航艇/无人机）"
+    },
+    "weapon.is_energy": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "是否能量武器（1=能量攻击，0=实弹/辅助）"
+    },
+    "weapon.friendly": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "友方作用（1=维修/驻防/增益，命中率按 100%）"
+    },
+    "weapon.hit_fighter": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对战机的命中率（%）"
+    },
+    "weapon.hit_escort": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对护航艇的命中率（%）"
+    },
+    "weapon.hit_drone": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对无人机的命中率（%）"
+    },
+    "weapon.hit_landing": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对登陆舰(作业态)的命中率（%）"
+    },
+    "weapon.hit_frigate": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对护卫舰的命中率（%）"
+    },
+    "weapon.hit_destroyer": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对驱逐舰的命中率（%）"
+    },
+    "weapon.hit_cruiser": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对巡洋舰的命中率（%）"
+    },
+    "weapon.hit_battlecruiser": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对战列巡洋舰的命中率（%）"
+    },
+    "weapon.hit_battleship": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对战列舰的命中率（%）"
+    },
+    "weapon.hit_carrier": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对航空母舰的命中率（%）"
+    },
+    "weapon.hit_support": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对支援舰的命中率（%）"
+    },
+    "weapon.hit_engineering_small": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对小型工程舰的命中率（%）"
+    },
+    "weapon.hit_engineering_medium": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对中型工程舰的命中率（%）"
+    },
+    "weapon.hit_engineering_large": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对大型工程舰的命中率（%）"
+    },
+    "weapon.hit_base_ship": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对大本营船的命中率（%）"
+    },
+    "weapon.hit_base": {
+      "type": "float",
+      "source": "weapon",
+      "default": 0.0,
+      "description": "对基地的命中率（%）"
+    },
+    "user_input.fleet_count": {
+      "type": "int",
+      "source": "user_input",
+      "default": 1,
+      "description": "该舰船编组数量（整数）"
+    },
+    "user_input.self_flight_bonus": {
       "type": "float",
       "source": "user_input",
-      "default": 851.0,
-      "description": "官方对舰火力（可选，用于击杀时间）"
+      "default": 0.0,
+      "description": "自身飞行时间加成（%，上限 100）",
+      "max": 100.0,
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.mothership_flight_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "母舰飞行时间加成（%，上限 100）",
+      "max": 100.0,
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.self_cooldown_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "自身冷却时间加成（%，上限 100）",
+      "max": 100.0,
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.mothership_cooldown_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "母舰冷却时间加成（%，上限 100）",
+      "max": 100.0,
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.self_duration_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "自身持续时间加成（%）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.mothership_duration_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "母舰持续时间加成（%）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.bonus_crit_rate": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "加成暴击率（%，武器无自带暴击时使用）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.crit_multiplier_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "暴击倍率加成（%）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.damage_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "伤害加成（%）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.physical_armor": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "目标物理护甲（固定值，非百分比）",
+      "ui_control": {
+        "step": 1
+      }
+    },
+    "user_input.energy_armor": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "目标能量护甲（固定值，非百分比）",
+      "ui_control": {
+        "step": 1
+      }
     }
   },
   "subgraphs": {},
   "nodes": {
-    "atk": {
+    "weapon_count": {
       "type": "var",
-      "path": "user_input.atk",
-      "label": "单发伤害"
+      "path": "weapon.weapon_count",
+      "label": "该舰船该种武器数量（Wiki 挂载数）"
     },
-    "attack_count": {
+    "ammo_count": {
       "type": "var",
-      "path": "user_input.attack_count",
-      "label": "攻击次数（工作次数×弹药数）"
+      "path": "weapon.ammo_count",
+      "label": "弹药数（Wiki rep）"
     },
-    "hit_rate": {
+    "attack_runs": {
       "type": "var",
-      "path": "user_input.hit_rate",
-      "label": "命中率（0-1，按单发折算）"
-    },
-    "mounts": {
-      "type": "var",
-      "path": "user_input.mounts",
-      "label": "挂载数"
-    },
-    "cooldown": {
-      "type": "var",
-      "path": "user_input.cooldown",
-      "label": "冷却时间（秒）"
-    },
-    "duration": {
-      "type": "var",
-      "path": "user_input.duration",
-      "label": "持续时间（秒）"
+      "path": "weapon.attack_runs",
+      "label": "攻击次数（Wiki at 工作次数）"
     },
     "outbound": {
       "type": "var",
-      "path": "user_input.outbound",
+      "path": "weapon.outbound",
       "label": "去程时间（秒）"
     },
     "inbound": {
       "type": "var",
-      "path": "user_input.inbound",
+      "path": "weapon.inbound",
       "label": "回程时间（秒）"
     },
-    "enemy_hp": {
+    "base_cooldown": {
       "type": "var",
-      "path": "user_input.enemy_hp",
-      "label": "目标血量"
+      "path": "weapon.base_cooldown",
+      "label": "基础冷却时间（秒）"
     },
-    "firepower": {
+    "base_duration": {
       "type": "var",
-      "path": "user_input.firepower",
-      "label": "官方对舰火力（可选，用于击杀时间）"
+      "path": "weapon.base_duration",
+      "label": "基础持续时间（秒）"
     },
-    "cycle": {
+    "base_damage": {
+      "type": "var",
+      "path": "weapon.base_damage",
+      "label": "基础单发伤害"
+    },
+    "crit_rate": {
+      "type": "var",
+      "path": "weapon.crit_rate",
+      "label": "武器自带暴击率（%）"
+    },
+    "crit_damage": {
+      "type": "var",
+      "path": "weapon.crit_damage",
+      "label": "武器自带暴击伤害（%）"
+    },
+    "crit_vs_air": {
+      "type": "var",
+      "path": "weapon.crit_vs_air",
+      "label": "暴击仅对舰载机生效（1=防空暴击）"
+    },
+    "needs_mothership": {
+      "type": "var",
+      "path": "weapon.needs_mothership",
+      "label": "是否需要母舰（1=战机/护航艇/无人机）"
+    },
+    "is_energy": {
+      "type": "var",
+      "path": "weapon.is_energy",
+      "label": "是否能量武器（1=能量攻击）"
+    },
+    "friendly": {
+      "type": "var",
+      "path": "weapon.friendly",
+      "label": "友方作用（1=维修/驻防/增益，命中率按 100%）"
+    },
+    "hit_fighter": {
+      "type": "var",
+      "path": "weapon.hit_fighter",
+      "label": "对战机的命中率（%）"
+    },
+    "hit_escort": {
+      "type": "var",
+      "path": "weapon.hit_escort",
+      "label": "对护航艇的命中率（%）"
+    },
+    "hit_drone": {
+      "type": "var",
+      "path": "weapon.hit_drone",
+      "label": "对无人机的命中率（%）"
+    },
+    "hit_landing": {
+      "type": "var",
+      "path": "weapon.hit_landing",
+      "label": "对登陆舰(作业态)的命中率（%）"
+    },
+    "hit_frigate": {
+      "type": "var",
+      "path": "weapon.hit_frigate",
+      "label": "对护卫舰的命中率（%）"
+    },
+    "hit_destroyer": {
+      "type": "var",
+      "path": "weapon.hit_destroyer",
+      "label": "对驱逐舰的命中率（%）"
+    },
+    "hit_cruiser": {
+      "type": "var",
+      "path": "weapon.hit_cruiser",
+      "label": "对巡洋舰的命中率（%）"
+    },
+    "hit_battlecruiser": {
+      "type": "var",
+      "path": "weapon.hit_battlecruiser",
+      "label": "对战列巡洋舰的命中率（%）"
+    },
+    "hit_battleship": {
+      "type": "var",
+      "path": "weapon.hit_battleship",
+      "label": "对战列舰的命中率（%）"
+    },
+    "hit_carrier": {
+      "type": "var",
+      "path": "weapon.hit_carrier",
+      "label": "对航空母舰的命中率（%）"
+    },
+    "hit_support": {
+      "type": "var",
+      "path": "weapon.hit_support",
+      "label": "对支援舰的命中率（%）"
+    },
+    "hit_engineering_small": {
+      "type": "var",
+      "path": "weapon.hit_engineering_small",
+      "label": "对小型工程舰的命中率（%）"
+    },
+    "hit_engineering_medium": {
+      "type": "var",
+      "path": "weapon.hit_engineering_medium",
+      "label": "对中型工程舰的命中率（%）"
+    },
+    "hit_engineering_large": {
+      "type": "var",
+      "path": "weapon.hit_engineering_large",
+      "label": "对大型工程舰的命中率（%）"
+    },
+    "hit_base_ship": {
+      "type": "var",
+      "path": "weapon.hit_base_ship",
+      "label": "对大本营船的命中率（%）"
+    },
+    "hit_base": {
+      "type": "var",
+      "path": "weapon.hit_base",
+      "label": "对基地的命中率（%）"
+    },
+    "fleet_count": {
+      "type": "var",
+      "path": "user_input.fleet_count",
+      "label": "该舰船编组数量"
+    },
+    "self_flight_bonus": {
+      "type": "var",
+      "path": "user_input.self_flight_bonus",
+      "label": "自身飞行时间加成（%）"
+    },
+    "mothership_flight_bonus": {
+      "type": "var",
+      "path": "user_input.mothership_flight_bonus",
+      "label": "母舰飞行时间加成（%）"
+    },
+    "self_cooldown_bonus": {
+      "type": "var",
+      "path": "user_input.self_cooldown_bonus",
+      "label": "自身冷却时间加成（%）"
+    },
+    "mothership_cooldown_bonus": {
+      "type": "var",
+      "path": "user_input.mothership_cooldown_bonus",
+      "label": "母舰冷却时间加成（%）"
+    },
+    "self_duration_bonus": {
+      "type": "var",
+      "path": "user_input.self_duration_bonus",
+      "label": "自身持续时间加成（%）"
+    },
+    "mothership_duration_bonus": {
+      "type": "var",
+      "path": "user_input.mothership_duration_bonus",
+      "label": "母舰持续时间加成（%）"
+    },
+    "bonus_crit_rate": {
+      "type": "var",
+      "path": "user_input.bonus_crit_rate",
+      "label": "加成暴击率（%，武器无自带暴击时使用）"
+    },
+    "crit_multiplier_bonus": {
+      "type": "var",
+      "path": "user_input.crit_multiplier_bonus",
+      "label": "暴击倍率加成（%）"
+    },
+    "damage_bonus": {
+      "type": "var",
+      "path": "user_input.damage_bonus",
+      "label": "伤害加成（%）"
+    },
+    "physical_armor": {
+      "type": "var",
+      "path": "user_input.physical_armor",
+      "label": "目标物理护甲（固定值）"
+    },
+    "energy_armor": {
+      "type": "var",
+      "path": "user_input.energy_armor",
+      "label": "目标能量护甲（固定值）"
+    },
+    "shots": {
       "type": "expr",
-      "expr": "cooldown + duration + outbound + inbound",
+      "expr": "fleet_count * weapon_count * ammo_count * attack_runs",
       "inputs": {
-        "cooldown": "cooldown",
-        "duration": "duration",
+        "fleet_count": "fleet_count",
+        "weapon_count": "weapon_count",
+        "ammo_count": "ammo_count",
+        "attack_runs": "attack_runs"
+      },
+      "label": "发射数 = 编组数量 × 武器数量 × 弹药数 × 攻击次数"
+    },
+    "flight_time": {
+      "type": "expr",
+      "expr": "(outbound + inbound) * (1 - self_flight_bonus / 100 - (mothership_flight_bonus / 100 if needs_mothership > 0.5 else 0)) if needs_mothership > 0.5 and outbound + inbound > 0 else 0",
+      "inputs": {
         "outbound": "outbound",
-        "inbound": "inbound"
+        "inbound": "inbound",
+        "needs_mothership": "needs_mothership",
+        "self_flight_bonus": "self_flight_bonus",
+        "mothership_flight_bonus": "mothership_flight_bonus"
       },
-      "label": "攻击周期 = 冷却 + 持续时间 + 去程 + 回程"
+      "label": "飞行时间 = (去程 + 回程) × (1 − 自身飞行加成 − 母舰飞行加成)"
     },
-    "volley": {
-      "type": "binary",
-      "op": "*",
-      "lhs": "atk",
-      "rhs": "attack_count",
-      "label": "单挂载齐射伤害"
-    },
-    "eff_volley": {
-      "type": "binary",
-      "op": "*",
-      "lhs": "volley",
-      "rhs": "hit_rate",
-      "label": "命中折算后齐射伤害"
-    },
-    "total_volley": {
-      "type": "binary",
-      "op": "*",
-      "lhs": "eff_volley",
-      "rhs": "mounts",
-      "label": "全挂载齐射总伤害"
-    },
-    "dps": {
+    "cooldown_duration": {
       "type": "expr",
-      "expr": "total_volley / max(cycle, 0.001)",
+      "expr": "base_cooldown * (1 - self_cooldown_bonus / 100 - (mothership_cooldown_bonus / 100 if needs_mothership > 0.5 else 0)) + base_duration * (1 - self_duration_bonus / 100 - (mothership_duration_bonus / 100 if needs_mothership > 0.5 else 0))",
       "inputs": {
-        "total_volley": "total_volley",
-        "cycle": "cycle"
+        "base_cooldown": "base_cooldown",
+        "base_duration": "base_duration",
+        "needs_mothership": "needs_mothership",
+        "self_cooldown_bonus": "self_cooldown_bonus",
+        "mothership_cooldown_bonus": "mothership_cooldown_bonus",
+        "self_duration_bonus": "self_duration_bonus",
+        "mothership_duration_bonus": "mothership_duration_bonus"
       },
-      "label": "理论 DPS = 齐射总伤害 / 攻击周期"
+      "label": "冷却与持续时间 = 基础冷却 × (1 − 冷却加成) + 基础持续 × (1 − 持续加成)"
     },
-    "ttk": {
+    "rate_per_minute": {
       "type": "expr",
-      "expr": "enemy_hp / max(dps, 0.000001)",
+      "expr": "shots / max(cooldown_duration + flight_time, 0.001) * 60",
       "inputs": {
-        "enemy_hp": "enemy_hp",
-        "dps": "dps"
+        "shots": "shots",
+        "cooldown_duration": "cooldown_duration",
+        "flight_time": "flight_time"
       },
-      "label": "击杀时间 = 目标血量 / 理论 DPS"
+      "label": "每分钟平均发射数 = 发射数 ÷ (冷却与持续时间 + 飞行时间) × 60"
     },
-    "official_ttk": {
+    "crit_core": {
       "type": "expr",
-      "expr": "enemy_hp / max(firepower, 0.000001)",
+      "expr": "(crit_rate / 100 if crit_rate > 0 else (bonus_crit_rate / 100 if bonus_crit_rate > 0 else 0)) * (crit_damage / 100 if crit_damage > 0 else 0) * (1 + crit_multiplier_bonus / 100)",
       "inputs": {
-        "enemy_hp": "enemy_hp",
-        "firepower": "firepower"
+        "crit_rate": "crit_rate",
+        "crit_damage": "crit_damage",
+        "bonus_crit_rate": "bonus_crit_rate",
+        "crit_multiplier_bonus": "crit_multiplier_bonus"
       },
-      "label": "官方对舰火力口径击杀时间"
+      "label": "暴击增伤倍率 = coalesce(武器暴击率, 加成暴击率) × 武器爆伤 × (1 + 暴击倍率加成)"
+    },
+    "crit_multiplier": {
+      "type": "expr",
+      "expr": "0 if crit_vs_air > 0.5 else crit_core",
+      "inputs": {
+        "crit_core": "crit_core",
+        "crit_vs_air": "crit_vs_air"
+      },
+      "label": "对舰暴击增伤倍率（防空暴击对舰船不生效）"
+    },
+    "crit_multiplier_air": {
+      "type": "expr",
+      "expr": "crit_core",
+      "inputs": {
+        "crit_core": "crit_core"
+      },
+      "label": "对空暴击增伤倍率"
+    },
+    "armor_damage": {
+      "type": "expr",
+      "expr": "base_damage * (1 + damage_bonus / 100) - (energy_armor if is_energy > 0.5 else physical_armor)",
+      "inputs": {
+        "base_damage": "base_damage",
+        "damage_bonus": "damage_bonus",
+        "is_energy": "is_energy",
+        "physical_armor": "physical_armor",
+        "energy_armor": "energy_armor"
+      },
+      "label": "甲后单发 = 基础单发 × (1 + 伤害加成) − 目标护甲（能量/物理）"
+    },
+    "final_shot": {
+      "type": "expr",
+      "expr": "armor_damage * (1 + crit_multiplier)",
+      "inputs": {
+        "armor_damage": "armor_damage",
+        "crit_multiplier": "crit_multiplier"
+      },
+      "label": "最终单发 = 甲后单发 × (1 + 暴击增伤倍率)"
+    },
+    "final_shot_air": {
+      "type": "expr",
+      "expr": "armor_damage * (1 + crit_multiplier_air)",
+      "inputs": {
+        "armor_damage": "armor_damage",
+        "crit_multiplier_air": "crit_multiplier_air"
+      },
+      "label": "最终单发(对空) = 甲后单发 × (1 + 对空暴击增伤倍率)"
+    },
+    "damage_per_minute": {
+      "type": "expr",
+      "expr": "rate_per_minute * final_shot",
+      "inputs": {
+        "rate_per_minute": "rate_per_minute",
+        "final_shot": "final_shot"
+      },
+      "label": "满命中参考 = 每分钟平均发射数 × 最终单发"
+    },
+    "dpm_fighter": {
+      "type": "expr",
+      "expr": "final_shot_air * rate_per_minute * (1.0 if friendly > 0.5 else hit_fighter / 100)",
+      "inputs": {
+        "final_shot_air": "final_shot_air",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_fighter": "hit_fighter"
+      },
+      "label": "对战机 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_escort": {
+      "type": "expr",
+      "expr": "final_shot_air * rate_per_minute * (1.0 if friendly > 0.5 else hit_escort / 100)",
+      "inputs": {
+        "final_shot_air": "final_shot_air",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_escort": "hit_escort"
+      },
+      "label": "对护航艇 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_drone": {
+      "type": "expr",
+      "expr": "final_shot_air * rate_per_minute * (1.0 if friendly > 0.5 else hit_drone / 100)",
+      "inputs": {
+        "final_shot_air": "final_shot_air",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_drone": "hit_drone"
+      },
+      "label": "对无人机 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_landing": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_landing / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_landing": "hit_landing"
+      },
+      "label": "对登陆舰(作业态) · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_frigate": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_frigate / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_frigate": "hit_frigate"
+      },
+      "label": "对护卫舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_destroyer": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_destroyer / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_destroyer": "hit_destroyer"
+      },
+      "label": "对驱逐舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_cruiser": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_cruiser / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_cruiser": "hit_cruiser"
+      },
+      "label": "对巡洋舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_battlecruiser": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_battlecruiser / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_battlecruiser": "hit_battlecruiser"
+      },
+      "label": "对战列巡洋舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_battleship": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_battleship / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_battleship": "hit_battleship"
+      },
+      "label": "对战列舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_carrier": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_carrier / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_carrier": "hit_carrier"
+      },
+      "label": "对航空母舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_support": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_support / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_support": "hit_support"
+      },
+      "label": "对支援舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_engineering_small": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_engineering_small / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_engineering_small": "hit_engineering_small"
+      },
+      "label": "对小型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_engineering_medium": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_engineering_medium / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_engineering_medium": "hit_engineering_medium"
+      },
+      "label": "对中型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_engineering_large": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_engineering_large / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_engineering_large": "hit_engineering_large"
+      },
+      "label": "对大型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_base_ship": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_base_ship / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_base_ship": "hit_base_ship"
+      },
+      "label": "对大本营船 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+    },
+    "dpm_base": {
+      "type": "expr",
+      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_base / 100)",
+      "inputs": {
+        "final_shot": "final_shot",
+        "rate_per_minute": "rate_per_minute",
+        "friendly": "friendly",
+        "hit_base": "hit_base"
+      },
+      "label": "对基地 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
     }
   },
   "outputs": {
-    "齐射总伤害": {
-      "node": "total_volley",
-      "label": "齐射总伤害",
+    "最终每分钟伤害_战机": {
+      "node": "dpm_fighter",
+      "label": "战机",
       "format": "",
       "is_primary": true
     },
-    "攻击周期(秒)": {
-      "node": "cycle",
-      "label": "攻击周期(秒)",
+    "最终每分钟伤害_护航艇": {
+      "node": "dpm_escort",
+      "label": "护航艇",
       "format": "",
       "is_primary": true
     },
-    "理论DPS": {
-      "node": "dps",
-      "label": "理论DPS",
+    "最终每分钟伤害_无人机": {
+      "node": "dpm_drone",
+      "label": "无人机",
       "format": "",
       "is_primary": true
     },
-    "击杀时间(秒)": {
-      "node": "ttk",
-      "label": "击杀时间(秒)",
+    "最终每分钟伤害_登陆舰(作业态)": {
+      "node": "dpm_landing",
+      "label": "登陆舰(作业态)",
       "format": "",
       "is_primary": true
     },
-    "官方火力击杀时间(秒)": {
-      "node": "official_ttk",
-      "label": "官方火力击杀时间(秒)",
+    "最终每分钟伤害_护卫舰": {
+      "node": "dpm_frigate",
+      "label": "护卫舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_驱逐舰": {
+      "node": "dpm_destroyer",
+      "label": "驱逐舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_巡洋舰": {
+      "node": "dpm_cruiser",
+      "label": "巡洋舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_战列巡洋舰": {
+      "node": "dpm_battlecruiser",
+      "label": "战列巡洋舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_战列舰": {
+      "node": "dpm_battleship",
+      "label": "战列舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_航空母舰": {
+      "node": "dpm_carrier",
+      "label": "航空母舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_支援舰": {
+      "node": "dpm_support",
+      "label": "支援舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_小型工程舰": {
+      "node": "dpm_engineering_small",
+      "label": "小型工程舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_中型工程舰": {
+      "node": "dpm_engineering_medium",
+      "label": "中型工程舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_大型工程舰": {
+      "node": "dpm_engineering_large",
+      "label": "大型工程舰",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_大本营船": {
+      "node": "dpm_base_ship",
+      "label": "大本营船",
+      "format": "",
+      "is_primary": true
+    },
+    "最终每分钟伤害_基地": {
+      "node": "dpm_base",
+      "label": "基地",
+      "format": "",
+      "is_primary": true
+    },
+    "满命中每分钟伤害": {
+      "node": "damage_per_minute",
+      "label": "满命中参考（未乘命中率）",
+      "format": "",
+      "is_primary": false
+    },
+    "每分钟平均发射数": {
+      "node": "rate_per_minute",
+      "label": "每分钟平均发射数",
+      "format": "",
+      "is_primary": true
+    },
+    "最终单发": {
+      "node": "final_shot",
+      "label": "最终单发",
+      "format": "",
+      "is_primary": true
+    },
+    "甲后单发": {
+      "node": "armor_damage",
+      "label": "甲后单发",
+      "format": "",
+      "is_primary": true
+    },
+    "发射数": {
+      "node": "shots",
+      "label": "发射数",
+      "format": "",
+      "is_primary": false
+    },
+    "飞行时间(秒)": {
+      "node": "flight_time",
+      "label": "飞行时间(秒)",
+      "format": "",
+      "is_primary": false
+    },
+    "冷却与持续时间(秒)": {
+      "node": "cooldown_duration",
+      "label": "冷却与持续时间(秒)",
+      "format": "",
+      "is_primary": false
+    },
+    "暴击增伤倍率": {
+      "node": "crit_multiplier",
+      "label": "暴击增伤倍率",
+      "format": "",
+      "is_primary": false
+    },
+    "暴击增伤倍率(对空)": {
+      "node": "crit_multiplier_air",
+      "label": "暴击增伤倍率(对空)",
+      "format": "",
+      "is_primary": false
+    },
+    "最终单发(对空)": {
+      "node": "final_shot_air",
+      "label": "最终单发(对空)",
       "format": "",
       "is_primary": false
     }

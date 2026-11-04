@@ -15,6 +15,9 @@ python -m tools.wiki_scout run warfarin --limit 5
 python -m tools.wiki_scout run wjdlglr
 python -m tools.wiki_scout fetch wjdlglr --refresh
 python -m tools.wiki_scout parse wjdlglr
+
+# 解析结果 → 拉格朗日适配器 data/weapons.json（571 条，16 种目标命中率）
+python -m tools.wiki_scout.wjdlglr_adapter_data --input tools/wiki_scout/output/wjdlglr/wjdlglr.json --output framework/adapters/wjdlglr/data/weapons.json
 ```
 
 产物：`tools/wiki_scout/output/<provider>/raw.json`（原始响应）与
@@ -65,6 +68,10 @@ class ExampleProvider(BaseProvider):
 - 武器：`atk` 单发伤害；攻击次数 = `at`（工作次数）× `rep`（弹药数）；
   `cd` 冷却、`dur` 持续时间、`lock` 锁定、`iv` 攻击间隔，单位毫秒；
   `hits` → `[{优先级, 目标, 命中率}]`。
+- 舰船：`docks` 非空 → `是否母舰`；类型含战机/护航艇/无人机 → `需要母舰`
+  （无页面类型的 TE 舰船按名称关键词兜底）。
+- 武器：作用为维修/驻防/增益（`act` 4/5/6）→ `友方作用=True`，适配器数据
+  构建时 16 种目标命中率统一写 100；Wiki 命中表缺失的目标写 0。
 - **`fa` = 去程、`fb` = 回程**（Wiki 渲染器标注相反，已用 AT021 /
   维塔斯A021 / BR050 页面数据交叉验证）。
 - 少数页面没有 `data-ship` 组件，解析时退化为「页面标题 == 配置名称」精确匹配；

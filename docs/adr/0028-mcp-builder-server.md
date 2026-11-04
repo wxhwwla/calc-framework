@@ -59,3 +59,12 @@
 **未采纳**：`.calcpack` 携带并执行 `functions.py`——包内 Python 无签名/信任机制，等同任意代码执行；若将来需要，先单独立 ADR 定义信任边界。
 
 **兼容性**：显式按 `enemy.*` 等命名空间传 context 的旧调用方会因变量重映射而失配；`validate_adapter` 对已绑定来源变量缺失 layout 的提示属预期噪音。
+
+## 修订 2026-11-05：实体级联、明细面板与条件禁用
+
+1. **`meta.entity_selectors`**：查看器可把单个实体下拉改为多级级联（如 舰船种类 → 舰船 → 武器），`generate_adapter.entity_selectors` 负责声明；末级 `field` 必须为 `名称`，其值注入 DAG 命名空间，`display_field` 仅改变显示文本。适配器数据记录无数值列表字段时查看器自动隐藏等级输入。
+2. **`meta.entity_detail`**：在查看器最左列渲染当前实体字段明细；`source` 须已绑定非空 `data_files`，`sections[].columns` 限 1–3，`fields[].field` 须存在于记录中，可选 `format` 为 Python 数值格式串。`generate_adapter.entity_detail` 原样写入 meta，校验失败返回 `ENTITY_DETAIL_INVALID`。
+3. **`meta.entity_input_rules`**：按实体字段值禁用无关输入（如不需要母舰时灰显母舰加成）。`disable` 只能引用 `user_input.*` 变量；实体记录缺字段或值不匹配时规则不命中，输入保持可编辑。`generate_adapter.entity_input_rules` 原样写入 meta，校验失败返回 `INPUT_RULE_INVALID`。
+4. **查看器布局**：右栏增加包说明与操作提示；`entity_detail` 与禁用规则在加载及每次级联切换后重新应用。
+
+**兼容性**：三者均为可选 meta 键，旧适配包与旧 `.calcpack` 不受影响；工具数量仍为 13，`.calcpack` 格式不变。

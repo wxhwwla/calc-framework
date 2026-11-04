@@ -144,6 +144,62 @@ def test_input_alias_normalized(tmp_path: Path) -> None:
     assert "input.x" not in dag["variables"]
 
 
+def test_entity_detail_and_input_rules_written_to_meta(tmp_path: Path) -> None:
+    engine = GeneratorEngine(adapters_dir=tmp_path)
+    detail = {
+        "source": "weapon",
+        "title": "武器数据",
+        "sections": [{"fields": [{"field": "atk", "label": "攻击"}]}],
+    }
+    rules = [
+        {
+            "source": "weapon",
+            "field": "is_energy",
+            "equals": 0.0,
+            "disable": ["user_input.armor"],
+        }
+    ]
+    files = engine.generate(
+        None,
+        "Demo",
+        variables=[
+            {"name": "atk", "source": "weapon", "default": 1},
+            {"name": "armor", "source": "user_input", "default": 0},
+        ],
+        formula_steps=[
+            {
+                "id": "out",
+                "op": "expr",
+                "expr": "atk - armor",
+                "input_map": {"atk": "atk", "armor": "armor"},
+            }
+        ],
+        outputs=[{"name": "out", "node": "out"}],
+        data_files={"weapon": [{"名称": "剑", "atk": 65, "is_energy": 0}]},
+        entity_detail=detail,
+        entity_input_rules=rules,
+    )
+
+    meta = json.loads(files["meta.json"])
+    assert meta["entity_detail"] == detail
+    assert meta["entity_input_rules"] == rules
+
+
+def test_entity_meta_omitted_when_empty(tmp_path: Path) -> None:
+    engine = GeneratorEngine(adapters_dir=tmp_path)
+    files = engine.generate(
+        None,
+        "Demo",
+        variables=[{"name": "x", "source": "user_input", "default": 1}],
+        formula_steps=[{"id": "out", "op": "*", "lhs": "x", "rhs": "2"}],
+        outputs=[{"name": "out", "node": "out"}],
+    )
+
+    meta = json.loads(files["meta.json"])
+    assert "entity_detail" not in meta
+    assert "entity_input_rules" not in meta
+
+
 def test_bound_source_keeps_namespace_and_excluded_from_layout(tmp_path: Path) -> None:
     engine = GeneratorEngine(adapters_dir=tmp_path)
     files = engine.generate(
@@ -320,3 +376,119 @@ def test_generate_requires_steps(tmp_path: Path) -> None:
     engine = GeneratorEngine(adapters_dir=tmp_path)
 
     assert engine.generate(None, "Demo", variables=[], formula_steps=[], outputs=[]) == {}
+
+
+def test_variable_ui_metadata_written_to_dag(tmp_path: Path) -> None:
+    engine = GeneratorEngine(adapters_dir=tmp_path)
+    files = engine.generate(
+        None,
+        "Demo",
+        variables=[
+            {
+                "name": "bonus",
+                "type": "float",
+                "source": "user_input",
+                "default": 0,
+                "min": 0,
+                "max": 100,
+                "ui_control": {"suffix": "%", "step": 1},
+            },
+            {"name": "atk", "type": "float", "source": "user_input", "default": 1},
+        ],
+        formula_steps=[{"id": "out", "op": "+", "lhs": "bonus", "rhs": "atk"}],
+        outputs=[{"name": "out", "node": "out"}],
+    )
+
+    dag = json.loads(files["dag/demo.dag.json"])
+    bonus = dag["variables"]["user_input.bonus"]
+    assert bonus["min"] == 0
+    assert bonus["max"] == 100
+    assert bonus["ui_control"] == {"suffix": "%", "step": 1}
+    plain = dag["variables"]["user_input.atk"]
+    assert "min" not in plain
+    assert "max" not in plain
+    assert "ui_control" not in plain
+
+
+def test_entity_selectors_written_to_meta(tmp_path: Path) -> None:
+    engine = GeneratorEngine(adapters_dir=tmp_path)
+    files = engine.generate(
+        None,
+        "Demo",
+        variables=[
+            {"name": "atk", "type": "float", "source": "weapon", "default": 1},
+            {"name": "mult", "type": "float", "source": "user_input", "default": 1},
+        ],
+        formula_steps=[{"id": "out", "op": "*", "lhs": "atk", "rhs": "mult"}],
+        outputs=[{"name": "out", "node": "out"}],
+        data_files={
+            "weapon": [
+                {
+                    "名称": "速射炮",
+                    "舰船分类": ["护卫舰"],
+                    "舰船": "测试舰",
+                    "武器标签": "速射炮·短",
+                }
+            ]
+        },
+        entity_selectors=[
+            {
+                "source": "weapon",
+                "steps": [
+                    {"field": "舰船分类", "label": "舰船种类"},
+                    {"field": "舰船"},
+                    {"field": "名称", "label": "武器", "display_field": "武器标签"},
+                ],
+            }
+        ],
+    )
+
+    meta = json.loads(files["meta.json"])
+    assert meta["entity_selectors"] == [
+        {
+            "source": "weapon",
+            "data_file": "weapons",
+            "steps": [
+                {"field": "舰船分类", "label": "舰船种类"},
+                {"field": "舰船"},
+                {"field": "名称", "label": "武器", "display_field": "武器标签"},
+            ],
+        }
+    ]
+
+
+def test_no_entity_selectors_omits_meta_key(tmp_path: Path) -> None:
+    engine = GeneratorEngine(adapters_dir=tmp_path)
+    files = engine.generate(
+        None,
+        "Demo",
+        variables=[{"name": "atk", "type": "float", "source": "user_input", "default": 1}],
+        formula_steps=[{"id": "out", "op": "*", "lhs": "atk", "rhs": "2"}],
+        outputs=[{"name": "out", "node": "out"}],
+    )
+
+    assert "entity_selectors" not in json.loads(files["meta.json"])
+
+
+def test_attr_schema_preserves_types_and_zero_defaults(tmp_path: Path) -> None:
+    engine = GeneratorEngine(adapters_dir=tmp_path)
+    files = engine.generate(
+        None,
+        "Demo",
+        variables=[
+            {"name": "fleet_count", "type": "int", "source": "user_input", "default": 1},
+            {"name": "enabled", "type": "bool", "source": "user_input", "default": False},
+            {"name": "label", "type": "str", "source": "user_input", "default": ""},
+            {"name": "rate", "type": "float", "source": "user_input", "default": 0},
+        ],
+        formula_steps=[{"id": "out", "op": "+", "lhs": "fleet_count", "rhs": "rate"}],
+        outputs=[{"name": "out", "node": "out"}],
+    )
+
+    attrs = {item["name"]: item for item in json.loads(files["attr_schema.json"])["attributes"]}
+    assert attrs["fleet_count"]["type"] == "int"
+    assert attrs["enabled"]["type"] == "bool"
+    assert attrs["label"]["type"] == "str"
+    assert attrs["rate"]["type"] == "float"
+    assert "default" in attrs["rate"]
+    assert attrs["rate"]["default"] == 0

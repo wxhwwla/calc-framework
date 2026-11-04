@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-import time
 import logging
+import time
 from typing import Any
 
 try:

@@ -112,6 +112,30 @@ def resolve_field_name(field: str) -> str:
     return _VARIABLE_FIELD_MAP.get(field, field)
 
 
+def has_leveled_fields(data_files: dict[str, list[dict[str, Any]]]) -> bool:
+    """判断实体数据中是否存在按等级索引的数值列表字段。
+
+    等级输入框只用于索引数值列表；没有任何这类字段时（例如舰船/武器
+    本身没有等级），显示等级输入框只会造成误导，应自动隐藏。
+
+    Args:
+        data_files: ``{数据文件名: 记录列表}``。
+
+    Returns:
+        任一记录含非空且全为数值的列表字段时返回 True。
+    """
+    for records in data_files.values():
+        for record in records:
+            for value in record.values():
+                if (
+                    isinstance(value, list)
+                    and value
+                    and all(isinstance(item, int | float) and not isinstance(item, bool) for item in value)
+                ):
+                    return True
+    return False
+
+
 def build_context_from_entity(
     entity: dict[str, Any],
     namespace: str,

@@ -62,6 +62,8 @@
       "labelVersion": "Version:",
       "labelVariables": "Variables:",
       "labelOutputs": "Outputs:",
+      "labelDescription": "Description:",
+      "hintText": "Pick a ship category, ship, and weapon in the left column. Inputs that do not apply are disabled; hover a disabled field to see why.",
       "unknown": "—",
       "menuFile": "File",
       "menuOpenCalcpack": "Open .calcpack…",
