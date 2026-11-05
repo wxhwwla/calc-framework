@@ -25,7 +25,7 @@ repos:
       - id: check-yaml
         args: [--allow-multiple-documents]
       - id: check-added-large-files
-        args: [--maxkb=2048]
+        args: [--maxkb=4096]
       - id: check-json
       - id: check-symlinks
       - id: destroyed-symlinks

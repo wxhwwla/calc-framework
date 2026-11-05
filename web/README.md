@@ -86,19 +86,24 @@ npm run build       # → dist/
 
 ### 限速与 Worker 数
 
-应用层限速（`RateLimitMiddleware`）为**进程内内存**实现，默认 **单 worker** 即可。多 worker 时请设置 `CALC_DISABLE_RATE_LIMIT=1` 并在 nginx / 网关层限速。详见 [`docs/Web后端限速与多Worker.md`](../docs/Web后端限速与多Worker.md)。
+应用层限速（`RateLimitMiddleware`）为**进程内内存**实现，默认 **单 worker** 即可。仅 `/api/*` 计入限速与 usage，静态资源与前端路由不限速；匿名额度按客户端 IP 分桶。经 tunnel / 反向代理部署时用 `uvicorn ... --proxy-headers --forwarded-allow-ips 127.0.0.1` 取真实 IP。多 worker 时请设置 `CALC_DISABLE_RATE_LIMIT=1` 并在 nginx / 网关层限速。详见 [`docs/Web后端限速与多Worker.md`](../docs/Web后端限速与多Worker.md)。
+
+CSRF 校验默认放行同源请求（Origin 与请求 `scheme://host` 一致）与 Vite 开发源；测试环境可用 `CALC_DISABLE_CSRF=1` 关闭。
 
 ### 请求体大小
 
 默认 JSON API 请求体上限 **1 MiB**（`ContentSizeLimitMiddleware`）。上传路径放宽：`/api/ocr/` 5 MiB、`/api/hub/` 15 MiB。环境变量 `CALC_MAX_BODY_BYTES` / `CALC_DISABLE_BODY_LIMIT`。nginx 可配置 `client_max_body_size` 作为外层限制。
 
-### PythonAnywhere（WSGI）
+### PythonAnywhere（WSGI，已弃用）
+
+项目已不再部署到 PythonAnywhere。当前由维护者本机 + ngrok 固定域名自托管：
 
 ```bash
-python web/scripts/deploy_pythonanywhere.py --all
+python -m uvicorn main:app --app-dir web/backend --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips 127.0.0.1
+ngrok http 8000
 ```
 
-详见 [`docs/操作指令集.md`](../docs/操作指令集.md)。
+详见 [`docs/操作指令集.md`](../docs/操作指令集.md) §6 与 [`docs/Web后端限速与多Worker.md`](../docs/Web后端限速与多Worker.md)。
 
 ### Docker
 

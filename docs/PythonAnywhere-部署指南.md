@@ -1,5 +1,7 @@
 # PythonAnywhere 免费部署 FastAPI + React 前端完整指南
 
+> **⚠️ 已弃用（2026-11-05）**：项目已改为「本机 + ngrok 固定域名」自托管，当前地址 <https://dove-magnitude-runner.ngrok-free.dev>；启动方式见 [`docs/Web后端限速与多Worker.md`](Web后端限速与多Worker.md) 与 [`docs/操作指令集.md`](操作指令集.md) §6。本文仅作历史参考。
+
 > 适用场景：在 PythonAnywhere 免费套餐上部署 FastAPI 后端 + React/Vue 前端，前后端同源服务。
 > 不使用 Docker，纯手动配置，零花费。全流程已验证。
 

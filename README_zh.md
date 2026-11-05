@@ -23,7 +23,9 @@
 
 **直接用计算器——无需安装。**
 
-[**打开 Web 版 →**](https://wxhwwla.pythonanywhere.com)
+[**打开 Web 版 →**](https://dove-magnitude-runner.ngrok-free.dev)
+
+> Web 版托管在维护者电脑上，经 ngrok 隧道对外；免费版每个浏览器每周可能弹出一次「Visit Site」提示页。
 
 *或* [下载桌面版](https://github.com/wxhwwla/calc-framework/releases)
 
@@ -151,7 +153,7 @@ cd web/frontend && npm install && npm run dev
 
 - 按星级/职业/分支筛选干员，技能文本解析
 - 物理/法术/真实伤害计算，DAG 引擎驱动
-- BWIKI 数据爬取：420+ 干员全量数据
+- BWIKI 数据爬取：440 名干员全量数据
 - 28 属性 + 5 自定义函数 + 51 节点 DAG
 
 ### 无尽的拉格朗日计算器

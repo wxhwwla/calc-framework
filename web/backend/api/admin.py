@@ -227,7 +227,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     读取 ``X-API-Key`` header：
     - 有效 key：按 tier 限速
-    - 无效或无 key：默认 20 req/min（宽松，方便开发）
+    - 无效或无 key：按客户端 IP 默认 20 req/min（宽松，方便开发）
+
+    仅 ``/api/*`` 计入限速与 usage；SPA 静态资源与前端路由不限速
+    （首屏会加载 20+ 个 chunk，计入额度会直接白屏）。匿名额度按
+    ``request.client.host`` 分桶；经反向代理/tunnel 部署时需启用
+    uvicorn 的 ``--proxy-headers`` 以取得真实客户端 IP。
 
     注意：usage/key 持久化通过 ``asyncio.to_thread`` 执行同步 I/O；
     滑动窗口在进程内存中，**仅对当前 worker 有效**。
@@ -246,13 +251,18 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> Any:
         if not self.enabled:
             return await call_next(request)
-        # 跳过文档端点；/api/admin 已受 Token 保护且纳入限速统计
         path = request.url.path
+        # 只对 API 限速；静态资源与前端路由不计入，避免首屏耗尽额度。
+        if path != "/api" and not path.startswith("/api/"):
+            return await call_next(request)
+        # 跳过文档端点；/api/admin 已受 Token 保护且纳入限速统计
         if path.startswith("/api/docs") or path.startswith("/api/redoc"):
             return await call_next(request)
 
         api_key = request.headers.get("X-API-Key", "")
-        client_id = "anonymous"
+        client = request.client
+        # 匿名额度按客户端 IP 分桶，避免所有访客共享一个全局额度。
+        client_id = f"anon:{client.host}" if client is not None else "anon:unknown"
 
         rate_limit = 20  # 默认
 

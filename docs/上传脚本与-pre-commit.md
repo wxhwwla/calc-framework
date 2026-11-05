@@ -288,7 +288,7 @@ python -m pytest games/endfield/tests/tools/test_upload_meta.py games/endfield/t
 
 ### 10.1 大文件限制
 
-`check-added-large-files` 限制已从 **1024 KB** 提升至 **2048 KB**（`.pre-commit-config.yaml` 中 `--maxkb=2048`），避免大型数据文件（如 ~1.3 MB 的 `arknights_parsed.json`）触发误报。
+`check-added-large-files` 限制已从 **1024 KB** 提升至 **2048 KB**，2026-11-05 又提升至 **4096 KB**（`.pre-commit-config.yaml` 中 `--maxkb=4096`）：明日方舟标准库写入全部干员的成长参数后达 ~2.66 MB。仓库内唯一超过 1 MB 的跟踪文件就是该标准库，4 MB 上限仍能拦截误入的二进制/压缩包。
 
 ### 10.2 行长限制差异
 

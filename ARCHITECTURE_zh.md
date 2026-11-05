@@ -20,7 +20,7 @@
 | 代码检查 | ruff（lint + format）+ pyright |
 | 打包 | PyInstaller（onedir）+ NSIS 安装器 |
 | 容器 | Docker + docker-compose |
-| 部署 | PythonAnywhere（Web 版） |
+| 部署 | 本机 + ngrok tunnel（Web 版，自托管） |
 
 ---
 

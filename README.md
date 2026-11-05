@@ -23,7 +23,7 @@
 
 **Use the calculator right now — no install needed.**
 
-[**Open Web App →**](https://wxhwwla.pythonanywhere.com)
+[**Open Web App →**](https://dove-magnitude-runner.ngrok-free.dev)
 
 *or* [Download Desktop App](https://github.com/wxhwwla/calc-framework/releases)
 
@@ -108,7 +108,9 @@ Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [
 
 ### Option 1: Web Demo (No Install)
 
-→ **[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)**
+→ **[dove-magnitude-runner.ngrok-free.dev](https://dove-magnitude-runner.ngrok-free.dev)**
+
+> Hosted on the maintainer's PC via ngrok; the free ngrok plan may show a one-time "Visit Site" interstitial per browser per week.
 
 ### Option 2: Desktop App
 
@@ -176,7 +178,7 @@ cd web/frontend && npm install && npm run dev
 
 - Operator selection by star / profession / branch with skill parser
 - Physical / Magic / True damage calculation via DAG engine
-- BWIKI data crawling: 420+ operators with full stats
+- BWIKI data crawling: 440 operators with full stats
 - 28 attributes + 5 custom functions + 51-node DAG
 
 ### Infinite Lagrange Calculator

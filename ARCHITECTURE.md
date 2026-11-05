@@ -21,7 +21,7 @@
 | Packaging | PyInstaller (onedir) + NSIS installer |
 | Container | Docker + docker-compose |
 | i18n | react-i18next (Web) + DesktopTranslator/JSON (Desktop) |
-| Deployment | PythonAnywhere (Web version) |
+| Deployment | Self-hosted PC + ngrok tunnel (Web version) |
 
 ---
 

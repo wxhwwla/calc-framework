@@ -38,7 +38,7 @@
 
 ### 第一步：使用计算器，发现问题
 
-1. 打开 [Web 版计算器](https://wxhwwla.pythonanywhere.com)
+1. 打开 [Web 版计算器](https://dove-magnitude-runner.ngrok-free.dev)
 2. 正常使用，对比游戏内数据
 3. 发现不一致 → 记录下来（角色名、字段名、游戏内实际值、计算器显示值）
 

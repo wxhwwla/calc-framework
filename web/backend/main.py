@@ -23,6 +23,7 @@ from api.generator import router as generator_router
 from api.history import router as history_router
 from api.hub import router as hub_router
 from api.internal.csrf import CSRFSkipMiddleware
+from api.internal.spa_static import SPAStaticFiles
 from api.ocr import router as ocr_router
 from api.packaging.contribute import router as contribute_router
 from api.packaging.pack import router as pack_router
@@ -207,7 +208,7 @@ def download_client():
 
 # 生产环境：serve 前端构建产物
 if _FRONTEND_DIST.is_dir():
-    app.mount("/", StaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
+    app.mount("/", SPAStaticFiles(directory=str(_FRONTEND_DIST), html=True), name="frontend")
     logger.info("前端静态文件已挂载: %s", _FRONTEND_DIST)
 
 

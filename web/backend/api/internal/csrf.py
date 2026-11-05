@@ -4,7 +4,8 @@
 
 设计的核心思路：
 - 非 GET/HEAD/OPTIONS 请求必须通过 Origin 或 Referer 校验
-- 源站白名单允许的跨域来源（与 CORS 配置一致）
+- 同源请求（Origin/Referer 与当前请求的 scheme://host 一致）默认放行
+- 源站白名单允许开发期跨域来源（与 CORS 配置一致）
 - GET/HEAD/OPTIONS 等安全方法无需校验
 - 通过 ``CSRFSkipMiddleware`` 白名单路径可豁免
 - 设置 ``CALC_DISABLE_CSRF=1`` 可禁用（仅用于测试环境）
@@ -54,19 +55,39 @@ def _is_safe_path(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in _SAFE_PATH_PREFIXES)
 
 
+def _request_origin(request: Request) -> str:
+    """当前请求自身的来源（``scheme://host``），用于同源判定。"""
+    host = request.headers.get("host", "").strip()
+    if not host:
+        return ""
+    return f"{request.url.scheme}://{host}".rstrip("/")
+
+
+def _origin_allowed(origin: str, request: Request) -> bool:
+    """Origin 是否命中跨域白名单，或与请求自身同源。"""
+    normalized = origin.lower()
+    if normalized in _ALLOWED_ORIGINS:
+        return True
+    own = _request_origin(request).lower()
+    return bool(own) and normalized == own
+
+
 def _validate_origin(request: Request) -> bool:
-    """校验 Origin 或 Referer 头是否在允许来源中。"""
+    """校验 Origin 或 Referer 头是否同源或在允许来源中。"""
     origin = request.headers.get("origin", "").strip().rstrip("/")
     if origin:
-        return origin in _ALLOWED_ORIGINS
+        return _origin_allowed(origin, request)
 
     referer = request.headers.get("referer", "").strip().rstrip("/")
-    if referer:
-        for allowed in _ALLOWED_ORIGINS:
-            if referer.startswith(allowed):
-                return True
+    if not referer:
+        return False
 
-    return False
+    own = _request_origin(request)
+    allowed_origins = set(_ALLOWED_ORIGINS)
+    if own:
+        allowed_origins.add(own)
+    # 前缀必须落在 / 边界，避免 localhost:5173.evil.example 被误放行
+    return any(referer == allowed or referer.startswith(allowed + "/") for allowed in allowed_origins)
 
 
 class CSRFSkipMiddleware(BaseHTTPMiddleware):
