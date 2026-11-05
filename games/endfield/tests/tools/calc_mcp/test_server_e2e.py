@@ -106,7 +106,21 @@ async def _scenario(project_dir: Path) -> None:
                         {"id": "raw", "op": "mul", "lhs": "atk", "rhs": "mult"},
                         {"id": "damage", "op": "sub", "lhs": "raw", "rhs": "def"},
                     ],
-                    "outputs": [{"name": "damage", "node": "damage", "label": "伤害"}],
+                    "outputs": [
+                        {"name": "damage", "node": "damage", "label": "伤害"},
+                        {"name": "raw", "node": "raw", "label": "原始伤害", "is_primary": False},
+                    ],
+                    "layout_sections": [
+                        {"type": "inputs", "title": "输入参数", "source": "user_input", "tab": "计算"},
+                        {"type": "outputs", "title": "计算结果", "outputs": ["damage"], "columns": 3, "tab": "计算"},
+                        {
+                            "type": "outputs",
+                            "title": "乘区明细",
+                            "outputs": ["raw"],
+                            "columns": 3,
+                            "tab": "乘区明细",
+                        },
+                    ],
                     "data_files": {"enemy": [{"名称": "测试敌人", "种类": "精英", "def": 10}]},
                     "entity_selectors": [
                         {
@@ -150,6 +164,32 @@ async def _scenario(project_dir: Path) -> None:
             assert atk_var["min"] == 0
             assert atk_var["max"] == 1000
             assert atk_var["ui_control"] == {"suffix": "点", "step": 1}
+
+            layout_file = await _call(session, "read_adapter_file", {"adapter_id": "demo", "path": "ui/layout.json"})
+            layout = json.loads(layout_file["content"])
+            assert [section["tab"] for section in layout["sections"]] == ["计算", "计算", "乘区明细"]
+            assert layout["sections"][2]["columns"] == 3
+
+            first_page = await _call(
+                session,
+                "read_adapter_file",
+                {"adapter_id": "demo", "path": "ui/layout.json", "max_bytes": 64},
+            )
+            assert first_page["truncated"] is True
+            assert first_page["next_offset"] > 0
+            assert chr(0xFFFD) not in first_page["content"]
+            rest = await _call(
+                session,
+                "read_adapter_file",
+                {
+                    "adapter_id": "demo",
+                    "path": "ui/layout.json",
+                    "offset": first_page["next_offset"],
+                    "max_bytes": 2 * 1024 * 1024,
+                },
+            )
+            assert first_page["content"] + rest["content"] == layout_file["content"]
+            assert rest["next_offset"] is None
 
             written = await _call(
                 session,

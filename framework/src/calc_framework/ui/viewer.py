@@ -2,13 +2,16 @@
 # SPDX-License-Identifier: AGPL-3.0
 """CalcPackViewer — 通用用户展示层。
 
-加载 .calcpack 文件并渲染完整的交互式计算界面。
+加载 .calcpack 文件或适配器目录（``framework/adapters/<id>/``），渲染完整的
+交互式计算界面。
 
-支持实体选择（角色/武器/装备）、自定义输入、实时 DAG 求值。
+支持实体选择（角色/武器/装备，含级联选择与明细面板）、自定义输入、实时
+DAG 求值。
 
 用法::
 
     python -m calc_framework.ui.viewer path/to/game.calcpack
+    python -m calc_framework.ui.viewer framework/adapters/wjdlglr
 
 """
 
@@ -16,7 +19,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup
@@ -38,6 +41,7 @@ from PySide6.QtWidgets import (
 
 from ..dag.schema import DAGVariable
 from ..dag.service import DAGService
+from .app_icon import apply_application_identity
 from .compute_sheet import ComputeSheet
 from .i18n import tr
 from .layout import Layout
@@ -227,6 +231,11 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
             QTimer.singleShot(100, lambda p=path_copy: self.load_calcpack(p))
 
+    @property
+    def is_loaded(self) -> bool:
+        """是否已成功加载计算包或适配器目录。"""
+        return self._dag_service is not None
+
     def _build_menu(self) -> None:
         mb = self.menuBar()
 
@@ -322,10 +331,23 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 def open_calcpack(path: str | Path) -> None:
     """便捷函数：加载并显示 .calcpack 文件。"""
 
-    QApplication.instance() or QApplication([])  # type: ignore[unused-expression]
+    app = cast(QApplication, QApplication.instance() or QApplication([]))
+    apply_application_identity(app)
     viewer = CalcPackViewer()
 
     viewer.load_calcpack(path)
+
+    viewer.show()
+
+
+def open_adapter_dir(path: str | Path) -> None:
+    """便捷函数：直接加载并显示适配器目录。"""
+
+    app = cast(QApplication, QApplication.instance() or QApplication([]))
+    apply_application_identity(app)
+    viewer = CalcPackViewer()
+
+    viewer.load_adapter_dir(path)
 
     viewer.show()
 
@@ -336,21 +358,27 @@ def main() -> None:
     用法::
 
         python -m calc_framework.ui.viewer [path/游戏名.calcpack]
+        python -m calc_framework.ui.viewer [适配器目录]
 
     """
 
     import sys
 
     app = QApplication(sys.argv)
+    apply_application_identity(app)
 
     app.setApplicationName(tr("app.calcpackViewer"))
 
     path = sys.argv[1] if len(sys.argv) > 1 else None
 
-    viewer = CalcPackViewer(path)
+    viewer = CalcPackViewer()
 
     if path:
-        viewer.load_calcpack(path)
+        source = Path(path)
+        if source.is_dir():
+            viewer.load_adapter_dir(source)
+        else:
+            viewer.load_calcpack(source)
 
     viewer.show()
 

@@ -18,7 +18,7 @@ describe("全局导航与布局 Navigation", () => {
 
   it("侧边栏 Games 组默认展开显示游戏导航项", () => {
     cy.visit("/compute");
-    const gameItems = ["终末地计算", "明日方舟"];
+    const gameItems = ["终末地计算", "明日方舟", "拉格朗日计算"];
     gameItems.forEach((item) => {
       cy.contains(item).should("be.visible");
     });

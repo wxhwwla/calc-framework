@@ -113,8 +113,10 @@ class TestCritAndDamage:
         assert result.outputs["最终单发"] == pytest.approx(90.0)
         assert result.outputs["最终单发(对空)"] == pytest.approx(90.0 * 1.25)
         rate = result.outputs["每分钟平均发射数"]
-        assert result.outputs["最终每分钟伤害_战机"] == pytest.approx(90.0 * 1.25 * rate * 0.22)
-        assert result.outputs["最终每分钟伤害_护卫舰"] == pytest.approx(90.0 * rate * 0.85)
+        fighter_hit = (0.20 + 0.10) * (1.0 + 0.22)
+        frigate_hit = (0.20 + 0.10) * (1.0 + 0.85)
+        assert result.outputs["最终每分钟伤害_战机"] == pytest.approx(90.0 * 1.25 * rate * fighter_hit)
+        assert result.outputs["最终每分钟伤害_护卫舰"] == pytest.approx(90.0 * rate * frigate_hit)
 
     def test_armor_adjusted_shot(self, adapter_pkg: AdapterPackage) -> None:
         result = adapter_pkg.dag_service.evaluate(_context())
@@ -146,9 +148,9 @@ class TestPerTargetDamage:
         result = adapter_pkg.dag_service.evaluate(_context())
         cycle = 23.0 + 3.5
         full = 120.0 / cycle * 60.0 * 189.0
-        assert result.outputs["最终每分钟伤害_战机"] == pytest.approx(full * 0.22)
-        assert result.outputs["最终每分钟伤害_护卫舰"] == pytest.approx(full * 0.85)
-        assert result.outputs["最终每分钟伤害_巡洋舰"] == pytest.approx(0.0)
+        assert result.outputs["最终每分钟伤害_战机"] == pytest.approx(full * (0.30 * 1.22))
+        assert result.outputs["最终每分钟伤害_护卫舰"] == pytest.approx(full * (0.30 * 1.85))
+        assert result.outputs["最终每分钟伤害_巡洋舰"] == pytest.approx(full * 0.30)
 
     def test_friendly_weapon_ignores_hit_table(self, adapter_pkg: AdapterPackage) -> None:
         result = adapter_pkg.dag_service.evaluate(_context(weapon={"friendly": 1.0, "hit_fighter": 0.0, "hit_frigate": 0.0}))
@@ -166,7 +168,7 @@ class TestInputDeclarations:
         assert variable.type == "int"
         assert variable.default == 1
 
-    def test_only_flight_and_cooldown_bonuses_have_upper_limit(self, adapter_pkg: AdapterPackage) -> None:
+    def test_only_declared_inputs_have_upper_limit(self, adapter_pkg: AdapterPackage) -> None:
         variables = adapter_pkg.dag_service.dag.variables
         capped = {path for path, variable in variables.items() if path.startswith("user_input.") and variable.max is not None}
         assert capped == {
@@ -174,9 +176,12 @@ class TestInputDeclarations:
             "user_input.mothership_flight_bonus",
             "user_input.self_cooldown_bonus",
             "user_input.mothership_cooldown_bonus",
+            "user_input.hit_rate_fluctuation",
         }
-        for path in capped:
+        for path in capped - {"user_input.hit_rate_fluctuation"}:
             assert variables[path].max == 100.0
+        assert variables["user_input.hit_rate_fluctuation"].max == 3.0
+        assert variables["user_input.hit_rate_fluctuation"].min == -3.0
 
     def test_percentage_inputs_declare_percent_suffix(self, adapter_pkg: AdapterPackage) -> None:
         variables = adapter_pkg.dag_service.dag.variables
@@ -190,10 +195,14 @@ class TestInputDeclarations:
             "user_input.bonus_crit_rate",
             "user_input.crit_multiplier_bonus",
             "user_input.damage_bonus",
+            "user_input.target_evasion",
+            "user_input.hit_rate_bonus",
         }
         for path in paths:
             assert variables[path].ui_control.get("suffix") == "%", path
             assert variables[path].ui_control.get("step") == 1, path
+        assert variables["user_input.hit_rate_fluctuation"].ui_control.get("suffix") == "%"
+        assert variables["user_input.hit_rate_fluctuation"].ui_control.get("step") == 0.1
         assert variables["user_input.physical_armor"].ui_control.get("suffix", "") == ""
 
     def test_target_parameters_are_removed(self, adapter_pkg: AdapterPackage) -> None:

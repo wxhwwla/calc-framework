@@ -60,6 +60,7 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
         entity_selectors: list[dict[str, Any]] | None = None,
         entity_detail: dict[str, Any] | None = None,
         entity_input_rules: list[dict[str, Any]] | None = None,
+        layout_sections: list[dict[str, Any]] | None = None,
         dry_run: bool = False,
         overwrite: bool = False,
     ) -> dict[str, Any]:
@@ -96,6 +97,17 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
         disable 只能引用生成后仍为 user_input 的变量路径。字段缺失的实体不会命中规则，
         对应输入保持可编辑。
 
+        ``layout_sections`` 覆盖自动 layout，支持分页与列数，形如
+        ``[{"type": "inputs", "title": "输入参数", "source": "user_input", "tab": "计算"},
+        {"type": "outputs", "title": "计算结果", "outputs": ["最终伤害"],
+        "columns": 3, "tab": "计算"},
+        {"type": "outputs", "title": "乘区明细",
+        "outputs": ["基础乘区", "暴击乘区"], "columns": 3, "tab": "乘区明细"}]``。
+        inputs 段用 ``variables``（变量名，可带 ``user_input.`` 前缀）或 ``source``
+        （按原始来源自动收集未绑定实体变量）二选一；outputs 段必须列出 ``outputs``。
+        ``columns`` 为 1–3；``tab`` 必须所有段都写或都不写。绑定实体变量与
+        computed 变量不能出现在 inputs 段。省略本参数时行为与旧版一致。
+
         ``dry_run=true`` 只预览文件内容，不写盘。
         """
         return build.generate_adapter(
@@ -111,6 +123,7 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
             entity_selectors=entity_selectors,
             entity_detail=entity_detail,
             entity_input_rules=entity_input_rules,
+            layout_sections=layout_sections,
             dry_run=dry_run,
             overwrite=overwrite,
         )

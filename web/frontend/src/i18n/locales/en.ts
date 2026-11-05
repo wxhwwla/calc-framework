@@ -2,7 +2,7 @@ const en = {
   app: { title: "Calc Framework · Web" },
 
   nav: {
-    endfieldCalc: "Endfield Calc", arknights: "Arknights", adapters: "Adapters",
+    endfieldCalc: "Endfield Calc", arknights: "Arknights", wjdlglr: "Infinite Lagrange", adapters: "Adapters",
     editor: "Graph Editor", designer: "Data Designer", packDesigner: "Pack Designer",
     contribute: "Contribute Data", marketplace: "Marketplace", generator: "AI Generator",
     games: "Games", devTools: "Dev Tools",
@@ -27,6 +27,7 @@ const en = {
 
   compute: {
     title: "Damage Calculator", advanced: "Advanced",
+    inputDisabled: "Disabled", inputDisabledReason: "Disabled: {{reason}}",
     character: "Character", weapon: "Weapon", level: "Level",
     trust: "Trust", potential: "Potential",
     skillLevel: "Skill Level", weaponSkill: "Weapon Skill",

@@ -7,7 +7,7 @@
 
 # Calc Framework — Universal Game Damage Calculator
 
-> A universal game calculation framework. Currently supports **Arknights: Endfield** and **Arknights**.
+> A universal game calculation framework. Currently supports **Arknights: Endfield**, **Arknights**, and **Infinite Lagrange**.
 >
 > [:cn: 中文文档](README_zh.md)
 
@@ -40,6 +40,7 @@
 git clone https://github.com/wxhwwla/calc-framework
 cd calc-framework
 python scripts/main_launcher.py
+# Windows, no console window: pythonw scripts/main_launcher.py
 ```
 
 **Or let your AI build the calculator:** the repo ships a Model Context Protocol server that exposes the DAG generator, scaffolder, validator, and `.calcpack` packer as deterministic tools.
@@ -89,7 +90,8 @@ Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [
 │   └── hub/                      #   Calc Hub — static marketplace
 ├── games/                        # Game adapter packages
 │   ├── endfield/                 #   Endfield damage calculator (calc + gui + data + tests)
-│   └── arknights/                #   Arknights calculator (DAG + GUI + tests)
+│   ├── arknights/                #   Arknights calculator (DAG + GUI + tests)
+│   └── wjdlglr/                  #   Infinite Lagrange entry (generic CalcPackViewer)
 ├── docs/                         # Project documentation
 ├── tools/                        # Dev tools (BWIKI/wiki_scout, data pipeline, OCR, designer, calc_mcp)
 ├── scripts/                      # Entry scripts (launcher, build, dev toolkit)
@@ -177,6 +179,13 @@ cd web/frontend && npm install && npm run dev
 - BWIKI data crawling: 420+ operators with full stats
 - 28 attributes + 5 custom functions + 51-node DAG
 
+### Infinite Lagrange Calculator
+
+- Ship category → ship → weapon cascade; stats from the game wiki (571 ship/weapon records)
+- Eight damage zones plus a dedicated hit-rate zone: `(target evasion + hit bonus) × (1 + base hit)`, clamped to 5%–95%, then ±N(0, 0.03) fluctuation
+- 42 outputs across two tabs (calculation / zone breakdown); energy vs. kinetic armor selected automatically from the weapon
+- Same adapter serves desktop (`--game wjdlglr`) and Web (`/wjdlglr`)
+
 ### Generic Framework
 
 - **Visual DAG Editor**: Drag-and-drop node editor (Web: ReactFlow, Desktop: PySide6) — build damage formulas visually, no code required
@@ -185,7 +194,7 @@ cd web/frontend && npm install && npm run dev
 - **Search Engine**: Top-N enumeration, parallel execution, cancel tokens, SQLite persistence
 - **ComputeSheet**: Declarative UI — consumes `layout.json` + DAG variables → auto-renders controls
 - **Plugin System**: Registry pattern + 3 built-in plugins (crit/dodge/distance) + `.calcplugin` format
-- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters, plus a wjdlglr eight-zone adapter (65 nodes, 16 target hit-rate outputs, three-level ship/weapon cascade, weapon detail panel, energy/kinetic armor selection)
+- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters, plus a wjdlglr eight-zone adapter (104 nodes, 16 target DPM outputs with a dedicated hit-rate zone, three-level ship/weapon cascade, weapon detail panel, energy/kinetic armor selection)
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 - **i18n**: Web (react-i18next, ~890 entries per language) + Desktop (DesktopTranslator, 1046 keys per language, en/zh-CN)
 - **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing
@@ -197,6 +206,7 @@ cd web/frontend && npm install && npm run dev
 | Web Page | Desktop Equivalent | Route |
 |----------|-------------------|-------|
 | Damage Calculator | `main.py` (desktop) / FastAPI+React (web) | `/` |
+| Infinite Lagrange Calculator | `games/wjdlglr/main.py` / generic `AdapterGamePage` | `/wjdlglr` |
 | Data Designer | Dev toolkit | `/designer` |
 | Pack Designer | Dev toolkit | `/pack-designer` |
 | Calc Hub Marketplace | — | `/marketplace` |

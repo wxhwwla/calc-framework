@@ -36,10 +36,14 @@ from .viewer_pack_utils import (
     _FALLBACK_DEFAULTS,
     _SOURCE_DISPLAY_NAMES,
     _SOURCE_TO_DATA_FILE,
+    extract_assets_from_adapter_dir,
     extract_assets_from_calcpack,
     has_leveled_fields,
     load_calcpack,
     resolve_asset_paths_in_layout,
+)
+from .viewer_pack_utils import (
+    load_adapter_dir as load_adapter_dir_data,
 )
 
 logger = get_logger(__name__)
@@ -84,62 +88,131 @@ class CalcPackViewerRenderMixin:
     _detail_value_labels: dict[str, Any]
     _detail_layout: Any
 
-    def load_calcpack(self, path: str | Path) -> None:
+    def load_calcpack(self, path: str | Path) -> bool:
         """加载 .calcpack 文件并渲染 UI。"""
         try:
-            self._loaded_data = load_calcpack(path)
+            data = load_calcpack(path)
         except Exception as e:
-            QMessageBox.critical(self, "加载失败", str(e))  # type: ignore[arg-type]
-            return
+            self._report_load_error(str(e), show_errors=True)
+            return False
 
         self._calcpack_path = str(path)
 
-        asset_map: dict[str, str] = {}
-
-        if self._asset_temp_dir:
-            self._asset_temp_dir.cleanup()
-            self._asset_temp_dir = None
+        self._reset_asset_temp_dir()
 
         temp_dir = tempfile.TemporaryDirectory(prefix="calcpack_assets_")
         self._asset_temp_dir = temp_dir
         asset_map = extract_assets_from_calcpack(path, temp_dir.name)
 
-        meta = self._loaded_data.get("meta.json", {})
+        return self._apply_loaded_data(
+            data,
+            asset_map=asset_map,
+            source_path=path,
+            title_suffix=" — 计算包查看器",
+            source_label=".calcpack",
+            show_errors=True,
+        )
+
+    def load_adapter_dir(self, adapter_dir: str | Path, *, show_errors: bool = True) -> bool:
+        """直接加载适配器目录并渲染 UI（无需先打包 .calcpack）。
+
+        Args:
+            adapter_dir: 适配器包目录（含 ``meta.json``）。
+            show_errors: 失败时是否弹出模态错误框；启动器同进程调用时关闭，
+                以便失败后回退到子进程启动。
+
+        Returns:
+            加载并渲染成功返回 True。
+        """
+        try:
+            data = load_adapter_dir_data(adapter_dir)
+        except Exception as e:
+            self._report_load_error(str(e), show_errors=show_errors)
+            return False
+
+        self._calcpack_path = ""
+
+        self._reset_asset_temp_dir()
+
+        temp_dir = tempfile.TemporaryDirectory(prefix="adapter_assets_")
+        self._asset_temp_dir = temp_dir
+        asset_map = extract_assets_from_adapter_dir(adapter_dir, temp_dir.name)
+
+        return self._apply_loaded_data(
+            data,
+            asset_map=asset_map,
+            source_path=adapter_dir,
+            title_suffix="",
+            source_label="适配器",
+            show_errors=show_errors,
+        )
+
+    def _reset_asset_temp_dir(self) -> None:
+        """清理上一次加载创建的临时资源目录。"""
+        if self._asset_temp_dir:
+            self._asset_temp_dir.cleanup()
+            self._asset_temp_dir = None
+
+    def _report_load_error(self, message: str, *, show_errors: bool) -> None:
+        """显示或记录加载错误；无 GUI 场景可关闭模态框。"""
+        if show_errors:
+            QMessageBox.critical(cast(QWidget, self), "加载失败", message)
+        else:
+            logger.warning("加载失败: %s", message)
+
+    def _apply_loaded_data(
+        self,
+        data: dict[str, Any],
+        *,
+        asset_map: dict[str, str],
+        source_path: str | Path,
+        title_suffix: str,
+        source_label: str,
+        show_errors: bool,
+    ) -> bool:
+        """把已解析的计算包/适配器数据渲染到窗口中。"""
+        self._loaded_data = data
+        self._dag_service = None
+        self._layout = None
+
+        meta = data.get("meta.json", {})
         self._meta = meta
         self._info_name.setText(meta.get("name", "—"))
         self._info_game.setText(meta.get("game", "—"))
         self._info_version.setText(meta.get("version", "—"))
         self._info_description.setText(meta.get("description", "—"))
 
-        dag_data = self._loaded_data.get("dag/formula.dag.json")
+        dag_data = data.get("dag/formula.dag.json")
         if not dag_data:
-            QMessageBox.critical(self, "加载失败", ".calcpack 缺少 dag/formula.dag.json")  # type: ignore[arg-type]
-            return
+            self._report_load_error(f"{source_label} 缺少 dag/formula.dag.json", show_errors=show_errors)
+            return False
 
         dag = dag_from_dict(dag_data)
         self._dag_service = DAGService(dag)
         self._variables = dag.variables
 
-        layout_data = self._loaded_data.get("ui/layout.json")
+        layout_data = data.get("ui/layout.json")
         if not layout_data:
-            QMessageBox.critical(self, "加载失败", ".calcpack 缺少 ui/layout.json")  # type: ignore[arg-type]
-            return
+            self._report_load_error(f"{source_label} 缺少 ui/layout.json", show_errors=show_errors)
+            return False
 
         if asset_map:
             layout_data = resolve_asset_paths_in_layout(layout_data, asset_map)
 
         self._layout = load_layout(layout_data)
 
-        calcpack_theme = self._loaded_data.get("ui/theme.json", {})
-        if calcpack_theme:
-            self._theme_manager.register("calcpack", calcpack_theme)
+        source_theme = data.get("ui/theme.json", {})
+        if source_theme:
+            self._theme_manager.register("calcpack", source_theme)
             self._theme_manager.switch("calcpack")
+        elif self._theme_manager.current_name == "calcpack":
+            self._theme_manager.switch("dark")
 
         self._data_files = {}
-        for arcname, data in self._loaded_data.items():
-            if arcname.startswith("data/") and isinstance(data, list):
+        for arcname, payload in data.items():
+            if arcname.startswith("data/") and isinstance(payload, list):
                 key = arcname.replace("data/", "").replace(".json", "")
-                self._data_files[key] = data
+                self._data_files[key] = payload
 
         self._info_vars.setText(str(len(self._variables)))
         self._info_outputs.setText(str(len(dag.outputs)))
@@ -150,9 +223,12 @@ class CalcPackViewerRenderMixin:
         self._apply_entity_input_rules()
         self._apply_theme()
 
-        name = meta.get("name", Path(path).stem)
-        self.setWindowTitle(f"{name} — 计算包查看器")
+        source = Path(source_path)
+        fallback = source.stem if source.is_file() else source.name
+        name = meta.get("name", fallback)
+        self.setWindowTitle(f"{name}{title_suffix}")
         self._status_label.setText(f"已加载 {name} ({len(self._variables)} 变量, {len(dag.outputs)} 输出)")
+        return True
 
     def _rebuild_entity_selectors(self) -> None:
         """重建实体选择下拉菜单和等级输入框。

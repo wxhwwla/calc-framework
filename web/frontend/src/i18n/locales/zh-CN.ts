@@ -2,7 +2,7 @@ const zhCN = {
   app: { title: "游戏计算器 · Web 版" },
 
   nav: {
-    endfieldCalc: "终末地计算", arknights: "明日方舟", adapters: "适配器管理",
+    endfieldCalc: "终末地计算", arknights: "明日方舟", wjdlglr: "拉格朗日计算", adapters: "适配器管理",
     editor: "公式图编辑器", designer: "数据设计器", packDesigner: "配置包设计器",
     contribute: "数据贡献", marketplace: "配置包市场", generator: "AI 生成器",
     games: "游戏", devTools: "开发工具",
@@ -27,6 +27,7 @@ const zhCN = {
 
   compute: {
     title: "伤害计算器", advanced: "高级页",
+    inputDisabled: "已禁用", inputDisabledReason: "已禁用：{{reason}}",
     character: "角色", weapon: "武器", level: "等级",
     trust: "信赖", potential: "潜能",
     skillLevel: "技能等级", weaponSkill: "武器技能",

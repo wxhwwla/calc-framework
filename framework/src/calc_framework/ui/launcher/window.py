@@ -15,6 +15,7 @@ import sys
 import threading
 import webbrowser
 from pathlib import Path
+from typing import cast
 
 from PySide6.QtCore import Q_ARG, QMetaObject, Qt, QTimer
 from PySide6.QtWidgets import (
@@ -35,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...logging import get_logger, setup_logging
+from ..app_icon import apply_application_identity
 from ..log_widget import LogWidget
 from ..theme import ThemeManager
 from .auto_update import ReleaseInfo, check_for_update_async, download_and_replace
@@ -410,7 +412,8 @@ def run_gui_launcher() -> None:
 
     setup_logging(level="INFO")
 
-    app = QApplication.instance() or QApplication(sys.argv)
+    app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
+    apply_application_identity(app, "CalcFramework.Launcher")
     app.setApplicationName("游戏计算器启动器")
     tm = ThemeManager()
     app.setStyleSheet(tm.stylesheet("dark"))

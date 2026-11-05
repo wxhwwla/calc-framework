@@ -1,7 +1,7 @@
 {
   "schema_version": "dag-v1",
-  "name": "无尽的拉格朗日 武器理论输出（八乘区 + 目标命中率）",
-  "description": "八乘区口径：武器属性与命中率来自 Wiki 数据；最终每分钟伤害按 16 种目标舰种分别乘以命中率。",
+  "name": "无尽的拉格朗日 武器理论输出（八乘区 + 命中率乘区）",
+  "description": "八乘区口径：武器属性与基础命中率来自 Wiki 数据；最终命中率 = 中间命中率（(目标闪避 + 命中加成) × (1 + 基础命中)）钳制到 5%–95% 后叠加正态浮动，16 种目标舰种分别计算。维修/驻防/增益类武器固定 100% 命中。",
   "variables": {
     "weapon.weapon_count": {
       "type": "float",
@@ -300,6 +300,39 @@
       "ui_control": {
         "step": 1
       }
+    },
+    "user_input.target_evasion": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "目标舰船的总闪避率（%）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.hit_rate_bonus": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "命中率加成（%）",
+      "ui_control": {
+        "suffix": "%",
+        "step": 1
+      }
+    },
+    "user_input.hit_rate_fluctuation": {
+      "type": "float",
+      "source": "user_input",
+      "default": 0.0,
+      "description": "命中率随机浮动（%，服从 N(0, 0.03)，填入本次抽样值）",
+      "min": -3.0,
+      "max": 3.0,
+      "ui_control": {
+        "suffix": "%",
+        "step": 0.1,
+        "widget": "spinbox"
+      }
     }
   },
   "subgraphs": {},
@@ -514,6 +547,21 @@
       "path": "user_input.energy_armor",
       "label": "目标能量护甲（固定值）"
     },
+    "target_evasion": {
+      "type": "var",
+      "path": "user_input.target_evasion",
+      "label": "目标舰船总闪避率（%）"
+    },
+    "hit_rate_bonus": {
+      "type": "var",
+      "path": "user_input.hit_rate_bonus",
+      "label": "命中率加成（%）"
+    },
+    "hit_rate_fluctuation": {
+      "type": "var",
+      "path": "user_input.hit_rate_fluctuation",
+      "label": "命中率随机浮动（%）"
+    },
     "shots": {
       "type": "expr",
       "expr": "fleet_count * weapon_count * ammo_count * attack_runs",
@@ -628,181 +676,485 @@
       },
       "label": "满命中参考 = 每分钟平均发射数 × 最终单发"
     },
+    "mid_hit_fighter": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_fighter / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_fighter": "hit_fighter"
+      },
+      "label": "对战机 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_fighter": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_fighter)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_fighter": "mid_hit_fighter",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对战机 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_escort": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_escort / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_escort": "hit_escort"
+      },
+      "label": "对护航艇 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_escort": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_escort)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_escort": "mid_hit_escort",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对护航艇 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_drone": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_drone / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_drone": "hit_drone"
+      },
+      "label": "对无人机 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_drone": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_drone)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_drone": "mid_hit_drone",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对无人机 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_landing": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_landing / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_landing": "hit_landing"
+      },
+      "label": "对登陆舰(作业态) · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_landing": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_landing)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_landing": "mid_hit_landing",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对登陆舰(作业态) · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_frigate": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_frigate / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_frigate": "hit_frigate"
+      },
+      "label": "对护卫舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_frigate": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_frigate)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_frigate": "mid_hit_frigate",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对护卫舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_destroyer": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_destroyer / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_destroyer": "hit_destroyer"
+      },
+      "label": "对驱逐舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_destroyer": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_destroyer)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_destroyer": "mid_hit_destroyer",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对驱逐舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_cruiser": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_cruiser / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_cruiser": "hit_cruiser"
+      },
+      "label": "对巡洋舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_cruiser": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_cruiser)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_cruiser": "mid_hit_cruiser",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对巡洋舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_battlecruiser": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_battlecruiser / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_battlecruiser": "hit_battlecruiser"
+      },
+      "label": "对战列巡洋舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_battlecruiser": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_battlecruiser)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_battlecruiser": "mid_hit_battlecruiser",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对战列巡洋舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_battleship": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_battleship / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_battleship": "hit_battleship"
+      },
+      "label": "对战列舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_battleship": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_battleship)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_battleship": "mid_hit_battleship",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对战列舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_carrier": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_carrier / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_carrier": "hit_carrier"
+      },
+      "label": "对航空母舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_carrier": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_carrier)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_carrier": "mid_hit_carrier",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对航空母舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_support": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_support / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_support": "hit_support"
+      },
+      "label": "对支援舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_support": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_support)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_support": "mid_hit_support",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对支援舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_engineering_small": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_engineering_small / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_engineering_small": "hit_engineering_small"
+      },
+      "label": "对小型工程舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_engineering_small": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_engineering_small)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_engineering_small": "mid_hit_engineering_small",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对小型工程舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_engineering_medium": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_engineering_medium / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_engineering_medium": "hit_engineering_medium"
+      },
+      "label": "对中型工程舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_engineering_medium": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_engineering_medium)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_engineering_medium": "mid_hit_engineering_medium",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对中型工程舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_engineering_large": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_engineering_large / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_engineering_large": "hit_engineering_large"
+      },
+      "label": "对大型工程舰 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_engineering_large": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_engineering_large)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_engineering_large": "mid_hit_engineering_large",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对大型工程舰 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_base_ship": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_base_ship / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_base_ship": "hit_base_ship"
+      },
+      "label": "对大本营船 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_base_ship": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_base_ship)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_base_ship": "mid_hit_base_ship",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对大本营船 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
+    "mid_hit_base": {
+      "type": "expr",
+      "expr": "(target_evasion / 100 + hit_rate_bonus / 100) * (1 + hit_base / 100)",
+      "inputs": {
+        "target_evasion": "target_evasion",
+        "hit_rate_bonus": "hit_rate_bonus",
+        "hit_base": "hit_base"
+      },
+      "label": "对基地 · 中间命中率 = (目标闪避 + 命中加成) × (1 + 基础命中)"
+    },
+    "final_hit_base": {
+      "type": "expr",
+      "expr": "1.0 if friendly > 0.5 else min(0.95, max(0.05, mid_hit_base)) + hit_rate_fluctuation / 100",
+      "inputs": {
+        "friendly": "friendly",
+        "mid_hit_base": "mid_hit_base",
+        "hit_rate_fluctuation": "hit_rate_fluctuation"
+      },
+      "label": "对基地 · 最终命中率 = 中间命中率钳制 5%–95% + 浮动（友方固定 100%）"
+    },
     "dpm_fighter": {
       "type": "expr",
-      "expr": "final_shot_air * rate_per_minute * (1.0 if friendly > 0.5 else hit_fighter / 100)",
+      "expr": "final_shot_air * rate_per_minute * final_hit_fighter",
       "inputs": {
         "final_shot_air": "final_shot_air",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_fighter": "hit_fighter"
+        "final_hit_fighter": "final_hit_fighter"
       },
-      "label": "对战机 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对战机 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_escort": {
       "type": "expr",
-      "expr": "final_shot_air * rate_per_minute * (1.0 if friendly > 0.5 else hit_escort / 100)",
+      "expr": "final_shot_air * rate_per_minute * final_hit_escort",
       "inputs": {
         "final_shot_air": "final_shot_air",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_escort": "hit_escort"
+        "final_hit_escort": "final_hit_escort"
       },
-      "label": "对护航艇 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对护航艇 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_drone": {
       "type": "expr",
-      "expr": "final_shot_air * rate_per_minute * (1.0 if friendly > 0.5 else hit_drone / 100)",
+      "expr": "final_shot_air * rate_per_minute * final_hit_drone",
       "inputs": {
         "final_shot_air": "final_shot_air",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_drone": "hit_drone"
+        "final_hit_drone": "final_hit_drone"
       },
-      "label": "对无人机 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对无人机 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_landing": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_landing / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_landing",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_landing": "hit_landing"
+        "final_hit_landing": "final_hit_landing"
       },
-      "label": "对登陆舰(作业态) · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对登陆舰(作业态) · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_frigate": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_frigate / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_frigate",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_frigate": "hit_frigate"
+        "final_hit_frigate": "final_hit_frigate"
       },
-      "label": "对护卫舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对护卫舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_destroyer": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_destroyer / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_destroyer",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_destroyer": "hit_destroyer"
+        "final_hit_destroyer": "final_hit_destroyer"
       },
-      "label": "对驱逐舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对驱逐舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_cruiser": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_cruiser / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_cruiser",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_cruiser": "hit_cruiser"
+        "final_hit_cruiser": "final_hit_cruiser"
       },
-      "label": "对巡洋舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对巡洋舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_battlecruiser": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_battlecruiser / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_battlecruiser",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_battlecruiser": "hit_battlecruiser"
+        "final_hit_battlecruiser": "final_hit_battlecruiser"
       },
-      "label": "对战列巡洋舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对战列巡洋舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_battleship": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_battleship / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_battleship",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_battleship": "hit_battleship"
+        "final_hit_battleship": "final_hit_battleship"
       },
-      "label": "对战列舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对战列舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_carrier": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_carrier / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_carrier",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_carrier": "hit_carrier"
+        "final_hit_carrier": "final_hit_carrier"
       },
-      "label": "对航空母舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对航空母舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_support": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_support / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_support",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_support": "hit_support"
+        "final_hit_support": "final_hit_support"
       },
-      "label": "对支援舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对支援舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_engineering_small": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_engineering_small / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_engineering_small",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_engineering_small": "hit_engineering_small"
+        "final_hit_engineering_small": "final_hit_engineering_small"
       },
-      "label": "对小型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对小型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_engineering_medium": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_engineering_medium / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_engineering_medium",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_engineering_medium": "hit_engineering_medium"
+        "final_hit_engineering_medium": "final_hit_engineering_medium"
       },
-      "label": "对中型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对中型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_engineering_large": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_engineering_large / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_engineering_large",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_engineering_large": "hit_engineering_large"
+        "final_hit_engineering_large": "final_hit_engineering_large"
       },
-      "label": "对大型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对大型工程舰 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_base_ship": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_base_ship / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_base_ship",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_base_ship": "hit_base_ship"
+        "final_hit_base_ship": "final_hit_base_ship"
       },
-      "label": "对大本营船 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对大本营船 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     },
     "dpm_base": {
       "type": "expr",
-      "expr": "final_shot * rate_per_minute * (1.0 if friendly > 0.5 else hit_base / 100)",
+      "expr": "final_shot * rate_per_minute * final_hit_base",
       "inputs": {
         "final_shot": "final_shot",
         "rate_per_minute": "rate_per_minute",
-        "friendly": "friendly",
-        "hit_base": "hit_base"
+        "final_hit_base": "final_hit_base"
       },
-      "label": "对基地 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 命中率"
+      "label": "对基地 · 最终每分钟伤害 = 每分钟发射数 × 最终单发 × 最终命中率"
     }
   },
   "outputs": {
@@ -901,6 +1253,102 @@
       "label": "基地",
       "format": "",
       "is_primary": true
+    },
+    "最终命中率_战机": {
+      "node": "final_hit_fighter",
+      "label": "战机",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_护航艇": {
+      "node": "final_hit_escort",
+      "label": "护航艇",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_无人机": {
+      "node": "final_hit_drone",
+      "label": "无人机",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_登陆舰(作业态)": {
+      "node": "final_hit_landing",
+      "label": "登陆舰(作业态)",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_护卫舰": {
+      "node": "final_hit_frigate",
+      "label": "护卫舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_驱逐舰": {
+      "node": "final_hit_destroyer",
+      "label": "驱逐舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_巡洋舰": {
+      "node": "final_hit_cruiser",
+      "label": "巡洋舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_战列巡洋舰": {
+      "node": "final_hit_battlecruiser",
+      "label": "战列巡洋舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_战列舰": {
+      "node": "final_hit_battleship",
+      "label": "战列舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_航空母舰": {
+      "node": "final_hit_carrier",
+      "label": "航空母舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_支援舰": {
+      "node": "final_hit_support",
+      "label": "支援舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_小型工程舰": {
+      "node": "final_hit_engineering_small",
+      "label": "小型工程舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_中型工程舰": {
+      "node": "final_hit_engineering_medium",
+      "label": "中型工程舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_大型工程舰": {
+      "node": "final_hit_engineering_large",
+      "label": "大型工程舰",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_大本营船": {
+      "node": "final_hit_base_ship",
+      "label": "大本营船",
+      "format": ".2%",
+      "is_primary": false
+    },
+    "最终命中率_基地": {
+      "node": "final_hit_base",
+      "label": "基地",
+      "format": ".2%",
+      "is_primary": false
     },
     "满命中每分钟伤害": {
       "node": "damage_per_minute",

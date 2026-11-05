@@ -26,6 +26,7 @@ from tools.generator.data_files import (
     bound_entity_sources,
     normalize_data_files,
 )
+from tools.generator.layout_sections import LayoutSectionsError, normalize_layout_sections
 from tools.generator.selectors import SelectorError, normalize_entity_selectors
 from tools.generator.variable_ui import VariableUiError, normalize_variable_ui
 
@@ -150,6 +151,7 @@ class AdapterSpec:
     entity_selectors: list[dict[str, Any]] = field(default_factory=list)
     entity_detail: dict[str, Any] | None = None
     entity_input_rules: list[dict[str, Any]] = field(default_factory=list)
+    layout_sections: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 
@@ -162,6 +164,7 @@ def normalize_spec(
     entity_selectors: list[dict[str, Any]] | None = None,
     entity_detail: dict[str, Any] | None = None,
     entity_input_rules: list[dict[str, Any]] | None = None,
+    layout_sections: list[dict[str, Any]] | None = None,
 ) -> AdapterSpec:
     """归一化并校验变量/步骤/输出/数据文件/级联选择器/实体增强声明。
 
@@ -174,6 +177,10 @@ def normalize_spec(
         entity_detail: 查看器实体详情面板声明，字段必须存在于已绑定数据文件。
         entity_input_rules: 条件禁用输入规则；disable 只能引用有效的
             ``user_input.*`` 变量。
+        layout_sections: 自定义 layout 段落声明；为空时使用自动 layout。
+            每段可指定 ``type``（inputs/outputs）、``title``、``tab``、
+            ``columns``（1–3），以及 inputs 的 ``variables``/``source``
+            或 outputs 的 ``outputs``。
 
     Returns:
         归一化后的 :class:`AdapterSpec`。
@@ -237,6 +244,12 @@ def normalize_spec(
     except EntityMetaError as exc:
         raise SpecError(f"entity_input_rules 无效: {exc}") from exc
 
+    try:
+        normalized_layout_sections, layout_warnings = normalize_layout_sections(layout_sections)
+        warnings.extend(layout_warnings)
+    except LayoutSectionsError as exc:
+        raise SpecError(f"layout_sections 无效: {exc}") from exc
+
     return AdapterSpec(
         variables=var_specs,
         steps=step_specs,
@@ -245,6 +258,7 @@ def normalize_spec(
         entity_selectors=normalized_selectors,
         entity_detail=normalized_detail,
         entity_input_rules=normalized_rules,
+        layout_sections=normalized_layout_sections,
         warnings=warnings,
     )
 

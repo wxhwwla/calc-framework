@@ -29,7 +29,7 @@ class TestAdapterLoads:
         assert adapter_pkg.meta["name"] == "无尽的拉格朗日 武器输出计算器"
         assert adapter_pkg.meta["game"] == "无尽的拉格朗日"
         assert adapter_pkg.meta["schema_version"] == "dag-v1"
-        assert adapter_pkg.meta["version"] == "0.6.0"
+        assert adapter_pkg.meta["version"] == "0.7.0"
         assert "data/weapons.json" in adapter_pkg.meta["entry_data"]
 
     def test_dag_exposes_per_target_outputs(self, adapter_pkg: AdapterPackage) -> None:
@@ -46,6 +46,7 @@ class TestAdapterLoads:
             "最终单发",
             "最终单发(对空)",
             "满命中每分钟伤害",
+            *(f"最终命中率_{label}" for _, label in _TARGETS),
         } <= outputs
         assert "击杀时间(秒)" not in outputs
         assert "官方火力击杀时间(秒)" not in outputs
@@ -59,6 +60,9 @@ class TestAdapterLoads:
         assert "user_input.self_flight_bonus" in variables
         assert "user_input.bonus_crit_rate" in variables
         assert "user_input.damage_bonus" in variables
+        assert "user_input.target_evasion" in variables
+        assert "user_input.hit_rate_bonus" in variables
+        assert "user_input.hit_rate_fluctuation" in variables
         assert "user_input.base_crit_multiplier" not in variables
         assert "user_input.base_crit_damage" not in variables
         assert "user_input.enemy_hp" not in variables
@@ -67,6 +71,7 @@ class TestAdapterLoads:
         assert "user_input.weapon_count" not in variables
         assert outputs >= _DPM_KEYS
         assert "满命中每分钟伤害" in outputs
+        assert {f"最终命中率_{label}" for _, label in _TARGETS} <= outputs
 
     def test_meta_declares_cascading_entity_selectors(self, adapter_pkg: AdapterPackage) -> None:
         selectors = adapter_pkg.meta["entity_selectors"]
@@ -95,6 +100,9 @@ class TestAdapterLoads:
         assert attrs["crit_damage"]["source"] == "weapon"
         assert attrs["crit_vs_air"]["source"] == "weapon"
         assert attrs["energy_armor"]["source"] == "user_input"
+        assert attrs["target_evasion"]["source"] == "user_input"
+        assert attrs["hit_rate_bonus"]["source"] == "user_input"
+        assert attrs["hit_rate_fluctuation"]["source"] == "user_input"
         assert attrs["hit_fighter"]["default"] == 0.0
         assert "base_crit_multiplier" not in attrs
         assert "base_crit_damage" not in attrs
@@ -107,7 +115,7 @@ class TestAdapterLoads:
         assert {"舰船", "舰船类型", "武器作用", "damage_type", "base_damage"} <= fields
         assert {"crit_rate", "crit_damage", "crit_target"} <= fields
         assert {f"hit_{key}" for key, _ in _TARGETS} <= fields
-        hit_section = next(section for section in detail["sections"] if section["title"] == "命中率（%）")
+        hit_section = next(section for section in detail["sections"] if section["title"] == "基础命中率（%，Wiki）")
         assert hit_section["columns"] == 2
 
         rules = adapter_pkg.meta["entity_input_rules"]
@@ -118,16 +126,31 @@ class TestAdapterLoads:
             "user_input.mothership_duration_bonus",
             "user_input.physical_armor",
             "user_input.energy_armor",
+            "user_input.target_evasion",
+            "user_input.hit_rate_bonus",
+            "user_input.hit_rate_fluctuation",
         }
+        friendly_rule = next(rule for rule in rules if rule["field"] == "friendly")
+        assert friendly_rule["equals"] == 1
+        assert "100% 命中" in friendly_rule["reason"]
 
     def test_layout_uses_multi_column_outputs_and_tabs(self) -> None:
         layout = json.loads((_ADAPTER_DIR / "ui" / "layout.json").read_text(encoding="utf-8"))
         sections = {section["id"]: section for section in layout["sections"]}
         assert sections["outputs"]["columns"] == 3
         assert sections["intermediate"]["columns"] == 2
-        assert set(sections) == {"inputs", "combat", "outputs", "intermediate"}
+        assert set(sections) == {
+            "inputs",
+            "combat",
+            "hit_rate_inputs",
+            "outputs",
+            "intermediate",
+            "hit_rate_outputs",
+        }
         assert sections["outputs"]["tab"] == "计算"
         assert sections["intermediate"]["tab"] == "乘区明细"
+        assert sections["hit_rate_inputs"]["tab"] == "计算"
+        assert sections["hit_rate_outputs"]["tab"] == "乘区明细"
         assert set(sections["intermediate"]["outputs"]) >= {
             "发射数",
             "飞行时间(秒)",

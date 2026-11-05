@@ -91,6 +91,9 @@ def _user(**overrides: float) -> dict[str, float]:
         "damage_bonus": 20.0,
         "physical_armor": 30.0,
         "energy_armor": 50.0,
+        "target_evasion": 20.0,
+        "hit_rate_bonus": 10.0,
+        "hit_rate_fluctuation": 0.0,
     }
     base.update(overrides)
     return base

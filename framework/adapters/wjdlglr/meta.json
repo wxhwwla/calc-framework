@@ -1,8 +1,8 @@
 {
   "name": "无尽的拉格朗日 武器输出计算器",
   "game": "无尽的拉格朗日",
-  "description": "基于八乘区口径计算武器每分钟发射数与 16 种目标舰种的最终每分钟伤害（武器属性、暴击与命中率来自 Wiki 数据，维修/驻防/增益按 100% 命中）。能量武器使用能量护甲，实弹/辅助武器使用物理护甲；不需要母舰的舰船自动灰显母舰加成。",
-  "version": "0.6.0",
+  "description": "基于八乘区口径计算武器每分钟发射数与 16 种目标舰种的最终每分钟伤害（武器属性、暴击与基础命中率来自 Wiki 数据，维修/驻防/增益按 100% 命中）。命中率乘区：中间命中率 = (目标总闪避率 + 命中率加成) × (1 + 基础命中率)，钳制到 5%–95% 后叠加服从 N(0, 0.03) 的浮动。能量武器使用能量护甲，实弹/辅助武器使用物理护甲；不需要母舰的舰船自动灰显母舰加成。",
+  "version": "0.7.0",
   "schema_version": "dag-v1",
   "entry_dag": "dag/wjdlglr.dag.json",
   "ui_layout": "ui/layout.json",
@@ -112,7 +112,7 @@
         ]
       },
       {
-        "title": "命中率（%）",
+        "title": "基础命中率（%，Wiki）",
         "columns": 2,
         "fields": [
           {
@@ -212,6 +212,17 @@
         "user_input.energy_armor"
       ],
       "reason": "实弹/辅助武器使用物理护甲"
+    },
+    {
+      "source": "weapon",
+      "field": "friendly",
+      "equals": 1,
+      "disable": [
+        "user_input.target_evasion",
+        "user_input.hit_rate_bonus",
+        "user_input.hit_rate_fluctuation"
+      ],
+      "reason": "维修/驻防/增益类武器固定 100% 命中"
     }
   ],
   "functions": {}

@@ -54,7 +54,7 @@
 
 1. **`expr` 沙箱支持控制流**：新增比较 `< <= > >= == !=`、布尔 `and/or/not`（短路、返回操作数）与三元 `a if cond else b`（只求值选中分支，死分支仍做静态白名单校验）；链式比较左值只求一次。`in` / `not in` / `is` / `is not`、属性访问、lambda、容器字面量继续拒绝。护甲减免、分档公式不再必须写 `functions.py`。
 2. **未绑定实体源变量自动转为可编辑输入**：`generate_adapter` 把未出现在 `data_files` 中（或对应列表为空）的 `character` / `weapon` / `equipment` / `enemy` 变量改写为 `user_input.<name>`，layout 按**原始 source** 分组（输入/角色/武器/装备/目标参数）；`computed` 不重映射；`source="input"` 别名归一为 `user_input`。UI 层零改动。
-3. **`generate_adapter.data_files`**：按 `character` / `weapon` / `equipment` / `enemy` 键接收记录数组，写入 `data/characters.json` / `weapons.json` / `equipments.json` / `enemies.json`；记录须含非空 `名称`、同文件不重复、≤512 KiB（UTF-8 字节）；非空路径写入 `meta.entry_data`。仅**非空记录列表**视为绑定：绑定来源的变量保留命名空间，由 CalcPackViewer 实体下拉注入，不出现在输入区；空列表按未绑定处理并在 warnings 中提示。查看器补齐 `enemy` 映射（标签「敌人」），脚手架数据文件名由 `enemys.json` 修正为 `enemies.json` 且不再生成 `computeds.json`。
+3. **`generate_adapter.data_files`**：按 `character` / `weapon` / `equipment` / `enemy` 键接收记录数组，写入 `data/characters.json` / `weapons.json` / `equipments.json` / `enemies.json`；记录须含非空 `名称`、同文件不重复、≤2 MiB（UTF-8 字节）；非空路径写入 `meta.entry_data`。仅**非空记录列表**视为绑定：绑定来源的变量保留命名空间，由 CalcPackViewer 实体下拉注入，不出现在输入区；空列表按未绑定处理并在 warnings 中提示。查看器补齐 `enemy` 映射（标签「敌人」），脚手架数据文件名由 `enemys.json` 修正为 `enemies.json` 且不再生成 `computeds.json`。
 
 **未采纳**：`.calcpack` 携带并执行 `functions.py`——包内 Python 无签名/信任机制，等同任意代码执行；若将来需要，先单独立 ADR 定义信任边界。
 
@@ -68,3 +68,11 @@
 4. **查看器布局**：右栏增加包说明与操作提示；`entity_detail` 与禁用规则在加载及每次级联切换后重新应用。
 
 **兼容性**：三者均为可选 meta 键，旧适配包与旧 `.calcpack` 不受影响；工具数量仍为 13，`.calcpack` 格式不变。
+
+## 修订 2026-11-05：布局生成与分页读取
+
+1. **`generate_adapter.layout_sections`**：可按段声明 `type`（inputs/outputs）、`title`、`tab`、`columns`（1–3），inputs 段用 `variables` 或 `source` 二选一，outputs 段列出输出名。生成时直接写出分页 layout，避免生成后手改 `ui/layout.json`；变量/输出引用在生成阶段校验，绑定实体变量与 `computed` 不可作为输入，跨段重复直接报错。省略参数时行为与旧版一致。
+2. **`read_adapter_file` 分页**：新增 `offset` / `max_bytes`（默认 256 KiB，上限 2 MiB），返回 `size` / `next_offset`；按 UTF-8 字符边界分页，不会产生替换字符。解决数据文件上限升至 2 MiB 后无法完整读回的问题。
+3. **`describe_schemas().layout.generator_override`**：公开 `layout_sections` 的字段与规则；server instructions 同步提示分页与布局能力。
+
+**兼容性**：均为可选参数，工具数量仍为 13，`.calcpack` 格式不变；`data_files` 单文件上限修正为 2 MiB（文档此前误写 512 KiB）。

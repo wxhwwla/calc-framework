@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "启动器（统一）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/main_launcher.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "终末地计算器",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/games/endfield/main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "明日方舟计算器",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/games/arknights/main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "拉格朗日计算器",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/games/wjdlglr/main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Web 后端（本地）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/web/run_local.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}

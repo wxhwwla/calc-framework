@@ -37,6 +37,11 @@ _INSTRUCTIONS = """\
 - generate_adapter.entity_detail 可在查看器最左侧显示当前实体字段明细；字段必须存在于
   已绑定数据文件。generate_adapter.entity_input_rules 可按实体字段禁用无关输入
   （例如不需要母舰时灰显母舰加成），disable 只能引用 user_input.* 变量。
+- generate_adapter.layout_sections 可直接生成分页（tab）、列数（columns 1-3）
+  与自定义分组，避免生成后再手改 ui/layout.json；inputs 段用 variables 或
+  source 二选一，outputs 段必须列出输出名。
+- read_adapter_file 支持 offset/max_bytes 分页（单页默认 256 KiB，上限 2 MiB），
+  大文件按返回的 next_offset 继续读。
 - 写文件默认不覆盖，需要覆盖时显式传 overwrite=true。
 - smoke_test_adapter 会执行适配包内的 functions.py，仅用于本地开发者适配包。
 """

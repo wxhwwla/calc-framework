@@ -28,12 +28,21 @@ class TestLauncherRuntime:
         ids = {e.adapter_id for e in entries}
         assert "endfield" in ids
         assert "arknights" in ids
+        assert "wjdlglr" in ids
 
     def test_argv_for_full_app(self) -> None:
         entries = {e.adapter_id: e for e in list_adapter_entries()}
         root = repo_root()
         argv = argv_for_adapter(entries["endfield"], root)
         assert argv[-1].replace("\\", "/").endswith("games/endfield/main.py")
+
+    def test_wjdlglr_registered_as_full_app(self) -> None:
+        entries = {e.adapter_id: e for e in list_adapter_entries()}
+        entry = entries["wjdlglr"]
+
+        assert entry.has_full_app
+        argv = argv_for_adapter(entry, repo_root())
+        assert argv[-1].replace("\\", "/").endswith("games/wjdlglr/main.py")
 
     def test_argv_for_generic_adapter(self) -> None:
         entries = {e.adapter_id: e for e in list_adapter_entries()}

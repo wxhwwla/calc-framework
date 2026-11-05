@@ -36,6 +36,7 @@ def generate_adapter(
     entity_selectors: list[dict[str, Any]] | None = None,
     entity_detail: dict[str, Any] | None = None,
     entity_input_rules: list[dict[str, Any]] | None = None,
+    layout_sections: list[dict[str, Any]] | None = None,
     dry_run: bool = False,
     overwrite: bool = False,
 ) -> dict[str, Any]:
@@ -55,6 +56,8 @@ def generate_adapter(
         entity_selectors: 级联选择器声明；来源必须已绑定非空数据文件。
         entity_detail: 查看器详情面板声明；字段必须存在于已绑定数据文件。
         entity_input_rules: 条件禁用输入规则；disable 只能引用 ``user_input.*``。
+        layout_sections: 自定义 layout 段落；支持分页（tab）、列数与自定义分组。
+            为 None 时使用自动 layout。
         dry_run: 为 True 时只返回文件内容，不写盘。
         overwrite: 是否允许覆盖已存在目录中的文件。
 
@@ -75,6 +78,7 @@ def generate_adapter(
         entity_selectors=entity_selectors,
         entity_detail=entity_detail,
         entity_input_rules=entity_input_rules,
+        layout_sections=layout_sections,
     )
     engine = GeneratorEngine(adapters_dir=scope.adapters_dir)
     try:
@@ -88,6 +92,7 @@ def generate_adapter(
             entity_selectors=spec.entity_selectors or None,
             entity_detail=spec.entity_detail,
             entity_input_rules=spec.entity_input_rules or None,
+            layout_sections=spec.layout_sections or None,
         )
     except (ValueError, KeyError, TypeError) as exc:
         raise BuildError(f"生成失败: {exc}") from exc

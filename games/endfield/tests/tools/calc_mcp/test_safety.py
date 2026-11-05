@@ -87,6 +87,39 @@ def test_read_text_truncates(scope: ProjectScope) -> None:
     assert truncated is False
 
 
+def test_read_text_range_pages_without_splitting_utf8(scope: ProjectScope) -> None:
+    """分页读取必须在 UTF-8 字符边界停下，拼接后与原文一致。"""
+    target = scope.resolve("docs/guide.md")  # “指南” = 6 字节
+
+    first = scope.read_text_range(target, offset=0, max_bytes=2)
+    text, next_offset, truncated, total = first
+    assert text == "指"
+    assert next_offset == 3
+    assert truncated is True
+    assert total == 6
+
+    text, next_offset, truncated, total = scope.read_text_range(target, offset=3, max_bytes=2)
+    assert text == "南"
+    assert next_offset is None
+    assert truncated is False
+    assert total == 6
+
+
+def test_read_text_range_offset_past_eof(scope: ProjectScope) -> None:
+    target = scope.resolve("docs/guide.md")
+
+    assert scope.read_text_range(target, offset=999, max_bytes=10) == ("", None, False, 6)
+
+
+def test_read_text_range_rejects_bad_arguments(scope: ProjectScope) -> None:
+    target = scope.resolve("docs/guide.md")
+
+    with pytest.raises(ScopeError, match="offset"):
+        scope.read_text_range(target, offset=-1, max_bytes=10)
+    with pytest.raises(ScopeError, match="max_bytes"):
+        scope.read_text_range(target, offset=0, max_bytes=0)
+
+
 def test_symlink_escape_is_rejected(scope: ProjectScope, tmp_path: Path) -> None:
     outside = tmp_path.parent / "mcp-outside-target"
     outside.write_text("secret", encoding="utf-8")

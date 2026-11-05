@@ -92,6 +92,9 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         if self._owns_qapp:
             self._qapp.setStyle("Fusion")
             self._apply_dark_style()
+            from calc_framework.ui.app_icon import apply_application_identity
+
+            apply_application_identity(self._qapp, "CalcFramework.Endfield")
 
         super().__init__()
 

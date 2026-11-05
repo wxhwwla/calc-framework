@@ -9,6 +9,8 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from tools.generator.data_files import MAX_DATA_FILE_BYTES
+
 from .errors import tool_error_boundary
 from .safety import ProjectScope, ScopeError
 
@@ -43,21 +45,34 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
 
     @mcp.tool()
     @tool_error_boundary
-    def read_adapter_file(adapter_id: str, path: str) -> dict[str, Any]:
-        """Read a UTF-8 text file inside an adapter package (truncated at 256 KiB).
+    def read_adapter_file(
+        adapter_id: str,
+        path: str,
+        offset: int = 0,
+        max_bytes: int = 256 * 1024,
+    ) -> dict[str, Any]:
+        """Read a UTF-8 text file inside an adapter package, with byte-range paging.
 
+        默认单页 256 KiB；数据文件可达 2 MiB，需要完整读取时按返回的
+        ``next_offset`` 继续分页（``next_offset=null`` 表示已到文件末尾）。
+        单页最多多读 3 字节以对齐 UTF-8 字符边界，不会产生替换字符。
         仅允许 .json/.py/.md/.txt/.csv/.yaml/.yml。
         """
+        if max_bytes > MAX_DATA_FILE_BYTES:
+            raise ScopeError(f"max_bytes 不能超过 {MAX_DATA_FILE_BYTES}: {max_bytes}")
         target = _adapter_path(scope, adapter_id, path)
         if target.suffix.lower() not in _READABLE_SUFFIXES:
             raise ScopeError(f"不支持读取该文件类型: {target.suffix!r}")
-        content, truncated = scope.read_text(target, max_bytes=256 * 1024)
+        content, next_offset, truncated, size = scope.read_text_range(target, offset=offset, max_bytes=max_bytes)
         return {
             "ok": True,
             "adapter_id": adapter_id,
             "path": target.relative_to(scope.adapter_dir(adapter_id, must_exist=True)).as_posix(),
             "content": content,
             "truncated": truncated,
+            "size": size,
+            "offset": offset,
+            "next_offset": next_offset,
         }
 
     @mcp.tool()

@@ -293,6 +293,27 @@
       "source": "user_input",
       "description": "目标能量护甲（固定值，非百分比）",
       "default": 0.0
+    },
+    {
+      "name": "target_evasion",
+      "type": "float",
+      "source": "user_input",
+      "description": "目标舰船的总闪避率（%）",
+      "default": 0.0
+    },
+    {
+      "name": "hit_rate_bonus",
+      "type": "float",
+      "source": "user_input",
+      "description": "命中率加成（%）",
+      "default": 0.0
+    },
+    {
+      "name": "hit_rate_fluctuation",
+      "type": "float",
+      "source": "user_input",
+      "description": "命中率随机浮动（%，服从 N(0, 0.03)，填入本次抽样值）",
+      "default": 0.0
     }
   ]
 }

@@ -15,7 +15,7 @@ from tools.generator.data_files import (
     normalize_data_files,
     serialize_data_file,
 )
-from tools.generator.layout_sections import build_attr_schema, build_layout
+from tools.generator.layout_sections import build_attr_schema, build_custom_layout, build_layout
 from tools.generator.selectors import normalize_entity_selectors
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -124,6 +124,7 @@ class GeneratorEngine:
         entity_selectors: list[dict] | None = None,
         entity_detail: dict | None = None,
         entity_input_rules: list[dict] | None = None,
+        layout_sections: list[dict] | None = None,
         output_dir: str | None = None,
     ) -> dict[str, str]:
         """生成适配器包的所有文件，返回 {相对路径: 文件内容}。
@@ -141,6 +142,7 @@ class GeneratorEngine:
                 依赖非空 data_files，末级 field 必须为 ``名称``。
             entity_detail: 实体详情面板声明，写入 ``meta.entity_detail``。
             entity_input_rules: 条件禁用输入规则，写入 ``meta.entity_input_rules``。
+            layout_sections: 已归一化的自定义 layout 段落；为 None 时自动生成。
             output_dir: 保留参数（当前不写盘，由调用方负责）。
 
         Returns:
@@ -159,7 +161,11 @@ class GeneratorEngine:
         normalized_selectors = normalize_entity_selectors(entity_selectors, normalized_data_files)
         effective_sources = self._effective_sources(vars_, bound_entity_sources(normalized_data_files))
         dag_json = self._build_dag(game_name, vars_, steps, outs, effective_sources)
-        layout_json = build_layout(game_name, vars_, effective_sources, outs)
+        layout_json = (
+            build_custom_layout(game_name, layout_sections, vars_, effective_sources, outs)
+            if layout_sections
+            else build_layout(game_name, vars_, effective_sources, outs)
+        )
         attr_schema = build_attr_schema(vars_, effective_sources)
 
         safe_name = game_name.replace(" ", "_").lower()

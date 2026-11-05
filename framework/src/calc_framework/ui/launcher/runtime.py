@@ -24,6 +24,7 @@ from ...config.manager import _get_adapters_dir
 _FULL_APP_SCRIPTS: dict[str, str] = {
     "endfield": "games/endfield/main.py",
     "arknights": "games/arknights/main.py",
+    "wjdlglr": "games/wjdlglr/main.py",
 }
 
 
@@ -220,6 +221,14 @@ def launch_adapter_in_process(entry: AdapterEntry, launcher: Any) -> bool:
         from games.arknights.gui.ArknightsDamageApp import ArknightsDamageApp
 
         window = ArknightsDamageApp(embedded=True)
+    elif entry.adapter_id == "wjdlglr":
+        from calc_framework.ui.viewer import CalcPackViewer
+
+        viewer = CalcPackViewer()
+        if not viewer.load_adapter_dir(entry.path, show_errors=False):
+            viewer.close()
+            return False
+        window = viewer
     else:
         return False
 

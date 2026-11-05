@@ -120,6 +120,9 @@ def test_describe_schemas_exposes_data_files_and_expression_operators() -> None:
     assert result["layout"]["section_types"] == ["inputs", "outputs", "widget"]
     assert result["layout"]["widget_types"] == ["donation"]
     assert "tab" in result["layout"]["section_fields"]
+    override = result["layout"]["generator_override"]
+    assert override["parameter"] == "layout_sections"
+    assert "columns" in override["section_fields"]
 
 
 def test_read_guide_returns_content(scope: ProjectScope) -> None:

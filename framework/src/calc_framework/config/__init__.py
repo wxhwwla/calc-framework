@@ -24,7 +24,7 @@ from calc_framework.config.entity_meta import (
     normalize_entity_input_rules,
     rule_matches,
 )
-from calc_framework.config.manager import AdapterManager, discover_adapters
+from calc_framework.config.manager import AdapterManager, discover_adapters, get_adapters_dir
 from calc_framework.config.scaffold import (
     AdapterScaffoldConfig,
     ScaffoldResult,
@@ -44,6 +44,7 @@ __all__ = [
     "ScaffoldResult",
     "discover_adapters",
     "format_detail_value",
+    "get_adapters_dir",
     "normalize_entity_detail",
     "normalize_entity_input_rules",
     "rule_matches",

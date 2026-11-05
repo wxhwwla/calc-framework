@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import codecs
 import os
 import re
 from pathlib import Path
@@ -120,6 +121,52 @@ class ProjectScope:
         if truncated:
             raw = raw[:max_bytes]
         return raw.decode("utf-8", errors="replace"), truncated
+
+    def read_text_range(
+        self,
+        path: Path,
+        *,
+        offset: int = 0,
+        max_bytes: int = 256 * 1024,
+    ) -> tuple[str, int | None, bool, int]:
+        """按字节区间读取 UTF-8 文本，保证不在多字节字符中间截断。
+
+        会最多多读 3 字节以对齐 UTF-8 字符边界，因此单页内容可能略大于
+        ``max_bytes``；``next_offset`` 可直接作为下一页的 ``offset``。
+
+        Args:
+            path: 已解析的绝对路径。
+            offset: 起始字节偏移（0 起）。
+            max_bytes: 单页最大字节数（读取窗口为 ``max_bytes + 3``）。
+
+        Returns:
+            ``(文本, 下一页偏移或 None, 是否还有后续, 文件总字节数)``。
+
+        Raises:
+            ScopeError: 路径越界、文件不存在或参数非法。
+        """
+        resolved = self._ensure_inside(path)
+        if not resolved.is_file():
+            raise ScopeError(f"文件不存在: {resolved}")
+        if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+            raise ScopeError(f"offset 必须是非负整数: {offset!r}")
+        if isinstance(max_bytes, bool) or not isinstance(max_bytes, int) or max_bytes <= 0:
+            raise ScopeError(f"max_bytes 必须是正整数: {max_bytes!r}")
+
+        total = resolved.stat().st_size
+        if offset >= total:
+            return "", None, False, total
+
+        with resolved.open("rb") as handle:
+            handle.seek(offset)
+            raw = handle.read(max_bytes + 3)
+
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        text = decoder.decode(raw, final=False)
+        pending, _ = decoder.getstate()
+        consumed = len(raw) - len(pending)
+        truncated = offset + consumed < total
+        return text, (offset + consumed if truncated else None), truncated, total
 
     def write_text(
         self,

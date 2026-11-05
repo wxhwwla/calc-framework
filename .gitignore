@@ -1,7 +1,8 @@
 ﻿# IDE / 编辑器
 .idea/
 .trae/
-.vscode/
+.vscode/*
+!.vscode/launch.json
 .claude/
 .cursorrules
 *.swp

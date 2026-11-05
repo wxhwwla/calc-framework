@@ -307,7 +307,24 @@ def describe_schemas() -> dict[str, Any]:
                 "tab",
             ],
             "tab_rule": "tab 必须为所有 section 统一指定非空字符串，或全部省略；指定后查看器按首次出现顺序渲染为分页",
-            "note": "scaffold_adapter 会自动生成基础 layout，可用 write_adapter_file 微调",
+            "generator_override": {
+                "tool": "generate_adapter",
+                "parameter": "layout_sections",
+                "section_fields": ["type", "title", "tab", "columns", "variables", "outputs", "source"],
+                "rules": [
+                    "type 为 inputs 或 outputs；widget 段请直接写 ui/layout.json",
+                    "inputs 段 variables 与 source 二选一；source 按原始来源收集未绑定实体变量",
+                    "variables 可写裸变量名或 user_input.<name>；绑定实体变量与 computed 不可作输入",
+                    "outputs 段必须列出 outputs，名称须与 outputs 声明一致",
+                    "columns 为 1–3 的整数，默认 2",
+                    "tab 必须全部指定或全部省略",
+                    "省略 layout_sections 时自动生成基础 layout",
+                ],
+            },
+            "note": (
+                "generate_adapter 可用 layout_sections 直接生成分页/列数；"
+                "scaffold_adapter 的基础 layout 可用 write_adapter_file 微调"
+            ),
         },
     }
 

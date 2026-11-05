@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -163,6 +164,28 @@ class TestComputeAPI(unittest.TestCase):
         }
         resp = self.client.post("/api/compute/evaluate", json=payload)
         self.assertEqual(resp.status_code, 404)
+
+    def test_evaluate_with_wjdlglr_adapter(self) -> None:
+        records_path = _REPO / "framework" / "adapters" / "wjdlglr" / "data" / "weapons.json"
+        weapons = json.loads(records_path.read_text(encoding="utf-8"))
+        first = weapons[0]
+        weapon_ctx = {
+            key: float(value)
+            for key, value in first.items()
+            if isinstance(value, int | float) and not isinstance(value, bool)
+        }
+        payload = {
+            "adapter": "无尽的拉格朗日 武器输出计算器",
+            "context": {
+                "weapon": weapon_ctx,
+                "user_input": {"fleet_count": 1, "hit_rate_bonus": 0},
+            },
+        }
+        resp = self.client.post("/api/compute/evaluate", json=payload)
+        self.assertEqual(resp.status_code, 200)
+        outputs = resp.json()["outputs"]
+        self.assertIn("满命中每分钟伤害", outputs)
+        self.assertIn("最终命中率_战机", outputs)
 
 
 class TestLayoutAPI(unittest.TestCase):
@@ -1086,10 +1109,35 @@ class TestAdapterAssets(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_adapter_schema_endpoint(self) -> None:
-        """获取适配器 attr_schema。"""
+        """按目录 id 获取适配器 attr_schema。"""
         resp = self.client.get("/api/adapters/endfield/schema")
-        # schema 可能不可用或返回 404/200
-        self.assertIn(resp.status_code, (200, 404))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()["attributes"])
+
+    def test_wjdlglr_data_summary(self) -> None:
+        resp = self.client.get("/api/adapters/wjdlglr/data-summary")
+        self.assertEqual(resp.status_code, 200)
+        entities = resp.json()["entities"]
+        weapons = next(entity for entity in entities if entity["key"] == "weapons")
+        self.assertEqual(weapons["label"], "武器")
+        self.assertEqual(weapons["count"], 571)
+        self.assertTrue(weapons["read_only"])
+
+    def test_wjdlglr_pack_bundle_includes_weapons(self) -> None:
+        resp = self.client.get("/api/adapters/wjdlglr/pack-bundle")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["adapter_id"], "wjdlglr")
+        self.assertEqual(len(data["data_files"]["weapons"]), 571)
+        self.assertEqual(data["meta"]["entry_data"], ["data/weapons.json"])
+        self.assertEqual(data["data_summary"]["weapons"], 571)
+
+    def test_wjdlglr_schema_endpoint(self) -> None:
+        resp = self.client.get("/api/adapters/wjdlglr/schema")
+        self.assertEqual(resp.status_code, 200)
+        names = {attr["name"] for attr in resp.json()["attributes"]}
+        self.assertIn("hit_rate_bonus", names)
+        self.assertIn("base_damage", names)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

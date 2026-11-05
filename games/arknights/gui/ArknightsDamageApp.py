@@ -67,6 +67,9 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
         if self._owns_qapp:
             self._qapp.setStyle("Fusion")
             self._qapp.setStyleSheet(DARK_QSS)
+            from calc_framework.ui.app_icon import apply_application_identity
+
+            apply_application_identity(self._qapp, "CalcFramework.Arknights")
 
         super().__init__()
         self.setWindowTitle("明日方舟 伤害计算器")

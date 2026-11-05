@@ -26,6 +26,7 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import { useNavigate, useLocation } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
@@ -47,6 +48,7 @@ import SiteFooter from "./components/SiteFooter";
 const ComputePage = lazy(() => import("./pages/ComputePage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const ArknightsComputePage = lazy(() => import("./pages/ArknightsComputePage"));
+const AdapterGamePage = lazy(() => import("./pages/AdapterGamePage"));
 const AdaptersPage = lazy(() => import("./pages/AdaptersPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 const DesignerPage = lazy(() => import("./pages/DesignerPage"));
@@ -69,6 +71,7 @@ function useNavItems(): { gameItems: NavItem[]; toolItems: NavItem[] } {
     gameItems: [
       { label: t("nav.endfieldCalc"), path: "/compute", icon: <CalculateIcon /> },
       { label: t("nav.arknights"), path: "/arknights", icon: <AutoAwesomeIcon /> },
+      { label: t("nav.wjdlglr"), path: "/wjdlglr", icon: <RocketLaunchIcon /> },
     ],
     toolItems: [
       { label: t("nav.adapters"), path: "/adapters", icon: <ExtensionIcon /> },
@@ -247,6 +250,7 @@ function Shell() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/compute" element={<ComputePage />} />
             <Route path="/arknights" element={<ArknightsComputePage />} />
+            <Route path="/wjdlglr" element={<AdapterGamePage adapterId="wjdlglr" />} />
             <Route path="/adapters" element={<AdaptersPage />} />
             <Route path="/editor" element={<EditorPage />} />
             <Route path="/designer" element={<DesignerPage />} />

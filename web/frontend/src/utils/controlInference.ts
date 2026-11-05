@@ -13,6 +13,7 @@ export interface ControlSpec {
   step: number;
   options: string[];
   description: string;
+  suffix: string;
 }
 
 export interface DagVariable {
@@ -27,6 +28,7 @@ export interface DagVariable {
     widget?: string;
     step?: number;
     options?: string[];
+    suffix?: string;
   };
 }
 
@@ -44,12 +46,13 @@ export function inferControl(path: string, variable: DagVariable): ControlSpec {
 
   // 非 user_input 来源不渲染控件
   if (source !== "user_input") {
-    return { label, widget: "none", default: 0, minVal: null, maxVal: null, step: 0.01, options: [], description };
+    return { label, widget: "none", default: 0, minVal: null, maxVal: null, step: 0.01, options: [], description, suffix: "" };
   }
 
   const widget = uiOverride.widget;
   let step = uiOverride.step;
   const options = uiOverride.options;
+  const suffix = uiOverride.suffix || "";
 
   const rawDefault = variable.default;
   let defaultValue: number | boolean | string = 0;
@@ -91,6 +94,7 @@ export function inferControl(path: string, variable: DagVariable): ControlSpec {
     step,
     options: resolvedOptions,
     description,
+    suffix,
   };
 }
 
@@ -105,6 +109,19 @@ export function getUserInputVariables(variables: Record<string, DagVariable>): R
     }
   }
   return result;
+}
+
+/**
+ * 收集全部 user_input 变量的推断默认值，可直接作为首次求值的输入。
+ */
+export function defaultInputValues(
+  variables: Record<string, DagVariable>,
+): Record<string, number | boolean | string> {
+  const values: Record<string, number | boolean | string> = {};
+  for (const [path, varDef] of Object.entries(getUserInputVariables(variables))) {
+    values[path] = inferControl(path, varDef).default;
+  }
+  return values;
 }
 
 /**

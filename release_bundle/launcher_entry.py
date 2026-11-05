@@ -8,6 +8,7 @@
     无参数              → 启动器 GUI
     --game endfield     → 终末地伤害计算器（Calc Framework）
     --game arknights    → 明日方舟伤害计算器
+    --game wjdlglr      → 无尽的拉格朗日武器输出计算器
     --tool dev_toolkit  → 开发者工具箱
     --tool viewer       → 计算包查看器
     --server            → 本地 Web 搜索服务器
@@ -64,7 +65,7 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="Game Calc Platform",
         description="游戏计算器平台 — 多游戏伤害计算框架",
     )
-    parser.add_argument("--game", choices=["endfield", "arknights"], help="直接启动指定游戏计算器")
+    parser.add_argument("--game", choices=["endfield", "arknights", "wjdlglr"], help="直接启动指定游戏计算器")
     parser.add_argument(
         "--tool", choices=["dev_toolkit", "viewer", "graph_editor", "layout_editor"], help="直接启动指定开发工具"
     )
@@ -84,6 +85,10 @@ def _launch_game(game: str) -> None:
         from games.arknights.main import main as arknights_main
 
         arknights_main()
+    elif game == "wjdlglr":
+        from games.wjdlglr.main import main as wjdlglr_main
+
+        wjdlglr_main()
 
 
 def _launch_tool(tool: str) -> None:
@@ -171,15 +176,7 @@ def main() -> None:
         elif args.server:
             _launch_server()
         elif args.game:
-            if args.game == "endfield":
-                from games.endfield.main import main as _game_main
-            elif args.game == "arknights":
-                from games.arknights.main import main as _game_main
-            else:
-                _game_main = None
-                sys.stderr.write(f"未知游戏: {args.game}\n")
-                sys.exit(1)
-            _game_main()
+            _launch_game(args.game)
         elif args.tool:
             _launch_tool(args.tool)
         elif args.calcpack:
