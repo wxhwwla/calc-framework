@@ -2,17 +2,16 @@ import {
   Box,
   FormControl,
   FormControlLabel,
-  InputAdornment,
   InputLabel,
   MenuItem,
   Select,
   Slider,
   Switch,
-  TextField,
   Typography,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import type { ControlSpec } from "../../utils/controlInference";
+import NumberField from "../common/NumberField";
 
 interface InputControlProps {
   spec: ControlSpec;
@@ -31,26 +30,15 @@ export default function InputControl({ spec, value, onChange, disabled = false }
     case "spinbox":
     case "text":
       return (
-        <TextField
-          type="number"
-          size="small"
-          fullWidth
+        <NumberField
           value={numValue}
+          onChange={(v) => onChange(v)}
+          min={spec.minVal}
+          max={spec.maxVal}
           disabled={disabled}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const parsed = parseFloat(e.target.value);
-            onChange(Number.isNaN(parsed) ? 0 : parsed);
-          }}
-          inputProps={{
-            step: spec.step,
-            min: spec.minVal ?? undefined,
-            max: spec.maxVal ?? undefined,
-          }}
-          InputProps={
-            spec.suffix
-              ? { endAdornment: <InputAdornment position="end">{spec.suffix}</InputAdornment> }
-              : undefined
-          }
+          fullWidth
+          suffix={spec.suffix || undefined}
+          ariaLabel={spec.description || spec.label}
         />
       );
 

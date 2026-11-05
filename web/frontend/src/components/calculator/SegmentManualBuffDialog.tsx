@@ -12,7 +12,6 @@ import {
   Typography,
   Select,
   MenuItem,
-  TextField,
   FormControl,
   InputLabel,
   IconButton,
@@ -20,6 +19,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
+import NumberField from "../common/NumberField";
 
 export type ManualBuffEntry = { effect_type: string; value: number };
 export type ManualBuffStore = Record<string, ManualBuffEntry[]>;
@@ -174,8 +174,8 @@ export default function SegmentManualBuffDialog({
                 {formatKeyLabel(selectedKey)}
               </Typography>
               {currentEntries.map((entry, idx) => (
-                <Box key={idx} sx={{ display: "flex", gap: 1, mb: 1, alignItems: "center" }}>
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                <Box key={idx} sx={{ display: "flex", gap: 1, mb: 1, alignItems: "center", flexWrap: "wrap" }}>
+                  <FormControl size="small" sx={{ minWidth: { xs: 120, sm: 160 }, flex: 1 }}>
                     <Select
                       value={entry.effect_type}
                       onChange={(e) => {
@@ -191,16 +191,15 @@ export default function SegmentManualBuffDialog({
                       ))}
                     </Select>
                   </FormControl>
-                  <TextField
-                    size="small"
-                    type="number"
+                  <NumberField
                     label={t("segmentManual.valueLabel")}
                     value={entry.value}
-                    onChange={(e) => {
+                    onChange={(v) => {
                       const next = [...currentEntries];
-                      next[idx] = { ...entry, value: parseFloat(e.target.value) || 0 };
+                      next[idx] = { ...entry, value: v };
                       updateEntries(next);
                     }}
+                    ariaLabel={t("segmentManual.valueLabel")}
                     sx={{ width: 100 }}
                   />
                   <IconButton

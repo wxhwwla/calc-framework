@@ -57,7 +57,7 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: |
           set +e
-          xvfb-run python -m pytest tests/ -q --ignore=tests/benchmarks/ --cov=calc_framework --cov-report=term --cov-report=xml --cov-fail-under=65
+          xvfb-run -a python -m pytest tests/ -q --ignore=tests/benchmarks/ --cov=calc_framework --cov-report=term --cov-report=xml --cov-fail-under=65
           ec=$?
           # PySide6 退出阶段偶发 segfault（139）；覆盖率已写出则视为通过
           if [ "$ec" -eq 139 ] && [ -f coverage.xml ]; then
@@ -106,7 +106,7 @@ jobs:
       - name: Run benchmarks
         env:
           QT_QPA_PLATFORM: offscreen
-        run: xvfb-run python -m pytest tests/benchmarks/ --benchmark-only --benchmark-json=benchmark.json --benchmark-min-rounds=3
+        run: xvfb-run -a python -m pytest tests/benchmarks/ --benchmark-only --benchmark-json=benchmark.json --benchmark-min-rounds=3
 
       - name: Store benchmark results
         if: always()

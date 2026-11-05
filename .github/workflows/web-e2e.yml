@@ -37,13 +37,17 @@ jobs:
 
       - name: Install system deps (Qt/EGL for PySide6)
         run: |
-          # 与 web-ci / Game CI 对齐，避免 act 镜像缺 PySide6 共享库
+          # 与 web-ci / Game CI 对齐，避免 act 镜像缺 PySide6 共享库；
+          # GitHub runner 已预装 Xvfb 与 Cypress Electron 运行库，act 镜像没有，需显式安装
           sudo apt-get update
           sudo apt-get install -y \
             libegl1 libegl-mesa0 libgl1 \
             libxcb-cursor0 libxkbcommon-x11-0 \
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
-            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
+            xvfb \
+            libgtk-3-0t64 libgbm1 libnotify4 libnss3 libxss1 \
+            libasound2t64 libatspi2.0-0 libxtst6 xdg-utils
 
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
@@ -75,11 +79,21 @@ jobs:
           # E2E 单个页面会发起十余个 API 请求，匿名限流 20 次/分钟会立刻返回 429，
           # 导致页面数据加载失败、用例大面积超时。限流属于部署层，测试中关闭。
           CALC_DISABLE_RATE_LIMIT: "1"
+          # API 文档生产默认关闭；Cypress 的「打开 API 文档页」用例需显式开启。
+          CALC_ENABLE_API_DOCS: "1"
         run: |
           cd web/backend
           uvicorn main:app --port 8180 > /tmp/uvicorn.log 2>&1 &
-          sleep 5
-          curl -s http://localhost:8180/api/layout -o /dev/null || (cat /tmp/uvicorn.log; echo "Backend failed to start"; exit 1)
+          # 冷启动时导入框架可能超过 5 秒；轮询最多 60 秒，避免固定 sleep 造成偶发失败。
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8180/api/layout -o /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/uvicorn.log
+          echo "Backend failed to start"
+          exit 1
 
       - name: Build frontend
         working-directory: web/frontend

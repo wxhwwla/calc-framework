@@ -239,7 +239,8 @@ function Shell() {
         sx={{
           flexGrow: 1,
           p: { xs: 1.5, md: 3 },
-          pb: { xs: 8, md: 3 },
+          // 底部导航 56px + iPhone 安全区，避免最后一个输入框被遮住
+          pb: { xs: "calc(72px + env(safe-area-inset-bottom))", md: 3 },
           minWidth: 0,
           overflowX: "hidden",
         }}
@@ -262,7 +263,17 @@ function Shell() {
           </Routes>
         </Suspense>
         {isMobile && (
-          <Paper sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+          <Paper
+            sx={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1000,
+              pb: "env(safe-area-inset-bottom)",
+            }}
+            elevation={3}
+          >
             <BottomNavigation
               value={location.pathname}
               onChange={(_, path) => navigate(path)}

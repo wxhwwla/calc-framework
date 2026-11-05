@@ -13,9 +13,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from "@mui/material";
+import NumberField from "../common/NumberField";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -280,21 +280,21 @@ export default function SearchPanel({ currentParams }: SearchPanelProps) {
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2, flexWrap: "wrap" }}>
-          <TextField
-            size="small"
+          <NumberField
             label={t("searchPanel.resultCount")}
-            type="number"
             value={topN}
-            onChange={(e) => setTopN(Math.max(1, parseInt(e.target.value) || 10))}
-            sx={{ width: { xs: 80, sm: 100 } }}
+            onChange={(v) => setTopN(Math.max(1, v))}
+            min={1}
+            integer
+            sx={{ width: { xs: 104, sm: 120 } }}
           />
-          <TextField
-            size="small"
+          <NumberField
             label={t("searchPanel.parallelThreads")}
-            type="number"
             value={maxWorkers}
-            onChange={(e) => setMaxWorkers(Math.max(1, parseInt(e.target.value) || 4))}
-            sx={{ width: { xs: 80, sm: 100 } }}
+            onChange={(v) => setMaxWorkers(Math.max(1, v))}
+            min={1}
+            integer
+            sx={{ width: { xs: 104, sm: 120 } }}
           />
           <Button
             variant="outlined"

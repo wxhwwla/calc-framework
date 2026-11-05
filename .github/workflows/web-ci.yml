@@ -81,6 +81,9 @@ jobs:
       - name: Production build
         run: npx vite build
 
+      - name: Build output guard (PWA / lazy loading)
+        run: npm run check:build
+
       - name: Bundle size check
         run: |
           echo "=== Bundle Size Report ==="

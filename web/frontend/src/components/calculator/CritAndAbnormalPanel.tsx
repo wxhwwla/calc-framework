@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Paper,
-  TextField,
   Button,
   FormControlLabel,
   Checkbox,
@@ -18,6 +17,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTranslation } from "react-i18next";
+import NumberField from "../common/NumberField";
 
 export interface CritAndAbnormalSettings {
   extraCritRate: number;
@@ -107,7 +107,7 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>{t("critAbnormal.typeLabel")}</TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap", pr: 0.5 }}>{t("critAbnormal.typeLabel")}</TableCell>
               {specs[0]?.ui_levels.map((lv) => (
                 <TableCell key={lv} align="center">
                   L{lv}
@@ -118,19 +118,16 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
           <TableBody>
             {specs.map((row) => (
               <TableRow key={row.abnormal_key}>
-                <TableCell>{row.label}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap", pr: 0.5 }}>{row.label}</TableCell>
                 {row.ui_levels.map((lv) => (
                   <TableCell key={lv} align="center" sx={{ p: 0.5 }}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={(
-                        (kind === "physical" ? physCounts : spellCounts)[`${row.abnormal_key}:${lv}`] ?? 0
-                      ).toString()}
-                      onChange={(e) =>
-                        setMatrixCount(kind, row.abnormal_key, lv, parseInt(e.target.value, 10) || 0)
-                      }
-                      slotProps={{ htmlInput: { min: 0, style: { width: 48, textAlign: "center" } } }}
+                    <NumberField
+                      value={(kind === "physical" ? physCounts : spellCounts)[`${row.abnormal_key}:${lv}`] ?? 0}
+                      onChange={(v) => setMatrixCount(kind, row.abnormal_key, lv, v)}
+                      min={0}
+                      integer
+                      ariaLabel={row.label}
+                      sx={{ width: 56, "& input": { textAlign: "center" } }}
                     />
                   </TableCell>
                 ))}
@@ -155,28 +152,24 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
       </Box>
       <Collapse in={expanded}>
         <Box sx={{ p: 2, pt: 0 }}>
-          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-            <TextField
-              size="small"
+          <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
+            <NumberField
               label={t("critAbnormal.extraCritRate")}
-              type="number"
               value={extraCritRate}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value) || 0;
+              onChange={(v) => {
                 setExtraCritRate(v);
                 notify({ extraCritRate: v });
               }}
+              sx={{ flex: "1 1 140px", minWidth: 120 }}
             />
-            <TextField
-              size="small"
+            <NumberField
               label={t("critAbnormal.extraCritDamage")}
-              type="number"
               value={extraCritDamage}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value) || 0;
+              onChange={(v) => {
                 setExtraCritDamage(v);
                 notify({ extraCritDamage: v });
               }}
+              sx={{ flex: "1 1 140px", minWidth: 120 }}
             />
           </Box>
           <FormControlLabel

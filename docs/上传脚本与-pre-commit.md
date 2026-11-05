@@ -13,7 +13,7 @@
 | `python github_upload_module.py --check` | 仅自检（rebase/merge/断历史），不 commit/push |
 | `python github_upload_module.py --dry-run` | **预览模式**：展示将要执行的变更文件、版本递增计划，不实际修改/推送 |
 | `python github_upload_module.py` | 提交并 push 到 **`develop`**；**默认 patch** bump `_VERSION`（不再询问 P/M） |
-| `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump） |
+| `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump）；会把工作区残留的 `_VERSION` 校正回 HEAD |
 | `python github_upload_module.py --minor` | 第二位 +1（需人类明确要求时使用）；commit 前备份 `.git` → `git_backup/snapshots/` |
 | `python github_upload_module.py --tag` | 次版本上传时合并 main 后打 `v{_EXE_VERSION}` 标签 |
 
@@ -112,6 +112,8 @@ python github_upload_module.py
 版本号在 **pre-commit 通过后** 才写入 `_version.py`；pre-commit 或 commit 失败时脚本自动回滚 `_VERSION`，**修复后直接重跑上传脚本即可**（无需 `--no-bump`）。  
 仅当 **commit 已成功、push 失败** 或 **显式跳过 bump** 时用 `--no-bump`。  
 需要升 minor 时：`python github_upload_module.py --minor`（不再交互询问 P/M）。
+
+> ⚠️ **`--no-bump` 的版本校正**：脚本会把工作区 `_VERSION` 与 HEAD 比较；若工作区更高（如上次失败残留、或手动预增），`--no-bump` 会将其**回退到 HEAD**，因此不要用它提交手动预增的版本号。需要递增版本时直接用默认模式（patch +1）。
 
 ---
 

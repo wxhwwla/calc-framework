@@ -173,13 +173,17 @@ def _cmd_hub(args: argparse.Namespace) -> int:
         return 1
     sub = passthrough[0]
     if sub == "start":
+        import os
         import subprocess
 
         root = Path(__file__).resolve().parent.parent.parent
         cmd = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8520", "--reload"]
         print("启动 Calc Hub 服务: http://localhost:8520/api/hub")
         print("API 文档: http://localhost:8520/api/docs")
-        subprocess.run(cmd, cwd=str(root / "web" / "backend"))
+        env = os.environ.copy()
+        # API 文档生产默认关闭；开发者工具启动时保留
+        env.setdefault("CALC_ENABLE_API_DOCS", "1")
+        subprocess.run(cmd, cwd=str(root / "web" / "backend"), env=env)
         return 0
     elif sub == "status":
         import json

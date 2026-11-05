@@ -44,11 +44,12 @@ describe("明日方舟计算页 ArknightsComputePage", () => {
   });
 
   it("敌人参数可输入", () => {
+    // NumberField 使用 type="text" + inputMode，避免手机端数字键盘与清空回弹问题
     cy.contains("敌军防御力")
       .parent()
-      .find('input[type="number"]')
-      .invoke("val", "500")
-      .trigger("input")
+      .find("input[inputmode]")
+      .clear()
+      .type("500")
       .should("have.value", "500");
   });
 });

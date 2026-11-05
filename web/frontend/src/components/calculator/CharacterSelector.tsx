@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { fetchCharacters, fetchWeapons, fetchCharacter, fetchWeapon } from "../../api/data";
 import type { CharacterSummary, WeaponSummary } from "../../api/data";
+import NumberField from "../common/NumberField";
 
 interface CharacterSelectorProps {
   onSelectCharacter: (name: string, fullData: Record<string, unknown>) => void;
@@ -43,9 +44,20 @@ function LevelSlider({
 }) {
   return (
     <Box sx={{ mb: 1.5 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        {label} {value}
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+          {label}
+        </Typography>
+        <NumberField
+          value={value}
+          onChange={onChange}
+          min={LEVEL_MIN}
+          max={LEVEL_MAX}
+          integer
+          ariaLabel={label}
+          sx={{ width: 72 }}
+        />
+      </Box>
       <Slider
         size="small"
         min={LEVEL_MIN}

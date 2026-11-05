@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Box, TextField, FormControlLabel, Switch, Typography } from "@mui/material";
+import { Box, FormControlLabel, Switch, Typography } from "@mui/material";
+import NumberField from "../common/NumberField";
 import { useComputeStore } from "../../store/computeStore";
 
 export default function ParamForm() {
@@ -45,13 +46,11 @@ export default function ParamForm() {
         }
 
         return (
-          <TextField
+          <NumberField
             key={attr.name}
             label={label}
-            type="number"
-            size="small"
-            value={value ?? 0}
-            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setParam(key, parseFloat(e.target.value) || 0)}
+            value={typeof value === "number" ? value : 0}
+            onChange={(v) => setParam(key, v)}
             onKeyDown={handleKeyDown}
           />
         );

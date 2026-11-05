@@ -14,6 +14,8 @@ import {
 } from "../api/skillParser";
 import OperatorSelector from "../components/arknights/OperatorSelector";
 import ArknightsAttributeDisplay from "../components/arknights/ArknightsAttributeDisplay";
+import NumberField from "../components/common/NumberField";
+import { sanitizeNumericDraft } from "../utils/numericDraft";
 
 export default function ArknightsComputePage() {
   const { t } = useTranslation();
@@ -140,9 +142,15 @@ export default function ArknightsComputePage() {
                     valueLabelDisplay="auto" sx={{ flex: 1 }}
                     valueLabelFormat={(v) => v <= 7 ? `Lv.${v}` : `专${v - 7}`}
                   />
-                  <Typography variant="caption" sx={{ minWidth: 50 }}>
-                    {computeParams.skill_level <= 7 ? `Lv.${computeParams.skill_level}` : `专${computeParams.skill_level - 7}`}
-                  </Typography>
+                  <NumberField
+                    value={computeParams.skill_level}
+                    onChange={(v) => setParam("skill_level", v)}
+                    min={1}
+                    max={10}
+                    integer
+                    ariaLabel={t("arknights.skillLevel")}
+                    sx={{ width: 64 }}
+                  />
                 </Box>
               </Grid>
             </Grid>
@@ -173,9 +181,12 @@ export default function ArknightsComputePage() {
                 <Typography variant="caption" color="text.secondary">{t("arknights.skillMultiplier")}</Typography>
                 <TextField
                   size="small" fullWidth
-                  value={manualMult || parsedSkill.effectiveMultiplier.toFixed(2)}
-                  onChange={(e) => setManualMult(e.target.value)}
-                  placeholder={String(parsedSkill.effectiveMultiplier.toFixed(2))}
+                  value={manualMult}
+                  onChange={(e) => setManualMult(sanitizeNumericDraft(e.target.value))}
+                  placeholder={parsedSkill.effectiveMultiplier.toFixed(2)}
+                  slotProps={{
+                    htmlInput: { inputMode: "decimal", enterKeyHint: "done" },
+                  }}
                 />
                 <Typography variant="caption" color="text.secondary">
                   {t("arknights.autoDetect")}: {parsedSkill.effectiveMultiplier.toFixed(2)}x
@@ -184,10 +195,13 @@ export default function ArknightsComputePage() {
               </Grid>
               <Grid item xs={6} sm={3}>
                 <Typography variant="caption" color="text.secondary">{t("arknights.hitCount")}</Typography>
-                <TextField
-                  size="small" fullWidth type="number"
+                <NumberField
                   value={hitCount}
-                  onChange={(e) => setHitCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={setHitCount}
+                  min={1}
+                  integer
+                  fullWidth
+                  ariaLabel={t("arknights.hitCount")}
                 />
                 <Typography variant="caption" color="text.secondary">
                   {t("arknights.autoDetect")}: {parsedSkill.hitCount}
@@ -223,8 +237,9 @@ export default function ArknightsComputePage() {
                   value={computeParams.enemy_def}
                   onChange={(_e, v) => setParam("enemy_def", v as number)}
                   valueLabelDisplay="auto" />
-                <TextField size="small" type="number" value={computeParams.enemy_def}
-                  onChange={(e) => setParam("enemy_def", Number(e.target.value) || 0)} />
+                <NumberField size="small" fullWidth value={computeParams.enemy_def}
+                  onChange={(v) => setParam("enemy_def", v)}
+                  min={0} integer ariaLabel={t("arknights.enemyDefense")} />
               </Box>
               <Box sx={{ minWidth: 180, flex: 1 }}>
                 <Typography variant="caption" color="text.secondary">{t("arknights.magicResistance")}</Typography>
@@ -232,8 +247,9 @@ export default function ArknightsComputePage() {
                   value={computeParams.enemy_res}
                   onChange={(_e, v) => setParam("enemy_res", v as number)}
                   valueLabelDisplay="auto" />
-                <TextField size="small" type="number" value={computeParams.enemy_res}
-                  onChange={(e) => setParam("enemy_res", Number(e.target.value) || 0)} />
+                <NumberField size="small" fullWidth value={computeParams.enemy_res}
+                  onChange={(v) => setParam("enemy_res", v)}
+                  min={0} max={100} integer ariaLabel={t("arknights.magicResistance")} />
               </Box>
             </Box>
           </Paper>

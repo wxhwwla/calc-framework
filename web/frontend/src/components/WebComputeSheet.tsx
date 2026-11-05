@@ -142,7 +142,11 @@ export default function WebComputeSheet({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: `repeat(${section.columns || 2}, minmax(0, 1fr))`,
+                // 手机上单列显示，避免 3 列把输入框压到 60~70px 宽
+                gridTemplateColumns: {
+                  xs: "minmax(0, 1fr)",
+                  sm: `repeat(${section.columns || 2}, minmax(0, 1fr))`,
+                },
                 gap: 2,
               }}
             >
@@ -189,7 +193,10 @@ export default function WebComputeSheet({
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: `repeat(${section.columns || 2}, minmax(0, 1fr))`,
+                  gridTemplateColumns: {
+                    xs: "minmax(0, 1fr)",
+                    sm: `repeat(${section.columns || 2}, minmax(0, 1fr))`,
+                  },
                   gap: 1.5,
                 }}
               >

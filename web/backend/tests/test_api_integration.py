@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -25,6 +26,7 @@ for _p in [str(_FRAMEWORK_SRC), str(_REPO), str(_BACKEND)]:
         sys.path.insert(0, _p)
 
 import unittest
+from unittest.mock import patch
 
 # 测试时禁用速率限制
 from api.admin import RateLimitMiddleware
@@ -296,8 +298,10 @@ class TestMiscEndpoints(unittest.TestCase):
         resp = self.client.get("/api/donation/manifest")
         self.assertIn(resp.status_code, (200, 404))
 
-    def test_api_docs_accessible(self) -> None:
-        resp = self.client.get("/api/docs")
+    def test_api_docs_accessible_when_enabled(self) -> None:
+        """文档默认关闭；显式开启后仍可访问。"""
+        with patch.dict(os.environ, {"CALC_ENABLE_API_DOCS": "1"}):
+            resp = self.client.get("/api/docs")
         self.assertIn(resp.status_code, (200, 302, 307))
 
 

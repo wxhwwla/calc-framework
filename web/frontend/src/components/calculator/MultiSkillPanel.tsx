@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Paper,
-  TextField,
   FormControlLabel,
   Checkbox,
   Select,
@@ -12,6 +11,7 @@ import {
   InputLabel,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import NumberField from "../common/NumberField";
 
 // Data access keys — kept as Chinese for charData field lookups
 const SKILL_TYPES = ["战技", "连携技", "终结技"] as const;
@@ -198,12 +198,13 @@ export default function MultiSkillPanel({
                 >
                   {displayType} {t("totalDamage.segment", { n: spec.segmentIndex })} ({Math.round(spec.multiplierPercent)}%) · {spec.damageType}
                 </Typography>
-                <TextField
-                  size="small"
-                  type="number"
+                <NumberField
                   value={counts[spec.key] ?? 0}
-                  onChange={(e) => handleCountChange(spec.key, parseInt(e.target.value) || 0)}
-                  slotProps={{ htmlInput: { min: 0, max: 99, step: 1 } }}
+                  onChange={(v) => handleCountChange(spec.key, v)}
+                  min={0}
+                  max={99}
+                  integer
+                  ariaLabel={`${displayType} ${t("totalDamage.segment", { n: spec.segmentIndex })}`}
                   sx={{ width: 80 }}
                 />
                 <Typography variant="caption" color="text.secondary">

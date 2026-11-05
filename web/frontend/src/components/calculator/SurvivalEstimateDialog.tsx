@@ -7,7 +7,6 @@ import {
   Button,
   Typography,
   Box,
-  TextField,
   CircularProgress,
   FormControl,
   InputLabel,
@@ -19,6 +18,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
+import NumberField from "../common/NumberField";
 import { fetchSurvivalEstimate, type SurvivalEstimateResult } from "../../api/survival";
 import { ENEMY_TIERS, type EnemyParams } from "../../api/search";
 
@@ -148,7 +148,14 @@ export default function SurvivalEstimateDialog({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t("survivalEstimate.title")}</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mb: 2 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: 2,
+            mb: 2,
+          }}
+        >
           <FormControl size="small" fullWidth>
             <InputLabel>{t("survivalEstimate.enemyTier")}</InputLabel>
             <Select
@@ -164,40 +171,32 @@ export default function SurvivalEstimateDialog({
               ))}
             </Select>
           </FormControl>
-          <TextField
-            size="small"
+          <NumberField
             fullWidth
-            type="number"
             label={t("survivalEstimate.singleImbGain")}
             value={imbGainBase}
-            onChange={(e) => setImbGainBase(parseFloat(e.target.value) || 0)}
+            onChange={setImbGainBase}
             onBlur={runEstimate}
           />
-          <TextField
-            size="small"
+          <NumberField
             fullWidth
-            type="number"
             label={t("survivalEstimate.imbEfficiency")}
             value={imbGainEff}
-            onChange={(e) => setImbGainEff(parseFloat(e.target.value) || 0)}
+            onChange={setImbGainEff}
             onBlur={runEstimate}
           />
-          <TextField
-            size="small"
+          <NumberField
             fullWidth
-            type="number"
             label={t("survivalEstimate.enemyMaxHp")}
             value={enemyMaxHp}
-            onChange={(e) => setEnemyMaxHp(parseFloat(e.target.value) || 0)}
+            onChange={setEnemyMaxHp}
             onBlur={runEstimate}
           />
-          <TextField
-            size="small"
+          <NumberField
             fullWidth
-            type="number"
             label={t("survivalEstimate.hotResist")}
             value={hotResist}
-            onChange={(e) => setHotResist(parseFloat(e.target.value) || 0)}
+            onChange={setHotResist}
             onBlur={runEstimate}
           />
         </Box>
@@ -207,39 +206,32 @@ export default function SurvivalEstimateDialog({
             <Typography variant="body2">{t("survivalEstimate.spUltimate")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                size="small"
-                type="number"
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+              <NumberField
                 label={t("survivalEstimate.startSp")}
                 value={spStart}
-                onChange={(e) => setSpStart(parseFloat(e.target.value) || 0)}
+                onChange={setSpStart}
                 onBlur={runEstimate}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberField
                 label={t("survivalEstimate.naturalRegenDuration")}
                 value={spSeconds}
-                onChange={(e) => setSpSeconds(parseFloat(e.target.value) || 0)}
+                onChange={setSpSeconds}
                 onBlur={runEstimate}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberField
                 label={t("survivalEstimate.startUltCharge")}
                 value={ultStart}
-                onChange={(e) => setUltStart(parseFloat(e.target.value) || 0)}
+                onChange={setUltStart}
                 onBlur={runEstimate}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberField
                 label={t("survivalEstimate.lifeStealRate")}
                 value={lifeStealRate}
-                onChange={(e) => setLifeStealRate(parseFloat(e.target.value) || 0)}
+                onChange={setLifeStealRate}
+                min={0}
+                max={1}
                 onBlur={runEstimate}
-                slotProps={{ htmlInput: { min: 0, max: 1, step: 0.01 } }}
               />
             </Box>
           </AccordionDetails>
@@ -250,37 +242,29 @@ export default function SurvivalEstimateDialog({
             <Typography variant="body2">{t("survivalEstimate.healingThreeZones")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-              <TextField
-                size="small"
-                type="number"
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+              <NumberField
                 label={t("survivalEstimate.baseHeal")}
                 value={baseHealFlat}
-                onChange={(e) => setBaseHealFlat(parseFloat(e.target.value) || 0)}
+                onChange={setBaseHealFlat}
                 onBlur={runEstimate}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberField
                 label={t("survivalEstimate.perWillBonus")}
                 value={statPerPoint}
-                onChange={(e) => setStatPerPoint(parseFloat(e.target.value) || 0)}
+                onChange={setStatPerPoint}
                 onBlur={runEstimate}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberField
                 label={t("survivalEstimate.healEfficiency")}
                 value={healEfficiency}
-                onChange={(e) => setHealEfficiency(parseFloat(e.target.value) || 0)}
+                onChange={setHealEfficiency}
                 onBlur={runEstimate}
               />
-              <TextField
-                size="small"
-                type="number"
+              <NumberField
                 label={t("survivalEstimate.independentHeal")}
                 value={independentHealBonus}
-                onChange={(e) => setIndependentHealBonus(parseFloat(e.target.value) || 0)}
+                onChange={setIndependentHealBonus}
                 onBlur={runEstimate}
               />
             </Box>

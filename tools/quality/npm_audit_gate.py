@@ -7,7 +7,7 @@ GitHub Advisory 已标明 ``react-router>=7.18.2`` 修复 GHSA-qwww-vcr4-c8h2，
 已安装版本满足补丁门槛后抑制该条。
 
 另外，个别构建期依赖的漏洞在受支持的大版本内没有修复版本（glob 的修复版
-仅提供 ESM、deepmerge 无上游修复）。这类条目在版本仍处于受影响范围内时按
+曾被认为仅提供 ESM，现 14.0.3 已同时提供 CJS；deepmerge 无上游修复）。这类条目在版本仍处于受影响范围内时按
 「接受风险」放行，并在输出中打印公告 ID 与理由；一旦升级到修复版本或超出
 受影响上限，抑制自动失效，避免掩盖新问题。其余漏洞仍按 ``--audit-level``
 阻断。
@@ -35,7 +35,7 @@ _ACCEPTED_RISK_GHSAS: dict[str, tuple[str, str, str]] = {
         "glob",
         "14.0.1",
         "构建期依赖 workbox-build；仅使用 AbortSignal 时受影响，workbox-build 未传入 signal；"
-        "修复版 glob 14 为 ESM-only，Node 20 的 CJS 依赖无法直接升级",
+        "glob 14.0.3 已提供 CJS 入口并修复该问题，此条仅在依赖回退到受影响版本时兜底",
     ),
     "GHSA-gcqx-w48m-w2h4": (
         "deepmerge",

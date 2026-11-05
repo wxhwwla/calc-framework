@@ -167,7 +167,7 @@ jobs:
       - name: Run endfield tests
         run: |
           set +e
-          xvfb-run python -m pytest games/endfield/tests/ -q --tb=short \
+          xvfb-run -a python -m pytest games/endfield/tests/ -q --tb=short \
             --cov=games.endfield --cov-report=term-missing --cov-report=xml \
             --cov-fail-under=60
           ec=$?
@@ -182,7 +182,7 @@ jobs:
       - name: Run arknights tests
         run: |
           set +e
-          xvfb-run python -m pytest games/arknights/tests/ -q --tb=short \
+          xvfb-run -a python -m pytest games/arknights/tests/ -q --tb=short \
             --cov=games.arknights --cov-report=term-missing --cov-report=xml
           ec=$?
           if [ "$ec" -eq 139 ] && [ -f coverage.xml ]; then

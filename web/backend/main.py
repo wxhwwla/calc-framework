@@ -23,6 +23,7 @@ from api.generator import router as generator_router
 from api.history import router as history_router
 from api.hub import router as hub_router
 from api.internal.csrf import CSRFSkipMiddleware
+from api.internal.security_headers import SecurityMiddleware
 from api.internal.spa_static import SPAStaticFiles
 from api.ocr import router as ocr_router
 from api.packaging.contribute import router as contribute_router
@@ -96,6 +97,9 @@ if os.environ.get("CALC_DISABLE_BODY_LIMIT", "").strip().lower() not in {"1", "t
         "ContentSizeLimitMiddleware 已启用（默认 %s 字节；OCR/Hub 见 PATH_MAX_BODY_BYTES）",
         _default_body_limit if _default_body_limit is not None else "无全局上限",
     )
+
+# 最后添加 → 最外层：安全头覆盖限速/CSRF 的 429/403，并统一拦截未开放的 API 文档
+app.add_middleware(SecurityMiddleware)
 
 app.include_router(admin_router)
 
