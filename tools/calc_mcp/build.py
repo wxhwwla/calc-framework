@@ -57,7 +57,7 @@ def generate_adapter(
         entity_detail: 查看器详情面板声明；字段必须存在于已绑定数据文件。
         entity_input_rules: 条件禁用输入规则；disable 只能引用 ``user_input.*``。
         layout_sections: 自定义 layout 段落；支持分页（tab）、列数与自定义分组。
-            为 None 时使用自动 layout。
+            为 None 时使用自动 layout（有非主输出时自动分两页）。
         dry_run: 为 True 时只返回文件内容，不写盘。
         overwrite: 是否允许覆盖已存在目录中的文件。
 

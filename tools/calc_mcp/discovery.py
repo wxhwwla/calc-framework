@@ -318,7 +318,7 @@ def describe_schemas() -> dict[str, Any]:
                     "outputs 段必须列出 outputs，名称须与 outputs 声明一致",
                     "columns 为 1–3 的整数，默认 2",
                     "tab 必须全部指定或全部省略",
-                    "省略 layout_sections 时自动生成基础 layout",
+                    "省略 layout_sections 时自动生成 layout：存在非主输出时自动分「计算」/「乘区明细」两页，否则单页",
                 ],
             },
             "note": (

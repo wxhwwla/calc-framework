@@ -288,7 +288,7 @@ distance → 判断落在哪个区间 → lerp(近距离伤害, 远距离伤害,
 - 变量 `name` 应与记录中的字段名一致（如变量 `防御` ↔ 记录 `"防御": 100`），否则查看器取不到该字段、只能回退到变量默认值；唯一例外是 `基础攻击力` 会自动映射为 `基础攻击`。
 - 需要展示实体字段时传 `entity_detail`（`source` + `sections[{title, columns, fields[{field,label,format?}]}]`），查看器在最左列渲染明细。
 - 需要按实体灰显输入时传 `entity_input_rules`（`{source, field, equals, disable:[user_input.*], reason?}`）；记录缺字段则不命中，输入保持可编辑。实体上的分类若同时影响公式，应另建**数值**变量（如 `is_energy` 1.0/0.0）参与 DAG 计算，字符串字段只用于展示。
-- 需要分页或指定列数时传 `layout_sections`：`[{"type":"inputs","title":"输入参数","source":"user_input","tab":"计算"}, {"type":"outputs","title":"计算结果","outputs":["最终伤害"],"columns":3,"tab":"计算"}, {"type":"outputs","title":"乘区明细","outputs":["基础乘区","暴击乘区"],"columns":3,"tab":"乘区明细"}]`。inputs 段的 `variables` 与 `source` 二选一；`columns` 限 1–3；`tab` 必须全写或全不写；省略本参数时按原 source 自动分组。
+- 需要分页或指定列数时传 `layout_sections`：`[{"type":"inputs","title":"输入参数","source":"user_input","tab":"计算"}, {"type":"outputs","title":"计算结果","outputs":["最终伤害"],"columns":3,"tab":"计算"}, {"type":"outputs","title":"乘区明细","outputs":["基础乘区","暴击乘区"],"columns":3,"tab":"乘区明细"}]`。inputs 段的 `variables` 与 `source` 二选一；`columns` 限 1–3；`tab` 必须全写或全不写；省略本参数时按原 source 自动分组，存在非主输出时自动分「计算」/「乘区明细」两页，否则单页。
 
 ### Step 7: 验证
 

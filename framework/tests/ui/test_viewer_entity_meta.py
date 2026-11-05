@@ -227,6 +227,7 @@ class TestEntityDetailPanel:
         combos = viewer._cascade_combos["weapon"]  # noqa: SLF001
 
         combos[0].setCurrentIndex(combos[0].findData("护卫舰"))
+        viewer.confirm()
 
         labels = viewer._detail_value_labels  # noqa: SLF001
         assert labels["舰船"].text() == "B"
@@ -247,13 +248,9 @@ class TestEntityDetailPanel:
         assert scroll.widget() is viewer._detail_container  # noqa: SLF001
 
     def test_viewer_renders_layout_tabs(self, qapp, tmp_path: Path) -> None:
-        from PySide6.QtWidgets import QTabWidget
-
         viewer = _viewer(tmp_path)
 
-        tabs = viewer._compute_sheet.widget.findChild(QTabWidget)  # noqa: SLF001
-        assert tabs is not None
-        assert [tabs.tabText(index) for index in range(tabs.count())] == ["计算", "乘区明细"]
+        assert viewer._shell.tab_texts() == ["计算", "乘区明细"]  # noqa: SLF001
 
 
 class TestEntityInputRules:
@@ -268,6 +265,7 @@ class TestEntityInputRules:
         combos = viewer._cascade_combos["weapon"]  # noqa: SLF001
 
         combos[0].setCurrentIndex(combos[0].findData("护卫舰"))
+        viewer.confirm()
 
         assert _widget(viewer, "user_input.mothership_flight_bonus").isEnabled()
 
@@ -276,6 +274,7 @@ class TestEntityInputRules:
         combos = viewer._cascade_combos["weapon"]  # noqa: SLF001
 
         combos[0].setCurrentIndex(combos[0].findData("未分类"))
+        viewer.confirm()
 
         assert _widget(viewer, "user_input.mothership_flight_bonus").isEnabled()
 
@@ -287,6 +286,7 @@ class TestEntityInputRules:
 
         combos = viewer._cascade_combos["weapon"]  # noqa: SLF001
         combos[0].setCurrentIndex(combos[0].findData("护卫舰"))
+        viewer.confirm()
 
         assert not _widget(viewer, "user_input.physical_armor").isEnabled()
         assert _widget(viewer, "user_input.energy_armor").isEnabled()

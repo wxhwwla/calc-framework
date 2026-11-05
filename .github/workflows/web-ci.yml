@@ -44,7 +44,9 @@ jobs:
         run: npm ci
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable 分支当前提交
+        with:
+          toolchain: stable
 
       - name: Cache Rust wasm-curve
         uses: Swatinem/rust-cache@v2

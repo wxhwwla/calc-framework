@@ -66,24 +66,13 @@ class CalcPackViewerRenderMixin:
     _current_level: int
     _entity_data: dict[str, dict[str, Any]]
     _meta: dict[str, Any]
-    _splitter: Any
     _entity_group: Any
-    _right_panel: Any
     _asset_temp_dir: Any
     _calcpack_path: str | None
     _entity_form: Any
-    _sheet_layout: Any
-    _info_name: Any
-    _info_game: Any
-    _info_version: Any
-    _info_vars: Any
-    _info_outputs: Any
-    _info_description: Any
     _status_label: Any
-    _progress: Any
-    _sheet_container: Any
-    _left_layout: Any
-    _scroll: Any
+    _detail_container: Any
+    _detail_scroll: Any
     _detail_group: Any
     _detail_value_labels: dict[str, Any]
     _detail_layout: Any
@@ -177,10 +166,6 @@ class CalcPackViewerRenderMixin:
 
         meta = data.get("meta.json", {})
         self._meta = meta
-        self._info_name.setText(meta.get("name", "—"))
-        self._info_game.setText(meta.get("game", "—"))
-        self._info_version.setText(meta.get("version", "—"))
-        self._info_description.setText(meta.get("description", "—"))
 
         dag_data = data.get("dag/formula.dag.json")
         if not dag_data:
@@ -214,14 +199,14 @@ class CalcPackViewerRenderMixin:
                 key = arcname.replace("data/", "").replace(".json", "")
                 self._data_files[key] = payload
 
-        self._info_vars.setText(str(len(self._variables)))
-        self._info_outputs.setText(str(len(dag.outputs)))
-
         self._rebuild_entity_selectors()
-        self._rebuild_detail_panel()
         self._rebuild_sheet()
+        self._rebuild_shell()
+        self._rebuild_detail_panel()
         self._apply_entity_input_rules()
         self._apply_theme()
+        if self._compute_sheet is not None:
+            self._compute_sheet.evaluate()
 
         source = Path(source_path)
         fallback = source.stem if source.is_file() else source.name
@@ -233,14 +218,9 @@ class CalcPackViewerRenderMixin:
     def _rebuild_entity_selectors(self) -> None:
         """重建实体选择下拉菜单和等级输入框。
 
-        支持两类选择器：
-
-        - 普通实体源（``_SOURCE_TO_DATA_FILE``）：一个下拉列出全部实体。
-        - ``meta.entity_selectors`` 声明的级联选择器：按步骤逐级过滤，
-          最后一级选中记录的 ``名称`` 作为实体标识注入 DAG 命名空间。
-
-        等级输入框只在实体数据含数值列表字段时显示；舰船/武器没有等级，
-        显示等级只会造成误导。
+        普通实体源各渲染一个下拉；``meta.entity_selectors`` 声明的级联
+        选择器按步骤逐级过滤，最后一级记录的 ``名称`` 注入 DAG 命名空间。
+        等级输入框只在实体数据含数值列表字段时显示。
         """
         while self._entity_form.count():
             item = self._entity_form.takeAt(0)
@@ -360,7 +340,7 @@ class CalcPackViewerRenderMixin:
             label = str(step.get("label") or step.get("field"))
             self._entity_form.addRow(f"{label}:", combo)
             populate(index)
-            combo.currentIndexChanged.connect(lambda _current, position=index: on_changed(position))
+            combo.currentIndexChanged.connect(lambda *_, position=index: on_changed(position))
 
         self._entity_selectors[source] = combos[-1]
         self._cascade_combos[source] = combos
@@ -451,15 +431,9 @@ class CalcPackViewerRenderMixin:
         self._detail_layout.addWidget(group)
 
     def _rebuild_sheet(self) -> None:
-        """重建 ComputeSheet 控件（加载新 .calcpack 后调用）。"""
-        while self._sheet_layout.count():
-            item = self._sheet_layout.takeAt(0)
-            w = item.widget()
-            if w:
-                w.deleteLater()
-
+        """创建 ComputeSheet（不挂载整表，分区由共享外壳放入四区）。"""
         if not self._dag_service or not self._layout:
-            self._sheet_layout.addWidget(QLabel("请先打开一个 .calcpack 文件"))
+            self._compute_sheet = None
             return
 
         base_context: dict[str, Any] = self._build_current_context()
@@ -488,11 +462,9 @@ class CalcPackViewerRenderMixin:
             layout=self._layout,
             variables=patched_vars,
             base_context=base_context,
-            parent=self._sheet_container,
+            parent=cast(QWidget, self),
         )
-        self._sheet_layout.addWidget(self._compute_sheet.widget)
-        self._sheet_layout.addStretch()
-        self._compute_sheet.evaluate()
+        self._compute_sheet.value_changed.connect(self._on_input_changed)
 
     def _is_var_in_input_sections(self, path: str) -> bool:
         """检查 DAG 变量路径是否属于 layout.json 的 inputs 区域。"""

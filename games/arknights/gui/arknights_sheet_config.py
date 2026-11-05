@@ -25,6 +25,7 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "min": 0.0,
         "max": 10.0,
         "step": 0.01,
+        "description": "技能倍率（自动解析，可手动覆盖）",
     },
     "user_input.技能等级": {
         "source": "user_input",
@@ -33,6 +34,7 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "min": 1,
         "max": 10,
         "step": 1,
+        "description": "技能等级（1-7 为技能等级，8-10 为专精）",
     },
     "user_input.敌人防御": {
         "source": "user_input",
@@ -41,6 +43,8 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "min": 0,
         "max": 10000,
         "step": 10,
+        "ui_control": {"widget": "spinbox", "step": 10},
+        "description": "敌人防御力",
     },
     "user_input.敌人法术抗性": {
         "source": "user_input",
@@ -49,6 +53,8 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "min": 0,
         "max": 100,
         "step": 1,
+        "ui_control": {"widget": "spinbox", "step": 1},
+        "description": "敌人法术抗性（%）",
     },
     "user_input.攻击力百分比加成": {
         "source": "user_input",
@@ -58,6 +64,7 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "max": 200,
         "step": 1,
         "ui_control": {"widget": "spinbox", "step": 1},
+        "description": "攻击力百分比加成（%）",
     },
     "user_input.伤害加成": {
         "source": "user_input",
@@ -67,6 +74,7 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "max": 200,
         "step": 1,
         "ui_control": {"widget": "spinbox", "step": 1},
+        "description": "伤害加成（%）",
     },
     "user_input.物理穿透": {
         "source": "user_input",
@@ -75,6 +83,8 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "min": 0,
         "max": 3000,
         "step": 10,
+        "ui_control": {"widget": "spinbox", "step": 10},
+        "description": "固定物理穿透（防御力）",
     },
     "user_input.法术穿透": {
         "source": "user_input",
@@ -83,6 +93,8 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "min": 0,
         "max": 1.0,
         "step": 0.01,
+        "ui_control": {"widget": "spinbox", "step": 0.01},
+        "description": "法术穿透（0-1）",
     },
     "user_input.信赖攻击": {
         "source": "user_input",
@@ -92,6 +104,7 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "max": 500,
         "step": 1,
         "ui_control": {"widget": "spinbox", "step": 1},
+        "description": "信赖加成攻击力",
     },
     "user_input.潜能攻击": {
         "source": "user_input",
@@ -101,6 +114,7 @@ ARKNIGHTS_USER_VARS: dict[str, dict[str, Any]] = {
         "max": 500,
         "step": 1,
         "ui_control": {"widget": "spinbox", "step": 1},
+        "description": "潜能加成攻击力",
     },
 }
 

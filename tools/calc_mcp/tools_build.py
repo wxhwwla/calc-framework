@@ -106,7 +106,8 @@ def register(mcp: FastMCP, scope: ProjectScope) -> None:
         inputs 段用 ``variables``（变量名，可带 ``user_input.`` 前缀）或 ``source``
         （按原始来源自动收集未绑定实体变量）二选一；outputs 段必须列出 ``outputs``。
         ``columns`` 为 1–3；``tab`` 必须所有段都写或都不写。绑定实体变量与
-        computed 变量不能出现在 inputs 段。省略本参数时行为与旧版一致。
+        computed 变量不能出现在 inputs 段。省略本参数时使用自动 layout：存在
+        非主输出时自动分「计算」/「乘区明细」两页，否则保持单页。
 
         ``dry_run=true`` 只预览文件内容，不写盘。
         """

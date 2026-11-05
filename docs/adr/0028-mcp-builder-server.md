@@ -71,7 +71,7 @@
 
 ## 修订 2026-11-05：布局生成与分页读取
 
-1. **`generate_adapter.layout_sections`**：可按段声明 `type`（inputs/outputs）、`title`、`tab`、`columns`（1–3），inputs 段用 `variables` 或 `source` 二选一，outputs 段列出输出名。生成时直接写出分页 layout，避免生成后手改 `ui/layout.json`；变量/输出引用在生成阶段校验，绑定实体变量与 `computed` 不可作为输入，跨段重复直接报错。省略参数时行为与旧版一致。
+1. **`generate_adapter.layout_sections`**：可按段声明 `type`（inputs/outputs）、`title`、`tab`、`columns`（1–3），inputs 段用 `variables` 或 `source` 二选一，outputs 段列出输出名。生成时直接写出分页 layout，避免生成后手改 `ui/layout.json`；变量/输出引用在生成阶段校验，绑定实体变量与 `computed` 不可作为输入，跨段重复直接报错。省略参数时按 source 自动分组；存在非主输出时自动分「计算」/「乘区明细」两页，无明细输出时保持单页。
 2. **`read_adapter_file` 分页**：新增 `offset` / `max_bytes`（默认 256 KiB，上限 2 MiB），返回 `size` / `next_offset`；按 UTF-8 字符边界分页，不会产生替换字符。解决数据文件上限升至 2 MiB 后无法完整读回的问题。
 3. **`describe_schemas().layout.generator_override`**：公开 `layout_sections` 的字段与规则；server instructions 同步提示分页与布局能力。
 

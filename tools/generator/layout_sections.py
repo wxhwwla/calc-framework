@@ -240,6 +240,9 @@ def build_layout(
 ) -> dict[str, Any]:
     """构建 UI layout，输入区按原始 source 分组，路径统一为 ``user_input.*``。
 
+    存在非主输出时自动分为两页：输入与主输出放「计算」，其余输出放
+    「乘区明细」；没有非主输出时保持单页，避免出现空页签。
+
     Args:
         game_name: 游戏/计算器名称。
         variables: 变量声明列表（保留原始 source 用于分组）。
@@ -255,36 +258,41 @@ def build_layout(
             continue
         grouped[_layout_group(v.source)].append(f"user_input.{v.name}")
 
+    primary_outs = [o.name for o in outputs if o.is_primary]
+    other_outs = [o.name for o in outputs if o.name not in primary_outs]
+    two_pages = bool(other_outs)
+
     sections: list[dict[str, Any]] = []
     for source in SECTION_ORDER:
         if grouped[source]:
-            sections.append(
-                {
-                    "id": SECTION_IDS[source],
-                    "type": "inputs",
-                    "title": SECTION_TITLES[source],
-                    "variables": grouped[source],
-                }
-            )
-
-    primary_outs = [o.name for o in outputs if o.is_primary]
-    if primary_outs:
-        sections.append(
-            {
-                "id": "outputs",
-                "type": "outputs",
-                "title": "计算结果",
-                "outputs": primary_outs,
+            section: dict[str, Any] = {
+                "id": SECTION_IDS[source],
+                "type": "inputs",
+                "title": SECTION_TITLES[source],
+                "variables": grouped[source],
             }
-        )
-    other_outs = [o.name for o in outputs if o.name not in primary_outs]
+            if two_pages:
+                section["tab"] = "计算"
+            sections.append(section)
+
+    if primary_outs:
+        section = {
+            "id": "outputs",
+            "type": "outputs",
+            "title": "计算结果",
+            "outputs": primary_outs,
+        }
+        if two_pages:
+            section["tab"] = "计算"
+        sections.append(section)
     if other_outs:
         sections.append(
             {
                 "id": "detail",
                 "type": "outputs",
-                "title": "中间过程",
+                "title": "乘区明细",
                 "outputs": other_outs,
+                "tab": "乘区明细",
             }
         )
 

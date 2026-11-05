@@ -81,7 +81,6 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
         self._current_operator: dict[str, Any] | None = None
         self._skill_count: int = 0
 
-        self._setup_menu()
         self._setup_ui()
 
     # ═══════════════════════════════════════════
@@ -92,8 +91,10 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
         """执行伤害计算并更新所有结果展示面板。"""
         if not self._current_operator:
             self._result_label.setText("请先选择一个干员")
+            self._set_confirm_ui_failed("请先选择一个干员")
             return
 
+        self._set_confirm_ui_computing()
         try:
             level = self._lvl_slider.value()
             si = self._skill_combo.currentIndex() - 1
@@ -192,6 +193,14 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
                 self._result_table.setItem(i, 1, QTableWidgetItem(v))
             self._result_table.resizeColumnsToContents()
 
+            self._update_detail()
+            self._fill_bonus_table(
+                skill_mult=skill_mult,
+                hit_count=hit_count,
+                skill_info=skill_info,
+                level=level,
+            )
+
             op_name = op.get("名称", "")
             label = f"计算结果 — {op_name}"
             label += f"（{skill_info.name}，总伤害倍率 {skill_mult * hit_count:.2f}x）"
@@ -199,13 +208,48 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
                 label += " ⚕ 治疗技能"
             self._result_label.setText(label)
             self._result_label.setStyleSheet("color: #68D391; font-size: 14px; font-weight: bold; padding: 8px;")
+            self._set_confirm_ui_confirmed()
 
         except Exception as e:
             self._result_label.setText(f"计算错误: {e}")
             self._result_label.setStyleSheet("color: #FC8181; font-size: 12px; padding: 8px;")
+            self._set_confirm_ui_failed("计算失败")
             import traceback
 
             traceback.print_exc()
+
+    def _fill_bonus_table(
+        self,
+        *,
+        skill_mult: float,
+        hit_count: int,
+        skill_info: Any,
+        level: int,
+    ) -> None:
+        """确认后填充右下角「技能加成数据」表。"""
+        level_text = f"Lv.{level}" if level <= 7 else f"专精{level - 7}"
+        rows = [
+            ("技能等级", level_text),
+            ("技能倍率", f"x{skill_mult:.2f}"),
+            ("连发数", f"x{hit_count}"),
+            ("总伤害倍率", f"x{skill_mult * hit_count:.2f}"),
+            ("技能攻击力加成", f"+{skill_info.atk_buff_hint * 100:.0f}%"),
+        ]
+        if skill_info.has_conditional:
+            active = "已激活" if self._cond_check.isChecked() else "未激活"
+            rows.append(("条件倍率", f"x{skill_info.conditional_mult:.2f}（{active}）"))
+        if skill_info.is_healing:
+            rows.append(("技能类型", "治疗"))
+        self._bonus_table.setRowCount(len(rows))
+        for i, (key, value) in enumerate(rows):
+            self._bonus_table.setItem(i, 0, QTableWidgetItem(key))
+            self._bonus_table.setItem(i, 1, QTableWidgetItem(value))
+        self._bonus_table.resizeColumnsToContents()
+
+    @property
+    def confirm_btn(self):
+        """底部工具条中的确认按钮。"""
+        return self._shell.confirm_button
 
     def run(self) -> None:
         """显示主窗口；独立启动时进入事件循环。"""

@@ -110,8 +110,9 @@ class ArknightsAppEventsMixin:
         for i in range(self._skill_count, 3):
             self._skill_combo.addItem(f"技能{i + 1}（无数据）")
         self._skill_combo.blockSignals(False)
-        self._update_detail()
+        self._update_detail_header()
         self._on_skill_changed(1)  # default to skill 1
+        self._mark_pending()
 
     def _on_skill_changed(self, idx: int) -> None:
         """技能选择变化时更新技能信息。"""
@@ -121,6 +122,7 @@ class ArknightsAppEventsMixin:
         level = self._lvl_slider.value()
         info = get_parsed_skill_info(self._current_operator, level, si)
         self._apply_skill_info(info)
+        self._mark_pending()
 
     def _on_level_changed(self, value: int) -> None:
         """技能等级滑块变化时更新标签和技能信息。"""
@@ -162,19 +164,26 @@ class ArknightsAppEventsMixin:
         self._update_total_mult_label()
         self._sync_param_sheet()
 
-    def _update_detail(self) -> None:
-        """更新右侧干员详情面板（名称/属性/信赖/天赋）。"""
+    def _update_detail_header(self) -> None:
+        """更新左上角基本信息（名称/职业/特性）。"""
         op = self._current_operator
         if not op:
+            self._det_name.setText("")
+            self._det_info.setText("")
+            self._det_trait.setText("")
             return
         name = op.get("名称", "?")
         star = op.get("星级", 0)
-        cls = op.get("职业", "")
-        branch = op.get("分支", "")
-        trait = op.get("特性", "")
         self._det_name.setText(f"{name}  {'★' * star}")
-        self._det_info.setText(f"{cls} · {branch}")
-        self._det_trait.setText(trait)
+        self._det_info.setText(f"{op.get('职业', '')} · {op.get('分支', '')}")
+        self._det_trait.setText(op.get("特性", ""))
+
+    def _update_detail(self) -> None:
+        """更新左下角干员基础数据（属性/信赖/潜能/天赋）。"""
+        op = self._current_operator
+        if not op:
+            return
+        self._update_detail_header()
 
         base = op.get("基础属性", {})
         labels = {

@@ -28,7 +28,6 @@ class CalcPackViewerEventMixin:
     # Mixin 属性占位 — 由 CalcPackViewer 提供（Pylance 类型识别）
     _theme_manager: Any
     _status_label: Any
-    _splitter: Any
     _compute_sheet: Any
     _entity_selectors: Any
     _level_spin: Any
@@ -57,26 +56,6 @@ class CalcPackViewerEventMixin:
             theme_name = theme.get("name", key) if theme else key
             self._status_label.setText(tr("desktop.viewer.themeSwitched", name=theme_name))
 
-    def _toggle_left_panel(self) -> None:
-        """切换左侧栏的显示/隐藏。"""
-        if self._splitter is None:
-            return
-        sizes = self._splitter.sizes()
-        if sizes[0] > 0:
-            self._splitter.setSizes([0, sizes[0] + sizes[1] + sizes[2], 0])
-        else:
-            self._splitter.setSizes([220, max(400, sizes[1] - 220), max(100, sizes[2])])
-
-    def _toggle_right_panel(self) -> None:
-        """切换右侧栏的显示/隐藏。"""
-        if self._splitter is None:
-            return
-        sizes = self._splitter.sizes()
-        if sizes[2] > 0:
-            self._splitter.setSizes([sizes[0], sizes[0] + sizes[1] + sizes[2], 0])
-        else:
-            self._splitter.setSizes([max(100, sizes[0]), max(400, sizes[1] - 200), 200])
-
     def _show_plugin_manager_dialog(self) -> None:
         """显示插件管理器对话框。"""
         dialog = PluginManagerDialog(self, self._status_label.setText)  # type: ignore[arg-type]
@@ -94,22 +73,10 @@ class CalcPackViewerEventMixin:
             self.load_calcpack(path)
 
     def _on_entity_changed(self) -> None:
-        """当用户切换实体或更改等级时重新求值。"""
+        """切换实体或等级时只标记待确认，点击确认后才求值。"""
         if self._compute_sheet is None:
             return
-
-        context = self._build_current_context()
-        self._compute_sheet._base_context = context
-        self._compute_sheet.evaluate()
-
-        self._rebuild_detail_panel()
-        self._apply_entity_input_rules()
-
-        from .viewer_evaluator import build_entity_status_text
-
-        selected = self._selected_entity_names()
-        lv = self._level_spin.value() if self._level_spin else None
-        self._status_label.setText(build_entity_status_text(selected, selected, lv))
+        self._mark_pending()
 
     def _displayed_input_paths(self) -> list[str]:
         """返回 layout 中声明的输入控件路径（用于条件禁用校验）。"""
@@ -159,21 +126,6 @@ class CalcPackViewerEventMixin:
                 sheet.set_input_enabled(path, False, reason=disabled[path])
             else:
                 sheet.set_input_enabled(path, True)
-
-    def resizeEvent(self, event: Any) -> None:  # noqa: N802
-        """窗口大小变化时自动调整侧栏布局。"""
-        super().resizeEvent(event)
-        if self._splitter is None:
-            return
-        width = event.size().width()
-        if width < 800:
-            self._splitter.setSizes([0, width, 0])
-        elif width < 1100:
-            sizes = self._splitter.sizes()
-            if sizes[0] > 180:
-                self._splitter.setSizes([180, width - 360, 180])
-        elif self._splitter.sizes()[0] == 0 and self._splitter.sizes()[2] == 0:
-            self._splitter.setSizes([220, width - 420, 200])
 
     def closeEvent(self, event: Any) -> None:  # noqa: N802
         if self._asset_temp_dir:

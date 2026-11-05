@@ -39,7 +39,8 @@ _INSTRUCTIONS = """\
   （例如不需要母舰时灰显母舰加成），disable 只能引用 user_input.* 变量。
 - generate_adapter.layout_sections 可直接生成分页（tab）、列数（columns 1-3）
   与自定义分组，避免生成后再手改 ui/layout.json；inputs 段用 variables 或
-  source 二选一，outputs 段必须列出输出名。
+  source 二选一，outputs 段必须列出输出名。省略时自动 layout 在存在非主输出
+  的情况下会生成「计算」/「乘区明细」两页。
 - read_adapter_file 支持 offset/max_bytes 分页（单页默认 256 KiB，上限 2 MiB），
   大文件按返回的 next_offset 继续读。
 - 写文件默认不覆盖，需要覆盖时显式传 overwrite=true。

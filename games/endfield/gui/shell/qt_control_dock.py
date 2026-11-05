@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
-"""
-高级页控制栏（PySide6 版）。
+"""高级页控制栏（PySide6 版）。
 
-与 CTk 版 ``app_control_dock.py`` 平行。
-三列布局：操作/乘区展示 | 全量搜索 | 多技能次数。
-包含固定配装槽、异常矩阵、搜索参数、增强工具按钮。
+与 CTk 版 ``app_control_dock.py`` 平行；可见布局为全量搜索 | 多技能次数，
+操作列保留供顶部工具条复用。包含固定配装槽、异常矩阵、搜索参数。
 """
 
 from __future__ import annotations
@@ -62,8 +60,6 @@ from games.endfield.gui.shell.qt_control_dock_widgets import (
     SectionHeader,
     SmallLabel,
 )
-
-# 固定配装槽位配置：(catalog_key, 界面标签)
 
 # ═══════════════════════════════════════════════════════
 #  QtControlDock
@@ -124,7 +120,6 @@ class QtControlDock(BuilderMixin, QWidget):
         self.extra_crit_damage_edit: QLineEdit
 
         self._build_ui()
-        """初始化实例。"""
 
     def _make_btn(self, text: str, height: int, *, primary: bool = False, style: str | None = None) -> QPushButton:
         """创建一个统一样式的 QPushButton。"""
@@ -135,14 +130,18 @@ class QtControlDock(BuilderMixin, QWidget):
         return btn
 
     def _build_ui(self) -> None:
-        """构建三列布局。"""
+        """构建可见的搜索列与多技能列；操作列保留供顶部工具条复用。"""
         outer = QHBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(6)
 
-        outer.addWidget(self._build_col_actions(), stretch=1)
-        outer.addWidget(self._build_col_search(), stretch=2)
-        outer.addWidget(self._build_col_multi(), stretch=3)
+        self._col_actions = self._build_col_actions()
+        self._col_actions.setParent(self)  # 保留父子关系，按钮仍可被既有代码/测试访问
+        self._col_search = self._build_col_search()
+        self._col_multi = self._build_col_multi()
+
+        outer.addWidget(self._col_search, stretch=2)
+        outer.addWidget(self._col_multi, stretch=3)
 
     # ── 列 1：操作 / 乘区展示 ──────────────────────
 

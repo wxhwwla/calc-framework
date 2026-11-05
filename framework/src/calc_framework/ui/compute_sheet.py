@@ -14,11 +14,16 @@ from typing import Any
 
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
     QLabel,
     QPushButton,
     QSizePolicy,
+    QSlider,
+    QSpinBox,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -40,6 +45,44 @@ logger = get_logger(__name__)
 
 # 后处理钩子：(合并后的 context, 当前 user_input 值) -> context
 ContextTransform = Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]]
+
+# 变量路径中不应展示给用户的代码前缀（按最长前缀优先匹配）。
+_CODE_PREFIXES: tuple[str, ...] = (
+    "user_input.",
+    "computed.",
+    "character.",
+    "equipment.",
+    "mothership.",
+    "weapon.",
+    "enemy.",
+    "ship.",
+    "user.",
+    "buff.",
+)
+
+
+def display_text(path: str) -> str:
+    """把变量路径转换为用户可读的标签。
+
+    DAG 未提供 ``description`` / ``label`` 时，直接展示 ``user_input.敌人防御``
+    这类路径会暴露代码命名。先去掉已知前缀；纯英文路径再把下划线换成空格，
+    中文路径保持原样。
+
+    Args:
+        path: DAG 变量路径或输出名。
+
+    Returns:
+        去掉代码前缀后的显示文本。
+    """
+    text = path
+    for prefix in _CODE_PREFIXES:
+        if text.startswith(prefix):
+            text = text[len(prefix) :]
+            break
+    has_cjk = any(0x4E00 <= ord(char) <= 0x9FFF for char in text)
+    if "_" in text and not has_cjk:
+        text = text.replace("_", " ")
+    return text
 
 
 class ComputeSheet(QObject):
@@ -155,6 +198,20 @@ class ComputeSheet(QObject):
         """将当前输出面板渲染为 HTML 表格。"""
         return _do_render_html(self._layout, self._output_labels)
 
+    def build_section_widget(self, sec: Section) -> QWidget | None:
+        """构建单个 layout 分区，并注册其中的输入/输出控件。
+
+        共享外壳会把不同分区放入不同区域（例如输入放右上、输出放右下），
+        因此需要在不构建整张计算表的情况下单独生成一个分区。
+
+        Args:
+            sec: layout.json 中的一个分区。
+
+        Returns:
+            分区控件；未知分区类型返回 ``None``。
+        """
+        return self._build_section(sec)
+
     def _read_input(self, path: str) -> Any:
         return _do_read_input(path, self._input_widgets, self._variables)
 
@@ -234,9 +291,9 @@ class ComputeSheet(QObject):
                 seeded = self._base_context_value(var_path)
                 if seeded is not None:
                     spec.default = seeded
-            # 优先用 DAG 描述作可见标签；英文变量名（如 user_input.fleet_count）
-            # 直接显示路径对用户不友好。
-            label = QLabel(spec.description or spec.label)
+            # 优先用 DAG 描述作可见标签；没有描述时去掉代码前缀，
+            # 避免把 user_input.fleet_count 这类命名直接展示给用户。
+            label = QLabel(spec.description or display_text(spec.label))
             label.setToolTip(spec.description)
             widget = create_control(spec)
             items.append((var_path, label, widget, spec))
@@ -248,9 +305,29 @@ class ComputeSheet(QObject):
             if widget is not None:
                 self._input_widgets[var_path] = (widget, spec)
                 self._input_labels[var_path] = label
+        for var_path, _label, widget, _spec in items:
+            if widget is not None:
+                self._wire_input_signal(var_path, widget)
         container = _ResponsiveGroupBox(sec.title, items)
         container._on_resized()
         return container
+
+    def _wire_input_signal(self, path: str, widget: QWidget) -> None:
+        """在输入控件变化时发出 ``value_changed(path, 逻辑值)``。
+
+        信号携带的是 ``read_input`` 的语义值（例如滑杆的 2500 会换算成
+        25.0），调用方可以直接用于标记「待确认」或做预览。
+        """
+
+        def _emit(*_args: Any) -> None:
+            self.value_changed.emit(path, _do_read_input(path, self._input_widgets, self._variables))
+
+        if isinstance(widget, QSlider | QSpinBox | QDoubleSpinBox):
+            widget.valueChanged.connect(_emit)
+        elif isinstance(widget, QCheckBox):
+            widget.toggled.connect(_emit)
+        elif isinstance(widget, QComboBox):
+            widget.currentTextChanged.connect(_emit)
 
     def _build_output_section(self, sec: Section) -> QWidget:
         group = QGroupBox(sec.title)
@@ -260,7 +337,7 @@ class ComputeSheet(QObject):
         columns = max(1, sec.columns)
         for i, out_name in enumerate(sec.outputs):
             output_def = self._dag_service.dag.outputs.get(out_name)
-            display = (output_def.label if output_def is not None else "") or out_name
+            display = (output_def.label if output_def is not None else "") or display_text(out_name)
             label = QLabel(display)
             label.setToolTip(out_name)
             # 标签与数值不参与最小宽度计算，输出网格才能收进可视区而不产生横向滚动。

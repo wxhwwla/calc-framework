@@ -63,7 +63,6 @@ def test_merge_atk_percent_bonus() -> None:
     assert merge_atk_percent_bonus(0.0, 0.0) == 0.0
 
 
-@pytest.mark.xfail(reason="layout 变量名可能已变更", strict=False)
 def test_layout_for_damage_app(qapp: QApplication) -> None:
     from games.arknights.gui.arknights_compute_sheet import (
         DAMAGE_APP_BONUS_VARS,
@@ -82,7 +81,6 @@ def test_layout_for_damage_app(qapp: QApplication) -> None:
     assert "user_input.信赖攻击" in all_vars
 
 
-@pytest.mark.xfail(reason="信赖攻击力数据格式可能已变更", strict=False)
 def test_read_enemy_bonus_params(qapp: QApplication, amiya_operator: dict) -> None:
     from games.arknights.gui.arknights_compute_sheet import (
         create_arknights_compute_sheet,

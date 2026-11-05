@@ -21,8 +21,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, cast
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QAction, QActionGroup
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -30,11 +29,8 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QLabel,
     QMainWindow,
-    QProgressBar,
     QScrollArea,
     QSpinBox,
-    QSplitter,
-    QStatusBar,
     QVBoxLayout,
     QWidget,
 )
@@ -48,9 +44,10 @@ from .layout import Layout
 from .theme import ThemeManager
 from .viewer_events import CalcPackViewerEventMixin
 from .viewer_render import CalcPackViewerRenderMixin
+from .viewer_shell import CalcPackViewerShellMixin
 
 
-class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainWindow):
+class CalcPackViewer(CalcPackViewerShellMixin, CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainWindow):
     """通用 .calcpack 查看器 — 加载计算包并渲染交互界面。"""
 
     def __init__(self, calcpack_path: str | None = None):
@@ -86,49 +83,17 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._entity_data: dict[str, dict[str, Any]] = {}
 
-        self._splitter: QSplitter | None = None
+        self._entity_group: QGroupBox = QGroupBox(tr("desktop.viewer.selectEntity"))
 
-        self._entity_group: QGroupBox | None = None
+        self._entity_form = QFormLayout(self._entity_group)
 
         self._detail_group: QGroupBox | None = None
 
         self._detail_value_labels: dict[str, QLabel] = {}
 
-        self._detail_layout: QVBoxLayout | None = None
-
-        self._right_panel: QWidget | None = None
-
-        self._asset_temp_dir: tempfile.TemporaryDirectory | None = None
-
-        self._calcpack_path: str = calcpack_path or ""
-
-        central = QWidget()
-
-        self.setCentralWidget(central)
-
-        main_layout = QVBoxLayout(central)
-
-        main_layout.setContentsMargins(0, 0, 0, 0)
-
-        self._build_menu()
-
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-
-        left = QWidget()
-
-        self._left_layout = QVBoxLayout(left)
-
-        self._left_layout.setContentsMargins(4, 4, 4, 4)
-
-        self._entity_group = QGroupBox(tr("desktop.viewer.selectEntity"))
-
-        self._entity_form = QFormLayout(self._entity_group)
-
-        self._left_layout.addWidget(self._entity_group)
-
         self._detail_container = QWidget()
 
-        self._detail_layout = QVBoxLayout(self._detail_container)
+        self._detail_layout: QVBoxLayout = QVBoxLayout(self._detail_container)
 
         self._detail_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -140,91 +105,11 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
 
         self._detail_scroll.setWidget(self._detail_container)
 
-        self._left_layout.addWidget(self._detail_scroll, 1)
+        self._asset_temp_dir: tempfile.TemporaryDirectory | None = None
 
-        splitter.addWidget(left)
+        self._calcpack_path: str = calcpack_path or ""
 
-        self._scroll = QScrollArea()
-
-        self._scroll.setWidgetResizable(True)
-
-        self._sheet_container = QWidget()
-
-        self._sheet_layout = QVBoxLayout(self._sheet_container)
-
-        self._scroll.setWidget(self._sheet_container)
-
-        splitter.addWidget(self._scroll)
-
-        right = QWidget()
-
-        self._right_layout = QVBoxLayout(right)
-
-        self._right_layout.setContentsMargins(4, 4, 4, 4)
-
-        self._info_group = QGroupBox(tr("desktop.viewer.packInfo"))
-
-        info_form = QFormLayout(self._info_group)
-
-        self._info_name = QLabel(tr("desktop.viewer.unknown"))
-
-        info_form.addRow(tr("desktop.viewer.labelName"), self._info_name)
-
-        self._info_game = QLabel(tr("desktop.viewer.unknown"))
-
-        info_form.addRow(tr("desktop.viewer.labelGame"), self._info_game)
-
-        self._info_version = QLabel(tr("desktop.viewer.unknown"))
-
-        info_form.addRow(tr("desktop.viewer.labelVersion"), self._info_version)
-
-        self._info_vars = QLabel(tr("desktop.viewer.unknown"))
-
-        info_form.addRow(tr("desktop.viewer.labelVariables"), self._info_vars)
-
-        self._info_outputs = QLabel(tr("desktop.viewer.unknown"))
-
-        info_form.addRow(tr("desktop.viewer.labelOutputs"), self._info_outputs)
-
-        self._info_description = QLabel(tr("desktop.viewer.unknown"))
-
-        self._info_description.setWordWrap(True)
-
-        info_form.addRow(tr("desktop.viewer.labelDescription"), self._info_description)
-
-        self._right_layout.addWidget(self._info_group)
-
-        self._info_hint = QLabel(tr("desktop.viewer.hintText"))
-
-        self._info_hint.setWordWrap(True)
-
-        self._right_layout.addWidget(self._info_hint)
-
-        self._right_layout.addStretch()
-
-        splitter.addWidget(right)
-
-        splitter.setSizes([320, 760, 300])
-
-        self._splitter = splitter
-
-        main_layout.addWidget(splitter, stretch=1)
-
-        bar = QStatusBar()
-
-        self._status_label = QLabel(tr("desktop.viewer.statusReady"))
-
-        bar.addWidget(self._status_label)
-
-        self._progress = QProgressBar()
-
-        self._progress.setMaximumWidth(160)
-
-        self._progress.setVisible(False)
-
-        bar.addPermanentWidget(self._progress)
-
-        self.setStatusBar(bar)
+        self._init_shell()
 
         if calcpack_path:
             path_copy = calcpack_path
@@ -235,97 +120,6 @@ class CalcPackViewer(CalcPackViewerRenderMixin, CalcPackViewerEventMixin, QMainW
     def is_loaded(self) -> bool:
         """是否已成功加载计算包或适配器目录。"""
         return self._dag_service is not None
-
-    def _build_menu(self) -> None:
-        mb = self.menuBar()
-
-        file_menu = mb.addMenu(tr("desktop.viewer.menuFile"))
-
-        open_action = QAction(tr("desktop.viewer.menuOpenCalcpack"), self)
-
-        open_action.setShortcut("Ctrl+O")
-
-        open_action.triggered.connect(self._open_file)
-
-        file_menu.addAction(open_action)
-
-        file_menu.addSeparator()
-
-        exit_action = QAction(tr("desktop.viewer.menuExit"), self)
-
-        exit_action.setShortcut("Ctrl+Q")
-
-        exit_action.triggered.connect(self.close)
-
-        file_menu.addAction(exit_action)
-
-        tools_menu = mb.addMenu(tr("desktop.viewer.menuTools"))
-
-        plugin_action = QAction(tr("desktop.viewer.menuPluginManager"), self)
-
-        plugin_action.triggered.connect(self._show_plugin_manager_dialog)
-
-        tools_menu.addAction(plugin_action)
-
-        theme_menu = mb.addMenu(tr("desktop.viewer.menuTheme"))
-
-        self._theme_actions: dict[str, QAction] = {}
-
-        theme_group = QActionGroup(self)
-
-        theme_group.setExclusive(True)
-
-        theme_group.triggered.connect(self._on_theme_switched)
-
-        for key in self._theme_manager.theme_names:
-            display = self._theme_manager.get_theme(key).get("name", key)
-
-            action = QAction(display, self, checkable=True)
-
-            action.setData(key)
-
-            if key == self._theme_manager.current_name:
-                action.setChecked(True)
-
-            theme_group.addAction(action)
-
-            theme_menu.addAction(action)
-
-            self._theme_actions[key] = action
-
-        file_menu.addSeparator()
-
-        layout_menu = mb.addMenu(tr("desktop.viewer.menuLayout"))
-
-        toggle_left_action = QAction(tr("desktop.viewer.menuToggleLeft"), self)
-
-        toggle_left_action.setShortcut("Ctrl+B")
-
-        toggle_left_action.triggered.connect(self._toggle_left_panel)
-
-        layout_menu.addAction(toggle_left_action)
-
-        toggle_right_action = QAction(tr("desktop.viewer.menuToggleRight"), self)
-
-        toggle_right_action.setShortcut("Ctrl+R")
-
-        toggle_right_action.triggered.connect(self._toggle_right_panel)
-
-        layout_menu.addAction(toggle_right_action)
-
-        help_menu = mb.addMenu(tr("desktop.viewer.menuHelp"))
-
-        help_action = QAction(tr("desktop.viewer.menuHelpUsage"), self)
-
-        help_action.setShortcut("F1")
-
-        help_action.triggered.connect(self._show_help)
-
-        help_menu.addAction(help_action)
-
-        from utils.gui.donation import append_donation_help_menu_action
-
-        append_donation_help_menu_action(help_menu, self)
 
 
 def open_calcpack(path: str | Path) -> None:

@@ -91,7 +91,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable 分支当前提交
+        with:
+          toolchain: stable
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2
@@ -146,7 +148,9 @@ jobs:
           python -m pip install -r requirements-mcp.txt
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable 分支当前提交
+        with:
+          toolchain: stable
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2

@@ -65,7 +65,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable 分支当前提交
+        with:
+          toolchain: stable
       - name: Run Rust tests
         run: |
           cd extensions/rust_search

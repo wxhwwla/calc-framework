@@ -29,13 +29,10 @@ from calc_framework.ui.i18n import tr
 from calc_framework.ui.log_widget import LogWidget
 from calc_framework.ui.theme import ThemeManager
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QFont, QKeySequence
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QTabWidget,
-    QVBoxLayout,
-    QWidget,
 )
 from scripts.please_read_me import get_exe_version
 
@@ -64,10 +61,10 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
 
     属性：
         big_font / small_font: 标题/正文字体
-        tabs: QTabWidget 双页签（计算页 / 高级页）
+        _shell: 共享 CalculatorShell（顶部工具条 + 2×2 页 + 底部确认/页签）
         char_panel / weapon_panel: 角色/武器四级联动选择面板
-        columns: QtAttributeColumns 三列属性展示
-        control_dock: QtControlDock 高级页控制栏
+        columns: QtAttributeColumns 三列属性展示（嵌入式，分区域放置）
+        control_dock: QtControlDock 高级页参数面板
         status_label: 底部状态文案
         all_weapons: 全量武器列表
         _current_calc_mode: 当前计算模式内部标识
@@ -123,18 +120,7 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         self.setMinimumSize(1024, 600)
         self.resize(1280, 720)
 
-        self._setup_app_menu()
-
-        central = QWidget()
-        self.setCentralWidget(central)
-        main_layout = QVBoxLayout(central)
-        main_layout.setContentsMargins(8, 8, 8, 8)
-        main_layout.setSpacing(0)
-
-        self.tabs: QTabWidget = QTabWidget()
-        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
-        main_layout.addWidget(self.tabs, stretch=1)
-
+        self._init_shell()
         self._build_calc_page()
         self._build_adv_page()
 
@@ -160,12 +146,12 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
     def _load_preferences(self) -> None:
         self._ui_preferences = load_ui_preferences()
         page = resolve_startup_page(self._ui_preferences)
-        self.tabs.setCurrentIndex(1 if page == "高级页" else 0)
+        self._shell.set_current_page(1 if page == "高级页" else 0)
         """load preferences。"""
 
     def _on_close(self, event: Any = None) -> None:
         try:
-            page_name = "高级页" if self.tabs.currentIndex() == 1 else "计算页"
+            page_name = "高级页" if self._shell.current_page == 1 else "计算页"
             self._ui_preferences = record_last_page(self._ui_preferences, page=page_name)
             save_ui_preferences(self._ui_preferences)
         except Exception:
@@ -208,20 +194,6 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
         """
         )
 
-    def _setup_app_menu(self) -> None:
-        menubar = self.menuBar()
-        help_menu = menubar.addMenu(tr("common.help") + "(&H)")
-        help_action = QAction(tr("desktop.endfield.helpUsage") + "(&U)", self)
-        help_action.setShortcut(QKeySequence("F1"))
-        help_action.triggered.connect(self._on_open_help)
-        help_menu.addAction(help_action)
-
-        # 调试菜单
-        debug_menu = menubar.addMenu(tr("desktop.endfield.menuDebug"))
-        log_action = QAction(tr("desktop.endfield.menuLog"), self)
-        log_action.triggered.connect(self._open_log_dialog)
-        debug_menu.addAction(log_action)
-
     def _open_log_dialog(self) -> None:
         """打开日志查看对话框。"""
         from PySide6.QtWidgets import QDialog, QVBoxLayout
@@ -239,5 +211,5 @@ class EndfieldApp(QMainWindow, ShellMixin, ActionsMixin, ActionsSearchMixin):
 
     @property
     def confirm_btn(self):
-        """confirm btn。"""
-        return self.control_dock.confirm_btn
+        """底部工具条中的确认按钮。"""
+        return self._shell.confirm_button
