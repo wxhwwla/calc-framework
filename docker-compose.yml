@@ -8,6 +8,8 @@ services:
     environment:
       # 未设置时管理写接口返回 503；生产环境通过 .env 或 shell 注入
       CALC_ADMIN_TOKEN: "${CALC_ADMIN_TOKEN:-}"
+      # SaaS API Key 哈希 pepper；启用 API Key 时必须 ≥32 字符
+      CALC_API_KEY_PEPPER: "${CALC_API_KEY_PEPPER:-}"
     volumes:
       # 权威状态：Calc Hub 市场元数据（catalog.db）与配置包文件
       - calc_hub_data:/app/web/backend/data/hub

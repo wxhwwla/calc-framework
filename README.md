@@ -74,6 +74,8 @@ Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [
 | [`docs/项目目标.md`](docs/项目目标.md) | Project vision & roadmap (ZH) |
 | [`docs/操作指令集.md`](docs/操作指令集.md) | Command reference (ZH) |
 | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | Licensing & data sources (ZH) |
+| [`docs/隐私与AI数据处理.md`](docs/隐私与AI数据处理.md) | Privacy & AI data handling (ZH) |
+| [`docs/Docker部署与数据运维.md`](docs/Docker部署与数据运维.md) | Docker deployment, backup & restore (ZH) |
 | [`games/endfield/README.md`](games/endfield/README.md) | Endfield package details |
 
 ---
@@ -201,7 +203,7 @@ cd web/frontend && npm install && npm run dev
 - **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters, plus a wjdlglr eight-zone adapter (104 nodes, 16 target DPM outputs with a dedicated hit-rate zone, three-level ship/weapon cascade, weapon detail panel, energy/kinetic armor selection)
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
 - **i18n**: Web (react-i18next, ~890 entries per language) + Desktop (DesktopTranslator, 1046 keys per language, en/zh-CN)
-- **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing
+- **AI Build Recommendation** (experimental): Natural language → DAG baseline suggestion, multi-turn chat, semantic search, AI formula parsing; not an exhaustive optimum search
 - **MCP Builder Server**: `tools/calc_mcp/` exposes 13 deterministic tools (templates, schemas, guides, generate, scaffold, validate, smoke-test, pack/import) so a host AI can build a new game calculator end-to-end from a cloned repo
 - **SaaS API**: API Key management + rate limiting + usage statistics
 
@@ -209,13 +211,28 @@ cd web/frontend && npm install && npm run dev
 
 | Web Page | Desktop Equivalent | Route |
 |----------|-------------------|-------|
-| Damage Calculator | `main.py` (desktop) / FastAPI+React (web) | `/` |
+| Damage Calculator | `main.py` (desktop) / FastAPI+React (web) | `/compute` |
 | Infinite Lagrange Calculator | `games/wjdlglr/main.py` / generic `AdapterGamePage` | `/wjdlglr` |
 | Data Designer | Dev toolkit | `/designer` |
 | Pack Designer | Dev toolkit | `/pack-designer` |
 | Calc Hub Marketplace | — | `/marketplace` |
 
 The Web version shares `layout.json` / `attr_schema.json` / DAG files / data JSON with the desktop version. One codebase, two rendering targets.
+
+---
+
+## Support Matrix
+
+| Component | Desktop | Web | Status |
+|-----------|---------|-----|--------|
+| Endfield damage calculator | ✅ launcher / exe | ✅ `/compute` | Stable (data synced from BWIKI) |
+| Arknights calculator | ✅ launcher / exe | ✅ `/arknights` | Beta |
+| Infinite Lagrange calculator | ✅ launcher / exe | ✅ `/wjdlglr` | Beta |
+| Generic adapters (`framework/adapters/`) | ✅ CalcPack viewer | ✅ adapter marketplace | Beta / experimental |
+
+**Python versions**: CI continuously verifies **3.12**. `framework` declares **≥3.11**; `games/endfield` declares **≥3.10**. Other versions are not continuously tested.
+
+**Non-goals**: game data is community-maintained and not officially verified; no commercial license is granted; self-hosted Web availability/SLA is not guaranteed; AI features are experimental and do not guarantee "optimal" results.
 
 ---
 

@@ -130,6 +130,10 @@ CSRF 校验默认放行同源请求（Origin 与请求 `scheme://host` 一致）
 
 默认 JSON API 请求体上限 **1 MiB**（`ContentSizeLimitMiddleware`）。上传路径放宽：`/api/ocr/` 5 MiB、`/api/hub/` 15 MiB。环境变量 `CALC_MAX_BODY_BYTES` / `CALC_DISABLE_BODY_LIMIT`。nginx 可配置 `client_max_body_size` 作为外层限制。
 
+### 隐私与 AI 数据处理
+
+AI 对话内容与 API Key 会经后端转发给用户配置的第三方服务；本项目不持久化 Key 与对话。数据流、保留期限与删除方式见 [`docs/隐私与AI数据处理.md`](../docs/隐私与AI数据处理.md)。
+
 ### PythonAnywhere（WSGI，已弃用）
 
 项目已不再部署到 PythonAnywhere。当前由维护者本机 + ngrok 固定域名自托管：

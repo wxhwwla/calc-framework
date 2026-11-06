@@ -1098,6 +1098,7 @@ const en = {
     yourQuery: "Your request",
     queryPlaceholder: "e.g. What's the best crit build for this character?",
     apiSettings: "API Settings (optional)",
+    privacyNotice: "Your messages and API key are forwarded through this site's backend to the third-party AI service you configure. The key is kept only in this page's memory and cleared on refresh.",
     apiKeyHint: "Enable multi-turn chat + AI explanation. Supports DeepSeek and other OpenAI-compatible APIs",
     searchSpace: "Search space",
     greeting: "Hi! I'm your loadout assistant. Try asking:\n• \"Recommend the highest damage build\"\n• \"Prioritize crit rate\"\n• \"Which weapon is best?\"",

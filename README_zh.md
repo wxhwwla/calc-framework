@@ -67,6 +67,8 @@ python scripts/main_launcher.py
 | [`docs/项目目标.md`](docs/项目目标.md) | 项目愿景与路线图 |
 | [`docs/操作指令集.md`](docs/操作指令集.md) | 操作命令速查 |
 | [`docs/数据来源与许可.md`](docs/数据来源与许可.md) | 许可与数据来源 |
+| [`docs/隐私与AI数据处理.md`](docs/隐私与AI数据处理.md) | 隐私与 AI 数据处理 |
+| [`docs/Docker部署与数据运维.md`](docs/Docker部署与数据运维.md) | Docker 部署、备份与恢复 |
 | [`games/endfield/README.md`](games/endfield/README.md) | 终末地包详细说明 |
 
 ---
@@ -177,7 +179,7 @@ cd web/frontend && npm install && npm run dev
 - **搜索引擎**：Top-N 枚举、并行执行、取消令牌、SQLite 持久化
 - **ComputeSheet**：声明式 UI — 消费 `layout.json` + DAG 变量 → 自动渲染控件
 - **插件系统**：注册表模式 + 3 内置插件（暴击/闪避/距离衰减）+ `.calcplugin` 格式
-- **AI 配装**：自然语言配装推荐 + 多轮对话 + 语义搜索 + AI 公式解析
+- **AI 配装**（实验性）：自然语言 → DAG 基线建议 + 多轮对话 + 语义搜索 + AI 公式解析；非穷举最优搜索
 - **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点)、wjdlglr (104 节点，八乘区 + 独立命中率乘区（闪避/命中加成/浮动），三级舰船/武器联动选择、武器明细面板、能量/实弹护甲选择) 适配器均通过
 - **主题管理**：暗色/亮色/高对比度，动态 QSS 生成；Web 端暗/亮切换
 - **SaaS API**：API Key 管理 + 速率限制 + 用量统计
@@ -186,13 +188,28 @@ cd web/frontend && npm install && npm run dev
 
 | Web 页面 | 桌面对应 | 路由 |
 |----------|---------|------|
-| 伤害计算器 | `main.py`（桌面）/ FastAPI + React（Web） | `/` |
+| 伤害计算器 | `main.py`（桌面）/ FastAPI + React（Web） | `/compute` |
 | 无尽的拉格朗日计算器 | `games/wjdlglr/main.py` / 通用 `AdapterGamePage` | `/wjdlglr` |
 | 数据设计器 | 开发者工具箱 | `/designer` |
 | 配置包设计器 | 开发者工具箱 | `/pack-designer` |
 | Calc Hub 市场 | — | `/marketplace` |
 
 Web 版与桌面版共享 `layout.json` / `attr_schema.json` / DAG 文件 / 数据 JSON。一套声明，两端渲染。
+
+---
+
+## 支持矩阵
+
+| 组件 | 桌面 | Web | 成熟度 |
+|------|------|-----|--------|
+| 终末地伤害计算器 | ✅ 启动器 / exe | ✅ `/compute` | 稳定（数据随 BWIKI 同步） |
+| 明日方舟伤害计算器 | ✅ 启动器 / exe | ✅ `/arknights` | Beta |
+| 无尽的拉格朗日计算器 | ✅ 启动器 / exe | ✅ `/wjdlglr` | Beta |
+| 通用适配器（`framework/adapters/`） | ✅ 计算包查看器 | ✅ 适配器市场 | Beta / 实验性 |
+
+**Python 版本**：CI 持续验证 **3.12**；`framework` 声明 **≥3.11**，`games/endfield` 声明 **≥3.10**。其他版本未持续测试。
+
+**非目标**：游戏数据由社区维护，不保证与官方一致；不授予商业使用许可；不承诺自托管 Web 的可用性与 SLA；AI 功能为实验性，不保证返回「最优」结果。
 
 ---
 

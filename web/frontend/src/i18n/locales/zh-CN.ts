@@ -1111,6 +1111,7 @@ const zhCN = {
     yourQuery: "你的需求",
     queryPlaceholder: "例：佩丽卡暴击流怎么配装？",
     apiSettings: "API 设置（可选）",
+    privacyNotice: "对话内容与 API Key 会经本站后端转发给你配置的第三方 AI 服务；Key 仅保存在当前页面内存，刷新即清空。",
     apiKeyHint: "填入后可多轮对话+AI解释。支持 DeepSeek 等兼容 API",
     searchSpace: "搜索空间",
     greeting: "你好！我是配装助手。你可以问我：\n• 「推荐最高伤害配装」\n• 「暴击率优先怎么配」\n• 「这把武器适合谁」",

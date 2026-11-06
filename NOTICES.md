@@ -5,6 +5,10 @@
 
 ## 软件依赖（含运行时与可选）
 
+> 下表覆盖**直接依赖**与代表性传递依赖；完整版本与传递依赖以各 `requirements*.txt`、`pyproject.toml`、`package-lock.json`、`Cargo.lock` 为准。
+
+### Python / 桌面 / 构建
+
 | 组件 | 许可 | 说明 |
 |------|------|------|
 | Python | PSF License | https://www.python.org/psf-license/ |
@@ -17,9 +21,41 @@
 | pyyaml | MIT | 插件 YAML 配置（可选依赖 `[plugins]`） |
 | PyInstaller | GPL-2.0（含例外） | 仅打包时使用，不随分发物提供；https://pyinstaller.org/ |
 | pytest / pytest-cov | MIT | 仅开发/测试使用 |
+| PyO3 | Apache-2.0 OR MIT | Rust 加速扩展（`extensions/rust_search/`）的 Python 绑定 |
+| maturin | MIT OR Apache-2.0 | 构建 Rust 扩展（CI/wheel） |
+| Rust toolchain / std | MIT OR Apache-2.0 | `extensions/rust_search/` |
+
+### Web 后端
+
+| 组件 | 许可 | 说明 |
+|------|------|------|
 | fastapi | MIT | Web 版后端（web/backend/）；仅在 web 部署时使用 |
 | pydantic | MIT | Web 版后端数据校验（web/backend/）；仅在 web 部署时使用 |
 | uvicorn | BSD-3-Clause | Web 版后端 ASGI 服务器（web/backend/）；仅在 web 部署时使用 |
+| httpx | BSD-3-Clause | 出站 HTTP 客户端（AI 转发 / Hub 拉取） |
+| httpcore | BSD-3-Clause | httpx 传输层；提供 `sni_hostname` 扩展 |
+| python-multipart | Apache-2.0 | 表单与文件上传解析 |
+| a2wsgi | Apache-2.0 | WSGI 适配层（历史 PythonAnywhere 兼容，仍在依赖中） |
+| mcp | MIT | MCP 计算器构建服务器（`tools/calc_mcp/`，可选） |
+
+### Web 前端
+
+| 组件 | 许可 | 说明 |
+|------|------|------|
+| React / React DOM | MIT | Web 前端框架 |
+| MUI（`@mui/material`、`@mui/icons-material`） | MIT | 组件库与图标 |
+| Emotion（`@emotion/react`、`@emotion/styled`） | MIT | MUI 样式引擎 |
+| React Router | MIT | 前端路由 |
+| Zustand | MIT | 状态管理 |
+| i18next / react-i18next | MIT | 国际化 |
+| @xyflow/react（React Flow） | MIT | DAG 公式图编辑器 |
+| ECharts / echarts-for-react | Apache-2.0 | 图表渲染 |
+| sql.js | MIT | 浏览器端 SQLite（历史/搜索） |
+| TypeScript | Apache-2.0 | 类型检查（构建期） |
+| Vite | MIT | 前端构建与开发服务器 |
+| Vitest | MIT | 前端单元测试 |
+| Cypress | MIT | Web E2E 测试 |
+| ESLint 及其插件 | MIT | 前端 lint |
 
 ## 游戏与 Wiki 内容
 

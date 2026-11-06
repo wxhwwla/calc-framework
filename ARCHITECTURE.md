@@ -11,14 +11,14 @@
 
 | Component | Technology |
 |-----------|------------|
-| Compute Engine | Python 3.12+ (DAG + inverse engine + full search) |
+| Compute Engine | Python 3.12 (CI-verified); source minimum 3.11 (framework) / 3.10 (endfield package); DAG + inverse engine + full search |
 | Desktop GUI | PySide6 (Qt 6) |
 | Web Frontend | React + TypeScript + Vite + MUI v6 |
 | Web Backend | FastAPI + Uvicorn |
 | Data Layer | JSON files + Pydantic validation |
 | Testing | pytest + pytest-cov |
 | Linting | ruff (lint + format) + pyright |
-| Packaging | PyInstaller (onedir) + NSIS installer |
+| Packaging | PyInstaller (onefile) + NSIS installer |
 | Container | Docker + docker-compose |
 | i18n | react-i18next (Web) + DesktopTranslator/JSON (Desktop) |
 | Deployment | Self-hosted PC + ngrok tunnel (Web version) |

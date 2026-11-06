@@ -269,6 +269,9 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
             <Typography variant="caption">{t("ai.apiSettings", "API 设置（可选）")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <Alert severity="info" sx={{ mb: 1, fontSize: "0.75rem" }}>
+              {t("ai.privacyNotice", "对话内容与 API Key 会经本站后端转发给你配置的第三方 AI 服务；Key 仅保存在当前页面内存，刷新即清空。")}
+            </Alert>
             <TextField
               fullWidth
               size="small"

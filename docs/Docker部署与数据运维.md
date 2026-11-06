@@ -51,11 +51,12 @@ docker compose stop web          # 停止但保留容器与卷
 docker compose down              # 删除容器，保留卷
 ```
 
-管理接口需要 `CALC_ADMIN_TOKEN`（未设置时管理写接口返回 503）：
+管理接口需要 `CALC_ADMIN_TOKEN`（未设置时管理写接口返回 503）。启用 SaaS API Key 时还需要 `CALC_API_KEY_PEPPER`（**≥32 字符**，缺失或过短会导致 Key 哈希请求报错）：
 
 ```bash
 # .env（与 docker-compose.yml 同目录，勿提交）
 CALC_ADMIN_TOKEN=change-me-to-a-long-random-value
+CALC_API_KEY_PEPPER=another-long-random-value-at-least-32-chars
 ```
 
 ---

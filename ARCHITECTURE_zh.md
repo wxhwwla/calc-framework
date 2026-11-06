@@ -11,14 +11,14 @@
 
 | 组件 | 技术选型 |
 |------|----------|
-| 计算引擎 | Python 3.12+（DAG + 逆推引擎 + 全量搜索） |
+| 计算引擎 | Python 3.12（CI 验证）；源码最低 3.11（框架）/ 3.10（终末地包）；DAG + 逆推引擎 + 全量搜索 |
 | 桌面 GUI | PySide6（Qt 6） |
 | Web 前端 | React + TypeScript + Vite + MUI v6 |
 | Web 后端 | FastAPI + Uvicorn |
 | 数据层 | JSON 文件 + Pydantic 校验 |
 | 测试框架 | pytest + pytest-cov |
 | 代码检查 | ruff（lint + format）+ pyright |
-| 打包 | PyInstaller（onedir）+ NSIS 安装器 |
+| 打包 | PyInstaller（onefile）+ NSIS 安装器 |
 | 容器 | Docker + docker-compose |
 | 部署 | 本机 + ngrok tunnel（Web 版，自托管） |
 
