@@ -53,12 +53,12 @@ COPY resources/ /app/resources/
 COPY requirements-web.txt requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 运行时 writable 目录 + 可选明日方舟数据挂载点
+# 运行时 writable 目录（与 docker-compose.yml 的具名卷一一对应）
 RUN mkdir -p \
-    /app/web/backend/api/data \
-    /app/web/backend/api/.admin_data \
-    /app/web/backend/api/packaging/.staging \
     /app/web/backend/data/hub/packs \
+    /app/web/backend/.data/admin \
+    /app/web/backend/.data/staging \
+    /app/web/backend/api/data \
     /app/tools/arknights_scout/output/parsed \
     && chown -R calcweb:calcweb /app
 
@@ -68,5 +68,9 @@ ENV HOME=/app
 EXPOSE 8000
 
 USER calcweb
+
+# 健康检查同时验证状态目录可写与 /api/health 可响应（见 web/backend/healthcheck.py）
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD ["python", "/app/web/backend/healthcheck.py"]
 
 CMD ["python", "-m", "uvicorn", "web.backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

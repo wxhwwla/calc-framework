@@ -231,11 +231,11 @@ result = adapter.fit(data)  # 自动按长度匹配
 ## 测试
 
 ```powershell
-# 框架测试
-cd framework && pytest tests/ -q     # 1160 passed
+# 框架测试（数量以实际输出为准）
+cd framework && pytest tests/ -q
 
-# 终末地测试
-cd games/endfield && pytest tests/ -q  # 1585 passed
+# 终末地测试（数量以实际输出为准）
+cd games/endfield && pytest tests/ -q
 ```
 
 [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)

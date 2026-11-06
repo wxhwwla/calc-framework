@@ -1,4 +1,7 @@
 # Framework PyPI Publish — calc-framework 包发布
+#
+# 前置条件：版本号必须先通过仓库上传流程写入 framework/pyproject.toml 并提交，
+# 然后以同一版本号手动触发本工作流。禁止在 runner 上临时改写版本号。
 
 name: Framework PyPI Publish
 permissions:
@@ -12,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "发布版本号 (如 0.2.0)"
+        description: "发布版本号（必须与 framework/pyproject.toml 一致，如 0.3.1）"
         required: true
         type: string
 
@@ -31,36 +34,77 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install build tools
-        run: python -m pip install build twine
-
-      - name: Validate version
+      - name: Validate input version
         run: |
           VERSION="${{ github.event.inputs.version }}"
           if ! echo "$VERSION" | grep -qP '^\d+\.\d+\.\d+$'; then
-            echo "错误: 版本号 '$VERSION' 格式无效，必须为 x.y.z"
+            echo "::error::版本号 '$VERSION' 格式无效，必须为 x.y.z"
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_ENV"
 
-      - name: Update version
-        shell: python
+      - name: Verify committed pyproject version matches input
         run: |
-          import os, re
-          with open('pyproject.toml') as f:
-              content = f.read()
-          content = re.sub(r'version = ".*"', f'version = "{os.environ["version"]}"', content, count=1)
-          with open('pyproject.toml', 'w') as f:
-              f.write(content)
+          ACTUAL=$(python -c "import pathlib,tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text('utf-8'))['project']['version'])")
+          if [ "$ACTUAL" != "$version" ]; then
+            echo "::error::framework/pyproject.toml 版本为 $ACTUAL，与输入 $version 不一致；请先通过仓库上传流程提交版本变更"
+            exit 1
+          fi
+
+      - name: Refuse to publish an already-tagged version
+        run: |
+          if git ls-remote --tags origin "refs/tags/framework-v$version" | grep -q .; then
+            echo "::error::标签 framework-v$version 已存在；如需重发，请先删除对应 Release 与标签"
+            exit 1
+          fi
+
+      - name: Install build and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+          python -m pip install -e ".[dev]"
+
+      - name: Lint check (ruff)
+        run: python -m ruff check src/ tests/
+
+      - name: Run tests before publishing
+        # GUI 测试依赖 Qt 系统库，由 framework-ci 在每个提交上覆盖；
+        # 发布门禁覆盖框架核心（DAG/搜索/inverse/数据层）与非 GUI 包。
+        run: python -m pytest tests/ -q --ignore=tests/benchmarks/ --ignore=tests/ui/ --ignore=tests/editor/
 
       - name: Build distribution
-        run: python -m build
+        run: |
+          rm -rf dist
+          python -m build
+
+      - name: Verify wheel metadata and contents
+        run: |
+          python -m twine check dist/*
+          python - "$version" <<'PY'
+          import email
+          import glob
+          import sys
+          import zipfile
+
+          expected = sys.argv[1]
+          wheel = glob.glob("dist/*.whl")[0]
+          with zipfile.ZipFile(wheel) as zf:
+              meta_name = next(n for n in zf.namelist() if n.endswith(".dist-info/METADATA"))
+              meta = email.message_from_bytes(zf.read(meta_name))
+              names = zf.namelist()
+          assert meta["Name"] == "calc-framework", meta["Name"]
+          assert meta["Version"] == expected, f"wheel 版本 {meta['Version']} != {expected}"
+          assert any(n.startswith("calc_framework/__init__.py") for n in names), "wheel 缺少 calc_framework 包"
+          print(f"wheel ok: {wheel} (version {meta['Version']})")
+          PY
 
       - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: python -m twine upload dist/*
+        # --skip-existing 让“PyPI 已成功后 Release 步骤失败”的重跑可恢复；
+        # 版本一致性已在上方校验，不会掩盖版本错误。
+        run: python -m twine upload --skip-existing dist/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2
@@ -71,6 +115,8 @@ jobs:
             calc-framework v${{ github.event.inputs.version }}
 
             安装：`pip install calc-framework`
+
+            源码：`framework/pyproject.toml` 版本 `${{ github.event.inputs.version }}`（提交 `${{ github.sha }}`）
           draft: false
           prerelease: false
           files: framework/dist/calc_framework-${{ github.event.inputs.version }}*.whl

@@ -144,8 +144,12 @@ ngrok http 8000
 ### Docker
 
 ```bash
-docker compose up
+docker compose up -d --build
 ```
+
+运行数据（Hub 市场、API Key/用量、历史记录）保存在具名卷中；健康检查同时验证
+状态目录可写与 `/api/health`。备份、恢复、升级与回滚见
+[`docs/Docker部署与数据运维.md`](../docs/Docker部署与数据运维.md)。
 
 ### 本地打包（PyInstaller）
 

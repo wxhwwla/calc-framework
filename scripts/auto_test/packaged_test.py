@@ -293,7 +293,7 @@ class PackagedTestRunner:
         try:
             self.inspector.screenshot(str(screenshot_path))
             step.status = "passed"
-            step.screenshot = str(screenshot_path.relative_to(_SCRIPT_DIR))
+            step.screenshot = screenshot_path.name
         except Exception as e:
             step.status = "failed"
             step.message = f"截图失败: {e}"
@@ -407,7 +407,7 @@ class PackagedTestRunner:
         try:
             self.inspector.screenshot(str(screenshot_path))
             step.status = "passed"
-            step.screenshot = str(screenshot_path.relative_to(_SCRIPT_DIR))
+            step.screenshot = screenshot_path.name
         except Exception as e:
             step.status = "failed"
             step.message = f"截图失败: {e}"

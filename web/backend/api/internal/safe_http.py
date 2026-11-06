@@ -140,18 +140,30 @@ async def post_chat_completions(
 
     使用验证阶段固定的 IP 地址发起连接，并设置 ``Host`` 头
     以支持虚拟主机，避免 HTTP 客户端重复 DNS 解析。
+    HTTPS 请求额外传递 ``sni_hostname`` 扩展，使 TLS SNI 与证书主机名校验
+    仍使用原始域名，而不是固定后的 IP 字面量。
     """
     host = validate_outbound_api_base(api_base)
     target_url = host.chat_completions_url()
 
     # 使用已解析的 IP 替换 URL 中的主机名，并添加 Host 头
-    # 这样 httpx 不会再次 DNS 解析
-    mapped_url = target_url.replace(f"://{host.hostname}", f"://{host.resolved_ip}", 1)
+    # 这样 httpx 不会再次 DNS 解析。IPv6 字面量必须加方括号才是合法 URL。
+    pinned_host = f"[{host.resolved_ip}]" if ":" in host.resolved_ip else host.resolved_ip
+    mapped_url = target_url.replace(f"://{host.hostname}", f"://{pinned_host}", 1)
     extra_headers = dict(headers)
     extra_headers.setdefault("Host", host.hostname)
 
+    extensions: dict[str, Any] = {}
+    if host.scheme == "https":
+        extensions["sni_hostname"] = host.hostname
+
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
-        return await client.post(mapped_url, json=json_body, headers=extra_headers)
+        return await client.post(
+            mapped_url,
+            json=json_body,
+            headers=extra_headers,
+            extensions=extensions,
+        )
 
 
 __all__ = [

@@ -23,6 +23,7 @@ on:
       - "extensions/**"
       - "framework/**"
       - "requirements-mcp.txt"
+      - "requirements-web.txt"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: [main, master, develop]
@@ -36,6 +37,7 @@ on:
       - "extensions/**"
       - "framework/**"
       - "requirements-mcp.txt"
+      - "requirements-web.txt"
 
 jobs:
   lint:
@@ -59,6 +61,10 @@ jobs:
 
       - name: Lint check (ruff)
         run: python -m ruff check games/endfield/ games/arknights/ games/wjdlglr/ framework/src/ web/backend/ scripts/ extensions/ tools/calc_mcp/ tools/generator/ tools/wiki_scout/
+
+      - name: Check layout constraints (games/endfield)
+        # 目录宽度 ≤20；文件硬顶 500 行（--max-lines 仅产生 WARN，不阻断）
+        run: python tools/quality/check_layout.py --max-lines 400
 
       - name: Check Python encoding declaration
         run: |

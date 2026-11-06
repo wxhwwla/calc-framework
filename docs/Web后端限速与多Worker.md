@@ -10,8 +10,8 @@
 | 组件 | 存储 | 作用域 |
 |------|------|--------|
 | 滑动窗口计数 | `RateLimitMiddleware._window`（内存） | **当前 worker 进程**；按 API Key 或客户端 IP 分桶，仅 `/api/*` 计数 |
-| API Key 元数据 | `.admin_data/api_keys.json` | 磁盘（多 worker 并发写可能竞态） |
-| 用量统计 | `.admin_data/usage.json` | 磁盘（多 worker 各自累加，统计不完整） |
+| API Key 元数据 | `.data/admin/api_keys.json` | 磁盘（多 worker 并发写可能竞态） |
+| 用量统计 | `.data/admin/usage.json` | 磁盘（多 worker 各自累加，统计不完整） |
 
 **tier 默认限额**（每分钟）：
 
@@ -68,7 +68,7 @@ python -m uvicorn main:app --app-dir web/backend --host 127.0.0.1 --port 8000 \
    }
    ```
 
-3. **用量统计**：当前 `.admin_data/usage.json` 在多 worker 下仅为近似值；精确统计需外部存储（Redis / 日志聚合），尚未实现。
+3. **用量统计**：当前 `.data/admin/usage.json` 在多 worker 下仅为近似值；精确统计需外部存储（Redis / 日志聚合），尚未实现。
 
 ### 2.3 生产环境变量速查
 

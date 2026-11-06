@@ -5,8 +5,22 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
-    # 可选：Admin Token、明日方舟干员数据 volume
-    # environment:
-    #   CALC_ADMIN_TOKEN: "change-me"
-    # volumes:
-    #   - ./tools/arknights_scout/output/parsed:/app/tools/arknights_scout/output/parsed:ro
+    environment:
+      # 未设置时管理写接口返回 503；生产环境通过 .env 或 shell 注入
+      CALC_ADMIN_TOKEN: "${CALC_ADMIN_TOKEN:-}"
+    volumes:
+      # 权威状态：Calc Hub 市场元数据（catalog.db）与配置包文件
+      - calc_hub_data:/app/web/backend/data/hub
+      # 权威状态：API Key 哈希、用量统计、贡献暂存
+      - calc_admin_data:/app/web/backend/.data
+      # 用户历史记录与搜索历史（可重建，保留可避免丢失用户数据）
+      - calc_api_data:/app/web/backend/api/data
+      # 可选：明日方舟干员数据（只读）
+      # - ./tools/arknights_scout/output/parsed:/app/tools/arknights_scout/output/parsed:ro
+    # 健康检查来自 Dockerfile HEALTHCHECK：状态目录可写 + /api/health 可响应。
+    # 备份 / 恢复 / 升级回滚见 docs/Docker部署与数据运维.md。
+
+volumes:
+  calc_hub_data:
+  calc_admin_data:
+  calc_api_data:

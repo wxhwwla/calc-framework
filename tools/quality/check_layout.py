@@ -30,18 +30,6 @@ EXEMPT_RELATIVE_PATHS = frozenset(
 )
 
 
-def _iter_check_dirs(root: Path) -> list[Path]:
-    """遍历根目录下所有需要检查的子目录，排除跳过目录。"""
-    out: list[Path] = []
-    for path in [root, *root.rglob("*")]:
-        if not path.is_dir():
-            continue
-        if any(part in SKIP_DIR_NAMES for part in path.parts):
-            continue
-        out.append(path)
-    return out
-
-
 def check_directory_width(*, max_items: int = 20) -> list[str]:
     """检查目录子项数是否超过上限。
 
@@ -53,12 +41,11 @@ def check_directory_width(*, max_items: int = 20) -> list[str]:
     """
     errors: list[str] = []
     scan_roots = [
-        PKG / "gui",
-        PKG / "calculation",
-        PKG / "tests",
-        PKG / "games/endfield/data",
+        PKG / "calc",
         PKG / "data",
-        PKG / "scripts",
+        PKG / "data_loading",
+        PKG / "gui",
+        PKG / "tests",
     ]
     for scan_root in scan_roots:
         if not scan_root.is_dir():

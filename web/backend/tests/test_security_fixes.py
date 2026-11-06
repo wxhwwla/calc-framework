@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -17,7 +18,11 @@ for _p in (str(_REPO / "framework" / "src"), str(_REPO), str(_BACKEND)):
 
 import pytest
 from api.admin import _hash_key
-from api.internal.safe_http import ValidatedOutboundHost, validate_outbound_api_base
+from api.internal.safe_http import (
+    ValidatedOutboundHost,
+    post_chat_completions,
+    validate_outbound_api_base,
+)
 from api.internal.safe_paths import (
     build_contribute_filename,
     resolve_staging_file,
@@ -94,3 +99,86 @@ class TestSafeHttp:
         assert isinstance(host, ValidatedOutboundHost)
         assert host.chat_completions_url() == "https://api.deepseek.com/chat/completions"
         assert host.resolved_ip == "104.20.22.46"
+
+
+class _RecordingAsyncClient:
+    """记录请求参数的假 httpx.AsyncClient。"""
+
+    instances: list[_RecordingAsyncClient] = []
+
+    def __init__(self, **kwargs: object) -> None:
+        self.init_kwargs = kwargs
+        self.calls: list[tuple[str, dict[str, object]]] = []
+        _RecordingAsyncClient.instances.append(self)
+
+    async def __aenter__(self) -> _RecordingAsyncClient:
+        return self
+
+    async def __aexit__(self, *exc: object) -> None:
+        return None
+
+    async def post(self, url: str, **kwargs: object) -> object:
+        self.calls.append((url, kwargs))
+        return object()
+
+
+class TestSafeHttpTlsHostname:
+    def _run(self, api_base: str) -> tuple[str, dict[str, object], _RecordingAsyncClient]:
+        _RecordingAsyncClient.instances.clear()
+        with (
+            patch("api.internal.safe_http._resolve_hostname", return_value="104.20.22.46"),
+            patch("api.internal.safe_http.httpx.AsyncClient", _RecordingAsyncClient),
+        ):
+            asyncio.run(
+                post_chat_completions(
+                    api_base,
+                    json_body={"model": "test"},
+                    headers={"Authorization": "Bearer test"},
+                    timeout=10.0,
+                )
+            )
+        client = _RecordingAsyncClient.instances[0]
+        url, kwargs = client.calls[0]
+        return url, kwargs, client
+
+    def test_https_connects_to_pinned_ip_with_original_sni(self) -> None:
+        url, kwargs, client = self._run("https://api.openai.com/v1")
+
+        assert url == "https://104.20.22.46/v1/chat/completions"
+        assert kwargs["extensions"] == {"sni_hostname": "api.openai.com"}
+        headers = kwargs["headers"]
+        assert isinstance(headers, dict)
+        assert headers["Host"] == "api.openai.com"
+        # 证书校验必须保持开启：通过 SNI 修复，而不是 verify=False
+        assert client.init_kwargs.get("verify") is not False
+
+    def test_host_header_does_not_override_caller_headers(self) -> None:
+        url, kwargs, _client = self._run("https://api.deepseek.com")
+
+        assert url == "https://104.20.22.46/chat/completions"
+        headers = kwargs["headers"]
+        assert isinstance(headers, dict)
+        assert headers["Authorization"] == "Bearer test"
+        assert headers["Host"] == "api.deepseek.com"
+
+    def test_ipv6_pinned_ip_is_bracketed(self) -> None:
+        _RecordingAsyncClient.instances.clear()
+        with (
+            patch(
+                "api.internal.safe_http._resolve_hostname",
+                return_value="2606:4700:4700::1111",
+            ),
+            patch("api.internal.safe_http.httpx.AsyncClient", _RecordingAsyncClient),
+        ):
+            asyncio.run(
+                post_chat_completions(
+                    "https://api.example.com/v1",
+                    json_body={"model": "test"},
+                    headers={"Authorization": "Bearer test"},
+                    timeout=10.0,
+                )
+            )
+
+        url, kwargs = _RecordingAsyncClient.instances[0].calls[0]
+        assert url == "https://[2606:4700:4700::1111]/v1/chat/completions"
+        assert kwargs["extensions"] == {"sni_hostname": "api.example.com"}
