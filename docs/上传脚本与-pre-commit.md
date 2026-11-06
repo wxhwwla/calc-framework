@@ -14,6 +14,7 @@
 | `python github_upload_module.py --dry-run` | **预览模式**：展示将要执行的变更文件、版本递增计划，不实际修改/推送 |
 | `python github_upload_module.py` | 提交并 push 到 **`develop`**；**默认 patch** bump `_VERSION`（不再询问 P/M） |
 | `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump）；会把工作区残留的 `_VERSION` 校正回 HEAD |
+| `python github_upload_module.py --merge` | push develop 后合并 **develop → main**，不升版本；与 `--minor` / `--tag` 互斥，通常配 `--no-bump` 使用 |
 | `python github_upload_module.py --minor` | 第二位 +1（需人类明确要求时使用）；commit 前备份 `.git` → `git_backup/snapshots/` |
 | `python github_upload_module.py --tag` | 次版本上传时合并 main 后打 `v{_EXE_VERSION}` 标签 |
 
@@ -22,7 +23,7 @@
 | 分支 | 用途 |
 |------|------|
 | **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
-| **`main`** | 仅当 **`--minor`（次版本号）** 时，脚本自动 `develop → main` 合并推送 |
+| **`main`** | **`--minor`**（次版本号）或显式 **`--merge`**（不升版本）时，脚本自动 `develop → main` 合并推送 |
 
 远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：**禁止堆积**。
 

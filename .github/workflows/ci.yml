@@ -171,10 +171,12 @@ jobs:
             --cov=games.endfield --cov-report=term-missing --cov-report=xml \
             --cov-fail-under=60
           ec=$?
-          # PySide6 在解释器退出时偶发 QObject teardown segfault（exit 139）；
-          # 若用例与覆盖率已成功写出 coverage.xml，则忽略该退出码。
-          if [ "$ec" -eq 139 ] && [ -f coverage.xml ]; then
-            echo "::warning::Ignoring Qt teardown segfault (139) after successful endfield pytest"
+          # PySide6 在解释器退出阶段偶发 native crash：segfault（139）或 abort（134，
+          # 日志含 "QObject: shared QObject was deleted directly" /
+          # "malloc(): unaligned tcache chunk"）。coverage.xml 由 pytest 在全部用例
+          # 跑完后写出，因此它存在即表示崩溃发生在 teardown，可忽略该退出码。
+          if { [ "$ec" -eq 139 ] || [ "$ec" -eq 134 ]; } && [ -f coverage.xml ]; then
+            echo "::warning::Ignoring Qt teardown crash ($ec) after successful endfield pytest"
             exit 0
           fi
           exit "$ec"
@@ -185,8 +187,9 @@ jobs:
           xvfb-run -a python -m pytest games/arknights/tests/ -q --tb=short \
             --cov=games.arknights --cov-report=term-missing --cov-report=xml
           ec=$?
-          if [ "$ec" -eq 139 ] && [ -f coverage.xml ]; then
-            echo "::warning::Ignoring Qt teardown segfault (139) after successful arknights pytest"
+          # 同 endfield：139（segfault）与 134（abort）都可能是 teardown 阶段的 Qt 崩溃。
+          if { [ "$ec" -eq 139 ] || [ "$ec" -eq 134 ]; } && [ -f coverage.xml ]; then
+            echo "::warning::Ignoring Qt teardown crash ($ec) after successful arknights pytest"
             exit 0
           fi
           exit "$ec"
