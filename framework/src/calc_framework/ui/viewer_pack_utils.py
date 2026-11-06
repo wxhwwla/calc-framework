@@ -10,11 +10,16 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from utils.zip_safety import validate_zip_member_name
+
 from calc_framework.data.entity_sources import (
     DATA_STEM_SOURCE,
     SOURCE_DATA_STEMS,
     SOURCE_DISPLAY_NAMES,
 )
+
+_MAX_PACK_ENTRIES = 10_000
+_MAX_PACK_BYTES = 64 * 1024 * 1024
 
 _VARIABLE_FIELD_MAP: dict[str, str] = {
     "基础攻击力": "基础攻击",
@@ -56,15 +61,36 @@ _FALLBACK_DEFAULTS: dict[str, float] = {
 _ASSETS_DIR = "assets/"
 
 
+def _validated_infos(zf: zipfile.ZipFile) -> list[zipfile.ZipInfo]:
+    """校验条目名、数量与解压后总大小，返回文件条目。"""
+    infos = [info for info in zf.infolist() if not info.is_dir()]
+    if len(infos) > _MAX_PACK_ENTRIES:
+        raise ValueError(f"calcpack 条目过多（上限 {_MAX_PACK_ENTRIES}）")
+
+    total_bytes = 0
+    for info in infos:
+        validate_zip_member_name(info.filename)
+        total_bytes += info.file_size
+        if total_bytes > _MAX_PACK_BYTES:
+            raise ValueError(f"calcpack 解压后超过 {_MAX_PACK_BYTES // (1024 * 1024)} MiB 限制")
+    return infos
+
+
 def load_calcpack(path: str | Path) -> dict[str, Any]:
-    """加载 .calcpack 文件，返回内部文件映射 {arcname: raw_bytes}。"""
+    """加载 .calcpack 文件，返回内部文件映射 {arcname: raw_bytes}。
+
+    Raises:
+        FileNotFoundError: 文件不存在。
+        ValueError: 条目越界、条目过多、解压后总大小超限或 JSON 无效。
+    """
     p = Path(path)
     if not p.is_file():
         raise FileNotFoundError(f".calcpack 文件未找到: {p}")
     result: dict[str, Any] = {}
     with zipfile.ZipFile(p, "r") as zf:
-        for name in zf.namelist():
-            raw = zf.read(name)
+        for info in _validated_infos(zf):
+            name = info.filename
+            raw = zf.read(info)
             if name.endswith(".json"):
                 result[name] = json.loads(raw.decode("utf-8"))
             else:
@@ -204,15 +230,19 @@ def extract_assets_from_calcpack(pack_path: str | Path, target_dir: str | Path) 
         {ZIP 内路径: 解压后完整路径} 的映射。
     """
     result: dict[str, str] = {}
-    target = Path(target_dir)
+    target = Path(target_dir).resolve()
     with zipfile.ZipFile(str(pack_path), "r") as zf:
-        for name in zf.namelist():
-            if name.startswith(_ASSETS_DIR) and not name.endswith("/"):
-                dest = target / name
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                with zf.open(name) as src, open(dest, "wb") as dst:
-                    dst.write(src.read())
-                result[name] = str(dest)
+        for info in _validated_infos(zf):
+            name = info.filename
+            if not name.startswith(_ASSETS_DIR) or name.endswith("/"):
+                continue
+            dest = (target / name).resolve()
+            if not dest.is_relative_to(target):
+                raise ValueError(f"calcpack 条目越界: {name!r}")
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with zf.open(info) as src, open(dest, "wb") as dst:
+                dst.write(src.read())
+            result[name] = str(dest)
     return result
 
 

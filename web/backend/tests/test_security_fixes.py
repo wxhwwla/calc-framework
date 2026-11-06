@@ -28,14 +28,21 @@ from fastapi import HTTPException
 
 class TestAdminScryptHash:
     def test_hash_deterministic_with_pepper(self) -> None:
-        with patch.dict(os.environ, {"CALC_API_KEY_PEPPER": "test-pepper-32-chars-minimum!!"}):
+        with patch.dict(os.environ, {"CALC_API_KEY_PEPPER": "test-pepper-32-chars-minimum-value!!"}):
             a = _hash_key("cf_test_key")
             b = _hash_key("cf_test_key")
             assert a == b
             assert len(a) == 128  # 64 bytes hex
 
+    def test_hash_rejects_short_pepper(self) -> None:
+        with (
+            patch.dict(os.environ, {"CALC_API_KEY_PEPPER": "too-short"}),
+            pytest.raises(RuntimeError, match="32"),
+        ):
+            _hash_key("cf_test_key")
+
     def test_hash_differs_for_different_keys(self) -> None:
-        with patch.dict(os.environ, {"CALC_API_KEY_PEPPER": "test-pepper-32-chars-minimum!!"}):
+        with patch.dict(os.environ, {"CALC_API_KEY_PEPPER": "test-pepper-32-chars-minimum-value!!"}):
             assert _hash_key("cf_a") != _hash_key("cf_b")
 
 

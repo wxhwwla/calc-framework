@@ -45,6 +45,16 @@ class TestCiTeardownTolerance(unittest.TestCase):
                 self.assertIn("-eq 134", run, f"{name} 未容忍 SIGABRT（exit 134）")
                 self.assertIn("-eq 139", run, f"{name} 未容忍 SIGSEGV（exit 139）")
                 self.assertIn("-f coverage.xml", run, f"{name} 未要求 coverage.xml 作为测试已完成的判据")
+                self.assertIn(
+                    "rm -f coverage.xml",
+                    run,
+                    f"{name} 未在 pytest 前删除旧 coverage.xml，崩溃时可能误判为本次测试已完成",
+                )
+                self.assertLess(
+                    run.index("rm -f coverage.xml"),
+                    run.index("pytest"),
+                    f"{name} 必须在 pytest 前删除旧 coverage.xml",
+                )
 
     def test_game_ci_tolerates_both_signals(self) -> None:
         self._assert_tolerates_both_signals("ci.yml", expected=2)

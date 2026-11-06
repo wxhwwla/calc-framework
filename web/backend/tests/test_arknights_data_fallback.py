@@ -53,12 +53,9 @@ class TestArknightsDataFallback(unittest.TestCase):
             self.skipTest("无可用干员数据")
         name = payload["operators"][0]
         req = ComputeRequest(operator_name=name)
-        try:
-            resp = compute_damage_payload(req)
-            self.assertEqual(resp.operator_name, name)
-            self.assertGreaterEqual(resp.execution_count, 1)
-        except Exception as e:
-            self.skipTest(f"计算跳过: {e}")
+        resp = compute_damage_payload(req)
+        self.assertEqual(resp.operator_name, name)
+        self.assertGreaterEqual(resp.execution_count, 1)
 
 
 if __name__ == "__main__":

@@ -106,6 +106,7 @@ _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
 # 生产环境**必须**设置 CALC_API_KEY_PEPPER（≥32 字符随机串）
 _API_KEY_PEPPER_ENV = "CALC_API_KEY_PEPPER"
+_MIN_PEPPER_LENGTH = 32
 # 不再提供硬编码回退 — 缺少环境变量时启动即失败
 
 
@@ -113,16 +114,20 @@ def _api_key_pepper() -> bytes:
     """读取 API Key 哈希用 pepper。
 
     Raises:
-        RuntimeError: ``CALC_API_KEY_PEPPER`` 环境变量未设置。
+        RuntimeError: ``CALC_API_KEY_PEPPER`` 未设置或短于 32 字符。
     """
     raw = os.environ.get(_API_KEY_PEPPER_ENV, "").strip()
     if not raw:
         raise RuntimeError(
             f"安全配置缺失：环境变量 {_API_KEY_PEPPER_ENV} 未设置。\n"
-            f"请设置一个 ≥32 字符的随机字符串作为 API Key 哈希盐值。\n"
+            f"请设置一个 ≥{_MIN_PEPPER_LENGTH} 字符的随机字符串作为 API Key 哈希盐值。\n"
             f"示例（PowerShell）：\n"
             f"  $env:{_API_KEY_PEPPER_ENV} = '$(openssl rand -base64 32)'\n"
-            f"  或使用任意 ≥32 字符的随机字符串。"
+            f"  或使用任意 ≥{_MIN_PEPPER_LENGTH} 字符的随机字符串。"
+        )
+    if len(raw) < _MIN_PEPPER_LENGTH:
+        raise RuntimeError(
+            f"安全配置错误：环境变量 {_API_KEY_PEPPER_ENV} 至少需要 {_MIN_PEPPER_LENGTH} 字符（当前 {len(raw)} 字符）。"
         )
     return raw.encode("utf-8")
 

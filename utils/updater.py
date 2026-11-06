@@ -39,6 +39,7 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 from utils.checksums import require_https_url
+from utils.zip_safety import ZipSafetyError, safe_extractall
 
 logger = logging.getLogger(__name__)
 
@@ -291,15 +292,9 @@ def extract_and_replace(
 
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
-            # Zip Slip 防护：验证所有条目路径在目标目录内
-            for info in zf.infolist():
-                target_path = (extract_dir / info.filename).resolve()
-                if not str(target_path).startswith(str(extract_dir.resolve())):
-                    logger.warning("Zip Slip 检测: %s", info.filename)
-                    return False
-            zf.extractall(extract_dir)
+            safe_extractall(zf, extract_dir)
 
-    except (zipfile.BadZipFile, OSError):
+    except (zipfile.BadZipFile, OSError, ZipSafetyError):
         return False
 
     is_frozen = getattr(sys, "frozen", False)

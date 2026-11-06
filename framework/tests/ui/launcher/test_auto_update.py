@@ -10,8 +10,13 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+from utils.checksums import sha256_hex
+
+from calc_framework.ui.launcher import auto_update
 from calc_framework.ui.launcher.auto_update import (
     _find_launcher_asset,
+    _is_newer,
     download_and_replace,
     fetch_latest_release,
 )
@@ -97,8 +102,6 @@ def test_download_and_replace_verifies_sha256(
     zip_path.write_bytes(_zip_bytes())
     mock_download.side_effect = lambda url, dest, cb: dest.write_bytes(zip_path.read_bytes())
 
-    from utils.checksums import sha256_hex
-
     mock_expected.return_value = sha256_hex(zip_path)
 
     exe = tmp_path / "launcher.exe"
@@ -110,3 +113,89 @@ def test_download_and_replace_verifies_sha256(
     )
     assert ok is True
     assert exe.read_bytes() == b"fake exe"
+
+
+def test_is_newer_prefers_stable_over_prerelease() -> None:
+    assert _is_newer("0.7.0", "0.7.0-beta") is True
+    assert _is_newer("0.7.0-beta", "0.7.0") is False
+    assert _is_newer("0.7.1", "0.7.0-beta") is True
+
+
+@patch("calc_framework.ui.launcher.auto_update._download_with_progress")
+def test_download_and_replace_requires_checksum(
+    mock_download: MagicMock,
+    tmp_path: Path,
+) -> None:
+    zip_path = tmp_path / "update.zip"
+    zip_path.write_bytes(_zip_bytes())
+    mock_download.side_effect = lambda url, dest, cb: dest.write_bytes(zip_path.read_bytes())
+
+    exe = tmp_path / "launcher.exe"
+    exe.write_bytes(b"old")
+
+    ok = download_and_replace("https://github.com/x/GameCalcPlatform_v1.zip", exe)
+
+    assert ok is False
+    assert exe.read_bytes() == b"old"
+
+
+@patch("calc_framework.ui.launcher.auto_update._fetch_expected_sha256", return_value=None)
+@patch("calc_framework.ui.launcher.auto_update._download_with_progress")
+def test_download_and_replace_rejects_unreadable_checksum(
+    mock_download: MagicMock,
+    _mock_expected: MagicMock,
+    tmp_path: Path,
+) -> None:
+    zip_path = tmp_path / "update.zip"
+    zip_path.write_bytes(_zip_bytes())
+    mock_download.side_effect = lambda url, dest, cb: dest.write_bytes(zip_path.read_bytes())
+
+    exe = tmp_path / "launcher.exe"
+    exe.write_bytes(b"old")
+
+    ok = download_and_replace(
+        "https://github.com/x/GameCalcPlatform_v1.zip",
+        exe,
+        checksum_url="https://github.com/x/GameCalcPlatform_v1.zip.sha256",
+    )
+
+    assert ok is False
+    assert exe.read_bytes() == b"old"
+
+
+@patch("calc_framework.ui.launcher.auto_update._fetch_expected_sha256")
+@patch("calc_framework.ui.launcher.auto_update._download_with_progress")
+def test_download_and_replace_rejects_sibling_prefix_traversal(
+    mock_download: MagicMock,
+    mock_expected: MagicMock,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    update_root = tmp_path / "gcp_update"
+    extract_root = tmp_path / "gcp_extract"
+    update_root.mkdir()
+    extract_root.mkdir()
+    roots = iter([str(update_root), str(extract_root)])
+    monkeypatch.setattr(auto_update.tempfile, "mkdtemp", lambda prefix="": next(roots))
+
+    buf = BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("../gcp_extract_evil/pwn.exe", b"pwn")
+    zip_bytes = buf.getvalue()
+    zip_path = tmp_path / "update.zip"
+    zip_path.write_bytes(zip_bytes)
+    mock_download.side_effect = lambda url, dest, cb: dest.write_bytes(zip_bytes)
+    mock_expected.return_value = sha256_hex(zip_path)
+
+    exe = tmp_path / "launcher.exe"
+    exe.write_bytes(b"old")
+
+    ok = download_and_replace(
+        "https://github.com/x/GameCalcPlatform_v1.zip",
+        exe,
+        checksum_url="https://github.com/x/GameCalcPlatform_v1.zip.sha256",
+    )
+
+    assert ok is False
+    assert not (tmp_path / "gcp_extract_evil" / "pwn.exe").exists()
+    assert exe.read_bytes() == b"old"

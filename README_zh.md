@@ -41,6 +41,8 @@
 ```bash
 git clone https://github.com/wxhwwla/calc-framework
 cd calc-framework
+pip install -e "framework[dev,ui]"
+pip install -e "games/endfield[dev]"
 python scripts/main_launcher.py
 # Windows 无控制台窗口：pythonw scripts/main_launcher.py
 ```
@@ -102,6 +104,10 @@ python scripts/main_launcher.py
 ### 推荐：启动器
 
 ```powershell
+# 首次运行先装框架与终末地依赖（均在仓库根执行）
+pip install -e "framework[dev,ui]"
+pip install -e "games/endfield[dev]"
+
 # 自动发现已安装的游戏适配包
 python scripts/main_launcher.py
 ```
@@ -127,7 +133,7 @@ python scripts/main_dev_toolkit.py
 
 ```powershell
 # 后端
-cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8002
+cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8180
 
 # 前端（新终端）
 cd web/frontend && npm install && npm run dev

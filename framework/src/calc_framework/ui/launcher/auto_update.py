@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tempfile
 import threading
@@ -30,6 +31,7 @@ from utils.checksums import (
     require_https_url,
     sha256_hex,
 )
+from utils.zip_safety import safe_extractall
 
 _REPO = "wxhwwla/calc-framework"
 _API_LATEST = f"https://api.github.com/repos/{_REPO}/releases/latest"
@@ -66,16 +68,21 @@ def _strip_v(tag: str) -> str:
 
 
 def _parse_version_tuple(ver: str) -> tuple[int, ...]:
-    """解析版本字符串为可比较的整数元组。"""
-    parts = ver.replace("-", ".").split(".")
-    result = []
-    for p in parts:
+    """解析版本字符串；正式版排在预发布版之后。"""
+    core, _, prerelease = ver.partition("-")
+    numbers: list[int] = []
+    for part in core.split("."):
         try:
-            result.append(int(p))
+            numbers.append(int(part))
         except ValueError:
-            # 对于 "beta" 等非数字部分，用大数确保预发布版 < 正式版
-            result.append(9999)
-    return tuple(result)
+            numbers.append(0)
+    while len(numbers) < 3:
+        numbers.append(0)
+
+    if not prerelease:
+        return (*numbers, 1, 0)
+    match = re.match(r"\d+", prerelease)
+    return (*numbers, 0, int(match.group()) if match else 0)
 
 
 def _is_newer(remote_ver: str, local_ver: str) -> bool:
@@ -245,9 +252,13 @@ def download_and_replace(
             if zf.testzip() is not None:
                 raise RuntimeError("ZIP 完整性校验失败")
 
-        expected = _fetch_expected_sha256(checksum_url) if checksum_url else None
+        if not checksum_url:
+            raise RuntimeError("更新包缺少 SHA256 校验文件，已拒绝更新")
+        expected = _fetch_expected_sha256(checksum_url)
+        if not expected:
+            raise RuntimeError("SHA256 校验文件缺失或格式错误")
         actual = _sha256_checksum(zip_path)
-        if expected and actual != expected:
+        if actual != expected:
             raise RuntimeError("SHA256 校验失败")
 
         # 解压 ZIP
@@ -256,12 +267,7 @@ def download_and_replace(
 
         extract_dir = Path(tempfile.mkdtemp(prefix="gcp_extract_"))
         with zipfile.ZipFile(zip_path, "r") as zf:
-            # Zip Slip 防护：验证所有条目路径在目标目录内
-            for info in zf.infolist():
-                target_path = (extract_dir / info.filename).resolve()
-                if not str(target_path).startswith(str(extract_dir.resolve())):
-                    raise RuntimeError(f"Zip Slip 检测: {info.filename}")
-            zf.extractall(extract_dir)
+            safe_extractall(zf, extract_dir)
 
         # 查找 exe
         exe_files = list(extract_dir.rglob("*.exe"))

@@ -166,6 +166,7 @@ jobs:
 
       - name: Run endfield tests
         run: |
+          rm -f coverage.xml
           set +e
           xvfb-run -a python -m pytest games/endfield/tests/ -q --tb=short \
             --cov=games.endfield --cov-report=term-missing --cov-report=xml \
@@ -183,6 +184,7 @@ jobs:
 
       - name: Run arknights tests
         run: |
+          rm -f coverage.xml
           set +e
           xvfb-run -a python -m pytest games/arknights/tests/ -q --tb=short \
             --cov=games.arknights --cov-report=term-missing --cov-report=xml

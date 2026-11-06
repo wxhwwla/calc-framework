@@ -857,8 +857,10 @@ class TestSearchExtended(unittest.TestCase):
             "skill_3_level": 8,
         }
         resp = self.client.post("/api/search/estimate", json=payload)
-        # 如果引擎可用则 200，否则 500
-        self.assertIn(resp.status_code, (200, 500))
+        self.assertEqual(resp.status_code, 200, resp.text)
+        data = resp.json()
+        self.assertIn("total_combinations", data)
+        self.assertGreaterEqual(data["total_combinations"], 0)
 
     def test_search_run_endpoint(self) -> None:
         """Full search endpoint - skipped in CI (long integration test)."""

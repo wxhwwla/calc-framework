@@ -39,6 +39,8 @@
 ```bash
 git clone https://github.com/wxhwwla/calc-framework
 cd calc-framework
+pip install -e "framework[dev,ui]"
+pip install -e "games/endfield[dev]"
 python scripts/main_launcher.py
 # Windows, no console window: pythonw scripts/main_launcher.py
 ```
@@ -152,7 +154,7 @@ python -m games.endfield.main
 
 ```powershell
 # Backend
-cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8002
+cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8180
 
 # Frontend (separate terminal)
 cd web/frontend && npm install && npm run dev

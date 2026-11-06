@@ -234,6 +234,26 @@ class TestExtractAndReplace:
         assert (target / "dummy.txt").exists()
         assert (target / "dummy.txt").read_text() == "hello world"
 
+    @patch("utils.updater.tempfile.gettempdir")
+    def test_rejects_sibling_prefix_traversal(
+        self,
+        mock_gettempdir: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        mock_gettempdir.return_value = str(tmp_path)
+
+        buf = BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("../egdc_extract_evil/pwn.txt", b"pwn")
+        zip_path = tmp_path / "bad.zip"
+        zip_path.write_bytes(buf.getvalue())
+
+        target = tmp_path / "install"
+        success = extract_and_replace(zip_path, target_dir=str(target))
+
+        assert success is False
+        assert not (tmp_path / "egdc_extract_evil" / "pwn.txt").exists()
+
 
 # ── Helper tests ──────────────────────────────────
 
