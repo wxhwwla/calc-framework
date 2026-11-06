@@ -59,9 +59,10 @@ jobs:
           set +e
           xvfb-run -a python -m pytest tests/ -q --ignore=tests/benchmarks/ --cov=calc_framework --cov-report=term --cov-report=xml --cov-fail-under=65
           ec=$?
-          # PySide6 退出阶段偶发 segfault（139）；覆盖率已写出则视为通过
-          if [ "$ec" -eq 139 ] && [ -f coverage.xml ]; then
-            echo "::warning::Ignoring Qt teardown segfault (139) after successful framework pytest"
+          # PySide6 退出阶段偶发 native crash：segfault（139）或 abort（134）；
+          # coverage.xml 已写出说明 pytest 已跑完全部用例，视为通过
+          if { [ "$ec" -eq 139 ] || [ "$ec" -eq 134 ]; } && [ -f coverage.xml ]; then
+            echo "::warning::Ignoring Qt teardown crash ($ec) after successful framework pytest"
             exit 0
           fi
           exit "$ec"

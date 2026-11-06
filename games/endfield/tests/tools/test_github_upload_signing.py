@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 """github_upload_module 提交签名行为测试。"""
 
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -158,6 +159,47 @@ class TestDualVersionReleaseMerge(unittest.TestCase):
 
         with patch.object(upload, "run_git", side_effect=fake_run_git):
             self.assertFalse(upload._should_merge_to_release(was_minor=False))
+
+    def test_should_merge_when_forced_without_minor(self):
+        def fake_run_git(args, **_):
+            if args[:2] == ["rev-parse", "--verify"]:
+                return 0, "abc", ""
+            return 1, "", ""
+
+        with patch.object(upload, "run_git", side_effect=fake_run_git):
+            self.assertTrue(upload._should_merge_to_release(was_minor=False, force_merge=True))
+
+    def test_should_not_merge_when_forced_but_remote_missing(self):
+        def fake_run_git(args, **_):
+            return 1, "", ""
+
+        with patch.object(upload, "run_git", side_effect=fake_run_git):
+            self.assertFalse(upload._should_merge_to_release(was_minor=False, force_merge=True))
+
+
+class TestMergeFlagCli(unittest.TestCase):
+    def test_parse_no_bump_merge(self):
+        with patch.object(sys, "argv", ["prog", "--no-bump", "--merge"]):
+            args = upload.parse_args()
+        self.assertTrue(args.no_bump)
+        self.assertTrue(args.merge)
+
+    def test_merge_flag_defaults_false(self):
+        with patch.object(sys, "argv", ["prog"]):
+            args = upload.parse_args()
+        self.assertFalse(args.merge)
+
+    def test_validate_rejects_minor_with_merge(self):
+        msg = upload._validate_flag_conflicts(minor=True, no_bump=False, merge=True, tag=False)
+        self.assertIsNotNone(msg)
+        self.assertIn("--merge", msg or "")
+
+    def test_validate_rejects_merge_with_tag(self):
+        msg = upload._validate_flag_conflicts(minor=False, no_bump=True, merge=True, tag=True)
+        self.assertIsNotNone(msg)
+
+    def test_validate_allows_no_bump_merge(self):
+        self.assertIsNone(upload._validate_flag_conflicts(minor=False, no_bump=True, merge=True, tag=False))
 
 
 class TestPorcelainDeletedPaths(unittest.TestCase):

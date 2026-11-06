@@ -5,6 +5,7 @@
 
 提交说明由 summarize_changes 内存生成（无 UPLOAD_SUMMARY 磁盘块）。
 commit 成功后若 push 失败：保留工作区与 HEAD 的新版本，用 --no-bump 补推。
+需要把 develop 同步到 main 但不升版本时：--no-bump --merge。
 """
 
 from __future__ import annotations
@@ -1043,17 +1044,20 @@ def _sync_saved_version_with_head(readme_path: Path, meta) -> str:
     return saved_version
 
 
-def _should_merge_to_release(*, was_minor: bool) -> bool:
-    """次版本号上传时自动同步 develop → main。"""
-    if not was_minor:
-        print(f"[信息] 非次版本上传，仅推送 {WORK_BRANCH}")
+def _should_merge_to_release(*, was_minor: bool, force_merge: bool = False) -> bool:
+    """次版本号上传或显式 --merge 时同步 develop → main。"""
+    if not was_minor and not force_merge:
+        print(f"[信息] 非次版本上传且未指定 --merge，仅推送 {WORK_BRANCH}")
         return False
     release_ref = _remote_release_ref()
     code, _, _ = run_git(["rev-parse", "--verify", release_ref], check=False, capture_output=True)
     if code != 0:
         print(f"[信息] 远程尚无 {RELEASE_BRANCH}，跳过合并")
         return False
-    print(f"[信息] 次版本上传 → 合并 {WORK_BRANCH} → {RELEASE_BRANCH}")
+    if was_minor:
+        print(f"[信息] 次版本上传 → 合并 {WORK_BRANCH} → {RELEASE_BRANCH}")
+    else:
+        print(f"[信息] --merge → 合并 {WORK_BRANCH} → {RELEASE_BRANCH}（不升版本）")
     return True
 
 
@@ -1260,6 +1264,7 @@ def commit_and_push(
     *,
     minor: bool = False,
     no_bump: bool = False,
+    merge_to_release: bool = False,
     push_tag: bool = False,
     skip_git_backup: bool = False,
     dry_run: bool = False,
@@ -1267,6 +1272,7 @@ def commit_and_push(
     """执行 git 提交与推送流程（含版本管理和总结块管理）。
 
     参数:
+        merge_to_release: 推送 develop 后合并 develop → main（不升版本）。
         dry_run: 预览模式，展示操作计划但不实际修改或推送。
     """
     os.chdir(_repo_root())
@@ -1380,8 +1386,8 @@ def commit_and_push(
             print(f"  变更文件:     {len(change_paths)} 个")
             for p in sorted(change_paths):
                 print(f"    - {p}")
-            if was_minor:
-                print(f"  Minor 操作:   合并 {WORK_BRANCH} → {RELEASE_BRANCH}")
+            if was_minor or merge_to_release:
+                print(f"  合并:          {WORK_BRANCH} → {RELEASE_BRANCH}")
             if push_tag:
                 print(f"  标签:         v{version_for_msg if version_planned_bump else saved_version}")
             print("=" * 60)
@@ -1456,14 +1462,14 @@ def commit_and_push(
 
     if push_succeeded:
         try:
-            if _should_merge_to_release(was_minor=was_minor):
+            if _should_merge_to_release(was_minor=was_minor, force_merge=merge_to_release):
                 _merge_work_into_release(
                     meta=meta,
                     readme_path=readme_path,
                     push_tag=push_tag,
                 )
             elif push_tag:
-                print("[信息] --tag 已跳过：仅次版本上传时合并并打标签，请使用 --minor")
+                print("[信息] --tag 已跳过：仅 --minor 上传会合并并打标签")
         except subprocess.CalledProcessError:
             print(f"[警告] {WORK_BRANCH} 已推送，但合并 {RELEASE_BRANCH} 失败，请人工处理 merge")
             raise
@@ -1473,6 +1479,17 @@ def commit_and_push(
             f"[信息] 当前 _VERSION = {meta.read_version(readme_path)}"
             f"（_EXE_VERSION = {meta.read_exe_version(readme_path)}）"
         )
+
+
+def _validate_flag_conflicts(*, minor: bool, no_bump: bool, merge: bool, tag: bool) -> str | None:
+    """返回参数冲突提示；无冲突返回 None。"""
+    if minor and no_bump:
+        return "--minor 与 --no-bump 不能同时使用"
+    if minor and merge:
+        return "--minor 已自动合并 develop → main，不能与 --merge 同时使用"
+    if merge and tag:
+        return "--merge 不升版本，不能与 --tag 同时使用（发版请用 --minor）"
+    return None
 
 
 def parse_args() -> argparse.Namespace:
@@ -1491,6 +1508,12 @@ def parse_args() -> argparse.Namespace:
         "--no-bump",
         action="store_true",
         help="本次不递增 _VERSION（已有未推送 commit 或显式跳过 bump 时使用）",
+    )
+
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="推送 develop 后合并 develop → main（不升版本；通常与 --no-bump 同用）",
     )
 
     parser.add_argument(
@@ -1538,8 +1561,15 @@ def main() -> None:
 
     args = parse_args()
 
-    if args.minor and args.no_bump:
-        print("[错误] --minor 与 --no-bump 不能同时使用")
+    conflict = _validate_flag_conflicts(
+        minor=args.minor,
+        no_bump=args.no_bump,
+        merge=args.merge,
+        tag=args.tag,
+    )
+
+    if conflict:
+        print(f"[错误] {conflict}")
 
         sys.exit(1)
 
@@ -1571,6 +1601,7 @@ def main() -> None:
         commit_and_push(
             minor=args.minor,
             no_bump=args.no_bump,
+            merge_to_release=args.merge,
             push_tag=args.tag,
             skip_git_backup=args.no_git_backup,
             dry_run=args.dry_run,
