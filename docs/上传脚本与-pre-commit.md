@@ -26,7 +26,7 @@
 
 远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：**禁止堆积**。
 
-自 2026-10-25 起 `.github/dependabot.yml` 全部 `open-pull-requests-limit: 0`（仍写 Security 告警，**不再开 PR/分支**）。若仍冒出 bot 分支，立刻关 PR 并删分支：
+自 2026-10-25 起 `.github/dependabot.yml` 全部 `open-pull-requests-limit: 0`（仍写 Security 告警，**不再开 PR/分支**）。**注意：GitHub 只读取默认分支 `main` 上的本文件**——只提交到 `develop` 时，每月扫描仍按 `main` 的旧配置创建 PR/分支；改完本文件须用 `--minor` 上传，随 `develop → main` 合并落盘。若仍冒出 bot 分支，关闭 PR 并（经用户确认后）删除分支：
 
 ```powershell
 git fetch --prune

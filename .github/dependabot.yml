@@ -5,6 +5,10 @@
 # open-pull-requests-limit: 0 → 仍写 Security/Dependabot 告警，但**不创建**
 # dependabot/* 分支与 PR，避免合 main 后一窝蜂再开一堆 bot 分支。
 # 日常依赖升级由维护者按需手动改 + 上传脚本推送。
+#
+# ⚠️ GitHub 只读取**默认分支 main** 上的本文件。只提交到 develop 不会生效：
+#    每月扫描仍按 main 的旧配置创建 PR/分支。修改后须用
+#    `python github_upload_module.py --minor` 合并 develop → main 才会落盘。
 
 version: 2
 updates:
