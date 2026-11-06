@@ -25,6 +25,18 @@ if %errorlevel% neq 0 (
 )
 for /f "tokens=*" %%i in ('python --version 2^>^&1') do echo [OK] %%i
 
+:: --- 解析 pythonw：GUI 模式用它启动，避免附带控制台窗口 ---
+set "PYTHONW="
+for /f "delims=" %%p in ('where pythonw 2^>nul') do (
+    set "PYTHONW=%%p"
+    goto :got_pythonw
+)
+:got_pythonw
+if not defined PYTHONW set "PYTHONW=pythonw"
+
+:: --- 仓库根（%~dp0 为 scripts\，支持双击/快捷方式从任意目录启动）---
+for %%i in ("%~dp0..") do set "ROOT=%%~fi"
+
 :: --- 检查参数，决定启动模式 ---
 set MODE=%1
 if /i "%MODE%"=="游戏" goto :launch_launcher
@@ -61,12 +73,8 @@ goto :menu
 echo.
 echo [启动中] 正在打开游戏启动器...
 echo.
-set PYTHONPATH=%CD%\framework\src;%CD%;%CD%\tools;%CD%\games\endfield
-python scripts/main_launcher.py
-if %errorlevel% neq 0 (
-    echo [!] 启动失败，请检查上方错误信息
-    pause
-)
+set "PYTHONPATH=%ROOT%\framework\src;%ROOT%;%ROOT%\tools;%ROOT%\games\endfield"
+start "" "%PYTHONW%" "%ROOT%\scripts\main_launcher.py"
 goto :eof
 
 :: --- 模式 2：开发者工具箱 ---
@@ -74,12 +82,8 @@ goto :eof
 echo.
 echo [启动中] 正在打开开发者工具箱...
 echo.
-set PYTHONPATH=%CD%\framework\src;%CD%;%CD%\tools;%CD%\games\endfield
-python scripts/main_dev_toolkit.py
-if %errorlevel% neq 0 (
-    echo [!] 启动失败，请检查上方错误信息
-    pause
-)
+set "PYTHONPATH=%ROOT%\framework\src;%ROOT%;%ROOT%\tools;%ROOT%\games\endfield"
+start "" "%PYTHONW%" "%ROOT%\scripts\main_dev_toolkit.py"
 goto :eof
 
 :: --- 模式 3：本地 Web 服务器 ---
@@ -100,7 +104,8 @@ if %errorlevel% neq 0 (
 )
 for /f "tokens=*" %%i in ('node --version 2^>^&1') do echo [OK] Node.js %%i
 echo.
-python web\run_local.py
+set "PYTHONPATH=%ROOT%\framework\src;%ROOT%;%ROOT%\tools;%ROOT%\games\endfield"
+python "%ROOT%\web\run_local.py"
 if %errorlevel% neq 0 (
     echo [!] 服务器启动失败，请检查上方错误信息
     pause

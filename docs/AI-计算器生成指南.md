@@ -44,7 +44,7 @@ endfield_damage_calculator/
 | `functions.py` | ❌ | DAG 中调用的纯函数 | AI（有自定义公式时） |
 | `ui/layout.json` | ✅ | UI 布局（输入面板 + 输出面板） | AI |
 | `loader.py` | ❌ | 数据上下文加载器 | 简化场景可不写 |
-| `data/*.json` | ❌ | 游戏数据（角色、武器数值表） | 用户 / 爬虫 |
+| `data/*.json` | ❌ | 游戏数据（`characters.json` / `weapons.json` / `equipments.json` / `enemies.json`，记录含 `名称`） | MCP `data_files` / 用户 / 爬虫 |
 
 ### 1.3 DAG 引擎核心概念
 
@@ -69,7 +69,7 @@ DAG = **有向无环图**，由节点（nodes）和变量（variables）组成�
 | `binary` | 二元运算 | `{ "type": "binary", "op": "+", "lhs": "a", "rhs": "b" }` |
 | `unary` | 一元运算 | `{ "type": "unary", "op": "negate", "input": "a" }` |
 | `condition` | 条件分支 | `{ "type": "condition", "cond": "is_crit", "true_val": "x", "false_val": "y" }` |
-| `expr` | 调用函数 | `{ "type": "expr", "expr": "clamp(x, 0, 999)", "inputs": {"x": "node_id"} }` |
+| `expr` | 调用函数 / 内联表达式 | `{ "type": "expr", "expr": "clamp(x, 0, 999)", "inputs": {"x": "node_id"} }`；支持比较 `< <= > >= == !=`、`and/or/not`（短路）与三元 `a if cond else b`，例如 `atk * (1 if defense < 100 else 100 / (100 + defense))` |
 | `call` | 调用子图 | `{ "type": "call", "subgraph": "sub_id", "inputs": {...} }` |
 | `output` | 声明输出 | 也可以用顶层 `outputs` 字段 |
 
@@ -275,6 +275,20 @@ distance → 判断落在哪个区间 → lerp(近距离伤害, 远距离伤害,
 - `outputs` 类型的 section：outputs 数组引用 DAG 中 outputs 的 key
 - 可以有多个 inputs 和 outputs section（分类展示）
 - section id 唯一
+- 可选 `"tab": "页签名"` 把 section 分到不同页签（如「计算」与「乘区明细」）；**必须所有 section 都写或都不写**，否则布局校验报错
+- 输出较多时优先给每个乘区单独的 output，并把中间量 section 放到第二页签；`columns` 按可用宽度选择 2–3，避免标签被裁切
+
+**用 MCP `generate_adapter` 生成时**（推荐，自动应用以下规则）：
+- 输入区只收 `user_input` 源变量；`computed` 不显示。
+- `character` / `weapon` / `equipment` / `enemy` 源变量分两种：
+  - **未绑定**（未出现在 `data_files`，或提供的是空列表）：自动改写为 `user_input.<name>`，仍可编辑，layout 按**原 source** 分组为 角色/武器/装备/目标参数（section id `inputs_character` / `inputs_weapon` / `inputs_equipment` / `inputs_enemy`）。空列表会在 `warnings` 中提示「按未绑定处理」。
+  - **已绑定**（`data_files` 提供了该类**非空**记录列表）：保留 `source.name` 命名空间，由查看器实体下拉注入，不出现在输入区。
+- 手工编写 layout 时不要引用已绑定来源的变量，否则查看器会重复展示。
+- 数据文件记录须含 `名称`，查看器按名称建立下拉；标量数值字段自动扁平化，数值数组按等级取值。
+- 变量 `name` 应与记录中的字段名一致（如变量 `防御` ↔ 记录 `"防御": 100`），否则查看器取不到该字段、只能回退到变量默认值；唯一例外是 `基础攻击力` 会自动映射为 `基础攻击`。
+- 需要展示实体字段时传 `entity_detail`（`source` + `sections[{title, columns, fields[{field,label,format?}]}]`），查看器在最左列渲染明细。
+- 需要按实体灰显输入时传 `entity_input_rules`（`{source, field, equals, disable:[user_input.*], reason?}`）；记录缺字段则不命中，输入保持可编辑。实体上的分类若同时影响公式，应另建**数值**变量（如 `is_energy` 1.0/0.0）参与 DAG 计算，字符串字段只用于展示。
+- 需要分页或指定列数时传 `layout_sections`：`[{"type":"inputs","title":"输入参数","source":"user_input","tab":"计算"}, {"type":"outputs","title":"计算结果","outputs":["最终伤害"],"columns":3,"tab":"计算"}, {"type":"outputs","title":"乘区明细","outputs":["基础乘区","暴击乘区"],"columns":3,"tab":"乘区明细"}]`。inputs 段的 `variables` 与 `source` 二选一；`columns` 限 1–3；`tab` 必须全写或全不写；省略本参数时按原 source 自动分组，存在非主输出时自动分「计算」/「乘区明细」两页，否则单页。
 
 ### Step 7: 验证
 

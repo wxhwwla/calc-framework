@@ -90,6 +90,8 @@ def _launcher_readme(exe_version: str, package_version: str) -> str:
 
   - 明日方舟伤害计算器（--game arknights）
 
+  - 无尽的拉格朗日武器输出计算器（--game wjdlglr）
+
   - 开发者工具箱（--tool dev_toolkit）
 
   - 计算包查看器（--tool viewer）

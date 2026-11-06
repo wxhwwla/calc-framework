@@ -14,7 +14,7 @@ PySide6 GUI，提供公式反推、数据浏览等功能。
 
 
 
-打包入口：python build.py --target designer
+打包入口：随开发者工具箱一起打包（python scripts/main_build.py --target toolkit）
 
 """
 

@@ -41,7 +41,7 @@
 
 ## 快速开始
 
-详见 [`docs/quickstart.md`](docs/quickstart.md)。
+详见 [`docs/quickstart.md`](../docs/quickstart.md)。
 
 ```python
 from calc_framework.config.adapter import AdapterPackage
@@ -275,6 +275,25 @@ print(result.outputs)
 # {"总攻击力": 115.0, "基础伤害": 85.0, "暴击倍率": 1.5, "最终伤害": 127.5}
 ```
 
+### 无尽的拉格朗日 武器输出（八乘区 + 命中率乘区）
+
+`framework/adapters/wjdlglr/` — 由 `tools/calc_mcp`（stdio MCP 服务器）生成后按八乘区口径扩展的适配器（45 变量 / 104 节点 / 42 输出）。武器属性、母舰标志与 16 种目标基础命中率来自 `tools/wiki_scout` 抓取并生成的 `data/weapons.json`（571 条「舰船 × 武器」记录），查看器用「舰船种类 → 舰船 → 武器」三级联动下拉注入 `weapon.*`（`meta.entity_selectors`），并在最左列显示武器明细（`meta.entity_detail`）；比率输入按百分比填写，编组数量为整数。能量武器使用能量护甲、实弹/辅助武器使用物理护甲（`weapon.is_energy`），不需要母舰的舰船自动灰显母舰加成、友方武器灰显命中率输入（`meta.entity_input_rules`）：
+
+```
+发射数       = 编组数量 × 武器数量 × 弹药数 × 攻击次数
+飞行时间     = (去程 + 回程) × (1 − 自身飞行加成 − 母舰飞行加成)，无母舰/无去回程时为 0
+冷却与持续时间 = 基础冷却 × (1 − 冷却加成) + 基础持续 × (1 − 持续加成)
+每分钟发射数  = 发射数 ÷ (冷却与持续时间 + 飞行时间) × 60
+暴击增伤倍率  = coalesce(基础暴击倍率, 加成暴击率) × 基础爆伤 × (1 + 暴击倍率加成)
+甲后单发     = 基础单发 × (1 + 伤害加成) − 护甲（能量武器用能量护甲，其余用物理护甲）
+最终单发     = 甲后单发 × (1 + 暴击增伤倍率)
+中间命中率   = (目标总闪避率 + 命中率加成) × (1 + Wiki 基础命中率)
+最终命中率   = clamp(中间命中率, 5%, 95%) + 正态浮动（N(0, 0.03)，手动填入抽样值）
+最终每分钟伤害_目标 = 每分钟发射数 × 最终单发 × 最终命中率
+```
+
+命中率按 16 种目标舰种分别输出（战机/护航艇/无人机/登陆舰(作业态)/护卫舰/驱逐舰/巡洋舰/战列巡洋舰/战列舰/航空母舰/支援舰/小型·中型·大型工程舰/大本营船/基地）。维修、驻防、增益类武器固定 100% 命中，不参与钳制与浮动。另保留 `满命中每分钟伤害` 作为未乘命中率的参考；第二分页「命中率乘区」显示 16 个最终命中率（百分比格式）。
+
 ---
 
 ## 构建 DAG 公式
@@ -386,5 +405,5 @@ python -c "from calc_framework.publish import build_catalog; build_catalog('dist
 
 ```bash
 cd framework
-python -m pytest tests/ -q    # 293 passed
+python -m pytest tests/ -q
 ```

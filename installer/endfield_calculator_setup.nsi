@@ -15,8 +15,12 @@ RequestExecutionLevel admin
   !define APP_ROOT "..\dist"
 !endif
 
+!ifndef OUTPUT
+  !define OUTPUT "..\dist\GameCalcPlatform_Setup_v${VERSION}.exe"
+!endif
+
 Name "${PRODUCT_NAME} v${VERSION}"
-OutFile "..\dist\GameCalcPlatform_Setup_v${VERSION}.exe"
+OutFile "${OUTPUT}"
 InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
 InstallDirRegKey HKLM "Software\${PUBLISHER}\${PRODUCT_NAME}" ""
 
@@ -46,11 +50,21 @@ Section "-MainInstall"
   WriteRegDWord HKLM "${UNINSTALL_KEY}" "NoModify" 1
   WriteRegDWord HKLM "${UNINSTALL_KEY}" "NoRepair" 1
 
-  ; .calcpack 文件关联
+  ; .calcpack 文件关联（仅当未被其他程序占用；记录所有权供卸载恢复）
+  ReadRegStr $0 HKCR ".calcpack" ""
+  StrCmp $0 "" install_calcpack_assoc
+  StrCmp $0 "${PRODUCT_NAME}.calcpack" install_calcpack_assoc
+  WriteRegDWord HKLM "${UNINSTALL_KEY}" "CalcpackOwned" 0
+  Goto calcpack_assoc_done
+
+  install_calcpack_assoc:
   WriteRegStr HKCR ".calcpack" "" "${PRODUCT_NAME}.calcpack"
   WriteRegStr HKCR "${PRODUCT_NAME}.calcpack" "" "Game Calc Platform 配置包"
   WriteRegStr HKCR "${PRODUCT_NAME}.calcpack\DefaultIcon" "" "$INSTDIR\${LAUNCHER_EXE},0"
   WriteRegStr HKCR "${PRODUCT_NAME}.calcpack\shell\open\command" "" '"$INSTDIR\${LAUNCHER_EXE}" --calcpack "%1"'
+  WriteRegDWord HKLM "${UNINSTALL_KEY}" "CalcpackOwned" 1
+
+  calcpack_assoc_done:
   System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 SectionEnd
 
@@ -73,12 +87,6 @@ Section "StartMenuAndDesktop"
     CreateShortCut "$DESKTOP\Game Calc Platform.lnk" "$INSTDIR\${LAUNCHER_EXE}" "" "$INSTDIR\${LAUNCHER_EXE}" 0
 SectionEnd
 
-Section /o "AddToPath"
-  ; 可选：添加安装目录到 PATH（供 devtool.py 等命令行工具使用）
-  Push "$INSTDIR"
-  Call AddToPath
-SectionEnd
-
 Function .onInstSuccess
   MessageBox MB_OK|MB_ICONINFORMATION "${PRODUCT_NAME} v${VERSION} 安装完成！$\n$\n已安装到: $INSTDIR"
 FunctionEnd
@@ -93,57 +101,13 @@ Section "Uninstall"
   ; 删除桌面快捷方式
   Delete "$DESKTOP\Game Calc Platform.lnk"
 
-  ; 删除注册表项
+  ; 删除注册表项（仅当本安装器创建了 .calcpack 关联时才删除）
+  ReadRegDWord $0 HKLM "${UNINSTALL_KEY}" "CalcpackOwned"
   DeleteRegKey HKLM "${UNINSTALL_KEY}"
+  StrCmp $0 "1" 0 calcpack_uninstall_done
   DeleteRegKey HKCR ".calcpack"
   DeleteRegKey HKCR "${PRODUCT_NAME}.calcpack"
+
+  calcpack_uninstall_done:
   System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 SectionEnd
-
-; ─── 辅助函数 ──────────────────────────────────────
-
-Function AddToPath
-  Exch $0
-  Push $1
-  Push $2
-  Push $3
-
-  ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
-  StrCpy $2 $1
-  StrCpy $3 ""
-  DetailPrint "当前 PATH: $1"
-
-  loop:
-    StrCmp $2 "" add
-    StrCpy $3 $2 1
-    StrCmp $3 ";" 0 next
-    StrCpy $2 $2 "" 1
-    Goto loop
-  next:
-    StrCpy $3 $2 1024
-    StrCmp $3 $0 found
-    IntOp $2 $2 + 1024
-    StrCmp $2 "" add
-    Goto loop
-
-  found:
-    DetailPrint "PATH 中已存在 $0，跳过"
-    Goto done
-
-  add:
-    StrCmp $1 "" 0 prepend_semicolon
-    StrCpy $1 "$0"
-    Goto write
-  prepend_semicolon:
-    StrCpy $1 "$1;$0"
-
-  write:
-    WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path" $1
-    DetailPrint "已添加 $0 到 PATH"
-
-  done:
-    Pop $3
-    Pop $2
-    Pop $1
-    Pop $0
-FunctionEnd

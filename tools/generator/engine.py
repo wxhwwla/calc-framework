@@ -9,6 +9,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from tools.generator.data_files import (
+    DATA_FILE_BY_SOURCE,
+    bound_entity_sources,
+    normalize_data_files,
+    serialize_data_file,
+)
+from tools.generator.layout_sections import build_attr_schema, build_custom_layout, build_layout
+from tools.generator.selectors import normalize_entity_selectors
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ADAPTERS_DIR = _REPO_ROOT / "framework" / "adapters"
 
@@ -46,8 +55,11 @@ class VarDef:
     name: str
     type: str = "float"
     source: str = "user_input"
-    default: float | bool = 0
+    default: float | bool | int | str = 0
     description: str = ""
+    min: float | int | None = None
+    max: float | int | None = None
+    ui_control: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -89,20 +101,53 @@ class GeneratorEngine:
             formula_steps=[...],
             outputs=[...],
         )
-        # files = {"meta.json": ..., "dag/formula.dag.json": ..., ...}
+        # files = {"meta.json": ..., "dag/<name>.dag.json": ..., ...}
     """
+
+    def __init__(self, adapters_dir: str | Path | None = None) -> None:
+        """初始化生成引擎。
+
+        Args:
+            adapters_dir: 模板根目录；默认使用仓库的 ``framework/adapters/``。
+        """
+        self._adapters_dir = Path(adapters_dir) if adapters_dir else _ADAPTERS_DIR
 
     def generate(
         self,
-        template_id: str,
-        game_name: str,
+        template_id: str | None = None,
+        game_name: str = "",
         *,
         variables: list[dict] | None = None,
         formula_steps: list[dict] | None = None,
         outputs: list[dict] | None = None,
+        data_files: dict[str, list[dict]] | None = None,
+        entity_selectors: list[dict] | None = None,
+        entity_detail: dict | None = None,
+        entity_input_rules: list[dict] | None = None,
+        layout_sections: list[dict] | None = None,
         output_dir: str | None = None,
     ) -> dict[str, str]:
-        """生成适配器包的所有文件，返回 {相对路径: 文件内容}。"""
+        """生成适配器包的所有文件，返回 {相对路径: 文件内容}。
+
+        Args:
+            template_id: 模板目录名；为 None 时使用通用默认值，不复制模板函数。
+            game_name: 游戏/计算器名称。
+            variables: 变量声明列表；可含 ``min``/``max``/``ui_control``。
+            formula_steps: 公式步骤列表。
+            outputs: 输出声明列表。
+            data_files: 实体数据文件声明，键仅允许 character/weapon/equipment/enemy；
+                仅非空记录列表视为绑定，绑定来源的变量保留原命名空间、其值由实体选择提供；
+                空列表按未绑定处理，对应变量改写为 user_input。
+            entity_selectors: 级联选择器声明，写入 ``meta.entity_selectors``；
+                依赖非空 data_files，末级 field 必须为 ``名称``。
+            entity_detail: 实体详情面板声明，写入 ``meta.entity_detail``。
+            entity_input_rules: 条件禁用输入规则，写入 ``meta.entity_input_rules``。
+            layout_sections: 已归一化的自定义 layout 段落；为 None 时自动生成。
+            output_dir: 保留参数（当前不写盘，由调用方负责）。
+
+        Returns:
+            相对路径到文件内容的映射；没有公式步骤时返回空字典。
+        """
         vars_ = [VarDef(**v) if isinstance(v, dict) else v for v in (variables or [])]
         steps = [StepDef(**s) if isinstance(s, dict) else s for s in (formula_steps or [])]
         outs = [OutputDef(**o) if isinstance(o, dict) else o for o in (outputs or [])]
@@ -110,11 +155,18 @@ class GeneratorEngine:
         if not steps:
             return {}
 
-        template = self._load_template(template_id)
+        template = self._load_template(template_id) if template_id else {}
 
-        dag_json = self._build_dag(game_name, vars_, steps, outs)
-        layout_json = self._build_layout(game_name, vars_, steps, outs)
-        attr_schema = self._build_attr_schema(vars_)
+        normalized_data_files, _data_warnings = normalize_data_files(data_files)
+        normalized_selectors = normalize_entity_selectors(entity_selectors, normalized_data_files)
+        effective_sources = self._effective_sources(vars_, bound_entity_sources(normalized_data_files))
+        dag_json = self._build_dag(game_name, vars_, steps, outs, effective_sources)
+        layout_json = (
+            build_custom_layout(game_name, layout_sections, vars_, effective_sources, outs)
+            if layout_sections
+            else build_layout(game_name, vars_, effective_sources, outs)
+        )
+        attr_schema = build_attr_schema(vars_, effective_sources)
 
         safe_name = game_name.replace(" ", "_").lower()
         dag_filename = f"{safe_name}.dag.json"
@@ -125,11 +177,23 @@ class GeneratorEngine:
             "description": f"自动生成的计算器: {game_name}",
             "version": "0.1.0",
             "schema_version": template.get("schema_version", "dag-v1"),
-            "entry_dag": dag_filename,
+            "entry_dag": "dag/" + dag_filename,
             "ui_layout": "ui/layout.json",
             "attr_schema": "attr_schema.json",
             "functions": template.get("functions", {}),
         }
+
+        entry_data = [
+            DATA_FILE_BY_SOURCE[source] for source in DATA_FILE_BY_SOURCE if normalized_data_files.get(source)
+        ]
+        if entry_data:
+            meta["entry_data"] = entry_data
+        if normalized_selectors:
+            meta["entity_selectors"] = normalized_selectors
+        if entity_detail:
+            meta["entity_detail"] = entity_detail
+        if entity_input_rules:
+            meta["entity_input_rules"] = entity_input_rules
 
         files: dict[str, str] = {
             "meta.json": json.dumps(meta, ensure_ascii=False, indent=2),
@@ -137,6 +201,9 @@ class GeneratorEngine:
             "ui/layout.json": json.dumps(layout_json, ensure_ascii=False, indent=2),
             "attr_schema.json": json.dumps(attr_schema, ensure_ascii=False, indent=2),
         }
+        for source in DATA_FILE_BY_SOURCE:
+            if source in normalized_data_files:
+                files[DATA_FILE_BY_SOURCE[source]] = serialize_data_file(normalized_data_files[source])
 
         func_src = template.get("_template_dir")
         if func_src:
@@ -149,7 +216,7 @@ class GeneratorEngine:
     # ── 内部实现 ────────────────────────────────────
 
     def _load_template(self, template_id: str) -> dict[str, Any]:
-        d = _ADAPTERS_DIR / template_id
+        d = self._adapters_dir / template_id
         if not d.is_dir():
             raise ValueError(f"模板不存在: {template_id}")
         meta_fp = d / "meta.json"
@@ -160,20 +227,33 @@ class GeneratorEngine:
         return meta
 
     def _build_dag(
-        self, game_name: str, variables: list[VarDef], steps: list[StepDef], outputs: list[OutputDef]
+        self,
+        game_name: str,
+        variables: list[VarDef],
+        steps: list[StepDef],
+        outputs: list[OutputDef],
+        effective_sources: dict[str, str],
     ) -> dict:
         dag_vars: dict[str, dict] = {}
         dag_nodes: dict[str, dict] = {}
         dag_outputs: dict[str, dict] = {}
 
         for v in variables:
-            var_path = f"{v.source}.{v.name}"
-            dag_vars[var_path] = {
+            source = effective_sources[v.name]
+            var_path = f"{source}.{v.name}"
+            var_entry: dict[str, Any] = {
                 "type": v.type,
-                "source": v.source,
+                "source": source,
                 "default": v.default,
                 "description": v.description,
             }
+            if v.min is not None:
+                var_entry["min"] = v.min
+            if v.max is not None:
+                var_entry["max"] = v.max
+            if v.ui_control:
+                var_entry["ui_control"] = dict(v.ui_control)
+            dag_vars[var_path] = var_entry
             node_id = self._safe_id(v.name)
             dag_nodes[node_id] = {
                 "type": "var",
@@ -242,63 +322,25 @@ class GeneratorEngine:
             "outputs": dag_outputs,
         }
 
-    def _build_layout(
-        self, game_name: str, variables: list[VarDef], _steps: list[StepDef], outputs: list[OutputDef]
-    ) -> dict:
-        input_vars = [f"{v.source}.{v.name}" for v in variables if v.source in ("user_input", "input")]
-        primary_outs = [o.name for o in outputs if o.is_primary]
+    @staticmethod
+    def _effective_sources(variables: list[VarDef], bound_sources: frozenset[str]) -> dict[str, str]:
+        """计算每个变量的生成后来源。
 
-        sections = []
-        if input_vars:
-            sections.append(
-                {
-                    "id": "inputs",
-                    "type": "inputs",
-                    "title": "输入参数",
-                    "variables": input_vars,
-                }
-            )
-        if primary_outs:
-            sections.append(
-                {
-                    "id": "outputs",
-                    "type": "outputs",
-                    "title": "计算结果",
-                    "outputs": primary_outs,
-                }
-            )
-        all_outs = [o.name for o in outputs]
-        other_outs = [n for n in all_outs if n not in primary_outs]
-        if other_outs:
-            sections.append(
-                {
-                    "id": "detail",
-                    "type": "outputs",
-                    "title": "中间过程",
-                    "outputs": other_outs,
-                }
-            )
+        规则：
 
-        return {
-            "schema_version": "ui-v1",
-            "name": f"{game_name}计算表",
-            "description": f"{game_name}的 ComputeSheet 排版（自动生成）",
-            "sections": sections,
-        }
-
-    def _build_attr_schema(self, variables: list[VarDef]) -> dict:
-        attrs = []
+        - ``input`` 别名归一为 ``user_input``；
+        - ``user_input`` / ``computed`` 保持不变；
+        - 其他来源（角色/武器/装备/敌人等）若数据文件提供非空记录则保留，
+          否则（未提供或空列表）改写为 ``user_input``，使其在 UI 中成为可编辑输入。
+        """
+        effective: dict[str, str] = {}
         for v in variables:
-            entry: dict[str, Any] = {
-                "name": v.name,
-                "type": "percent" if v.type in ("percent", "bool") else "float",
-                "source": v.source,
-                "description": v.description,
-            }
-            if v.default != 0:
-                entry["default"] = v.default
-            attrs.append(entry)
-        return {"attributes": attrs}
+            normalized = "user_input" if v.source == "input" else v.source
+            if normalized in ("user_input", "computed") or normalized in bound_sources:
+                effective[v.name] = normalized
+            else:
+                effective[v.name] = "user_input"
+        return effective
 
     # ── 工具方法 ────────────────────────────────────
 

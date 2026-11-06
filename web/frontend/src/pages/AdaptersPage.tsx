@@ -78,7 +78,7 @@ export default function AdaptersPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const handleUpload = async () => {
     if (!uploadFile) {

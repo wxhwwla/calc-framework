@@ -26,7 +26,7 @@ describe("Calc Hub 市场页 MarketplacePage", () => {
   });
 
   it("页面标题正确渲染", () => {
-    cy.contains("Calc Hub").should("be.visible");
+    cy.contains("配置包市场").should("be.visible");
   });
 
   it("显示配置包市场内容", () => {

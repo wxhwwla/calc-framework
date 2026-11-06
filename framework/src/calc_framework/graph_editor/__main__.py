@@ -16,7 +16,7 @@ from calc_framework.ui.i18n import tr
 
 def main() -> None:
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QAction, QKeySequence, QShortcut
+    from PySide6.QtGui import QKeySequence, QShortcut
     from PySide6.QtWidgets import (
         QApplication,
         QFileDialog,
@@ -27,14 +27,16 @@ def main() -> None:
         QWidget,
     )
 
-    from ..dag.engine import evaluate_graph
-    from .compiler import compile_graph
+    from .app.actions import export_dag_interactive, show_evaluation_report
+    from .app.help_dialog import HelpDialog
+    from .app.menu import MenuActions, build_menu
+    from .app.preview import preview_text_for_node
+    from .app.toolbar import ToolbarActions, build_toolbar
     from .file_actions import collect_document
     from .graph_editor_widget import (
         GraphEditorWidget,
         NodeItem,
     )
-    from .help_dialog import HelpDialog
     from .node_panel import NodePanel
     from .package_manager import PackageManager
     from .prop_panel import PropPanel
@@ -166,7 +168,6 @@ def main() -> None:
         if not canvas:
             return False
 
-        from .file_actions import collect_document
         from .serializer import document_to_json
 
         doc = collect_document(canvas)
@@ -223,108 +224,7 @@ def main() -> None:
         if not node_items:
             prop.set_preview_value("—")
             return
-        node_id = node_items[0].node_id
-        graph_node = node_items[0].to_graph_node()
-
-        # 对于变量引用节点，显示引用路径
-        if graph_node.type == "var":
-            path = graph_node.config.path
-            if path:
-                prop.set_preview_value(f"引用: {path}")
-            else:
-                prop.set_preview_value("(未设置路径)")
-            return
-
-        # 对于用户输入节点，显示默认值
-        if graph_node.type == "user_input":
-            default = graph_node.config.default
-            prop.set_preview_value(f"默认值: {default}")
-            return
-
-        # 对于常量节点，显示值
-        if graph_node.type == "const":
-            value = graph_node.config.value
-            prop.set_preview_value(f"{value}")
-            return
-
-        # 对于输出节点，追踪输入源的值
-        if graph_node.type == "output":
-            try:
-                doc = collect_document(canvas)
-                dag = compile_graph(doc)
-                if not dag.nodes:
-                    prop.set_preview_value("—")
-                    return
-                res = evaluate_graph(dag, {})
-                # 输出节点的值 = 其输入源节点的值
-                port_inputs = {}
-                for e in doc.edges:
-                    port_inputs[(e.to_node, e.to_port)] = e.from_node
-                source = port_inputs.get((node_id, 0))
-                if source:
-                    val = res.node_values.get(source)
-                    if val is not None:
-                        prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
-                    else:
-                        # 源可能是复合节点，值在 outputs 中
-                        val = res.outputs.get(source)
-                        if val is not None:
-                            prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
-                        else:
-                            prop.set_preview_value("—")
-                else:
-                    prop.set_preview_value("(未连接)")
-            except Exception as e:
-                prop.set_preview_value(f"错误: {str(e)[:60]}")
-            return
-
-        # 对于复合节点，尝试求值显示结果
-        if graph_node.type == "composite":
-            try:
-                doc = collect_document(canvas)
-                dag = compile_graph(doc)
-                if not dag.nodes:
-                    prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
-                    return
-                res = evaluate_graph(dag, {})
-                # 复合节点展开后，其子图输出节点的值在 node_values 中
-                # 键格式为 {node_id}.{子图内节点id}
-                # 通过子图 outputs 定位哪个展开节点是输出
-                for sub in dag.subgraphs.values():
-                    for out_def in sub.outputs.values():
-                        expanded_key = f"{node_id}.{out_def.node}"
-                        val = res.node_values.get(expanded_key)
-                        if val is not None:
-                            prop.set_preview_value(f"{val:.6f}" if isinstance(val, float) else str(val))
-                            return
-                prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
-            except Exception:
-                prop.set_preview_value(f"[{graph_node.label or '复合节点'}]")
-            return
-
-        # 对于计算节点（binary/unary/condition），尝试求值
-        try:
-            doc = collect_document(canvas)
-            dag = compile_graph(doc)
-            if not dag.nodes:
-                prop.set_preview_value("—")
-                return
-            res = evaluate_graph(dag, {})
-            val = res.node_values.get(node_id)
-            if val is not None:
-                formatted = f"{val:.6f}" if isinstance(val, float) else str(val)
-                prop.set_preview_value(formatted)
-            else:
-                val = res.outputs.get(node_id)
-                if val is not None:
-                    prop.set_preview_value(f"{val:.6f}")
-                else:
-                    prop.set_preview_value("—")
-        except Exception as e:
-            err_msg = str(e)
-            if len(err_msg) > 60:
-                err_msg = err_msg[:57] + "..."
-            prop.set_preview_value(f"错误: {err_msg}")
+        prop.set_preview_value(preview_text_for_node(canvas, node_items[0]))
 
     def _on_node_config_changed(node_id: str) -> None:
         canvas = _get_current_canvas()
@@ -371,11 +271,6 @@ def main() -> None:
     # 删除快捷键（绑定到主窗口）
     delete_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Delete), window)
     delete_shortcut.activated.connect(_delete_selected)
-
-    # ── 菜单栏 ──
-    menubar = window.menuBar()
-
-    file_menu = menubar.addMenu(tr("common.file"))
 
     def _new_file() -> None:
         """新建文件（新标签页）。"""
@@ -431,149 +326,17 @@ def main() -> None:
         canvas = _get_current_canvas()
         if not canvas:
             return
-
-        try:
-            doc = collect_document(canvas)
-            dag = compile_graph(doc)
-        except Exception as e:
-            QMessageBox.critical(window, tr("desktop.graphEditor.exportDagFailed"), str(e))
-            return
-
-        # 默认文件名：从当前标签页名称推断
-        tab_text = tab_manager.tabText(tab_manager.currentIndex()).replace("*", "").strip()
-        untitled = tr("desktop.graphEditor.untitled")
-        default_name = tab_text if tab_text and tab_text != untitled else "untitled"
-        default_path = f"{default_name}.dag.json"
-
-        path_str, _ = QFileDialog.getSaveFileName(
-            window,
-            tr("desktop.graphEditor.exportDag"),
-            default_path,
-            tr("desktop.graphEditor.exportDagFileFilter"),
-        )
-        if not path_str:
-            return
-
-        try:
-            from ..dag.serializer import save_dag
-
-            save_dag(dag, Path(path_str))
-            QMessageBox.information(
-                window,
-                tr("desktop.graphEditor.exportDagSuccess"),
-                tr("desktop.graphEditor.exportDagSuccessDetail", path=path_str),
-            )
-        except Exception as e:
-            QMessageBox.critical(window, tr("desktop.graphEditor.exportDagFailed"), str(e))
-
-    new_action = QAction(tr("desktop.graphEditor.new"), window)
-    new_action.setShortcut(QKeySequence.StandardKey.New)
-    new_action.triggered.connect(lambda: _new_file())
-    file_menu.addAction(new_action)
-
-    open_action = QAction(tr("desktop.graphEditor.open"), window)
-    open_action.setShortcut(QKeySequence.StandardKey.Open)
-    open_action.triggered.connect(lambda: _open_file())
-    file_menu.addAction(open_action)
-
-    save_action = QAction(tr("desktop.graphEditor.save"), window)
-    save_action.setShortcut(QKeySequence.StandardKey.Save)
-    save_action.triggered.connect(lambda: _save_file())
-    file_menu.addAction(save_action)
-
-    save_as_action = QAction(tr("desktop.graphEditor.saveAs"), window)
-    save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
-    save_as_action.triggered.connect(lambda: _save_as_file())
-    file_menu.addAction(save_as_action)
-
-    file_menu.addSeparator()
-
-    export_dag_action = QAction(tr("desktop.graphEditor.exportDag"), window)
-    export_dag_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
-    export_dag_action.triggered.connect(lambda: _export_dag())
-    file_menu.addAction(export_dag_action)
-
-    # ── 帮助菜单 ──
-    help_menu = menubar.addMenu(tr("common.help"))
+        export_dag_interactive(window, canvas, tab_manager)
 
     def _show_help() -> None:
         dialog = HelpDialog(window)
         dialog.exec()
 
-    help_action = QAction(tr("desktop.graphEditor.usageGuide"), window)
-    help_action.setShortcut(QKeySequence(Qt.Key.Key_F1))
-    help_action.triggered.connect(lambda: _show_help())
-    help_menu.addAction(help_action)
-
-    # 捐赠菜单（可选，依赖项目特定的 utils 模块）
-    try:
-        from utils.gui.donation import append_donation_help_menu_action
-
-        append_donation_help_menu_action(help_menu, window)
-    except ImportError:
-        pass  # 捐赠功能不可用，跳过
-
-    # ── 工具栏 ──
-    toolbar = window.addToolBar(tr("desktop.graphEditor.commonOperations"))
-    toolbar.setMovable(False)
-    toolbar.setStyleSheet("""
-        QToolBar {
-            background: #252526; border-bottom: 1px solid #3c3c3c;
-            padding: 2px; spacing: 4px;
-        }
-        QToolButton {
-            color: #cccccc; background: transparent;
-            border: 1px solid transparent; border-radius: 4px;
-            padding: 6px 12px; font-family: "Microsoft YaHei"; font-size: 13px;
-        }
-        QToolButton:hover { background: #2a2d2e; border-color: #094771; color: white; }
-        QToolButton:pressed { background: #094771; color: white; }
-    """)
-
-    from collections.abc import Callable
-
-    from PySide6.QtWidgets import QToolButton
-
-    def _tb(text: str, tip: str, cb: Callable[[], None]) -> None:
-        btn = QToolButton()
-        btn.setText(text)
-        btn.setToolTip(tip)
-        btn.clicked.connect(cb)
-        toolbar.addWidget(btn)
-
     def _run_evaluate() -> None:
         canvas = _get_current_canvas()
         if not canvas:
             return
-
-        try:
-            doc = collect_document(canvas)
-            dag = compile_graph(doc)
-            res = evaluate_graph(dag, {})
-            output_lines = [f"{k}: {v}" for k, v in res.outputs.items()]
-            node_lines = [f"{k}: {v}" for k, v in res.node_values.items()]
-            msg = (
-                tr("desktop.graphEditor.evalOutputResult") + "\n" + "\n".join(output_lines)
-                if output_lines
-                else tr("desktop.graphEditor.evalNoOutput")
-            )
-            msg += "\n\n" + tr("desktop.graphEditor.evalNodeValues") + "\n" + "\n".join(node_lines) if node_lines else ""
-            QMessageBox.information(window, tr("desktop.graphEditor.evalResult"), msg)
-        except Exception as e:
-            QMessageBox.critical(window, tr("desktop.graphEditor.evalFailed"), str(e))
-
-    _tb(tr("desktop.graphEditor.newBtn"), tr("desktop.graphEditor.newTip"), _new_file)
-    _tb(tr("desktop.graphEditor.openBtn"), tr("desktop.graphEditor.openTip"), _open_file)
-    _tb(tr("desktop.graphEditor.saveBtn"), tr("desktop.graphEditor.saveTip"), _save_file)
-    toolbar.addSeparator()
-    _tb(
-        tr("desktop.graphEditor.importPackageBtn"),
-        tr("desktop.graphEditor.importPackageTip"),
-        lambda: node_panel._on_import_package(),
-    )
-    toolbar.addSeparator()
-    _tb(tr("common.delete"), tr("desktop.graphEditor.deleteTip"), _delete_selected)
-    toolbar.addSeparator()
+        show_evaluation_report(window, canvas)
 
     def _fit_all() -> None:
         canvas = _get_current_canvas()
@@ -585,13 +348,6 @@ def main() -> None:
         if canvas:
             canvas.reset_zoom()
 
-    _tb(tr("desktop.graphEditor.fitViewBtn"), tr("desktop.graphEditor.fitViewTip"), _fit_all)
-    _tb(tr("desktop.graphEditor.resetViewBtn"), tr("desktop.graphEditor.resetViewTip"), _reset_zoom)
-    toolbar.addSeparator()
-    _tb(tr("desktop.graphEditor.evaluateBtn"), tr("desktop.graphEditor.evaluateTip"), _run_evaluate)
-    _tb(tr("desktop.graphEditor.exportDagBtn"), tr("desktop.graphEditor.exportDagTip"), _export_dag)
-    toolbar.addSeparator()
-
     def _clear_canvas() -> None:
         """清除当前画布的所有节点。"""
         canvas = _get_current_canvas()
@@ -601,7 +357,32 @@ def main() -> None:
         if prop:
             prop.show_node(None)
 
-    _tb(tr("desktop.graphEditor.clearBtn"), tr("desktop.graphEditor.clearTip"), _clear_canvas)
+    build_menu(
+        window,
+        MenuActions(
+            new_file=_new_file,
+            open_file=_open_file,
+            save_file=_save_file,
+            save_as_file=_save_as_file,
+            export_dag=_export_dag,
+            show_help=_show_help,
+        ),
+    )
+    build_toolbar(
+        window,
+        ToolbarActions(
+            new_file=_new_file,
+            open_file=_open_file,
+            save_file=_save_file,
+            import_package=node_panel._on_import_package,
+            delete_selected=_delete_selected,
+            fit_all=_fit_all,
+            reset_zoom=_reset_zoom,
+            run_evaluate=_run_evaluate,
+            export_dag=_export_dag,
+            clear_canvas=_clear_canvas,
+        ),
+    )
 
     window.showMaximized()
     sys.exit(app.exec())

@@ -57,7 +57,18 @@ def filter_layout(layout: Layout, section_ids: set[str]) -> Layout:
 
 
 def layout_for_damage_app(full_layout: Layout) -> Layout:
-    """DamageApp 右栏专用 layout：额外加成 + 敌人 + 信赖/潜能（与 Web 参数组一致）。"""
+    """DamageApp 专用参数 layout：额外加成 + 敌人 + 信赖/潜能。
+
+    这些分区必须使用 ``user_input.*`` 变量：完整 layout 中的 ``enemy.*`` /
+    ``character.*`` 属于实体来源，ComputeSheet 不会为其生成输入控件，
+    直接复用会让「敌人参数」区域变成空白。
+
+    Args:
+        full_layout: 完整计算表 layout，用于继承 schema 版本与名称。
+
+    Returns:
+        仅包含可编辑 ``user_input.*`` 输入的分区列表。
+    """
     sections: list[Section] = [
         Section(
             id="extra_pct_bonus",
@@ -66,11 +77,29 @@ def layout_for_damage_app(full_layout: Layout) -> Layout:
             variables=list(DAMAGE_APP_BONUS_VARS),
             columns=2,
         ),
+        Section(
+            id="enemy",
+            title="敌方参数",
+            type="inputs",
+            variables=[
+                "user_input.敌人防御",
+                "user_input.敌人法术抗性",
+                "user_input.物理穿透",
+                "user_input.法术穿透",
+            ],
+            columns=2,
+        ),
+        Section(
+            id="extra_bonuses",
+            title="信赖与潜能",
+            type="inputs",
+            variables=[
+                "user_input.信赖攻击",
+                "user_input.潜能攻击",
+            ],
+            columns=2,
+        ),
     ]
-    for sec_id in ("enemy", "extra_bonuses"):
-        sec = full_layout.find_section(sec_id)
-        if sec is not None:
-            sections.append(sec)
     return Layout(
         schema_version=full_layout.schema_version,
         name=full_layout.name,

@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import type { DagNodeData } from "../../store/editorStore";
 import { getNodeColor } from "../../store/editorStore";
+import NumberField from "../common/NumberField";
 
 const BINARY_OPS = ["+", "-", "*", "/", "^", "min", "max", "mod"];
 const UNARY_OPS = ["neg", "floor", "ceil", "abs", "sqrt", "ln", "log10", "sin", "cos", "tan"];
@@ -68,12 +69,10 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
           />
 
           {data.nodeType === "const" && (
-            <TextField
+            <NumberField
               label={t("dag.nodeEdit.value")}
-              type="number"
               value={form.value ?? 0}
-              onChange={(e) => setForm({ ...form, value: parseFloat(e.target.value) || 0 })}
-              size="small"
+              onChange={(value) => setForm({ ...form, value })}
               fullWidth
             />
           )}
@@ -130,10 +129,10 @@ export default function NodeEditDialog({ open, nodeId, data, onClose, onSave }: 
 
           {data.nodeType === "user_input" && (
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              <TextField label={t("dag.nodeEdit.defaultVal")} type="number" value={form.default ?? 0} onChange={(e) => setForm({ ...form, default: parseFloat(e.target.value) || 0 })} size="small" />
-              <TextField label={t("dag.nodeEdit.minVal")} type="number" value={form.min ?? 0} onChange={(e) => setForm({ ...form, min: parseFloat(e.target.value) || 0 })} size="small" />
-              <TextField label={t("dag.nodeEdit.maxVal")} type="number" value={form.max ?? 100} onChange={(e) => setForm({ ...form, max: parseFloat(e.target.value) || 100 })} size="small" />
-              <TextField label={t("dag.nodeEdit.step")} type="number" value={form.step ?? 1} onChange={(e) => setForm({ ...form, step: parseFloat(e.target.value) || 1 })} size="small" />
+              <NumberField label={t("dag.nodeEdit.defaultVal")} value={form.default ?? 0} onChange={(value) => setForm({ ...form, default: value })} sx={{ flex: "1 1 96px" }} />
+              <NumberField label={t("dag.nodeEdit.minVal")} value={form.min ?? 0} onChange={(min) => setForm({ ...form, min })} sx={{ flex: "1 1 96px" }} />
+              <NumberField label={t("dag.nodeEdit.maxVal")} value={form.max ?? 100} onChange={(max) => setForm({ ...form, max })} sx={{ flex: "1 1 96px" }} />
+              <NumberField label={t("dag.nodeEdit.step")} value={form.step ?? 1} onChange={(step) => setForm({ ...form, step })} sx={{ flex: "1 1 96px" }} />
             </Box>
           )}
 

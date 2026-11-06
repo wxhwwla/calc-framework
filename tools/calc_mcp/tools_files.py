@@ -1,0 +1,116 @@
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: AGPL-3.0
+"""MCP 适配包文件读写工具注册。"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from mcp.server.fastmcp import FastMCP
+
+from tools.generator.data_files import MAX_DATA_FILE_BYTES
+
+from .errors import tool_error_boundary
+from .safety import ProjectScope, ScopeError
+
+_READABLE_SUFFIXES = frozenset({".json", ".py", ".md", ".txt", ".csv", ".yaml", ".yml"})
+_MAX_LISTED_FILES = 5000
+
+
+def register(mcp: FastMCP, scope: ProjectScope) -> None:
+    """注册适配包文件工具。"""
+
+    @mcp.tool()
+    @tool_error_boundary
+    def list_adapter_files(adapter_id: str) -> dict[str, Any]:
+        """List files inside one adapter package with relative paths and byte sizes.
+
+        ``adapter_id`` 是 ``framework/adapters`` 下的目录名（不是显示名称）。
+        """
+        base = scope.adapter_dir(adapter_id, must_exist=True)
+        files: list[dict[str, Any]] = []
+        for path in sorted(base.rglob("*")):
+            if len(files) >= _MAX_LISTED_FILES:
+                break
+            if not path.is_file() or not path.resolve().is_relative_to(base):
+                continue
+            files.append(
+                {
+                    "path": path.relative_to(base).as_posix(),
+                    "size": path.stat().st_size,
+                }
+            )
+        return {"ok": True, "adapter_id": adapter_id, "files": files}
+
+    @mcp.tool()
+    @tool_error_boundary
+    def read_adapter_file(
+        adapter_id: str,
+        path: str,
+        offset: int = 0,
+        max_bytes: int = 256 * 1024,
+    ) -> dict[str, Any]:
+        """Read a UTF-8 text file inside an adapter package, with byte-range paging.
+
+        默认单页 256 KiB；数据文件可达 2 MiB，需要完整读取时按返回的
+        ``next_offset`` 继续分页（``next_offset=null`` 表示已到文件末尾）。
+        单页最多多读 3 字节以对齐 UTF-8 字符边界，不会产生替换字符。
+        仅允许 .json/.py/.md/.txt/.csv/.yaml/.yml。
+        """
+        if max_bytes > MAX_DATA_FILE_BYTES:
+            raise ScopeError(f"max_bytes 不能超过 {MAX_DATA_FILE_BYTES}: {max_bytes}")
+        target = _adapter_path(scope, adapter_id, path)
+        if target.suffix.lower() not in _READABLE_SUFFIXES:
+            raise ScopeError(f"不支持读取该文件类型: {target.suffix!r}")
+        content, next_offset, truncated, size = scope.read_text_range(target, offset=offset, max_bytes=max_bytes)
+        return {
+            "ok": True,
+            "adapter_id": adapter_id,
+            "path": target.relative_to(scope.adapter_dir(adapter_id, must_exist=True)).as_posix(),
+            "content": content,
+            "truncated": truncated,
+            "size": size,
+            "offset": offset,
+            "next_offset": next_offset,
+        }
+
+    @mcp.tool()
+    @tool_error_boundary
+    def write_adapter_file(
+        adapter_id: str,
+        path: str,
+        content: str,
+        overwrite: bool = False,
+    ) -> dict[str, Any]:
+        """Write a UTF-8 text file inside an adapter package (max 2 MiB).
+
+        扩展名白名单：.json/.py/.md/.txt/.csv/.yaml/.yml。默认不覆盖已有文件。
+        """
+        target = _adapter_path(scope, adapter_id, path)
+        written = scope.write_text(target, content, overwrite=overwrite)
+        base = scope.adapter_dir(adapter_id, must_exist=True)
+        return {
+            "ok": True,
+            "adapter_id": adapter_id,
+            "path": target.relative_to(base).as_posix(),
+            "bytes": written,
+        }
+
+    _ = (list_adapter_files, read_adapter_file, write_adapter_file)
+
+
+def _adapter_path(scope: ProjectScope, adapter_id: str, rel: str) -> Path:
+    base = scope.adapter_dir(adapter_id, must_exist=True)
+    raw = str(rel or "")
+    if not raw or "\x00" in raw or "\\" in raw:
+        raise ScopeError(f"路径非法: {rel!r}")
+
+    candidate = Path(raw)
+    if candidate.is_absolute() or candidate.drive:
+        raise ScopeError(f"不允许绝对路径: {rel!r}")
+
+    resolved = (base / candidate).resolve()
+    if not resolved.is_relative_to(base):
+        raise ScopeError(f"路径越界: {rel!r}")
+    return resolved

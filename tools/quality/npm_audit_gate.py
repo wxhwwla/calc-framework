@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
-"""npm audit 门禁：过滤已知误报后按严重级别失败。
+"""npm audit 门禁：过滤已知误报与接受风险后按严重级别失败。
 
 GitHub Advisory 已标明 ``react-router>=7.18.2`` 修复 GHSA-qwww-vcr4-c8h2，
 但 npm 公告库仍用 ``>=7.12.0 <8.3.0`` 范围误伤已打补丁版本。本脚本在确认
-已安装版本满足补丁门槛后抑制该条，其余漏洞仍按 ``--audit-level`` 阻断。
+已安装版本满足补丁门槛后抑制该条。
+
+另外，个别构建期依赖的漏洞在受支持的大版本内没有修复版本（glob 的修复版
+曾被认为仅提供 ESM，现 14.0.3 已同时提供 CJS；deepmerge 无上游修复）。这类条目在版本仍处于受影响范围内时按
+「接受风险」放行，并在输出中打印公告 ID 与理由；一旦升级到修复版本或超出
+受影响上限，抑制自动失效，避免掩盖新问题。其余漏洞仍按 ``--audit-level``
+阻断。
 """
 
 from __future__ import annotations
@@ -20,6 +26,22 @@ from typing import Any
 # GHSA → 抑制条件（包名 + 最低已修复版本）
 _FALSE_POSITIVE_GHSAS: dict[str, tuple[str, str]] = {
     "GHSA-qwww-vcr4-c8h2": ("react-router", "7.18.2"),
+}
+
+# GHSA → 接受风险条件（包名 + 受影响版本上限 + 理由）
+# 仅用于构建期依赖；已安装版本 <= 上限时放行，升级到修复版后自动失效。
+_ACCEPTED_RISK_GHSAS: dict[str, tuple[str, str, str]] = {
+    "GHSA-3g3m-2fjr-6pw4": (
+        "glob",
+        "14.0.1",
+        "构建期依赖 workbox-build；仅使用 AbortSignal 时受影响，workbox-build 未传入 signal；"
+        "glob 14.0.3 已提供 CJS 入口并修复该问题，此条仅在依赖回退到受影响版本时兜底",
+    ),
+    "GHSA-gcqx-w48m-w2h4": (
+        "deepmerge",
+        "4.3.1",
+        "构建期依赖 @rollup/plugin-node-resolve；4.3.1 为上游最新版本且无修复；合并输入来自本地构建配置，非不可信数据",
+    ),
 }
 
 _SEVERITY_RANK = {
@@ -48,6 +70,11 @@ def _parse_version(ver: str) -> tuple[int, ...]:
 def version_gte(installed: str, minimum: str) -> bool:
     """比较已安装版本是否 >= 最低补丁版本。"""
     return _parse_version(installed) >= _parse_version(minimum)
+
+
+def version_lte(installed: str, maximum: str) -> bool:
+    """比较已安装版本是否 <= 受影响上限。"""
+    return _parse_version(installed) <= _parse_version(maximum)
 
 
 def installed_package_version(lock_data: dict[str, Any], package: str) -> str | None:
@@ -106,6 +133,18 @@ def filter_vulnerabilities(
             if installed and version_gte(installed, min_ver):
                 vulns.pop(name, None)
                 suppressed.append(f"{name}: 抑制 {ghsa}（已安装 {pkg}@{installed} >= {min_ver}）")
+                break
+
+        if name not in vulns:
+            continue
+
+        for ghsa, (pkg, max_vuln, reason) in _ACCEPTED_RISK_GHSAS.items():
+            if ghsa not in ids:
+                continue
+            installed = installed_package_version(lock_data, pkg)
+            if installed and version_lte(installed, max_vuln):
+                vulns.pop(name, None)
+                suppressed.append(f"{name}: 接受风险 {ghsa}（已安装 {pkg}@{installed} <= {max_vuln}；{reason}）")
                 break
 
     # 级联：via 全是包名且这些包已不在剩余集合中

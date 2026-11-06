@@ -36,6 +36,9 @@
 | **DesktopTranslator** | Singleton i18n system for PySide6 desktop apps — loads JSON translation files, supports zh-CN/en locale switching |
 | **I18n Key** | Dot-notation path into translation JSON (e.g. `desktop.launcher.windowTitle`), shared between desktop and web |
 | **i18n_data/** | Translation JSON directory at `framework/src/calc_framework/ui/i18n_data/` — one file per locale (`zh-CN.json`, `en.json`) |
+| **Calc MCP** | Repository-level Model Context Protocol server (`tools/calc_mcp/`) that lets a host AI build adapters and `.calcpack` files; deterministic tools only, no LLM inside |
+| **Project Scope** | `ProjectScope` — the MCP path guard that rejects absolute paths, traversal, and anything outside `--project-dir` |
+| **Generator Spec** | The declarative `variables` / `formula_steps` / `outputs` input consumed by `GeneratorEngine`; step refs are variable `name`, step `id`, or numeric literals |
 
 ---
 

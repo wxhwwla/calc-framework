@@ -11,7 +11,8 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "calc-framework>=0.2.0",
+    # GUI 运行时依赖 calc_framework.ui.i18n；0.3.1 起该模块随框架 wheel 发布。
+    "calc-framework>=0.3.1",
     "matplotlib>=3.8",
     "PySide6>=6.6",
 ]
@@ -22,6 +23,7 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
     "pyyaml>=6.0",
+    "setuptools>=75",
 ]
 # 与运行时重复，保留别名便于旧文档/命令
 viz = [
@@ -44,22 +46,49 @@ ocr = [
 ]
 
 [project.scripts]
-endfield-calculator = "main:main"
+endfield-calculator = "games.endfield.main:main"
 
 [tool.setuptools.dynamic]
-version = { attr = "please_read_me._VERSION" }
+version = { attr = "scripts._version._VERSION" }
 
 [tool.setuptools]
-py-modules = ["main", "please_read_me"]
+# 显式 package-data 已覆盖运行时资源；关闭自动收集，避免旧 egg-info/SOURCES.txt
+# 把顶层 main.py / please_read_me.py 等历史文件重新带入 wheel。
+include-package-data = false
 
+# 源码布局在仓库根：games/endfield、共享 utils/、版本模块 scripts/。
+# where 相对 pyproject.toml 所在目录，因此需要上溯两级。
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["../.."]
+namespaces = true
 include = [
-    "gui_design*",
-    "character_weapon_equipment*",
-    "legal*",
+    "games",
+    "games.endfield",
+    "games.endfield.*",
+    "utils",
+    "utils.*",
+    "scripts",
+    "tools",
+    "tools.ocr",
+    "framework.adapters.endfield",
+    "resources.donation",
 ]
-exclude = ["tests*"]
+exclude = [
+    "games.endfield.tests",
+    "games.endfield.tests.*",
+    "games.endfield.build",
+    "games.endfield.build.*",
+    "games.endfield.data",
+    "games.endfield.__pycache__",
+    "games.endfield.__pycache__.*",
+]
+
+[tool.setuptools.package-data]
+"games.endfield" = ["data/*.json", "data/*.md"]
+"games.endfield.gui.legal" = ["*.jpg", "*.jpeg", "*.png", "*.webp"]
+"tools.ocr" = ["*.yaml"]
+"framework.adapters.endfield" = ["*.json", "dag/*.json", "data/*.json", "ui/*.json"]
+"resources.donation" = ["*.jpg", "*.jpeg", "*.png", "*.webp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

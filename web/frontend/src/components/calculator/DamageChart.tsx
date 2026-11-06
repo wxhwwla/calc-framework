@@ -48,7 +48,7 @@ export default function DamageChart({ outputValues, zoneShare }: DamageChartProp
         },
       ],
     };
-  }, [outputValues]);
+  }, [outputValues, textColor]);
 
   const zoneOption = useMemo(() => {
     if (!zoneShare || Object.keys(zoneShare).length === 0) return null;

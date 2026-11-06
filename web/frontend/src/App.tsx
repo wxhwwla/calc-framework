@@ -26,6 +26,7 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import { useNavigate, useLocation } from "react-router-dom";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
@@ -47,6 +48,7 @@ import SiteFooter from "./components/SiteFooter";
 const ComputePage = lazy(() => import("./pages/ComputePage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const ArknightsComputePage = lazy(() => import("./pages/ArknightsComputePage"));
+const AdapterGamePage = lazy(() => import("./pages/AdapterGamePage"));
 const AdaptersPage = lazy(() => import("./pages/AdaptersPage"));
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 const DesignerPage = lazy(() => import("./pages/DesignerPage"));
@@ -69,6 +71,7 @@ function useNavItems(): { gameItems: NavItem[]; toolItems: NavItem[] } {
     gameItems: [
       { label: t("nav.endfieldCalc"), path: "/compute", icon: <CalculateIcon /> },
       { label: t("nav.arknights"), path: "/arknights", icon: <AutoAwesomeIcon /> },
+      { label: t("nav.wjdlglr"), path: "/wjdlglr", icon: <RocketLaunchIcon /> },
     ],
     toolItems: [
       { label: t("nav.adapters"), path: "/adapters", icon: <ExtensionIcon /> },
@@ -236,7 +239,8 @@ function Shell() {
         sx={{
           flexGrow: 1,
           p: { xs: 1.5, md: 3 },
-          pb: { xs: 8, md: 3 },
+          // 底部导航 56px + iPhone 安全区，避免最后一个输入框被遮住
+          pb: { xs: "calc(72px + env(safe-area-inset-bottom))", md: 3 },
           minWidth: 0,
           overflowX: "hidden",
         }}
@@ -247,6 +251,7 @@ function Shell() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/compute" element={<ComputePage />} />
             <Route path="/arknights" element={<ArknightsComputePage />} />
+            <Route path="/wjdlglr" element={<AdapterGamePage adapterId="wjdlglr" />} />
             <Route path="/adapters" element={<AdaptersPage />} />
             <Route path="/editor" element={<EditorPage />} />
             <Route path="/designer" element={<DesignerPage />} />
@@ -258,7 +263,17 @@ function Shell() {
           </Routes>
         </Suspense>
         {isMobile && (
-          <Paper sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+          <Paper
+            sx={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1000,
+              pb: "env(safe-area-inset-bottom)",
+            }}
+            elevation={3}
+          >
             <BottomNavigation
               value={location.pathname}
               onChange={(_, path) => navigate(path)}

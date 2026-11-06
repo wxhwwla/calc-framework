@@ -1,9 +1,12 @@
+import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Box,
 } from "@mui/material";
 import type { DamageSnapshot } from "../../api/compute";
-import DamageChart from "./DamageChart";
+
+// 与 ComputePage 保持一致使用动态导入，避免同一模块既静态又动态导入而无法分包
+const DamageChart = lazy(() => import("./DamageChart"));
 
 interface DamageDashboardDialogProps {
   open: boolean;
@@ -27,10 +30,14 @@ export default function DamageDashboardDialog({ open, onClose, snapshot }: Damag
         ) : (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             <Box sx={{ flex: "1 1 320px", minWidth: 280 }}>
-              <DamageChart outputValues={segmentPie} nodeValues={null} />
+              <Suspense fallback={null}>
+                <DamageChart outputValues={segmentPie} nodeValues={null} />
+              </Suspense>
             </Box>
             <Box sx={{ flex: "1 1 320px", minWidth: 280 }}>
-              <DamageChart outputValues={null} nodeValues={null} zoneShare={zoneShare} />
+              <Suspense fallback={null}>
+                <DamageChart outputValues={null} nodeValues={null} zoneShare={zoneShare} />
+              </Suspense>
             </Box>
           </Box>
         )}

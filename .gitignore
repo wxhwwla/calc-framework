@@ -1,7 +1,8 @@
 ﻿# IDE / 编辑器
 .idea/
 .trae/
-.vscode/
+.vscode/*
+!.vscode/launch.json
 .claude/
 .cursorrules
 *.swp
@@ -61,6 +62,10 @@ data/
 !framework/**/data/
 !games/**/data/
 !web/**/data/
+
+# Wiki 爬虫原始输出（可重新抓取）
+tools/wiki_scout/output/*
+!tools/wiki_scout/output/.gitkeep
 skills/
 !games/**/skills/
 
@@ -107,6 +112,9 @@ dist-types/
 *.exe
 终末地伤害计算器.exe
 games/endfield/终末地伤害计算器.exe
+
+# MCP 服务器临时工作区
+.calc-mcp/
 
 # 上传脚本临时文件
 .git-upload-msg.txt

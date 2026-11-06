@@ -1,13 +1,13 @@
 [![GitHub stars](https://img.shields.io/github/stars/wxhwwla/calc-framework?style=social)](https://github.com/wxhwwla/calc-framework)
 [![AtomGit stars](https://atomgit.com/wxhwwla/calc-framework/star/badge.svg)](https://atomgit.com/wxhwwla/calc-framework)
-[![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
-[![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
-[![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
-[![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
+[![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
+[![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
+[![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
+[![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
 
 # Calc Framework — 通用游戏计算框架
 
-> 通用游戏计算框架 · 目前支持《明日方舟：终末地》与《明日方舟》
+> 通用游戏计算框架 · 目前支持《明日方舟：终末地》《明日方舟》与《无尽的拉格朗日》
 >
 > [:us: English](README.md)
 
@@ -23,7 +23,9 @@
 
 **直接用计算器——无需安装。**
 
-[**打开 Web 版 →**](https://wxhwwla.pythonanywhere.com)
+[**打开 Web 版 →**](https://dove-magnitude-runner.ngrok-free.dev)
+
+> Web 版托管在维护者电脑上，经 ngrok 隧道对外；免费版每个浏览器每周可能弹出一次「Visit Site」提示页。
 
 *或* [下载桌面版](https://github.com/wxhwwla/calc-framework/releases)
 
@@ -40,6 +42,7 @@
 git clone https://github.com/wxhwwla/calc-framework
 cd calc-framework
 python scripts/main_launcher.py
+# Windows 无控制台窗口：pythonw scripts/main_launcher.py
 ```
 
 > 🏗 [快速上手 ↓](#快速上手) · [创建计算器](docs/制造游戏计算器完整流程.md) · [贡献路径](docs/contributor-pathways.md)
@@ -72,7 +75,7 @@ python scripts/main_launcher.py
 [仓库根]/
 ├── framework/                    # [框架] calc-framework 通用 pip 包
 │   ├── src/calc_framework/       #   DAG 引擎、逆推引擎、数据、UI、搜索、插件
-│   └── adapters/                 #   游戏适配器 (endfield/arknights/card_rpg/fps/moba)
+│   └── adapters/                 #   游戏适配器 (endfield/arknights/card_rpg/fps/moba/wjdlglr)
 ├── web/                          # [Web] React + FastAPI 全栈 Web 应用
 │   ├── backend/                  #   FastAPI 后端 (/api/*)
 │   │   └── api/                  #     路由 + internal/ entity/ search_lib/ 等（会话手册 §4.188）
@@ -80,7 +83,8 @@ python scripts/main_launcher.py
 │   └── hub/                      #   Calc Hub — 静态市场页面
 ├── games/                        # [游戏] 游戏适配包
 │   ├── endfield/                 #   终末地伤害计算器 (calc + gui + data + tests)
-│   └── arknights/                #   明日方舟计算器 (DAG + GUI + tests)
+│   ├── arknights/                #   明日方舟计算器 (DAG + GUI + tests)
+│   └── wjdlglr/                  #   无尽的拉格朗日入口（通用 CalcPackViewer）
 ├── docs/                         # 项目文档
 ├── tools/                        # [工具] 开发工具 (BWIKI侦察、数据管线、OCR、设计器)
 ├── scripts/                      # [入口] 启动器、打包、开发者工具箱
@@ -108,8 +112,11 @@ python scripts/main_launcher.py
 # 终末地计算器
 cd games/endfield
 pip install -e ".[dev]"
+cd ../..
 python -m games.endfield.main
 ```
+
+> wheel 安装：先安装本仓库的 `framework`（本地 wheel 或 editable，≥ 0.3.1），再安装 `games/endfield` wheel；旧 PyPI 框架包缺少 `calc_framework.ui.i18n`。
 
 ```powershell
 # 开发者工具箱
@@ -146,8 +153,15 @@ cd web/frontend && npm install && npm run dev
 
 - 按星级/职业/分支筛选干员，技能文本解析
 - 物理/法术/真实伤害计算，DAG 引擎驱动
-- BWIKI 数据爬取：420+ 干员全量数据
+- BWIKI 数据爬取：440 名干员全量数据
 - 28 属性 + 5 自定义函数 + 51 节点 DAG
+
+### 无尽的拉格朗日计算器
+
+- 「舰船种类 → 舰船 → 武器」三级联动，属性来自游戏 Wiki（571 条「舰船 × 武器」记录）
+- 八乘区 + 独立命中率乘区：`(目标总闪避率 + 命中率加成) × (1 + 基础命中率)`，钳制 5%–95% 后叠加 N(0, 0.03) 浮动
+- 两页签共 42 个输出（计算 / 乘区明细）；能量/实弹武器自动切换能量/物理护甲
+- 同一适配包同时服务桌面（`--game wjdlglr`）与 Web（`/wjdlglr`）
 
 ### 通用框架
 
@@ -158,7 +172,7 @@ cd web/frontend && npm install && npm run dev
 - **ComputeSheet**：声明式 UI — 消费 `layout.json` + DAG 变量 → 自动渲染控件
 - **插件系统**：注册表模式 + 3 内置插件（暴击/闪避/距离衰减）+ `.calcplugin` 格式
 - **AI 配装**：自然语言配装推荐 + 多轮对话 + 语义搜索 + AI 公式解析
-- **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点) 适配器均通过
+- **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点)、wjdlglr (104 节点，八乘区 + 独立命中率乘区（闪避/命中加成/浮动），三级舰船/武器联动选择、武器明细面板、能量/实弹护甲选择) 适配器均通过
 - **主题管理**：暗色/亮色/高对比度，动态 QSS 生成；Web 端暗/亮切换
 - **SaaS API**：API Key 管理 + 速率限制 + 用量统计
 
@@ -167,6 +181,7 @@ cd web/frontend && npm install && npm run dev
 | Web 页面 | 桌面对应 | 路由 |
 |----------|---------|------|
 | 伤害计算器 | `main.py`（桌面）/ FastAPI + React（Web） | `/` |
+| 无尽的拉格朗日计算器 | `games/wjdlglr/main.py` / 通用 `AdapterGamePage` | `/wjdlglr` |
 | 数据设计器 | 开发者工具箱 | `/designer` |
 | 配置包设计器 | 开发者工具箱 | `/pack-designer` |
 | Calc Hub 市场 | — | `/marketplace` |
@@ -217,7 +232,7 @@ cd framework && pytest tests/ -q     # 1160 passed
 cd games/endfield && pytest tests/ -q  # 1585 passed
 ```
 
-[![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
+[![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
 
 ---
 

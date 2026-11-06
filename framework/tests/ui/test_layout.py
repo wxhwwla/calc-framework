@@ -179,6 +179,52 @@ class TestLoadLayout:
 
         assert layout.sections[1].title == "输出区"
 
+    def test_sections_can_declare_a_tab(self):
+        data = {
+            "schema_version": "ui-v1",
+            "name": "分页",
+            "sections": [
+                {"id": "in", "type": "inputs", "title": "输入", "variables": ["a"], "tab": "计算"},
+                {"id": "out", "type": "outputs", "title": "乘区", "outputs": ["b"], "tab": "乘区明细"},
+            ],
+        }
+
+        layout = load_layout(data)
+
+        assert [section.tab for section in layout.sections] == ["计算", "乘区明细"]
+
+    def test_tab_is_optional_for_legacy_layouts(self):
+        data = {
+            "schema_version": "ui-v1",
+            "name": "旧布局",
+            "sections": [{"id": "in", "type": "inputs", "title": "输入", "variables": ["a"]}],
+        }
+
+        assert load_layout(data).sections[0].tab == ""
+
+    def test_partial_tabs_are_rejected(self):
+        data = {
+            "schema_version": "ui-v1",
+            "name": "混用",
+            "sections": [
+                {"id": "in", "type": "inputs", "title": "输入", "variables": ["a"], "tab": "计算"},
+                {"id": "out", "type": "outputs", "title": "输出", "outputs": ["b"]},
+            ],
+        }
+
+        with pytest.raises(LayoutValidationError, match="tab"):
+            load_layout(data)
+
+    def test_empty_tab_is_rejected(self):
+        data = {
+            "schema_version": "ui-v1",
+            "name": "空 tab",
+            "sections": [{"id": "in", "type": "inputs", "title": "输入", "variables": ["a"], "tab": "  "}],
+        }
+
+        with pytest.raises(LayoutValidationError, match="tab"):
+            load_layout(data)
+
     def test_load_from_json_string(self):
         import json
 

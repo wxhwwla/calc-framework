@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Typography,
   Paper,
-  TextField,
   FormControlLabel,
   Checkbox,
   Select,
@@ -13,6 +12,7 @@ import {
   Button,
   Collapse,
 } from "@mui/material";
+import NumberField from "../common/NumberField";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -60,40 +60,44 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
   const [selectedEnemyId, setSelectedEnemyId] = useState("");
   const [params, setParams] = useState<EnemyParams>({ ...DEFAULT_ENEMY_PARAMS });
   const [expanded, setExpanded] = useState(false);
+  // 失焦时 NumberField 会先提交夹紧后的数值，再调用 onBlur；
+  // 用 ref 保存最新值，避免闭包里的旧 params 覆盖刚输入的结果。
+  const paramsRef = useRef<EnemyParams>({ ...DEFAULT_ENEMY_PARAMS });
 
   useEffect(() => {
     fetchEnemyChoices().then(setEnemies).catch(() => {});
+  }, []);
+
+  const applyParams = useCallback((next: EnemyParams) => {
+    paramsRef.current = next;
+    setParams(next);
   }, []);
 
   const applyEnemy = useCallback(
     (enemyId: string) => {
       setSelectedEnemyId(enemyId);
       const enemy = enemies.find((e) => e.id === enemyId);
-      if (enemy) {
-        const newParams = enemyToParams(enemy);
-        setParams(newParams);
-        onParamsChange(newParams);
-      } else {
-        setParams({ ...DEFAULT_ENEMY_PARAMS });
-        onParamsChange({ ...DEFAULT_ENEMY_PARAMS });
-      }
+      const next = enemy ? enemyToParams(enemy) : { ...DEFAULT_ENEMY_PARAMS };
+      applyParams(next);
+      onParamsChange(next);
     },
-    [enemies, onParamsChange],
+    [applyParams, enemies, onParamsChange],
   );
 
   const updateParam = useCallback(<K extends keyof EnemyParams>(key: K, value: EnemyParams[K]) => {
-    setParams((prev) => ({ ...prev, [key]: value }));
-  }, []);
+    const next = { ...paramsRef.current, [key]: value };
+    applyParams(next);
+  }, [applyParams]);
 
   const handleBlur = useCallback(() => {
-    onParamsChange(params);
-  }, [params, onParamsChange]);
+    onParamsChange(paramsRef.current);
+  }, [onParamsChange]);
 
   const handleReset = useCallback(() => {
     setSelectedEnemyId("");
-    setParams({ ...DEFAULT_ENEMY_PARAMS });
+    applyParams({ ...DEFAULT_ENEMY_PARAMS });
     onParamsChange({ ...DEFAULT_ENEMY_PARAMS });
-  }, [onParamsChange]);
+  }, [applyParams, onParamsChange]);
 
   return (
     <Paper variant="outlined" sx={{ mb: 2 }}>
@@ -141,98 +145,82 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
           </FormControl>
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.defense")}
-              type="number"
               value={params.enemy_defense}
-              onChange={(e) => updateParam("enemy_defense", parseFloat(e.target.value) || 0)}
+              onChange={(v) => updateParam("enemy_defense", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0, max: 99999, step: 1 } }}
+              min={0}
+              max={99999}
+              integer
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.resistance")}
-              type="number"
               value={params.enemy_resistance}
-              onChange={(e) => updateParam("enemy_resistance", parseFloat(e.target.value) || 0)}
+              onChange={(v) => updateParam("enemy_resistance", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: -100, max: 100, step: 1 } }}
+              min={-100}
+              max={100}
+              integer
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.ignoreResistance")}
-              type="number"
               value={params.ignore_resistance}
-              onChange={(e) => updateParam("ignore_resistance", parseFloat(e.target.value) || 0)}
+              onChange={(v) => updateParam("ignore_resistance", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: -100, max: 100, step: 1 } }}
+              min={-100}
+              max={100}
+              integer
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.imbalanceCoeff")}
-              type="number"
               value={params.imbalance_vulnerability_coeff}
-              onChange={(e) =>
-                updateParam("imbalance_vulnerability_coeff", parseFloat(e.target.value) || 0)
-              }
+              onChange={(v) => updateParam("imbalance_vulnerability_coeff", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0.1, max: 10, step: 0.05 } }}
+              min={0.1}
+              max={10}
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.comboStacks")}
-              type="number"
               value={params.combo_stacks}
-              onChange={(e) =>
-                updateParam("combo_stacks", Math.max(0, Math.min(4, parseInt(e.target.value, 10) || 0)))
-              }
+              onChange={(v) => updateParam("combo_stacks", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0, max: 4, step: 1 } }}
+              min={0}
+              max={4}
+              integer
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.breakDefenseStacks")}
-              type="number"
               value={params.break_defense_stacks}
-              onChange={(e) =>
-                updateParam(
-                  "break_defense_stacks",
-                  Math.max(0, Math.min(4, parseInt(e.target.value, 10) || 0)),
-                )
-              }
+              onChange={(v) => updateParam("break_defense_stacks", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0, max: 4, step: 1 } }}
+              min={0}
+              max={4}
+              integer
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.attachedEffectMultiplier")}
-              type="number"
               value={params.attached_effect_multiplier}
-              onChange={(e) =>
-                updateParam("attached_effect_multiplier", parseFloat(e.target.value) || 0)
-              }
+              onChange={(v) => updateParam("attached_effect_multiplier", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0, max: 10, step: 0.05 } }}
+              min={0}
+              max={10}
             />
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.corrosionDuration")}
-              type="number"
               value={params.corrosion_duration_seconds}
-              onChange={(e) =>
-                updateParam("corrosion_duration_seconds", parseFloat(e.target.value) || 0)
-              }
+              onChange={(v) => updateParam("corrosion_duration_seconds", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0, max: 15, step: 0.1 } }}
+              min={0}
+              max={15}
             />
             <FormControl size="small" fullWidth>
               <InputLabel>{t("enemy.tier")}</InputLabel>
@@ -251,17 +239,14 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              size="small"
+            <NumberField
               fullWidth
               label={t("enemy.imbalanceEfficiency")}
-              type="number"
               value={params.imbalance_efficiency_bonus}
-              onChange={(e) =>
-                updateParam("imbalance_efficiency_bonus", parseFloat(e.target.value) || 0)
-              }
+              onChange={(v) => updateParam("imbalance_efficiency_bonus", v)}
               onBlur={handleBlur}
-              slotProps={{ htmlInput: { min: 0, max: 2, step: 0.01 } }}
+              min={0}
+              max={2}
             />
           </Box>
 

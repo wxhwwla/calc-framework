@@ -1,5 +1,7 @@
 # PythonAnywhere 免费部署 FastAPI + React 前端完整指南
 
+> **⚠️ 已弃用（2026-11-05）**：项目已改为「本机 + ngrok 固定域名」自托管，当前地址 <https://dove-magnitude-runner.ngrok-free.dev>；启动方式见 [`docs/Web后端限速与多Worker.md`](Web后端限速与多Worker.md) 与 [`docs/操作指令集.md`](操作指令集.md) §6。本文仅作历史参考。
+
 > 适用场景：在 PythonAnywhere 免费套餐上部署 FastAPI 后端 + React/Vue 前端，前后端同源服务。
 > 不使用 Docker，纯手动配置，零花费。全流程已验证。
 
@@ -769,7 +771,7 @@ project = calc-framework
 | `CALC_MAX_BODY_BYTES` | 默认 **1048576**（1 MiB）；`0`/`off` 取消全局上限（OCR/Hub 路径特例仍生效） |
 | `CALC_DISABLE_BODY_LIMIT` | `1`/`true` 时完全关闭 `ContentSizeLimitMiddleware` |
 
-**限速与多 Worker**：`RateLimitMiddleware` 使用进程内内存计数；**默认请单 worker 部署**。多 worker 时设置 `CALC_DISABLE_RATE_LIMIT=1` 并在反向代理层限速。详见 [`docs/Web后端限速与多Worker.md`](../Web后端限速与多Worker.md)。
+**限速与多 Worker**：`RateLimitMiddleware` 使用进程内内存计数；**默认请单 worker 部署**。多 worker 时设置 `CALC_DISABLE_RATE_LIMIT=1` 并在反向代理层限速。详见 [`Web后端限速与多Worker.md`](Web后端限速与多Worker.md)。
 
 **管理接口认证**：在 PythonAnywhere Web App → Environment variables 中设置 `CALC_ADMIN_TOKEN`。调用管理 API 或修改游戏 JSON 时附加请求头：
 

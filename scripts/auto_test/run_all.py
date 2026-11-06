@@ -31,13 +31,20 @@ if str(_SCRIPT_DIR) not in sys.path:
 
 from config import SCREENSHOT_DIR, ensure_dirs
 
-from utils.report import TestReport
+from utils.report import TestReport, any_report_failed
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def _infra_failed_report(title: str, error: Exception) -> TestReport:
+    """把测试层异常转换为基础设施失败报告。"""
+    report = TestReport(title=title)
+    report.mark_infra_failed(f"{type(error).__name__}: {error}")
+    return report
 
 
 def run_web_tests() -> TestReport | None:
@@ -49,7 +56,7 @@ def run_web_tests() -> TestReport | None:
         return runner.run_all()
     except Exception as e:
         logger.error("Web 测试失败: %s", e)
-        return None
+        return _infra_failed_report("Web 前端测试报告", e)
 
 
 def run_desktop_tests() -> TestReport | None:
@@ -61,7 +68,7 @@ def run_desktop_tests() -> TestReport | None:
         return runner.run_all()
     except Exception as e:
         logger.error("桌面应用测试失败: %s", e)
-        return None
+        return _infra_failed_report("桌面应用测试报告", e)
 
 
 def run_packaged_tests(skip_build: bool = False) -> TestReport | None:
@@ -73,7 +80,7 @@ def run_packaged_tests(skip_build: bool = False) -> TestReport | None:
         return runner.run_all()
     except Exception as e:
         logger.error("打包后测试失败: %s", e)
-        return None
+        return _infra_failed_report("打包后 exe 测试报告", e)
 
 
 def generate_summary_report(reports: dict[str, TestReport | None]) -> str:
@@ -108,7 +115,12 @@ def generate_summary_report(reports: dict[str, TestReport | None]) -> str:
             lines.append(f"| {name} | ⏭️ 跳过 | - | - | - |")
             continue
 
-        status = "✅ 通过" if report.failed_scenarios == 0 else "❌ 失败"
+        if report.success:
+            status = "✅ 通过"
+        elif report.infra_failed:
+            status = f"❌ 基础设施失败: {report.infra_error}"
+        else:
+            status = "❌ 失败"
         lines.append(
             f"| {name} | {status} | "
             f"{report.passed_scenarios}/{report.total_scenarios} | "
@@ -221,9 +233,8 @@ def main() -> None:
     print(f"汇总报告已保存: {summary_path}")
     print(f"详细截图目录: {SCREENSHOT_DIR}")
 
-    # 检查是否有失败
-    has_failure = any(report and report.failed_scenarios > 0 for report in reports.values())
-    if has_failure:
+    # 检查是否有失败（基础设施失败 / 0 场景 / 失败场景）
+    if any_report_failed(reports):
         print("\n❌ 存在测试失败，请检查报告")
         sys.exit(1)
     else:

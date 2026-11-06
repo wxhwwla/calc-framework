@@ -1,6 +1,7 @@
 import { Box, Slider, Typography, Paper } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import NumberField from "../common/NumberField";
 
 interface SkillLevelPanelProps {
   charData: Record<string, unknown> | null;
@@ -32,14 +33,20 @@ export default function SkillLevelPanel({ charData, onChange }: SkillLevelPanelP
     setLevels((prev) => ({ ...prev, ...next }));
   }, [charData]);
 
-  const handleSlider = useCallback(
-    (key: string) => (_: Event, value: number | number[]) => {
-      const v = value as number;
-      const next = { ...levels, [key]: v };
+  const handleLevel = useCallback(
+    (key: string, value: number) => {
+      const next = { ...levels, [key]: value };
       setLevels(next);
       onChange(next);
     },
-    [levels, onChange]
+    [levels, onChange],
+  );
+
+  const handleSlider = useCallback(
+    (key: string) => (_: Event, value: number | number[]) => {
+      handleLevel(key, value as number);
+    },
+    [handleLevel],
   );
 
   const skillRows = SKILL_DATA_KEYS.filter((sk) => {
@@ -57,9 +64,20 @@ export default function SkillLevelPanel({ charData, onChange }: SkillLevelPanelP
       </Typography>
       {skillRows.map((sk) => (
         <Box key={sk.key} sx={{ mb: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            {t(sk.i18nKey)}: Lv.{levels[sk.key] ?? 1}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+              {t(sk.i18nKey)}: Lv.{levels[sk.key] ?? 1}
+            </Typography>
+            <NumberField
+              value={levels[sk.key] ?? 8}
+              onChange={(v) => handleLevel(sk.key, v)}
+              min={1}
+              max={12}
+              integer
+              ariaLabel={t(sk.i18nKey)}
+              sx={{ width: 72 }}
+            />
+          </Box>
           <Slider
             size="small"
             min={1}

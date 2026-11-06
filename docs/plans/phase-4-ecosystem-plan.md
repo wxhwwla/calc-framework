@@ -66,7 +66,7 @@ Phase 0–3 解决了安全、Web 可靠性、框架质量与 `api/` 目录约�
 **交付**（2026-06-17）：
 
 - [`utils/game_data_paths.py`](../../utils/game_data_paths.py) — 层 A/B 路径单一常量源
-- [`tools/sync_adapter_snapshots.py`](../../tools/sync_adapter_snapshots.py) — endfield / arknights 层 A→B 同步 CLI
+- [`tools/data_pipeline/sync_adapter_snapshots.py`](../../tools/data_pipeline/sync_adapter_snapshots.py) — endfield / arknights 层 A→B 同步 CLI
 - `from_arknights_scout` 输出修正为 `framework/adapters/arknights/data/operators_standard.json`
 - `loader.py` / `operator_catalog.py` / `profiles.py` 引用 `game_data_paths`
 

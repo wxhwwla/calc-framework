@@ -78,6 +78,11 @@ DECOUPLED_MODULES = {
     "games/endfield/gui/controls/search/search_settings.py",
 }
 
+# 整个目录都必须保持 PySide6-free（MCP 需在无 GUI 环境运行）
+DECOUPLED_DIRS = {
+    "tools/calc_mcp/",
+}
+
 
 def _has_pyside6_import(filepath: Path) -> bool:
     """检查文件是否包含 PySide6 导入。"""
@@ -92,9 +97,8 @@ def _has_pyside6_import(filepath: Path) -> bool:
             for alias in node.names:
                 if alias.name.startswith("PySide6"):
                     return True
-        elif isinstance(node, ast.ImportFrom):
-            if node.module and node.module.startswith("PySide6"):
-                return True
+        elif isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("PySide6"):
+            return True
     return False
 
 
@@ -108,9 +112,22 @@ def check_decoupled_modules(root: Path) -> list[str]:
     return violations
 
 
+def check_decoupled_dirs(root: Path) -> list[str]:
+    """检查必须保持 PySide6-free 的目录。"""
+    violations = []
+    for rel_dir in DECOUPLED_DIRS:
+        directory = root / rel_dir
+        if not directory.is_dir():
+            continue
+        for filepath in sorted(directory.rglob("*.py")):
+            if _has_pyside6_import(filepath):
+                violations.append(filepath.relative_to(root).as_posix())
+    return violations
+
+
 def main() -> int:
     root = Path(__file__).resolve().parent.parent
-    violations = check_decoupled_modules(root)
+    violations = check_decoupled_modules(root) + check_decoupled_dirs(root)
 
     if violations:
         print("[FAIL] Found PySide6 imports in decoupled modules:")

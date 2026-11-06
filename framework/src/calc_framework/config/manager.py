@@ -45,6 +45,11 @@ def _get_adapters_dir() -> Path:
     return _default_adapters_dir()
 
 
+def get_adapters_dir() -> Path:
+    """返回适配器根目录（公开 API，优先 ``CALC_ADAPTERS_DIR``）。"""
+    return _get_adapters_dir()
+
+
 def discover_adapters(adapters_dir: Path | None = None) -> dict[str, Path]:
     """扫描适配器目录，返回 {适配器名: 目录路径} 字典。
 

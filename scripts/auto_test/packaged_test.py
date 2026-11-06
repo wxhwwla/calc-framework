@@ -25,18 +25,25 @@ if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
 from config import (
-    APP_STARTUP_TIMEOUT,
+    APP_WINDOW_TITLE,
     BUILD_SCRIPT,
     BUILD_TIMEOUT,
     DIST_DIR,
+    PACKAGED_APP_DIR_NAME,
+    PACKAGED_BUILD_TARGET,
+    PACKAGED_EXE_ARGS,
     PACKAGED_EXE_NAME,
+    PACKAGED_LAUNCHER_TITLE,
+    PACKAGED_STARTUP_TIMEOUT,
     SCREENSHOT_PACKAGED_DIR,
+    STEP_TIMEOUT,
     TEST_SCENARIOS,
     ensure_dirs,
 )
 
-from utils.qt_inspector import QtInspector
-from utils.report import TestReport, TestScenario, TestStep
+from utils.launch import start_exe_process
+from utils.qt_inspector import QtInspector, find_visible_window
+from utils.report import TestReport, TestScenario, TestStep, check_required_steps
 
 logging.basicConfig(
     level=logging.INFO,
@@ -57,6 +64,9 @@ class PackagedTestRunner:
         self._process: subprocess.Popen | None = None
         self._skip_build = skip_build
         self._exe_path: Path | None = None
+        self._launcher_inspector: QtInspector | None = None
+        self._launcher_startup_seconds: float | None = None
+        self._endfield_startup_seconds: float | None = None
 
     def build_exe(self) -> bool:
         """打包应用。
@@ -80,7 +90,7 @@ class PackagedTestRunner:
                     sys.executable,
                     str(BUILD_SCRIPT),
                     "--target",
-                    "calculator",
+                    PACKAGED_BUILD_TARGET,
                 ],
                 cwd=str(_REPO_ROOT),
                 capture_output=True,
@@ -109,9 +119,8 @@ class PackagedTestRunner:
         """查找已存在的 exe 文件。"""
         # 常见的输出路径
         possible_paths = [
+            DIST_DIR / PACKAGED_APP_DIR_NAME / PACKAGED_EXE_NAME,
             DIST_DIR / PACKAGED_EXE_NAME,
-            DIST_DIR / "终末地伤害计算器" / PACKAGED_EXE_NAME,
-            DIST_DIR / "calculator" / PACKAGED_EXE_NAME,
         ]
 
         for path in possible_paths:
@@ -122,7 +131,7 @@ class PackagedTestRunner:
 
         # 递归查找
         for exe in DIST_DIR.rglob("*.exe"):
-            if "calculator" in exe.name.lower() or "终末地" in exe.name:
+            if exe.name == PACKAGED_EXE_NAME:
                 self._exe_path = exe
                 logger.info("找到 exe: %s", exe)
                 return
@@ -141,36 +150,62 @@ class PackagedTestRunner:
 
         logger.info("启动 exe: %s", self._exe_path)
 
-        try:
-            self._process = subprocess.Popen(
-                [str(self._exe_path)],
-                cwd=str(self._exe_path.parent),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
+        # 避免连接到上一次运行遗留的窗口：有旧实例时直接判失败
+        existing = find_visible_window(PACKAGED_LAUNCHER_TITLE) or find_visible_window(APP_WINDOW_TITLE)
+        if existing is not None:
+            logger.error("检测到已在运行的实例：%s，请先关闭后再运行", existing[1])
+            return False
 
-            # 等待窗口出现
-            logger.info("等待窗口出现 (超时: %ds)...", APP_STARTUP_TIMEOUT)
-            if self.inspector.connect("终末地伤害计算器", timeout=APP_STARTUP_TIMEOUT):
-                logger.info("exe 启动成功")
-                return True
-            else:
-                logger.error("exe 启动超时")
+        try:
+            started_at = time.monotonic()
+            self._process = start_exe_process(self._exe_path, PACKAGED_EXE_ARGS)
+
+            # 先等待启动器窗口，验证真实链路而不是直接进入游戏
+            logger.info("等待启动器窗口出现 (超时: %ds)...", PACKAGED_STARTUP_TIMEOUT)
+            self._launcher_inspector = QtInspector()
+            if not self._launcher_inspector.connect(PACKAGED_LAUNCHER_TITLE, timeout=PACKAGED_STARTUP_TIMEOUT):
+                logger.error("启动器窗口未出现")
                 self.stop_exe()
                 return False
+            self._launcher_startup_seconds = time.monotonic() - started_at
+
+            # 启动器会在窗口就绪后自动拉起终末地
+            remaining = max(PACKAGED_STARTUP_TIMEOUT - self._launcher_startup_seconds, 10)
+            logger.info("等待终末地窗口出现 (超时: %.0fs)...", remaining)
+            if not self.inspector.connect(APP_WINDOW_TITLE, timeout=remaining):
+                logger.error("终末地窗口未出现")
+                self.stop_exe()
+                return False
+            self._endfield_startup_seconds = time.monotonic() - started_at
+
+            logger.info(
+                "exe 启动成功（启动器 %.1fs，终末地累计 %.1fs）",
+                self._launcher_startup_seconds,
+                self._endfield_startup_seconds,
+            )
+            return True
 
         except Exception as e:
             logger.error("启动 exe 失败: %s", e)
             return False
 
     def stop_exe(self) -> None:
-        """停止 exe。"""
+        """停止 exe 及其 onefile 子进程。"""
         if self._process:
             try:
-                self._process.terminate()
-                self._process.wait(timeout=5)
+                # PyInstaller onefile 会派生实际应用子进程，必须按进程树结束
+                subprocess.run(
+                    ["taskkill", "/PID", str(self._process.pid), "/T", "/F"],
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
             except Exception:
-                self._process.kill()
+                try:
+                    self._process.terminate()
+                    self._process.wait(timeout=5)
+                except Exception:
+                    self._process.kill()
             self._process = None
             logger.info("exe 已停止")
 
@@ -198,6 +233,17 @@ class PackagedTestRunner:
             self._test_exe_functionality(scenario)
         else:
             logger.warning("未知场景: %s", scenario.name)
+            scenario.steps.append(TestStep(name="执行场景", status="failed", message=f"未知场景: {scenario.name}"))
+
+        missing = check_required_steps(scenario, scenario_config.get("steps", []))
+        if missing:
+            scenario.steps.append(
+                TestStep(
+                    name="必要步骤未执行",
+                    status="failed",
+                    message="、".join(missing),
+                )
+            )
 
         scenario.end_time = time.time()
         scenario.status = "passed" if scenario.failed_count == 0 else "failed"
@@ -205,22 +251,41 @@ class PackagedTestRunner:
         return scenario
 
     def _test_exe_startup(self, scenario: TestScenario) -> None:
-        """测试 exe 启动。"""
-        # 步骤 1: 检查窗口存在
-        step = TestStep(name="检查窗口存在")
+        """测试 exe 经启动器启动终末地。"""
+        # 步骤 1: 等待启动器
+        step = TestStep(name="等待启动器")
         step_start = time.time()
 
-        if self.inspector.main_window and self.inspector.main_window.exists():
+        launcher_ok = bool(
+            self._launcher_inspector
+            and self._launcher_inspector.main_window
+            and self._launcher_inspector.main_window.exists()
+        )
+        if launcher_ok:
             step.status = "passed"
-            step.message = "主窗口已找到"
+            step.message = f"启动器就绪，耗时 {self._launcher_startup_seconds or 0:.1f}s"
         else:
             step.status = "failed"
-            step.message = "主窗口未找到"
+            step.message = "启动器窗口未找到"
 
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 2: 截图
+        # 步骤 2: 等待主窗口（终末地）
+        step = TestStep(name="等待主窗口")
+        step_start = time.time()
+
+        if self.inspector.main_window and self.inspector.main_window.exists():
+            step.status = "passed"
+            step.message = f"终末地就绪，累计 {self._endfield_startup_seconds or 0:.1f}s"
+        else:
+            step.status = "failed"
+            step.message = "终末地窗口未找到"
+
+        step.duration = time.time() - step_start
+        scenario.steps.append(step)
+
+        # 步骤 3: 截图
         step = TestStep(name="截图")
         step_start = time.time()
 
@@ -254,7 +319,49 @@ class PackagedTestRunner:
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 2: 切换高级页
+        # 步骤 2: 确认计算（等待真实按钮状态变化，不用固定睡眠）
+        step = TestStep(name="确认计算")
+        step_start = time.time()
+
+        confirm_btn = self.inspector.find_control(name="确认选择（待更新）")
+        if confirm_btn is None:
+            confirm_btn = self.inspector.find_control(name="确认选择")
+        if confirm_btn is None:
+            step.status = "failed"
+            step.message = "未找到确认按钮"
+        elif not self.inspector.click(confirm_btn, wait=0.2):
+            step.status = "failed"
+            step.message = "点击确认按钮失败"
+        else:
+            confirmed = self.inspector.wait_for_control(name="已确认", timeout=STEP_TIMEOUT)
+            if confirmed is not None:
+                step.status = "passed"
+                step.message = "确认完成，乘区表已刷新"
+            else:
+                step.status = "failed"
+                step.message = f"确认后 {STEP_TIMEOUT}s 内未出现「已确认」"
+
+        step.duration = time.time() - step_start
+        scenario.steps.append(step)
+
+        # 步骤 3: 读取乘区表（确认后仍在计算页）
+        step = TestStep(name="读取乘区表")
+        step_start = time.time()
+
+        zone_lines = self._read_zone_lines()
+        if len(zone_lines) >= 2:
+            zone_path = SCREENSHOT_PACKAGED_DIR / "zone_table.txt"
+            zone_path.write_text("\n".join(zone_lines), encoding="utf-8")
+            step.status = "passed"
+            step.message = f"读取乘区行 {len(zone_lines)} 条"
+        else:
+            step.status = "failed"
+            step.message = "未读取到乘区表内容"
+
+        step.duration = time.time() - step_start
+        scenario.steps.append(step)
+
+        # 步骤 4: 切换高级页
         step = TestStep(name="切换高级页")
         step_start = time.time()
 
@@ -270,15 +377,15 @@ class PackagedTestRunner:
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 3: 检查基本功能
+        # 步骤 5: 检查基本功能
         step = TestStep(name="检查基本功能")
         step_start = time.time()
 
         # 检查是否有基本的 UI 元素
         missing = []
 
-        # 检查搜索面板
-        search = self.inspector.find_control(name="全量搜索")
+        # 检查搜索面板（按钮文案来自 zh-CN.json 的 desktop.endfield.fullSearch）
+        search = self.inspector.find_control(name="全量遍历搜索")
         if not search:
             missing.append("搜索面板")
 
@@ -292,7 +399,7 @@ class PackagedTestRunner:
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 4: 截图
+        # 步骤 6: 截图
         step = TestStep(name="截图")
         step_start = time.time()
 
@@ -308,6 +415,36 @@ class PackagedTestRunner:
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
+    def _read_zone_lines(self) -> list[str]:
+        """读取确认后的乘区表文本行。
+
+        Returns:
+            乘区表各单元格文本；未找到乘区表时返回空列表。
+        """
+        header = self.inspector.find_control(name="=== 乘区数据 ===")
+        if header is None:
+            return []
+
+        cells: list = []
+        try:
+            table = header.parent()
+            # Qt 的 QTableWidget 单元格在 UIA 下可能是 DataItem 或 Text
+            for control_type in ("DataItem", "Text"):
+                found = table.descendants(control_type=control_type)
+                if found:
+                    cells = found
+                    break
+        except Exception as e:
+            logger.warning("读取乘区表失败: %s", e)
+            return []
+
+        lines: list[str] = []
+        for cell in cells:
+            text = (cell.element_info.name or "").strip()
+            if text:
+                lines.append(text)
+        return lines
+
     def run_all(self) -> TestReport:
         """运行所有测试场景。
 
@@ -319,11 +456,13 @@ class PackagedTestRunner:
 
         # 打包
         if not self.build_exe():
+            self.report.mark_infra_failed("打包失败或未找到 exe，未执行测试场景")
             self.report.end_time = time.time()
             return self.report
 
         # 启动 exe
         if not self.start_exe():
+            self.report.mark_infra_failed("exe 启动失败，未执行测试场景")
             self.report.end_time = time.time()
             return self.report
 
@@ -362,12 +501,15 @@ def main() -> None:
     # 输出摘要
     print("\n" + "=" * 60)
     print(f"测试完成: {report.passed_scenarios}/{report.total_scenarios} 场景通过")
+    if report.infra_failed:
+        print(f"基础设施失败: {report.infra_error}")
+    if report.total_scenarios == 0:
+        print("警告: 未执行任何测试场景")
     print(f"报告已保存: {report_path}")
     print("=" * 60)
 
-    # 返回退出码
-    if report.failed_scenarios > 0:
-        sys.exit(1)
+    # 返回退出码：启动失败、0 场景、失败场景都会返回非零
+    sys.exit(report.exit_code)
 
 
 if __name__ == "__main__":

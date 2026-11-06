@@ -1,13 +1,13 @@
 [![GitHub stars](https://img.shields.io/github/stars/wxhwwla/calc-framework?style=social)](https://github.com/wxhwwla/calc-framework)
 [![AtomGit stars](https://atomgit.com/wxhwwla/calc-framework/star/badge.svg)](https://atomgit.com/wxhwwla/calc-framework)
-[![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
-[![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
-[![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
-[![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
+[![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
+[![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
+[![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
+[![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
 
 # Calc Framework — Universal Game Damage Calculator
 
-> A universal game calculation framework. Currently supports **Arknights: Endfield** and **Arknights**.
+> A universal game calculation framework. Currently supports **Arknights: Endfield**, **Arknights**, and **Infinite Lagrange**.
 >
 > [:cn: 中文文档](README_zh.md)
 
@@ -23,7 +23,7 @@
 
 **Use the calculator right now — no install needed.**
 
-[**Open Web App →**](https://wxhwwla.pythonanywhere.com)
+[**Open Web App →**](https://dove-magnitude-runner.ngrok-free.dev)
 
 *or* [Download Desktop App](https://github.com/wxhwwla/calc-framework/releases)
 
@@ -40,7 +40,17 @@
 git clone https://github.com/wxhwwla/calc-framework
 cd calc-framework
 python scripts/main_launcher.py
+# Windows, no console window: pythonw scripts/main_launcher.py
 ```
+
+**Or let your AI build the calculator:** the repo ships a Model Context Protocol server that exposes the DAG generator, scaffolder, validator, and `.calcpack` packer as deterministic tools.
+
+```bash
+pip install -r requirements-mcp.txt
+python -m tools.calc_mcp --project-dir .
+```
+
+Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [操作指令集 §2.4](docs/操作指令集.md) and [ADR-0028](docs/adr/0028-mcp-builder-server.md).
 
 > 🏗 [Quick Start ↓](#quick-start) · [Create a Calculator](docs/制造游戏计算器完整流程.md)
 
@@ -72,7 +82,7 @@ python scripts/main_launcher.py
 [repo root]/
 ├── framework/                    # calc-framework — generic pip package
 │   ├── src/calc_framework/       #   DAG engine, inverse engine, data, UI, search, plugin
-│   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba)
+│   └── adapters/                 #   Game adapters (endfield, arknights, card_rpg, fps, moba, wjdlglr)
 ├── web/                          # React + FastAPI full-stack web app
 │   ├── backend/                  #   FastAPI backend (/api/*)
 │   │   └── api/                  #     routes + internal/ entity/ search_lib/ … (see docs §4.188)
@@ -80,9 +90,10 @@ python scripts/main_launcher.py
 │   └── hub/                      #   Calc Hub — static marketplace
 ├── games/                        # Game adapter packages
 │   ├── endfield/                 #   Endfield damage calculator (calc + gui + data + tests)
-│   └── arknights/                #   Arknights calculator (DAG + GUI + tests)
+│   ├── arknights/                #   Arknights calculator (DAG + GUI + tests)
+│   └── wjdlglr/                  #   Infinite Lagrange entry (generic CalcPackViewer)
 ├── docs/                         # Project documentation
-├── tools/                        # Dev tools (BWIKI scout, data pipeline, OCR, designer)
+├── tools/                        # Dev tools (BWIKI/wiki_scout, data pipeline, OCR, designer, calc_mcp)
 ├── scripts/                      # Entry scripts (launcher, build, dev toolkit)
 ├── release_bundle/               # Release layout config
 ├── installer/                    # NSIS installer
@@ -97,7 +108,9 @@ python scripts/main_launcher.py
 
 ### Option 1: Web Demo (No Install)
 
-→ **[wxhwwla.pythonanywhere.com](https://wxhwwla.pythonanywhere.com)**
+→ **[dove-magnitude-runner.ngrok-free.dev](https://dove-magnitude-runner.ngrok-free.dev)**
+
+> Hosted on the maintainer's PC via ngrok; the free ngrok plan may show a one-time "Visit Site" interstitial per browser per week.
 
 ### Option 2: Desktop App
 
@@ -115,11 +128,16 @@ cd framework
 pip install -e ".[dev]"
 cd ..
 
-# 3. Install game adapter + launch
+# 3. Install game adapter
 cd games/endfield
 pip install -e ".[dev]"
+cd ../..
+
+# 4. Launch from the repository root
 python -m games.endfield.main
 ```
+
+> Wheel install: install this repository's framework first (local wheel or editable, ≥ 0.3.1), then the `games/endfield` wheel. Older PyPI framework builds lack `calc_framework.ui.i18n`.
 
 <details>
 <summary>Troubleshooting</summary>
@@ -160,8 +178,15 @@ cd web/frontend && npm install && npm run dev
 
 - Operator selection by star / profession / branch with skill parser
 - Physical / Magic / True damage calculation via DAG engine
-- BWIKI data crawling: 420+ operators with full stats
+- BWIKI data crawling: 440 operators with full stats
 - 28 attributes + 5 custom functions + 51-node DAG
+
+### Infinite Lagrange Calculator
+
+- Ship category → ship → weapon cascade; stats from the game wiki (571 ship/weapon records)
+- Eight damage zones plus a dedicated hit-rate zone: `(target evasion + hit bonus) × (1 + base hit)`, clamped to 5%–95%, then ±N(0, 0.03) fluctuation
+- 42 outputs across two tabs (calculation / zone breakdown); energy vs. kinetic armor selected automatically from the weapon
+- Same adapter serves desktop (`--game wjdlglr`) and Web (`/wjdlglr`)
 
 ### Generic Framework
 
@@ -171,10 +196,11 @@ cd web/frontend && npm install && npm run dev
 - **Search Engine**: Top-N enumeration, parallel execution, cancel tokens, SQLite persistence
 - **ComputeSheet**: Declarative UI — consumes `layout.json` + DAG variables → auto-renders controls
 - **Plugin System**: Registry pattern + 3 built-in plugins (crit/dodge/distance) + `.calcplugin` format
-- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters
+- **Cross-genre**: Verified with card_rpg (9 nodes), moba (7), fps (8) adapters, plus a wjdlglr eight-zone adapter (104 nodes, 16 target DPM outputs with a dedicated hit-rate zone, three-level ship/weapon cascade, weapon detail panel, energy/kinetic armor selection)
 - **Theme Manager**: Dark / Light / High Contrast with dynamic QSS generation
-- **i18n**: Web (react-i18next, ~500+ keys, 98 files) + Desktop (DesktopTranslator, 282 keys, 15 files, en/zh-CN)
+- **i18n**: Web (react-i18next, ~890 entries per language) + Desktop (DesktopTranslator, 1046 keys per language, en/zh-CN)
 - **AI Build Recommendation**: Natural language → optimal loadout, multi-turn chat, semantic search, AI formula parsing
+- **MCP Builder Server**: `tools/calc_mcp/` exposes 13 deterministic tools (templates, schemas, guides, generate, scaffold, validate, smoke-test, pack/import) so a host AI can build a new game calculator end-to-end from a cloned repo
 - **SaaS API**: API Key management + rate limiting + usage statistics
 
 ### Web Version
@@ -182,6 +208,7 @@ cd web/frontend && npm install && npm run dev
 | Web Page | Desktop Equivalent | Route |
 |----------|-------------------|-------|
 | Damage Calculator | `main.py` (desktop) / FastAPI+React (web) | `/` |
+| Infinite Lagrange Calculator | `games/wjdlglr/main.py` / generic `AdapterGamePage` | `/wjdlglr` |
 | Data Designer | Dev toolkit | `/designer` |
 | Pack Designer | Dev toolkit | `/pack-designer` |
 | Calc Hub Marketplace | — | `/marketplace` |
@@ -226,13 +253,13 @@ result = adapter.fit(data)  # auto-match by data length
 
 ```powershell
 # Framework tests
-cd framework && pytest tests/ -q     # 1160 passed
+cd framework && pytest tests/ -q
 
 # Endfield tests (full suite)
-cd games/endfield && pytest tests/ -q  # 1585 passed
+cd games/endfield && pytest tests/ -q
 ```
 
-[![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
+[![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
 
 ---
 

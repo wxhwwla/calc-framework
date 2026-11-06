@@ -34,6 +34,9 @@ _PROJECT_ROOT = _INSTALLER_DIR.parent
 
 _NSI_SCRIPT = _INSTALLER_DIR / "endfield_calculator_setup.nsi"
 
+# NSIS 脚本当前只打包统一启动器；其余构建目标各自独立分发，不参与安装包
+_INSTALL_TARGET = "launcher"
+
 
 def _get_version() -> str:
     """从 please_read_me.py 读取 EXE 版本号。"""
@@ -68,28 +71,28 @@ def _ensure_nsis() -> str | None:
     return None
 
 
+def _required_install_apps() -> list[tuple[str, str]]:
+    """从发布布局读取安装包必须包含的应用（当前仅统一启动器）。"""
+    _add_path()
+
+    from release_bundle.release_layout import TARGET_APP_NAMES
+
+    app_name = TARGET_APP_NAMES[_INSTALL_TARGET]
+    return [(app_name, f"{app_name}.exe")]
+
+
 def _validate_dist(dist_dir: Path) -> list[str]:
     """验证构建产物目录是否完整。"""
 
     issues: list[str] = []
 
-    expected_apps = [
-        ("Game Calc Platform", "Game Calc Platform.exe"),
-        ("终末地伤害计算器", "终末地伤害计算器.exe"),
-        ("数据设计器", "数据设计器.exe"),
-        ("配置包设计器", "配置包设计器.exe"),
-    ]
-
-    for app_name, exe_name in expected_apps:
+    for app_name, exe_name in _required_install_apps():
         app_dir = dist_dir / app_name
 
         exe_path = app_dir / exe_name
 
         if not exe_path.exists():
             issues.append(f"缺少 {exe_name}（预期位置: {exe_path})")
-
-        elif not app_dir.is_dir():
-            issues.append(f"目录不存在: {app_dir}")
 
     return issues
 
@@ -129,17 +132,24 @@ def build_installer(
     issues = _validate_dist(dist_dir)
 
     if issues:
-        print("警告: 构建产物不完整:", file=sys.stderr)
+        print("错误: 构建产物不完整，已中止安装包构建:", file=sys.stderr)
 
         for issue in issues:
             print(f"  - {issue}", file=sys.stderr)
 
-        print("安装包可能缺少部分组件。\n", file=sys.stderr)
+        return 1
+
+    output_path = dist_dir / f"GameCalcPlatform_Setup_v{version}.exe"
 
     cmd = [
         makensis,
+        # NSI 脚本为 UTF-8 无 BOM；不显式指定时 makensis 按系统 ACP 读取，
+        # 中文 Windows（GBK）会报 Bad text encoding，CI（CP1252）会乱码。
+        "-INPUTCHARSET",
+        "UTF8",
         f"/DVERSION={version}",
         f"/DAPP_ROOT={dist_dir}",
+        f"/DOUTPUT={output_path}",
         str(_NSI_SCRIPT),
     ]
 
@@ -151,7 +161,7 @@ def build_installer(
 
     print(f"脚本: {_NSI_SCRIPT}")
 
-    print(f"输出: {dist_dir / f'GameCalcPlatform_Setup_v{version}.exe'}")
+    print(f"输出: {output_path}")
 
     print(f"命令: {' '.join(cmd)}\n")
 
@@ -167,15 +177,14 @@ def build_installer(
 
         return 1
 
-    output_path = dist_dir / f"GameCalcPlatform_Setup_v{version}.exe"
+    if not output_path.exists():
+        print(f"\n错误: 未生成安装包 {output_path}", file=sys.stderr)
 
-    if output_path.exists():
-        size_mb = output_path.stat().st_size / 1024 / 1024
+        return 1
 
-        print(f"\n安装包已生成: {output_path} ({size_mb:.1f} MB)")
+    size_mb = output_path.stat().st_size / 1024 / 1024
 
-    else:
-        print(f"\n警告: 未找到输出文件 {output_path}", file=sys.stderr)
+    print(f"\n安装包已生成: {output_path} ({size_mb:.1f} MB)")
 
     return 0
 

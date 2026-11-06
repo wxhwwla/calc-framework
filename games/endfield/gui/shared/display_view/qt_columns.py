@@ -150,6 +150,8 @@ class QtAttributeColumns(QWidget):
         big_font: QFont,
         small_font: QFont,
         parent: QWidget | None = None,
+        *,
+        embedded: bool = False,
     ) -> None:
         super().__init__(parent)
 
@@ -157,21 +159,17 @@ class QtAttributeColumns(QWidget):
 
         self._small_font = small_font
 
-        layout = QHBoxLayout(self)
+        self._embedded = embedded
 
-        layout.setContentsMargins(4, 4, 4, 4)
-
-        layout.setSpacing(8)
-
-        self._char_table = _ColumnTable()
+        self._char_table = _ColumnTable(self)
 
         self._char_table.set_font(small_font)
 
-        self._weapon_table = _ColumnTable()
+        self._weapon_table = _ColumnTable(self)
 
         self._weapon_table.set_font(small_font)
 
-        self._zone_table = _ColumnTable()
+        self._zone_table = _ColumnTable(self)
 
         self._zone_table.set_font(small_font)
 
@@ -180,10 +178,33 @@ class QtAttributeColumns(QWidget):
 
             tbl.setStyleSheet("background-color: transparent;")
 
-            layout.addWidget(tbl, stretch=1)
+        if not embedded:
+            layout = QHBoxLayout(self)
+
+            layout.setContentsMargins(4, 4, 4, 4)
+
+            layout.setSpacing(8)
+
+            for tbl in (self._char_table, self._weapon_table, self._zone_table):
+                layout.addWidget(tbl, stretch=1)
 
         self._show_empty()
         """初始化实例。"""
+
+    @property
+    def char_table(self) -> _ColumnTable:
+        """角色基础数据表（嵌入式模式下由外壳放入左下区域）。"""
+        return self._char_table
+
+    @property
+    def weapon_table(self) -> _ColumnTable:
+        """武器加成数据表（嵌入式模式下由外壳放入右下区域）。"""
+        return self._weapon_table
+
+    @property
+    def zone_table(self) -> _ColumnTable:
+        """乘区明细表（嵌入式模式下由外壳放入高级页区域）。"""
+        return self._zone_table
 
     def refresh(self, request: DisplayRequest) -> None:
         """用 DisplayRequest 刷新三列展示。"""

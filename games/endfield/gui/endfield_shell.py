@@ -2,30 +2,35 @@
 # SPDX-License-Identifier: AGPL-3.0
 """ShellMixin — 终末地伤害计算主窗口面板创建与布局。
 
-P2 迁移目标：所有面板最终使用 ComputeSheet + layout.json。
+采用共享 ``CalculatorShell``：
+
+- 顶部工具条：帮助、捐赠、数据来源、搜索历史、日志与工具菜单。
+- 计算页 2×2：角色选择 | 武器选择 / 角色基础数据 | 武器加成数据。
+- 高级页 2×2：敌人与装备参数 | 技能与加成参数 / 乘区明细 | 总伤害。
+- 底部固定确认按钮与页签；选择/输入变更只标记待确认。
 """
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
+from calc_framework.ui.calculator_shell import CalculatorPage, CalculatorShell
 from calc_framework.ui.i18n import tr
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
-    QSplitter,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from games.endfield.data_loading.equipment_catalog import get_equipment_catalog
 from games.endfield.data_loading.loader import get_characters, get_weapons
-from games.endfield.framework_bridge import ComputeSheet
 from games.endfield.gui.panels.selection.qt_panel import QtSelectionPanel
 from games.endfield.gui.presentation.total_damage_panel import TotalDamagePanel
 from games.endfield.gui.shared.display_view.qt_columns import QtAttributeColumns
@@ -41,93 +46,107 @@ _CONFIRM_PENDING_STYLE = """
 """
 
 
+def _scrollable(widget: QWidget) -> QScrollArea:
+    """把内容包进滚动区，避免固定 2×2 区域被长面板撑破。"""
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QFrame.Shape.NoFrame)
+    scroll.setWidget(widget)
+    return scroll
+
+
 class ShellMixin:
     """面板创建与布局混合类。
 
-    提供计算页/高级页构建、角色/武器选择面板联动、控件面板初始化。
-    由 EndfieldApp 继承使用。
+    提供共享外壳初始化、计算页/高级页 2×2 构建、角色/武器选择面板联动、
+    控件面板初始化。由 EndfieldApp 继承使用。
     """
 
+    def _tool_slot(self, method_name: str) -> Callable[[], None]:
+        """把 mixin 方法包装为无参回调（供工具条复用）。"""
+
+        def _invoke() -> None:
+            getattr(self, method_name)()
+
+        return _invoke
+
+    def _init_shell(self) -> None:
+        """创建顶部工具条 + 页面栈 + 底部确认/页签外壳。"""
+        self._shell = CalculatorShell(cast(QWidget, self))
+        self.setCentralWidget(self._shell)
+        self.status_label = self._shell.status_label
+        self._shell.confirmed.connect(self._on_confirm)
+        self._shell.set_status(tr("common.ready"))
+        self._build_toolbar()
+
+    def _build_toolbar(self) -> None:
+        """把所有与计算无关的入口收进顶部工具条。"""
+        shell = self._shell
+        shell.add_tool_action(tr("desktop.endfield.helpUsage"), self._tool_slot("_on_open_help"), shortcut="F1")
+        shell.add_tool_action(tr("desktop.endfield.dataAttribution"), self._tool_slot("_on_attribution"))
+        shell.add_tool_action(tr("desktop.endfield.donate"), self._tool_slot("_on_donation"))
+        shell.add_tool_action(tr("desktop.endfield.searchHistory"), self._tool_slot("_on_search_history"))
+        if callable(getattr(self, "_open_log_dialog", None)):
+            shell.add_tool_action(tr("desktop.endfield.runtimeLogs"), self._tool_slot("_open_log_dialog"))
+        shell.add_tool_separator()
+
+        tools = QToolButton(shell.toolbar)
+        tools.setText(tr("desktop.endfield.sectionTools"))
+        tools.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(tools)
+        tool_actions = (
+            ("exportPreset", "_on_export_preset"),
+            ("importPreset", "_on_import_preset"),
+            ("comparePresets", "_on_compare_presets"),
+            ("damageDashboard", "_on_damage_dashboard"),
+            ("calcHistory", "_on_calc_history"),
+            ("exportOpLog", "_on_export_log"),
+            ("ocrDetect", "_on_ocr_detect"),
+        )
+        for i18n_key, method_name in tool_actions:
+            slot = getattr(self, method_name, None)
+            if not callable(slot):
+                continue
+            action = menu.addAction(tr(f"desktop.endfield.{i18n_key}"))
+            action.triggered.connect(lambda *_, handler=slot: handler())
+        tools.setMenu(menu)
+        shell.add_tool_widget(tools)
+
     def _show_main_page(self) -> None:
-        self.tabs.setCurrentIndex(0)
-        """show main page。"""
+        """切换回计算页。"""
+        self._shell.set_current_page(0)
 
     def _build_calc_page(self) -> None:
-        calc_page = QWidget()
-        calc_layout = QVBoxLayout(calc_page)
-        calc_layout.setContentsMargins(0, 0, 0, 0)
-        calc_layout.setSpacing(4)
-
+        """计算页 2×2：角色选择 | 武器选择 / 角色基础 | 武器加成。"""
         characters = get_characters()
         weapons = get_weapons()
         self.all_weapons: list[dict[str, Any]] = list(weapons)
 
-        panels_frame = QFrame()
-        panels_frame.setStyleSheet("QFrame { background-color: #1E1E1E; border-radius: 8px; }")
-        panels_row = QHBoxLayout(panels_frame)
-        panels_row.setContentsMargins(8, 8, 8, 8)
-        panels_row.setSpacing(12)
-
         self.char_panel = QtSelectionPanel(characters, self.big_font, parent=None)
         self.weapon_panel = QtSelectionPanel(weapons, self.big_font, is_weapon_panel=True, parent=None)
+        self.columns: QtAttributeColumns = QtAttributeColumns(
+            big_font=self.big_font,
+            small_font=self.small_font,
+            embedded=True,
+        )
 
-        panels_row.addWidget(self.char_panel, stretch=1)
-        line = QFrame()
-        line.setFrameShape(QFrame.Shape.VLine)
-        line.setStyleSheet("color: #333333;")
-        panels_row.addWidget(line)
-        panels_row.addWidget(self.weapon_panel, stretch=1)
+        page = CalculatorPage(
+            top_left_title=tr("desktop.endfield.zoneCharSelect"),
+            top_right_title=tr("desktop.endfield.zoneWeaponSelect"),
+            bottom_left_title=tr("desktop.endfield.zoneCharBase"),
+            bottom_right_title=tr("desktop.endfield.zoneWeaponBonus"),
+        )
+        page.zone("top_left").add_widget(_scrollable(self.char_panel))
+        page.zone("top_right").add_widget(_scrollable(self.weapon_panel))
+        page.zone("bottom_left").add_widget(self.columns.char_table)
+        page.zone("bottom_right").add_widget(self.columns.weapon_table)
 
-        calc_layout.addWidget(panels_frame)
-
-        content_split = QSplitter(Qt.Orientation.Horizontal)
-        calc_layout.addWidget(content_split, stretch=1)
-
-        self.columns: QtAttributeColumns = QtAttributeColumns(big_font=self.big_font, small_font=self.small_font)
-        content_split.addWidget(self.columns)
-
-        self._compute_sheet: ComputeSheet | None = None
-        self._compute_sheet_widget: QWidget = QWidget()
-        sheet_layout = QVBoxLayout(self._compute_sheet_widget)
-        sheet_layout.setContentsMargins(0, 0, 0, 0)
-        self._sheet_hint_label = QLabel(tr("desktop.endfield.hintLoadZones"))
-        sheet_layout.addWidget(self._sheet_hint_label)
-
-        self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
-        sheet_layout.addWidget(self._total_damage_panel)
-
-        sheet_scroll = QScrollArea()
-        sheet_scroll.setWidgetResizable(True)
-        sheet_scroll.setWidget(self._compute_sheet_widget)
-
-        right_wrapper = QWidget()
-        right_layout = QVBoxLayout(right_wrapper)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(6)
-        right_layout.addWidget(sheet_scroll, stretch=1)
-
-        action_row = QHBoxLayout()
-        action_row.setSpacing(8)
-        self.calc_confirm_btn = QPushButton(tr("desktop.endfield.confirmSelection"))
-        self.calc_confirm_btn.setMinimumHeight(40)
-        self.calc_confirm_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.calc_confirm_btn.clicked.connect(self._on_confirm)
-        action_row.addWidget(self.calc_confirm_btn, stretch=2)
-
-        self.goto_adv_btn = QPushButton(tr("desktop.endfield.goAdvanced"))
-        self.goto_adv_btn.setMinimumHeight(40)
-        self.goto_adv_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.goto_adv_btn.clicked.connect(lambda: self.tabs.setCurrentIndex(1))
-        action_row.addWidget(self.goto_adv_btn, stretch=1)
-        right_layout.addLayout(action_row)
-
-        content_split.addWidget(right_wrapper)
-        content_split.setSizes([400, 400])
-
-        self.tabs.addTab(calc_page, tr("desktop.endfield.tabCalc"))
-        """build calc page。"""
+        self._calc_page = page
+        self.calc_page = page
+        self._shell.add_page(tr("desktop.endfield.tabCalc"), page)
 
     def _build_adv_page(self) -> None:
+        """高级页 2×2：敌人/装备 | 技能/加成 / 乘区明细 | 总伤害。"""
         self.control_dock: QtControlDock = QtControlDock(
             big_font=self.big_font,
             small_font=self.small_font,
@@ -139,57 +158,66 @@ class ShellMixin:
             on_ocr_detect=self._on_ocr_detect,
             on_search_history=self._on_search_history,
         )
+        dock = self.control_dock
 
-        adv_page = QWidget()
-        adv_layout = QVBoxLayout(adv_page)
-        adv_layout.setContentsMargins(0, 0, 0, 0)
+        enemy_body = QWidget()
+        enemy_layout = QVBoxLayout(enemy_body)
+        enemy_layout.setContentsMargins(0, 0, 0, 0)
+        enemy_layout.setSpacing(4)
+        enemy_layout.addWidget(dock._enemy_panel)
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel(tr("desktop.endfield.calcModeLabel")))
+        mode_row.addWidget(dock.calc_mode_menu, 1)
+        enemy_layout.addLayout(mode_row)
+        enemy_layout.addStretch()
 
-        self.control_dock.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        adv_layout.addWidget(self.control_dock, stretch=1)
+        enemy_equipment = QWidget()
+        enemy_equipment_layout = QVBoxLayout(enemy_equipment)
+        enemy_equipment_layout.setContentsMargins(0, 0, 0, 0)
+        enemy_equipment_layout.setSpacing(4)
+        enemy_equipment_layout.addWidget(_scrollable(enemy_body), 1)
+        enemy_equipment_layout.addWidget(dock._col_search, 1)
 
-        self.status_label = QLabel(tr("common.ready"))
-        self.status_label.setFont(self.small_font)
-        self.status_label.setStyleSheet("color: #828282; padding: 4px 12px;")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        adv_layout.addWidget(self.status_label)
+        page = CalculatorPage(
+            top_left_title=tr("desktop.endfield.zoneEnemyEquip"),
+            top_right_title=tr("desktop.endfield.zoneSkillBonus"),
+            bottom_left_title=tr("desktop.endfield.zoneBreakdown"),
+            bottom_right_title=tr("desktop.endfield.zoneTotalDamage"),
+        )
+        page.zone("top_left").add_widget(enemy_equipment)
+        page.zone("top_right").add_widget(dock._col_multi)
+        page.zone("bottom_left").add_widget(self.columns.zone_table)
 
-        self.tabs.addTab(adv_page, tr("desktop.endfield.tabAdvanced"))
-        """build adv page。"""
+        self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
+        page.zone("bottom_right").add_widget(self._total_damage_panel)
+
+        self._adv_page = page
+        self.adv_page = page
+        self._shell.add_page(tr("desktop.endfield.tabAdvanced"), page)
 
     def _confirm_buttons(self) -> list[QPushButton]:
-        """计算页与高级页共用的确认按钮（状态同步）。"""
-        buttons: list[QPushButton] = []
-        if hasattr(self, "calc_confirm_btn"):
-            buttons.append(self.calc_confirm_btn)
-        if hasattr(self, "control_dock"):
-            buttons.append(self.control_dock.confirm_btn)
-        return buttons
+        """当前可见的确认按钮（底部工具条固定按钮）。"""
+        if hasattr(self, "_shell"):
+            return [self._shell.confirm_button]
+        return []
 
     def _set_confirm_ui_pending(self) -> None:
-        """配装变更后：两页确认按钮均显示待更新。"""
-        for btn in self._confirm_buttons():
-            btn.setEnabled(True)
-            btn.setText(tr("desktop.endfield.confirmPending"))
-            btn.setStyleSheet(_CONFIRM_PENDING_STYLE)
-        self.status_label.setText(tr("desktop.endfield.pendingConfirm"))
+        """配装变更后：底部确认按钮显示待更新。"""
+        self._shell.set_pending(tr("desktop.endfield.confirmPending"))
+        self._shell.confirm_button.setStyleSheet(_CONFIRM_PENDING_STYLE)
+        self._shell.set_status(tr("desktop.endfield.pendingConfirm"))
 
     def _set_confirm_ui_computing(self) -> None:
         """计算进行中。"""
-        for btn in self._confirm_buttons():
-            btn.setEnabled(False)
-            btn.setText(tr("desktop.endfield.computing"))
-        if hasattr(self, "status_label"):
-            self.status_label.setText(tr("desktop.endfield.computing"))
+        self._shell.set_confirm_enabled(False)
+        self._shell.set_confirm_text(tr("desktop.endfield.computing"))
+        self._shell.set_status(tr("desktop.endfield.computing"))
 
     def _set_confirm_ui_confirmed(self) -> None:
         """确认完成。"""
-        style = getattr(self, "_confirm_btn_default_style", _CONFIRM_PENDING_STYLE)
-        for btn in self._confirm_buttons():
-            btn.setEnabled(True)
-            btn.setText(tr("desktop.endfield.confirmed"))
-            btn.setStyleSheet(style)
-        if hasattr(self, "status_label"):
-            self.status_label.setText(tr("desktop.endfield.confirmed"))
+        self._shell.set_confirmed(tr("desktop.endfield.confirmed"))
+        self._shell.confirm_button.setStyleSheet(getattr(self, "_confirm_btn_default_style", ""))
+        self._shell.set_status(tr("desktop.endfield.confirmed"))
 
     def _on_char_name_change(self) -> None:
         char_data = self.char_panel.get_selected_data()
@@ -225,8 +253,7 @@ class ShellMixin:
         dock = self.control_dock
 
         self._confirm_btn_default_style = dock.confirm_btn.styleSheet()
-        if hasattr(self, "calc_confirm_btn"):
-            self.calc_confirm_btn.setStyleSheet(self._confirm_btn_default_style)
+        self._shell.confirm_button.setStyleSheet(self._confirm_btn_default_style)
 
         dock._enemy_panel.enemy_params_changed.connect(self._on_enemy_params_changed)
         initial_params = dock._enemy_panel.get_params()
@@ -240,7 +267,8 @@ class ShellMixin:
 
         dock.equipment_scope_combo.currentTextChanged.connect(self._on_equipment_scope_changed)
 
-        dock._enemy_panel.setVisible(False)
+        # 敌人参数现在位于高级页左上区域，不再藏在「更多设置」里。
+        dock._enemy_panel.setVisible(True)
 
         dock._manual_buff_btn.clicked.connect(self._on_manual_buff)
         dock._survival_btn.clicked.connect(self._on_survival_estimate)

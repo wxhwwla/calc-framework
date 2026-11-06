@@ -12,6 +12,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchTemplates, fetchTemplateDetail, generateAdapter, type TemplateInfo, type TemplateDetail } from '../api/generator';
+import NumberField from '../components/common/NumberField';
 import AIFormulaDialog from './AIFormulaDialog';
 import type { AIFormulaResponse } from '../api/generator';
 
@@ -177,8 +178,8 @@ export default function GeneratorPage() {
                   </Select>
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 60 }}>
-                  <TextField size="small" variant="standard" type="number" value={v.default}
-                    onChange={e => updateVar(i, 'default', parseFloat(e.target.value) || 0)} />
+                  <NumberField value={v.default} onChange={val => updateVar(i, 'default', val)}
+                    ariaLabel={v.name} sx={{ width: 96 }} />
                 </TableCell>
                 <TableCell sx={{ p: 0.5, minWidth: 120 }}>
                   <TextField size="small" variant="standard" value={v.description}

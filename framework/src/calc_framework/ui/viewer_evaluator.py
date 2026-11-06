@@ -60,20 +60,21 @@ def build_viewer_context(
 def build_entity_status_text(
     entity_selectors: dict[str, Any],
     selected_names: dict[str, str],
-    level: int = 90,
+    level: int | None = None,
 ) -> str:
     """构建实体选择状态文案（用于状态栏显示）。
 
     参数：
         entity_selectors: {source_prefix: selected_name} 当前选中的实体。
         selected_names: 已选中的 {source: name} 映射。
-        level: 当前等级。
+        level: 当前等级；``None`` 表示该计算包没有等级概念，状态栏不显示 Lv。
 
     返回：
-        如 "character=艾拉, weapon=天弓 Lv.90" 的状态文案。
+        如 "character=艾拉, weapon=天弓 Lv.90" 或 "weapon=…" 的状态文案。
     """
     selected = []
     for src, name in entity_selectors.items():
         if name:
             selected.append(f"{src}={name}")
-    return f"已求值 — {', '.join(selected) if selected else '自定义输入'} Lv.{level}"
+    suffix = f" Lv.{level}" if level is not None else ""
+    return f"已求值 — {', '.join(selected) if selected else '自定义输入'}{suffix}"

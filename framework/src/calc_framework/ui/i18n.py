@@ -17,7 +17,7 @@
     - 单例模式 — 全局共享翻译状态
     - JSON 数据文件 — 与 Qt .ts/.qm 解耦，无需 lrelease
     - 与 Web i18n 共享键名结构 — 渐进统一
-    - 自动检测系统语言 — locale.getdefaultlocale()
+    - 自动检测系统语言 — 环境变量 / locale.getlocale()
     - 回退到 zh-CN — 中文作为源语言
 """
 
@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import locale
 import logging
+import os
 from pathlib import Path
 from threading import Lock
 from typing import Any
@@ -41,14 +42,26 @@ _FALLBACK_LOCALE = "zh-CN"
 def _detect_system_locale() -> str:
     """检测系统默认语言并映射到支持的 locale。
 
-    返回 ``zh-CN`` 如果系统语言以 "zh" 开头，否则返回 ``en``。
+    依次检查 ``LC_ALL`` / ``LC_MESSAGES`` / ``LANG``，再回退到
+    ``locale.getlocale()``（Python 3.11 起取代已弃用的
+    ``locale.getdefaultlocale()``）。Windows 的 ``getlocale()`` 返回
+    ``"Chinese (Simplified)_China"`` 这类显示名，因此同时匹配 ``zh``
+    前缀与 ``chinese``。
+
+    返回 ``zh-CN`` 如果系统语言为中文，否则返回 ``en``。
     """
+    for key in ("LC_ALL", "LC_MESSAGES", "LANG"):
+        raw = os.environ.get(key)
+        if raw:
+            return "zh-CN" if raw.lower().startswith("zh") else "en"
+
     try:
-        sys_locale, _ = locale.getdefaultlocale()
+        sys_locale, _ = locale.getlocale()
     except (ValueError, locale.Error):
         sys_locale = None
 
-    if sys_locale and sys_locale.lower().startswith("zh"):
+    normalized = (sys_locale or "").lower()
+    if normalized.startswith("zh") or "chinese" in normalized:
         return "zh-CN"
     return "en"
 

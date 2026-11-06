@@ -14,6 +14,7 @@ from api.internal.json_utils import (
     REPO_ROOT,
     load_json,
 )
+from calc_framework.data.entity_sources import DATA_STEM_SOURCE, SOURCE_DISPLAY_NAMES
 from fastapi import HTTPException
 
 ENDFIELD_GAME_DATA = ENDFIELD_DATA_ROOT
@@ -95,6 +96,39 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
     return data
 
 
+def _adapter_data_files(adapter_id: str) -> dict[str, Path]:
+    """解析适配器声明的数据文件（``{stem: path}``）。
+
+    优先使用 ``meta.entry_data``，未声明时扫描 ``data/*.json``。所有路径
+    必须位于适配器目录内，避免通过元数据读取任意文件。
+    """
+    adapter_dir = _adapter_path(adapter_id).resolve()
+    meta = load_adapter_meta(adapter_id)
+    entry_data = meta.get("entry_data")
+
+    paths: list[Path] = []
+    if entry_data is None:
+        data_dir = adapter_dir / "data"
+        if data_dir.is_dir():
+            paths = sorted(path for path in data_dir.glob("*.json") if path.is_file())
+    elif isinstance(entry_data, list):
+        for rel in entry_data:
+            if not isinstance(rel, str) or not rel.strip():
+                raise HTTPException(status_code=422, detail="entry_data 须为路径列表")
+            candidate = (adapter_dir / rel).resolve()
+            if not candidate.is_relative_to(adapter_dir):
+                raise HTTPException(status_code=400, detail=f"entry_data 路径越界: {rel}")
+            if candidate.suffix.lower() != ".json":
+                raise HTTPException(status_code=422, detail=f"entry_data 须为 .json: {rel}")
+            if not candidate.is_file():
+                raise HTTPException(status_code=404, detail=f"data file not found: {rel}")
+            paths.append(candidate)
+    else:
+        raise HTTPException(status_code=422, detail="entry_data 须为路径列表")
+
+    return {path.stem: path for path in paths}
+
+
 def data_entity_summary(adapter_id: str) -> list[dict[str, Any]]:
     """各实体类型条数与是否只读（Web 录入）。"""
     if adapter_id == "endfield":
@@ -115,27 +149,41 @@ def data_entity_summary(adapter_id: str) -> list[dict[str, Any]]:
             count = len(_load_json_list(ARKNIGHTS_OPERATORS_JSON))
         return [{"key": "operators", "label": "干员", "count": count, "read_only": False}]
 
-    return []
+    entities = []
+    for key, path in _adapter_data_files(adapter_id).items():
+        source = DATA_STEM_SOURCE.get(key, "")
+        label = SOURCE_DISPLAY_NAMES.get(source, key)
+        entities.append(
+            {
+                "key": key,
+                "label": label,
+                "count": len(_load_json_list(path)),
+                "read_only": True,
+            }
+        )
+    return entities
 
 
 def get_data_files_for_export(adapter_id: str) -> dict[str, list[dict[str, Any]]]:
     """导出 .calcpack 时写入的 data_files。"""
-    result: dict[str, list[dict[str, Any]]] = {}
-    for ent in data_entity_summary(adapter_id):
-        key = ent["key"]
-        if adapter_id == "endfield":
-            paths = {
-                "characters": ENDFIELD_GAME_DATA / "characters.json",
-                "weapons": ENDFIELD_GAME_DATA / "weapons.json",
-                "equipments": ENDFIELD_GAME_DATA / "equipments.json",
-            }
-            path = paths.get(key)
-            if path and path.is_file():
+    if adapter_id == "endfield":
+        result: dict[str, list[dict[str, Any]]] = {}
+        paths = {
+            "characters": ENDFIELD_GAME_DATA / "characters.json",
+            "weapons": ENDFIELD_GAME_DATA / "weapons.json",
+            "equipments": ENDFIELD_GAME_DATA / "equipments.json",
+        }
+        for key, path in paths.items():
+            if path.is_file():
                 result[key] = _load_json_list(path)
-        elif adapter_id == "arknights" and key == "operators":
-            if ARKNIGHTS_OPERATORS_JSON.is_file():
-                result[key] = _load_json_list(ARKNIGHTS_OPERATORS_JSON)
-    return result
+        return result
+
+    if adapter_id == "arknights":
+        if ARKNIGHTS_OPERATORS_JSON.is_file():
+            return {"operators": _load_json_list(ARKNIGHTS_OPERATORS_JSON)}
+        return {}
+
+    return {key: _load_json_list(path) for key, path in _adapter_data_files(adapter_id).items()}
 
 
 def get_pack_export_bundle(adapter_id: str) -> dict[str, Any]:

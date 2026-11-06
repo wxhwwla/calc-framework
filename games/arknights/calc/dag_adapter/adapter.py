@@ -44,6 +44,8 @@ def compute_snapshot_with_dag(
     res_penetration: float = 0.0,
     trust_atk_override: float | None = None,
     pot_atk_override: float | None = None,
+    elite: int = 2,
+    operator_level: int | None = None,
 ) -> SnapshotResult:
     """用 DAG 引擎计算干员伤害快照。
 
@@ -59,6 +61,8 @@ def compute_snapshot_with_dag(
         res_penetration: 百分比减抗（小数）
         trust_atk_override: 信赖攻击覆盖（None 时从干员数据读取）
         pot_atk_override: 潜能攻击覆盖（None 时从干员数据解析）
+        elite: 精英阶段（0/1/2），默认 2
+        operator_level: 段内等级（1 起）；None 表示该精英阶段满级
 
     返回:
         SnapshotResult 包含输出变量和执行顺序
@@ -80,6 +84,8 @@ def compute_snapshot_with_dag(
         res_penetration=res_penetration,
         trust_atk_override=trust_atk_override,
         pot_atk_override=pot_atk_override,
+        elite=elite,
+        operator_level=operator_level,
     )
 
     result = pkg.dag_service.evaluate(ctx)

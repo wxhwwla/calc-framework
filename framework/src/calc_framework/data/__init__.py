@@ -5,10 +5,18 @@
 
 from calc_framework.data.attr_schema import AttributeDecl, AttributeSchema
 from calc_framework.data.context import DataContext, make_context
+from calc_framework.data.entity_sources import (
+    DATA_STEM_SOURCE,
+    SOURCE_DATA_STEMS,
+    SOURCE_DISPLAY_NAMES,
+)
 from calc_framework.data.json_loader import JsonDataLoader
 from calc_framework.data.loader import DataContextLoader
 
 __all__ = [
+    "DATA_STEM_SOURCE",
+    "SOURCE_DATA_STEMS",
+    "SOURCE_DISPLAY_NAMES",
     "AttributeDecl",
     "AttributeSchema",
     "DataContext",

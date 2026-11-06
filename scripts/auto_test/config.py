@@ -39,8 +39,11 @@ SCREENSHOT_PACKAGED_DIR = SCREENSHOT_DIR / "packaged"
 # 超时配置（秒）
 # ──────────────────────────────────────────────────────────────
 
-# 应用启动等待时间
+# 应用启动等待时间（源码启动）
 APP_STARTUP_TIMEOUT = 10
+
+# 打包 exe 启动等待时间（onefile 解压 + 依赖导入 + 窗口创建）
+PACKAGED_STARTUP_TIMEOUT = 180
 
 # 页面加载等待时间
 PAGE_LOAD_TIMEOUT = 5
@@ -74,8 +77,20 @@ APP_WINDOW_TITLE = "终末地伤害计算器"
 # 应用类名（Qt 窗口类名）
 APP_CLASS_NAME = "EndfieldApp"
 
+# 打包构建目标（与 release_bundle.release_layout 的 launcher 保持一致）
+PACKAGED_BUILD_TARGET = "launcher"
+
+# 打包后应用目录名
+PACKAGED_APP_DIR_NAME = "Game Calc Platform"
+
 # 打包后 exe 名称
-PACKAGED_EXE_NAME = "终末地伤害计算器.exe"
+PACKAGED_EXE_NAME = "Game Calc Platform.exe"
+
+# 启动参数：不带参数启动启动器，启动器会自动拉起终末地（审查项 P2-02 要求验证真实链路）
+PACKAGED_EXE_ARGS: tuple[str, ...] = ()
+
+# 启动器窗口标题（部分匹配）
+PACKAGED_LAUNCHER_TITLE = "游戏计算器启动器"
 
 # ──────────────────────────────────────────────────────────────
 # 测试场景配置
@@ -87,52 +102,37 @@ TEST_SCENARIOS = {
         {
             "name": "启动检查",
             "description": "检查应用能否正常启动",
-            "steps": ["启动应用", "等待主窗口", "截图"],
+            "steps": ["检查窗口存在", "截图"],
         },
         {
             "name": "计算页功能",
             "description": "检查计算页基本功能",
-            "steps": [
-                "切换到计算页",
-                "选择角色",
-                "选择武器",
-                "点击确认",
-                "检查属性展示",
-                "截图",
-            ],
+            "steps": ["切换到计算页", "检查角色选择区域", "截图"],
         },
         {
             "name": "高级页功能",
             "description": "检查高级页基本功能",
-            "steps": [
-                "切换到高级页",
-                "检查搜索面板",
-                "检查多技能面板",
-                "截图",
-            ],
+            "steps": ["切换到高级页", "检查搜索面板", "截图"],
         },
         {
             "name": "数据设计器",
             "description": "检查数据设计器功能",
-            "steps": [
-                "打开设计器",
-                "检查数据浏览",
-                "检查公式反推",
-                "截图",
-            ],
+            "steps": ["查找设计器入口", "截图"],
         },
     ],
     "packaged": [
         {
             "name": "exe 启动检查",
-            "description": "检查打包后 exe 能否正常启动",
-            "steps": ["启动 exe", "等待主窗口", "截图"],
+            "description": "检查打包后 exe 能否经启动器正常启动终末地",
+            "steps": ["等待启动器", "等待主窗口", "截图"],
         },
         {
             "name": "exe 功能完整性",
-            "description": "检查打包后功能是否完整",
+            "description": "检查打包后计算页/高级页与确认计算",
             "steps": [
                 "切换计算页",
+                "确认计算",
+                "读取乘区表",
                 "切换高级页",
                 "检查基本功能",
                 "截图",

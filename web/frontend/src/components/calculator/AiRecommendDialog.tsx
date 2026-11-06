@@ -53,7 +53,7 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
         content: t("ai.greeting", "你好！我是配装助手。你可以问我：\n• 「推荐最高伤害配装」\n• 「暴击率优先怎么配」\n• 「这把武器适合谁」"),
       }]);
     }
-  }, [open, characterName, t]);
+  }, [open, characterName, t, chat.length]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

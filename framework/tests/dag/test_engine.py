@@ -232,6 +232,20 @@ class TestEvaluateGraph:
         result = evaluate_graph(graph, {})
         assert result.node_values["e"] == 22.0
 
+    def test_expr_node_comparison_and_ternary(self) -> None:
+        graph = DAGGraph(
+            nodes={
+                "atk": ConstNode(value=100.0),
+                "def": ConstNode(value=50.0),
+                "e": ExprNode(
+                    expr="atk * (1 if defense < 100 else 100 / (100 + defense))",
+                    inputs={"atk": "atk", "defense": "def"},
+                ),
+            }
+        )
+        result = evaluate_graph(graph, {})
+        assert result.node_values["e"] == 100.0
+
     def test_user_input_default(self) -> None:
         graph = DAGGraph(
             nodes={

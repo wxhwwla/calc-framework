@@ -7,7 +7,7 @@ describe("明日方舟计算页 ArknightsComputePage", () => {
   });
 
   it("页面标题正确渲染", () => {
-    cy.contains("明日方舟伤害计算").should("be.visible");
+    cy.contains("明日方舟 伤害计算器").should("be.visible");
   });
 
   it("通过侧边栏导航可访问", () => {
@@ -23,15 +23,19 @@ describe("明日方舟计算页 ArknightsComputePage", () => {
   });
 
   it("显示敌人参数面板", () => {
-    cy.contains("敌方防御").should("be.visible");
-    cy.contains("敌方法抗").should("be.visible");
+    cy.contains("敌军防御力").should("be.visible");
+    // 敌人面板中的法抗输入用 arknights.magicResistance（"法术抗性"）；
+    // "敌军法抗"只出现在计算结果表里，计算前不可见。
+    cy.contains("法术抗性").should("be.visible");
   });
 
-  it("显示计算结果区域", () => {
-    cy.contains("最终攻击力").should("be.visible");
-    cy.contains("物理伤害").should("be.visible");
-    cy.contains("法术伤害").should("be.visible");
-    cy.contains("真实伤害").should("be.visible");
+  it("选择干员并计算后显示结果区域", () => {
+    cy.get('[class*="MuiAutocomplete"]').first().type("阿米娅");
+    cy.contains("阿米娅", { timeout: 10000 }).first().click();
+    cy.contains("开始计算").click();
+    cy.contains("最终攻击力", { timeout: 20000 }).should("be.visible");
+    cy.contains("物理伤害").should("exist");
+    cy.contains("真实伤害").should("exist");
   });
 
   it("搜索干员后显示结果", () => {
@@ -40,7 +44,12 @@ describe("明日方舟计算页 ArknightsComputePage", () => {
   });
 
   it("敌人参数可输入", () => {
-    cy.get('input[type="number"]').first().clear().type("500");
-    cy.get('input[type="number"]').first().should("have.value", "500");
+    // NumberField 使用 type="text" + inputMode，避免手机端数字键盘与清空回弹问题
+    cy.contains("敌军防御力")
+      .parent()
+      .find("input[inputmode]")
+      .clear()
+      .type("500")
+      .should("have.value", "500");
   });
 });

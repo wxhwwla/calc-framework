@@ -122,7 +122,7 @@
 | 项目 | 说明 |
 |------|------|
 | **问题** | 部分目录超限或接近上限（`tools/` 31→18 ✅ 已修复，`web/backend/api/` 21，`scripts/` 17），ADR-0001 约束需持续监控 |
-| **方案** | 在 CI 中定期运行 `check_layout.py`（当前已在 CI）；2026-06-13 完成 tools/ 拆分（quality/migration/publish 三个子目录，16 个文件移入） |
+| **方案** | 在 CI 中定期运行 `tools/quality/check_layout.py`（当前已在 CI）；2026-06-13 完成 tools/ 拆分（quality/migration/publish 三个子目录，16 个文件移入）；2026-11-03 修复其根目录误解析，门禁从此真实扫描 `games/endfield` |
 | **优先级建议** | 新增模块时同步检查；`web/backend/api/` 需通过 FastAPI APIRouter 拆分，风险较高暂缓 |
 
 ---
@@ -166,7 +166,7 @@
 | 独立入口清理 | ✅ 已完成 | `scripts/` 仅 3 个有效入口（§4.140–4.148） |
 | `_version.py` 统一 | ✅ 已完成 | 版本唯一源头（§4.144） |
 | 上传脚本全流程 | ✅ 稳定 | 中文 pathspec / ruff-lint 误判 / CRLF F822 已修复（§4.151–4.155） |
-| GUI 文件超限 | ⚠️ 持续监控 | `endfield_actions.py` 等大文件仍需盯（目标 ≤400 / 硬顶 500） |
+| GUI 文件超限 | ✅ 软目标达成 | `endfield_actions.py`（590 → 327）、`ArknightsDamageApp.py`（802 → 234）、`dev_toolkit/pages.py`（1048 → 35）、`graph_editor/__main__.py`（611 → 392）、`qt_panel.py`（566 → 85）、`store.py`（506 → 378）已拆分；`test_coverage_expansion.py`（810 → 6 个主题文件）与 `test_full_batch_parity.py`（614 → 263 + 384）已拆；2026-11-03 再拆剩余 8 个 400–500 行文件（`qt_dialogs` / `evaluate` / `attribute_zone` / `qt_search_browser` / `dag_adapter/config` / `equipment/system` / `search/run/parallel` / `qt_actions`）。门禁 **0 ERROR / 0 WARN**（3 个 §5 豁免历史文件除外） |
 | 目录宽度 | 🟢 贴顶 | 2026-10-24：`tools/`/`scripts/`/`api/` = **19**（ADR-0001 硬顶 20） |
 | CI 覆盖门槛 | ⚠️ 双轨 | **workflow** Game 60 / Framework 65；**pyproject** 75 / 80 — CI 以 workflow 为准 |
 | Desktop GUI i18n | 🟢 基本完成 | `i18n_data` **1046** 键；边角/docs 摘录仍开放 |

@@ -2,11 +2,11 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>游戏计算器 · Web 版</title>
     <meta name="description" content="Calc Framework Web 版 — 开源游戏数值计算器 (AGPL-3.0)，源代码 https://github.com/wxhwwla/calc-framework" />
     <meta name="theme-color" content="#1976d2" />
-    <link rel="canonical" href="https://wxhwwla.pythonanywhere.com/" />
+    <link rel="canonical" href="https://dove-magnitude-runner.ngrok-free.dev/" />
     <style>
       /* 骨架屏 — React 加载前显示，React mount 后自动替换 */
       #root:empty::before,
@@ -61,6 +61,14 @@
       @keyframes sk-pulse {
         0%, 100% { opacity: 0.4; }
         50% { opacity: 1; }
+      }
+      /* 手机首屏：隐藏桌面侧栏，卡片改为纵向排列 */
+      @media (max-width: 600px) {
+        .sk-sidebar { display: none; }
+        .sk-main { padding: 12px; }
+        .sk-row { flex-direction: column; }
+        .sk-row > * { height: 72px; }
+        .sk-card { height: 140px; }
       }
     </style>
   </head>

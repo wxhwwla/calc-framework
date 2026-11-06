@@ -1,0 +1,116 @@
+{
+  "schema_version": "ui-v1",
+  "name": "无尽的拉格朗日 武器输出计算表",
+  "description": "先按「舰船种类 → 舰船 → 武器」三级下拉选择（属性来自 Wiki），再填写编组数量与各类加成（百分比）。命中率按 16 种目标舰种分别计算：中间命中率 = (目标总闪避率 + 命中率加成) × (1 + Wiki 基础命中率)，钳制到 5%–95% 后叠加服从 N(0, 0.03) 的浮动；维修/驻防/增益类武器固定 100% 命中。能量武器使用能量护甲，实弹/辅助武器使用物理护甲。",
+  "sections": [
+    {
+      "id": "inputs",
+      "type": "inputs",
+      "title": "编组与飞行、冷却、持续加成",
+      "tab": "计算",
+      "variables": [
+        "user_input.fleet_count",
+        "user_input.self_flight_bonus",
+        "user_input.mothership_flight_bonus",
+        "user_input.self_cooldown_bonus",
+        "user_input.mothership_cooldown_bonus",
+        "user_input.self_duration_bonus",
+        "user_input.mothership_duration_bonus"
+      ]
+    },
+    {
+      "id": "combat",
+      "type": "inputs",
+      "title": "暴击加成、伤害与护甲",
+      "tab": "计算",
+      "variables": [
+        "user_input.bonus_crit_rate",
+        "user_input.crit_multiplier_bonus",
+        "user_input.damage_bonus",
+        "user_input.physical_armor",
+        "user_input.energy_armor"
+      ]
+    },
+    {
+      "id": "hit_rate_inputs",
+      "type": "inputs",
+      "title": "命中率修正（目标闪避、命中加成、浮动）",
+      "columns": 3,
+      "tab": "计算",
+      "variables": [
+        "user_input.target_evasion",
+        "user_input.hit_rate_bonus",
+        "user_input.hit_rate_fluctuation"
+      ]
+    },
+    {
+      "id": "outputs",
+      "type": "outputs",
+      "title": "最终每分钟伤害（按目标舰种，已乘命中率）",
+      "columns": 3,
+      "tab": "计算",
+      "outputs": [
+        "最终每分钟伤害_战机",
+        "最终每分钟伤害_护航艇",
+        "最终每分钟伤害_无人机",
+        "最终每分钟伤害_登陆舰(作业态)",
+        "最终每分钟伤害_护卫舰",
+        "最终每分钟伤害_驱逐舰",
+        "最终每分钟伤害_巡洋舰",
+        "最终每分钟伤害_战列巡洋舰",
+        "最终每分钟伤害_战列舰",
+        "最终每分钟伤害_航空母舰",
+        "最终每分钟伤害_支援舰",
+        "最终每分钟伤害_小型工程舰",
+        "最终每分钟伤害_中型工程舰",
+        "最终每分钟伤害_大型工程舰",
+        "最终每分钟伤害_大本营船",
+        "最终每分钟伤害_基地"
+      ]
+    },
+    {
+      "id": "intermediate",
+      "type": "outputs",
+      "title": "乘区明细",
+      "columns": 2,
+      "tab": "乘区明细",
+      "outputs": [
+        "发射数",
+        "飞行时间(秒)",
+        "冷却与持续时间(秒)",
+        "每分钟平均发射数",
+        "暴击增伤倍率",
+        "暴击增伤倍率(对空)",
+        "甲后单发",
+        "最终单发",
+        "最终单发(对空)",
+        "满命中每分钟伤害"
+      ]
+    },
+    {
+      "id": "hit_rate_outputs",
+      "type": "outputs",
+      "title": "命中率乘区（最终命中率，已钳制并加浮动）",
+      "columns": 3,
+      "tab": "乘区明细",
+      "outputs": [
+        "最终命中率_战机",
+        "最终命中率_护航艇",
+        "最终命中率_无人机",
+        "最终命中率_登陆舰(作业态)",
+        "最终命中率_护卫舰",
+        "最终命中率_驱逐舰",
+        "最终命中率_巡洋舰",
+        "最终命中率_战列巡洋舰",
+        "最终命中率_战列舰",
+        "最终命中率_航空母舰",
+        "最终命中率_支援舰",
+        "最终命中率_小型工程舰",
+        "最终命中率_中型工程舰",
+        "最终命中率_大型工程舰",
+        "最终命中率_大本营船",
+        "最终命中率_基地"
+      ]
+    }
+  ]
+}

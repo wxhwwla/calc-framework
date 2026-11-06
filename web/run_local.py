@@ -68,6 +68,8 @@ def main() -> None:
     # 2. 设置环境变量
     env = os.environ.copy()
     env.setdefault("PYTHONUNBUFFERED", "1")
+    # 生产默认关闭 API 文档；本地开发保持可用（http://localhost:<port>/api/docs）
+    env.setdefault("CALC_ENABLE_API_DOCS", "1")
     if args.workers > 0:
         env["SEARCH_MAX_WORKERS"] = str(args.workers)
 

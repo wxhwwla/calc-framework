@@ -1,4 +1,4 @@
-# Web CI — 前端编译 + 后端 lint/测试
+# Web CI — 前端编译/单测 + 后端 lint/测试
 # 作为 web-e2e.yml（Cypress 全量 E2E）之前的快速反馈层
 # 每次 web/** 变更时运行，约 2-3 分钟
 
@@ -27,14 +27,14 @@ on:
 
 jobs:
   frontend:
-    name: Frontend (tsc + build)
+    name: Frontend (tsc + test + build)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: web/frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
           node-version: "20"
           cache: "npm"
@@ -44,10 +44,12 @@ jobs:
         run: npm ci
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable 分支当前提交
+        with:
+          toolchain: stable
 
       - name: Cache Rust wasm-curve
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0  # v2
         with:
           workspaces: "web/wasm-curve -> target"
 
@@ -56,7 +58,12 @@ jobs:
           # binaryen 提供系统 wasm-opt，避免 wasm-pack 从 GitHub Releases 下载挂起（act/代理环境）
           sudo apt-get update
           sudo apt-get install -y binaryen
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          # 本地 act 镜像可能已预装 wasm-pack；已安装时跳过联网安装脚本
+          if command -v wasm-pack >/dev/null 2>&1; then
+            echo "wasm-pack already installed: $(wasm-pack --version)"
+          else
+            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          fi
 
       - name: Build wasm-curve
         working-directory: web/wasm-curve
@@ -66,10 +73,16 @@ jobs:
         run: npx tsc --noEmit
 
       - name: ESLint check
-        run: npx eslint "src/**/*.{ts,tsx}" --max-warnings 50
+        run: npm run lint
+
+      - name: Unit tests (vitest)
+        run: npm test
 
       - name: Production build
         run: npx vite build
+
+      - name: Build output guard (PWA / lazy loading)
+        run: npm run check:build
 
       - name: Bundle size check
         run: |
@@ -83,7 +96,7 @@ jobs:
           fi
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: frontend-dist
           path: web/frontend/dist/
@@ -96,13 +109,13 @@ jobs:
       run:
         working-directory: .
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
 
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # actions/cache v4
         with:
           path: ~/.cache/pip
           key: pip-web-backend-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml', 'requirements-web.txt') }}

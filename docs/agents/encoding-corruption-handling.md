@@ -119,7 +119,7 @@ git clean -fd
 
 重建完成后：
 ```powershell
-python tools/check_layout.py --max-lines 400
+python tools/quality/check_layout.py --max-lines 400
 python -m pytest tests/ -q
 ```
 

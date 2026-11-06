@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 import sys
 from pathlib import Path
 
@@ -24,6 +26,7 @@ for _p in [str(_FRAMEWORK_SRC), str(_REPO), str(_BACKEND)]:
         sys.path.insert(0, _p)
 
 import unittest
+from unittest.mock import patch
 
 # 测试时禁用速率限制
 from api.admin import RateLimitMiddleware
@@ -164,6 +167,28 @@ class TestComputeAPI(unittest.TestCase):
         resp = self.client.post("/api/compute/evaluate", json=payload)
         self.assertEqual(resp.status_code, 404)
 
+    def test_evaluate_with_wjdlglr_adapter(self) -> None:
+        records_path = _REPO / "framework" / "adapters" / "wjdlglr" / "data" / "weapons.json"
+        weapons = json.loads(records_path.read_text(encoding="utf-8"))
+        first = weapons[0]
+        weapon_ctx = {
+            key: float(value)
+            for key, value in first.items()
+            if isinstance(value, int | float) and not isinstance(value, bool)
+        }
+        payload = {
+            "adapter": "无尽的拉格朗日 武器输出计算器",
+            "context": {
+                "weapon": weapon_ctx,
+                "user_input": {"fleet_count": 1, "hit_rate_bonus": 0},
+            },
+        }
+        resp = self.client.post("/api/compute/evaluate", json=payload)
+        self.assertEqual(resp.status_code, 200)
+        outputs = resp.json()["outputs"]
+        self.assertIn("满命中每分钟伤害", outputs)
+        self.assertIn("最终命中率_战机", outputs)
+
 
 class TestLayoutAPI(unittest.TestCase):
     """布局/属性 Schema 查询。"""
@@ -273,8 +298,10 @@ class TestMiscEndpoints(unittest.TestCase):
         resp = self.client.get("/api/donation/manifest")
         self.assertIn(resp.status_code, (200, 404))
 
-    def test_api_docs_accessible(self) -> None:
-        resp = self.client.get("/api/docs")
+    def test_api_docs_accessible_when_enabled(self) -> None:
+        """文档默认关闭；显式开启后仍可访问。"""
+        with patch.dict(os.environ, {"CALC_ENABLE_API_DOCS": "1"}):
+            resp = self.client.get("/api/docs")
         self.assertIn(resp.status_code, (200, 302, 307))
 
 
@@ -747,38 +774,59 @@ class TestSearchExtended(unittest.TestCase):
 
     def test_search_catalog_default(self) -> None:
         resp = self.client.get("/api/search/catalog")
-        self.assertIn(resp.status_code, (200, 500))
-        if resp.status_code == 200:
-            data = resp.json()
-            self.assertIsInstance(data, dict)
-            # 目录 key 是部位名称
-            for key, entries in data.items():
-                self.assertIsInstance(key, str)
-                self.assertIsInstance(entries, list)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIsInstance(data, dict)
+        self.assertGreater(len(data), 0)
+        # 目录 key 是部位名称
+        for key, entries in data.items():
+            self.assertIsInstance(key, str)
+            self.assertIsInstance(entries, list)
+            for entry in entries:
+                self.assertIn("名称", entry)
+                self.assertIn("部位", entry)
 
     def test_search_catalog_with_scope(self) -> None:
         resp = self.client.get("/api/search/catalog?scope=全部装备")
-        self.assertIn(resp.status_code, (200, 500))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsInstance(resp.json(), dict)
 
     def test_search_history_roundtrip(self) -> None:
-        """POST 保存搜索记录后 GET 可查到。"""
+        """POST 保存搜索记录后 GET 可查到，且不改写受跟踪的持久化文件。"""
+        from unittest.mock import patch
+
+        from api import search as search_api
+        from api.internal.persistent_store import _path
+
+        store_path = _path("search_history")
+        before = store_path.stat().st_mtime_ns if store_path.is_file() else None
+
         entry = {
             "char_name": "陈千语",
             "timestamp": "2026-06-13T00:00:00",
             "test": True,
         }
-        resp_post = self.client.post("/api/search/history", json=entry)
-        self.assertEqual(resp_post.status_code, 200)
-        self.assertEqual(resp_post.json(), {"message": "ok"})
+        with (
+            patch.object(search_api, "_search_history", []),
+            patch.object(search_api, "save_list") as save_list,
+        ):
+            resp_post = self.client.post("/api/search/history", json=entry)
+            self.assertEqual(resp_post.status_code, 200)
+            self.assertEqual(resp_post.json(), {"message": "ok"})
 
-        resp_get = self.client.get("/api/search/history")
-        self.assertEqual(resp_get.status_code, 200)
-        data = resp_get.json()
-        self.assertIsInstance(data, list)
-        self.assertTrue(
-            any(e.get("char_name") == "陈千语" and e.get("test") is True for e in data),
-            "刚写入的搜索历史记录应可读回",
-        )
+            resp_get = self.client.get("/api/search/history")
+            self.assertEqual(resp_get.status_code, 200)
+            data = resp_get.json()
+            self.assertIsInstance(data, list)
+            self.assertTrue(
+                any(e.get("char_name") == "陈千语" and e.get("test") is True for e in data),
+                "刚写入的搜索历史记录应可读回",
+            )
+            save_list.assert_called_once()
+            self.assertEqual(save_list.call_args.args[0], "search_history")
+
+        after = store_path.stat().st_mtime_ns if store_path.is_file() else None
+        self.assertEqual(after, before, "测试不得改写受跟踪的 search_history.json")
 
     def test_search_estimate(self) -> None:
         """工作量预估端点（需要完整数据以构建搜索作业）。"""
@@ -1065,10 +1113,35 @@ class TestAdapterAssets(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_adapter_schema_endpoint(self) -> None:
-        """获取适配器 attr_schema。"""
+        """按目录 id 获取适配器 attr_schema。"""
         resp = self.client.get("/api/adapters/endfield/schema")
-        # schema 可能不可用或返回 404/200
-        self.assertIn(resp.status_code, (200, 404))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()["attributes"])
+
+    def test_wjdlglr_data_summary(self) -> None:
+        resp = self.client.get("/api/adapters/wjdlglr/data-summary")
+        self.assertEqual(resp.status_code, 200)
+        entities = resp.json()["entities"]
+        weapons = next(entity for entity in entities if entity["key"] == "weapons")
+        self.assertEqual(weapons["label"], "武器")
+        self.assertEqual(weapons["count"], 571)
+        self.assertTrue(weapons["read_only"])
+
+    def test_wjdlglr_pack_bundle_includes_weapons(self) -> None:
+        resp = self.client.get("/api/adapters/wjdlglr/pack-bundle")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["adapter_id"], "wjdlglr")
+        self.assertEqual(len(data["data_files"]["weapons"]), 571)
+        self.assertEqual(data["meta"]["entry_data"], ["data/weapons.json"])
+        self.assertEqual(data["data_summary"]["weapons"], 571)
+
+    def test_wjdlglr_schema_endpoint(self) -> None:
+        resp = self.client.get("/api/adapters/wjdlglr/schema")
+        self.assertEqual(resp.status_code, 200)
+        names = {attr["name"] for attr in resp.json()["attributes"]}
+        self.assertIn("hit_rate_bonus", names)
+        self.assertIn("base_damage", names)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

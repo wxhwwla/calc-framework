@@ -1,25 +1,31 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: AGPL-3.0
-"""ActionsMixin — 终末地伤害计算主窗口事件处理、计算、搜索与对话框。
+"""ActionsMixin — 终末地伤害计算主窗口事件处理与计算。
 
+对话框/预设/工具方法见 ``ActionsDialogsMixin``（P2-07 拆分）。
 P2 迁移目标：所有面板最终使用 ComputeSheet + layout.json。
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, cast
 
 from calc_framework.ui.i18n import tr
 from PySide6.QtWidgets import (
     QApplication,
-    QFileDialog,
     QMessageBox,
     QVBoxLayout,
     QWidget,
 )
+from utils.path_utils import get_resource_path
 
+from games.endfield.data_loading.web_loadout_bridge import build_adapter_context_from_loadout
 from games.endfield.framework_bridge import AdapterPackage, ComputeSheet, Layout, get_logger, load_layout_json
+from games.endfield.gui.app.compute_sheet_variables import (
+    ENDFIELD_USER_CONTEXT_OVERRIDES,
+    ENDFIELD_USER_INPUT_VARIABLES,
+    apply_endfield_sheet_context,
+)
 from games.endfield.gui.app.loadout_evaluation import (
     refresh_damage_snapshot,
 )
@@ -27,13 +33,11 @@ from games.endfield.gui.app.loadout_evaluation import (
     sync_evaluation_cache as _sync_eval_cache,
 )
 from games.endfield.gui.app.loadout_state import read_loadout_from_panels
-from games.endfield.gui.legal.attribution_content import SUMMARY_TEXT
-from games.endfield.gui.legal.donation_qt import open_donation_dialog
+from games.endfield.gui.endfield_actions_dialogs import ActionsDialogsMixin
 from games.endfield.gui.presentation.damage_snapshot import get_snapshot_from_app
 from games.endfield.gui.shared.calc_history import HistoryEntry, get_app_calculation_history
 
-_CUR_FILE = Path(__file__).resolve()
-_FRAMEWORK_ADAPTER = _CUR_FILE.parents[4] / "framework" / "adapters" / "endfield"
+_FRAMEWORK_ADAPTER = get_resource_path("framework/adapters/endfield")
 
 _adapter_pkg: AdapterPackage | None = None
 _adapter_layout: Layout | None = None
@@ -52,11 +56,11 @@ def _ensure_adapter() -> tuple[AdapterPackage, Layout]:
     return _adapter_pkg, _adapter_layout
 
 
-class ActionsMixin:
+class ActionsMixin(ActionsDialogsMixin):
     """事件处理与计算混合类（非搜索部分）。
 
-    提供敌方参数管理、确认计算、ComputeSheet 集成、
-    对话框处理（预设、手动 buff、生存估算、帮助等）及信号连接。
+    提供敌方参数管理、确认计算、ComputeSheet 集成及信号连接；
+    对话框/预设/工具方法由 ActionsDialogsMixin 提供。
     搜索相关方法见 ActionsSearchMixin。
     由 EndfieldApp 继承使用。"""
 
@@ -112,6 +116,7 @@ class ActionsMixin:
             attached_effect_multiplier=self._attached_effect_multiplier,
             corrosion_duration_seconds=self._corrosion_duration_seconds,
             imbalance_efficiency_bonus=self._imbalance_efficiency_bonus,
+            break_defense_stacks=self._break_defense_stacks,
         )
         if loadout is None:
             return None
@@ -146,10 +151,13 @@ class ActionsMixin:
             # 先恢复按钮：ComputeSheet 求值若卡住不应一直停在「计算中」
             self._set_confirm_ui_confirmed()
             QApplication.processEvents()
+            compute_sheet_error: Exception | None = None
             try:
-                self._refresh_compute_sheet()
+                self._refresh_compute_sheet(request.loadout)
             except Exception as exc:
-                _logger.warning("乘区表刷新失败: %s", exc)
+                # 乘区表是文档声明的核心输出：失败必须可见，不能只写日志
+                compute_sheet_error = exc
+                _logger.exception("乘区表刷新失败: %s", exc)
             try:
                 preset = request.loadout.to_loadout_preset()
                 label = f"{preset.char_name} / {preset.weapon_name}"
@@ -163,6 +171,13 @@ class ActionsMixin:
             except Exception as exc:
                 _logger.warning("快照刷新失败: %s", exc)
             self._update_total_damage_panel()
+            if compute_sheet_error is not None:
+                self._set_confirm_ui_pending()
+                QMessageBox.warning(
+                    cast(QWidget, self),
+                    tr("desktop.endfield.confirmFailedTitle"),
+                    tr("desktop.endfield.confirmFailedMsg", error=str(compute_sheet_error)),
+                )
         except Exception as exc:
             _logger.exception("确认选择失败: %s", exc)
             QMessageBox.warning(
@@ -184,122 +199,56 @@ class ActionsMixin:
         except Exception as exc:
             _logger.warning("求值缓存同步失败: %s", exc)
 
-    def _refresh_compute_sheet(self) -> None:
+    def _refresh_compute_sheet(self, loadout: Any | None = None) -> None:
+        """用已确认的配装刷新乘区表。
+
+        Args:
+            loadout: 本次确认的配装快照；缺省时重新读取面板（兼容旧调用）。
+        """
+        if loadout is None:
+            request = self._build_request()
+            if request is None:
+                raise RuntimeError("无法读取当前配装")
+            loadout = request.loadout
+
         pkg, layout = _ensure_adapter()
         dag_service = pkg.dag_service
 
-        variables = dict(dag_service.dag.variables)
-        user_vars: dict[str, Any] = {
-            "user_input.敌人防御": {
-                "source": "user_input",
-                "type": "float",
-                "default": 100.0,
-                "min": 0,
-                "max": 99999,
-                "step": 10.0,
-            },
-            "user_input.敌人等阶": {"source": "user_input", "type": "str", "default": "普通"},
-            "user_input.敌人抗性": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": -100,
-                "max": 100,
-                "step": 1.0,
-            },
-            "user_input.无视抗性": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": -100,
-                "max": 100,
-                "step": 1.0,
-            },
-            "user_input.失衡易伤系数": {
-                "source": "user_input",
-                "type": "float",
-                "default": 1.3,
-                "min": 0.1,
-                "max": 10.0,
-                "step": 0.05,
-            },
-            "user_input.是否失衡": {"source": "user_input", "type": "bool", "default": False},
-            "user_input.是否真实伤害": {"source": "user_input", "type": "bool", "default": False},
-            "user_input.连击层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.额外暴击率": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 1.0,
-                "step": 0.01,
-            },
-            "user_input.额外暴击伤害": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 5.0,
-                "step": 0.01,
-            },
-            "user_input.额外伤害加成": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 5.0,
-                "step": 0.01,
-            },
-            "user_input.附带效果倍率": {
-                "source": "user_input",
-                "type": "float",
-                "default": 1.0,
-                "min": 0.1,
-                "max": 3.0,
-                "step": 0.05,
-            },
-            "user_input.破防层数": {"source": "user_input", "type": "int", "default": 0, "min": 0, "max": 4, "step": 1},
-            "user_input.失衡效率加成": {
-                "source": "user_input",
-                "type": "float",
-                "default": 0.0,
-                "min": 0,
-                "max": 1.0,
-                "step": 0.05,
-            },
-            "user_input.腐蚀计时(秒)": {
-                "source": "user_input",
-                "type": "float",
-                "default": 15.0,
-                "min": 0.0,
-                "max": 15.0,
-                "step": 0.5,
-            },
-        }
-        variables.update(user_vars)
+        variables: dict[str, Any] = dict(dag_service.dag.variables)
+        variables.update(ENDFIELD_USER_INPUT_VARIABLES)
 
-        user_context_overrides = {
-            "user_input.敌人防御": ("enemy.防御", ["override"]),
-            "user_input.敌人抗性": ("computed.抗性", ["add"]),
-            "user_input.无视抗性": ("computed.无视抗性", ["override"]),
-            "user_input.失衡易伤系数": ("computed.失衡易伤", ["override"]),
-            "user_input.是否失衡": ("computed.失衡状态", ["override"]),
-            "user_input.是否真实伤害": ("computed.真实伤害", ["override"]),
-            "user_input.连击层数": ("computed.连击层数", ["override"]),
-            "user_input.额外暴击率": ("character.暴击率", ["add"]),
-            "user_input.额外暴击伤害": ("character.暴击伤害", ["add"]),
-            "user_input.额外伤害加成": ("computed.伤害加成", ["add"]),
-        }
+        base_context = build_adapter_context_from_loadout(
+            loadout,
+            equipment_catalog=getattr(self, "_equipment_catalog", None),
+        )
+        base_context.setdefault("user_input", {})["敌人等阶"] = getattr(loadout, "enemy_tier", "普通")
+        # enrich_adapter_context 已把额外暴击叠加进 character；这里先移除，
+        # 由输入控件统一叠加一次，避免刷新时重复计算。
+        character = base_context.setdefault("character", {})
+        character["暴击率"] = float(character.get("暴击率", 0.05)) - float(
+            getattr(loadout, "extra_crit_rate", 0.0) or 0.0
+        )
+        character["暴击伤害"] = float(character.get("暴击伤害", 0.5)) - float(
+            getattr(loadout, "extra_crit_damage", 0.0) or 0.0
+        )
+
+        def _transform(context: dict[str, Any], user_values: dict[str, Any]) -> dict[str, Any]:
+            return apply_endfield_sheet_context(
+                context,
+                user_values,
+                skill_type=str(getattr(loadout, "skill_type", "") or ""),
+                use_expected_crit=bool(getattr(loadout, "use_expected_crit", False)),
+            )
 
         assert layout is not None
         compute_sheet = ComputeSheet(
             dag_service,
             layout,
             variables,
-            base_context={},
-            user_context_overrides=user_context_overrides,
+            base_context=base_context,
+            user_context_overrides=ENDFIELD_USER_CONTEXT_OVERRIDES,
+            context_transform=_transform,
         )
-        self._populate_sheet(compute_sheet)
         compute_sheet.evaluated.connect(self._on_compute_sheet_evaluated)
         compute_sheet.evaluate()
 
@@ -317,307 +266,12 @@ class ActionsMixin:
             new_layout.addWidget(self._total_damage_panel)
             self._compute_sheet_widget.setLayout(new_layout)
 
-    def _populate_sheet(self, sheet: ComputeSheet) -> None:
-        dock = self.control_dock
-        loadout = read_loadout_from_panels(
-            self.char_panel,
-            self.weapon_panel,
-            calculation_mode=self._current_calc_mode,
-            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
-            equipment_scope_label=dock.equipment_scope_combo.currentText(),
-            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
-            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
-            manual_counts=dock.read_skill_counts(),
-            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
-            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
-            damage_component_mode=dock.read_damage_component_mode(),
-            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
-            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
-            extra_crit_rate=dock.read_extra_crit_rate(),
-            extra_crit_damage=dock.read_extra_crit_damage(),
-            enemy_defense=self._enemy_defense,
-            enemy_resistance=self._enemy_resistance,
-            ignore_resistance=self._ignore_resistance,
-            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
-            is_unbalanced=self._is_unbalanced,
-            is_true_damage=self._is_true_damage,
-            enemy_tier=self._enemy_tier,
-            combo_stacks=self._combo_stacks,
-            attached_effect_multiplier=self._attached_effect_multiplier,
-            corrosion_duration_seconds=self._corrosion_duration_seconds,
-            imbalance_efficiency_bonus=self._imbalance_efficiency_bonus,
-        )
-        if loadout is None:
-            return
-        for key, value in loadout.to_compute_sheet_inputs().items():
-            sheet.set(key, value)
-
-    def _on_compute_sheet_evaluated(self, result: Any = None) -> None:
+    def _on_compute_sheet_evaluated(self, _result: Any = None) -> None:
         self._update_total_damage_panel()
 
     def _update_total_damage_panel(self) -> None:
         snapshot = get_snapshot_from_app(self)
         self._total_damage_panel.update_from_snapshot(snapshot)
-
-    # ── 对话框 / 工具 / 信号 ─────────────────────
-
-    def _on_manual_buff(self) -> None:
-        from games.endfield.gui.controls.manual_buff.qt_window import QtManualBuffDialog
-
-        def _read_counts():
-            dock = self.control_dock
-            return dock.read_skill_counts(), dock.read_physical_abnormal_counts(), dock.read_spell_abnormal_counts()
-
-        dialog = QtManualBuffDialog(
-            cast(QWidget, self),
-            big_font=self.big_font,
-            small_font=self.small_font,
-            read_counts_callback=_read_counts,
-        )
-        if not hasattr(self, "_manual_buff_store"):
-            self._manual_buff_store = {}
-        dialog.load_store(getattr(self, "_manual_buff_store", None))
-        if dialog.exec():
-            self._manual_buff_store = dialog.buff_store()
-
-    def _on_survival_estimate(self) -> None:
-        from games.endfield.gui.controls.survival import open_survival_estimate_dialog
-
-        dock = self.control_dock
-        loadout = read_loadout_from_panels(
-            self.char_panel,
-            self.weapon_panel,
-            calculation_mode=self._current_calc_mode,
-            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
-            equipment_scope_label=dock.equipment_scope_combo.currentText(),
-            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
-            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
-            manual_counts=dock.read_skill_counts(),
-            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
-            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
-            damage_component_mode=dock.read_damage_component_mode(),
-            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
-            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
-            extra_crit_rate=dock.read_extra_crit_rate(),
-            extra_crit_damage=dock.read_extra_crit_damage(),
-            enemy_defense=self._enemy_defense,
-            enemy_resistance=self._enemy_resistance,
-            ignore_resistance=self._ignore_resistance,
-            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
-            is_unbalanced=self._is_unbalanced,
-            is_true_damage=self._is_true_damage,
-        )
-        if loadout is None:
-            QMessageBox.warning(
-                cast(QWidget, self),
-                tr("desktop.endfield.survivalEstimate"),
-                tr("desktop.endfield.survivalNeedCharWeapon"),
-            )
-            return
-        from games.endfield.data_loading.enemy_params import resolve_enemy_max_hp
-
-        enemy_id = dock._enemy_panel.current_enemy_id()
-        open_survival_estimate_dialog(
-            self,
-            char_data=loadout.char_data,
-            weapon_data=loadout.weapon_data,
-            char_level=loadout.char_level,
-            weapon_level=loadout.weapon_level,
-            trust_level=loadout.trust_level,
-            enemy_tier=self._enemy_tier,
-            imbalance_efficiency_bonus=self._imbalance_efficiency_bonus,
-            enemy_max_hp=resolve_enemy_max_hp(enemy_id),
-            weapon_skill_kwargs=loadout.weapon_skill_kwargs(),
-            big_font=self.big_font,
-        )
-
-    def _on_export_preset(self) -> None:
-        from games.endfield.gui.app.loadout_preset import export_preset_json
-
-        dock = self.control_dock
-        loadout = read_loadout_from_panels(
-            self.char_panel,
-            self.weapon_panel,
-            calculation_mode=self._current_calc_mode,
-            weapon_scope_label=dock.single_skill_scope_combo.currentText(),
-            equipment_scope_label=dock.equipment_scope_combo.currentText(),
-            fixed_loadout=dock.read_fixed_loadout_selection(self._equipment_catalog),
-            use_manual_multi_skill_counts=dock.use_manual_skill_counts_cb.isChecked(),
-            manual_counts=dock.read_skill_counts(),
-            physical_abnormal_counts=dock.read_physical_abnormal_counts(),
-            spell_abnormal_counts=dock.read_spell_abnormal_counts(),
-            damage_component_mode=dock.read_damage_component_mode(),
-            use_expected_crit=dock.use_expected_crit_cb.isChecked(),
-            include_conditional_equipment_crit=dock.include_conditional_crit_cb.isChecked(),
-            extra_crit_rate=dock.read_extra_crit_rate(),
-            extra_crit_damage=dock.read_extra_crit_damage(),
-            enemy_defense=self._enemy_defense,
-            enemy_resistance=self._enemy_resistance,
-            ignore_resistance=self._ignore_resistance,
-            imbalance_vulnerability_coeff=self._imbalance_vulnerability_coeff,
-            is_unbalanced=self._is_unbalanced,
-            is_true_damage=self._is_true_damage,
-        )
-        if loadout is None:
-            QMessageBox.warning(
-                cast(QWidget, self),
-                tr("desktop.endfield.exportPresetTitle"),
-                tr("desktop.endfield.cannotReadLoadout"),
-            )
-            return
-        preset = loadout.to_loadout_preset()
-        path, _ = QFileDialog.getSaveFileName(
-            cast(QWidget, self),
-            tr("desktop.endfield.exportPresetDialog"),
-            "preset.json",
-            "JSON (*.json)",
-        )
-        if not path:
-            return
-        Path(path).write_text(export_preset_json(preset), encoding="utf-8")
-        self.status_label.setText(tr("desktop.endfield.presetExported"))
-
-    def _on_import_preset(self) -> None:
-        from games.endfield.gui.app.loadout_preset import import_presets_from_json_text
-
-        path, _ = QFileDialog.getOpenFileName(
-            cast(QWidget, self),
-            tr("desktop.endfield.importPresetDialog"),
-            "",
-            "JSON (*.json)",
-        )
-        if not path:
-            return
-        try:
-            text = Path(path).read_text(encoding="utf-8")
-            preset = import_presets_from_json_text(text)
-            if not preset:
-                raise ValueError(tr("desktop.endfield.presetFileEmpty"))
-            self._apply_preset_to_qt_app(preset[0])
-            self.status_label.setText(tr("desktop.endfield.presetImported"))
-        except Exception as exc:
-            QMessageBox.warning(
-                cast(QWidget, self),
-                tr("desktop.endfield.importPresetFailed"),
-                str(exc),
-            )
-
-    def _apply_preset_to_qt_app(self, preset) -> None:
-        from games.endfield.gui.app.loadout_preset import apply_preset_to_panels
-
-        apply_preset_to_panels(
-            preset=preset,
-            char_panel=self.char_panel,
-            weapon_panel=self.weapon_panel,
-            control_dock=self.control_dock,
-            equipment_catalog=self._equipment_catalog,
-            shell=self,
-        )
-
-    def _on_compare_presets(self) -> None:
-        from games.endfield.gui.controls.enhancement.qt_dialogs import QtCompareDialog
-
-        dialog = QtCompareDialog(
-            parent=self,
-            big_font=self.big_font,
-            small_font=self.small_font,
-            char_panel=self.char_panel,
-            weapon_panel=self.weapon_panel,
-        )
-        dialog.exec()
-
-    def _on_attribution(self) -> None:
-        QMessageBox.about(
-            cast(QWidget, self),
-            tr("desktop.endfield.attributionAboutTitle"),
-            SUMMARY_TEXT,
-        )
-
-    def _on_donation(self) -> None:
-        open_donation_dialog(cast(QWidget, self))
-
-    def _on_damage_dashboard(self) -> None:
-        from games.endfield.gui.controls.enhancement.qt_dialogs import QtDamageDashboardDialog
-
-        snapshot = get_snapshot_from_app(self)
-        dialog = QtDamageDashboardDialog(
-            cast(QWidget, self),
-            big_font=self.big_font,
-            small_font=self.small_font,
-            snapshot=snapshot,
-        )
-        dialog.exec()
-
-    def _on_calc_history(self) -> None:
-        from games.endfield.gui.controls.enhancement.qt_dialogs import QtCalcHistoryDialog
-
-        history = get_app_calculation_history(self)
-        dialog = QtCalcHistoryDialog(
-            cast(QWidget, self),
-            big_font=self.big_font,
-            small_font=self.small_font,
-            history=history,
-            apply_fn=self._apply_preset_to_qt_app,
-        )
-        dialog.exec()
-
-    def _on_export_log(self) -> None:
-        from utils.operation_log import get_session_operation_log
-
-        path, _ = QFileDialog.getSaveFileName(
-            cast(QWidget, self),
-            tr("desktop.endfield.exportOpLog"),
-            "operation_log.json",
-            "JSON (*.json)",
-        )
-        if not path:
-            return
-        try:
-            get_session_operation_log().export_to_file(Path(path))
-            self.status_label.setText(tr("desktop.endfield.opLogExported"))
-        except Exception as exc:
-            QMessageBox.warning(
-                cast(QWidget, self),
-                tr("desktop.endfield.exportFailedTitle"),
-                str(exc),
-            )
-
-    def _on_open_help(self) -> None:
-        from utils.gui.help_calculator import build_calculator_help
-        from utils.gui.help_dialog import HelpDialog
-
-        dialog = HelpDialog(
-            build_calculator_help,
-            cast(QWidget, self),
-            title=tr("desktop.endfield.helpCalculatorTitle"),
-        )
-        dialog.exec()
-
-    def _on_ocr_detect(self) -> None:
-        try:
-            from games.endfield.gui.controls.ocr import open_ocr_detection_dialog
-
-            def _apply_ocr(preset_dict: dict[str, Any]) -> None:
-                char_name = preset_dict.get("char_name", "")
-                weapon_name = preset_dict.get("weapon_name", "")
-                char_level = int(preset_dict.get("char_level", 1))
-                weapon_level = int(preset_dict.get("weapon_level", 1))
-                trust_level = int(preset_dict.get("trust_level", 0))
-
-                if char_name:
-                    ok = self.char_panel.select_by_name(char_name)
-                    if ok and weapon_name:
-                        self.weapon_panel.select_by_name(weapon_name)
-                    self.char_panel.level_slider.setValue(char_level)
-                    self.weapon_panel.level_slider.setValue(weapon_level)
-                    if trust_level and self.char_panel.trust_panel:
-                        self.char_panel.trust_panel.set_level(min(trust_level, 4))
-                    self._on_confirm()
-
-            open_ocr_detection_dialog(cast(QWidget, self), on_apply=_apply_ocr)
-        except Exception as exc:
-            msg = tr("desktop.endfield.ocrLoadFailedMsg", error=str(exc))
-            QMessageBox.warning(cast(QWidget, self), tr("desktop.endfield.ocrDetect"), msg)
 
     # ── 信号连接 ──────────────────────────────
 

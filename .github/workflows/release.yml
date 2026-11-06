@@ -26,8 +26,8 @@ jobs:
       tag_version: ${{ steps.version.outputs.tag_version }}
       code_version: ${{ steps.version.outputs.code_version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - name: Install framework
@@ -60,12 +60,14 @@ jobs:
       run:
         working-directory: .
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable 分支当前提交
+        with:
+          toolchain: stable
       - name: Run Rust tests
         run: |
           cd extensions/rust_search
@@ -85,14 +87,14 @@ jobs:
         run: python -m pytest games/endfield/tests/ framework/tests/ -q --tb=short
 
   build:
-    needs: test
+    needs: [test, verify-version]
     runs-on: windows-latest
     defaults:
       run:
         working-directory: .
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - name: Install dependencies
@@ -107,34 +109,17 @@ jobs:
         run: |
           $version = "${{ needs.verify-version.outputs.tag_version }}"
           # 主产物：启动器（单 exe，含所有游戏+工具）
-          if (Test-Path "dist/Game Calc Platform") {
-            $launcher_zip = "GameCalcPlatform_v${version}.zip"
-            Compress-Archive -Path "dist/Game Calc Platform/*" -DestinationPath "dist/${launcher_zip}"
-            Write-Host "Created: dist/${launcher_zip}"
+          if (-not (Test-Path "dist/Game Calc Platform")) {
+            Write-Error "未找到启动器产物 dist/Game Calc Platform，无法发布"
+            exit 1
           }
-          # 过渡期：继续打包旧分体目标（供仍需独立 exe 的用户）
-          if (Test-Path "dist/终末地伤害计算器") {
-            $name = "终末地伤害计算器_v${version}.zip"
-            Compress-Archive -Path "dist/终末地伤害计算器/*" -DestinationPath "dist/${name}"
-            Write-Host "Created: dist/${name}"
-          }
-          if (Test-Path "dist/数据设计器") {
-            $designer_zip = "数据设计器_v${version}.zip"
-            Compress-Archive -Path "dist/数据设计器/*" -DestinationPath "dist/${designer_zip}"
-            Write-Host "Created: dist/${designer_zip}"
-          }
-          if (Test-Path "dist/配置包设计器") {
-            $pack_zip = "配置包设计器_v${version}.zip"
-            Compress-Archive -Path "dist/配置包设计器/*" -DestinationPath "dist/${pack_zip}"
-            Write-Host "Created: dist/${pack_zip}"
-          }
+          $launcher_zip = "GameCalcPlatform_v${version}.zip"
+          Compress-Archive -Path "dist/Game Calc Platform/*" -DestinationPath "dist/${launcher_zip}"
+          Write-Host "Created: dist/${launcher_zip}"
           # SHA256 侧车（自动更新校验）
-          Get-ChildItem dist/*.zip | ForEach-Object {
-            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
-            $sidecar = "$($_.FullName).sha256"
-            Set-Content -Path $sidecar -Value $hash -NoNewline
-            Write-Host "Created: $sidecar"
-          }
+          $hash = (Get-FileHash "dist/${launcher_zip}" -Algorithm SHA256).Hash.ToLower()
+          Set-Content -Path "dist/${launcher_zip}.sha256" -Value $hash -NoNewline
+          Write-Host "Created: dist/${launcher_zip}.sha256"
 
       - name: Code sign release PE (optional)
         shell: pwsh
@@ -164,28 +149,26 @@ jobs:
             Write-Host "Cleaned up PFX certificate file"
           }
 
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+
       - name: Build NSIS installer
         shell: pwsh
         run: |
           python scripts/devtool.py installer build --version "${{ needs.verify-version.outputs.tag_version }}"
-        continue-on-error: true
 
       - name: List dist artifacts
         shell: pwsh
         run: Get-ChildItem dist/ -Name | Select-Object
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: release-artifact
+          if-no-files-found: error
           path: |
             dist/GameCalcPlatform_v*.zip
             dist/GameCalcPlatform_v*.zip.sha256
-            dist/终末地伤害计算器_v*.zip
-            dist/终末地伤害计算器_v*.zip.sha256
-            dist/数据设计器_v*.zip
-            dist/数据设计器_v*.zip.sha256
-            dist/配置包设计器_v*.zip
-            dist/配置包设计器_v*.zip.sha256
             dist/GameCalcPlatform_Setup_v*.exe
 
   publish:
@@ -194,27 +177,21 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: release-artifact
       - name: List downloaded artifacts
         shell: bash
         run: ls -la
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2
         with:
           name: "v${{ needs.verify-version.outputs.tag_version }}"
           tag_name: ${{ github.ref_name }}
           files: |
             GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip
             GameCalcPlatform_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
-            终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip
-            终末地伤害计算器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
-            数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
-            数据设计器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
-            配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip
-            配置包设计器_v${{ needs.verify-version.outputs.tag_version }}.zip.sha256
             GameCalcPlatform_Setup_v${{ needs.verify-version.outputs.tag_version }}.exe
           generate_release_notes: true
           make_latest: true
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true

@@ -81,7 +81,7 @@ export default function ThemeExportTab() {
       setDagInfo(t("packDesigner.themeExportTab.notLoaded"));
       setLayoutInfo(t("packDesigner.themeExportTab.notLoaded"));
     }
-  }, [adapterId]);
+  }, [adapterId, t]);
 
   useEffect(() => {
     refreshStatus();
@@ -137,7 +137,7 @@ export default function ThemeExportTab() {
     } catch (e: unknown) {
       setError(String(e));
     }
-  }, [adapterId, layoutDraft, theme, fontFamily, fontSize, colors, packName, buildExportMeta]);
+  }, [adapterId, layoutDraft, theme, fontFamily, fontSize, colors, packName, buildExportMeta, t]);
 
   const handlePreview = useCallback(async () => {
     setError(null);
@@ -167,7 +167,7 @@ export default function ThemeExportTab() {
     } catch (e: unknown) {
       setError(String(e));
     }
-  }, [adapterId, layoutDraft, buildExportMeta]);
+  }, [adapterId, layoutDraft, buildExportMeta, t]);
 
   return (
     <Box>

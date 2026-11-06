@@ -34,15 +34,10 @@
 
 from __future__ import annotations
 
-
 import json
-
 import os
-
 import zipfile
-
 from pathlib import Path
-
 from typing import Any
 
 
@@ -55,6 +50,8 @@ def export_calcpack(
     theme: dict[str, Any] | None = None,
     data_files: dict[str, list[dict[str, Any]]] | None = None,
     asset_files: dict[str, str] | None = None,
+    subgraphs: dict[str, dict[str, Any]] | None = None,
+    extra_json: dict[str, dict[str, Any]] | None = None,
 ) -> str:
     """将适配包数据导出为 .calcpack 文件。
 
@@ -81,6 +78,14 @@ def export_calcpack(
                     文件会复制到 .calcpack 的 assets/ 目录下，
 
                     layout.json 中的 image_path 会被重写为 assets/<名称>。
+
+        subgraphs: 可选子图映射 {子图名: DAG 字典}，写入
+
+                  ``dag/subgraphs/<安全名>.dag.json``。
+
+        extra_json: 可选附加 JSON 文件映射 {ZIP 内路径: 字典}，如
+
+                   ``{"attr_schema.json": {...}}``。
 
 
 
@@ -110,6 +115,16 @@ def export_calcpack(
         if data_files:
             for key, records in data_files.items():
                 _write_json_in_zip(zf, f"data/{key}.json", records)
+
+        if subgraphs:
+            for name, subgraph in subgraphs.items():
+                safe_name = name.strip("@").replace("/", "_").replace("\\", "_") or "subgraph"
+
+                _write_json_in_zip(zf, f"dag/subgraphs/{safe_name}.dag.json", subgraph)
+
+        if extra_json:
+            for arcname, payload in extra_json.items():
+                _write_json_in_zip(zf, arcname, payload)
 
         if asset_files:
             for local_path, name in asset_files.items():
@@ -205,10 +220,7 @@ def resolve_asset_paths_in_layout(
 
             raw = cfg.get("image_path", "")
 
-            if raw in asset_map:
-                cfg["image_path"] = asset_map[raw]
-
-            elif raw.startswith(_ASSETS_DIR) and raw in asset_map:
+            if raw in asset_map or (raw.startswith(_ASSETS_DIR) and raw in asset_map):
                 cfg["image_path"] = asset_map[raw]
 
     return patched

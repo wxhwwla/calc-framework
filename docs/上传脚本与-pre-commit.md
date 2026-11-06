@@ -13,7 +13,7 @@
 | `python github_upload_module.py --check` | 仅自检（rebase/merge/断历史），不 commit/push |
 | `python github_upload_module.py --dry-run` | **预览模式**：展示将要执行的变更文件、版本递增计划，不实际修改/推送 |
 | `python github_upload_module.py` | 提交并 push 到 **`develop`**；**默认 patch** bump `_VERSION`（不再询问 P/M） |
-| `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump） |
+| `python github_upload_module.py --no-bump` | 补推 **develop**（已有未推送 commit 或跳过 bump）；会把工作区残留的 `_VERSION` 校正回 HEAD |
 | `python github_upload_module.py --minor` | 第二位 +1（需人类明确要求时使用）；commit 前备份 `.git` → `git_backup/snapshots/` |
 | `python github_upload_module.py --tag` | 次版本上传时合并 main 后打 `v{_EXE_VERSION}` 标签 |
 
@@ -24,16 +24,16 @@
 | **`develop`** | 日常上传默认目标（脚本自动 checkout / 创建） |
 | **`main`** | 仅当 **`--minor`（次版本号）** 时，脚本自动 `develop → main` 合并推送 |
 
-远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：PR 审完即合或关，并删除远程分支；禁止堆积。清理示例：
+远程**只允许长期存在上述两个分支**。`dependabot/*`、`renovate/*` 等机器人分支：**禁止堆积**。
+
+自 2026-10-25 起 `.github/dependabot.yml` 全部 `open-pull-requests-limit: 0`（仍写 Security 告警，**不再开 PR/分支**）。**注意：GitHub 只读取默认分支 `main` 上的本文件**——只提交到 `develop` 时，每月扫描仍按 `main` 的旧配置创建 PR/分支；改完本文件须用 `--minor` 上传，随 `develop → main` 合并落盘。若仍冒出 bot 分支，关闭 PR 并（经用户确认后）删除分支：
 
 ```powershell
-# 列出非 main/develop 的远程分支
 git fetch --prune
 git branch -r | Select-String -NotMatch 'origin/(main|develop)$|HEAD'
-
-# 删除（确认后）
+gh pr list --state open
+gh pr close <n> --delete-branch
 git push origin --delete dependabot/...
-# 或关闭 PR：gh pr close <n> --comment "清理 bot 分支"
 ```
 
 发 **main 正式版** 前须在同一提交中：上传 bump `_VERSION` + 手动改 `_EXE_VERSION` + 可选 `--tag`。
@@ -112,6 +112,8 @@ python github_upload_module.py
 版本号在 **pre-commit 通过后** 才写入 `_version.py`；pre-commit 或 commit 失败时脚本自动回滚 `_VERSION`，**修复后直接重跑上传脚本即可**（无需 `--no-bump`）。  
 仅当 **commit 已成功、push 失败** 或 **显式跳过 bump** 时用 `--no-bump`。  
 需要升 minor 时：`python github_upload_module.py --minor`（不再交互询问 P/M）。
+
+> ⚠️ **`--no-bump` 的版本校正**：脚本会把工作区 `_VERSION` 与 HEAD 比较；若工作区更高（如上次失败残留、或手动预增），`--no-bump` 会将其**回退到 HEAD**，因此不要用它提交手动预增的版本号。需要递增版本时直接用默认模式（patch +1）。
 
 ---
 
@@ -288,7 +290,7 @@ python -m pytest games/endfield/tests/tools/test_upload_meta.py games/endfield/t
 
 ### 10.1 大文件限制
 
-`check-added-large-files` 限制已从 **1024 KB** 提升至 **2048 KB**（`.pre-commit-config.yaml` 中 `--maxkb=2048`），避免大型数据文件（如 ~1.3 MB 的 `arknights_parsed.json`）触发误报。
+`check-added-large-files` 限制已从 **1024 KB** 提升至 **2048 KB**，2026-11-05 又提升至 **4096 KB**（`.pre-commit-config.yaml` 中 `--maxkb=4096`）：明日方舟标准库写入全部干员的成长参数后达 ~2.66 MB。仓库内唯一超过 1 MB 的跟踪文件就是该标准库，4 MB 上限仍能拦截误入的二进制/压缩包。
 
 ### 10.2 行长限制差异
 

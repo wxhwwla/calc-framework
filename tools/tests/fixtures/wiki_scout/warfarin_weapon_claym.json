@@ -1,0 +1,729 @@
+{
+  "weaponBasicTable": {
+    "weaponId": "wpn_claym_0003",
+    "weaponType": 3,
+    "rarity": 4,
+    "maxLv": 90,
+    "weaponSkillList": [
+      "wpn_attr_str_low",
+      "wpn_sp_attr_atk_low",
+      "sk_wpn_claym_0003"
+    ]
+  },
+  "itemTable": {
+    "name": "工业零点一",
+    "rarity": 4,
+    "type": 5
+  },
+  "weaponUpgradeTemplateTable": {
+    "list": [
+      {
+        "weaponLv": 1,
+        "baseAtk": 34
+      },
+      {
+        "weaponLv": 2,
+        "baseAtk": 38
+      },
+      {
+        "weaponLv": 3,
+        "baseAtk": 41
+      },
+      {
+        "weaponLv": 4,
+        "baseAtk": 45
+      },
+      {
+        "weaponLv": 5,
+        "baseAtk": 48
+      },
+      {
+        "weaponLv": 6,
+        "baseAtk": 52
+      },
+      {
+        "weaponLv": 7,
+        "baseAtk": 55
+      },
+      {
+        "weaponLv": 8,
+        "baseAtk": 59
+      },
+      {
+        "weaponLv": 9,
+        "baseAtk": 62
+      },
+      {
+        "weaponLv": 10,
+        "baseAtk": 65
+      },
+      {
+        "weaponLv": 11,
+        "baseAtk": 69
+      },
+      {
+        "weaponLv": 12,
+        "baseAtk": 72
+      },
+      {
+        "weaponLv": 13,
+        "baseAtk": 76
+      },
+      {
+        "weaponLv": 14,
+        "baseAtk": 79
+      },
+      {
+        "weaponLv": 15,
+        "baseAtk": 83
+      },
+      {
+        "weaponLv": 16,
+        "baseAtk": 86
+      },
+      {
+        "weaponLv": 17,
+        "baseAtk": 90
+      },
+      {
+        "weaponLv": 18,
+        "baseAtk": 93
+      },
+      {
+        "weaponLv": 19,
+        "baseAtk": 96
+      },
+      {
+        "weaponLv": 20,
+        "baseAtk": 100
+      },
+      {
+        "weaponLv": 21,
+        "baseAtk": 103
+      },
+      {
+        "weaponLv": 22,
+        "baseAtk": 107
+      },
+      {
+        "weaponLv": 23,
+        "baseAtk": 110
+      },
+      {
+        "weaponLv": 24,
+        "baseAtk": 114
+      },
+      {
+        "weaponLv": 25,
+        "baseAtk": 117
+      },
+      {
+        "weaponLv": 26,
+        "baseAtk": 121
+      },
+      {
+        "weaponLv": 27,
+        "baseAtk": 124
+      },
+      {
+        "weaponLv": 28,
+        "baseAtk": 127
+      },
+      {
+        "weaponLv": 29,
+        "baseAtk": 131
+      },
+      {
+        "weaponLv": 30,
+        "baseAtk": 134
+      },
+      {
+        "weaponLv": 31,
+        "baseAtk": 138
+      },
+      {
+        "weaponLv": 32,
+        "baseAtk": 141
+      },
+      {
+        "weaponLv": 33,
+        "baseAtk": 145
+      },
+      {
+        "weaponLv": 34,
+        "baseAtk": 148
+      },
+      {
+        "weaponLv": 35,
+        "baseAtk": 152
+      },
+      {
+        "weaponLv": 36,
+        "baseAtk": 155
+      },
+      {
+        "weaponLv": 37,
+        "baseAtk": 158
+      },
+      {
+        "weaponLv": 38,
+        "baseAtk": 162
+      },
+      {
+        "weaponLv": 39,
+        "baseAtk": 165
+      },
+      {
+        "weaponLv": 40,
+        "baseAtk": 169
+      },
+      {
+        "weaponLv": 41,
+        "baseAtk": 172
+      },
+      {
+        "weaponLv": 42,
+        "baseAtk": 176
+      },
+      {
+        "weaponLv": 43,
+        "baseAtk": 179
+      },
+      {
+        "weaponLv": 44,
+        "baseAtk": 183
+      },
+      {
+        "weaponLv": 45,
+        "baseAtk": 186
+      },
+      {
+        "weaponLv": 46,
+        "baseAtk": 189
+      },
+      {
+        "weaponLv": 47,
+        "baseAtk": 193
+      },
+      {
+        "weaponLv": 48,
+        "baseAtk": 196
+      },
+      {
+        "weaponLv": 49,
+        "baseAtk": 200
+      },
+      {
+        "weaponLv": 50,
+        "baseAtk": 203
+      },
+      {
+        "weaponLv": 51,
+        "baseAtk": 207
+      },
+      {
+        "weaponLv": 52,
+        "baseAtk": 210
+      },
+      {
+        "weaponLv": 53,
+        "baseAtk": 214
+      },
+      {
+        "weaponLv": 54,
+        "baseAtk": 217
+      },
+      {
+        "weaponLv": 55,
+        "baseAtk": 220
+      },
+      {
+        "weaponLv": 56,
+        "baseAtk": 224
+      },
+      {
+        "weaponLv": 57,
+        "baseAtk": 227
+      },
+      {
+        "weaponLv": 58,
+        "baseAtk": 231
+      },
+      {
+        "weaponLv": 59,
+        "baseAtk": 234
+      },
+      {
+        "weaponLv": 60,
+        "baseAtk": 238
+      },
+      {
+        "weaponLv": 61,
+        "baseAtk": 241
+      },
+      {
+        "weaponLv": 62,
+        "baseAtk": 245
+      },
+      {
+        "weaponLv": 63,
+        "baseAtk": 248
+      },
+      {
+        "weaponLv": 64,
+        "baseAtk": 251
+      },
+      {
+        "weaponLv": 65,
+        "baseAtk": 255
+      },
+      {
+        "weaponLv": 66,
+        "baseAtk": 258
+      },
+      {
+        "weaponLv": 67,
+        "baseAtk": 262
+      },
+      {
+        "weaponLv": 68,
+        "baseAtk": 265
+      },
+      {
+        "weaponLv": 69,
+        "baseAtk": 269
+      },
+      {
+        "weaponLv": 70,
+        "baseAtk": 272
+      },
+      {
+        "weaponLv": 71,
+        "baseAtk": 276
+      },
+      {
+        "weaponLv": 72,
+        "baseAtk": 279
+      },
+      {
+        "weaponLv": 73,
+        "baseAtk": 282
+      },
+      {
+        "weaponLv": 74,
+        "baseAtk": 286
+      },
+      {
+        "weaponLv": 75,
+        "baseAtk": 289
+      },
+      {
+        "weaponLv": 76,
+        "baseAtk": 293
+      },
+      {
+        "weaponLv": 77,
+        "baseAtk": 296
+      },
+      {
+        "weaponLv": 78,
+        "baseAtk": 300
+      },
+      {
+        "weaponLv": 79,
+        "baseAtk": 303
+      },
+      {
+        "weaponLv": 80,
+        "baseAtk": 307
+      },
+      {
+        "weaponLv": 81,
+        "baseAtk": 310
+      },
+      {
+        "weaponLv": 82,
+        "baseAtk": 313
+      },
+      {
+        "weaponLv": 83,
+        "baseAtk": 317
+      },
+      {
+        "weaponLv": 84,
+        "baseAtk": 320
+      },
+      {
+        "weaponLv": 85,
+        "baseAtk": 324
+      },
+      {
+        "weaponLv": 86,
+        "baseAtk": 327
+      },
+      {
+        "weaponLv": 87,
+        "baseAtk": 331
+      },
+      {
+        "weaponLv": 88,
+        "baseAtk": 334
+      },
+      {
+        "weaponLv": 89,
+        "baseAtk": 338
+      },
+      {
+        "weaponLv": 90,
+        "baseAtk": 341
+      }
+    ]
+  },
+  "skillPatchTable": {
+    "wpn_attr_str_low": {
+      "SkillPatchDataBundle": [
+        {
+          "level": 1,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 12
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 2,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 21
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 3,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 31
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 4,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 40
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 5,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 50
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 6,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 60
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 7,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 69
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 8,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 79
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        },
+        {
+          "level": 9,
+          "blackboard": [
+            {
+              "key": "str",
+              "value": 93
+            }
+          ],
+          "skillName": "力量提升·小",
+          "description": "力量<@ba.vup>+{str}</>"
+        }
+      ]
+    },
+    "wpn_sp_attr_atk_low": {
+      "SkillPatchDataBundle": [
+        {
+          "level": 1,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.03
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 2,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.054
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 3,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.078
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 4,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.102
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 5,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.126
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 6,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.15
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 7,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.174
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 8,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.198
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        },
+        {
+          "level": 9,
+          "blackboard": [
+            {
+              "key": "atk",
+              "value": 0.234
+            }
+          ],
+          "skillName": "攻击提升·小",
+          "description": "攻击力<@ba.vup>+{atk:0.0%}</>"
+        }
+      ]
+    },
+    "sk_wpn_claym_0003": {
+      "SkillPatchDataBundle": [
+        {
+          "level": 1,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.12
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 2,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.144
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 3,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.168
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 4,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.192
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 5,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.216
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 6,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.24
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 7,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.264
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 8,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.288
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        },
+        {
+          "level": 9,
+          "blackboard": [
+            {
+              "key": "atk_up",
+              "value": 0.336
+            },
+            {
+              "key": "duration",
+              "value": 20
+            }
+          ],
+          "skillName": "压制·应急强化",
+          "description": "装备者的战技命中敌人时，获得攻击力<@ba.vup>+{atk_up:0.0%}</>，持续{duration:0}秒。\n<@ba.info>同名效果无法叠加。</>"
+        }
+      ]
+    }
+  }
+}

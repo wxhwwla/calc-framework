@@ -88,10 +88,17 @@
 
 ### 4.3 并行线程怎么选？
 
-- **自动 (1 线程)**（默认）：Rust job 批量已摊销 FFI，**单 worker 内联 batch 最快**（实测 97 万组合约 1 分钟）
+- **自动 (1 线程)**（默认）：Rust job 批量已摊销 FFI，**单 worker 内联 batch 最快**。固定 973,728 组合实测（Windows 11 / Python 3.13 / 24 逻辑核）：`rust_full` **9.75s**（优化前 28.36s）、`rust_soa` 48.11s、纯 Python 77.07s；**`<10s` 目标已达成**，详见 [`P3-01 性能基准`](P3-01-搜索性能基准结果.md)
 - 本机会显示 **物理核心 / 逻辑线程**；下拉仍可选手动数字，但在 job 批量路径下 **有效 worker 仍为 1**（避免 GIL/锁导致更慢）
 - 实验多 worker：`CALC_SEARCH_BATCH_POOL=1` 环境变量（可能更慢，仅供对比）
 - 组合规模 ≈ `武器数 × 护甲 × 护手 × 配件²`；建议先用 **当前武器** + **仅套装装备** 试跑
+
+复跑性能基准（在 `[根]`，默认 `rust_full` + `rust_soa`，约 1–2 分钟）：
+
+```powershell
+python -m tools.quality.search_benchmark
+python -m tools.quality.search_benchmark --modes all --cancel-after 100000 --out-md docs/P3-01-搜索性能基准结果.md
+```
 
 ### 4.4 装备数据
 
@@ -127,15 +134,16 @@ python -m pytest tests/test_mvp_pipeline.py tests/test_search_settings.py -q
 ## 6. 打包发布
 
 ```powershell
-cd games/endfield
-python build.py
+# 仓库根目录执行
+python scripts/main_build.py --target launcher   # 统一启动器（含终末地入口）
 ```
 
-产出 `dist/终末地伤害计算器/` 须整夹分发，内含：
+产出 `dist/Game Calc Platform/` 须整夹分发，内含：
 
-- `终末地伤害计算器.exe`
-- `character_weapon_equipment/**`（含 **`equipments.json`**）
-- `发布说明.txt`（含 `search_output/`、并行线程说明）
+- `Game Calc Platform.exe`（单文件，内含启动器与各游戏 GUI）
+- `games/endfield/data/**`（含 **`equipments.json`**）
+- `tools/arknights_scout/output/parsed/**`、`framework/adapters/arknights/data/**`
+- `发布说明.txt`、`LICENSE`、`DATA_LICENSE`、`NOTICES.md`
 - 首次搜索后生成 **`search_output/`**（与 exe 同级）
 
 详见 [`操作指令集.md`](操作指令集.md) §7、[`数据来源与许可.md`](数据来源与许可.md) §七。

@@ -14,6 +14,7 @@ import {
   Stack,
 } from "@mui/material";
 import type { OperatorIndexEntry } from "../../api/arknights";
+import NumberField from "../common/NumberField";
 
 const STAR_OPTIONS = [6, 5, 4, 3, 2, 1] as const;
 const ALL_STARS = new Set<number>(STAR_OPTIONS);
@@ -178,7 +179,7 @@ export default function OperatorSelector({
       </Stack>
 
       <Typography variant="subtitle2" gutterBottom color="text.secondary">
-        {t('arknights.pageTitle')}
+        {t('operatorSelector.title')}
       </Typography>
       <Autocomplete
         options={filteredNames}
@@ -234,6 +235,15 @@ export default function OperatorSelector({
               ]}
               sx={{ flex: 1 }}
             />
+            <NumberField
+              value={skillLevel}
+              onChange={onSkillLevelChange}
+              min={1}
+              max={10}
+              integer
+              ariaLabel={t('arknights.skillLevel')}
+              sx={{ width: 64 }}
+            />
           </Box>
 
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mb: 2 }}>
@@ -271,6 +281,15 @@ export default function OperatorSelector({
                 { value: 3.0, label: "3.0" },
               ]}
               sx={{ flex: 1 }}
+            />
+            <NumberField
+              value={skillMultiplier}
+              onChange={onSkillMultiplierChange}
+              min={0.1}
+              max={5}
+              suffix="x"
+              ariaLabel={t('operatorSelector.skillMultiplier')}
+              sx={{ width: 88 }}
             />
           </Box>
         </>

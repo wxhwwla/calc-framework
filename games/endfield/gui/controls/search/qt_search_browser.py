@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # SPDX-License-Identifier: AGPL-3.0
-"""历史搜索记录浏览对话框（search_output/ SQLite 快速搜装）。"""
+"""历史搜索记录浏览对话框（search_output/ SQLite 快速搜装）。
+
+P2-07 拆分：UI 构建迁至 ``qt_search_browser_build_mixin.py``，本模块保留
+数据填充、复制与剪贴板逻辑，``SearchHistoryDialog`` 公开路径不变。
+"""
 
 from __future__ import annotations
 
@@ -11,18 +15,9 @@ from pathlib import Path
 from calc_framework.ui.i18n import tr
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QClipboard, QColor, QFont
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QDialog,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
-    QPushButton,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QDialog, QTreeWidgetItem, QWidget
+
+from .qt_search_browser_build_mixin import QtSearchBrowserBuildMixin
 
 # 数据层已提取到 search_history_data.py（无 PySide6 依赖）
 from .search_history_data import (
@@ -36,18 +31,12 @@ from .search_history_data import (
     scan_search_output,
 )
 
-_DARK_BG = "#1E1E1E"
-
-_DARK_FG = "#D1D1D1"
-
-_ACCENT = "#2B6CB6"
-
 _SCORE_FG = QColor("#9BB9E0")
 
 _DMG_FG = QColor("#85C1A8")
 
 
-class SearchHistoryDialog(QDialog):
+class SearchHistoryDialog(QtSearchBrowserBuildMixin, QDialog):
     """历史搜索记录浏览弹窗。"""
 
     def __init__(
@@ -59,224 +48,9 @@ class SearchHistoryDialog(QDialog):
     ) -> None:
         super().__init__(parent)
 
-        self.setWindowTitle(tr("desktop.endfield.searchBrowserTitle"))
-
-        self.resize(960, 720)
-
-        self.setMinimumSize(640, 480)
-
-        self._big = big_font
-
-        self._small = small_font
-
-        self._all_db_paths: list[Path] = []
-
-        layout = QVBoxLayout(self)
-
-        layout.setContentsMargins(12, 12, 12, 12)
-
-        top_row = QHBoxLayout()
-
-        title = QLabel(tr("desktop.endfield.searchBrowserHeading"))
-
-        title.setFont(big_font)
-
-        title.setStyleSheet(f"color: {_DARK_FG};")
-
-        top_row.addWidget(title)
-
-        top_row.addStretch()
-
-        refresh_btn = QPushButton(tr("common.refresh"))
-
-        refresh_btn.setFont(small_font)
-
-        refresh_btn.setStyleSheet(f"""
-
-            QPushButton {{
-
-                background-color: transparent; color: {_DARK_FG};
-
-                border: 1px solid #464646; border-radius: 6px;
-
-                padding: 6px 20px;
-
-            }}
-
-            QPushButton:hover {{ border-color: {_ACCENT}; color: white; }}
-
-        """)
-
-        refresh_btn.clicked.connect(self._populate)
-
-        top_row.addWidget(refresh_btn)
-
-        copy_btn = QPushButton(tr("desktop.endfield.searchBrowserCopyAll"))
-
-        copy_btn.setFont(small_font)
-
-        copy_btn.setStyleSheet(f"""
-
-            QPushButton {{
-
-                background-color: transparent; color: {_DARK_FG};
-
-                border: 1px solid #464646; border-radius: 6px;
-
-                padding: 6px 20px;
-
-            }}
-
-            QPushButton:hover {{ border-color: {_ACCENT}; color: white; }}
-
-        """)
-
-        copy_btn.clicked.connect(self._copy_all)
-
-        top_row.addWidget(copy_btn)
-
-        layout.addLayout(top_row)
-
-        self._tree = QTreeWidget()
-
-        self._tree.setFont(small_font)
-
-        self._tree.setHeaderLabels(
-            [
-                tr("desktop.endfield.searchBrowserColRun"),
-                tr("desktop.endfield.searchBrowserColStatus"),
-                tr("desktop.endfield.searchBrowserColDetails"),
-            ]
-        )
-
-        self._tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-
-        self._tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-
-        self._tree.header().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-
-        self._tree.setAlternatingRowColors(True)
-
-        self._tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-
-        self._tree.setStyleSheet(f"""
-
-            QTreeWidget {{
-
-                background-color: {_DARK_BG}; color: {_DARK_FG};
-
-                border: 1px solid #464646; border-radius: 6px;
-
-                padding: 4px;
-
-                alternate-background-color: #252525;
-
-            }}
-
-            QTreeWidget::item {{
-
-                padding: 3px 4px;
-
-                border-bottom: 1px solid #333;
-
-            }}
-
-            QTreeWidget::item:selected {{
-
-                background-color: {_ACCENT}; color: white;
-
-            }}
-
-        """)
-
-        self._tree.setIndentation(20)
-
-        self._tree.setAnimated(True)
-
-        self._tree.itemDoubleClicked.connect(self._on_item_double_clicked)
-
-        layout.addWidget(self._tree, stretch=1)
-
-        btn_row = QHBoxLayout()
-
-        btn_row.addStretch()
-
-        expand_btn = QPushButton(tr("desktop.endfield.searchBrowserExpandAll"))
-
-        expand_btn.setFont(small_font)
-
-        expand_btn.setStyleSheet(f"""
-
-            QPushButton {{
-
-                background-color: transparent; color: {_DARK_FG};
-
-                border: 1px solid #464646; border-radius: 6px;
-
-                padding: 6px 20px;
-
-            }}
-
-            QPushButton:hover {{ border-color: {_ACCENT}; color: white; }}
-
-        """)
-
-        expand_btn.clicked.connect(lambda: self._tree.expandAll())
-
-        btn_row.addWidget(expand_btn)
-
-        collapse_btn = QPushButton(tr("desktop.endfield.searchBrowserCollapseAll"))
-
-        collapse_btn.setFont(small_font)
-
-        collapse_btn.setStyleSheet(f"""
-
-            QPushButton {{
-
-                background-color: transparent; color: {_DARK_FG};
-
-                border: 1px solid #464646; border-radius: 6px;
-
-                padding: 6px 20px;
-
-            }}
-
-            QPushButton:hover {{ border-color: {_ACCENT}; color: white; }}
-
-        """)
-
-        collapse_btn.clicked.connect(lambda: self._tree.collapseAll())
-
-        btn_row.addWidget(collapse_btn)
-
-        close_btn = QPushButton(tr("common.close"))
-
-        close_btn.setFont(small_font)
-
-        close_btn.setStyleSheet(f"""
-
-            QPushButton {{
-
-                background-color: transparent; color: {_DARK_FG};
-
-                border: 1px solid #464646; border-radius: 6px;
-
-                padding: 6px 24px;
-
-            }}
-
-            QPushButton:hover {{ border-color: {_ACCENT}; color: white; }}
-
-        """)
-
-        close_btn.clicked.connect(self.accept)
-
-        btn_row.addWidget(close_btn)
-
-        layout.addLayout(btn_row)
+        self._build_gui(big_font=big_font, small_font=small_font)
 
         self._populate()
-        """初始化实例。"""
 
     def _populate(self) -> None:
         self._tree.clear()
@@ -361,7 +135,6 @@ class SearchHistoryDialog(QDialog):
                     run_item.addChild(child)
 
             db_item.setExpanded(False)
-        """populate。"""
 
     def _on_item_double_clicked(self, item: QTreeWidgetItem, _column: int) -> None:
         """双击 TopN 行时复制单行到剪贴板。"""
@@ -445,5 +218,4 @@ class SearchHistoryDialog(QDialog):
     def clipboard() -> QClipboard:
         from PySide6.QtWidgets import QApplication
 
-        """clipboard。"""
         return QApplication.clipboard()

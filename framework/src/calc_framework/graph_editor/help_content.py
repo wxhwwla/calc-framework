@@ -20,7 +20,7 @@ class HelpSection:
 
 
 # 在定义 HelpSection 之后再导入 help_menu，避免循环导入
-from .help_menu import (
+from .app.help_menu import (
     _compilation,
     _config,
     _file_ops,

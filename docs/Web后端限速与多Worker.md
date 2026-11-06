@@ -9,7 +9,7 @@
 
 | 组件 | 存储 | 作用域 |
 |------|------|--------|
-| 滑动窗口计数 | `RateLimitMiddleware._window`（内存） | **当前 worker 进程** |
+| 滑动窗口计数 | `RateLimitMiddleware._window`（内存） | **当前 worker 进程**；按 API Key 或客户端 IP 分桶，仅 `/api/*` 计数 |
 | API Key 元数据 | `.admin_data/api_keys.json` | 磁盘（多 worker 并发写可能竞态） |
 | 用量统计 | `.admin_data/usage.json` | 磁盘（多 worker 各自累加，统计不完整） |
 
@@ -17,7 +17,7 @@
 
 | tier | 限额 |
 |------|------|
-| 无 Key / 匿名 | 20 |
+| 无 Key / 匿名 | 20（按客户端 IP 分桶） |
 | free | 30 |
 | pro | 300 |
 | enterprise | 3000 |
@@ -30,14 +30,21 @@
 
 ### 2.1 单 worker（默认推荐）
 
-适用于 PythonAnywhere、Docker 默认 CMD、本地 `uvicorn main:app`：
+适用于反向代理 / tunnel、Docker 默认 CMD、本地 `uvicorn main:app`：
 
 ```bash
-uvicorn web.backend.main:app --host 0.0.0.0 --port 8000
-# 或 Docker / PA WSGI 单进程
+# 仓库根目录执行（web/backend/main.py 以 `api.*` 顶层包导入，必须让 web/backend 在 sys.path）
+python -m uvicorn main:app --app-dir web/backend --host 127.0.0.1 --port 8000 \
+  --proxy-headers --forwarded-allow-ips 127.0.0.1
+# 等价：cd web/backend && uvicorn main:app --host 127.0.0.1 --port 8000 \
+#   --proxy-headers --forwarded-allow-ips 127.0.0.1
+# 无反向代理/tunnel、需要直接对外时才用 --host 0.0.0.0
+# 注意：uvicorn web.backend.main:app 形式会因找不到 api 包而启动失败
 ```
 
 - 内存限速与 usage 统计行为与代码设计一致。
+- **仅 `/api` 与 `/api/*` 参与限速和 usage**；`/`、`/assets/*`、前端路由等静态请求不计入（否则 SPA 首屏 20+ 个 chunk 会直接耗尽额度并白屏）。
+- **匿名额度按客户端 IP 分桶**（`anon:<client.host>`）。本机 ngrok / cloudflared 都从 `127.0.0.1` 连入，`--proxy-headers --forwarded-allow-ips 127.0.0.1` 让 uvicorn 信任其 `X-Forwarded-For`；不加时所有访客会被视为同一个 IP，共享 20 次/分钟。
 - 无需额外环境变量。
 
 ### 2.2 多 worker + 反向代理限速
@@ -91,4 +98,4 @@ RateLimitMiddleware.enabled = False
 
 ---
 
-*最后更新：2026-06-17（Phase 2 Step 2.2）*
+*最后更新：2026-11-05（自托管：仅 `/api/*` 限速、匿名按 IP 分桶、tunnel 代理头）*

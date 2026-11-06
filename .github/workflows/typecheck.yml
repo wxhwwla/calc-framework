@@ -19,14 +19,14 @@ jobs:
   pyright:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
 
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
         with:
           path: ~/.cache/pip
           key: pip-typecheck-${{ hashFiles('framework/pyproject.toml', 'games/endfield/pyproject.toml') }}
@@ -38,6 +38,7 @@ jobs:
           python -m pip install pyright
           python -m pip install -e 'framework[dev,ui]'
           python -m pip install -e 'games/endfield[dev]'
+          python -m pip install -r requirements-mcp.txt
 
       - name: Run pyright
         run: pyright

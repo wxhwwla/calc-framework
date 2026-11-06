@@ -16,7 +16,9 @@
 
 # 脚本文件
 *.ps1 text eol=lf
-*.bat text eol=lf
+# Windows 批处理必须 CRLF：cmd 解析 LF + 中文 + 括号块时会错乱
+*.bat text eol=crlf
+*.cmd text eol=crlf
 *.sh text eol=lf
 
 # 文档与配置

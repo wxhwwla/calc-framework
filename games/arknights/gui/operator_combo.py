@@ -31,10 +31,16 @@ def configure_operator_combobox(combo: QComboBox, names: list[str], *, preserve:
     completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
     combo.setCompleter(completer)
 
-    if current and current in names:
-        combo.setCurrentText(current)
-    elif current:
-        combo.setEditText(current)
+    if current:
+        index = combo.findText(current)
+        if index >= 0:
+            combo.setCurrentIndex(index)
+        else:
+            combo.setEditText(current)
+    # 可编辑 + placeholder 的 QComboBox 在 addItems 后可能停在 -1，
+    # 这里显式落到第一项，避免主窗口启动时没有选中任何干员。
+    if names and combo.currentIndex() < 0:
+        combo.setCurrentIndex(0)
     combo.blockSignals(False)
 
 

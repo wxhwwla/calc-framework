@@ -1,0 +1,3881 @@
+{
+  "characterTable": {
+    "name": "陈千语",
+    "engName": "Chen Qianyu",
+    "rarity": 5,
+    "profession": 0,
+    "weaponType": 1,
+    "mainAttrType": 40,
+    "subAttrType": 39,
+    "charTypeId": "Physical",
+    "attributes": [
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 10.7732
+            },
+            {
+              "attrType": 40,
+              "attrValue": 20.567
+            },
+            {
+              "attrType": 41,
+              "attrValue": 8.866
+            },
+            {
+              "attrType": 42,
+              "attrValue": 9.6907
+            },
+            {
+              "attrType": 2,
+              "attrValue": 30.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 11.8505
+            },
+            {
+              "attrType": 40,
+              "attrValue": 22.2658
+            },
+            {
+              "attrType": 41,
+              "attrValue": 9.7299
+            },
+            {
+              "attrType": 42,
+              "attrValue": 10.6371
+            },
+            {
+              "attrType": 2,
+              "attrValue": 33.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 12.9278
+            },
+            {
+              "attrType": 40,
+              "attrValue": 23.9647
+            },
+            {
+              "attrType": 41,
+              "attrValue": 10.5937
+            },
+            {
+              "attrType": 42,
+              "attrValue": 11.5834
+            },
+            {
+              "attrType": 2,
+              "attrValue": 36.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 14.0052
+            },
+            {
+              "attrType": 40,
+              "attrValue": 25.6635
+            },
+            {
+              "attrType": 41,
+              "attrValue": 11.4576
+            },
+            {
+              "attrType": 42,
+              "attrValue": 12.5298
+            },
+            {
+              "attrType": 2,
+              "attrValue": 39.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 15.0825
+            },
+            {
+              "attrType": 40,
+              "attrValue": 27.3623
+            },
+            {
+              "attrType": 41,
+              "attrValue": 12.3215
+            },
+            {
+              "attrType": 42,
+              "attrValue": 13.4761
+            },
+            {
+              "attrType": 2,
+              "attrValue": 42.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 16.1598
+            },
+            {
+              "attrType": 40,
+              "attrValue": 29.0611
+            },
+            {
+              "attrType": 41,
+              "attrValue": 13.1854
+            },
+            {
+              "attrType": 42,
+              "attrValue": 14.4225
+            },
+            {
+              "attrType": 2,
+              "attrValue": 45.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 17.2371
+            },
+            {
+              "attrType": 40,
+              "attrValue": 30.7599
+            },
+            {
+              "attrType": 41,
+              "attrValue": 14.0492
+            },
+            {
+              "attrType": 42,
+              "attrValue": 15.3688
+            },
+            {
+              "attrType": 2,
+              "attrValue": 48.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 18.3144
+            },
+            {
+              "attrType": 40,
+              "attrValue": 32.4588
+            },
+            {
+              "attrType": 41,
+              "attrValue": 14.9131
+            },
+            {
+              "attrType": 42,
+              "attrValue": 16.3152
+            },
+            {
+              "attrType": 2,
+              "attrValue": 51.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 19.3918
+            },
+            {
+              "attrType": 40,
+              "attrValue": 34.1576
+            },
+            {
+              "attrType": 41,
+              "attrValue": 15.777
+            },
+            {
+              "attrType": 42,
+              "attrValue": 17.2615
+            },
+            {
+              "attrType": 2,
+              "attrValue": 54.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 20.4691
+            },
+            {
+              "attrType": 40,
+              "attrValue": 35.8564
+            },
+            {
+              "attrType": 41,
+              "attrValue": 16.6409
+            },
+            {
+              "attrType": 42,
+              "attrValue": 18.2079
+            },
+            {
+              "attrType": 2,
+              "attrValue": 57.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 21.5464
+            },
+            {
+              "attrType": 40,
+              "attrValue": 37.5552
+            },
+            {
+              "attrType": 41,
+              "attrValue": 17.5047
+            },
+            {
+              "attrType": 42,
+              "attrValue": 19.1542
+            },
+            {
+              "attrType": 2,
+              "attrValue": 60.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 22.6237
+            },
+            {
+              "attrType": 40,
+              "attrValue": 39.2541
+            },
+            {
+              "attrType": 41,
+              "attrValue": 18.3686
+            },
+            {
+              "attrType": 42,
+              "attrValue": 20.1006
+            },
+            {
+              "attrType": 2,
+              "attrValue": 63.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 23.701
+            },
+            {
+              "attrType": 40,
+              "attrValue": 40.9529
+            },
+            {
+              "attrType": 41,
+              "attrValue": 19.2325
+            },
+            {
+              "attrType": 42,
+              "attrValue": 21.0469
+            },
+            {
+              "attrType": 2,
+              "attrValue": 66.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 24.7784
+            },
+            {
+              "attrType": 40,
+              "attrValue": 42.6517
+            },
+            {
+              "attrType": 41,
+              "attrValue": 20.0964
+            },
+            {
+              "attrType": 42,
+              "attrValue": 21.9933
+            },
+            {
+              "attrType": 2,
+              "attrValue": 69.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 25.8557
+            },
+            {
+              "attrType": 40,
+              "attrValue": 44.3505
+            },
+            {
+              "attrType": 41,
+              "attrValue": 20.9602
+            },
+            {
+              "attrType": 42,
+              "attrValue": 22.9396
+            },
+            {
+              "attrType": 2,
+              "attrValue": 72.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 26.933
+            },
+            {
+              "attrType": 40,
+              "attrValue": 46.0493
+            },
+            {
+              "attrType": 41,
+              "attrValue": 21.8241
+            },
+            {
+              "attrType": 42,
+              "attrValue": 23.886
+            },
+            {
+              "attrType": 2,
+              "attrValue": 75.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 28.0103
+            },
+            {
+              "attrType": 40,
+              "attrValue": 47.7482
+            },
+            {
+              "attrType": 41,
+              "attrValue": 22.688
+            },
+            {
+              "attrType": 42,
+              "attrValue": 24.8323
+            },
+            {
+              "attrType": 2,
+              "attrValue": 78.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 29.0876
+            },
+            {
+              "attrType": 40,
+              "attrValue": 49.447
+            },
+            {
+              "attrType": 41,
+              "attrValue": 23.5519
+            },
+            {
+              "attrType": 42,
+              "attrValue": 25.7787
+            },
+            {
+              "attrType": 2,
+              "attrValue": 81.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 30.1649
+            },
+            {
+              "attrType": 40,
+              "attrValue": 51.1458
+            },
+            {
+              "attrType": 41,
+              "attrValue": 24.4157
+            },
+            {
+              "attrType": 42,
+              "attrValue": 26.725
+            },
+            {
+              "attrType": 2,
+              "attrValue": 84.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 0,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 31.2423
+            },
+            {
+              "attrType": 40,
+              "attrValue": 52.8446
+            },
+            {
+              "attrType": 41,
+              "attrValue": 25.2796
+            },
+            {
+              "attrType": 42,
+              "attrValue": 27.6714
+            },
+            {
+              "attrType": 2,
+              "attrValue": 87.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 31.2423
+            },
+            {
+              "attrType": 40,
+              "attrValue": 52.8446
+            },
+            {
+              "attrType": 41,
+              "attrValue": 25.2796
+            },
+            {
+              "attrType": 42,
+              "attrValue": 27.6714
+            },
+            {
+              "attrType": 2,
+              "attrValue": 87.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 32.3196
+            },
+            {
+              "attrType": 40,
+              "attrValue": 54.5434
+            },
+            {
+              "attrType": 41,
+              "attrValue": 26.1435
+            },
+            {
+              "attrType": 42,
+              "attrValue": 28.6177
+            },
+            {
+              "attrType": 2,
+              "attrValue": 90.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 33.3969
+            },
+            {
+              "attrType": 40,
+              "attrValue": 56.2423
+            },
+            {
+              "attrType": 41,
+              "attrValue": 27.0074
+            },
+            {
+              "attrType": 42,
+              "attrValue": 29.5641
+            },
+            {
+              "attrType": 2,
+              "attrValue": 93.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 34.4742
+            },
+            {
+              "attrType": 40,
+              "attrValue": 57.9411
+            },
+            {
+              "attrType": 41,
+              "attrValue": 27.8712
+            },
+            {
+              "attrType": 42,
+              "attrValue": 30.5104
+            },
+            {
+              "attrType": 2,
+              "attrValue": 96.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 35.5515
+            },
+            {
+              "attrType": 40,
+              "attrValue": 59.6399
+            },
+            {
+              "attrType": 41,
+              "attrValue": 28.7351
+            },
+            {
+              "attrType": 42,
+              "attrValue": 31.4568
+            },
+            {
+              "attrType": 2,
+              "attrValue": 99.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 36.6289
+            },
+            {
+              "attrType": 40,
+              "attrValue": 61.3387
+            },
+            {
+              "attrType": 41,
+              "attrValue": 29.599
+            },
+            {
+              "attrType": 42,
+              "attrValue": 32.4031
+            },
+            {
+              "attrType": 2,
+              "attrValue": 102.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 37.7062
+            },
+            {
+              "attrType": 40,
+              "attrValue": 63.0376
+            },
+            {
+              "attrType": 41,
+              "attrValue": 30.4629
+            },
+            {
+              "attrType": 42,
+              "attrValue": 33.3495
+            },
+            {
+              "attrType": 2,
+              "attrValue": 105.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 38.7835
+            },
+            {
+              "attrType": 40,
+              "attrValue": 64.7364
+            },
+            {
+              "attrType": 41,
+              "attrValue": 31.3267
+            },
+            {
+              "attrType": 42,
+              "attrValue": 34.2958
+            },
+            {
+              "attrType": 2,
+              "attrValue": 108.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 39.8608
+            },
+            {
+              "attrType": 40,
+              "attrValue": 66.4352
+            },
+            {
+              "attrType": 41,
+              "attrValue": 32.1906
+            },
+            {
+              "attrType": 42,
+              "attrValue": 35.2422
+            },
+            {
+              "attrType": 2,
+              "attrValue": 111.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 40.9381
+            },
+            {
+              "attrType": 40,
+              "attrValue": 68.134
+            },
+            {
+              "attrType": 41,
+              "attrValue": 33.0545
+            },
+            {
+              "attrType": 42,
+              "attrValue": 36.1885
+            },
+            {
+              "attrType": 2,
+              "attrValue": 114.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 42.0155
+            },
+            {
+              "attrType": 40,
+              "attrValue": 69.8328
+            },
+            {
+              "attrType": 41,
+              "attrValue": 33.9184
+            },
+            {
+              "attrType": 42,
+              "attrValue": 37.1349
+            },
+            {
+              "attrType": 2,
+              "attrValue": 117.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 43.0928
+            },
+            {
+              "attrType": 40,
+              "attrValue": 71.5317
+            },
+            {
+              "attrType": 41,
+              "attrValue": 34.7822
+            },
+            {
+              "attrType": 42,
+              "attrValue": 38.0812
+            },
+            {
+              "attrType": 2,
+              "attrValue": 120.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 44.1701
+            },
+            {
+              "attrType": 40,
+              "attrValue": 73.2305
+            },
+            {
+              "attrType": 41,
+              "attrValue": 35.6461
+            },
+            {
+              "attrType": 42,
+              "attrValue": 39.0276
+            },
+            {
+              "attrType": 2,
+              "attrValue": 123.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 45.2474
+            },
+            {
+              "attrType": 40,
+              "attrValue": 74.9293
+            },
+            {
+              "attrType": 41,
+              "attrValue": 36.51
+            },
+            {
+              "attrType": 42,
+              "attrValue": 39.9739
+            },
+            {
+              "attrType": 2,
+              "attrValue": 126.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 46.3247
+            },
+            {
+              "attrType": 40,
+              "attrValue": 76.6281
+            },
+            {
+              "attrType": 41,
+              "attrValue": 37.3739
+            },
+            {
+              "attrType": 42,
+              "attrValue": 40.9203
+            },
+            {
+              "attrType": 2,
+              "attrValue": 129.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 47.4021
+            },
+            {
+              "attrType": 40,
+              "attrValue": 78.327
+            },
+            {
+              "attrType": 41,
+              "attrValue": 38.2377
+            },
+            {
+              "attrType": 42,
+              "attrValue": 41.8666
+            },
+            {
+              "attrType": 2,
+              "attrValue": 132.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 48.4794
+            },
+            {
+              "attrType": 40,
+              "attrValue": 80.0258
+            },
+            {
+              "attrType": 41,
+              "attrValue": 39.1016
+            },
+            {
+              "attrType": 42,
+              "attrValue": 42.813
+            },
+            {
+              "attrType": 2,
+              "attrValue": 135.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 49.5567
+            },
+            {
+              "attrType": 40,
+              "attrValue": 81.7246
+            },
+            {
+              "attrType": 41,
+              "attrValue": 39.9655
+            },
+            {
+              "attrType": 42,
+              "attrValue": 43.7593
+            },
+            {
+              "attrType": 2,
+              "attrValue": 138.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 50.634
+            },
+            {
+              "attrType": 40,
+              "attrValue": 83.4234
+            },
+            {
+              "attrType": 41,
+              "attrValue": 40.8294
+            },
+            {
+              "attrType": 42,
+              "attrValue": 44.7057
+            },
+            {
+              "attrType": 2,
+              "attrValue": 141.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 51.7113
+            },
+            {
+              "attrType": 40,
+              "attrValue": 85.1222
+            },
+            {
+              "attrType": 41,
+              "attrValue": 41.6932
+            },
+            {
+              "attrType": 42,
+              "attrValue": 45.652
+            },
+            {
+              "attrType": 2,
+              "attrValue": 144.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 1,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 52.7887
+            },
+            {
+              "attrType": 40,
+              "attrValue": 86.8211
+            },
+            {
+              "attrType": 41,
+              "attrValue": 42.5571
+            },
+            {
+              "attrType": 42,
+              "attrValue": 46.5984
+            },
+            {
+              "attrType": 2,
+              "attrValue": 147.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 52.7887
+            },
+            {
+              "attrType": 40,
+              "attrValue": 86.8211
+            },
+            {
+              "attrType": 41,
+              "attrValue": 42.5571
+            },
+            {
+              "attrType": 42,
+              "attrValue": 46.5984
+            },
+            {
+              "attrType": 2,
+              "attrValue": 147.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 53.866
+            },
+            {
+              "attrType": 40,
+              "attrValue": 88.5199
+            },
+            {
+              "attrType": 41,
+              "attrValue": 43.421
+            },
+            {
+              "attrType": 42,
+              "attrValue": 47.5447
+            },
+            {
+              "attrType": 2,
+              "attrValue": 150.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 54.9433
+            },
+            {
+              "attrType": 40,
+              "attrValue": 90.2187
+            },
+            {
+              "attrType": 41,
+              "attrValue": 44.2849
+            },
+            {
+              "attrType": 42,
+              "attrValue": 48.4911
+            },
+            {
+              "attrType": 2,
+              "attrValue": 153.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 56.0206
+            },
+            {
+              "attrType": 40,
+              "attrValue": 91.9175
+            },
+            {
+              "attrType": 41,
+              "attrValue": 45.1487
+            },
+            {
+              "attrType": 42,
+              "attrValue": 49.4374
+            },
+            {
+              "attrType": 2,
+              "attrValue": 156.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 57.0979
+            },
+            {
+              "attrType": 40,
+              "attrValue": 93.6163
+            },
+            {
+              "attrType": 41,
+              "attrValue": 46.0126
+            },
+            {
+              "attrType": 42,
+              "attrValue": 50.3838
+            },
+            {
+              "attrType": 2,
+              "attrValue": 159.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 58.1753
+            },
+            {
+              "attrType": 40,
+              "attrValue": 95.3152
+            },
+            {
+              "attrType": 41,
+              "attrValue": 46.8765
+            },
+            {
+              "attrType": 42,
+              "attrValue": 51.3301
+            },
+            {
+              "attrType": 2,
+              "attrValue": 162.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 59.2526
+            },
+            {
+              "attrType": 40,
+              "attrValue": 97.014
+            },
+            {
+              "attrType": 41,
+              "attrValue": 47.7404
+            },
+            {
+              "attrType": 42,
+              "attrValue": 52.2765
+            },
+            {
+              "attrType": 2,
+              "attrValue": 165.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 60.3299
+            },
+            {
+              "attrType": 40,
+              "attrValue": 98.7128
+            },
+            {
+              "attrType": 41,
+              "attrValue": 48.6042
+            },
+            {
+              "attrType": 42,
+              "attrValue": 53.2228
+            },
+            {
+              "attrType": 2,
+              "attrValue": 168.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 61.4072
+            },
+            {
+              "attrType": 40,
+              "attrValue": 100.4116
+            },
+            {
+              "attrType": 41,
+              "attrValue": 49.4681
+            },
+            {
+              "attrType": 42,
+              "attrValue": 54.1692
+            },
+            {
+              "attrType": 2,
+              "attrValue": 171.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 62.4845
+            },
+            {
+              "attrType": 40,
+              "attrValue": 102.1105
+            },
+            {
+              "attrType": 41,
+              "attrValue": 50.332
+            },
+            {
+              "attrType": 42,
+              "attrValue": 55.1155
+            },
+            {
+              "attrType": 2,
+              "attrValue": 174.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 63.5619
+            },
+            {
+              "attrType": 40,
+              "attrValue": 103.8093
+            },
+            {
+              "attrType": 41,
+              "attrValue": 51.1959
+            },
+            {
+              "attrType": 42,
+              "attrValue": 56.0619
+            },
+            {
+              "attrType": 2,
+              "attrValue": 177.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 64.6392
+            },
+            {
+              "attrType": 40,
+              "attrValue": 105.5081
+            },
+            {
+              "attrType": 41,
+              "attrValue": 52.0598
+            },
+            {
+              "attrType": 42,
+              "attrValue": 57.0082
+            },
+            {
+              "attrType": 2,
+              "attrValue": 180.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 65.7165
+            },
+            {
+              "attrType": 40,
+              "attrValue": 107.2069
+            },
+            {
+              "attrType": 41,
+              "attrValue": 52.9236
+            },
+            {
+              "attrType": 42,
+              "attrValue": 57.9546
+            },
+            {
+              "attrType": 2,
+              "attrValue": 183.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 66.7938
+            },
+            {
+              "attrType": 40,
+              "attrValue": 108.9057
+            },
+            {
+              "attrType": 41,
+              "attrValue": 53.7875
+            },
+            {
+              "attrType": 42,
+              "attrValue": 58.9009
+            },
+            {
+              "attrType": 2,
+              "attrValue": 186.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 67.8711
+            },
+            {
+              "attrType": 40,
+              "attrValue": 110.6046
+            },
+            {
+              "attrType": 41,
+              "attrValue": 54.6514
+            },
+            {
+              "attrType": 42,
+              "attrValue": 59.8473
+            },
+            {
+              "attrType": 2,
+              "attrValue": 189.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 68.9485
+            },
+            {
+              "attrType": 40,
+              "attrValue": 112.3034
+            },
+            {
+              "attrType": 41,
+              "attrValue": 55.5153
+            },
+            {
+              "attrType": 42,
+              "attrValue": 60.7936
+            },
+            {
+              "attrType": 2,
+              "attrValue": 192.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 70.0258
+            },
+            {
+              "attrType": 40,
+              "attrValue": 114.0022
+            },
+            {
+              "attrType": 41,
+              "attrValue": 56.3791
+            },
+            {
+              "attrType": 42,
+              "attrValue": 61.74
+            },
+            {
+              "attrType": 2,
+              "attrValue": 195.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 71.1031
+            },
+            {
+              "attrType": 40,
+              "attrValue": 115.701
+            },
+            {
+              "attrType": 41,
+              "attrValue": 57.243
+            },
+            {
+              "attrType": 42,
+              "attrValue": 62.6863
+            },
+            {
+              "attrType": 2,
+              "attrValue": 198.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 72.1804
+            },
+            {
+              "attrType": 40,
+              "attrValue": 117.3999
+            },
+            {
+              "attrType": 41,
+              "attrValue": 58.1069
+            },
+            {
+              "attrType": 42,
+              "attrValue": 63.6327
+            },
+            {
+              "attrType": 2,
+              "attrValue": 201.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 73.2577
+            },
+            {
+              "attrType": 40,
+              "attrValue": 119.0987
+            },
+            {
+              "attrType": 41,
+              "attrValue": 58.9708
+            },
+            {
+              "attrType": 42,
+              "attrValue": 64.579
+            },
+            {
+              "attrType": 2,
+              "attrValue": 204.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 2,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 74.3351
+            },
+            {
+              "attrType": 40,
+              "attrValue": 120.7975
+            },
+            {
+              "attrType": 41,
+              "attrValue": 59.8346
+            },
+            {
+              "attrType": 42,
+              "attrValue": 65.5254
+            },
+            {
+              "attrType": 2,
+              "attrValue": 207.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 74.3351
+            },
+            {
+              "attrType": 40,
+              "attrValue": 120.7975
+            },
+            {
+              "attrType": 41,
+              "attrValue": 59.8346
+            },
+            {
+              "attrType": 42,
+              "attrValue": 65.5254
+            },
+            {
+              "attrType": 2,
+              "attrValue": 207.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 75.4124
+            },
+            {
+              "attrType": 40,
+              "attrValue": 122.4963
+            },
+            {
+              "attrType": 41,
+              "attrValue": 60.6985
+            },
+            {
+              "attrType": 42,
+              "attrValue": 66.4717
+            },
+            {
+              "attrType": 2,
+              "attrValue": 210.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 76.4897
+            },
+            {
+              "attrType": 40,
+              "attrValue": 124.1951
+            },
+            {
+              "attrType": 41,
+              "attrValue": 61.5624
+            },
+            {
+              "attrType": 42,
+              "attrValue": 67.4181
+            },
+            {
+              "attrType": 2,
+              "attrValue": 213.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 77.567
+            },
+            {
+              "attrType": 40,
+              "attrValue": 125.894
+            },
+            {
+              "attrType": 41,
+              "attrValue": 62.4263
+            },
+            {
+              "attrType": 42,
+              "attrValue": 68.3644
+            },
+            {
+              "attrType": 2,
+              "attrValue": 216.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 78.6443
+            },
+            {
+              "attrType": 40,
+              "attrValue": 127.5928
+            },
+            {
+              "attrType": 41,
+              "attrValue": 63.2901
+            },
+            {
+              "attrType": 42,
+              "attrValue": 69.3108
+            },
+            {
+              "attrType": 2,
+              "attrValue": 219.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 79.7216
+            },
+            {
+              "attrType": 40,
+              "attrValue": 129.2916
+            },
+            {
+              "attrType": 41,
+              "attrValue": 64.154
+            },
+            {
+              "attrType": 42,
+              "attrValue": 70.2571
+            },
+            {
+              "attrType": 2,
+              "attrValue": 222.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 80.799
+            },
+            {
+              "attrType": 40,
+              "attrValue": 130.9904
+            },
+            {
+              "attrType": 41,
+              "attrValue": 65.0179
+            },
+            {
+              "attrType": 42,
+              "attrValue": 71.2035
+            },
+            {
+              "attrType": 2,
+              "attrValue": 225.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 81.8763
+            },
+            {
+              "attrType": 40,
+              "attrValue": 132.6892
+            },
+            {
+              "attrType": 41,
+              "attrValue": 65.8818
+            },
+            {
+              "attrType": 42,
+              "attrValue": 72.1498
+            },
+            {
+              "attrType": 2,
+              "attrValue": 228.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 82.9536
+            },
+            {
+              "attrType": 40,
+              "attrValue": 134.3881
+            },
+            {
+              "attrType": 41,
+              "attrValue": 66.7456
+            },
+            {
+              "attrType": 42,
+              "attrValue": 73.0961
+            },
+            {
+              "attrType": 2,
+              "attrValue": 231.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 84.0309
+            },
+            {
+              "attrType": 40,
+              "attrValue": 136.0869
+            },
+            {
+              "attrType": 41,
+              "attrValue": 67.6095
+            },
+            {
+              "attrType": 42,
+              "attrValue": 74.0425
+            },
+            {
+              "attrType": 2,
+              "attrValue": 234.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 85.1082
+            },
+            {
+              "attrType": 40,
+              "attrValue": 137.7857
+            },
+            {
+              "attrType": 41,
+              "attrValue": 68.4734
+            },
+            {
+              "attrType": 42,
+              "attrValue": 74.9888
+            },
+            {
+              "attrType": 2,
+              "attrValue": 237.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 86.1856
+            },
+            {
+              "attrType": 40,
+              "attrValue": 139.4845
+            },
+            {
+              "attrType": 41,
+              "attrValue": 69.3373
+            },
+            {
+              "attrType": 42,
+              "attrValue": 75.9352
+            },
+            {
+              "attrType": 2,
+              "attrValue": 240.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 87.2629
+            },
+            {
+              "attrType": 40,
+              "attrValue": 141.1834
+            },
+            {
+              "attrType": 41,
+              "attrValue": 70.2011
+            },
+            {
+              "attrType": 42,
+              "attrValue": 76.8815
+            },
+            {
+              "attrType": 2,
+              "attrValue": 243.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 88.3402
+            },
+            {
+              "attrType": 40,
+              "attrValue": 142.8822
+            },
+            {
+              "attrType": 41,
+              "attrValue": 71.065
+            },
+            {
+              "attrType": 42,
+              "attrValue": 77.8279
+            },
+            {
+              "attrType": 2,
+              "attrValue": 246.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 89.4175
+            },
+            {
+              "attrType": 40,
+              "attrValue": 144.581
+            },
+            {
+              "attrType": 41,
+              "attrValue": 71.9289
+            },
+            {
+              "attrType": 42,
+              "attrValue": 78.7742
+            },
+            {
+              "attrType": 2,
+              "attrValue": 249.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 90.4948
+            },
+            {
+              "attrType": 40,
+              "attrValue": 146.2798
+            },
+            {
+              "attrType": 41,
+              "attrValue": 72.7928
+            },
+            {
+              "attrType": 42,
+              "attrValue": 79.7206
+            },
+            {
+              "attrType": 2,
+              "attrValue": 252.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 91.5722
+            },
+            {
+              "attrType": 40,
+              "attrValue": 147.9786
+            },
+            {
+              "attrType": 41,
+              "attrValue": 73.6566
+            },
+            {
+              "attrType": 42,
+              "attrValue": 80.6669
+            },
+            {
+              "attrType": 2,
+              "attrValue": 255.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 92.6495
+            },
+            {
+              "attrType": 40,
+              "attrValue": 149.6775
+            },
+            {
+              "attrType": 41,
+              "attrValue": 74.5205
+            },
+            {
+              "attrType": 42,
+              "attrValue": 81.6133
+            },
+            {
+              "attrType": 2,
+              "attrValue": 258.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 93.7268
+            },
+            {
+              "attrType": 40,
+              "attrValue": 151.3763
+            },
+            {
+              "attrType": 41,
+              "attrValue": 75.3844
+            },
+            {
+              "attrType": 42,
+              "attrValue": 82.5596
+            },
+            {
+              "attrType": 2,
+              "attrValue": 261.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 94.8041
+            },
+            {
+              "attrType": 40,
+              "attrValue": 153.0751
+            },
+            {
+              "attrType": 41,
+              "attrValue": 76.2483
+            },
+            {
+              "attrType": 42,
+              "attrValue": 83.506
+            },
+            {
+              "attrType": 2,
+              "attrValue": 264.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 3,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 95.8814
+            },
+            {
+              "attrType": 40,
+              "attrValue": 154.7739
+            },
+            {
+              "attrType": 41,
+              "attrValue": 77.1121
+            },
+            {
+              "attrType": 42,
+              "attrValue": 84.4523
+            },
+            {
+              "attrType": 2,
+              "attrValue": 267.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 95.8814
+            },
+            {
+              "attrType": 40,
+              "attrValue": 154.7739
+            },
+            {
+              "attrType": 41,
+              "attrValue": 77.1121
+            },
+            {
+              "attrType": 42,
+              "attrValue": 84.4523
+            },
+            {
+              "attrType": 2,
+              "attrValue": 267.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 96.9588
+            },
+            {
+              "attrType": 40,
+              "attrValue": 156.4728
+            },
+            {
+              "attrType": 41,
+              "attrValue": 77.976
+            },
+            {
+              "attrType": 42,
+              "attrValue": 85.3987
+            },
+            {
+              "attrType": 2,
+              "attrValue": 270.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 98.0361
+            },
+            {
+              "attrType": 40,
+              "attrValue": 158.1716
+            },
+            {
+              "attrType": 41,
+              "attrValue": 78.8399
+            },
+            {
+              "attrType": 42,
+              "attrValue": 86.345
+            },
+            {
+              "attrType": 2,
+              "attrValue": 273.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 99.1134
+            },
+            {
+              "attrType": 40,
+              "attrValue": 159.8704
+            },
+            {
+              "attrType": 41,
+              "attrValue": 79.7038
+            },
+            {
+              "attrType": 42,
+              "attrValue": 87.2914
+            },
+            {
+              "attrType": 2,
+              "attrValue": 276.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 100.1907
+            },
+            {
+              "attrType": 40,
+              "attrValue": 161.5692
+            },
+            {
+              "attrType": 41,
+              "attrValue": 80.5676
+            },
+            {
+              "attrType": 42,
+              "attrValue": 88.2377
+            },
+            {
+              "attrType": 2,
+              "attrValue": 279.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 101.268
+            },
+            {
+              "attrType": 40,
+              "attrValue": 163.268
+            },
+            {
+              "attrType": 41,
+              "attrValue": 81.4315
+            },
+            {
+              "attrType": 42,
+              "attrValue": 89.1841
+            },
+            {
+              "attrType": 2,
+              "attrValue": 282.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 102.3454
+            },
+            {
+              "attrType": 40,
+              "attrValue": 164.9669
+            },
+            {
+              "attrType": 41,
+              "attrValue": 82.2954
+            },
+            {
+              "attrType": 42,
+              "attrValue": 90.1304
+            },
+            {
+              "attrType": 2,
+              "attrValue": 285.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 103.4227
+            },
+            {
+              "attrType": 40,
+              "attrValue": 166.6657
+            },
+            {
+              "attrType": 41,
+              "attrValue": 83.1593
+            },
+            {
+              "attrType": 42,
+              "attrValue": 91.0768
+            },
+            {
+              "attrType": 2,
+              "attrValue": 288.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 104.5
+            },
+            {
+              "attrType": 40,
+              "attrValue": 168.3645
+            },
+            {
+              "attrType": 41,
+              "attrValue": 84.0231
+            },
+            {
+              "attrType": 42,
+              "attrValue": 92.0231
+            },
+            {
+              "attrType": 2,
+              "attrValue": 291.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 105.5773
+            },
+            {
+              "attrType": 40,
+              "attrValue": 170.0633
+            },
+            {
+              "attrType": 41,
+              "attrValue": 84.887
+            },
+            {
+              "attrType": 42,
+              "attrValue": 92.9695
+            },
+            {
+              "attrType": 2,
+              "attrValue": 294.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 106.6546
+            },
+            {
+              "attrType": 40,
+              "attrValue": 171.7622
+            },
+            {
+              "attrType": 41,
+              "attrValue": 85.7509
+            },
+            {
+              "attrType": 42,
+              "attrValue": 93.9158
+            },
+            {
+              "attrType": 2,
+              "attrValue": 297.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 107.732
+            },
+            {
+              "attrType": 40,
+              "attrValue": 173.461
+            },
+            {
+              "attrType": 41,
+              "attrValue": 86.6148
+            },
+            {
+              "attrType": 42,
+              "attrValue": 94.8622
+            },
+            {
+              "attrType": 2,
+              "attrValue": 300.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 108.8093
+            },
+            {
+              "attrType": 40,
+              "attrValue": 175.1598
+            },
+            {
+              "attrType": 41,
+              "attrValue": 87.4786
+            },
+            {
+              "attrType": 42,
+              "attrValue": 95.8085
+            },
+            {
+              "attrType": 2,
+              "attrValue": 303.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 109.8866
+            },
+            {
+              "attrType": 40,
+              "attrValue": 176.8586
+            },
+            {
+              "attrType": 41,
+              "attrValue": 88.3425
+            },
+            {
+              "attrType": 42,
+              "attrValue": 96.7549
+            },
+            {
+              "attrType": 2,
+              "attrValue": 306.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 110.9639
+            },
+            {
+              "attrType": 40,
+              "attrValue": 178.5574
+            },
+            {
+              "attrType": 41,
+              "attrValue": 89.2064
+            },
+            {
+              "attrType": 42,
+              "attrValue": 97.7012
+            },
+            {
+              "attrType": 2,
+              "attrValue": 309.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 112.0412
+            },
+            {
+              "attrType": 40,
+              "attrValue": 180.2563
+            },
+            {
+              "attrType": 41,
+              "attrValue": 90.0703
+            },
+            {
+              "attrType": 42,
+              "attrValue": 98.6476
+            },
+            {
+              "attrType": 2,
+              "attrValue": 312.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 113.1186
+            },
+            {
+              "attrType": 40,
+              "attrValue": 181.9551
+            },
+            {
+              "attrType": 41,
+              "attrValue": 90.9341
+            },
+            {
+              "attrType": 42,
+              "attrValue": 99.5939
+            },
+            {
+              "attrType": 2,
+              "attrValue": 315.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 114.1959
+            },
+            {
+              "attrType": 40,
+              "attrValue": 183.6539
+            },
+            {
+              "attrType": 41,
+              "attrValue": 91.798
+            },
+            {
+              "attrType": 42,
+              "attrValue": 100.5403
+            },
+            {
+              "attrType": 2,
+              "attrValue": 318.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 115.2732
+            },
+            {
+              "attrType": 40,
+              "attrValue": 185.3527
+            },
+            {
+              "attrType": 41,
+              "attrValue": 92.6619
+            },
+            {
+              "attrType": 42,
+              "attrValue": 101.4866
+            },
+            {
+              "attrType": 2,
+              "attrValue": 321.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      },
+      {
+        "breakStage": 4,
+        "Attribute": {
+          "attrs": [
+            {
+              "attrType": 39,
+              "attrValue": 116.3505
+            },
+            {
+              "attrType": 40,
+              "attrValue": 187.0515
+            },
+            {
+              "attrType": 41,
+              "attrValue": 93.5258
+            },
+            {
+              "attrType": 42,
+              "attrValue": 102.433
+            },
+            {
+              "attrType": 2,
+              "attrValue": 324.0
+            },
+            {
+              "attrType": 3,
+              "attrValue": 0.0
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "skillPatchTable": {
+    "chr_0005_chen_normal_skill": {
+      "SkillPatchDataBundle": [
+        {
+          "level": 1,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.69
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.86
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.03
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.19
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.36
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.53
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1.5
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.7
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1.5
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.87
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 1.5
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 3.04
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 2
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 3.25
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 2
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 3.5
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 2
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 3.8
+            },
+            {
+              "key": "poise",
+              "value": 10
+            },
+            {
+              "key": "airborne_initial",
+              "value": 2.5
+            },
+            {
+              "key": "airborne_coefficient",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    "chr_0005_chen_combo_skill": {
+      "SkillPatchDataBundle": [
+        {
+          "level": 1,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.2
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.32
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.44
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.56
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.68
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.8
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 1.92
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.04
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.16
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.31
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.49
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "blackboard": [
+            {
+              "key": "atk_scale",
+              "value": 2.7
+            },
+            {
+              "key": "usp",
+              "value": 10
+            }
+          ]
+        }
+      ]
+    },
+    "chr_0005_chen_ultimate_skill": {
+      "SkillPatchDataBundle": [
+        {
+          "level": 1,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.36
+            },
+            {
+              "key": "atk_scale2",
+              "value": 4.55
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.4
+            },
+            {
+              "key": "atk_scale2",
+              "value": 5
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.43
+            },
+            {
+              "key": "atk_scale2",
+              "value": 5.45
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.47
+            },
+            {
+              "key": "atk_scale2",
+              "value": 5.91
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.5
+            },
+            {
+              "key": "atk_scale2",
+              "value": 6.36
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.54
+            },
+            {
+              "key": "atk_scale2",
+              "value": 6.82
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.58
+            },
+            {
+              "key": "atk_scale2",
+              "value": 7.27
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.61
+            },
+            {
+              "key": "atk_scale2",
+              "value": 7.73
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.65
+            },
+            {
+              "key": "atk_scale2",
+              "value": 8.18
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.69
+            },
+            {
+              "key": "atk_scale2",
+              "value": 8.75
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.75
+            },
+            {
+              "key": "atk_scale2",
+              "value": 9.43
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "blackboard": [
+            {
+              "key": "atk_scale1",
+              "value": 0.81
+            },
+            {
+              "key": "atk_scale2",
+              "value": 10.23
+            },
+            {
+              "key": "poise_start",
+              "value": 15
+            },
+            {
+              "key": "poise_final",
+              "value": 20
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

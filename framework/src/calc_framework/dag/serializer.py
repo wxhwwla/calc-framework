@@ -49,6 +49,9 @@ def _variable_to_dict(var: DAGVariable) -> dict[str, Any]:
     if var.max is not None:
         d["max"] = var.max
 
+    if var.ui_control:
+        d["ui_control"] = var.ui_control
+
     return d
 
 

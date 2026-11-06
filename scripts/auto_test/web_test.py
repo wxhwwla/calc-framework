@@ -219,6 +219,7 @@ class WebTestRunner:
 
         # 启动 dev server
         if not self.start_dev_server():
+            self.report.mark_infra_failed("Vite dev server 启动失败，未执行 Cypress 测试")
             self.report.end_time = time.time()
             return self.report
 
@@ -252,12 +253,15 @@ def main() -> None:
     # 输出摘要
     print("\n" + "=" * 60)
     print(f"测试完成: {report.passed_scenarios}/{report.total_scenarios} 场景通过")
+    if report.infra_failed:
+        print(f"基础设施失败: {report.infra_error}")
+    if report.total_scenarios == 0:
+        print("警告: 未执行任何测试场景")
     print(f"报告已保存: {report_path}")
     print("=" * 60)
 
-    # 返回退出码
-    if report.failed_scenarios > 0:
-        sys.exit(1)
+    # 返回退出码：启动失败、0 场景、失败场景都会返回非零
+    sys.exit(report.exit_code)
 
 
 if __name__ == "__main__":

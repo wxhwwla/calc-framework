@@ -34,6 +34,8 @@ class ControlSpec:
 
     description: str = ""
 
+    suffix: str = ""
+
 
 def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
     ui_override = variable.get("ui_control", {})
@@ -51,9 +53,11 @@ def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
 
     widget = ui_override.get("widget")
 
-    step = ui_override.get("step")
+    step = ui_override.get("step", variable.get("step"))
 
     options = ui_override.get("options")
+
+    suffix = str(ui_override.get("suffix", ""))
 
     default = variable.get("default", 0)
 
@@ -92,6 +96,7 @@ def infer_control(path: str, variable: dict[str, Any]) -> ControlSpec:
         step=step,
         options=options if options else [],
         description=description,
+        suffix=suffix,
     )
 
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from calc_framework.ui.launcher.runtime import (
+    _restore_launcher_after_game_closed,
     argv_for_adapter,
     argv_for_calcpack,
     argv_for_tool,
@@ -27,12 +28,21 @@ class TestLauncherRuntime:
         ids = {e.adapter_id for e in entries}
         assert "endfield" in ids
         assert "arknights" in ids
+        assert "wjdlglr" in ids
 
     def test_argv_for_full_app(self) -> None:
         entries = {e.adapter_id: e for e in list_adapter_entries()}
         root = repo_root()
         argv = argv_for_adapter(entries["endfield"], root)
         assert argv[-1].replace("\\", "/").endswith("games/endfield/main.py")
+
+    def test_wjdlglr_registered_as_full_app(self) -> None:
+        entries = {e.adapter_id: e for e in list_adapter_entries()}
+        entry = entries["wjdlglr"]
+
+        assert entry.has_full_app
+        argv = argv_for_adapter(entry, repo_root())
+        assert argv[-1].replace("\\", "/").endswith("games/wjdlglr/main.py")
 
     def test_argv_for_generic_adapter(self) -> None:
         entries = {e.adapter_id: e for e in list_adapter_entries()}
@@ -54,3 +64,43 @@ class TestLauncherRuntime:
         pack.write_text("{}", encoding="utf-8")
         argv = argv_for_calcpack(pack)
         assert argv[-1] == str(pack.resolve())
+
+
+class TestRestoreLauncherAfterGameClosed:
+    def test_restores_live_launcher(self) -> None:
+        class _LiveLauncher:
+            _embedded_game_window = object()
+
+            def __init__(self) -> None:
+                self.raised = False
+                self.activated = False
+
+            def raise_(self) -> None:
+                self.raised = True
+
+            def activateWindow(self) -> None:
+                self.activated = True
+
+        launcher = _LiveLauncher()
+
+        _restore_launcher_after_game_closed(launcher)
+
+        assert launcher._embedded_game_window is None
+        assert launcher.raised
+        assert launcher.activated
+
+    def test_ignores_already_deleted_qt_object(self) -> None:
+        class _DeletedLauncher:
+            _embedded_game_window = object()
+
+            def raise_(self) -> None:
+                raise RuntimeError("libshiboken: Internal C++ object (GameLauncherWindow) already deleted.")
+
+            def activateWindow(self) -> None:
+                raise AssertionError("已销毁的窗口不应再被激活")
+
+        launcher = _DeletedLauncher()
+
+        _restore_launcher_after_game_closed(launcher)
+
+        assert launcher._embedded_game_window is None

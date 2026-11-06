@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Typography, Box, Paper, TextField, Button, Chip, IconButton,
   Table, TableBody, TableCell, TableContainer, TableHead,
@@ -46,23 +46,26 @@ export default function MarketplacePage() {
   const [snackMsg, setSnackMsg] = useState("");
   const [snackSeverity, setSnackSeverity] = useState<"success" | "error">("success");
 
-  const loadPacks = async () => {
+  const searchRef = useRef(search);
+  searchRef.current = search;
+
+  const loadPacks = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listPacks({ search, sort, order: "desc", limit: 100 });
+      const data = await listPacks({ search: searchRef.current, sort, order: "desc", limit: 100 });
       setPacks(data.packs);
       setTotal(data.total);
-    } catch (e) {
+    } catch {
       setPacks([]);
       setTotal(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [sort]);
 
   useEffect(() => {
     loadPacks();
-  }, [sort]);
+  }, [loadPacks]);
 
   const handleSearch = () => {
     loadPacks();

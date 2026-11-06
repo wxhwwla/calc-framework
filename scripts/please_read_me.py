@@ -225,7 +225,8 @@ USAGE_INFO = """
 
     【打包构建】
 
-        python scripts/main_build.py --target local-backend  # 本地 exe
+        python scripts/main_build.py --target launcher       # 统一启动器 exe
+        python scripts/main_build.py --target toolkit        # 开发者工具箱 exe
         python scripts/main_build.py --help                  # 查看所有目标
 
     【测试】

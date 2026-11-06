@@ -11,6 +11,7 @@ from api.adapter_lib.assets import (
     get_adapter_dag,
     get_adapter_layout,
     get_pack_export_bundle,
+    load_adapter_meta,
 )
 from api.internal.errors import raise_http_from_exc
 from api.internal.json_utils import ADAPTER_ROOT
@@ -127,9 +128,16 @@ async def get_adapter_pack_bundle(adapter_id: str):
 
 @router.get("/{name}/schema", response_model=AdapterSchemaResponse)
 async def get_schema(name: str):
-    name = _validate_adapter_id(name)
+    """按适配器目录 id 获取 attr_schema。
+
+    ``AdapterManager`` 以 ``meta.json`` 的显示名称为 key，而 Web 列表接口
+    返回目录 id；这里先读 meta 再按显示名加载。
+    """
+    adapter_id = _validate_adapter_id(name)
+    meta = load_adapter_meta(adapter_id)
+    display_name = str(meta.get("name") or adapter_id)
     try:
-        pkg = _manager.load(name)
+        pkg = _manager.load(display_name)
     except KeyError as e:
         raise_http_from_exc(e, status_code=404, public_message="适配器不存在")
 

@@ -26,9 +26,14 @@ from .node_types import (
     _collect_node_refs,
 )
 
-_VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
+VALID_VAR_TYPES = frozenset({"float", "int", "bool", "str"})
 
-_VALID_VAR_SOURCES = frozenset({"character", "weapon", "equipment", "enemy", "user_input", "computed"})
+VALID_VAR_SOURCES = frozenset({"character", "weapon", "equipment", "enemy", "user_input", "computed"})
+
+# 向后兼容的私有别名
+_VALID_VAR_TYPES = VALID_VAR_TYPES
+
+_VALID_VAR_SOURCES = VALID_VAR_SOURCES
 
 
 @dataclass
@@ -46,6 +51,8 @@ class DAGVariable:
     min: float | None = None
 
     max: float | None = None
+
+    ui_control: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -107,6 +114,7 @@ def _parse_variable(raw: dict[str, Any], var_path: str, *, allow_no_source: bool
     if not isinstance(source, str) or source not in _VALID_VAR_SOURCES:
         raise DAGCompileError(f"变量 {var_path} 的 source 无效: {source!r}")
 
+    ui_control_raw = raw.get("ui_control")
     return DAGVariable(
         type=typ,
         source=source,
@@ -114,6 +122,7 @@ def _parse_variable(raw: dict[str, Any], var_path: str, *, allow_no_source: bool
         default=raw.get("default"),
         min=raw.get("min"),
         max=raw.get("max"),
+        ui_control=ui_control_raw if isinstance(ui_control_raw, dict) else {},
     )
 
 
