@@ -777,7 +777,7 @@ const en = {
     aiDialog: {
       title: "AI Formula Parsing",
       apiConfig: "API Config",
-      apiKey: "API Key",
+      apiKey: "API Key", // pragma: allowlist secret（UI 文案，非密钥）
       apiBase: "API Base URL",
       model: "Model",
       modelHint: "Supports GPT, Claude, Ollama, DeepSeek, and other OpenAI-compatible APIs",
@@ -797,10 +797,10 @@ const en = {
       showRaw: "Show Raw",
       hideRaw: "Hide Raw",
       applyResult: "Apply Result",
-      enterApiKey: "Please enter your API Key",
-      apiKeyInvalid: "API Key appears invalid; should start with sk- (e.g. sk-xxxx)",
+      enterApiKey: "Please enter your API Key", // pragma: allowlist secret（UI 文案，非密钥）
+      apiKeyInvalid: "API Key appears invalid; should start with sk- (e.g. sk-xxxx)", // pragma: allowlist secret（UI 文案，非密钥）
       shouldStartWithSk: "Should start with sk-",
-      apiKeyHelp: "Key for OpenAI-compatible API",
+      apiKeyHelp: "Key for OpenAI-compatible API", // pragma: allowlist secret（UI 文案，非密钥）
       enterFormulaDesc: "Please enter a formula description",
     },
   },
@@ -1080,7 +1080,7 @@ const en = {
     featureDag: "Visual DAG Editor",
     featureDagDesc: "Drag-and-drop formula editor — build damage formulas for any game without coding",
     featureAi: "AI Smart Loadout",
-    featureAiDesc: "Describe your needs in natural language, AI understands and recommends optimal loadouts",
+    featureAiDesc: "Describe your needs in natural language; AI suggests build directions (experimental, not an optimal search)",
     featureDesigner: "Data Designer",
     featureDesignerDesc: "Browse, edit, and validate character/weapon/equipment data with formula inverse fitting",
     featureMarket: "Pack Marketplace",
@@ -1099,9 +1099,10 @@ const en = {
     queryPlaceholder: "e.g. What's the best crit build for this character?",
     apiSettings: "API Settings (optional)",
     privacyNotice: "Your messages and API key are forwarded through this site's backend to the third-party AI service you configure. The key is kept only in this page's memory and cleared on refresh.",
-    apiKeyHint: "Enable multi-turn chat + AI explanation. Supports DeepSeek and other OpenAI-compatible APIs",
-    searchSpace: "Search space",
-    greeting: "Hi! I'm your loadout assistant. Try asking:\n• \"Recommend the highest damage build\"\n• \"Prioritize crit rate\"\n• \"Which weapon is best?\"",
+    apiKeyHint: "Enable multi-turn chat + AI explanation. Supports DeepSeek and other OpenAI-compatible APIs", // pragma: allowlist secret（UI 文案，非密钥）
+    candidateCounts: "{{weapons}} candidate weapons / {{equipments}} candidate equipment pieces",
+    baselineNotice: "Experimental: this is only a fixed-parameter baseline estimate, not an optimal search. Use the Advanced page's full search for real TopN.",
+    greeting: "Hi! I'm your loadout assistant (experimental). Try asking:\n• \"What build direction suits this character?\"\n• \"Prioritize crit rate\"\n• \"Which weapon is best?\"\nNote: this only provides a baseline estimate, not an optimal search.",
     error: "Something went wrong, please try again",
     noResults: "No results found",
     explainResult: "AI Explain",

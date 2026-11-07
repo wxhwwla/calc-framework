@@ -51,7 +51,7 @@ docker compose stop web          # 停止但保留容器与卷
 docker compose down              # 删除容器，保留卷
 ```
 
-管理接口需要 `CALC_ADMIN_TOKEN`（未设置时管理写接口返回 503）。启用 SaaS API Key 时还需要 `CALC_API_KEY_PEPPER`（**≥32 字符**，缺失或过短会导致 Key 哈希请求报错）：
+管理接口需要 `CALC_ADMIN_TOKEN`（未设置时管理写接口返回 503，启动仅记录警告）。SaaS API Key 功能需要 `CALC_API_KEY_PEPPER`（**≥32 字符**）：未设置时启动仅记录警告、SaaS Key 功能不可用（匿名计算不受影响），带 `X-API-Key` 的请求按匿名额度限速；一旦显式设置但短于 32 字符，**启动自检直接失败**（`RuntimeError`）：
 
 ```bash
 # .env（与 docker-compose.yml 同目录，勿提交）

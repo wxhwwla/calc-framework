@@ -50,7 +50,7 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
     if (open && chat.length === 0 && characterName) {
       setChat([{
         role: "ai",
-        content: t("ai.greeting", "你好！我是配装助手。你可以问我：\n• 「推荐最高伤害配装」\n• 「暴击率优先怎么配」\n• 「这把武器适合谁」"),
+        content: t("ai.greeting", "你好！我是配装助手（实验性）。你可以问我：\n• 「这个角色适合什么配装方向」\n• 「暴击率优先怎么配」\n• 「这把武器适合谁」\n注意：这里只做基线估算，不是最优搜索。"),
       }]);
     }
   }, [open, characterName, t, chat.length]);
@@ -116,10 +116,19 @@ export default function AiRecommendDialog({ open, onClose, characterName, weapon
       return;
     }
     const data = await r.json();
-    const results = data.top_results || [];
-    const summary = results.length > 0
-      ? `${data.ai_intent || ""}\n\n搜索空间: ${data.total_combinations.toLocaleString()} 种组合\n${data.ai_hint || ""}`
-      : t("ai.noResults", "暂无搜索结果");
+    // 后端只在有基线时返回单条记录；不再返回伪 TopN（审查项 R-02）
+    const results = data.baseline_result ? [data.baseline_result] : [];
+    const counts = t("ai.candidateCounts", {
+      weapons: data.candidate_weapons ?? 0,
+      equipments: data.candidate_equipments ?? 0,
+      defaultValue: "候选武器 {{weapons}} 把 / 装备 {{equipments}} 件",
+    });
+    const summary = [
+      data.ai_intent || "",
+      counts,
+      t("ai.baselineNotice", "实验性功能：仅提供固定参数基线估算，不是最优搜索。完整 TopN 请使用高级页的全量搜索。"),
+      data.ai_hint || "",
+    ].filter(Boolean).join("\n\n");
     setChat((prev) => [...prev, { role: "ai", content: summary, results }]);
   };
 

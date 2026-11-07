@@ -16,7 +16,11 @@
 
 | 命令 | 用途 | 说明 |
 |------|------|------|
-| `python tools/quality/check_layout.py` | 仓库布局门禁（目录宽度、文件行数） | 见 `check_layout.py` |
+| `python tools/quality/check_layout.py` | 全仓布局门禁（目录宽度、文件行数、历史基线） | 新超限失败；基线见 `layout_baseline.json` |
+| `python tools/quality/supply_chain/check_licenses.py` | NOTICES 对直接依赖的覆盖检查 | 输出缺口；`--json-out` 供 CI artifact |
+| `python tools/quality/check_benchmarks.py --input framework/benchmark.json` | DAG 基准预算门禁 | 超 `budget_ms × tolerance` 失败 |
+| `python tools/quality/supply_chain/generate_sbom.py` | 生成 CycloneDX 1.5 SBOM | 覆盖 Python / npm / Cargo |
+| `python tools/quality/supply_chain/scan_git_history.py` | 只读扫描历史大文件与构建产物 | 不重写历史；见 `docs/仓库历史清理评估.md` |
 | `python -m tools.quality.search_benchmark` | 搜索性能基准（固定 973,728 组合） | Rust 开/关耗时、内存、TopN、取消/续跑；见 [P3-01 结果](../docs/P3-01-搜索性能基准结果.md) |
 | `python tools/quality/run_scancode.py` | 权威许可证/版权扫描（逐个目录，16 进程） | 输出 `scan_report.json` |
 | `python tools/quality/check_code_origin.py` | 轻量 AI 代码来源/版权检测 | 1 秒出结果，50 MB 内存 |

@@ -29,6 +29,8 @@
 
 *或* [下载桌面版](https://github.com/wxhwwla/calc-framework/releases)
 
+> ⚠️ **当前 Releases 仍是旧预发布版**：最新资产为 `v0.7.0-beta`（2026-06-04，仅 `games.zip` / `tools.zip`），不包含当前源码的新功能。当前源码构建的安装器名为 `GameCalcPlatform_Setup_v<版本>.exe`。在新标签发布前，建议使用 Web 版或从源码构建。
+
 > 📖 [玩家手册](docs/player-guide.md)
 
 </td>

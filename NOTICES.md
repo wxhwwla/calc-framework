@@ -20,9 +20,17 @@
 | pillow | HPND (Historical) | 图像处理（可选依赖 `[ocr]` 传递依赖） |
 | pyyaml | MIT | 插件 YAML 配置（可选依赖 `[plugins]`） |
 | PyInstaller | GPL-2.0（含例外） | 仅打包时使用，不随分发物提供；https://pyinstaller.org/ |
-| pytest / pytest-cov | MIT | 仅开发/测试使用 |
+| pytest / pytest-cov / pytest-benchmark | MIT / MIT / BSD-2-Clause | 仅开发/测试使用；benchmark 用于框架性能门禁 |
+| ruff | MIT | Python lint / format（开发与 CI） |
+| setuptools / wheel | MIT | Python 构建后端（pyproject `build-system`） |
+| jinja2 | BSD-3-Clause | 自动化测试报告模板（`scripts/auto_test/`） |
+| mss | MIT | 自动化测试截图（`scripts/auto_test/`） |
+| psutil | BSD-3-Clause | 自动化测试进程管理（`scripts/auto_test/`） |
+| pywinauto / pygetwindow | BSD-3-Clause | 桌面应用自动化测试（`scripts/auto_test/`） |
+| torch | BSD-3-Clause | OCR 可选依赖的深度学习运行时 |
 | PyO3 | Apache-2.0 OR MIT | Rust 加速扩展（`extensions/rust_search/`）的 Python 绑定 |
 | maturin | MIT OR Apache-2.0 | 构建 Rust 扩展（CI/wheel） |
+| wasm-bindgen | Apache-2.0 OR MIT | WebAssembly 曲线模块绑定（`web/wasm-curve/`） |
 | Rust toolchain / std | MIT OR Apache-2.0 | `extensions/rust_search/` |
 
 ### Web 后端
@@ -45,9 +53,9 @@
 | React / React DOM | MIT | Web 前端框架 |
 | MUI（`@mui/material`、`@mui/icons-material`） | MIT | 组件库与图标 |
 | Emotion（`@emotion/react`、`@emotion/styled`） | MIT | MUI 样式引擎 |
-| React Router | MIT | 前端路由 |
+| React Router / react-router-dom | MIT | 前端路由 |
 | Zustand | MIT | 状态管理 |
-| i18next / react-i18next | MIT | 国际化 |
+| i18next / react-i18next / i18next-browser-languagedetector | MIT | 国际化与浏览器语言检测 |
 | @xyflow/react（React Flow） | MIT | DAG 公式图编辑器 |
 | ECharts / echarts-for-react | Apache-2.0 | 图表渲染 |
 | sql.js | MIT | 浏览器端 SQLite（历史/搜索） |
@@ -56,6 +64,8 @@
 | Vitest | MIT | 前端单元测试 |
 | Cypress | MIT | Web E2E 测试 |
 | ESLint 及其插件 | MIT | 前端 lint |
+| @typescript-eslint/eslint-plugin / @typescript-eslint/parser / @vitejs/plugin-react / esbuild / eslint-plugin-jsx-a11y / eslint-plugin-react / eslint-plugin-react-hooks / vite-plugin-pwa | MIT | 前端构建与 lint 工具链 |
+| @types/react / @types/react-dom | MIT | TypeScript 类型声明 |
 
 ## 游戏与 Wiki 内容
 

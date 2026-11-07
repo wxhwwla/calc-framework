@@ -108,7 +108,7 @@ python tools/bwiki_scout/sync_weapons.py --new --apply      # 写入 JSON + seed
 
 默认只处理 **已在** `characters.json` / `weapons.json` 中的名称（与 Wiki 对比后更新）。加 `--new` 会从 `manifest.json` 并入本地缺失、且 `output/raw` 缓存可反推的条目（武器须含 `词条1rank1` 等成长块）。
 
-**装备** → `games/endfield/character_weapon_equipment/equipment_data/equipments.json`：
+**装备** → `games/endfield/data/equipments.json`：
 
 Wiki 模板字段：`装备种类`（**护甲 / 护手 / 配件**）、`所属套组`、`装备套组效果`、`主词条` / `属性词条N`。
 

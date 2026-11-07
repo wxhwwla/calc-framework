@@ -62,8 +62,8 @@ jobs:
       - name: Lint check (ruff)
         run: python -m ruff check games/endfield/ games/arknights/ games/wjdlglr/ framework/src/ web/backend/ scripts/ extensions/ tools/calc_mcp/ tools/generator/ tools/wiki_scout/
 
-      - name: Check layout constraints (games/endfield)
-        # 目录宽度 ≤20；文件硬顶 500 行（--max-lines 仅产生 WARN，不阻断）
+      - name: Check layout constraints (full repo)
+        # 目录宽度 ≤20；文件硬顶 500 行；历史超限见 layout_baseline.json
         run: python tools/quality/check_layout.py --max-lines 400
 
       - name: Check Python encoding declaration

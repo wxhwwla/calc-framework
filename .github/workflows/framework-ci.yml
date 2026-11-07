@@ -110,10 +110,15 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: xvfb-run -a python -m pytest tests/benchmarks/ --benchmark-only --benchmark-json=benchmark.json --benchmark-min-rounds=3
 
+      - name: Check benchmark budgets
+        run: python ../tools/quality/check_benchmarks.py --input benchmark.json --json-out benchmark-check.json
+
       - name: Store benchmark results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: benchmark-results
-          path: framework/benchmark.json
+          path: |
+            framework/benchmark.json
+            framework/benchmark-check.json
           if-no-files-found: ignore

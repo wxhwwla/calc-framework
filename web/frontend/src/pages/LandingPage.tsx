@@ -41,7 +41,7 @@ export default function LandingPage() {
     {
       icon: <SmartToyIcon fontSize="large" color="primary" />,
       title: t("landing.featureAi", "AI 智能配装"),
-      desc: t("landing.featureAiDesc", "自然语言描述需求，AI 理解意图并推荐最优配装方案"),
+      desc: t("landing.featureAiDesc", "自然语言描述需求，AI 理解意图并给出配装方向建议（实验性，非最优搜索）"),
       path: "/compute",
     },
     {

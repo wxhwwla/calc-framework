@@ -120,6 +120,8 @@ Point your MCP client (Claude Code / Cursor / VS Code) at that command — see [
 
 Download the installer from [Releases](https://github.com/wxhwwla/calc-framework/releases).
 
+> ⚠️ **Current Releases are an older pre-release.** The latest published asset is still `v0.7.0-beta` (2026-06-04, `games.zip` / `tools.zip` only); it does **not** include the current source features. The current installer built from source is named `GameCalcPlatform_Setup_v<version>.exe`. Until a new tagged Release is published, use the Web demo or build from source.
+
 ### Option 3: Run from Source (Developers)
 
 ```powershell

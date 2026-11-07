@@ -99,10 +99,11 @@ PROJECT_STRUCTURE = """
     │   └── loader.py              # 角色和武器数据的统一加载与缓存
     ├── utils/                     # 工具函数模块
     │   └── path_utils.py          # 路径处理工具
-    └── character_weapon_equipment/# 数据文件目录（许可见仓库根 DATA_LICENSE）
+    └── data/                      # 数据文件目录（许可见仓库根 DATA_LICENSE）
         ├── DATA_README.md         # 数据许可入口说明
-        ├── character_data/        # 角色数据（JSON格式）
-        └── weapon_data/           # 武器数据（JSON格式）
+        ├── characters.json        # 角色数据（JSON 格式）
+        ├── weapons.json           # 武器数据（JSON 格式）
+        └── equipments.json        # 装备数据（JSON 格式）
 
 仓库根目录（与 [包] 并列）：
     ├── README.md / CONTEXT.md     # 门面与术语

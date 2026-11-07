@@ -10,7 +10,7 @@
 
 用法:
 
-    python -m character_weapon_equipment.character_data.add_character  # 查看说明
+    python -m tools.endfield_scripts.add_character  # 查看说明
 
     python scripts/seed_characters.py  # 批量录入角色配置
 
@@ -18,18 +18,12 @@
 
 from __future__ import annotations
 
-
 import copy
-
 import json
-
 from pathlib import Path
-
 from typing import Any
 
-
 from games.endfield.calc.core.curve_baker import bake_character_curves
-
 from games.endfield.data_loading.loader import reload_characters
 
 

@@ -194,6 +194,13 @@ framework/packages/_diag*.py
 # 覆盖率报告
 coverage.xml
 
+# 质量门禁生成物（CI artifact / 本地调试）
+benchmark.json
+benchmark-check.json
+license-coverage.json
+sbom.cdx.json
+history-report.json
+
 # 构建临时目录
 build_local-backend_*/
 spec_local-backend_*/
@@ -212,6 +219,9 @@ games/endfield/search_output/
 tools/bwiki_scout/output/
 debug.log
 
-# Rust 构建产物（Cargo target 目录 + 锁文件）
+# Rust 构建产物（Cargo target 目录）
 target/
+# 应用型 crate 的锁文件必须提交以保证可复现构建（R-15）
 Cargo.lock
+!extensions/rust_search/Cargo.lock
+!web/wasm-curve/Cargo.lock

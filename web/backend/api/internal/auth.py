@@ -11,11 +11,11 @@ import threading
 import time
 from collections import defaultdict
 
+from api.internal.startup_config import ADMIN_TOKEN_ENV
 from fastapi import Header, HTTPException, Request
 
 logger = logging.getLogger(__name__)
 
-ADMIN_TOKEN_ENV = "CALC_ADMIN_TOKEN"
 ADMIN_TOKEN_HEADER = "X-Admin-Token"
 
 # ── 暴力破解防护 ──────────────────────────────────────

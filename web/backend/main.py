@@ -25,6 +25,7 @@ from api.hub import router as hub_router
 from api.internal.csrf import CSRFSkipMiddleware
 from api.internal.security_headers import SecurityMiddleware
 from api.internal.spa_static import SPAStaticFiles
+from api.internal.startup_config import run_startup_config_checks
 from api.ocr import router as ocr_router
 from api.packaging.contribute import router as contribute_router
 from api.packaging.pack import router as pack_router
@@ -40,6 +41,9 @@ from web.backend.bridge import get_logger, setup_logging
 setup_logging(level="INFO", console=True)
 
 logger = get_logger(__name__)
+
+# 启动自检：pepper 显式配置但过短时直接失败；缺失仅警告（SaaS 可选）
+run_startup_config_checks()
 
 
 app = FastAPI(title="Calc Framework Web API", version="1.0.0", docs_url="/api/docs", redoc_url="/api/redoc")

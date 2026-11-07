@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "DAG 引擎性能预算（毫秒）；CI 使用 mean，允许 tolerance 倍抖动。目标值按 2026-11-06 act/Docker 实测设定（card_rpg 0.189ms、endfield 0.824ms、cache_miss 0.890ms、cache_hit 0.053ms、1000 增量 57.2ms），容差用于吸收共享 runner 与容器抖动；预算变更须在 PR 说明理由与测量环境。",
+  "benchmarks": {
+    "test_bench_card_rpg_single": {
+      "budget_ms": 0.2,
+      "tolerance": 3.0
+    },
+    "test_bench_endfield_single": {
+      "budget_ms": 0.9,
+      "tolerance": 3.0
+    },
+    "test_bench_1000_incremental": {
+      "budget_ms": 80.0,
+      "tolerance": 2.0
+    },
+    "test_bench_cache_miss": {
+      "budget_ms": 1.0,
+      "tolerance": 3.0
+    },
+    "test_bench_cache_hit": {
+      "budget_ms": 0.06,
+      "tolerance": 4.0
+    }
+  }
+}

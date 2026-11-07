@@ -33,9 +33,11 @@
 如果你更喜欢用桌面软件，或者想使用 OCR 截图导入功能：
 
 1. 打开 [Releases 页面](https://github.com/wxhwwla/calc-framework/releases)
-2. 下载最新的 `终末地伤害计算器_Setup.exe`
+2. 下载当前源码构建的安装器 `GameCalcPlatform_Setup_v<版本>.exe`（例如 `GameCalcPlatform_Setup_v0.7.0-beta.exe`）
 3. 双击安装（Windows 可能会弹出 SmartScreen 警告，点击「更多信息」→「仍要运行」）
 4. 安装完成后桌面会出现快捷方式，双击打开
+
+> ⚠️ **注意**：GitHub Releases 目前最新仍是 `v0.7.0-beta` 预发布（2026-06-04，仅 `games.zip` / `tools.zip`），**不包含当前源码的新功能**。在新标签发布前，请优先使用 Web 版或按 README 从源码构建；安装器文件名以 `GameCalcPlatform_Setup_v<版本>.exe` 为准，旧文档中的 `终末地伤害计算器_Setup.exe` 已不再使用。
 
 > 💡 **提示**：桌面版支持 OCR 功能——截一张游戏里的角色面板图，粘贴进去就能自动识别属性。
 

@@ -17,6 +17,11 @@ on:
       - "requirements*.txt"
       - "games/*/pyproject.toml"
       - "framework/pyproject.toml"
+      - "extensions/**/pyproject.toml"
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+      - "NOTICES.md"
+      - "tools/quality/**"
       - ".github/workflows/security-audit.yml"
       - ".secrets.baseline"
   pull_request:
@@ -27,6 +32,11 @@ on:
       - "requirements*.txt"
       - "games/*/pyproject.toml"
       - "framework/pyproject.toml"
+      - "extensions/**/pyproject.toml"
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+      - "NOTICES.md"
+      - "tools/quality/**"
       - ".secrets.baseline"
   schedule:
     - cron: "0 8 * * 1"  # 每周一 8:00 UTC
@@ -80,6 +90,33 @@ jobs:
         run: |
           python -m pip install -r requirements-mcp.txt
           pip-audit
+
+  supply-chain:
+    name: License / SBOM / History
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - name: Check NOTICES coverage
+        run: python tools/quality/supply_chain/check_licenses.py --json-out license-coverage.json
+      - name: Generate CycloneDX SBOM
+        run: python tools/quality/supply_chain/generate_sbom.py --output sbom.cdx.json
+      - name: Scan Git history (read-only)
+        run: python tools/quality/supply_chain/scan_git_history.py --json-out history-report.json
+      - name: Upload supply-chain reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: supply-chain-reports
+          path: |
+            license-coverage.json
+            sbom.cdx.json
+            history-report.json
+          if-no-files-found: ignore
 
   detect-secrets:
     name: detect-secrets

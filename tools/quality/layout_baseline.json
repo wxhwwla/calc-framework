@@ -1,0 +1,184 @@
+{
+  "generated": "2026-11-06",
+  "review_by": "2027-02-04",
+  "files": {
+    "extensions/rust_search/python/rust_bridge.py": {
+      "lines": 898,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/dag/debugger_cli.py": {
+      "lines": 441,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/dag/engine.py": {
+      "lines": 469,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/dag/graph_types.py": {
+      "lines": 426,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/dev_toolkit/pages_graph_editor.py": {
+      "lines": 434,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/editor/gui.py": {
+      "lines": 453,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/inverse/base.py": {
+      "lines": 709,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/ui/launcher/window.py": {
+      "lines": 422,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/ui/theme.py": {
+      "lines": 445,
+      "review_by": "2027-02-04"
+    },
+    "framework/src/calc_framework/ui/viewer_render.py": {
+      "lines": 499,
+      "review_by": "2027-02-04"
+    },
+    "games/arknights/gui/ArknightsApp.py": {
+      "lines": 419,
+      "review_by": "2027-02-04"
+    },
+    "games/arknights/gui/arknights_app_ui.py": {
+      "lines": 465,
+      "review_by": "2027-02-04"
+    },
+    "games/arknights/tests/test_dag_compute_extended.py": {
+      "lines": 515,
+      "review_by": "2027-02-04"
+    },
+    "scripts/auto_test/packaged_test.py": {
+      "lines": 516,
+      "review_by": "2027-02-04"
+    },
+    "scripts/auto_test/utils/qt_inspector.py": {
+      "lines": 526,
+      "review_by": "2027-02-04"
+    },
+    "scripts/main_build.py": {
+      "lines": 434,
+      "review_by": "2027-02-04"
+    },
+    "scripts/tools/github_upload_module.py": {
+      "lines": 1623,
+      "review_by": "2027-02-04"
+    },
+    "tools/bwiki_scout/scout.py": {
+      "lines": 406,
+      "review_by": "2027-02-04"
+    },
+    "tools/bwiki_scout/weapon_wiki.py": {
+      "lines": 753,
+      "review_by": "2027-02-04"
+    },
+    "tools/bwiki_scout/wiki_sync.py": {
+      "lines": 621,
+      "review_by": "2027-02-04"
+    },
+    "tools/calc_mcp/spec.py": {
+      "lines": 483,
+      "review_by": "2027-02-04"
+    },
+    "tools/calc_mcp/verify.py": {
+      "lines": 435,
+      "review_by": "2027-02-04"
+    },
+    "tools/data_pipeline/diff.py": {
+      "lines": 698,
+      "review_by": "2027-02-04"
+    },
+    "tools/designer/data_editor/panel.py": {
+      "lines": 767,
+      "review_by": "2027-02-04"
+    },
+    "tools/designer/layout_editor/canvas.py": {
+      "lines": 1122,
+      "review_by": "2027-02-04"
+    },
+    "tools/endfield_designer/data_editor_tab.py": {
+      "lines": 588,
+      "review_by": "2027-02-04"
+    },
+    "tools/endfield_designer/inverse_tab.py": {
+      "lines": 506,
+      "review_by": "2027-02-04"
+    },
+    "tools/endfield_designer/seed_tab.py": {
+      "lines": 718,
+      "review_by": "2027-02-04"
+    },
+    "tools/endfield_scripts/inverse_cli.py": {
+      "lines": 419,
+      "review_by": "2027-02-04"
+    },
+    "tools/generate_endfield_zone_package.py": {
+      "lines": 834,
+      "review_by": "2027-02-04"
+    },
+    "tools/ocr/detector.py": {
+      "lines": 531,
+      "review_by": "2027-02-04"
+    },
+    "tools/ocr/label.py": {
+      "lines": 935,
+      "review_by": "2027-02-04"
+    },
+    "tools/quality/check_code_origin.py": {
+      "lines": 458,
+      "review_by": "2027-02-04"
+    },
+    "tools/wiki_scout/providers/wjdlglr.py": {
+      "lines": 423,
+      "review_by": "2027-02-04"
+    },
+    "web/backend/api/ai.py": {
+      "lines": 508,
+      "review_by": "2027-02-04"
+    },
+    "web/backend/api/compute.py": {
+      "lines": 422,
+      "review_by": "2027-02-04"
+    },
+    "web/backend/api/data.py": {
+      "lines": 636,
+      "review_by": "2027-02-04"
+    },
+    "web/backend/api/search.py": {
+      "lines": 667,
+      "review_by": "2027-02-04"
+    },
+    "web/backend/tests/test_api_integration.py": {
+      "lines": 1525,
+      "review_by": "2027-02-04"
+    }
+  },
+  "directories": {
+    "framework/src/calc_framework/ui": {
+      "count": 26,
+      "review_by": "2027-02-04"
+    },
+    "games/arknights/tests": {
+      "count": 23,
+      "review_by": "2027-02-04"
+    },
+    "tools/bwiki_scout": {
+      "count": 32,
+      "review_by": "2027-02-04"
+    },
+    "tools/tests": {
+      "count": 27,
+      "review_by": "2027-02-04"
+    },
+    "web/backend/tests": {
+      "count": 26,
+      "review_by": "2027-02-04"
+    }
+  }
+}

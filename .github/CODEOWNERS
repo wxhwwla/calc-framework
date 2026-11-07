@@ -1,0 +1,21 @@
+# 代码所有者登记（GitHub CODEOWNERS）
+# 单维护者阶段：所有目录由项目维护者复核；新增协作者时按目录追加。
+# 责任人说明见 MAINTAINERS.md，开放债务见 docs/开放问题与治理.md。
+
+* @wxhwwla
+
+/.github/ @wxhwwla
+/docs/ @wxhwwla
+/framework/ @wxhwwla
+/games/ @wxhwwla
+/web/ @wxhwwla
+/tools/ @wxhwwla
+/scripts/ @wxhwwla
+/extensions/ @wxhwwla
+/release_bundle/ @wxhwwla
+/installer/ @wxhwwla
+/LICENSE @wxhwwla
+/DATA_LICENSE @wxhwwla
+/NOTICES.md @wxhwwla
+/SECURITY.md @wxhwwla
+/MAINTAINERS.md @wxhwwla

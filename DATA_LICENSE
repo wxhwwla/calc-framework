@@ -26,9 +26,11 @@ Copyright (C) 2024-2026 wxhwwla（数据整理与编排）
 
   包括但不限于：
 
-  - endfield_damage_calculator/character_weapon_equipment/**/characters.json
-  - endfield_damage_calculator/character_weapon_equipment/**/weapons.json
-  - 以及今后在同路径下维护的同类结构化游戏数据文件
+  - games/endfield/data/**/*.json（含 characters.json / weapons.json / equipments.json）
+  - games/arknights/data/**/*.json
+  - games/wjdlglr/data/**/*.json
+  - framework/adapters/*/data/**/*.json
+  - 以及今后在上述路径下维护的同类结构化游戏数据文件
   - tools/bwiki_scout/output/ 下的侦察缓存与解析草案（若存在）
   - 基于上述文件或本项目数据采集流程（人工录入模板、BWIKI 侦察脚本、
     字段映射、对比合并规则等）所产生的衍生数据集

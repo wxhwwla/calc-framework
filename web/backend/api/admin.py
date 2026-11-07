@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import os
 import secrets
 import threading
@@ -17,7 +18,8 @@ from pathlib import Path
 from typing import Any
 
 from api.internal.auth import verify_admin_token
-from fastapi import APIRouter, Depends, Request
+from api.internal.startup_config import API_KEY_PEPPER_ENV, MIN_PEPPER_LENGTH
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -27,6 +29,8 @@ router = APIRouter(
     tags=["admin"],
     dependencies=[Depends(verify_admin_token)],
 )
+
+logger = logging.getLogger(__name__)
 
 # ── 持久化路径 ────────────────────────────────────────
 
@@ -104,10 +108,9 @@ class CreateKeyResponse(BaseModel):
 
 _TIER_RATE_LIMITS = {"free": 30, "pro": 300, "enterprise": 3000}
 
-# 生产环境**必须**设置 CALC_API_KEY_PEPPER（≥32 字符随机串）
-_API_KEY_PEPPER_ENV = "CALC_API_KEY_PEPPER"
-_MIN_PEPPER_LENGTH = 32
-# 不再提供硬编码回退 — 缺少环境变量时启动即失败
+# 生产环境启用 SaaS 时**必须**设置 CALC_API_KEY_PEPPER（≥32 字符随机串）；
+# 未设置时 SaaS 功能不可用，但匿名计算不受影响（启动自检见 startup_config）。
+# 不再提供硬编码回退。
 
 
 def _api_key_pepper() -> bytes:
@@ -116,18 +119,18 @@ def _api_key_pepper() -> bytes:
     Raises:
         RuntimeError: ``CALC_API_KEY_PEPPER`` 未设置或短于 32 字符。
     """
-    raw = os.environ.get(_API_KEY_PEPPER_ENV, "").strip()
+    raw = os.environ.get(API_KEY_PEPPER_ENV, "").strip()
     if not raw:
         raise RuntimeError(
-            f"安全配置缺失：环境变量 {_API_KEY_PEPPER_ENV} 未设置。\n"
-            f"请设置一个 ≥{_MIN_PEPPER_LENGTH} 字符的随机字符串作为 API Key 哈希盐值。\n"
+            f"安全配置缺失：环境变量 {API_KEY_PEPPER_ENV} 未设置。\n"
+            f"请设置一个 ≥{MIN_PEPPER_LENGTH} 字符的随机字符串作为 API Key 哈希盐值。\n"
             f"示例（PowerShell）：\n"
-            f"  $env:{_API_KEY_PEPPER_ENV} = '$(openssl rand -base64 32)'\n"
-            f"  或使用任意 ≥{_MIN_PEPPER_LENGTH} 字符的随机字符串。"
+            f"  $env:{API_KEY_PEPPER_ENV} = '$(openssl rand -base64 32)'\n"
+            f"  或使用任意 ≥{MIN_PEPPER_LENGTH} 字符的随机字符串。"
         )
-    if len(raw) < _MIN_PEPPER_LENGTH:
+    if len(raw) < MIN_PEPPER_LENGTH:
         raise RuntimeError(
-            f"安全配置错误：环境变量 {_API_KEY_PEPPER_ENV} 至少需要 {_MIN_PEPPER_LENGTH} 字符（当前 {len(raw)} 字符）。"
+            f"安全配置错误：环境变量 {API_KEY_PEPPER_ENV} 至少需要 {MIN_PEPPER_LENGTH} 字符（当前 {len(raw)} 字符）。"
         )
     return raw.encode("utf-8")
 
@@ -148,8 +151,12 @@ def _hash_key(api_key: str) -> str:
 @router.post("/keys", response_model=CreateKeyResponse)
 async def create_api_key(req: CreateKeyRequest):
     """创建新的 API Key（仅创建时返回完整 key，请妥善保存）。"""
-    api_key = "cf_" + secrets.token_urlsafe(32)
-    key_hash = _hash_key(api_key)
+    api_key = "cf_" + secrets.token_urlsafe(32)  # pragma: allowlist secret（运行时生成，非硬编码密钥）
+    try:
+        key_hash = _hash_key(api_key)
+    except RuntimeError as exc:
+        # pepper 未配置/过短是可读的部署配置问题，不应表现为 500
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     keys = await _load_json_async(_KEYS_FILE)
     keys[key_hash] = {
@@ -226,6 +233,20 @@ async def get_usage_stats():
 
 # ── 速率限制中间件 ────────────────────────────────────
 
+_pepper_warning_emitted = False
+
+
+def _warn_pepper_unavailable_once() -> None:
+    """收到 X-API-Key 但 pepper 不可用时只告警一次，避免逐请求刷日志。"""
+    global _pepper_warning_emitted
+    if _pepper_warning_emitted:
+        return
+    _pepper_warning_emitted = True
+    logger.warning(
+        "收到 X-API-Key 但 %s 未配置或过短，已按匿名额度限速（匿名计算不受影响）",
+        API_KEY_PEPPER_ENV,
+    )
+
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """简单的内存速率限制中间件。
@@ -272,15 +293,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         rate_limit = 20  # 默认
 
         if api_key:
-            key_hash = _hash_key(api_key)
-            keys = await _load_json_async(_KEYS_FILE)
-            key_data = keys.get(key_hash)
-            if key_data and key_data.get("enabled", True):
-                client_id = f"key:{key_data['key_prefix']}"
-                rate_limit = key_data.get("rate_limit", 30)
-                # 更新 last_used
-                key_data["last_used"] = datetime.now(timezone.utc).isoformat()
-                await _save_json_async(_KEYS_FILE, keys)
+            try:
+                key_hash = _hash_key(api_key)
+            except RuntimeError:
+                # pepper 未配置/过短：降级为匿名额度，避免每个请求 500
+                _warn_pepper_unavailable_once()
+                key_hash = ""
+            if key_hash:
+                keys = await _load_json_async(_KEYS_FILE)
+                key_data = keys.get(key_hash)
+                if key_data and key_data.get("enabled", True):
+                    client_id = f"key:{key_data['key_prefix']}"
+                    rate_limit = key_data.get("rate_limit", 30)
+                    # 更新 last_used
+                    key_data["last_used"] = datetime.now(timezone.utc).isoformat()
+                    await _save_json_async(_KEYS_FILE, keys)
 
         # 滑动窗口检查
         now = time.time()

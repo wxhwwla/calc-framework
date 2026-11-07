@@ -4,8 +4,10 @@
 
 如果发现安全漏洞，**请勿公开提交 Issue**。请通过以下方式私下报告：
 
-1. **GitHub Security Advisory**：在仓库页面点击 `Security → Report a vulnerability`
-2. **邮件**：发送至项目维护者（见 git 历史提交者信息）
+1. **GitHub Security Advisory**：在仓库页面点击 `Security → Report a vulnerability`（首选）
+2. **邮件**：wxhwwla@gmail.com（请勿在公开 Issue 中披露漏洞细节）
+
+责任人、响应流程与角色变更见 [`MAINTAINERS.md`](MAINTAINERS.md)。
 
 ## 响应时间
 

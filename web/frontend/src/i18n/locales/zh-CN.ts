@@ -787,7 +787,7 @@ const zhCN = {
     aiDialog: {
       title: "AI 公式解析",
       apiConfig: "API 配置",
-      apiKey: "API Key",
+      apiKey: "API Key", // pragma: allowlist secret（UI 文案，非密钥）
       apiBase: "API 地址",
       model: "模型",
       modelHint: "支持 GPT、Claude、Ollama、DeepSeek 等 OpenAI 兼容接口",
@@ -807,10 +807,10 @@ const zhCN = {
       showRaw: "展开原始返回",
       hideRaw: "收起原始返回",
       applyResult: "应用此结果",
-      enterApiKey: "请输入 API Key",
-      apiKeyInvalid: "API Key 似乎不正确，应以 sk- 开头（如 sk-xxxx）",
+      enterApiKey: "请输入 API Key", // pragma: allowlist secret（UI 文案，非密钥）
+      apiKeyInvalid: "API Key 似乎不正确，应以 sk- 开头（如 sk-xxxx）", // pragma: allowlist secret（UI 文案，非密钥）
       shouldStartWithSk: "应以 sk- 开头",
-      apiKeyHelp: "OpenAI 兼容 API 的密钥",
+      apiKeyHelp: "OpenAI 兼容 API 的密钥", // pragma: allowlist secret（UI 文案，非密钥）
       enterFormulaDesc: "请输入公式描述",
     },
   },
@@ -1093,7 +1093,7 @@ const zhCN = {
     featureDag: "可视化 DAG 编辑器",
     featureDagDesc: "拖拽式公式编辑器，无需写代码即可构建任意游戏的伤害公式",
     featureAi: "AI 智能配装",
-    featureAiDesc: "自然语言描述需求，AI 理解意图并推荐最优配装方案",
+    featureAiDesc: "自然语言描述需求，AI 理解意图并给出配装方向建议（实验性，非最优搜索）",
     featureDesigner: "数据设计器",
     featureDesignerDesc: "角色/武器/装备数据的浏览、编辑、验证，支持公式反推",
     featureMarket: "配置包市场",
@@ -1112,9 +1112,10 @@ const zhCN = {
     queryPlaceholder: "例：佩丽卡暴击流怎么配装？",
     apiSettings: "API 设置（可选）",
     privacyNotice: "对话内容与 API Key 会经本站后端转发给你配置的第三方 AI 服务；Key 仅保存在当前页面内存，刷新即清空。",
-    apiKeyHint: "填入后可多轮对话+AI解释。支持 DeepSeek 等兼容 API",
-    searchSpace: "搜索空间",
-    greeting: "你好！我是配装助手。你可以问我：\n• 「推荐最高伤害配装」\n• 「暴击率优先怎么配」\n• 「这把武器适合谁」",
+    apiKeyHint: "填入后可多轮对话+AI解释。支持 DeepSeek 等兼容 API", // pragma: allowlist secret（UI 文案，非密钥）
+    candidateCounts: "候选武器 {{weapons}} 把 / 装备 {{equipments}} 件",
+    baselineNotice: "实验性功能：仅提供固定参数基线估算，不是最优搜索。完整 TopN 请使用高级页的全量搜索。",
+    greeting: "你好！我是配装助手（实验性）。你可以问我：\n• 「这个角色适合什么配装方向」\n• 「暴击率优先怎么配」\n• 「这把武器适合谁」\n注意：这里只做基线估算，不是最优搜索。",
     error: "出错了，请稍后重试",
     noResults: "暂无搜索结果",
     explainResult: "AI 解释结果",

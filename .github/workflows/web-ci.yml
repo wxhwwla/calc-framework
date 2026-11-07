@@ -90,9 +90,11 @@ jobs:
           du -sh dist/assets/*.js | sort -rh | head -10
           echo ""
           TOTAL=$(du -sb dist/ | cut -f1)
-          echo "Total: $((TOTAL / 1024)) KB"
-          if [ $TOTAL -gt 3072000 ]; then
-            echo "::warning::Total bundle > 3 MB ($((TOTAL / 1024)) KB)"
+          BUDGET=4000000
+          echo "Total: $((TOTAL / 1024)) KB (budget: $((BUDGET / 1024)) KB)"
+          if [ "$TOTAL" -gt "$BUDGET" ]; then
+            echo "::error::Total bundle $((TOTAL / 1024)) KB exceeds hard budget $((BUDGET / 1024)) KB"
+            exit 1
           fi
 
       - name: Upload build artifacts

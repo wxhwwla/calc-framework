@@ -32,7 +32,8 @@ _RECOMMEND_SYSTEM_PROMPT = """你是一个游戏伤害计算器的智能配装�
   "explanation_template": "用于在结果展示时填充的模板说明（{top_damage} 等占位符可用）"
 }
 
-搜索系统会自动找到伤害最高的配装。你只需要理解用户意图并给出人性化的解释。"""
+本系统只提供固定示例参数的基线估算，**不执行穷举搜索**，也不保证返回最优配装。
+你只负责理解用户意图并给出人性化解释，不得声称结果是「最优」或「最高伤害」。"""
 
 
 class AiRecommendRequest(BaseModel):
@@ -45,14 +46,20 @@ class AiRecommendRequest(BaseModel):
 
 
 class AiRecommendResponse(BaseModel):
-    """AI 配装推荐响应。"""
+    """AI 配装建议响应。
+
+    本接口不执行真实搜索，只返回候选规模与固定参数基线，避免把估算
+    结果伪装成「最优 TopN」（审查项 R-02）。
+    """
 
     character_name: str
     query: str
     ai_intent: str = ""
     ai_hint: str = ""
-    total_combinations: int = 0
-    top_results: list[dict] = Field(default_factory=list)
+    candidate_weapons: int = 0
+    candidate_equipments: int = 0
+    baseline_result: dict | None = None
+    notice: str = ""
 
 
 def _list_chars() -> list[dict]:
@@ -78,14 +85,13 @@ async def ai_recommend(req: AiRecommendRequest):
     if req.weapon_name:
         weapon_data = next((w for w in weapons if w.get("名称") == req.weapon_name), None)
 
-    # 统计可搜索空间
+    # 候选规模（不是组合数，也不代表真实搜索空间）
     weapon_count = len(weapons)
-    equipment_count = 0  # 从装备文件获取
+    equipment_count = 0
     equip_path = ENDFIELD_DATA_ROOT / "equipments.json"
     if equip_path.exists():
         equip_data = load_json(equip_path) or []
         equipment_count = len(equip_data)
-    total_combinations = weapon_count * max(equipment_count, 1)
 
     ai_intent = ""
     ai_hint = ""
@@ -133,10 +139,10 @@ async def ai_recommend(req: AiRecommendRequest):
             ai_hint = ""
 
     if not ai_intent and req.query:
-        ai_intent = f"根据「{req.query}」搜索最优配装"
+        ai_intent = f"根据「{req.query}」分析配装方向（基线估算，非最优搜索）"
 
-    # 构建推荐结果（从搜索 API 获取或提供估算）
-    top_results: list[dict] = []
+    # 固定参数基线：仅作数量级参考，不代表当前角色配装的真实结果
+    baseline_result: dict | None = None
     try:
         from calc_framework.config.manager import AdapterManager
 
@@ -184,13 +190,11 @@ async def ai_recommend(req: AiRecommendRequest):
             }
             result = pkg.dag_service.evaluate(ctx)
             baseline_damage = result.outputs.get("加权总伤", sum(result.outputs.values()))
-            top_results.append(
-                {
-                    "label": f"{req.character_name} 基线",
-                    "damage": round(baseline_damage, 2),
-                    "note": "当前配置的基线伤害",
-                }
-            )
+            baseline_result = {
+                "label": f"{req.character_name} 固定参数基线",
+                "damage": round(baseline_damage, 2),
+                "note": "使用固定示例参数计算，非当前配装、非最优结果",
+            }
     except Exception as exc:
         logger.warning("DAG 基线求值失败: %s", exc)
 
@@ -199,8 +203,10 @@ async def ai_recommend(req: AiRecommendRequest):
         query=req.query,
         ai_intent=ai_intent,
         ai_hint=ai_hint,
-        total_combinations=total_combinations,
-        top_results=top_results,
+        candidate_weapons=weapon_count,
+        candidate_equipments=equipment_count,
+        baseline_result=baseline_result,
+        notice="实验性功能：仅提供候选规模与固定参数基线估算，不是最优搜索；建议使用高级页的全量搜索获取真实 TopN。",
     )
 
 
@@ -442,7 +448,7 @@ _CONVERSATION_PROMPT = """你是一个游戏伤害计算器的配装顾问。你
 - 解释为什么某种配装更好
 - 建议下一步搜索参数
 
-当前可用功能：搜索最优配装、对比方案、查看伤害明细。
+当前可用功能：配装方向建议（实验性，仅固定参数基线估算，不做穷举最优搜索）、对比方案、查看伤害明细。
 
 输出 JSON:
 {
