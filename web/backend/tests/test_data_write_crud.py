@@ -192,3 +192,34 @@ class TestDataWriteCrudWithToken:
         assert resp.status_code == 200
         ids = [p["id"] for p in resp.json()]
         assert "endfield" in ids
+
+
+class TestDagVerifyUsesRealAdapterNames:
+    def test_endfield_verify_succeeds(self, client: TestClient) -> None:
+        resp = client.post(
+            "/api/data/dag-verify",
+            json={"profile_id": "endfield", "entity_key": "characters", "entity_name": "陈千语", "level": 90},
+        )
+
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["outputs"]
+
+    def test_arknights_verify_succeeds(self, client: TestClient) -> None:
+        resp = client.post(
+            "/api/data/dag-verify",
+            json={"profile_id": "arknights", "entity_key": "operators", "entity_name": "风笛", "level": 90},
+        )
+
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["outputs"]
+
+    def test_arknights_verify_uses_operator_level(self, client: TestClient) -> None:
+        def verify(level: int) -> float:
+            resp = client.post(
+                "/api/data/dag-verify",
+                json={"profile_id": "arknights", "entity_key": "operators", "entity_name": "风笛", "level": level},
+            )
+            assert resp.status_code == 200, resp.text
+            return resp.json()["outputs"]["最终攻击力"]
+
+        assert verify(1) != verify(90)

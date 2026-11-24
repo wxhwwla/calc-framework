@@ -54,35 +54,26 @@ CSV 宽表模式（skills 列以 ``技能名称1``、``技能名称2`` 等为前
 
 from __future__ import annotations
 
-
 import re
-
-from typing import Any, Dict, List, Tuple
-
+from typing import Any
 
 from ..readers.csv_reader import parse_int_list
-
-from ..schema import EntitySchema, RawRecord, SkillSchema, SegmentSchema
-
-
-def to_standard(records: List[RawRecord]) -> List[EntitySchema]:
-    """将 RawRecord 列表转换为标准 EntitySchema 列表。
+from ..schema import EntitySchema, RawRecord, SegmentSchema, SkillSchema
 
 
-
-    Args:
-
-        records: 读取阶段的原始记录（每行一个字典）
-
-
-
-    Returns:
-
-        标准化的实体列表
-
-    """
-
-    return [_transform_one(r) for r in records]
+def to_standard(records: list[RawRecord], *, stacked_skills: bool = False) -> list[EntitySchema]:
+    """将 RawRecord 列表转换为标准 EntitySchema 列表。"""
+    entities = [_transform_one(r) for r in records]
+    if not stacked_skills:
+        return entities
+    merged: dict[str, EntitySchema] = {}
+    for entity in entities:
+        name = entity["名称"]
+        if name not in merged:
+            merged[name] = entity
+            continue
+        merged[name].setdefault("技能", []).extend(entity.get("技能", []))
+    return list(merged.values())
 
 
 def _transform_one(record: RawRecord) -> EntitySchema:
@@ -116,7 +107,7 @@ def _is_skill_column(key: str) -> bool:
     return bool(re.match(r"^技能(名称|标签|百分比|类型)", key)) or bool(re.match(r"^段\d+(倍率|类型)", key))
 
 
-_SKILL_COL_PATTERNS: Dict[str, str] = {
+_SKILL_COL_PATTERNS: dict[str, str] = {
     r"技能名称(\d+)": "名称",
     r"技能标签(\d+)": "标签",
     r"技能百分比(\d+)": "百分比",
@@ -128,9 +119,9 @@ _SKILL_COL_PATTERNS: Dict[str, str] = {
 
 def _collect_skills(record: RawRecord, entity: EntitySchema) -> None:
     """_collect_skills 实现。"""
-    skill_indices: Dict[int, SkillSchema] = {}
+    skill_indices: dict[int, SkillSchema] = {}
 
-    segment_indices: Dict[Tuple[int, int], SegmentSchema] = {}
+    segment_indices: dict[tuple[int, int], SegmentSchema] = {}
 
     for key, value in record.items():
         if value is None or (isinstance(value, str) and value.strip() == ""):
@@ -207,10 +198,10 @@ def _typed(value: Any) -> Any:
 
     s = str(value).strip()
 
-    if s.lower() in ("true", "yes", "1"):
+    if s.lower() in ("true", "yes"):
         return True
 
-    if s.lower() in ("false", "no", "0"):
+    if s.lower() in ("false", "no"):
         return False
 
     try:
@@ -236,7 +227,7 @@ def _parse_bool(value: Any) -> bool:
     return s in ("true", "yes", "1")
 
 
-def _parse_int_list(value: Any) -> List[int]:
+def _parse_int_list(value: Any) -> list[int]:
     """_parse_int_list 实现。"""
     if isinstance(value, list):
         return [int(x) for x in value if x is not None]

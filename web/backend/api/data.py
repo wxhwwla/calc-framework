@@ -4,6 +4,7 @@
 
 from typing import Any
 
+from api.arknights import build_dag_verify_context
 from api.internal.auth import verify_admin_token
 from api.internal.errors import raise_http_from_exc
 from api.internal.json_utils import ENDFIELD_DATA_ROOT, aload_json
@@ -448,10 +449,7 @@ class DagVerifyResponse(BaseModel):
     node_count: int
 
 
-_PROFILE_ADAPTER_MAP: dict[str, str] = {
-    "endfield": "终末地伤害计算",
-    "arknights": "明日方舟",
-}
+_PROFILE_ADAPTER_MAP: dict[str, str] = {"endfield": "终末地伤害计算（Calc Framework）", "arknights": "明日方舟伤害计算"}
 
 
 def _extract_level_curve_value(entity: dict, attr_name: str, level: int) -> float:
@@ -543,7 +541,7 @@ async def dag_verify(req: DagVerifyRequest):
     except Exception as e:
         raise_http_from_exc(e, status_code=500, public_message="加载适配器失败")
 
-    context = _build_dag_verify_context(entity, req.entity_key, req.level)
+    context = build_dag_verify_context(req, entity, _build_dag_verify_context)
 
     try:
         result = pkg.dag_service.evaluate(context)

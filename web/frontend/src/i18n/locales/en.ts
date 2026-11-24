@@ -77,6 +77,7 @@ const en = {
     selectCharWeaponFirst: "Please select a character and weapon first",
     equipmentDetailsNotReady: "Fixed equipment details are still loading. Please wait before calculating",
     equipmentDetailsLoadFailed: "Failed to load fixed equipment details. Please reselect or check the network",
+    entityRestoreFailed: "Failed to restore character or weapon data. Please check the names and network",
   },
 
   attr: {

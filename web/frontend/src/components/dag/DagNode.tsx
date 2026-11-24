@@ -45,7 +45,11 @@ function DagNode({ data, selected }: NodeProps<Node<DagNodeData>>) {
   const color = getNodeColor(data.nodeType);
   const isBinaryOrUnary = data.nodeType === "binary" || data.nodeType === "unary";
   const isCondition = data.nodeType === "condition";
-  const isExpr = data.nodeType === "expr";
+  const dynamicInputs = data.nodeType === "expr"
+    ? Object.keys(data.inputs ?? {})
+    : data.nodeType === "call"
+      ? Object.keys(data.bindings ?? {})
+      : [];
 
   return (
     <Box
@@ -96,9 +100,15 @@ function DagNode({ data, selected }: NodeProps<Node<DagNodeData>>) {
         </>
       )}
 
-      {isExpr && (
-        <Handle type="target" position={Position.Top} id="input" style={{ background: "#9c27b0", width: 8, height: 8 }} />
-      )}
+      {dynamicInputs.map((input, index) => (
+        <Handle
+          key={input}
+          type="target"
+          id={input}
+          position={index % 2 === 0 ? Position.Left : Position.Right}
+          style={{ background: "#9c27b0", width: 8, height: 8, top: `${30 + index * 20}%` }}
+        />
+      ))}
 
       {data.nodeType === "var" && (
         <Handle type="target" position={Position.Top} id="input" style={{ background: "#2196f3", width: 8, height: 8 }} />

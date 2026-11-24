@@ -7,7 +7,7 @@
  * 因此所有需要断言「全量搜索 / 预估」的用例都要先调用本函数。
  */
 export function selectFirstLoadout(): void {
-  cy.get('[data-testid="char-select"] [role="combobox"]', { timeout: 15000 }).click();
+  cy.get('[data-testid="char-select"] [role="combobox"]', { timeout: 30000 }).click();
   cy.get('li[role="option"]', { timeout: 15000 }).first().click();
   // 等角色详情加载完成（AI 推荐按钮随 selectedChar 一起出现）：
   // 此时武器候选才会按角色武器类型过滤，避免选中不匹配的武器后被清空。

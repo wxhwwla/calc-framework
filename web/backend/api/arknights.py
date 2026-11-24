@@ -4,12 +4,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Any
+
 from api.internal.json_utils import ADAPTER_ROOT
 from calc_framework.config.manager import AdapterManager
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from games.arknights.calc.dag_adapter import compute_snapshot_with_dag
+from games.arknights.calc.dag_adapter.loader import ArknightsContextLoader
 from games.arknights.operator_catalog import (
     build_operator_index,
     load_operators_map,
@@ -21,6 +25,24 @@ ADAPTER_MANAGER = AdapterManager(ADAPTER_ROOT)
 
 _OPERATORS_MAP: dict | None = None
 _OPERATOR_INDEX_CACHE: list[dict] | None = None
+
+
+def build_dag_verify_context(
+    req: Any,
+    entity: dict[str, Any],
+    fallback: Callable[[dict[str, Any], str, int], dict[str, Any]],
+) -> dict[str, Any]:
+    """按数据 profile 构建 DAG 验证上下文。"""
+    if req.profile_id != "arknights":
+        return fallback(entity, req.entity_key, req.level)
+    return ArknightsContextLoader().build_context(
+        operator=entity,
+        skill_level=req.level,
+        operator_level=req.level,
+        skill_multiplier=1.0,
+        enemy_def=100.0,
+        enemy_res=0.0,
+    )
 
 
 def _operators_map() -> dict:

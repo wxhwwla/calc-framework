@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, type DragEvent } from "react";
+import React, { useCallback, useEffect, useRef, type DragEvent } from "react";
 import {
   ReactFlow,
   Background,
@@ -41,11 +41,17 @@ const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) 
   const storeNodes = useEditorStore((s) => s.nodes);
   const storeEdges = useEditorStore((s) => s.edges);
   const setNodes = useEditorStore((s) => s.setNodes);
+  const setEdges = useEditorStore((s) => s.setEdges);
+  const deleteNodesAction = useEditorStore((s) => s.deleteNodes);
   const onConnectAction = useEditorStore((s) => s.onConnect);
   const addNode = useEditorStore((s) => s.addNode);
 
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState(storeNodes);
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState(storeEdges);
+
+  useEffect(() => setFlowNodes(storeNodes), [storeNodes, setFlowNodes]);
+  useEffect(() => setFlowEdges(storeEdges), [storeEdges, setFlowEdges]);
+
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useRef<ReactFlowInstance<Node<DagNodeData>> | null>(null);
 
@@ -104,17 +110,25 @@ const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) 
       const deletedIds = new Set(deletedNodes.map((n) => n.id));
       setFlowNodes((nds) => nds.filter((n) => !deletedIds.has(n.id)));
       setFlowEdges((eds) => eds.filter((e) => !deletedIds.has(e.source) && !deletedIds.has(e.target)));
-      setNodes(useEditorStore.getState().nodes.filter((n) => !deletedIds.has(n.id)));
+      deleteNodesAction(Array.from(deletedIds));
     },
-    [setNodes, setFlowNodes, setFlowEdges],
+    [deleteNodesAction, setFlowNodes, setFlowEdges],
+  );
+
+  const onNodeDragStop = useCallback(
+    (_event: React.MouseEvent, draggedNode: Node<DagNodeData>) => {
+      setNodes(useEditorStore.getState().nodes.map((node) => (node.id === draggedNode.id ? draggedNode : node)));
+    },
+    [setNodes],
   );
 
   const onEdgesDeleteHandler: OnEdgesDelete = useCallback(
     (deletedEdges) => {
       const deletedIds = new Set(deletedEdges.map((e) => e.id));
       setFlowEdges((eds) => eds.filter((e) => !deletedIds.has(e.id)));
+      setEdges(useEditorStore.getState().edges.filter((e) => !deletedIds.has(e.id)));
     },
-    [setFlowEdges],
+    [setEdges, setFlowEdges],
   );
 
   return (
@@ -134,6 +148,7 @@ const DagEditorCanvas: React.FC<DagEditorCanvasProps> = ({ onNodeDoubleClick }) 
           onDrop={onDrop}
           onNodesDelete={onNodesDeleteHandler}
           onEdgesDelete={onEdgesDeleteHandler}
+          onNodeDragStop={onNodeDragStop}
           onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
           defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}

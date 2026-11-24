@@ -61,7 +61,7 @@ export default function EditorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          adapter: "终末地伤害计算",
+          adapter: "终末地伤害计算（Calc Framework）",
           context: {
             character: { "基础攻击": 600, "力量": 100, "敏捷": 80, "智识": 60, "意志": 70, "暴击率": 0.05, "暴击伤害": 0.5 },
             weapon: { "基础攻击": 400, "攻击力+": 0, "附加攻击力+": 0 },

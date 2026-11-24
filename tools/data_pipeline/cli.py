@@ -42,16 +42,10 @@
 
 from __future__ import annotations
 
-
 import json
-
-import sys
-
 import os
-
-
-from typing import Any, Dict
-
+import sys
+from typing import Any
 
 # 确保项目根在 sys.path 中（tools/ 是隐式 namespace package）
 
@@ -86,16 +80,12 @@ def main() -> None:
     do_validate = args.get("validate", False)
     migrate_chars = args.get("migrate_characters", False)
     migrate_weaps = args.get("migrate_weapons", False)
-    args.get("stacked_skills", False)
+    stacked_skills = args.get("stacked_skills", False)
 
     # --- 读取 ---
 
     try:
-        if _is_csv(path):
-            records = read_csv(path)
-
-        else:
-            records = read_json(path)
+        records = read_csv(path) if _is_csv(path) else read_json(path)
 
     except Exception as e:
         print(f"读取失败: {e}", file=sys.stderr)
@@ -111,8 +101,11 @@ def main() -> None:
         elif migrate_weaps:
             entities = from_weapons([dict(r) for r in records])
 
+        elif do_validate:
+            entities = [dict(r) for r in records]
+
         else:
-            entities = to_standard(records)
+            entities = to_standard(records, stacked_skills=stacked_skills)
 
     except Exception as e:
         print(f"转换失败: {e}", file=sys.stderr)
@@ -135,10 +128,10 @@ def main() -> None:
         print(json.dumps(entities, ensure_ascii=False, indent=2))
 
 
-def _parse_args() -> Dict[str, Any]:
+def _parse_args() -> dict[str, Any]:
     """_parse_args 实现。"""
     args = sys.argv[1:]
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
 
     if not args:
         print(__doc__, file=sys.stderr)

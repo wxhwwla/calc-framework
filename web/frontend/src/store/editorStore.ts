@@ -53,6 +53,7 @@ export function dagToFlow(dag: Record<string, unknown>): { nodes: Node<DagNodeDa
     const data: DagNodeData = {
       label: (n.label as string) || id,
       nodeType: nodeType as DagNodeTypeName,
+      description: n.description as string | undefined,
     };
     if (nodeType === "const") data.value = n.value as number;
     if (nodeType === "var") data.path = n.path as string;
@@ -130,6 +131,7 @@ export function flowToDag(nodes: Node<DagNodeData>[], edges: Edge[]): Record<str
     const d = n.data;
     const raw: Record<string, unknown> = { type: d.nodeType };
     if (d.label && d.label !== n.id) raw.label = d.label;
+    if (d.description) raw.description = d.description;
 
     const incoming = edgeMap[n.id] || [];
     switch (d.nodeType) {
@@ -141,7 +143,7 @@ export function flowToDag(nodes: Node<DagNodeData>[], edges: Edge[]): Record<str
         break;
       case "unary": {
         raw.op = d.op || "neg";
-        const inputEdge = incoming.find((e) => !e.targetHandle || e.targetHandle === "input");
+        const inputEdge = incoming.find((e) => !e.targetHandle || e.targetHandle === "input" || e.targetHandle === "lhs");
         raw.input = inputEdge ? inputEdge.source : undefined;
         break;
       }
@@ -179,10 +181,15 @@ export function flowToDag(nodes: Node<DagNodeData>[], edges: Edge[]): Record<str
         raw.max = d.max ?? 100;
         raw.step = d.step ?? 1;
         break;
-      case "call":
+      case "call": {
         raw.subgraph = d.subgraph || "";
-        raw.bindings = d.bindings || {};
+        const bindings: Record<string, string> = {};
+        for (const edge of incoming) {
+          if (edge.targetHandle) bindings[edge.targetHandle] = edge.source;
+        }
+        raw.bindings = bindings;
         break;
+      }
     }
     dagNodes[n.id] = raw;
   }
@@ -195,16 +202,31 @@ function generateId(): string {
   return `node_${_nextId++}`;
 }
 
+function withoutDanglingOutputs(outputs: Record<string, unknown>, nodes: Node<DagNodeData>[]): Record<string, unknown> {
+  const ids = new Set(nodes.map((node) => node.id));
+  return Object.fromEntries(
+    Object.entries(outputs).filter(([, output]) => {
+      const ref = (output as { node?: string }).node;
+      return !ref || ids.has(ref);
+    }),
+  );
+}
+
 interface EditorStoreState {
   nodes: Node<DagNodeData>[];
   edges: Edge[];
   dagJson: string;
   dagName: string;
+  description: string;
   error: string | null;
+  variables: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+  subgraphs: Record<string, unknown>;
   setNodes: (nodes: Node<DagNodeData>[]) => void;
   setEdges: (edges: Edge[]) => void;
   addNode: (nodeType: DagNodeTypeName, position: { x: number; y: number }) => string;
   updateNodeData: (nodeId: string, data: Partial<DagNodeData>) => void;
+  deleteNodes: (nodeIds: string[]) => void;
   deleteSelected: () => void;
   onConnect: (connection: Connection) => void;
   parseAndRender: () => void;
@@ -218,7 +240,11 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   edges: [],
   dagJson: "",
   dagName: "新DAG图",
+  description: "",
   error: null,
+  variables: {},
+  outputs: {},
+  subgraphs: {},
 
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
@@ -247,14 +273,24 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
     }));
   },
 
-  deleteSelected: () => {
-    const { nodes, edges } = get();
-    const selectedIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));
-    const selectedEdgeIds = new Set(edges.filter((e) => e.selected).map((e) => e.id));
-    set({
-      nodes: nodes.filter((n) => !selectedIds.has(n.id)),
-      edges: edges.filter((e) => !selectedEdgeIds.has(e.id) && !selectedIds.has(e.source) && !selectedIds.has(e.target)),
+  deleteNodes: (nodeIds) => {
+    const ids = new Set(nodeIds);
+    set((state) => {
+      const nodes = state.nodes.filter((node) => !ids.has(node.id));
+      return {
+        nodes,
+        edges: state.edges.filter((edge) => !ids.has(edge.source) && !ids.has(edge.target)),
+        outputs: withoutDanglingOutputs(state.outputs, nodes),
+      };
     });
+  },
+
+  deleteSelected: () => {
+    const { nodes, edges, deleteNodes } = get();
+    const selectedIds = nodes.filter((n) => n.selected).map((n) => n.id);
+    const selectedEdgeIds = new Set(edges.filter((e) => e.selected).map((e) => e.id));
+    deleteNodes(selectedIds);
+    set((state) => ({ edges: state.edges.filter((edge) => !selectedEdgeIds.has(edge.id)) }));
   },
 
   onConnect: (connection) => {
@@ -279,20 +315,32 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
       const dag = JSON.parse(dagJson);
       const dagName = (dag.name as string) || "新DAG图";
       const { nodes, edges } = dagToFlow(dag);
-      set({ nodes, edges, dagName, error: null });
+      set({
+        nodes,
+        edges,
+        dagName,
+        description: (dag.description as string) ?? "",
+        variables: (dag.variables as Record<string, unknown>) ?? {},
+        outputs: (dag.outputs as Record<string, unknown>) ?? {},
+        subgraphs: (dag.subgraphs as Record<string, unknown>) ?? {},
+        error: null,
+      });
     } catch (e: unknown) {
       set({ error: String(e), nodes: [], edges: [] });
     }
   },
 
   saveToJson: () => {
-    const { nodes, edges, dagName } = get();
+    const { nodes, edges, dagName, description, variables, outputs, subgraphs } = get();
     const dagNodes = flowToDag(nodes, edges);
     const result: Record<string, unknown> = {
       schema_version: "dag-v1",
       name: dagName,
+      description,
+      variables,
       nodes: dagNodes.nodes,
-      outputs: {},
+      outputs,
+      subgraphs,
     };
     return JSON.stringify(result, null, 2);
   },

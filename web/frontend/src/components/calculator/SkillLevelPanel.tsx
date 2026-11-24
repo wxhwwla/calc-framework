@@ -5,6 +5,7 @@ import NumberField from "../common/NumberField";
 
 interface SkillLevelPanelProps {
   charData: Record<string, unknown> | null;
+  value?: Record<string, number>;
   onChange: (levels: Record<string, number>) => void;
 }
 
@@ -14,7 +15,7 @@ const SKILL_DATA_KEYS = [
   { key: "skill_3_level", i18nKey: "totalDamage.skillTypes.finisher", dataKey: "终结技倍率" },
 ] as const;
 
-export default function SkillLevelPanel({ charData, onChange }: SkillLevelPanelProps) {
+export default function SkillLevelPanel({ charData, value, onChange }: SkillLevelPanelProps) {
   const { t } = useTranslation();
   const [levels, setLevels] = useState<Record<string, number>>({
     skill_1_level: 8,
@@ -32,6 +33,10 @@ export default function SkillLevelPanel({ charData, onChange }: SkillLevelPanelP
     }
     setLevels((prev) => ({ ...prev, ...next }));
   }, [charData]);
+
+  useEffect(() => {
+    if (value) setLevels(value);
+  }, [value]);
 
   const handleLevel = useCallback(
     (key: string, value: number) => {

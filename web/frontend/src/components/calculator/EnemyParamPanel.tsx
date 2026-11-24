@@ -26,6 +26,7 @@ import {
 } from "../../api/search";
 
 interface EnemyParamPanelProps {
+  value?: EnemyParams;
   onParamsChange: (params: EnemyParams) => void;
 }
 
@@ -54,7 +55,7 @@ const ENEMY_TIER_I18N: Record<string, string> = {
   领袖: "enemyTiers.leader",
 };
 
-export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps) {
+export default function EnemyParamPanel({ value, onParamsChange }: EnemyParamPanelProps) {
   const { t } = useTranslation();
   const [enemies, setEnemies] = useState<EnemyInfo[]>([]);
   const [selectedEnemyId, setSelectedEnemyId] = useState("");
@@ -72,6 +73,10 @@ export default function EnemyParamPanel({ onParamsChange }: EnemyParamPanelProps
     paramsRef.current = next;
     setParams(next);
   }, []);
+
+  useEffect(() => {
+    if (value) applyParams(value);
+  }, [value, applyParams]);
 
   const applyEnemy = useCallback(
     (enemyId: string) => {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, lazy, Suspense } from "react";
 import { Box, Paper, Grid2 as Grid, Typography, Tabs, Tab, Button, Collapse, FormControl, InputLabel, Select, MenuItem, IconButton } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -37,6 +37,7 @@ import SegmentManualBuffDialog, {
 } from "../components/calculator/SegmentManualBuffDialog";
 import { fetchEquipmentCatalog } from "../api/search";
 import { fetchEquipment } from "../api/data";
+import { fixedLoadoutFromPayload, historyPresetPayload, loadEntitiesForRestore } from "../api/entityRestore";
 import {
   buildWebLoadoutPayload,
   missingFixedEquipmentDetails,
@@ -173,33 +174,47 @@ export default function ComputePage() {
     (skillLevels.skill_3_level as number) ?? 8,
   ], [skillLevels]);
 
+  const restoreGeneration = useRef(0);
+
   const handleSelectCharacter = useCallback((name: string, data: Record<string, unknown>) => {
+    restoreGeneration.current += 1;
     setSelectedChar(name);
     setCharData(data);
   }, []);
 
   const handleSelectWeapon = useCallback((name: string, data: Record<string, unknown>) => {
+    restoreGeneration.current += 1;
     setSelectedWeapon(name);
     setWeaponData(data);
   }, []);
 
-  const handleImportPreset = useCallback((data: Record<string, unknown>) => {
+  const handleImportPreset = useCallback(async (data: Record<string, unknown>) => {
+    const generation = ++restoreGeneration.current;
+    const charName = String(data.char_name || "");
+    const weaponName = String(data.weapon_name || "");
+    try {
+      const [character, weapon] = await loadEntitiesForRestore(charName, weaponName);
+      if (generation !== restoreGeneration.current) return;
+      setCharData(character);
+      setWeaponData(weapon);
+    } catch {
+      useComputeStore.setState({ error: t("compute.entityRestoreFailed") });
+      return;
+    }
     const schema = String(data.schema || "");
-    setSelectedChar(String(data.char_name || ""));
-    setSelectedWeapon(String(data.weapon_name || ""));
+    setSelectedChar(charName);
+    setSelectedWeapon(weaponName);
     setCharLevel(Number(data.char_level ?? 90));
     setWeaponLevel(Number(data.weapon_level ?? 90));
     setTrustLevel(Number(data.trust_level ?? 0));
 
     if (schema === "endfield_loadout_preset_v2") {
       const levels = data.skill_levels as number[] | undefined;
-      if (levels && levels.length >= 3) {
-        setSkillLevels({
-          skill_1_level: levels[0],
-          skill_2_level: levels[1],
-          skill_3_level: levels[2],
-        });
-      }
+      setSkillLevels({
+        skill_1_level: Number(levels?.[0] ?? 8),
+        skill_2_level: Number(levels?.[1] ?? 8),
+        skill_3_level: Number(levels?.[2] ?? 8),
+      });
       setEnemyParams(mergeEnemyParams((data.enemy_params as Partial<EnemyParams>) ?? {}));
       setMultiSkill({
         useManualCounts: Boolean(data.use_manual_multi_skill_counts),
@@ -215,15 +230,7 @@ export default function ComputePage() {
         spellAbnormalCounts: (data.spell_abnormal_counts as Record<string, number>) ?? {},
       });
       setManualBuffStore((data.manual_buffs as ManualBuffStore) ?? {});
-      const fixed = data.fixed_equipment_names as Record<string, string | null> | undefined;
-      if (fixed) {
-        setFixedLoadout({
-          chest: fixed.chest ?? null,
-          gloves: fixed.gloves ?? null,
-          accessory_a: fixed.accessory_a ?? null,
-          accessory_b: fixed.accessory_b ?? null,
-        });
-      }
+      setFixedLoadout(fixedLoadoutFromPayload(data));
       const normal = (data.weapon_normal_levels as number[]) ?? [];
       const wsv: Record<string, number> = {};
       normal.forEach((lv, i) => {
@@ -234,9 +241,10 @@ export default function ComputePage() {
         wsv[`special_skill_${i + 1}_level`] = s.level;
         wsv[`special_skill_${i + 1}_stack`] = s.stack;
       });
-      if (Object.keys(wsv).length > 0) setWeaponSkillValues(wsv);
+      setWeaponSkillValues(wsv);
       if (data.weapon_scope) setWeaponScope(String(data.weapon_scope));
       if (data.equipment_scope) setEquipmentScope(String(data.equipment_scope));
+      setCalcMode(String(data.calc_mode ?? data.calculation_mode ?? "zone_snapshot"));
       return;
     }
 
@@ -246,20 +254,36 @@ export default function ComputePage() {
         use_manual_multi_skill_counts?: boolean;
         manual_counts?: Record<string, number>;
         damage_component_mode?: string;
+        use_expected_crit?: boolean;
       };
       fixed_loadout?: FixedLoadoutSelection | null;
     };
     setEnemyParams(mergeEnemyParams(web.enemy_params ?? {}));
-    setMultiSkill({
-      useManualCounts: Boolean(web.multi_skill?.use_manual_multi_skill_counts),
-      manualCounts: web.multi_skill?.manual_counts ?? {},
-      damageComponentMode: web.multi_skill?.damage_component_mode ?? "skill_and_abnormal",
-      useExpectedCrit: false,
+    setSkillLevels({
+      skill_1_level: Number(data.skill_1_level ?? 8),
+      skill_2_level: Number(data.skill_2_level ?? 8),
+      skill_3_level: Number(data.skill_3_level ?? 8),
     });
-    if (web.fixed_loadout) {
-      setFixedLoadout(web.fixed_loadout as unknown as FixedLoadoutSelection);
-    }
-  }, []);
+    setMultiSkill({
+      useManualCounts: Boolean(web.multi_skill?.use_manual_multi_skill_counts ?? data.use_manual_multi_skill_counts),
+      manualCounts: web.multi_skill?.manual_counts ?? (data.manual_counts as Record<string, number>) ?? {},
+      damageComponentMode: web.multi_skill?.damage_component_mode ?? String(data.damage_component_mode ?? "skill_and_abnormal"),
+      useExpectedCrit: Boolean(web.multi_skill?.use_expected_crit ?? data.use_expected_crit),
+    });
+    setCritAbnormal({
+      extraCritRate: Number(data.extra_crit_rate ?? 0),
+      extraCritDamage: Number(data.extra_crit_damage ?? 0),
+      includeConditionalEquipmentCrit: Boolean(data.include_conditional_equipment_crit),
+      physicalAbnormalCounts: (data.physical_abnormal_counts as Record<string, number>) ?? {},
+      spellAbnormalCounts: (data.spell_abnormal_counts as Record<string, number>) ?? {},
+    });
+    setManualBuffStore((data.manual_buffs as ManualBuffStore) ?? {});
+    setWeaponSkillValues((data.weapon_skill_values as Record<string, number>) ?? {});
+    setFixedLoadout(fixedLoadoutFromPayload(data));
+    if (data.weapon_scope_label) setWeaponScope(String(data.weapon_scope_label));
+    if (data.equipment_scope_label) setEquipmentScope(String(data.equipment_scope_label));
+    setCalcMode(String(data.calc_mode ?? data.calculation_mode ?? "zone_snapshot"));
+  }, [t]);
 
   const makeLoadoutPayload = useCallback(() => {
     return buildWebLoadoutPayload({
@@ -407,7 +431,7 @@ export default function ComputePage() {
               </IconButton>
             </Box>
             <Collapse in={charAdvancedExpanded}>
-              <SkillLevelPanel charData={charData} onChange={setSkillLevels} />
+              <SkillLevelPanel charData={charData} value={skillLevels} onChange={setSkillLevels} />
             </Collapse>
 
             <Box
@@ -435,7 +459,7 @@ export default function ComputePage() {
               skillLevels={skillLevels}
             />
 
-            <EnemyParamPanel onParamsChange={setEnemyParams} />
+            <EnemyParamPanel value={enemyParams} onParamsChange={setEnemyParams} />
 
             <Paper sx={{ p: 2, mb: 2 }}>
               <CalcModeSelector value={calcMode} onChange={setCalcMode} />
@@ -628,13 +652,14 @@ export default function ComputePage() {
                   </Button>
                 </Box>
               </Paper>
-              <FixedLoadoutPanel onChange={setFixedLoadout} equipmentScope={equipmentScope} />
+              <FixedLoadoutPanel value={fixedLoadout} onChange={setFixedLoadout} equipmentScope={equipmentScope} />
               <MultiSkillPanel
                 charData={charData}
                 skillLevels={skillLevelsTuple}
+                value={multiSkill}
                 onChange={setMultiSkill}
               />
-              <CritAndAbnormalPanel onChange={setCritAbnormal} />
+              <CritAndAbnormalPanel value={critAbnormal} onChange={setCritAbnormal} />
             </Box>
           </Grid>
           <Grid size={{ xs: 12, md: 7 }}>
@@ -667,8 +692,7 @@ export default function ComputePage() {
         onClose={() => setHistoryDialogOpen(false)}
         currentEntry={historyEntry}
         onRestore={(entry) => {
-          setSelectedChar(String(entry.char_name || ""));
-          setSelectedWeapon(String(entry.weapon_name || ""));
+          void handleImportPreset(historyPresetPayload(entry));
           setHistoryDialogOpen(false);
         }}
       />
@@ -718,12 +742,25 @@ export default function ComputePage() {
       <OCRUploadDialog
         open={ocrDialogOpen}
         onClose={() => setOcrDialogOpen(false)}
-        onResult={(data) => {
+        onResult={async (data) => {
           if (data.preset) {
-            handleImportPreset(data.preset);
+            await handleImportPreset(data.preset);
           } else {
-            if (data.char_name) setSelectedChar(data.char_name);
-            if (data.weapon_name) setSelectedWeapon(data.weapon_name);
+            const generation = ++restoreGeneration.current;
+            try {
+              const [character, weapon] = await loadEntitiesForRestore(data.char_name ?? "", data.weapon_name ?? "");
+              if (generation !== restoreGeneration.current) return;
+              if (data.char_name) {
+                setCharData(character);
+                setSelectedChar(data.char_name);
+              }
+              if (data.weapon_name) {
+                setWeaponData(weapon);
+                setSelectedWeapon(data.weapon_name);
+              }
+            } catch {
+              useComputeStore.setState({ error: t("compute.entityRestoreFailed") });
+            }
           }
           setOcrDialogOpen(false);
         }}

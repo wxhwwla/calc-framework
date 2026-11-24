@@ -56,4 +56,19 @@ describe("计算页 ComputePage - 交互操作", () => {
       }
     });
   });
+
+  it("历史恢复会重新加载角色武器和完整配装", () => {
+    selectFirstLoadout();
+    cy.get('input[aria-label="战技"]').first().clear().type("12");
+    cy.contains("提交").click();
+    cy.get('[data-testid="char-select"] [role="combobox"]').invoke("text").then((firstName) => {
+      cy.contains("高级页").click();
+      cy.contains("历史").click();
+      cy.contains("恢复").first().click();
+      cy.contains("计算页").click();
+      cy.get('[data-testid="char-select"] [role="combobox"]').should("contain.text", firstName);
+      cy.get('input[aria-label="战技"]').first().should("have.value", "12");
+    });
+  });
+
 });

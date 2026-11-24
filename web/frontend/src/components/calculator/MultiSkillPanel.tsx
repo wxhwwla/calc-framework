@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -42,6 +42,7 @@ export interface MultiSkillSettings {
 interface MultiSkillPanelProps {
   charData: Record<string, unknown> | null;
   skillLevels?: [number, number, number];
+  value?: MultiSkillSettings;
   onChange?: (settings: MultiSkillSettings) => void;
 }
 
@@ -103,12 +104,20 @@ function extractDamageType(
 export default function MultiSkillPanel({
   charData,
   skillLevels = [0, 0, 0],
+  value,
   onChange,
 }: MultiSkillPanelProps) {
   const { t } = useTranslation();
   const [useManual, setUseManual] = useState(false);
   const [damageComponentMode, setDamageComponentMode] = useState("skill_and_abnormal");
   const [counts, setCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!value) return;
+    setUseManual(value.useManualCounts);
+    setDamageComponentMode(value.damageComponentMode);
+    setCounts(value.manualCounts);
+  }, [value]);
 
   const segmentSpecs = useMemo(() => {
     if (!charData) return [];
@@ -122,10 +131,10 @@ export default function MultiSkillPanel({
         useManualCounts: overrides?.useManualCounts ?? useManual,
         manualCounts: overrides?.manualCounts ?? counts,
         damageComponentMode: overrides?.damageComponentMode ?? damageComponentMode,
-        useExpectedCrit: false,
+        useExpectedCrit: overrides?.useExpectedCrit ?? value?.useExpectedCrit ?? false,
       });
     },
-    [onChange, useManual, counts, damageComponentMode],
+    [onChange, useManual, counts, damageComponentMode, value],
   );
 
   const handleToggleManual = useCallback(

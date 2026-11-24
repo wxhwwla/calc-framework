@@ -78,6 +78,7 @@ const zhCN = {
     selectCharWeaponFirst: "请先选择角色与武器",
     equipmentDetailsNotReady: "固定装备详情正在加载，请稍后再计算",
     equipmentDetailsLoadFailed: "固定装备详情加载失败，请重新选择或检查网络",
+    entityRestoreFailed: "角色或武器数据恢复失败，请检查名称和网络",
   },
 
   attr: {

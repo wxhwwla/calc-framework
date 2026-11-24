@@ -24,6 +24,7 @@ import {
   flushSearchResumeDb,
   initSearchResumeDb,
   isComboProcessed,
+  loadTopScores,
   markProcessedBatch,
   markRunStatus,
   replaceTopScores,
@@ -124,10 +125,18 @@ export async function runLocalTopNSearch(
   const fixed = resolveFixedLoadoutItems(catalog, params.fixed_equipment_names);
   const loadoutCombos = countLoadoutCombinations(catalog, fixed, true);
   const total = weapons.length * loadoutCombos;
+  const candidateNames = {
+    weapons: weapons.map((weapon) => String(weapon.名称 ?? "")).sort(),
+    chest: (catalog.chest ?? []).map((item) => String(item.名称 ?? "")).sort(),
+    gloves: (catalog.gloves ?? []).map((item) => String(item.名称 ?? "")).sort(),
+    accessories: (catalog.accessories ?? []).map((item) => String(item.名称 ?? "")).sort(),
+  };
   const signature = buildSearchRunSignature(params, {
     weaponCount: weapons.length,
     chestCount: catalog.chest?.length ?? 0,
     loadoutCombos,
+    candidateNames,
+    topN: options.topN,
   });
 
   if (options.resume !== false) {
@@ -136,6 +145,9 @@ export async function runLocalTopNSearch(
   }
 
   const tracker = new TopNTracker(options.topN);
+  if (options.resume !== false) {
+    for (const row of loadTopScores(signature)) tracker.consider(row);
+  }
   let processed = options.resume !== false ? countProcessed(signature) : 0;
   let skippedPreprocessed = 0;
   const processedBuffer: string[] = [];
@@ -152,6 +164,7 @@ export async function runLocalTopNSearch(
   for (const weapon of weapons) {
     if (options.signal?.aborted) {
       if (options.resume !== false) {
+        replaceTopScores(signature, tracker.snapshot());
         markRunStatus(signature, "cancelled");
         await flushSearchResumeDb();
       }
@@ -214,6 +227,7 @@ export async function runLocalTopNSearch(
         if (options.signal?.aborted) {
           if (options.resume !== false) {
             if (processedBuffer.length) markProcessedBatch(signature, processedBuffer);
+            replaceTopScores(signature, tracker.snapshot());
             markRunStatus(signature, "cancelled");
             await flushSearchResumeDb();
           }

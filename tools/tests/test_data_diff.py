@@ -4,15 +4,17 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 
 from tools.data_pipeline.diff import (
     DataDiffResult,
     compare_entities,
-    render_text,
-    render_json,
     render_html,
+    render_json,
+    render_text,
 )
-
 
 # ── 测试辅助 ──
 
@@ -289,17 +291,17 @@ def test_summary_property():
     r1 = DataDiffResult(total_old=2, total_new=2)
     assert r1.summary == "无差异"
 
-    r2 = DataDiffResult(total_old=2, total_new=3, added=[EntityDiff_mock("X")])
+    r2 = DataDiffResult(total_old=2, total_new=3, added=[_entity_diff("X")])
     assert "新增" in r2.summary
 
-    r3 = DataDiffResult(total_old=3, total_new=2, removed=[EntityDiff_mock("X")])
+    r3 = DataDiffResult(total_old=3, total_new=2, removed=[_entity_diff("X")])
     assert "删除" in r3.summary
 
-    r4 = DataDiffResult(total_old=2, total_new=2, modified=[EntityDiff_mock("X")])
+    r4 = DataDiffResult(total_old=2, total_new=2, modified=[_entity_diff("X")])
     assert "修改" in r4.summary
 
 
-def EntityDiff_mock(name: str):
+def _entity_diff(name: str):
     from tools.data_pipeline.diff import EntityDiff
 
     return EntityDiff(name=name, status="modified")
@@ -316,3 +318,45 @@ def test_long_list_summary():
     assert result.has_changes
     fc = result.modified[0].field_changes[0]
     assert "[100 项]" in str(fc.old_value)
+
+
+# ── CLI 转换与校验 ──
+
+
+def _run_cli_json(path, *args):
+    result = subprocess.run(
+        [sys.executable, "-m", "tools.data_pipeline.cli", str(path), *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout, json.loads(result.stdout[result.stdout.index("[\n") :])
+
+
+def test_validate_standard_json_preserves_nested_skills(tmp_path):
+    entity = dict(_A, 技能=[_SKILL_A])
+    path = tmp_path / "standard.json"
+    path.write_text(json.dumps([entity], ensure_ascii=False), encoding="utf-8")
+
+    message, payload = _run_cli_json(path, "--validate")
+
+    assert "校验通过" in message
+    assert payload == [entity]
+
+
+def test_stacked_skills_merge_and_preserve_numeric_types(tmp_path):
+    path = tmp_path / "stacked.csv"
+    path.write_text(
+        "名称,星级,技能名称1,技能标签1,技能百分比1,段1倍率1\n"
+        '角色A,1,战技,主动,true,"100,110"\n'
+        '角色A,0,连携技,主动,false,"200,220"\n',
+        encoding="utf-8",
+    )
+
+    _message, payload = _run_cli_json(path, "--stacked-skills")
+
+    assert len(payload) == 1
+    assert [skill["名称"] for skill in payload[0]["技能"]] == ["战技", "连携技"]
+    assert payload[0]["星级"] == 1
+    assert isinstance(payload[0]["星级"], int)

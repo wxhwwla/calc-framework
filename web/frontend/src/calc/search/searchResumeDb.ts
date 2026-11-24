@@ -8,7 +8,7 @@ import type { LoadoutResult } from "../../api/search";
 
 const IDB_NAME = "endfield-search-resume";
 const IDB_STORE = "databases";
-const IDB_KEY = "active";
+const IDB_KEY = "active"; // pragma: allowlist secret（IndexedDB 常量键名，非密钥）
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS runs (
@@ -182,6 +182,29 @@ export function replaceTopScores(signature: string, results: LoadoutResult[]): v
     );
   });
   schedulePersist();
+}
+
+export function loadTopScores(signature: string): LoadoutResult[] {
+  const conn = requireDb();
+  const stmt = conn.prepare(
+    `SELECT weapon_name, final_damage, chest, gloves, accessory_a, accessory_b
+     FROM scores WHERE signature=?`,
+  );
+  stmt.bind([signature]);
+  const rows: LoadoutResult[] = [];
+  while (stmt.step()) {
+    const row = stmt.getAsObject();
+    rows.push({
+      weapon_name: String(row.weapon_name),
+      final_damage: Number(row.final_damage),
+      chest: String(row.chest),
+      gloves: String(row.gloves),
+      accessory_a: String(row.accessory_a),
+      accessory_b: String(row.accessory_b),
+    });
+  }
+  stmt.free();
+  return rows;
 }
 
 export function markRunStatus(signature: string, status: string): void {

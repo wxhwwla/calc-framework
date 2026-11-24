@@ -65,4 +65,30 @@ describe("DAG 编辑器 EditorPage", () => {
   it("通过侧边栏导航可访问", () => {
     cy.contains("公式图编辑器").should("be.visible");
   });
+
+  it("导入后渲染并无损导出声明", () => {
+    const completeDag = JSON.stringify({
+      name: "完整 DAG",
+      variables: { "user_input.x": { type: "float", source: "user_input", default: 1 } },
+      nodes: {
+        x: { type: "user_input", default: 1 },
+        out: { type: "expr", expr: "x + 1", inputs: { x: "x" } },
+      },
+      outputs: { result: { node: "out", label: "结果", is_primary: true } },
+      subgraphs: { inner: { nodes: { one: { type: "const", value: 1 } }, outputs: { value: { node: "one" } } } },
+    });
+    cy.get("textarea").first().clear();
+    cy.get("textarea").first().type(completeDag, { parseSpecialCharSequences: false });
+    cy.contains("渲染").click();
+    cy.contains("2 个节点").should("be.visible");
+    cy.contains("导出 JSON").click();
+    cy.get("textarea").first().invoke("val").then((value) => {
+      const exported = JSON.parse(String(value));
+      expect(exported.variables).to.have.property("user_input.x");
+      expect(exported.outputs).to.have.property("result");
+      expect(exported.subgraphs).to.have.property("inner");
+      expect(exported.nodes.out.inputs).to.deep.equal({ x: "x" });
+    });
+  });
+
 });

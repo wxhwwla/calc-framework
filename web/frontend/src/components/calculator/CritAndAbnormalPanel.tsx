@@ -34,10 +34,11 @@ interface MatrixRowSpec {
 }
 
 interface CritAndAbnormalPanelProps {
+  value?: CritAndAbnormalSettings;
   onChange?: (settings: CritAndAbnormalSettings) => void;
 }
 
-export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelProps) {
+export default function CritAndAbnormalPanel({ value, onChange }: CritAndAbnormalPanelProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [extraCritRate, setExtraCritRate] = useState(0);
@@ -48,6 +49,15 @@ export default function CritAndAbnormalPanel({ onChange }: CritAndAbnormalPanelP
   const [physSpecs, setPhysSpecs] = useState<MatrixRowSpec[]>([]);
   const [spellSpecs, setSpellSpecs] = useState<MatrixRowSpec[]>([]);
   const [hint, setHint] = useState("");
+
+  useEffect(() => {
+    if (!value) return;
+    setExtraCritRate(value.extraCritRate);
+    setExtraCritDamage(value.extraCritDamage);
+    setIncludeConditionalCrit(value.includeConditionalEquipmentCrit);
+    setPhysCounts(value.physicalAbnormalCounts);
+    setSpellCounts(value.spellAbnormalCounts);
+  }, [value]);
 
   useEffect(() => {
     fetch("/api/manual-buff/abnormal-matrix-specs")

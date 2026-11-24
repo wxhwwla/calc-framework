@@ -31,6 +31,7 @@ export interface FixedLoadoutSelection {
 }
 
 interface FixedLoadoutPanelProps {
+  value?: FixedLoadoutSelection | null;
   onChange?: (selection: FixedLoadoutSelection | null) => void;
   equipmentScope?: string;
 }
@@ -41,7 +42,7 @@ function catalogKeyForSlot(slotKey: string): string {
   return slotKey;
 }
 
-export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoadoutPanelProps) {
+export default function FixedLoadoutPanel({ value, onChange, equipmentScope }: FixedLoadoutPanelProps) {
   const { t } = useTranslation();
   const [catalog, setCatalog] = useState<Record<string, { 名称: string }[]>>({});
   const [selection, setSelection] = useState<FixedLoadoutSelection>({
@@ -50,6 +51,12 @@ export default function FixedLoadoutPanel({ onChange, equipmentScope }: FixedLoa
     accessory_a: null,
     accessory_b: null,
   });
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setSelection(value ?? { chest: null, gloves: null, accessory_a: null, accessory_b: null });
+    }
+  }, [value]);
 
   useEffect(() => {
     fetchEquipmentCatalog(equipmentScope ?? "全部装备").then(setCatalog).catch(() => {});

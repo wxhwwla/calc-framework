@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -126,3 +128,26 @@ class TestBuildCatalog:
             content = index.read_text(encoding="utf-8")
 
             assert "<!DOCTYPE html>" in content
+
+
+class TestPublishCli:
+    def test_help_succeeds(self):
+        result = subprocess.run(
+            [sys.executable, "-m", "calc_framework.publish", "--help"],
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "--output" in result.stdout
+
+    def test_cli_writes_catalog(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [sys.executable, "-m", "calc_framework.publish", "--output", tmp],
+                capture_output=True,
+                text=True,
+            )
+
+            assert result.returncode == 0, result.stderr
+            assert Path(tmp, "index.html").is_file()
