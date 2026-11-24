@@ -48,6 +48,8 @@ class TestAddCharacterNoMutation(unittest.TestCase):
                 json_path=json_path,
             )
 
+            self.assertTrue(json_path.read_bytes().endswith(b"\n"))
+
         self.assertEqual(sk1, before)
 
         self.assertIn("special", sk1[0])

@@ -39,6 +39,21 @@ class TestAddWeaponNoMutation(unittest.TestCase):
 
         self.assertIn("special", bonus["意志+"])
 
+    def test_add_weapon_writes_trailing_newline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            json_path = Path(tmp) / "weapons.json"
+            json_path.write_text("[]", encoding="utf-8")
+
+            add_weapon(
+                name="测试武器",
+                weapon_type="单手剑",
+                star=3,
+                base_atk={"base": 10, "growth": 10, "divisor": 5, "offset": 0},
+                json_path=json_path,
+            )
+
+            self.assertTrue(json_path.read_bytes().endswith(b"\n"))
+
     def test_remove_weapon_deletes_by_name(self):
         """按名称从 weapons.json 删除条目，且不误删其它武器。"""
 
@@ -70,6 +85,8 @@ class TestAddWeaponNoMutation(unittest.TestCase):
             names = [w["名称"] for w in json.loads(json_path.read_text(encoding="utf-8"))]
 
             self.assertEqual(names, ["保留"])
+
+            self.assertTrue(json_path.read_bytes().endswith(b"\n"))
 
     def test_remove_weapon_returns_false_when_missing(self):
         with tempfile.TemporaryDirectory() as tmp:

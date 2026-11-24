@@ -8,6 +8,7 @@ P0-01 验收要求：点击确认后乘区表必须成功求值。此前的实�
 
 from __future__ import annotations
 
+from dataclasses import replace
 from unittest.mock import patch
 
 import pytest
@@ -130,6 +131,14 @@ class TestRefreshComputeSheetContext:
         assert values["user_input.敌人防御"] == pytest.approx(loadout.enemy_defense)
         assert values["user_input.敌人抗性"] == pytest.approx(loadout.enemy_resistance)
         assert values["user_input.是否失衡"] == loadout.is_unbalanced
+
+    def test_first_evaluation_uses_nondefault_enemy_params(self):
+        loadout = replace(_loadout(), enemy_defense=300.0, enemy_resistance=20.0)
+
+        sheet = _refresh(loadout)
+
+        assert sheet.last_result.outputs["防御区"] == pytest.approx(0.25)
+        assert sheet.last_result.outputs["抗性区"] == pytest.approx(0.8)
 
     def test_resistance_widget_drives_dag_zone(self):
         sheet = _refresh(_loadout())

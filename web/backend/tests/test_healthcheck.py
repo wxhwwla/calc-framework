@@ -20,7 +20,7 @@ import healthcheck
 
 
 class _OkHandler(BaseHTTPRequestHandler):
-    def do_GET(self) -> None:  # noqa: N802
+    def _get(self) -> None:
         body = b'{"status": "ok"}'
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -30,6 +30,9 @@ class _OkHandler(BaseHTTPRequestHandler):
 
     def log_message(self, *args: object) -> None:
         return
+
+
+_OkHandler.do_GET = _OkHandler._get
 
 
 def _serve() -> tuple[ThreadingHTTPServer, str]:

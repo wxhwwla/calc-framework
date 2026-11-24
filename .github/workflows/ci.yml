@@ -60,7 +60,7 @@ jobs:
         run: python -m pip install ruff==0.9.6
 
       - name: Lint check (ruff)
-        run: python -m ruff check games/endfield/ games/arknights/ games/wjdlglr/ framework/src/ web/backend/ scripts/ extensions/ tools/calc_mcp/ tools/generator/ tools/wiki_scout/
+        run: python -m ruff check games/endfield/ games/arknights/ games/wjdlglr/ framework/src/ web/backend/ scripts/ extensions/ tools/calc_mcp/ tools/generator/ tools/wiki_scout/ tools/quality/contracts/ tools/tests/quality/
 
       - name: Check layout constraints (full repo)
         # 目录宽度 ≤20；文件硬顶 500 行；历史超限见 layout_baseline.json

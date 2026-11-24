@@ -52,6 +52,47 @@ export interface BuildLoadoutContext {
   fixedLoadout: FixedLoadoutSelection | null;
   manualBuffStore: Record<string, { effect_type: string; value: number }[]>;
   equipmentCatalog?: Record<string, unknown[]>;
+  equipmentDetails?: Record<string, Record<string, unknown>>;
+}
+
+export function missingFixedEquipmentDetails(
+  fixedLoadout: FixedLoadoutSelection | null,
+  details: Record<string, Record<string, unknown>>,
+): string[] {
+  const names = [
+    fixedLoadout?.chest,
+    fixedLoadout?.gloves,
+    fixedLoadout?.accessory_a,
+    fixedLoadout?.accessory_b,
+  ];
+  return Array.from(new Set(names.filter((name): name is string => Boolean(name)))).filter((name) => !details[name]);
+}
+
+function mergeEquipmentDetails(ctx: BuildLoadoutContext): Record<string, Record<string, unknown>[]> | undefined {
+  if (!ctx.equipmentCatalog) return undefined;
+  const catalog = ctx.equipmentCatalog as Record<string, Record<string, unknown>[]>;
+  const details = ctx.equipmentDetails;
+  if (!details) return catalog;
+  const merged = Object.fromEntries(
+    Object.entries(catalog).map(([slot, entries]) => [
+      slot,
+      entries.map((entry) => details[String(entry.名称)] ?? entry),
+    ]),
+  ) as Record<string, Record<string, unknown>[]>;
+  const fixedBySlot = {
+    chest: [ctx.fixedLoadout?.chest],
+    gloves: [ctx.fixedLoadout?.gloves],
+    accessories: [ctx.fixedLoadout?.accessory_a, ctx.fixedLoadout?.accessory_b],
+  };
+  for (const [slot, names] of Object.entries(fixedBySlot)) {
+    for (const name of names) {
+      if (!name || !details[name]) continue;
+      const entries = merged[slot] ?? [];
+      if (!entries.some((entry) => entry.名称 === name)) entries.push(details[name]);
+      merged[slot] = entries;
+    }
+  }
+  return merged;
 }
 
 function resolveCalculationMode(calcMode: string, multiSkill: MultiSkillSettings): string {
@@ -96,7 +137,7 @@ export function buildWebLoadoutPayload(ctx: BuildLoadoutContext): WebLoadoutPayl
       accessory_b: ctx.fixedLoadout?.accessory_b ?? null,
     },
     manual_buffs: ctx.manualBuffStore,
-    equipment_catalog: ctx.equipmentCatalog as Record<string, Record<string, unknown>[]> | undefined,
+    equipment_catalog: mergeEquipmentDetails(ctx),
     calculation_mode: calculationMode,
     calc_mode: ctx.calcMode,
   };

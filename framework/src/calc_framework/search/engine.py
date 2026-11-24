@@ -206,6 +206,15 @@ class SearchEngine(ABC, Generic[C, R]):
         _buf_lock = threading.Lock()
 
         processed_count = 0
+        failed_count = 0
+
+        def _on_error(key_and_candidate: tuple[str, C], _error: Exception) -> None:
+            nonlocal failed_count
+            key, _ = key_and_candidate
+            with _buf_lock:
+                failed_count += 1
+                if key in processed_buf:
+                    processed_buf.remove(key)
 
         def _on_result(key_and_candidate: tuple[str, C], result: R) -> None:
             nonlocal processed_count
@@ -213,8 +222,6 @@ class SearchEngine(ABC, Generic[C, R]):
             key, _ = key_and_candidate
 
             processed_count += 1
-
-            tracker.offer(result)
 
             with _buf_lock:
                 processed_buf.append(key)
@@ -232,12 +239,13 @@ class SearchEngine(ABC, Generic[C, R]):
 
         results = _run_parallel(
             tasks=pending,
-            evaluator=lambda kc: self.evaluate(kc[1]),
+            evaluator=lambda key_and_candidate: self.evaluate(key_and_candidate[1]),
             max_workers=config.max_workers,
             cancel_token=cancel_token,
             progress_callback=_progress,
             top_n_tracker=tracker,
             on_result=_on_result,
+            on_error=_on_error,
         )
 
         if processed_buf:
@@ -245,7 +253,7 @@ class SearchEngine(ABC, Generic[C, R]):
 
         cancelled = cancel_token.is_cancelled
 
-        status = "cancelled" if cancelled else "completed"
+        status = "cancelled" if cancelled else "failed" if failed_count else "completed"
 
         run_store.mark_run_status(run_signature, status)
 
@@ -256,6 +264,7 @@ class SearchEngine(ABC, Generic[C, R]):
             metadata={
                 "cancelled": cancelled,
                 "skipped_preprocessed": skipped,
+                "failed_count": failed_count,
                 "max_workers": config.max_workers,
             },
         )

@@ -249,22 +249,21 @@ class ActionsMixin(ActionsDialogsMixin):
             user_context_overrides=ENDFIELD_USER_CONTEXT_OVERRIDES,
             context_transform=_transform,
         )
+        self._compute_sheet = compute_sheet
         compute_sheet.evaluated.connect(self._on_compute_sheet_evaluated)
+        sheet_widget = compute_sheet.widget
         compute_sheet.evaluate()
 
         if self._compute_sheet_widget is not None:
-            old_layout = self._compute_sheet_widget.layout()
-            if old_layout is not None:
-                while old_layout.count():
-                    item = old_layout.takeAt(0)
-                    if item.widget():
-                        item.widget().deleteLater()
-                old_layout.deleteLater()
-            new_layout = QVBoxLayout()
-            new_layout.setContentsMargins(0, 0, 0, 0)
-            new_layout.addWidget(compute_sheet.widget, stretch=1)
-            new_layout.addWidget(self._total_damage_panel)
-            self._compute_sheet_widget.setLayout(new_layout)
+            sheet_layout = self._compute_sheet_widget.layout()
+            if sheet_layout is None:
+                sheet_layout = QVBoxLayout(self._compute_sheet_widget)
+            while sheet_layout.count():
+                item = sheet_layout.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+            sheet_layout.setContentsMargins(0, 0, 0, 0)
+            sheet_layout.addWidget(sheet_widget, stretch=1)
 
     def _on_compute_sheet_evaluated(self, _result: Any = None) -> None:
         self._update_total_damage_panel()

@@ -165,4 +165,3 @@ python -m pytest tests/test_bwiki_scout.py tests/test_wiki_sync.py -q
 ### 已知限制
 
 - **新实装条目常无法立即导入**：干员需 `干员名/详细数据` 子页（成长曲线唯一来源），武器需 `词条1rank1`–`rank9` 成长块；Wiki 未补全时会被按设计跳过，等补全后重跑即可，**无需改代码**。排查方法见 [`docs/操作指令集.md`](../../docs/操作指令集.md) §11.4。
-- **「计划 N 条」不等于「N 条有变化」**：`needs_weapon_sync_with_wiki()` 对已迁移的新 schema（`成长参数` + `normal_skills` / `special_skills`）会全部误报，`--bump-version` 会被连带误触发。判断真实变更请用 `git diff` 或语义比对，详见 [`docs/错误集.md`](../../docs/错误集.md)。

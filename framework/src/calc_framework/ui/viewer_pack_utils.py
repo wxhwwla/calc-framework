@@ -328,7 +328,7 @@ def build_context_from_entity(
     for key, val in entity.items():
         if key in ignored_keys:
             continue
-        if isinstance(val, list) and all(isinstance(v, int | float) for v in val):
+        if isinstance(val, list) and val and all(isinstance(v, int | float) for v in val):
             idx = min(level, len(val)) - 1
             resolved = resolve_field_name(key)
             ctx[resolved] = float(val[idx])

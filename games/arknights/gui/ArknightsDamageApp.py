@@ -17,6 +17,7 @@ from calc_framework.ui.theme import ThemeManager as _ThemeManager
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
 
 from games.arknights.calc.dag_adapter.adapter import compute_snapshot_with_dag, get_parsed_skill_info
+from games.arknights.calc.inverse.stats import resolve_stats_from_segments
 from games.arknights.gui.arknights_app_events import ArknightsAppEventsMixin
 from games.arknights.gui.arknights_app_ui import ArknightsAppUIMixin
 from games.arknights.gui.arknights_compute_sheet import read_compute_params_from_sheet
@@ -160,7 +161,11 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
 
             # 乘区明细表
             op = self._current_operator
-            base_atk = float(op.get("基础属性", {}).get("攻击", 0))
+            segment_stats = resolve_stats_from_segments(op, elite=2, level=None)
+            if "atk" in segment_stats:
+                base_atk = float(segment_stats["atk"])
+            else:
+                base_atk = float(op.get("基础属性", {}).get("atk", 0))
             trust_atk = sheet_params["trust_atk"]
             pot_atk = sheet_params["pot_atk"]
             zone_rows = [
@@ -176,10 +181,7 @@ class ArknightsDamageApp(QMainWindow, ArknightsAppUIMixin, ArknightsAppEventsMix
                 ("防御力", f"{enemy_def:.0f}"),
                 ("法术抗性", f"{enemy_res:.0f}%"),
                 ("", ""),
-                (
-                    "物理伤害（单发）",
-                    f"{phys:.1f}" if hit_count <= 1 else f"{(phys / hit_count if hit_count else 0):.1f}",
-                ),
+                ("物理伤害（单发）", f"{phys:.1f}"),
                 # "法术伤害（单发）" 类似
             ]
             if hit_count > 1:

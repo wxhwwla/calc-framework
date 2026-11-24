@@ -186,7 +186,8 @@ class ShellMixin:
         )
         page.zone("top_left").add_widget(enemy_equipment)
         page.zone("top_right").add_widget(dock._col_multi)
-        page.zone("bottom_left").add_widget(self.columns.zone_table)
+        self._compute_sheet_widget = QWidget()
+        page.zone("bottom_left").add_widget(self._compute_sheet_widget)
 
         self._total_damage_panel = TotalDamagePanel(self.big_font, self.small_font)
         page.zone("bottom_right").add_widget(self._total_damage_panel)

@@ -31,6 +31,7 @@ def run_parallel(
     top_n_tracker: TopNTracker[R] | None = None,
     submit_batch_size: int = 100,
     on_result: Callable[[T, R], None] | None = None,
+    on_error: Callable[[T, Exception], None] | None = None,
 ) -> list[R]:
     """并行评估一组任务，支持取消和进度回调。
 
@@ -121,19 +122,21 @@ def run_parallel(
                 try:
                     result = f.result()
 
+                    if top_n_tracker is not None:
+                        top_n_tracker.offer(result)
+
                     if on_result is not None and task is not None:
                         on_result(task, result)
 
                     results.append(result)
 
-                    if top_n_tracker is not None:
-                        top_n_tracker.offer(result)
-
-                except Exception:
+                except Exception as exc:
                     logger.warning(
                         "run_parallel: 任务评估失败，已跳过",
                         exc_info=True,
                     )
+                    if on_error is not None and task is not None:
+                        on_error(task, exc)
 
             if cancel.should_cancel(processed):
                 for f in futures:

@@ -32,6 +32,7 @@ from bwiki_scout.weapon_wiki import (  # noqa: E402
     build_weapon_seed_spec_from_wiki,
     fit_weapon_base_atk_from_endpoints,
     has_weapon_growth_block,
+    needs_weapon_sync_with_wiki,
 )
 from bwiki_scout.wiki_sync import (  # noqa: E402
     build_seed_spec_from_wiki,
@@ -253,6 +254,60 @@ class TestWikiSync(unittest.TestCase):
         self.assertTrue(spec["special_2"]["enabled"])
 
         self.assertEqual(spec["special_1"]["name"], "施放战技后，法术伤害+")
+
+    def test_matching_compact_weapon_does_not_need_sync(self):
+        base_atk = {"base": 10, "growth": 89, "divisor": 89, "offset": 0}
+        bonus_curve = [float(value) for value in range(1, 10)]
+        spec = {
+            "weapon_type": "单手剑",
+            "star": 5,
+            "base_atk": base_atk,
+            "bonus_attrs": {
+                "力量+": {"base": 1, "growth": 1, "divisor": 1, "offset": 0},
+            },
+        }
+        local = {
+            "类型": "单手剑",
+            "星级": 5,
+            "成长参数": {"基础攻击力": base_atk},
+            "normal_skills": [{"zone": 1, "effect": "力量+", "curve": bonus_curve}],
+            "special_skills": [],
+        }
+
+        self.assertFalse(needs_weapon_sync_with_wiki(spec, local))
+
+    def test_matching_compact_weapon_special_skill_does_not_need_sync(self):
+        base_atk = {"base": 10, "growth": 89, "divisor": 89, "offset": 0}
+        special_curve = [float(value) for value in range(1, 10)]
+        spec = {
+            "weapon_type": "单手剑",
+            "star": 5,
+            "base_atk": base_atk,
+            "bonus_attrs": {},
+            "special_1": {
+                "enabled": True,
+                "name": "目标受到的伤害+",
+                "curve": special_curve,
+                "max_stack": 2,
+            },
+        }
+        local = {
+            "类型": "单手剑",
+            "星级": 5,
+            "成长参数": {"基础攻击力": base_atk},
+            "normal_skills": [],
+            "special_skills": [
+                {
+                    "zone": 3,
+                    "name": "目标受到的伤害+",
+                    "effect": "伤害+",
+                    "curve": special_curve,
+                    "max_stack": 2,
+                }
+            ],
+        }
+
+        self.assertFalse(needs_weapon_sync_with_wiki(spec, local))
 
     def test_fit_weapon_base_atk_preserves_shape_with_reference(self):
         ref = list(range(100, 190))

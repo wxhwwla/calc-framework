@@ -36,6 +36,16 @@ def test_build_context_from_entity_flattens_enemy_scalars() -> None:
     assert ctx == {"防御": 100.0, "韧性": 20.0}
 
 
+def test_build_context_from_entity_ignores_empty_numeric_curve() -> None:
+    ctx = build_context_from_entity(
+        {"名称": "Boss", "空曲线": [], "韧性": [10, 20, 30]},
+        "enemy",
+        level=2,
+    )
+
+    assert ctx == {"韧性": 20.0}
+
+
 def test_build_viewer_context_uses_enemy_namespace_and_defaults() -> None:
     class _Var:
         default = 0.0

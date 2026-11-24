@@ -15,7 +15,7 @@ import sys
 import unittest
 from pathlib import Path
 
-_REPO = Path(__file__).resolve().parents[3]
+_REPO = Path(__file__).resolve().parents[4]
 _FRAMEWORK_SRC = _REPO / "framework" / "src"
 _BACKEND = _REPO / "web" / "backend"
 for _p in [str(_FRAMEWORK_SRC), str(_REPO), str(_BACKEND)]:

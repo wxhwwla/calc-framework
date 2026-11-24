@@ -36,8 +36,10 @@ import SegmentManualBuffDialog, {
   type ManualBuffStore,
 } from "../components/calculator/SegmentManualBuffDialog";
 import { fetchEquipmentCatalog } from "../api/search";
+import { fetchEquipment } from "../api/data";
 import {
   buildWebLoadoutPayload,
+  missingFixedEquipmentDetails,
   buildSearchRequestFromLoadout,
   evaluateLoadout,
   fetchLoadoutPreview,
@@ -111,6 +113,7 @@ export default function ComputePage() {
   const [damageSnapshot, setDamageSnapshot] = useState<DamageSnapshot | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [equipmentCatalog, setEquipmentCatalog] = useState<Record<string, unknown[]>>({});
+  const [equipmentDetails, setEquipmentDetails] = useState<Record<string, Record<string, unknown>>>({});
   const [manualBuffDialogOpen, setManualBuffDialogOpen] = useState(false);
   const [manualBuffStore, setManualBuffStore] = useState<ManualBuffStore>({});
   const [previewLines, setPreviewLines] = useState<string[] | null>(null);
@@ -133,6 +136,36 @@ export default function ComputePage() {
   useEffect(() => {
     fetchEquipmentCatalog(equipmentScope).then(setEquipmentCatalog).catch(() => {});
   }, [equipmentScope]);
+
+  useEffect(() => {
+    const names = Array.from(
+      new Set(
+        [fixedLoadout?.chest, fixedLoadout?.gloves, fixedLoadout?.accessory_a, fixedLoadout?.accessory_b].filter(
+          (name): name is string => Boolean(name),
+        ),
+      ),
+    );
+    if (names.length === 0) {
+      setEquipmentDetails({});
+      return;
+    }
+    setEquipmentDetails({});
+    let cancelled = false;
+    Promise.all(names.map((name) => fetchEquipment(name)))
+      .then((details) => {
+        if (!cancelled) {
+          setEquipmentDetails(Object.fromEntries(details.map((detail) => [String(detail.名称), detail])));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          useComputeStore.setState({ error: t("compute.equipmentDetailsLoadFailed") });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fixedLoadout, t]);
 
   const skillLevelsTuple = useMemo((): [number, number, number] => [
     (skillLevels.skill_1_level as number) ?? 8,
@@ -246,6 +279,7 @@ export default function ComputePage() {
       fixedLoadout,
       manualBuffStore,
       equipmentCatalog,
+      equipmentDetails,
     });
   }, [
     charData,
@@ -264,12 +298,17 @@ export default function ComputePage() {
     fixedLoadout,
     manualBuffStore,
     equipmentCatalog,
+    equipmentDetails,
   ]);
 
   const handleEvaluate = useCallback(async () => {
     const payload = makeLoadoutPayload();
     if (!payload) {
       useComputeStore.setState({ error: t("compute.selectCharWeaponFirst"), loading: false });
+      return;
+    }
+    if (missingFixedEquipmentDetails(fixedLoadout, equipmentDetails).length > 0) {
+      useComputeStore.setState({ error: t("compute.equipmentDetailsNotReady"), loading: false });
       return;
     }
 
@@ -306,7 +345,7 @@ export default function ComputePage() {
     } catch (e: unknown) {
       useComputeStore.setState({ error: String(e), loading: false });
     }
-  }, [makeLoadoutPayload, selectedChar, selectedWeapon, charLevel, weaponLevel, t]);
+  }, [makeLoadoutPayload, selectedChar, selectedWeapon, charLevel, weaponLevel, fixedLoadout, equipmentDetails, t]);
 
   const loadoutPayload = makeLoadoutPayload();
   const searchParams = loadoutPayload

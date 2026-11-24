@@ -17,6 +17,9 @@
 | 命令 | 用途 | 说明 |
 |------|------|------|
 | `python tools/quality/check_layout.py` | 全仓布局门禁（目录宽度、文件行数、历史基线） | 新超限失败；基线见 `layout_baseline.json` |
+| `python tools/quality/contracts/check_adr.py` | ADR 索引校验；`--write` 从 ADR 文件重新生成 | 重复编号需登记 `SUPERSEDED`；空缺编号自动标注 |
+| `python tools/quality/contracts/check_links.py` | 活跃文档本地链接检查 | 跳过外部链接、纯锚点、代码块与历史月度快照 |
+| `python tools/quality/contracts/check_openapi.py` | OpenAPI 契约校验；`--write` 重新生成 | 契约文件 `docs/openapi-contract.json`，Web CI backend 测试对照 |
 | `python tools/quality/supply_chain/check_licenses.py` | NOTICES 对直接依赖的覆盖检查 | 输出缺口；`--json-out` 供 CI artifact |
 | `python tools/quality/check_benchmarks.py --input framework/benchmark.json` | DAG 基准预算门禁 | 超 `budget_ms × tolerance` 失败 |
 | `python tools/quality/supply_chain/generate_sbom.py` | 生成 CycloneDX 1.5 SBOM | 覆盖 Python / npm / Cargo |

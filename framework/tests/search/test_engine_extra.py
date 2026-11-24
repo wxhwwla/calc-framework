@@ -69,6 +69,75 @@ class TestRunWithPersist:
 
         assert store.run_status("test-basic") == "completed"
 
+    def test_run_with_persist_does_not_duplicate_top_n(self):
+        engine = _SquareEngine([1, 2, 3])
+        store = SearchRunStore(self.db_path)
+
+        result = engine.run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-no-duplicates",
+        )
+
+        assert result.items == (9, 4, 1)
+
+    def test_run_with_persist_failure_is_not_completed(self):
+        class FailingEngine(_SquareEngine):
+            def evaluate(self, candidate: int) -> int:
+                if candidate == 2:
+                    raise ValueError("intentional")
+                return super().evaluate(candidate)
+
+        store = SearchRunStore(self.db_path)
+        result = FailingEngine([1, 2, 3]).run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-failure",
+        )
+
+        assert result.items == (9, 1)
+        assert result.metadata["failed_count"] == 1
+        assert store.run_status("test-failure") == "failed"
+        assert "2" not in store.get_processed_keys("test-failure")
+
+    def test_score_failure_is_not_processed_or_completed(self):
+        class FailingScoreEngine(_SquareEngine):
+            def score_key(self, result: int) -> float:
+                if result == 4:
+                    raise ValueError("score failed")
+                return super().score_key(result)
+
+        store = SearchRunStore(self.db_path)
+        result = FailingScoreEngine([1, 2, 3]).run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-score-failure",
+        )
+
+        assert result.items == (9, 1)
+        assert result.metadata["failed_count"] == 1
+        assert store.run_status("test-score-failure") == "failed"
+        assert "2" not in store.get_processed_keys("test-score-failure")
+
+    def test_processed_write_failure_is_reported(self, monkeypatch):
+        import calc_framework.search.persist as persist_module
+
+        class FailingStore(SearchRunStore):
+            def mark_processed_batch(self, signature, combo_keys):
+                raise OSError("database unavailable")
+
+        monkeypatch.setattr(persist_module, "PROCESSED_BATCH_SIZE", 1)
+        store = FailingStore(self.db_path)
+        result = _SquareEngine([1]).run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-write-failure",
+        )
+
+        assert result.metadata["failed_count"] == 1
+        assert store.run_status("test-write-failure") == "failed"
+        assert "1" not in store.get_processed_keys("test-write-failure")
+
     def test_run_with_persist_skips_processed(self):
         engine = _SquareEngine([1, 2, 3, 4, 5])
 

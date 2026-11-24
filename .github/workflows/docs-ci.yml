@@ -1,0 +1,45 @@
+# Docs CI — ADR 索引与活跃文档本地链接门禁
+# 文档变更时运行，约 30 秒；不安装项目依赖，只用标准库脚本
+
+name: Docs CI
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "docs/**"
+      - "README.md"
+      - "README_zh.md"
+      - "tools/quality/contracts/check_adr.py"
+      - "tools/quality/contracts/check_links.py"
+      - ".github/workflows/docs-ci.yml"
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - "docs/**"
+      - "README.md"
+      - "README_zh.md"
+      - "tools/quality/contracts/check_adr.py"
+      - "tools/quality/contracts/check_links.py"
+
+jobs:
+  docs:
+    name: ADR index & links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+
+      - name: Check ADR index
+        run: python tools/quality/contracts/check_adr.py
+
+      - name: Check documentation links
+        run: python tools/quality/contracts/check_links.py

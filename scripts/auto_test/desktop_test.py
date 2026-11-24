@@ -29,6 +29,7 @@ from config import (
     APP_WINDOW_TITLE,
     DESKTOP_ENTRY,
     SCREENSHOT_DESKTOP_DIR,
+    STEP_TIMEOUT,
     TEST_SCENARIOS,
     ensure_dirs,
 )
@@ -67,8 +68,8 @@ class DesktopTestRunner:
             self._process = subprocess.Popen(
                 [sys.executable, str(DESKTOP_ENTRY)],
                 cwd=str(_REPO_ROOT),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
 
             # 等待窗口出现
@@ -120,7 +121,7 @@ class DesktopTestRunner:
             self._test_compute_page(scenario)
         elif scenario.name == "高级页功能":
             self._test_advanced_page(scenario)
-        elif scenario.name == "数据设计器":
+        elif scenario.name == "工具入口":
             self._test_designer(scenario)
         else:
             logger.warning("未知场景: %s", scenario.name)
@@ -175,27 +176,20 @@ class DesktopTestRunner:
 
     def _test_compute_page(self, scenario: TestScenario) -> None:
         """测试计算页功能。"""
-        # 步骤 1: 切换到计算页
         step = TestStep(name="切换到计算页")
         step_start = time.time()
-
-        # 查找计算页标签
-        tab = self.inspector.find_control(name="计算页")
-        if tab:
-            self.inspector.click(tab)
+        tab = self.inspector.find_control(name="计算")
+        if tab and self.inspector.click(tab):
             step.status = "passed"
             step.message = "已切换到计算页"
         else:
             step.status = "failed"
             step.message = "未找到计算页标签"
-
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 2: 检查角色选择区域
         step = TestStep(name="检查角色选择区域")
         step_start = time.time()
-
         char_selector = self.inspector.find_control(name="角色选择")
         if char_selector:
             step.status = "passed"
@@ -203,14 +197,33 @@ class DesktopTestRunner:
         else:
             step.status = "failed"
             step.message = "角色选择区域未找到"
-
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 3: 截图
+        step = TestStep(name="确认计算")
+        step_start = time.time()
+        confirm = self.inspector.find_control(name="确认选择（待更新）")
+        if confirm is None:
+            confirm = self.inspector.find_control(name="确认选择")
+        if confirm and self.inspector.click(confirm):
+            confirmed = self.inspector.wait_for_control(name="已确认", timeout=STEP_TIMEOUT)
+        else:
+            confirmed = None
+        if confirmed:
+            time.sleep(0.5)
+            confirmed = self.inspector.find_control(name="已确认")
+        error_dialog = self.inspector.find_control(name="确认失败")
+        if confirmed and not error_dialog:
+            step.status = "passed"
+            step.message = "确认完成且状态稳定"
+        else:
+            step.status = "failed"
+            step.message = "确认计算未完成或出现错误对话框"
+        step.duration = time.time() - step_start
+        scenario.steps.append(step)
+
         step = TestStep(name="截图")
         step_start = time.time()
-
         screenshot_path = SCREENSHOT_DESKTOP_DIR / "compute_page.png"
         try:
             self.inspector.screenshot(str(screenshot_path))
@@ -219,47 +232,39 @@ class DesktopTestRunner:
         except Exception as e:
             step.status = "failed"
             step.message = f"截图失败: {e}"
-
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
     def _test_advanced_page(self, scenario: TestScenario) -> None:
         """测试高级页功能。"""
-        # 步骤 1: 切换到高级页
         step = TestStep(name="切换到高级页")
         step_start = time.time()
-
-        tab = self.inspector.find_control(name="高级页")
-        if tab:
-            self.inspector.click(tab)
+        tab = self.inspector.find_control(name="高级")
+        if tab and self.inspector.click(tab):
             step.status = "passed"
             step.message = "已切换到高级页"
         else:
             step.status = "failed"
             step.message = "未找到高级页标签"
-
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 2: 检查搜索面板
         step = TestStep(name="检查搜索面板")
         step_start = time.time()
-
-        search_panel = self.inspector.find_control(name="全量搜索")
-        if search_panel:
+        search_panel = self.inspector.find_control(name="全量遍历搜索")
+        zone_output = self.inspector.find_control(name="最终伤害")
+        error_dialog = self.inspector.find_control(name="确认失败")
+        if search_panel and zone_output and not error_dialog:
             step.status = "passed"
-            step.message = "搜索面板已找到"
+            step.message = "搜索面板与乘区输出均已找到"
         else:
             step.status = "failed"
-            step.message = "搜索面板未找到"
-
+            step.message = "搜索面板或乘区输出缺失，或出现错误对话框"
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 3: 截图
         step = TestStep(name="截图")
         step_start = time.time()
-
         screenshot_path = SCREENSHOT_DESKTOP_DIR / "advanced_page.png"
         try:
             self.inspector.screenshot(str(screenshot_path))
@@ -268,36 +273,26 @@ class DesktopTestRunner:
         except Exception as e:
             step.status = "failed"
             step.message = f"截图失败: {e}"
-
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
     def _test_designer(self, scenario: TestScenario) -> None:
-        """测试数据设计器。"""
-        # 步骤 1: 查找设计器入口
-        step = TestStep(name="查找设计器入口")
+        """测试当前工具菜单入口。"""
+        step = TestStep(name="查找工具入口")
         step_start = time.time()
-
-        # 设计器可能是菜单项或按钮
-        designer_entry = self.inspector.find_control(name="设计器")
-        if not designer_entry:
-            designer_entry = self.inspector.find_control(name="数据设计器")
-
-        if designer_entry:
+        tools_entry = self.inspector.find_control(name="工具与分享")
+        if tools_entry:
             step.status = "passed"
-            step.message = "设计器入口已找到"
+            step.message = "工具入口已找到"
         else:
-            step.status = "skipped"
-            step.message = "设计器入口未找到（可能需要从菜单打开）"
-
+            step.status = "failed"
+            step.message = "工具入口未找到"
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 
-        # 步骤 2: 截图
         step = TestStep(name="截图")
         step_start = time.time()
-
-        screenshot_path = SCREENSHOT_DESKTOP_DIR / "designer.png"
+        screenshot_path = SCREENSHOT_DESKTOP_DIR / "tools_entry.png"
         try:
             self.inspector.screenshot(str(screenshot_path))
             step.status = "passed"
@@ -305,7 +300,6 @@ class DesktopTestRunner:
         except Exception as e:
             step.status = "failed"
             step.message = f"截图失败: {e}"
-
         step.duration = time.time() - step_start
         scenario.steps.append(step)
 

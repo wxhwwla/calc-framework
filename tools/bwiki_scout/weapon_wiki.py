@@ -8,19 +8,12 @@
 
 from __future__ import annotations
 
-
 import io
-
 import re
-
 import sys
-
 from contextlib import redirect_stdout
-
 from pathlib import Path
-
 from typing import Any
-
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -30,12 +23,10 @@ if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
 
-from bwiki_scout.parse_draft import extract_template_params, _parse_int
+from bwiki_scout.parse_draft import _parse_int, extract_template_params
 
 from games.endfield.calc.damage.formula import calculate_bonus_attribute, calculate_growth_curve
-
 from games.endfield.calc.damage.inverse import fit_attribute_formula, fit_skill_formula_no_special
-
 
 # Wiki 稀有度 → 本地星级
 
@@ -539,7 +530,6 @@ def backfill_weapon_max_stack_from_cache(
     import json
 
     from bwiki_scout.seed_persist import load_seed_weapon_specs, write_seed_weapon_specs
-
     from bwiki_scout.storage import load_page_bundle
 
     from games.endfield.calc.skills.special_fields import (
@@ -683,6 +673,8 @@ def needs_weapon_sync_with_wiki(
     tolerance: float = 0.05,
 ) -> bool:
     """本地武器与 Wiki 推导是否不一致。"""
+    from games.endfield.calc.skills.special_fields import read_weapon_skills_schema, read_weapon_special_slots
+    from games.endfield.data_loading.curve_materialize import materialize_weapon_entity
 
     if spec.get("weapon_type") != local_record.get("类型"):
         return True
@@ -690,6 +682,7 @@ def needs_weapon_sync_with_wiki(
     if spec.get("star") != local_record.get("星级"):
         return True
 
+    local_record = materialize_weapon_entity(local_record)
     wiki_atk = calculate_growth_curve(**spec["base_atk"])
 
     local_atk = local_record.get("基础攻击力")
@@ -703,10 +696,11 @@ def needs_weapon_sync_with_wiki(
         if abs(float(la) - float(wa)) > tolerance:
             return True
 
-    wiki_bonus = _bonus_curves_from_seed_spec(spec)
+    local_bonus = {s["effect"]: s["curve"] for s in read_weapon_skills_schema(local_record)["normal_skills"]}
+    wiki_bonus = _bonus_curves_from_seed_spec({"bonus_attrs": spec.get("bonus_attrs") or {}})
 
     for key, wiki_arr in wiki_bonus.items():
-        local_arr = local_record.get(key)
+        local_arr = local_bonus.get(key)
 
         if not isinstance(local_arr, list):
             return True
@@ -714,10 +708,6 @@ def needs_weapon_sync_with_wiki(
         for la, wa in zip(local_arr, wiki_arr):
             if abs(float(la) - float(wa)) > tolerance:
                 return True
-
-    from games.endfield.calc.skills.special_fields import (
-        read_weapon_special_slots,
-    )
 
     local_slots = read_weapon_special_slots(local_record)
 

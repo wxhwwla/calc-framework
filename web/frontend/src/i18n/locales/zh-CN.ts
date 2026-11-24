@@ -76,6 +76,8 @@ const zhCN = {
     historyButton: "历史",
     searchHistoryButton: "搜索历史",
     selectCharWeaponFirst: "请先选择角色与武器",
+    equipmentDetailsNotReady: "固定装备详情正在加载，请稍后再计算",
+    equipmentDetailsLoadFailed: "固定装备详情加载失败，请重新选择或检查网络",
   },
 
   attr: {

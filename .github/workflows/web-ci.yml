@@ -17,6 +17,7 @@ on:
       - "web/**"
       - "extensions/rust_search/**"
       - "web/wasm-curve/**"
+      - "docs/openapi-contract.json"
       - ".github/workflows/web-ci.yml"
   pull_request:
     branches: [main, master, develop]
@@ -24,6 +25,7 @@ on:
       - "web/**"
       - "extensions/rust_search/**"
       - "web/wasm-curve/**"
+      - "docs/openapi-contract.json"
 
 jobs:
   frontend:

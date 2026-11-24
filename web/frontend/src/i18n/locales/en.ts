@@ -75,6 +75,8 @@ const en = {
     historyButton: "History",
     searchHistoryButton: "Search History",
     selectCharWeaponFirst: "Please select a character and weapon first",
+    equipmentDetailsNotReady: "Fixed equipment details are still loading. Please wait before calculating",
+    equipmentDetailsLoadFailed: "Failed to load fixed equipment details. Please reselect or check the network",
   },
 
   attr: {

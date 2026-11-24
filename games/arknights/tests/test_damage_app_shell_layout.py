@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import unittest
+from copy import deepcopy
 
 from PySide6.QtWidgets import QApplication, QDoubleSpinBox, QSpinBox
 
@@ -99,6 +100,46 @@ class TestArknightsShellLayout(unittest.TestCase):
         after = self.window._result_cards["phys"].text()
 
         self.assertNotEqual(before, after)
+
+    def test_breakdown_uses_materialized_base_attack(self) -> None:
+        self.window._op_combo.setCurrentText("风笛")
+        self.window._on_compute()
+        rows = {
+            self.window._result_table.item(row, 0).text(): self.window._result_table.item(row, 1).text()
+            for row in range(self.window._result_table.rowCount())
+        }
+
+        self.assertEqual(rows["基础攻击力"], "586.0")
+        self.assertEqual(rows["最终攻击力"], self.window._result_cards["atk"].text())
+
+    def test_breakdown_does_not_divide_single_hit_again(self) -> None:
+        self.window._hit_spin.setValue(2)
+        self.window._on_compute()
+        physical = float(self.window._result_cards["phys"].text())
+        rows = {
+            self.window._result_table.item(row, 0).text(): self.window._result_table.item(row, 1).text()
+            for row in range(self.window._result_table.rowCount())
+        }
+
+        self.assertEqual(rows["物理伤害（单发）"], f"{physical:.1f}")
+        self.assertEqual(rows["物理伤害（合计）"], f"{physical * 2:.1f}")
+
+    def test_breakdown_falls_back_to_base_attributes_without_growth_curve(self) -> None:
+        original = self.window._current_operator
+        operator = deepcopy(original)
+        operator.pop("成长参数", None)
+        operator.pop("段曲线", None)
+        operator["基础属性"] = dict(operator.get("基础属性", {}), atk=321)
+        self.window._current_operator = operator
+        try:
+            self.window._on_compute()
+            rows = {
+                self.window._result_table.item(row, 0).text(): self.window._result_table.item(row, 1).text()
+                for row in range(self.window._result_table.rowCount())
+            }
+            self.assertEqual(rows["基础攻击力"], "321.0")
+        finally:
+            self.window._current_operator = original
 
     def test_user_vars_have_chinese_descriptions(self) -> None:
         from games.arknights.gui.arknights_sheet_config import ARKNIGHTS_USER_VARS

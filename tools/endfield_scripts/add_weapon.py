@@ -15,11 +15,8 @@
 """
 
 import json
-
 import sys
-
 from pathlib import Path
-
 
 # 添加项目根目录到路径，确保模块导入正确
 
@@ -27,7 +24,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 from games.endfield.calc.damage.formula import calculate_bonus_attribute
-
 from games.endfield.calc.damage.formula import (  # pyright: ignore[reportMissingImports]
     calculate_growth_curve as calculate_weapon_attack,
 )
@@ -48,8 +44,7 @@ def add_weapon(
     base_atk: dict,  # {"base": int, "growth": int, "divisor": int, "offset": int}
     bonus_attrs: dict
     | None = None,  # {"属性名+": {"base": int, "growth": int, "divisor": int, "offset": int, "special": list}}
-    special_ability: dict
-    | None = None,  # {"enabled": bool, "name": str, "curve": list} or {"enabled": bool, "name": str, "base": int/float, "growth": int/float, "divisor": int/float, "offset": int/float, "special": list}
+    special_ability: dict | None = None,  # 可选特殊能力；支持 curve 或成长参数，详见下方说明
     special_1: dict | None = None,  # 同 special_ability 格式
     special_2: dict | None = None,  # 同 special_ability 格式
     json_path: Path | None = None,
@@ -77,7 +72,7 @@ def add_weapon(
 
                         {"enabled": True/False, "name": "属性名+", "curve": [等级1值, 等级2值, ...]}
 
-                        或 {"enabled": True/False, "name": "属性名+", "base": int/float, "growth": int/float, "divisor": int/float, "offset": int/float, "special": list}
+                        或使用 base/growth/divisor/offset/special 成长参数
 
     """
 
@@ -164,6 +159,7 @@ def add_weapon(
 
     with open(_json_path, "w", encoding="utf-8") as f:
         json.dump(weapons, f, ensure_ascii=False, indent=2)
+        f.write("\n")
 
     # 计算基础攻击力用于显示
     atk_curve = calculate_weapon_attack(**base_atk)
@@ -202,6 +198,7 @@ def remove_weapon(name: str, json_path: Path | None = None) -> bool:
 
     with open(_json_path, "w", encoding="utf-8") as f:
         json.dump(new_weapons, f, ensure_ascii=False, indent=2)
+        f.write("\n")
 
     return True
 

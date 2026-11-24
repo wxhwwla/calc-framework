@@ -5,7 +5,10 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
+from games.endfield.gui import endfield_actions
+from games.endfield.gui.presentation.damage_snapshot import get_snapshot_from_app
 from PySide6.QtWidgets import QApplication
 
 
@@ -52,7 +55,7 @@ class TestEndfieldShellLayout(unittest.TestCase):
 
         self.assertTrue(page.zone("top_left").isAncestorOf(self.window.control_dock._enemy_panel))
         self.assertTrue(page.zone("top_right").isAncestorOf(self.window.control_dock._col_multi))
-        self.assertTrue(page.zone("bottom_left").isAncestorOf(self.window.columns.zone_table))
+        self.assertTrue(page.zone("bottom_left").isAncestorOf(self.window._compute_sheet_widget))
         self.assertTrue(page.zone("bottom_right").isAncestorOf(self.window._total_damage_panel))
 
     def test_pending_state_is_rendered_in_shell(self) -> None:
@@ -60,6 +63,23 @@ class TestEndfieldShellLayout(unittest.TestCase):
 
         self.assertEqual(self.window._shell.confirm_button.text(), "确认选择（待更新）")
         self.assertEqual(self.window._shell.status_text(), "待确认")
+
+    def test_production_window_confirms_twice_without_deleting_owned_tables(self) -> None:
+        with patch.object(endfield_actions.QMessageBox, "warning") as warning:
+            for _ in range(2):
+                self.window._on_loadout_changed()
+                self.window._on_confirm()
+                QApplication.processEvents()
+
+        self.assertFalse(warning.called)
+        self.assertEqual(self.window._shell.status_text(), "已确认")
+        sheet = self.window._compute_sheet
+        snapshot = get_snapshot_from_app(self.window)
+        self.assertAlmostEqual(
+            sheet.evaluate().outputs["最终伤害"],
+            snapshot.weighted_total_damage,
+            places=6,
+        )
 
 
 if __name__ == "__main__":

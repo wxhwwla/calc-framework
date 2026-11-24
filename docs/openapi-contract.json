@@ -1,0 +1,4322 @@
+{
+  "paths": {
+    "/api/adapters": {
+      "get": {
+        "operationId": "list_adapters_api_adapters_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "AdapterInfoResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/adapters/{adapter_id}/dag": {
+      "get": {
+        "operationId": "get_adapter_dag_route_api_adapters__adapter_id__dag_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/adapters/{adapter_id}/data-summary": {
+      "get": {
+        "operationId": "get_adapter_data_summary_api_adapters__adapter_id__data_summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/adapters/{adapter_id}/layout": {
+      "get": {
+        "operationId": "get_adapter_layout_route_api_adapters__adapter_id__layout_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/adapters/{adapter_id}/meta": {
+      "get": {
+        "operationId": "get_adapter_meta_api_adapters__adapter_id__meta_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "AdapterMetaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/adapters/{adapter_id}/pack-bundle": {
+      "get": {
+        "operationId": "get_adapter_pack_bundle_api_adapters__adapter_id__pack_bundle_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/adapters/{name}/schema": {
+      "get": {
+        "operationId": "get_schema_api_adapters__name__schema_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "AdapterSchemaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "adapters"
+        ]
+      }
+    },
+    "/api/admin/keys": {
+      "get": {
+        "operationId": "list_api_keys_api_admin_keys_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "ApiKeyInfo"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "create_api_key_api_admin_keys_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "CreateKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "CreateKeyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/keys/{key_prefix}": {
+      "delete": {
+        "operationId": "revoke_api_key_api_admin_keys__key_prefix__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "key_prefix",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/usage": {
+      "get": {
+        "operationId": "get_usage_stats_api_admin_usage_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "UsageStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/ai/chat": {
+      "post": {
+        "operationId": "ai_chat_api_ai_chat_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ConversationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "ConversationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/explain": {
+      "post": {
+        "operationId": "ai_explain_api_ai_explain_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ExplainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "ExplainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/recommend": {
+      "post": {
+        "operationId": "ai_recommend_api_ai_recommend_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "AiRecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "AiRecommendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/ai/search": {
+      "post": {
+        "operationId": "ai_search_api_ai_search_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "api__ai__SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/arknights/compute": {
+      "post": {
+        "operationId": "compute_damage_api_arknights_compute_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ComputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "ComputeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "arknights"
+        ]
+      }
+    },
+    "/api/arknights/operators": {
+      "get": {
+        "operationId": "list_operators_api_arknights_operators_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "arknights"
+        ]
+      }
+    },
+    "/api/arknights/operators/{name}": {
+      "get": {
+        "operationId": "get_operator_api_arknights_operators__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "arknights"
+        ]
+      }
+    },
+    "/api/compute/compare": {
+      "post": {
+        "operationId": "compare_api_compute_compare_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/evaluate": {
+      "post": {
+        "operationId": "evaluate_api_compute_evaluate_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "EvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "EvaluateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/evaluate-loadout": {
+      "post": {
+        "operationId": "evaluate_loadout_api_compute_evaluate_loadout_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "LoadoutPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "EvaluateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/loadout-context": {
+      "post": {
+        "operationId": "loadout_context_api_compute_loadout_context_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "LoadoutPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "LoadoutContextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/preset-export": {
+      "post": {
+        "operationId": "preset_export_api_compute_preset_export_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "PresetExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/preview": {
+      "post": {
+        "operationId": "loadout_preview_api_compute_preview_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "LoadoutPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/snapshot": {
+      "post": {
+        "operationId": "snapshot_api_compute_snapshot_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "SnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/compute/snapshot-full": {
+      "post": {
+        "operationId": "loadout_snapshot_api_compute_snapshot_full_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "LoadoutSnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "compute"
+        ]
+      }
+    },
+    "/api/contribute/submit": {
+      "post": {
+        "operationId": "submit_contribute_api_contribute_submit_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "SubmitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "contribute"
+        ]
+      }
+    },
+    "/api/contribute/validate": {
+      "post": {
+        "operationId": "validate_contribute_api_contribute_validate_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "api__packaging__contribute__ValidateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "contribute"
+        ]
+      }
+    },
+    "/api/data/characters": {
+      "get": {
+        "operationId": "list_characters_api_data_characters_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "post": {
+        "operationId": "create_character_api_data_characters_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/characters/detail/all": {
+      "get": {
+        "operationId": "list_characters_full_api_data_characters_detail_all_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/characters/{name}": {
+      "delete": {
+        "operationId": "delete_character_api_data_characters__name__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "get": {
+        "operationId": "get_character_api_data_characters__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "put": {
+        "operationId": "update_character_api_data_characters__name__put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/dag-verify": {
+      "post": {
+        "operationId": "dag_verify_api_data_dag_verify_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "DagVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "DagVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/equipments": {
+      "get": {
+        "operationId": "list_equipments_api_data_equipments_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "post": {
+        "operationId": "create_equipment_api_data_equipments_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/equipments/detail/all": {
+      "get": {
+        "operationId": "list_equipments_full_api_data_equipments_detail_all_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/equipments/set/{set_name}": {
+      "get": {
+        "operationId": "get_equipment_by_set_api_data_equipments_set__set_name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/equipments/slot/{slot}": {
+      "get": {
+        "operationId": "get_equipment_by_slot_api_data_equipments_slot__slot__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slot",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/equipments/{name}": {
+      "delete": {
+        "operationId": "delete_equipment_api_data_equipments__name__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "get": {
+        "operationId": "get_equipment_api_data_equipments__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "put": {
+        "operationId": "update_equipment_api_data_equipments__name__put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/inverse": {
+      "post": {
+        "operationId": "inverse_formula_api_data_inverse_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "InverseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "InverseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/inverse/milestones": {
+      "post": {
+        "operationId": "inverse_milestones_api_data_inverse_milestones_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "MilestonesInverseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "MilestonesInverseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/inverse/segment": {
+      "post": {
+        "operationId": "inverse_segment_api_data_inverse_segment_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "SegmentInverseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "SegmentInverseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/profiles": {
+      "get": {
+        "operationId": "list_data_profiles_api_data_profiles_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/profiles/{profile_id}/{entity_key}": {
+      "get": {
+        "operationId": "list_profile_entity_api_data_profiles__profile_id___entity_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "post": {
+        "operationId": "create_profile_entity_api_data_profiles__profile_id___entity_key__post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/profiles/{profile_id}/{entity_key}/detail/all": {
+      "get": {
+        "operationId": "list_profile_entity_full_api_data_profiles__profile_id___entity_key__detail_all_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/profiles/{profile_id}/{entity_key}/{name}": {
+      "delete": {
+        "operationId": "delete_profile_entity_api_data_profiles__profile_id___entity_key___name__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "put": {
+        "operationId": "update_profile_entity_api_data_profiles__profile_id___entity_key___name__put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "entity_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/summary": {
+      "get": {
+        "operationId": "data_summary_api_data_summary_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/validate": {
+      "post": {
+        "operationId": "validate_data_api_data_validate_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "api__data__ValidateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/weapons": {
+      "get": {
+        "operationId": "list_weapons_api_data_weapons_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "post": {
+        "operationId": "create_weapon_api_data_weapons_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/weapons/detail/all": {
+      "get": {
+        "operationId": "list_weapons_full_api_data_weapons_detail_all_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/data/weapons/{name}": {
+      "delete": {
+        "operationId": "delete_weapon_api_data_weapons__name__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "get": {
+        "operationId": "get_weapon_api_data_weapons__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      },
+      "put": {
+        "operationId": "update_weapon_api_data_weapons__name__put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "data"
+        ]
+      }
+    },
+    "/api/donation/manifest": {
+      "get": {
+        "operationId": "donation_manifest_api_donation_manifest_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": []
+      }
+    },
+    "/api/download/client": {
+      "get": {
+        "operationId": "download_client_api_download_client_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": []
+      }
+    },
+    "/api/generator/ai/parse": {
+      "post": {
+        "operationId": "ai_parse_formula_api_generator_ai_parse_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "AIFormulaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "generator"
+        ]
+      }
+    },
+    "/api/generator/ai/test": {
+      "post": {
+        "operationId": "ai_test_connection_api_generator_ai_test_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "AITestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "generator"
+        ]
+      }
+    },
+    "/api/generator/generate": {
+      "post": {
+        "operationId": "generate_adapter_api_generator_generate_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "GenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "generator"
+        ]
+      }
+    },
+    "/api/generator/templates": {
+      "get": {
+        "operationId": "get_templates_api_generator_templates_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "generator"
+        ]
+      }
+    },
+    "/api/generator/templates/{template_id}": {
+      "get": {
+        "operationId": "get_template_detail_api_generator_templates__template_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "generator"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health_api_health_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": []
+      }
+    },
+    "/api/history": {
+      "get": {
+        "operationId": "list_history_api_history_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": []
+      },
+      "post": {
+        "operationId": "save_history_api_history_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "entry",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": []
+      }
+    },
+    "/api/hub/adapters/{adapter_id}": {
+      "delete": {
+        "operationId": "delete_hub_adapter_api_hub_adapters__adapter_id__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/download/{adapter_id}": {
+      "get": {
+        "operationId": "download_hub_adapter_api_hub_download__adapter_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adapter_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/list": {
+      "get": {
+        "operationId": "list_hub_adapters_api_hub_list_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/packs": {
+      "get": {
+        "operationId": "list_packs_endpoint_api_hub_packs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "PackListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      },
+      "post": {
+        "operationId": "create_pack_endpoint_api_hub_packs_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "PackCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/packs/{pack_id}": {
+      "delete": {
+        "operationId": "delete_pack_endpoint_api_hub_packs__pack_id__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "content": {}
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      },
+      "get": {
+        "operationId": "get_pack_endpoint_api_hub_packs__pack_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      },
+      "put": {
+        "operationId": "update_pack_endpoint_api_hub_packs__pack_id__put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "PackUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/packs/{pack_id}/download/{filename}": {
+      "get": {
+        "operationId": "download_pack_file_api_hub_packs__pack_id__download__filename__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "filename",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/packs/{pack_id}/rate": {
+      "post": {
+        "operationId": "rate_pack_endpoint_api_hub_packs__pack_id__rate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "RateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/packs/{pack_id}/upload": {
+      "post": {
+        "operationId": "upload_pack_file_api_hub_packs__pack_id__upload_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "Body_upload_pack_file_api_hub_packs__pack_id__upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/stats": {
+      "get": {
+        "operationId": "hub_stats_api_hub_stats_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/hub/upload": {
+      "post": {
+        "operationId": "upload_hub_adapter_api_hub_upload_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "Body_upload_hub_adapter_api_hub_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "hub"
+        ]
+      }
+    },
+    "/api/layout": {
+      "get": {
+        "operationId": "get_layout_api_layout_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "adapter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "layout"
+        ]
+      }
+    },
+    "/api/layout/dag": {
+      "get": {
+        "operationId": "get_dag_api_layout_dag_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "adapter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "layout"
+        ]
+      }
+    },
+    "/api/layout/schema": {
+      "get": {
+        "operationId": "get_attr_schema_api_layout_schema_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "adapter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "layout"
+        ]
+      }
+    },
+    "/api/layout/validate": {
+      "post": {
+        "operationId": "validate_layout_api_layout_validate_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "adapter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "layout"
+        ]
+      }
+    },
+    "/api/layout/variables": {
+      "get": {
+        "operationId": "get_variables_api_layout_variables_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "adapter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "layout"
+        ]
+      }
+    },
+    "/api/manual-buff/abnormal-matrix-specs": {
+      "get": {
+        "operationId": "abnormal_matrix_specs_api_manual_buff_abnormal_matrix_specs_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "manual-buff"
+        ]
+      }
+    },
+    "/api/manual-buff/active-keys": {
+      "post": {
+        "operationId": "active_keys_api_manual_buff_active_keys_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ActiveKeysRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "manual-buff"
+        ]
+      }
+    },
+    "/api/manual-buff/apply-consumable": {
+      "post": {
+        "operationId": "apply_consumable_api_manual_buff_apply_consumable_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ApplyConsumableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "manual-buff"
+        ]
+      }
+    },
+    "/api/manual-buff/consumable-presets": {
+      "get": {
+        "operationId": "list_consumable_presets_api_manual_buff_consumable_presets_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "manual-buff"
+        ]
+      }
+    },
+    "/api/manual-buff/zone-options": {
+      "get": {
+        "operationId": "list_zone_options_api_manual_buff_zone_options_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "manual-buff"
+        ]
+      }
+    },
+    "/api/ocr/detect": {
+      "post": {
+        "operationId": "detect_api_ocr_detect_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "Body_detect_api_ocr_detect_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "ocr"
+        ]
+      }
+    },
+    "/api/pack/export": {
+      "post": {
+        "operationId": "export_calcpack_api_pack_export_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "pack"
+        ]
+      }
+    },
+    "/api/pack/export/preview": {
+      "post": {
+        "operationId": "export_preview_api_pack_export_preview_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "pack"
+        ]
+      }
+    },
+    "/api/pack/theme/default": {
+      "get": {
+        "operationId": "get_default_theme_api_pack_theme_default_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "pack"
+        ]
+      }
+    },
+    "/api/plugins": {
+      "get": {
+        "operationId": "list_plugins_api_plugins_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "PluginInfo"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/plugins/install": {
+      "post": {
+        "operationId": "install_plugin_api_plugins_install_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "plugin_name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/plugins/{plugin_name}": {
+      "delete": {
+        "operationId": "uninstall_plugin_api_plugins__plugin_name__delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Admin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "plugin_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "plugins"
+        ]
+      }
+    },
+    "/api/search/catalog": {
+      "get": {
+        "operationId": "get_equipment_catalog_api_search_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/enemies": {
+      "get": {
+        "operationId": "get_enemy_choices_api_search_enemies_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/estimate": {
+      "post": {
+        "operationId": "estimate_search_api_search_estimate_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "EstimateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/history": {
+      "get": {
+        "operationId": "list_search_history_route_api_search_history_get",
+        "parameters": [],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      },
+      "post": {
+        "operationId": "save_search_history_route_api_search_history_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/run": {
+      "post": {
+        "operationId": "run_search_api_search_run_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "api__search__SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/run_stream": {
+      "post": {
+        "operationId": "run_search_stream_api_search_run_stream_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "api__search__SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/score-batch": {
+      "post": {
+        "operationId": "score_search_batch_api_search_score_batch_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "ScoreBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/survival/estimate": {
+      "post": {
+        "operationId": "survival_estimate_api_survival_estimate_post",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "SurvivalEstimateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": null,
+        "tags": [
+          "survival"
+        ]
+      }
+    }
+  }
+}
