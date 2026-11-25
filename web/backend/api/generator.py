@@ -11,10 +11,11 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from api.internal.ai_json import extract_ai_json
 from api.internal.errors import raise_http_from_exc
 from api.internal.safe_http import post_chat_completions
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,18 @@ except ImportError:
     _HAS_ENGINE = False
 
 
+_OPERATION_ALIASES = {
+    "add": "+",
+    "subtract": "-",
+    "multiply": "*",
+    "divide": "/",
+    "cond": "condition",
+}
+
+
 class FormulaStep(BaseModel):
     id: str
-    op: str  # + - * / condition expr
+    op: str  # + - * / condition expr；同时接受界面英文别名
     lhs: str = ""
     rhs: str = ""
     cond: str = ""
@@ -44,6 +54,11 @@ class FormulaStep(BaseModel):
     expr: str = ""
     input_map: dict[str, str] = {}
     label: str = ""
+
+    @field_validator("op")
+    @classmethod
+    def normalize_operation(cls, value: str) -> str:
+        return _OPERATION_ALIASES.get(value, value)
 
 
 class VariableDef(BaseModel):
@@ -295,19 +310,13 @@ async def ai_parse_formula(req: AIFormulaRequest):
     except (KeyError, IndexError) as e:
         raise HTTPException(status_code=502, detail=f"AI 返回格式异常，缺少 choices/content: {e!s}")
 
-    # 尝试提取 JSON
-    import re
-
-    json_match = re.search(r"\{[^{}]*\}", content)
-    if json_match:
-        try:
-            parsed = json.loads(json_match.group())
-        except json.JSONDecodeError:
-            logger.warning("AI 返回的 JSON 格式无效: %s", content[:200])
-            raise HTTPException(status_code=502, detail="AI 返回的 JSON 格式无效，请稍后重试")
-    else:
-        logger.warning("AI 返回内容中未找到 JSON 数据: %s", content[:200])
-        raise HTTPException(status_code=502, detail="AI 返回内容中未找到 JSON 数据，请稍后重试")
+    parsed = extract_ai_json(content)
+    if parsed is None:
+        detail = (
+            "AI 返回的 JSON 格式无效，请稍后重试" if "{" in content else "AI 返回内容中未找到 JSON 数据，请稍后重试"
+        )
+        logger.warning("AI 返回内容无法解析为完整 JSON 对象: %s", content[:200])
+        raise HTTPException(status_code=502, detail=detail)
 
     # 验证返回的数据结构
     variables = parsed.get("variables", [])

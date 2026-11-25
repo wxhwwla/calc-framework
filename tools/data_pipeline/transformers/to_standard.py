@@ -68,7 +68,7 @@ def to_standard(records: list[RawRecord], *, stacked_skills: bool = False) -> li
         return entities
     merged: dict[str, EntitySchema] = {}
     for entity in entities:
-        name = entity["名称"]
+        name = str(entity.get("名称", ""))
         if name not in merged:
             merged[name] = entity
             continue

@@ -45,7 +45,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from typing import Any
+from typing import Any, cast
 
 # 确保项目根在 sys.path 中（tools/ 是隐式 namespace package）
 
@@ -102,7 +102,7 @@ def main() -> None:
             entities = from_weapons([dict(r) for r in records])
 
         elif do_validate:
-            entities = [dict(r) for r in records]
+            entities = [cast(EntitySchema, dict(r)) for r in records]
 
         else:
             entities = to_standard(records, stacked_skills=stacked_skills)

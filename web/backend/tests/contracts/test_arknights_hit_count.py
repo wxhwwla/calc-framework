@@ -15,10 +15,19 @@ for _path in (str(_REPO / "framework" / "src"), str(_REPO), str(_REPO / "web" / 
 from api.arknights import ComputeRequest, compute_damage_payload
 
 
+def _request(hit_count: int) -> ComputeRequest:
+    return ComputeRequest(
+        operator_name="风笛",
+        skill_multiplier=1.0,
+        enemy_def=200.0,
+        enemy_res=50.0,
+        hit_count=hit_count,
+    )
+
+
 def test_hit_count_multiplies_damage_once() -> None:
-    base = dict(operator_name="风笛", skill_multiplier=1.0, enemy_def=200.0, enemy_res=50.0)
-    single = compute_damage_payload(ComputeRequest(**base, hit_count=1))
-    double = compute_damage_payload(ComputeRequest(**base, hit_count=2))
+    single = compute_damage_payload(_request(1))
+    double = compute_damage_payload(_request(2))
 
     assert double.physical_damage == single.physical_damage * 2
     assert double.magical_damage == single.magical_damage * 2
