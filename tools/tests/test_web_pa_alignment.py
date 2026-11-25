@@ -19,7 +19,12 @@ def test_find_local_backend_zip_optional():
         assert path.name == "local-backend.zip"
 
 
-def test_build_client_download_returns_zip():
+def test_build_client_download_returns_zip(tmp_path, monkeypatch):
+    target = tmp_path / "web" / "frontend" / "dist" / "local-backend.zip"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"PK-real-backend")
+    monkeypatch.setattr("api.internal.download_client.REPO_ROOT", tmp_path)
+
     body, filename, ctype = build_client_download()
     assert body[:2] == b"PK"
     assert filename.endswith(".zip")

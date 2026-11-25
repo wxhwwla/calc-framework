@@ -8,10 +8,10 @@
 
 用法::
 
-    python tools/sync_adapter_snapshots.py --game endfield --dry-run
-    python tools/sync_adapter_snapshots.py --game endfield --apply
-    python tools/sync_adapter_snapshots.py --game arknights --apply
-    python tools/sync_adapter_snapshots.py --game all --apply
+    python tools/data_pipeline/sync_adapter_snapshots.py --game endfield
+    python tools/data_pipeline/sync_adapter_snapshots.py --game endfield --apply
+    python tools/data_pipeline/sync_adapter_snapshots.py --game arknights --apply
+    python tools/data_pipeline/sync_adapter_snapshots.py --game all --apply
 """
 
 from __future__ import annotations
@@ -22,20 +22,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_REPO = Path(__file__).resolve().parents[1]
+_REPO = Path(__file__).resolve().parents[2]
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
 from tools.data_pipeline.transformers.from_legacy_endfield import from_characters, from_weapons
 from utils.game_data_paths import (
+    ARKNIGHTS_OPERATORS_STANDARD,
+    ARKNIGHTS_PARSED_DIR,
     ENDFIELD_CHARACTERS_JSON,
     ENDFIELD_CHARACTERS_STANDARD,
     ENDFIELD_EQUIPMENTS_JSON,
     ENDFIELD_EQUIPMENTS_STANDARD,
     ENDFIELD_WEAPONS_JSON,
     ENDFIELD_WEAPONS_STANDARD,
-    ARKNIGHTS_PARSED_DIR,
-    ARKNIGHTS_OPERATORS_STANDARD,
 )
 
 

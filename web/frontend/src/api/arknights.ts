@@ -42,6 +42,7 @@ export interface ArknightsSkill {
 export interface ComputeRequest {
   operator_name: string;
   skill_multiplier: number;
+  hit_count: number;
   skill_level: number;
   enemy_def: number;
   enemy_res: number;

@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import MenuIcon from "@mui/icons-material/Menu";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
@@ -44,6 +45,7 @@ import GlobalHelpDialog from "./components/GlobalHelpDialog";
 import PluginManagerDialog from "./components/calculator/PluginManagerDialog";
 import GlobalAttributionButton from "./components/GlobalAttributionButton";
 import SiteFooter from "./components/SiteFooter";
+import AdminTokenDialog from "./components/common/AdminTokenDialog";
 
 const ComputePage = lazy(() => import("./pages/ComputePage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -141,6 +143,7 @@ function Shell() {
   const { mode, toggle: toggleTheme } = useThemeMode();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pluginOpen, setPluginOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const { t, i18n } = useTranslation();
   const { gameItems, toolItems } = useNavItems();
 
@@ -199,6 +202,9 @@ function Shell() {
           <IconButton color="inherit" onClick={toggleLanguage} title={t("common.language")} size="small" sx={{ mr: 1 }}>
             <Typography variant="body2">{i18n.language === "zh-CN" ? "EN" : t("common.language")}</Typography>
           </IconButton>
+          <IconButton color="inherit" onClick={() => setAdminOpen(true)} title={t("adminAuth.title")} size="small" sx={{ mr: 1 }}>
+            <AdminPanelSettingsIcon fontSize="small" />
+          </IconButton>
           <IconButton color="inherit" onClick={() => setPluginOpen(true)} title={t("plugins.title", "插件")} size="small" sx={{ mr: 1 }}>
             <ExtensionIcon fontSize="small" />
           </IconButton>
@@ -206,6 +212,7 @@ function Shell() {
           <GlobalDonationButton />
           <GlobalHelpDialog />
           <PluginManagerDialog open={pluginOpen} onClose={() => setPluginOpen(false)} />
+          <AdminTokenDialog open={adminOpen} onClose={() => setAdminOpen(false)} />
         </Toolbar>
       </AppBar>
 

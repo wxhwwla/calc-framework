@@ -324,11 +324,14 @@ def test_long_list_summary():
 
 
 def _run_cli_json(path, *args):
+    import os
+
     result = subprocess.run(
         [sys.executable, "-m", "tools.data_pipeline.cli", str(path), *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     assert result.returncode == 0, result.stderr
     return result.stdout, json.loads(result.stdout[result.stdout.index("[\n") :])

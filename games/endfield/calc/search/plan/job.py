@@ -37,6 +37,7 @@ class SingleSkillSearchJob:
     weapon_data_by_name: dict[str, dict[str, Any]]
     run_signature: str
     multi_skill_eval: MultiSkillSearchEval | None = None
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None
     physical_abnormal_counts: dict[str, int] | None = None
     spell_abnormal_counts: dict[str, int] | None = None
     weapon_normal_levels: tuple[int, ...] = ()
@@ -117,6 +118,7 @@ def build_run_signature(
     spell_abnormal_counts: dict[str, int] | None = None,
     weapon_normal_levels: Sequence[int] | None = None,
     weapon_special_states: Sequence[dict[str, int]] | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> str:
     """
     生成续跑用 run_signature（写入 search_runs.db）。
@@ -134,7 +136,8 @@ def build_run_signature(
         f"{tuple(sorted((physical_abnormal_counts or {}).items()))}-"
         f"{tuple(sorted((spell_abnormal_counts or {}).items()))}-"
         f"{tuple(int(v) for v in (weapon_normal_levels or ()))}-"
-        f"{tuple((int(s.get('level', 0)), int(s.get('stack', 0))) for s in (weapon_special_states or ()))}"
+        f"{tuple((int(s.get('level', 0)), int(s.get('stack', 0))) for s in (weapon_special_states or ()))}-"
+        f"{manual_buffs or {}}"
     )
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:16]
 
@@ -156,6 +159,7 @@ def prepare_single_skill_search_job(
     current_weapon: dict[str, Any],
     equipment_catalog: dict[str, list[dict[str, Any]]],
     multi_skill_eval: MultiSkillSearchEval | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
     enemy_defense: float = 100.0,
     physical_abnormal_counts: dict[str, int] | None = None,
     spell_abnormal_counts: dict[str, int] | None = None,
@@ -221,6 +225,7 @@ def prepare_single_skill_search_job(
         spell_abnormal_counts=spell_abnormal_counts,
         weapon_normal_levels=tuple(int(v) for v in (weapon_normal_levels or ())),
         weapon_special_states=tuple(dict(s) for s in (weapon_special_states or ())),
+        manual_buffs=manual_buffs,
     )
     weapon_data_by_name = {str(w.get("名称", "")): w for w in all_weapons if w.get("名称")}
     display_skill = multi_skill_eval.display_label if multi_skill_eval else skill_name
@@ -256,6 +261,7 @@ def prepare_single_skill_search_job(
         spell_abnormal_counts=dict(spell_abnormal_counts or {}),
         weapon_normal_levels=tuple(int(v) for v in (weapon_normal_levels or ())),
         weapon_special_states=tuple(dict(s) for s in (weapon_special_states or ())),
+        manual_buffs=manual_buffs,
         damage_component_mode=str(damage_component_mode),
         use_expected_crit=bool(use_expected_crit),
         include_conditional_equipment_crit=bool(include_conditional_equipment_crit),

@@ -31,7 +31,7 @@ from api.packaging.contribute import router as contribute_router
 from api.packaging.pack import router as pack_router
 from api.plugins import router as plugins_router
 from api.search import router as search_router
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -203,7 +203,10 @@ def download_client():
     """下载本地搜索服务器（PyInstaller 打包，双击即可运行）。"""
     from api.internal.download_client import build_client_download
 
-    content, filename, media_type = build_client_download()
+    try:
+        content, filename, media_type = build_client_download()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     return Response(
         content=content,
         media_type=media_type,

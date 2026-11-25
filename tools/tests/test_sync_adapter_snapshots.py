@@ -39,6 +39,22 @@ def test_arknights_standard_rel_matches_adapter_file() -> None:
     assert REPO_ROOT.joinpath(*ARKNIGHTS_OPERATORS_STANDARD_REL.split("/")) == ARKNIGHTS_OPERATORS_STANDARD
 
 
+def test_sync_endfield_cli_runs_from_outside_repo(tmp_path: Path) -> None:
+    import subprocess
+
+    script = _REPO / "tools" / "data_pipeline" / "sync_adapter_snapshots.py"
+    result = subprocess.run(
+        [sys.executable, str(script), "--game", "endfield"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "success=True" in result.stdout
+
+
 def test_sync_endfield_dry_run_success() -> None:
     stats = sync_endfield_snapshots(apply=False)
     assert stats["success"] is True

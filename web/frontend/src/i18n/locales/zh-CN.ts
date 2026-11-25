@@ -25,6 +25,12 @@ const zhCN = {
     ok: "确定", enabled: "启用", disabled: "禁用",
   },
 
+  adminAuth: {
+    title: "管理 API Token",
+    description: "仅用于受保护的数据写入、上传和贡献操作。Token 只保存在当前浏览器会话，不会写入日志或 URL。",
+    tokenLabel: "X-Admin-Token",
+  },
+
   compute: {
     title: "伤害计算器", advanced: "高级页",
     inputDisabled: "已禁用", inputDisabledReason: "已禁用：{{reason}}",

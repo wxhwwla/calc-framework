@@ -81,6 +81,7 @@ class SearchRequest(BaseModel):
     max_workers: int = Field(default=4, description="并行线程数")
     use_manual_multi_skill_counts: bool = Field(default=False, description="是否手动指定多段技能计数")
     manual_counts: dict[str, int] | None = Field(default=None, description="手动技能计数")
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = Field(default=None, description="段级手动 Buff")
     skill_1_level: int = Field(default=0, description="技能 1 等级")
     skill_2_level: int = Field(default=0, description="技能 2 等级")
     skill_3_level: int = Field(default=0, description="技能 3 等级")
@@ -101,7 +102,6 @@ class EstimateRequest(BaseModel):
     char_data: dict[str, Any]
 
     char_level: int = 90
-
     weapon_level: int = 90
 
     trust_level: int = 0

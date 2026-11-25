@@ -26,6 +26,7 @@ interface ArknightsState {
 const defaultParams: ComputeRequest = {
   operator_name: "",
   skill_multiplier: 1.0,
+  hit_count: 1,
   skill_level: 7,
   enemy_def: 200,
   enemy_res: 50,

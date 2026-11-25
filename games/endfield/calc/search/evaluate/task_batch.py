@@ -37,7 +37,7 @@ def _rust_search_importable() -> bool:
 
 def can_batch_search_job_eval(job: SingleSkillSearchJob) -> bool:
     """是否可对 search_job 单技能路径启用 Rust 批量。"""
-    if job.multi_skill_eval is not None:
+    if job.multi_skill_eval is not None or job.manual_buffs:
         return False
     if not frozen_use_search_job_batch() or not use_rust_search_accel():
         return False

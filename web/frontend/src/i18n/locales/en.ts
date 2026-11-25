@@ -25,6 +25,12 @@ const en = {
     ok: "OK", enabled: "Enabled", disabled: "Disabled",
   },
 
+  adminAuth: {
+    title: "Admin API Token",
+    description: "Used for protected data writes, uploads and contributions. The token is stored only for this browser session and never logged or placed in URLs.",
+    tokenLabel: "X-Admin-Token",
+  },
+
   compute: {
     title: "Damage Calculator", advanced: "Advanced",
     inputDisabled: "Disabled", inputDisabledReason: "Disabled: {{reason}}",

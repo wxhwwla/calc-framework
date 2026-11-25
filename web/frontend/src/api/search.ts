@@ -231,6 +231,7 @@ export interface SearchRequest {
   max_workers?: number;
   use_manual_multi_skill_counts?: boolean;
   manual_counts?: Record<string, number> | null;
+  manual_buffs?: Record<string, { effect_type: string; value: number }[]>;
   skill_1_level?: number;
   skill_2_level?: number;
   skill_3_level?: number;

@@ -60,6 +60,7 @@ def _ensure_db() -> sqlite3.Connection:
             rating_count INTEGER NOT NULL DEFAULT 0,
             download_count INTEGER NOT NULL DEFAULT 0,
             file_size INTEGER NOT NULL DEFAULT 0,
+            filename TEXT NOT NULL DEFAULT '',
             screenshot_urls TEXT NOT NULL DEFAULT '[]',
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
@@ -75,6 +76,9 @@ def _ensure_db() -> sqlite3.Connection:
             FOREIGN KEY (pack_id) REFERENCES packs(id)
         )
     """)
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(packs)")}
+    if "filename" not in columns:
+        conn.execute("ALTER TABLE packs ADD COLUMN filename TEXT NOT NULL DEFAULT ''")
     conn.commit()
     return conn
 
@@ -196,6 +200,7 @@ def update_pack(pack_id: str, **kwargs: Any) -> dict[str, Any] | None:
             "author",
             "tags",
             "file_size",
+            "filename",
         }
     }
     if not fields:
@@ -315,6 +320,7 @@ def save_pack_file(pack_id: str, content: bytes, filename: str) -> Path:
     if not file_path.resolve().is_relative_to(pack_dir.resolve()):
         raise ValueError(f"路径穿越检测: {filename}")
     file_path.write_bytes(content)
+    update_pack(pack_id, file_size=len(content), filename=filename)
     return file_path
 
 

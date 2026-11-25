@@ -43,6 +43,7 @@ class SearchJobInputs:
     skill_2_level: int = 0
     skill_3_level: int = 0
     manual_counts: dict[str, int] | None = None
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None
     physical_abnormal_counts: dict[str, int] | None = None
     spell_abnormal_counts: dict[str, int] | None = None
     damage_component_mode: str = "skill_and_abnormal"
@@ -99,6 +100,7 @@ def prepare_search_job(
         current_weapon=inputs.current_weapon,
         equipment_catalog=inputs.equipment_catalog,
         fixed_loadout=inputs.fixed_loadout,
+        manual_buffs=dict(inputs.manual_buffs or {}),
         multi_skill_eval=multi_skill_eval,
         enemy_defense=float(inputs.enemy_defense),
         physical_abnormal_counts=dict(inputs.physical_abnormal_counts or {}),

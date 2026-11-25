@@ -126,6 +126,52 @@ class TestScoreSearchLoadoutsBatch(unittest.TestCase):
         self.assertEqual(len(data["final_damage"]), 1)
         self.assertGreater(data["final_damage"][0], 0.0)
 
+    def test_score_batch_api_applies_manual_buffs(self) -> None:
+        job, weapon, catalog = self._minimal_job()
+        client = TestClient(app)
+        payload = {
+            "params": {
+                "char_data": job.char_data,
+                "char_level": job.char_level,
+                "weapon_level": job.weapon_level,
+                "trust_level": job.trust_level,
+                "skill_name": "战技",
+                "skill_type": "战技",
+                "skill_multiplier": 2.0,
+                "damage_type": "物理",
+                "weapon_scope_label": "当前武器",
+                "equipment_scope_label": "全部装备",
+                "all_weapons": [weapon],
+                "current_weapon": weapon,
+                "equipment_catalog": catalog,
+                "skill_1_level": 8,
+                "skill_2_level": 8,
+                "skill_3_level": 8,
+            },
+            "loadouts": [
+                {
+                    "weapon_name": str(weapon["名称"]),
+                    "chest": "甲",
+                    "gloves": "手",
+                    "accessory_a": "件A",
+                    "accessory_b": "件B",
+                }
+            ],
+        }
+        plain_resp = client.post("/api/search/score-batch", json=payload)
+        buffed_payload = {
+            **payload,
+            "params": {
+                **payload["params"],
+                "manual_buffs": {"战技:1:1": [{"effect_type": "其他伤害加成", "value": 0.5}]},
+            },
+        }
+        buffed_resp = client.post("/api/search/score-batch", json=buffed_payload)
+
+        self.assertEqual(plain_resp.status_code, 200, plain_resp.text)
+        self.assertEqual(buffed_resp.status_code, 200, buffed_resp.text)
+        self.assertGreater(buffed_resp.json()["final_damage"][0], plain_resp.json()["final_damage"][0])
+
 
 if __name__ == "__main__":
     unittest.main()

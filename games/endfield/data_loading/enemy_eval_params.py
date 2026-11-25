@@ -191,6 +191,7 @@ def build_search_job_inputs_from_request(
         skill_2_level=int(getattr(req, "skill_2_level", 0)),
         skill_3_level=int(getattr(req, "skill_3_level", 0)),
         manual_counts=getattr(req, "manual_counts", None),
+        manual_buffs=getattr(req, "manual_buffs", None),
         physical_abnormal_counts=getattr(req, "physical_abnormal_counts", None),
         spell_abnormal_counts=getattr(req, "spell_abnormal_counts", None),
         damage_component_mode=str(getattr(req, "damage_component_mode", "skill_and_abnormal")),

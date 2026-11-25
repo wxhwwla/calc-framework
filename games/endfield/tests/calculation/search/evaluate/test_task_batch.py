@@ -75,6 +75,20 @@ class TestSearchJobTaskBatch(unittest.TestCase):
     def test_can_batch_false_for_multi_skill(self) -> None:
         self.assertFalse(can_batch_search_job_eval(self._multi_skill_job()))
 
+    def test_manual_buffs_disable_rust_batch_evaluation(self) -> None:
+        from unittest.mock import patch
+
+        job = replace(
+            self._single_skill_job(),
+            manual_buffs={"战技:1": [{"effect_type": "其他伤害加成", "value": 0.5}]},
+        )
+        with (
+            patch("games.endfield.calc.search.evaluate.task_batch.frozen_use_search_job_batch", return_value=True),
+            patch("games.endfield.calc.search.evaluate.task_batch.use_rust_search_accel", return_value=True),
+            patch("games.endfield.calc.search.evaluate.task_batch._rust_search_importable", return_value=True),
+        ):
+            self.assertFalse(can_batch_search_job_eval(job))
+
     def test_batch_matches_single_evaluator(self) -> None:
         job = self._single_skill_job()
         if not can_batch_search_job_eval(job):

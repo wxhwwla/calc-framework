@@ -79,6 +79,7 @@ def _build_operator_index() -> list[dict]:
 class ComputeRequest(BaseModel):
     operator_name: str
     skill_multiplier: float | None = None
+    hit_count: int = 1
     skill_level: int = 7
     enemy_def: float = 200.0
     enemy_res: float = 50.0
@@ -137,12 +138,13 @@ def compute_damage_payload(req: ComputeRequest) -> ComputeResponse:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"计算失败: {e}") from e
 
+    hits = max(1, req.hit_count)
     return ComputeResponse(
         operator_name=req.operator_name,
         final_atk=result.outputs.get("最终攻击力", 0.0),
-        physical_damage=result.outputs.get("物理伤害", 0.0),
-        magical_damage=result.outputs.get("法术伤害", 0.0),
-        true_damage=result.outputs.get("真伤伤害", 0.0),
+        physical_damage=result.outputs.get("物理伤害", 0.0) * hits,
+        magical_damage=result.outputs.get("法术伤害", 0.0) * hits,
+        true_damage=result.outputs.get("真伤伤害", 0.0) * hits,
         execution_count=len(result.execution_order),
     )
 

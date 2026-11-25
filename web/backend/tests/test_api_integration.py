@@ -1297,9 +1297,9 @@ class TestDownloadClient(unittest.TestCase):
         self.client = TestClient(app)
 
     def test_download_client_endpoint(self) -> None:
-        resp = self.client.get("/api/download/client")
-        # 如果 PyInstaller 未打包或 client 不可用，可能返回 404/500
-        self.assertIn(resp.status_code, (200, 404, 500))
+        with patch("api.internal.download_client.find_local_backend_zip", return_value=None):
+            resp = self.client.get("/api/download/client")
+        self.assertEqual(resp.status_code, 404)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -212,6 +212,7 @@ def evaluate_multi_skill_task(
     scenarios: tuple[SkillScenario, ...],
     skill_counts: dict[str, int],
     search_eval: SearchEvalContext | None = None,
+    manual_buffs: dict[str, list[dict[str, str | float]]] | None = None,
 ) -> LoadoutScore:
     """评估单条配装的多技能加权总伤（供全量并行/续跑搜索）。
 
@@ -292,6 +293,7 @@ def evaluate_multi_skill_task(
                 break_defense_stacks=bd_stacks,
                 effects=effects + list(scenario.external_effects),
                 crit_mode=crit_mode,
+                manual_buffs=(manual_buffs or {}).get(f"{key}:{occurrence}", (manual_buffs or {}).get(key)),
             )
             segment_sum += dmg.final_damage
         segment_breakdown[key] = segment_sum / count if count else 0.0

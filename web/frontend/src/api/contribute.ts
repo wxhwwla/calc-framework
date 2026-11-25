@@ -1,11 +1,12 @@
 import i18n from "../i18n/config";
+import { adminHeaders } from "./adminAuth";
 
 const BASE = "/api/contribute";
 
 export async function validateContributeData(data: unknown): Promise<{ valid: boolean; errors: string[] }> {
   const r = await fetch(`${BASE}/validate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   return r.json();
@@ -14,7 +15,7 @@ export async function validateContributeData(data: unknown): Promise<{ valid: bo
 export async function submitContributeData(data: unknown): Promise<{ message: string; filename: string }> {
   const r = await fetch(`${BASE}/submit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   if (!r.ok) {

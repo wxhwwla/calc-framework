@@ -210,6 +210,7 @@ export function buildSearchRequestFromLoadout(
     damage_component_mode: payload.damage_component_mode,
     use_manual_multi_skill_counts: payload.use_manual_multi_skill_counts,
     manual_counts: payload.manual_counts,
+    manual_buffs: payload.manual_buffs,
     skill_1_level: payload.skill_1_level,
     skill_2_level: payload.skill_2_level,
     skill_3_level: payload.skill_3_level,

@@ -1,4 +1,5 @@
 import i18n from "../i18n/config";
+import { adminHeaders } from "./adminAuth";
 
 const HUB_BASE = "/api/hub";
 
@@ -13,6 +14,7 @@ export interface HubPackInfo {
   rating_count: number;
   download_count: number;
   file_size: number;
+  filename?: string;
   screenshot_urls: string[];
   created_at: string;
   updated_at: string;
@@ -60,7 +62,7 @@ export async function createPack(data: {
 }): Promise<{ id: string; name: string; version: string; message: string }> {
   const resp = await fetch(`${HUB_BASE}/packs`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -75,6 +77,7 @@ export async function uploadPackFile(
   form.append("file", file);
   const resp = await fetch(`${HUB_BASE}/packs/${packId}/upload`, {
     method: "POST",
+    headers: adminHeaders(),
     body: form,
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -103,7 +106,7 @@ export async function ratePack(
 ): Promise<{ rating: number; rating_count: number }> {
   const resp = await fetch(`${HUB_BASE}/packs/${packId}/rate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ score, comment: comment || "" }),
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -131,6 +134,7 @@ export async function uploadHubAdapter(
   form.append("file", file);
   const resp = await fetch(`${HUB_BASE}/upload`, {
     method: "POST",
+    headers: adminHeaders(),
     body: form,
   });
   if (!resp.ok) {

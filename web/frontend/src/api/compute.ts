@@ -1,6 +1,7 @@
 const BASE = "/api";
 
 export interface AdapterInfo {
+  id: string;
   name: string;
   game: string;
   version: string;

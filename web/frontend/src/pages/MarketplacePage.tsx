@@ -113,7 +113,7 @@ export default function MarketplacePage() {
 
   const handleDownload = async (pack: HubPackInfo) => {
     try {
-      await downloadPackFile(pack.id, `${pack.name}_v${pack.version}.calcpack`);
+      await downloadPackFile(pack.id, pack.filename || `${pack.id}.calcpack`);
       setSnackMsg(t("marketplace.downloadStart", { name: pack.name }));
       setSnackSeverity("success");
     } catch (e) {

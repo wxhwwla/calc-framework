@@ -28,7 +28,7 @@ import UploadIcon from "@mui/icons-material/Upload";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useAdapterStore } from "../store/adapterStore";
 import { fetchSchema, type AdapterAttr } from "../api/compute";
-import { uploadHubAdapter, downloadHubAdapter } from "../api/hub";
+import { uploadHubAdapter } from "../api/hub";
 
 function AdapterDetail({ name }: { name: string }) {
   const { t } = useTranslation();
@@ -71,8 +71,6 @@ export default function AdaptersPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const [downloading, setDownloading] = useState<string | null>(null);
-
   const [snackMsg, setSnackMsg] = useState("");
   const [snackSeverity, setSnackSeverity] = useState<"success" | "error">("success");
 
@@ -98,20 +96,6 @@ export default function AdaptersPage() {
       setSnackSeverity("error");
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleDownload = async (name: string) => {
-    setDownloading(name);
-    try {
-      await downloadHubAdapter(name);
-      setSnackMsg(t("adapters.downloadStart", { name }));
-      setSnackSeverity("success");
-    } catch (e) {
-      setSnackMsg(t("adapters.downloadFailed", { e: String(e) }));
-      setSnackSeverity("error");
-    } finally {
-      setDownloading(null);
     }
   };
 
@@ -143,9 +127,9 @@ export default function AdaptersPage() {
           </TableHead>
           <TableBody>
             {adapters.map((a) => (
-              <TableRow key={a.name}>
+              <TableRow key={a.id}>
                 <TableCell padding="checkbox">
-                  <AdapterDetail name={a.name} />
+                  <AdapterDetail name={a.id} />
                 </TableCell>
                 <TableCell>
                   <Typography fontWeight="bold">{a.name}</Typography>
@@ -163,11 +147,11 @@ export default function AdaptersPage() {
                   <IconButton
                     size="small"
                     color="primary"
-                    disabled={downloading === a.name}
-                    onClick={() => handleDownload(a.name)}
+                    component="a"
+                    href="/hub"
                     title={t("adapters.downloadFromMarket")}
                   >
-                    {downloading === a.name ? <CircularProgress size={18} /> : <DownloadIcon />}
+                    <DownloadIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>

@@ -97,6 +97,7 @@ def evaluate_task(
     crit_mode: CritMode,
     task: tuple[WeaponCandidate, tuple[dict, dict, dict, dict]],
     search_eval: SearchEvalContext | None = None,
+    manual_buffs: list[dict[str, str | float]] | None = None,
 ) -> LoadoutScore:
     """评估单条搜索任务。
 
@@ -142,6 +143,7 @@ def evaluate_task(
         break_defense_stacks=base_context.break_defense_stacks,
         effects=list(snapshot.effects),
         crit_mode=crit_mode,
+        manual_buffs=manual_buffs,
     ).final_damage
     return LoadoutScore(
         weapon_name=snapshot.weapon_name,

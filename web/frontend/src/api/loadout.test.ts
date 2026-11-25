@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildWebLoadoutPayload, missingFixedEquipmentDetails, type BuildLoadoutContext } from "./loadout";
+import { buildSearchRequestFromLoadout, buildWebLoadoutPayload, missingFixedEquipmentDetails, type BuildLoadoutContext } from "./loadout";
 
 function context(): BuildLoadoutContext {
   return {
@@ -89,5 +89,16 @@ describe("buildWebLoadoutPayload equipment details", () => {
         测试护甲: { 名称: "测试护甲", 属性词条: ["攻击力16"] },
       }),
     ).toEqual([]);
+  });
+
+  it("keeps manual buffs when converting a loadout to search", () => {
+    const payload = buildWebLoadoutPayload({
+      ...context(),
+      manualBuffStore: { "战技:1:1": [{ effect_type: "其他伤害加成", value: 0.5 }] },
+    });
+
+    expect(buildSearchRequestFromLoadout(payload!).manual_buffs).toEqual({
+      "战技:1:1": [{ effect_type: "其他伤害加成", value: 0.5 }],
+    });
   });
 });

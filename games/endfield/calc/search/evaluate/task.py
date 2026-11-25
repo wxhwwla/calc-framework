@@ -164,6 +164,7 @@ def _evaluate_abnormal_damage(
         effects=list(snapshot.effects),
         counts=physical_counts,
         char_level=char_level,
+        manual_buffs=job.manual_buffs,
         originium_arts_strength=float(snapshot.originium_arts_strength),
         attached_effect_multiplier=float(job.attached_effect_multiplier),
     )
@@ -192,6 +193,7 @@ def _evaluate_abnormal_damage(
         effects=list(snapshot.effects),
         counts=spell_counts,
         char_level=char_level,
+        manual_buffs=job.manual_buffs,
         originium_arts_strength=float(snapshot.originium_arts_strength),
         attached_effect_multiplier=float(job.attached_effect_multiplier),
         corrosion_duration_seconds=float(job.corrosion_duration_seconds),
@@ -199,6 +201,14 @@ def _evaluate_abnormal_damage(
     merged = dict(physical_breakdown)
     merged.update(spell_breakdown)
     return physical_total + spell_total, merged
+
+
+def _single_skill_manual_buffs(job: SingleSkillSearchJob) -> list[dict[str, str | float]]:
+    """选取当前单段第一次的 Buff，并兼容旧二级键。"""
+    store = job.manual_buffs or {}
+    label = job.skill_label.strip()
+    base_key = label if ":" in label else f"{job.base_context.skill_type or label}:1"
+    return list(store.get(f"{base_key}:1", store.get(base_key, [])))
 
 
 def make_loadout_task_evaluator(
@@ -244,6 +254,7 @@ def make_loadout_task_evaluator(
                 crit_mode=eval_crit_mode,
                 task=task,
                 search_eval=search_eval,
+                manual_buffs=_single_skill_manual_buffs(job),
             )
             abnormal_total, abnormal_breakdown = _evaluate_abnormal_damage(
                 job=job,
@@ -294,6 +305,7 @@ def make_loadout_task_evaluator(
             scenarios=scenarios,
             skill_counts=counts,
             search_eval=search_eval,
+            manual_buffs=job.manual_buffs,
         )
         abnormal_total, abnormal_breakdown = _evaluate_abnormal_damage(
             job=job,

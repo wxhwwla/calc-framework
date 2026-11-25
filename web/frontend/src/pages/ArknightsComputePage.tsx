@@ -65,11 +65,12 @@ export default function ArknightsComputePage() {
       computeParams: {
         ...computeParams,
         skill_multiplier: effectiveMult,
+        hit_count: hitCount,
         atk_percent_bonus: computeParams.atk_percent_bonus + parsedSkill.atkBuffHint * 100,
       },
     });
     runCompute();
-  }, [computeParams, effectiveMult, parsedSkill.atkBuffHint, runCompute]);
+  }, [computeParams, effectiveMult, hitCount, parsedSkill.atkBuffHint, runCompute]);
 
   const totalDamageMult = effectiveMult * hitCount;
 

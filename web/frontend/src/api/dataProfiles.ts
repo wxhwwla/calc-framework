@@ -1,4 +1,5 @@
 import i18n from "../i18n/config";
+import { adminHeaders } from "./adminAuth";
 
 const BASE = "/api/data/profiles";
 
@@ -15,7 +16,7 @@ export async function createProfileRow(
 ): Promise<void> {
   const r = await fetch(`${BASE}/${encodeURIComponent(profileId)}/${encodeURIComponent(entityKey)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(data),
   });
   if (!r.ok) throw new Error(`${i18n.t("api.profileCreateFailed")}: ${await r.text()}`);
@@ -31,7 +32,7 @@ export async function updateProfileRow(
     `${BASE}/${encodeURIComponent(profileId)}/${encodeURIComponent(entityKey)}/${encodeURIComponent(name)}`,
     {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: adminHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(data),
     },
   );
@@ -45,7 +46,7 @@ export async function deleteProfileRow(
 ): Promise<void> {
   const r = await fetch(
     `${BASE}/${encodeURIComponent(profileId)}/${encodeURIComponent(entityKey)}/${encodeURIComponent(name)}`,
-    { method: "DELETE" },
+    { method: "DELETE", headers: adminHeaders() },
   );
   if (!r.ok) throw new Error(`${i18n.t("api.profileDeleteFailed")}: ${await r.text()}`);
 }
@@ -69,7 +70,7 @@ export interface ValidateResult {
 export async function validateData(profileId: string, entityKey: string): Promise<ValidateResult> {
   const r = await fetch("/api/data/validate", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ profile_id: profileId, entity_key: entityKey }),
   });
   if (!r.ok) throw new Error(await r.text());
@@ -84,7 +85,7 @@ export async function dagVerify(
 ): Promise<DagVerifyResult> {
   const r = await fetch("/api/data/dag-verify", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: adminHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ profile_id: profileId, entity_key: entityKey, entity_name: entityName, level }),
   });
   if (!r.ok) throw new Error(await r.text());
