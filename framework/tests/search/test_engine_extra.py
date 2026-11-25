@@ -123,7 +123,7 @@ class TestRunWithPersist:
         import calc_framework.search.persist as persist_module
 
         class FailingStore(SearchRunStore):
-            def mark_processed_batch(self, signature, combo_keys):
+            def mark_scored_batch(self, signature, rows):
                 raise OSError("database unavailable")
 
         monkeypatch.setattr(persist_module, "PROCESSED_BATCH_SIZE", 1)
@@ -137,6 +137,63 @@ class TestRunWithPersist:
         assert result.metadata["failed_count"] == 1
         assert store.run_status("test-write-failure") == "failed"
         assert "1" not in store.get_processed_keys("test-write-failure")
+
+    def test_final_batch_write_failure_is_reported(self):
+        class FailingStore(SearchRunStore):
+            def mark_scored_batch(self, signature, rows):
+                raise OSError("database unavailable")
+
+        store = FailingStore(self.db_path)
+        result = _SquareEngine([1]).run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-final-write-failure",
+        )
+
+        assert result.metadata["failed_count"] == 1
+        assert store.run_status("test-final-write-failure") == "failed"
+        assert store.get_processed_keys("test-final-write-failure") == set()
+
+    def test_non_json_result_failure_is_reported(self):
+        class NonJsonEngine(_SquareEngine):
+            def evaluate(self, candidate):
+                return {"score": candidate * candidate, "payload": object()}
+
+            def score_key(self, result):
+                return float(result["score"])
+
+        store = SearchRunStore(self.db_path)
+        result = NonJsonEngine([1]).run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-non-json-failure",
+        )
+
+        assert result.metadata["failed_count"] == 1
+        assert store.run_status("test-non-json-failure") == "failed"
+        assert store.get_processed_keys("test-non-json-failure") == set()
+
+    def test_legacy_processed_hook_still_runs(self):
+        class LegacyStore(SearchRunStore):
+            def __init__(self, db_path):
+                super().__init__(db_path)
+                self.calls = 0
+
+            def mark_processed_batch(self, signature, combo_keys):
+                self.calls += 1
+                super().mark_processed_batch(signature, combo_keys)
+
+        store = LegacyStore(self.db_path)
+        result = _SquareEngine([1]).run(
+            SearchConfig(top_n=10, max_workers=1),
+            run_store=store,
+            run_signature="test-legacy-hook",
+        )
+
+        assert store.calls == 1
+        assert result.items == (1,)
+        assert store.get_processed_keys("test-legacy-hook") == {"1"}
+        assert store.get_scored_results("test-legacy-hook") == [("1", 1.0, 1)]
 
     def test_run_with_persist_skips_processed(self):
         engine = _SquareEngine([1, 2, 3, 4, 5])
@@ -159,6 +216,72 @@ class TestRunWithPersist:
 
         assert result.metadata.get("skipped_preprocessed") == 3
 
+    def test_resume_restores_historical_top_n(self):
+        store = SearchRunStore(self.db_path)
+        engine = _SquareEngine([5, 1, 2, 3])
+        first = engine.run(
+            SearchConfig(top_n=2, max_workers=1),
+            cancel_token=SearchCancelToken(cancel_after=1),
+            run_store=store,
+            run_signature="test-restore-scores",
+        )
+        assert first.items == (25,)
+
+        resumed = engine.run(
+            SearchConfig(top_n=2, max_workers=1),
+            run_store=store,
+            run_signature="test-restore-scores",
+        )
+
+        assert resumed.items == (25, 9)
+        assert store.run_status("test-restore-scores") == "completed"
+
+    def test_resume_with_no_pending_returns_saved_top_n(self):
+        store = SearchRunStore(self.db_path)
+        engine = _SquareEngine([5, 1, 2, 3])
+        config = SearchConfig(top_n=2, max_workers=1)
+        engine.run(config, run_store=store, run_signature="test-no-pending-scores")
+
+        resumed = engine.run(config, run_store=store, run_signature="test-no-pending-scores")
+
+        assert resumed.items == (25, 9)
+        assert resumed.metadata["skipped_preprocessed"] == 4
+
+    def test_custom_result_json_roundtrip(self):
+        class ObjectResult:
+            def __init__(self, score):
+                self.score = score
+
+        class ObjectEngine(_SquareEngine):
+            def evaluate(self, candidate):
+                return ObjectResult(candidate * candidate)
+
+            def score_key(self, result):
+                return float(result.score)
+
+            def serialize_result(self, result):
+                return {"score": result.score}
+
+            def deserialize_result(self, payload):
+                return ObjectResult(payload["score"])
+
+        store = SearchRunStore(self.db_path)
+        engine = ObjectEngine([5, 1, 2, 3])
+        engine.run(
+            SearchConfig(top_n=2, max_workers=1),
+            cancel_token=SearchCancelToken(cancel_after=1),
+            run_store=store,
+            run_signature="test-object-scores",
+        )
+
+        resumed = engine.run(
+            SearchConfig(top_n=2, max_workers=1),
+            run_store=store,
+            run_signature="test-object-scores",
+        )
+
+        assert [item.score for item in resumed.items] == [25, 9]
+
     def test_run_with_persist_cancel(self):
         engine = _SquareEngine(list(range(100)))
 
@@ -178,6 +301,19 @@ class TestRunWithPersist:
         assert result.metadata["cancelled"] is True
 
         assert store.run_status("test-cancel") == "cancelled"
+
+    def test_time_budget_metadata_with_persist(self):
+        store = SearchRunStore(self.db_path)
+
+        result = _SquareEngine([1, 2]).run(
+            SearchConfig(max_seconds=0),
+            run_store=store,
+            run_signature="test-persist-deadline",
+        )
+
+        assert result.metadata["cancelled"] is True
+        assert result.metadata["deadline_exceeded"] is True
+        assert store.run_status("test-persist-deadline") == "cancelled"
 
     def test_run_with_persist_flush_remaining_batch(self):
         numbers = list(range(5))
@@ -267,6 +403,8 @@ class TestProgressCallback:
         engine = _SquareEngine([1, 2, 3, 4, 5])
 
         store = SearchRunStore(Path(tempfile.mkdtemp()) / "progress.db")
+        store.ensure_run("test-progress-persist", 5)
+        store.mark_processed_batch("test-progress-persist", ["1", "2"])
 
         calls: list[ParallelProgress] = []
 

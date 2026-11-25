@@ -109,6 +109,8 @@ def _is_shallow_clone(repo: Path) -> bool:
 
 def test_repository_scan_reports_known_large_object() -> None:
     """真实仓库扫描应能发现审查清单记录的 12 MB 构建产物（只读）。"""
+    if not (scan_git_history.REPO / ".git").exists():
+        pytest.skip("源码归档不含 Git 历史；完整扫描由仓库/CI 环境覆盖")
     if _is_shallow_clone(scan_git_history.REPO):
         pytest.skip("浅克隆不含完整历史；完整扫描由 security-audit supply-chain job 覆盖")
     report = scan_git_history.scan_repository(scan_git_history.REPO, threshold_bytes=4_194_304)

@@ -32,6 +32,9 @@ def run_parallel(
     submit_batch_size: int = 100,
     on_result: Callable[[T, R], None] | None = None,
     on_error: Callable[[T, Exception], None] | None = None,
+    max_seconds: float | None = None,
+    total_candidates: int | None = None,
+    processed_offset: int = 0,
 ) -> list[R]:
     """并行评估一组任务，支持取消和进度回调。
 
@@ -55,6 +58,12 @@ def run_parallel(
 
         on_result: 可选逐结果回调，接收 (task, result)，用于续跑写入等
 
+        max_seconds: 可选协作式时间预算；到期后停止新提交并取消未开始的任务
+
+        total_candidates: 原始候选总数（含续跑时已处理项）
+
+        processed_offset: 本轮开始前已处理的数量，用于恢复全局进度
+
 
 
     Returns:
@@ -65,13 +74,22 @@ def run_parallel(
 
     cancel = cancel_token or SearchCancelToken()
 
-    total = 0
+    total = max(0, int(total_candidates)) if total_candidates is not None else 0
 
     results: list[R] = []
 
     processed = 0
 
     start = time.perf_counter()
+    deadline = start + max(0.0, max_seconds) if max_seconds is not None else None
+
+    def _deadline_exceeded() -> bool:
+        if cancel.is_cancelled:
+            return True
+        if deadline is not None and time.perf_counter() >= deadline:
+            cancel.cancel(timed_out=True)
+            return True
+        return False
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         task_iter = iter(tasks)
@@ -90,7 +108,7 @@ def run_parallel(
             submitted = 0
 
             for _ in range(count):
-                if cancel.should_cancel(processed):
+                if cancel.should_cancel(processed) or _deadline_exceeded():
                     break
 
                 try:
@@ -112,7 +130,14 @@ def run_parallel(
         _submit_batch(max_workers * 2)
 
         while futures:
-            done, futures = wait(futures, return_when=FIRST_COMPLETED)
+            wait_timeout = None if deadline is None else max(0.0, deadline - time.perf_counter())
+            done, futures = wait(futures, return_when=FIRST_COMPLETED, timeout=wait_timeout)
+
+            if not done and _deadline_exceeded():
+                for f in futures:
+                    f.cancel()
+                futures.clear()
+                break
 
             for f in done:
                 processed += 1
@@ -138,7 +163,7 @@ def run_parallel(
                     if on_error is not None and task is not None:
                         on_error(task, exc)
 
-            if cancel.should_cancel(processed):
+            if cancel.should_cancel(processed) or _deadline_exceeded():
                 for f in futures:
                     f.cancel()
 
@@ -149,16 +174,16 @@ def run_parallel(
             if progress_callback is not None:
                 elapsed = time.perf_counter() - start
 
-                rate = (processed + 1) / max(elapsed, 0.001)
-
-                remaining = (total - processed) / rate if rate > 0 and total > 0 else 0.0
+                progress_processed = processed_offset + processed
+                rate = processed / max(elapsed, 0.001)
+                remaining = (total - progress_processed) / rate if rate > 0 and total > 0 else 0.0
 
                 progress_callback(
                     ParallelProgress(
-                        processed=processed,
-                        total=total or processed,
+                        processed=progress_processed,
+                        total=total or progress_processed,
                         elapsed=elapsed,
-                        estimated_remaining=remaining,
+                        estimated_remaining=max(0.0, remaining),
                     )
                 )
 

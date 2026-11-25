@@ -204,6 +204,13 @@ class TestDagVerifyUsesRealAdapterNames:
         assert resp.status_code == 200, resp.text
         assert resp.json()["outputs"]
 
+    def test_arknights_profile_uses_packaged_standard_data(self) -> None:
+        from api.entity.profiles import get_entity
+
+        from utils.game_data_paths import ARKNIGHTS_OPERATORS_STANDARD
+
+        assert get_entity("arknights", "operators").path == ARKNIGHTS_OPERATORS_STANDARD
+
     def test_arknights_verify_succeeds(self, client: TestClient) -> None:
         resp = client.post(
             "/api/data/dag-verify",

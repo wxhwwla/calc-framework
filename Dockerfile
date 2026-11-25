@@ -7,10 +7,10 @@
 # 运行：docker compose up -d  → http://localhost:8000
 
 # ── Stage 1：前端静态资源 ─────────────────────────────────────────────
-FROM node:18-alpine AS frontend-build
+FROM node:20-alpine AS frontend-build
 WORKDIR /app/web/frontend
 COPY web/frontend/package*.json ./
-RUN npm ci
+RUN CYPRESS_SKIP_BINARY_INSTALL=1 npm ci
 COPY web/frontend/ ./
 RUN npm run build
 

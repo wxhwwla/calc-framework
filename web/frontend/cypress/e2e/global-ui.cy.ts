@@ -26,7 +26,12 @@ describe("全局 UI 元素 GlobalUI", () => {
   });
 
   it("打开 API 文档页", () => {
-    // 直接访问 redoc 或 swagger
+    // Swagger 静态资源属于外部 CDN；路由测试不应依赖公网可用性。
+    cy.intercept("**/swagger-ui-bundle.js", {
+      contentType: "application/javascript",
+      body: "window.SwaggerUIBundle = Object.assign(function () { return {}; }, { presets: { apis: {} }, SwaggerUIStandalonePreset: {} });",
+    });
+    cy.intercept("**/swagger-ui.css", { contentType: "text/css", body: "" });
     cy.visit("/api/docs", { failOnStatusCode: false });
     cy.get("body").should("be.visible");
   });

@@ -34,6 +34,26 @@ def test_env_non_zh_returns_en(monkeypatch: pytest.MonkeyPatch, raw: str) -> Non
     assert _detect_system_locale() == "en"
 
 
+def test_i18n_import_does_not_require_pyside6() -> None:
+    import subprocess
+    import sys
+
+    script = """
+import builtins
+real_import = builtins.__import__
+def without_pyside(name, *args, **kwargs):
+    if name == "PySide6" or name.startswith("PySide6."):
+        raise ModuleNotFoundError("PySide6 intentionally unavailable")
+    return real_import(name, *args, **kwargs)
+builtins.__import__ = without_pyside
+from calc_framework.ui.i18n import tr
+assert callable(tr)
+"""
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=False)
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_windows_chinese_display_name_returns_zh_cn(monkeypatch: pytest.MonkeyPatch) -> None:
     _clear_env(monkeypatch)
     monkeypatch.setattr(locale, "getlocale", lambda: ("Chinese (Simplified)_China", "936"))

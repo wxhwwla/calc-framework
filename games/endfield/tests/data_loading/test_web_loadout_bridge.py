@@ -114,6 +114,33 @@ class TestWebLoadoutBridge(unittest.TestCase):
         self.assertIsInstance(mult, float)
         self.assertIsInstance(dmg, str)
 
+    def test_framework_bridge_logger_does_not_require_pyside6(self) -> None:
+        import subprocess
+        import sys
+
+        from games.endfield.tests.conftest import REPO_ROOT
+
+        script = """
+import builtins
+real_import = builtins.__import__
+def without_pyside(name, *args, **kwargs):
+    if name == "PySide6" or name.startswith("PySide6."):
+        raise ModuleNotFoundError("PySide6 intentionally unavailable")
+    return real_import(name, *args, **kwargs)
+builtins.__import__ = without_pyside
+from games.endfield.framework_bridge import get_logger
+assert callable(get_logger)
+"""
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

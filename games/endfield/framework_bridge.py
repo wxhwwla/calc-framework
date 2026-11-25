@@ -6,10 +6,25 @@
 当框架 API 变化时，只需修改此桥接层，无需逐文件更新 GUI。
 """
 
+from typing import TYPE_CHECKING
+
 from calc_framework.config.adapter import AdapterPackage
 from calc_framework.logging import get_logger, setup_logging
-from calc_framework.ui.compute_sheet import ComputeSheet
 from calc_framework.ui.layout import Layout, load_layout_json
+
+if TYPE_CHECKING:
+    from calc_framework.ui.compute_sheet import ComputeSheet
+
+
+def __getattr__(name: str) -> object:
+    """仅在 GUI 使用 ComputeSheet 时加载 Qt 依赖。"""
+    if name != "ComputeSheet":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from calc_framework.ui.compute_sheet import ComputeSheet
+
+    globals()[name] = ComputeSheet
+    return ComputeSheet
+
 
 __all__ = [
     "AdapterPackage",

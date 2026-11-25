@@ -70,14 +70,21 @@ class SearchCancelToken:
 
     cancel_after: int | None = None
     _cancelled: bool = False
+    _timed_out: bool = False
 
-    def cancel(self) -> None:
+    def cancel(self, *, timed_out: bool = False) -> None:
         self._cancelled = True
+        self._timed_out = self._timed_out or timed_out
 
     @property
     def is_cancelled(self) -> bool:
         """is_cancelled。"""
         return self._cancelled
+
+    @property
+    def timed_out(self) -> bool:
+        """是否因时间预算到期而取消。"""
+        return self._timed_out
 
     def should_cancel(self, processed_count: int) -> bool:
         if self._cancelled:

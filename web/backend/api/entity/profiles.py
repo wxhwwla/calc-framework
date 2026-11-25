@@ -14,8 +14,10 @@ from api.internal.errors import raise_http_from_exc
 from api.internal.json_utils import REPO_ROOT, load_json, save_json
 from fastapi import HTTPException
 
+from utils.game_data_paths import ARKNIGHTS_OPERATORS_STANDARD
+
 ENDFIELD_DATA = REPO_ROOT / "games" / "endfield" / "data"
-ARKNIGHTS_OPERATORS = REPO_ROOT / "tools" / "arknights_scout" / "output" / "parsed" / "operators.json"
+ARKNIGHTS_OPERATORS = ARKNIGHTS_OPERATORS_STANDARD
 
 
 @dataclass(frozen=True)

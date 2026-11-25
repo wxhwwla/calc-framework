@@ -67,6 +67,15 @@ class TestSearchEngine:
 
         assert result.total_evaluated <= 10
 
+    def test_time_budget_is_reported_in_metadata(self):
+        engine = _SquareEngine(list(range(100)))
+
+        result = engine.run(SearchConfig(max_seconds=0))
+
+        assert result.items == ()
+        assert result.metadata["cancelled"] is True
+        assert result.metadata["deadline_exceeded"] is True
+
     def test_estimate_workload(self):
         engine = _SquareEngine([1, 2, 3])
 

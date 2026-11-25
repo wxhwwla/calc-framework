@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     qt6-base-dev \
-    libegl1-mesa \
+    libegl-mesa0 \
     libegl1 \
     xvfb \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \

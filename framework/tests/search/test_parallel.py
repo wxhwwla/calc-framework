@@ -63,6 +63,74 @@ class TestRunParallel:
 
         assert calls[-1] == 20
 
+    def test_progress_includes_preprocessed_offset(self):
+        calls = []
+
+        run_parallel(
+            range(3),
+            square,
+            max_workers=1,
+            progress_callback=calls.append,
+            total_candidates=8,
+            processed_offset=5,
+        )
+
+        assert calls[-1].processed == 8
+        assert calls[-1].total == 8
+        assert calls[-1].estimated_remaining == 0
+
+    def test_zero_time_budget_stops_before_evaluating(self):
+        evaluated = []
+
+        def evaluate(x):
+            evaluated.append(x)
+            return x
+
+        results = run_parallel(range(5), evaluate, max_workers=1, max_seconds=0)
+
+        assert results == []
+        assert evaluated == []
+
+    def test_time_budget_stops_submitting_new_tasks(self):
+        import time
+
+        def slow_square(x):
+            time.sleep(0.02)
+            return x * x
+
+        results = run_parallel(range(100), slow_square, max_workers=1, max_seconds=0.04)
+
+        assert 0 < len(results) < 100
+
+    def test_manual_cancel_during_wait_is_not_reported_as_timeout(self):
+        import threading
+        import time
+
+        cancel = SearchCancelToken()
+        started = threading.Event()
+
+        def blocking_square(x):
+            started.set()
+            time.sleep(0.08)
+            return x * x
+
+        timer = threading.Timer(0.01, cancel.cancel)
+        timer.start()
+        try:
+            run_parallel(
+                range(2),
+                blocking_square,
+                max_workers=1,
+                cancel_token=cancel,
+                max_seconds=0.03,
+            )
+        finally:
+            timer.cancel()
+
+        assert started.is_set()
+        assert cancel.is_cancelled is True
+        assert cancel.timed_out is False
+
     def test_single_worker(self):
         results = run_parallel(range(5), square, max_workers=1)
 

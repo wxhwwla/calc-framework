@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import json
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -110,6 +111,14 @@ class SearchEngine(ABC, Generic[C, R]):
 
         return str(candidate)
 
+    def serialize_result(self, result: R) -> Any:
+        """转为可 JSON 序列化的结果；非原生类型由游戏适配器覆盖。"""
+        return result
+
+    def deserialize_result(self, payload: Any) -> R:
+        """从 JSON 数据恢复结果；与 ``serialize_result`` 对应。"""
+        return payload
+
     def estimate_workload(self) -> int:
         return len(self.generate_candidates())
 
@@ -164,6 +173,8 @@ class SearchEngine(ABC, Generic[C, R]):
             cancel_token=cancel_token,
             progress_callback=_progress,
             top_n_tracker=tracker,
+            total_candidates=total,
+            max_seconds=config.max_seconds,
         )
 
         return SearchResult[R](
@@ -172,6 +183,7 @@ class SearchEngine(ABC, Generic[C, R]):
             total_candidates=total,
             metadata={
                 "cancelled": cancel_token.is_cancelled,
+                "deadline_exceeded": cancel_token.timed_out,
                 "max_workers": config.max_workers,
             },
         )
@@ -201,8 +213,11 @@ class SearchEngine(ABC, Generic[C, R]):
         skipped = len(candidates) - len(pending)
 
         tracker = TopNTracker[R](config.top_n, key_fn=self.score_key)
+        for _key, _score, payload in run_store.get_scored_results(run_signature):
+            tracker.offer(self.deserialize_result(payload))
 
         processed_buf: list[str] = []
+        scored_buf: list[tuple[str, float, str]] = []
         _buf_lock = threading.Lock()
 
         processed_count = 0
@@ -215,21 +230,24 @@ class SearchEngine(ABC, Generic[C, R]):
                 failed_count += 1
                 if key in processed_buf:
                     processed_buf.remove(key)
+                scored_buf[:] = [row for row in scored_buf if row[0] != key]
 
         def _on_result(key_and_candidate: tuple[str, C], result: R) -> None:
             nonlocal processed_count
 
             key, _ = key_and_candidate
-
+            payload = json.dumps(self.serialize_result(result), ensure_ascii=False)
+            score = float(self.score_key(result))
             processed_count += 1
 
             with _buf_lock:
                 processed_buf.append(key)
+                scored_buf.append((key, score, payload))
 
-                if len(processed_buf) >= PROCESSED_BATCH_SIZE:
-                    run_store.mark_processed_batch(run_signature, processed_buf)
-
+                if len(scored_buf) >= PROCESSED_BATCH_SIZE:
+                    run_store.mark_scored_batch(run_signature, scored_buf)
                     processed_buf.clear()
+                    scored_buf.clear()
 
         def _progress(p):
             if progress_callback is not None:
@@ -244,12 +262,20 @@ class SearchEngine(ABC, Generic[C, R]):
             cancel_token=cancel_token,
             progress_callback=_progress,
             top_n_tracker=tracker,
+            total_candidates=total,
+            processed_offset=skipped,
+            max_seconds=config.max_seconds,
             on_result=_on_result,
             on_error=_on_error,
         )
 
-        if processed_buf:
-            run_store.mark_processed_batch(run_signature, processed_buf)
+        if scored_buf:
+            try:
+                run_store.mark_scored_batch(run_signature, scored_buf)
+            except Exception:
+                failed_count += len(scored_buf)
+                processed_buf.clear()
+                scored_buf.clear()
 
         cancelled = cancel_token.is_cancelled
 
@@ -263,6 +289,7 @@ class SearchEngine(ABC, Generic[C, R]):
             total_candidates=total,
             metadata={
                 "cancelled": cancelled,
+                "deadline_exceeded": cancel_token.timed_out,
                 "skipped_preprocessed": skipped,
                 "failed_count": failed_count,
                 "max_workers": config.max_workers,

@@ -16,9 +16,8 @@ docs/
 *.md
 !web/frontend/README.md
 
-# 前端源码（dist 由多阶段 frontend-build 产出）
+# 前端依赖（构建阶段执行 npm ci；src 必须进入构建上下文）
 web/frontend/node_modules
-web/frontend/src
 
 # 测试与 CI
 **/tests/
