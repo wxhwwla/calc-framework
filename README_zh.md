@@ -3,6 +3,8 @@
 [![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
 [![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
 [![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
+[![Type Check](https://github.com/wxhwwla/calc-framework/actions/workflows/typecheck.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/typecheck.yml)
+[![Web E2E](https://github.com/wxhwwla/calc-framework/actions/workflows/web-e2e.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-e2e.yml)
 [![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
 
 # Calc Framework — 通用游戏计算框架
@@ -133,14 +135,23 @@ python -m games.endfield.main
 python scripts/main_dev_toolkit.py
 ```
 
-### Web 版
+### Docker 自托管
+
+```bash
+docker compose up --build -d
+# 打开 http://localhost:8000
+```
+
+Compose 为 Hub 数据、API Key 和用户历史提供持久化卷；健康检查同时验证存储写入与 API 就绪。使用管理写接口前请设置 `CALC_ADMIN_TOKEN`。详见 [Docker 部署与数据运维](docs/Docker部署与数据运维.md)。
+
+### Web 版（本地开发）
 
 ```powershell
 # 后端
 cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8180
 
 # 前端（新终端）
-cd web/frontend && npm install && npm run dev
+cd web/frontend && npm ci && npm run dev
 ```
 
 ---
@@ -182,6 +193,7 @@ cd web/frontend && npm install && npm run dev
 - **ComputeSheet**：声明式 UI — 消费 `layout.json` + DAG 变量 → 自动渲染控件
 - **插件系统**：注册表模式 + 3 内置插件（暴击/闪避/距离衰减）+ `.calcplugin` 格式
 - **AI 配装**（实验性）：自然语言 → DAG 基线建议 + 多轮对话 + 语义搜索 + AI 公式解析；非穷举最优搜索
+- **MCP 构建服务器**：`tools/calc_mcp/` 提供 13 个确定性工具（模板、Schema、指南、生成、脚手架、校验、冒烟与打包/导入），供宿主 AI 从克隆仓库端到端创建新游戏计算器
 - **跨品类验证**：card_rpg (9 节点)、moba (7)、fps (8)、genshin_like (45 节点)、wjdlglr (104 节点，八乘区 + 独立命中率乘区（闪避/命中加成/浮动），三级舰船/武器联动选择、武器明细面板、能量/实弹护甲选择) 适配器均通过
 - **主题管理**：暗色/亮色/高对比度，动态 QSS 生成；Web 端暗/亮切换
 - **SaaS API**：API Key 管理 + 速率限制 + 用量统计
@@ -194,7 +206,7 @@ cd web/frontend && npm install && npm run dev
 | 无尽的拉格朗日计算器 | `games/wjdlglr/main.py` / 通用 `AdapterGamePage` | `/wjdlglr` |
 | 数据设计器 | 开发者工具箱 | `/designer` |
 | 配置包设计器 | 开发者工具箱 | `/pack-designer` |
-| Calc Hub 市场 | — | `/marketplace` |
+| Calc Hub 市场 | — | `/hub` |
 
 Web 版与桌面版共享 `layout.json` / `attr_schema.json` / DAG 文件 / 数据 JSON。一套声明，两端渲染。
 
@@ -249,12 +261,23 @@ result = adapter.fit(data)  # 自动按长度匹配
 
 ## 测试
 
-```powershell
-# 框架测试（数量以实际输出为准）
-cd framework && pytest tests/ -q
+除代码块主动切换目录外，命令均在仓库根执行；测试数量以实际输出为准：
 
-# 终末地测试（数量以实际输出为准）
-cd games/endfield && pytest tests/ -q
+```powershell
+python -m pytest framework/tests -q
+python -m pytest games/endfield/tests -q
+python -m pytest games/arknights/tests -q
+python -m pytest tools/tests -q
+python -m pytest web/backend/tests -q
+pyright  # 未安装时先执行：pip install pyright
+python tools/quality/npm_audit_gate.py --cwd web/frontend --audit-level low
+
+cd web/frontend
+npm ci
+npm test
+npm run lint
+npm run build
+npm run check:build
 ```
 
 [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)

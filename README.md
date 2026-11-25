@@ -3,6 +3,8 @@
 [![Game CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
 [![Framework CI](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/framework-ci.yml)
 [![Web CI](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-ci.yml)
+[![Type Check](https://github.com/wxhwwla/calc-framework/actions/workflows/typecheck.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/typecheck.yml)
+[![Web E2E](https://github.com/wxhwwla/calc-framework/actions/workflows/web-e2e.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/web-e2e.yml)
 [![Security Audit](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/security-audit.yml)
 
 # Calc Framework — Universal Game Damage Calculator
@@ -154,14 +156,23 @@ python -m games.endfield.main
 
 </details>
 
-### Option 4: Web Version (Local)
+### Option 4: Self-host with Docker
+
+```bash
+docker compose up --build -d
+# Open http://localhost:8000
+```
+
+The compose stack includes persistent volumes for Hub data, API keys and user history, plus a health check that verifies both storage writes and API readiness. Set `CALC_ADMIN_TOKEN` before using admin write APIs. See [Docker deployment & operations](docs/Docker部署与数据运维.md).
+
+### Option 5: Web Version (Local Development)
 
 ```powershell
 # Backend
 cd web/backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8180
 
 # Frontend (separate terminal)
-cd web/frontend && npm install && npm run dev
+cd web/frontend && npm ci && npm run dev
 ```
 
 ---
@@ -217,7 +228,7 @@ cd web/frontend && npm install && npm run dev
 | Infinite Lagrange Calculator | `games/wjdlglr/main.py` / generic `AdapterGamePage` | `/wjdlglr` |
 | Data Designer | Dev toolkit | `/designer` |
 | Pack Designer | Dev toolkit | `/pack-designer` |
-| Calc Hub Marketplace | — | `/marketplace` |
+| Calc Hub Marketplace | — | `/hub` |
 
 The Web version shares `layout.json` / `attr_schema.json` / DAG files / data JSON with the desktop version. One codebase, two rendering targets.
 
@@ -272,12 +283,23 @@ result = adapter.fit(data)  # auto-match by data length
 
 ## Testing
 
-```powershell
-# Framework tests
-cd framework && pytest tests/ -q
+Run the following from the repository root unless the block changes directory:
 
-# Endfield tests (full suite)
-cd games/endfield && pytest tests/ -q
+```powershell
+python -m pytest framework/tests -q
+python -m pytest games/endfield/tests -q
+python -m pytest games/arknights/tests -q
+python -m pytest tools/tests -q
+python -m pytest web/backend/tests -q
+pyright  # Install with: pip install pyright
+python tools/quality/npm_audit_gate.py --cwd web/frontend --audit-level low
+
+cd web/frontend
+npm ci
+npm test
+npm run lint
+npm run build
+npm run check:build
 ```
 
 [![CI](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/wxhwwla/calc-framework/actions/workflows/ci.yml)
